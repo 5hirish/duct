@@ -2,16 +2,13 @@
 
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Globe } from "lucide-react";
+import { useTheme } from "next-themes";
 import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import Aqueduct, { STEP_TODO } from "@/components/onboarding/Aqueduct";
-import { Button } from "@/components/ui/button";
+import FrontDoor from "@/components/onboarding/FrontDoor";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   POST_SIGNIN_REDIRECT_KEY,
   SIGNIN_REASON_EXPIRED,
@@ -28,20 +25,6 @@ import { consumeSignInSources, peekSignInSources } from "@/lib/signInSources";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const DEFAULT_LANDING = "/insights/organic-growth";
-
-/**
- * The same three steps `/start` runs, by the same names — rendered dry, before
- * anything has happened. Submitting the field walks into that page, where this
- * aqueduct is already on screen and the water starts moving. One picture across
- * the threshold beats two that merely coordinate.
- */
-const ROUTE_AHEAD = [
-  { key: "site", label: "Your site", state: STEP_TODO },
-  { key: "model", label: "Your model", state: STEP_TODO },
-  { key: "audit", label: "The audit", state: STEP_TODO },
-];
-
-const READS_FROM = ["Google Ads", "GA4", "Search Console", "Meta Ads"];
 
 /**
  * Where to go once signed in. The invite page parks its own path here before
@@ -109,6 +92,7 @@ export default function SignInPage() {
 function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { resolvedTheme } = useTheme();
   const [turnstileToken, setTurnstileToken] = useState("");
   const [ready, setReady] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -209,7 +193,10 @@ function SignInContent() {
 
   // Load and render Turnstile explicitly so remounts always work.
   useEffect(() => {
-    if (!requiresTurnstile || !ready) return;
+    // `resolvedTheme` is undefined until next-themes mounts. Waiting for it
+    // costs a tick and saves rendering the widget twice; re-rendering it is
+    // not free, because it throws away a token the visitor already solved.
+    if (!requiresTurnstile || !ready || !resolvedTheme) return;
     let cancelled = false;
 
     const renderWidget = () => {
@@ -234,7 +221,7 @@ function SignInContent() {
               setTurnstileToken("");
               setTurnstileError("Security check failed to load. Please refresh and try again.");
             },
-            theme: "light",
+            theme: resolvedTheme === "dark" ? "dark" : "light",
             appearance: "always",
           }
         );
@@ -271,7 +258,7 @@ function SignInContent() {
         delete window.onTurnstileLoad;
       }
     };
-  }, [ready, requiresTurnstile]);
+  }, [ready, requiresTurnstile, resolvedTheme]);
 
   const handleSignIn = useCallback(async () => {
     if (isSigningIn) return;
@@ -470,69 +457,17 @@ function SignInContent() {
         </div>
       </div>
 
-      {/* ── Start the audit: no account needed, the real first impression ── */}
+      {/* ── The offer: an audit, no account needed — the real first impression ── */}
       <div className="landing-start">
-        <div className="landing-start-inner">
-          <div className="signin-logo">
-            <span className="signin-logo-text">duct</span>
-            <span className="logo-mark" aria-hidden="true" />
-          </div>
-
-          <h1 className="landing-start-headline">
-            Your tools have the answers. <em>Duct connects them.</em>
-          </h1>
-
-          <p className="landing-start-sub">
-            Point Duct at your site and it reads it, audits it, and drafts
-            your project from what it finds &mdash; before you sign in.
-          </p>
-
-          <form onSubmit={handleStartSubmit} className="landing-start-form">
-            <Label htmlFor="landing-site-url" className="sr-only">
-              Your website
-            </Label>
-            <div className="start-url">
-              <Globe className="start-url-icon size-4" aria-hidden />
-              <Input
-                id="landing-site-url"
-                inputMode="url"
-                autoComplete="url"
-                placeholder="acme.com"
-                value={startUrl}
-                onChange={(e) => {
-                  setStartUrl(e.target.value);
-                  if (startError) setStartError("");
-                }}
-                aria-invalid={startError ? true : undefined}
-                aria-describedby={startError ? "landing-site-url-error" : undefined}
-                className="start-url-input"
-              />
-            </div>
-            <Button type="submit" size="lg">
-              Read my site <ArrowRight className="size-4" aria-hidden />
-            </Button>
-          </form>
-          <p
-            id={startError ? "landing-site-url-error" : undefined}
-            className={`landing-start-hint${startError ? " landing-start-hint-error" : ""}`}
-            role={startError ? "alert" : undefined}
-          >
-            {startError || "No account needed — free during beta."}
-          </p>
-
-          <div className="landing-reads">
-            <span className="landing-reads-label">Reads from</span>
-            <ul className="landing-start-tools">
-              {READS_FROM.map((tool) => (
-                <li key={tool} className="landing-tool-pill">
-                  {tool}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <Aqueduct steps={ROUTE_AHEAD} water={0} className="landing-aqueduct" />
-        </div>
+        <FrontDoor
+          url={startUrl}
+          onUrlChange={(value) => {
+            setStartUrl(value);
+            if (startError) setStartError("");
+          }}
+          error={startError}
+          onSubmit={handleStartSubmit}
+        />
       </div>
     </main>
   );

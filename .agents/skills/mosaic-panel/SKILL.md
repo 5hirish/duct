@@ -35,12 +35,18 @@ in `app/public/art/mosaic/`.
 
 | Slug | State | Subject | Inscription |
 |---|---|---|---|
+| `fons` | the signed-out front door | spring-head basin spilling into the first channel | `FONS` |
 | `salve` | first run, onboarding | open arched doorway, water beyond | `SALVE` |
 | `nihil` | empty — no results yet | dry basin, two pigeons, one peering in | `NIHIL` |
 | `fractum` | error, connection failed | aqueduct with one arch gone, water stops | — |
 | `cdiv` | 404 | road ends at a milestone | `CDIV` |
 | `cave-canem` | 403, no access | the Pompeii guard dog | `CAVE·CANEM` |
 | `otium` | all caught up | water running full, pigeon asleep | `OTIVM` |
+
+`fons` and `salve` are both arrival panels because the arrival has two steps:
+the front door is the spring, `/start` is the threshold you cross a click later.
+That is the bar for a second panel of the same kind — a distinct moment in one
+flow, not a second surface with the same feeling.
 
 Unbuilt, if a surface ever needs them: sinter-choked channel (rate limited),
 the *asaroton* unswept floor (no results left), `FESTINA·LENTE` (a long check

@@ -20,6 +20,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
+import FrontDoor from "@/components/onboarding/FrontDoor";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
@@ -33,6 +34,7 @@ import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
+import ChatGPTCard from "@/components/connections/ChatGPTCard";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
@@ -146,6 +148,18 @@ function Row({ children }) {
   return <div className="flex flex-wrap items-center gap-4">{children}</div>;
 }
 
+/** The front door owns its field, so give the scene somewhere to type. The
+ *  `.landing-start` wrapper is not decoration: it carries `--start-ground`, and
+ *  a panel written for that ground says nothing useful on `--background`. */
+function FrontDoorScene({ error = "" }) {
+  const [url, setUrl] = useState("");
+  return (
+    <div className="landing-start">
+      <FrontDoor url={url} onUrlChange={setUrl} error={error} onSubmit={(e) => e.preventDefault()} />
+    </div>
+  );
+}
+
 /** Autonomy is controlled from the parent in the real Desk — stub that here
  *  so picking an option actually round-trips back into the trigger's label. */
 function DeskComposerScene(props) {
@@ -246,6 +260,22 @@ function DeskRaceScene() {
 }
 
 export const SCENES = [
+  {
+    id: "front-door",
+    state: "default — signed out, nothing typed",
+    group: "FrontDoor",
+    title: "The signed-out front door",
+    note: "Check it in dark before anything else: this panel paints on `--start-ground`, which flips with the theme, and it previously used the fixed `--navy` brand hexes for ink — headline 1.05:1, body 2.94:1, both effectively invisible. Then drag the frame through 64rem: the mosaic should move from under the field into a second column beside it, and never sit between the headline and the button. The headline carries no accent colour on purpose — the submit button is the page's one accent.",
+    render: () => <FrontDoorScene />,
+  },
+  {
+    id: "front-door-error",
+    state: "submitted empty — the field's error replaces the reassurance line",
+    group: "FrontDoor",
+    title: "The signed-out front door",
+    note: "One line does two jobs, so check the swap does not move the layout: the hint and the error are the same element, and the error takes `role=\"alert\"` plus `aria-describedby` off the input. The reassurance it replaces (\"Free, no account, and nothing else connected\") is the page's answer to the fear that pointing Duct at a site hands over an ad account, so it must come back the moment the error clears.",
+    render: () => <FrontDoorScene error="Enter your website address." />,
+  },
   {
     id: "desk-composer",
     state: "default — a project with a favicon, no thread yet",
@@ -392,6 +422,18 @@ export const SCENES = [
           status="Coming soon"
           disabled
         />
+      </div>
+    ),
+  },
+  {
+    id: "chatgpt-card-web",
+    state: "browser",
+    group: "ChatGPTCard",
+    title: "Asked in a browser",
+    note: "The real component, unmocked: /preview is a browser, so chatgptAuthAvailable() is false and this is exactly what a web user sees. The desktop states (signed out, signed in on a plan) need the shell and cannot be drawn here. Click the tile — the dialog is the answer, and the download is the only action in it.",
+    render: () => (
+      <div className="conn-grid">
+        <ChatGPTCard enabled />
       </div>
     ),
   },

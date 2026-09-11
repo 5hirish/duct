@@ -35,6 +35,10 @@ const CLEAN = new Set([
   // Split out of generate.css when the wizard became the Project context
   // page; it came out clean, so it goes straight onto the ratchet.
   "project.css",
+  // Cleaned when the front door was rebuilt — eight invented sizes between
+  // 13px and 28px, none of which carried hierarchy the weight was not
+  // already carrying.
+  "signin.css",
   "theme.css",
   "tokens.css",
   "typography.css",

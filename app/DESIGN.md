@@ -654,10 +654,11 @@ The tree, measured against this file. Fix each when a change touches it.
   font sizes must land on Tailwind's scale, and files on its clean list can
   never regress. It runs inside `check:parity`, so CI has it. Currently clean:
   `base`, `connector-tiles`, `forms`, `layout-grids`, `mode-selector`,
-  `theme`, `tokens`, `typography`. Still owing, and reported on every run:
-  `ads-report` (15), `generate` (14), `model-tiers` (9), `signin` (7),
-  `chat` (5), `connections` (1), `app-shell` (1). Clean a file, add it to
-  `CLEAN` in the script. Separately, ~300 arbitrary px type values in JSX
+  `project`, `signin`, `theme`, `tokens`, `typography`, `usage`. Still owing,
+  and reported on every run: `ads-report` (15), `generate` (14),
+  `model-tiers` (7), `chat` (5), `onboarding` (2), `app-shell` (1),
+  `connections` (1). Clean a file, add it to `CLEAN` in the script.
+  Separately, ~300 arbitrary px type values in JSX
   (`text-[10px]` ×88, `text-[11px]` ×77…) contradict the rem rule in
   `AGENTS.md`, as does heavy inline `style={{}}` spacing in `execute/page.jsx`
   and `AuditReportV1.jsx` — neither is covered by the script yet.

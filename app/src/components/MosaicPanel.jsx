@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 // The panels that exist. A typo'd string would 404 silently into an alt-less
 // broken image, which on an error page is a bleak thing to ship.
 export const MOSAIC = {
+  fons: "fons", // the front door — the spring, before anything has run
   salve: "salve", // first run, onboarding
   nihil: "nihil", // empty — nothing here yet
   fractum: "fractum", // something broke

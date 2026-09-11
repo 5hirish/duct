@@ -1,9 +1,9 @@
 /* signin — The signed-out landing split: the app's front door.
-   Right (wide, light) is the audit — no account needed, the real growth
-   funnel. Left (narrow, dark) is sign-in, for someone who already has an
-   account. On mobile the audit renders first: it is the higher-conversion
-   half, and first impression order should match that — unless the visitor
-   was bounced here by an expired session, in which case sign-in leads.
+   Right (wide) is the offer — a free audit, no account, the real growth funnel.
+   Left (narrow, dark in both themes) is sign-in, for someone who already has an
+   account. On mobile the offer renders first: it is the higher-conversion half,
+   and first-impression order should match that — unless the visitor was bounced
+   here by an expired session, in which case sign-in leads.
    Split out of globals.css; see that file for the load order. */
 
 .landing-split {
@@ -49,7 +49,7 @@
 }
 
 .landing-auth-kicker {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 0.5rem;
 }
@@ -76,7 +76,7 @@
   justify-content: center;
   gap: 0.5rem;
   margin-bottom: 1.25rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.68);
   cursor: pointer;
 }
@@ -88,7 +88,7 @@
   gap: 0.75rem;
   width: 100%;
   padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 500;
   font-family: var(--sans);
   color: var(--navy);
@@ -134,7 +134,7 @@
 
 .landing-auth-note {
   margin-top: 0.5rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.6);
 }
 
@@ -142,9 +142,17 @@
   color: oklch(0.75 0.15 25);
 }
 
-/* ── Start the audit (right, wide, light — the first impression) ────── */
+/* ── The offer (right, wide — the first impression) ─────────────────── */
 /* Travertine, not white: the same ground `/start` stands on, so submitting the
-   field does not change the floor under the visitor. */
+   field does not change the floor under the visitor.
+
+   That ground flips with the theme, so every colour on it must flip too. This
+   panel shipped a release painting `--navy` headlines and `--navy-3` body on a
+   dark-mode `--start-ground` — a fixed brand hex over a token that moves —
+   which measured **1.05:1** for the headline and 2.94:1 for the body. Both were
+   invisible rather than merely low. Semantic tokens only here; DESIGN.md's
+   "pure token substitution" is what makes dark mode free, and a raw hex is how
+   a surface opts out of it without saying so. */
 .landing-start {
   background: var(--start-ground);
   display: flex;
@@ -153,9 +161,41 @@
   padding: 3.75rem 3.5rem;
 }
 
+/* One column on a phone — copy first, picture last, which is already the DOM
+   order — and the picture takes a second column once there is room for it
+   beside the field instead of under it. */
 .landing-start-inner {
-  max-width: 36rem;
+  display: grid;
+  gap: 2.5rem;
+  justify-items: start;
+  max-width: 52rem;
   width: 100%;
+}
+
+/* 80rem, not the 64rem the split itself uses: this panel is 68% of the
+   viewport, so at 1024px a second column leaves the copy about 295px and the
+   hero breaks to five lines. The breakpoint has to be read off the panel, not
+   the window. */
+@media (width >= 80rem) {
+  .landing-start-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 3rem;
+  }
+}
+
+.landing-start-copy {
+  max-width: 32rem;
+}
+
+/* The band between the split's breakpoint and the mosaic's: one column, but a
+   page that still fits one screen. Stacking a 280px panel under the copy there
+   buys a scrollbar with a decoration, so it sits out. Below 64rem the split has
+   already stacked and the page scrolls regardless, so the panel is free. */
+@media (64rem <= width < 80rem) {
+  .landing-mosaic {
+    display: none;
+  }
 }
 
 .landing-start-inner .signin-logo {
@@ -169,7 +209,7 @@
   font-family: var(--serif);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--foreground);
   letter-spacing: -0.5px;
 }
 
@@ -182,33 +222,40 @@
   margin-bottom: -1px;
 }
 
-/* `balance` rather than a hand-placed <br>: the break that reads well at 36rem
-   orphans a word at 28rem, and this page is read at both. The claim still gets
-   its own line — as a block, not a <br>, so it survives every width. */
+/* `balance` rather than a hand-placed <br>: the break that reads well in the
+   32rem copy column orphans a word on a phone, and this page is read at both.
+   The clamp tops out at 2.25rem rather than the 2.75rem it carried as a
+   full-width hero — the column is narrower now, and at 2.75rem the two claims
+   ran to four long lines that swamped the field they exist to point at. */
 .landing-start-headline {
   font-family: var(--serif);
-  font-size: clamp(2.125rem, 1.4rem + 1.8vw, 2.75rem);
+  font-size: clamp(1.875rem, 1.1rem + 2vw, 2.25rem);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.5px;
-  color: var(--navy);
+  color: var(--foreground);
   margin-bottom: 1rem;
-  max-width: 20ch;
+  max-width: 26ch;
   text-wrap: balance;
 }
 
+/* The second claim gets its own line — as a block, not a <br>, so it survives
+   every width. It does not get its own colour. The page has one accent and the
+   submit button is spending it; a violet line here was the stock shadcn
+   `--primary` doing brand work on the one screen that is entirely brand, which
+   is the single most-cited "generated app" tell (DESIGN.md, "Not AI slop"). */
 .landing-start-headline em {
   display: block;
-  color: var(--primary);
+  margin-top: 0.2em;
   font-style: normal;
 }
 
 .landing-start-sub {
   font-size: 1.125rem;
   line-height: 1.6;
-  color: var(--navy-3);
+  color: var(--muted-foreground);
   margin-bottom: 1.75rem;
-  max-width: 46ch;
+  max-width: 44ch;
 }
 
 .landing-start-form {
@@ -217,74 +264,37 @@
   max-width: 28rem;
 }
 
-/* ── Proof, below the CTA: what it reads, then the route ahead ───────── */
-.landing-reads {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.landing-reads-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--tessera-ochre);
-}
-
-.landing-start-tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.landing-tool-pill {
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.3125rem 0.875rem;
-  border-radius: var(--pill);
-  border: 1px solid var(--border);
-  color: var(--navy-3);
-  background: color-mix(in oklch, var(--white) 60%, transparent);
-}
-
-/* Spans the column to anchor it — that is what stops the stack reading as a card
-   adrift in the panel — but held back from the hero's weight: here it is a map
-   of the route, not the progress bar it becomes on `/start`.
-   `margin-inline: 0` undoes the centring `.aqueduct` carries for that page; this
-   column is left-aligned and the strip has to share its rail. */
-.landing-aqueduct {
-  margin-top: 1.75rem;
-  margin-inline: 0;
-  opacity: 0.85;
-}
-
 .landing-start-form .start-url-input {
   width: 100%;
 }
 
 .landing-start-hint {
-  font-size: 0.8125rem;
-  color: var(--navy-3);
+  max-width: 28rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
 }
 
 .landing-start-hint-error {
   color: var(--destructive);
 }
 
-.landing-start-trust {
-  margin-top: 1.25rem;
-  font-size: 0.8125rem;
-  color: var(--navy-3);
-  opacity: 0.8;
+/* The connector list, demoted from four pills directly under the field to one
+   sentence under a rule. Pills are for state and these encoded none; what they
+   did encode, sitting between a stranger and their first click, was a demand
+   for access to their ad and analytics accounts — which is not what this step
+   does. Below the fold and with the "when you're ready" clause, the same fact
+   reassures instead. */
+.landing-connect {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  max-width: 28rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
 }
 
-/* ── Responsive: the audit leads on a phone, sign-in follows ────────── */
+/* ── Responsive: the offer leads on a phone, sign-in follows ────────── */
 @media (width < 64rem) {
   .landing-split {
     grid-template-columns: 1fr;
@@ -311,13 +321,7 @@
   .landing-start {
     padding: 2.5rem 1.5rem 2.25rem;
   }
-  .landing-start-headline {
-    font-size: 1.75rem;
-  }
   .landing-start-sub {
-    font-size: 0.9375rem;
-  }
-  .landing-start-tools {
-    margin-bottom: 1.5rem;
+    font-size: 1rem;
   }
 }

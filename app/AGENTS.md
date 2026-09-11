@@ -45,13 +45,24 @@ Three route groups under `app/`:
   project this becomes, offers a separate one, and asks when two projects
   share the site. The audit that follows says so again from the workspace,
   because that write happens while the user is reading the report.
-- `(auth)/` — login page; links to `/start` for first-timers, and passes a
-  guest's link code to the authorize URL so the account keeps their work.
+- `(auth)/` — the front door, and it is a landing page before it is a login
+  page: the wide half (`components/onboarding/FrontDoor.jsx`) is the free
+  audit — one URL field that hands off to `/start` — and the narrow dark half
+  is sign-in for someone who already has an account. It passes a guest's link
+  code to the authorize URL so the account keeps their work.
   When `lib/signInSources.js` has armed the onboarding bundle it also passes
   `sources=onboarding` (Search Console + Analytics read scopes in the same
   consent) and says so under the button. Only the connector prompt on the
   onboarding audit arms it, and the arming expires; the Share dialog, an
   invitation and a plain visit here stay identity-only.
+  Two things the offer half deliberately does **not** show, both of which read
+  as a demand rather than an offer to someone who has not decided yet: the
+  connector list as pills under the field (it survives as one sentence below
+  the fold, with a "when you're ready" clause), and `/start`'s aqueduct strip
+  rendered dry, which is three chores shown before the first click. Its ink is
+  semantic tokens only — the ground is `--start-ground`, which flips with the
+  theme, and the fixed `--navy` brand hexes it used to paint with measured
+  1.05:1 on it in dark.
 - `(app)/` — authenticated app shell:
   - `audit/` + `audit/[sessionId]/` — general audit reports
   - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit variant
