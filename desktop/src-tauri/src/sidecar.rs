@@ -261,6 +261,28 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     // dev build is every rebuild: `try_spawn` then sits on that dialog and
     // never reaches `spawn()`, so the sidecar simply never starts and the only
     // symptom is a shell that says its backend stopped responding.
+    // The two secrets the sidecar used to mint into `0600` files beside its own
+    // database. A file at `0600` is private to this *account*, not to this
+    // *app*, so anything running as the user could read the key that drives the
+    // loopback API and the one that signs its session tokens. They live in the
+    // keychain now and arrive here; the sidecar prefers what it is given and
+    // retires the file it finds, which is the whole migration. A keychain that
+    // will not answer is not fatal — the sidecar falls back to its file and a
+    // headless `--data-dir` run keeps working with no shell at all.
+    for (var, read) in [
+        ("DUCT_LOCAL_API_KEY", crate::local_api_key as fn() -> Result<String, String>),
+        ("DUCT_LOCAL_JWT_SECRET", crate::local_jwt_secret),
+    ] {
+        match read() {
+            Ok(secret) => {
+                command.env(var, secret);
+            }
+            Err(err) => {
+                eprintln!("duct: no keychain for {var} ({err}). Falling back to the data directory.");
+            }
+        }
+    }
+
     let env_file_pinned =
         std::env::var_os("DUCT_ENV_FILE").is_some() || SIDECAR_ENV_FILE.is_some_and(|s| !s.is_empty());
     if !env_file_pinned && std::env::var_os("CREDENTIALS_ENCRYPTION_KEY").is_none() {

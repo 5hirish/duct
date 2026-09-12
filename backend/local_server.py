@@ -66,13 +66,49 @@ def _load_or_create_secret(path: Path) -> str:
     return value
 
 
+# What the desktop shell passes down when it holds these in the OS keychain.
+# Deliberately not `DUCT_API_KEY`/`JWT_SECRET`: those are Configs settings a
+# developer may pin for other reasons, and seeing one set must not be read as
+# "the shell has this in the keychain now, delete the file".
+_API_KEY_ENV = "DUCT_LOCAL_API_KEY"
+_JWT_SECRET_ENV = "DUCT_LOCAL_JWT_SECRET"
+
+
+def _retire_file(path: Path) -> None:
+    """Remove a secret now held somewhere stronger.
+
+    Best effort and deliberately quiet: the value is already in the keychain, so
+    a file that cannot be deleted is stale rather than dangerous, and failing a
+    boot over it would be the worse outcome.
+    """
+    try:
+        path.unlink()
+    except OSError:
+        pass
+
+
+def _from_shell_or_file(env_name: str, path: Path) -> str:
+    """The shell's keychain copy if there is one, else the file, else a new one.
+
+    Deleting the file once the keychain answers *is* the migration: an existing
+    install moves on its next launch and nothing has to detect a version. The
+    fallback is what keeps a headless `duct-sidecar --data-dir …` working with
+    no shell, and what keeps a machine whose keychain is unavailable bootable.
+    """
+    supplied = os.environ.get(env_name, "").strip()
+    if supplied:
+        _retire_file(path)
+        return supplied
+    return _load_or_create_secret(path)
+
+
 def load_or_create_api_key(data_dir: Path) -> str:
-    """Return the persisted local API key, creating it on first run.
+    """Return the local API key: the shell's keychain copy, or this install's file.
 
     This is not a shared secret with a server — it only stops other local
-    processes on the machine from driving the sidecar. Stored 0600.
+    processes on the machine from driving the sidecar.
     """
-    return _load_or_create_secret(data_dir / _API_KEY_FILE)
+    return _from_shell_or_file(_API_KEY_ENV, data_dir / _API_KEY_FILE)
 
 
 def load_or_create_jwt_secret(data_dir: Path) -> str:
@@ -85,7 +121,7 @@ def load_or_create_jwt_secret(data_dir: Path) -> str:
     which is a confusing place to land. Persisted rather than per-boot so a
     restart does not silently sign everyone out.
     """
-    return _load_or_create_secret(data_dir / _JWT_SECRET_FILE)
+    return _from_shell_or_file(_JWT_SECRET_ENV, data_dir / _JWT_SECRET_FILE)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:

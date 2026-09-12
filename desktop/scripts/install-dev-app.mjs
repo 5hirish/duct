@@ -21,7 +21,7 @@
 // instead of leaving a stale one to confuse you later. Never fatal: failing to
 // install a convenience copy must not fail a build that otherwise succeeded.
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,6 +39,31 @@ if (process.platform !== "darwin") {
 
 if (!existsSync(source)) {
   console.warn(`No dev bundle at ${source} — skipping the /Applications install.`);
+  process.exit(0);
+}
+
+// Never swap the bundle out from under a running copy.
+//
+// macOS grants keychain access per application signature, and a dev build is
+// ad-hoc signed — its identity is derived from the binary, so every build has a
+// different one. Replacing the bundle while the app runs leaves a process whose
+// on-disk identity no longer matches the one its keychain items were saved
+// under, and the first symptom is a ChatGPT sign-in that stores fine and then
+// reads back as "not signed in". Merging instead of replacing does not help:
+// either way the Mach-O on disk changes underneath the process.
+//
+// So this refuses, loudly, rather than producing an app that looks installed
+// and has quietly lost its credentials. Still exit 0 — the build succeeded, and
+// only the convenience copy was skipped.
+const running = spawnSync("pgrep", ["-f", `${target}/Contents/MacOS/`], { encoding: "utf8" });
+if (running.status === 0 && running.stdout.trim()) {
+  console.warn(
+    `\n${APP_NAME} is running (pid ${running.stdout.trim().split("\n").join(", ")}).\n` +
+      `Not replacing it: swapping the bundle under a running app changes its code\n` +
+      `signature on disk, and macOS then refuses that process the keychain items it\n` +
+      `saved — a ChatGPT sign-in survives the write and vanishes on the next read.\n\n` +
+      `Quit ${APP_NAME}, then run:  npm --prefix desktop run install:dev-app\n`,
+  );
   process.exit(0);
 }
 

@@ -147,9 +147,33 @@ fn load() -> Result<Option<Session>, String> {
     }
 }
 
+/// Save the bundle, replacing an item this build cannot touch if it has to.
+///
+/// macOS scopes an item's ACL to the app that wrote it, so an item left behind
+/// by a differently-signed build — every rebuild of an ad-hoc signed dev app —
+/// can refuse both the read *and* the overwrite. Refusing the overwrite is the
+/// worse half: the sign-in that would repair the situation fails, and the user
+/// is stuck with a credential they can neither use nor replace. Deleting first
+/// costs nothing (the item was already unusable) and turns a dead end into a
+/// retry.
 fn store(session: &Session) -> Result<(), String> {
     let raw = serde_json::to_string(session).map_err(|e| e.to_string())?;
-    entry()?.set_password(&raw).map_err(describe_keyring_error)
+    // `item`, not `entry`: the local would shadow the `entry()` constructor the
+    // retry below needs.
+    let item = entry()?;
+    match item.set_password(&raw) {
+        Ok(()) => Ok(()),
+        Err(first) => {
+            if item.delete_credential().is_err() {
+                return Err(describe_keyring_error(first));
+            }
+            // Report the original failure if the retry fails too: the delete
+            // succeeding tells the user nothing about why the save did not.
+            entry()?
+                .set_password(&raw)
+                .map_err(|_| describe_keyring_error(first))
+        }
+    }
 }
 
 fn clear() -> Result<(), String> {

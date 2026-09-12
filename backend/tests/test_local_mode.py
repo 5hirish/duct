@@ -108,6 +108,71 @@ def test_api_key_persists_across_restarts(clean_env, tmp_path):
     assert first == second
 
 
+def test_the_shell_supplies_the_api_key_and_the_file_is_retired(clean_env, tmp_path):
+    """The keychain copy wins, and the weaker file it replaces is deleted.
+
+    That deletion *is* the migration — an existing install moves on its next
+    launch and nothing has to detect a version — so it is the behaviour worth
+    pinning: a 0600 file is private to this account, not to this application,
+    and leaving it behind would keep the weaker copy readable forever.
+    """
+    first = local_server.bootstrap(["--data-dir", str(tmp_path)])["api_key"]
+    on_disk = tmp_path / local_server._API_KEY_FILE
+    assert on_disk.exists(), "the no-shell path should still mint a file"
+
+    clean_env.setenv("DUCT_LOCAL_API_KEY", "from-the-keychain")
+    handshake = local_server.bootstrap(["--data-dir", str(tmp_path)])
+
+    assert handshake["api_key"] == "from-the-keychain" != first
+    assert not on_disk.exists()
+
+
+def test_the_shell_supplies_the_signing_key_and_the_file_is_retired(clean_env, tmp_path):
+    """Tested on the function, not through two `bootstrap()` calls.
+
+    `bootstrap` writes JWT_SECRET into `os.environ` with `setdefault`, so a
+    second call in the same process reads back the first call's value and the
+    test would be measuring the fixture rather than the code. The sidecar boots
+    once per process; the unit is where the precedence actually lives.
+    """
+    on_disk = tmp_path / local_server._JWT_SECRET_FILE
+    minted = local_server.load_or_create_jwt_secret(tmp_path)
+    assert on_disk.exists()
+
+    clean_env.setenv("DUCT_LOCAL_JWT_SECRET", "signing-key-from-the-keychain")
+    from_keychain = local_server.load_or_create_jwt_secret(tmp_path)
+
+    assert from_keychain == "signing-key-from-the-keychain" != minted
+    assert not on_disk.exists()
+
+
+def test_a_pinned_signing_key_still_beats_the_keychain(clean_env, tmp_path):
+    """A developer pointing the sidecar at a deployment pins JWT_SECRET itself.
+
+    That has to keep winning, or running the desktop build against staging
+    signs tokens the deployment will reject — which is why `bootstrap` uses
+    `setdefault` and why the shell passes its copy under a *different* name.
+    """
+    clean_env.setenv("DUCT_LOCAL_JWT_SECRET", "signing-key-from-the-keychain")
+    clean_env.setenv("JWT_SECRET", "pinned-to-the-deployment")
+
+    local_server.bootstrap(["--data-dir", str(tmp_path)])
+
+    assert os.environ["JWT_SECRET"] == "pinned-to-the-deployment"
+
+
+def test_without_a_shell_the_sidecar_still_boots(clean_env, tmp_path):
+    """A headless `duct-sidecar --data-dir ...` has no keychain to ask.
+
+    The fallback is not a nicety: it is what keeps the self-host build and every
+    CI run working, so it must not quietly become a hard dependency.
+    """
+    handshake = local_server.bootstrap(["--data-dir", str(tmp_path)])
+    assert handshake["api_key"]
+    assert (tmp_path / local_server._API_KEY_FILE).exists()
+    assert (tmp_path / local_server._JWT_SECRET_FILE).exists()
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions only")
 def test_api_key_file_is_owner_only(clean_env, tmp_path):
     local_server.bootstrap(["--data-dir", str(tmp_path)])

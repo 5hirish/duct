@@ -44,6 +44,20 @@ fn entry(provider: &str) -> Result<Entry, String> {
 /// silently didn't persist. Name the actual problem instead.
 pub(crate) fn describe_keyring_error(err: KeyringError) -> String {
     let generic = err.to_string();
+    if cfg!(target_os = "macos") {
+        // macOS ties an item's ACL to the code signature of the app that wrote
+        // it. A rebuilt development build is ad-hoc signed, and its identity
+        // changes with every build, so yesterday's item is unreadable today and
+        // the raw error is a bare OSStatus that explains none of that.
+        return match err {
+            KeyringError::NoStorageAccess(_) | KeyringError::PlatformFailure(_) => format!(
+                "the keychain would not release this item ({generic}). macOS grants \
+                 access per application signature, so a rebuilt or re-signed app \
+                 cannot read what an earlier build stored. Saving it again fixes it."
+            ),
+            other => other.to_string(),
+        };
+    }
     if !cfg!(target_os = "linux") {
         return generic;
     }
@@ -62,6 +76,64 @@ pub(crate) fn describe_keyring_error(err: KeyringError) -> String {
 /// same thing.
 const KEYCHAIN_SIDECAR_SERVICE: &str = "ai.getduct.desktop.sidecar";
 const CREDENTIALS_KEY_ACCOUNT: &str = "credentials-encryption-key";
+/// Gates the loopback API the webview talks to.
+const LOCAL_API_KEY_ACCOUNT: &str = "local-api-key";
+/// Signs this install's session tokens.
+const LOCAL_JWT_SECRET_ACCOUNT: &str = "local-jwt-secret";
+
+/// Read a sidecar secret from the keychain, minting it on first run.
+///
+/// **The shell owns these, not the sidecar.** Only one signed binary should
+/// ever touch the keychain: macOS grants access per application signature, so a
+/// second executable reading it doubles both the number of identities that can
+/// drift and the number of ways a user can be shown a keychain prompt. The
+/// sidecar is a separate binary, so the shell reads and passes the value down
+/// the environment instead (`sidecar.rs`). See
+/// `docs/engineering/credential-storage.md` §3.
+///
+/// `mint` encodes the 32 fresh bytes, because the callers disagree about the
+/// alphabet: Fernet wants padded url-safe base64, the rest want unpadded.
+fn sidecar_secret(account: &str, mint: impl Fn(&[u8; 32]) -> String) -> Result<String, String> {
+    let entry = Entry::new(KEYCHAIN_SIDECAR_SERVICE, account).map_err(describe_keyring_error)?;
+
+    match entry.get_password() {
+        Ok(existing) if !existing.trim().is_empty() => return Ok(existing),
+        // An empty stored value is treated as absent and re-minted: it can only
+        // come from a half-finished write, and handing it on would fail later,
+        // somewhere that does not mention the keychain.
+        Ok(_) | Err(KeyringError::NoEntry) => {}
+        Err(e) => return Err(describe_keyring_error(e)),
+    }
+
+    let mut bytes = [0u8; 32];
+    getrandom::fill(&mut bytes).map_err(|e| format!("could not gather randomness: {e}"))?;
+    let value = mint(&bytes);
+    entry.set_password(&value).map_err(describe_keyring_error)?;
+    Ok(value)
+}
+
+/// The `X-API-Key` the webview sends to the loopback sidecar.
+///
+/// It used to be a `0600` file beside the database, which protects it from
+/// other *accounts* on the machine and from nothing running as this user — the
+/// realistic attacker for a desktop app. The keychain gates it on the asking
+/// app's signature instead.
+pub(crate) fn local_api_key() -> Result<String, String> {
+    sidecar_secret(LOCAL_API_KEY_ACCOUNT, |b| {
+        base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE_NO_PAD, b)
+    })
+}
+
+/// The key this install signs its session tokens with.
+///
+/// The sharpest of the local secrets: whoever holds it can mint a valid token
+/// for any user id and drive the whole local API, so a `0600` file was the
+/// weakest link in an otherwise keychain-backed design.
+pub(crate) fn local_jwt_secret() -> Result<String, String> {
+    sidecar_secret(LOCAL_JWT_SECRET_ACCOUNT, |b| {
+        base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE_NO_PAD, b)
+    })
+}
 
 /// The Fernet key the sidecar encrypts stored connector credentials with,
 /// minted on first run and kept in the OS keychain.
@@ -80,24 +152,10 @@ const CREDENTIALS_KEY_ACCOUNT: &str = "credentials-encryption-key";
 /// both treat a failed decrypt as "absent" and degrade to reconnecting — but it
 /// does mean a user who wipes their keychain reconnects their sources.
 pub(crate) fn credentials_encryption_key() -> Result<String, String> {
-    let entry = Entry::new(KEYCHAIN_SIDECAR_SERVICE, CREDENTIALS_KEY_ACCOUNT)
-        .map_err(describe_keyring_error)?;
-
-    match entry.get_password() {
-        Ok(existing) if !existing.trim().is_empty() => return Ok(existing),
-        // An empty stored value is treated as absent and re-minted: it can only
-        // come from a half-finished write, and returning it would hand the
-        // sidecar a key Fernet rejects.
-        Ok(_) | Err(KeyringError::NoEntry) => {}
-        Err(e) => return Err(describe_keyring_error(e)),
-    }
-
-    let mut bytes = [0u8; 32];
-    getrandom::fill(&mut bytes).map_err(|e| format!("could not gather randomness: {e}"))?;
     // Fernet keys are url-safe base64 of exactly 32 bytes, padding included.
-    let key = base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE, bytes);
-    entry.set_password(&key).map_err(describe_keyring_error)?;
-    Ok(key)
+    sidecar_secret(CREDENTIALS_KEY_ACCOUNT, |b| {
+        base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE, b)
+    })
 }
 
 /// Read a stored provider key. Returns "" when none is set.
