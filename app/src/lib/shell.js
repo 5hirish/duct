@@ -8,6 +8,9 @@
  * given command) gracefully keep the plain web behaviour.
  */
 
+/** Where a browser user goes to get the shell. Some flows only exist there. */
+export const DESKTOP_DOWNLOAD_URL = "https://getduct.ai/download";
+
 export function isDesktopShell() {
   return typeof window !== "undefined" && Boolean(window.__TAURI__);
 }

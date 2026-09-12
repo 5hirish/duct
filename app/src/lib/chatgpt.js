@@ -20,6 +20,18 @@ import { getShellInfo, isDesktopShell } from "./shell.js";
 
 /** The shell said "revoked": the user signed out of ChatGPT or removed Duct. */
 export const CHATGPT_REVOKED = "revoked";
+/**
+ * The shell said "cancelled": the sign-in was abandoned on purpose — the
+ * Cancel button, or a newer sign-in taking the port over. Quiet, not an error.
+ */
+export const CHATGPT_CANCELLED = "cancelled";
+
+const PLAN_LABELS = { plus: "ChatGPT Plus", pro: "ChatGPT Pro", team: "ChatGPT Team", free: "ChatGPT Free" };
+
+/** The plan as the user would name it, from the `plan_type` claim the shell reports. */
+export function planLabel(planType) {
+  return PLAN_LABELS[String(planType || "").toLowerCase()] || (planType ? `ChatGPT ${planType}` : "ChatGPT");
+}
 
 let capabilityPromise = null;
 
@@ -58,6 +70,28 @@ export async function chatgptLogin() {
     throw new Error("Signing in with ChatGPT needs the Duct desktop app.");
   }
   return invoke("chatgpt_login");
+}
+
+/**
+ * Abandon a sign-in still waiting on the browser. The pending `chatgptLogin()`
+ * rejects with `CHATGPT_CANCELLED` and the loopback port is released, so the
+ * next attempt can bind it. Harmless when nothing is waiting.
+ *
+ * Tolerates a shell that predates the command: that shell's login still ends
+ * on its own timeout, and there is nothing better to do than let it.
+ */
+export async function chatgptLoginCancel() {
+  if (!(await chatgptAuthAvailable())) return;
+  try {
+    await invoke("chatgpt_login_cancel");
+  } catch {
+    /* older shell: no such command */
+  }
+}
+
+/** Whether a login rejection is the quiet kind — cancelled, not failed. */
+export function isChatgptCancelled(err) {
+  return String(err?.message ?? err) === CHATGPT_CANCELLED;
 }
 
 export async function chatgptLogout() {

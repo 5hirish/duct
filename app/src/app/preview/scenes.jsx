@@ -34,7 +34,8 @@ import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
-import ChatGPTCard from "@/components/connections/ChatGPTCard";
+import ProviderCard from "@/components/connections/ProviderCard";
+import { PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
@@ -375,7 +376,7 @@ export const SCENES = [
     state: "all states",
     group: "ConnectorTile",
     title: "Every state",
-    note: "Connected, partial grant, session-only, not connected, and disabled. The foot is the part that breaks: state left, storage right.",
+    note: "Connected, partial grant, not-yours, session-only, not connected, and disabled. Amber and blue are different claims: partial means degraded, info means it works but the key is Duct's or the machine's, not one the reader added. The foot is the part that breaks: state left, storage right.",
     render: () => (
       <div className="conn-grid">
         <ConnectorTile
@@ -394,6 +395,15 @@ export const SCENES = [
           tone="partial"
           status="Some permissions declined"
           storage={STORAGE_SESSION}
+          onClick={() => {}}
+        />
+        <ConnectorTile
+          logo={LOGO}
+          title="OpenAI"
+          description="GPT models, and image generation for slides and posts."
+          tone="info"
+          status="Duct's key"
+          storage={STORAGE_CLOUD}
           onClick={() => {}}
         />
         <ConnectorTile
@@ -426,14 +436,34 @@ export const SCENES = [
     ),
   },
   {
-    id: "chatgpt-card-web",
-    state: "browser",
-    group: "ChatGPTCard",
-    title: "Asked in a browser",
-    note: "The real component, unmocked: /preview is a browser, so chatgptAuthAvailable() is false and this is exactly what a web user sees. The desktop states (signed out, signed in on a plan) need the shell and cannot be drawn here. Click the tile — the dialog is the answer, and the download is the only action in it.",
+    id: "provider-key-dialog",
+    state: "openai, no key",
+    group: "ProviderCard",
+    title: "The key dialog",
+    note: "Click the tile. Check: the eye sits inside the field and the field keeps its full width; label/input are tighter than input/notes; the checkbox is a control, not small print. The ChatGPT plan section is the browser variant here \u2014 steps plus the download; in the desktop shell it is the Continue with ChatGPT button itself (with Cancel beside it while it waits), then the signed-in account row carrying Disconnect and Reconnect \u2014 the same pair, in the same variants, as every OAuth connector. Type into the field to see the prefix warning replace the storage line.",
     render: () => (
       <div className="conn-grid">
-        <ChatGPTCard enabled />
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "openai")}
+          logo={LOGO}
+          status={{ id: "openai", source: "none", reachable: false, stored: false }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "provider-key-mismatch",
+    state: "stale value in the slot",
+    group: "ProviderCard",
+    title: "Not a key we can use",
+    note: "What a leftover credential looks like — a JWT that was never an Anthropic key. The server refused it, so the dot is grey and the source reads none, not \"Your key\". Open it: the alert is in the field notes and Remove key is in the footer, which is the whole point of the state. It asks before it drops anything, and the confirm names where the key lives.",
+    render: () => (
+      <div className="conn-grid">
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "anthropic")}
+          logo={LOGO}
+          status={{ id: "anthropic", source: "none", reachable: false, stored: false, key_mismatch: true }}
+        />
       </div>
     ),
   },

@@ -17,10 +17,17 @@
 // anything that needs its own interaction just sits above it.
 
 import { ChevronRight } from "lucide-react";
+import ConnectorDot from "./ConnectorDot";
 import StorageBadge from "./StorageBadge";
 
 /**
- * @param tone  "on" | "partial" | "off" — drives the status dot's colour.
+ * @param tag  Optional short capability label beside the title ("Works with
+ *   ChatGPT"). A fact about what the tile accepts, not a state — states go in
+ *   the foot. One tile has one today; it is a prop so the second does not
+ *   need a second markup path.
+ * @param tone  "on" | "info" | "partial" | "off" — drives the status dot's
+ *   colour. "info" is reachable-but-not-yours (Duct's key, or this machine's);
+ *   "partial" is reachable-but-degraded. They are different claims.
  * @param status  Short state line, e.g. "Connected — Acme Ads".
  * @param storage  STORAGE_* constant — where the credential lives. On the tile
  *   rather than only in the dialog because "saved to your account" and "living
@@ -31,14 +38,13 @@ export default function ConnectorTile({
   logo,
   title,
   description,
+  tag,
   tone = "off",
   status,
   storage,
   onClick,
   disabled = false,
 }) {
-  const dotTone = tone === "on" ? " conn-dot--on" : tone === "partial" ? " conn-dot--partial" : "";
-
   return (
     <div className={`conn-tile${disabled ? " is-disabled" : ""}`}>
       <span className="conn-tile-logo" aria-hidden="true">
@@ -61,13 +67,14 @@ export default function ConnectorTile({
               {title}
             </button>
           )}
+          {tag && <span className="conn-tile-tag">{tag}</span>}
           {!disabled && (
             <ChevronRight className="conn-tile-chevron" size={16} aria-hidden="true" />
           )}
         </div>
         <p className="conn-tile-desc">{description}</p>
         <div className={`conn-tile-foot${tone === "on" ? " conn-tile-foot--on" : ""}`}>
-          <span className={`conn-dot${dotTone}`} />
+          <ConnectorDot tone={tone} />
           {/* State on the left, where it is read; where the credential lives
               on the right. The word stays even when the dot is green — the dot
               alone made the left half of the row look empty, and colour is

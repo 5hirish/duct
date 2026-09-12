@@ -71,11 +71,14 @@
   color: var(--muted-foreground);
 }
 
-/* "Duct cloud" is not a warning and not a win — it is a fact about who pays,
-   so it reads as information rather than as either. */
+/* A key that is not yours — Duct's, or this machine's — is not a warning and
+   not a win, it is a fact about who pays. Blue says that; amber would not.
+   Both literals here were hand-picked light-mode blues with no dark partner,
+   so the chip kept its light colours on a dark background; `--info` is the
+   same colour the connector tile's dot uses, themed. */
 .mt-chip--info {
-  background: color-mix(in oklch, oklch(0.62 0.14 250) 16%, transparent);
-  color: color-mix(in oklch, oklch(0.48 0.14 250) 88%, var(--foreground));
+  background: color-mix(in oklch, var(--info) 16%, transparent);
+  color: color-mix(in oklch, var(--info) 88%, var(--foreground));
 }
 
 /* ── Provider marks ────────────────────────────────────── */

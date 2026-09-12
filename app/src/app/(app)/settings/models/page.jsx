@@ -32,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ChatGPTCard from "@/components/connections/ChatGPTCard";
 import ProviderCard from "@/components/connections/ProviderCard";
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import AutoFallbackCard from "@/components/AutoFallbackCard";
@@ -675,16 +674,16 @@ function ModelSettings() {
           </p>
 
           <div className="conn-grid">
-            {/* Desktop only, and only while the backend allows the path —
-                renders nothing otherwise. First because it is the one
-                provider that costs nothing extra. */}
-            <ChatGPTCard enabled={chatgptAuthEnabled} />
+            {/* The ChatGPT plan is inside the OpenAI card, not a tile of its
+                own: one company, one card. `planEnabled` is the backend's
+                kill switch for that path and only OpenAI reads it. */}
             {PROVIDERS.map((provider) => (
               <ProviderCard
                 key={provider.id}
                 provider={provider}
                 logo={LOGOS[provider.id]}
                 status={providersById[provider.statusId]}
+                planEnabled={chatgptAuthEnabled}
               />
             ))}
             {/* Desktop only, and only in a build that can actually report —

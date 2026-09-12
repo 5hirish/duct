@@ -52,6 +52,13 @@
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.55 0.13 78);
   --warning-foreground: oklch(1 0 0);
+  /* The third status colour, for a state that is neither a win nor a problem:
+     a key that works but is not yours — this machine's env file, or Duct's own
+     account. Amber was the only non-green available and it read as a fault,
+     which is wrong about a run that will succeed. Hue 250 is far enough from
+     the 270 primary to stay a status colour rather than a second accent. */
+  --info: oklch(0.52 0.15 250);
+  --info-foreground: oklch(1 0 0);
   --border: oklch(0.92 0.005 80);
   --input: oklch(0.92 0.005 80);
   --ring: oklch(0.52 0.22 270);

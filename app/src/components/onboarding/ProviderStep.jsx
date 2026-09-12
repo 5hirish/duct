@@ -30,9 +30,9 @@ import { verifyProvider } from "../../lib/onboardingApi";
 import { PROVIDERS, getProviderKey, setProviderKey } from "../../lib/providerKeys";
 import { rememberProviderKey } from "../../lib/providerKeysRemote";
 import { fetchProviderStatus } from "../../lib/modelTiers";
-import { chatgptAuthAvailable, chatgptLogin, chatgptStatus } from "../../lib/chatgpt";
+import { chatgptAuthAvailable, chatgptLogin, chatgptLoginCancel, chatgptStatus, isChatgptCancelled } from "../../lib/chatgpt";
 import { isDesktopShell } from "../../lib/shell";
-import { planLabel } from "../connections/ChatGPTCard";
+import { planLabel } from "../../lib/chatgpt";
 
 const RECOMMENDED_ID = "openai";
 const OPENAI_STATUS_ID = "openai";
@@ -220,7 +220,10 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
       const verdict = await verifyProvider(OPENAI_STATUS_ID);
       report(verdict, { providerId: RECOMMENDED_ID, statusId: OPENAI_STATUS_ID, subscription: true });
     } catch (err) {
-      setResult({ ok: false, code: "unreachable", detail: String(err?.message || err) });
+      // Cancelled is the user's own Cancel below, not a failure to explain.
+      if (!isChatgptCancelled(err)) {
+        setResult({ ok: false, code: "unreachable", detail: String(err?.message || err) });
+      }
     } finally {
       setChatgptBusy(false);
     }
@@ -246,16 +249,25 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
                 : "Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history."}
             </p>
           </div>
-          <Button type="button" size="lg" onClick={continueWithChatgpt} disabled={anyBusy}>
-            {chatgptBusy && <Spinner className="size-4" />}
-            {chatgptBusy
-              ? connectedPlan
-                ? "Checking…"
-                : "Finish in your browser…"
-              : connectedPlan
-                ? "Use this plan"
-                : "Continue with ChatGPT"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" size="lg" onClick={continueWithChatgpt} disabled={anyBusy}>
+              {chatgptBusy && <Spinner className="size-4" />}
+              {chatgptBusy
+                ? connectedPlan
+                  ? "Checking…"
+                  : "Finish in your browser…"
+                : connectedPlan
+                  ? "Use this plan"
+                  : "Continue with ChatGPT"}
+            </Button>
+            {/* A closed browser tab tells the shell nothing; this is the way
+                back short of the sign-in's own five-minute timeout. */}
+            {chatgptBusy && !connectedPlan && (
+              <Button type="button" variant="ghost" size="lg" onClick={() => chatgptLoginCancel()}>
+                Cancel
+              </Button>
+            )}
+          </div>
         </div>
       )}
 

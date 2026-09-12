@@ -1,5 +1,7 @@
 "use client";
 
+import { Fragment } from "react";
+
 // "Where does this credential actually live?" — one glyph, used by every card
 // on the Connections page so the answer reads the same everywhere.
 //
@@ -83,8 +85,15 @@ export default function StorageBadge({ storage, detail = false }) {
   if (!label) return null;
   const sentence = STORAGE_DETAIL[storage];
 
+  // The detail form is glyph + sentence as ONE row. As a bare fragment the two
+  // became separate children of whatever grid the caller had — and the
+  // provider dialog's notes are a grid — so the lock sat alone on a line with
+  // its sentence a row below, reading as an icon that had lost its label.
+  const Wrap = detail ? "span" : Fragment;
+  const wrapProps = detail ? { className: "conn-storage-detail" } : {};
+
   return (
-    <>
+    <Wrap {...wrapProps}>
       {/* No local Provider: the root layout already wraps the whole app in one
           (`app/layout.js`). A second one here was not merely redundant — it
           overrode `delayDuration` for this tooltip alone, so the storage glyph
@@ -113,6 +122,6 @@ export default function StorageBadge({ storage, detail = false }) {
         </TooltipContent>
       </Tooltip>
       {detail && <p className="conn-hint">{sentence}</p>}
-    </>
+    </Wrap>
   );
 }
