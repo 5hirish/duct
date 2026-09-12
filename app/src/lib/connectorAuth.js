@@ -27,14 +27,76 @@ export const CONNECTOR_TOKEN_KEYS = {
 };
 
 /**
+ * Where the connect should land once the token is home, and which connector
+ * just arrived. Both the browser flow (a redirect to /connections with the
+ * token in the fragment) and the desktop flow (a deep link the shell turns
+ * into /connections?connector=&auth_code=) end on the Connections page, which
+ * is the wrong place when the connect was asked for mid-conversation: the
+ * user was answering the agent, and came back to a settings screen with the
+ * agent's question a navigation away. So the page that started the connect
+ * parks where to return, and the Connections page — the one place every flow
+ * passes through — sends them back and flags which connector it adopted, so
+ * the pause card that asked can answer itself.
+ *
+ * Session storage, same-origin paths only: the return is a UI convenience,
+ * never an auth decision.
+ */
+const CONNECTOR_RETURN_KEY = "duct_connector_return";
+const CONNECTOR_CONNECTED_KEY = "duct_connector_connected";
+
+function samePath(path) {
+  return typeof path === "string" && path.startsWith("/") && !path.startsWith("//");
+}
+
+/** The path parked by the page that started the last connect, consumed once. */
+export function consumeConnectorReturn() {
+  try {
+    const path = sessionStorage.getItem(CONNECTOR_RETURN_KEY) || "";
+    sessionStorage.removeItem(CONNECTOR_RETURN_KEY);
+    return samePath(path) ? path : "";
+  } catch {
+    return "";
+  }
+}
+
+/** Record that `connectorType` just came home, for the card that asked. */
+export function markConnectorConnected(connectorType) {
+  try {
+    sessionStorage.setItem(CONNECTOR_CONNECTED_KEY, connectorType);
+  } catch {
+    /* the card keeps its manual "I've connected it" button */
+  }
+}
+
+/** True once, if `connectorType` is the connector that just came home. */
+export function consumeConnectorConnected(connectorType) {
+  try {
+    if (sessionStorage.getItem(CONNECTOR_CONNECTED_KEY) !== connectorType) return false;
+    sessionStorage.removeItem(CONNECTOR_CONNECTED_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Begin OAuth for one connector.
  *
  * Returns "browser" when the system browser took over — the caller should show
  * a waiting state, because the result arrives later through the deep link — or
  * "redirect" when this window is navigating away, in which case nothing the
  * caller does afterwards runs.
+ *
+ * `returnTo` is where the Connections page should send the user once the
+ * token is home; omit it to stay on the Connections page.
  */
-export async function startConnectorOAuth(authorizeUrl) {
+export async function startConnectorOAuth(authorizeUrl, { returnTo = "" } = {}) {
+  try {
+    if (samePath(returnTo)) sessionStorage.setItem(CONNECTOR_RETURN_KEY, returnTo);
+    else sessionStorage.removeItem(CONNECTOR_RETURN_KEY);
+  } catch {
+    /* they land on the Connections page instead */
+  }
   if (isDesktopShell()) {
     const info = await getShellInfo();
     if (info?.capabilities?.browserConnectors) {

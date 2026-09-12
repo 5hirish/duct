@@ -16,7 +16,7 @@
 // That route exists only on that prompt (lib/signInSources.js); every other
 // prompt, and every other sign-in, is unchanged.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,9 @@ import {
   resumeAuditPath,
 } from "@/lib/signInSources";
 import { BASE } from "../../lib/api";
-import { startConnectorOAuth } from "../../lib/connectorAuth";
+import { consumeConnectorConnected, startConnectorOAuth } from "../../lib/connectorAuth";
 
-export default function ConnectionRequest({ request, onAnswer, disabled, signInToConnect = null }) {
+export default function ConnectionRequest({ request, onAnswer, disabled, signInToConnect = null, returnTo = "" }) {
   const router = useRouter();
   // "" | "starting" | "browser" — "browser" is the desktop shell waiting on the
   // system browser, where this window never navigates and the state is the only
@@ -42,11 +42,25 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
   const isManual = authKind === "manual" || !authorizePath;
   const viaSignIn = Boolean(signInToConnect?.conversationId) && !isManual && canSignInToConnect(connectorId);
 
+  // The connect left this page (browser redirect) or this window (desktop
+  // shell), and the Connections page sent the user back here with the
+  // connector flagged as adopted. The card is on screen again because the
+  // thread re-raised its pause; answer it, once the session can take an
+  // answer, rather than making the user press "I've connected it" for a
+  // thing the app already knows happened.
+  const autoAnswered = useRef(false);
+  useEffect(() => {
+    if (disabled || autoAnswered.current) return;
+    if (!consumeConnectorConnected(connectorId)) return;
+    autoAnswered.current = true;
+    onAnswer({ connected: true });
+  }, [connectorId, disabled, onAnswer]);
+
   async function connect() {
     if (phase === "starting") return;
     setPhase("starting");
     try {
-      const mode = await startConnectorOAuth(`${BASE}${authorizePath}`);
+      const mode = await startConnectorOAuth(`${BASE}${authorizePath}`, { returnTo });
       setPhase(mode === "browser" ? "browser" : "starting");
     } catch {
       setPhase("");

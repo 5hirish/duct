@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BASE } from "../../../lib/api";
 import {
@@ -20,7 +21,12 @@ import {
   saveServerConnector,
   unbindProjectConnector,
 } from "../../../lib/connectorsApi";
-import { CONNECTOR_TOKEN_KEYS, exchangeConnectorCode } from "../../../lib/connectorAuth";
+import {
+  CONNECTOR_TOKEN_KEYS,
+  consumeConnectorReturn,
+  exchangeConnectorCode,
+  markConnectorConnected,
+} from "../../../lib/connectorAuth";
 import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
 import { getActiveProject } from "../../../lib/projects";
 
@@ -40,6 +46,7 @@ import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSel
 import { LOGOS } from "../../../components/connections/logos";
 
 export default function ConnectionsPage() {
+  const router = useRouter();
   const [ga4Connected, setGa4Connected] = useState(false);
   const [gscConnected, setGscConnected] = useState(false);
   const [gtmConnected, setGtmConnected] = useState(false);
@@ -199,6 +206,22 @@ export default function ConnectionsPage() {
     else await syncTokenToServer(connectorType, refreshToken);
   }
 
+  // A connect that started from a conversation ends back in it. Only after
+  // the server row is written: the agent answers "connected" by re-reading
+  // the database, not by trusting the browser, so returning a beat early
+  // would have it report the source as still missing.
+  async function returnToRequester(connectorType, pending) {
+    const back = consumeConnectorReturn();
+    if (!back) return;
+    try {
+      await pending;
+    } catch {
+      /* the card keeps its manual "I've connected it" button for this case */
+    }
+    markConnectorConnected(connectorType);
+    router.replace(back);
+  }
+
   async function removeServerRow(connectorType) {
     const row = serverRows[connectorType];
     if (!row) return;
@@ -252,15 +275,19 @@ export default function ConnectionsPage() {
 
     const authed = hasAuthToken();
     setSignedIn(authed);
+    const synced = [];
     if (authed) {
       refreshServerRows();
       // Persist newly-arrived OAuth tokens server-side (encrypted) so agent
       // executions and scheduled pulls can run without this browser tab.
-      if (arrived.gads_refresh_token) syncGadsToServer();
-      if (arrived.ga4_refresh_token) syncTokenToServer("ga4", arrived.ga4_refresh_token);
-      if (arrived.gsc_refresh_token) syncTokenToServer("gsc", arrived.gsc_refresh_token);
-      if (arrived.gtm_refresh_token) syncTokenToServer("gtm", arrived.gtm_refresh_token);
+      if (arrived.gads_refresh_token) synced.push(syncGadsToServer());
+      if (arrived.ga4_refresh_token) synced.push(syncTokenToServer("ga4", arrived.ga4_refresh_token));
+      if (arrived.gsc_refresh_token) synced.push(syncTokenToServer("gsc", arrived.gsc_refresh_token));
+      if (arrived.gtm_refresh_token) synced.push(syncTokenToServer("gtm", arrived.gtm_refresh_token));
     }
+    // One grant per callback, so the first arrival names the connector.
+    const arrivedKey = Object.keys(arrived)[0];
+    if (arrivedKey) returnToRequester(connectorTypeForStorageKey(arrivedKey), Promise.all(synced));
 
     // Desktop shell: the OAuth ran in the system browser and came home through
     // the shell's deep link, which navigates this window to
@@ -275,9 +302,11 @@ export default function ConnectionsPage() {
       window.history.replaceState(null, "", window.location.pathname);
       setConnectError("");
       exchangeConnectorCode(codeParam)
-        .then(({ connector_type, refresh_token, granted_scopes }) =>
-          adoptConnectorToken(connector_type || connectorParam, refresh_token, granted_scopes || ""),
-        )
+        .then(({ connector_type, refresh_token, granted_scopes }) => {
+          const type = connector_type || connectorParam;
+          // adoptConnectorToken awaits the server sync, so the return waits too.
+          return returnToRequester(type, adoptConnectorToken(type, refresh_token, granted_scopes || ""));
+        })
         .catch(() =>
           setConnectError(
             "That connection didn't finish — the link expires after a minute. Please try again.",

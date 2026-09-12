@@ -24,7 +24,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AgentChat from "@/components/workspace/AgentChat";
+import ComposerDials from "@/components/workspace/ComposerDials";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
+import { AUTONOMY_ASK } from "@/lib/projectsApi";
+import { getProjectById } from "@/lib/projects";
 import { MarkdownView } from "@/components/artifacts/ArtifactRenderer";
 import { useAgentSession } from "../../hooks/useAgentSession";
 import { getArtifactContent, listArtifactVersions } from "../../lib/artifactsApi";
@@ -50,6 +53,13 @@ export default function InsightsWorkspace({
   // Streamed brief text also lives in a ref: the event callback would
   // otherwise close over a stale value on every chunk.
   const briefRef = useRef("");
+  // The posture this conversation runs at. Seeded from the stored project,
+  // corrected by PIPELINE_STARTED (the backend may step it down for the
+  // model), and changed from the composer chip — which writes the project
+  // and reaches the agent at its next message.
+  const [autonomy, setAutonomy] = useState(
+    () => (projectId && getProjectById(projectId)?.autonomyLevel) || AUTONOMY_ASK,
+  );
 
   const body = useMemo(
     () => ({
@@ -96,7 +106,10 @@ export default function InsightsWorkspace({
         // The runner emits one per data pull, labelled with the window it
         // covers. Anything else with a step_id is ignored rather than guessed at.
         if (event.step_id === InsightsStep.COLLECT_SOURCE_DATA) {
-          setFetched((prev) => [...prev, { label: event.label || "", ok: event.status === "success" }]);
+          setFetched((prev) => [
+            ...prev,
+            { label: event.label || "", ok: event.status === "success", error: event.error || "" },
+          ]);
         }
         break;
       default:
@@ -114,6 +127,11 @@ export default function InsightsWorkspace({
     hydrateThreadState: true,
     onEvent,
   });
+
+  useEffect(() => {
+    const level = agent.started?.autonomy;
+    if (level) setAutonomy(level);
+  }, [agent.started?.autonomy]);
 
   // A stored document in the right pane, from the desk, where opening a brief
   // means opening the thread that argued for it.
@@ -168,6 +186,16 @@ export default function InsightsWorkspace({
   const shown = versions.length ? versions[selected < 0 ? versions.length - 1 : selected] : null;
   const hasBrief = Boolean(shown) || Boolean(writing);
 
+  // A connect asked for mid-run comes back to this thread, resumed — never to
+  // the ?q= form of this page, which would ask the question again from scratch.
+  const connectReturnTo = useMemo(() => {
+    const cid = agent.conversationId || conversationId;
+    if (!cid) return "";
+    const qs = new URLSearchParams({ conversation: cid });
+    if (projectId) qs.set("project", projectId);
+    return `/insights/session?${qs}`;
+  }, [agent.conversationId, conversationId, projectId]);
+
   const chat = (
     <AgentChat
       title="Insights"
@@ -195,10 +223,14 @@ export default function InsightsWorkspace({
       onRetry={handleRetry}
       onStop={() => agent.stop({ keepReady: agent.opened })}
       questionsCopy={QUESTIONS_COPY}
+      connectReturnTo={connectReturnTo}
+      composerTools={
+        <ComposerDials projectId={projectId} autonomy={autonomy} onAutonomyChange={setAutonomy} deferred />
+      }
       inputPlaceholder="Ask about your growth data…"
       inputAriaLabel="Message the insights agent"
       startingLabel="Opening the session…"
-      headerExtra={<AutonomyBadge autonomy={agent.started} />}
+      headerExtra={<AutonomyBadge autonomy={agent.started} level={autonomy} />}
     />
   );
 
@@ -262,11 +294,13 @@ const AUTONOMY_LABELS = {
  * model driving it is not on the allowlist for `auto`, and saying so is the
  * difference between a considered step-down and an agent that mysteriously
  * keeps asking questions. */
-function AutonomyBadge({ autonomy }) {
-  const level = autonomy?.autonomy || "";
+function AutonomyBadge({ autonomy, level: current = "" }) {
+  // The composer chip is the live value once the person touches it; the
+  // event is what the run opened with.
+  const level = current || autonomy?.autonomy || "";
   const configured = autonomy?.autonomy_configured || "";
   if (!level) return null;
-  const steppedDown = configured && configured !== level;
+  const steppedDown = configured && configured !== level && current === (autonomy?.autonomy || "");
   return (
     <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
       <span className="rounded-full bg-muted px-2 py-0.5 font-medium uppercase tracking-wide">{level}</span>
@@ -370,7 +404,14 @@ function DataPane({ fetched }) {
           <span className={f.ok ? "text-green-500" : "text-destructive"} aria-hidden="true">
             {f.ok ? "✓" : "!"}
           </span>
-          <span className={f.ok ? "" : "text-muted-foreground"}>{f.label}</span>
+          <span className={f.ok ? "" : "text-muted-foreground"}>
+            {f.label}
+            {/* The provider's own sentence. The chat paraphrases a failure;
+                this is where the person debugging it reads the real one. */}
+            {!f.ok && f.error && (
+              <span className="mt-0.5 block break-words font-mono text-[11px] text-destructive/80">{f.error}</span>
+            )}
+          </span>
         </li>
       ))}
     </ul>
