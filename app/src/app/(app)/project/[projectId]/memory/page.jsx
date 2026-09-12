@@ -74,9 +74,8 @@ function ProjectMemory({ projectId }) {
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        What Duct knows about this project, and where each fact came from. Agents read this
-        before every run — confirm what they propose, correct what they got wrong, pin what
-        should always be in view.
+        What Duct knows about this project. Agents read it before every run — confirm,
+        correct, or pin a fact so it stays in view.
       </p>
 
       <MemoryTimeline

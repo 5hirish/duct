@@ -283,9 +283,7 @@ export function UsageEmpty({ windowDays, earlier = null, onWiden }) {
         </>
       }
     >
-      The first agent run fills this in: what it cost, which agent spent it, which model. Below
-      is a normal month — and the thing worth noticing is the deep model, 2% of the calls and
-      40% of the bill.
+      Your first agent run fills this in. Below is a normal month.
     </EmptyState>
   );
 }

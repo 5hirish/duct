@@ -58,10 +58,8 @@ export default function UserMemoryPage() {
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        How you like to be worked with — the depth and tone you want, the methods you
-        insist on, the tools you trust. This follows you across every project and is
-        private to you. Your preferences land here automatically; add anything else you
-        want every agent to know.
+        How you like to be worked with. Every agent reads this, on every project, and
+        only you can see it.
       </p>
 
       <MemoryTimeline

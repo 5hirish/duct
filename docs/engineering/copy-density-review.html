@@ -223,7 +223,7 @@
   <em>over</em>-written in a specific, repeating way: the sentence that explains the design sits
   next to the sentence that describes the choice, and both ship. Here is where, and which ones are
   a layout problem rather than a writing one.</p>
-  <div class="byline">2026-09-12 · 308 prose strings scanned · excludes <code>app/preview</code>, tests, <code>ui/</code> primitives and agent prompts</div>
+  <div class="byline">2026-09-12 · 308 prose strings scanned · <b>every finding below shipped the same day</b>, in seven commits · excludes <code>app/preview</code>, tests, <code>ui/</code> primitives and agent prompts</div>
 </header>
 
 <p class="lede">Method: every JSX text node and string literal in <code>app/src</code> of eight words or
@@ -467,20 +467,26 @@ card an agent's proposed change appears inside.</p>
   rule, which this sweep extends from pickers to panels.</p>
 </div>
 
-<p>Suggested order — cheapest and most-seen first:</p>
+<p>Done in this order — cheapest and most-seen first, one commit each:</p>
 
-<ul class="clean">
-  <li><strong>1 ·</strong> The fifteen <code>Failed to …</code> fallbacks → <code>LoadError</code>.
-  Mechanical, and it fixes a documented voice violation rather than a taste call.</li>
-  <li><strong>2 ·</strong> Connections tile descriptions to ≤ 10 words. One file, thirteen strings,
-  and it is the page every new user lands on second.</li>
-  <li><strong>3 ·</strong> <code>TelemetryCard</code> → the two-column list. The largest single
-  paragraph in the app, and a privacy disclosure is where a scannable shape matters most.</li>
-  <li><strong>4 ·</strong> desktop-auth: one-sentence bodies plus <code>Copy diagnostics</code>.
-  Deletes 100+ words and improves the bug reports that come back.</li>
-  <li><strong>5 ·</strong> The trim table, one commit per surface.</li>
-  <li><strong>6 ·</strong> <code>ChangeSetCard</code> emoji → lucide.</li>
-</ul>
+<div class="tablewrap">
+<table>
+  <thead><tr><th class="num">#</th><th>What shipped</th><th>Commit</th></tr></thead>
+  <tbody>
+    <tr><td class="num">1</td><td>Fifteen <code>Failed to …</code> fallbacks and eight <code>Something went wrong</code> strings rewritten to name what did not happen and what is still true; four section failures moved to <code>LoadError</code>; <code>AccountsTab</code>'s failed load stopped rendering as an empty list; <code>PublishModal</code>'s duplicate error translator deleted</td><td class="mono">a89d111</td></tr>
+    <tr><td class="num">2</td><td>Thirteen connector tiles cut to metric nouns, ten words or fewer</td><td class="mono">0ef0f76</td></tr>
+    <tr><td class="num">3</td><td><code>TelemetryCard</code> is a Sends / Never-sends list; the panel split out so <code>/preview</code> can render it, with a scene in both build states</td><td class="mono">9daeca0</td></tr>
+    <tr><td class="num">4</td><td>desktop-auth bodies to one sentence each; <code>Copy details</code> button with the reason code, replacing "report this with the version number from the About screen" ×3</td><td class="mono">a5a83c6</td></tr>
+    <tr><td class="num">5</td><td>The trim table, plus the usage caption and both memory ledes</td><td class="mono">c14d964</td></tr>
+    <tr><td class="num">6</td><td><code>ChangeSetCard</code>'s six emoji → lucide on semantic tokens, and the card gets its first <code>/preview</code> scene</td><td class="mono">b5e7b49</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>One thing changed shape in the doing. The audit's <em>Remember this session</em> switch was
+listed as a trim; it became a pattern fix instead, because the sentence only described the OFF
+state and the two switches on the Models page already describe whichever state they are in. It
+now does the same — which is also the only version that is true while the switch is on.</p>
 
 <footer>
   <p>Companion to <a href="../../app/DESIGN.md">app/DESIGN.md</a> (Voice &amp; microcopy, Not AI slop)
