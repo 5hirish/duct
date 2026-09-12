@@ -175,6 +175,10 @@ _MODEL_LABEL: dict[str, str] = {
     ImageModel.GPT_IMAGE_2_5_SUNBURST.value: "GPT Image 2.5 Sunburst",
     ImageModel.GPT_IMAGE_2.value: "GPT Image 2",
     ImageModel.GROK_IMAGINE_IMAGE_2.value: "Grok Imagine 2.0",
+    ImageModel.OR_GEMINI_3_1_FLASH_IMAGE.value: "Gemini 3.1 Flash Image",
+    ImageModel.OR_SEEDREAM_5_PRO.value: "Seedream 5 Pro",
+    ImageModel.OR_FLUX_2_PRO.value: "FLUX.2 Pro",
+    ImageModel.OR_RECRAFT_V4_VECTOR.value: "Recraft V4 Vector (SVG)",
 }
 
 

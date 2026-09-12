@@ -71,21 +71,37 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
   **Images are a second provider inside a content run, and not a fixed one.**
   The conversation runs on whatever key the user brought for chat; the pictures
-  run on whatever *image-capable* key they brought — Gemini, OpenAI or xAI, in
-  that order of preference (`agents/models.IMAGE_PROVIDER_ORDER`). The seam is
+  run on whatever *image-capable* key they brought — Gemini, OpenAI, xAI or
+  OpenRouter, in that order of preference
+  (`agents/models.IMAGE_PROVIDER_ORDER`; the gateway is last because a
+  first-party key for the same model is one hop fewer). The seam is
   `service/images/`: one request shape, one `ImageAPIError`, one factory
-  (`image_client_for`), three backends (`service/google/gemini/client.py`,
-  `service/openai/images.py`, `service/xai/images.py`). `routes/content.py`
+  (`image_client_for`), four backends (`service/google/gemini/client.py`,
+  `service/openai/images.py`, `service/xai/images.py`,
+  `service/openrouter/images.py`). `routes/content.py`
   resolves the image run once per session (`agents/engines.resolve_image_run`)
   and stashes provider + key on it; the tools spend that or decline, and the
-  decline names all three providers. The agent's tool schema still defaults to
-  the Gemini model id, so `image_model_for` swaps in the resolved provider's
-  default rather than refusing — the agent asked for an image, not a Google
-  image. Adding a backend means a client module, an `ImageModel` entry whose
-  prefix `provider_of` recognises, a `DEFAULT_IMAGE_MODELS` row, and a branch in
+  decline names every provider that would unblock the user. The agent's tool
+  schema still defaults to the Gemini model id, so `image_model_for` swaps in
+  the resolved provider's default rather than refusing — the agent asked for an
+  image, not a Google image. Adding a backend means a client module, an
+  `ImageModel` entry whose prefix `provider_of` recognises, a
+  `DEFAULT_IMAGE_MODELS` row, and a branch in
   the factory; `/providers/status` and `/models/catalogue` derive the settings
   page's Images row from those same tables, so nothing in the browser lists a
-  model. The ChatGPT-subscription route (`agents/core/codex.py`) is deliberately
+  model.
+
+  **The OpenRouter backend is a short list, not a catalogue.** They front 52
+  image models; `ImageModel` names four, because it is a Pydantic enum in the
+  content agent's tool schema and opening it to free-form slugs — the way the
+  *chat* catalogue deliberately does — would let a run invent a model and fail
+  on a slide. Three of the four reach vendors no first-party key here can
+  (Seedream, Flux, Recraft, the last emitting SVG); the fourth is the cheap
+  Gemini workhorse. Adding one is an enum line plus a `_CAPS` row in
+  `service/openrouter/images.py`, and that row is not optional: the four models
+  disagree about `resolution`, ratio lists and how many images one call may
+  return, so every request is clamped to the table and the clamp is logged
+  rather than sent hopefully. The ChatGPT-subscription route (`agents/core/codex.py`) is deliberately
   not an image backend: it can draw through Codex's hosted tool, but OpenAI's
   own docs scope subscription sign-in to Codex products and it is Plus-and-up,
   per-minute-quota'd, and unofficial — the wrong thing to put a customer's slide

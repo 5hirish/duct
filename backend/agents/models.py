@@ -177,6 +177,20 @@ class ImageModel(str, Enum):
 
     xAI. grok-imagine-image-2.0 is the id the generation and edit endpoints
     document; the plain ``grok-imagine-image`` alias is the older standard tier.
+
+    OpenRouter. A *deliberately short* list against a catalogue of 52, and the
+    shortness is the design. Three of these four reach vendors no first-party
+    key here can — Seedream, Flux, Recraft — and Recraft emits SVG, which is a
+    capability nothing else in this enum has rather than another raster model.
+    The fourth is the Gemini workhorse, listed because a run needs a cheap
+    default and the gateway bills it at Google's own rate.
+
+    Unlike the OpenRouter *chat* slugs, an unrecognised image slug is **not**
+    passed through: ``ImageModel`` is a Pydantic enum in the content agent's
+    tool schema, so opening it to free-form strings would let a run name a
+    model that does not exist and fail on a slide. Adding one is one line and
+    a ``_CAPS`` row in service/openrouter/images.py — cheap, on purpose, and
+    the right moment for it is when somebody asks for that model by name.
     """
 
     GEMINI_3_1_FLASH_IMAGE      = "gemini-3.1-flash-image"
@@ -186,6 +200,10 @@ class ImageModel(str, Enum):
     GPT_IMAGE_2_5_SUNBURST      = "gpt-image-2.5-sunburst"
     GPT_IMAGE_2                 = "gpt-image-2"
     GROK_IMAGINE_IMAGE_2        = "grok-imagine-image-2.0"
+    OR_GEMINI_3_1_FLASH_IMAGE   = "google/gemini-3.1-flash-image"
+    OR_SEEDREAM_5_PRO           = "bytedance-seed/seedream-5-0-pro"
+    OR_FLUX_2_PRO               = "black-forest-labs/flux.2-pro"
+    OR_RECRAFT_V4_VECTOR        = "recraft/recraft-v4-styles-vector"
 
 
 # gemini-3.1-flash-image: the high-efficiency, high-volume flash image model
@@ -199,6 +217,7 @@ DEFAULT_IMAGE_MODELS: dict[Provider, ImageModel] = {
     Provider.GOOGLE_GENAI: ImageModel.GEMINI_3_1_FLASH_IMAGE,
     Provider.OPENAI:       ImageModel.GPT_IMAGE_2_5_FLARE,
     Provider.XAI:          ImageModel.GROK_IMAGINE_IMAGE_2,
+    Provider.OPENROUTER:   ImageModel.OR_GEMINI_3_1_FLASH_IMAGE,
 }
 
 # Which key a run spends on images, when the user brought more than one.
@@ -210,6 +229,11 @@ IMAGE_PROVIDER_ORDER: tuple[Provider, ...] = (
     Provider.GOOGLE_GENAI,
     Provider.OPENAI,
     Provider.XAI,
+    # Last, and last on purpose: a gateway is a hop, so a first-party key for
+    # the same model is the more direct route whenever the user brought one.
+    # Its place in this tuple is what it is here for — a run whose only key is
+    # an OpenRouter one used to resolve to None and decline every picture.
+    Provider.OPENROUTER,
 )
 
 

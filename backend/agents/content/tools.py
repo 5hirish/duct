@@ -101,7 +101,8 @@ _POST_LOCKS: dict[str, asyncio.Lock] = {}
 # OpenAI key to Google for something their own key already does.
 _NO_IMAGE_KEY = (
     "Image {verb} needs an API key from a provider with an image model \u2014 "
-    "Google Gemini, OpenAI or xAI. Add one in Settings \u2192 Providers, then try again."
+    "Google Gemini, OpenAI, xAI or OpenRouter. Add one in Settings \u2192 Providers, "
+    "then try again."
 )
 
 def _post_lock(key: str) -> asyncio.Lock:
