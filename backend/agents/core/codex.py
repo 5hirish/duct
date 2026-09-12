@@ -92,6 +92,16 @@ _REFRESH_HELD_BY_SHELL = "held-by-desktop-shell"
 # When a JWT carries no ``exp`` claim, assume OpenAI's usual lifetime.
 _DEFAULT_ACCESS_LIFETIME = timedelta(hours=1)
 
+# What every Codex request asks the backend to return alongside the answer.
+#
+# The backend forces ``store=False``, and a stateless Responses call keeps a
+# reasoning item only if it came back encrypted: without this ``include`` the
+# client drops every reasoning block before the next call (see
+# ``_construct_responses_api_input``), so a tool loop re-derives its plan from
+# scratch at every step — the single biggest reason a plan-backed run felt
+# slower than the same model on an API key. Codex CLI sends exactly this.
+REASONING_CARRYOVER = ("reasoning.encrypted_content",)
+
 
 # ---------------------------------------------------------------------------
 # Credential shapes
@@ -345,5 +355,6 @@ def build_codex_chat(
         temperature=temperature,
         token_provider=token_provider,
         originator=_originator(),
+        include=list(REASONING_CARRYOVER),
         **kwargs,
     )

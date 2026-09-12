@@ -195,3 +195,45 @@ def test_an_unusable_credential_is_not_the_key_a_run_spends(monkeypatch):
     )
     assert key.key == "sk-ant-api03-real"
     assert key.source == "stored"
+
+
+# ---------------------------------------------------------------------------
+# What a plan-backed call asks for
+# ---------------------------------------------------------------------------
+
+
+def test_a_plan_call_carries_its_reasoning_across_tool_steps():
+    """The Codex backend forces ``store=False``, and a stateless Responses call
+    keeps a reasoning item only when it came back encrypted. Without the
+    ``include`` the client dropped every reasoning block between tool calls
+    and the model re-planned from scratch at each step."""
+    from langchain_core.messages import HumanMessage
+
+    token = "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE|acct-1"
+    llm = codex.build_codex_chat("gpt-5-mini", api_key=token)
+    payload = llm._get_request_payload([HumanMessage("hi")])
+
+    assert payload["store"] is False
+    assert list(codex.REASONING_CARRYOVER) == payload["include"]
+
+
+def test_the_thread_is_the_prompt_cache_key_on_both_openai_routes():
+    """One conversation, one cache: the key pins every call of a tool loop to
+    the machine that already holds its prefix. A plan token and an API key
+    reach different endpoints and both take it."""
+    from langchain_core.messages import HumanMessage
+
+    from agents.core.lc import PROMPT_CACHE_KEY_FIELD, resolve_chat_model
+
+    plan = resolve_chat_model(
+        Provider.OPENAI, ModelName.GPT_5_MINI, "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE|acct-1",
+        cache_key="thread-1",
+    )
+    key = resolve_chat_model(Provider.OPENAI, ModelName.GPT_5_MINI, "sk-proj-x", cache_key="thread-1")
+    for llm in (plan, key):
+        assert llm._get_request_payload([HumanMessage("hi")])[PROMPT_CACHE_KEY_FIELD] == "thread-1"
+
+    # Other vendors key their caches on content; the kwarg must not leak to
+    # a class that would reject it.
+    other = resolve_chat_model(Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, "sk-ant-x", cache_key="thread-1")
+    assert PROMPT_CACHE_KEY_FIELD not in (getattr(other, "model_kwargs", None) or {})

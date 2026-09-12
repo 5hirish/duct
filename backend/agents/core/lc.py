@@ -207,6 +207,7 @@ def resolve_chat_model(
     *,
     base_url: str = "",
     thinking: str = "",
+    cache_key: str = "",
 ):
     """Any LangChain-supported provider — this is the point of the migration.
 
@@ -218,7 +219,14 @@ def resolve_chat_model(
     value. It resolves through agents/thinking.py to whatever this model calls
     that rung, and contributes nothing when the model has no such dial — which
     is why it is safe to pass unconditionally from every call site.
+
+    ``cache_key`` is the thread the calls belong to. OpenAI routes a request
+    carrying ``prompt_cache_key`` to the machine holding that prefix, so a
+    tool loop's ten calls on the same conversation hit the cache instead of
+    landing on ten machines and rebuilding it. Anthropic and Google key
+    caching on content alone, so it contributes nothing there.
     """
+    cache = _cache_kwargs(provider, cache_key)
     # A ChatGPT access token is not an API key and does not go to the public
     # API: the credential's own shape sends it to the Codex backend. Decided
     # here, at the one seam every run passes through, so no runner knows.
@@ -228,19 +236,45 @@ def resolve_chat_model(
             api_key=api_key,
             temperature=temperature,
             **_thinking_kwargs_for(provider, model, thinking),
+            **cache,
         )
     return init_chat_model(
         model=getattr(model, "value", model),
         model_provider=langchain_provider(provider),
         temperature=temperature,
         **_thinking_kwargs_for(provider, model, thinking),
+        **cache,
         **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
     )
+
+
+# The OpenAI request field that pins a conversation to one cache. Not a
+# declared ChatOpenAI field, so it rides in ``model_kwargs`` and lands as a
+# top-level request parameter on both the Responses and Completions shapes.
+PROMPT_CACHE_KEY_FIELD = "prompt_cache_key"
+
+
+def _cache_kwargs(provider: Provider, cache_key: str) -> dict:
+    if provider is not Provider.OPENAI or not cache_key:
+        return {}
+    return {"model_kwargs": {PROMPT_CACHE_KEY_FIELD: cache_key}}
 
 
 # ---------------------------------------------------------------------------
 # Stream translation
 # ---------------------------------------------------------------------------
+
+# What the model itself produced. A full AIMessage arrives when a node returns
+# one whole (a fake model, a non-streaming provider); chunks arrive from a
+# streaming call.
+MODEL_MESSAGE_TYPES = ("ai", "AIMessageChunk")
+
+
+def is_model_message(message: Any) -> bool:
+    """True for a message the model wrote, as opposed to one a node wrote into
+    the thread on the user's behalf (a steer) or a tool result."""
+    return getattr(message, "type", "") in MODEL_MESSAGE_TYPES
+
 
 def split_chunk(message: Any) -> tuple[str, str]:
     """Separate visible text from reasoning in a stream chunk.
@@ -943,6 +977,12 @@ async def stream_agent(
             if mode != "messages":
                 continue
             message, meta = chunk
+            if not is_model_message(message):
+                # LangGraph's messages stream also carries any message a node
+                # *writes* — and SteerMiddleware writes the user's own words.
+                # Streamed on, a message typed mid-turn came back as a grey
+                # bubble, as if the agent had said it.
+                continue
             meta = meta if isinstance(meta, dict) else {}
             billed = usage.feed(message, meta)
             if billed is not None:
