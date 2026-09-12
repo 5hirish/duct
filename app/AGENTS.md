@@ -90,6 +90,20 @@ the agent to check what the bundled sign-in connected and bind the property
 (`KICKOFF_MESSAGES` in `AuditWorkspace.jsx`; it rides the session's `client`
 bag and is spent once).
 
+**Every routable segment renders `LocalBackendGate`.** The desktop shell
+bundles its own backend and only learns its loopback port at runtime, so
+`BASE` is repointed once at boot (`lib/localBackend.js`) and the gate holds
+rendering until then. Skipping it is not a slow path, it is a sign-out: the
+session token is stored under one key but signed by whichever backend minted
+it, so a token from the wrong one comes back 401 "Invalid token" and
+`authFetch.endSession` reads any 401 as a dead session. That is what `/start`
+did — it was ungated and mints a guest, so "Audit a site" from inside the
+desktop app replaced the signed-in session with a token the sidecar would
+never accept, and the next request bounced the user to the front door.
+`scripts/check-backend-gate.mjs` (in `npm run check:parity`) holds the rule;
+its `ALLOWED` list is for subtrees that reach no backend at all, and adding to
+it is a claim about the code, not a way to quiet the check.
+
 ## Key utilities
 
 - `lib/api.js` — fetch wrapper for backend calls

@@ -1,3 +1,9 @@
+import LocalBackendGate from "../../components/LocalBackendGate.jsx";
+
+// The lead magnet's own chrome. Gated like every other subtree that talks to
+// the API: the desktop shell only learns its sidecar's port at runtime, and a
+// request that leaves before then goes to the hosted API with a token the
+// sidecar minted — a 401 the app reads as a dead session.
 export const metadata = {
   robots: { index: false, follow: false },
 };
@@ -24,7 +30,7 @@ export default function PublicLayout({ children }) {
         </a>
       </header>
       <main id="main-content" className="flex-1 min-h-0 flex flex-col" tabIndex={-1}>
-        {children}
+        <LocalBackendGate>{children}</LocalBackendGate>
       </main>
     </div>
   );
