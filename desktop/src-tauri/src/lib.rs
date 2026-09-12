@@ -218,6 +218,10 @@ fn get_shell_info(app: AppHandle) -> serde_json::Value {
             // "needs you" notices to the OS instead of the webview's missing
             // Notification API. Older shells lack it and stay silent.
             "notifications": true,
+            // `open_notification_settings` exists *and* this OS has a page for
+            // it to open. False on Linux, where it does not — the web app then
+            // offers no "open settings" affordance rather than one that errors.
+            "notificationSettings": NOTIFICATION_SETTINGS_URL.is_some(),
             // The `chatgpt_*` commands exist: the web app may offer "Continue
             // with ChatGPT" and send the access token they mint as the OpenAI
             // credential. Older shells lack them and show the API-key path
@@ -227,6 +231,24 @@ fn get_shell_info(app: AppHandle) -> serde_json::Value {
         }
     })
 }
+
+/// Where the OS keeps this app's notification switch, or `None` where the
+/// desktop has no single such place.
+///
+/// macOS moved the pane to ExtensionKit with the System Settings rewrite in
+/// Ventura; `com.apple.preference.notifications` was the pre-13 spelling. An id
+/// the running OS does not know opens System Settings at its front page rather
+/// than failing, so an older macOS degrades to "you are in the right app".
+///
+/// Linux is `None` on purpose rather than a guess: GNOME, KDE and the rest each
+/// own their own page and there is no scheme that covers them.
+const NOTIFICATION_SETTINGS_URL: Option<&str> = if cfg!(target_os = "macos") {
+    Some("x-apple.systempreferences:com.apple.Notifications-Settings.extension")
+} else if cfg!(windows) {
+    Some("ms-settings:notifications")
+} else {
+    None
+};
 
 /// Show a system notification. The web app decides *when* (only while the
 /// window is not focused — `app/src/lib/notify.js`); this only decides *how*,
@@ -247,6 +269,26 @@ fn notify(app: AppHandle, title: String, body: Option<String>) -> Result<(), Str
         builder = builder.body(body);
     }
     builder.show().map_err(|e| e.to_string())
+}
+
+/// Open the OS page where notifications for this app are turned on or off.
+///
+/// The sidebar's notification row needs this because the shell cannot answer
+/// "are they on?": the notification plugin's desktop `permission_state` returns
+/// `Granted` unconditionally, whatever the user actually chose in System
+/// Settings. So the row does not assert a state it cannot know — it hands the
+/// user to where the real switch is.
+///
+/// Unlike `open_external` this takes no URL. A page that could name the
+/// settings URL could name any URL-scheme handler on the machine, and the one
+/// destination worth reaching here is a constant.
+#[tauri::command]
+fn open_notification_settings(app: AppHandle) -> Result<(), String> {
+    let url = NOTIFICATION_SETTINGS_URL
+        .ok_or("this desktop has no single notification settings page")?;
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 /// Open a URL in the system's default browser. Restricted to http(s) so the
@@ -809,6 +851,7 @@ pub fn run() {
             delete_provider_key,
             get_shell_info,
             notify,
+            open_notification_settings,
             get_sidecar_info,
             open_external,
             check_for_update,

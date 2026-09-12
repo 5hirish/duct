@@ -164,6 +164,16 @@ carries all the code.
   The web app decides *when* (`app/src/lib/notify.js`: only while the window is
   not focused) and gates on the `notifications` flag from `get_shell_info`; the
   shell only decides *how*.
+
+  The shell cannot report whether the user has notifications **enabled**: the
+  plugin's desktop `permission_state` returns `Granted` no matter what System
+  Settings says. So the sidebar's row does not assert a state — it offers
+  `open_notification_settings`, which opens the OS page (macOS
+  `x-apple.systempreferences:`, Windows `ms-settings:`) where the real switch
+  is. Gated on `capabilities.notificationSettings`, false on Linux because
+  GNOME, KDE and the rest have no shared page. The command takes no URL, unlike
+  `open_external`: a page that could name the settings URL could name any
+  URL-scheme handler on the machine.
 - **The application menu is built, not defaulted** (`install_app_menu`).
   `Menu::default` is only a starting point, and two of its choices bite:
   - Its Help submenu holds a single About item marked

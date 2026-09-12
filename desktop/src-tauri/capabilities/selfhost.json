@@ -22,6 +22,7 @@
     "allow-delete-provider-key",
     "allow-get-shell-info",
     "allow-notify",
+    "allow-open-notification-settings",
     "allow-get-sidecar-info",
     "allow-open-external",
     "allow-check-for-update",

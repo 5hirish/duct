@@ -48,7 +48,11 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import PreferencesDialog from "./PreferencesDialog";
 import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
-import { notificationSurface } from "@/lib/notify";
+import {
+  notificationSurface,
+  canOpenNotificationSettings,
+  openNotificationSettings,
+} from "@/lib/notify";
 import { CONSENT_SETTINGS_EVENT } from "@/lib/consent";
 import { isDesktopShell } from "@/lib/shell";
 
@@ -192,50 +196,79 @@ function SidebarProjectSwitcher() {
  * than one that claims "Off" and corrects itself. */
 function useNotificationPermission() {
   const [permission, setPermission] = useState("unknown");
+  // Only meaningful while `permission` is "system": whether this shell has an
+  // OS page to send the user to.
+  const [hasSettingsPage, setHasSettingsPage] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    notificationSurface().then((surface) => {
+    notificationSurface().then(async (surface) => {
       if (!alive) return;
       // The shell posts through the OS, which owns the switch and has no
-      // permission for the page to request. "system" is that state: on as far
-      // as Duct is concerned, changeable only in System Settings.
+      // permission for the page to request. "system" is that state: Duct will
+      // post, and whether anything appears is settled in System Settings.
       setPermission(surface === "shell" ? "system" : surface === "browser" ? Notification.permission : "none");
+      if (surface !== "shell") return;
+      const canOpen = await canOpenNotificationSettings();
+      if (alive) setHasSettingsPage(canOpen);
     });
     return () => {
       alive = false;
     };
   }, []);
 
-  async function request() {
+  /** The one thing clicking the row does, whichever surface we are on. */
+  async function act() {
+    // The shell cannot ask — `permission_state` there is a constant `Granted`,
+    // so the OS page is the only place the real answer lives or changes.
+    if (permission === "system") {
+      await openNotificationSettings();
+      return;
+    }
     if (permission !== "default") return;
     setPermission(await Notification.requestPermission());
   }
 
-  return { permission, request };
+  return { permission, hasSettingsPage, act };
 }
 
 function NotificationMenuItem() {
-  const { permission, request } = useNotificationPermission();
+  const { permission, hasSettingsPage, act } = useNotificationPermission();
 
   if (permission === "unknown" || permission === "none") return null;
+  return <NotificationRow permission={permission} hasSettingsPage={hasSettingsPage} onAct={act} />;
+}
 
+/** The row itself, given a state rather than detecting one.
+ *
+ * Split from the hook so every state is reachable: two of the four ("System",
+ * "Blocked") cannot be produced in a browser at all, which is exactly why they
+ * are the ones that go unreviewed. `/preview` renders all four side by side. */
+export function NotificationRow({ permission, hasSettingsPage = false, onAct }) {
+  // "system" is the only row whose label depends on more than the permission:
+  // it is an action when the shell can open the OS page and a statement when it
+  // cannot (Linux, or a shell older than `open_notification_settings`).
   const states = {
     default:     { icon: Bell,     badge: "Off",      label: "Enable notifications", clickable: true  },
     granted:     { icon: BellRing, badge: "On",       label: "Notifications",        clickable: false },
     denied:      { icon: BellOff,  badge: "Blocked",  label: "Notifications",        clickable: false },
-    system:      { icon: BellRing, badge: "System",   label: "Notifications",        clickable: false },
+    system: hasSettingsPage
+      ? { icon: BellRing, badge: "System", label: "Notification settings", clickable: true  }
+      : { icon: BellRing, badge: "System", label: "Notifications",         clickable: false },
   };
   const { icon: Icon, badge, label, clickable } = states[permission] ?? states.default;
 
   const hint =
     permission === "denied" ? "Blocked in browser — open Site Settings to re-enable" :
+    permission === "system" && hasSettingsPage ? "Duct posts through the OS — open System Settings to turn them on or off" :
     permission === "system" ? "Handled by the OS — change it in your system notification settings" :
     undefined;
 
   return (
     <DropdownMenuItem
-      onClick={clickable ? request : undefined}
+      // Opening System Settings puts another window in front; closing the menu
+      // first means returning to the app does not land back inside a stale one.
+      onSelect={clickable ? onAct : undefined}
       className={`flex items-center justify-between ${!clickable ? "cursor-default opacity-60" : ""}`}
       title={hint}
     >

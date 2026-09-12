@@ -33,6 +33,7 @@ fn main() {
             "delete_provider_key",
             "get_shell_info",
             "notify",
+            "open_notification_settings",
             "get_sidecar_info",
             "open_external",
             "check_for_update",

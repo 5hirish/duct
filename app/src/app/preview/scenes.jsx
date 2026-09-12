@@ -41,6 +41,12 @@ import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
 import ContextRing from "@/components/workspace/ContextRing";
 import { Button } from "@/components/ui/button";
+import { NotificationRow } from "@/components/AppSidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   STORAGE_CLOUD,
   STORAGE_KEYCHAIN,
@@ -713,6 +719,27 @@ export const SCENES = [
         <span className="text-xs text-muted-foreground">No details prop — decorative only, as on a thread that hasn&rsquo;t started</span>
         <ContextRing used={0} />
       </Row>
+    ),
+  },
+  {
+    id: "notification-row",
+    state: "all four permission states",
+    group: "AppSidebar",
+    title: "The notification row, in every state it has",
+    note: "Lives in the user footer menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Clickability is the thing to check: \"Off\" asks the browser for permission and \"Notification settings\" opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <NotificationRow permission="default" onAct={() => {}} />
+          <NotificationRow permission="granted" />
+          <NotificationRow permission="denied" />
+          <NotificationRow permission="system" hasSettingsPage onAct={() => {}} />
+          <NotificationRow permission="system" />
+        </DropdownMenuContent>
+      </DropdownMenu>
     ),
   },
 ];

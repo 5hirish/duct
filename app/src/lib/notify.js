@@ -53,6 +53,32 @@ export async function notificationSurface() {
   return "none";
 }
 
+/**
+ * Whether this shell can open the OS page where notifications are switched on.
+ *
+ * Gated on the capability rather than on `isDesktopShell()`, because a shell
+ * installed before `open_notification_settings` would reject the invoke and the
+ * sidebar would offer a row that does nothing — and on Linux, where the flag is
+ * false because no single such page exists.
+ */
+export async function canOpenNotificationSettings() {
+  const info = await getShellInfo();
+  return Boolean(info?.capabilities?.notificationSettings);
+}
+
+/**
+ * Send the user to the OS notification settings. Resolves to whether it opened;
+ * never throws, so a caller can fall back to saying where to look.
+ */
+export async function openNotificationSettings() {
+  try {
+    await window.__TAURI__.core.invoke("open_notification_settings");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Whether the browser side is able to notify right now. */
 export function browserCanNotify() {
   return typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted";
