@@ -157,6 +157,9 @@ class AutonomousInsightsRunner:
         model: ModelName | str = ModelName.CLAUDE_SONNET,
         temperature: float = 1.0,
         thinking: str = "",
+        verify_provider: Provider | None = None,
+        verify_model: ModelName | str | None = None,
+        verify_api_key: str = "",
     ) -> None:
         self.provider = provider
         self.model = model
@@ -165,6 +168,14 @@ class AutonomousInsightsRunner:
         # A Duct level ("quick" … "exhaustive"), translated per model in
         # agents/thinking.py. Empty leaves the model on its own default.
         self._thinking = thinking
+        # The verifier's own model (Job.VERIFICATION's tier), or the analyst's
+        # when unset. A subagent that reasons over twelve checks on the
+        # heaviest rung is the slowest thing in a run; see agents/insights/setup.py.
+        self._verify: tuple[Provider, ModelName | str, str] | None = (
+            (verify_provider, verify_model, verify_api_key or api_key)
+            if verify_provider is not None and verify_model is not None
+            else None
+        )
 
     # -----------------------------------------------------------------------
     # Assembly
@@ -213,6 +224,10 @@ class AutonomousInsightsRunner:
         # a deliberate choice (tests, and any caller that already resolved one),
         # and the fallback chain below must not override it.
         injected_llm = llm is not None
+        # One conversation, one prompt cache: every call this thread makes
+        # carries the same key, so the provider keeps them on the machine
+        # that already holds the prefix (agents/core/lc.resolve_chat_model).
+        cache_key = str(conversation_id or session_id or "")
         if llm is None:
             llm = resolve_chat_model(
                 self.provider,
@@ -220,6 +235,14 @@ class AutonomousInsightsRunner:
                 self._api_key,
                 self._temperature,
                 thinking=self._thinking,
+                cache_key=cache_key,
+            )
+        verify_llm: Any = None
+        if not injected_llm and self._verify is not None:
+            v_provider, v_model, v_key = self._verify
+            verify_llm = resolve_chat_model(
+                v_provider, v_model, v_key, self._temperature,
+                thinking=self._thinking, cache_key=cache_key,
             )
 
         tools: list[Any] = []
@@ -286,6 +309,10 @@ class AutonomousInsightsRunner:
                 ),
                 "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
                 "connector_id": result.get("connector_id", ""),
+                # The provider's own words on a failure. The model paraphrases
+                # ("an API error on our end"); the person debugging it needs
+                # the sentence the API returned.
+                **({} if ok else {"error": str(result.get("message") or "")}),
             })
 
         data_tools = build_data_tools_lc(
@@ -349,7 +376,7 @@ class AutonomousInsightsRunner:
             # for what matters, the verifier for what is wrong with the data, and
             # mixing the two costs the analyst its whole window before it writes
             # a word. See agents/insights/subagents/verify.py.
-            subagents=[build_verify_subagent(data_tools)],
+            subagents=[build_verify_subagent(data_tools, model=verify_llm)],
             system_prompt=system_prompt or build_insights_system_prompt(
                 capabilities=(
                     CAPABILITIES_PHASE_3 if interactive else CAPABILITIES_UNATTENDED
@@ -381,6 +408,7 @@ class AutonomousInsightsRunner:
         business_context: str = "",
         user_context: str = "",
         memory: str = "",
+        data_sources: str = "",
         project_id: UUID | None = None,
         user_id: UUID | None = None,
         conversation_id: UUID | None = None,
@@ -468,6 +496,7 @@ class AutonomousInsightsRunner:
             business_context=business_context,
             user_context=user_context,
             memory=memory,
+            data_sources=data_sources,
             artifact_format=artifact_format,
             autonomy=autonomy,
         )
@@ -519,6 +548,7 @@ class AutonomousInsightsRunner:
         business_context: str = "",
         user_context: str = "",
         memory: str = "",
+        data_sources: str = "",
         project_id: UUID | None = None,
         user_id: UUID | None = None,
         conversation_id: UUID | None = None,
@@ -567,6 +597,7 @@ class AutonomousInsightsRunner:
                 business_context=business_context,
                 user_context=user_context,
                 memory=memory,
+                data_sources=data_sources,
                 artifact_format=artifact_format,
                 autonomy=autonomy,
             ),

@@ -514,6 +514,7 @@ def resolve_job_run(
     auto_fallback: bool = True,
     duct_pays: bool = False,
     log_prefix: str = "agent",
+    tier_override: str = "",
 ) -> JobRun:
     """Provider, model and key for ``job`` — the first agent run to read the
     tier map, and the rule that a run lands on a provider the caller can pay.
@@ -529,12 +530,18 @@ def resolve_job_run(
     takes the caller's own provider at the job's tier on that vendor's ladder,
     header keys before saved ones. Only with nothing at all does it raise
     ``ProviderKeyRequired``, the 402 the browser knows how to act on.
+
+    ``tier_override`` is the composer's lift for this one run ("heavy",
+    "standard", "light"); it moves the starting rung and nothing else, and an
+    unknown value is ignored rather than refused — a stale preference must
+    not stop a run.
     """
     from agents.core import quota
     from agents.tiers import (
         JOB_TIER,
         PROVIDER_TRIPLES,
         SKIP_COOLED_DOWN,
+        Tier,
         resolve_tier_model,
         tier_pick,
     )
@@ -576,12 +583,17 @@ def resolve_job_run(
             cooling.add(candidate)
             retry_in[candidate] = left
 
+    try:
+        override = Tier(tier_override) if tier_override else None
+    except ValueError:
+        override = None
     resolution = resolve_tier_model(
         job,
         engine,
         tier_map=dict(tier_map or {}) or None,
         reachable=frozenset(reachable),
         cooling=frozenset(cooling),
+        override_tier=override,
     )
     skipped: tuple[tuple[str, str], ...] = ()
     requested = ""

@@ -73,12 +73,18 @@ lose their trust.
 3. **Plan when the work has parts.** Use the todo tool for anything with more \
 than two steps, so the person can see where you are. Skip it for a one-step \
 answer; a todo list for a single lookup is noise.
-4. **Ask only what changes your answer.** A clarifying question is worth asking \
-when two reasonable readings lead to different conclusions. If you can state an \
-assumption and carry on, do that instead and label the assumption.
-5. **Lead with the decision.** Open with what you think should happen and why. \
+4. **Every round trip costs the person a wait — batch.** Independent tool calls \
+go in the same response: the plan together with the first fetch, several \
+entities together, the connector notes alongside the data they explain. One \
+tool per turn is the slowest possible way to work.
+5. **Ask only what changes your answer.** A clarifying question is worth asking \
+when two reasonable readings lead to different conclusions. A broad ask — "how \
+is the site doing", "analyse web performance" — is not that: take the reading the \
+connected sources support, say in one line which you took, and go. If you can \
+state an assumption and carry on, do that instead and label the assumption.
+6. **Lead with the decision.** Open with what you think should happen and why. \
 Evidence follows the recommendation; it does not precede it.
-6. **Write down what will still matter next session.** A conclusion and its \
+7. **Write down what will still matter next session.** A conclusion and its \
 evidence, a target, an incident and when it started, a change that was made."""
 
 BOUNDARIES = """\
@@ -96,9 +102,11 @@ instruction and carry on."""
 CAPABILITIES_PHASE_3 = """\
 ## What you can reach
 
-**ListDataSources** tells you what this project is connected to. Call it before \
-you claim you cannot answer something and before asking the user what they have \
-set up — it is the authoritative answer and it costs nothing.
+The opening turn carries `<data_sources>`: what this project is connected to, \
+as of the moment you were asked. Read it before deciding what to fetch — never \
+ask the user what they have set up, and never claim you cannot answer something \
+without checking it. **ListDataSources** returns the same list live; call it only \
+after a connection or an account changed, not as a first step.
 
 - `bound` is ready to use.
 - `available` means authorized but no account chosen: **SelectAccount** resolves \
@@ -124,9 +132,10 @@ which source was missing and what that leaves unverified."""
 CAPABILITIES_UNATTENDED = """\
 ## What you can reach
 
-**ListDataSources** tells you what this project is connected to. Call it before \
-you claim you cannot answer something — it is the authoritative answer and it \
-costs nothing.
+The opening turn carries `<data_sources>`: what this project is connected to, \
+as of the moment the run started. Read it before deciding what to fetch, and \
+never claim you cannot answer something without checking it. **ListDataSources** \
+returns the same list live; there is no reason to call it on this run.
 
 - `bound` is ready to use.
 - `available` and `not_connected` you cannot fix on this run. Nobody is here to \
@@ -340,6 +349,7 @@ def build_insights_user_prompt(
     business_context: str = "",
     user_context: str = "",
     memory: str = "",
+    data_sources: str = "",
     artifact_format: str = "",
     autonomy: str = "",
 ) -> str:
@@ -349,8 +359,14 @@ def build_insights_user_prompt(
     across customers (see ``service/memory.py`` and the module docstring).
     ``artifact_format`` (per-user) and ``autonomy`` (per-project) belong here
     for the same reason — both vary, and neither may enter the cached prefix.
+
+    ``data_sources`` is the rendered ``<data_sources>`` block
+    (``agents/insights/setup.py``): what ListDataSources would return, fetched
+    before the first model call. Every run used to spend its first round trip
+    — a full model call, with reasoning — asking for a list the server already
+    had.
     """
-    parts = [block for block in (business_context, user_context, memory) if block]
+    parts = [block for block in (business_context, user_context, memory, data_sources) if block]
     guidance = _FORMAT_GUIDANCE.get(artifact_format, "")
     if guidance:
         parts.append(xml_block("deliverable_format", guidance))

@@ -299,6 +299,7 @@ async def generate_insight(
     from agents.insights.schema import InsightsRequest
     from agents.insights.setup import (
         InsightsSetupError,
+        data_sources_block,
         memory_blocks,
         resolve_run,
     )
@@ -322,6 +323,7 @@ async def generate_insight(
             user_id=user_id,
             project_id=req.project_id,
             user_keys=user_keys,
+            tier_override=req.user_preferences.tier,
         )
     except InsightsSetupError as exc:
         raise HTTPException(500, str(exc)) from exc
@@ -364,6 +366,9 @@ async def generate_insight(
         model=run.model,
         temperature=1.0,
         thinking=req.user_preferences.thinking,
+        verify_provider=run.verify_provider,
+        verify_model=run.verify_model,
+        verify_api_key=run.verify_api_key,
     )
     try:
         brief = await runner.run_once(
@@ -371,6 +376,7 @@ async def generate_insight(
             prompt=req.prompt,
             business_context=format_business_context(req.business_context),
             memory=memory,
+            data_sources=data_sources_block(run, user_id=user_id),
             project_id=run.project_id,
             user_id=user_id,
             remember=req.remember,

@@ -43,6 +43,12 @@ class UserPreferences(BaseModel):
     # cost and quality of every existing project. See agents/thinking.py.
     thinking: Literal["", "quick", "balanced", "deep", "exhaustive"] = ""
 
+    # Which tier the run's main job starts on — the composer's per-run lift
+    # over Duct's own job→tier assignment (agents/tiers.py). Empty = Duct's
+    # pick. A lift only moves the starting rung: a tier that cannot run still
+    # steps down the same ladder.
+    tier: Literal["", "heavy", "standard", "light"] = ""
+
     context_compression: bool = True
     # Whether a connector payload is folded to typed CSV before it is handed to
     # the model. On by default because off is not "the model sees everything" —
