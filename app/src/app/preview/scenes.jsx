@@ -43,6 +43,7 @@ import ContextRing from "@/components/workspace/ContextRing";
 import TierSummary from "@/components/models/TierSummary";
 import TierCard from "@/components/models/TierCard";
 import AdvancedSettings from "@/components/models/AdvancedSettings";
+import { TelemetryPanel } from "@/components/TelemetryCard";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
@@ -901,6 +902,19 @@ export const SCENES = [
     note: "The two switches left after the image row moved up into the setup card. Closed is the state to check first: the summary line has to say what is inside, because both are things somebody arrives looking for by name. Opening it toggles real preferences, so expect the fallback card to report itself unsaved when signed out — that is the state, not a bug.",
     render: () => (
       <AdvancedSettings ladder={TIERS.map((tier) => tier.label)} />
+    ),
+  },
+  {
+    id: "telemetry-card",
+    state: "on-by-default build · off-by-default build",
+    group: "TelemetryCard",
+    title: "The one data switch",
+    note: "Renders `null` in every build without a DSN, which is why the panel is exported separately from the card that asks the shell — this scene passes the two answers the shell can give. What to check: the Sends / Never-sends columns stack rather than crush at phone width, the check is `text-success` and the exclusions are muted (a promise, not a warning), and that the two-line intro above them does not reflow into a third line in either state. The paragraph this replaced was seventy-two words.",
+    render: () => (
+      <div style={{ display: "grid", gap: 16, maxWidth: 520 }}>
+        <TelemetryPanel enabled defaultOn onToggle={() => {}} />
+        <TelemetryPanel enabled={false} defaultOn={false} onToggle={() => {}} />
+      </div>
     ),
   },
   {
