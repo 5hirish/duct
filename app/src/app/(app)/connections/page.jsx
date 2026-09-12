@@ -522,7 +522,7 @@ export default function ConnectionsPage() {
           <div className="conn-grid">
             <OAuthConnectorCard
               title="Google Ads"
-              description="Campaign performance including spend, clicks, impressions, conversions, and ROAS."
+              description="Spend, clicks, impressions, conversions and ROAS, per campaign."
               logo={LOGOS.google_ads}
               connected={gadsConnected}
               oauthConnected={gadsAuthorized}
@@ -608,7 +608,7 @@ export default function ConnectionsPage() {
 
             <OAuthConnectorCard
               title="Google Search Console"
-              description="Organic search queries, clicks, impressions, and average position data for SEO reporting."
+              description="Search queries, clicks, impressions and average position."
               logo={LOGOS.gsc}
               connected={gscAuthorized}
               oauthConnected={gscAuthorized}
@@ -625,7 +625,7 @@ export default function ConnectionsPage() {
 
             <OAuthConnectorCard
               title="Google Analytics"
-              description="Website traffic, sessions, engagement, and conversion trend data for performance reporting."
+              description="Traffic, sessions, engagement and conversions."
               logo={LOGOS.ga4}
               connected={ga4Authorized}
               oauthConnected={ga4Authorized}
@@ -642,7 +642,7 @@ export default function ConnectionsPage() {
 
             <OAuthConnectorCard
               title="Google Tag Manager"
-              description="Tags, variables, and container versions — measurement fixes with staged publishes and one-command rollback."
+              description="Tags, variables and container versions — staged, with rollback."
               logo={LOGOS.gtm}
               connected={gtmAuthorized}
               oauthConnected={gtmAuthorized}
@@ -660,7 +660,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="meta_ads"
               title="Meta Ads"
-              description="Facebook and Instagram campaign performance including spend, reach, conversions, and CPA."
+              description="Facebook and Instagram spend, reach, conversions and CPA."
               logo={LOGOS.meta_ads}
               fields={[
                 {
@@ -694,7 +694,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="stripe"
               title="Stripe"
-              description="Settled revenue, subscriptions, refunds, and payment outcomes — the money truth your ad platforms get reconciled against."
+              description="Settled revenue, subscriptions, refunds and payment outcomes."
               logo={LOGOS.stripe}
               fields={[
                 {
@@ -719,7 +719,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="apple_ads"
               title="Apple Search Ads"
-              description="App Store search campaign performance — spend, taps, and installs by campaign and search term."
+              description="Spend, taps and installs, by campaign and search term."
               logo={LOGOS.apple_ads}
               fields={[
                 { key: "client_id", label: "Client ID", placeholder: "SEARCHADS.xxxxxxxx-…" },
@@ -748,7 +748,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="revenuecat"
               title="RevenueCat"
-              description="Mobile subscription truth — trials, renewals, refunds, grace periods, and MRR across the App Store and Play."
+              description="Trials, renewals, refunds and MRR across the App Store and Play."
               logo={LOGOS.revenuecat}
               fields={[
                 {
@@ -774,7 +774,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="openai_ads"
               title="OpenAI Ads"
-              description="ChatGPT Ads campaign delivery — impressions, clicks, and spend (conversions live only in Ads Manager)."
+              description="Impressions, clicks and spend. Conversions stay in Ads Manager."
               logo={LOGOS.openai_ads}
               fields={[
                 {
@@ -797,7 +797,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="mixpanel"
               title="Mixpanel"
-              description="Cross-platform event truth — signups, logins, and upgrades under one name across web and app, the reference your ad platforms and GA4 get reconciled against."
+              description="Signups, logins and upgrades, one name across web and app."
               logo={LOGOS.mixpanel}
               fields={[
                 { key: "service_account_username", label: "Service account username", placeholder: "duct.xxxxxx.mp-service-account" },
@@ -840,7 +840,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="clarity"
               title="Microsoft Clarity"
-              description="What paid clicks do after landing — rage clicks, dead clicks, quick-backs, and script errors per page (last 3 days)."
+              description="Rage clicks, dead clicks, quick-backs and script errors, per page."
               logo={LOGOS.clarity}
               fields={[
                 {
@@ -873,7 +873,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="growthbook"
               title="GrowthBook"
-              description="Experiment health — which tests are live, whether they are still bucketing users, and per-metric results. Read-only."
+              description="Which tests are live, whether they still bucket, per-metric results."
               logo={LOGOS.growthbook}
               fields={[
                 {
@@ -903,7 +903,7 @@ export default function ConnectionsPage() {
             <ConnectorTile
               logo={LOGOS.hubspot}
               title="HubSpot"
-              description="CRM lifecycle and pipeline outcomes to tie paid and organic traffic to downstream revenue."
+              description="CRM lifecycle stages, pipeline and closed revenue."
               tone="off"
               status="Coming soon"
               disabled
