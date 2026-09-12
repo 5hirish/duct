@@ -13,6 +13,10 @@ export const PREFS_DEFAULTS = {
   // provider's words. "" means the model's own default — see the note in
   // backend/agents/thinking.py for why that is not normalised away.
   thinking: "",
+  // Which tier the run's main job starts on: "heavy" | "standard" | "light",
+  // or "" for Duct's own job→tier pick (backend/agents/tiers.py). A lift only
+  // moves the starting rung; a tier that cannot run still steps down.
+  tier: "",
   // Whether connector rows reach the model folded to a compact table instead
   // of raw JSON. On by default because off is not "the model sees everything":
   // off is the mid-structure cut in backend/agents/insights/data_tools.py,

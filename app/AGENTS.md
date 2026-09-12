@@ -373,9 +373,13 @@ Rules that follow:
 - **The status row says what is happening, with a clock.** While the agent
   works the header reads `Working · 1m 12s · Collecting source data` — phase,
   elapsed, and the step in progress (or "Reconnecting to the model (2/4)",
-  "Compacting context"). The context ring beside it is `workspace/ContextRing`
-  over the reducer's `usage`; it is the same ring the insights desk shows for
-  a new thread. A retry counts down (`retrying.until`, anchored on this
+  "Compacting context"). The context ring sits in the composer beside Send —
+  `workspace/ContextRing` over the reducer's `usage`, empty and labelled "New
+  thread" until the first call reports — the same place and the same ring
+  the insights desk shows. The composer (`workspace/ChatInput`) is the desk
+  composer's card: text on top, a footer with the shell's `composerTools`
+  chips (`workspace/ComposerDials` for insights: autonomy, thinking, model
+  tier) on the left and the ring and Send on the right. A retry counts down (`retrying.until`, anchored on this
   client's clock at receipt), and the tooltip carries cost and the cached
   share beside the tokens. After a compaction the ring is empty and says so
   (`usage.last.stale`) until the next call on the thread reports its size.

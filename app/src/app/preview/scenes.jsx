@@ -23,6 +23,8 @@ import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import FrontDoor from "@/components/onboarding/FrontDoor";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
+import ComposerDials from "@/components/workspace/ComposerDials";
+import ChatInput from "@/components/workspace/ChatInput";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
 import { FolderOpen, RefreshCw } from "lucide-react";
@@ -176,6 +178,11 @@ function FrontDoorScene({ error = "" }) {
 
 /** Autonomy is controlled from the parent in the real Desk — stub that here
  *  so picking an option actually round-trips back into the trigger's label. */
+function DialsScene() {
+  const [autonomy, setAutonomy] = useState(AUTONOMY_ASK);
+  return <ComposerDials projectId="p1" autonomy={autonomy} onAutonomyChange={setAutonomy} deferred />;
+}
+
 function DeskComposerScene(props) {
   const [autonomy, setAutonomy] = useState(AUTONOMY_ASK);
   return <DeskComposer {...props} autonomy={autonomy} onAutonomyChange={setAutonomy} />;
@@ -434,6 +441,25 @@ export const SCENES = [
         project={{ id: "p1", name: "Sictec Infotech, Inc.", company: { name: "Sictec Infotech, Inc.", website_url: "https://sictec.example" } }}
         placeholder="Ask about &ldquo;Next growth milestone&rdquo; — or anything else"
       />
+    ),
+  },
+  {
+    id: "session-composer",
+    state: "inside a running session — dials deferred, ring beside Send",
+    group: "DeskComposer",
+    title: "The session composer",
+    note: "The same card as the desk composer, in the chat shell: attach, the three dials (autonomy, thinking, model tier) on the left, the context ring and Send on the right. `deferred` makes each menu say when the choice lands — autonomy at the next message, thinking and tier at the next session — check the footer line is there in all three menus and that the chips wrap under the text at phone width rather than pushing Send off the card.",
+    render: () => (
+      <div className="max-w-[720px]">
+        <ChatInput
+          onSend={() => {}}
+          isStreaming
+          onStop={() => {}}
+          placeholder="Ask about your growth data…"
+          tools={<DialsScene />}
+          status={<ContextRing used={0.08} label="8% context" />}
+        />
+      </div>
     ),
   },
   {
