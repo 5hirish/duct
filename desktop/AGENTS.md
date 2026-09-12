@@ -67,7 +67,14 @@ carries all the code.
   (`app/src/lib/chatgpt.js`, `backend/agents/core/codex.py`). It is not
   `~/.codex/auth.json` on purpose — rotating a refresh token there signs the
   user out of the Codex CLI. Whether the path is *allowed* is the backend's
-  `CHATGPT_AUTH_ENABLED`; the shell only says whether it *can*.
+  `CHATGPT_AUTH_ENABLED`; the shell only says whether it *can*. One sign-in
+  waits on the port at a time: a new `chatgpt_login` replaces a pending one
+  rather than reporting "address in use" — a closed browser tab tells the
+  shell nothing — and `chatgpt_login_cancel` ends it without waiting out the
+  five-minute timeout. The listener is bound *before* the browser opens, so
+  a bind failure never leaves a tab open with nowhere to land, and a
+  callback carrying someone else's `state` is answered and ignored rather
+  than ending the wait.
 
   **Sign-in is the one exception, and deliberately so.** A shell without
   `browserAuth` has no legacy path worth keeping: navigating the webview to

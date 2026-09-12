@@ -24,6 +24,8 @@
 
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -55,6 +57,14 @@ const LOGIN_TIMEOUT: Duration = Duration::from_secs(300);
 /// already dead by the time the request lands.
 const REFRESH_SKEW_SECS: u64 = 300;
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
+/// What a pending login resolves with when it is abandoned on purpose. The
+/// web app treats it as nothing to show, the way it treats `"revoked"`.
+const CANCELLED: &str = "cancelled";
+/// How often the listener looks for a connection or a cancellation.
+const ACCEPT_POLL: Duration = Duration::from_millis(50);
+/// How long a new sign-in waits for the one it replaced to let go of the
+/// port. That one polls at `ACCEPT_POLL`, so this is generous.
+const PORT_HANDOVER: Duration = Duration::from_secs(2);
 
 /// Its own service, not `KEYCHAIN_SERVICE`: a provider key is one string
 /// keyed by provider id, and this is a bundle that must not be readable or
@@ -186,39 +196,103 @@ fn authorize_url(state: &str, challenge: &str) -> Result<Url, String> {
 // The loopback callback
 // ---------------------------------------------------------------------------
 
+/// The sign-in currently waiting on the loopback port, if any.
+///
+/// One at a time, because the port is fixed by OpenAI: a second attempt can
+/// only ever fail to bind behind the first. By the time anyone clicks again,
+/// the first is a browser tab they closed — a closed tab tells this process
+/// nothing, and the listener would otherwise sit on the port for the rest of
+/// `LOGIN_TIMEOUT` reporting "address in use" to every retry. So a new sign-in
+/// replaces the pending one, and `chatgpt_login_cancel` ends it on demand.
+static PENDING: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
+
+fn pending() -> std::sync::MutexGuard<'static, Option<Arc<AtomicBool>>> {
+    // A poisoned lock holds an `Option` that is valid either way.
+    PENDING.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+/// Tell the pending sign-in, if any, to stop. Returns at once; the listener
+/// notices within one poll and releases the port as it returns.
+fn cancel_pending() {
+    if let Some(flag) = pending().take() {
+        flag.store(true, Ordering::Relaxed);
+    }
+}
+
+fn register_pending() -> Arc<AtomicBool> {
+    let flag = Arc::new(AtomicBool::new(false));
+    *pending() = Some(flag.clone());
+    flag
+}
+
+/// Forget `flag` once its sign-in has ended — unless a newer sign-in has
+/// registered since, in which case the slot is theirs.
+fn clear_pending(flag: &Arc<AtomicBool>) {
+    let mut slot = pending();
+    if slot.as_ref().is_some_and(|current| Arc::ptr_eq(current, flag)) {
+        *slot = None;
+    }
+}
+
 /// What the browser brought back: an authorization code, or OpenAI's error.
+/// The `state` has already been checked — a callback carrying someone else's
+/// never gets this far.
+#[derive(Debug)]
 struct Callback {
     code: Option<String>,
-    state: Option<String>,
     error: Option<String>,
 }
 
-/// Serve exactly one callback on the registered port, then close.
+/// Take the registered port, giving a sign-in this one replaced a moment to
+/// release it.
+fn bind_listener() -> Result<TcpListener, String> {
+    let give_up = Instant::now() + PORT_HANDOVER;
+    loop {
+        match TcpListener::bind((REDIRECT_HOST, REDIRECT_PORT)) {
+            Ok(listener) => {
+                listener
+                    .set_nonblocking(true)
+                    .map_err(|e| format!("could not configure the sign-in listener: {e}"))?;
+                return Ok(listener);
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::AddrInUse && Instant::now() < give_up => {
+                std::thread::sleep(ACCEPT_POLL);
+            }
+            Err(e) => {
+                return Err(format!(
+                    "could not listen on {REDIRECT_HOST}:{REDIRECT_PORT} for the ChatGPT sign-in ({e}). \
+                     Another app is using the port — most likely the Codex CLI signing in. Finish or \
+                     close that, then try again."
+                ))
+            }
+        }
+    }
+}
+
+/// Serve callbacks on the bound port until ours arrives, the deadline passes,
+/// or `cancel` is raised; the port is released as this returns.
 ///
 /// Hand-rolled on `TcpListener` rather than pulling in an HTTP server crate:
 /// one GET, one response, and the request line is the only thing parsed. The
 /// query string carries the auth code, so nothing here ever logs a request.
-fn wait_for_callback(deadline: Instant) -> Result<Callback, String> {
-    let listener = TcpListener::bind((REDIRECT_HOST, REDIRECT_PORT)).map_err(|e| {
-        format!(
-            "could not listen on {}:{} for the ChatGPT sign-in ({e}). Another app may be using \
-             the port — the Codex CLI, or an earlier sign-in still waiting.",
-            REDIRECT_HOST, REDIRECT_PORT
-        )
-    })?;
-    listener
-        .set_nonblocking(true)
-        .map_err(|e| format!("could not configure the sign-in listener: {e}"))?;
-
+fn wait_for_callback(
+    listener: TcpListener,
+    deadline: Instant,
+    cancel: Arc<AtomicBool>,
+    expected_state: &str,
+) -> Result<Callback, String> {
     while Instant::now() < deadline {
+        if cancel.load(Ordering::Relaxed) {
+            return Err(CANCELLED.into());
+        }
         match listener.accept() {
             Ok((stream, _)) => {
-                if let Some(callback) = handle_request(stream) {
+                if let Some(callback) = handle_request(stream, expected_state) {
                     return Ok(callback);
                 }
             }
             Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                std::thread::sleep(Duration::from_millis(50));
+                std::thread::sleep(ACCEPT_POLL);
             }
             Err(e) => return Err(format!("sign-in listener failed: {e}")),
         }
@@ -226,11 +300,14 @@ fn wait_for_callback(deadline: Instant) -> Result<Callback, String> {
     Err("Timed out waiting for the ChatGPT sign-in to finish in your browser.".into())
 }
 
-/// Parse one request; answer it; return the callback if this was one.
+/// Parse one request; answer it; return the callback if it was ours.
 ///
 /// Browsers also fetch `/favicon.ico` and the like while the tab is open —
-/// those get a 404 and `None`, and the listener keeps waiting.
-fn handle_request(mut stream: TcpStream) -> Option<Callback> {
+/// those get a 404 and `None`, and the listener keeps waiting. So does a
+/// callback whose `state` is not the one this sign-in minted: anything on
+/// this machine can hit the port, and a stray hit must not end the wait for
+/// the tab we actually opened.
+fn handle_request(mut stream: TcpStream, expected_state: &str) -> Option<Callback> {
     let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
     let mut buf = [0u8; 8192];
     let n = stream.read(&mut buf).ok()?;
@@ -242,11 +319,15 @@ fn handle_request(mut stream: TcpStream) -> Option<Callback> {
         return None;
     }
     let param = |key: &str| url.query_pairs().find(|(k, _)| k == key).map(|(_, v)| v.into_owned());
-    let callback = Callback {
-        code: param("code"),
-        state: param("state"),
-        error: param("error").or_else(|| param("error_description")),
-    };
+    if param("state").as_deref() != Some(expected_state) {
+        let body = page(
+            "Sign-in failed",
+            "This sign-in was not started by the Duct that is open now. Go back to Duct and try again.",
+        );
+        respond(&mut stream, 200, &body);
+        return None;
+    }
+    let callback = Callback { code: param("code"), error: param("error").or_else(|| param("error_description")) };
     let body = if callback.error.is_some() {
         page("Sign-in failed", "ChatGPT did not complete the sign-in. Go back to Duct and try again.")
     } else {
@@ -409,28 +490,45 @@ pub fn chatgpt_status() -> Result<Status, String> {
 }
 
 /// Run the sign-in: system browser → loopback callback → token exchange →
-/// keychain. Resolves once the bundle is stored, or with why it was not.
+/// keychain. Resolves once the bundle is stored, or with why it was not:
+/// `"cancelled"` when this sign-in was abandoned by the button or replaced by
+/// a newer click, and a sentence for everything else.
 #[tauri::command]
 pub async fn chatgpt_login(app: AppHandle) -> Result<Status, String> {
     let (verifier, challenge) = pkce_pair()?;
     let state = random_urlsafe(32)?;
     let url = authorize_url(&state, &challenge)?;
 
-    // Listen before opening the browser, or a fast redirect races the bind.
-    let deadline = Instant::now() + LOGIN_TIMEOUT;
-    let waiter = tauri::async_runtime::spawn_blocking(move || wait_for_callback(deadline));
-    app.opener()
-        .open_url(url.as_str(), None::<&str>)
-        .map_err(|e| format!("could not open the browser: {e}"))?;
+    // Whatever was waiting is a tab the user gave up on; this click is the
+    // retry. Replace it rather than reporting its port as taken.
+    cancel_pending();
 
-    let callback = waiter.await.map_err(|e| format!("sign-in listener stopped: {e}"))??;
+    // Bind *before* opening the browser, and on this task rather than on the
+    // listener's thread: a fast redirect would otherwise race the bind, and a
+    // bind that fails must fail here — not after a tab is open with nowhere
+    // to land.
+    let listener = tauri::async_runtime::spawn_blocking(bind_listener)
+        .await
+        .map_err(|e| format!("sign-in listener stopped: {e}"))??;
+    let cancel = register_pending();
+    let deadline = Instant::now() + LOGIN_TIMEOUT;
+    let waiter = {
+        let cancel = cancel.clone();
+        let state = state.clone();
+        tauri::async_runtime::spawn_blocking(move || wait_for_callback(listener, deadline, cancel, &state))
+    };
+
+    if let Err(e) = app.opener().open_url(url.as_str(), None::<&str>) {
+        cancel.store(true, Ordering::Relaxed);
+        clear_pending(&cancel);
+        return Err(format!("could not open the browser: {e}"));
+    }
+
+    let waited = waiter.await;
+    clear_pending(&cancel);
+    let callback = waited.map_err(|e| format!("sign-in listener stopped: {e}"))??;
     if let Some(error) = callback.error {
         return Err(format!("ChatGPT declined the sign-in: {error}"));
-    }
-    if callback.state.as_deref() != Some(state.as_str()) {
-        // A callback we did not start. Anything on this machine can hit the
-        // port; only ours carries the state we minted.
-        return Err("the sign-in callback did not match this request".into());
     }
     let code = callback.code.ok_or("the sign-in returned no authorization code")?;
 
@@ -451,6 +549,14 @@ pub async fn chatgpt_login(app: AppHandle) -> Result<Status, String> {
         let _ = window.set_focus();
     }
     Ok(session.status())
+}
+
+/// Abandon the sign-in waiting on the port, if any. The pending
+/// `chatgpt_login` resolves with `"cancelled"` and the port is released. A
+/// sign-in that already finished is untouched — that is `chatgpt_logout`.
+#[tauri::command]
+pub fn chatgpt_login_cancel() {
+    cancel_pending();
 }
 
 /// The headers for one request: a live access token and the account id.
@@ -474,4 +580,53 @@ pub async fn chatgpt_credential() -> Result<Option<Credential>, String> {
 #[tauri::command]
 pub fn chatgpt_logout() -> Result<(), String> {
     clear()
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use std::thread;
+
+    /// Both tests need the real, fixed port; cargo runs tests in parallel.
+    static PORT: Mutex<()> = Mutex::new(());
+
+    fn get(query: &str) -> String {
+        let mut stream = TcpStream::connect((REDIRECT_HOST, REDIRECT_PORT)).expect("listener up");
+        write!(stream, "GET {REDIRECT_PATH}?{query} HTTP/1.1\r\nHost: localhost\r\n\r\n").unwrap();
+        let mut body = String::new();
+        stream.read_to_string(&mut body).unwrap();
+        body
+    }
+
+    #[test]
+    fn cancel_ends_the_wait_and_frees_the_port() {
+        let _port = PORT.lock().unwrap_or_else(|p| p.into_inner());
+        let listener = bind_listener().expect("port free for the test");
+        let cancel = Arc::new(AtomicBool::new(false));
+        let waiter = {
+            let cancel = cancel.clone();
+            thread::spawn(move || wait_for_callback(listener, Instant::now() + LOGIN_TIMEOUT, cancel, "s"))
+        };
+        cancel.store(true, Ordering::Relaxed);
+        assert_eq!(waiter.join().unwrap().unwrap_err(), CANCELLED);
+        // The next sign-in must be able to take the port straight away.
+        assert!(bind_listener().is_ok());
+    }
+
+    #[test]
+    fn a_callback_with_someone_elses_state_does_not_end_the_wait() {
+        let _port = PORT.lock().unwrap_or_else(|p| p.into_inner());
+        let listener = bind_listener().expect("port free for the test");
+        let cancel = Arc::new(AtomicBool::new(false));
+        let waiter = thread::spawn(move || {
+            wait_for_callback(listener, Instant::now() + LOGIN_TIMEOUT, cancel, "ours")
+        });
+        assert!(get("code=stray&state=theirs").contains("Sign-in failed"));
+        assert!(get("code=abc&state=ours").contains("signed in"));
+        let callback = waiter.join().unwrap().expect("our callback ends the wait");
+        assert_eq!(callback.code.as_deref(), Some("abc"));
+        assert!(callback.error.is_none());
+    }
 }

@@ -752,6 +752,7 @@ pub fn run() {
             set_telemetry_enabled,
             chatgpt::chatgpt_status,
             chatgpt::chatgpt_login,
+            chatgpt::chatgpt_login_cancel,
             chatgpt::chatgpt_credential,
             chatgpt::chatgpt_logout
         ])

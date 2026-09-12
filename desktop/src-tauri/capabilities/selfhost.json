@@ -26,6 +26,7 @@
     "allow-set-telemetry-enabled",
     "allow-chatgpt-status",
     "allow-chatgpt-login",
+    "allow-chatgpt-login-cancel",
     "allow-chatgpt-credential",
     "allow-chatgpt-logout"
   ]

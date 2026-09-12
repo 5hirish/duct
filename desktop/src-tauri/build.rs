@@ -41,6 +41,7 @@ fn main() {
             "set_telemetry_enabled",
             "chatgpt_status",
             "chatgpt_login",
+            "chatgpt_login_cancel",
             "chatgpt_credential",
             "chatgpt_logout",
         ])),
