@@ -475,7 +475,7 @@ export default function AgentChat({
               title={
                 tierStepDown.detail
                   + (stepDownIn > 0 ? ` — back in about ${Math.ceil(stepDownIn / 60)} min` : "")
-                  + ". Set which model runs each job in Settings → Models."
+                  + ". Set which model runs each job in Settings → Models & providers."
               }
             >
               <ArrowDownRight size={12} aria-hidden="true" />

@@ -229,7 +229,7 @@ export default function UsagePage() {
 
           <p className="app-subtle usage-foot">
             Which model runs which job is set in{" "}
-            <Link href="/settings/models">Models</Link>.
+            <Link href="/settings/models">Models &amp; providers</Link>.
           </p>
         </>
       )}

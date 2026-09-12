@@ -18,7 +18,8 @@
  */
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Anvil, ArrowRight, Feather, ImageIcon, Scale, Video, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -59,6 +60,17 @@ import { DEFAULT_ENGINE } from "@/lib/engines";
 // ---------------------------------------------------------------------------
 // Small shared pieces
 // ---------------------------------------------------------------------------
+
+/**
+ * The tab lives in the URL so a refresh lands where you were.
+ *
+ * It used to be `defaultValue` — uncontrolled — which meant every reload of a
+ * page whose whole purpose is pasting a key dropped you back on Tiers, with
+ * the field you were filling one click away and no sign that it had moved.
+ * Anything that sends someone here to add a key can now say so in the link.
+ */
+const TAB_QUERY = "tab";
+const TABS = ["tiers", "providers"];
 
 function StateChip({ tone = "neutral", children, title }) {
   return (
@@ -337,7 +349,15 @@ function ImagesRow({ images, catalogue, providersById }) {
 // Page
 // ---------------------------------------------------------------------------
 
-export default function ModelSettingsPage() {
+function ModelSettings() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // An unknown `?tab=` is someone's typo or a stale link, not a third view —
+  // fall back rather than render a page with no tab selected at all.
+  const requested = searchParams.get(TAB_QUERY);
+  const tab = TABS.includes(requested) ? requested : TABS[0];
+
   const [map, setMap] = useState({});
   const [catalogue, setCatalogue] = useState(null);
   const [providers, setProviders] = useState([]);
@@ -414,6 +434,19 @@ export default function ModelSettingsPage() {
   // rather than hiding it — see ModelPicker for why filtering was wrong.
   const models = catalogue?.models ?? [];
 
+  // `replace`, not `push`: the two tabs are one page seen twice, and a Back
+  // button that walks back through tab switches instead of leaving is the
+  // thing nobody expects. `scroll: false` because a tab change is not a
+  // navigation you should be yanked to the top for.
+  const selectTab = useCallback(
+    (next) => {
+      const params = new URLSearchParams(searchParams);
+      params.set(TAB_QUERY, next);
+      router.replace(`${pathname}?${params}`, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
   const flash = useCallback((message) => {
     setSaved(message);
     clearTimeout(savedTimer.current);
@@ -486,13 +519,18 @@ export default function ModelSettingsPage() {
             </svg>
           </Link>
         </Button>
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Models</h1>
+        {/* Same words as the menu item that leads here — a menu reading
+            "Models & providers" that lands on a page headed "Models" reads as
+            the wrong page for half a second, every time. */}
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
+          Models &amp; providers
+        </h1>
         <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
           {saved}
         </span>
       </div>
 
-      <Tabs defaultValue="tiers">
+      <Tabs value={tab} onValueChange={selectTab}>
         <TabsList>
           <TabsTrigger value="tiers">Tiers</TabsTrigger>
           <TabsTrigger value="providers">Providers</TabsTrigger>
@@ -624,11 +662,16 @@ export default function ModelSettingsPage() {
 
         {/* ---------------------------------------------------------------- */}
         <TabsContent value="providers">
+          {/* Where a key is kept used to be spelled out here in full — keychain,
+              session, remembered-and-encrypted — which is the same answer each
+              card gives for itself, for its own provider, with the storage
+              glyph beside it. Two copies of that rule is how one of them goes
+              stale. This says what the page is for; the card says where your
+              key went. */}
           <p className="app-subtle mt-lede">
-            Duct runs on your own provider keys &mdash; paste one below and it&rsquo;s sent with
-            each request. On desktop they live in your OS keychain; in a browser they stay in this
-            session unless you ask Duct to remember one, which saves it encrypted so scheduled runs
-            can use it too. Use a budget-capped or restricted key where your provider offers one.
+            Duct runs on your own provider keys. Paste one below and it&rsquo;s sent with each
+            request &mdash; each card says where that key is kept. Use a budget-capped or
+            restricted key where your provider offers one.
           </p>
 
           <div className="conn-grid">
@@ -653,5 +696,27 @@ export default function ModelSettingsPage() {
 
       </Tabs>
     </section>
+  );
+}
+
+export default function ModelSettingsPage() {
+  // useSearchParams needs a Suspense boundary in the App Router. The fallback
+  // is the toolbar alone: the tab it is waiting on decides everything below
+  // it, so guessing one would flash the wrong half of the page.
+  return (
+    <Suspense
+      fallback={
+        <section>
+          <div className="page-toolbar-back">
+            <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
+              Models &amp; providers
+            </h1>
+          </div>
+          <p className="app-subtle">Loading&hellip;</p>
+        </section>
+      }
+    >
+      <ModelSettings />
+    </Suspense>
   );
 }

@@ -357,7 +357,7 @@ function SidebarUserFooter() {
         <DropdownMenuItem asChild>
           <Link href="/settings/models">
             <Cpu className="size-4" />
-            <span>Models</span>
+            <span>Models &amp; providers</span>
           </Link>
         </DropdownMenuItem>
         <PreferencesDialogMenuItem />

@@ -292,8 +292,14 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
             <KeyRound className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             <p className="leading-relaxed">
               No model provider is connected, so this can&apos;t run yet.{" "}
-              <Link href="/settings/models" className="font-medium underline underline-offset-2">
-                Connect one in Settings → Models →
+              {/* Straight to the tab with the key fields. The banner's whole
+                  complaint is that no key is set, and landing on Tiers made
+                  the reader find the one control this sentence is about. */}
+              <Link
+                href="/settings/models?tab=providers"
+                className="font-medium underline underline-offset-2"
+              >
+                Connect one in Settings → Models &amp; providers →
               </Link>{" "}
               — what you typed is still here when you come back.
             </p>
