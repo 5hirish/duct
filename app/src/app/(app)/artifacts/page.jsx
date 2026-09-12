@@ -6,10 +6,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FileText } from "lucide-react";
+import { FileText, LockKeyhole } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
 import LoadError from "@/components/LoadError";
+import EmptyState from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/format";
 import { listArtifacts } from "../../../lib/artifactsApi";
 import { Button } from "@/components/ui/button";
@@ -80,9 +81,19 @@ export default function ArtifactsPage() {
       </Tabs>
 
       {!signedIn && (
-        <p className="app-subtle" style={{ marginTop: 18 }}>
-          Sign in to see your saved artifacts.
-        </p>
+        <div style={{ marginTop: 18 }}>
+          <EmptyState
+            icon={LockKeyhole}
+            title="Sign in to see your saved artifacts"
+            actions={
+              <Button size="sm" asChild>
+                <Link href="/">Sign in</Link>
+              </Button>
+            }
+          >
+            Reports are stored against your account, so they survive the tab that made them.
+          </EmptyState>
+        </div>
       )}
 
       {signedIn && items === null && (
@@ -93,12 +104,23 @@ export default function ArtifactsPage() {
 
       {signedIn && !error && items && items.length === 0 && (
         <div style={{ marginTop: 18 }}>
-          <p className="app-subtle">
-            No artifacts yet. Run an audit with your project selected and its report lands here.
-          </p>
-          <Button asChild size="sm" style={{ marginTop: 8 }}>
-            <Link href="/audit/seo">Run an SEO audit</Link>
-          </Button>
+          <EmptyState
+            icon={FileText}
+            title="No artifacts yet"
+            actions={
+              <>
+                <Button size="sm" asChild>
+                  <Link href="/audit/seo">Run an SEO audit</Link>
+                </Button>
+                <Button size="sm" variant="ghost" asChild>
+                  <Link href="/insights/organic-growth">Ask a question</Link>
+                </Button>
+              </>
+            }
+          >
+            Run an audit with your project selected and its report lands here — versioned, so
+            you can read what changed between two runs of the same check.
+          </EmptyState>
         </div>
       )}
 

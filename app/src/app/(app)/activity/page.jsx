@@ -9,10 +9,11 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, History, ShieldCheck, Zap } from "lucide-react";
+import { FileText, History, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
 import LoadError from "@/components/LoadError";
+import EmptyState from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/format";
 import { listActivity } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
@@ -177,7 +178,20 @@ function ActivityFeed() {
       </Tabs>
 
       {!signedIn && (
-        <p className="app-subtle" style={{ marginTop: 18 }}>Sign in to see project activity.</p>
+        <div style={{ marginTop: 18 }}>
+          <EmptyState
+            icon={LockKeyhole}
+            title="Sign in to see project activity"
+            actions={
+              <Button size="sm" asChild>
+                <Link href="/">Sign in</Link>
+              </Button>
+            }
+          >
+            The trail is attributed — who approved what, and whether it was you or an agent —
+            so it only exists once there is an account to attribute it to.
+          </EmptyState>
+        </div>
       )}
 
       {signedIn && items === null && (
@@ -190,10 +204,24 @@ function ActivityFeed() {
 
       {signedIn && !error && items && items.length === 0 && (
         <div style={{ marginTop: 18 }}>
-          <p className="app-subtle">
-            No activity yet. When an agent proposes changes or writes artifacts for
-            this project, every transition lands here.
-          </p>
+          <EmptyState
+            icon={History}
+            title="No activity yet"
+            // One action, not two. The obvious second was "see what needs
+            // approval", and on a project with no activity there is nothing
+            // to approve — a button that lands on another empty page is worse
+            // than no button, because it spends the reader's trust as well as
+            // their click.
+            actions={
+              <Button size="sm" asChild>
+                <Link href="/insights/organic-growth">Ask a question</Link>
+              </Button>
+            }
+          >
+            Every change an agent proposes, everything you approve or roll back, and every
+            artifact version lands here with who did it. Nothing is written until something
+            runs.
+          </EmptyState>
         </div>
       )}
 

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brain, Trash2, Globe, Users } from "lucide-react";
+import { Brain, FolderPlus, Trash2, Globe, Users } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { deleteProject, getProjects, resolveActiveProjectId, setActiveProjectId } from "../../../lib/projects";
 import { faviconUrl, safeHostname } from "@/lib/favicon";
+import EmptyState from "@/components/ui/empty-state";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -98,14 +99,19 @@ export default function ProjectsPage() {
       </p>
 
       {!hasProjects && (
-        <div className="rounded-3xl border border-border bg-card p-6">
-          <p className="text-sm text-muted-foreground">No projects yet. A project starts from a site: Duct reads it and drafts the rest.</p>
-          <div className="mt-3">
-            <Button asChild>
+        <EmptyState
+          icon={FolderPlus}
+          title="No projects yet"
+          actions={
+            <Button size="sm" asChild>
               <Link href="/start">Audit a site</Link>
             </Button>
-          </div>
-        </div>
+          }
+        >
+          A project starts from a site: Duct reads it and drafts the rest — name, industry,
+          competitors — for you to correct. Everything else hangs off it, so this is the first
+          step.
+        </EmptyState>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

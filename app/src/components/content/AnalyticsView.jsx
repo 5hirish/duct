@@ -23,6 +23,7 @@ import {
   Share2,
   TrendingUp,
 } from "lucide-react";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { getContentAnalytics } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
@@ -45,7 +46,7 @@ function safeHref(u) {
 }
 
 
-export default function AnalyticsView({ projectId }) {
+export default function AnalyticsView({ projectId, onLinkAccounts }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -142,13 +143,30 @@ export default function AnalyticsView({ projectId }) {
           <RefreshCw className="size-4 animate-spin" /> Fetching analytics from PostBridge…
         </div>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 py-20 text-center">
-          <BarChart2 className="mb-3 size-10 text-muted-foreground/40" />
-          <p className="text-sm font-semibold">No analytics yet</p>
-          <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-            Publish posts through PostBridge and link the accounts in the Accounts tab, then hit Refresh.
-          </p>
-        </div>
+        // "Link the accounts in the Accounts tab" was a correct instruction
+        // with nothing to click, on the one tab where the reader has already
+        // decided they want this to work. The button is that same sentence.
+        <EmptyState
+          icon={BarChart2}
+          title="No analytics yet"
+          actions={
+            <>
+              {onLinkAccounts && (
+                <Button size="sm" onClick={onLinkAccounts}>
+                  Link an account
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => load(true)} disabled={refreshing}>
+                <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
+                {refreshing ? "Syncing…" : "Refresh from PostBridge"}
+              </Button>
+            </>
+          }
+        >
+          Numbers arrive from PostBridge once posts are published through it and the accounts
+          are linked. Views, likes, comments and shares only — saves and retention are entered
+          by hand on each post.
+        </EmptyState>
       ) : (
         <>
           {/* Stat cards */}

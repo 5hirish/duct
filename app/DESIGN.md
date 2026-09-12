@@ -345,7 +345,7 @@ are the canonical choices; migrate the others when a change touches them.
 | Destructive confirm | `ui/alert-dialog`: title quotes the object ("Delete \"Acme\"?"), body states scope + irreversibility, action button is verb + noun ("Delete project") in the *tinted* destructive style | the three `window.confirm` sites; the filled-red `bg-red-600` variant |
 | Destructive action (the button that opens that confirm) | `Button variant="destructive"` — the tinted style above, already shipped: `bg-destructive/10 text-destructive`. Red **at rest**, not on hover: an action worth confirming is worth seeing before the pointer arrives. Pass `buttonVariants({ variant: "destructive" })` to `AlertDialogAction`, which defaults to the primary variant | hand-rolled danger links; pasting the class string inline; raw palette (`bg-red-600 text-white`) instead of the tokens, which cannot follow the theme; anything that is only red on `:hover` |
 | Dialog actions | `DialogFooter` — bottom of the dialog, below the content they act on, destructive/secondary left and primary rightmost (it reverses to primary-first when the row stacks). Never mid-body | a hand-rolled right-aligned row anywhere above the content |
-| Empty state (whole surface) | dashed panel: `rounded-xl border-dashed p-10 text-center`, `size-12` icon tile, `text-sm font-medium` title, `text-xs text-muted-foreground` body, verb-first `Button size="sm"` CTA | ad-hoc variants; pick this anatomy every time |
+| Empty state (whole surface) | `ui/empty-state`'s `EmptyState` — the dashed panel (`rounded-xl border-dashed p-10 text-center`, `size-12` icon tile, `text-sm font-medium` title, `text-xs text-muted-foreground` body, verb-first `Button size="sm"` CTA) as a component, because four hand-rolled copies of that anatomy had already disagreed about the icon size, the radius and whether there was a CTA at all. Its `example` prop frames a sample of the *filled* surface below the panel — pass the real component over invented props (`UsagePanel`'s `UsageEmpty` is the model), never a mock-up of it, and never for a state the reader has already seen filled | ad-hoc variants; an empty state with nothing to click |
 | Empty state (inside a stable layout) | one muted line in place (`DeskCards`) so the layout doesn't jump | — |
 | First-run | the `DeskDayOne` pattern: labelled example data + a short checklist — "an empty board teaches nothing" | "No X yet" on a first-run surface |
 | Inline error | `text-sm text-destructive` line with `role="alert"`, or the boxed `border-destructive/30 bg-destructive/5` variant for section-level failures | unlabelled error text (only 4 of 31 sites set `role="alert"` today) |
@@ -357,6 +357,14 @@ are the canonical choices; migrate the others when a change touches them.
 Empty states are onboarding surfaces (NN/g): show what the filled state will
 look like or say exactly what to do, CTA verb-first ("Connect GA4", never
 "Get started").
+
+And **one zero can mean two things.** A count of nothing is ambiguous wherever
+a window or a filter is involved — a first run and a quiet fortnight are the
+same zero and want opposite actions, and telling somebody who spent $6 last
+quarter to go and run something reads as though their data was lost. Where the
+surface can afford one extra read to tell the two apart, do it and say the true
+one (`UsagePanel` probes the widest window); where it cannot, write copy that is
+true of both.
 
 Loading states inform: for anything over ~1s, say what is happening
 ("Reading last 28 days of GSC…") — skeletons read faster than spinners, but

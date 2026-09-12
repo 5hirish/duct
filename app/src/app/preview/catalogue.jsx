@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import EmptyState from "@/components/ui/empty-state";
 import { ClampText, ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -161,19 +162,39 @@ const EXAMPLES = {
     </div>
   ),
 
+  // The specimen renders `ui/empty-state` rather than restating its markup:
+  // this row is the reason the component exists, and a catalogue entry that
+  // hand-rolls the thing it documents is how the four forks started.
   "Empty state (whole surface)": () => (
-    <div className="rounded-xl border border-dashed p-10 text-center">
-      <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-muted">
-        <Inbox className="size-5 text-muted-foreground" aria-hidden="true" />
-      </div>
-      <p className="mt-3 text-sm font-medium">No briefs yet</p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Connect a source and Duct writes the first one for you.
-      </p>
-      <Button size="sm" className="mt-4">
-        Connect a source
-      </Button>
-    </div>
+    <EmptyState
+      icon={Inbox}
+      title="No briefs yet"
+      actions={<Button size="sm">Connect a source</Button>}
+    >
+      Connect a source and Duct writes the first one for you.
+    </EmptyState>
+  ),
+
+  // Same component, teaching instead of reporting: the `example` slot takes
+  // the real filled component over invented props, dimmed and out of the
+  // accessibility tree.
+  "Empty state (with an example)": () => (
+    <EmptyState
+      icon={Inbox}
+      title="No briefs yet"
+      exampleLabel="Example brief"
+      actions={<Button size="sm">Connect a source</Button>}
+      example={
+        <div className="rounded-xl border bg-card p-5">
+          <p className="text-sm font-medium">Ads says 4,212. Stripe settled 1,890.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Nobody had compared them. The gap is refunds and failed cards.
+          </p>
+        </div>
+      }
+    >
+      Connect a source and Duct writes the first one for you.
+    </EmptyState>
   ),
 
   "Empty state (inside a stable layout)": () => (

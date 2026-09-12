@@ -81,7 +81,9 @@ export default function ContentLandingPage() {
 
       {tab === "plan"      && <PlanTab      projectId={projectId} />}
       {tab === "posts"     && <PostsTab     projectId={projectId} />}
-      {tab === "analytics" && <AnalyticsView projectId={projectId} />}
+      {tab === "analytics" && (
+        <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
+      )}
       {tab === "discover"  && <DiscoverPage projectId={projectId} />}
       {tab === "library"   && <LibraryTab   projectId={projectId} />}
       {tab === "brand"     && <BrandTab     projectId={projectId} />}

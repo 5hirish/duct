@@ -9,11 +9,11 @@ import {
   Pencil,
   Plus,
   Save,
-  Sparkles,
   Trash2,
   Type,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import EmptyState from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -182,7 +182,18 @@ export default function FormatLibrary({ projectId }) {
           ))}
         </div>
       ) : formats.length === 0 ? (
-        <EmptyState onCreate={() => setEditing({})} />
+        <EmptyState
+          icon={Layers}
+          title="No formats yet"
+          actions={
+            <Button size="sm" onClick={() => setEditing({})}>
+              <Plus className="size-4" aria-hidden="true" /> Create your first format
+            </Button>
+          }
+        >
+          A format is a reusable recipe — slide structure, caption styles, image prompt rules.
+          The drafting agent reads it when it builds each post.
+        </EmptyState>
       ) : (
         <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
           {formats.map((f) => (
@@ -241,28 +252,6 @@ export default function FormatLibrary({ projectId }) {
         </AlertDialogContent>
       </AlertDialog>
     </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Empty state
-// ---------------------------------------------------------------------------
-
-function EmptyState({ onCreate }) {
-  return (
-    <div className="relative overflow-hidden rounded-xl border border-dashed border-border/70 bg-gradient-to-br from-muted/30 to-transparent p-10 text-center">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
-        <Sparkles className="h-6 w-6" />
-      </div>
-      <p className="text-sm font-medium">No formats yet</p>
-      <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
-        A format is a reusable recipe — slide structure, caption styles, image prompt rules.
-        The drafting agent reads it when it builds each post.
-      </p>
-      <Button size="sm" className="mt-4" onClick={onCreate}>
-        <Plus className="h-4 w-4" /> Create your first format
-      </Button>
-    </div>
   );
 }
 
