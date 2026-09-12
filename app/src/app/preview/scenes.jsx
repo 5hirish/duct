@@ -44,6 +44,7 @@ import TierSummary from "@/components/models/TierSummary";
 import TierCard from "@/components/models/TierCard";
 import AdvancedSettings from "@/components/models/AdvancedSettings";
 import { TelemetryPanel } from "@/components/TelemetryCard";
+import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
@@ -371,6 +372,39 @@ function TierSummaryScene({
     />
   );
 }
+
+// Two change sets for the review card: one waiting on a person with a blocked
+// row in it, one that auto-applied and can still be rolled back.
+const SAMPLE_CHANGE_SET = {
+  change_set_id: "cs_1",
+  connector_type: "google_ads",
+  account_name: "Sictec — Search",
+  title: "Cut spend on three converting-nothing search terms",
+  context: "Last 30 days: these three terms took 18% of spend and produced no conversions.",
+  status: "proposed",
+  source: "agent",
+  applied_by: "",
+  changes: [
+    { id: "c1", op_type: "add_negative_keyword", diff: 'Add negative: "free crm template"', status: "pending" },
+    { id: "c2", op_type: "pause_ad_group", diff: "Pause ad group “Brand — Exact”", status: "blocked", destructive: true,
+      guardrail_violations: ["Never pause the Brand campaign — set on this account"] },
+    { id: "c3", op_type: "add_negative_keyword", diff: 'Add negative: "duct tape"', status: "pending",
+      warnings: ["Matches 41 historical queries, 2 of which converted"] },
+  ],
+};
+
+const SAMPLE_CHANGE_SET_APPLIED = {
+  ...SAMPLE_CHANGE_SET,
+  change_set_id: "cs_2",
+  title: "Mark checkout_complete as a key event",
+  context: "",
+  status: "applied",
+  applied_by: "auto",
+  changes: [
+    { id: "c4", op_type: "mark_key_event", diff: "GA4: checkout_complete → key event", status: "applied" },
+    { id: "c5", op_type: "mark_key_event", diff: "GA4: trial_start → key event", status: "rolled_back" },
+  ],
+};
 
 export const SCENES = [
   {
@@ -902,6 +936,19 @@ export const SCENES = [
     note: "The two switches left after the image row moved up into the setup card. Closed is the state to check first: the summary line has to say what is inside, because both are things somebody arrives looking for by name. Opening it toggles real preferences, so expect the fallback card to report itself unsaved when signed out — that is the state, not a bug.",
     render: () => (
       <AdvancedSettings ladder={TIERS.map((tier) => tier.label)} />
+    ),
+  },
+  {
+    id: "change-set-card",
+    state: "proposed with a blocked change · applied, auto-applied",
+    group: "ChangeSetCard",
+    title: "The human review gate",
+    note: "The card an agent's proposed changes arrive inside, and the only place a change is approved, rejected or rolled back — so what it must always show is non-negotiable: the destructive flag, guardrail violations and preview errors in full, and whether a set arrived without a click. Check the status marks read as four distinct states at a glance (they were ✓ ✕ ↺ • as text until this pass) and that a long guardrail line wraps under its icon rather than beside it.",
+    render: () => (
+      <div style={{ display: "grid", gap: 16 }}>
+        <ChangeSetCard changeSet={SAMPLE_CHANGE_SET} />
+        <ChangeSetCard changeSet={SAMPLE_CHANGE_SET_APPLIED} />
+      </div>
     ),
   },
   {

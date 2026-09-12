@@ -17,12 +17,27 @@
  */
 
 import { useState, useEffect } from "react";
+import { Ban, Check, RotateCcw, TriangleAlert, X, Zap } from "lucide-react";
 import {
   approveChangeSet,
   applyChangeSet,
   rejectChangeSet,
   rollbackChangeSet,
 } from "@/lib/executionApi";
+
+/**
+ * The per-change mark. Four states, four lucide glyphs — it was ✓ ✕ ↺ •, which
+ * is emoji-as-icon, the tell DESIGN.md's anti-slop table names, and the only
+ * place in the app that drew status that way. A dot for "still waiting" rather
+ * than an icon: pending is the absence of an outcome, not an outcome.
+ */
+function StatusMark({ status, failed }) {
+  const cls = "mt-0.5 size-3 shrink-0";
+  if (status === "applied") return <Check className={`${cls} text-success`} aria-hidden="true" />;
+  if (status === "blocked" || failed) return <X className={`${cls} text-destructive`} aria-hidden="true" />;
+  if (status === "rolled_back") return <RotateCcw className={`${cls} text-muted-foreground`} aria-hidden="true" />;
+  return <span className="mt-[7px] size-1 shrink-0 rounded-full bg-muted-foreground/60" aria-hidden="true" />;
+}
 
 /** API change-set response → SSE-card shape, preserving per-change flags the
  * API rows don't carry (destructive comes only from the SSE card). */
@@ -105,7 +120,7 @@ export default function ChangeSetCard({ changeSet: initial }) {
   return (
     <div className="my-2 rounded-lg border border-input bg-muted/20 max-w-md overflow-hidden">
       <div className="px-3 py-2 border-b border-border/60 flex items-start gap-2">
-        <span aria-hidden="true" className="text-base leading-tight">⚡</span>
+        <Zap className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium leading-snug">{cs.title}</p>
           <p className="text-xs text-muted-foreground truncate">
@@ -130,9 +145,7 @@ export default function ChangeSetCard({ changeSet: initial }) {
         {(cs.changes || []).map((c) => (
           <li key={c.id} className="text-xs leading-snug">
             <span className="flex items-start gap-1.5">
-              <span aria-hidden="true" className="mt-0.5 shrink-0">
-                {c.status === "applied" ? "✓" : c.status === "blocked" || c.preview_error ? "✕" : c.status === "rolled_back" ? "↺" : "•"}
-              </span>
+              <StatusMark status={c.status} failed={!!c.preview_error} />
               <span className="min-w-0">
                 <span className="text-foreground/90">{c.diff || c.summary || c.op_type}</span>
                 {c.destructive && (
@@ -141,10 +154,14 @@ export default function ChangeSetCard({ changeSet: initial }) {
                   </span>
                 )}
                 {(c.warnings || []).map((w, j) => (
-                  <span key={j} className="block text-amber-700 dark:text-amber-400">⚠ {w}</span>
+                  <span key={j} className="flex items-start gap-1 text-amber-700 dark:text-amber-400">
+                    <TriangleAlert className="mt-0.5 size-3 shrink-0" aria-hidden="true" /> {w}
+                  </span>
                 ))}
                 {(c.guardrail_violations || []).map((v, j) => (
-                  <span key={j} className="block text-red-700 dark:text-red-400">⛔ {v}</span>
+                  <span key={j} className="flex items-start gap-1 text-red-700 dark:text-red-400">
+                    <Ban className="mt-0.5 size-3 shrink-0" aria-hidden="true" /> {v}
+                  </span>
                 ))}
                 {c.preview_error && (
                   <span className="block text-red-700 dark:text-red-400">Preview failed: {c.preview_error}</span>
@@ -187,9 +204,15 @@ export default function ChangeSetCard({ changeSet: initial }) {
             <button
               onClick={onRollback}
               disabled={!!busy}
-              className="rounded-md border border-input px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md border border-input px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
             >
-              {busy === "rollback" ? "Rolling back…" : "↺ Roll back"}
+              {busy === "rollback" ? (
+                "Rolling back…"
+              ) : (
+                <>
+                  <RotateCcw className="size-3.5" aria-hidden="true" /> Roll back
+                </>
+              )}
             </button>
           )}
         </div>
