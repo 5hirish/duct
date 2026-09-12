@@ -24,6 +24,12 @@ _GA4_SCOPE = GA4_READ_SCOPE
 _GA4_EDIT_SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 _TOKEN_URI = "https://oauth2.googleapis.com/token"
 
+# GA4 renamed "conversions" to "key events" in 2024 and the Data API followed;
+# the old metric name is the deprecated alias. The rows still carry the
+# figure as ``conversions`` — that is the catalog's field, and the knowledge
+# pack explains the rename to the model rather than making it learn two names.
+KEY_EVENTS_METRIC = "keyEvents"
+
 
 def _build_credentials(*, refresh_token: str, client_id: str, client_secret: str) -> Credentials:
     return Credentials(
@@ -141,7 +147,7 @@ def fetch_ga4_landing_pages(
             Metric(name="bounceRate"),
             Metric(name="engagementRate"),
             Metric(name="averageSessionDuration"),
-            Metric(name="conversions"),
+            Metric(name=KEY_EVENTS_METRIC),
             Metric(name="totalRevenue"),
         ],
         dimension_filter=FilterExpression(
@@ -216,12 +222,12 @@ def fetch_ga4_conversion_paths(
             Dimension(name="sessionDefaultChannelGroup"),
         ],
         metrics=[
-            Metric(name="conversions"),
+            Metric(name=KEY_EVENTS_METRIC),
             Metric(name="totalRevenue"),
             Metric(name="sessions"),
             Metric(name="engagedSessions"),
         ],
-        order_bys=[OrderBy(metric=OrderBy.MetricOrderBy(metric_name="conversions"), desc=True)],
+        order_bys=[OrderBy(metric=OrderBy.MetricOrderBy(metric_name=KEY_EVENTS_METRIC), desc=True)],
         limit=100,
     )
     resp = client.run_report(req)
