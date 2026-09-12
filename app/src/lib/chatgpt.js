@@ -50,13 +50,22 @@ function invoke(command, args) {
   return window.__TAURI__.core.invoke(command, args);
 }
 
-/** `{ connected, plan_type, email, account_id }` — never a token. */
+/**
+ * `{ connected, plan_type, email, account_id }` — never a token. On a failed
+ * read, `{ connected: false, error }`.
+ *
+ * The error matters and used to be swallowed. "The keychain refused to hand
+ * back your sign-in" and "you never signed in" are different facts, and
+ * collapsing them into `connected: false` renders the first one as the second:
+ * the card offers "Continue with ChatGPT" to someone who just did exactly
+ * that, which is how a stored session looks like it was forgotten.
+ */
 export async function chatgptStatus() {
   if (!(await chatgptAuthAvailable())) return { connected: false };
   try {
     return (await invoke("chatgpt_status")) || { connected: false };
-  } catch {
-    return { connected: false };
+  } catch (err) {
+    return { connected: false, error: String(err?.message ?? err) };
   }
 }
 

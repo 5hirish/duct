@@ -89,7 +89,7 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
     ),
     Provider.OPENAI: (
         "OpenAI",
-        "GPT models and images — or your ChatGPT Plus or Pro plan, no API key.",
+        "GPT models and images, or your own ChatGPT Plus or Pro plan.",
     ),
     Provider.GOOGLE_GENAI: (
         "Google Gemini",

@@ -45,7 +45,7 @@ export const PROVIDERS = [
     header: "X-Provider-OpenAI",
     placeholder: "sk-…",
     prefix: "sk-",
-    description: "GPT models and images — or your ChatGPT Plus or Pro plan, no API key.",
+    description: "GPT models and images, or your own ChatGPT Plus or Pro plan.",
     // Only OpenAI has a consumer plan Duct can run on, so the dialog's
     // "set it up" section is keyed off this rather than off the id. If a
     // second provider ever opens one up, it gets the flag, not a new branch.

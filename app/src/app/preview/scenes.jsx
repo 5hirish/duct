@@ -452,6 +452,23 @@ export const SCENES = [
     ),
   },
   {
+    id: "provider-key-loading",
+    state: "nothing answered yet",
+    group: "ProviderCard",
+    title: "Before anything is known",
+    note: "The card asks three things on mount \u2014 the server's status, the keychain, and the ChatGPT sign-in \u2014 and every one of them defaults to \"nothing here\". Rendered as-is that reads \"Not set\", a verdict delivered before the question was asked. Held here with `loading`: the dot pulses, the foot says Checking, and the storage glyph is absent because where a key lives is also a claim. Open it: the key field and the plan section say the same thing rather than offering a sign-in you may already have done.",
+    render: () => (
+      <div className="conn-grid">
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "openai")}
+          logo={LOGO}
+          status={undefined}
+          loading
+        />
+      </div>
+    ),
+  },
+  {
     id: "provider-key-mismatch",
     state: "stale value in the slot",
     group: "ProviderCard",

@@ -87,6 +87,9 @@ const TILE_TONE = { ok: "on", info: "info", warn: "off" };
  *   everywhere on this card — the tag, the section, the button — because the
  *   Codex endpoint is undocumented and "advertised but broken" is the one
  *   state worse than absent. Only OpenAI reads it; the others have no plan.
+ * @param loading  The page has not heard back about this provider yet.
+ *   Separate from the card's own two async reads below, because all three
+ *   default to "nothing here" and "nothing here" renders as a verdict.
  */
 /**
  * How the confirm names what it is about to drop, completing "Duct forgets the
@@ -97,6 +100,17 @@ const TILE_TONE = { ok: "on", info: "info", warn: "off" };
  * here — a key the server rejects offers Remove while this card holds nothing
  * of its own — so it gets a phrase rather than a blank.
  */
+/**
+ * The pill beside the provider's name on the tile.
+ *
+ * The benefit, not the mechanism. "Works with ChatGPT" describes a
+ * compatibility; what actually decides whether someone picks this provider is
+ * that a plan they already pay for replaces an API key they would otherwise
+ * have to go and buy. The tile's description names ChatGPT one line below, so
+ * the tag does not have to spend its width on it.
+ */
+const PLAN_TAG = "No API key needed";
+
 const REMOVAL_SCOPE = {
   [STORAGE_KEYCHAIN]: "held in this machine\u2019s keychain",
   [STORAGE_SESSION]: "held for this browser session",
@@ -105,7 +119,7 @@ const REMOVAL_SCOPE = {
   [STORAGE_NONE]: "stored for this provider",
 };
 
-export default function ProviderCard({ provider, logo, status, planEnabled = true }) {
+export default function ProviderCard({ provider, logo, status, planEnabled = true, loading = false }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [saved, setSaved] = useState(false);
@@ -135,17 +149,36 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
   // app does. Dropping a key is not undoable from here — whether it can be
   // recovered at all depends on whether the user still has it somewhere else,
   // which is exactly the case DESIGN.md reserves the confirm for.
+  // The card asks two more questions of its own, and until both answer it
+  // knows nothing — yet every default here reads as a settled "no": no key,
+  // no plan, so "Not set". That is the flash the user sees on every open.
+  const [keyLoaded, setKeyLoaded] = useState(false);
+  const [planLoaded, setPlanLoaded] = useState(false);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
   const planConnected = planOffered && plan.available && Boolean(plan.status?.connected);
+  // The keychain refused to answer. Not the same as "no sign-in", and it must
+  // not be shown as one: the fix is different and the user has already done
+  // the thing the card would otherwise be asking them to do.
+  const planUnreadable = planOffered && plan.available && Boolean(plan.status?.error);
 
   useEffect(() => {
-    if (!planOffered) return undefined;
+    if (!planOffered) {
+      // Nothing to ask, so nothing to wait for. Note this flips back to false
+      // when `planEnabled` arrives and turns the plan on — the card really is
+      // undetermined again at that moment.
+      setPlanLoaded(true);
+      return undefined;
+    }
     let alive = true;
+    setPlanLoaded(false);
     chatgptAuthAvailable().then(async (available) => {
       if (!alive) return;
       const current = available ? await chatgptStatus() : { connected: false };
-      if (alive) setPlan({ available, status: current });
+      if (alive) {
+        setPlan({ available, status: current });
+        setPlanLoaded(true);
+      }
     });
     return () => {
       alive = false;
@@ -158,11 +191,18 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
 
   useEffect(() => {
     let alive = true;
-    getProviderKey(provider.id).then((stored) => {
-      if (!alive) return;
-      setValue(stored || "");
-      setSaved(Boolean(stored));
-    });
+    setKeyLoaded(false);
+    getProviderKey(provider.id)
+      .then((stored) => {
+        if (!alive) return;
+        setValue(stored || "");
+        setSaved(Boolean(stored));
+      })
+      // A keychain that will not answer is not a key that is absent, but the
+      // card has to stop waiting either way.
+      .finally(() => {
+        if (alive) setKeyLoaded(true);
+      });
     return () => {
       alive = false;
     };
@@ -222,7 +262,15 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
         : STORAGE_NONE;
   const storage = keyStorage === STORAGE_NONE && planConnected ? STORAGE_KEYCHAIN : keyStorage;
   const storageSentence = REMOVAL_SCOPE[keyStorage] || REMOVAL_SCOPE[STORAGE_NONE];
-  const tile = mismatched
+  // Any one of the three outstanding, and this card has no verdict to report.
+  const settling = loading || !keyLoaded || !planLoaded;
+  const tile = settling
+    ? {
+        tone: "loading",
+        label: "Checking\u2026",
+        detail: `Looking up where ${provider.label}'s key comes from.`,
+      }
+    : mismatched
     ? {
         tone: "off",
         label: "Not a key we can use",
@@ -323,11 +371,11 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
       <ConnectorTile
         logo={logo}
         title={provider.label}
-        tag={planOffered ? "Works with ChatGPT" : undefined}
+        tag={planOffered ? PLAN_TAG : undefined}
         description={provider.description}
         tone={tile.tone}
         status={tile.label}
-        storage={storage}
+        storage={settling ? undefined : storage}
         onClick={() => setOpen(true)}
       />
 
@@ -346,7 +394,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
             <span className="conn-state-glyph" title={tile.detail}>
               <ConnectorDot tone={tile.tone} label={tile.label} />
             </span>
-            <StorageBadge storage={storage} />
+            <StorageBadge storage={settling ? undefined : storage} />
           </span>
         }
         footer={
@@ -384,7 +432,8 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 id={`provider-${provider.id}`}
                 type={revealed ? "text" : "password"}
                 value={value}
-                placeholder={provider.placeholder}
+                placeholder={settling ? "\u2026" : provider.placeholder}
+                disabled={settling}
                 onChange={(event) => setValue(event.target.value)}
                 autoComplete="off"
                 autoCapitalize="off"
@@ -408,7 +457,9 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 one grey paragraph, and the checkbox — the only control among
                 them — read as another line of small print. */}
             <div className="conn-field-notes">
-              {trimmed && !looksValid ? (
+              {settling ? (
+                <p className="conn-hint">Checking&#8230;</p>
+              ) : trimmed && !looksValid ? (
                 <p className="conn-hint">Keys usually start with &ldquo;{provider.prefix}&rdquo;.</p>
               ) : keyStorage !== STORAGE_NONE ? (
                 <StorageBadge storage={keyStorage} detail />
@@ -465,15 +516,24 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
             past a plan they may not want. */}
         {planOffered && (
           <div className="conn-dialog-section">
-            <h3 className="conn-dialog-heading">Or use your ChatGPT plan</h3>
-            <p className="conn-hint">
-              A ChatGPT Plus or Pro plan runs GPT models with no API key and nothing
-              extra to pay. Signing in opens your normal browser; Duct never sees your
-              password or your chat history, and the sign-in stays in this
-              machine&rsquo;s keychain.
-            </p>
+            {/* "Or" offers a choice. Once the choice is made it is just the
+                name of what is connected. */}
+            <h3 className="conn-dialog-heading">
+              {planConnected ? "Your ChatGPT plan" : "Or use your ChatGPT plan"}
+            </h3>
+            {/* Only before signing in. Afterwards this was three lines
+                arguing for something the user had already chosen, directly
+                above the row that says they chose it. */}
+            {!settling && !planConnected && !planUnreadable && (
+              <p className="conn-hint">
+                Runs GPT models on a plan you already pay for. Signing in opens your
+                browser; Duct never sees your password or your chats.
+              </p>
+            )}
 
-            {plan.available ? (
+            {settling ? (
+              <p className="conn-hint">Checking&#8230;</p>
+            ) : plan.available ? (
               planConnected ? (
                 <div className="conn-account-row">
                   <span className="conn-account-text">
@@ -516,7 +576,11 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
               ) : (
                 <div className="flex flex-wrap items-center gap-2">
                   <Button type="button" size="sm" onClick={signInPlan} disabled={Boolean(planBusy)}>
-                    {signingIn ? "Waiting for your browser\u2026" : "Continue with ChatGPT"}
+                    {signingIn
+                      ? "Waiting for your browser\u2026"
+                      : planUnreadable
+                        ? "Sign in again"
+                        : "Continue with ChatGPT"}
                   </Button>
                   {/* A closed tab tells the shell nothing, so this is the only
                       way back short of the five-minute timeout. */}
@@ -545,16 +609,20 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
               </ol>
             )}
 
+            {!settling && planUnreadable && (
+              <p className="conn-hint conn-hint--alert" role="alert">
+                Your ChatGPT sign-in is saved, but this build cannot read it:{" "}
+                {plan.status.error}
+              </p>
+            )}
             {planError && (
               <p className="conn-hint conn-hint--alert" role="alert">
                 {planError}
               </p>
             )}
             <p className="conn-hint">
-              {saved
-                ? "Your pasted key takes precedence over the plan. "
-                : "A key pasted above always wins over the plan. "}
-              Scheduled runs happen with no app open, so those still need a key.
+              {saved || remembered ? "Your key is used before the plan. " : ""}
+              Scheduled runs happen with no app open, so they always need a key.
             </p>
             {!desktop && (
               <p className="conn-hint">

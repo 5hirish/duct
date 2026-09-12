@@ -359,7 +359,10 @@ function ModelSettings() {
 
   const [map, setMap] = useState({});
   const [catalogue, setCatalogue] = useState(null);
-  const [providers, setProviders] = useState([]);
+  // null until the server answers, not []. An empty array is a real answer
+  // ("no providers"), and the cards rendered it as "Not set" — a definite
+  // claim about every provider, made before anything had been asked.
+  const [providers, setProviders] = useState(null);
   // The server's pick for the image tools, or null until it answers.
   const [images, setImages] = useState(null);
   // The backend's kill switch for the ChatGPT tile; off until it answers.
@@ -413,7 +416,7 @@ function ModelSettings() {
 
   const providersById = useMemo(() => {
     const byId = {};
-    for (const provider of providers) byId[provider.id] = provider;
+    for (const provider of providers ?? []) byId[provider.id] = provider;
     return byId;
   }, [providers]);
 
@@ -684,6 +687,7 @@ function ModelSettings() {
                 logo={LOGOS[provider.id]}
                 status={providersById[provider.statusId]}
                 planEnabled={chatgptAuthEnabled}
+                loading={providers === null}
               />
             ))}
             {/* Desktop only, and only in a build that can actually report —

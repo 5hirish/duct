@@ -12,11 +12,14 @@ const DOT_CLASS = {
   on: "conn-dot--on",
   info: "conn-dot--info",
   partial: "conn-dot--partial",
+  // Not a state, the absence of one: nothing has been asked yet. Grey alone
+  // would be indistinguishable from "off", which is a claim.
+  loading: "conn-dot--loading",
   off: "",
 };
 
 /**
- * @param tone  "on" | "info" | "partial" | "off"
+ * @param tone  "on" | "info" | "partial" | "loading" | "off"
  * @param label  The state in words, when the dot is the only thing saying it.
  *   Omit where the state is already spelled out next to it — a second reading
  *   of "Connected" is noise to a screen reader, and colour is not the only

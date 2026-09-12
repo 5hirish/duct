@@ -146,8 +146,14 @@
   font-weight: 500;
   line-height: 1.35;
   white-space: nowrap;
-  color: var(--muted-foreground);
-  background: color-mix(in oklch, var(--foreground) 4%, transparent);
+  /* The accent, not a status colour. A tag is the one thing on the tile worth
+     noticing before the name — "you can use this without buying an API key" is
+     the reason someone picks this provider at all — and in muted grey on a grey
+     tint it was the least prominent thing in the row. Green/amber/red stay
+     reserved for state in the foot (DESIGN.md, the accent rule). */
+  color: var(--primary);
+  border-color: color-mix(in oklch, var(--primary) 35%, transparent);
+  background: color-mix(in oklch, var(--primary) 12%, transparent);
 }
 
 .conn-tile-chevron {
@@ -212,6 +218,30 @@
   border-radius: 50%;
   flex-shrink: 0;
   background: color-mix(in oklch, var(--muted-foreground) 55%, transparent);
+}
+
+/* Still being determined. It pulses so it reads as "asking", not as a settled
+   grey "off" — the tile's own words say "Checking…" beside it, so the motion
+   is reinforcement rather than the only channel (WCAG 1.4.1). */
+.conn-dot--loading {
+  animation: conn-dot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes conn-dot-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conn-dot--loading {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 .conn-dot--on {
