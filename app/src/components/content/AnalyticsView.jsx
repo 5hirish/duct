@@ -163,9 +163,7 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
             </>
           }
         >
-          Numbers arrive from PostBridge once posts are published through it and the accounts
-          are linked. Views, likes, comments and shares only — saves and retention are entered
-          by hand on each post.
+          Numbers arrive once posts go out through PostBridge and the accounts are linked.
         </EmptyState>
       ) : (
         <>

@@ -122,8 +122,8 @@ export default function DiscoverPage({ projectId }) {
           <Sparkles className="h-4 w-4 text-primary" /> Discover what&apos;s working
         </h2>
         <p className="mt-0.5 max-w-prose text-xs text-muted-foreground">
-          Scrape real TikTok posts in your niche. Save the best ones — the research sub-agent
-          cites them when proposing topics, so your plan is grounded in what already gets reach.
+          Scrape real posts in your niche. What you save, the research agent cites when it
+          proposes topics.
         </p>
       </header>
 

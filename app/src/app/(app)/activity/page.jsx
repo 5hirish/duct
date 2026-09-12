@@ -188,8 +188,8 @@ function ActivityFeed() {
               </Button>
             }
           >
-            The trail is attributed — who approved what, and whether it was you or an agent —
-            so it only exists once there is an account to attribute it to.
+            Every entry names who did it, so the trail starts once there is an account to
+            name.
           </EmptyState>
         </div>
       )}
@@ -218,9 +218,8 @@ function ActivityFeed() {
               </Button>
             }
           >
-            Every change an agent proposes, everything you approve or roll back, and every
-            artifact version lands here with who did it. Nothing is written until something
-            runs.
+            Proposals, approvals, rollbacks and artifact versions land here, each with who
+            did it.
           </EmptyState>
         </div>
       )}

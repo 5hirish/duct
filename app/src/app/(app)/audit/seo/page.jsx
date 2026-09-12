@@ -246,8 +246,9 @@ export default function SeoAuditSetupPage() {
               <div>
                 <p className="text-sm font-medium">Remember this session</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Off means a one-off: nothing from project memory is read into the run, and
-                  nothing it concludes is written back. Your report is still saved.
+                  {remember
+                    ? "This run reads project memory, and what it concludes is written back."
+                    : "A one-off: project memory is neither read nor written. The report is still saved."}
                 </p>
               </div>
               <button

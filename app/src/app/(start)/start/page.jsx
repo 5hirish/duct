@@ -425,8 +425,8 @@ function StartPageContent() {
                 <p className="start-warn">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
                   <span>
-                    The site answered <code>{site.http_status}</code> to our crawler — it may sit behind a bot
-                    wall. The audit can still run, but it will be thin.
+                    The site answered <code>{site.http_status}</code> to our crawler, so this audit will be
+                    thin — it may sit behind a bot wall.
                   </span>
                 </p>
               )}
@@ -434,8 +434,8 @@ function StartPageContent() {
                 <p className="start-warn">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
                   <span>
-                    This looks like a client-rendered app. The crawler sees what a search engine sees, which
-                    may not be much — the audit will say so.
+                    This looks like a client-rendered app, so the crawler may see very little — the same
+                    as a search engine.
                   </span>
                 </p>
               )}

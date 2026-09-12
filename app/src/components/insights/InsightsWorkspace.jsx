@@ -321,8 +321,7 @@ function BriefPane({ brief, writing, empty }) {
   if (empty || !brief) {
     return (
       <p className="p-4 text-xs text-muted-foreground">
-        Nothing written yet. When Duct has an answer worth keeping it writes a brief
-        here — versioned, so you can see what changed between reads.
+        Nothing written yet. An answer worth keeping becomes a brief here.
       </p>
     );
   }
@@ -360,8 +359,7 @@ function DataPane({ fetched }) {
   if (!fetched.length) {
     return (
       <p className="p-4 text-xs text-muted-foreground">
-        Nothing yet. Duct pulls only what your question needs, and shows each source
-        and the period it covers here.
+        Nothing yet. Each source Duct pulls shows up here, with the period it covers.
       </p>
     );
   }

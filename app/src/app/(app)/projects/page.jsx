@@ -108,9 +108,8 @@ export default function ProjectsPage() {
             </Button>
           }
         >
-          A project starts from a site: Duct reads it and drafts the rest — name, industry,
-          competitors — for you to correct. Everything else hangs off it, so this is the first
-          step.
+          A project starts from a site. Duct reads it and drafts the rest — name, industry,
+          competitors — for you to correct.
         </EmptyState>
       )}
 
@@ -222,8 +221,8 @@ export default function ProjectsPage() {
                 : "Delete project?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the project and its saved configuration from this browser. Saved reports are not removed
-              automatically. This cannot be undone.
+              This removes the project and its configuration from this browser, and cannot be
+              undone. Saved reports stay where they are.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -141,8 +141,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
       <div>
         <h2 className="text-lg font-semibold tracking-tight">Brand context</h2>
         <p className="text-sm text-muted-foreground">
-          The tone, messaging, pillars, and visual identity the content agent uses. Core
-          business details are inherited from your project setup.
+          The tone, messaging, pillars and visual identity the content agent works from.
         </p>
       </div>
 
@@ -161,8 +160,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
               From project context
             </h3>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Company, website, audience, and brand voice live in your project setup so they
-              stay consistent across audit, insights, and content.
+              Set once in project setup, so audit, insights and content agree.
             </p>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/project/${projectId}#brand`}>

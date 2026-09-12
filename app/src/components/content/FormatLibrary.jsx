@@ -205,8 +205,8 @@ export default function FormatLibrary({ projectId }) {
             </Button>
           }
         >
-          A format is a reusable recipe — slide structure, caption styles, image prompt rules.
-          The drafting agent reads it when it builds each post.
+          A reusable recipe — slide structure, caption styles, image prompt rules — that the
+          drafting agent follows.
         </EmptyState>
       ) : (
         <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
