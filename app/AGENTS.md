@@ -202,6 +202,15 @@ it is a claim about the code, not a way to quiet the check.
   leaves the app believing it is signed in. Opt out with `retireSession: false`
   only where signing out costs the user something they just did — the connector
   save does, because its 401 lands on the way back from the provider.
+  It also records **which backend minted the session** (`AUTH_BACKEND_KEY`,
+  written by `setAuthToken`), because the shell addresses two — its sidecar and
+  the hosted API — and a token from the wrong one is well-formed, unexpired and
+  correctly signed, so nothing else on the client can tell it apart.
+  `reconcileStoredSession()` runs once, from `LocalBackendGate`, and discards a
+  mismatch *quietly*: no event, no parked redirect, no "your session ended".
+  That is the distinction — a mismatch is not an expiry, and treating it as one
+  is what signed people out mid-use. A session with no recorded issuer predates
+  this and is left alone, so upgrading signs nobody out.
 
 ## UI conventions
 

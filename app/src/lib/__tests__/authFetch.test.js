@@ -7,11 +7,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../api.js", () => ({
   BASE: "http://test.local",
   backendApiKey: vi.fn(() => ""),
+  // Which backend BASE points at. A function, not a constant, because the
+  // whole point of the pinning tests is that it changes between page loads.
+  backendIdentity: vi.fn(() => "https://api.test.local"),
 }));
 
-import { backendApiKey } from "../api.js";
+import { backendApiKey, backendIdentity } from "../api.js";
 import {
+  AUTH_BACKEND_KEY,
   AUTH_TOKEN_KEY,
+  DESKTOP_AUTH_BACKEND_KEY,
   DESKTOP_AUTH_TOKEN_KEY,
   POST_SIGNIN_REDIRECT_KEY,
   SESSION_EXPIRED_EVENT,
@@ -28,6 +33,7 @@ import {
   hasAuthToken,
   isSessionExpired,
   isTokenValid,
+  reconcileStoredSession,
   setAuthToken,
   throwForStatus,
 } from "../authFetch.js";
@@ -121,6 +127,81 @@ describe("authTokenKey / storage", () => {
     setAuthToken("desktop-token");
     expect(globalThis.window.localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
     expect(globalThis.window.localStorage.getItem(DESKTOP_AUTH_TOKEN_KEY)).toBe("desktop-token");
+  });
+});
+
+// A session token is signed by whichever backend minted it, and the desktop
+// shell can address two: its bundled sidecar and the hosted API. The token from
+// the wrong one is well-formed, unexpired and correctly signed — so it used to
+// arrive as a 401 and take the whole session down with it. These pin the
+// difference between "your session ended" and "that token is not for this
+// server".
+describe("reconcileStoredSession", () => {
+  beforeEach(() => {
+    globalThis.window = fakeWindow();
+    backendIdentity.mockReturnValue("https://api.test.local");
+  });
+
+  it("records the minting backend beside the token", () => {
+    setAuthToken("t1");
+    expect(globalThis.window.localStorage.getItem(AUTH_BACKEND_KEY)).toBe("https://api.test.local");
+  });
+
+  it("keeps a session minted by the backend this page load talks to", () => {
+    setAuthToken("t1");
+    expect(reconcileStoredSession()).toBe("match");
+    expect(authToken()).toBe("t1");
+  });
+
+  it("discards a session minted by the other backend", () => {
+    setAuthToken("t1");
+    backendIdentity.mockReturnValue("local");
+    expect(reconcileStoredSession()).toBe("discarded");
+    expect(hasAuthToken()).toBe(false);
+  });
+
+  it("discarding is quiet — it is not the treatment a dead session gets", () => {
+    setAuthToken("t1");
+    backendIdentity.mockReturnValue("local");
+    reconcileStoredSession();
+    // No SESSION_EXPIRED_EVENT, no parked redirect, no "your session ended"
+    // notice. The app renders signed out, which is true of this backend.
+    expect(globalThis.window.dispatchEvent).not.toHaveBeenCalled();
+    expect(globalThis.window.sessionStorage.getItem(POST_SIGNIN_REDIRECT_KEY)).toBeNull();
+    expect(globalThis.window.sessionStorage.getItem(SIGNIN_REASON_KEY)).toBeNull();
+  });
+
+  it("leaves a session stored before issuers were recorded alone", () => {
+    // Signing everyone out once on upgrade is the exact thing this prevents.
+    globalThis.window.localStorage.setItem(AUTH_TOKEN_KEY, "legacy-token");
+    expect(reconcileStoredSession()).toBe("unpinned");
+    expect(authToken()).toBe("legacy-token");
+  });
+
+  it("an unknown base is not a mismatch", () => {
+    setAuthToken("t1");
+    backendIdentity.mockReturnValue("");
+    expect(reconcileStoredSession()).toBe("match");
+    expect(authToken()).toBe("t1");
+  });
+
+  it("clearing a session takes its issuer with it", () => {
+    setAuthToken("t1");
+    clearAuthToken();
+    expect(globalThis.window.localStorage.getItem(AUTH_BACKEND_KEY)).toBeNull();
+  });
+
+  it("the shell judges its own session, not the browser tab's", () => {
+    globalThis.window = fakeWindow({ tauri: {} });
+    setAuthToken("desktop-token");
+    expect(globalThis.window.localStorage.getItem(AUTH_BACKEND_KEY)).toBeNull();
+    expect(globalThis.window.localStorage.getItem(DESKTOP_AUTH_BACKEND_KEY)).toBe(
+      "https://api.test.local"
+    );
+
+    backendIdentity.mockReturnValue("local");
+    expect(reconcileStoredSession()).toBe("discarded");
+    expect(globalThis.window.localStorage.getItem(DESKTOP_AUTH_TOKEN_KEY)).toBeNull();
   });
 });
 

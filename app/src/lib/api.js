@@ -27,6 +27,32 @@ const hostedBase = normalizedConfiguredBase || (isProduction ? "" : "http://loca
  */
 export let BASE = hostedBase;
 
+/**
+ * The desktop shell's bundled backend, as a session can refer to it.
+ *
+ * Not its URL: the sidecar binds port 0 and gets a new port every launch, so
+ * the URL identifies a *run*, not a backend. Its database and its JWT secret
+ * both live in one per-install data directory, so one install has exactly one
+ * local backend and this constant names it for as long as that install lasts.
+ */
+export const LOCAL_BACKEND_ID = "local";
+
+/**
+ * Which backend `BASE` currently points at, stable enough to pin a session to.
+ *
+ * A session token is signed by whoever minted it, and the shell can talk to
+ * either the sidecar or the hosted API. Storing this alongside the token is
+ * what lets `authFetch` tell "you are signed out" from "this token belongs to
+ * the other backend" — the second used to arrive as a 401 and retire a session
+ * that was never bad. Empty when no base is configured, which reads as
+ * "unknown" rather than as a mismatch.
+ */
+let backendId = hostedBase;
+
+export function backendIdentity() {
+  return backendId;
+}
+
 /** Must match backend DUCT_API_KEY. Prefer a Next server proxy in production so this is not public. */
 let apiKey = process.env.NEXT_PUBLIC_DUCT_API_KEY || "";
 
@@ -45,6 +71,7 @@ export function backendApiKey() {
 export function useLocalBackend({ url, apiKey: localKey }) {
   BASE = String(url || "").replace(/\/+$/, "");
   apiKey = localKey || "";
+  backendId = LOCAL_BACKEND_ID;
 }
 
 function backendApiHeaders(extra = {}) {
