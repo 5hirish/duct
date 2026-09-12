@@ -22,7 +22,7 @@
 // install a convenience copy must not fail a build that otherwise succeeded.
 
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -43,6 +43,15 @@ if (!existsSync(source)) {
 }
 
 try {
+  // Replace, never merge. `ditto` onto an existing bundle copies the new files
+  // in and leaves everything else where it was — so a resource the build has
+  // stopped shipping survives from whatever was installed before. That is how
+  // the sidecar frozen on 2026-09-07 outlived the thin-client change: every
+  // later dev build was clean, every install kept the old
+  // Resources/duct-sidecar, and sidecar.rs prefers a bundled copy over the
+  // fresh backend/dist fallback, so the app ran weeks-old Python while the
+  // build log said otherwise.
+  rmSync(target, { recursive: true, force: true });
   execFileSync("ditto", [source, target], { stdio: "inherit" });
   console.log(`Installed ${APP_NAME} to /Applications — searchable in Spotlight.`);
 } catch (err) {
