@@ -485,7 +485,7 @@ function GuardrailsPanel() {
       .then(setRows)
       .catch((err) => {
         setRows([]);
-        setError(err.message || "Failed to load guardrails.");
+        setError(err.message || "Couldn't load your guardrails. The queue above is unaffected.");
       });
   }, []);
 
@@ -515,7 +515,7 @@ function GuardrailsPanel() {
       setForm((f) => ({ ...f, rule: "", op_types: "", target_contains: "" }));
       load();
     } catch (err) {
-      setError(err.message || "Failed to create guardrail.");
+      setError(err.message || "That guardrail wasn't saved — nothing on your account changed.");
     } finally {
       setSaving(false);
     }
@@ -526,7 +526,7 @@ function GuardrailsPanel() {
       await deleteGuardrail(id);
       load();
     } catch (err) {
-      setError(err.message || "Failed to delete guardrail.");
+      setError(err.message || "That guardrail is still in place — removing it didn't go through.");
     }
   }
 
@@ -749,7 +749,7 @@ export default function ExecutePage() {
       setAutonomy(updated.autonomyLevel);
     } catch (err) {
       setAutonomy(prev);
-      setAutonomyError(err.message || "Failed to update autonomy.");
+      setAutonomyError(err.message || "Autonomy is unchanged — that didn't save.");
     } finally {
       setAutonomySaving(false);
     }

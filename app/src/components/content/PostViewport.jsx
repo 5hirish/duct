@@ -106,7 +106,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
       setDirty(false);
       return updated;
     } catch (err) {
-      setSaveError(err.message || "Failed to save post.");
+      setSaveError(err.message || "Your edits are still here, but they didn't save. Try again.");
       throw err;
     } finally {
       setSaving(false);

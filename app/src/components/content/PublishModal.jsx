@@ -15,6 +15,7 @@ import {
   publishPost,
 } from "@/lib/contentApi";
 import { PLATFORM_LABELS } from "@/lib/contentEnums";
+import { friendlyErrorMessage } from "@/lib/agentSession";
 
 /**
  * Publish flow:
@@ -269,13 +270,10 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   );
 }
 
+// A near-copy of `friendlyErrorMessage` used to live here — same four classes,
+// slightly different wording, so the same failure read differently depending on
+// which surface caught it. One translator now; publishing's own case
+// (POSTBRIDGE) is already in its table.
 function friendlyError(err) {
-  const msg = err?.message || String(err || "");
-  if (!msg) return "Something went wrong. Please try again.";
-  if (/connect/i.test(msg))    return "Publishing isn't connected. Ask your admin to set it up.";
-  if (/rate limit|429/i.test(msg)) return "Hit the rate limit — wait a minute and try again.";
-  if (/network|connection/i.test(msg)) return "Couldn't reach the service. Check your internet and try again.";
-  // Don't leak status codes or stack traces to the user.
-  if (/^\d{3}\b/.test(msg))    return "Publishing failed. Please try again in a moment.";
-  return msg;
+  return friendlyErrorMessage(err?.message || String(err || ""));
 }

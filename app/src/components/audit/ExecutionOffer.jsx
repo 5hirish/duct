@@ -309,7 +309,7 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
             />
 
             {status === 'error' && (
-              <p className="mt-2 text-[12px] text-red-600">Something went wrong — please try again.</p>
+              <p className="mt-2 text-[12px] text-red-600">That didn&rsquo;t send — your choices are still here. Try again.</p>
             )}
 
             <button

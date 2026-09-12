@@ -7,6 +7,7 @@ import PostViewport from "@/components/content/PostViewport";
 import PublishModal from "@/components/content/PublishModal";
 import { getPost } from "@/lib/contentApi";
 import { getActiveProjectId } from "@/lib/projects";
+import LoadError from "@/components/LoadError";
 
 /**
  * Per-post draft workspace. Two routes here:
@@ -30,6 +31,7 @@ export default function PostDetailPage() {
   const [post, setPost] = useState(null);
   const [revise, setRevise] = useState(false);
   const [err, setErr] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
   const [publishOpen, setPublishOpen] = useState(false);
 
   useEffect(() => {
@@ -47,16 +49,16 @@ export default function PostDetailPage() {
         const p = await getPost(postId);
         if (!cancelled) setPost(p);
       } catch (e) {
-        if (!cancelled) setErr(e.message || "Failed to load post.");
+        if (!cancelled) setErr(e.message || "");
       }
     })();
     return () => { cancelled = true; };
-  }, [postId]);
+  }, [postId, reloadKey]);
 
   if (err) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-destructive">{err}</p>
+      <div className="mx-auto w-full max-w-2xl px-4">
+        <LoadError what="this post" detail={err} onRetry={() => { setErr(""); setReloadKey((k) => k + 1); }} />
       </div>
     );
   }

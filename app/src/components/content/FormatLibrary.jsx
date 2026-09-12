@@ -44,6 +44,7 @@ import {
   deleteFormat,
 } from "@/lib/contentApi";
 import MarkdownSpec from "@/components/content/MarkdownSpec";
+import LoadError from "@/components/LoadError";
 
 const SLIDE_MIN = 1;
 const SLIDE_MAX = 12;
@@ -112,7 +113,11 @@ function glyphFor(f) {
 export default function FormatLibrary({ projectId }) {
   const [formats, setFormats] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Two failures, kept apart: `loadError` means the list never arrived and the
+  // section is empty behind it (LoadError, with a retry); `error` is an action
+  // that failed against a list still on screen.
   const [error,   setError]   = useState("");
+  const [loadError, setLoadError] = useState("");
 
   const [viewing, setViewing] = useState(null);   // format being viewed
   const [editing, setEditing] = useState(null);   // format being edited, or {} for new
@@ -122,10 +127,11 @@ export default function FormatLibrary({ projectId }) {
   async function refresh() {
     try {
       setError("");
+      setLoadError("");
       const list = await listFormats(projectId);
       setFormats(Array.isArray(list) ? list : []);
     } catch (e) {
-      setError(e.message || "Failed to load formats.");
+      setLoadError(e.message || "");
     } finally {
       setLoading(false);
     }
@@ -147,7 +153,7 @@ export default function FormatLibrary({ projectId }) {
       setViewing(null);
       await refresh();
     } catch (e) {
-      setError(e.message || "Delete failed.");
+      setError(e.message || "That format could not be deleted — it is still in the library.");
     } finally {
       setBusy(false);
     }
@@ -174,6 +180,14 @@ export default function FormatLibrary({ projectId }) {
       </div>
 
       {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
+
+      {loadError && (
+        <LoadError
+          what="your formats"
+          detail={loadError}
+          onRetry={() => { setLoading(true); refresh(); }}
+        />
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">

@@ -180,7 +180,7 @@ export default function SeoAuditSetupPage() {
       sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));
       router.push(`/audit/seo/${sessionId}`);
     } catch (err) {
-      setError(err.message || "Failed to start audit.");
+      setError(err.message || "The audit didn't start. Check the address and try again.");
       setLoading(false);
     }
   }

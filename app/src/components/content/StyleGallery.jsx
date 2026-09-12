@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Sparkles, X } from "lucide-react";
 import { listStyles } from "@/lib/contentApi";
+import LoadError from "@/components/LoadError";
 
 // ---------------------------------------------------------------------------
 // Live preview — render the real CSS inside an isolated iframe so global
@@ -86,6 +87,7 @@ export default function StyleGallery() {
   const [baseCss, setBaseCss] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,13 +98,13 @@ export default function StyleGallery() {
         setStyles(Array.isArray(data?.styles) ? data.styles : []);
         setBaseCss(data?.base_css || "");
       } catch (e) {
-        if (!cancelled) setError(e.message || "Failed to load styles.");
+        if (!cancelled) setError(e.message || "");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [reloadKey]);
 
   const grouped = useMemo(() => {
     const g = {};
@@ -119,7 +121,15 @@ export default function StyleGallery() {
       </div>
     );
   }
-  if (error) return <p className="text-sm text-destructive">{error}</p>;
+  if (error) {
+    return (
+      <LoadError
+        what="the slide styles"
+        detail={error}
+        onRetry={() => { setError(""); setLoading(true); setReloadKey((k) => k + 1); }}
+      />
+    );
+  }
 
   return (
     <section className="space-y-6">

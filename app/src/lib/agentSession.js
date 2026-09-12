@@ -558,7 +558,7 @@ export function reduceAgentSession(state, action) {
         phase: state.phase === Phase.CHATTING ? Phase.READY : state.phase,
         messages: [
           ...releaseQueued(state.messages, action.clientId),
-          { role: Row.SEND_ERROR, text: action.error || "Failed to send message.", content: action.content ?? null },
+          { role: Row.SEND_ERROR, text: action.error || "Your message didn't reach the agent.", content: action.content ?? null },
         ],
       };
 
@@ -582,7 +582,7 @@ export function reduceAgentSession(state, action) {
         phase: Phase.QUESTIONS,
         messages: [
           ...state.messages,
-          { role: Row.SEND_ERROR, text: `Failed to submit: ${action.error || "network error"}.`, content: null },
+          { role: Row.SEND_ERROR, text: `Your answer didn't go through — ${action.error || "the network dropped it"}.`, content: null },
         ],
       };
 
@@ -669,7 +669,7 @@ const ERROR_COPY = Object.freeze({
   [ErrorCode.CONNECTOR_EXPIRED]:   { text: "A connected account needs reconnecting before the agent can read it.", action: ErrorAction.CONNECTIONS },
   [ErrorCode.CONNECTOR_FORBIDDEN]: { text: "A connected account doesn't have access to that data. Check its permissions under Connections.", action: ErrorAction.CONNECTIONS },
   [ErrorCode.CANCELLED]:           { text: "Stopped.", action: ErrorAction.RETRY },
-  [ErrorCode.UNKNOWN]:             { text: "Something went wrong. Try again.", action: ErrorAction.RETRY },
+  [ErrorCode.UNKNOWN]:             { text: "The run stopped without saying why. Try again.", action: ErrorAction.RETRY },
 });
 
 /** The action a failure with this code deserves. No code means the old
@@ -686,11 +686,15 @@ export function errorAction(code) {
  * and never passes through anything that looks like a traceback or a status
  * code.
  */
+// Said twice below — for a leaked traceback and for a message too technical to
+// show — and they are the same claim: ours, logged, and worth one more try.
+const SERVER_FAULT = "Something broke on our end. It's logged — try again in a moment.";
+
 export function friendlyErrorMessage(raw, code = "") {
   const known = ERROR_COPY[code];
   if (known) return known.text;
   const msg = String(raw || "").trim();
-  if (!msg) return "Something went wrong. Please try again.";
+  if (!msg) return "The run stopped without saying why. Try again.";
 
   // Configuration gaps
   if (/ANTHROPIC_API_KEY/i.test(msg)) return "The assistant isn't connected. Ask your admin to finish setup.";
@@ -707,10 +711,10 @@ export function friendlyErrorMessage(raw, code = "") {
   if (/validation|invalid|missing/i.test(msg) && msg.length < 200) return "Some input wasn't valid — please review and try again.";
 
   // Don't leak status codes / file paths / stack traces.
-  if (/^\d{3}\b/.test(msg) || /Traceback|line \d+/i.test(msg)) return "Something went wrong on our end. Please try again in a moment.";
+  if (/^\d{3}\b/.test(msg) || /Traceback|line \d+/i.test(msg)) return SERVER_FAULT;
 
   // Reasonably short, doesn't look technical → pass through.
   if (msg.length < 200 && !/^\w+Error:/.test(msg)) return msg;
 
-  return "Something went wrong. Please try again.";
+  return SERVER_FAULT;
 }

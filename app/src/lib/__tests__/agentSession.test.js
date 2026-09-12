@@ -272,10 +272,10 @@ describe("failure and reconnect", () => {
 
 describe("friendlyErrorMessage", () => {
   it.each([
-    ["", "Something went wrong. Please try again."],
+    ["", "The run stopped without saying why. Try again."],
     ["429 Too Many Requests", "We're hitting a rate limit — wait a minute and try again."],
     ["Read timed out", "That took longer than expected. Try again."],
-    ["Traceback (most recent call last): line 12", "Something went wrong on our end. Please try again in a moment."],
+    ["Traceback (most recent call last): line 12", "Something broke on our end. It's logged — try again in a moment."],
     ["That turn failed. Try rephrasing.", "That turn failed. Try rephrasing."],
   ])("%s", (raw, expected) => {
     expect(friendlyErrorMessage(raw)).toBe(expected);
