@@ -28,6 +28,21 @@ So this checks:
    the version changed too. Per `desktop/AGENTS.md`, a new capability flag is a
    MINOR bump; removing one is MAJOR (MINOR while pre-1.0).
 
+3. The strings that identify a user's saved credentials never change by
+   accident. macOS stores each keychain item with an ACL naming the app that
+   wrote it, matched by code-signing *designated requirement* — for a Developer
+   ID build that is the bundle identifier plus the team OU. Both are stable
+   across versions, which is exactly why an update or a reinstall keeps a user
+   signed in. Change the bundle identifier and every installed copy stops
+   matching: saved provider keys and the ChatGPT sign-in become unreadable, on
+   every machine, with no migration path and no error the user can act on.
+   Rename a keychain service and the same thing happens one service at a time.
+   The sidecar's data directory is the same bargain for the local database.
+
+   None of these can be checked by compiling. They are four string literals in
+   three languages that must agree, so they are pinned here — a deliberate edit
+   means updating this list and saying why in the PR.
+
 Usage: check-shell-contract.py [base-ref]   # base-ref defaults to origin/main
 """
 
@@ -46,6 +61,19 @@ LIB_RS = "desktop/src-tauri/src/lib.rs"
 SRC_TAURI = REPO_ROOT / "desktop/src-tauri"
 BUILD_RS = SRC_TAURI / "build.rs"
 CAPABILITIES = SRC_TAURI / "capabilities"
+
+APPDIRS_PY = "backend/utils/appdirs.py"
+CHATGPT_RS = "desktop/src-tauri/src/chatgpt.rs"
+
+# Identity of a user's stored credentials. See point 3 above before touching.
+BUNDLE_IDENTIFIER = "ai.getduct.desktop"
+CREDENTIAL_STORES = {
+    # where                      what it must say
+    (LIB_RS, "KEYCHAIN_SERVICE"): "ai.getduct.desktop.provider-keys",
+    (LIB_RS, "KEYCHAIN_SIDECAR_SERVICE"): "ai.getduct.desktop.sidecar",
+    (CHATGPT_RS, "KEYCHAIN_SERVICE"): "ai.getduct.desktop.chatgpt",
+    (APPDIRS_PY, "APP_IDENTIFIER"): "ai.getduct.desktop",
+}
 
 
 def read_base(ref: str, path: str) -> str | None:
@@ -124,9 +152,38 @@ def command_registrations() -> list[str]:
     return problems
 
 
+def credential_identity() -> list[str]:
+    """Every string a user's saved credentials are filed under, still itself."""
+    problems: list[str] = []
+
+    identifier = str(json.loads((REPO_ROOT / TAURI_CONF).read_text()).get("identifier", ""))
+    if identifier != BUNDLE_IDENTIFIER:
+        problems.append(
+            f"{TAURI_CONF} identifier is {identifier!r}, expected {BUNDLE_IDENTIFIER!r}.\n"
+            "    The keychain ACL on every installed copy is bound to this string. Changing\n"
+            "    it signs out every existing user with no way back. If that is genuinely\n"
+            "    intended, update BUNDLE_IDENTIFIER here and ship a migration first."
+        )
+
+    for (path, name), expected in sorted(CREDENTIAL_STORES.items()):
+        text = (REPO_ROOT / path).read_text(encoding="utf-8")
+        # `const NAME: &str = "..."` (Rust) or `NAME = "..."` (Python).
+        found = re.search(rf'\b{re.escape(name)}\b[^=\n]*=\s*"([^"]+)"', text)
+        if not found:
+            problems.append(f"could not find {name} in {path} — has it been renamed?")
+        elif found.group(1) != expected:
+            problems.append(
+                f"{path}: {name} is {found.group(1)!r}, expected {expected!r}.\n"
+                "    Users' existing credentials are filed under the old name and will not\n"
+                "    be found under the new one. Update the pin here only alongside a\n"
+                "    migration that reads the old name and rewrites it."
+            )
+    return problems
+
+
 def main() -> int:
     base = sys.argv[1] if len(sys.argv) > 1 else "origin/main"
-    errors: list[str] = command_registrations()
+    errors: list[str] = command_registrations() + credential_identity()
 
     head_conf = (REPO_ROOT / TAURI_CONF).read_text(encoding="utf-8")
     head_cargo = (REPO_ROOT / CARGO_TOML).read_text(encoding="utf-8")
