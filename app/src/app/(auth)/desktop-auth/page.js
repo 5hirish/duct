@@ -29,33 +29,37 @@ import { Button } from "@/components/ui/button";
 const SHELL_SCHEME =
   process.env.NEXT_PUBLIC_SHELL_SCHEME?.trim() || "ai.getduct.desktop";
 
-// Keyed by the reason codes in `backend/routes/signin.py`. Each one says what
-// happened and what to do about it — "try again" is useless advice when the
-// install is misconfigured, and alarming when the user simply took too long.
+// Keyed by the reason codes in `backend/routes/signin.py`. The title says what
+// happened; the body is one sentence of what to do about it — "try again" is
+// useless advice when the install is misconfigured, and alarming when the user
+// simply took too long. Anything a bug report needs is in the Copy details
+// button, not in the prose: this page cannot read the app's version, which is
+// why three bodies used to send the reader to the About screen to transcribe
+// one by hand.
 const ERRORS = {
   expired: {
     title: "Sign-in link expired",
-    body: "This sign-in didn't complete in time. Go back to the Duct desktop app and start again — it usually works on the second try.",
+    body: "Go back to the Duct desktop app and start again — it usually works second time.",
     retryable: true,
   },
   exchange: {
     title: "Google didn't complete the sign-in",
-    body: "Google declined to finish the exchange. This is almost always temporary. Go back to the Duct desktop app and try again.",
+    body: "Google declined the exchange, which is almost always temporary. Try again from the app.",
     retryable: true,
   },
   identity: {
     title: "Couldn't read your Google account",
-    body: "Google signed you in but didn't return the account details Duct needs. Try again, and if it keeps happening, try a different Google account.",
+    body: "Google signed you in but sent no account details. Try again, or use a different Google account.",
     retryable: true,
   },
   config: {
     title: "Sign-in isn't configured",
-    body: "This build of Duct is missing its Google sign-in credentials, so it can't sign anyone in. Trying again won't help — please report this with the version number from the app's About screen.",
+    body: "Trying again won't help — this build shipped without its Google sign-in credentials.",
     retryable: false,
   },
   server: {
     title: "Something broke on our side",
-    body: "Duct hit an unexpected error finishing your sign-in. The details were written to the app's log. Try again, and if it keeps happening, please report it.",
+    body: "It's logged on our side. Try again, and send us the details below if it keeps happening.",
     retryable: true,
   },
 };
@@ -69,32 +73,32 @@ const FALLBACK = ERRORS.server;
 const CONNECTOR_ERRORS = {
   expired: {
     title: "Connection link expired",
-    body: "This didn't finish in time. Go back to the Duct desktop app and start the connection again.",
+    body: "Go back to the Duct desktop app and start the connection again.",
     retryable: true,
   },
   exchange: {
     title: "Google didn't complete the connection",
-    body: "Google declined to finish the exchange. This is almost always temporary — go back to the Duct desktop app and try again.",
+    body: "Google declined the exchange, which is almost always temporary. Try again from the app.",
     retryable: true,
   },
   consent: {
     title: "Google didn't grant lasting access",
-    body: "Google returned no refresh token, which happens when the account has already approved Duct before. Go back to the app, try again, and approve the access screen when it appears.",
+    body: "Google sent no refresh token, which happens when you've approved Duct before. Try again and approve the access screen.",
     retryable: true,
   },
   config: {
     title: "This connector isn't configured",
-    body: "This build of Duct is missing the credentials for that connector. Trying again won't help — please report this with the version number from the app's About screen.",
+    body: "Trying again won't help — this build shipped without that connector's credentials.",
     retryable: false,
   },
   unknown: {
     title: "Unknown connector",
-    body: "Duct doesn't recognise the connector this link was for. Please report this with the version number from the app's About screen.",
+    body: "Trying again won't help — Duct doesn't recognise the connector this link names.",
     retryable: false,
   },
   server: {
     title: "Something broke on our side",
-    body: "Duct hit an unexpected error finishing the connection. The details were written to the app's log. Try again, and if it keeps happening, please report it.",
+    body: "It's logged on our side. Try again, and send us the details below if it keeps happening.",
     retryable: true,
   },
 };
@@ -114,6 +118,8 @@ function DesktopAuthContent() {
   const [error, setError] = useState(null);
   const [connectorName, setConnectorName] = useState("");
   const [isConnector, setIsConnector] = useState(false);
+  const [reason, setReason] = useState("");
+  const [copied, setCopied] = useState(false);
   // The handover happens exactly once, and everything it needs is latched into
   // state below. Without this guard the scrub further down re-runs the effect:
   // Next keeps `useSearchParams` in sync with `history.replaceState`, so the
@@ -142,11 +148,13 @@ function DesktopAuthContent() {
     if (reason) {
       const table = isConnectorFlow ? CONNECTOR_ERRORS : ERRORS;
       setError(table[reason] || table.server || FALLBACK);
+      setReason(reason);
       return;
     }
     const authCode = searchParams.get("auth_code") || "";
     if (!authCode) {
       setError(isConnectorFlow ? CONNECTOR_ERRORS.expired : ERRORS.expired);
+      setReason("expired");
       return;
     }
     // Scrub the one-time code from the address bar and history, then fire the
@@ -162,6 +170,18 @@ function DesktopAuthContent() {
 
   // Read from state, not the query: by the time this renders the code — and
   // the `connector` beside it — has been scrubbed out of the address bar.
+  // Everything this page can honestly report. Not the app version — a browser
+  // tab opened by the shell has no way to read it, which is the reason the old
+  // copy asked the reader to go and find it themselves.
+  const diagnostics = [
+    `reason: ${reason || "unknown"}`,
+    `flow: ${isConnector ? "connector" : "sign-in"}`,
+    connectorName ? `connector: ${connectorName}` : "",
+    `at: ${new Date().toISOString()}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   const successTitle = connectorName
     ? `${connectorName} connected`
     : isConnector
@@ -182,11 +202,31 @@ function DesktopAuthContent() {
               {error.title}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">{error.body}</p>
-            {error.retryable && (
-              <p className="mt-4 text-xs text-muted-foreground">
-                You can close this tab.
-              </p>
-            )}
+            {/* What a bug report actually needs, as one click. The reason code
+                is the field that makes a report diagnosable, and no reader was
+                ever going to type it out of a paragraph. */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-5"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(diagnostics);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                } catch {
+                  /* clipboard blocked — the details stay visible below */
+                }
+              }}
+            >
+              {copied ? "Copied" : "Copy details"}
+            </Button>
+            <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground/80">
+              {diagnostics}
+            </p>
+            <p className="mt-4 text-xs text-muted-foreground">
+              You can close this tab.
+            </p>
           </>
         ) : (
           <>
@@ -194,8 +234,7 @@ function DesktopAuthContent() {
               {successTitle}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Return to the Duct desktop app to continue — it should open
-              automatically. If nothing happens, use the button below.
+              Duct should open automatically. If it doesn&rsquo;t, use the button below.
             </p>
             {deepLink && (
               <Button asChild size="lg" className="mt-6">
