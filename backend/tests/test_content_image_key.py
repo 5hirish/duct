@@ -199,8 +199,12 @@ def test_the_tool_schema_default_is_corrected_to_the_runs_provider():
     asked for an image, not a Google image."""
     from agents.models import image_model_for
 
-    assert image_model_for(Provider.OPENAI, ImageModel.GEMINI_3_1_FLASH_IMAGE) is ImageModel.GPT_IMAGE_2
+    assert image_model_for(Provider.OPENAI, ImageModel.GEMINI_3_1_FLASH_IMAGE) is ImageModel.GPT_IMAGE_2_5_FLARE
     assert image_model_for(Provider.XAI, "gemini-3.1-flash-image") is ImageModel.GROK_IMAGINE_IMAGE_2
     # A model the provider does serve is kept as asked.
     assert image_model_for(Provider.GOOGLE_GENAI, ImageModel.GEMINI_3_PRO_IMAGE) is ImageModel.GEMINI_3_PRO_IMAGE
-    assert image_model_for(Provider.OPENAI, None) is ImageModel.GPT_IMAGE_2
+    assert image_model_for(Provider.OPENAI, None) is ImageModel.GPT_IMAGE_2_5_FLARE
+    # ...including the older and the slower rung of the same family, which a
+    # run may name precisely because the default is neither.
+    assert image_model_for(Provider.OPENAI, "gpt-image-2") is ImageModel.GPT_IMAGE_2
+    assert image_model_for(Provider.OPENAI, ImageModel.GPT_IMAGE_2_5_SUNBURST) is ImageModel.GPT_IMAGE_2_5_SUNBURST

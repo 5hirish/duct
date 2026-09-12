@@ -16,7 +16,8 @@ from service.images.schema import ImageSize
 
 # --- OpenAI -----------------------------------------------------------------
 #
-# gpt-image-2 accepts arbitrary sizes under four rules (Image API guide):
+# Every gpt-image model Duct offers — 2, 2.5-flare, 2.5-sunburst — accepts
+# arbitrary sizes under the same four rules (Image API guide):
 # both edges multiples of 16, no edge over 3840, total pixels within
 # [655,360, 8,294,400], long-to-short ratio at most 3:1. Every AspectRatio in
 # the catalogue is within 3:1, so only the grid and the pixel cap need code.

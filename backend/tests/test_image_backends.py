@@ -125,13 +125,13 @@ def _openai_client(**kw):
 
 def test_openai_generate_sends_a_pixel_size_and_asks_for_png():
     client, fake = _openai_client()
-    request = GenerateImageRequest(prompt="a duct", model=ImageModel.GPT_IMAGE_2)
+    request = GenerateImageRequest(prompt="a duct", model=ImageModel.GPT_IMAGE_2_5_FLARE)
 
     images = asyncio.run(client.generate_image(request))
 
     (verb, sent), = fake.calls
     assert verb == "generate"
-    assert sent["model"] == "gpt-image-2"
+    assert sent["model"] == "gpt-image-2.5-flare"
     assert sent["size"] == openai_size(AspectRatio.PORTRAIT_9_16, ImageSize.K2)
     assert sent["output_format"] == "png"
     assert "input_fidelity" not in sent and "aspect_ratio" not in sent
@@ -142,7 +142,7 @@ def test_openai_generate_with_references_is_an_edit():
     """OpenAI has no generate-with-references call; an edit with several
     inputs is that call, and the references keep their role order."""
     client, fake = _openai_client()
-    request = GenerateImageRequest(prompt="same face", model=ImageModel.GPT_IMAGE_2)
+    request = GenerateImageRequest(prompt="same face", model=ImageModel.GPT_IMAGE_2_5_FLARE)
 
     asyncio.run(client.generate_image(request, input_bytes_list=[b"face", b"camera"]))
 
@@ -156,7 +156,7 @@ def test_openai_edit_leads_with_the_base_and_keeps_its_dimensions():
     from uuid import uuid4
 
     client, fake = _openai_client()
-    request = EditImageRequest(prompt="brighter", input_asset_id=uuid4(), model=ImageModel.GPT_IMAGE_2)
+    request = EditImageRequest(prompt="brighter", input_asset_id=uuid4(), model=ImageModel.GPT_IMAGE_2_5_FLARE)
 
     asyncio.run(client.edit_image(request, base_bytes=b"base", mask_bytes=b"mask", style_bytes=b"style"))
 
@@ -169,12 +169,12 @@ def test_openai_edit_leads_with_the_base_and_keeps_its_dimensions():
 
 def test_openai_failures_surface_as_the_shared_error_with_the_status():
     client, _ = _openai_client(fail=type("APIStatusError", (Exception,), {"status_code": 403})("verify your org"))
-    request = GenerateImageRequest(prompt="x", model=ImageModel.GPT_IMAGE_2)
+    request = GenerateImageRequest(prompt="x", model=ImageModel.GPT_IMAGE_2_5_FLARE)
 
     with pytest.raises(ImageAPIError) as excinfo:
         asyncio.run(client.generate_image(request))
     assert excinfo.value.http_status == 403
-    assert "OpenAI (gpt-image-2)" in str(excinfo.value)
+    assert "OpenAI (gpt-image-2.5-flare)" in str(excinfo.value)
 
 
 # --- the xAI client ---------------------------------------------------------
@@ -301,7 +301,7 @@ def test_provider_status_names_the_same_pick_the_run_would_make(monkeypatch):
     out = providers_route.providers_status(
         user_keys={Provider.OPENAI: "sk-test", Provider.XAI: "xai-test"}, user=None, db=None
     )
-    assert out["images"] == {"provider": "openai", "model": "gpt-image-2", "source": "user"}
+    assert out["images"] == {"provider": "openai", "model": "gpt-image-2.5-flare", "source": "user"}
 
 
 def test_provider_status_says_none_when_only_a_chat_provider_is_reachable(monkeypatch):

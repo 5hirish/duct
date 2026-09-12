@@ -1,4 +1,4 @@
-"""OpenAI image backend — gpt-image-2 over the Images API.
+"""OpenAI image backend — the gpt-image family over the Images API.
 
 The Images API rather than the Responses ``image_generation`` tool: the tool
 wraps every picture in a paid gpt-5.x chat turn and returns it as a content
@@ -11,10 +11,22 @@ references" call, an edit with several ``image`` inputs *is* that. Which
 means a generate-with-refs and an edit are the same request here, differing
 only in which image comes first.
 
-Only gpt-image-2 is targeted. gpt-image-1.5, gpt-image-1-mini and
-chatgpt-image-latest shut down on 2026-12-01 (announced 2026-06-02), and
-gpt-image-2 processes every input at high fidelity on its own, so
-``input_fidelity`` is deliberately never sent — the API rejects it there.
+gpt-image-2, 2.5-flare and 2.5-sunburst take the same request: same size
+rules, same ``output_format``, same edits-with-several-inputs shape. So the
+model id is the only thing that varies here and nothing branches on it — the
+choice is made in ``agents/models.DEFAULT_IMAGE_MODELS`` and arrives on the
+request.
+
+``input_fidelity`` is deliberately never sent. gpt-image-2 rejects it (it
+processes every input at high fidelity on its own) and the 2.5 pair no longer
+document it; Sunburst *is* the high-fidelity answer on this family, reached by
+naming the model rather than by a parameter.
+
+``quality`` is likewise left off, which means ``auto``. The 2.5 models add
+``xhigh`` and ``max`` rungs above ``high``; they belong to a caller who asked
+for them, and no caller can yet — ``GenerateImageRequest`` has no quality
+field. Add the field before adding the parameter, or every slide silently
+gets the expensive rung.
 """
 
 from __future__ import annotations
