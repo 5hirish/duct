@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "selfhost",
-  "description": "Template: lets a fork's own web origin call the shell commands. Replace the URLs with your deployment and build with `npm run build:selfhost`, which selects this capability via tauri.selfhost.conf.json. Additive to `default` rather than a replacement \u2014 a capability can only widen the set of origins, so the official origin stays listed and harmless. An origin missing from here loads and renders normally and then fails every invoke with 'not allowed. Plugin not found', which reads like a broken keychain rather than a config gap.",
+  "description": "Template: lets a fork's own web origin call the shell commands. Replace the URLs with your deployment and build with `npm run build:selfhost`, which selects this capability via tauri.selfhost.conf.json. Additive to `default` rather than a replacement \u2014 a capability can only widen the set of origins, so the official origin stays listed and harmless. An origin missing from here loads and renders normally and then fails every invoke with 'not allowed. Plugin not found', which reads like a broken keychain rather than a config gap. The `notification:*` entries are not for our own code, which notifies through the `notify` command: registering `tauri-plugin-notification` injects a `window.Notification` polyfill into every webview, and that polyfill invokes `is_permission_granted` on load. Without these it was denied, and the rejection surfaced as a runtime error on every page load.",
   "windows": [
     "main"
   ],
@@ -14,10 +14,14 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "notification:allow-notify",
     "allow-get-provider-key",
     "allow-set-provider-key",
     "allow-delete-provider-key",
     "allow-get-shell-info",
+    "allow-notify",
     "allow-get-sidecar-info",
     "allow-open-external",
     "allow-check-for-update",

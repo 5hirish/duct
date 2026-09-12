@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "dev-localhost",
-  "description": "DEV ONLY. Lets a locally served Duct app (Next dev server) call the shell commands from a built dev bundle, where localhost is a remote origin rather than a devUrl. Release builds must exclude this: tauri.conf.json pins app.security.capabilities to [\"default\"], and only tauri.dev.conf.json opts this back in. The port is wildcarded because URLPattern matching on an explicit port does not match reliably.",
+  "description": "DEV ONLY. Lets a locally served Duct app (Next dev server) call the shell commands from a built dev bundle, where localhost is a remote origin rather than a devUrl. Release builds must exclude this: tauri.conf.json pins app.security.capabilities to [\"default\"], and only tauri.dev.conf.json opts this back in. The port is wildcarded because URLPattern matching on an explicit port does not match reliably. The `notification:*` entries are not for our own code, which notifies through the `notify` command: registering `tauri-plugin-notification` injects a `window.Notification` polyfill into every webview, and that polyfill invokes `is_permission_granted` on load. Without these it was denied, and the rejection surfaced as a runtime error on every page load.",
   "windows": [
     "main"
   ],
@@ -14,6 +14,9 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "notification:allow-notify",
     "allow-get-provider-key",
     "allow-set-provider-key",
     "allow-delete-provider-key",

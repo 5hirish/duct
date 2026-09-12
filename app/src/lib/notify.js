@@ -4,9 +4,9 @@
  * The rule is OpenCode's: notify only when the window is not focused, never
  * when it is — a banner over the thing you are already reading is noise. The
  * transport depends on where the app runs: the desktop shell has a `notify`
- * command that goes through the OS (the webview has no Notification API on a
- * remote origin), the browser has `Notification` behind a permission the
- * sidebar menu asks for. Neither is required; without either this is a no-op.
+ * command that goes through the OS, the browser has `Notification` behind a
+ * permission the sidebar menu asks for. Neither is required; without either
+ * this is a no-op.
  */
 
 import { getShellInfo, isDesktopShell } from "./shell";
@@ -38,9 +38,14 @@ export function pageIsBeingLookedAt() {
  *
  * The sidebar's permission item needs this because the two surfaces answer
  * "are notifications on?" in different places. In the shell the OS owns that
- * switch and there is nothing for the page to ask for — but the item used to
- * test `"Notification" in window`, which no desktop webview satisfies, so the
- * desktop app hid the row entirely and left no sign that notices were on.
+ * switch and there is nothing for the page to ask for, so the item cannot be
+ * driven off `Notification.permission` the way the browser's is.
+ *
+ * The shell is asked *first*, and the order is load bearing: the desktop
+ * webview does define `window.Notification`, because `tauri-plugin-notification`
+ * injects a polyfill over it. Testing for the constructor would therefore call
+ * every desktop session a browser one and report a permission the OS never
+ * asked for.
  */
 export async function notificationSurface() {
   if (await shellCanNotify()) return "shell";

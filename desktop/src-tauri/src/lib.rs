@@ -232,6 +232,13 @@ fn get_shell_info(app: AppHandle) -> serde_json::Value {
 /// window is not focused — `app/src/lib/notify.js`); this only decides *how*,
 /// which on a remote origin cannot be the plugin's JS bindings for the same
 /// reason as the updater. Title and body are plain text from our own page.
+///
+/// Registering the plugin is not free of the webview, though: it injects a
+/// `window.Notification` polyfill that invokes `plugin:notification|notify` and
+/// friends. Those three commands are permitted in `capabilities/*.json` because
+/// the polyfill calls `is_permission_granted` on load and an ACL denial there
+/// reaches the page as an unhandled rejection — a runtime error on every load,
+/// for an API we do not use. They grant no reach this command did not already.
 #[tauri::command]
 fn notify(app: AppHandle, title: String, body: Option<String>) -> Result<(), String> {
     use tauri_plugin_notification::NotificationExt;

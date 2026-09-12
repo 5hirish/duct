@@ -153,9 +153,14 @@ carries all the code.
   handshake). Windows builds are **not** Authenticode-signed yet, so SmartScreen
   warns on first run.
 - **System notifications** go through the `notify` command
-  (`tauri-plugin-notification`, registered unconditionally, so no
-  `notification:*` permission is needed — the same "our command reaches the
-  plugin from Rust" shape as the updater, for the same remote-origin reason).
+  (`tauri-plugin-notification` — the same "our command reaches the plugin from
+  Rust" shape as the updater, for the same remote-origin reason). Registering
+  the plugin still injects a `window.Notification` polyfill into the webview,
+  which invokes `is_permission_granted` on load, so `capabilities/*.json` must
+  permit `notification:allow-is-permission-granted`,
+  `allow-request-permission` and `allow-notify` — the three the polyfill calls.
+  Omitting them does not disable an unused API, it throws a runtime error on
+  every page load.
   The web app decides *when* (`app/src/lib/notify.js`: only while the window is
   not focused) and gates on the `notifications` flag from `get_shell_info`; the
   shell only decides *how*.

@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Lets the hosted Duct web app call the keychain commands. Local dev origins live in the dev-only `dev-localhost` capability, which release builds exclude via app.security.capabilities.",
+  "description": "Lets the hosted Duct web app call the keychain commands. Local dev origins live in the dev-only `dev-localhost` capability, which release builds exclude via app.security.capabilities. The `notification:*` entries are not for our own code, which notifies through the `notify` command: registering `tauri-plugin-notification` injects a `window.Notification` polyfill into every webview, and that polyfill invokes `is_permission_granted` on load. Without these it was denied, and the rejection surfaced as a runtime error on every page load.",
   "windows": [
     "main"
   ],
@@ -14,6 +14,9 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "notification:allow-notify",
     "allow-get-provider-key",
     "allow-set-provider-key",
     "allow-delete-provider-key",
