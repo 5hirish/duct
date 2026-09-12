@@ -40,6 +40,12 @@ import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
 import ContextRing from "@/components/workspace/ContextRing";
+import TierSummary from "@/components/models/TierSummary";
+import TierCard from "@/components/models/TierCard";
+import AdvancedSettings from "@/components/models/AdvancedSettings";
+import ModalityRows from "@/components/models/ModalityRows";
+import { UsageEmpty } from "@/components/models/UsagePanel";
+import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
 import { NotificationRow } from "@/components/AppSidebar";
 import {
@@ -264,6 +270,92 @@ function DeskRaceScene() {
     return () => clearTimeout(t);
   }, []);
   return <Desk projectIdOverride="preview" loadDeskFn={load} />;
+}
+
+
+// ── Models & providers ────────────────────────────────────────────────────
+//
+// The Tiers tab is a summary plus a fold, so the state that matters is which
+// of them a reader lands on and whether the summary is honest when a tier
+// cannot run. Both the collapsed and blocked cases are unreachable on a
+// healthy dev install, which is exactly why they are pinned here.
+
+const MODEL_CATALOGUE = {
+  models: [
+    { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro (preview)", provider: "google_genai", engines: ["v1"] },
+    { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", provider: "google_genai", engines: ["v1"] },
+    { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", provider: "google_genai", engines: ["v1"] },
+    { id: "claude-opus-5", label: "Claude Opus 5", provider: "anthropic", engines: ["v1"] },
+    { id: "claude-sonnet-5", label: "Claude Sonnet 5", provider: "anthropic", engines: ["v1"] },
+    { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", provider: "anthropic", engines: ["v1"] },
+  ],
+  tiers: [
+    { id: "heavy", default_model: "gemini-3.1-pro-preview", jobs: ["analysis", "audit"] },
+    { id: "standard", default_model: "gemini-3.8-flash", jobs: ["verification", "synthesis", "drafting", "chat"] },
+    { id: "light", default_model: "gemini-3.5-flash-lite", jobs: ["research", "memory", "recap"] },
+  ],
+  image_models: [
+    { id: "gemini-3.1-flash-image", label: "Gemini 3.1 Flash Image", provider: "google_genai", default: true },
+  ],
+  image_provider_order: ["google_genai", "openai", "xai"],
+  provider_triples: {
+    anthropic: { heavy: "claude-opus-5", standard: "claude-sonnet-5", light: "claude-haiku-4-5" },
+    google_genai: { heavy: "gemini-3.1-pro-preview", standard: "gemini-3.8-flash", light: "gemini-3.5-flash-lite" },
+  },
+};
+
+const MODEL_PROVIDERS = {
+  google_genai: { id: "google_genai", label: "Google Gemini", source: "env", reachable: true, engines: ["v1"] },
+  anthropic: { id: "anthropic", label: "Anthropic", source: "none", reachable: false, engines: ["v1"] },
+};
+
+const MODEL_PICKS = {
+  heavy: "gemini-3.1-pro-preview",
+  standard: "gemini-3.8-flash",
+  light: "gemini-3.5-flash-lite",
+};
+
+const MODEL_PREVIEW_OK = {
+  heavy: { id: "heavy", provider: "google_genai", model: "gemini-3.1-pro-preview", runnable: true },
+  standard: { id: "standard", provider: "google_genai", model: "gemini-3.8-flash", runnable: true },
+  light: { id: "light", provider: "google_genai", model: "gemini-3.5-flash-lite", runnable: true },
+};
+
+// Heavy set to a provider with no key — the case the summary has to surface
+// rather than hide, since the fold is closed and the cards are not on screen.
+const MODEL_PREVIEW_BLOCKED = {
+  ...MODEL_PREVIEW_OK,
+  heavy: {
+    id: "heavy",
+    provider: "anthropic",
+    model: "claude-opus-5",
+    runnable: false,
+    reason: "no_credential",
+    serves: { model: "gemini-3.8-flash", engine_default: false },
+  },
+};
+
+const MODEL_FILLABLE = [
+  { id: "anthropic", statusId: "anthropic", label: "Anthropic" },
+  { id: "gemini", statusId: "google_genai", label: "Google Gemini" },
+];
+
+function TierSummaryScene({ picks, previewByTier, expanded = false }) {
+  const [open, setOpen] = useState(expanded);
+  return (
+    <TierSummary
+      picks={picks}
+      models={MODEL_CATALOGUE.models}
+      providersById={MODEL_PROVIDERS}
+      previewByTier={previewByTier}
+      expanded={open}
+      onToggle={() => setOpen((v) => !v)}
+      fillable={MODEL_FILLABLE}
+      onFill={() => {}}
+      configuredCount={3}
+      onReset={() => {}}
+    />
+  );
 }
 
 export const SCENES = [
@@ -740,6 +832,116 @@ export const SCENES = [
           <NotificationRow permission="system" />
         </DropdownMenuContent>
       </DropdownMenu>
+    ),
+  },
+  {
+    id: "model-setup",
+    state: "collapsed, one provider, all three runnable",
+    group: "TierSummary",
+    title: "The setup you already have",
+    note: "What the Models page opens with, and the whole answer for anyone on one key. Check that the provider is named once in the heading rather than three times as a logo per row, that Customise sits hard against the right edge at every width, and that the three model names stay on one line each — they ellipsize rather than wrap, because a two-line model name turns a three-row list into five. The note under the list is the credential answer said once for the page; the tier cards repeat it only when the three disagree.",
+    render: () => <TierSummaryScene picks={MODEL_PICKS} previewByTier={MODEL_PREVIEW_OK} />,
+  },
+  {
+    id: "model-setup-blocked",
+    state: "Heavy has no key",
+    group: "TierSummary",
+    title: "A tier that cannot run, with the fold closed",
+    note: "The state the redesign is most at risk of hiding: the cards that used to carry the warning are behind Customise now, so the summary has to say it. Heavy is struck through and the note names what serves its work instead. The card loses its tinted ground here — an amber border on a primary-tinted gradient reads as decoration rather than as a problem.",
+    render: () => (
+      <TierSummaryScene
+        picks={{ ...MODEL_PICKS, heavy: "claude-opus-5" }}
+        previewByTier={MODEL_PREVIEW_BLOCKED}
+      />
+    ),
+  },
+  {
+    id: "model-tier-cards",
+    state: "expanded — one runnable, one blocked",
+    group: "TierCard",
+    title: "The three tiers, customising",
+    note: "Open \"What runs here\" on one card and not the others: the disclosure grows the card, and the grid is align-items:stretch, so its neighbours grow with it — that is correct, a row of cards with one taller than the rest is not. The second card is the blocked case with showSource on, which is the only time a tier card carries its own credential chip.",
+    render: () => (
+      <div className="mt-tiers">
+        {TIERS.map((tier, index) => (
+          <TierCard
+            key={tier.key}
+            tier={tier}
+            index={index}
+            value={tier.key === "heavy" ? "claude-opus-5" : MODEL_PICKS[tier.key]}
+            models={MODEL_CATALOGUE.models}
+            providersById={MODEL_PROVIDERS}
+            engine="v1"
+            jobs={MODEL_CATALOGUE.tiers.find((row) => row.id === tier.key)?.jobs || []}
+            preview={MODEL_PREVIEW_BLOCKED[tier.key]}
+            showSource={tier.key !== "heavy"}
+            onChange={() => {}}
+          />
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: "model-advanced",
+    state: "closed — open it",
+    group: "AdvancedSettings",
+    title: "The fold the page's second half went into",
+    note: "Quota fallback, context compression and the image pick, which were three stacked sections and roughly half the old page's scroll. Closed is the state to check first: the summary line has to say what is inside, because each of these is something somebody arrives looking for by name. Opening it toggles two switches that write real preferences, so expect the fallback card to report itself unsaved when signed out — that is the state, not a bug.",
+    render: () => (
+      <AdvancedSettings
+        ladder={TIERS.map((tier) => tier.label)}
+        images={{ provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" }}
+        catalogue={MODEL_CATALOGUE}
+        providersById={MODEL_PROVIDERS}
+        // The tiers all resolve to this same env key, so the Images row must
+        // not repeat the answer — that is the state to check here.
+        sharedSource="env"
+      />
+    ),
+  },
+  {
+    id: "model-images-differs",
+    state: "the drawing key is not the one the page named",
+    group: "ModalityRows",
+    title: "Images, when whose key draws is news",
+    note: "The pair that decides whether this row earns its chip. Above: the tiers run on a saved key and the drawing key is the machine's, so the chip appears — that is a fact the page has not already given you. Below: everything is on the same key, and the row says nothing about it, because the summary at the top of the page already did. Getting this backwards is how the old page said \"This computer's key\" four times on one screen.",
+    render: () => (
+      <div style={{ display: "grid", gap: 8 }}>
+        <ModalityRows
+          images={{ provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" }}
+          catalogue={MODEL_CATALOGUE}
+          providersById={MODEL_PROVIDERS}
+          sharedSource="stored"
+        />
+        <ModalityRows
+          images={{ provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" }}
+          catalogue={MODEL_CATALOGUE}
+          providersById={MODEL_PROVIDERS}
+          sharedSource="env"
+        />
+      </div>
+    ),
+  },
+  {
+    id: "usage-first-run",
+    state: "nothing has ever run",
+    group: "UsagePanel",
+    title: "Usage, before the first model call",
+    note: "The state this page spends most of its life in for a new account, and the one it used to answer with a single grey sentence and a button. The example below the panel is the real UsageReport over invented numbers, so check two things: that the Example month rule reads as a label and not as a heading for real data, and that the by-model column tells the story on its own — the deep model is a hairline bar next to the largest dollar figure, which is the entire argument for the tier split made without the word tier. The sample is inert and aria-hidden; tab through and you should land on the two buttons and then leave the page.",
+    render: () => <UsageEmpty windowDays={30} earlier={null} onWiden={() => {}} />,
+  },
+  {
+    id: "usage-quiet-window",
+    state: "ran before, nothing in this window",
+    group: "UsagePanel",
+    title: "Usage, on a quiet fortnight",
+    note: "The same zero, meaning the opposite thing. Somebody who spent $6.41 last quarter and picked 7 days used to be told there were no model calls and invited to go run something, which reads as though their spending had been lost. The panel pays one extra read of the widest window to tell these apart, and the action here is the window, not the product. No example: this reader has seen the filled page.",
+    render: () => (
+      <UsageEmpty
+        windowDays={7}
+        earlier={{ calls: 1284, total_tokens: 4_210_000, cost_usd: 6.41 }}
+        onWiden={() => {}}
+      />
     ),
   },
 ];

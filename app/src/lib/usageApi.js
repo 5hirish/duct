@@ -18,6 +18,13 @@ export const WINDOWS = [
 
 export const DEFAULT_WINDOW_DAYS = 30;
 
+/**
+ * The widest window on offer, which is also the one the empty state probes.
+ * Derived rather than typed again: a fourth window added above would otherwise
+ * leave the probe quietly asking about the third-widest.
+ */
+export const WIDEST_WINDOW_DAYS = WINDOWS[WINDOWS.length - 1].days;
+
 /** Empty shape, so a page can render its own layout before the first response. */
 export const EMPTY_USAGE = Object.freeze({
   window_days: DEFAULT_WINDOW_DAYS,

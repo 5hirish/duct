@@ -149,6 +149,20 @@ it is a claim about the code, not a way to quiet the check.
   what every run reads — including the scheduled brief, which has no browser.
   On disagreement the server wins, and every write is a partial so a stale tab
   cannot put back a control it never saw.
+- `components/models/` — the Models & providers page, in parts, because
+  `/preview` can only document a component it can import. `TierSummary` is
+  what the Tiers tab opens with: the setup you already have, in three lines,
+  with the three-way choice behind Customise — **most people bring one key**,
+  and the page it replaced asked all three questions before answering any.
+  Two rules that page is one careless change away from losing, both of which
+  it had already lost once: **say the credential answer once** (`sourcesAgree`
+  decides whether the summary says it for the page or the cards say it each),
+  and **state the fall-through rule once**, in the drawn chain. `UsagePanel`
+  is the whole Usage view and has two homes — the `/usage` route and this
+  page's third tab — so change it there, never fork it into either caller.
+  Its `UsageEmpty` is exported for one reason: `/preview` renders fixtures and
+  never the API, and this panel's first paint is a fetch, so without that seam
+  the two states most worth reviewing would be the two nobody could open.
 - `lib/engines.js` — `DEFAULT_ENGINE` and the agent-type list. The engine is
   no longer a user choice: v3 is gone, every agent runs v1, so the Runtime
   tab, the `ENGINES` list and the agent↔engine support map went with it.

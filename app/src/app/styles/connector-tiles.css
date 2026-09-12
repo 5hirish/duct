@@ -492,6 +492,12 @@
 .conn-panel .conn-tile-desc {
   display: block;
   -webkit-line-clamp: unset;
+  /* These panels also run full-width outside `conn-grid` (the Models page's
+     Advanced fold), where an uncapped line is the whole window wide — about
+     three times the measure, and unreadable in the specific way a long line
+     is: you lose which row you were on coming back to the left. Harmless in
+     a grid column, which is never this wide. */
+  max-width: var(--measure);
 }
 
 

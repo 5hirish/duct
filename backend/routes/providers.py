@@ -126,6 +126,51 @@ _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.GROK_4_6.value: Tier.HEAVY,
 }
 
+# The name a person would say out loud, keyed by model id.
+#
+# The picker used to render the id itself, so the answer to "which model am I
+# on" was `gemini-3.1-pro-preview` — punctuation a marketer has to decode
+# before they can compare it to the row above. The id still ships and is still
+# shown underneath, because it is what a support thread needs.
+#
+# A model missing from this map falls back to its id, which is exactly the old
+# behaviour. That is deliberate: a new model appearing unlabelled is a cosmetic
+# regression, and making this map mandatory would mean a failing test every
+# time the catalogue gained a row.
+_MODEL_LABEL: dict[str, str] = {
+    ModelName.GPT_5_6_SOL.value: "GPT-5.6 Sol",
+    ModelName.GPT_5_6_TERRA.value: "GPT-5.6 Terra",
+    ModelName.GPT_5_6_LUNA.value: "GPT-5.6 Luna",
+    ModelName.GPT_5_MINI.value: "GPT-5 mini",
+    ModelName.GPT_4O.value: "GPT-4o",
+    ModelName.GPT_4O_MINI.value: "GPT-4o mini",
+    ModelName.GEMINI_3_1_PRO_PREVIEW.value: "Gemini 3.1 Pro (preview)",
+    ModelName.GEMINI_3_8_FLASH.value: "Gemini 3.8 Flash",
+    ModelName.GEMINI_3_5_FLASH_LITE.value: "Gemini 3.5 Flash-Lite",
+    ModelName.GEMINI_2_5_FLASH.value: "Gemini 2.5 Flash",
+    ModelName.CLAUDE_FABLE.value: "Claude Fable 5.1",
+    ModelName.CLAUDE_OPUS.value: "Claude Opus 5",
+    ModelName.CLAUDE_SONNET.value: "Claude Sonnet 5",
+    ModelName.CLAUDE_HAIKU.value: "Claude Haiku 4.5",
+    ModelName.GROK_4_6.value: "Grok 4.6",
+    ModelName.OR_DEEPSEEK_V4_FLASH.value: "DeepSeek V4 Flash",
+    ModelName.OR_DEEPSEEK_V4_PRO.value: "DeepSeek V4 Pro",
+    ModelName.OR_QWEN3_8_FLASH.value: "Qwen3.8 Flash",
+    ModelName.OR_KIMI_K3.value: "Kimi K3",
+    ModelName.OR_GLM_5_3_FLASH.value: "GLM-5.3 Flash",
+    ModelName.OR_CLAUDE_OPUS.value: "Claude Opus 5",
+    ModelName.OR_CLAUDE_SONNET.value: "Claude Sonnet 5",
+    ModelName.OR_GPT_5_MINI.value: "GPT-5 mini",
+    # The image models are not tier picks, but they are rendered in the same
+    # sentence as one, and a raw id beside a name reads as a different kind
+    # of thing.
+    ImageModel.GEMINI_3_1_FLASH_IMAGE.value: "Gemini 3.1 Flash Image",
+    ImageModel.GEMINI_3_1_FLASH_LITE_IMAGE.value: "Gemini 3.1 Flash-Lite Image",
+    ImageModel.GEMINI_3_PRO_IMAGE.value: "Gemini 3 Pro Image",
+    ImageModel.GPT_IMAGE_2.value: "GPT Image 2",
+    ImageModel.GROK_IMAGINE_IMAGE_2.value: "Grok Imagine 2.0",
+}
+
 
 def _engines_for(provider: Provider) -> list[str]:
     return [e.value for e in Engine if provider in ENGINE_SUPPORTED_PROVIDERS.get(e, frozenset())]
@@ -454,6 +499,7 @@ def models_catalogue() -> dict:
             continue
         models.append({
             "id": model.value,
+            "label": _MODEL_LABEL.get(model.value, model.value),
             "provider": provider.value,
             "tier_hint": (_MODEL_TIER_HINT.get(model.value) or Tier.STANDARD).value,
             "engines": _engines_for(provider),
@@ -480,6 +526,7 @@ def models_catalogue() -> dict:
         "image_models": [
             {
                 "id": model.value,
+                "label": _MODEL_LABEL.get(model.value, model.value),
                 "provider": provider_of(model).value,
                 "default": DEFAULT_IMAGE_MODELS.get(provider_of(model)) is model,
             }

@@ -17,6 +17,12 @@
   margin-bottom: 1.5rem;
 }
 
+/* The lede carries its own bottom margin for the standalone page; inside this
+   flex row the row's own gap is the spacing, and the extra reads as a sag. */
+.usage-head .mt-lede {
+  margin-bottom: 0;
+}
+
 .usage-windows {
   display: flex;
   align-items: center;
@@ -146,11 +152,11 @@
 
 /* --- the states that are not a full page -------------------------------- */
 
-.usage-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.75rem;
+/* What is left of the old `.usage-empty` box. The empty states that carry a
+   heading and a CTA are `ui/empty-state` now — this is only the two remaining
+   one-liners (a breakdown with no rows, and "Adding it up…"), which want the
+   vertical air and nothing else. */
+.usage-empty-line {
   padding: 1.5rem 0;
 }
 

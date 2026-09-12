@@ -50,7 +50,6 @@ export const TIERS = [
     icon: "scale",
     tagline: "Most of what runs",
     blurb: "Real reasoning at ordinary cost. Where Duct spends most of its time.",
-    fallbackFor: "heavy",
   },
   {
     key: "light",
@@ -58,9 +57,20 @@ export const TIERS = [
     icon: "feather",
     tagline: "High volume, low judgement",
     blurb: "Reading pages, remembering context, naming things. Should be the cheapest model you own.",
-    fallbackFor: "standard",
   },
 ];
+
+/**
+ * What to call a model on screen.
+ *
+ * Comes from the catalogue so it cannot drift from what actually runs. `label`
+ * is absent for a model the backend has not named yet, and the id is the right
+ * fallback — it is what the user would paste into a support thread.
+ */
+export function modelLabel(model) {
+  return model?.label || model?.id || "";
+}
+
 
 export const TIER_KEYS = TIERS.map((tier) => tier.key);
 
@@ -114,6 +124,23 @@ export const SOURCE_LABELS = {
   cloud: "Duct's key",
   subscription: "Your ChatGPT plan",
   none: "Not set",
+};
+
+/**
+ * The same fact as a whole sentence, for the one place it is said for the
+ * entire page rather than pinned to a tile.
+ *
+ * SOURCE_DETAIL is written as a clause because it lands in a `title=`; read
+ * on its own under the summary card it is a fragment, and a fragment is what
+ * a sentence written for somewhere else always sounds like.
+ */
+export const SOURCE_SENTENCE = {
+  user: "Running on the key you pasted — this browser session only.",
+  stored: "Running on your saved key, the one that also funds scheduled runs.",
+  env: "Running on a key already on this computer, not one you added here.",
+  cloud: "Running on Duct's own key — we are paying for these runs.",
+  subscription: "Running on the ChatGPT plan you signed in with on this desktop.",
+  none: "No key set for these models yet.",
 };
 
 /** Longer form, for the provider tiles where there is room for a clause. */
@@ -179,6 +206,29 @@ export function saveModelMap(map) {
   } catch {
     /* private mode / storage disabled — the map stays at its defaults */
   }
+}
+
+/**
+ * The one answer to "whose key pays" when all three tiers give the same one,
+ * and `""` when they do not.
+ *
+ * Three callers ask, for three reasons, and they must not disagree: the
+ * summary says the answer once when there is one, the tier cards say it
+ * per-card when there is not, and the Images row stays silent when its own
+ * answer is the one already on screen. Written as the *value* rather than as
+ * a boolean because two of those three need to print it, and a predicate plus
+ * a separate lookup is how the page ends up both saying it once and saying it
+ * four times.
+ *
+ * `""` while any tier is unresolved: "they agree" is a claim, and three
+ * pending answers are not three matching ones.
+ */
+export function agreedSource(previewByTier = {}, providersById = {}) {
+  const sources = TIER_KEYS.map(
+    (key) => providersById[previewByTier[key]?.provider]?.source
+  ).filter(Boolean);
+  if (sources.length !== TIER_KEYS.length) return "";
+  return new Set(sources).size === 1 ? sources[0] : "";
 }
 
 /** The tier picks alone, which is what every agent request carries. */
