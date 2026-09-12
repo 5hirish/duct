@@ -49,7 +49,11 @@ from agents.tiers import (
     Tier,
     resolve_tier_model,
 )
-from agents.core.codex import is_plan_credential, is_subscription_credential
+from agents.core.codex import (
+    is_plan_credential,
+    is_subscription_credential,
+    is_usable_credential,
+)
 from config import allow_server_provider_keys, get_configs
 from db.session import get_session as db_session
 from models.auth import User
@@ -85,7 +89,7 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
     ),
     Provider.OPENAI: (
         "OpenAI",
-        "GPT models, and image generation for slides and posts.",
+        "GPT models and images — or your ChatGPT Plus or Pro plan, no API key.",
     ),
     Provider.GOOGLE_GENAI: (
         "Google Gemini",
@@ -173,7 +177,11 @@ def providers_status(
     providers = []
     for provider in Provider:
         label, description = _PROVIDER_LABELS.get(provider, (provider.value, ""))
-        has_user = bool(user_keys.get(provider))
+        # Not `bool(...)`: a supplied value that this provider cannot accept
+        # is not a key, and calling it one is what made the Anthropic tile
+        # green for a stale ChatGPT token.
+        supplied = user_keys.get(provider) or ""
+        has_user = is_usable_credential(provider, supplied)
         has_stored = provider in saved
         has_server = server_usable and bool(
             getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "")
@@ -199,6 +207,10 @@ def providers_status(
             # provider can be serving from `user` and still have one saved. The
             # settings page needs to know to offer "Forget".
             "stored": has_stored,
+            # Something was sent for this provider and it is not a credential
+            # it could ever accept. Distinct from `source`, because the user
+            # still has to go remove it even when a stored key is serving.
+            "key_mismatch": bool(supplied) and not has_user,
             "engines": _engines_for(provider),
         })
     return {
@@ -515,7 +527,7 @@ def models_preview(
     reachable = {
         provider
         for provider in Provider
-        if user_keys.get(provider)
+        if is_usable_credential(provider, user_keys.get(provider) or "")
         or provider in stored
         or (server_usable and getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), ""))
     }

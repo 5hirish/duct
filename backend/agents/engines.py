@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from agents.core.codex import is_plan_credential
+from agents.core.codex import is_plan_credential, is_usable_credential
 from agents.models import (
     DEFAULT_IMAGE_MODELS,
     IMAGE_PROVIDER_ORDER,
@@ -288,7 +288,9 @@ def resolve_provider_key(
     from config import allow_server_provider_keys, get_configs
 
     supplied = (user_keys or {}).get(provider, "")
-    if supplied and supplied.strip():
+    # A value this provider cannot accept is not a key to spend — fall through
+    # to the stored or env one rather than sending it and collecting a 401.
+    if is_usable_credential(provider, supplied):
         # The header's own shape says whose account this is: a ChatGPT access
         # token is the user's plan, not a key they pasted, and the settings
         # page words the two differently. Shape alone is not enough — only

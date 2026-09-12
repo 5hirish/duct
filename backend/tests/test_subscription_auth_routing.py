@@ -138,3 +138,60 @@ def test_only_openai_can_claim_a_plan(provider):
 def test_an_api_key_is_never_a_plan_even_on_openai():
     assert codex.is_plan_credential(Provider.OPENAI, "sk-proj-abc") is False
     assert codex.is_plan_credential(Provider.OPENAI, "") is False
+
+
+# ---------------------------------------------------------------------------
+# Presence is not reachability
+# ---------------------------------------------------------------------------
+
+
+def test_a_stray_plan_token_is_not_a_key_for_anyone_else():
+    """The bug this pair of guards exists for, end to end.
+
+    ``bool(user_keys.get(provider))`` was the reachability test, so a leftover
+    ChatGPT token in the Anthropic slot reported ``reachable`` *and*
+    ``runnable`` — the tile went green and `/models/preview` promised "Heavy
+    jobs run on claude-opus-5" for a request that would come back 401.
+    """
+    from routes import providers as providers_route
+
+    token = "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE"
+    assert codex.is_usable_credential(Provider.OPENAI, token) is True
+    assert codex.is_usable_credential(Provider.ANTHROPIC, token) is False
+
+    rows = providers_route.providers_status(
+        user_keys={Provider.ANTHROPIC: token}, user=None, db=None
+    )["providers"]
+    row = next(r for r in rows if r["id"] == Provider.ANTHROPIC.value)
+    assert row["reachable"] is False
+    assert row["source"] == "none"
+    # The user still has to go remove it, so the tile needs to be told.
+    assert row["key_mismatch"] is True
+
+    preview = providers_route.models_preview(
+        body=providers_route.TierPreviewRequest(tiers={"heavy": "claude-opus-5"}, engine="v1"),
+        user_keys={Provider.ANTHROPIC: token},
+        user=None,
+        db=None,
+    )
+    heavy = next(t for t in preview["tiers"] if t["id"] == "heavy")
+    assert heavy["runnable"] is False
+
+
+def test_an_ordinary_api_key_is_usable_everywhere():
+    for provider in Provider:
+        assert codex.is_usable_credential(provider, "sk-whatever-123") is True
+        assert codex.is_usable_credential(provider, "  ") is False
+
+
+def test_an_unusable_credential_is_not_the_key_a_run_spends(monkeypatch):
+    """It falls through to the stored key instead of being sent and 401ing."""
+    from agents import engines
+
+    key = engines.resolve_provider_key(
+        Provider.ANTHROPIC,
+        {Provider.ANTHROPIC: "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE"},
+        stored_keys={Provider.ANTHROPIC: "sk-ant-api03-real"},
+    )
+    assert key.key == "sk-ant-api03-real"
+    assert key.source == "stored"

@@ -135,6 +135,34 @@ def is_plan_credential(provider: Provider, value: str) -> bool:
     return provider in SUBSCRIPTION_PROVIDERS and is_subscription_credential(value)
 
 
+def is_usable_credential(provider: Provider, value: str) -> bool:
+    """False for a credential this provider could never accept.
+
+    Deliberately narrow: the only shape certain enough to reject on is that a
+    JWT is not an API key. Every vendor Duct talks to issues a prefixed opaque
+    string (``sk-ant-``, ``sk-``, ``AIza``, ``xai-``); the single reason a JWT
+    appears in a provider slot at all is that a ChatGPT plan travels as one,
+    and that is OpenAI's slot. Anywhere else it is stale or mis-pasted.
+
+    Why this exists rather than the caller just checking presence: ``bool(key)``
+    was being reported as ``reachable`` and ``runnable``, so a leftover JWT in
+    the Anthropic slot lit the tile green *and* made ``/models/preview`` promise
+    "Heavy jobs run on claude-opus-5" — a run that 401s. Presence is not
+    reachability, and the difference has to be decided once, here, or each
+    endpoint invents its own answer.
+
+    Do not widen this to per-provider prefixes without moving the prefix table
+    here first: OpenRouter's key may front any OpenAI-compatible gateway, so
+    its shape is genuinely not ours to assert.
+    """
+    value = (value or "").strip()
+    if not value:
+        return False
+    if is_subscription_credential(value):
+        return provider in SUBSCRIPTION_PROVIDERS
+    return True
+
+
 def pack_subscription_credential(access_token: str, account_id: str = "") -> str:
     """One string carrying both halves, for the credential plumbing."""
     token = (access_token or "").strip()
