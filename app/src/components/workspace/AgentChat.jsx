@@ -35,7 +35,7 @@ import { AssistantMarkdown, ThinkingMarkdown } from "./ChatMarkdown";
 import ChatInput from "./ChatInput";
 import ContextRing from "./ContextRing";
 import { TIERS } from "@/lib/modelTiers";
-import { MemoryNote, MemoryRecall, RememberThis } from "./MemoryRows";
+import { MemoryNote, MemoryRecall } from "./MemoryRows";
 import PauseCard from "./PauseCard";
 import StepProgress from "./StepProgress";
 import Todos from "./Todos";
@@ -114,7 +114,7 @@ function TypingIndicator() {
   );
 }
 
-function ChatBubble({ role, text, thinking, streaming, remember, queued = false }) {
+function ChatBubble({ role, text, thinking, streaming, queued = false }) {
   if (role === Row.USER) {
     return (
       <div className="flex justify-end mb-4">
@@ -145,7 +145,6 @@ function ChatBubble({ role, text, thinking, streaming, remember, queued = false 
             {streaming && <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />}
           </div>
         )}
-        {text && !streaming && remember && <RememberThis text={text} />}
       </div>
     </div>
   );
@@ -200,7 +199,7 @@ function ArtifactCard({ artifact }) {
   );
 }
 
-function TranscriptRow({ msg, onRetrySend, remember }) {
+function TranscriptRow({ msg, onRetrySend }) {
   switch (msg.role) {
     case Row.SEND_ERROR:
       return <SendErrorBubble text={msg.text} content={msg.content} code={msg.code} onRetry={onRetrySend} retryable={msg.retryable} />;
@@ -223,7 +222,6 @@ function TranscriptRow({ msg, onRetrySend, remember }) {
           text={msg.text}
           thinking={msg.thinking}
           streaming={msg.streaming}
-          remember={remember}
           queued={Boolean(msg.queued)}
         />
       );
@@ -335,7 +333,7 @@ export default function AgentChat({
   // produced, so it must not flicker away on the next token the way a retry does.
   tierStepDown = null,
   draft = null,
-  // Tokens (lib/agentSession.js `usage`): the ring in the header, the figures
+  // Tokens (lib/agentSession.js `usage`): the ring in the composer, the figures
   // in its tooltip. Null until the first model call has been billed.
   usage = null,
   // History is being summarised to make room — the status row says so.
@@ -347,6 +345,7 @@ export default function AgentChat({
   // The pause card can be on screen before the session it answers to exists
   // (restored from the thread's state on open); keep its buttons off until then.
   answerDisabled = false,
+  // Memory is off for this run — the header says so, quietly.
   remembering = true,
   onAnswer,
   onSendMessage,
@@ -361,6 +360,13 @@ export default function AgentChat({
   // Onboarding only: what a guest's connector prompt needs to route through
   // sign-in instead (see PauseCard). Null everywhere else.
   signInToConnect = null,
+  // Where a connect started from a pause card should land once the OAuth
+  // round trip is done — this conversation, not the Connections page. Empty
+  // means the connector flow's own default.
+  connectReturnTo = "",
+  // The shell's own chips in the composer's footer (ComposerDials for
+  // insights). Null for a shell with no dials.
+  composerTools = null,
   inputPlaceholder,
   inputAriaLabel,
   inputAccept,
@@ -482,7 +488,6 @@ export default function AgentChat({
               {tierLabel(tierStepDown.ran)} · {tierLabel(tierStepDown.requested)} is rate limited
             </span>
           )}
-          {usage?.last && <ContextRing used={contextUsed} details={usage} />}
           {!remembering && (
             <span
               className="inline-flex items-center gap-1 text-xs text-muted-foreground"
@@ -533,13 +538,12 @@ export default function AgentChat({
               key={msg.role === Row.CHANGE_SET_CARD ? msg.changeSet?.change_set_id || i : i}
               msg={msg}
               onRetrySend={onRetrySend}
-              remember={remembering}
             />
           ))}
 
           {isAgentTyping && <TypingIndicator />}
 
-          {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} />}
+          {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} returnTo={connectReturnTo} />}
 
           {reconnecting && !isFailed && (
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
@@ -594,6 +598,17 @@ export default function AgentChat({
         placeholder={placeholder}
         ariaLabel={inputAriaLabel}
         accept={inputAccept}
+        tools={composerTools}
+        // The ring lives beside Send, where the desk composer has it, and is
+        // there from the first moment: an empty ring says "new thread" where
+        // no ring said nothing.
+        status={
+          usage?.last ? (
+            <ContextRing used={contextUsed} details={usage} />
+          ) : (
+            <ContextRing used={0} label="New thread" />
+          )
+        }
       />
     </div>
   );

@@ -1,13 +1,20 @@
 "use client";
 
-// The project-memory rows in a transcript: what a turn remembered (with undo),
-// what it was primed with (with forget), and the user's own "remember this".
-// Agent-neutral — memory belongs to the project, not to the agent that wrote
-// it — so every chat shell renders the same three.
+// The project-memory rows in a transcript: what a turn remembered (with undo)
+// and what it was primed with (with forget). Agent-neutral — memory belongs to
+// the project, not to the agent that wrote it — so every chat shell renders
+// the same two.
+//
+// There is deliberately no "remember this" button under a reply. The agent
+// decides what is durable (RememberFact, under the discipline in
+// agents/core/prompts.py) and the row below says what it kept, with undo —
+// the same shape ChatGPT's "Memory updated" takes. A per-reply save button
+// asked the user to do the agent's job and, once pressed, sat under every
+// answer as a permanent link.
 
 import { useState } from "react";
 import { Brain } from "lucide-react";
-import { MEMORY_KIND_ICONS, createMemory, deleteMemory } from "@/lib/memoryApi";
+import { MEMORY_KIND_ICONS, deleteMemory } from "@/lib/memoryApi";
 import { getActiveProject } from "@/lib/projects";
 
 /** Deep link to one entry in the project timeline, which fetches and highlights
@@ -146,57 +153,5 @@ export function MemoryRecall({ memories }) {
         </a>
       )}
     </details>
-  );
-}
-
-/** "Remember this" under a finished agent turn — or under a selection inside it.
- *
- * The agent decides what to remember on its own; this is the other half, where
- * the user overrules that judgement. What it writes is a user statement, so it
- * lands confirmed rather than as a proposal awaiting its own approval. */
-export function RememberThis({ text }) {
-  const [state, setState] = useState("idle"); // idle | saving | saved | error
-  const projectId = getActiveProject()?.id;
-  if (!projectId) return null;
-
-  async function save() {
-    // A selection inside this turn beats the whole turn — the user pointing at
-    // one sentence is a much better title than 400 words of analysis.
-    const selected = String(window.getSelection?.() || "").trim();
-    const title = (selected || text).replace(/\s+/g, " ").trim().slice(0, 200);
-    if (!title) return;
-    setState("saving");
-    try {
-      await createMemory({
-        projectId,
-        kind: "conclusion",
-        title,
-        source_refs: [{ source: "user", from: "chat" }],
-      });
-      setState("saved");
-    } catch {
-      setState("error");
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={save}
-      disabled={state === "saving" || state === "saved"}
-      className="mt-1 ml-1 text-[11px] text-muted-foreground hover:text-foreground disabled:hover:text-muted-foreground"
-    >
-      {state === "saved" ? (
-        <a href={`/project/${projectId}/memory`} className="underline underline-offset-2">
-          Remembered — open the timeline
-        </a>
-      ) : state === "error" ? (
-        "Could not remember that"
-      ) : state === "saving" ? (
-        "Remembering…"
-      ) : (
-        "+ Remember this"
-      )}
-    </button>
   );
 }

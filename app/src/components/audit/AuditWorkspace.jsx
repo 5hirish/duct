@@ -284,10 +284,10 @@ export default function AuditWorkspace({
           // closes the composer.
           inputDisabled={agent.inputDisabled}
           answerDisabled={!agent.attached}
+          remembering={auditParams?.remember !== false}
           // Ambient state, per the memory UX rules: a session that is not being
           // remembered should say so while it runs, not only at the point the
           // switch was flipped.
-          remembering={auditParams?.remember !== false}
           onAnswer={agent.answer}
           onSendMessage={handleSend}
           onRetrySend={handleSend}
