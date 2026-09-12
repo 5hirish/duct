@@ -61,8 +61,8 @@ export default function AutoFallbackCard({ ladder = [] }) {
         </div>
         <p className="conn-tile-desc">
           {enabled
-            ? `When a provider says you are out of quota, Duct runs the job on the next model down${chain ? ` — ${chain}` : ""} — and tells you which one it used. Your scheduled brief still arrives.`
-            : "When a provider says you are out of quota, the run stops and shows you the limit. Nothing switches models on your behalf — including your scheduled brief, which will not arrive that morning."}
+            ? `Out of quota, the job runs on the next model down${chain ? ` — ${chain}` : ""} — and Duct says which. Your scheduled brief still arrives.`
+            : "Out of quota, the run stops and shows you the limit. Nothing switches models for you, so that morning's brief does not arrive."}
         </p>
         {signedOut && (
           <p className="conn-tile-desc mt-warn">

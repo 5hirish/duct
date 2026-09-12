@@ -116,7 +116,7 @@ await page.evaluate((id) => {
   sessionStorage.setItem(`audit_session_${id}`, JSON.stringify({ url: "https://getduct.ai", project_id: "p1", report_mode: "template" }));
 }, auditId);
 await page.goto(`${APP}/audit/seo/${auditId}`);
-await page.getByText("Your SEO report is ready").waitFor({ timeout: 30000 });
+await page.getByText("Your report is on the right").waitFor({ timeout: 30000 });
 await page.waitForTimeout(600);
 console.log("audit: report ready; status:", await status());
 await shot("audit-1-ready");

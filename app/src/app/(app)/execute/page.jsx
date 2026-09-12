@@ -447,10 +447,9 @@ function AutonomyPanel({ project, level, onChange, saving, error }) {
           top of the ladder is safe to offer at all, and a user who does not
           know it will read "Auto" as "anything". */}
       <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>
-        At every level: destructive operations — GTM publishes, archives, unlinks — and
-        anything budget- or status-related wait for your approval here. Assisted and Auto
-        share one narrow allowlist (negative/positive keywords, GA4 key events and
-        audiences, GTM workspace edits), and every auto-applied set keeps a rollback handle.
+        Destructive work waits here at every level — GTM publishes, archives, unlinks,
+        anything touching budget or status. Assisted and Auto share one narrow allowlist:
+        keywords, GA4 key events and audiences, GTM workspace edits.
       </p>
 
       {error && (
@@ -544,9 +543,9 @@ function GuardrailsPanel() {
       {open && (
         <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
           <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>
-            Account invariants enforced in code: a change matching a guardrail arrives{" "}
-            <em>blocked</em> and can never auto-apply. Rules are also shown to agents so they
-            propose around them. A rule with no matcher is prose-only guidance.
+            A change that matches a guardrail arrives <em>blocked</em> and can never
+            auto-apply; agents see the rules and propose around them. A rule with no matcher
+            is guidance only.
           </p>
 
           {error && (
@@ -781,9 +780,8 @@ export default function ExecutePage() {
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Executions</h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Review and approve the changes agents propose to your connected accounts. Every change is
-        previewed and checked against your guardrails; nothing is applied until you approve it, and
-        applied changes keep a rollback handle.
+        Agents propose, you approve. Every change is previewed against your guardrails, and
+        anything applied can be rolled back.
       </p>
 
       <AutonomyPanel
@@ -847,7 +845,7 @@ export default function ExecutePage() {
       ) : filtered.length === 0 ? (
         <p className="app-subtle">
           {changeSets.length === 0
-            ? "No proposed changes yet. Run an audit or insight session — recommended fixes will land here for your approval."
+            ? "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
             : "Nothing matches these filters."}
         </p>
       ) : (

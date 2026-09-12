@@ -47,8 +47,8 @@ export default function ContextCompressionCard() {
         </div>
         <p className="conn-tile-desc">
           {enabled
-            ? "Your analytics rows reach the model as a compact table instead of raw JSON — about half the tokens, with every row and every number unchanged."
-            : "Your analytics rows reach the model as raw JSON. A large pull gets cut short before the model sees all of it, so a brief may be written without the rows that were dropped."}
+            ? "Analytics rows reach the model as a compact table, not raw JSON — about half the tokens, every number unchanged."
+            : "Analytics rows reach the model as raw JSON. A large pull gets cut short, so a brief can be written without the rows that were dropped."}
         </p>
       </div>
     </article>

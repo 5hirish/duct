@@ -403,9 +403,9 @@ function ModelSettings() {
               stale. This says what the page is for; the card says where your
               key went. */}
           <p className="app-subtle mt-lede">
-            Duct runs on your own provider keys. Paste one below and it&rsquo;s sent with each
-            request &mdash; each card says where that key is kept. Use a budget-capped or
-            restricted key where your provider offers one.
+            Duct runs on your own provider keys &mdash; paste one below, and its card says
+            where that key is kept. Use a restricted or budget-capped key if your provider
+            offers one.
           </p>
 
           <div className="conn-grid">

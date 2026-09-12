@@ -575,6 +575,12 @@ Rules, checkable in review:
 - **Buttons are terse verb(+noun)**: `Retry`, `Later`, `Delete project`,
   `Restart to update`. In-progress labels use the ellipsis character:
   `Saving…`, `Checking…`, `Working…`.
+- **One line per option.** A picker row gets one clause, roughly a dozen
+  words, carrying the fact that tells it apart from the row above it — never
+  the argument for why the choice exists. That argument belongs in the code
+  comment beside the strings; a menu read mid-task is not where a design gets
+  defended. `AUTONOMY_OPTIONS` in `src/lib/projectsApi.js` is the model: the
+  three-sentence version of it filled a dropdown taller than the composer.
 - **No setup sentences, no forced jokes** (Slack: "Get to the point";
   "write like you're having a conversation with one person").
 - Apologize only for serious failures, once.

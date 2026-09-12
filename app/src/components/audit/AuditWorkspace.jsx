@@ -152,7 +152,7 @@ export default function AuditWorkspace({
         if (event.version_id === 1) {
           appendMessage({
             role: Row.ASSISTANT,
-            text: "✓ Your SEO report is ready! Review the score and findings in the panel on the right. Ask me anything about the results — I can explain findings, suggest fixes, or update the report.",
+            text: "Your report is on the right. Ask me to explain a finding, suggest a fix, or update the report.",
           });
         }
         break;
