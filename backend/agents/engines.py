@@ -352,6 +352,8 @@ class ImageRun:
 def resolve_image_run(
     user_keys: Mapping[Provider, str] | None = None,
     stored_keys: Mapping[Provider, str] | None = None,
+    *,
+    preferred: str = "",
 ) -> ImageRun | None:
     """Which image-capable provider this run may spend, or None for none.
 
@@ -362,7 +364,29 @@ def resolve_image_run(
     call (``resolve_provider_key``), and the first one with a spendable key
     wins. None is a normal answer — the image tools decline politely — not an
     error, because a content session is worth having without pictures.
+
+    ``preferred`` is the user's saved ``image_model``, and it is a preference
+    rather than an instruction: an unknown id, or one whose provider has no
+    spendable key, falls through to the order above instead of failing. That
+    matches the tier ladder — a pick you cannot pay for steps down, it does not
+    stop the run — and it is what keeps the setting safe to carry across a
+    machine where a different key happens to be present.
     """
+    wanted = preferred_image_model(preferred)
+    if wanted is not None:
+        provider = provider_of(wanted)
+        try:
+            resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+        except ProviderKeyRequired:
+            pass  # asked for, cannot pay for it — fall through to the order
+        else:
+            return ImageRun(
+                provider=provider,
+                model=wanted,
+                api_key=resolved.key,
+                source=resolved.source,
+            )
+
     for provider in IMAGE_PROVIDER_ORDER:
         try:
             resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
@@ -375,6 +399,22 @@ def resolve_image_run(
             source=resolved.source,
         )
     return None
+
+
+def preferred_image_model(preferred: str) -> "ImageModel | None":
+    """The saved pick as a catalogue member, or None for anything else.
+
+    Anything else includes the empty string (nobody picked), a model retired
+    from the catalogue since it was saved, and a chat model id pasted into the
+    field. All three mean the same thing to the caller — resolve normally —
+    so they are one branch rather than three error paths.
+    """
+    if not preferred:
+        return None
+    try:
+        return ImageModel(str(preferred).strip())
+    except ValueError:
+        return None
 
 
 def resolve_run_model(

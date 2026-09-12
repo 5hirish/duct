@@ -26,6 +26,7 @@ from sqlmodel import Session
 
 from agents.engines import (
     ENGINE_SUPPORTED_PROVIDERS,
+    preferred_image_model,
     PROVIDER_CONFIG_ATTR,
     Engine,
     resolve_engine_model,
@@ -55,6 +56,7 @@ from agents.core.codex import (
     is_usable_credential,
 )
 from config import allow_server_provider_keys, get_configs
+from service.model_settings import get_model_settings
 from db.session import get_session as db_session
 from models.auth import User
 from service.auth import (
@@ -169,6 +171,8 @@ _MODEL_LABEL: dict[str, str] = {
     ImageModel.GEMINI_3_PRO_IMAGE.value: "Gemini 3 Pro Image",
     ImageModel.GPT_IMAGE_2_5_FLARE.value: "GPT Image 2.5 Flare",
     ImageModel.GPT_IMAGE_2_5_SUNBURST.value: "GPT Image 2.5 Sunburst",
+    ImageModel.GPT_IMAGE_2_5_FLARE.value: "GPT Image 2.5 Flare",
+    ImageModel.GPT_IMAGE_2_5_SUNBURST.value: "GPT Image 2.5 Sunburst",
     ImageModel.GPT_IMAGE_2.value: "GPT Image 2",
     ImageModel.GROK_IMAGINE_IMAGE_2.value: "Grok Imagine 2.0",
 }
@@ -262,7 +266,8 @@ def providers_status(
         })
     return {
         "providers": providers,
-        "images": _images_status(providers),
+        # The saved pick, so the row promises the run's own answer.
+        "images": _images_status(providers, get_model_settings(user.id if user else None).image_model),
         # The desktop shell decides whether it *can* offer "Continue with
         # ChatGPT"; this decides whether it *may*. An undocumented backend
         # needs a switch that does not wait for an app release.
@@ -270,7 +275,7 @@ def providers_status(
     }
 
 
-def _images_status(providers: list[dict]) -> dict:
+def _images_status(providers: list[dict], preferred: str = "") -> dict:
     """Which provider the image tools would spend, given the tiles above.
 
     Same preference order as ``resolve_image_run`` and the same reachability
@@ -278,8 +283,23 @@ def _images_status(providers: list[dict]) -> dict:
     the run agree by construction. ``source`` is ``none`` when no image-capable
     provider is reachable — the row then asks for a key rather than naming a
     model nothing can run.
+
+    ``preferred`` mirrors the same argument on ``resolve_image_run``, including
+    the fall-through: a saved pick whose provider has no key resolves to the
+    order below. The page has to render what will actually happen, and "the
+    model you chose, which cannot run" is the one answer it must not give.
     """
     by_id = {row["id"]: row for row in providers}
+    wanted = preferred_image_model(preferred)
+    if wanted is not None:
+        row = by_id.get(provider_of(wanted).value)
+        if row and row["reachable"]:
+            return {
+                "provider": row["id"],
+                "model": wanted.value,
+                "source": row["source"],
+            }
+
     for provider in IMAGE_PROVIDER_ORDER:
         row = by_id.get(provider.value)
         if row and row["reachable"]:

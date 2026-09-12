@@ -30,8 +30,12 @@
  *    note under it, and the quota switch's copy) — now the chain, once;
  *  * the credential chip repeated on all three cards — now one sentence on the
  *    summary, and per-card only when the three tiers disagree;
- *  * job chips and tier blurbs — inside each card's "What runs here";
- *  * quota fallback, context compression and the image pick — Advanced.
+ *  * job chips and tier blurbs — gone; the tagline already says what the
+ *    tier is for, and nine chips across the row explained a decision nobody
+ *    is being asked to make;
+ *  * quota fallback and context compression — Advanced. The image model came
+ *    back *out* of that fold and into the summary card: it is a fourth thing
+ *    Duct runs on your key, and it now picks rather than only reports.
  *
  * A third tab, Runtime, picked the agent harness. Once v3 was removed it
  * offered a single engine, always active, already selected — a radio group
@@ -115,13 +119,19 @@ function ModelSettings() {
     // brief, which has no browser. localStorage paints first so the page is
     // never blank; this corrects it a moment later, and a stale tab loses.
     fetchModelSettings().then((settings) => {
-      if (Object.keys(settings.tiers || {}).length) {
-        setMap((current) => {
-          const next = { ...current, tiers: settings.tiers };
-          saveModelMap(next);
-          return next;
-        });
-      }
+      const tiers = Object.keys(settings.tiers || {}).length ? settings.tiers : null;
+      if (!tiers && !settings.image_model) return;
+      setMap((current) => {
+        const next = { ...current };
+        if (tiers) next.tiers = tiers;
+        // Mirrors the tier map: the server's copy is what a run reads, and the
+        // local one only paints first.
+        if (settings.image_model) {
+          next.modality = { ...(current.modality || {}), image: settings.image_model };
+        }
+        saveModelMap(next);
+        return next;
+      });
     });
     fetchModelCatalogue().then(setCatalogue);
     fetchProviderStatus().then((status) => {
@@ -162,12 +172,6 @@ function ModelSettings() {
     for (const row of preview?.tiers ?? []) byTier[row.id] = row;
     return byTier;
   }, [preview]);
-
-  const jobsByTier = useMemo(() => {
-    const byTier = {};
-    for (const row of catalogue?.tiers ?? []) byTier[row.id] = row.jobs || [];
-    return byTier;
-  }, [catalogue]);
 
   // What each tier is actually set to, defaults filled in. Both the summary
   // and the cards read this, so neither can disagree with the other about
@@ -233,6 +237,20 @@ function ModelSettings() {
     );
     const nextTiers = { ...defaults, ...(map.tiers || {}), [tierKey]: model };
     commit({ ...map, tiers: nextTiers }, "Saved");
+  }
+
+  function setImageModel(model) {
+    const modality = { ...(map.modality || {}) };
+    // Absent, not empty-string: an absent key is what `modelPayload` already
+    // treats as "nothing configured", and writing "" would make an untouched
+    // install start sending a modality block that says nothing.
+    if (model) modality.image = model;
+    else delete modality.image;
+    const next = { ...map, modality };
+    setMap(next);
+    saveModelMap(next);
+    saveModelSettings({ image_model: model || "" });
+    flash("Saved");
   }
 
   function fillFromProvider(providerId) {
@@ -313,6 +331,10 @@ function ModelSettings() {
             onFill={fillFromProvider}
             configuredCount={configuredCount}
             onReset={resetToDefaults}
+            images={images}
+            imageModels={catalogue?.image_models ?? []}
+            imagePick={map.modality?.image || ""}
+            onImageChange={setImageModel}
           />
 
           {customising && (
@@ -332,7 +354,6 @@ function ModelSettings() {
                     providersById={providersById}
                     engine={DEFAULT_ENGINE}
                     loading={!catalogue}
-                    jobs={jobsByTier[tier.key] || []}
                     preview={previewByTier[tier.key]}
                     showSource={!sharedSource}
                     onChange={setTier}
@@ -370,13 +391,7 @@ function ModelSettings() {
             </div>
           )}
 
-          <AdvancedSettings
-            ladder={TIERS.map((tier) => tier.label)}
-            images={images}
-            catalogue={catalogue}
-            providersById={providersById}
-            sharedSource={sharedSource}
-          />
+          <AdvancedSettings ladder={TIERS.map((tier) => tier.label)} />
         </TabsContent>
 
         {/* ---------------------------------------------------------------- */}

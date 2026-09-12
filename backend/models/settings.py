@@ -59,6 +59,19 @@ class UserModelSettings(SQLModel, table=True):
     # instance default, which is what almost every install wants.
     engine: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
 
+    # Which model draws, when the user picked one. Empty means "whichever of my
+    # keys can draw", resolved in IMAGE_PROVIDER_ORDER — the behaviour every
+    # install had before this column, so an empty string is not a missing
+    # setting, it is the answer most people want.
+    #
+    # A preference, not a guarantee: a pick whose provider has no spendable key
+    # falls through to that same order rather than failing the run. Same rule
+    # the tier ladder follows, for the same reason — a content session is worth
+    # having without the exact model you asked for.
+    image_model: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
+
     updated_at: datetime = Field(
         default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )

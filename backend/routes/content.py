@@ -233,7 +233,14 @@ def _attach_image_run(
         return
     if owner_id is None:
         owner_id = getattr(sess, "user_id", None)
-    run = resolve_image_run(user_keys, stored_keys_for(owner_id))
+    # The user's saved pick, when they made one. Read here rather than passed
+    # down from the request because the run that matters most for images is the
+    # one nobody is watching, and it carries no browser state.
+    run = resolve_image_run(
+        user_keys,
+        stored_keys_for(owner_id),
+        preferred=get_model_settings(owner_id).image_model,
+    )
     if run is None:
         # Expected on the hosted deployment for a user who has connected no
         # image-capable key. The tools report it in the words the user needs.

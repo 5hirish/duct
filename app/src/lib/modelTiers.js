@@ -42,21 +42,18 @@ export const TIERS = [
     label: "Heavy",
     icon: "anvil",
     tagline: "The work you act on",
-    blurb: "Slow and expensive on purpose. Reserved for the analysis that becomes your decision.",
   },
   {
     key: "standard",
     label: "Standard",
     icon: "scale",
     tagline: "Most of what runs",
-    blurb: "Real reasoning at ordinary cost. Where Duct spends most of its time.",
   },
   {
     key: "light",
     label: "Light",
     icon: "feather",
     tagline: "High volume, low judgement",
-    blurb: "Reading pages, remembering context, naming things. Should be the cheapest model you own.",
   },
 ];
 
@@ -77,25 +74,6 @@ export const TIER_KEYS = TIERS.map((tier) => tier.key);
 export function getTier(key) {
   return TIERS.find((tier) => tier.key === key) ?? TIERS[1];
 }
-
-/**
- * What each internal job is, in words a growth marketer recognises.
- *
- * The backend's `Job` enum names steps for what they produce; these are the
- * same steps described by what the user would see. Shown only inside the
- * "what runs here" disclosure — this is an explanation, not a control.
- */
-export const JOB_LABELS = {
-  analysis: "Writes your brief",
-  audit: "Scores your site",
-  verification: "Proves a number before it's used",
-  synthesis: "Structures the findings",
-  drafting: "Writes content and captions",
-  chat: "Answers your follow-up questions",
-  research: "Reads pages and connector data",
-  memory: "Remembers context between sessions",
-  recap: "Summaries and titles",
-};
 
 /**
  * Whose account pays. `source` comes from `/providers/status`.

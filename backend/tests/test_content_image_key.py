@@ -208,3 +208,78 @@ def test_the_tool_schema_default_is_corrected_to_the_runs_provider():
     # run may name precisely because the default is neither.
     assert image_model_for(Provider.OPENAI, "gpt-image-2") is ImageModel.GPT_IMAGE_2
     assert image_model_for(Provider.OPENAI, ImageModel.GPT_IMAGE_2_5_SUNBURST) is ImageModel.GPT_IMAGE_2_5_SUNBURST
+
+
+# ---------------------------------------------------------------------------
+# The saved pick
+#
+# `image_model` on user_model_settings names which model draws. It is a
+# preference and not an instruction, for the same reason the tier ladder steps
+# down rather than failing: the setting travels with the user, the keys do not,
+# and a content session is worth having without the exact model you asked for.
+# ---------------------------------------------------------------------------
+
+
+def _saved_pick(monkeypatch, model: str) -> None:
+    """Stand in for the user's row on user_model_settings."""
+    from service.model_settings import ModelSettings
+
+    monkeypatch.setattr(
+        content_routes,
+        "get_model_settings",
+        lambda _uid: ModelSettings(tiers={}, image_model=model),
+    )
+
+
+def test_the_saved_pick_wins_over_the_preference_order(monkeypatch):
+    """Gemini leads IMAGE_PROVIDER_ORDER, so a user who wants OpenAI's model
+    can only ever get it if the pick outranks the order."""
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, raises=True)
+    _saved_pick(monkeypatch, ImageModel.GPT_IMAGE_2_5_FLARE.value)
+
+    content_routes._attach_image_run(
+        "sid", {Provider.OPENAI: "sk-mine", Provider.GOOGLE_GENAI: "AIza-mine"}
+    )
+    assert session.image_provider is Provider.OPENAI
+
+
+def test_a_pick_with_no_key_falls_through_instead_of_failing(monkeypatch):
+    """The setting is per user and the keys are per machine, so "the model I
+    chose on my laptop" routinely names a provider this run cannot pay. That
+    has to degrade to the ordinary order, not strand the run without images."""
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, raises=True)
+    _saved_pick(monkeypatch, ImageModel.GPT_IMAGE_2_5_FLARE.value)
+
+    content_routes._attach_image_run("sid", {Provider.GOOGLE_GENAI: "AIza-mine"})
+    assert session.image_provider is Provider.GOOGLE_GENAI
+
+
+def test_a_pick_the_catalogue_no_longer_knows_is_ignored(monkeypatch):
+    """A model retired since it was saved, or a chat id pasted into the field.
+    Both mean "resolve normally" — never a 404 on a model nothing serves."""
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, raises=True)
+    _saved_pick(monkeypatch, "gemini-1.0-retired-image")
+
+    content_routes._attach_image_run("sid", {Provider.GOOGLE_GENAI: "AIza-mine"})
+    assert session.image_provider is Provider.GOOGLE_GENAI
+
+
+def test_the_settings_page_promises_what_the_run_will_do(monkeypatch):
+    """`/providers/status` and `resolve_image_run` take the same argument and
+    must answer the same way — the row a user reads is a promise about the run,
+    and an unreachable pick shown as the answer is the one lie it must not
+    tell."""
+    from routes.providers import _images_status
+
+    tiles = [
+        {"id": "google_genai", "reachable": True, "source": "user"},
+        {"id": "openai", "reachable": False, "source": "none"},
+    ]
+    assert _images_status(tiles, ImageModel.GEMINI_3_PRO_IMAGE.value)["model"] == (
+        ImageModel.GEMINI_3_PRO_IMAGE.value
+    )
+    # Picked OpenAI, no OpenAI key — the row names what will really draw.
+    assert _images_status(tiles, ImageModel.GPT_IMAGE_2_5_FLARE.value)["provider"] == "google_genai"

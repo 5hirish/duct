@@ -204,6 +204,24 @@
   white-space: nowrap;
 }
 
+/* Images is a peer of the three rows above it but not a fourth rung — nothing
+   falls through to it — so a rule says "related, not in the ladder" without
+   needing a sentence to say it. */
+.mt-setup-row--aside {
+  margin-top: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--border);
+  align-items: center;
+}
+
+/* The only row whose value is a control rather than a statement; it takes the
+   rest of the line so the trigger is not a stub next to three full-width
+   names. */
+.mt-setup-row--aside dd {
+  flex: 1 1 auto;
+  max-width: 22rem;
+}
+
 /* A tier that cannot run, struck through in the same language the chain uses
    below — one visual rule for "this rung is skipped", in both places. */
 .mt-setup-dead {
@@ -364,15 +382,6 @@
   color: var(--muted-foreground);
 }
 
-/* Inside the disclosure now — the honest explanation of the tier, kept, but
-   where someone goes looking for one rather than in the way of the picker. */
-.mt-tier-blurb {
-  margin: 0.5rem 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--muted-foreground);
-}
-
 /* The picker gets a whole row and the credential chip sits under it. Sharing
    a line worked until the trigger also carried a provider mark, after which a
    three-column card truncated every id to "gemini-3.1-pro…". The model id is
@@ -388,6 +397,13 @@
 .mt-select {
   width: 100%;
   min-width: 0;
+}
+
+/* Popper mode sizes to content; a list narrower than the control it drops out
+   of reads as a different widget. */
+.mt-select-list {
+  min-width: var(--radix-select-trigger-width);
+  max-height: min(20rem, var(--radix-select-content-available-height));
 }
 
 /* The model id, under the name the picker now shows. Mono because it is a
@@ -412,16 +428,9 @@
   font-weight: 600;
 }
 
-/* What runs here. A disclosure, not a flat chip strip: these are an
-   explanation of a decision Duct made, and rendered at full weight on the card
-   they read as controls the reader is being asked to operate. */
-.mt-tier-jobs {
-  margin-top: auto;
-  padding-top: 0.625rem;
-  border-top: 1px solid var(--border);
-}
-
-.mt-tier-jobs > summary,
+/* The Advanced fold's own summary. This markup used to be shared with a
+   "What runs here" disclosure on each tier card; that fold and its job chips
+   are gone, so only the one rule is left. */
 .mt-advanced > summary {
   cursor: pointer;
   list-style: none;
@@ -429,22 +438,12 @@
 }
 
 /* Safari still paints its own marker without this, beside the one we draw. */
-.mt-tier-jobs > summary::-webkit-details-marker,
 .mt-advanced > summary::-webkit-details-marker {
   display: none;
 }
 
-.mt-tier-jobs > summary {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
 /* The triangle, drawn rather than inherited, so it turns with the state and
    matches the icon weight everywhere else on the page. */
-.mt-tier-jobs > summary::before,
 .mt-advanced > summary::before {
   content: "";
   flex: none;
@@ -456,30 +455,12 @@
   transition: transform 0.15s ease;
 }
 
-.mt-tier-jobs[open] > summary::before,
 .mt-advanced[open] > summary::before {
   transform: rotate(90deg);
 }
 
-.mt-tier-jobs > summary:hover,
 .mt-advanced > summary:hover {
   color: var(--foreground);
-}
-
-.mt-tier-joblist {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-top: 0.5rem;
-}
-
-.mt-job {
-  font-size: 0.6875rem;
-  line-height: 1.4;
-  padding: 0.125rem 0.4375rem;
-  border-radius: 6px;
-  background: var(--muted);
-  color: var(--muted-foreground);
 }
 
 /* ── The ladder, drawn ─────────────────────────────────── */

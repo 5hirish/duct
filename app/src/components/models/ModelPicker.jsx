@@ -20,7 +20,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LOGOS } from "@/components/connections/logos";
+import { Sparkles } from "lucide-react";
 import { PROVIDER_LOGO_KEY, modelLabel } from "@/lib/modelTiers";
+
+/**
+ * The value Radix carries for "let Duct choose".
+ *
+ * Radix reserves the empty string for "nothing selected", so an option that
+ * *means* empty needs a sentinel of its own. The caller never sees it: this
+ * module maps it to `""` on the way out and back on the way in, so a saved
+ * setting is still the empty string the backend already treats as "resolve
+ * normally".
+ */
+export const AUTO_MODEL = "__auto__";
 
 /**
  * A provider's mark at picker size.
@@ -59,6 +71,7 @@ export default function ModelPicker({
   id,
   label,
   loading,
+  autoOption = "",
 }) {
   const grouped = useMemo(() => {
     const byProvider = new Map();
@@ -89,7 +102,10 @@ export default function ModelPicker({
   const selected = models.find((model) => model.id === value);
 
   return (
-    <Select value={value || ""} onValueChange={onChange}>
+    <Select
+      value={value || (autoOption ? AUTO_MODEL : "")}
+      onValueChange={(next) => onChange(next === AUTO_MODEL ? "" : next)}
+    >
       {/* The id lives in the tooltip, not the trigger. It is what a support
           thread needs and what nobody reading this page is choosing between. */}
       <SelectTrigger id={id} className="mt-select" aria-label={label} title={selected?.id}>
@@ -104,11 +120,35 @@ export default function ModelPicker({
           // Not "Choose a model": until the catalogue lands every tier *does*
           // have a model, and inviting a choice implies none is set.
           <span className="mt-selected mt-selected--loading">Loading models…</span>
+        ) : autoOption ? (
+          <span className="mt-selected">
+            <Sparkles className="mt-mark" size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span className="mt-selected-id">{autoOption}</span>
+          </span>
         ) : (
           <SelectValue placeholder="Choose a model" />
         )}
       </SelectTrigger>
-      <SelectContent>
+      {/* `position="popper"`, not Radix's default `item-aligned`. Item-aligned
+          positions the list by aligning the *selected item* over the trigger,
+          and on grouped content it never resolves one: the wrapper is left
+          without `left`/`bottom` and the list opens at the viewport's
+          bottom-left corner, off-screen. Clicking the picker did nothing —
+          this is the only `SelectGroup` in the app, so it was the only select
+          that hit it. `DeskComposer` reaches for popper for the same reason.
+          A settings picker wants to hang under its trigger anyway. */}
+      <SelectContent position="popper" align="start" sideOffset={4} className="mt-select-list">
+        {/* First, and deliberately not last: leaving Duct to choose is the
+            state most people should stay in, and an option buried under seven
+            model names reads as the thing you settle for. */}
+        {autoOption && (
+          <SelectItem value={AUTO_MODEL}>
+            <span className="mt-option">
+              <Sparkles className="mt-mark" size={14} strokeWidth={1.75} aria-hidden="true" />
+              <span className="mt-option-id">{autoOption}</span>
+            </span>
+          </SelectItem>
+        )}
         {grouped.map(([providerId, list]) => (
           <SelectGroup key={providerId}>
             <SelectLabel className="mt-group">

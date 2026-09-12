@@ -16,7 +16,7 @@
  */
 
 import { Button } from "@/components/ui/button";
-import { ProviderMark } from "./ModelPicker";
+import ModelPicker, { ProviderMark } from "./ModelPicker";
 import { SOURCE_SENTENCE, TIERS, agreedSource, modelLabel } from "@/lib/modelTiers";
 
 export default function TierSummary({
@@ -31,6 +31,10 @@ export default function TierSummary({
   onFill,
   configuredCount = 0,
   onReset,
+  images,
+  imageModels = [],
+  imagePick = "",
+  onImageChange,
 }) {
   const rows = TIERS.map((tier) => {
     const id = picks[tier.key];
@@ -62,9 +66,12 @@ export default function TierSummary({
   const resolved = rows.some((row) => row.preview);
 
   // The server answers with an id; this page says names everywhere else, and
-  // switching to an id mid-sentence reads as a different kind of thing.
+  // switching to an id mid-sentence reads as a different kind of thing. Both
+  // catalogues, because the image models are not in `models` and the first
+  // version of this looked them up there and printed the id every time.
   const nameOf = (id) => {
-    const model = models.find((entry) => entry.id === id);
+    const model =
+      models.find((entry) => entry.id === id) || imageModels.find((entry) => entry.id === id);
     return model ? modelLabel(model) : id;
   };
 
@@ -78,6 +85,26 @@ export default function TierSummary({
     note = SOURCE_SENTENCE[shared] || "";
   } else if (resolved) {
     note = "Your three tiers run on different keys — open Customise to see which.";
+  }
+
+  // What "let Duct choose" resolves to right now, said in the option itself —
+  // a picker whose default option is the word "Auto" makes the reader open a
+  // second surface to find out what Auto meant.
+  const drawn = images?.model
+    ? nameOf(images.model) || images.model
+    : "";
+  // "Auto" alone would send the reader somewhere else to find out what it
+  // meant; the resolved name is the answer, so it is in the label. Kept short
+  // because this shares its string with the trigger, which is one line wide.
+  const autoImageLabel = drawn ? `Auto · ${drawn}` : "Auto — whichever key can draw";
+
+  // Only when something is wrong. A working image pick is already on screen.
+  let imageNote = "";
+  if (images && !images.provider) {
+    imageNote = "No key of yours can generate images yet — add one on the Providers tab.";
+  } else if (imagePick && images?.model && imagePick !== images.model) {
+    // The server resolved past the pick: its provider has no spendable key.
+    imageNote = `No key for ${nameOf(imagePick) || imagePick}, so images are drawn with ${drawn}.`;
   }
 
   return (
@@ -106,9 +133,36 @@ export default function TierSummary({
               </dd>
             </div>
           ))}
+
+          {/* Images is the fourth thing Duct runs on your key, so it belongs in
+              the list of what Duct runs on your key — it was in an Advanced
+              fold, two clicks from the three rows it is a peer of.
+
+              It is set apart by a rule because it is not a tier: nothing falls
+              through to it and nothing falls through from it. An empty pick is
+              "whichever of my keys can draw", which is why the picker offers
+              `AUTO_IMAGE` as a real option rather than leaving the control
+              blank — blank reads as broken, and this is the state most people
+              are in and should stay in. */}
+          <div className="mt-setup-row mt-setup-row--aside">
+            <dt>Images</dt>
+            <dd>
+              <ModelPicker
+                id="image-model"
+                label="Model for generating images"
+                loading={loading}
+                value={imagePick}
+                models={imageModels}
+                providersById={providersById}
+                autoOption={autoImageLabel}
+                onChange={onImageChange}
+              />
+            </dd>
+          </div>
         </dl>
 
         {note && <p className="mt-setup-note">{note}</p>}
+        {imageNote && <p className="mt-setup-note">{imageNote}</p>}
       </article>
 
       <div className="mt-actions">

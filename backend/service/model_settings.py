@@ -33,11 +33,13 @@ class ModelSettings:
     #: May a run step down the ladder when its tier is out of quota?
     auto_fallback: bool = True
     engine: str = ""
+    #: Which model draws. Empty = whichever key can, in IMAGE_PROVIDER_ORDER.
+    image_model: str = ""
 
 
 #: What an install that has never opened the settings page gets. Empty map, so
 #: resolution is byte-for-byte the behaviour that shipped before this table.
-DEFAULTS = ModelSettings(tiers={}, auto_fallback=True, engine="")
+DEFAULTS = ModelSettings(tiers={}, auto_fallback=True, engine="", image_model="")
 
 
 def _clean(tiers: object) -> dict[str, str]:
@@ -68,6 +70,7 @@ def get_model_settings(user_id: UUID | None) -> ModelSettings:
                 tiers=_clean(row.tiers),
                 auto_fallback=bool(row.auto_fallback),
                 engine=str(row.engine or ""),
+                image_model=str(row.image_model or ""),
             )
     except Exception:
         logger.warning("model settings unavailable — using defaults", exc_info=True)
@@ -80,6 +83,7 @@ def save_model_settings(
     tiers: object = None,
     auto_fallback: bool | None = None,
     engine: str | None = None,
+    image_model: str | None = None,
 ) -> ModelSettings:
     """Upsert the fields the caller sent, leaving the rest alone.
 
@@ -98,8 +102,13 @@ def save_model_settings(
             row.auto_fallback = bool(auto_fallback)
         if engine is not None:
             row.engine = str(engine or "").strip()
+        if image_model is not None:
+            row.image_model = str(image_model or "").strip()
         row.updated_at = utcnow()
         db.commit()
         return ModelSettings(
-            tiers=_clean(row.tiers), auto_fallback=bool(row.auto_fallback), engine=str(row.engine or "")
+            tiers=_clean(row.tiers),
+            auto_fallback=bool(row.auto_fallback),
+            engine=str(row.engine or ""),
+            image_model=str(row.image_model or ""),
         )

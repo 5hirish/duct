@@ -43,7 +43,6 @@ import ContextRing from "@/components/workspace/ContextRing";
 import TierSummary from "@/components/models/TierSummary";
 import TierCard from "@/components/models/TierCard";
 import AdvancedSettings from "@/components/models/AdvancedSettings";
-import ModalityRows from "@/components/models/ModalityRows";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
@@ -296,6 +295,8 @@ const MODEL_CATALOGUE = {
   ],
   image_models: [
     { id: "gemini-3.1-flash-image", label: "Gemini 3.1 Flash Image", provider: "google_genai", default: true },
+    { id: "gemini-3-pro-image", label: "Gemini 3 Pro Image", provider: "google_genai" },
+    { id: "gpt-image-2.5-flare", label: "GPT Image 2.5 Flare", provider: "openai" },
   ],
   image_provider_order: ["google_genai", "openai", "xai"],
   provider_triples: {
@@ -307,6 +308,7 @@ const MODEL_CATALOGUE = {
 const MODEL_PROVIDERS = {
   google_genai: { id: "google_genai", label: "Google Gemini", source: "env", reachable: true, engines: ["v1"] },
   anthropic: { id: "anthropic", label: "Anthropic", source: "none", reachable: false, engines: ["v1"] },
+  openai: { id: "openai", label: "OpenAI", source: "none", reachable: false, engines: ["v1"] },
 };
 
 const MODEL_PICKS = {
@@ -340,8 +342,15 @@ const MODEL_FILLABLE = [
   { id: "gemini", statusId: "google_genai", label: "Google Gemini" },
 ];
 
-function TierSummaryScene({ picks, previewByTier, expanded = false }) {
+function TierSummaryScene({
+  picks,
+  previewByTier,
+  expanded = false,
+  imagePick = "",
+  images = { provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" },
+}) {
   const [open, setOpen] = useState(expanded);
+  const [image, setImage] = useState(imagePick);
   return (
     <TierSummary
       picks={picks}
@@ -354,6 +363,10 @@ function TierSummaryScene({ picks, previewByTier, expanded = false }) {
       onFill={() => {}}
       configuredCount={3}
       onReset={() => {}}
+      images={images}
+      imageModels={MODEL_CATALOGUE.image_models}
+      imagePick={image}
+      onImageChange={setImage}
     />
   );
 }
@@ -860,7 +873,7 @@ export const SCENES = [
     state: "expanded — one runnable, one blocked",
     group: "TierCard",
     title: "The three tiers, customising",
-    note: "Open \"What runs here\" on one card and not the others: the disclosure grows the card, and the grid is align-items:stretch, so its neighbours grow with it — that is correct, a row of cards with one taller than the rest is not. The second card is the blocked case with showSource on, which is the only time a tier card carries its own credential chip.",
+    note: "Click a picker — the list must hang under its own trigger. It used to open at the viewport's bottom-left corner and read as a dead control, because Radix's default item-aligned positioning never resolves a selected item inside a SelectGroup and this is the app's only grouped select. The first card is the blocked case; the other two carry a credential chip because showSource is on, which only happens when the three tiers disagree about whose key pays.",
     render: () => (
       <div className="mt-tiers">
         {TIERS.map((tier, index) => (
@@ -872,7 +885,6 @@ export const SCENES = [
             models={MODEL_CATALOGUE.models}
             providersById={MODEL_PROVIDERS}
             engine="v1"
-            jobs={MODEL_CATALOGUE.tiers.find((row) => row.id === tier.key)?.jobs || []}
             preview={MODEL_PREVIEW_BLOCKED[tier.key]}
             showSource={tier.key !== "heavy"}
             onChange={() => {}}
@@ -886,62 +898,33 @@ export const SCENES = [
     state: "closed — open it",
     group: "AdvancedSettings",
     title: "The fold the page's second half went into",
-    note: "Quota fallback, context compression and the image pick, which were three stacked sections and roughly half the old page's scroll. Closed is the state to check first: the summary line has to say what is inside, because each of these is something somebody arrives looking for by name. Opening it toggles two switches that write real preferences, so expect the fallback card to report itself unsaved when signed out — that is the state, not a bug.",
+    note: "The two switches left after the image row moved up into the setup card. Closed is the state to check first: the summary line has to say what is inside, because both are things somebody arrives looking for by name. Opening it toggles real preferences, so expect the fallback card to report itself unsaved when signed out — that is the state, not a bug.",
     render: () => (
-      <AdvancedSettings
-        ladder={TIERS.map((tier) => tier.label)}
-        images={{ provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" }}
-        catalogue={MODEL_CATALOGUE}
-        providersById={MODEL_PROVIDERS}
-        // The tiers all resolve to this same env key, so the Images row must
-        // not repeat the answer — that is the state to check here.
-        sharedSource="env"
-      />
+      <AdvancedSettings ladder={TIERS.map((tier) => tier.label)} />
     ),
   },
   {
-    id: "model-images-differs",
-    state: "the drawing key is not the one the page named",
-    group: "ModalityRows",
-    title: "Images, when whose key draws is news",
-    note: "The pair that decides whether this row earns its chip. Above: the tiers run on a saved key and the drawing key is the machine's, so the chip appears — that is a fact the page has not already given you. Below: everything is on the same key, and the row says nothing about it, because the summary at the top of the page already did. Getting this backwards is how the old page said \"This computer's key\" four times on one screen.",
+    id: "model-images",
+    state: "auto · picked · picked but unreachable",
+    group: "TierSummary",
+    title: "The Images row, in its three states",
+    note: "Images is a fourth row in the setup card rather than a fold in Advanced, because it is a fourth thing Duct runs on your key. Top: nobody picked, and the option says what \"whichever key can draw\" currently resolves to — \"Auto\" alone would make the reader open another surface to find out. Middle: an explicit pick, no note, because the row already says it. Bottom: a pick whose provider has no key — the server resolved past it, and the note has to admit that rather than show a model that will not run.",
     render: () => (
-      <div style={{ display: "grid", gap: 8 }}>
-        <ModalityRows
-          images={{ provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" }}
-          catalogue={MODEL_CATALOGUE}
-          providersById={MODEL_PROVIDERS}
-          sharedSource="stored"
+      <div style={{ display: "grid", gap: 16 }}>
+        <TierSummaryScene picks={MODEL_PICKS} previewByTier={MODEL_PREVIEW_OK} />
+        <TierSummaryScene
+          picks={MODEL_PICKS}
+          previewByTier={MODEL_PREVIEW_OK}
+          imagePick="gemini-3-pro-image"
+          images={{ provider: "google_genai", model: "gemini-3-pro-image", source: "env" }}
         />
-        <ModalityRows
+        <TierSummaryScene
+          picks={MODEL_PICKS}
+          previewByTier={MODEL_PREVIEW_OK}
+          imagePick="gpt-image-2.5-flare"
           images={{ provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" }}
-          catalogue={MODEL_CATALOGUE}
-          providersById={MODEL_PROVIDERS}
-          sharedSource="env"
         />
       </div>
-    ),
-  },
-  {
-    id: "usage-first-run",
-    state: "nothing has ever run",
-    group: "UsagePanel",
-    title: "Usage, before the first model call",
-    note: "The state this page spends most of its life in for a new account, and the one it used to answer with a single grey sentence and a button. The example below the panel is the real UsageReport over invented numbers, so check two things: that the Example month rule reads as a label and not as a heading for real data, and that the by-model column tells the story on its own — the deep model is a hairline bar next to the largest dollar figure, which is the entire argument for the tier split made without the word tier. The sample is inert and aria-hidden; tab through and you should land on the two buttons and then leave the page.",
-    render: () => <UsageEmpty windowDays={30} earlier={null} onWiden={() => {}} />,
-  },
-  {
-    id: "usage-quiet-window",
-    state: "ran before, nothing in this window",
-    group: "UsagePanel",
-    title: "Usage, on a quiet fortnight",
-    note: "The same zero, meaning the opposite thing. Somebody who spent $6.41 last quarter and picked 7 days used to be told there were no model calls and invited to go run something, which reads as though their spending had been lost. The panel pays one extra read of the widest window to tell these apart, and the action here is the window, not the product. No example: this reader has seen the filled page.",
-    render: () => (
-      <UsageEmpty
-        windowDays={7}
-        earlier={{ calls: 1284, total_tokens: 4_210_000, cost_usd: 6.41 }}
-        onWiden={() => {}}
-      />
     ),
   },
 ];

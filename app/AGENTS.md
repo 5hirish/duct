@@ -160,6 +160,17 @@ it is a claim about the code, not a way to quiet the check.
   and **state the fall-through rule once**, in the drawn chain. `UsagePanel`
   is the whole Usage view and has two homes — the `/usage` route and this
   page's third tab — so change it there, never fork it into either caller.
+  `ModelPicker` is the **only `SelectGroup` in the app**, and it must keep
+  `position="popper"`: Radix's default `item-aligned` positions the list by
+  aligning the selected item over the trigger and never resolves one inside a
+  group, so the list opens at the viewport's bottom-left corner and the
+  control reads as dead. `DeskComposer` carries the same prop for the same
+  reason. The **Images row is a picker, not a report**: `image_model` on
+  `user_model_settings` names which model draws, and `resolve_image_run`
+  treats it as a preference — an unknown id, or one whose provider has no
+  spendable key, falls through to `IMAGE_PROVIDER_ORDER` rather than failing
+  the run. `/providers/status` takes the same argument and must keep giving
+  the same answer, because that row is a promise about what the run will do.
   Its `UsageEmpty` is exported for one reason: `/preview` renders fixtures and
   never the API, and this panel's first paint is a fetch, so without that seam
   the two states most worth reviewing would be the two nobody could open.

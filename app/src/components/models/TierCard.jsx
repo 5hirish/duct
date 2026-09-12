@@ -8,9 +8,10 @@
  *
  *  * **The rank superscript.** Icon, name and position already said "these are
  *    ordered". A fourth encoding of one fact is not emphasis.
- *  * **The blurb, at full weight.** It is the honest explanation of the tier,
- *    so it moved into the disclosure with the job chips rather than being cut:
- *    an explanation belongs where someone goes looking for one.
+ *  * **The "What runs here" fold** — the tier blurb and a chip per job. Nine
+ *    chips and three paragraphs across the row, for an explanation of a
+ *    decision nobody is being asked to make. The tagline under the name says
+ *    what the tier is for in five words; the rest was restating it at length.
  *  * **"Also the fallback for Heavy".** The chain drawn under these cards is
  *    the same claim, once, for all three.
  *  * **The credential chip, unconditionally.** `showSource` is false while all
@@ -21,7 +22,7 @@
 import { Anvil, Feather, Scale } from "lucide-react";
 import ModelPicker from "./ModelPicker";
 import StateChip from "./StateChip";
-import { JOB_LABELS, SOURCE_DETAIL, SOURCE_LABELS, SOURCE_TONE, modelLabel } from "@/lib/modelTiers";
+import { SOURCE_DETAIL, SOURCE_LABELS, SOURCE_TONE, modelLabel } from "@/lib/modelTiers";
 
 /** The tier's own mark. Anvil, balance scale, feather — heaviest to lightest. */
 const TIER_ICONS = { anvil: Anvil, scale: Scale, feather: Feather };
@@ -33,7 +34,6 @@ export default function TierCard({
   models,
   providersById,
   engine,
-  jobs,
   preview,
   loading,
   showSource,
@@ -104,23 +104,6 @@ export default function TierCard({
             <>Nothing below this tier can run either — add a key to use {tier.label}.</>
           )}
         </p>
-      )}
-
-      {/* Native <details>: this is an explanation someone opens on purpose,
-          which is exactly the element's job, and it costs no primitive. The
-          chips stayed flat on the card for a while and read as controls. */}
-      {jobs.length > 0 && (
-        <details className="mt-tier-jobs">
-          <summary>What runs here</summary>
-          <p className="mt-tier-blurb">{tier.blurb}</p>
-          <div className="mt-tier-joblist">
-            {jobs.map((job) => (
-              <span key={job} className="mt-job">
-                {JOB_LABELS[job] || job}
-              </span>
-            ))}
-          </div>
-        </details>
       )}
     </div>
   );
