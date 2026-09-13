@@ -142,119 +142,126 @@ export default function ProfilePage() {
         </p>
       )}
 
-      <div className="pf-rows">
-        <div className="pf-row">
-          <label className="pf-label" htmlFor="pf-name">
-            What should Duct call you?
-          </label>
-          <input
-            id="pf-name"
-            className="pf-input"
-            value={profile.display_name}
-            maxLength={80}
-            placeholder="Shirish"
-            onChange={(e) => update({ display_name: e.target.value }, { debounce: true })}
-          />
-        </div>
+      {/* One column, one right edge. Every block inside sits at the column
+          width rather than carrying its own `ch` measure, which resolves
+          against each element's own font-size and so lined nothing up: the
+          character counter under the notes box stopped a fifth of the way
+          short of it, because 68ch at 11px is not 68ch at 14px. */}
+      <div className="pf-body">
+        <div className="pf-rows">
+          <div className="pf-row">
+            <label className="pf-label" htmlFor="pf-name">
+              What should Duct call you?
+            </label>
+            <input
+              id="pf-name"
+              className="pf-input"
+              value={profile.display_name}
+              maxLength={80}
+              placeholder="Shirish"
+              onChange={(e) => update({ display_name: e.target.value }, { debounce: true })}
+            />
+          </div>
 
-        <div className="pf-row">
-          <label className="pf-label" htmlFor="pf-role">
-            What do you do?
-          </label>
-          {/* Radix treats "" as no selection, so the empty option travels as a
-              sentinel and is mapped back on the way in and out. */}
-          <Select
-            value={profile.role || NO_ROLE}
-            onValueChange={(role) => update({ role: role === NO_ROLE ? "" : role })}
-          >
-            <SelectTrigger id="pf-role" className="pf-control">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ROLE_OPTIONS.map((option) => (
-                <SelectItem key={option.value || NO_ROLE} value={option.value || NO_ROLE}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="pf-row">
-          <label className="pf-label" htmlFor="pf-language">
-            Write to me in
-          </label>
-          <Select
-            value={profile.communication_language || "auto"}
-            onValueChange={(value) =>
-              update({ communication_language: value === "auto" ? "" : value })
-            }
-          >
-            <SelectTrigger id="pf-language" className="pf-control">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LANGUAGES.map((option) => (
-                <SelectItem key={option.value || "auto"} value={option.value || "auto"}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <h2 className="pf-heading">How Duct writes</h2>
-      <div className="pf-presets" role="radiogroup" aria-label="How Duct writes">
-        {WRITING_PRESETS.map((preset) => {
-          const selected = preset.value === profile.writing_preset;
-          return (
-            <button
-              key={preset.value}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => update({ writing_preset: preset.value })}
-              className={`pf-preset${selected ? " pf-preset--on" : ""}`}
+          <div className="pf-row">
+            <label className="pf-label" htmlFor="pf-role">
+              What do you do?
+            </label>
+            {/* Radix treats "" as no selection, so the empty option travels as a
+                sentinel and is mapped back on the way in and out. */}
+            <Select
+              value={profile.role || NO_ROLE}
+              onValueChange={(role) => update({ role: role === NO_ROLE ? "" : role })}
             >
-              <span className="pf-preset-name">{preset.label}</span>
-              <span className="pf-preset-desc">{preset.description}</span>
-            </button>
-          );
-        })}
-      </div>
+              <SelectTrigger id="pf-role" className="pf-control">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value || NO_ROLE} value={option.value || NO_ROLE}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      {/* The reason the presets are legible at all. Same finding, three voices. */}
-      <VoiceSample preset={profile.writing_preset} language={profile.communication_language} />
+          <div className="pf-row">
+            <label className="pf-label" htmlFor="pf-language">
+              Write to me in
+            </label>
+            <Select
+              value={profile.communication_language || "auto"}
+              onValueChange={(value) =>
+                update({ communication_language: value === "auto" ? "" : value })
+              }
+            >
+              <SelectTrigger id="pf-language" className="pf-control">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((option) => (
+                  <SelectItem key={option.value || "auto"} value={option.value || "auto"}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-      <h2 className="pf-heading">Anything else Duct should know</h2>
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 8, fontSize: 13 }}>
-        House rules, the metric you actually care about, how you want to be argued with. This
-        wins when it disagrees with the setting above.
-      </p>
-      <textarea
-        className="pf-notes"
-        value={profile.notes}
-        maxLength={NOTES_MAX_CHARS}
-        rows={4}
-        aria-label="Anything else Duct should know"
-        placeholder="Give me the number first, then the why. Never recommend a change I cannot roll back."
-        onChange={(e) => update({ notes: e.target.value }, { debounce: true })}
-      />
-      <p className="pf-count">{notesLeft} characters left</p>
+        <h2 className="pf-heading">How Duct writes</h2>
+        <div className="pf-presets" role="radiogroup" aria-label="How Duct writes">
+          {WRITING_PRESETS.map((preset) => {
+            const selected = preset.value === profile.writing_preset;
+            return (
+              <button
+                key={preset.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => update({ writing_preset: preset.value })}
+                className={`pf-preset${selected ? " pf-preset--on" : ""}`}
+              >
+                <span className="pf-preset-name">{preset.label}</span>
+                <span className="pf-preset-desc">{preset.description}</span>
+              </button>
+            );
+          })}
+        </div>
 
-      <div className="pf-actions">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            setProfile({ ...PROFILE_DEFAULTS });
-            saveProfile({ ...PROFILE_DEFAULTS }).then(flash);
-          }}
-        >
-          Reset to defaults
-        </Button>
+        {/* The reason the presets are legible at all. Same finding, three voices. */}
+        <VoiceSample preset={profile.writing_preset} language={profile.communication_language} />
+
+        <h2 className="pf-heading">Anything else Duct should know</h2>
+        <p className="app-subtle" style={{ marginTop: 0, marginBottom: 8, fontSize: 13 }}>
+          House rules, the metric you actually care about, how you want to be argued with. This
+          wins when it disagrees with the setting above.
+        </p>
+        <textarea
+          className="pf-notes"
+          value={profile.notes}
+          maxLength={NOTES_MAX_CHARS}
+          rows={4}
+          aria-label="Anything else Duct should know"
+          placeholder="Give me the number first, then the why. Never recommend a change I cannot roll back."
+          onChange={(e) => update({ notes: e.target.value }, { debounce: true })}
+        />
+        <p className="pf-count">{notesLeft} characters left</p>
+
+        <div className="pf-actions">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setProfile({ ...PROFILE_DEFAULTS });
+              saveProfile({ ...PROFILE_DEFAULTS }).then(flash);
+            }}
+          >
+            Reset to defaults
+          </Button>
+        </div>
       </div>
     </section>
   );
