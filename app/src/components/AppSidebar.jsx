@@ -46,8 +46,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import PreferencesDialog from "./PreferencesDialog";
-import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
+import {
+  PROFILE_CHANGED,
+  PROFILE_DEFAULTS,
+  loadProfile,
+} from "@/lib/userProfile";
 import {
   notificationSurface,
   canOpenNotificationSettings,
@@ -288,33 +291,44 @@ export function NotificationRow({ permission, hasSettingsPage = false, onAct }) 
   );
 }
 
-function PreferencesDialogMenuItem() {
-  const [hasPrefs, setHasPrefs] = useState(false);
+function ProfileMenuItem() {
+  const [set, setSet] = useState(false);
 
+  // The badge answers "have I told Duct anything about myself", which is the
+  // only question this row can answer without opening it. It reads the local
+  // cache rather than the server: the menu opens in a frame, and a fetch to
+  // decorate a menu item is a request nobody asked for.
   useEffect(() => {
-    const check = () => setHasPrefs(hasNonDefaultPreferences(loadPreferences()));
+    const check = () => {
+      const profile = loadProfile();
+      setSet(
+        Boolean(profile.display_name || profile.role || profile.notes || profile.communication_language)
+          || profile.writing_preset !== PROFILE_DEFAULTS.writing_preset,
+      );
+    };
     check();
     window.addEventListener("storage", check);
-    return () => window.removeEventListener("storage", check);
+    window.addEventListener(PROFILE_CHANGED, check);
+    return () => {
+      window.removeEventListener("storage", check);
+      window.removeEventListener(PROFILE_CHANGED, check);
+    };
   }, []);
 
   return (
-    <PreferencesDialog>
-      <DropdownMenuItem
-        onSelect={(e) => e.preventDefault()}
-        className="flex items-center justify-between"
-      >
+    <DropdownMenuItem asChild className="flex items-center justify-between">
+      <Link href="/settings/profile">
         <span className="flex items-center gap-2">
           <SlidersHorizontal className="size-4" />
-          Preferences
+          Profile
         </span>
-        {hasPrefs && (
+        {set && (
           <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
             Set
           </span>
         )}
-      </DropdownMenuItem>
-    </PreferencesDialog>
+      </Link>
+    </DropdownMenuItem>
   );
 }
 
@@ -393,7 +407,7 @@ function SidebarUserFooter() {
             <span>Models &amp; providers</span>
           </Link>
         </DropdownMenuItem>
-        <PreferencesDialogMenuItem />
+        <ProfileMenuItem />
         <NotificationMenuItem />
         <DropdownMenuSeparator />
         {/* Plain new-tab links: installExternalLinkHandler (lib/shell.js)

@@ -189,7 +189,21 @@ it is a claim about the code, not a way to quiet the check.
   as "no new version", because a reload prompt nobody needed is what teaches
   people to ignore the one they do. **Never reload for the user** — this app
   holds long agent runs and unsent input.
-- `lib/userPreferences.js` — preference persistence
+- `lib/userProfile.js` + `/settings/profile` — who Duct is answering and how
+  they want to be written to: name, role, one writing preset, the language Duct
+  writes *to them* in, and their own instructions. Server-owned, on the
+  `lib/modelSettings.js` pattern (localStorage paints, the server wins, writes
+  are partial), because the scheduled brief has no browser to send a preference
+  from. One preset where the dialog had two grids: `service/profile.py` derives
+  the `communication_style`/`report_depth` pair from it, so no prompt changed.
+  The page's sample is canned on purpose — a live rewrite is a model call per
+  click. **Communication language is not the project's output language (#125)
+  and not interface localisation (#126):** chat follows this, an artifact
+  follows the project's output language when it has one.
+- `lib/userPreferences.js` — what is left after the profile moved to the
+  server: the per-run dials the composer writes (`thinking`, `tier`,
+  `context_compression`), plus the three fields an agent request still carries
+  for signed-out runs, mirrored from the profile rather than edited here
 - `lib/analytics-client.js` — how to load GTM and push events (never whether)
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
 - `lib/analytics/` — the seam. `index.js` selects a provider from

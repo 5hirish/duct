@@ -47,6 +47,7 @@ import TierCard from "@/components/models/TierCard";
 import AdvancedSettings from "@/components/models/AdvancedSettings";
 import { TelemetryPanel } from "@/components/TelemetryCard";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
+import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
@@ -962,6 +963,21 @@ export const SCENES = [
     note: "The two switches left after the image row moved up into the setup card. Closed is the state to check first: the summary line has to say what is inside, because both are things somebody arrives looking for by name. Opening it toggles real preferences, so expect the fallback card to report itself unsaved when signed out — that is the state, not a bug.",
     render: () => (
       <AdvancedSettings ladder={TIERS.map((tier) => tier.label)} />
+    ),
+  },
+  {
+    id: "voice-sample",
+    state: "each preset, and a language with no sample of its own",
+    group: "VoiceSample",
+    title: "What the writing preset actually means",
+    note: "The profile page's one piece of evidence: the same finding in all three voices, so \"Practitioner\" is a thing you can read rather than a word you have to trust. Canned strings, no model call. Check the three read as genuinely different lengths and registers — if two look alike, the preset behind them is not worth offering — and that the untranslated-language notice says the preview is the limitation, not the agent.",
+    render: () => (
+      <div style={{ display: "grid", gap: 12, maxWidth: 640 }}>
+        <VoiceSample preset="executive" />
+        <VoiceSample preset="practitioner" />
+        <VoiceSample preset="technical" />
+        <VoiceSample preset="practitioner" language="Japanese" />
+      </div>
     ),
   },
   {
