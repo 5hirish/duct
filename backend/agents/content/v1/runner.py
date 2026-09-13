@@ -288,6 +288,22 @@ def _compose_audience(audience: dict | None) -> str:
     return "; ".join(parts)
 
 
+
+def _voice_block(user_id) -> str:
+    """The operator's ``<user_context>``, or '' when they never set a profile.
+
+    Best-effort like every other profile read: a content session is worth
+    having without it, and a settings row is not worth failing a run over.
+    """
+    from agents.core.voice import user_context_block
+    from service.profile import get_profile
+
+    try:
+        return user_context_block(get_profile(user_id))
+    except Exception:  # noqa: BLE001 — a preference, never a blocker
+        logger.warning("content: profile unavailable", exc_info=True)
+        return ""
+
 async def _memory_block(session: ContentSession, *, query: str = "") -> str:
     """The project's memory digest for a content run, as a user-turn block.
 
@@ -632,6 +648,13 @@ class ContentRunner:
             })
             brand = await self._load_project_step(session.project_id, emit)
             opening_prompt = await opening(brand)
+            # Who is being written for, and in which language. In the opening
+            # turn rather than the system prompt: the orchestrator prompt is
+            # shared across this account's sessions and per-user text in it
+            # would cost the cached prefix on every call.
+            voice = await asyncio.to_thread(_voice_block, getattr(session, "user_id", None))
+            if voice:
+                opening_prompt = f"{voice}\n\n{opening_prompt}"
             memory = await _memory_block(session, query=memory_query)
             if memory:
                 opening_prompt = f"{opening_prompt}\n\n{memory}"

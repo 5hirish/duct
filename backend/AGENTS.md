@@ -364,6 +364,18 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
   (which serves both the live session and the scheduled brief), content via
   `routes/content._resolve_run_model`. `resolve_run_model` remains for callers
   that have no job to name.
+- `models/settings.py` + `service/profile.py` + `routes/profile.py` — the
+  operator profile: name, role, writing preset, the language Duct writes to
+  them in, and their own instructions. Same argument as the tier map below,
+  applied to voice. Two rules worth knowing: **the server row is the truth and
+  the request payload is the fallback** (`resolve`), so a signed-out audit
+  still gets the voice picked in the browser; and **the preset derives the
+  older `communication_style`/`report_depth` pair** rather than replacing it,
+  so every prompt that reads those is unchanged. Rendered for a run by
+  `agents/core/voice.user_context_block` into the `<user_context>` block — in
+  the USER turn, never the system prompt, because
+  `build_insights_system_prompt` is cache-stable and one per-customer string
+  in it costs the cached prefix on every call.
 - `models/settings.py` + `service/model_settings.py` — the tier map and the
   fallback switch, keyed by user. They used to live in `localStorage` and ride
   on each request, which meant the scheduled brief — the run whose owner is

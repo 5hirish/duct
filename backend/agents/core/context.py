@@ -137,11 +137,15 @@ def format_business_context(
 class UserContext(BaseModel):
     """The human operator a synthesis is for — used to personalise tone/depth.
 
-    Separate from BusinessContext (which describes the company). Extensible:
-    populate ``name`` today; add role/seniority later and the formatter renders
-    only the fields that are set. Per-user data is rendered in the USER message
-    (via get_synthesis_user_prompt), never the system prompt, so the cached
-    system prefix stays byte-identical across users.
+    Separate from BusinessContext (which describes the company). The formatter
+    renders only the fields that are set, so an account that never opened the
+    profile page contributes no block at all.
+
+    Per-user data is rendered in the USER message, never the system prompt, so
+    the cached system prefix stays byte-identical across users. That is not a
+    style rule: ``build_insights_system_prompt`` is deliberately cache-stable,
+    and one per-customer string in it would give every account its own prefix
+    and lose the cache hit on every call of every run.
     """
 
     model_config = ConfigDict(extra="ignore")
@@ -149,6 +153,16 @@ class UserContext(BaseModel):
     name: str = ""
     role: str = ""
     seniority: str = ""
+    #: How this operator wants to be written to, and in which language. Both
+    #: come from their saved profile (``service/profile.py``); an empty
+    #: language means "match the language they wrote in", which is why it is
+    #: rendered as an instruction only when it is set.
+    voice: str = ""
+    language: str = ""
+    #: Their own words about how they want to be worked with. Last in the
+    #: block on purpose: it outranks the preset above it when the two
+    #: disagree, and a model reading in order should meet the override last.
+    notes: str = ""
 
     @classmethod
     def coerce(cls, data: "UserContext | dict | None") -> "UserContext":
@@ -166,6 +180,9 @@ _USER_LABELS: list[tuple[str, str]] = [
     ("name", "Name"),
     ("role", "Role"),
     ("seniority", "Seniority"),
+    ("voice", "Write for them"),
+    ("language", "Write in"),
+    ("notes", "Their own instructions, which win over the line above"),
 ]
 
 

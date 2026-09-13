@@ -75,3 +75,69 @@ class UserModelSettings(SQLModel, table=True):
     updated_at: datetime = Field(
         default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )
+
+
+class UserProfile(SQLModel, table=True):
+    """Who the operator is, and how they want to be written to.
+
+    Same argument as ``UserModelSettings`` above, applied to a different kind of
+    preference: this used to live only in ``localStorage``
+    (``app/src/lib/userPreferences.js``) and travel on each agent request, which
+    meant a laptop and a phone disagreed and the scheduled brief — the one run
+    whose owner is definitely not watching — could read none of it.
+
+    One row per user. Everything is optional and an empty row is exactly the
+    behaviour of an account that never opened the page: no name, Duct's default
+    voice, and the language of whatever the person wrote.
+    """
+
+    __tablename__ = "user_profile"
+
+    user_id: UUID = Field(
+        sa_column=Column(
+            ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, nullable=False
+        ),
+    )
+
+    # What to call them. Not the account's full name: this is the one they
+    # answer to, and it is the only field here that shows up verbatim in
+    # generated text.
+    display_name: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
+
+    # Their job, from the shipped list. Free text is accepted too — the list is
+    # a convenience, and a role the list does not have is still worth knowing.
+    role: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+
+    # How Duct writes: "executive" | "practitioner" | "technical". One control
+    # rather than the two (style and depth) that shipped before it, because
+    # almost nobody wants executive tone with exhaustive evidence, and the
+    # person who does can say so in `notes`. Both older fields are still
+    # derived from this one, so every prompt that reads them is unchanged.
+    writing_preset: str = Field(
+        default="practitioner",
+        sa_column=Column(String, nullable=False, server_default="practitioner"),
+    )
+
+    # The language Duct writes *to them* in. Empty means "match the language
+    # they wrote in", which is the default because it is right more often than
+    # any fixed choice and because it never makes someone set a preference to
+    # get the behaviour they already had.
+    #
+    # Not the same field as a project's output language (the deliverable
+    # written for a client) and not the interface language. See the precedence
+    # rule in `service/profile.py`.
+    communication_language: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
+
+    # Anything the controls above cannot hold: house rules, the metric they
+    # care about, how they want to be argued with. It outranks the preset when
+    # the two disagree, and it is capped at NOTES_MAX_CHARS because it rides in
+    # every prompt this account ever runs.
+    notes: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+
+    updated_at: datetime = Field(
+        default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
+    )

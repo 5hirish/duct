@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from routes import (
     activity, agents, artifacts, audit, audit_prefetch, auth, chat, connectors, content, engines,
     execution,
-    generate, health, lead_magnet, memory, model_settings, project_connectors,
+    generate, health, lead_magnet, memory, model_settings, profile, project_connectors,
     project_members, projects,
     providers,
     reports, signin, usage, user_connectors, user_contexts, user_projects,
@@ -107,6 +107,7 @@ router.include_router(artifacts.router, prefix="/api/user/artifacts")
 router.include_router(activity.router, prefix="/api/user/activity")
 router.include_router(usage.router, prefix="/api/user/usage")
 router.include_router(model_settings.router, prefix="/api/user/model-settings")
+router.include_router(profile.router, prefix="/api/user/profile")
 router.include_router(user_projects.router, prefix="/api/user/projects")
 router.include_router(user_contexts.router, prefix="/api/user/projects")
 router.include_router(memory.router, prefix="/api/user/projects")

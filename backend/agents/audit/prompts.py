@@ -50,7 +50,17 @@ _DEPTH_GUIDANCE: dict[str, str] = {
 }
 
 
-def _format_user_preferences(prefs: UserPreferences) -> str:
+def _format_user_preferences(
+    prefs: UserPreferences, *, language: str = "", notes: str = ""
+) -> str:
+    """The audit's own operator block.
+
+    It keeps its SEO-specific style and depth guidance rather than moving to the
+    shared ``<user_context>`` renderer, because "translate signals into
+    outcomes" and "reference the RFC" are advice about *this* deliverable. What
+    it takes from the shared profile is the two things it had no version of:
+    which language to write in, and the operator's own instructions.
+    """
     lines = [
         f"  role: {prefs.role or 'not specified'}",
         f"  communication_style: {prefs.communication_style}",
@@ -68,6 +78,10 @@ def _format_user_preferences(prefs: UserPreferences) -> str:
             "",
             f"  Outcome focus: Weight findings and recommendations toward {_OUTCOME_LABELS[prefs.primary_outcome]} impact.",
         ]
+    if language:
+        lines += ["", f"  Write the report in {language}."]
+    if notes:
+        lines += ["", f"  Their own instructions, which win over the guidance above: {notes}"]
     return "<user_preferences>\n" + "\n".join(lines) + "\n</user_preferences>"
 
 
@@ -603,6 +617,10 @@ def build_audit_user_prompt(
     report_mode: str = "freehand",
     research_context: AuditResearchContext | None = None,
     extra_context: str = "",
+    # From the saved profile (``service/profile.py``). An empty language means
+    # "match the language they wrote in", which needs no instruction.
+    language: str = "",
+    notes: str = "",
 ) -> str:
     parts: list[str] = []
 
@@ -679,8 +697,10 @@ def build_audit_user_prompt(
         user_preferences.communication_style != "practitioner",
         user_preferences.report_depth != "balanced",
         user_preferences.primary_outcome,
+        language,
+        notes,
     ]):
-        parts.append(_format_user_preferences(user_preferences))
+        parts.append(_format_user_preferences(user_preferences, language=language, notes=notes))
         parts.append("")
 
     # Crawl metadata

@@ -92,6 +92,8 @@ from service.memory_consolidation import schedule_consolidation
 from agents.engines import resolve_job_run
 from agents.tiers import Job, tier_fields
 from service.model_settings import get_model_settings
+from service.profile import resolve as resolve_profile
+from agents.core.voice import user_context_block
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso
 
@@ -1680,6 +1682,13 @@ async def _start_insights(
                 session=session,
                 prompt=req.prompt,
                 business_context=business_context,
+                # Who is being answered, and how they want it written. Resolved
+                # from the saved profile, which is why it is read here rather
+                # than taken from the request: the browser's copy is a cache,
+                # and a scheduled run has no browser to send one.
+                user_context=user_context_block(
+                    resolve_profile(owner_id, req.user_preferences)
+                ),
                 memory=memory,
                 data_sources=data_sources,
                 project_id=project_uuid,
