@@ -1660,7 +1660,12 @@ async def _start_insights(
             # queries, which against a remote database is ten seconds of
             # "Connecting…" with no stream to attach to. Both are best-effort
             # and never raise (see agents/insights/setup.py).
-            memory = await insights_memory_blocks(
+            #
+            # Neither primes a resumed thread. Its opening turn is the raw
+            # follow-up (or nothing, from the desk), so the digest went unread
+            # — while its MEMORY_RECALLED row landed in the transcript between
+            # the restored history and the next message, attached to no turn.
+            memory = "" if is_resume else await insights_memory_blocks(
                 run,
                 user_id=owner_id,
                 user_preferences=req.user_preferences,
