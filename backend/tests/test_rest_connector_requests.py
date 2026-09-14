@@ -23,6 +23,12 @@ from tests.fakes import FakeWire
 
 @pytest.fixture
 def wire(monkeypatch):
+    import service.rest as rest
+
+    # Two real sleeps live under Endpoint.request: the retry backoff and the
+    # RevenueCat charts pacer, which waits 2.4 s between calls once any test
+    # has hit it. Neither is what these tests are about.
+    monkeypatch.setattr(rest.time, "sleep", lambda *_: None)
     return FakeWire().install(monkeypatch)
 
 
@@ -374,12 +380,7 @@ def test_revenuecat_pull_isolates_a_failed_section_but_not_a_rejected_key(wire):
         .on("GET", "/v2/projects/proj1/", _rc_list([]))
         .on("GET", "/v2/projects/proj1/metrics/overview", {"metrics": []})
     )
-    import service.rest as rest
-    # The retry policy would sleep between the 500s; the test only cares that
-    # the section fails and the pull continues.
-    import unittest.mock as mock
-    with mock.patch.object(rest.time, "sleep"):
-        payload = fetch_revenuecat({"api_key": "sk_x", "project_id": "proj1"}, days=30)
+    payload = fetch_revenuecat({"api_key": "sk_x", "project_id": "proj1"}, days=30)
 
     assert "apps" in payload["errors"] and payload["errors"].keys() == {"apps"}
     assert payload["data"]["products"] == []
