@@ -21,7 +21,7 @@ export function listServerConnectors() {
 /**
  * Upsert one connector's credentials.
  * `credentials` is the raw dict to encrypt at rest, e.g. `{refresh_token}` or
- * `{refresh_token, developer_token, login_customer_id}` for Google Ads.
+ * `{refresh_token, login_customer_id}` for Google Ads.
  * Note: the blob replaces the stored one whole — always send every field.
  */
 export async function saveServerConnector({
@@ -97,12 +97,7 @@ export async function connectedConnectorTypes() {
     }
   }
 
-  let hasAdsDevToken = false;
-  if (sessionTypes.includes("google_ads") || serverTypes.includes("google_ads")) {
-    const { getAdsDeveloperToken } = await import("./adsCredentials");
-    hasAdsDevToken = !!(await getAdsDeveloperToken());
-  }
-  return resolveConnectedTypes({ sessionTypes, serverTypes, hasAdsDevToken });
+  return resolveConnectedTypes({ sessionTypes, serverTypes });
 }
 
 // --- The inventory: what can this project actually reach? ----------------

@@ -74,14 +74,13 @@ class FetchSpec:
 # ---------------------------------------------------------------------------
 
 def _google_ads(fn: Callable, **extra: Any) -> Callable[[str, str, str, dict], dict]:
-    """Google Ads clients want the developer token and the MCC id as well."""
+    """Google Ads clients want the MCC id as well."""
 
     def _call(account_id: str, date_from: str, date_to: str, creds: dict) -> dict:
         return fn(
             account_id,
             date_from=date_from,
             date_to=date_to,
-            developer_token=creds.get("developer_token", ""),
             client_id=creds.get("client_id", ""),
             client_secret=creds.get("client_secret", ""),
             refresh_token=creds.get("refresh_token", ""),
@@ -93,7 +92,7 @@ def _google_ads(fn: Callable, **extra: Any) -> Callable[[str, str, str, dict], d
 
 
 def _google_oauth(fn: Callable) -> Callable[[str, str, str, dict], dict]:
-    """GA4 and Search Console: plain OAuth, no developer token."""
+    """GA4 and Search Console: plain OAuth, no MCC id."""
 
     def _call(account_id: str, date_from: str, date_to: str, creds: dict) -> dict:
         return fn(
@@ -128,7 +127,6 @@ def _campaigns(account_id: str, date_from: str, date_to: str, creds: dict) -> di
 
     return fetch_campaigns(
         account_id,
-        developer_token=creds.get("developer_token", ""),
         client_id=creds.get("client_id", ""),
         client_secret=creds.get("client_secret", ""),
         refresh_token=creds.get("refresh_token", ""),

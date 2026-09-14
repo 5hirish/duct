@@ -154,7 +154,6 @@ def _previous_slice(prev_bucket: dict[str, Any] | None) -> dict[str, float]:
 
 def fetch_campaigns(
     customer_id: str,
-    developer_token: str,
     client_id: str,
     client_secret: str,
     refresh_token: str,
@@ -168,7 +167,6 @@ def fetch_campaigns(
     prev_from, prev_to = _previous_window(date_from, date_to)
 
     creds: dict[str, Any] = {
-        "developer_token": developer_token,
         "client_id": client_id,
         "client_secret": client_secret,
         "refresh_token": refresh_token,
@@ -219,15 +217,20 @@ def fetch_campaigns(
 # ---------------------------------------------------------------------------
 
 def _build_client(
-    developer_token: str,
     client_id: str,
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
 ) -> GoogleAdsClient:
-    """Build a GoogleAdsClient from explicit credentials."""
+    """Build a GoogleAdsClient from explicit credentials.
+
+    No developer token: Google sunset them on 2026-09-09 and the API servers
+    ignore the header. A call's access level is now the access level of the
+    Cloud project that owns ``client_id``/``client_secret``, so an empty result
+    against a production account means that project is still on Test access,
+    not that a credential is missing.
+    """
     creds: dict[str, Any] = {
-        "developer_token": developer_token,
         "client_id": client_id,
         "client_secret": client_secret,
         "refresh_token": refresh_token,
@@ -284,14 +287,13 @@ def fetch_search_terms(
     date_from: str,
     date_to: str,
     *,
-    developer_token: str,
     client_id: str,
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
 ) -> dict[str, Any]:
     """Fetch top search terms by spend. Useful for CAC and spend-audit goals."""
-    client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
+    client = _build_client(client_id, client_secret, refresh_token, login_customer_id)
     query = _SEARCH_TERMS_GAQL.format(date_from=date_from, date_to=date_to)
     raw = _run_query(client, customer_id, query)
 
@@ -347,14 +349,13 @@ def fetch_device_performance(
     date_from: str,
     date_to: str,
     *,
-    developer_token: str,
     client_id: str,
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
 ) -> dict[str, Any]:
     """Fetch campaign performance segmented by device (MOBILE, DESKTOP, TABLET)."""
-    client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
+    client = _build_client(client_id, client_secret, refresh_token, login_customer_id)
     query = _DEVICE_GAQL.format(date_from=date_from, date_to=date_to)
     raw = _run_query(client, customer_id, query)
 
@@ -428,14 +429,13 @@ def fetch_geo_performance(
     date_from: str,
     date_to: str,
     *,
-    developer_token: str,
     client_id: str,
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
 ) -> dict[str, Any]:
     """Fetch geographic performance data. Useful for scaling and spend-audit goals."""
-    client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
+    client = _build_client(client_id, client_secret, refresh_token, login_customer_id)
     query = _GEO_GAQL.format(date_from=date_from, date_to=date_to)
     raw = _run_query(client, customer_id, query)
 
@@ -496,14 +496,13 @@ def fetch_ad_group_performance(
     date_from: str,
     date_to: str,
     *,
-    developer_token: str,
     client_id: str,
     client_secret: str,
     refresh_token: str,
     login_customer_id: str = "",
 ) -> dict[str, Any]:
     """Fetch ad group level performance. Deeper than campaign for spend audit and ROAS goals."""
-    client = _build_client(developer_token, client_id, client_secret, refresh_token, login_customer_id)
+    client = _build_client(client_id, client_secret, refresh_token, login_customer_id)
     query = _AD_GROUP_GAQL.format(date_from=date_from, date_to=date_to)
     raw = _run_query(client, customer_id, query)
 

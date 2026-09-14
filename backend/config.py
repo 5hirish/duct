@@ -148,8 +148,8 @@ class Configs(BaseSettings):
     )
     google_oauth_redirect_uri: str = Field(default="")
 
-    # Google Ads API
-    google_ads_developer_token: str = ""
+    # Google Ads API. No developer token: sunset 2026-09-09, access level now
+    # follows the Cloud project that owns the OAuth client.
     google_ads_client_id: str = ""
     google_ads_client_secret: str = ""
     google_ads_refresh_token: str = ""

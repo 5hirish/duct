@@ -69,7 +69,6 @@ def resolve_execution_creds(
 
     return {
         "refresh_token": _pick("refresh_token"),
-        "developer_token": _pick("developer_token", cfg.google_ads_developer_token),
         "login_customer_id": _pick("login_customer_id", cfg.google_ads_login_customer_id),
         "client_id": cfg.google_oauth_client_id or cfg.google_ads_client_id,
         "client_secret": cfg.google_oauth_client_secret or cfg.google_ads_client_secret,

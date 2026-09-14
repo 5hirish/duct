@@ -27,7 +27,9 @@
   uncovered spend share is structural, not a data bug.
 - MCC access needs `login-customer-id` (manager ID, digits only); without it
   child-account queries fail in ways that look like empty accounts.
-- A developer token is bound permanently to the first Cloud project that uses
-  it, and a token in Test access mode cannot query production accounts.
+- Developer tokens were sunset on 2026-09-09 and the header is ignored. A
+  call's access level is the access level of the Cloud project that owns the
+  OAuth client, and a project in Test access cannot query production accounts —
+  which surfaces as empty results, not as an auth error.
 - Campaign/ad-group/keyword removal is **irreversible** (`REMOVED` is forever).
   Pause instead; never propose removal as a reversible change.

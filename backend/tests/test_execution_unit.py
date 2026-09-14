@@ -148,8 +148,8 @@ def test_missing_target_field_raises():
 
 
 def test_missing_credentials_raise_before_any_network():
-    with pytest.raises(ValueError, match="developer_token"):
-        google_ads_exec._client({"refresh_token": "rt", "client_id": "c", "client_secret": "s"})
+    with pytest.raises(ValueError, match="client_secret"):
+        google_ads_exec._client({"refresh_token": "rt", "client_id": "c"})
     with pytest.raises(ValueError, match="refresh_token"):
         ga4_exec._admin_service({"client_id": "c", "client_secret": "s", "refresh_token": ""})
 

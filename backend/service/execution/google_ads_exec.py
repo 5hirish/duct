@@ -34,11 +34,10 @@ _SETTABLE_STATUSES = {"ENABLED", "PAUSED"}
 
 
 def _client(creds: dict[str, Any]):
-    for key in ("developer_token", "client_id", "client_secret", "refresh_token"):
+    for key in ("client_id", "client_secret", "refresh_token"):
         if not (creds.get(key) or "").strip():
             raise ValueError(f"Missing Google Ads credential: {key}")
     return _build_client(
-        developer_token=creds["developer_token"],
         client_id=creds["client_id"],
         client_secret=creds["client_secret"],
         refresh_token=creds["refresh_token"],

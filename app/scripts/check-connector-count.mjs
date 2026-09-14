@@ -42,13 +42,11 @@ const CASES = [
     expect: 3,
   },
   {
-    name: "google ads without a developer token is partial, not connected",
-    input: { sessionTypes: ["google_ads", "ga4"], hasAdsDevToken: false },
-    expect: 1,
-  },
-  {
-    name: "google ads with a developer token counts",
-    input: { sessionTypes: ["google_ads", "ga4"], hasAdsDevToken: true },
+    // Google Ads used to need a developer token on top of OAuth to count.
+    // Google sunset those on 2026-09-09, so OAuth alone is the whole answer
+    // and Ads counts exactly like GA4 next to it.
+    name: "google ads counts on OAuth alone",
+    input: { sessionTypes: ["google_ads", "ga4"] },
     expect: 2,
   },
   { name: "nothing connected", input: {}, expect: 0 },

@@ -30,7 +30,6 @@ class InsightRefreshRequest(BaseModel):
     date_from: str = ""
     date_to: str = ""
     refresh_token: str = ""
-    developer_token: str = ""
     ga4_refresh_token: str = ""
     gsc_refresh_token: str = ""
     targets: dict[str, RefreshRoutineTarget] = Field(default_factory=dict)

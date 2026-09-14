@@ -12,7 +12,7 @@
 
 import { authedRequest } from "./authFetch";
 import { trackEvent, AnalyticsEvent } from "./analytics";
-import { googleAdsByoCredentials } from "./adsCredentials";
+import { googleAdsRequestFields } from "./adsCredentials";
 
 function request(path, options) {
   return authedRequest(`/api/execute${path}`, options);
@@ -35,11 +35,9 @@ export async function executionCredentials(connectorType) {
     // backend resolves their stored encrypted rows.
     return {};
   }
-  const ads = await googleAdsByoCredentials();
   return {
     refresh_token: sessionStorage.getItem("gads_refresh_token") || "",
-    developer_token: ads.developer_token,
-    login_customer_id: ads.login_customer_id,
+    ...googleAdsRequestFields(),
   };
 }
 

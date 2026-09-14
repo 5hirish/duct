@@ -1,4 +1,4 @@
-import { googleAdsByoCredentials } from "./adsCredentials.js";
+import { googleAdsRequestFields } from "./adsCredentials.js";
 import { providerKeyHeaders } from "./providerKeys.js";
 import { consumeSseStream } from "./sse.js";
 // Bearer JWT minted by Google Sign-In. Optional: signed-out sessions omit it and
@@ -120,7 +120,7 @@ export async function fetchConnectorAccounts(connectorId, refreshToken, extras =
 }
 
 export async function fetchGoogleAdsAccounts(refreshToken) {
-  return fetchConnectorAccounts("google_ads", refreshToken, await googleAdsByoCredentials());
+  return fetchConnectorAccounts("google_ads", refreshToken, googleAdsRequestFields());
 }
 
 export async function fetchGa4Properties(refreshToken) {
@@ -154,7 +154,6 @@ export async function refreshInsightBriefs(routine) {
     date_from: routine?.custom_date_from || "",
     date_to: routine?.custom_date_to || "",
     refresh_token: refreshToken,
-    developer_token: (await googleAdsByoCredentials()).developer_token,
     ga4_refresh_token: ga4RefreshToken,
     gsc_refresh_token: gscRefreshToken,
     targets: routine?.targets || {},

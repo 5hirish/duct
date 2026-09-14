@@ -4,13 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BASE } from "../../../lib/api";
-import {
-  clearAdsDeveloperToken,
-  getAdsDeveloperToken,
-  getAdsLoginCustomerId,
-  setAdsDeveloperToken,
-  setAdsLoginCustomerId,
-} from "../../../lib/adsCredentials";
+import { getAdsLoginCustomerId, setAdsLoginCustomerId } from "../../../lib/adsCredentials";
 import {
   bindProjectConnector,
   deleteServerConnector,
@@ -51,8 +45,6 @@ export default function ConnectionsPage() {
   const [gscConnected, setGscConnected] = useState(false);
   const [gtmConnected, setGtmConnected] = useState(false);
   const [gadsOauthConnected, setGadsOauthConnected] = useState(false);
-  const [gadsDevTokenSaved, setGadsDevTokenSaved] = useState(false);
-  const [devTokenInput, setDevTokenInput] = useState("");
   const [mccInput, setMccInput] = useState("");
   const [signedIn, setSignedIn] = useState(false);
   const [connectError, setConnectError] = useState("");
@@ -92,19 +84,17 @@ export default function ConnectionsPage() {
   }
 
   // Upserts replace the stored blob whole, so a Google Ads sync must always
-  // carry all three fields (refresh token + developer token + MCC).
+  // carry both fields (refresh token + MCC).
   async function syncGadsToServer() {
     if (!hasAuthToken()) return;
     const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
     if (!refreshToken) return;
-    const developerToken = (await getAdsDeveloperToken()) || "";
     const loginCustomerId = getAdsLoginCustomerId() || "";
     try {
       await saveServerConnector({
         connector_type: "google_ads",
         credentials: {
           refresh_token: refreshToken,
-          developer_token: developerToken,
           login_customer_id: loginCustomerId,
         },
         granted_scopes: grantedScopesFor("google_ads"),
@@ -271,7 +261,6 @@ export default function ConnectionsPage() {
     setGa4Connected(!!sessionStorage.getItem("ga4_refresh_token"));
     setGscConnected(!!sessionStorage.getItem("gsc_refresh_token"));
     setGtmConnected(!!sessionStorage.getItem("gtm_refresh_token"));
-    getAdsDeveloperToken().then((token) => setGadsDevTokenSaved(!!token));
 
     const authed = hasAuthToken();
     setSignedIn(authed);
@@ -417,15 +406,9 @@ export default function ConnectionsPage() {
     };
   }
 
-  async function saveGadsApiAccess(event) {
+  async function saveGadsManagerAccount(event) {
     event.preventDefault();
-    const token = devTokenInput.trim();
     const mcc = mccInput.replace(/-/g, "").trim();
-    if (token) {
-      await setAdsDeveloperToken(token);
-      setGadsDevTokenSaved(true);
-      setDevTokenInput("");
-    }
     setAdsLoginCustomerId(mcc);
     setMccInput(mcc);
     await syncGadsToServer();
@@ -435,11 +418,8 @@ export default function ConnectionsPage() {
     sessionStorage.removeItem("gads_refresh_token");
     sessionStorage.removeItem("gads_customer_id");
     notifyConnectorsChanged();
-    await clearAdsDeveloperToken();
     setAdsLoginCustomerId("");
     setGadsOauthConnected(false);
-    setGadsDevTokenSaved(false);
-    setDevTokenInput("");
     setMccInput("");
     await removeServerRow("google_ads");
   }
@@ -477,8 +457,6 @@ export default function ConnectionsPage() {
   const ga4Authorized = ga4Connected || !!serverRows.ga4;
   const gscAuthorized = gscConnected || !!serverRows.gsc;
   const gtmAuthorized = gtmConnected || !!serverRows.gtm;
-
-  const gadsConnected = gadsAuthorized && gadsDevTokenSaved;
 
   // Authorized is not the same as fully permitted. Google's consent screen has
   // a tickbox per scope, so a connector can hold a valid token and still be
@@ -553,34 +531,11 @@ export default function ConnectionsPage() {
               title="Google Ads"
               description="Spend, clicks, impressions, conversions and ROAS, per campaign."
               logo={LOGOS.google_ads}
-              connected={gadsConnected}
+              connected={gadsAuthorized}
               oauthConnected={gadsAuthorized}
-              tone={
-                gadsConnected
-                  ? toneFor(true, "google_ads")
-                  : gadsAuthorized || gadsDevTokenSaved
-                    ? "partial"
-                    : "off"
-              }
+              tone={toneFor(gadsAuthorized, "google_ads")}
               {...scopeProps("google_ads")}
-              status={
-                gadsConnected
-                  ? "Connected"
-                  : gadsAuthorized
-                    ? "Add developer token"
-                    : gadsDevTokenSaved
-                      ? "Sign in with Google"
-                      : "Not connected"
-              }
-              pillStatus={
-                gadsConnected
-                  ? "Connected"
-                  : gadsAuthorized
-                    ? "Needs developer token"
-                    : gadsDevTokenSaved
-                      ? "Needs Google sign-in"
-                      : "Not connected"
-              }
+              status={connectionStatusFor(gadsAuthorized, "google_ads")}
               authorizeUrl={`${BASE}/auth/connectors/google_ads/oauth/authorize`}
               onDisconnect={signOutGads}
               signedIn={signedIn}
@@ -588,30 +543,11 @@ export default function ConnectionsPage() {
               rows={serverRowsAll.google_ads || []}
               {...mappingProps("google_ads")}
             >
-              <form onSubmit={saveGadsApiAccess} style={{ display: "grid", gap: 10 }}>
+              <form onSubmit={saveGadsManagerAccount} style={{ display: "grid", gap: 10 }}>
                 <p className="conn-hint">
-                  Duct&rsquo;s Google Ads API access is pending Google approval — bring your own{" "}
-                  <a
-                    className="app-link"
-                    href="https://developers.google.com/google-ads/api/docs/get-started/dev-token"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    developer token
-                  </a>{" "}
-                  from your manager account. It stays on this device and is only sent with your requests.
+                  Signing in with Google is all Duct needs. If your accounts sit under a manager
+                  account, name it here so Duct reads the child accounts through it.
                 </p>
-                <div className="conn-field">
-                  <Label htmlFor="gads-dev-token">Developer token</Label>
-                  <Input
-                    id="gads-dev-token"
-                    type="password"
-                    autoComplete="off"
-                    placeholder={gadsDevTokenSaved ? "Saved — paste to replace" : "Paste your developer token"}
-                    value={devTokenInput}
-                    onChange={(e) => setDevTokenInput(e.target.value)}
-                  />
-                </div>
                 <div className="conn-field">
                   <Label htmlFor="gads-mcc">Manager account ID (MCC, optional)</Label>
                   <Input
@@ -623,13 +559,8 @@ export default function ConnectionsPage() {
                   />
                 </div>
                 <div>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="secondary"
-                    disabled={!devTokenInput.trim() && !gadsDevTokenSaved}
-                  >
-                    Save API access
+                  <Button type="submit" size="sm" variant="secondary" disabled={!gadsAuthorized}>
+                    Save manager account
                   </Button>
                 </div>
               </form>

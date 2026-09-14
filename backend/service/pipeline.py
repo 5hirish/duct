@@ -120,7 +120,6 @@ async def fetch_connector_payload(
     date_to: str,
     cfg: Configs,
     refresh_token: str = "",
-    developer_token: str = "",
     customer_id: str = "",
     account_name: str = "",
     currency_code: str = "USD",
@@ -182,14 +181,10 @@ async def fetch_connector_payload(
 
     if connector_id == "google_ads":
         resolved_customer_id = resolve_customer_id(request_customer_id=customer_id)
-        dt, cid, secret, rt = resolve_ads_credentials(
-            request_refresh_token=refresh_token,
-            request_developer_token=developer_token,
-        )
+        cid, secret, rt = resolve_ads_credentials(request_refresh_token=refresh_token)
         data = await asyncio.to_thread(
             fetch_campaigns,
             customer_id=resolved_customer_id,
-            developer_token=dt,
             client_id=cid,
             client_secret=secret,
             refresh_token=rt,

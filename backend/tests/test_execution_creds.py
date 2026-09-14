@@ -30,7 +30,6 @@ def db_session():
 def cfg(monkeypatch):
     config = Configs(
         credentials_encryption_key=FERNET_KEY,
-        google_ads_developer_token="env-dev-token",
         google_ads_login_customer_id="env-mcc",
         google_oauth_client_id="env-client-id",
         google_oauth_client_secret="env-client-secret",
@@ -63,17 +62,15 @@ def _store(db_session, user, connector_type, account_id, data):
 def test_env_fallback_when_nothing_stored(db_session, cfg, user):
     creds = resolve_execution_creds(db_session, user.id, "google_ads")
     assert creds["refresh_token"] == ""
-    assert creds["developer_token"] == "env-dev-token"
     assert creds["login_customer_id"] == "env-mcc"
     assert creds["client_id"] == "env-client-id"
     assert creds["client_secret"] == "env-client-secret"
 
 
 def test_stored_credentials_used_when_override_empty(db_session, cfg, user):
-    _store(db_session, user, "google_ads", "", {"refresh_token": "stored-rt", "developer_token": "stored-dev"})
+    _store(db_session, user, "google_ads", "", {"refresh_token": "stored-rt"})
     creds = resolve_execution_creds(db_session, user.id, "google_ads")
     assert creds["refresh_token"] == "stored-rt"
-    assert creds["developer_token"] == "stored-dev"
     # Unset stored fields still fall through to env.
     assert creds["login_customer_id"] == "env-mcc"
 
@@ -106,7 +103,6 @@ def test_missing_encryption_key_degrades_to_env(db_session, cfg, user, monkeypat
     _store(db_session, user, "google_ads", "", {"refresh_token": "stored-rt"})
     broken = Configs(
         credentials_encryption_key="",
-        google_ads_developer_token="env-dev-token",
         google_oauth_client_id="env-client-id",
         google_oauth_client_secret="env-client-secret",
     )
@@ -114,4 +110,4 @@ def test_missing_encryption_key_degrades_to_env(db_session, cfg, user, monkeypat
     monkeypatch.setattr(credentials_service, "get_configs", lambda: broken)
     creds = resolve_execution_creds(db_session, user.id, "google_ads")
     assert creds["refresh_token"] == ""  # stored row unreadable → skipped, no raise
-    assert creds["developer_token"] == "env-dev-token"
+    assert creds["client_id"] == "env-client-id"

@@ -30,7 +30,6 @@ from service.execution.registry import EXECUTOR_REGISTRY
 from tests.fakes import FakeAdsClient
 
 CREDS = {
-    "developer_token": "dev",
     "client_id": "cid",
     "client_secret": "secret",
     "refresh_token": "refresh",
@@ -67,7 +66,7 @@ def _change(op_type: str, **sections) -> dict:
 # Credentials
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("missing", ["developer_token", "client_id", "client_secret", "refresh_token"])
+@pytest.mark.parametrize("missing", ["client_id", "client_secret", "refresh_token"])
 def test_a_missing_credential_is_named_before_any_call(missing):
     creds = {k: v for k, v in CREDS.items() if k != missing}
     with pytest.raises(ValueError, match=missing):

@@ -12,7 +12,7 @@ provides three callables sharing the signature ``(change: dict, creds: dict) -> 
   ``change["result"]["rollback"]``.
 
 ``change`` is one element of ``ExecutionChangeSet.changes``; ``creds`` is the
-per-request BYO credential dict (refresh_token, developer_token,
+per-request credential dict (refresh_token,
 login_customer_id, client_id, client_secret) — never read from env here, the
 route resolves them.
 

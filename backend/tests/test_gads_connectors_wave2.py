@@ -256,7 +256,7 @@ def test_execution_creds_hand_back_manual_blob(monkeypatch):
         lambda *a, **k: {"service_account_username": "sa", "service_account_secret": "s", "project_id": "1"},
     )
     monkeypatch.setattr(creds_module, "get_configs", lambda: SimpleNamespace(
-        google_ads_developer_token="env-dt", google_ads_login_customer_id="", google_oauth_client_id="cid",
+        google_ads_login_customer_id="", google_oauth_client_id="cid",
         google_oauth_client_secret="cs", google_ads_client_id="", google_ads_client_secret=""))
     out = creds_module.resolve_execution_creds(None, uuid4(), "mixpanel", override={"project_id": "2"})
     assert out == {"service_account_username": "sa", "service_account_secret": "s", "project_id": "2"}

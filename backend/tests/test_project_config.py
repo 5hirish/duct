@@ -13,7 +13,6 @@ def _load_server_with_env():
         "http://localhost:8002/auth/connectors/google_ads/oauth/callback"
     )
     os.environ["FRONTEND_ORIGIN"] = "http://localhost:3003"
-    os.environ["GOOGLE_ADS_DEVELOPER_TOKEN"] = "test-dev-token"
     os.environ["DUCT_API_KEY"] = TEST_DUCT_API_KEY
     os.environ.pop("GEMINI_API_KEY", None)
     import config
