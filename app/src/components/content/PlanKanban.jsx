@@ -1,7 +1,8 @@
 "use client";
 
+import { PostStatus } from "../../lib/contentEnums";
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
-import { effectiveSchedule, monthStartOf } from "../../lib/contentSchedule";
+import { effectiveSchedule, planStartOf } from "../../lib/contentSchedule";
 import PostMiniCard from "./PostMiniCard";
 
 const COLUMNS = STATUS_ORDER.map((key) => {
@@ -21,12 +22,12 @@ const COLUMNS = STATUS_ORDER.map((key) => {
  */
 export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
   const days = Array.isArray(plan?.days) ? plan.days : [];
-  const monthStart = monthStartOf(plan);
+  const anchor = planStartOf(plan);
 
   const grouped = Object.fromEntries(COLUMNS.map((c) => [c.key, []]));
   days.forEach((d, idx) => {
     const post = d.post_id ? postsById[d.post_id] || null : null;
-    const schedule = effectiveSchedule(d, post, monthStart, idx);
+    const schedule = effectiveSchedule(d, post, anchor, idx);
     const status = schedule.status || "pending";
     (grouped[status] = grouped[status] || []).push({ day: d, post, schedule, index: idx });
   });
@@ -50,9 +51,12 @@ export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
     // on /content and inside SplitWorkspace's user-resizable right pane, where
     // `lg:` would be true at 1024px of WINDOW while the pane itself is 300px.
     <div className="@container flex-1 overflow-auto p-4">
-      <div className="grid min-w-0 grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-flow-col @4xl:auto-cols-fr @4xl:grid-cols-none">
         {COLUMNS.map((col) => {
           const cards = grouped[col.key] || [];
+          // Discarded is where posts go to be forgotten; an empty lane for it
+          // is a column-width "Nothing here yet" on every fresh plan.
+          if (col.key === PostStatus.DISCARDED && cards.length === 0) return null;
           return (
             <div key={col.key} className={`flex min-w-0 flex-col rounded-lg border ${col.accent}`}>
               <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">

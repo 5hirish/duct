@@ -19,7 +19,6 @@ import {
   MEMORY_KINDS,
   createMemory,
   deleteMemory,
-  exportMemory,
   getMemory,
   listMemory,
   resetMemory,
@@ -48,7 +47,6 @@ function ProjectMemory({ projectId }) {
       remove: ({ memoryId }) => deleteMemory({ projectId, memoryId }),
       setPaused: ({ paused }) => setMemoryPaused({ projectId, paused }),
       reset: () => resetMemory({ projectId }),
-      exportAll: () => exportMemory({ projectId }),
     }),
     [projectId]
   );
@@ -85,8 +83,7 @@ function ProjectMemory({ projectId }) {
         focusId={focusId}
         kinds={MEMORY_KINDS.filter((k) => k !== "artifact")}
         defaultKind="decision"
-        exportFilename={`duct-memory-${projectName || projectId}.json`}
-        resetPrompt="Delete every memory for this project? This cannot be undone — export first if you want a copy."
+        resetPrompt="Delete every memory for this project? This cannot be undone."
         emptyHint="Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
       />
     </section>

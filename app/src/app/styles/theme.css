@@ -28,6 +28,14 @@
   --color-destructive: var(--destructive);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  /* The three status hues each pair a lifted dark-mode colour with a
+     darkened text partner (tokens.css). Without these three lines the
+     partner tokens exist but no `text-*-foreground` utility is ever
+     generated, so a button that asks for one inherits the body colour:
+     the Stop button rendered dark text on red in both themes. */
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning-foreground: var(--warning-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);

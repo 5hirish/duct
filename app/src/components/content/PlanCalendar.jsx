@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
-import { dayKey, effectiveSchedule, monthStartOf } from "../../lib/contentSchedule";
+import { dayKey, effectiveSchedule, monthStartOf, planStartOf } from "../../lib/contentSchedule";
 import PostMiniCard from "./PostMiniCard";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -29,14 +29,15 @@ function startOfWeek(d) {
  */
 export default function PlanCalendar({ plan, postsById = {}, view = "month", onViewChange, onReviseDay }) {
   const monthStart = monthStartOf(plan);
+  const anchor = planStartOf(plan);
 
   const byDate = useMemo(() => {
     const map = new Map();
-    if (!monthStart) return map;
+    if (!anchor) return map;
     const days = Array.isArray(plan?.days) ? plan.days : [];
     days.forEach((d, idx) => {
       const post = d.post_id ? postsById[d.post_id] || null : null;
-      const schedule = effectiveSchedule(d, post, monthStart, idx);
+      const schedule = effectiveSchedule(d, post, anchor, idx);
       if (!schedule.date) return;
       const k = dayKey(schedule.date);
       if (!map.has(k)) map.set(k, []);
@@ -50,7 +51,7 @@ export default function PlanCalendar({ plan, postsById = {}, view = "month", onV
       );
     }
     return map;
-  }, [plan, postsById, monthStart]);
+  }, [plan, postsById, anchor]);
 
   const [monthCursor, setMonthCursor] = useState(() => {
     const base = monthStart || new Date();

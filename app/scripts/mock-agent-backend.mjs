@@ -16,16 +16,26 @@
 // shows the three lines that do it. Never run this on the port the real
 // backend uses; the app cannot tell them apart, which is the point.
 import http from "node:http";
+import { createReadStream, existsSync } from "node:fs";
 import { readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
-const FIX = fileURLToPath(new URL("../src/lib/__fixtures__", import.meta.url));
+// FIXTURES_DIR swaps the recorded streams for another set with the same
+// filenames (scripts/shots builds one from a story); ROUTES_FILE answers the
+// non-agent routes the app calls, keyed "METHOD /path", instead of the empty
+// list below, so a whole page can render with data; MEDIA_DIR serves
+// /uploads/story/* from a folder, which is how a post gets a cover image.
+const FIX = process.env.FIXTURES_DIR || fileURLToPath(new URL("../src/lib/__fixtures__", import.meta.url));
 const fixtures = {
   insights: JSON.parse(readFileSync(`${FIX}/insights-pause.json`, "utf8")),
   tiktok_studio: JSON.parse(readFileSync(`${FIX}/content-plan.json`, "utf8")),
   audit_seo: JSON.parse(readFileSync(`${FIX}/audit-run.json`, "utf8")),
 };
+const ROUTES = process.env.ROUTES_FILE ? JSON.parse(readFileSync(process.env.ROUTES_FILE, "utf8")) : {};
+const MEDIA_DIR = process.env.MEDIA_DIR || "";
+const MEDIA_TYPES = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
 const FRAME_MS = Number(process.env.FRAME_MS || 220);
 
 const sessions = new Map();   // id -> { type, frames, cursor, waiting, wake, conversationId, res, log }
@@ -175,6 +185,16 @@ const server = http.createServer(async (req, res) => {
         { seq: 3, kind: "question", data: { questions: [{ question: "Which goal matters most?" }] } },
       ],
     });
+  }
+  const canned = ROUTES[`${req.method} ${path}`];
+  if (canned !== undefined) return json(res, 200, canned);
+  if (MEDIA_DIR && path.startsWith("/uploads/story/") && req.method === "GET") {
+    // basename: the path came off the wire, and this folder is the only one it may read.
+    const file = join(MEDIA_DIR, basename(path));
+    if (!existsSync(file)) return json(res, 404, { detail: "No such file." });
+    cors(res);
+    res.writeHead(200, { "Content-Type": MEDIA_TYPES[file.split(".").pop()] || "application/octet-stream" });
+    return createReadStream(file).pipe(res);
   }
   if (path.startsWith("/api/agents/") && req.method === "GET") return json(res, 200, []);
   if (req.method === "GET") return json(res, 200, []);

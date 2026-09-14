@@ -37,6 +37,7 @@ import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ProviderCard from "@/components/connections/ProviderCard";
+import { LOGOS } from "@/components/connections/logos";
 import { PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
@@ -47,6 +48,10 @@ import TierCard from "@/components/models/TierCard";
 import AdvancedSettings from "@/components/models/AdvancedSettings";
 import { TelemetryPanel } from "@/components/TelemetryCard";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
+import MemoryTimeline from "@/components/memory/MemoryTimeline";
+import PlanKanban from "@/components/content/PlanKanban";
+import { MEMORY_KINDS } from "@/lib/memoryApi";
+import { CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/kestrel-story.mjs";
 import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
@@ -1030,4 +1035,108 @@ export const SCENES = [
       </div>
     ),
   },
+
+  // ------------------------------------------------------------------ Shots
+  // One customer's week, the same in every frame: these four scenes are what
+  // scripts/shots captures for the README, from the story in
+  // lib/__fixtures__/kestrel-story.mjs. They double as the richest examples of
+  // each component, so they stay here even between screenshot runs.
+  {
+    id: "shot-change-set",
+    state: "proposed — one destructive, one blocked by a guardrail",
+    group: "ChangeSetCard",
+    title: "The review card, from the story",
+    note: "The change the insights agent proposes in Kestrel's week: a pause (destructive, so it asks), two negatives, and a budget raise the account's 25% guardrail blocks. Same object the session emits. What to check: one colour per row at most, the approve button is the plain primary even with a pause in the set, and the footer line says how many changes wait on a person.",
+    render: () => (
+      <div data-shot style={{ maxWidth: 680 }}>
+        <ChangeSetCard changeSet={STORY_CHANGE_SET} />
+      </div>
+    ),
+  },
+  {
+    id: "shot-chatgpt-card",
+    state: "openai, signed in with a ChatGPT plan",
+    group: "ProviderCard",
+    title: "Continue with ChatGPT, signed in",
+    note: "The desktop variant needs the shell: scripts/shots installs a `window.__TAURI__` stub that answers get_shell_info and chatgpt_status before the page loads. In a plain browser this renders the web variant (steps plus the download). Click the tile to open the dialog.",
+    render: () => (
+      <div className="conn-grid">
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "openai")}
+          logo={LOGOS.openai}
+          status={{ id: "openai", source: "subscription", reachable: true, stored: false }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "shot-memory-timeline",
+    state: "eight memories: one superseded, one pinned, one unconfirmed",
+    group: "MemoryTimeline",
+    title: "What Duct remembers about Kestrel",
+    note: "The rows the insights agent recalls in the session. One goal was raised from 700 to 900, so the old value is shown superseded rather than deleted; the CPA target is pinned; the watch the agent wrote this week is still unconfirmed. Every write here is a no-op.",
+    render: () => <StoryMemoryScene />,
+  },
+  {
+    id: "shot-connectors",
+    state: "five connected, four waiting",
+    group: "ConnectorTile",
+    title: "Kestrel's connections",
+    note: "The stack behind the story week: the five sources the insights agent pulls, connected and saved to the account, beside four it has not needed yet. Real logos, the page's own descriptions. What to check: three tiles per row at 1040px, connected and not-connected read as different at a glance without the dot doing all the work.",
+    render: () => (
+      <div className="conn-grid" data-shot style={{ padding: 24 }}>
+        {STORY_CONNECTORS.map((c) => (
+          <ConnectorTile
+            key={c.id}
+            logo={LOGOS[c.id]}
+            title={c.title}
+            description={c.description}
+            tone={c.connected ? "on" : "off"}
+            status={c.connected ? "Connected" : "Not connected"}
+            storage={c.connected ? STORAGE_CLOUD : STORAGE_NONE}
+            onClick={() => {}}
+          />
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: "shot-plan-board",
+    state: "one week: two posted, one drafted, two planned",
+    group: "PlanKanban",
+    title: "The story week on the board",
+    note: "The plan the content agent writes in the story, with the posts it links to. Covers come from the shots mock (MEDIA_DIR); in a plain dev server the two posted cards and the draft show the no-image state instead. The empty Discarded lane is not rendered.",
+    render: () => (
+      <div style={{ height: 640, display: "flex" }}>
+        <PlanKanban plan={STORY_PLAN} postsById={STORY_POSTS} />
+      </div>
+    ),
+  },
 ];
+
+function StoryMemoryScene() {
+  const api = useMemo(() => {
+    const items = STORY_MEMORIES.map((m) => ({ ...m })).sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));
+    const kinds = Array.from(new Set(items.map((m) => m.kind))).sort();
+    const noop = async () => ({});
+    return {
+      list: async ({ q = "", kind = "", includeSuperseded = true } = {}) => ({
+        items: items.filter(
+          (m) =>
+            (includeSuperseded || m.status !== "superseded") &&
+            (!kind || m.kind === kind) &&
+            (!q || `${m.title} ${m.body}`.toLowerCase().includes(q.toLowerCase())),
+        ),
+        kinds,
+        memory_paused: false,
+      }),
+      get: async ({ memoryId }) => items.find((m) => m.id === memoryId) || null,
+      create: noop, patch: noop, remove: noop, reset: noop, setPaused: noop,
+    };
+  }, []);
+  return (
+    <div style={{ maxWidth: 880, padding: 24 }}>
+      <MemoryTimeline api={api} kinds={MEMORY_KINDS} defaultKind="goal" />
+    </div>
+  );
+}

@@ -81,3 +81,5 @@ backend/tests/outputs/
 
 # Claude Code session file references (dragged-in media)
 .file-refs/
+# scripts/shots leaves a raw capture beside a scenario that failed
+docs/assets/readme/*.failed.png

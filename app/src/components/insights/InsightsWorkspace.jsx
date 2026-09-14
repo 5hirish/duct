@@ -259,7 +259,10 @@ export default function InsightsWorkspace({
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {/* The brief sits on a muted ground, as a document rather than as
+          more of the page: the chat and the pane were the same white, and
+          the artifact read as a continuation of the transcript. */}
+      <div className={`min-h-0 flex-1 overflow-y-auto ${pane === "brief" ? "bg-muted/40" : ""}`}>
         {pane === "brief" ? <BriefPane brief={shown} writing={writing} empty={!hasBrief} /> : <DataPane fetched={fetched} />}
       </div>
     </div>
@@ -341,7 +344,7 @@ function BriefPane({ brief, writing, empty }) {
     return (
       <div>
         <BriefHeader title={liveTitle || "Writing…"} sub="being written" />
-        <div className="px-1">
+        <div className="m-4 rounded-xl border border-border bg-card px-3 shadow-sm">
           {sniffFormat(live) === "markdown" ? (
             <MarkdownView source={live} />
           ) : (
@@ -363,18 +366,20 @@ function BriefPane({ brief, writing, empty }) {
   return (
     <div>
       <BriefHeader title={brief.title} sub={`v${brief.version} · ${brief.label}`} />
-      {brief.format === "html" ? (
-        <iframe
-          title={brief.title}
-          srcDoc={brief.content}
-          sandbox="allow-modals allow-same-origin"
-          className="h-[74vh] w-full border-0 bg-white"
-        />
-      ) : (
-        <div className="px-1">
-          <MarkdownView source={brief.content} />
-        </div>
-      )}
+      <div className="m-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        {brief.format === "html" ? (
+          <iframe
+            title={brief.title}
+            srcDoc={brief.content}
+            sandbox="allow-modals allow-same-origin"
+            className="block h-[74vh] w-full border-0 bg-white"
+          />
+        ) : (
+          <div className="px-3">
+            <MarkdownView source={brief.content} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

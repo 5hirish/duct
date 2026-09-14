@@ -362,6 +362,13 @@ over SSE on :8012 (pausing where the real backend would), and
 `scripts/smoke-agent-workspaces.mjs` drives all three workspaces through a
 headless browser against it — pause, reload-and-reattach, answer, follow-up,
 turn failure — and screenshots each state. Run it after touching the shell.
+The same mock takes `FIXTURES_DIR` (another set of streams with the same
+filenames), `ROUTES_FILE` (canned JSON for the non-agent routes it would
+otherwise answer with `[]`) and `MEDIA_DIR` (a folder served as
+`/uploads/story/*`, so a post can have a cover); `scripts/shots/shoot.mjs` at
+the repo root uses all three to shoot the README's product images from one
+story, `lib/__fixtures__/kestrel-story.mjs`, whose `shot-*` scenes in
+`/preview` are the component halves of the same week.
 
 The shell borrows deliberately from harnesses built in the open.
 [`docs/engineering/agent-harness-references.md`](../docs/engineering/agent-harness-references.md)

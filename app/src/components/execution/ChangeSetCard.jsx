@@ -14,16 +14,26 @@
  *   - guardrail violations and preview errors, in full, not summarised away;
  *   - who applied it: a set marked "auto-applied" arrived without a click, and
  *     the user should be able to tell that at a glance and roll it back here.
+ *
+ * How it says those things matters as much as that it says them. The first
+ * version painted every flag in its own colour — a red approve button, a red
+ * "destructive" tag, an amber warning line, a red guardrail line — and the
+ * card that exists to make a calm decision read as an alarm. Colour is now
+ * spent once per row at most; the words carry the rest, and the summary line
+ * above the buttons says how many changes are waiting on a person.
  */
 
 import { useState, useEffect } from "react";
 import { Ban, Check, RotateCcw, TriangleAlert, X, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   approveChangeSet,
   applyChangeSet,
   rejectChangeSet,
   rollbackChangeSet,
 } from "@/lib/executionApi";
+import { titleCase } from "@/lib/format";
 
 /**
  * The per-change mark. Four states, four lucide glyphs — it was ✓ ✕ ↺ •, which
@@ -32,11 +42,11 @@ import {
  * than an icon: pending is the absence of an outcome, not an outcome.
  */
 function StatusMark({ status, failed }) {
-  const cls = "mt-0.5 size-3 shrink-0";
+  const cls = "mt-1 size-3.5 shrink-0";
   if (status === "applied") return <Check className={`${cls} text-success`} aria-hidden="true" />;
-  if (status === "blocked" || failed) return <X className={`${cls} text-destructive`} aria-hidden="true" />;
+  if (status === "blocked" || failed) return <X className={`${cls} text-muted-foreground`} aria-hidden="true" />;
   if (status === "rolled_back") return <RotateCcw className={`${cls} text-muted-foreground`} aria-hidden="true" />;
-  return <span className="mt-[7px] size-1 shrink-0 rounded-full bg-muted-foreground/60" aria-hidden="true" />;
+  return <span className="mt-2 size-1.5 shrink-0 rounded-full bg-muted-foreground/50" aria-hidden="true" />;
 }
 
 /** API change-set response → SSE-card shape, preserving per-change flags the
@@ -68,14 +78,26 @@ export function apiToCard(cs, prevCard) {
   };
 }
 
-const CHANGE_SET_STATUS_STYLES = {
-  proposed: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400",
-  applied: "bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-400",
-  partial: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400",
-  failed: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-400",
-  rejected: "bg-muted text-muted-foreground",
-  rolled_back: "bg-muted text-muted-foreground",
+// The set's state, in words a person would use, with the one colour it earns.
+const SET_STATUS = {
+  proposed: { label: "Waiting for you", className: "bg-warning/10 text-warning" },
+  applied: { label: "Applied", className: "bg-success/10 text-success" },
+  partial: { label: "Partly applied", className: "bg-warning/10 text-warning" },
+  failed: { label: "Failed", className: "bg-destructive/10 text-destructive" },
+  rejected: { label: "Rejected", className: "bg-muted text-muted-foreground" },
+  rolled_back: { label: "Rolled back", className: "bg-muted text-muted-foreground" },
 };
+
+/** One line under a change: an icon and the reason, in the muted voice. The
+ * icon is the only colour, so the eye lands on the text, not the alarm. */
+function Note({ icon: Icon, tone, children }) {
+  return (
+    <p className="mt-0.5 flex items-start gap-1.5 text-xs text-muted-foreground">
+      <Icon className={`mt-px size-3 shrink-0 ${tone}`} aria-hidden="true" />
+      <span>{children}</span>
+    </p>
+  );
+}
 
 /** Inline review card for a staged change set the agent proposed. Reversible,
  * allowlisted, guardrail-clean sets may arrive already auto-applied (assisted
@@ -90,10 +112,19 @@ export default function ChangeSetCard({ changeSet: initial }) {
   useEffect(() => setCs(initial), [initial]);
 
   if (!cs) return null;
+  const changes = cs.changes || [];
   const autoApplied = cs.applied_by === "auto";
   const canReview = cs.status === "proposed";
   const canRollback = ["applied", "partial"].includes(cs.status);
-  const hasDestructive = (cs.changes || []).some((c) => c.destructive);
+  const blocked = changes.filter((c) => c.status === "blocked" || c.preview_error).length;
+  const ready = changes.length - blocked;
+  const setStatus =
+    autoApplied && cs.status === "applied"
+      ? { label: "Applied automatically", className: SET_STATUS.applied.className }
+      : SET_STATUS[cs.status] || { label: cs.status.replace("_", " "), className: "bg-muted text-muted-foreground" };
+  const where = [cs.connector_type ? titleCase(cs.connector_type) : "", cs.account_name || cs.account_id]
+    .filter(Boolean)
+    .join(" · ");
 
   const run = async (label, fn) => {
     setBusy(label);
@@ -118,102 +149,80 @@ export default function ChangeSetCard({ changeSet: initial }) {
     run("rollback", () => rollbackChangeSet(cs.change_set_id, cs.connector_type));
 
   return (
-    <div className="my-2 rounded-lg border border-input bg-muted/20 max-w-md overflow-hidden">
-      <div className="px-3 py-2 border-b border-border/60 flex items-start gap-2">
-        <Zap className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium leading-snug">{cs.title}</p>
-          <p className="text-xs text-muted-foreground truncate">
-            {cs.connector_type}
-            {cs.account_name ? ` · ${cs.account_name}` : cs.account_id ? ` · ${cs.account_id}` : ""}
-          </p>
-        </div>
+    <div className="my-2 max-w-md overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex items-start gap-3 p-4">
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
-            CHANGE_SET_STATUS_STYLES[cs.status] || "bg-muted text-muted-foreground"
-          }`}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+          aria-hidden="true"
         >
-          {autoApplied && cs.status === "applied" ? "auto-applied" : cs.status.replace("_", " ")}
+          <Zap className="size-4" />
         </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold leading-snug">{cs.title}</p>
+          {where && <p className="mt-0.5 truncate text-xs text-muted-foreground">{where}</p>}
+        </div>
+        <Badge className={`shrink-0 ${setStatus.className}`}>{setStatus.label}</Badge>
       </div>
 
       {cs.context && (
-        <p className="px-3 pt-2 text-xs text-muted-foreground leading-relaxed">{cs.context}</p>
+        <p className="px-4 pb-4 text-xs leading-relaxed text-muted-foreground">{cs.context}</p>
       )}
 
-      <ul className="px-3 py-2 space-y-1.5">
-        {(cs.changes || []).map((c) => (
-          <li key={c.id} className="text-xs leading-snug">
-            <span className="flex items-start gap-1.5">
+      <ul className="divide-y divide-border/60 border-t border-border/60">
+        {changes.map((c) => {
+          const held = c.status === "blocked" || c.preview_error;
+          return (
+            <li key={c.id} className="flex items-start gap-3 px-4 py-3">
               <StatusMark status={c.status} failed={!!c.preview_error} />
-              <span className="min-w-0">
-                <span className="text-foreground/90">{c.diff || c.summary || c.op_type}</span>
-                {c.destructive && (
-                  <span className="ml-1.5 rounded bg-red-100 dark:bg-red-950/50 px-1 py-px text-[10px] font-medium text-red-700 dark:text-red-400">
-                    destructive
-                  </span>
-                )}
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm leading-snug ${held ? "text-muted-foreground" : ""}`}>
+                  {c.diff || c.summary || c.op_type}
+                </p>
                 {(c.warnings || []).map((w, j) => (
-                  <span key={j} className="flex items-start gap-1 text-amber-700 dark:text-amber-400">
-                    <TriangleAlert className="mt-0.5 size-3 shrink-0" aria-hidden="true" /> {w}
-                  </span>
+                  <Note key={j} icon={TriangleAlert} tone="text-warning">{w}</Note>
                 ))}
                 {(c.guardrail_violations || []).map((v, j) => (
-                  <span key={j} className="flex items-start gap-1 text-red-700 dark:text-red-400">
-                    <Ban className="mt-0.5 size-3 shrink-0" aria-hidden="true" /> {v}
-                  </span>
+                  <Note key={j} icon={Ban} tone="text-muted-foreground">{v}</Note>
                 ))}
                 {c.preview_error && (
-                  <span className="block text-red-700 dark:text-red-400">Preview failed: {c.preview_error}</span>
+                  <Note icon={Ban} tone="text-destructive">Preview failed: {c.preview_error}</Note>
                 )}
-              </span>
-            </span>
-          </li>
-        ))}
+              </div>
+              {c.destructive && (
+                <Badge variant="outline" className="shrink-0 text-muted-foreground">
+                  destructive
+                </Badge>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
-      {error && (
-        <p className="px-3 pb-1 text-xs text-destructive break-words">{error}</p>
-      )}
+      {error && <p className="px-4 pb-2 pt-3 text-xs text-destructive break-words">{error}</p>}
 
       {(canReview || canRollback) && (
-        <div className="px-3 pb-2.5 flex items-center gap-2">
+        <div className="flex items-center gap-2 border-t border-border/60 px-4 py-3">
+          <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+            {canReview && blocked > 0
+              ? `${ready} of ${changes.length} will apply · ${blocked} ${blocked === 1 ? "needs" : "need"} a person`
+              : canReview && changes.some((c) => c.destructive)
+                ? "Includes a pause. It can be rolled back from here."
+                : ""}
+          </p>
           {canReview && (
             <>
-              <button
-                onClick={onApprove}
-                disabled={!!busy}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-                  hasDestructive
-                    ? "bg-red-600 text-white hover:bg-red-700"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90"
-                }`}
-              >
-                {busy === "approve" ? "Applying…" : hasDestructive ? "Approve & apply (destructive)" : "Approve & apply"}
-              </button>
-              <button
-                onClick={onReject}
-                disabled={!!busy}
-                className="rounded-md border border-input px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
-              >
+              <Button size="sm" variant="ghost" onClick={onReject} disabled={!!busy}>
                 {busy === "reject" ? "Rejecting…" : "Reject"}
-              </button>
+              </Button>
+              <Button size="sm" onClick={onApprove} disabled={!!busy}>
+                {busy === "approve" ? "Applying…" : "Approve & apply"}
+              </Button>
             </>
           )}
           {canRollback && (
-            <button
-              onClick={onRollback}
-              disabled={!!busy}
-              className="inline-flex items-center gap-1.5 rounded-md border border-input px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
-            >
-              {busy === "rollback" ? (
-                "Rolling back…"
-              ) : (
-                <>
-                  <RotateCcw className="size-3.5" aria-hidden="true" /> Roll back
-                </>
-              )}
-            </button>
+            <Button size="sm" variant="outline" onClick={onRollback} disabled={!!busy}>
+              {busy === "rollback" ? "Rolling back…" : <><RotateCcw aria-hidden="true" /> Roll back</>}
+            </Button>
           )}
         </div>
       )}
