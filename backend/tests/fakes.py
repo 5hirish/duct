@@ -123,7 +123,13 @@ class OverflowFake(ToolCallingFake):
 # the part that talks: `get_service`. A test that names a field wrong fails on
 # the proto, the way production would fail on the wire.
 
+from types import SimpleNamespace  # noqa: E402
 from typing import Any, NamedTuple  # noqa: E402
+
+
+class RecordedQuery(NamedTuple):
+    customer_id: str
+    query: str
 
 
 class RecordedMutation(NamedTuple):
@@ -168,6 +174,10 @@ class FakeAdsService:
             return lambda customer_id, operations, **kw: self._client._mutate(
                 self._name, attr, customer_id, list(operations)
             )
+        if attr == "search_stream":
+            return lambda customer_id, query, **kw: self._client._search_stream(
+                str(customer_id), query
+            )
         if attr.endswith("_path"):
             return getattr(_real_ads_service_class(self._name), attr)
         raise AttributeError(f"{self._name} has no attribute {attr!r} (add it to FakeAdsService)")
@@ -190,10 +200,13 @@ def _real_ads_service_class(name: str):
 class FakeAdsClient:
     """Stands in for ``GoogleAdsClient`` in an executor, minus the network.
 
-    ``rows`` is what the next ``_run_query`` should return — set it directly, or
-    pass ``query_rows`` per test. ``mutations`` is what the executor sent, in
-    order, for a test to assert on. ``fail_with`` makes the next mutate raise,
-    which is how the "upstream rejected it" branch gets exercised.
+    ``rows`` is what the next query should return — set it directly, or pass
+    ``query_rows`` per test. Executors reach rows through a patched
+    ``_run_query``; the read fetchers call ``GoogleAdsService.search_stream``
+    themselves, so the fake answers that too, one batch of ``rows``, and logs
+    the GAQL it was handed in ``queries``. ``mutations`` is what the executor
+    sent, in order, for a test to assert on. ``fail_with`` makes the next
+    mutate raise, which is how the "upstream rejected it" branch gets exercised.
     """
 
     def __init__(
@@ -209,6 +222,7 @@ class FakeAdsClient:
         self.use_proto_plus = True
         self.enums = _EnumGetter(self)
         self.rows = list(rows or [])
+        self.queries: list[RecordedQuery] = []
         self.mutations: list[RecordedMutation] = []
         self.fail_with = fail_with
         self._resource_names = resource_names
@@ -223,6 +237,10 @@ class FakeAdsClient:
 
     def get_service(self, name: str, **kwargs) -> FakeAdsService:
         return FakeAdsService(name, self)
+
+    def _search_stream(self, customer_id: str, query: str) -> list[Any]:
+        self.queries.append(RecordedQuery(customer_id, query))
+        return [SimpleNamespace(results=list(self.rows))]
 
     def _mutate(self, service: str, method: str, customer_id: str, operations: list) -> _MutateResponse:
         self.mutations.append(RecordedMutation(method, str(customer_id), operations))
@@ -325,3 +343,132 @@ class FakeDiscoveryService:
             return child
 
         return call
+
+
+# ---------------------------------------------------------------------------
+# The wire itself: one fake per transport, beneath the vendor's request code
+# ---------------------------------------------------------------------------
+#
+# `FakeAdsClient` and `FakeDiscoveryService` stand in for a *client*, which is
+# the right seam for an executor: what matters there is the mutation it sends.
+# A fetcher is different — the bug that broke GA4 landing pages for six weeks
+# (`StringFilter` imported from the wrong module) lived in the code that BUILDS
+# the request, which a client-level fake never runs. These two sit one layer
+# down, at the transport, so the real library builds the request and a test
+# reads what would have gone over the wire.
+
+
+class RecordedHttp(NamedTuple):
+    method: str
+    uri: str
+    body: str | None
+    headers: dict
+
+
+class RecordingHttp:
+    """An ``httplib2.Http`` for ``googleapiclient.discovery.build(http=...)``.
+
+    With ``static_discovery=True`` the library builds the service from the
+    discovery document it ships, so method names and parameters are validated
+    against the real API surface offline; only ``execute()`` lands here.
+    ``answers`` maps a substring of the request URI to the JSON body to return;
+    ``calls`` is every request, in order.
+
+    Install it through :func:`discovery_build_offline` rather than by hand, so
+    the credential argument the code under test passes is dropped the same way
+    every time.
+    """
+
+    def __init__(self, answers: dict[str, Any] | None = None) -> None:
+        self.answers = dict(answers or {})
+        self.calls: list[RecordedHttp] = []
+
+    def request(self, uri: str, method: str = "GET", body: str | None = None, headers=None, **_):
+        import json
+
+        import httplib2
+
+        self.calls.append(RecordedHttp(method, uri, body, dict(headers or {})))
+        for needle, answer in self.answers.items():
+            if needle in uri:
+                break
+        else:
+            raise AssertionError(f"no canned answer for {method} {uri} (add one to RecordingHttp.answers)")
+        response = httplib2.Response({"status": 200, "content-type": "application/json"})
+        return response, json.dumps(answer).encode()
+
+
+def discovery_build_offline(monkeypatch, http: RecordingHttp) -> None:
+    """Route every ``discovery.build(...)`` in the test at ``http``.
+
+    Patched on the module, which is where the connectors import ``build`` from
+    at call time. The real ``build`` still runs — it just gets the recorder
+    instead of an authorised transport, and the shipped discovery document
+    instead of a fetched one.
+    """
+    import googleapiclient.discovery as discovery
+
+    real_build = discovery.build
+
+    def build(service_name, version, **kwargs):
+        kwargs.pop("credentials", None)
+        kwargs.pop("http", None)
+        kwargs["static_discovery"] = True
+        kwargs["cache_discovery"] = False
+        return real_build(service_name, version, http=http, **kwargs)
+
+    monkeypatch.setattr(discovery, "build", build)
+
+
+class RecordedWire(NamedTuple):
+    method: str
+    url: str
+    #: Query parameters as httpx would send them, decoded.
+    query: dict[str, str]
+    json: Any
+    data: Any
+    headers: dict[str, str]
+
+
+class FakeWire:
+    """Stands in for ``httpx.request`` beneath ``service.rest.Endpoint``.
+
+    Every REST connector (Meta, Apple, Stripe, RevenueCat, ...) funnels through
+    that one call, so this is the single seam that lets a pull run end to end
+    with the vendor's own encoding, headers, pagination and error handling all
+    real. ``on(method, needle, body)`` registers an answer for any URL that
+    contains ``needle``; first match wins, so register the specific path before
+    the general one. ``body`` may be a callable taking the recorded call.
+    ``calls`` is the log, and :meth:`sent` filters it.
+    """
+
+    def __init__(self) -> None:
+        self.routes: list[tuple[str, str, Any, int]] = []
+        self.calls: list[RecordedWire] = []
+
+    def on(self, method: str, needle: str, body: Any, status: int = 200) -> "FakeWire":
+        self.routes.append((method.upper(), needle, body, status))
+        return self
+
+    def install(self, monkeypatch) -> "FakeWire":
+        import httpx
+
+        monkeypatch.setattr(httpx, "request", self)
+        return self
+
+    def sent(self, method: str, needle: str) -> list[RecordedWire]:
+        return [c for c in self.calls if c.method == method.upper() and needle in c.url]
+
+    def __call__(self, method, url, params=None, json=None, data=None, headers=None, timeout=None, **_):
+        import httpx
+
+        request = httpx.Request(method, url, params=params)
+        call = RecordedWire(
+            method.upper(), str(request.url), dict(request.url.params), json, data, dict(headers or {})
+        )
+        self.calls.append(call)
+        for route_method, needle, body, status in self.routes:
+            if route_method == call.method and needle in call.url:
+                answer = body(call) if callable(body) else body
+                return httpx.Response(status, json=answer, request=request)
+        raise AssertionError(f"unexpected {call.method} {call.url} (register it with FakeWire.on)")

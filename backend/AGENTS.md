@@ -267,6 +267,26 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   (`"properties.keyEvents.list"`). The GTM fake in `test_execution_policy.py`
   stays where it is on purpose: it keeps container state so it can answer a read
   that follows a write, which is a different job from replaying canned answers.
+- **A fetcher's test fakes the transport, not the client.** The client-level
+  fakes above are right for an executor, where the mutation it sends is what
+  matters. They never run the code that *builds* a read request, and that is
+  where GA4 landing pages were broken for six weeks (`StringFilter` imported
+  from the wrong module) with every test green. So each read fetcher has a
+  request-shape test one layer down: `FakeWire` replaces `httpx.request`
+  beneath `service/rest.py` so a whole Meta, Apple, Stripe or RevenueCat pull
+  runs with the vendor's own encoding, headers and pagination real
+  (`test_rest_connector_requests.py`); `RecordingHttp` plus
+  `discovery_build_offline` let `googleapiclient` build Search Console and the
+  GA4 admin API from the discovery document it ships, so method names and
+  parameters are validated offline (`test_gsc_fetchers.py`); the GA4 Data API
+  test fakes only `BetaAnalyticsDataClient` and lets the real request types
+  build the report; and `FakeAdsClient.search_stream` answers the Google Ads
+  read fetchers with real `GoogleAdsRow` protos and logs the GAQL in `queries`
+  (`test_google_ads_fetchers.py`). When you add a fetcher, add one of these
+  with it — assert on the request that would have gone over the wire, then on
+  the parsed rows. `test_vendor_contracts.py` covers what none of them can:
+  that every lazily imported SDK name and every GAQL field still exists in the
+  installed package.
 
 ### Desktop (local sidecar) mode
 
@@ -609,6 +629,38 @@ don't fit.
   set (`pytest tests/test_memory_retrieval.py -s` prints the per-axis report);
   it exists because it caught the AND-everything query bug that made questions
   retrieve nothing, so extend it before tuning retrieval by feel.
+- `agents/core/turn.py` — **how every agent's user turn is built.** An agent
+  declares a `ContextSpec` in `agents/registry.py` (which shared blocks it
+  wants); a run renders a `TurnContext`; `build_turn` orders them. A new agent
+  that declares nothing gets everything — business context, the operator's
+  profile, stored agent context, prior reports, memory, data sources — which is
+  the right default, because an extra block costs a few hundred tokens and a
+  missing one costs an agent that does not know who it is answering. That was
+  not hypothetical: `display_name` reached insights and content and silently
+  missed audit for a release, because audit described the operator its own way.
+
+  Two rules this module exists to hold, both enforced by `tests/test_turn.py`:
+
+  - **Per-user and per-project text goes in the USER turn, never the system
+    prompt.** The system prompt is the cached prefix; one customer's name in it
+    gives every account a prefix of its own and loses the hit on every call of
+    every run. The test builds a profile of distinctive strings and fails if
+    any of them appear in a system prompt.
+  - **`BLOCK_ORDER` is stable-first, volatile-last, and it is a cache decision
+    rather than a formatting one.** Inside one session the order is free (turn
+    one is the prefix for turn two either way). It pays *across* runs: two
+    insights runs on the same project a week apart share a system prompt, and
+    if both turns open with byte-identical `<business_context>` and
+    `<user_context>` the cached prefix extends past the system prompt into the
+    turn. Lead with the memory digest instead and the match ends at the first
+    block, because memory moved in between. Do not "tidy" that tuple into
+    declaration order.
+
+  An agent with a block of its own may set an unlisted tag — it renders after
+  the ordered blocks and before the request. Anything a *second* agent starts
+  using belongs in `BLOCK_ORDER`, where its cache position is a decision
+  somebody made on purpose.
+
 - `agents/core/lc.py` — the LangChain adapter every V1 runner shares:
   `resolve_chat_model` (model transport) and `stream_agent` (LangChain stream →
   the `AgentEvent` vocabulary), plus `build_ask_user_tool`, the LangChain half

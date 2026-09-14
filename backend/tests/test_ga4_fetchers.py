@@ -60,3 +60,58 @@ def test_landing_pages_builds_a_filtered_report_request(monkeypatch):
     assert result["row_count"] == 1
     assert result["rows"][0]["page_path"] == "/pricing"
     assert result["rows"][0]["conversions"] == 2.0
+
+
+def test_conversion_paths_orders_channels_by_key_events(monkeypatch):
+    import google.analytics.data_v1beta as data_api
+
+    monkeypatch.setattr(data_api, "BetaAnalyticsDataClient", _FakeClient)
+    monkeypatch.setattr(ga4, "_build_credentials", lambda **_: object())
+    _FakeClient.requests = []
+
+    result = ga4.fetch_ga4_conversion_paths(
+        " 360006549 ", "2026-08-14", "2026-09-12",
+        refresh_token="r", client_id="c", client_secret="s",
+    )
+
+    req = _FakeClient.requests[0]
+    assert req.property == "properties/360006549"  # whitespace never reaches the resource name
+    assert [d.name for d in req.dimensions] == ["sessionSourceMedium", "sessionDefaultChannelGroup"]
+    assert [m.name for m in req.metrics] == [ga4.KEY_EVENTS_METRIC, "totalRevenue", "sessions", "engagedSessions"]
+    assert req.order_bys[0].metric.metric_name == ga4.KEY_EVENTS_METRIC
+    assert req.order_bys[0].desc is True
+    assert req.limit == 100
+    # The fake answers with the landing-page row shape; only the first four
+    # metric cells are read here, and the dimension pair maps positionally.
+    row = result["rows"][0]
+    assert row["session_source_medium"] == "/pricing"
+    assert row["session_default_channel_group"] == "google / cpc"
+    assert (row["conversions"], row["total_revenue"], row["sessions"], row["engaged_sessions"]) == (12.0, 0.4, 0, 33)
+
+
+def test_property_listing_reads_account_summaries_from_the_admin_api(monkeypatch):
+    from types import SimpleNamespace
+
+    from service.connectors import ConnectorAuthContext
+    from tests.fakes import RecordingHttp, discovery_build_offline
+
+    http = RecordingHttp({"accountSummaries": {"accountSummaries": [
+        {"displayName": "Acme", "propertySummaries": [
+            {"property": "properties/2", "displayName": "Website"},
+            {"property": "properties/1", "displayName": "App"},
+            {"displayName": "no resource name"},
+        ]},
+    ]}})
+    discovery_build_offline(monkeypatch, http)
+    monkeypatch.setattr(ga4, "get_configs", lambda: SimpleNamespace(
+        google_oauth_client_id="c", google_oauth_client_secret="s",
+        google_ads_client_id="", google_ads_client_secret="",
+    ))
+
+    rows = ga4.GA4Connector().list_accounts(ConnectorAuthContext(connector_id="ga4", refresh_token="r"))
+
+    (call,) = http.calls
+    assert call.uri.startswith("https://analyticsadmin.googleapis.com/v1beta/accountSummaries?pageSize=200")
+    assert [(r["account_id"], r["account_name"], r["parent_account_name"]) for r in rows] == [
+        ("1", "App", "Acme"), ("2", "Website", "Acme"),
+    ]
