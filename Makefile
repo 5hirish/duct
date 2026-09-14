@@ -68,9 +68,10 @@ check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 -c "import xml.dom.minidom as m; m.parse('site/sitemap.xml'); print('sitemap.xml is well-formed')"
 	npm --prefix site run test:e2e
 
-check-desktop: ## Check the Tauri contract and compile the shell
+check-desktop: ## Check the Tauri contract, compile the shell, run its unit tests
 	python3 .github/scripts/check-shell-contract.py
 	cd desktop/src-tauri && cargo check --locked --all-targets
+	cd desktop/src-tauri && cargo test --lib --locked
 
 check-security: ## Secret scan + deep audit (mirrors security-audit.yml)
 	python3 scripts/security/leak_scan.py --all

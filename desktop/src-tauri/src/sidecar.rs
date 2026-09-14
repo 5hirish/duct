@@ -108,6 +108,16 @@ pub struct SidecarInfo {
     pub data_dir: String,
 }
 
+/// The first stdout line, as the shell reads it.
+///
+/// Anything but the documented JSON object is a failed start, and the raw
+/// line rides in the error on purpose: a traceback or "Address already in
+/// use" from the frozen Python is the only clue the user (or Sentry) gets.
+fn parse_handshake(line: &str) -> Result<SidecarInfo, String> {
+    serde_json::from_str::<SidecarInfo>(line)
+        .map_err(|e| format!("sidecar handshake was not valid JSON ({e}): {line}"))
+}
+
 /// Spawned child plus the handshake, once it has arrived.
 ///
 /// `info` starts `None` and is filled by the reader thread — freezing a Python
@@ -361,12 +371,9 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
             Ok(_) => {}
         }
 
-        match serde_json::from_str::<SidecarInfo>(&line) {
+        match parse_handshake(&line) {
             Ok(info) => *state.info.lock().unwrap() = Some(info),
-            Err(e) => {
-                *state.error.lock().unwrap() =
-                    Some(format!("sidecar handshake was not valid JSON ({e}): {line}"))
-            }
+            Err(e) => *state.error.lock().unwrap() = Some(e),
         }
 
         // Keep draining stdout, and *forward* what we read. The pipe has a
@@ -412,4 +419,37 @@ pub fn get_sidecar_info(state: State<'_, SidecarState>) -> Result<Option<Sidecar
         return Err(err);
     }
     Ok(state.info.lock().unwrap().clone())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_documented_handshake_line_parses() {
+        let line = r#"{"duct_sidecar":1,"url":"http://127.0.0.1:53124","port":53124,"api_key":"k","data_dir":"/tmp/d"}"#;
+        let info = parse_handshake(line).expect("the shape local_server.py prints");
+        assert_eq!(info.url, "http://127.0.0.1:53124");
+        assert_eq!(info.port, 53124);
+        assert_eq!(info.api_key, "k");
+        assert_eq!(info.data_dir, "/tmp/d");
+    }
+
+    #[test]
+    fn a_python_traceback_on_stdout_is_reported_verbatim() {
+        // What the user sees when the frozen backend dies before serving: the
+        // line itself, so "Address already in use" is not hidden behind
+        // "invalid JSON".
+        let err = parse_handshake("OSError: [Errno 48] Address already in use").unwrap_err();
+        assert!(err.contains("not valid JSON"), "{err}");
+        assert!(err.contains("Address already in use"), "{err}");
+    }
+
+    #[test]
+    fn a_handshake_missing_a_field_the_webview_needs_is_rejected() {
+        // `port` gone: the webview could not build its API base from this.
+        let err = parse_handshake(r#"{"duct_sidecar":1,"url":"http://127.0.0.1:1","api_key":"k","data_dir":"d"}"#)
+            .unwrap_err();
+        assert!(err.contains("port"), "{err}");
+    }
 }

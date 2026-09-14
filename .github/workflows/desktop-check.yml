@@ -17,6 +17,13 @@ name: desktop — compile check
 # dependencies without linking or codegen, which is most of the signal for a
 # fraction of the time. It does still need the sidecar path to exist, which is
 # not the same as needing a sidecar — see the stub step below.
+#
+# Then `cargo test --lib`, which does link — the unit tests in the crate cover
+# the three places a regression reaches a user as "the app does nothing": the
+# sidecar handshake line, deep-link parsing, and the keyring error text. They
+# ran nowhere before this step existed. `--lib` only: no integration-test
+# target, no doctests, and the ChatGPT callback tests bind a fixed loopback
+# port, which a runner has free.
 
 on:
   pull_request:
@@ -97,3 +104,7 @@ jobs:
       - name: cargo check
         working-directory: desktop/src-tauri
         run: cargo check --locked --all-targets
+
+      - name: cargo test
+        working-directory: desktop/src-tauri
+        run: cargo test --lib --locked

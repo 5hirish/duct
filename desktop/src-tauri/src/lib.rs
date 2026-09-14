@@ -444,49 +444,54 @@ fn navigate_webview(app: &AppHandle, path: &str, query: &str) {
     let _ = window.set_focus();
 }
 
-/// Forward `ai.getduct.desktop://auth?auth_code=...` into the webview by
-/// navigating it to `/?auth_code=...`. The login page's existing
-/// `/auth/exchange` path takes it from there; the code is single-use and
-/// expires in seconds, so it is safe to carry in the URL.
+/// Where a deep link sends the webview: `(path, query)`, or `None` for a URL
+/// the shell does not act on.
+///
+/// Pure, so it can be tested without a window. Two routes, one shape:
+///
+/// - `ai.getduct.desktop://auth?auth_code=...` → `/?auth_code=...`. The login
+///   page's existing `/auth/exchange` path takes it from there; the code is
+///   single-use and expires in seconds, so it is safe to carry in the URL.
+/// - `ai.getduct.desktop://connector?connector=...&auth_code=...` →
+///   `/connections?connector=...&auth_code=...`. Connecting a data source is
+///   Google OAuth, which will not run in an embedded webview, so it happens in
+///   the system browser and has to cross back into the app. What crosses is
+///   only a single-use 60-second code — a connector refresh token is
+///   long-lived and never rides in a deep link, which any app claiming the
+///   scheme could read. The connections page redeems it via
+///   `/auth/connectors/exchange`.
+fn deep_link_target(url: &Url) -> Option<(&'static str, String)> {
+    match url.host_str()? {
+        "auth" => {
+            let code = query_param(url, "auth_code")?;
+            safe_deep_link_value(&code).then(|| ("/", format!("auth_code={code}")))
+        }
+        "connector" => {
+            let connector = query_param(url, "connector")?;
+            let code = query_param(url, "auth_code")?;
+            (safe_deep_link_value(&connector) && safe_deep_link_value(&code))
+                .then(|| ("/connections", format!("connector={connector}&auth_code={code}")))
+        }
+        _ => None,
+    }
+}
+
 fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
     if url.host_str() != Some("auth") {
         return;
     }
-    let Some(code) = query_param(url, "auth_code") else {
-        return;
-    };
-    if !safe_deep_link_value(&code) {
-        return;
+    if let Some((path, query)) = deep_link_target(url) {
+        navigate_webview(app, path, &query);
     }
-    navigate_webview(app, "/", &format!("auth_code={code}"));
 }
 
-/// Forward `ai.getduct.desktop://connector?connector=...&auth_code=...` into the
-/// webview by navigating it to `/connections?connector=...&auth_code=...`.
-///
-/// The same shape as the sign-in route, for the same reason: connecting a data
-/// source is Google OAuth, which will not run in an embedded webview, so it
-/// happens in the system browser and has to cross back into the app. What
-/// crosses is only a single-use 60-second code — a connector refresh token is
-/// long-lived and never rides in a deep link, which any app claiming the scheme
-/// could read. The connections page redeems it via `/auth/connectors/exchange`.
 fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
     if url.host_str() != Some("connector") {
         return;
     }
-    let (Some(connector), Some(code)) =
-        (query_param(url, "connector"), query_param(url, "auth_code"))
-    else {
-        return;
-    };
-    if !safe_deep_link_value(&connector) || !safe_deep_link_value(&code) {
-        return;
+    if let Some((path, query)) = deep_link_target(url) {
+        navigate_webview(app, path, &query);
     }
-    navigate_webview(
-        app,
-        "/connections",
-        &format!("connector={connector}&auth_code={code}"),
-    );
 }
 
 /// Menu ids. Namespaced so a future menu can't collide with these.
@@ -873,4 +878,61 @@ pub fn run() {
                 sidecar::shutdown(app);
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn target(link: &str) -> Option<(&'static str, String)> {
+        deep_link_target(&Url::parse(link).expect("a well-formed link"))
+    }
+
+    #[test]
+    fn a_sign_in_link_lands_on_the_login_page_with_its_code() {
+        assert_eq!(
+            target("ai.getduct.desktop://auth?auth_code=abc-123_XYZ"),
+            Some(("/", "auth_code=abc-123_XYZ".to_string()))
+        );
+    }
+
+    #[test]
+    fn a_connector_link_lands_on_connections_with_both_values() {
+        assert_eq!(
+            target("ai.getduct.desktop://connector?connector=ga4&auth_code=c0de"),
+            Some(("/connections", "connector=ga4&auth_code=c0de".to_string()))
+        );
+    }
+
+    #[test]
+    fn anything_but_a_url_safe_token_is_dropped_rather_than_escaped() {
+        // Any app on the machine can open our scheme; a code carrying query
+        // syntax or a path would otherwise be spliced into the webview URL.
+        assert_eq!(target("ai.getduct.desktop://auth?auth_code=a%26b"), None);
+        assert_eq!(target("ai.getduct.desktop://auth?auth_code=../x"), None);
+        assert_eq!(target("ai.getduct.desktop://auth?auth_code="), None);
+        assert_eq!(target("ai.getduct.desktop://connector?connector=ga4"), None);
+        assert_eq!(target("ai.getduct.desktop://connector?connector=g%2F4&auth_code=c"), None);
+        assert_eq!(target("ai.getduct.desktop://elsewhere?auth_code=abc"), None);
+        let long = "a".repeat(513);
+        assert_eq!(target(&format!("ai.getduct.desktop://auth?auth_code={long}")), None);
+    }
+
+    #[test]
+    fn a_keyring_failure_is_described_in_terms_the_user_can_act_on() {
+        let platform = describe_keyring_error(KeyringError::PlatformFailure(Box::new(
+            std::io::Error::other("errSecItemNotFound (-25300)"),
+        )));
+        // The raw cause survives for a bug report ...
+        assert!(platform.contains("errSecItemNotFound"), "{platform}");
+        if cfg!(target_os = "macos") {
+            // ... and macOS names the signature rule that actually explains it.
+            assert!(platform.contains("Saving it again fixes it"), "{platform}");
+        } else if cfg!(target_os = "linux") {
+            assert!(platform.contains("gnome-keyring"), "{platform}");
+        }
+        // A missing entry is an ordinary answer, not a platform fault: no advice attached.
+        let missing = describe_keyring_error(KeyringError::NoEntry);
+        assert_eq!(missing, KeyringError::NoEntry.to_string());
+    }
 }
