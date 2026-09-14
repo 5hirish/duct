@@ -1,5 +1,7 @@
 # Artifact store — design notes & roadmap
 
+**Author:** Shirish Kadam · **Date:** 2026-08-26
+
 How the industry builds AI artifacts (Claude artifacts, Claude Code artifacts,
 ChatGPT Canvas, Gemini Canvas, Copilot Workspace, Notion AI), and what Duct's
 artifact store (`backend/models/artifact.py`, added 2026-08) adopts from it.

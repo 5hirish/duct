@@ -1,5 +1,7 @@
 # Credential storage: the local API key and provider auth
 
+**Author:** Shirish Kadam · **Updated:** 2026-09-14
+
 **Reference.** Where every secret Duct holds actually lives, what protects it,
 and what breaks it. Written 2026-09-12 after a debugging session in which a
 ChatGPT sign-in stored correctly and then read back as "not signed in" — the

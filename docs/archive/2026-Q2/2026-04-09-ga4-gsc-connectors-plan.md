@@ -1,5 +1,7 @@
 # Plan: Add GA4 and Google Search Console Connectors
 
+**Author:** Shirish Kadam, Claude · **Date:** 2026-04-09
+
 > **Archived (September 2026).** Both connectors shipped
 > (`backend/service/google/ga4.py`, `gsc.py`) and the connector set has since grown
 > well past two — Meta, HubSpot, Mixpanel, Clarity, GrowthBook, Stripe, RevenueCat and

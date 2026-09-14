@@ -1,5 +1,7 @@
 # Smart onboarding — the audit is the onboarding
 
+**Author:** Shirish Kadam · **Date:** 2026-09-08
+
 **Status:** Accepted 2026-09-08; Phases 1–3 built the same day, then Phase 2b
 (ChatGPT sign-in in the shell), Phase 5 (the wizard is gone; Project context
 lives at `/project/[id]`), and from Phase 4 the contextual Search Console
@@ -8,15 +10,15 @@ against a live crawl of getduct.ai and a live OpenAI 401 (see §10 for what is
 built and what is not).
 
 Companion reading:
-[`autonomous-insights-agent-plan.md`](autonomous-insights-agent-plan.md) (the same
+[`2026-08-31-autonomous-insights-agent-plan.md`](2026-08-31-autonomous-insights-agent-plan.md) (the same
 "wire what exists, delete the wizard" shape, one agent over),
-[`model-routing-ux-design.html`](model-routing-ux-design.html) §10 (the tier map no
+[`2026-09-01-model-routing-ux-design.md`](2026-09-01-model-routing-ux-design.md) §10 (the tier map no
 run reads yet — §4 here is where an agent run starts reading it),
-[`project-collaboration-plan.md`](project-collaboration-plan.md) (members + invites,
+[`2026-08-16-project-collaboration-plan.md`](2026-08-16-project-collaboration-plan.md) (members + invites,
 reused as-is),
-[`agent-memory-research.html`](agent-memory-research.html) §07 (provenance chips —
+[`2026-08-28-agent-memory-research.md`](2026-08-28-agent-memory-research.md) §07 (provenance chips —
 every field this plan infers gets one),
-[`../archive/2026-Q2/business-profile-context-enrichment-plan.md`](../archive/2026-Q2/business-profile-context-enrichment-plan.md)
+[`../archive/2026-Q2/2026-04-07-business-profile-context-enrichment-plan.md`](../archive/2026-Q2/2026-04-07-business-profile-context-enrichment-plan.md)
 (the enrichment idea, archived unbuilt; this is where it ships).
 
 ---
@@ -190,7 +192,7 @@ An audit run resolves its provider from the instance default —
 key. A user who connects OpenAI on a Google-default instance is asked for a
 Google key and gets a 402. The tier map from `/settings/models` was built to
 answer "which provider can this user actually run on", and
-[`model-routing-ux-design.html`](model-routing-ux-design.html) §10 records that no
+[`2026-09-01-model-routing-ux-design.md`](2026-09-01-model-routing-ux-design.md) §10 records that no
 agent run reads it yet.
 
 **This plan makes the audit route the first reader.** Provider and model for the

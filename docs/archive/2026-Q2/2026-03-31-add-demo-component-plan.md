@@ -1,5 +1,7 @@
 # Plan: Add Interactive Demo to `for-product-intelligence.html` and `for-organic-growth.html`
 
+**Author:** Shirish Kadam, Claude · **Date:** 2026-03-31
+
 > **Archived (April 2026).** Work completed; retained as a record. See [`README.md`](README.md) in this folder.
 
 ---

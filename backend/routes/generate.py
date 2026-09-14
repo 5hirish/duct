@@ -11,7 +11,7 @@ structured-output call — a shape that only existed because a six-step form had
 already decided every interesting question before the model was invoked. Both
 the form and the pipeline behind it were deleted once the autonomous agent
 could answer those questions itself; see
-``docs/engineering/autonomous-insights-agent-plan.md``.
+``docs/engineering/2026-08-31-autonomous-insights-agent-plan.md``.
 
 The frozen ``agents/insights/v1/agent.py`` and ``v3/`` that outlived it have
 since been deleted — they served no route, and the goal-ranked tool registry

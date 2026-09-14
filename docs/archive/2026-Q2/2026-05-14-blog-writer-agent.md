@@ -1,5 +1,7 @@
 # Blog Writer Agent — Product & Engineering Plan
 
+**Author:** Shirish Kadam · **Date:** 2026-05-14
+
 > **Archived (September 2026).** Never implemented, and no longer implementable as
 > written: every engineering half of this plan is built on the Claude Agent SDK — the
 > session-wide `output_format`, `allowed_tools`, `ClaudeBlogRunner`, and

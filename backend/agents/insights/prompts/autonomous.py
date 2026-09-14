@@ -12,7 +12,7 @@ business context and the user's actual question ride in the USER turn
 session of the same shape. Never interpolate per-request data into the system
 half.
 
-See ``docs/engineering/autonomous-insights-agent-plan.md`` for the phasing. The
+See ``docs/engineering/2026-08-31-autonomous-insights-agent-plan.md`` for the phasing. The
 capability stanza below is the one part that grows per phase: it must always
 describe the tools actually mounted, because an agent that believes it can fetch
 data it cannot reach produces a confident, wrong brief — which is precisely the

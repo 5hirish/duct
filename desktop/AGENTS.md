@@ -2,7 +2,7 @@
 
 Tauri v2 shell that loads the hosted Duct web app, plus an OS-keychain store for
 bring-your-own provider API keys. Design:
-`docs/engineering/tauri-desktop-byo-keys-plan.md`.
+`docs/engineering/2026-06-18-tauri-desktop-byo-keys-plan.md`.
 
 **Two build shapes, one binary.** The official build is a thin client
 that talks to the hosted API. A self-host build restores `bundle.resources` and

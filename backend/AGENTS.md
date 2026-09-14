@@ -418,7 +418,7 @@ Postgres `DATABASE_URL` names.
   Recorded in `ReportedRetryMiddleware._give_up`, consumed by
   `agents/tiers.resolve_tier_model`'s `cooling` set, reported to the browser
   as `tier_skipped` on `PIPELINE_STARTED`. See
-  `docs/engineering/quota-aware-tier-ladder.md`.
+  `docs/engineering/2026-09-08-quota-aware-tier-ladder.md`.
 - `POST /api/providers/{id}/verify` — one real completion on the provider's
   Light model, classified into `invalid_key` / `no_billing` / `model_access`
   / `rate_limited` / `unreachable`, or for a ChatGPT credential
@@ -431,7 +431,7 @@ Postgres `DATABASE_URL` names.
   audit's user turn (`draft_project`) is the trigger, so the cached prefix is
   identical across every other audit.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
-- `routes/project_members.py` — project members + email invitations (`docs/engineering/project-collaboration-plan.md`)
+- `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`
 

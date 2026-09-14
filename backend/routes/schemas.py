@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 # GenerateRequest (connectors + accounts + goal + date range) and the
 # UnifiedInsight envelope they produced. All four went with the six-step form
 # that filled them in — the autonomous session takes a project and a sentence.
-# See docs/engineering/autonomous-insights-agent-plan.md.
+# See docs/engineering/2026-08-31-autonomous-insights-agent-plan.md.
 
 
 class RefreshRoutineTarget(BaseModel):

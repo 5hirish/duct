@@ -1,11 +1,13 @@
 # Intelligent Insights Architecture — Design Plan
 
+**Author:** Shirish Kadam · **Date:** 2026-04-28
+
 > **Archived (September 2026).** The two ideas here shipped — the per-connector
 > `ENTITY_CATALOG` (`backend/agents/insights/catalog/`) and the agent-authored
 > `dashboard_spec` (`backend/agents/insights/schema.py`) — but the surrounding
 > architecture did not survive: the fixed wizard and two-call pipeline it assumes were
 > replaced by a session-shaped autonomous agent. Current design:
-> [`autonomous-insights-agent-plan.md`](../../engineering/autonomous-insights-agent-plan.md).
+> [`2026-08-31-autonomous-insights-agent-plan.md`](../../engineering/2026-08-31-autonomous-insights-agent-plan.md).
 > See [`README.md`](README.md).
 
 ## The Core Idea

@@ -1,5 +1,7 @@
 # Tauri Desktop App + Bring‑Your‑Own Provider Keys — Implementation Plan
 
+**Author:** Shirish Kadam, Claude · **Date:** 2026-06-18
+
 > **Status:** Phase 0 (backend BYO key) implemented — frontend (Phase 1) & Tauri shell (Phases 2–3) pending
 > **Date:** 2026‑06‑18
 > **Branch:** `claude/stoic-volta-2alwt0`

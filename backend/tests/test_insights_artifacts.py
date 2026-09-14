@@ -1,6 +1,6 @@
 """The insights brief becomes a versioned artifact.
 
-Phase 4 of `docs/engineering/autonomous-insights-agent-plan.md`. Three things
+Phase 4 of `docs/engineering/2026-08-31-autonomous-insights-agent-plan.md`. Three things
 have to hold, and they are what this file pins:
 
   * **A brief the model wrote is never lost.** The payload has no schema — it

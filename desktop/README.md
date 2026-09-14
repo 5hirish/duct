@@ -31,7 +31,7 @@ being compiled two ways.
 > both: if a build ships the sidecar, everything under `backend/` is on the
 > user's disk.**
 
-Full design: [`docs/engineering/tauri-desktop-byo-keys-plan.md`](../docs/engineering/tauri-desktop-byo-keys-plan.md).
+Full design: [`docs/engineering/2026-06-18-tauri-desktop-byo-keys-plan.md`](../docs/engineering/2026-06-18-tauri-desktop-byo-keys-plan.md).
 
 ## Architecture
 

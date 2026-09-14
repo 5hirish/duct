@@ -5,7 +5,7 @@ units, CSS file layout, accessibility basics. This file holds what the app
 should **look, feel, and sound like**: the design system as actually built,
 one canonical pattern per job, and the principles that keep new screens from
 reading as generated defaults. The deep reasoning behind the layout system
-lives in `docs/engineering/desktop-adaptive-ui-review.html`; this file does
+lives in `docs/engineering/2026-09-01-desktop-adaptive-ui-review.html`; this file does
 not repeat it.
 
 Rules cite their source where they came from research (NN/g, Apple HIG,

@@ -1,13 +1,15 @@
 # Autonomous Insights Agent — design plan
 
+**Author:** Shirish Kadam · **Date:** 2026-08-31
+
 **Status:** Built, Phases 1–6. Supersedes the request-shaped insights pipeline
 (`agents/insights/v1/agent.py` + the six-step wizard at `app/src/app/(app)/generate/page.jsx`).
 
 Companion reading, in this order:
 [`agent-ports-and-events.md`](agent-ports-and-events.md) (the boundary this must not break),
-[`agent-memory-research.html`](agent-memory-research.html) §07 (memory, Phases 1–3 shipped),
-[`agent-memory-on-deepagents.md`](agent-memory-on-deepagents.md) (the harness),
-[`intelligent-insights-architecture-plan.md`](../archive/2026-Q2/intelligent-insights-architecture-plan.md)
+[`2026-08-28-agent-memory-research.md`](2026-08-28-agent-memory-research.md) §07 (memory, Phases 1–3 shipped),
+[`2026-08-29-agent-memory-on-deepagents.md`](2026-08-29-agent-memory-on-deepagents.md) (the harness),
+[`2026-04-28-intelligent-insights-architecture-plan.md`](../archive/2026-Q2/2026-04-28-intelligent-insights-architecture-plan.md)
 (the entity catalog + dashboard blocks, partially built).
 
 ---
@@ -80,7 +82,7 @@ The autonomous shape needs exactly the four things `deepagents` adds over
    job; running it inline pollutes the analyst's context with check plumbing.
 3. **Skills** — `agents/knowledge/*.md` is 10 packs and growing. All-in-system-prompt
    does not scale; `SkillsMiddleware` progressive disclosure does. Flagged as a
-   "cheap win" in [`agent-memory-on-deepagents.md`](agent-memory-on-deepagents.md) §5
+   "cheap win" in [`2026-08-29-agent-memory-on-deepagents.md`](2026-08-29-agent-memory-on-deepagents.md) §5
    and this is the port that earns it.
 4. **HITL middleware + checkpointer path** — `interrupt_on` is the documented upgrade
    from the in-process Future bridge when runs must survive a restart.

@@ -1,5 +1,7 @@
 # User storage: Railway Postgres + SQLModel + Alembic
 
+**Author:** Shirish Kadam · **Date:** 2026-04-06
+
 > **Archived (September 2026).** The setup it plans is done — Railway Postgres,
 > SQLModel, Alembic from day one — and its unchecked boxes are stale, not pending.
 > The parts that stayed live moved into [`backend/AGENTS.md`](../../../backend/AGENTS.md):
@@ -195,5 +197,5 @@ Encrypt refresh tokens at rest; enforce **application-level** tenant scoping on 
 ## Related docs
 
 - Deployment: Cloudflare + Railway (duct-cloud, private)
-- [OAuth authentication plan](./oauth-authentication-plan.md)
+- [OAuth authentication plan](./2026-04-03-oauth-authentication-plan.md)
 - MVP direction: the MVP plan (duct-cloud, private) (historical Supabase mention; this doc supersedes the host choice for the current stack)

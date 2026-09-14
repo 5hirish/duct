@@ -1,5 +1,7 @@
 # Improve Duct Report Context — Implementation Plan
 
+**Author:** Shirish Kadam, Claude · **Date:** 2026-04-07
+
 > **Archived (September 2026).** Written when business context was a localStorage
 > blob filled in by an onboarding wizard. The wizard was deleted in
 > `feat(insights): delete the wizard, and let the agent answer its own questions`;

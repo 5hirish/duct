@@ -12,7 +12,7 @@
 
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-backend setup-app setup-site setup-desktop \
-        check check-backend check-app check-site check-desktop check-security \
+        check check-backend check-app check-site check-desktop check-security check-docs \
         fmt test dump-prompts serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
 
 # ---------------------------------------------------------------------------
@@ -45,7 +45,7 @@ setup-desktop: ## Install desktop dependencies (npm + Cargo)
 # Checks — these mirror .github/workflows/*.yml
 # ---------------------------------------------------------------------------
 
-check: check-backend check-app check-site check-desktop check-security ## Run every check CI runs
+check: check-backend check-app check-site check-desktop check-security check-docs ## Run every check CI runs
 	@echo "\n✅ all checks passed"
 
 check-backend: ## Ruff + pytest + rendered prompts (mirrors backend.yml and prompts.yml)
@@ -88,6 +88,9 @@ check-desktop: ## Check the Tauri contract, compile the shell, run its unit test
 check-security: ## Secret scan + deep audit (mirrors security-audit.yml)
 	python3 scripts/security/leak_scan.py --all
 	python3 scripts/security/audit.py --mode deep
+
+check-docs: ## Every doc is a dated record or a reference with a current Updated: line (mirrors docs.yml)
+	python3 scripts/check_docs.py
 
 # ---------------------------------------------------------------------------
 # Shortcuts

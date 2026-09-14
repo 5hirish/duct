@@ -10,8 +10,8 @@
 // passes an `api` adapter and everything else lives here rather than being
 // forked twice and drifting.
 //
-// See docs/engineering/agent-memory-research.html §06 for what each affordance
-// is for, and agent-memory-taxonomy-and-ux-patterns.md Part B for why.
+// See docs/engineering/2026-08-28-agent-memory-research.md §06 for what each affordance
+// is for, and 2026-08-29-agent-memory-taxonomy-and-ux-patterns.md Part B for why.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";

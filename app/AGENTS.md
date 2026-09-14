@@ -38,7 +38,7 @@ Three route groups under `app/`:
   `--tessera-*` tokens in `styles/onboarding.css` and the one celebration
   (`TesseraBurst`) is made of them. Provider choice is a radio-card list
   (`ProviderStep.jsx`), OpenAI first. Design and phases:
-  `docs/engineering/smart-onboarding-plan.md`.
+  `docs/engineering/2026-09-08-smart-onboarding-plan.md`.
   Nothing is **written** until the user confirms the site card: for someone
   already signed in, the crawl's draft would otherwise land in whichever
   project happened to be active and overwrite it. The card says which
@@ -253,7 +253,7 @@ it is a claim about the code, not a way to quiet the check.
 
 ## UI conventions
 
-Full reasoning in `docs/engineering/desktop-adaptive-ui-review.html` (in `duct`).
+Full reasoning in `docs/engineering/2026-09-01-desktop-adaptive-ui-review.html` (in `duct`).
 
 **[`DESIGN.md`](DESIGN.md) is the design & UX companion to this section** —
 the look/feel/voice layer: design tokens as built, the canonical pattern per

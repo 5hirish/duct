@@ -1,5 +1,7 @@
 # Project collaboration — invitations and members
 
+**Author:** Shirish Kadam, Claude · **Date:** 2026-08-16
+
 Status: **shipped (v1)** · Scope: `backend/`, `app/`
 
 Lets a project owner invite teammates by email and collaborate on the same

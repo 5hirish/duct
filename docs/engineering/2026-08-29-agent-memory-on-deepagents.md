@@ -1,8 +1,10 @@
 # Agent memory on `deepagents` — what the SDK gives us, what we build, and the open-source stack
 
-Companion to [`agent-memory-research.html`](agent-memory-research.html) (the research
+**Author:** Shirish Kadam · **Date:** 2026-08-29
+
+Companion to [`2026-08-28-agent-memory-research.md`](2026-08-28-agent-memory-research.md) (the research
 and the Duct memory model) and
-[`agent-memory-taxonomy-and-ux-patterns.md`](agent-memory-taxonomy-and-ux-patterns.md).
+[`2026-08-29-agent-memory-taxonomy-and-ux-patterns.md`](2026-08-29-agent-memory-taxonomy-and-ux-patterns.md).
 This doc answers two narrower questions: **how much of the memory design does the
 LangChain Deep Agents SDK already give us**, now that V1 is the target harness, and
 **which open-source libraries are actually usable** given the constraints — Postgres on
@@ -454,7 +456,7 @@ Not verified (the verification agent was cut off): Hindsight (`vectorize-io`) an
 ## 5. What this changes in the phase plan
 
 > **Built 28–29 Aug 2026 — and where it diverged from this section.** Phases 1 and 2
-> shipped on `feat/agent-memory-phase-1` (see `agent-memory-research.html` §07 for the
+> shipped on `feat/agent-memory-phase-1` (see `2026-08-28-agent-memory-research.md` §07 for the
 > full status). Two deliberate departures from the plan below:
 >
 > - **`GetMemory` was kept, not dropped.** It reads by short id, which is what the
@@ -470,7 +472,7 @@ Not verified (the verification agent was cut off): Hindsight (`vectorize-io`) an
 > The consolidation call did land as planned: `with_structured_output`, no LangMem, and
 > the proposed → confirm flow as the approval mechanism.
 
-Relative to `agent-memory-research.html` §07:
+Relative to `2026-08-28-agent-memory-research.md` §07:
 
 - **Phase 1** adds `DuctMemoryBackend` (the projection) and the `MemoryMiddleware`
   wiring in the V1 runners, and drops `GetMemory` (file read covers it). The V3 (Claude

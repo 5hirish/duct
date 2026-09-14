@@ -1,5 +1,7 @@
 # Plan: Dynamic Account Data Fetching + Gemini 2.5 Flash Synthesis
 
+**Author:** Shirish Kadam · **Date:** 2026-04-03
+
 > **Archived (April 2026).** Early `/run`-era spec; implementation diverged (see [`README.md`](README.md) in this folder).
 
 ## Context

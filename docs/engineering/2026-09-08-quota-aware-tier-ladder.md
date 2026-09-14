@@ -1,5 +1,7 @@
 # Quota-aware tier ladder
 
+**Author:** Shirish Kadam · **Date:** 2026-09-08
+
 *Status: built, Sept 2026. This file is now a record of why, not a plan.*
 
 Shipped as specified, with four departures worth naming:

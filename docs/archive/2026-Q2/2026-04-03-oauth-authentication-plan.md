@@ -1,5 +1,7 @@
 # OAuth Authentication for Google Ads — Implementation Plan
 
+**Author:** Shirish Kadam · **Date:** 2026-04-03
+
 > **Archived (September 2026).** Superseded on both of its load-bearing decisions:
 > tokens live in the `connector_credentials` table, not `sessionStorage`, and the
 > Google Ads developer token is now supplied by the user (Duct's own application is

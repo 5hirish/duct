@@ -116,11 +116,11 @@ The design decisions with real reasoning behind them, rather than a diagram:
 - **[Agent ports](backend/agents/core/ports/__init__.py)** — Duct rents an agent
   harness, it does not marry one. Domain code imports no framework; only runners
   and binders do, and a test enforces it.
-- **[Agent memory](docs/engineering/agent-memory-research.html)** — the research
+- **[Agent memory](docs/engineering/2026-08-28-agent-memory-research.md)** — the research
   and the bi-temporal model behind `project_memories`.
 - **[Staged execution](backend/service/execution/policy.py)** — why autonomy
   changes how often an agent interrupts, never what may auto-apply.
-- **[Insights architecture](docs/engineering/autonomous-insights-agent-plan.md)** — the
+- **[Insights architecture](docs/engineering/2026-08-31-autonomous-insights-agent-plan.md)** — the
   insights agent as a session, not a wizard: connector autonomy, a verification
   subagent that proves the number, and artifacts as markdown by default.
 

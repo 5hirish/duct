@@ -1,5 +1,7 @@
 # Duct Architecture & Stack Recommendations
 
+**Author:** Shirish Kadam · **Date:** 2026-04-03
+
 > **Archived (April 2026).** Contradicts the current shipped stack (Python FastAPI + Next.js). See [`README.md`](README.md) in this folder.
 
 ## Context

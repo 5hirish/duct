@@ -9,7 +9,7 @@
 //   III  The audit   the session, inside the real app, crawl already done
 //
 // The first submit mints a guest (lib/guest.js); there is no "start" click
-// that does nothing visible. Design in docs/engineering/smart-onboarding-plan.md.
+// that does nothing visible. Design in docs/engineering/2026-09-08-smart-onboarding-plan.md.
 // The water in the aqueduct strip is the state: it reaches an arch when that
 // step's data does.
 

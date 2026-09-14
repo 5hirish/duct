@@ -1,5 +1,7 @@
 # Paid Ads Demo — World-Class Report Implementation Plan
 
+**Author:** Shirish Kadam · **Date:** 2026-03-28
+
 > **Archived (April 2026).** Agent execution plan for `for-paid-ads-demo.html`; marketing demos now live under `site/` (e.g. `for-paid-ads.html`). See [`README.md`](README.md) in this folder.
 
 

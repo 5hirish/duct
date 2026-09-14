@@ -1,5 +1,7 @@
 # Agent ports and the event contract
 
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-14
+
 **Status:** implemented · Source of truth is the code, not this page —
 [`backend/agents/core/ports/__init__.py`](../../backend/agents/core/ports/__init__.py)
 declares the ports and

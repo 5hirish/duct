@@ -1518,7 +1518,7 @@ async def _start_insights(
     takes a fully-specified request (connectors, accounts, goal, date range)
     decided by a wizard; this one takes a project and a sentence, and the agent
     works out the rest. See
-    ``docs/engineering/autonomous-insights-agent-plan.md``.
+    ``docs/engineering/2026-08-31-autonomous-insights-agent-plan.md``.
     """
     from agents.insights.brief import (
         ARTIFACT_KIND as INSIGHTS_ARTIFACT_KIND,

@@ -1,8 +1,10 @@
 # shadcn/ui + Luma Implementation Plan for Duct App
 
+**Author:** Shirish Kadam, Claude · **Date:** 2026-04-06
+
 > **Archived (September 2026).** The evaluation was decided and executed —
 > shadcn/ui shipped. Living design docs are [`app/DESIGN.md`](../../../app/DESIGN.md)
-> and [`design-system-contrast-review.html`](../../engineering/design-system-contrast-review.html);
+> and [`2026-09-06-design-system-contrast-review.md`](../../engineering/2026-09-06-design-system-contrast-review.md);
 > the token values here predate both. See [`README.md`](README.md).
 
 ## Context

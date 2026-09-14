@@ -1,6 +1,6 @@
 """Autonomous insights session — assembly, event contract, and the chat loop.
 
-Phase 1 of `docs/engineering/autonomous-insights-agent-plan.md`: insights stops
+Phase 1 of `docs/engineering/2026-08-31-autonomous-insights-agent-plan.md`: insights stops
 being a request-shaped pipeline and becomes a session like audit and content.
 What matters, and what these pin:
 

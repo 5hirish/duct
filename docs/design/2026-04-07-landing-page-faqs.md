@@ -1,5 +1,7 @@
 # Landing Page FAQ Sections — Content & Implementation Spec
 
+**Author:** Claude · **Date:** 2026-04-07
+
 > **Purpose**: Add FAQ sections to all three landing pages for SEO, AIO/AEO optimization, and user value.
 > **Status**: Ready for implementation
 > **Date**: 2026-04-07

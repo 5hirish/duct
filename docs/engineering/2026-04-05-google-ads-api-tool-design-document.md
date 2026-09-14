@@ -1,11 +1,13 @@
 # Google Ads API — Tool Design Document
 
+**Author:** Shirish Kadam, Claude · **Date:** 2026-04-05
+
 **Company:** Alleviate Lab  
 **Product:** Duct (https://getduct.ai)  
 **Document version:** 1.0  
 **Last updated:** April 2026  
 
-Word copy (with embedded prototype image): [`google-ads-api-tool-design-document.docx`](google-ads-api-tool-design-document.docx).
+Word copy (with embedded prototype image): [`2026-04-05-google-ads-api-tool-design-document.docx`](2026-04-05-google-ads-api-tool-design-document.docx).
 
 ---
 

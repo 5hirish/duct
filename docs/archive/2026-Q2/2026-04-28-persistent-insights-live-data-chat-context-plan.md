@@ -1,5 +1,7 @@
 # Plan: Persistent Insights with Live Data Refresh and Chat-Ready Context
 
+**Author:** Shirish Kadam · **Date:** 2026-04-28
+
 > **Archived (September 2026).** Its premise — "everything is localStorage-only
 > (no backend DB)" — is no longer true. Insights persist in Postgres against a
 > project, and the chat sidebar this planned for became the artifact store plus the
@@ -295,7 +297,7 @@ Add a visual indicator to insight cards that have a `routine` stored (meaning th
 
 ---
 
-## Alignment With `intelligent-insights-architecture-plan.md`
+## Alignment With `2026-04-28-intelligent-insights-architecture-plan.md`
 
 The two plans connect at these points:
 
@@ -313,7 +315,7 @@ The two plans connect at these points:
 
 | Old name | New name | Where |
 |----------|----------|-------|
-| `persistent-reports-live-data-chat-context-plan.md` | `persistent-insights-live-data-chat-context-plan.md` | docs |
+| `persistent-reports-live-data-chat-context-plan.md` | `2026-04-28-persistent-insights-live-data-chat-context-plan.md` | docs |
 | `duct_local_reports` | `duct_local_insights` | localStorage key |
 | `LOCAL_REPORTS_STORAGE_KEY` | `LOCAL_INSIGHTS_STORAGE_KEY` | `localReports.js` |
 | `saveLocalReport` | `saveLocalInsight` | `localReports.js` |
