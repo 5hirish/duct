@@ -99,7 +99,7 @@ langchain-xai = "^1.3.0"
 pytest = "^9"
 pytest-asyncio = "^1.0"
 ruff = "^0.16"
-arize-phoenix = "^17.7.0"
+arize-phoenix = "^20.3.0"
 pyinstaller = "^6.11"
 # In-memory span exporter for tests/test_telemetry.py.
 opentelemetry-sdk = "^1.41"
