@@ -13,7 +13,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-backend setup-app setup-site setup-desktop \
         check check-backend check-app check-site check-desktop check-security \
-        fmt test serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
+        fmt test dump-prompts serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
 
 # ---------------------------------------------------------------------------
 
@@ -48,9 +48,12 @@ setup-desktop: ## Install desktop dependencies (npm + Cargo)
 check: check-backend check-app check-site check-desktop check-security ## Run every check CI runs
 	@echo "\n✅ all checks passed"
 
-check-backend: ## Ruff + pytest (mirrors backend.yml)
+check-backend: ## Ruff + pytest + rendered prompts (mirrors backend.yml and prompts.yml)
 	cd backend && poetry run ruff check server.py agents routes service tests utils
 	cd backend && poetry run pytest -q -m "not live" tests
+	# Mirrors prompts.yml. Unlike check-migrations this needs nothing a laptop
+	# lacks, so it belongs in the local gate rather than beside it.
+	cd backend && poetry run python scripts/dump_prompts.py --check
 
 # Not part of `check`: it needs a throwaway Postgres in DATABASE_URL, which a
 # laptop does not have by default and CI provides as a service container.
@@ -92,6 +95,12 @@ check-security: ## Secret scan + deep audit (mirrors security-audit.yml)
 
 test: ## Backend tests only — the fastest useful signal
 	cd backend && poetry run pytest -q -m "not live" tests
+
+# Regenerate after ANY prompt change. `prompts.yml` runs the --check form on a
+# pull request that touches a prompt, so skipping this shows up in review
+# rather than shipping a document describing last week's prompt.
+dump-prompts: ## Re-render docs/engineering/agent-prompts.md from the code
+	cd backend && poetry run python scripts/dump_prompts.py
 
 fmt: ## Auto-fix what ruff can fix
 	cd backend && poetry run ruff check --fix server.py agents routes service tests utils

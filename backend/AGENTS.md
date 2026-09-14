@@ -667,6 +667,28 @@ don't fit.
   using belongs in `BLOCK_ORDER`, where its cache position is a decision
   somebody made on purpose.
 
+- `scripts/dump_prompts.py` — **regenerate after any prompt change**
+  (`make dump-prompts`). It renders every agent's system prompt and a sample
+  assembled turn to [`docs/engineering/agent-prompts.md`](../docs/engineering/agent-prompts.md),
+  checked in, so a prompt change lands in the pull request as prose rather than
+  as a Python string edit a reviewer has to assemble in their head.
+  `prompts.yml` runs the `--check` form on a PR that touched a prompt, and
+  `make check-backend` runs it locally.
+
+  We looked at the prompt file formats (Prompty, dotprompt, POML, BAML) and did
+  not adopt one. They solve prompts-as-swappable-config, edited outside the
+  repository and hot-reloaded without a deploy. Duct's prompts are composed:
+  `agents/content/prompts.py` alone has 47 interpolation sites and 22 branches,
+  audit assembles its scoring table from `agents/audit/scoring.py` and varies
+  its tool guidance on whether the provider does vision. Moving that into
+  Handlebars or Jinja moves real logic into a template language with no types
+  and no tests. **The reviewability problem was never the storage format** — it
+  was that nobody could read the assembled result. That is what the dump fixes.
+
+  The output must stay deterministic: no timestamps, no run ids. A
+  non-deterministic byte fails `--check` on every unrelated pull request, and a
+  check that cries wolf gets switched off.
+
 - `agents/core/lc.py` — the LangChain adapter every V1 runner shares:
   `resolve_chat_model` (model transport) and `stream_agent` (LangChain stream →
   the `AgentEvent` vocabulary), plus `build_ask_user_tool`, the LangChain half
