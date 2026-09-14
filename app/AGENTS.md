@@ -20,7 +20,7 @@ Next.js App Router report viewer and agent interface.
 
 ## Route structure
 
-Three route groups under `app/`:
+Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the token-gated lead-magnet audit with its own chrome and no auth):
 
 - `(start)/start` — onboarding: the audit *is* the onboarding. One field
   (URL — the root page read back in a second, crawl continuing in the
@@ -64,12 +64,19 @@ Three route groups under `app/`:
   theme, and the fixed `--navy` brand hexes it used to paint with measured
   1.05:1 on it in dark.
 - `(app)/` — authenticated app shell:
-  - `audit/` + `audit/[sessionId]/` — general audit reports
-  - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit variant
+  - `insights/organic-growth/` + `[slug]/` + `generate/` — the Desk, stored
+    insights, generate entry; `insights/session/` — the insights agent
+    workspace
+  - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit hub and live workspace
+  - `content/` — Content Studio hub; `content/plan/` the planner board;
+    `content/posts/[postId]`, `posts/new`, `sessions/new` — the content agent
+    workspace over a post or a plan
+  - `execute/` — change-set review queue: diffs, approve, apply, roll back
   - `connections/` — connector/integration management
-  - `generate/` — report generation workflow
-  - `insights/` + `insights/[slug]/` + `insights/generate/` — insights hub
-  - `insights/organic-growth/` + `[slug]/` + `generate/` — organic growth insights
+  - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
+    library, the cross-agent feed, usage, and user-level memory
+  - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
+  - `generate/` — the retired wizard, now a bare redirect to `/insights/session`
   - `projects/` — project management
   - `project/[projectId]/` — **Project context**, the editor for one
     project: the wizard's five sections, kept, minus creation (a project
@@ -78,7 +85,8 @@ Three route groups under `app/`:
     Deep-link a section with `#about` / `#targets` / `#audience` /
     `#competition` / `#brand`. There is no `/onboarding` route any more —
     "new project" everywhere means `/start`.
-  - `project/[projectId]/members/` — project members + invitations (owner/collaborator)
+  - `project/[projectId]/members/` + `project/[projectId]/memory/` — members
+    and invitations (owner/collaborator); project-scoped memory
 
 Plus two top-level routes outside every group, because their visitor is
 usually signed out and the app shell's guard would lose where they were going:

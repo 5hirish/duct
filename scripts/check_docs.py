@@ -17,6 +17,10 @@ figure (an <svg>, <img>, <figure>, <canvas> or mermaid block). Everything
 else is markdown, which diffs in review, renders on GitHub and costs no
 styling to write or read.
 
+A document may also list repository paths in `files: [...]` arrays (the
+architecture page does, one per node). Every such path must exist, so a
+rename fails the check instead of leaving a dead link on the map.
+
 Exempt: docs/guides/ (third-party material with its own provenance headers),
 every folder README.md (an index), assets/, and the generated agent prompts.
 
@@ -33,6 +37,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FOLDERS = ("docs/engineering", "docs/design", "docs/archive")
+#: Documents that sit at the docs root rather than in a folder.
+ROOT_DOCS = ("docs/architecture.html",)
 #: Folders whose every document must be a record.
 RECORDS_ONLY = ("docs/archive",)
 EXEMPT = frozenset({"docs/engineering/agent-prompts.md"})  # generated, CI-diffed
@@ -47,6 +53,8 @@ HTML_META = re.compile(
 )
 FIGURE = re.compile(r"<(svg|img|figure|canvas)\b|class=\"mermaid\"|```mermaid", re.IGNORECASE)
 HTML_DATE = re.compile(r"<b>(?P<kind>Date|Updated)</b>\s*(?P<date>\d{4}-\d{2}-\d{2})")
+FILE_LISTS = re.compile(r"files:\s*\[([^\]]*)\]")
+QUOTED = re.compile(r'"([^"]+)"')
 
 
 def git(*args: str) -> str:
@@ -102,6 +110,12 @@ def check(path: Path) -> list[str]:
             "an HTML document with no figure (<svg>, <img>, <figure>, <canvas> or mermaid): write it as markdown"
         )
 
+    text = path.read_text(encoding="utf-8", errors="replace")
+    for block in FILE_LISTS.findall(text):
+        for listed in QUOTED.findall(block):
+            if not (ROOT / listed).exists():
+                problems.append(f"lists {listed}, which does not exist — the map is stale")
+
     meta = metadata(path)
     if meta is None:
         problems.append(
@@ -131,8 +145,7 @@ def check(path: Path) -> list[str]:
     return problems
 
 
-def main() -> int:
-    failures = 0
+def documents():
     for folder in FOLDERS:
         for path in sorted((ROOT / folder).rglob("*")):
             if not path.is_file():
@@ -142,9 +155,19 @@ def main() -> int:
                 continue
             if path.name.startswith("."):
                 continue
-            for problem in check(path):
-                failures += 1
-                print(f"{rel}: {problem}")
+            yield path
+    for rel in ROOT_DOCS:
+        if (ROOT / rel).is_file():
+            yield ROOT / rel
+
+
+def main() -> int:
+    failures = 0
+    for path in documents():
+        rel = path.relative_to(ROOT).as_posix()
+        for problem in check(path):
+            failures += 1
+            print(f"{rel}: {problem}")
     if failures:
         print(f"\n{failures} problem(s). The rule is in docs/README.md under Naming.", file=sys.stderr)
         return 1

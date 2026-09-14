@@ -13,7 +13,8 @@ first thing to work out is which one your change lives in.
 Each area has its own `AGENTS.md` with the conventions that actually apply
 there (`CLAUDE.md` beside it is a symlink to the same file). **Read the one for
 the directory you are editing** — backend conventions do not apply to `site/`,
-and vice versa.
+and vice versa. For how the areas fit together, open
+[`docs/architecture.html`](docs/architecture.html) in a browser first.
 
 **Not touching backend/app/desktop code?** This file is written for someone
 about to run `poetry install` or `npm install`. If you're filing design

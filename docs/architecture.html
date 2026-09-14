@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A friendly map of the Duct monorepo: what the pieces are, how they talk to each other, and where to look first. Interactive, self-contained, no build step.">
+<title>Duct architecture</title>
+<style>
+  :root {
+    --bg: #f6f6f4; --surface: #ffffff; --surface-2: #efefec;
+    --ink: #0D0F1A; --ink-2: #33364a; --ink-3: #6f7386;
+    --border: #e3e3df; --border-strong: #cdcdc7;
+    --accent: #FF5C00; --accent-ink: #C43F00; --accent-soft: rgba(255,92,0,.09);
+    --lane-a: rgba(13,15,26,.028);
+    --edge: #b4b8c8; --edge-hi: #FF5C00;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --r: 14px; --r-s: 10px;
+    --s1: 8px; --s2: 12px; --s3: 16px; --s4: 24px; --s5: 32px; --s6: 48px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D0F1A; --surface: #14172a; --surface-2: #1b1f36;
+      --ink: #f1f1ef; --ink-2: #cfd1dc; --ink-3: #9094a8;
+      --border: #272b44; --border-strong: #3d4262;
+      --accent: #FF7A2E; --accent-ink: #FF9A5E; --accent-soft: rgba(255,122,46,.14);
+      --lane-a: rgba(255,255,255,.035); --edge: #4f5476; --edge-hi: #FF7A2E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D0F1A; --surface: #14172a; --surface-2: #1b1f36;
+    --ink: #f1f1ef; --ink-2: #cfd1dc; --ink-3: #9094a8;
+    --border: #272b44; --border-strong: #3d4262;
+    --accent: #FF7A2E; --accent-ink: #FF9A5E; --accent-soft: rgba(255,122,46,.14);
+    --lane-a: rgba(255,255,255,.035); --edge: #4f5476; --edge-hi: #FF7A2E;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--sans); }
+  a { color: var(--accent-ink); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font: 0.88em var(--mono); background: var(--surface-2); padding: 2px 6px; border-radius: 5px; }
+  .wrap { max-width: 1248px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); }
+  @media (max-width: 600px) { .wrap { padding: var(--s4) var(--s3) var(--s5); } }
+
+  header.mast { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); align-items: baseline; margin-bottom: var(--s2); }
+  header.mast h1 { font-size: 32px; line-height: 1.15; margin: 0; letter-spacing: -.015em; }
+  header.mast .meta { color: var(--ink-3); font-size: 14px; }
+  header.mast .meta b { color: var(--ink-2); font-weight: 600; }
+  p.lede { max-width: 62ch; margin: 0 0 var(--s5); color: var(--ink-2); font-size: 17px; line-height: 1.6; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+
+  .start { margin: 0 0 var(--s4); padding: var(--s3) var(--s4) var(--s4); }
+  .start > span { display: block; color: var(--ink-3); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-bottom: var(--s2); }
+  .start .chips { display: flex; flex-wrap: wrap; gap: var(--s1) 10px; }
+  .start a { font-size: 15px; line-height: 1.3; padding: 8px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); }
+  .start a:hover { text-decoration: none; filter: brightness(.96); }
+  .start a[aria-current="true"] { background: var(--accent); color: #fff; }
+
+  .route { display: flex; flex-wrap: wrap; gap: var(--s1) 10px; align-items: center; margin: 0 0 var(--s4); padding: var(--s2) var(--s3); border: 1px solid var(--accent); border-radius: var(--r-s); background: var(--accent-soft); font-size: 14px; }
+  .route[hidden] { display: none; }
+  .route > b { color: var(--accent-ink); margin-right: var(--s1); }
+  .route a.step { padding: 5px 12px; border-radius: 999px; background: var(--surface); color: var(--ink-2); border: 1px solid transparent; line-height: 1.3; }
+  .route a.step[aria-current="step"] { border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .route a.step.done { color: var(--ink-3); }
+  .route a.leave { margin-left: auto; color: var(--ink-3); font-size: 13px; }
+
+  nav.levels { display: flex; flex-wrap: wrap; gap: 10px var(--s5); margin: 0 0 var(--s3); font-size: 14px; }
+  nav.levels .group { display: flex; flex-wrap: wrap; gap: var(--s1); align-items: center; }
+  nav.levels .group > span { color: var(--ink-3); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-right: 4px; }
+  nav.levels a { padding: 6px 13px; border: 1px solid var(--border); border-radius: 999px; color: var(--ink-2); background: var(--surface); line-height: 1.3; }
+  nav.levels a:hover { border-color: var(--border-strong); text-decoration: none; }
+  nav.levels a[aria-current="page"] { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); font-weight: 600; }
+
+  .crumbs { font-size: 14px; color: var(--ink-3); margin: 0 0 var(--s3); }
+  .crumbs a { color: var(--ink-2); }
+  .crumbs span + span::before { content: "  ›  "; color: var(--ink-3); white-space: pre; }
+
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--s4); align-items: start; }
+  @media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
+  .figure { padding: var(--s3) var(--s3) var(--s2); min-width: 0; overflow-x: auto; }
+  .figure h2 { font-size: 22px; line-height: 1.25; margin: var(--s1) var(--s2) 6px; letter-spacing: -.01em; }
+  .figure p.sum { margin: 0 var(--s2) var(--s4); color: var(--ink-3); font-size: 15px; line-height: 1.55; max-width: 66ch; }
+  svg.arch { display: block; width: 100%; min-width: 640px; height: auto; font-family: var(--sans); }
+  svg.arch .lane-bg { fill: var(--lane-a); }
+  svg.arch .lane-label { fill: var(--ink-3); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  svg.arch .node rect.box { fill: var(--surface); stroke: var(--border-strong); stroke-width: 1; rx: 10; }
+  svg.arch .node.drill rect.box { stroke: var(--accent); stroke-width: 1.3; }
+  svg.arch .node rect.bar { fill: var(--border-strong); rx: 2; }
+  svg.arch .node.drill rect.bar { fill: var(--accent); }
+  svg.arch .node text.label { fill: var(--ink); font-size: 13.5px; font-weight: 600; }
+  svg.arch .node text.sub { fill: var(--ink-3); font-size: 11.5px; }
+  svg.arch .node text.drill-mark { fill: var(--accent); font-size: 12px; }
+  svg.arch .node { cursor: pointer; outline: none; }
+  svg.arch .node:hover rect.box, svg.arch .node:focus rect.box, svg.arch .node.on rect.box { stroke: var(--accent); stroke-width: 1.6; fill: var(--accent-soft); }
+  svg.arch .node.dim { opacity: .38; }
+  svg.arch .edge path { fill: none; stroke: var(--edge); stroke-width: 1.4; }
+  svg.arch .edge.quiet { opacity: 0; }
+  svg.arch .edge.hi { opacity: 1; }
+  svg.arch .edge.hi path { stroke: var(--edge-hi); stroke-width: 2; }
+  svg.arch .edge.dim { opacity: .15; }
+  svg.arch .edge text { fill: var(--ink-3); font-size: 11px; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+  svg.arch .edge.hi text { fill: var(--accent-ink); }
+
+  aside.panel { padding: var(--s4); position: sticky; top: var(--s3); font-size: 15px; line-height: 1.55; }
+  aside.panel .job { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 var(--s1); }
+  aside.panel h3 { margin: 0 0 2px; font-size: 19px; line-height: 1.3; letter-spacing: -.01em; }
+  aside.panel .kind { color: var(--ink-3); font-size: 13.5px; margin-bottom: var(--s2); }
+  aside.panel p { margin: 0 0 var(--s2); color: var(--ink-2); }
+  aside.panel p.do { padding: var(--s2) var(--s3); border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 var(--r-s) var(--r-s) 0; color: var(--ink); margin-bottom: var(--s3); }
+  aside.panel .files-h { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: var(--s3) 0 6px; }
+  aside.panel ul.files { list-style: none; padding: 0; margin: 0 0 var(--s3); }
+  aside.panel ul.files li { margin: 4px 0; font: 12.5px/1.5 var(--mono); overflow-wrap: anywhere; }
+  aside.panel .row { display: flex; flex-wrap: wrap; gap: var(--s1); margin-top: var(--s1); }
+  aside.panel button { font: 600 14px var(--sans); border-radius: var(--r-s); padding: 9px 14px; cursor: pointer; line-height: 1.3; }
+  aside.panel button.open { color: #fff; background: var(--accent); border: 1px solid var(--accent); }
+  aside.panel button.open:hover { filter: brightness(.95); }
+  aside.panel button.next { color: var(--accent-ink); background: var(--surface); border: 1px solid var(--accent); }
+  aside.panel button.next:hover { background: var(--accent-soft); }
+  aside.panel .hint { color: var(--ink-3); font-size: 14px; }
+  aside.panel .hint b { color: var(--ink-2); }
+
+  section.notes { margin-top: var(--s5); padding: var(--s3) var(--s4); font-size: 15px; max-width: 72ch; }
+  section.notes h2 { font-size: 16px; margin: 0 0 var(--s1); }
+  section.notes ul { margin: 0; padding-left: 20px; color: var(--ink-2); }
+  section.notes li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <h1>Duct architecture</h1>
+    <span class="meta"><b>Author</b> Shirish Kadam · <b>Updated</b> 2026-09-14</span>
+  </header>
+  <p class="lede">
+    A map of how Duct is put together. Pick the job you came to do and follow the stops, or start wide and click
+    around. Only the main flow is drawn; point at a box to see everything it touches.
+  </p>
+
+  <div class="start card" id="start"></div>
+
+  <div class="route" id="route" hidden></div>
+  <nav class="levels" id="levels" aria-label="Levels"></nav>
+  <div class="crumbs" id="crumbs"></div>
+
+  <div class="stage">
+    <div class="figure card">
+      <h2 id="fig-title"></h2>
+      <p class="sum" id="fig-sum"></p>
+      <svg class="arch" id="fig" role="img" aria-labelledby="fig-title"></svg>
+    </div>
+    <aside class="panel card" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <section class="notes card">
+    <h2>About this page</h2>
+    <ul>
+      <li>It covers the open-source code only. Hosting and deployment are kept outside this repository.</li>
+      <li>The picture is the <code>DATA</code> block at the bottom of this file. Edit it there; nothing is drawn by hand.</li>
+      <li><code>make check-docs</code> fails this page when a file it points to no longer exists. Bump the date above whenever you edit it.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// DATA — the whole map. A level has lanes (rows) and nodes; `to` on a node
+// drills into another level. Edges with `main: true` are always drawn; the
+// rest appear only when a box they touch is pointed at. Paths are repo-
+// relative and checked for existence by scripts/check_docs.py.
+// ---------------------------------------------------------------------------
+const REPO = "https://github.com/5hirish/duct/blob/main/";
+
+const DATA = {
+  order: [
+    ["Overview", ["root", "runtime"]],
+    ["Apps", ["backend", "app", "desktop", "tooling"]],
+    ["Internals", ["auth", "agents", "connectors", "execution", "data"]],
+  ],
+  // A job is the reason someone opened this page. Each stop opens one box
+  // and says what to do there; the panel walks from stop to stop.
+  jobs: [
+    { id: "add-connector", label: "Add a connector", steps: [
+      { level: "connectors", node: "cn-skill", do: "Start with the skill. It lists every step and where each file goes." },
+      { level: "connectors", node: "cn-reg", do: "Register the connector here. The app tile and the data-source list both read this." },
+      { level: "connectors", node: "tr-rest", do: "Declare an endpoint. Retries and pacing are already written for you." },
+      { level: "connectors", node: "tr-fakes", do: "Test against the fake wire and assert the exact request you sent." },
+      { level: "connectors", node: "us-app", do: "Add the tile, then a /preview entry for it in the same change." },
+    ]},
+    { id: "add-route", label: "Add a route", steps: [
+      { level: "backend", node: "b-routes", do: "Routes hold HTTP shape only. Mount yours in namespace.py with its guards." },
+      { level: "auth", node: "m-member", do: "Touching a project-scoped row? You need the user plus a membership check. Non-members get 404." },
+      { level: "auth", node: "e-test", do: "This test fails your route if that check is missing. Run it before the PR." },
+      { level: "app", node: "a-clients", do: "Call it from the app through the matching client, never with a raw fetch." },
+    ]},
+    { id: "change-agent", label: "Change what an agent does", steps: [
+      { level: "agents", node: "ag-prompts", do: "Prompt text lives beside the agent. A change here shows up as a diff in CI." },
+      { level: "agents", node: "ag-tools", do: "A new tool is a plain function plus a small binder. Copy the shape of memory_tools.py." },
+      { level: "agents", node: "ag-turn", do: "Adding something to the prompt? Stable parts go first so caching keeps working." },
+      { level: "agents", node: "bd-tests", do: "No framework import outside the runners. This test says no otherwise." },
+    ]},
+    { id: "new-event", label: "Send a new event to the app", steps: [
+      { level: "agents", node: "ev-vocab", do: "Add the name here first." },
+      { level: "agents", node: "ap-runtime", do: "Mirror it in agentEvents.js and teach the reducer what to do with it." },
+      { level: "root", node: "t-contracts", do: "The contract test holds both sides equal and tells you if one is missing." },
+    ]},
+    { id: "build-ui", label: "Build a UI surface", steps: [
+      { level: "app", node: "a-app", do: "Pick the route group. The layout decides the chrome by path." },
+      { level: "app", node: "a-domain", do: "Components go in the folder that owns the surface." },
+      { level: "app", node: "a-ui", do: "Use the primitives and tokens. Never write your own dark-mode rules." },
+      { level: "app", node: "a-preview", do: "Add a /preview entry in the same change. That is the documentation." },
+    ]},
+    { id: "agent-action", label: "Let an agent change a tool", steps: [
+      { level: "execution", node: "x-execs", do: "Write an executor: preview, apply, roll back, and the scopes it needs." },
+      { level: "execution", node: "x-guard", do: "Decide which guardrail should be able to stop it." },
+      { level: "execution", node: "x-policy", do: "Only reversible, non-destructive changes may ever run without a person." },
+      { level: "execution", node: "x-card", do: "Check how it reads on the review card. That is where people decide." },
+    ]},
+    { id: "add-setting", label: "Add a setting", steps: [
+      { level: "backend", node: "b-config", do: "Add it to Configs with a default." },
+      { level: "root", node: "t-contracts", do: "Add it to .env.example too, or the contract test fails." },
+      { level: "tooling", node: "sc-env", do: "Real values reach CI through the push script, never by hand." },
+    ]},
+    { id: "add-table", label: "Add a table or column", steps: [
+      { level: "data", node: "t-projects", do: "Find where it hangs off the spine." },
+      { level: "backend", node: "b-models", do: "Use the portable column types so SQLite keeps working." },
+      { level: "backend", node: "b-db", do: "Write the migration. CI runs the chain up, down and up again." },
+      { level: "auth", node: "m-member", do: "If it is project-scoped, every read goes through membership." },
+    ]},
+    { id: "desktop", label: "Touch the desktop shell", steps: [
+      { level: "desktop", node: "d-lib", do: "A new command is registered in three places. The CI check knows all three." },
+      { level: "desktop", node: "d-caps", do: "Grant it to the right origin." },
+      { level: "app", node: "a-shell", do: "The app gates on the capability flag, never on the shell version." },
+      { level: "desktop", node: "d-frozen", do: "Testing self-host? Refreeze the sidecar first or you will be testing old code." },
+    ]},
+    { id: "self-host", label: "Run it yourself", steps: [
+      { level: "runtime", node: "shell-thin", do: "Not sure you need to? The download from [getduct.ai](https://getduct.ai/download) needs no setup; Duct runs the service. Self-hosting is for when you want everything on your machine." },
+      { level: "runtime", node: "shell-self", do: "The self-host build is the same shell with the backend bundled. Everything stays on your disk." },
+      { level: "desktop", node: "d-frozen", do: "Freeze the backend first; the self-host build bundles this folder." },
+      { level: "desktop", node: "d-conf", do: "Build with the self-host overlay. It swaps the identifier and adds the sidecar." },
+      { level: "runtime", node: "db-sqlite", do: "Your data is a SQLite file in your data folder. The sidecar upgrades its schema on start." },
+    ]},
+    { id: "find-secret", label: "Find where a key lives", steps: [
+      { level: "auth", node: "w-prov", do: "Model keys travel with each request." },
+      { level: "desktop", node: "d-keychain", do: "On the desktop they rest in the OS keychain." },
+      { level: "connectors", node: "cr-store", do: "Connector credentials rest here, encrypted, per user." },
+    ]},
+    { id: "before-pr", label: "Open a pull request", steps: [
+      { level: "tooling", node: "ci-make", do: "Run make check. It is exactly what CI runs." },
+      { level: "tooling", node: "sc-sec", do: "Install the pre-commit hook once. It scans for secrets before they land." },
+      { level: "root", node: "t-agents", do: "Read the AGENTS.md for the folder you touched. Changed a convention? Update it." },
+    ]},
+  ],
+  levels: {
+
+  root: {
+    title: "The monorepo",
+    summary: "Four products in one repository. Most people download the desktop app and let Duct run the service; the same code can also be self-hosted by anyone who wants to.",
+    lanes: ["Products", "Keeps it honest"],
+    nodes: [
+      { id: "site", lane: 0, label: "site/", sub: "marketing site", to: "tooling",
+        text: "Plain HTML, CSS and JavaScript with no build step. It links to the app and shares nothing with it.",
+        files: ["site/AGENTS.md"] },
+      { id: "app", lane: 0, label: "app/", sub: "the product UI", to: "app",
+        text: "A Next.js app in plain JavaScript. The same bundle renders inside the desktop shell.",
+        files: ["app/AGENTS.md"] },
+      { id: "desktop", lane: 0, label: "desktop/", sub: "the download", to: "desktop",
+        text: "The app people download from [getduct.ai](https://getduct.ai/download). A thin native shell around the hosted app, with the OS keychain, deep links and auto-update. A self-host build bundles the backend too.",
+        files: ["desktop/AGENTS.md"] },
+      { id: "backend", lane: 0, label: "backend/", sub: "API and agents", to: "backend",
+        text: "Python and FastAPI. Routes, domain services, the agent runtime and the database. One codebase runs hosted and inside the desktop app.",
+        files: ["backend/AGENTS.md"] },
+      { id: "t-agents", lane: 1, label: "AGENTS.md + skills", sub: "how we work here", to: "tooling",
+        text: "Every directory has one instruction file, for people and coding agents alike. Repeatable jobs live as skills.",
+        files: ["AGENTS.md", "STYLE.md", ".agents/skills/prioritize/SKILL.md"] },
+      { id: "t-contracts", lane: 1, label: "Contract tests", sub: "areas stay in step", to: "tooling",
+        text: "Tests that hold two areas together: the event names the app and backend share, the desktop commands the app may call, the settings file.",
+        files: ["backend/tests/test_app_event_contract.py", ".github/scripts/check-shell-contract.py", "backend/tests/test_env_example.py"] },
+      { id: "t-ci", lane: 1, label: "CI + Makefile", sub: "make check", to: "tooling",
+        text: "One workflow per area plus security and docs checks. make check runs the same commands locally.",
+        files: ["Makefile", ".github/workflows/backend.yml"] },
+      { id: "t-docs", lane: 1, label: "docs/", sub: "records and references",
+        text: "Dated records that stay frozen, and undated references like this page that stay current.",
+        files: ["docs/README.md"] },
+    ],
+    edges: [
+      { from: "app", to: "backend", label: "talks to", main: true },
+      { from: "desktop", to: "app", label: "wraps", main: true },
+      { from: "desktop", to: "backend", label: "self-host bundles it" },
+      { from: "t-contracts", to: "app" }, { from: "t-contracts", to: "backend" }, { from: "t-contracts", to: "desktop" },
+      { from: "t-ci", to: "t-contracts" },
+    ],
+  },
+
+  runtime: {
+    title: "Download it, or host it yourself",
+    summary: "The easy path is the desktop app: download it from getduct.ai, sign in, and Duct runs the service for you. Self-hosting is the same code running entirely on your own machine, for anyone who wants that.",
+    lanes: ["You pick", "Who runs the API", "Talks to"],
+    nodes: [
+      { id: "shell-thin", lane: 0, label: "Desktop app", sub: "download, no setup",
+        text: "The easy path. Download it from [getduct.ai](https://getduct.ai/download) and sign in. Duct runs the service; your model keys stay in your keychain.",
+        files: ["desktop/src-tauri/tauri.conf.json"] },
+      { id: "browser", lane: 0, label: "Browser", sub: "same service, in a tab",
+        text: "The hosted app in a browser, for a machine without the download. Same service, same account.",
+        files: ["app/src/lib/api.js"] },
+      { id: "shell-self", lane: 0, label: "Self-host build", sub: "your machine, your data",
+        text: "For people who want to run everything themselves. Same shell with the backend bundled; data in a file on your disk; no account and no Duct servers.",
+        files: ["desktop/src-tauri/tauri.selfhost.conf.json", "desktop/src-tauri/src/sidecar.rs"] },
+      { id: "api-hosted", lane: 1, label: "Hosted API", sub: "run by Duct",
+        text: "The FastAPI app, run and kept up to date by Duct. Nothing for the user to install or upgrade.",
+        files: ["backend/server.py"] },
+      { id: "api-sidecar", lane: 1, label: "Sidecar", sub: "run by you, inside the app",
+        text: "The same app on loopback, started by the self-host build. Local mode swaps in SQLite and a local uploads folder.",
+        files: ["backend/local_server.py", "backend/duct_sidecar.spec"] },
+      { id: "db-pg", lane: 2, label: "Cloud database", sub: "Duct's",
+        text: "Migrations run from the backend. CI applies the whole chain to a fresh database on every pull request.",
+        files: ["backend/alembic/env.py"] },
+      { id: "db-sqlite", lane: 2, label: "SQLite file", sub: "yours, on disk",
+        text: "The sidecar owns its schema and upgrades it on start. JSON columns use a portable type so both databases work.",
+        files: ["backend/db/migrate.py", "backend/models/columns.py"] },
+      { id: "connectors-ext", lane: 2, label: "Connected tools", sub: "12 connectors", to: "connectors",
+        text: "Google Ads, GA4, Search Console and Tag Manager over OAuth. Eight more over pasted keys.",
+        files: ["backend/service/connectors.py"] },
+      { id: "models-ext", lane: 2, label: "Model providers", sub: "your own keys",
+        text: "Anthropic, OpenAI, Gemini, xAI, OpenRouter. Keys travel with each request or are stored encrypted for scheduled runs.",
+        files: ["backend/agents/models.py", "app/src/lib/providerKeys.js"] },
+    ],
+    edges: [
+      { from: "browser", to: "api-hosted", main: true }, { from: "shell-thin", to: "api-hosted", main: true },
+      { from: "shell-self", to: "api-sidecar", main: true },
+      { from: "api-hosted", to: "db-pg", main: true }, { from: "api-sidecar", to: "db-sqlite", main: true },
+      { from: "api-hosted", to: "connectors-ext", main: true }, { from: "api-hosted", to: "models-ext", main: true },
+      { from: "api-sidecar", to: "connectors-ext" }, { from: "api-sidecar", to: "models-ext" },
+    ],
+  },
+
+  backend: {
+    title: "backend/",
+    summary: "Layers that only call downward: routes, then services, then agents, then the database. Tests keep it that way.",
+    lanes: ["Entry", "routes/", "service/", "agents/", "models/ + db/"],
+    nodes: [
+      { id: "b-server", lane: 0, label: "server.py", sub: "the app",
+        text: "Creates the FastAPI app, middleware and startup. Importing the connector modules is what registers them.",
+        files: ["backend/server.py", "backend/local_server.py"] },
+      { id: "b-config", lane: 0, label: "config.py", sub: "settings",
+        text: "Every setting has a default, so a new one must also land in .env.example. A test checks that.",
+        files: ["backend/config.py", "backend/.env.example"] },
+      { id: "b-routes", lane: 1, label: "Routers", sub: "HTTP only", to: "auth",
+        text: "Thirty route modules mounted by namespace.py with explicit guards. No business logic here.",
+        files: ["backend/routes/namespace.py", "backend/routes/agents.py"] },
+      { id: "b-access", lane: 2, label: "auth + membership", sub: "who may do what", to: "auth",
+        text: "Is this the Duct app, who is calling, and are they a member of that project.",
+        files: ["backend/service/auth.py", "backend/service/membership.py"] },
+      { id: "b-conn", lane: 2, label: "connectors", sub: "outside data", to: "connectors",
+        text: "Registry, credentials, one shared transport. Google has its own family of adapters.",
+        files: ["backend/service/connectors.py", "backend/service/connector_access.py"] },
+      { id: "b-exec", lane: 2, label: "execution/", sub: "change sets", to: "execution",
+        text: "Propose, preview, approve, apply, roll back. One file decides what may run without a person.",
+        files: ["backend/service/execution/service.py", "backend/service/execution/policy.py"] },
+      { id: "b-mem", lane: 2, label: "memory", sub: "what agents remember",
+        text: "One write path and one read path. Retrieval is ranked without a model call.",
+        files: ["backend/service/memory.py", "backend/models/memory.py"] },
+      { id: "b-prompts", lane: 3, label: "Prompts + tools", sub: "plain Python",
+        text: "Prompts live beside each agent and tools are plain functions. Neither imports a framework.",
+        files: ["backend/agents/core/prompts.py", "backend/agents/core/memory_tools.py"] },
+      { id: "b-agents", lane: 3, label: "Agent runtime", sub: "registry, core, runners", to: "agents",
+        text: "Agents are declared once. Only the runners import a framework; everything else is plain Python.",
+        files: ["backend/agents/registry.py", "backend/agents/core/deep_session.py"] },
+      { id: "b-tiers", lane: 3, label: "tiers + engines", sub: "which model, which key",
+        text: "You set Heavy, Standard and Light. Duct maps each job to a tier and steps down when a key is missing.",
+        files: ["backend/agents/tiers.py", "backend/agents/engines.py"] },
+      { id: "b-models", lane: 4, label: "Tables", sub: "SQLModel", to: "data",
+        text: "Users, projects, connectors, agent work, execution, content. Portable column types for both databases.",
+        files: ["backend/models/columns.py", "backend/models/project.py"] },
+      { id: "b-db", lane: 4, label: "Migrations", sub: "Alembic",
+        text: "The hosted chain runs from a script. The sidecar bootstraps its own SQLite file the same way.",
+        files: ["backend/scripts/migrations.py", "backend/db/migrate.py"] },
+      { id: "b-tests", lane: 4, label: "Boundary tests", sub: "the rules, enforced",
+        text: "No framework imports in domain code, membership on every project route, settings in step with the example file.",
+        files: ["backend/tests/test_harness_boundaries.py", "backend/tests/test_route_auth_boundaries.py"] },
+    ],
+    edges: [
+      { from: "b-server", to: "b-routes", main: true }, { from: "b-config", to: "b-server" },
+      { from: "b-routes", to: "b-access", main: true }, { from: "b-routes", to: "b-conn" }, { from: "b-routes", to: "b-exec" }, { from: "b-routes", to: "b-mem" },
+      { from: "b-routes", to: "b-agents", main: true },
+      { from: "b-agents", to: "b-tiers" }, { from: "b-prompts", to: "b-agents" }, { from: "b-agents", to: "b-conn" }, { from: "b-agents", to: "b-mem" }, { from: "b-agents", to: "b-exec" },
+      { from: "b-conn", to: "b-models" }, { from: "b-exec", to: "b-models" }, { from: "b-mem", to: "b-models" }, { from: "b-agents", to: "b-models", main: true },
+      { from: "b-models", to: "b-db" },
+    ],
+  },
+
+  app: {
+    title: "app/",
+    summary: "Routes decide the chrome, a few shared shells decide the layout, and src/lib holds everything that is not React.",
+    lanes: ["Routes", "Shared UI", "src/lib", "Checks"],
+    nodes: [
+      { id: "a-front", lane: 0, label: "Front door + /start", sub: "sign in, or just audit",
+        text: "One URL field starts a free audit as a guest. Sign in later and the account keeps that work.",
+        files: ["app/src/app/(auth)/page.js", "app/src/app/(start)/start/page.jsx"] },
+      { id: "a-app", lane: 0, label: "(app)/", sub: "signed-in shell",
+        text: "Insights, audit, content, connections, execute, memory, projects, settings. The layout picks the chrome by path.",
+        files: ["app/src/app/(app)/layout.js", "app/src/lib/navigation.js"] },
+      { id: "a-preview", lane: 0, label: "/preview", sub: "component catalogue",
+        text: "Every component with an example, read from DESIGN.md. Dev only. A new component needs an entry here.",
+        files: ["app/src/app/preview/page.jsx", "app/DESIGN.md"] },
+      { id: "a-split", lane: 1, label: "SplitWorkspace", sub: "chat left, work right", to: "agents",
+        text: "The one agent shell. Insights, audit and content all compose it; only the right pane differs.",
+        files: ["app/src/components/workspace/SplitWorkspace.jsx", "app/src/components/content/ContentWorkspace.jsx"] },
+      { id: "a-domain", lane: 1, label: "Feature components", sub: "one folder per surface",
+        text: "connections, insights, content, audit, execution, memory. Each folder owns its surface.",
+        files: ["app/src/components/connections/ConnectorTile.jsx", "app/src/components/insights/Desk.jsx"] },
+      { id: "a-ui", lane: 1, label: "ui/ + tokens", sub: "primitives and colours",
+        text: "Vendored shadcn primitives restyled at source. Dark mode is token substitution; no component writes its own.",
+        files: ["app/src/components/ui/button.tsx", "app/src/app/styles/tokens.css"] },
+      { id: "a-api", lane: 2, label: "api + authFetch", sub: "talking to the backend", to: "auth",
+        text: "The base URL, the two credentials on every request, and what a 401 means. Inside the desktop app the base URL is repointed once at boot.",
+        files: ["app/src/lib/api.js", "app/src/lib/authFetch.js"] },
+      { id: "a-agent", lane: 2, label: "Agent runtime", sub: "events, reducer, hook", to: "agents",
+        text: "The event vocabulary, a pure reducer tested against recorded streams, and the hook that connects and reconnects.",
+        files: ["app/src/lib/agentEvents.js", "app/src/lib/agentSession.js", "app/src/hooks/useAgentSession.js"] },
+      { id: "a-clients", lane: 2, label: "API clients", sub: "one per backend area",
+        text: "connectors, projects, content, memory, execution, artifacts. All go through the same authed request.",
+        files: ["app/src/lib/connectorsApi.js", "app/src/lib/executionApi.js"] },
+      { id: "a-shell", lane: 2, label: "Shell awareness", sub: "am I in the desktop app?", to: "desktop",
+        text: "Ask the shell what it can do and gate on that, never on its version. Keys go to the keychain there, sessionStorage on the web.",
+        files: ["app/src/lib/shell.js", "app/src/lib/localBackend.js", "app/src/lib/providerKeys.js"] },
+      { id: "a-checks", lane: 3, label: "Tests + parity", sub: "vitest, six guard scripts",
+        text: "Pure-logic tests, plus scripts that assert the app's copies of backend constants have not drifted.",
+        files: ["app/vitest.config.mjs", "app/scripts/check-backend-gate.mjs"] },
+    ],
+    edges: [
+      { from: "a-app", to: "a-split", main: true }, { from: "a-app", to: "a-domain", main: true }, { from: "a-front", to: "a-domain" }, { from: "a-preview", to: "a-ui" },
+      { from: "a-domain", to: "a-ui" }, { from: "a-split", to: "a-agent", main: true }, { from: "a-domain", to: "a-clients", main: true },
+      { from: "a-clients", to: "a-api", main: true }, { from: "a-agent", to: "a-api" }, { from: "a-app", to: "a-shell" },
+      { from: "a-api", to: "a-checks" }, { from: "a-agent", to: "a-checks" },
+    ],
+  },
+
+  desktop: {
+    title: "desktop/",
+    summary: "One Rust binary. It becomes the self-host build only when a sidecar is present at runtime, never by a build flag.",
+    lanes: ["Shell", "Sidecar", "Config", "The OS"],
+    nodes: [
+      { id: "d-lib", lane: 0, label: "lib.rs", sub: "17 commands the app can call",
+        text: "Keychain, shell info, notifications, open in browser, updater, telemetry, sign-in via the system browser.",
+        files: ["desktop/src-tauri/src/lib.rs"] },
+      { id: "d-chatgpt", lane: 0, label: "chatgpt.rs", sub: "subscription sign-in",
+        text: "Signs in with a ChatGPT plan on desktop only. The token never leaves the keychain.",
+        files: ["desktop/src-tauri/src/chatgpt.rs"] },
+      { id: "d-telemetry", lane: 0, label: "telemetry/", sub: "consent first",
+        text: "Policy in one file, the vendor in another behind a build feature. Off unless the user says yes.",
+        files: ["desktop/src-tauri/src/telemetry/mod.rs", "desktop/src-tauri/src/telemetry/reporter.rs"] },
+      { id: "d-sidecar", lane: 1, label: "sidecar.rs", sub: "start, watch, stop",
+        text: "Finds the bundled backend, starts it with secrets the shell minted, reads one handshake line for the port, stops it on exit.",
+        files: ["desktop/src-tauri/src/sidecar.rs"] },
+      { id: "d-frozen", lane: 1, label: "duct-sidecar", sub: "the frozen backend",
+        text: "The backend packaged with PyInstaller. Only the self-host config bundles it. Stale copies are the usual mystery bug.",
+        files: ["backend/duct_sidecar.spec", "desktop/scripts/check-sidecar-fresh.mjs"] },
+      { id: "d-conf", lane: 2, label: "tauri.conf.json", sub: "+ overlays",
+        text: "The official build loads the hosted app and bundles nothing. Overlays for dev and self-host swap what they need.",
+        files: ["desktop/src-tauri/tauri.conf.json", "desktop/src-tauri/tauri.selfhost.conf.json"] },
+      { id: "d-caps", lane: 2, label: "capabilities/", sub: "who may call what",
+        text: "Which web origin may invoke which command. A CI check makes sure every command is registered everywhere.",
+        files: ["desktop/src-tauri/capabilities/default.json", ".github/scripts/check-shell-contract.py"] },
+      { id: "d-keychain", lane: 3, label: "Keychain", sub: "keys stay on the machine",
+        text: "Provider keys, the sidecar's secrets and the ChatGPT session. Only the signed shell touches it.",
+        files: ["desktop/src-tauri/src/lib.rs"] },
+      { id: "d-deeplink", lane: 3, label: "Deep links", sub: "sign in via the browser",
+        text: "Sign-in and connector OAuth run in the system browser and return a single-use code. Nothing secret rides the link.",
+        files: ["app/src/app/(auth)/desktop-auth/page.js", "backend/routes/signin.py"] },
+      { id: "d-updater", lane: 3, label: "Updater", sub: "signed releases",
+        text: "Archives are signed at release time and the shell verifies them before installing.",
+        files: [".github/workflows/desktop-release.yml"] },
+    ],
+    edges: [
+      { from: "d-lib", to: "d-sidecar", main: true }, { from: "d-sidecar", to: "d-frozen", main: true },
+      { from: "d-lib", to: "d-keychain", main: true }, { from: "d-lib", to: "d-deeplink", main: true }, { from: "d-lib", to: "d-updater" },
+      { from: "d-chatgpt", to: "d-keychain" }, { from: "d-conf", to: "d-caps", main: true }, { from: "d-conf", to: "d-frozen" }, { from: "d-telemetry", to: "d-sidecar" },
+    ],
+  },
+
+  tooling: {
+    title: "Site and tooling",
+    summary: "The site stands alone. The rest is what keeps every change honest: one instruction file per folder, scripts for the plumbing, and CI the Makefile mirrors.",
+    lanes: ["site/", "Instructions", "scripts/", "CI"],
+    nodes: [
+      { id: "s-pages", lane: 0, label: "Pages", sub: "landing, download, legal",
+        text: "Hand-written HTML with a checked head. Landing-page experiments are one file each.",
+        files: ["site/AGENTS.md", ".github/scripts/check-pages.py"] },
+      { id: "s-blog", lane: 0, label: "Blog", sub: "pre-rendered",
+        text: "Posts are rendered to static pages at build time so crawlers see the words.",
+        files: ["scripts/build_blog.py"] },
+      { id: "i-agents", lane: 1, label: "AGENTS.md", sub: "one per folder",
+        text: "The conventions that apply where you are editing. CLAUDE.md beside it is a symlink. STYLE.md says what good looks like.",
+        files: ["AGENTS.md", "STYLE.md", "backend/AGENTS.md", "app/AGENTS.md"] },
+      { id: "i-skills", lane: 1, label: "Skills", sub: ".agents/skills/",
+        text: "Ten repeatable jobs. prioritize gates any new feature; add-connector, new-page and the rest do the work.",
+        files: [".agents/skills/prioritize/SKILL.md", ".agents/skills/add-connector/SKILL.md"] },
+      { id: "sc-env", lane: 2, label: "Env plumbing", sub: "push_env_to_*",
+        text: "Push allowlisted settings from local files to where CI reads them. Never by hand.",
+        files: ["scripts/push_env_to_github.py"] },
+      { id: "sc-sec", lane: 2, label: "security/", sub: "leak scan + audit",
+        text: "The pre-commit hook scans staged files for secrets; CI scans the whole tree and audits the code.",
+        files: ["scripts/security/leak_scan.py", ".githooks/pre-commit"] },
+      { id: "sc-docs", lane: 2, label: "check_docs.py", sub: "keeps docs honest",
+        text: "Records dated, references current, HTML only with a figure, and this page's paths real.",
+        files: ["scripts/check_docs.py"] },
+      { id: "ci-area", lane: 3, label: "One workflow per area", sub: "backend, app, site, desktop",
+        text: "Lint, tests, parity, build. The backend one also runs the migrations on a fresh database.",
+        files: [".github/workflows/backend.yml", ".github/workflows/app.yml", ".github/workflows/desktop-check.yml"] },
+      { id: "ci-make", lane: 3, label: "Makefile", sub: "make check",
+        text: "Runs what CI runs. If they disagree, CI is right and the Makefile gets fixed.",
+        files: ["Makefile"] },
+    ],
+    edges: [
+      { from: "s-blog", to: "s-pages", main: true }, { from: "s-pages", to: "ci-area" },
+      { from: "i-agents", to: "i-skills" }, { from: "sc-sec", to: "ci-area" }, { from: "sc-docs", to: "ci-area" },
+      { from: "ci-area", to: "ci-make", label: "mirrored", main: true },
+    ],
+  },
+
+  auth: {
+    title: "Who may do what",
+    summary: "Two credentials on every request, then a membership check. A non-member gets 404, never 403, so nothing leaks.",
+    lanes: ["On the request", "Checked by", "Then", "Kept true by"],
+    nodes: [
+      { id: "w-key", lane: 0, label: "X-API-Key", sub: "the app key",
+        text: "Proves the caller is the Duct app and nothing more. It ships in the browser bundle, so it can never mean 'trusted'.",
+        files: ["app/src/lib/api.js"] },
+      { id: "w-jwt", lane: 0, label: "Bearer token", sub: "the user",
+        text: "Minted at sign-in or for a guest. A guest is a real user row, so their work has an owner from the first click.",
+        files: ["app/src/lib/authFetch.js", "app/src/lib/guest.js"] },
+      { id: "w-prov", lane: 0, label: "X-Provider-*", sub: "model keys",
+        text: "Your own model keys, sent per request. Never stored by this path.",
+        files: ["app/src/lib/providerKeys.js"] },
+      { id: "g-key", lane: 1, label: "validate_api_key", sub: "is this the app?",
+        text: "Fails with 403. Unchanged inside the desktop app, which exports its own local key under the same name.",
+        files: ["backend/service/auth.py"] },
+      { id: "g-user", lane: 1, label: "get_current_user", sub: "who is calling?",
+        text: "Verifies the token and loads the user. Fails with 401, which the app treats as 'sign in again'.",
+        files: ["backend/service/auth.py"] },
+      { id: "g-prov", lane: 1, label: "provider keys", sub: "which keys to spend",
+        text: "Reads the headers. Later, engines.py picks the key a run uses and asks for one if none fits.",
+        files: ["backend/service/auth.py", "backend/agents/engines.py"] },
+      { id: "m-member", lane: 2, label: "membership.py", sub: "are they a member?",
+        text: "Every project-scoped route calls it. The project comes from the row, never from the request body.",
+        files: ["backend/service/membership.py", "backend/routes/artifacts.py"] },
+      { id: "e-test", lane: 3, label: "Route boundary test", sub: "every project route",
+        text: "Walks the router and fails any project route without the user check and a membership call.",
+        files: ["backend/tests/test_route_auth_boundaries.py", "backend/routes/namespace.py"] },
+      { id: "e-app", lane: 3, label: "401 policy", sub: "in the app",
+        text: "A 401 always means the user half, so the app clears the token and sends them to sign in.",
+        files: ["app/src/lib/authFetch.js"] },
+    ],
+    edges: [
+      { from: "w-key", to: "g-key", main: true }, { from: "w-jwt", to: "g-user", main: true }, { from: "w-prov", to: "g-prov", main: true },
+      { from: "g-user", to: "m-member", main: true }, { from: "m-member", to: "e-test" }, { from: "g-user", to: "e-app" },
+    ],
+  },
+
+  agents: {
+    title: "How an agent runs",
+    summary: "From a declared agent to words on screen. Prompts and tools are plain Python; only the runners touch a framework.",
+    lanes: ["Declared", "Run", "Streamed", "Shown", "Kept true by"],
+    nodes: [
+      { id: "ag-reg", lane: 0, label: "registry.py", sub: "three agents",
+        text: "SEO audit, insights and content studio. Each says what it can do and what context its turn needs.",
+        files: ["backend/agents/registry.py"] },
+      { id: "ag-prompts", lane: 0, label: "Prompts", sub: "plain text, plain Python",
+        text: "Beside each agent, with shared stanzas in core. Connector know-how lives as markdown packs.",
+        files: ["backend/agents/core/prompts.py", "backend/agents/knowledge/"] },
+      { id: "ag-tools", lane: 0, label: "Tools", sub: "plain functions",
+        text: "A tool is a function plus a tiny binder that wraps it for the framework. memory_tools.py is the model.",
+        files: ["backend/agents/core/memory_tools.py", "backend/agents/core/connector_tools.py"] },
+      { id: "ag-turn", lane: 1, label: "turn.py", sub: "builds the prompt",
+        text: "Stable parts first, changing parts last, so the model's cache keeps working. Your data goes in the user turn.",
+        files: ["backend/agents/core/turn.py"] },
+      { id: "ag-runner", lane: 1, label: "Runners", sub: "one per agent",
+        text: "The only files that import a framework. They bind the tools and hand over to the shared session loop.",
+        files: ["backend/agents/insights/v1/runner.py", "backend/agents/core/deep_session.py", "backend/agents/core/lc.py"] },
+      { id: "ag-model", lane: 1, label: "tiers + engines", sub: "which model",
+        text: "Each job maps to Heavy, Standard or Light. Missing key or a rate limit? Step down a rung.",
+        files: ["backend/agents/tiers.py", "backend/agents/engines.py"] },
+      { id: "ev-vocab", lane: 2, label: "events.py", sub: "one vocabulary",
+        text: "About forty event names: steps, pauses, messages, artifacts, memory, token usage.",
+        files: ["backend/agents/core/events.py"] },
+      { id: "ev-sse", lane: 2, label: "SSE route", sub: "routes/agents.py",
+        text: "Create a session, stream it, answer a pause. Every event is also saved so a reload can catch up.",
+        files: ["backend/routes/agents.py", "backend/agents/content/persistence.py"] },
+      { id: "ap-runtime", lane: 3, label: "Reducer + hook", sub: "in the app",
+        text: "A pure reducer turns events into state; the hook connects, reconnects and answers pauses.",
+        files: ["app/src/lib/agentSession.js", "app/src/hooks/useAgentSession.js", "app/src/lib/sse.js"] },
+      { id: "ap-ws", lane: 3, label: "Workspaces", sub: "insights, audit, content",
+        text: "All three compose the same chat and split shell. The content one is the shortest and the reference.",
+        files: ["app/src/components/content/ContentWorkspace.jsx", "app/src/components/audit/AuditWorkspace.jsx"] },
+      { id: "bd-tests", lane: 4, label: "Boundary tests", sub: "ports, imports, names",
+        text: "Framework imports only where allowed, and the app's event names equal to the backend's.",
+        files: ["backend/agents/core/ports/__init__.py", "backend/tests/test_harness_boundaries.py", "backend/tests/test_app_event_contract.py"] },
+    ],
+    edges: [
+      { from: "ag-reg", to: "ag-turn", main: true }, { from: "ag-prompts", to: "ag-turn" }, { from: "ag-tools", to: "ag-runner" },
+      { from: "ag-turn", to: "ag-runner", main: true }, { from: "ag-model", to: "ag-runner" },
+      { from: "ag-runner", to: "ev-vocab", main: true }, { from: "ev-vocab", to: "ev-sse", main: true },
+      { from: "ev-sse", to: "ap-runtime", label: "SSE", main: true }, { from: "ap-runtime", to: "ap-ws", main: true },
+      { from: "bd-tests", to: "ag-runner" }, { from: "bd-tests", to: "ap-runtime" },
+    ],
+  },
+
+  connectors: {
+    title: "How data gets in",
+    summary: "A credential belongs to a user. A project binds one credential and one account. Reading resolves that binding and goes through one shared transport.",
+    lanes: ["Catalog", "Credential", "Binding", "Transport", "Used by"],
+    nodes: [
+      { id: "cn-reg", lane: 0, label: "connectors.py", sub: "the registry",
+        text: "Each connector registers its id, label, scopes and how to list accounts. Registration happens on import.",
+        files: ["backend/service/connectors.py"] },
+      { id: "cn-list", lane: 0, label: "12 connectors", sub: "4 OAuth, 8 with keys",
+        text: "Google Ads, GA4, Search Console, Tag Manager. Apple Ads, Meta Ads, OpenAI Ads, Stripe, RevenueCat, Mixpanel, Clarity, GrowthBook.",
+        files: ["backend/service/google/ga4.py", "backend/service/stripe/fetch.py"] },
+      { id: "cn-skill", lane: 0, label: "add-connector", sub: "the skill",
+        text: "The step-by-step for a new one: research memo, adapter, tests with a fake transport, app tile, knowledge pack.",
+        files: [".agents/skills/add-connector/SKILL.md"] },
+      { id: "cr-oauth", lane: 1, label: "OAuth flow", sub: "authorize, callback",
+        text: "The grant is read back and stored, so a half-consent shows as missing scopes instead of a mystery error.",
+        files: ["backend/routes/auth.py", "backend/service/connector_scopes.py"] },
+      { id: "cr-store", lane: 1, label: "connector_credentials", sub: "per user, encrypted",
+        text: "The only real answer to 'is this connected'. Secret in an encrypted blob, scopes and account name beside it.",
+        files: ["backend/service/connector_store.py", "backend/models/connector.py"] },
+      { id: "bi-access", lane: 2, label: "connector_access.py", sub: "bind and resolve",
+        text: "Binds a project to a credential and an account, then resolves and decrypts on every read.",
+        files: ["backend/service/connector_access.py"] },
+      { id: "tr-rest", lane: 3, label: "rest.py", sub: "one transport",
+        text: "Endpoints, retries, pacing. A new connector declares an endpoint and writes no HTTP code.",
+        files: ["backend/service/rest.py"] },
+      { id: "tr-google", lane: 3, label: "service/google/", sub: "its own family",
+        text: "Discovery-built clients for GA4, Search Console and Tag Manager; the Ads client for GAQL.",
+        files: ["backend/service/google/fetch.py"] },
+      { id: "tr-fakes", lane: 3, label: "Transport fakes", sub: "tests/fakes.py",
+        text: "Tests fake the wire, not the connector, and assert the exact request that was sent.",
+        files: ["backend/tests/fakes.py"] },
+      { id: "us-agents", lane: 4, label: "Agents + pipeline", sub: "read the data",
+        text: "Fetches fan out and become the brief an agent reads. Agents see bound sources as tools.",
+        files: ["backend/service/pipeline.py", "backend/agents/core/connector_tools.py"] },
+      { id: "us-app", lane: 4, label: "Connections page", sub: "in the app",
+        text: "Tiles and cards. The server's answer wins; the browser's memory is only a signed-out fallback.",
+        files: ["app/src/app/(app)/connections/page.jsx", "app/src/lib/connectorsApi.js"] },
+    ],
+    edges: [
+      { from: "cn-reg", to: "cn-list", main: true }, { from: "cn-skill", to: "cn-list" },
+      { from: "cn-list", to: "cr-oauth", main: true }, { from: "cr-oauth", to: "cr-store", main: true },
+      { from: "cr-store", to: "bi-access", main: true }, { from: "bi-access", to: "tr-rest", main: true }, { from: "bi-access", to: "tr-google" },
+      { from: "tr-fakes", to: "tr-rest" }, { from: "tr-fakes", to: "tr-google" },
+      { from: "tr-rest", to: "us-agents", main: true }, { from: "tr-google", to: "us-agents" }, { from: "bi-access", to: "us-app" },
+    ],
+  },
+
+  execution: {
+    title: "Making changes safely",
+    summary: "Nothing in a connected tool changes without a preview and, by default, a person. Agents can propose; they cannot approve or apply.",
+    lanes: ["Propose", "Preview", "Decide", "Apply", "States"],
+    nodes: [
+      { id: "x-tools", lane: 0, label: "Agent tools", sub: "propose, inspect, roll back",
+        text: "What an agent may call. Approve and apply are missing on purpose.",
+        files: ["backend/agents/tools/execution_tools.py"] },
+      { id: "x-route", lane: 0, label: "/api/execute", sub: "the API",
+        text: "Propose, list, approve, reject, apply, roll back. Membership on every call.",
+        files: ["backend/routes/execution.py"] },
+      { id: "x-execs", lane: 1, label: "Executors", sub: "Ads, GA4, GTM, Mixpanel",
+        text: "Each knows how to preview, apply and roll back one kind of change, and which scopes it needs.",
+        files: ["backend/service/execution/registry.py", "backend/service/execution/google_ads_exec.py"] },
+      { id: "x-guard", lane: 1, label: "Guardrails", sub: "your limits",
+        text: "Rules you set per account, checked at preview. A hit blocks auto-apply and shows on the card.",
+        files: ["backend/service/execution/guardrails.py"] },
+      { id: "x-policy", lane: 2, label: "policy.py", sub: "may this run alone?",
+        text: "Reversible, non-destructive, guardrail-clean, preview succeeded, and the project allows it. The model is never asked.",
+        files: ["backend/service/execution/policy.py"] },
+      { id: "x-card", lane: 2, label: "/execute page", sub: "the review queue",
+        text: "Diffs with approve, reject, apply and roll back. Where a person decides.",
+        files: ["app/src/app/(app)/execute/page.jsx", "app/src/components/execution/ChangeSetCard.jsx"] },
+      { id: "x-service", lane: 3, label: "service.py", sub: "does the work",
+        text: "Previews and snapshots on propose, runs executors on apply, replays the snapshot on roll back. Every step is logged.",
+        files: ["backend/service/execution/service.py", "backend/models/activity.py"] },
+      { id: "l-proposed", lane: 4, label: "proposed", sub: "", text: "Previewed and snapshotted. Waiting for a decision.", files: ["backend/models/execution.py"] },
+      { id: "l-approved", lane: 4, label: "approved", sub: "", text: "A person, or the policy, said yes.", files: ["backend/models/execution.py"] },
+      { id: "l-applied", lane: 4, label: "applied", sub: "or partial, or failed", text: "Per-change results are kept, so a partial run is not a mystery.", files: ["backend/models/execution.py"] },
+      { id: "l-back", lane: 4, label: "rolled back", sub: "or rejected", text: "Restored from the snapshot, or never applied.", files: ["backend/models/execution.py"] },
+    ],
+    edges: [
+      { from: "x-tools", to: "x-route", main: true }, { from: "x-route", to: "x-execs", main: true }, { from: "x-route", to: "x-guard" },
+      { from: "x-execs", to: "x-policy", main: true }, { from: "x-guard", to: "x-policy" }, { from: "x-route", to: "x-card" },
+      { from: "x-policy", to: "x-service", main: true }, { from: "x-card", to: "x-service", label: "approve / apply" },
+      { from: "l-proposed", to: "l-approved", main: true }, { from: "l-approved", to: "l-applied", main: true }, { from: "l-applied", to: "l-back", main: true },
+      { from: "x-service", to: "l-proposed" },
+    ],
+  },
+
+  data: {
+    title: "The tables",
+    summary: "Users join projects through membership. Users own credentials that projects bind. Projects own everything the agents make.",
+    lanes: ["People", "Projects", "Connectors", "Agent work", "More"],
+    nodes: [
+      { id: "t-users", lane: 0, label: "users", sub: "guests are rows too", files: ["backend/models/auth.py"], text: "A guest from the front door is a real user with a placeholder email, merged when they sign in." },
+      { id: "t-ident", lane: 0, label: "auth_identities", sub: "sign-in providers", files: ["backend/models/auth.py"], text: "One row per external identity, plus the OAuth state table for flows in progress." },
+      { id: "t-projects", lane: 1, label: "projects", sub: "the thing being worked on", files: ["backend/models/project.py"], text: "URL, business context, targets, autonomy level. Ownership is informational; access is membership." },
+      { id: "t-members", lane: 1, label: "project_members", sub: "owner or collaborator", files: ["backend/models/membership.py"], text: "The access table. Every project read joins through it. Invitations live beside it." },
+      { id: "t-creds", lane: 2, label: "connector_credentials", sub: "per user, encrypted", files: ["backend/models/connector.py"], text: "The secret in an encrypted blob; scopes and account name in plain columns." },
+      { id: "t-bind", lane: 2, label: "project_connectors", sub: "credential + account", files: ["backend/models/connector.py"], text: "Binds a project to one credential and the chosen property or account." },
+      { id: "t-conv", lane: 3, label: "agent_conversations", sub: "+ agent_events", files: ["backend/models/content/conversation.py"], text: "One row per session, and every streamed event appended in order so a reload can catch up." },
+      { id: "t-artifacts", lane: 3, label: "artifacts", sub: "versioned outputs", files: ["backend/models/artifact.py"], text: "Reports and briefs, versioned in groups, bytes in object storage." },
+      { id: "t-memory", lane: 3, label: "project_memories", sub: "what agents remember", files: ["backend/models/memory.py"], text: "User, project and artifact scope. Each fact knows when it was true and what replaced it." },
+      { id: "t-exec", lane: 4, label: "change_sets", sub: "execution_*, guardrails", files: ["backend/models/execution.py", "backend/models/activity.py"], text: "Proposed through applied or rolled back, with the snapshot inside." },
+      { id: "t-content", lane: 4, label: "content_*", sub: "plans, posts, assets", files: ["backend/models/content/plan.py", "backend/models/content/post.py"], text: "A plan holds posts; posts hold slides, captions and results; assets are the generated media." },
+      { id: "t-settings", lane: 4, label: "settings + usage", sub: "tiers, profile, spend", files: ["backend/models/settings.py", "backend/models/usage.py"], text: "The model tier map and profile, and a row per model call with its cost." },
+    ],
+    edges: [
+      { from: "t-users", to: "t-members", main: true }, { from: "t-members", to: "t-projects", main: true }, { from: "t-ident", to: "t-users" },
+      { from: "t-users", to: "t-creds", main: true }, { from: "t-creds", to: "t-bind", main: true }, { from: "t-bind", to: "t-projects" },
+      { from: "t-projects", to: "t-conv", main: true }, { from: "t-projects", to: "t-artifacts", main: true }, { from: "t-projects", to: "t-memory", main: true },
+      { from: "t-projects", to: "t-exec" }, { from: "t-projects", to: "t-content" }, { from: "t-users", to: "t-settings" },
+    ],
+  },
+
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Renderer. Lanes are horizontal bands; boxes wrap inside a lane; edges are
+// curves between box edges. Laid out at a virtual width that tracks the
+// container, so it stays readable from phone to desktop.
+// ---------------------------------------------------------------------------
+const SVG_NS = "http://www.w3.org/2000/svg";
+const NW = 164, NH = 60, GX = 20, GY = 24, LANE_PAD = 28, ARC_PAD = 64, LABEL_W = 100, RIGHT_PAD = 20;
+let current = null, selected = null, job = null, step = 0;
+
+function el(name, attrs = {}, parent) {
+  const n = document.createElementNS(SVG_NS, name);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+// Plain text with optional [label](https://…) links, for the panel.
+function rich(text) {
+  const frag = document.createDocumentFragment(), re = /\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) {
+    frag.append(text.slice(last, m.index), h("a", { href: m[2], target: "_blank", rel: "noopener" }, m[1]));
+    last = m.index + m[0].length;
+  }
+  frag.append(text.slice(last));
+  return frag;
+}
+function h(tag, attrs = {}, ...children) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) k === "on" ? Object.entries(v).forEach(([e, f]) => n.addEventListener(e, f)) : n.setAttribute(k, v);
+  for (const c of children) n.append(c);
+  return n;
+}
+function parentLevel(id) {
+  for (const [key, lvl] of Object.entries(DATA.levels)) if (lvl.nodes.some(n => n.to === id)) return key;
+  return null;
+}
+function crumbChain(id) {
+  const chain = [], seen = new Set();
+  let cur = id;
+  while (cur && !seen.has(cur)) { seen.add(cur); chain.unshift(cur); cur = cur === "root" ? null : (parentLevel(cur) || "root"); }
+  return chain;
+}
+
+function layout(level, width) {
+  const x0 = LABEL_W, x1 = width - RIGHT_PAD;
+  const perRow = Math.max(1, Math.floor((x1 - x0 + GX) / (NW + GX)));
+  const pos = {}, lanes = [];
+  const laneOf = Object.fromEntries(level.nodes.map(n => [n.id, n.lane]));
+  let y = 0;
+  level.lanes.forEach((name, li) => {
+    const nodes = level.nodes.filter(n => n.lane === li);
+    const rows = Math.max(1, Math.ceil(nodes.length / perRow));
+    // An edge between two boxes in the same lane is an arc over them, so
+    // such a lane gets headroom for the arc and its label.
+    const arcs = level.edges.some(e => laneOf[e.from] === li && laneOf[e.to] === li);
+    const top = arcs ? ARC_PAD : LANE_PAD;
+    const height = top + LANE_PAD + rows * NH + (rows - 1) * GY;
+    nodes.forEach((n, i) => {
+      const r = Math.floor(i / perRow), c = i % perRow;
+      const inRow = Math.min(perRow, nodes.length - r * perRow);
+      const rowW = inRow * NW + (inRow - 1) * GX;
+      const startX = x0 + Math.max(0, (x1 - x0 - rowW) / 2);
+      pos[n.id] = { x: startX + c * (NW + GX), y: y + top + r * (NH + GY), n, lane: li };
+    });
+    lanes.push({ name, y, height });
+    y += height;
+  });
+  return { pos, lanes, height: y, width };
+}
+
+function edgePath(a, b, L) {
+  const ax = a.x + NW / 2, bx = b.x + NW / 2;
+  if (Math.abs(a.y - b.y) < 1) {
+    // Same row: an arc over the boxes. Neighbours get a low arc with the
+    // label beside the source; a longer hop rises higher with the label at
+    // the apex, so the two kinds of label never share a height.
+    const long = Math.abs(bx - ax) > NW + GX + 1, lift = long ? 48 : 26;
+    const y0 = a.y, y1 = a.y - lift;
+    const d = `M${ax},${y0} C${ax},${y1} ${bx},${y1} ${bx},${b.y}`;
+    if (long) return { d, lx: (ax + bx) / 2, ly: y1 + lift * 0.25 - 4, anchor: "middle" };
+    const t = 0.25, u = 1 - t;
+    const lx = u * u * u * ax + 3 * u * u * t * ax + 3 * u * t * t * bx + t * t * t * bx;
+    const ly = u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y1 + t * t * t * y0;
+    return { d, lx, ly: ly - 5, anchor: bx > ax ? "start" : "end" };
+  }
+  const down = a.y < b.y;
+  const sy = down ? a.y + NH : a.y, ey = down ? b.y : b.y + NH;
+  const lanes = L.lanes, lo = Math.min(a.lane, b.lane), hi = Math.max(a.lane, b.lane);
+  if (hi - lo > 1) {
+    // The edge crosses whole lanes. Find an x that is clear of boxes in
+    // every crossed lane and run a straight trunk down it, so the line
+    // passes between boxes rather than through them.
+    const gx = clearX(L, lo + 1, hi - 1, (ax + bx) / 2);
+    if (gx !== null) {
+      const top = lanes[lo + 1].y, bottom = lanes[hi - 1].y + lanes[hi - 1].height;
+      const [s0, s1] = down ? [sy, top] : [sy, bottom], [e0, e1] = down ? [bottom, ey] : [top, ey];
+      const d = `M${ax},${s0} C${ax},${(s0 + s1) / 2} ${gx},${(s0 + s1) / 2} ${gx},${s1} L${gx},${e0} C${gx},${(e0 + e1) / 2} ${bx},${(e0 + e1) / 2} ${bx},${e1}`;
+      return { d, lx: gx + 7, ly: (top + bottom) / 2 + 3, anchor: "start" };
+    }
+  }
+  const dy = (ey - sy) / 2;
+  return { d: `M${ax},${sy} C${ax},${sy + dy} ${bx},${ey - dy} ${bx},${ey}`, lx: (ax + bx) / 2 + 7, ly: (sy + ey) / 2 + 3, anchor: "start" };
+}
+
+// An x inside a gap between boxes in every lane from `from` to `to`
+// (inclusive), as near to `want` as possible; null when no gap is shared.
+function clearX(L, from, to, want) {
+  const MIN = 18, x0 = LABEL_W + 6, x1 = L.width - RIGHT_PAD - 6;
+  let free = [[x0, x1]];
+  for (let li = from; li <= to; li++) {
+    const boxes = Object.values(L.pos).filter(p => p.lane === li).map(p => [p.x - 6, p.x + NW + 6]).sort((p, q) => p[0] - q[0]);
+    const next = [];
+    for (const [s, e] of free) {
+      let cur = s;
+      for (const [bs, be] of boxes) { if (bs > cur && Math.min(bs, e) - cur >= MIN) next.push([cur, Math.min(bs, e)]); cur = Math.max(cur, be); }
+      if (e - cur >= MIN) next.push([cur, e]);
+    }
+    free = next;
+    if (!free.length) return null;
+  }
+  let best = null;
+  for (const [s, e] of free) { const x = Math.min(Math.max(want, s + 6), e - 6); if (best === null || Math.abs(x - want) < Math.abs(best - want)) best = x; }
+  return best;
+}
+
+function render(levelId, nodeId) {
+  const level = DATA.levels[levelId];
+  if (!level) return render("root");
+  current = levelId; selected = level.nodes.some(n => n.id === nodeId) ? nodeId : null;
+  document.getElementById("fig-title").textContent = level.title;
+  document.getElementById("fig-sum").textContent = level.summary;
+  renderNav(); renderJobs(); renderRoute(); renderCrumbs(); renderPanel(null);
+  drawFigure();
+}
+function activeStep() {
+  const j = DATA.jobs.find(j => j.id === job);
+  return j ? { job: j, i: step, at: j.steps[step] } : null;
+}
+
+function drawFigure() {
+  const level = DATA.levels[current];
+  const svg = document.getElementById("fig");
+  const width = Math.max(640, Math.floor(svg.parentElement.clientWidth) - 32);
+  const L = layout(level, width);
+  svg.innerHTML = "";
+  svg.setAttribute("viewBox", `0 0 ${L.width} ${L.height}`);
+  const defs = el("defs", {}, svg);
+  for (const [id, color] of [["arrow", "var(--edge)"], ["arrow-hi", "var(--edge-hi)"]]) {
+    const m = el("marker", { id, viewBox: "0 0 8 8", refX: "7", refY: "4", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" }, defs);
+    el("path", { d: "M0,0 L8,4 L0,8 z", fill: color }, m);
+  }
+  L.lanes.forEach((lane, i) => {
+    if (i % 2 === 0) el("rect", { class: "lane-bg", x: 0, y: lane.y, width: L.width, height: lane.height }, svg);
+    const t = el("text", { class: "lane-label", x: 14, y: lane.y + 20 }, svg);
+    t.textContent = lane.name;
+  });
+
+  const edgesG = el("g", {}, svg), edgeEls = [];
+  for (const e of level.edges) {
+    const a = L.pos[e.from], b = L.pos[e.to];
+    if (!a || !b) continue;
+    const p = edgePath(a, b, L);
+    const g = el("g", { class: "edge" + (e.main ? "" : " quiet") }, edgesG);
+    const path = el("path", { d: p.d, "marker-end": "url(#arrow)" }, g);
+    if (e.label) { const t = el("text", { x: p.lx, y: p.ly, "text-anchor": p.anchor }, g); t.textContent = e.label; }
+    edgeEls.push({ g, path, e });
+  }
+
+  const nodesG = el("g", {}, svg);
+  for (const [id, p] of Object.entries(L.pos)) {
+    const n = p.n;
+    const g = el("g", { class: "node" + (n.to ? " drill" : ""), transform: `translate(${p.x},${p.y})`, tabindex: "0", role: "button", "data-id": id, "aria-label": n.label + (n.to ? ", opens a deeper level" : "") }, nodesG);
+    el("rect", { class: "box", width: NW, height: NH }, g);
+    el("rect", { class: "bar", x: 0, y: 11, width: 3, height: NH - 22 }, g);
+    const clip = el("clipPath", { id: "clip-" + id }, g);
+    el("rect", { x: 0, y: 0, width: NW - 8, height: NH }, clip);
+    const textG = el("g", { "clip-path": `url(#clip-${id})` }, g);
+    const label = el("text", { class: "label", x: 15, y: n.sub ? 26 : 35 }, textG); label.textContent = n.label;
+    if (n.sub) { const sub = el("text", { class: "sub", x: 15, y: 44 }, textG); sub.textContent = n.sub; }
+    if (n.to) { const m = el("text", { class: "drill-mark", x: NW - 12, y: 18, "text-anchor": "end" }, g); m.textContent = "↘"; }
+    const activate = () => select(id);
+    g.addEventListener("click", activate);
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); activate(); } });
+    g.addEventListener("mouseenter", () => highlight(id));
+    g.addEventListener("mouseleave", () => highlight(selected));
+    g.addEventListener("focus", () => highlight(id));
+    g.addEventListener("blur", () => highlight(selected));
+  }
+
+  function highlight(id) {
+    const nodes = nodesG.querySelectorAll(".node");
+    if (!id) {
+      edgeEls.forEach(({ g, path }) => { g.classList.remove("hi", "dim"); path.setAttribute("marker-end", "url(#arrow)"); });
+      nodes.forEach(n => n.classList.remove("dim", "on"));
+      return;
+    }
+    const touching = new Set([id]);
+    edgeEls.forEach(({ g, path, e }) => {
+      const on = e.from === id || e.to === id;
+      g.classList.toggle("hi", on); g.classList.toggle("dim", !on);
+      path.setAttribute("marker-end", on ? "url(#arrow-hi)" : "url(#arrow)");
+      if (on) { touching.add(e.from); touching.add(e.to); }
+    });
+    nodes.forEach(n => { n.classList.toggle("dim", !touching.has(n.dataset.id)); n.classList.toggle("on", n.dataset.id === id); });
+  }
+  function select(id) { selected = id; highlight(id); renderPanel(level.nodes.find(n => n.id === id)); }
+  if (selected) select(selected);
+}
+
+function renderPanel(node) {
+  const panel = document.getElementById("panel");
+  panel.innerHTML = "";
+  if (!node) {
+    const level = DATA.levels[current];
+    panel.append(h("h3", {}, level.title), h("p", { class: "hint" }, "Click a box to read what it is. ", h("b", {}, "Orange boxes"), " open a deeper level. Point at any box to see what it touches."));
+    return;
+  }
+  const st = activeStep(), here = st && st.at.level === current && st.at.node === node.id;
+  if (here) panel.append(h("div", { class: "job" }, `${st.job.label} · stop ${st.i + 1} of ${st.job.steps.length}`));
+  panel.append(h("h3", {}, node.label));
+  if (node.sub) panel.append(h("div", { class: "kind" }, node.sub));
+  if (here) panel.append(h("p", { class: "do" }, rich(st.at.do)));
+  if (node.text) panel.append(h("p", {}, rich(node.text)));
+  if (node.files && node.files.length) {
+    panel.append(h("div", { class: "files-h" }, "Look at"));
+    const ul = h("ul", { class: "files" });
+    for (const f of node.files) ul.append(h("li", {}, h("a", { href: REPO + f, target: "_blank", rel: "noopener" }, f)));
+    panel.append(ul);
+  }
+  const row = h("div", { class: "row" });
+  if (here) {
+    const last = st.i + 1 >= st.job.steps.length;
+    row.append(h("button", { class: "next", type: "button", on: { click: () => last ? leaveJob() : goStep(st.job.id, st.i + 1) } }, last ? "Done with this job ✓" : "Next stop →"));
+  }
+  if (node.to) row.append(h("button", { class: "open", type: "button", on: { click: () => go(node.to) } }, "Go deeper: " + DATA.levels[node.to].title + " ↘"));
+  if (row.childElementCount) panel.append(row);
+}
+
+function renderNav() {
+  const nav = document.getElementById("levels");
+  nav.innerHTML = "";
+  for (const [group, ids] of DATA.order) {
+    const g = h("div", { class: "group" }, h("span", {}, group));
+    for (const id of ids) {
+      const a = h("a", { href: "#" + id, on: { click: ev => { ev.preventDefault(); go(id); } } }, DATA.levels[id].title);
+      if (id === current) a.setAttribute("aria-current", "page");
+      g.append(a);
+    }
+    nav.append(g);
+  }
+}
+function renderJobs() {
+  const box = document.getElementById("start");
+  box.innerHTML = "";
+  box.append(h("span", {}, "What are you here to do?"));
+  const chips = h("div", { class: "chips" });
+  for (const j of DATA.jobs) {
+    const a = h("a", { href: hashFor(j.steps[0].level, j.steps[0].node, j.id, 0), on: { click: ev => { ev.preventDefault(); goStep(j.id, 0); } } }, j.label);
+    if (j.id === job) a.setAttribute("aria-current", "true");
+    chips.append(a);
+  }
+  box.append(chips);
+}
+function renderRoute() {
+  const bar = document.getElementById("route"), st = activeStep();
+  bar.innerHTML = "";
+  bar.hidden = !st;
+  if (!st) return;
+  bar.append(h("b", {}, st.job.label));
+  st.job.steps.forEach((s, i) => {
+    const n = DATA.levels[s.level].nodes.find(n => n.id === s.node);
+    const a = h("a", { class: "step" + (i < st.i ? " done" : ""), href: hashFor(s.level, s.node, st.job.id, i), on: { click: ev => { ev.preventDefault(); goStep(st.job.id, i); } } }, `${i + 1} · ${n ? n.label : s.node}`);
+    if (i === st.i) a.setAttribute("aria-current", "step");
+    bar.append(a);
+  });
+  bar.append(h("a", { class: "leave", href: "#" + current, on: { click: ev => { ev.preventDefault(); leaveJob(); } } }, "leave this job ×"));
+}
+function goStep(jobId, i) {
+  const j = DATA.jobs.find(j => j.id === jobId);
+  if (!j || !j.steps[i]) return;
+  job = jobId; step = i;
+  go(j.steps[i].level, j.steps[i].node);
+}
+function leaveJob() { job = null; step = 0; go(current, selected); }
+function renderCrumbs() {
+  const c = document.getElementById("crumbs");
+  c.innerHTML = "";
+  const chain = crumbChain(current);
+  chain.forEach((id, i) => {
+    const last = i === chain.length - 1;
+    c.append(h("span", {}, last ? DATA.levels[id].title : h("a", { href: "#" + id, on: { click: ev => { ev.preventDefault(); go(id); } } }, DATA.levels[id].title)));
+  });
+}
+function hashFor(level, node, jobId, i) {
+  return "#" + level + (node ? "/" + node : "") + (jobId ? `?job=${jobId}&stop=${i + 1}` : "");
+}
+function go(id, node) {
+  if (!DATA.levels[id]) id = "root";
+  const hash = hashFor(id, node, job, step);
+  if (location.hash !== hash) history.pushState(null, "", hash);
+  render(id, node);
+}
+function fromHash() {
+  const [path, query] = location.hash.slice(1).split("?");
+  const [level, node] = path.split("/");
+  const q = new URLSearchParams(query || "");
+  const j = DATA.jobs.find(j => j.id === q.get("job"));
+  job = j ? j.id : null;
+  step = j ? Math.min(Math.max(parseInt(q.get("stop") || "1", 10) - 1, 0), j.steps.length - 1) : 0;
+  render(level || "root", node);
+}
+window.addEventListener("popstate", fromHash);
+window.addEventListener("resize", () => { if (current) drawFigure(); });
+for (const j of DATA.jobs) for (const s of j.steps) {
+  const lvl = DATA.levels[s.level];
+  if (!lvl || !lvl.nodes.some(n => n.id === s.node)) console.warn(`job ${j.id}: no box ${s.level}/${s.node}`);
+}
+fromHash();
+</script>
+</body>
+</html>

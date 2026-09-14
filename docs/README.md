@@ -3,6 +3,10 @@
 Engineering and reference material for Duct. Folder indexes list only the
 references; records are found by their dated filenames.
 
+**Start with [`architecture.html`](architecture.html)**: the interactive map
+of the monorepo, each app, and the internals a contributor meets first. Open
+the file in a browser; it is self-contained.
+
 | Folder | What is in it |
 |--------|---------------|
 | [`engineering/`](engineering/) | How we build: a short list of references, and dated records beside them |
@@ -33,8 +37,9 @@ user who wrote it) and its date: `**Author:** … · **Date:** …` on a record,
 `<b>Author</b>` / `<b>Date</b>` in its masthead). `scripts/check_docs.py`
 (`make check-docs`, `docs.yml` on pull requests) fails a file that has
 neither line, a record whose date disagrees with its filename, a reference
-that was edited without its `Updated:` line moving, or an HTML file with no
-figure in it. `guides/` is exempt as third-party material with its own
+that was edited without its `Updated:` line moving, an HTML file with no
+figure in it, or a document whose `files: [...]` lists name a path that no
+longer exists (the architecture page lists one per box). `guides/` is exempt as third-party material with its own
 provenance headers; folder `README.md` indexes and the generated
 `engineering/agent-prompts.md` are exempt too.
 

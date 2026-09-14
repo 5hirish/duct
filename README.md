@@ -109,9 +109,13 @@ whether a backend is actually in the bundle. See
 Each area's `AGENTS.md` is the canonical instruction file for both humans and
 coding agents; `CLAUDE.md` beside it is a symlink to the same file.
 
-## Architecture notes worth reading
+## Architecture
 
-The design decisions with real reasoning behind them, rather than a diagram:
+**[docs/architecture.html](docs/architecture.html)** is the map: the monorepo,
+the two ways Duct runs, each app, and the five internals a contributor meets
+first (auth chain, agent pipeline, connector path, change sets, data model).
+It is a self-contained page; open the file in a browser. The design decisions
+with the reasoning behind them:
 
 - **[Agent ports](backend/agents/core/ports/__init__.py)** — Duct rents an agent
   harness, it does not marry one. Domain code imports no framework; only runners
