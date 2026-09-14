@@ -319,7 +319,13 @@ see the engine consolidation review (duct-cloud, private) §7–8.
 Schema changes are applied **manually** with Alembic — a normal local dev step,
 distinct from an app deploy (the global "deploys go through CI/CD" rule is about
 shipping app code, not running migrations). Nothing runs migrations
-automatically: `railway.json` only starts uvicorn and there is no CI migration job.
+automatically: `railway.json` only starts uvicorn. CI does *verify* them —
+`backend.yml`'s `migrations` job applies the whole chain to an empty
+Postgres 16, runs `alembic check` (fails on any model/migration drift, the
+diff `--autogenerate` would have written) and undoes the newest one once.
+The offline suite runs on SQLite and cannot see any of that;
+`make check-migrations` is the same three steps against whatever throwaway
+Postgres `DATABASE_URL` names.
 
 - Apply: from `backend/`, run `alembic upgrade head`. The DB URL resolves from
   `backend/.env.local` (the Railway TCP proxy) via `config.get_configs()`.

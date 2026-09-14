@@ -52,6 +52,15 @@ check-backend: ## Ruff + pytest (mirrors backend.yml)
 	cd backend && poetry run ruff check server.py agents routes service tests utils
 	cd backend && poetry run pytest -q -m "not live" tests
 
+# Not part of `check`: it needs a throwaway Postgres in DATABASE_URL, which a
+# laptop does not have by default and CI provides as a service container.
+# The offline suite runs on SQLite, so this is the only local way to see the
+# drift `alembic check` reports on the pull request.
+check-migrations: ## Apply every migration to an empty Postgres and check the models match (mirrors backend.yml)
+	cd backend && poetry run python scripts/migrations.py upgrade head
+	cd backend && poetry run alembic check
+	cd backend && poetry run alembic downgrade -1 && poetry run alembic upgrade head
+
 # `lint` stays --if-present: app/ has no ESLint config, so that line is a
 # placeholder rather than a gate. `typecheck` was a placeholder too until the
 # script existed — `--if-present` on a missing script exits 0, so the step
