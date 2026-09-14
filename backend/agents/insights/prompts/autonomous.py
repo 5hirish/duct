@@ -28,6 +28,8 @@ from agents.core.prompts import (
     MEMORY_DISCIPLINE,
     xml_block,
 )
+from agents.core.turn import TurnContext, build_turn, spec_for
+from agents.registry import AgentType
 
 PERSONA = """\
 You are Duct's growth analyst — a senior paid-media and organic-growth operator \
@@ -355,10 +357,10 @@ def build_insights_user_prompt(
 ) -> str:
     """The USER turn: everything per-project, in context-then-task order.
 
-    Kept out of the system prompt so the cached prefix stays byte-identical
-    across customers (see ``service/memory.py`` and the module docstring).
-    ``artifact_format`` (per-user) and ``autonomy`` (per-project) belong here
-    for the same reason — both vary, and neither may enter the cached prefix.
+    A thin adapter over ``agents/core/turn.py`` — this agent's callers hand in
+    blocks already rendered, so what is left here is naming which tag each one
+    is and letting the shared builder order them. The order itself is not this
+    module's to choose: see ``BLOCK_ORDER`` and the reasoning above it.
 
     ``data_sources`` is the rendered ``<data_sources>`` block
     (``agents/insights/setup.py``): what ListDataSources would return, fetched
@@ -366,23 +368,20 @@ def build_insights_user_prompt(
     — a full model call, with reasoning — asking for a list the server already
     had.
     """
-    parts = [block for block in (business_context, user_context, memory, data_sources) if block]
-    guidance = _FORMAT_GUIDANCE.get(artifact_format, "")
-    if guidance:
-        parts.append(xml_block("deliverable_format", guidance))
-    posture = AUTONOMY_POSTURE.get(autonomy, "")
-    if posture:
-        parts.append(xml_block("autonomy", posture))
-    request = (prompt or "").strip()
-    parts.append(
-        xml_block(
-            "request",
-            request
-            or (
-                "The user opened an insights session without saying what they want. "
-                "Greet them briefly, say what you already know about this project "
-                "from memory, and ask what they want to look at."
-            ),
-        )
+    ctx = TurnContext()
+    ctx.set("business_context", business_context)
+    ctx.set("user_context", user_context)
+    ctx.set("project_memory", memory)
+    ctx.set("data_sources", data_sources)
+    ctx.set("deliverable_format", xml_block("deliverable_format", _FORMAT_GUIDANCE.get(artifact_format, "")))
+    ctx.set("autonomy", xml_block("autonomy", AUTONOMY_POSTURE.get(autonomy, "")))
+    return build_turn(
+        spec=spec_for(AgentType.INSIGHTS),
+        context=ctx,
+        request=prompt,
+        request_fallback=(
+            "The user opened an insights session without saying what they want. "
+            "Greet them briefly, say what you already know about this project "
+            "from memory, and ask what they want to look at."
+        ),
     )
-    return "\n\n".join(parts)

@@ -419,7 +419,7 @@ class LangChainAuditRunner:
             announce_finish=False,
         )
         # The profile, resolved server-side. Until this call passed it, the
-        # whole <user_preferences> block was unreachable in v1: the runner took
+        # whole operator block was unreachable in v1: the runner took
         # `user_preferences` and never handed it to the prompt, so role, style
         # and depth reached the model in no run at all.
         from agents.preferences import UserPreferences
@@ -438,6 +438,9 @@ class LangChainAuditRunner:
                 "report_depth": profile.report_depth,
             }
         )
+        # The whole profile, not three fields off it. Passing the parts is how
+        # `display_name` went missing: it was never one of the parts anyone
+        # remembered to pass.
         await loop.turn(
             build_audit_user_prompt(
                 crawl_result,
@@ -445,8 +448,7 @@ class LangChainAuditRunner:
                 prefs,
                 research_context=research_context,
                 extra_context=extra_context,
-                language=profile.communication_language,
-                notes=profile.notes,
+                profile=profile,
             )
         )
 

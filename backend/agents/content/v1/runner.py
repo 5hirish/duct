@@ -100,6 +100,7 @@ from agents.core.deep_session import (
 )
 from agents.core.lc import build_ask_user_tool, inspection_chat_model, interrupt_pause, resolve_chat_model
 from agents.core.quota import credential_identity
+from agents.core.turn import TurnContext, build_turn, spec_for
 from agents.core.session import register_session
 from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
 from agents.engines import Engine, resolve_fallback_models
@@ -652,12 +653,26 @@ class ContentRunner:
             # turn rather than the system prompt: the orchestrator prompt is
             # shared across this account's sessions and per-user text in it
             # would cost the cached prefix on every call.
-            voice = await asyncio.to_thread(_voice_block, getattr(session, "user_id", None))
-            if voice:
-                opening_prompt = f"{voice}\n\n{opening_prompt}"
-            memory = await _memory_block(session, query=memory_query)
-            if memory:
-                opening_prompt = f"{opening_prompt}\n\n{memory}"
+            #
+            # Ordered by agents/core/turn.py rather than by hand. The hand
+            # version put the memory digest *after* the ask, which is the one
+            # place it cannot be cached from: memory moves between runs, so
+            # everything before it is what a later run can reuse, and there was
+            # nothing before it.
+            ctx = TurnContext()
+            ctx.set("user_context", await asyncio.to_thread(
+                _voice_block, getattr(session, "user_id", None)
+            ))
+            ctx.set("project_memory", await _memory_block(session, query=memory_query))
+            opening_prompt = build_turn(
+                spec=spec_for(AgentType.TIKTOK_STUDIO),
+                context=ctx,
+                request=opening_prompt,
+                # Content's opening turn is a composed instruction, not the
+                # user's words. Ordering it is the win here; retagging it would
+                # be a prompt change this agent has no eval to catch.
+                wrap_request=False,
+            )
         else:
             brand = await asyncio.to_thread(_load_brand_context, session.project_id)
             opening_prompt = ""
