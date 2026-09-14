@@ -238,7 +238,7 @@ export default function InsightsWorkspace({
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center gap-1 border-b border-border/60 px-2 py-1.5">
         <PaneTab active={pane === "brief"} onClick={() => setPane("brief")}>
-          Brief
+          Artifact
         </PaneTab>
         <PaneTab active={pane === "data"} onClick={() => setPane("data")}>
           Data{fetched.length ? ` · ${fetched.length}` : ""}
@@ -246,7 +246,7 @@ export default function InsightsWorkspace({
         {pane === "brief" && versions.length > 1 && (
           <select
             value={selected < 0 ? versions.length - 1 : selected}
-            aria-label="Brief version"
+            aria-label="Artifact version"
             onChange={(e) => setSelected(Number(e.target.value))}
             className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-[11px]"
           >
@@ -271,7 +271,7 @@ export default function InsightsWorkspace({
       right={viewport}
       storageKey="insights_split_w"
       leftLabel="Chat"
-      rightLabel="Brief"
+      rightLabel="Artifact"
       rightStatus={writing || agent.isRunning ? "busy" : hasBrief ? "ready" : "idle"}
     />
   );
@@ -355,7 +355,7 @@ function BriefPane({ brief, writing, empty }) {
   if (empty || !brief) {
     return (
       <p className="p-4 text-xs text-muted-foreground">
-        Nothing written yet. An answer worth keeping becomes a brief here.
+        Nothing written yet. An answer worth keeping becomes an artifact here.
       </p>
     );
   }

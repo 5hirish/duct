@@ -141,7 +141,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
       <TabsContent value="artifacts">
         {docs.length === 0 ? (
           <p className="py-4 text-[12.5px] text-muted-foreground">
-            Nothing written yet. Briefs a thread produces collect here.
+            Nothing written yet. Artifacts a thread produces collect here.
           </p>
         ) : (
           <div>
