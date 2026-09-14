@@ -39,6 +39,22 @@
   }
 }
 
+/* A note under a control, not under its label: the row is label | control at
+   34rem and up, so an unplaced third child would land in the label column. */
+.pf-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
+
+@media (min-width: 34rem) {
+  .pf-hint {
+    grid-column: 2;
+    margin-top: -0.25rem;
+  }
+}
+
 .pf-label {
   font-size: 0.875rem;
   color: var(--foreground);

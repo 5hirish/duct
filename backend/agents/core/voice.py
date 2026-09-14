@@ -52,6 +52,11 @@ def user_context_block(profile: Profile) -> str:
             role=profile.role,
             voice=VOICE_GUIDANCE.get(profile.writing_preset, ""),
             language=_language_instruction(profile.communication_language),
+            # The stored value, not ``profile.zone``: an unset timezone should
+            # render no line at all, and the UTC default is what an agent does
+            # already. Saying "Their timezone: UTC" to someone who never chose
+            # one asserts a preference they did not express.
+            timezone=profile.timezone,
             notes=profile.notes,
         )
     )

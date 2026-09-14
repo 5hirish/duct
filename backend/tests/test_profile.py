@@ -56,6 +56,11 @@ class TestPreset:
 
 
 class TestNotesAreCapped:
+    def test_an_unset_timezone_resolves_to_utc(self):
+        """`zone` is what a caller computing a window reads; it is never empty."""
+        assert Profile().zone == "UTC"
+        assert Profile(timezone="Europe/Madrid").zone == "Europe/Madrid"
+
     def test_the_free_text_cannot_grow_without_limit(self):
         """It rides in every prompt this account ever runs."""
         assert len(_clean_text("x" * 5000, limit=NOTES_MAX_CHARS)) == NOTES_MAX_CHARS
@@ -101,6 +106,17 @@ class TestUserContextBlock:
         assert VOICE_GUIDANCE["executive"] in block
         assert "Spanish" in block
         assert "Give me the number first" in block
+
+    def test_the_block_carries_the_timezone_when_they_set_one(self):
+        """An agent picking seven days for "last week" needs to know whose week."""
+        block = user_context_block(Profile(timezone="Europe/Madrid"))
+        assert "Europe/Madrid" in block
+
+    def test_an_unset_timezone_asserts_nothing(self):
+        """UTC is what an agent does already. Saying it back is a fake preference."""
+        block = user_context_block(Profile(display_name="Shirish"))
+        assert "timezone" not in block.lower()
+        assert "UTC" not in block
 
     def test_the_default_language_asks_for_nothing(self):
         """Empty means "match the language they wrote in", which a model does anyway."""
@@ -198,6 +214,21 @@ class TestRoundTrip:
         assert body["display_name"] == "Shirish"
         assert body["notes"] == "Numbers first."
         assert body["writing_preset"] == "technical"
+
+    def test_a_timezone_round_trips(self, api):
+        api.put("/api/user/profile", json={"timezone": "Europe/Madrid"})
+        assert api.get("/api/user/profile").json()["timezone"] == "Europe/Madrid"
+
+    def test_an_unknown_zone_is_ignored_rather_than_stored(self, api):
+        """A bad zone is worth dropping and never worth failing a save over —
+        but storing it would send a date instruction no agent can honour."""
+        api.put("/api/user/profile", json={"timezone": "Middle/Earth"})
+        assert api.get("/api/user/profile").json()["timezone"] == ""
+
+    def test_clearing_the_timezone_returns_to_utc(self, api):
+        api.put("/api/user/profile", json={"timezone": "Asia/Tokyo"})
+        api.put("/api/user/profile", json={"timezone": ""})
+        assert api.get("/api/user/profile").json()["timezone"] == ""
 
     def test_notes_are_capped_at_the_write(self, api):
         api.put("/api/user/profile", json={"notes": "x" * 4000})

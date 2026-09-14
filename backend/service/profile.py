@@ -48,6 +48,10 @@ WRITING_PRESETS: dict[str, tuple[str, str]] = {
 
 DEFAULT_PRESET = "practitioner"
 
+#: What an unset timezone means. Everything resolved to UTC before the column
+#: existed, so the default is the old behaviour rather than a guess at theirs.
+DEFAULT_TIMEZONE = "UTC"
+
 
 @dataclass(frozen=True)
 class Profile:
@@ -58,7 +62,14 @@ class Profile:
     writing_preset: str = DEFAULT_PRESET
     #: Empty means "match the language they wrote in".
     communication_language: str = ""
+    #: IANA zone name. Empty means UTC — see :data:`DEFAULT_TIMEZONE`.
+    timezone: str = ""
     notes: str = ""
+
+    @property
+    def zone(self) -> str:
+        """The zone to resolve dates in. Never empty."""
+        return self.timezone or DEFAULT_TIMEZONE
 
     @property
     def communication_style(self) -> str:
@@ -83,6 +94,28 @@ def _clean_text(value: object, *, limit: int) -> str:
     return str(value or "").strip()[:limit]
 
 
+def _clean_timezone(value: object) -> str:
+    """An IANA zone name, or '' for anything the platform does not know.
+
+    Validated against ``zoneinfo`` rather than a list kept here: the tzdata set
+    moves (zones are added, renamed and merged), and a hand-kept copy is a list
+    that is wrong from the first release after someone splits a zone. Rejecting
+    to '' rather than raising, because a bad timezone is worth ignoring and
+    never worth failing a settings save over.
+    """
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    try:
+        from zoneinfo import ZoneInfo
+
+        ZoneInfo(text)
+    except Exception:  # noqa: BLE001 — unknown key, missing tzdata, bad type
+        logger.warning("ignoring unknown timezone %r", text[:64])
+        return ""
+    return text
+
+
 def get_profile(user_id: UUID | None) -> Profile:
     """The saved profile, or the defaults for an anonymous caller or a failure."""
     if user_id is None:
@@ -97,6 +130,7 @@ def get_profile(user_id: UUID | None) -> Profile:
                 role=str(row.role or ""),
                 writing_preset=_clean_preset(row.writing_preset),
                 communication_language=str(row.communication_language or ""),
+                timezone=str(row.timezone or ""),
                 notes=str(row.notes or ""),
             )
     except Exception:
@@ -111,6 +145,7 @@ def save_profile(
     role: str | None = None,
     writing_preset: str | None = None,
     communication_language: str | None = None,
+    timezone: str | None = None,
     notes: str | None = None,
 ) -> Profile:
     """Upsert the fields the caller sent, leaving the rest alone.
@@ -132,6 +167,8 @@ def save_profile(
             row.writing_preset = _clean_preset(writing_preset)
         if communication_language is not None:
             row.communication_language = _clean_text(communication_language, limit=40)
+        if timezone is not None:
+            row.timezone = _clean_timezone(timezone)
         if notes is not None:
             row.notes = _clean_text(notes, limit=NOTES_MAX_CHARS)
         row.updated_at = utcnow()
@@ -141,6 +178,7 @@ def save_profile(
             role=str(row.role or ""),
             writing_preset=_clean_preset(row.writing_preset),
             communication_language=str(row.communication_language or ""),
+            timezone=str(row.timezone or ""),
             notes=str(row.notes or ""),
         )
 

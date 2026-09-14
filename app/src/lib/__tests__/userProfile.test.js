@@ -11,8 +11,13 @@ import {
   NOTES_MAX_CHARS,
   PROFILE_DEFAULTS,
   PROFILE_KEY,
+  detectTimezone,
+  listTimezones,
   loadProfile,
   migrateLegacyPreferences,
+  zoneLabel,
+  zoneOffsetLabel,
+  zoneRegion,
 } from "../userProfile.js";
 
 function fakeLocalStorage() {
@@ -121,5 +126,64 @@ describe("the request payload a signed-out run sends", () => {
     expect(sent.role).toBe("Founder / CEO");
     expect(sent.communication_style).toBe("executive");
     expect(sent.report_depth).toBe("summary");
+  });
+});
+
+describe("timezone", () => {
+  // The list comes from `Intl.supportedValuesOf` rather than a copy kept in the
+  // repo, because the tz database moves and a copy is wrong from the first
+  // release after someone splits a zone. What is worth pinning is that the
+  // helpers around it survive a browser that answers oddly — a settings page
+  // that throws is worse than one offering a short list.
+
+  it("offers the platform's zones, and enough of them to be the real list", () => {
+    const zones = listTimezones();
+    expect(zones).toContain("Europe/Madrid");
+    expect(zones.length).toBeGreaterThan(100);
+  });
+
+  it("falls back rather than rendering no control when Intl cannot answer", () => {
+    const real = Intl.supportedValuesOf;
+    Intl.supportedValuesOf = () => {
+      throw new Error("locked down");
+    };
+    try {
+      const zones = listTimezones();
+      expect(zones).toContain("UTC");
+      expect(zones.length).toBeGreaterThan(0);
+    } finally {
+      Intl.supportedValuesOf = real;
+    }
+  });
+
+  it("names the city and groups on the region, so 420 entries stay type-ahead-able", () => {
+    expect(zoneLabel("Europe/Madrid")).toBe("Madrid");
+    expect(zoneRegion("Europe/Madrid")).toBe("Europe");
+    expect(zoneLabel("America/Argentina/Buenos_Aires")).toBe("Argentina / Buenos Aires");
+  });
+
+  it("groups a bare zone under Other rather than under itself", () => {
+    expect(zoneRegion("UTC")).toBe("Other");
+    expect(zoneLabel("UTC")).toBe("UTC");
+  });
+
+  it("reports an offset for the hint, and nothing for an unset zone", () => {
+    expect(zoneOffsetLabel("Europe/Madrid")).toMatch(/GMT[+-]\d/);
+    expect(zoneOffsetLabel("")).toBe("");
+    expect(zoneOffsetLabel("Middle/Earth")).toBe("");
+  });
+
+  it("detects a zone without throwing", () => {
+    expect(typeof detectTimezone()).toBe("string");
+  });
+
+  it("is empty on a profile nobody has set one on", () => {
+    expect(PROFILE_DEFAULTS.timezone).toBe("");
+    expect(loadProfile().timezone).toBe("");
+  });
+
+  it("survives the cache holding a non-string", () => {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify({ timezone: 42 }));
+    expect(loadProfile().timezone).toBe("42");
   });
 });

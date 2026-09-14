@@ -159,6 +159,10 @@ class UserContext(BaseModel):
     #: rendered as an instruction only when it is set.
     voice: str = ""
     language: str = ""
+    #: Their IANA timezone, rendered only when they set one. An agent that
+    #: reads "last week" has to pick seven days, and it cannot pick the right
+    #: seven without knowing whose week it is.
+    timezone: str = ""
     #: Their own words about how they want to be worked with. Last in the
     #: block on purpose: it outranks the preset above it when the two
     #: disagree, and a model reading in order should meet the override last.
@@ -182,6 +186,7 @@ _USER_LABELS: list[tuple[str, str]] = [
     ("seniority", "Seniority"),
     ("voice", "Write for them"),
     ("language", "Write in"),
+    ("timezone", "Their timezone — resolve relative dates like \"last week\" in it"),
     ("notes", "Their own instructions, which win over the line above"),
 ]
 

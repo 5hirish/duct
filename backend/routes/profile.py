@@ -32,6 +32,7 @@ class ProfileBody(BaseModel):
     role: str | None = None
     writing_preset: str | None = None
     communication_language: str | None = None
+    timezone: str | None = None
     notes: str | None = None
 
 
@@ -44,6 +45,7 @@ def _payload(profile) -> dict:
         "role": profile.role,
         "writing_preset": profile.writing_preset,
         "communication_language": profile.communication_language,
+        "timezone": profile.timezone,
         "notes": profile.notes,
         "communication_style": profile.communication_style,
         "report_depth": profile.report_depth,
@@ -66,6 +68,7 @@ def write_profile(body: ProfileBody, user: User = Depends(get_current_user)) -> 
             role=body.role,
             writing_preset=body.writing_preset,
             communication_language=body.communication_language,
+            timezone=body.timezone,
             notes=body.notes,
         )
     )

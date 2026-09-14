@@ -41,6 +41,12 @@ export const PROFILE_DEFAULTS = Object.freeze({
   // choice, and it never makes someone set a preference to keep the behaviour
   // they already had.
   communication_language: "",
+  // "" reads as UTC, which is what every date window resolved to before this
+  // field existed. The page offers the browser's own zone as a one-click fix
+  // rather than pre-selecting it: a detected value saved without being chosen
+  // is indistinguishable from a preference, and this one changes which seven
+  // days "last week" means.
+  timezone: "",
   notes: "",
 });
 
@@ -83,6 +89,80 @@ export const LANGUAGES = [
   { value: "Japanese", label: "日本語" },
 ];
 
+/**
+ * Every IANA zone the browser knows, newest tzdata included, grouped by region.
+ *
+ * From `Intl.supportedValuesOf` rather than a list kept here or a package:
+ * the tz database moves — zones get added, renamed and merged — and a copy in
+ * this file is a copy that is wrong from the first release after someone
+ * splits one. The platform's list is the platform's problem to keep current.
+ *
+ * Falls back to a short list on a browser too old for `supportedValuesOf`
+ * (and on the server, where there is no `Intl` catalogue to ask), because a
+ * profile page that renders no timezone control at all is worse than one
+ * offering a dozen.
+ */
+const FALLBACK_ZONES = [
+  "UTC",
+  "Europe/London",
+  "Europe/Madrid",
+  "Europe/Berlin",
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Sao_Paulo",
+  "Asia/Kolkata",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+];
+
+export function listTimezones() {
+  try {
+    const zones = Intl.supportedValuesOf?.("timeZone");
+    if (Array.isArray(zones) && zones.length) return zones;
+  } catch {
+    /* older browser, or a locked-down Intl — fall through */
+  }
+  return FALLBACK_ZONES;
+}
+
+/** The zone this browser is in, or "" when it cannot say. */
+export function detectTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    return "";
+  }
+}
+
+/** "Europe/Madrid" → "Madrid" — the region is the group heading. */
+export function zoneLabel(zone) {
+  const tail = String(zone || "").split("/").slice(1).join(" / ");
+  return (tail || zone).replace(/_/g, " ");
+}
+
+/** "Europe/Madrid" → "Europe"; a bare zone like "UTC" groups under "Other". */
+export function zoneRegion(zone) {
+  const head = String(zone || "").split("/")[0];
+  return head && head !== zone ? head.replace(/_/g, " ") : "Other";
+}
+
+/** The current UTC offset, for the hint beside the control. Never throws. */
+export function zoneOffsetLabel(zone, now = new Date()) {
+  if (!zone) return "";
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: zone,
+      timeZoneName: "shortOffset",
+    }).formatToParts(now);
+    return parts.find((p) => p.type === "timeZoneName")?.value || "";
+  } catch {
+    return "";
+  }
+}
+
 export const ROLE_OPTIONS = [
   { value: "", label: "Not saying" },
   { value: "Founder / CEO", label: "Founder / CEO" },
@@ -104,6 +184,7 @@ function coerce(body) {
     role: String(body?.role || ""),
     writing_preset: preset,
     communication_language: String(body?.communication_language || ""),
+    timezone: String(body?.timezone || ""),
     notes: String(body?.notes || "").slice(0, NOTES_MAX_CHARS),
   };
 }

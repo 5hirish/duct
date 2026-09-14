@@ -132,6 +132,17 @@ class UserProfile(SQLModel, table=True):
         default="", sa_column=Column(String, nullable=False, server_default="")
     )
 
+    # IANA zone name ("Europe/Madrid"). Empty means UTC, which is what every
+    # date window resolved to before this column existed.
+    #
+    # Not cosmetic: an agent asked about "last week" has to pick seven days,
+    # and in Valencia those are not the same seven days as in UTC. Stored as
+    # the IANA name rather than an offset because an offset is wrong twice a
+    # year.
+    timezone: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
+
     # Anything the controls above cannot hold: house rules, the metric they
     # care about, how they want to be argued with. It outranks the preset when
     # the two disagree, and it is capped at NOTES_MAX_CHARS because it rides in

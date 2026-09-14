@@ -29,7 +29,9 @@ import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -39,10 +41,15 @@ import {
   PROFILE_DEFAULTS,
   ROLE_OPTIONS,
   WRITING_PRESETS,
+  detectTimezone,
   fetchProfile,
+  listTimezones,
   loadProfile,
   migrateLegacyPreferences,
   saveProfile,
+  zoneLabel,
+  zoneOffsetLabel,
+  zoneRegion,
 } from "@/lib/userProfile";
 import { hasAuthToken } from "@/lib/authFetch";
 import VoiceSample from "@/components/profile/VoiceSample";
@@ -52,6 +59,35 @@ const SAVE_DEBOUNCE_MS = 600;
 
 /** Radix cannot hold "" as a select value; this is "not saying". */
 const NO_ROLE = "none";
+
+/** Same constraint for the timezone: "" is stored, "utc" is what Radix holds. */
+const UTC_VALUE = "utc";
+
+/**
+ * The zone list, grouped by region and built once per mount.
+ *
+ * ~420 entries, which sounds unusable and is not: Radix Select does type-ahead
+ * on the item text, and the items are named "Madrid" rather than
+ * "Europe/Madrid", so typing three letters gets there. That is why the region
+ * is a group heading instead of part of every label.
+ *
+ * ``pinned`` is dropped from its region group. Two items may not share a
+ * value: Radix builds the trigger's text by concatenating *every* item whose
+ * value matches the selection, so a zone listed both under "This device" and
+ * under "Europe" renders the trigger as "Madrid · EuropeMadrid".
+ */
+function groupedZones(pinned = "") {
+  const groups = new Map();
+  for (const zone of listTimezones()) {
+    if (zone === pinned) continue;
+    const region = zoneRegion(zone);
+    if (!groups.has(region)) groups.set(region, []);
+    groups.get(region).push(zone);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([region, zones]) => [region, zones.sort((a, b) => zoneLabel(a).localeCompare(zoneLabel(b)))]);
+}
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(() => loadProfile());
@@ -111,6 +147,12 @@ export default function ProfilePage() {
   );
 
   const notesLeft = NOTES_MAX_CHARS - (profile.notes || "").length;
+  // Both are environment facts, not props: read once per mount rather than on
+  // every keystroke in the notes box, which re-renders this whole form.
+  const [deviceZone] = useState(detectTimezone);
+  const [zoneGroups] = useState(() => groupedZones(deviceZone));
+  const chosenZone = profile.timezone || "";
+  const offset = zoneOffsetLabel(chosenZone || "UTC");
 
   return (
     <section>
@@ -207,6 +249,59 @@ export default function ProfilePage() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="pf-row">
+            <label className="pf-label" htmlFor="pf-timezone">
+              My timezone
+            </label>
+            <Select
+              value={chosenZone || UTC_VALUE}
+              onValueChange={(value) =>
+                update({ timezone: value === UTC_VALUE ? "" : value })
+              }
+            >
+              <SelectTrigger id="pf-timezone" className="pf-control">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {/* The device's own zone first, because it is the right answer
+                    for almost everyone and scrolling to it otherwise means
+                    passing four hundred that are not. Not pre-selected: a
+                    detected value saved without being chosen reads back as a
+                    preference, and this one decides which seven days "last
+                    week" means. */}
+                {deviceZone && (
+                  <SelectGroup>
+                    <SelectLabel>This device</SelectLabel>
+                    {/* Just the city, like every other item: the trigger
+                        renders the selected item's own text, so a pinned entry
+                        spelled differently makes the closed control read
+                        differently depending on where you picked from. */}
+                    <SelectItem value={deviceZone}>{zoneLabel(deviceZone)}</SelectItem>
+                  </SelectGroup>
+                )}
+                <SelectGroup>
+                  <SelectLabel>Default</SelectLabel>
+                  <SelectItem value={UTC_VALUE}>UTC</SelectItem>
+                </SelectGroup>
+                {zoneGroups.map(([region, zones]) => (
+                  <SelectGroup key={region}>
+                    <SelectLabel>{region}</SelectLabel>
+                    {zones.map((zone) => (
+                      <SelectItem key={zone} value={zone}>
+                        {zoneLabel(zone)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="pf-hint">
+              {chosenZone
+                ? `Duct reads "last week" and "yesterday" in ${chosenZone}${offset ? ` · ${offset}` : ""}.`
+                : `Dates resolve in UTC${offset ? ` · ${offset}` : ""}. Pick your zone so "last week" means your week.`}
+            </p>
           </div>
         </div>
 
