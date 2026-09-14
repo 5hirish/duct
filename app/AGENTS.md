@@ -372,7 +372,12 @@ Rules that follow:
   hook and the backend route already carry any pause event that arrives with
   an `interrupt_id`; the card is the only agent-visible part.
 - **A new protocol event goes in the reducer, with a fixture.** Agent-specific
-  payloads stay in the workspace's `onEvent`.
+  payloads stay in the workspace's `onEvent`. The backend holds the other end:
+  `backend/tests/test_app_event_contract.py` parses `lib/agentEvents.js`,
+  `lib/insightsEvents.js` and every fixture here and fails when an event
+  name, error code, step id or memory kind exists on one side only (legacy
+  `LEGACY_*` values excepted, since the app deploys first). Add the member to
+  both enums in the same change, and record only kinds the backend stores.
 - **Phases are the protocol, not a UI mood.** Only the reducer moves `phase`;
   a workspace that needs a different input policy passes `inputDisabled`
   rather than inventing a state. The default policy keeps the box open while
