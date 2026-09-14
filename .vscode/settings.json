@@ -1,4 +1,48 @@
 {
+  // 167k files on disk, 1.2k tracked by git. VS Code's defaults exclude
+  // node_modules but not target/, .venv/, dist/ or .next/, which is ~93k files
+  // of build output being watched for changes that will never matter.
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true,
+    "**/desktop/src-tauri/target/**": true,
+    "**/backend/.venv/**": true,
+    "**/backend/dist/**": true,
+    "**/backend/build/**": true,
+    "**/app/.next/**": true,
+    "**/app/.open-next/**": true,
+    "**/.ruff_cache/**": true,
+    "**/__pycache__/**": true
+  },
+
+  // Same set, so a project-wide search returns your code rather than three
+  // vendored copies of every dependency.
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/desktop/src-tauri/target": true,
+    "**/backend/.venv": true,
+    "**/backend/dist": true,
+    "**/backend/build": true,
+    "**/app/.next": true,
+    "**/app/.open-next": true,
+    "**/.ruff_cache": true,
+    "**/__pycache__": true,
+    "**/poetry.lock": true,
+    "**/package-lock.json": true,
+    "**/Cargo.lock": true
+  },
+
+  // The Cargo project is not at the repo root, so say where it is rather than
+  // letting rust-analyzer scan 167k files to find one Cargo.toml.
+  "rust-analyzer.linkedProjects": ["desktop/src-tauri/Cargo.toml"],
+
+  // rust-analyzer runs its own `cargo check`. Sharing target/ with the CLI
+  // means the two take turns on the same lock: run `make serve-desktop` while
+  // the editor is checking and one of them sits on "waiting for file lock on
+  // build directory". A separate dir costs disk (roughly 1 GB of .rmeta) and
+  // buys back every one of those stalls.
+  "rust-analyzer.cargo.targetDir": true,
+
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": [
