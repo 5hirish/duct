@@ -8,14 +8,19 @@ name: Connector Smoke
 # as a red scheduled run instead of as a support thread.
 #
 # Reads the staging database, so it needs the same secrets the hosted API has.
-# Required repository secrets:
+# Required repository secrets (pushed by scripts/push_env_to_github.py from
+# a gitignored backend/.env.test):
 #   DATABASE_URL                    — the staging Postgres (proxy URL)
 #   CREDENTIALS_ENCRYPTION_KEY      — decrypts connector_credentials rows
 #   GOOGLE_WEB_OAUTH_CLIENT_ID      — the hosted OAuth client; a token minted
 #   GOOGLE_WEB_OAUTH_CLIENT_SECRET    by the desktop client fails here, which
 #                                     is a finding, not a misconfiguration
-# Repository variable:
-#   DUCT_SMOKE_USER_EMAIL           — whose bound connectors to pull
+#                                     (the unprefixed GOOGLE_OAUTH_CLIENT_*
+#                                     pair is the backend's fallback spelling)
+#   DUCT_SMOKE_USER_EMAIL           — whose bound connectors to pull. A secret,
+#                                     not a variable: variables are readable
+#                                     by anyone with read access to a public
+#                                     repository.
 #
 # Status only reaches the log and the step summary — no rows, no names.
 
@@ -63,7 +68,9 @@ jobs:
           CREDENTIALS_ENCRYPTION_KEY: ${{ secrets.CREDENTIALS_ENCRYPTION_KEY }}
           GOOGLE_WEB_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_WEB_OAUTH_CLIENT_ID }}
           GOOGLE_WEB_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_WEB_OAUTH_CLIENT_SECRET }}
-          DUCT_SMOKE_USER_EMAIL: ${{ vars.DUCT_SMOKE_USER_EMAIL }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          DUCT_SMOKE_USER_EMAIL: ${{ secrets.DUCT_SMOKE_USER_EMAIL }}
         # -rs surfaces the skip reason when a secret is missing, so an
         # unconfigured run reads as "not configured" rather than as green.
         run: poetry run pytest -m live tests/test_connector_smoke.py -s -rs
