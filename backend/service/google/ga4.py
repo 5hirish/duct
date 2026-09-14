@@ -126,7 +126,6 @@ def fetch_ga4_landing_pages(
         Metric,
         OrderBy,
         RunReportRequest,
-        StringFilter,
     )
 
     credentials = _build_credentials(
@@ -153,8 +152,8 @@ def fetch_ga4_landing_pages(
         dimension_filter=FilterExpression(
             filter=Filter(
                 field_name="sessionSourceMedium",
-                string_filter=StringFilter(
-                    match_type=StringFilter.MatchType.CONTAINS,
+                string_filter=Filter.StringFilter(
+                    match_type=Filter.StringFilter.MatchType.CONTAINS,
                     value="google / cpc",
                 ),
             )
