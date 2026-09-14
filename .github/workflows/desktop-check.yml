@@ -45,6 +45,21 @@ concurrency:
   group: desktop-check-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Pinned rather than floating `stable`. This workflow builds binaries we sign
+  # and ship, so "which compiler produced that release" needs an answer that is
+  # not "whatever was stable that Tuesday". A new stable can also change codegen
+  # or start rejecting code on a PR that has nothing to do with Rust.
+  #
+  # CI-only on purpose: a rust-toolchain.toml would pin contributors too, and
+  # rustup would install a second ~540 MB toolchain byte-identical to the
+  # `stable` most of us already have. Local tracks stable; releases are pinned.
+  #
+  # Bumping is deliberate: change it here and in the sibling desktop workflow,
+  # then expect new lints from the newer compiler in the same PR. Dependabot
+  # does not manage this — there is no cargo-toolchain ecosystem.
+  RUST_TOOLCHAIN: "1.97.1"
+
 jobs:
   check:
     name: cargo check
@@ -67,7 +82,9 @@ jobs:
       - name: Shell contract
         run: python3 .github/scripts/check-shell-contract.py "origin/${{ github.base_ref || 'main' }}"
 
-      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # pinned by RUST_TOOLCHAIN
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
