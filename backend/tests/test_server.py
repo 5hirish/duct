@@ -1,6 +1,7 @@
 import importlib
 import os
 import uuid
+from urllib.parse import urlparse
 
 import pytest
 from fastapi.testclient import TestClient
@@ -151,7 +152,10 @@ def test_connector_oauth_authorize_redirects_to_google(server_client, connector)
         follow_redirects=False,
     )
     assert res.status_code == 307
-    assert "accounts.google.com" in res.headers.get("location", "")
+    # The host, not a substring of the URL: "accounts.google.com" also appears
+    # in evil.com/?next=accounts.google.com, so a substring assertion would pass
+    # for a redirect that sends the user somewhere else entirely.
+    assert urlparse(res.headers.get("location", "")).hostname == "accounts.google.com"
 
 
 @pytest.mark.parametrize(
