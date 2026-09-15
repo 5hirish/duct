@@ -23,7 +23,7 @@
 //! a refresh token there signs the user out of the Codex CLI.
 
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -370,6 +370,17 @@ fn respond(stream: &mut TcpStream, status: u16, body: &str) {
     );
     let _ = stream.write_all(response.as_bytes());
     let _ = stream.flush();
+
+    // Say we are done writing, then read the rest of what the peer sent before
+    // letting the socket drop. Closing a socket that still has unread bytes in
+    // its receive queue makes the OS send RST rather than FIN, and an RST
+    // discards the response we just wrote even though it was already on the
+    // wire — the browser lands on "connection reset" instead of "You're signed
+    // in", and the test that drives this path failed on exactly that in CI.
+    let _ = stream.shutdown(Shutdown::Write);
+    let _ = stream.set_read_timeout(Some(Duration::from_millis(250)));
+    let mut sink = [0u8; 1024];
+    while matches!(stream.read(&mut sink), Ok(n) if n > 0) {}
 }
 
 /// The page the browser tab is left on. Plain and self-contained: it is served
