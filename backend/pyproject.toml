@@ -26,9 +26,10 @@ uvicorn = {version = "^0.52", extras = ["standard"]}
 # app missing it does not degrade, it fails to boot. It was only ever present
 # transitively through a dev dependency, and Railway installs --only main,
 # which is why every deploy died on "Form data requires python-multipart".
-# Not a caret: poetry reads ^0.0.31 as <0.0.32, and this is FastAPI's own floor.
+# Not a caret: poetry reads ^0.0.31 as <0.0.32, so a floor is what we want here.
+# FastAPI's own is 0.0.18; Dependabot walks ours forward as releases land.
 python-multipart = ">=0.0.32"
-google-ads = "^31.4"
+google-ads = "^32.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.200.0"
 google-genai = "^2.23"
