@@ -13,7 +13,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-backend setup-app setup-site setup-desktop \
         check check-backend check-app check-site check-desktop check-security check-docs \
-        i18n fmt test dump-prompts serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
+        i18n fmt test dump-prompts serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean clean-deep clean-prune
 
 # ---------------------------------------------------------------------------
 
@@ -155,7 +155,42 @@ serve-desktop-local: ## Run Tauri against the local Next.js app
 serve-desktop-api: ## Run local Tauri, Next.js, and FastAPI together
 	$(MAKE) -j2 serve-backend serve-desktop-local
 
-clean: ## Remove build output and caches
-	rm -rf app/.next app/.open-next
+clean: ## Remove build output and caches that cost nothing to regenerate
+	rm -rf app/.next app/.open-next app/tsconfig.tsbuildinfo
+	rm -rf backend/build
+	rm -rf desktop/src-tauri/target/debug/incremental
+	@# find, not a fixed list: ruff and pytest drop these wherever they are run
+	@# from, and a hardcoded backend/ path quietly missed the one at the root.
 	find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null || true
 	find . -name .pytest_cache -type d -prune -exec rm -rf {} + 2>/dev/null || true
+	find . -name .ruff_cache -type d -prune -exec rm -rf {} + 2>/dev/null || true
+
+# `clean` deliberately leaves target/debug alone: that directory is not build
+# garbage, it is the cache that keeps a Tauri rebuild under a minute instead of
+# fifteen. What it never does is forget — 286 crates were occupying 841 .rlib
+# files here, ~3 stale generations deep, because nothing prunes superseded
+# artifacts. Prefer `clean-prune` for that; this target is the blunt fallback
+# for when the tool is missing or the tree is genuinely wedged.
+# NOT `cargo clean`. That walks target/*/duct-sidecar — the PyInstaller bundle
+# Tauri copies in as an external binary — and dies on grpc's vendored
+# roots.pem wherever .pem files are write-protected (agent sandboxes here, and
+# anything with a hardened profile). It exits 101 *after* deleting the
+# fingerprints, leaving deps/ on disk with nothing left to validate it: several
+# GB of dead weight that still looks like a warm cache. Removing the Rust
+# output by name is both sandbox-safe and keeps the sidecar where the build
+# already expects to find it.
+clean-deep: clean ## Also drop Rust build output (next desktop build recompiles everything)
+	@for d in desktop/src-tauri/target/*/; do \
+		[ -d "$$d" ] || continue; \
+		find "$$d" -mindepth 1 -maxdepth 1 ! -name duct-sidecar -exec rm -rf {} + ; \
+	done
+
+# 14, not 30: cargo-sweep keys off cargo's own fingerprint data rather than file
+# mtime, and the whole target dir gets re-fingerprinted on any full build. At
+# --time 30 this tree reported 663 KiB to reclaim; at --time 14, 5.5 GiB. The
+# stale generations here are 14-30 days old, so a 30-day window sweeps nothing.
+# Anything the current build actually uses was fingerprinted far more recently.
+clean-prune: ## Drop Rust artifacts untouched for 14 days, keeping the hot cache warm
+	@command -v cargo-sweep >/dev/null 2>&1 || { \
+		echo "cargo-sweep not installed. Run: cargo install cargo-sweep"; exit 1; }
+	cargo sweep --time 14 --recursive desktop/src-tauri
