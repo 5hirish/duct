@@ -67,7 +67,7 @@ export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
               </div>
               <div className="min-h-20 flex-1 space-y-2 p-2">
                 {cards.length === 0 && (
-                  <p className="px-1 py-2 text-xs italic text-muted-foreground/60">Nothing here yet.</p>
+                  <p className="px-1 py-2 text-xs italic text-muted-foreground">Nothing here yet.</p>
                 )}
                 {cards.map((card) => (
                   <PostMiniCard

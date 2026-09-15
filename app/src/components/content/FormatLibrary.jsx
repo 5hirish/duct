@@ -89,11 +89,11 @@ function excerptOf(f) {
 const relTime = (iso) => relativeTime(iso, { fallbackAfterDays: 7 });
 
 const ACCENTS = [
-  "from-rose-500/25 to-orange-400/15 text-rose-500 dark:text-rose-300",
-  "from-violet-500/25 to-indigo-400/15 text-violet-500 dark:text-violet-300",
-  "from-emerald-500/25 to-teal-400/15 text-emerald-500 dark:text-emerald-300",
-  "from-sky-500/25 to-cyan-400/15 text-sky-500 dark:text-sky-300",
-  "from-amber-500/25 to-yellow-400/15 text-amber-600 dark:text-amber-300",
+  "from-destructive/25 to-warning/15 text-destructive",
+  "from-primary/25 to-primary/15 text-primary",
+  "from-success/25 to-success/15 text-success",
+  "from-info/25 to-info/15 text-info",
+  "from-warning/25 to-warning/15 text-warning",
 ];
 function accentFor(f) {
   const key = (f?.slug || "?").toString();
@@ -291,7 +291,7 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
             <button
               type="button"
               onClick={onView}
-              className="block w-full cursor-pointer truncate text-left after:absolute after:inset-0 after:rounded-xl after:content-[''] focus:outline-none"
+              className="block w-full cursor-pointer truncate text-left after:absolute after:inset-0 after:rounded-xl after:content-[''] outline-none"
             >
               {format.name || format.slug}
             </button>
@@ -323,22 +323,22 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
       )}
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <Badge variant="outline" className="gap-1 font-mono text-[10px]">
+        <Badge variant="outline" className="gap-1 font-mono text-2xs">
           <Hash className="h-3 w-3" />{format.slug}
         </Badge>
         {slides != null && (
-          <Badge variant="secondary" className="gap-1 text-[10px]">
+          <Badge variant="secondary" className="gap-1 text-2xs">
             <Clapperboard className="h-3 w-3" />{slides} slides
           </Badge>
         )}
         {linked.length > 0 && (
-          <Badge variant="secondary" className="gap-1 text-[10px]">
+          <Badge variant="secondary" className="gap-1 text-2xs">
             <Type className="h-3 w-3" />{linked.length} linked {linked.length === 1 ? "style" : "styles"}
           </Badge>
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5 text-[11px] text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5 text-2xs text-muted-foreground">
         <span>Updated {relTime(format.updated_at)}</span>
         <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100">View →</span>
       </div>
@@ -371,10 +371,10 @@ function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
               </div>
 
               <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                <Badge variant="outline" className="gap-1 font-mono text-[10px]"><Hash className="h-3 w-3" />{format.slug}</Badge>
-                {slides != null && <Badge variant="secondary" className="text-[10px]">{slides} slides</Badge>}
+                <Badge variant="outline" className="gap-1 font-mono text-2xs"><Hash className="h-3 w-3" />{format.slug}</Badge>
+                {slides != null && <Badge variant="secondary" className="text-2xs">{slides} slides</Badge>}
                 {linked.map((c) => (
-                  <Badge key={c} variant="ghost" className="border border-border/60 font-mono text-[10px]">{c}</Badge>
+                  <Badge key={c} variant="ghost" className="border border-border/60 font-mono text-2xs">{c}</Badge>
                 ))}
               </div>
 
@@ -383,7 +383,7 @@ function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
                 <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onDelete}>
                   <Trash2 className="h-3.5 w-3.5" /> Delete
                 </Button>
-                <span className="ml-auto text-[11px] text-muted-foreground">Updated {relTime(format.updated_at)}</span>
+                <span className="ml-auto text-2xs text-muted-foreground">Updated {relTime(format.updated_at)}</span>
               </div>
             </SheetHeader>
 
@@ -507,7 +507,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
               onChange={(e) => setSlideCount(Number(e.target.value))}
               className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
             />
-            <div className="mt-1 flex justify-between text-[10px] text-muted-foreground/70">
+            <div className="mt-1 flex justify-between text-2xs text-muted-foreground">
               <span>{SLIDE_MIN}</span><span>{SLIDE_MAX}</span>
             </div>
           </div>
@@ -515,11 +515,11 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
           {/* Linked styles — pick from the shared base styles */}
           <div className="mt-5">
             <Label className="text-xs">Linked styles</Label>
-            <p className="mb-2 text-[11px] text-muted-foreground">
+            <p className="mb-2 text-2xs text-muted-foreground">
               Base styles the slide builder inlines for this format. Browse them in Library → Styles.
             </p>
             {available.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border/60 px-3 py-3 text-center text-[11px] text-muted-foreground">
+              <p className="rounded-md border border-dashed border-border/60 px-3 py-3 text-center text-2xs text-muted-foreground">
                 No base styles available.
               </p>
             ) : (
@@ -532,7 +532,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
                       type="button"
                       title={s.description}
                       onClick={() => toggleLinked(s.key)}
-                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-2xs font-medium transition-colors ${
                         on
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border text-muted-foreground hover:bg-muted"
@@ -550,7 +550,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
 
           <div className="mt-5">
             <Label className="text-xs">Spec document (Markdown)</Label>
-            <p className="mb-1.5 text-[11px] text-muted-foreground">
+            <p className="mb-1.5 text-2xs text-muted-foreground">
               The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported.
             </p>
             <Tabs defaultValue="edit" className="w-full">
@@ -567,7 +567,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
                   placeholder={"# My Format\n\n## Slide Structure\n\n| Slide | Type |\n|-------|------|\n| 1 | Hook |"}
                   className="h-[48vh] w-full resize-y rounded-md border border-border/70 bg-background p-3 font-mono text-xs leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 />
-                <p className="mt-1 text-right text-[11px] tabular-nums text-muted-foreground">{spec.length.toLocaleString()} chars</p>
+                <p className="mt-1 text-right text-2xs tabular-nums text-muted-foreground">{spec.length.toLocaleString()} chars</p>
               </TabsContent>
               <TabsContent value="preview">
                 <div className="h-[48vh] overflow-y-auto rounded-md border border-border/70 bg-background px-4 py-3">
@@ -598,9 +598,9 @@ function Field({ label, hint, error, children }) {
   return (
     <div>
       <Label className="text-xs">{label}</Label>
-      {hint && <p className="mb-1.5 text-[11px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mb-1.5 text-2xs text-muted-foreground">{hint}</p>}
       {children}
-      {error && <p className="mt-1 text-[11px] text-destructive">{error}</p>}
+      {error && <p className="mt-1 text-2xs text-destructive">{error}</p>}
     </div>
   );
 }

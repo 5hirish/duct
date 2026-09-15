@@ -37,7 +37,7 @@ import { NO_THINKING, fetchThinking, levelHint } from "@/lib/thinking";
 // run with. Height comes from the trigger's own size="sm" (h-8) — a bare h-7
 // here loses to the component's data-[size] variant.
 const CHIP =
-  "gap-1.5 rounded-full border bg-transparent px-2.5 text-[12px] text-muted-foreground " +
+  "gap-1.5 rounded-full border bg-transparent px-2.5 text-xs text-muted-foreground " +
   "shadow-none hover:bg-accent hover:text-foreground focus-visible:ring-0";
 
 // The stored value for "let Duct decide" is "", which a Select cannot hold —
@@ -52,8 +52,8 @@ function Row({ label, blurb, hint }) {
   return (
     <span className="flex flex-col items-start gap-0.5">
       <span>{label}</span>
-      {blurb && <span className="text-[11px] leading-snug text-muted-foreground">{blurb}</span>}
-      {hint && <span className="text-[10.5px] font-mono text-muted-foreground/70">{hint}</span>}
+      {blurb && <span className="text-2xs leading-snug text-muted-foreground">{blurb}</span>}
+      {hint && <span className="text-2xs font-mono text-muted-foreground">{hint}</span>}
     </span>
   );
 }
@@ -61,7 +61,7 @@ function Row({ label, blurb, hint }) {
 /** A quiet last line in a menu saying when the choice takes effect. */
 function Applies({ text }) {
   return (
-    <p className="border-t px-2 pb-1 pt-1.5 text-[10.5px] text-muted-foreground/80">{text}</p>
+    <p className="border-t px-2 pb-1 pt-1.5 text-2xs text-muted-foreground">{text}</p>
   );
 }
 

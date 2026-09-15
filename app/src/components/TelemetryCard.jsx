@@ -101,7 +101,7 @@ export function TelemetryPanel({ enabled, defaultOn, busy = false, error = "", o
         {/* Two columns, not two paragraphs: the promise is only legible next
             to what it excludes. Muted rather than destructive on the right —
             "we never send this" is a reassurance, not a warning. */}
-        <dl className="mt-2.5 grid gap-x-5 gap-y-1 text-[11.5px] leading-snug sm:grid-cols-2">
+        <dl className="mt-2.5 grid gap-x-5 gap-y-1 text-xs leading-snug @md:grid-cols-2">
           <div>
             <dt className="mb-1 font-medium text-foreground">Sends</dt>
             {["The error and stack trace of a crash", "Which screens and features you open"].map((row) => (
@@ -122,7 +122,7 @@ export function TelemetryPanel({ enabled, defaultOn, busy = false, error = "", o
           </div>
         </dl>
 
-        <p className="mt-2 text-[11px] text-muted-foreground/80">
+        <p className="mt-2 text-2xs text-muted-foreground">
           Applies to the bundled backend next time you open Duct.
         </p>
 

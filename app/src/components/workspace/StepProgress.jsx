@@ -31,7 +31,7 @@ export default function StepProgress({ steps, labels = {} }) {
 
       {dispatchSteps.length > 0 && (
         <div className="space-y-1">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Sub-agents</p>
+          <p className="text-2xs uppercase tracking-wide text-muted-foreground font-medium">Sub-agents</p>
           <div className="flex flex-wrap gap-1.5">
             {dispatchSteps.map((s) => (
               <DispatchChip key={s.step_id} step={s} />
@@ -56,8 +56,8 @@ function StepRow({ step, labels }) {
 }
 
 function StatusDot({ status }) {
-  if (status === StepStatus.RUNNING) return <Spinner className="size-2 text-blue-500" />;
-  if (status === StepStatus.SUCCESS) return <span className="inline-block size-2 shrink-0 rounded-full bg-green-500" />;
+  if (status === StepStatus.RUNNING) return <Spinner className="size-2 text-info" />;
+  if (status === StepStatus.SUCCESS) return <span className="inline-block size-2 shrink-0 rounded-full bg-success" />;
   if (status === StepStatus.ERROR) return <span className="inline-block size-2 shrink-0 rounded-full bg-destructive" />;
   return <span className="inline-block size-2 shrink-0 rounded-full bg-muted-foreground/40" />;
 }
@@ -67,14 +67,14 @@ function DispatchChip({ step }) {
   const running = step.status === StepStatus.RUNNING;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] ${
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs ${
         running
-          ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+          ? "border-info/40 bg-info/10 text-info"
           : "border-border bg-muted/50 text-muted-foreground"
       }`}
       title={step.summary || ""}
     >
-      {running && <span className="inline-block size-1.5 rounded-full bg-blue-500 animate-pulse" />}
+      {running && <span className="inline-block size-1.5 rounded-full bg-info animate-pulse" />}
       {name}
     </span>
   );

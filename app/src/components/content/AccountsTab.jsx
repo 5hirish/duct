@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Loader2, Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import {
   listLinkedAccounts,
@@ -193,7 +194,7 @@ export default function AccountsTab({ projectId }) {
         })}
       </div>
 
-      <p className="text-xs text-muted-foreground/70">
+      <p className="text-xs text-muted-foreground">
         Profile pictures are resolved from public handles. PostBridge doesn&apos;t expose
         bios or follower counts, so those aren&apos;t shown.
       </p>
@@ -282,9 +283,9 @@ function SaveState({ saving, saved, count }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
       {saving ? (
-        <><Loader2 className="size-3.5 animate-spin" /> Saving…</>
+        <><Spinner className="size-3.5" /> Saving…</>
       ) : saved ? (
-        <><Check className="size-3.5 text-green-500" /> Saved</>
+        <><Check className="size-3.5 text-success" /> Saved</>
       ) : (
         <><span className="font-medium text-foreground tabular-nums">{count}</span> linked</>
       )}

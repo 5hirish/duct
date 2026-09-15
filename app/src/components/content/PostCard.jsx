@@ -11,6 +11,7 @@ import {
   Share2,
 } from "lucide-react";
 import { cdnImage, mediaUrl } from "@/lib/contentApi";
+import { SCHEDULED_META, statusMeta } from "@/lib/contentStatus";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import { compactNumber, formatDate, titleCase } from "@/lib/format";
 
@@ -18,13 +19,9 @@ import { compactNumber, formatDate, titleCase } from "@/lib/format";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const STATUS_STYLE = {
-  posted:    "bg-green-500/90 text-white",
-  scheduled: "bg-sky-500/90 text-white",
-  draft:     "bg-amber-500/90 text-white",
-  discarded: "bg-rose-500/90 text-white",
-  pending:   "bg-zinc-500/90 text-white",
-};
+// `scheduled` is not a stored post status — it is a plan slot — so it comes
+// from its own entry rather than widening the enum's map.
+const chipFor = (status) => (status === "scheduled" ? SCHEDULED_META : statusMeta(status)).solidClass;
 
 function pick(perf, ...keys) {
   for (const k of keys) {
@@ -74,9 +71,9 @@ export default function PostCard({ post }) {
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground/60">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
             <ImageOff className="h-7 w-7" />
-            <span className="text-[11px]">No preview yet</span>
+            <span className="text-2xs">No preview yet</span>
           </div>
         )}
 
@@ -84,13 +81,13 @@ export default function PostCard({ post }) {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent" />
 
         {/* status pill */}
-        <span className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize shadow-sm backdrop-blur-sm ${STATUS_STYLE[status] || STATUS_STYLE.pending}`}>
+        <span className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-2xs font-semibold capitalize shadow-sm ${chipFor(status)}`}>
           {status}
         </span>
 
         {/* day badge */}
         {post.day_index != null && (
-          <span className="absolute right-2.5 top-2.5 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+          <span className="absolute right-2.5 top-2.5 rounded-full bg-foreground/70 px-2 py-0.5 text-2xs font-medium text-background backdrop-blur-sm">
             Day {post.day_index}
           </span>
         )}
@@ -101,8 +98,7 @@ export default function PostCard({ post }) {
             {platforms.slice(0, 5).map((p) => (
               <span
                 key={p}
-                title={platformMeta(p).label}
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-white/95 text-black shadow-sm"
+                className="flex size-6 items-center justify-center rounded-full bg-background/95 text-foreground shadow-sm"
               >
                 <PlatformGlyph platform={p} className="size-3.5" title={platformMeta(p).label} />
               </span>
@@ -111,7 +107,7 @@ export default function PostCard({ post }) {
         )}
 
         {post.published_via === "duct" && (
-          <span className="absolute bottom-2.5 right-2.5 rounded-full bg-primary/90 px-2 py-0.5 text-[9px] font-semibold text-primary-foreground shadow-sm">
+          <span className="absolute bottom-2.5 right-2.5 rounded-full bg-primary/90 px-2 py-0.5 text-2xs font-semibold text-primary-foreground shadow-sm">
             via Duct
           </span>
         )}
@@ -125,12 +121,12 @@ export default function PostCard({ post }) {
 
         <div className="flex flex-wrap items-center gap-1.5">
           {post.pillar && (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">
               {titleCase(post.pillar)}
             </span>
           )}
           {formatLabel && (
-            <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] text-muted-foreground">
+            <span className="rounded-full border border-border/70 px-2 py-0.5 text-2xs text-muted-foreground">
               {formatLabel}
             </span>
           )}
@@ -138,7 +134,7 @@ export default function PostCard({ post }) {
 
         {/* Metrics */}
         {hasMetrics ? (
-          <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[11px] text-muted-foreground">
+          <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-2xs text-muted-foreground">
             <Metric icon={Eye}           value={m.views} />
             <Metric icon={Heart}         value={m.likes} />
             <Metric icon={MessageCircle} value={m.comments} />
@@ -146,11 +142,11 @@ export default function PostCard({ post }) {
             <Metric icon={Bookmark}      value={m.saves} />
           </div>
         ) : (
-          <p className="mt-auto pt-1 text-[11px] text-muted-foreground/70">No metrics yet</p>
+          <p className="mt-auto pt-1 text-2xs text-muted-foreground">No metrics yet</p>
         )}
 
         {/* Footer */}
-        <div className="flex items-center gap-1.5 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 border-t border-border/40 pt-2 text-2xs text-muted-foreground">
           <Calendar className="h-3 w-3" />
           {published ? <span>Published {formatDate(published)}</span> : <span className="italic">Not published</span>}
         </div>

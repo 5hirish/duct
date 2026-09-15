@@ -263,9 +263,11 @@ function SignInContent() {
   const handleSignIn = useCallback(async () => {
     if (isSigningIn) return;
     if (!BASE) {
-      window.alert(
-        "Sign-in is temporarily unavailable: API endpoint is not configured. Please set NEXT_PUBLIC_API_BASE for this deployment."
-      );
+      // This page already has a place to say a sign-in cannot proceed, and it
+      // is under the button the user just pressed. A `window.alert` put the
+      // one misconfiguration message the operator needs into an OS modal that
+      // reads like a browser warning and vanishes on OK.
+      setShellBlocked("unconfigured");
       return;
     }
     const resolvedTurnstileToken = turnstileToken || getTurnstileResponseToken();
@@ -435,6 +437,13 @@ function SignInContent() {
                 getduct.ai/download
               </a>{" "}
               and try again.
+            </p>
+          )}
+          {shellBlocked === "unconfigured" && (
+            <p className="landing-auth-note landing-auth-note-error">
+              Sign-in is unavailable on this deployment: no API endpoint is
+              configured. If this is your install, set{" "}
+              <code>NEXT_PUBLIC_API_BASE</code> and redeploy.
             </p>
           )}
           {shellBlocked === "browser" && (

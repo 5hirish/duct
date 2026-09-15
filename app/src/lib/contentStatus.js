@@ -3,35 +3,74 @@
 
 import { PostStatus, POST_STATUS_LABELS } from "./contentEnums";
 
+/**
+ * One status, one colour, named by meaning rather than by hue.
+ *
+ * This map used to reach for green-500, amber-400, rose-500 and their 700/400
+ * dark partners directly, which is how the app ended up with eight hues for
+ * four meanings: every file that needed "this went out fine" picked its own
+ * green, and the ones picked as *text* (`text-success` at 2.22:1,
+ * `text-warning` at 2.15:1) were unreadable on a light page. The status
+ * tokens carry a contrast-checked pair per theme, so a caller gets dark mode
+ * for free and the guard in `check-contrast.mjs` notices if that stops being
+ * true.
+ *
+ * `badgeVariant` is the preferred way in — `<Badge variant={meta.badgeVariant}>`
+ * — with `dotClass`/`softClass`/`textClass` for the places that are not a badge.
+ * `solidClass` is the exception, for a chip sitting on a photograph: a 10%
+ * tint over an unknown image is not a colour, so those pair the full status
+ * colour with its `-foreground` partner. Those partners are exactly the three
+ * utilities the theme never generated, which is why this was white-on-green
+ * before and not simply the wrong token.
+ */
 export const STATUS_META = Object.freeze({
   [PostStatus.PENDING]: {
     label: POST_STATUS_LABELS[PostStatus.PENDING],
+    badgeVariant: "secondary",
+    solidClass: "bg-foreground text-background",
     dotClass: "bg-muted-foreground/50",
     softClass: "bg-muted text-muted-foreground",
-    accentClass: "border-amber-400/40 bg-amber-50/40 dark:bg-amber-950/10",
+    accentClass: "border-border bg-muted/30",
     textClass: "text-muted-foreground",
   },
   [PostStatus.DRAFT]: {
     label: POST_STATUS_LABELS[PostStatus.DRAFT],
-    dotClass: "bg-amber-400",
-    softClass: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-    accentClass: "border-blue-400/40 bg-blue-50/40 dark:bg-blue-950/10",
-    textClass: "text-amber-500",
+    badgeVariant: "warning",
+    solidClass: "bg-warning text-warning-foreground",
+    dotClass: "bg-warning",
+    softClass: "bg-warning/10 text-warning dark:bg-warning/20",
+    accentClass: "border-warning/30 bg-warning/5",
+    textClass: "text-warning",
   },
   [PostStatus.POSTED]: {
     label: POST_STATUS_LABELS[PostStatus.POSTED],
-    dotClass: "bg-green-500",
-    softClass: "bg-green-500/15 text-green-700 dark:text-green-400",
-    accentClass: "border-green-400/40 bg-green-50/40 dark:bg-green-950/10",
-    textClass: "text-green-500",
+    badgeVariant: "success",
+    solidClass: "bg-success text-success-foreground",
+    dotClass: "bg-success",
+    softClass: "bg-success/10 text-success dark:bg-success/20",
+    accentClass: "border-success/30 bg-success/5",
+    textClass: "text-success",
   },
   [PostStatus.DISCARDED]: {
     label: POST_STATUS_LABELS[PostStatus.DISCARDED],
-    dotClass: "bg-rose-500",
-    softClass: "bg-rose-500/15 text-rose-700 dark:text-rose-400",
-    accentClass: "border-muted-foreground/30 bg-muted/40",
-    textClass: "text-rose-500",
+    badgeVariant: "destructive",
+    solidClass: "bg-destructive text-destructive-foreground",
+    dotClass: "bg-destructive",
+    softClass: "bg-destructive/10 text-destructive dark:bg-destructive/20",
+    accentClass: "border-destructive/25 bg-destructive/5",
+    textClass: "text-destructive",
   },
+});
+
+/** The scheduled state is a plan slot, not a stored status — same vocabulary. */
+export const SCHEDULED_META = Object.freeze({
+  label: "Scheduled",
+  badgeVariant: "info",
+  solidClass: "bg-info text-info-foreground",
+  dotClass: "bg-info",
+  softClass: "bg-info/10 text-info dark:bg-info/20",
+  accentClass: "border-info/30 bg-info/5",
+  textClass: "text-info",
 });
 
 // Column / legend order.

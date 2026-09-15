@@ -14,7 +14,8 @@
 // ReloadToast, which shares this component's chrome via ui/corner-notice.
 
 import { useCallback, useEffect, useState } from "react";
-import { ArrowUpCircle, Loader2 } from "lucide-react";
+import { ArrowUpCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { CornerNotice } from "@/components/ui/corner-notice";
 import {
@@ -86,7 +87,7 @@ export default function UpdateToast() {
           <Button size="sm" onClick={onInstall} disabled={installing}>
             {installing ? (
               <>
-                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                <Spinner className="size-3.5" />
                 Installing…
               </>
             ) : (

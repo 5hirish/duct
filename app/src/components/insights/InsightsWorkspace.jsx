@@ -248,7 +248,7 @@ export default function InsightsWorkspace({
             value={selected < 0 ? versions.length - 1 : selected}
             aria-label="Artifact version"
             onChange={(e) => setSelected(Number(e.target.value))}
-            className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-[11px]"
+            className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-2xs"
           >
             {versions.map((v, i) => (
               <option key={v.version} value={i}>
@@ -305,7 +305,7 @@ function AutonomyBadge({ autonomy, level: current = "" }) {
   if (!level) return null;
   const steppedDown = configured && configured !== level && current === (autonomy?.autonomy || "");
   return (
-    <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs">
       <span className="rounded-full bg-muted px-2 py-0.5 font-medium uppercase tracking-wide">{level}</span>
       <span className="hidden text-muted-foreground @md:inline">{AUTONOMY_LABELS[level] || ""}</span>
       {steppedDown && (
@@ -388,7 +388,7 @@ function BriefHeader({ title, sub }) {
   return (
     <div className="flex items-baseline gap-2 border-b border-border/40 px-4 py-2">
       <span className="truncate text-xs font-medium">{title}</span>
-      <span className="shrink-0 text-[11px] text-muted-foreground">{sub}</span>
+      <span className="shrink-0 text-2xs text-muted-foreground">{sub}</span>
     </div>
   );
 }
@@ -406,7 +406,7 @@ function DataPane({ fetched }) {
     <ul className="space-y-1.5 p-4">
       {fetched.map((f, i) => (
         <li key={i} className="flex items-start gap-2 text-xs">
-          <span className={f.ok ? "text-green-500" : "text-destructive"} aria-hidden="true">
+          <span className={f.ok ? "text-success" : "text-destructive"} aria-hidden="true">
             {f.ok ? "✓" : "!"}
           </span>
           <span className={f.ok ? "" : "text-muted-foreground"}>
@@ -414,7 +414,7 @@ function DataPane({ fetched }) {
             {/* The provider's own sentence. The chat paraphrases a failure;
                 this is where the person debugging it reads the real one. */}
             {!f.ok && f.error && (
-              <span className="mt-0.5 block break-words font-mono text-[11px] text-destructive/80">{f.error}</span>
+              <span className="mt-0.5 block break-words font-mono text-2xs text-destructive/80">{f.error}</span>
             )}
           </span>
         </li>

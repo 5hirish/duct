@@ -14,6 +14,7 @@
 
 import { useState } from "react";
 import { Brain } from "lucide-react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { MEMORY_KIND_ICONS, deleteMemory } from "@/lib/memoryApi";
 import { getActiveProject } from "@/lib/projects";
 
@@ -96,12 +97,17 @@ export function MemoryNote({ memories }) {
 export function MemoryRecall({ memories }) {
   const projectId = getActiveProject()?.id;
   const [forgotten, setForgotten] = useState(() => new Set());
+  const { confirm, dialog } = useConfirm();
   if (!memories?.length) return null;
 
   async function forget(memory) {
-    if (!window.confirm(`Forget "${memory.title}"? The agents stop seeing it from the next turn.`)) {
-      return;
-    }
+    const ok = await confirm({
+      title: `Forget "${memory.title}"?`,
+      description: "The agents stop seeing it from the next turn.",
+      action: "Forget",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await deleteMemory({ projectId, memoryId: memory.memory_id });
       setForgotten((prev) => new Set(prev).add(memory.memory_id));
@@ -111,7 +117,9 @@ export function MemoryRecall({ memories }) {
   }
 
   return (
-    <details className="my-1.5 px-1 text-xs text-muted-foreground">
+    <>
+      {dialog}
+      <details className="my-1.5 px-1 text-xs text-muted-foreground">
       <summary className="cursor-pointer select-none hover:text-foreground">
         <Brain size={13} className="mr-1 inline-block align-[-2px]" aria-hidden="true" />
         Recalled {memories.length} {memories.length === 1 ? "memory" : "memories"}
@@ -134,7 +142,7 @@ export function MemoryRecall({ memories }) {
             ) : (
               <span className="min-w-0 flex-1">{m.title}</span>
             )}
-            <span className="font-mono text-[11px] opacity-70">{m.id}</span>
+            <span className="font-mono text-2xs opacity-70">{m.id}</span>
             {projectId && m.memory_id && !forgotten.has(m.memory_id) && (
               <button
                 type="button"
@@ -153,5 +161,6 @@ export function MemoryRecall({ memories }) {
         </a>
       )}
     </details>
+    </>
   );
 }

@@ -169,11 +169,11 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
         <>
           {/* Stat cards */}
           <div className="grid grid-cols-2 gap-3 @4xl:grid-cols-5">
-            <StatCard icon={Eye} label="Views" value={formatNumber(totals.views)} accent="text-sky-500" />
-            <StatCard icon={Heart} label="Likes" value={formatNumber(totals.likes)} accent="text-rose-500" />
-            <StatCard icon={MessageCircle} label="Comments" value={formatNumber(totals.comments)} accent="text-violet-500" />
-            <StatCard icon={Share2} label="Shares" value={formatNumber(totals.shares)} accent="text-emerald-500" />
-            <StatCard icon={TrendingUp} label="Engagement" value={`${engagementRate.toFixed(1)}%`} sub={`${formatNumber(rows.length)} posts · ${formatNumber(avgViews)} avg views`} accent="text-amber-500" />
+            <StatCard icon={Eye} label="Views" value={formatNumber(totals.views)} accent="text-info" />
+            <StatCard icon={Heart} label="Likes" value={formatNumber(totals.likes)} accent="text-destructive" />
+            <StatCard icon={MessageCircle} label="Comments" value={formatNumber(totals.comments)} accent="text-primary" />
+            <StatCard icon={Share2} label="Shares" value={formatNumber(totals.shares)} accent="text-success" />
+            <StatCard icon={TrendingUp} label="Engagement" value={`${engagementRate.toFixed(1)}%`} sub={`${formatNumber(rows.length)} posts · ${formatNumber(avgViews)} avg views`} accent="text-warning" />
           </div>
 
           {/* Charts */}
@@ -278,12 +278,12 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
                             <div className="min-w-0 max-w-[320px]">
                               <p className="flex items-center gap-1.5 text-muted-foreground">
                                 <PlatformGlyph platform={r.platform} className="size-3 shrink-0" />
-                                <span className="text-[10px] uppercase tracking-wide">{meta.label}</span>
+                                <span className="text-2xs uppercase tracking-wide">{meta.label}</span>
                                 {r.published_via === "duct" && (
-                                  <span className="rounded-full bg-primary/10 px-1.5 py-px text-[9px] font-semibold text-primary">via Duct</span>
+                                  <span className="rounded-full bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary">via Duct</span>
                                 )}
                                 {r.pillar && (
-                                  <span className="rounded-full bg-muted px-1.5 py-px text-[9px] font-medium text-muted-foreground">{titleCase(r.pillar)}</span>
+                                  <span className="rounded-full bg-muted px-1.5 py-px text-2xs font-medium text-muted-foreground">{titleCase(r.pillar)}</span>
                                 )}
                               </p>
                               <p className="line-clamp-2 text-xs text-foreground">{r.title || <span className="italic text-muted-foreground">No caption</span>}</p>
@@ -323,7 +323,7 @@ function StatCard({ icon: Icon, label, value, sub, accent = "text-foreground" })
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
       </div>
       <p className="mt-1.5 text-2xl font-semibold tabular-nums">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs text-muted-foreground">{sub}</p>}
     </div>
   );
 }

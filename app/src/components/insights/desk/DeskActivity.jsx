@@ -17,7 +17,7 @@ function ringClass(entry) {
   const action = (entry.action || "").toLowerCase();
   if (action.includes("fail") || action.includes("reject") || action.includes("rolled"))
     return "border-destructive";
-  if (action.includes("appl") || action.includes("connect")) return "border-emerald-500";
+  if (action.includes("appl") || action.includes("connect")) return "border-success";
   if (entry.source === "agent" || entry.source === "auto") return "border-primary";
   return "border-muted-foreground/40";
 }
@@ -32,13 +32,13 @@ function actionLabel(entry) {
 export default function DeskActivity({ items }) {
   return (
     <aside className="min-w-0">
-      <h2 className="mb-5 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.02em] text-muted-foreground">
+      <h2 className="mb-5 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.02em] text-muted-foreground">
         <History className="size-3.5" aria-hidden />
         Activity
       </h2>
 
       {items.length === 0 ? (
-        <p className="text-[12px] leading-relaxed text-muted-foreground">
+        <p className="text-xs leading-relaxed text-muted-foreground">
           Nothing yet. Every sync, check and change lands here — with what it found and how to
           undo it.
         </p>
@@ -60,9 +60,9 @@ export default function DeskActivity({ items }) {
               <ClampText
                 as="p"
                 text={actionLabel(entry)}
-                className="rounded-sm text-[12.5px] leading-snug focus-visible:ring-2 focus-visible:ring-ring"
+                className="rounded-sm text-xs leading-snug focus-visible:ring-2 focus-visible:ring-ring"
               />
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
+              <p className="mt-0.5 text-2xs text-muted-foreground">
                 {relativeTime(entry.created_at)}
                 {entry.source === "auto" && " · ran on its own"}
                 {entry.source === "agent" && " · Duct"}

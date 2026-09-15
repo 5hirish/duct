@@ -113,7 +113,7 @@ export default function ProjectsPage() {
         </EmptyState>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 @md:grid-cols-2 @4xl:grid-cols-3">
         {sortedProjects.map((project) => {
           const name = project.name || project.company?.name || "Untitled project";
           const industry = project.company?.industry || "Unspecified industry";

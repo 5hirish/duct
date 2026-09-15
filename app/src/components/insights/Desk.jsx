@@ -206,7 +206,7 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
           <Skeleton className="h-8 w-[420px] max-w-full" />
           <Skeleton className="h-4 w-[300px] max-w-full" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 @md:grid-cols-2 @3xl:grid-cols-3">
           <Skeleton className="h-48" />
           <Skeleton className="h-48" />
           <Skeleton className="h-48" />
@@ -243,15 +243,15 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
             the ancestor the row-vs-stacked decision above just used. */}
         <div className="@container flex min-w-0 flex-col gap-8">
           <div>
-            <h1 className="text-[28px] font-bold leading-tight tracking-tight">{head.title}</h1>
-            <p className="mt-2.5 max-w-[640px] text-sm leading-relaxed text-muted-foreground">
+            <h1 className="text-3xl font-bold leading-tight tracking-tight">{head.title}</h1>
+            <p className="measure mt-2.5 text-sm leading-relaxed text-muted-foreground">
               {head.sub}
             </p>
           </div>
 
           <DeskCards buckets={buckets} />
 
-          <p className="-mt-4 text-[11.5px] text-muted-foreground">
+          <p className="-mt-4 text-xs text-muted-foreground">
             Each item shows up in one card only — sorted by who&apos;s holding it.
           </p>
 

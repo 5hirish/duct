@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Paperclip, Square } from "lucide-react";
+import { ArrowUp, Paperclip, Square, X } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 /**
  * The chat composer every agent shell uses: text, pasted or attached images,
@@ -110,14 +112,16 @@ export default function ChatInput({
             {attachments.map((att, i) => (
               <div key={i} className="flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs">
                 <span className="max-w-[120px] truncate">{att.name}</span>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
                   aria-label={`Remove ${att.name}`}
-                  className="ml-1 text-muted-foreground hover:text-foreground"
+                  className="-mr-1 ml-0.5 text-muted-foreground hover:text-foreground"
                 >
-                  ×
-                </button>
+                  <X aria-hidden />
+                </Button>
               </div>
             ))}
           </div>
@@ -142,16 +146,17 @@ export default function ChatInput({
 
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-2.5 pb-2.5">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => fileRef.current?.click()}
               disabled={disabled}
-              title="Attach image"
               aria-label="Attach image"
-              className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-40"
+              className="text-muted-foreground"
             >
-              <Paperclip className="size-4" aria-hidden />
-            </button>
+              <Paperclip aria-hidden />
+            </Button>
             <input
               ref={fileRef}
               type="file"
@@ -167,27 +172,20 @@ export default function ChatInput({
           <div className="ml-auto flex shrink-0 items-center gap-3">
             {status}
             {isStreaming && (
-              <button
-                type="button"
-                onClick={onStop}
-                aria-label="Stop"
-                title="Stop"
-                className="flex h-7 items-center gap-1.5 rounded-full bg-destructive px-2.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90"
-              >
-                <Square className="size-3 fill-current" aria-hidden />
+              <Button type="button" variant="destructive" size="xs" onClick={onStop}>
+                <Square className="fill-current" aria-hidden />
                 Stop
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               type="button"
+              size="icon-xs"
               onClick={handleSend}
               disabled={!canSend}
               aria-label="Send"
-              title="Send"
-              className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:bg-primary/90 disabled:opacity-35"
             >
               <ArrowUp className="size-3.5" aria-hidden />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

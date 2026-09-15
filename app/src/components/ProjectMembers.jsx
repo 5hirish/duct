@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Mail, RotateCw, Trash2, TriangleAlert, UserPlus, X } from "lucide-react";
+import { Mail, RotateCw, Trash2, TriangleAlert, UserPlus, X } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +40,7 @@ function Avatar({ member }) {
     );
   }
   return (
-    <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted/50 text-[11px] font-semibold text-muted-foreground">
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted/50 text-2xs font-semibold text-muted-foreground">
       {initials(label)}
     </span>
   );
@@ -137,7 +138,7 @@ export default function ProjectMembers({ projectId, onLeft }) {
   if (loading) {
     return (
       <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
+        <Spinner className="size-4" />
         Loading members…
       </div>
     );
@@ -156,7 +157,7 @@ export default function ProjectMembers({ projectId, onLeft }) {
       {/* Invite form — owner only */}
       {isOwner ? (
         <form onSubmit={handleInvite} className="space-y-2">
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 @md:flex-row">
             <Input
               type="email"
               value={email}
@@ -164,11 +165,11 @@ export default function ProjectMembers({ projectId, onLeft }) {
               placeholder="teammate@company.com"
               aria-label="Email address to invite"
               autoComplete="off"
-              className="sm:flex-1"
+              className="@md:flex-1"
             />
             <Button type="submit" disabled={inviting || !email.trim()}>
               {inviting ? (
-                <Loader2 className="size-4 animate-spin" />
+                <Spinner className="size-4" />
               ) : (
                 <UserPlus className="size-4" />
               )}
@@ -190,7 +191,7 @@ export default function ProjectMembers({ projectId, onLeft }) {
       {notice && <p className="text-sm text-muted-foreground">{notice}</p>}
 
       {isOwner && data.email_delivery === "console" && (
-        <p className="flex items-start gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
+        <p className="flex items-start gap-2 rounded-2xl border border-warning/30 bg-warning/5 p-3 text-xs text-warning">
           <TriangleAlert className="mt-px size-4 shrink-0" />
           <span>
             Email delivery isn&rsquo;t configured on this environment, so invitations are logged
@@ -233,7 +234,7 @@ export default function ProjectMembers({ projectId, onLeft }) {
                   onClick={() => setPendingRemoval(member)}
                 >
                   {busyId === member.user_id ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Spinner className="size-4" />
                   ) : (
                     <Trash2 className="size-4" />
                   )}
@@ -283,7 +284,7 @@ export default function ProjectMembers({ projectId, onLeft }) {
                   }
                 >
                   {busyId === invitation.id ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Spinner className="size-4" />
                   ) : (
                     <RotateCw className="size-4" />
                   )}

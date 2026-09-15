@@ -34,7 +34,7 @@ export function formatUsd(v) {
 function Ring({ pct, label }) {
   const tone =
     pct >= 0.9 ? "stroke-destructive"
-    : pct >= 0.75 ? "stroke-amber-500"
+    : pct >= 0.75 ? "stroke-warning"
     : "stroke-primary";
   return (
     <span className="inline-flex items-center gap-2 text-muted-foreground">
@@ -55,7 +55,7 @@ function Ring({ pct, label }) {
           />
         )}
       </svg>
-      <span className="text-[12.5px]">{label || `${Math.round(pct * 100)}% context`}</span>
+      <span className="text-xs">{label || `${Math.round(pct * 100)}% context`}</span>
     </span>
   );
 }

@@ -76,7 +76,7 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
     return (
       <div className="overflow-hidden rounded-2xl border border-border bg-muted/20">
         <CarouselHeader index={0} total={0} />
-        <div className="flex aspect-[9/16] max-h-[520px] w-full flex-col items-center justify-center gap-2 text-center text-muted-foreground/60">
+        <div className="flex aspect-[9/16] max-h-[520px] w-full flex-col items-center justify-center gap-2 text-center text-muted-foreground">
           <Images className="size-8" />
           <p className="text-sm font-medium">No slides yet</p>
           <p className="max-w-[16rem] text-xs">Slides appear here as the agent drafts them.</p>
@@ -145,7 +145,7 @@ function CarouselHeader({ index, total }) {
       <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         <Smartphone className="size-3.5" /> Slides preview
       </span>
-      <span className="text-[10px] text-muted-foreground/70">
+      <span className="text-2xs text-muted-foreground">
         {total > 0 ? `${index + 1} / ${total}` : "sandboxed"}
       </span>
     </div>

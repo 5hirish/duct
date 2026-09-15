@@ -48,6 +48,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -171,7 +172,7 @@ function MemoryRow({ entry, onPatch, onDelete, busy, focused = false }) {
         <span
           title={titleCase(entry.kind)}
           className={`mt-px flex size-7 shrink-0 items-center justify-center rounded-full bg-muted ${
-            faded ? "text-muted-foreground/60" : "text-muted-foreground"
+            faded ? "text-muted-foreground" : "text-muted-foreground"
           }`}
         >
           <KindIcon kind={entry.kind} />
@@ -374,7 +375,7 @@ export default function MemoryTimeline({
   emptyHint,
   // Completes "We couldn't load …" on the error panel.
   errorSubject = "your memory",
-  resetPrompt = "Delete every memory here? This cannot be undone.",
+  resetPrompt = "The agents lose every fact on this timeline from their next turn. This cannot be undone.",
   signedIn = true,
   focusId = "",
 }) {
@@ -390,6 +391,7 @@ export default function MemoryTimeline({
   const [showSuperseded, setShowSuperseded] = useState(true);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [resetting, setResetting] = useState(false);
   // Two kinds of failure, kept apart on purpose: `error` is a mutation that
   // did not take (shown inline, the list is still trustworthy), `loadError` is
   // a list that never arrived — which must replace the empty state rather than
@@ -536,9 +538,10 @@ export default function MemoryTimeline({
                 <DropdownMenuItem
                   variant="destructive"
                   disabled={busy}
-                  onSelect={() => {
-                    if (window.confirm(resetPrompt)) run(() => api.reset(), "Reset failed.");
-                  }}
+                  // Radix closes the menu on select, so the confirm has to be
+                  // asked on the next tick or the dialog opens into a closing
+                  // popover and inherits its exit animation.
+                  onSelect={() => setTimeout(() => setResetting(true), 0)}
                 >
                   <Trash2 /> Delete everything
                 </DropdownMenuItem>
@@ -674,6 +677,20 @@ export default function MemoryTimeline({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={resetting}
+        onOpenChange={setResetting}
+        busy={busy}
+        title="Delete every memory here?"
+        description={resetPrompt}
+        action="Delete everything"
+        destructive
+        onConfirm={() => {
+          setResetting(false);
+          run(() => api.reset(), "Reset failed.");
+        }}
+      />
     </div>
   );
 }

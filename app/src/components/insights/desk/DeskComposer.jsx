@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CornerDownLeft, KeyRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { faviconUrl } from "@/lib/favicon";
 import { fetchProviderStatus } from "@/lib/modelTiers";
@@ -129,7 +130,7 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
   return (
     <div className="mx-auto w-full max-w-[720px]">
       <div className="mb-2.5 flex">
-        <span className="inline-flex items-center gap-2 rounded-lg border bg-card py-1 pl-[7px] pr-3 text-[12.5px]">
+        <span className="inline-flex items-center gap-2 rounded-lg border bg-card py-1 pl-[7px] pr-3 text-xs">
           <span className="flex size-[18px] shrink-0 items-center justify-center overflow-hidden rounded border bg-background">
             {icon ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -155,7 +156,7 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
           }}
           placeholder={placeholder}
           aria-label="Ask Duct"
-          className="w-full resize-none bg-transparent px-4 py-3.5 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
+          className="w-full resize-none bg-transparent px-4 py-3.5 text-base leading-relaxed outline-none placeholder:text-muted-foreground"
         />
         <div className="flex items-center justify-between gap-3 px-3 pb-2.5">
           <ComposerDials projectId={project?.id} autonomy={autonomy} onAutonomyChange={onAutonomyChange} />
@@ -164,20 +165,20 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
             {/* A new thread starts empty — the ring fills once there is a
                 conversation to spend the window on. */}
             <ContextRing used={0} label="New thread" />
-            <button
+            <Button
               type="button"
+              size="icon-xs"
               onClick={send}
               disabled={!draft.trim() || sending}
               aria-label={sending ? "Opening session…" : "Send"}
-              className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-35"
             >
               {sending ? <Spinner className="size-3.5" /> : <CornerDownLeft className="size-3.5" />}
-            </button>
+            </Button>
           </div>
         </div>
 
         {needsProvider && (
-          <div className="flex items-start gap-2.5 border-t border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
+          <div className="flex items-start gap-2.5 border-t border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning">
             <KeyRound className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             <p className="leading-relaxed">
               No model provider is connected, so this can&apos;t run yet.{" "}

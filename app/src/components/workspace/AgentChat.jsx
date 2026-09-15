@@ -127,7 +127,7 @@ function ChatBubble({ role, text, thinking, streaming, queued = false }) {
             <p className="whitespace-pre-wrap break-words">{text}</p>
           </div>
           {queued && (
-            <p className="mt-1 pr-1 text-right text-[11px] text-muted-foreground" title="Sent while the agent was busy; it reads this at its next step.">
+            <p className="mt-1 pr-1 text-right text-2xs text-muted-foreground" title="Sent while the agent was busy; it reads this at its next step.">
               ↳ Queued · picked up at the next step
             </p>
           )}
@@ -169,7 +169,7 @@ function ImageBubble({ image, fullUrl, caption }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={thumb} alt={caption || "Generated image"} loading="lazy" className="block w-44 max-w-full object-cover" />
         </button>
-        {caption && <p className="pl-1 text-[11px] text-muted-foreground">{caption}</p>}
+        {caption && <p className="pl-1 text-2xs text-muted-foreground">{caption}</p>}
       </div>
       <Lightbox open={open} onOpenChange={setOpen} src={full} alt={caption || "Generated image"} />
     </div>
@@ -283,7 +283,7 @@ export function formatElapsed(seconds) {
 /** A quiet centred line in the transcript — "Context compacted". */
 function NoticeRow({ text }) {
   return (
-    <p className="my-3 text-center text-[11px] text-muted-foreground" role="note">
+    <p className="my-3 text-center text-2xs text-muted-foreground" role="note">
       {text}
     </p>
   );
@@ -448,14 +448,14 @@ export default function AgentChat({
     <div className="flex flex-col h-full">
       <div
         className={`flex items-center gap-2 border-b px-4 py-2 shrink-0 transition-colors ${
-          waiting ? "border-amber-400/70 bg-amber-50/60 dark:bg-amber-950/20" : "border-border/60"
+          waiting ? "border-warning/70 bg-warning/5" : "border-border/60"
         }`}
       >
         <span className="text-sm font-medium">{title}</span>
         {waiting && (
           <span className="relative flex size-2" aria-hidden="true">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-            <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
+            <span className="relative inline-flex rounded-full size-2 bg-warning" />
           </span>
         )}
         {/* role="status" so a screen reader hears the agent change state —
@@ -468,7 +468,7 @@ export default function AgentChat({
           role="status"
           aria-live="polite"
           className={`text-xs ${
-            waiting ? "text-amber-600 dark:text-amber-400 font-medium" : isFailed ? "text-destructive" : "text-muted-foreground"
+            waiting ? "text-warning font-medium" : isFailed ? "text-destructive" : "text-muted-foreground"
           } ${status.pulse && !waiting && !working ? "animate-pulse" : ""}`}
         >
           — {statusLabel}
@@ -546,7 +546,7 @@ export default function AgentChat({
           {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} returnTo={connectReturnTo} />}
 
           {reconnecting && !isFailed && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning">
               <Spinner className="size-3" />
               Connection dropped — reconnecting…
             </div>

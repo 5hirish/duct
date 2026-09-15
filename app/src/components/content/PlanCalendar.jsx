@@ -130,7 +130,7 @@ function MonthView({ byDate, cursor, setCursor, onOpenWeek, onReviseDay }) {
 
       <div className="grid grid-cols-7 border-b border-border/60 px-4">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="pb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{w}</div>
+          <div key={w} className="pb-2 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{w}</div>
         ))}
       </div>
 
@@ -179,7 +179,7 @@ function MonthCell({ date, inMonth, isToday, entries, onOpenWeek, onReviseDay })
             ? "bg-primary text-primary-foreground"
             : inMonth
               ? "text-foreground group-hover:bg-muted"
-              : "text-muted-foreground/40"
+              : "text-muted-foreground"
         }`}
       >
         {date.getDate()}
@@ -198,7 +198,7 @@ function MonthCell({ date, inMonth, isToday, entries, onOpenWeek, onReviseDay })
             />
           ))}
           {extra > 0 && (
-            <span className="px-1 text-[10px] font-medium text-muted-foreground group-hover:text-foreground">
+            <span className="px-1 text-2xs font-medium text-muted-foreground group-hover:text-foreground">
               +{extra} more
             </span>
           )}
@@ -245,7 +245,7 @@ function WeekView({ byDate, weekStart, setWeekStart, onReviseDay }) {
           return (
             <div key={key} className="flex min-w-0 flex-col bg-background">
               <div className={`sticky top-0 z-10 border-b border-border/60 bg-background/95 px-2 py-1.5 text-center backdrop-blur ${isToday ? "text-primary" : ""}`}>
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{WEEKDAYS[date.getDay()]}</p>
+                <p className="text-2xs uppercase tracking-wide text-muted-foreground">{WEEKDAYS[date.getDay()]}</p>
                 <p className={`text-sm font-semibold tabular-nums ${isToday ? "text-primary" : ""}`}>{date.getDate()}</p>
               </div>
               <div className="flex-1 space-y-2 p-1.5">

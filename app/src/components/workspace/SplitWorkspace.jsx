@@ -225,7 +225,7 @@ function PaneTab({ active, onClick, icon: Icon, label, status }) {
         <span className="absolute right-2 top-1.5 size-1.5 rounded-full bg-primary" aria-hidden="true" />
       )}
       {!active && status === "busy" && (
-        <span className="absolute right-2 top-1.5 size-1.5 animate-pulse rounded-full bg-amber-500" aria-hidden="true" />
+        <span className="absolute right-2 top-1.5 size-1.5 animate-pulse rounded-full bg-warning" aria-hidden="true" />
       )}
     </button>
   );

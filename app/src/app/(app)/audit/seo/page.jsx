@@ -4,6 +4,8 @@ import { useCallback, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { loadPreferences } from "@/lib/userPreferences";
 import { getActiveProject } from "@/lib/projects";
 import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "@/lib/audit";
@@ -25,14 +27,18 @@ const EFFORT_OPTIONS = [
   { value: "high",   label: "High",   hint: "Deeper analysis" },
 ];
 
-const INPUT = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+// Kept for the one control the primitive does not cover (`<textarea>`), and
+// written the way the primitive writes it: `text-base md:text-sm` so iOS
+// Safari does not zoom the page when a field under 16px takes focus, and
+// `focus-visible` so a mouse click does not light the ring up.
+const FIELD = "w-full rounded-3xl border border-control bg-input/50 px-3 py-2 text-base placeholder:text-muted-foreground outline-none transition-[color,box-shadow,background-color] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm";
 
 /** What a past audit's run is doing, from the list route — so one stuck on a
  *  question or a failure says so before it is opened. Idle says nothing. */
 function auditBadge(conv) {
   switch (conv.run_status) {
     case "running": return { label: "Working…", className: "text-primary" };
-    case "paused": return { label: "Needs you", className: "text-amber-600 dark:text-amber-400" };
+    case "paused": return { label: "Needs you", className: "text-warning" };
     case "failed": return { label: "Failed", className: "text-destructive" };
     case "cancelled": return { label: "Stopped", className: "text-muted-foreground" };
     default: return null;
@@ -200,10 +206,10 @@ export default function SeoAuditSetupPage() {
           <label className="block text-sm font-medium mb-1.5" htmlFor="url">
             Website URL <span className="text-destructive">*</span>
           </label>
-          <input
+          <Input
             id="url" type="url" placeholder="https://yoursite.com"
             value={url} onChange={e => setUrl(e.target.value)} required
-            className={INPUT}
+            className="border-control"
           />
         </div>
 
@@ -223,21 +229,11 @@ export default function SeoAuditSetupPage() {
                   Turn off to audit a different business or competitor — only the fields below are used.
                 </p>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={useProjectContext}
-                onClick={() => toggleProjectContext(!useProjectContext)}
-                className={`relative shrink-0 mt-0.5 h-5 w-9 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-                  useProjectContext ? "bg-primary" : "bg-input"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform ${
-                    useProjectContext ? "translate-x-4" : "translate-x-0"
-                  }`}
-                />
-              </button>
+              <Switch
+                className="mt-0.5 shrink-0"
+                checked={useProjectContext}
+                onCheckedChange={(next) => toggleProjectContext(next)}
+              />
             </div>
           )}
 
@@ -251,35 +247,25 @@ export default function SeoAuditSetupPage() {
                     : "A one-off: project memory is neither read nor written. The report is still saved."}
                 </p>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={remember}
+              <Switch
+                className="mt-0.5 shrink-0"
+                checked={remember}
                 aria-label="Remember this session"
-                onClick={() => setRemember(!remember)}
-                className={`relative shrink-0 mt-0.5 h-5 w-9 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-                  remember ? "bg-primary" : "bg-input"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform ${
-                    remember ? "translate-x-4" : "translate-x-0"
-                  }`}
-                />
-              </button>
+                onCheckedChange={(next) => setRemember(next)}
+              />
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
             <div>
               <label className="block text-sm font-medium mb-1.5" htmlFor="biz-name">Business name</label>
-              <input id="biz-name" type="text" placeholder="Duct" value={businessName}
-                onChange={e => setBusinessName(e.target.value)} className={INPUT} />
+              <Input id="biz-name" type="text" placeholder="Duct" value={businessName}
+                onChange={e => setBusinessName(e.target.value)} className="border-control" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1.5" htmlFor="content-type">Primary content type</label>
               <select id="content-type" value={contentType} onChange={e => setContentType(e.target.value)}
-                className="w-full rounded-md border border-input bg-background pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                className={FIELD}>
                 {CONTENT_TYPES.map(ct => <option key={ct.value} value={ct.value}>{ct.label}</option>)}
               </select>
             </div>
@@ -287,29 +273,29 @@ export default function SeoAuditSetupPage() {
 
           <div>
             <label className="block text-sm font-medium mb-1.5" htmlFor="description">Business description</label>
-            <input id="description" type="text" placeholder="One-sentence description of what you do"
-              value={description} onChange={e => setDescription(e.target.value)} className={INPUT} />
+            <Input id="description" type="text" placeholder="One-sentence description of what you do"
+              value={description} onChange={e => setDescription(e.target.value)} className="border-control" />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1.5" htmlFor="keywords">Target keywords</label>
-            <input id="keywords" type="text"
+            <Input id="keywords" type="text"
               placeholder="analytics reporting, growth intelligence, SEO audit (comma-separated)"
-              value={keywords} onChange={e => setKeywords(e.target.value)} className={INPUT} />
+              value={keywords} onChange={e => setKeywords(e.target.value)} className="border-control" />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1.5" htmlFor="competitors">Competitors</label>
-            <input id="competitors" type="text"
+            <Input id="competitors" type="text"
               placeholder="competitor1.com, competitor2.com (comma-separated)"
-              value={competitors} onChange={e => setCompetitors(e.target.value)} className={INPUT} />
+              value={competitors} onChange={e => setCompetitors(e.target.value)} className="border-control" />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1.5" htmlFor="goals">Primary SEO goal</label>
             <textarea id="goals" rows={2} placeholder="e.g. Increase trial signups from organic search"
               value={goals} onChange={e => setGoals(e.target.value)}
-              className={`${INPUT} resize-none`} />
+              className={`${FIELD} resize-none`} />
           </div>
         </div>
 
@@ -349,7 +335,7 @@ export default function SeoAuditSetupPage() {
                       }`}
                     >
                       <span className="block text-sm font-medium">{opt.label}</span>
-                      <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.hint}</span>
+                      <span className="block text-2xs text-muted-foreground mt-0.5">{opt.hint}</span>
                     </button>
                   ))}
                 </div>
@@ -363,21 +349,12 @@ export default function SeoAuditSetupPage() {
                     Lets the AI reason internally before responding. Improves accuracy on complex sites.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={adaptiveThinking}
-                  onClick={() => setAdaptiveThinking(v => !v)}
-                  className={`relative shrink-0 mt-0.5 h-5 w-9 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-                    adaptiveThinking ? "bg-primary" : "bg-input"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform ${
-                      adaptiveThinking ? "translate-x-4" : "translate-x-0"
-                    }`}
-                  />
-                </button>
+                <Switch
+                  className="mt-0.5 shrink-0"
+                  checked={adaptiveThinking}
+                  aria-label="Adaptive thinking"
+                  onCheckedChange={setAdaptiveThinking}
+                />
               </div>
 
             </div>
@@ -406,7 +383,7 @@ export default function SeoAuditSetupPage() {
                   <p className="text-sm font-medium truncate">
                     {conv.title || "SEO audit"}
                     {auditBadge(conv) && (
-                      <span className={`ml-2 text-[11px] font-medium ${auditBadge(conv).className}`}>{auditBadge(conv).label}</span>
+                      <span className={`ml-2 text-2xs font-medium ${auditBadge(conv).className}`}>{auditBadge(conv).label}</span>
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">

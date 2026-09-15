@@ -71,7 +71,7 @@ function ActivityRow({ row }) {
           {hasData && (
             <details className="inline-block">
               <summary className="cursor-pointer select-none hover:text-foreground">details</summary>
-              <pre className="mt-1 max-w-full overflow-x-auto rounded bg-muted/40 p-2 text-[11px]">
+              <pre className="mt-1 max-w-full overflow-x-auto rounded bg-muted/40 p-2 text-2xs">
                 {JSON.stringify(row.data, null, 2)}
               </pre>
             </details>

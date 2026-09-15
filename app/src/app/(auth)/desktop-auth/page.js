@@ -221,7 +221,7 @@ function DesktopAuthContent() {
             >
               {copied ? "Copied" : "Copy details"}
             </Button>
-            <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground/80">
+            <p className="mt-3 font-mono text-2xs leading-relaxed text-muted-foreground">
               {diagnostics}
             </p>
             <p className="mt-4 text-xs text-muted-foreground">

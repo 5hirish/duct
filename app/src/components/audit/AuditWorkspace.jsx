@@ -228,16 +228,16 @@ export default function AuditWorkspace({
   const rightStatus = reportVersions.length > 0 ? "ready" : phase === Phase.PIPELINE ? "busy" : "idle";
 
   const banner = showPublicCta ? (
-    <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-orange-50 border-b border-orange-200 text-sm">
+    <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-brand/10 border-b border-brand/25 text-sm">
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="font-semibold text-orange-900 leading-tight">Want the full picture?</span>
-        <span className="text-orange-700 text-xs leading-tight">
+        <span className="font-semibold text-foreground leading-tight">Want the full picture?</span>
+        <span className="text-brand text-xs leading-tight">
           This is a quick scan. Sign up for a deeper audit with competitor analysis, keyword gaps, and a prioritized action plan.
         </span>
       </div>
       <a
         href="/"
-        className="shrink-0 inline-flex items-center gap-1 rounded-md bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 transition-colors"
+        className="shrink-0 inline-flex items-center gap-1 rounded-md bg-brand px-3 py-1.5 text-xs font-semibold text-brand-foreground hover:bg-brand/90 transition-colors"
       >
         Get the full audit →
       </a>
@@ -305,7 +305,7 @@ export default function AuditWorkspace({
           retryLabel="↺ Retry audit"
           readyHint={
             reportVersions.length > 0 ? (
-              <p className="text-sm text-center mt-6 px-2 py-3 rounded-lg bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+              <p className="text-sm text-center mt-6 px-2 py-3 rounded-lg bg-success/5 text-success border border-success/30">
                 ✓ Report ready — ask me anything about the findings.
               </p>
             ) : null

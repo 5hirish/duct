@@ -157,18 +157,18 @@ export default function StyleGallery() {
                 <div className="flex flex-1 flex-col gap-2 p-3.5">
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="text-sm font-semibold">{s.name}</h4>
-                    <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">.{s.key}</code>
+                    <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-2xs text-muted-foreground">.{s.key}</code>
                   </div>
                   <p className="text-xs leading-relaxed text-muted-foreground">{s.description}</p>
                   {s.when_to_use && (
-                    <p className="flex items-start gap-1.5 text-[11px] text-foreground/70">
-                      <Check className="mt-0.5 h-3 w-3 shrink-0 text-green-500" />
+                    <p className="flex items-start gap-1.5 text-2xs text-foreground/70">
+                      <Check className="mt-0.5 h-3 w-3 shrink-0 text-success" />
                       <span>{s.when_to_use}</span>
                     </p>
                   )}
                   {s.dont_use_on && (
-                    <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
-                      <X className="mt-0.5 h-3 w-3 shrink-0 text-rose-500" />
+                    <p className="flex items-start gap-1.5 text-2xs text-muted-foreground">
+                      <X className="mt-0.5 h-3 w-3 shrink-0 text-destructive" />
                       <span>{s.dont_use_on}</span>
                     </p>
                   )}

@@ -279,9 +279,9 @@ export function NotificationRow({ permission, hasSettingsPage = false, onAct }) 
         <Icon className="size-4" />
         {label}
       </span>
-      <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
+      <span className={`rounded px-1.5 py-0.5 font-mono text-2xs ${
         permission === "granted" ||
-        permission === "system"   ? "bg-green-500/15 text-green-600 dark:text-green-400" :
+        permission === "system"   ? "bg-success/15 text-success" :
         permission === "denied"   ? "bg-destructive/10 text-destructive" :
                                     "bg-muted text-muted-foreground"
       }`}>
@@ -323,7 +323,7 @@ function ProfileMenuItem() {
           Profile
         </span>
         {set && (
-          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-2xs font-medium text-primary">
             Set
           </span>
         )}
@@ -363,7 +363,7 @@ function SidebarUserFooter() {
             </span>
             {/* A guest's email is a synthetic install id; the useful second
                 line is what an account would do for them. */}
-            <span className="truncate text-[11px] text-sidebar-foreground/50">
+            <span className="truncate text-2xs text-sidebar-foreground/50">
               {user.guest ? "Sign in to save your work" : user.email}
             </span>
           </div>
@@ -591,7 +591,7 @@ export default function AppSidebar() {
             )}
 
             <SidebarGroup className="py-2">
-              <SidebarGroupLabel className="px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              <SidebarGroupLabel className="px-4 text-2xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">
                 {section.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -609,7 +609,7 @@ export default function AppSidebar() {
                           >
                             <Icon className="size-4" />
                             <span>{item.label}</span>
-                            <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-[10px] leading-none text-muted-foreground">
+                            <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-2xs leading-none text-muted-foreground">
                               Soon
                             </span>
                           </SidebarMenuButton>
@@ -649,11 +649,11 @@ export default function AppSidebar() {
                 <Plug className="size-4" />
                 <span>Connections</span>
                 {connectionCount > 0 ? (
-                  <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-px text-[10px] leading-none font-medium text-primary group-data-[collapsible=icon]:hidden">
+                  <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-px text-2xs leading-none font-medium text-primary group-data-[collapsible=icon]:hidden">
                     {connectionCount}
                   </span>
                 ) : (
-                  <span className="ml-auto text-[11px] text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
+                  <span className="ml-auto text-2xs text-muted-foreground group-data-[collapsible=icon]:hidden">
                     New
                   </span>
                 )}

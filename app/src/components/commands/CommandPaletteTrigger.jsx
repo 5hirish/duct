@@ -23,7 +23,7 @@ export default function CommandPaletteTrigger({ className = "" }) {
     >
       <Search className="size-3.5 shrink-0" aria-hidden />
       <span className="hidden @md:inline">Search</span>
-      <kbd className="hidden rounded border border-border bg-background px-1 py-0.5 text-[10px] @md:inline">
+      <kbd className="hidden rounded border border-border bg-background px-1 py-0.5 text-2xs @md:inline">
         {formatShortcut("mod+k")}
       </kbd>
       <span className="sr-only">Open the command palette</span>

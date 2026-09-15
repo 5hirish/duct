@@ -79,7 +79,7 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
   }
 
   return (
-    <div className="my-3 space-y-3 rounded-xl border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-800/60 dark:bg-sky-950/20">
+    <div className="my-3 space-y-3 rounded-xl border border-info/30 bg-info/5 p-4">
       <div className="space-y-0.5">
         <p className="text-sm font-semibold">Connect {label}?</p>
         {reason && <p className="text-xs text-muted-foreground">{reason}</p>}
@@ -139,7 +139,7 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
           Finish signing in in your browser, then come back and press “I've connected it”.
         </p>
       )}
-      <p className="text-[11px] text-muted-foreground/70">
+      <p className="text-2xs text-muted-foreground">
         Skipping is fine — Duct will say what it couldn't check.
       </p>
     </div>

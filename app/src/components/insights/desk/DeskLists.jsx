@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
 // A document says what it is before you read its name.
 const LOOKS = {
   brief: { Icon: FileText, className: "bg-primary/15 text-primary" },
-  report: { Icon: FileBarChart2, className: "bg-[var(--orange)]/15 text-[var(--orange)]" },
-  data: { Icon: Table2, className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  report: { Icon: FileBarChart2, className: "bg-[var(--orange)]/15 text-brand" },
+  data: { Icon: Table2, className: "bg-success/15 text-success" },
   image: { Icon: ImageIcon, className: "bg-muted text-muted-foreground" },
 };
 
@@ -32,7 +32,7 @@ function threadState(conv) {
     case "running":
       return { label: "Working…", className: "text-primary animate-pulse" };
     case "paused":
-      return { label: "Needs you", className: "text-amber-600 dark:text-amber-400 font-medium" };
+      return { label: "Needs you", className: "text-warning font-medium" };
     case "failed":
       return { label: "Failed", className: "text-destructive font-medium" };
     case "cancelled":
@@ -58,7 +58,7 @@ function PinButton({ pinned, onToggle, label }) {
       className={cn(
         "rounded p-0.5 transition-opacity",
         pinned
-          ? "text-[var(--orange)] opacity-100"
+          ? "text-brand opacity-100"
           : "text-muted-foreground opacity-0 group-hover:opacity-70 focus-visible:opacity-100"
       )}
     >
@@ -102,7 +102,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
 
       <TabsContent value="threads">
         {threads.length === 0 ? (
-          <p className="py-4 text-[12.5px] text-muted-foreground">
+          <p className="py-4 text-xs text-muted-foreground">
             No threads yet. Ask something below and one starts.
           </p>
         ) : (
@@ -119,16 +119,16 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                     label={conv.title || "thread"}
                     onToggle={() => onPinThread(conv)}
                   />
-                  <span className="truncate text-[13.5px] font-medium" title={conv.title || "Untitled thread"}>
+                  <span className="truncate text-sm font-medium" title={conv.title || "Untitled thread"}>
                     {conv.title || "Untitled thread"}
                   </span>
-                  <span className={cn("hidden text-[12px] @lg:block", state.className)}>
+                  <span className={cn("hidden text-xs @lg:block", state.className)}>
                     {state.label}
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @lg:block">
                     {relativeTime(conv.last_active_at || conv.created_at)}
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @lg:block">
                     {conv.last_seq ? `${conv.last_seq} messages` : "—"}
                   </span>
                 </Row>
@@ -140,7 +140,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
 
       <TabsContent value="artifacts">
         {docs.length === 0 ? (
-          <p className="py-4 text-[12.5px] text-muted-foreground">
+          <p className="py-4 text-xs text-muted-foreground">
             Nothing written yet. Artifacts a thread produces collect here.
           </p>
         ) : (
@@ -172,19 +172,19 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                       <Icon className="size-3.5" />
                     </span>
                     <span
-                      className="truncate text-[13.5px] font-medium"
+                      className="truncate text-sm font-medium"
                       title={doc.title || doc.filename || "Untitled"}
                     >
                       {doc.title || doc.filename || "Untitled"}
                     </span>
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @lg:block">
                     {look.label}
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @lg:block">
                     {doc.version_count > 1 ? `v${doc.version} of ${doc.version_count}` : `v${doc.version}`}
                   </span>
-                  <span className="hidden text-[12px] text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @lg:block">
                     {relativeTime(doc.created_at)}
                   </span>
                 </Row>
