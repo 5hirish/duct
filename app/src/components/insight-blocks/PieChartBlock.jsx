@@ -3,7 +3,13 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { numericField } from "../../lib/insightData";
 
-const COLORS = ["#2563eb", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+// The theme's series, not a sixth hand-picked palette. These are checked
+// against both canvases in scripts/check-contrast.mjs, so adjacent slices stay
+// apart for a low-vision reader and the chart follows the theme.
+const COLORS = [
+  "var(--chart-1)", "var(--chart-5)", "var(--chart-3)",
+  "var(--chart-2)", "var(--chart-4)", "var(--primary)",
+];
 
 export default function PieChartBlock({ title, rows, xField, yField, insightNote = "" }) {
   if (!rows?.length || !xField || !yField) return null;

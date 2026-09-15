@@ -32,10 +32,13 @@ export default function HeatmapBlock({ title, rows, xField, yField, groupBy, ins
           axisBottom={{ tickSize: 5, tickPadding: 5, tickRotation: -30 }}
           axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
           colors={{ type: "sequential", scheme: "blues" }}
-          emptyColor="#f3f4f6"
+          // Nivo takes colours as values, not classes, so these read the
+          // theme rather than restating a light-mode one: a white cell border
+          // and near-black labels vanished on the dark canvas.
+          emptyColor="var(--muted)"
           borderWidth={1}
-          borderColor="#ffffff"
-          labelTextColor="#111827"
+          borderColor="var(--background)"
+          labelTextColor="var(--foreground)"
         />
       </div>
       {insightNote ? <p className="rpt-meta">{insightNote}</p> : null}

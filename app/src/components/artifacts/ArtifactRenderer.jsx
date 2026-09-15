@@ -33,7 +33,14 @@ export const CONTENT_TYPES = {
   CSV: "text/csv",
 };
 
-const CHART_COLORS = ["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#0ea5e9", "#a855f7"];
+// The five chart series the theme defines, which are contrast-checked against
+// both canvases (scripts/check-contrast.mjs) and move when the theme does; the
+// six fixed hexes here did neither, and three of them were the status hues at
+// values no status token uses.
+const CHART_COLORS = [
+  "var(--chart-1)", "var(--chart-3)", "var(--chart-5)",
+  "var(--chart-2)", "var(--chart-4)", "var(--primary)",
+];
 
 function safeJson(text) {
   try {
@@ -200,12 +207,12 @@ export function DiffJsonView({ source }) {
             {c.status && <span className="status-pill grey">{c.status}</span>}
           </div>
           {(c.before != null || c.after != null) && (
-            <div className="grid md:grid-cols-2 gap-2 text-xs">
+            <div className="grid @xl:grid-cols-2 gap-2 text-xs">
               {c.before != null && (
-                <pre className="p-2 rounded bg-red-500/5 border border-red-500/20 overflow-x-auto whitespace-pre-wrap">{typeof c.before === "string" ? c.before : JSON.stringify(c.before, null, 2)}</pre>
+                <pre className="p-2 rounded bg-destructive/5 border border-destructive/20 overflow-x-auto whitespace-pre-wrap">{typeof c.before === "string" ? c.before : JSON.stringify(c.before, null, 2)}</pre>
               )}
               {c.after != null && (
-                <pre className="p-2 rounded bg-emerald-500/5 border border-emerald-500/20 overflow-x-auto whitespace-pre-wrap">{typeof c.after === "string" ? c.after : JSON.stringify(c.after, null, 2)}</pre>
+                <pre className="p-2 rounded bg-success/5 border border-success/20 overflow-x-auto whitespace-pre-wrap">{typeof c.after === "string" ? c.after : JSON.stringify(c.after, null, 2)}</pre>
               )}
             </div>
           )}
@@ -222,9 +229,9 @@ export function UnifiedDiffView({ diff }) {
     <pre className="text-xs p-3 overflow-x-auto leading-5 border border-input rounded-md">
       {diff.split("\n").map((line, i) => {
         let cls = "";
-        if (line.startsWith("+") && !line.startsWith("+++")) cls = "text-emerald-600 dark:text-emerald-400";
-        else if (line.startsWith("-") && !line.startsWith("---")) cls = "text-red-600 dark:text-red-400";
-        else if (line.startsWith("@@")) cls = "text-sky-600 dark:text-sky-400";
+        if (line.startsWith("+") && !line.startsWith("+++")) cls = "text-success";
+        else if (line.startsWith("-") && !line.startsWith("---")) cls = "text-destructive";
+        else if (line.startsWith("@@")) cls = "text-info";
         return (
           <span key={i} className={`block ${cls}`}>{line || " "}</span>
         );
@@ -252,7 +259,7 @@ export default function ArtifactRenderer({ artifact, content }) {
         title={artifact.title || "Artifact"}
         srcDoc={content}
         sandbox="allow-modals allow-same-origin"
-        style={{ width: "100%", height: "74vh", border: "1px solid var(--border, #e5e7eb)", borderRadius: 8, background: "#fff" }}
+        className="block h-[74vh] w-full rounded-lg border border-border bg-card"
       />
     );
   }

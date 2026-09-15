@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo, useState } from 'react';
-import { Sparkles, PenLine, Languages, ArrowRight, X, Check, Loader2 } from 'lucide-react';
+import { Sparkles, PenLine, Languages, ArrowRight, X, Check } from 'lucide-react';
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -90,7 +91,7 @@ export function ExecutionOfferBlock({ services, onOpen }) {
         <div className="px-5 py-6 @xl:px-8 @xl:py-7">
           <div className="flex items-center gap-2 mb-3">
             <span
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide"
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-2xs font-semibold tracking-wide"
               style={{ background: 'rgba(255,92,0,0.16)', color: DUCT_ORANGE }}
             >
               <Sparkles size={12} /> DONE FOR YOU
@@ -113,7 +114,7 @@ export function ExecutionOfferBlock({ services, onOpen }) {
               : <>Want Duct to execute these fixes for you?</>}
           </h2>
 
-          <p className="mt-2.5 text-sm @xl:text-[15px]" style={{ color: 'rgba(244,236,226,0.72)', lineHeight: 1.6 }}>
+          <p className="mt-2.5 text-sm @xl:text-base" style={{ color: 'rgba(244,236,226,0.72)', lineHeight: 1.6 }}>
             The audit is on us. Our agents turn these findings into ready-to-ship fixes —
             so you ship the work, not just the to-do list.
           </p>
@@ -131,15 +132,15 @@ export function ExecutionOfferBlock({ services, onOpen }) {
                   <span className="text-sm font-semibold" style={{ color: DUCT_CREAM }}>{label}</span>
                 </div>
                 {count > 0 ? (
-                  <div className="mt-1.5 text-[11px] font-medium" style={{ color: DUCT_ORANGE }}>
+                  <div className="mt-1.5 text-2xs font-medium" style={{ color: DUCT_ORANGE }}>
                     {count} {count === 1 ? 'fix' : 'fixes'} we can generate
                   </div>
                 ) : (
-                  <div className="mt-1.5 text-[11px] font-medium" style={{ color: 'rgba(244,236,226,0.5)' }}>
+                  <div className="mt-1.5 text-2xs font-medium" style={{ color: 'rgba(244,236,226,0.72)' }}>
                     {key === 'translation' ? 'Expand into new markets' : 'On request'}
                   </div>
                 )}
-                <p className="mt-1.5 text-[12px] leading-snug" style={{ color: 'rgba(244,236,226,0.6)' }}>
+                <p className="mt-1.5 text-xs leading-snug" style={{ color: 'rgba(244,236,226,0.76)' }}>
                   {blurb}
                 </p>
               </div>
@@ -155,7 +156,7 @@ export function ExecutionOfferBlock({ services, onOpen }) {
             >
               See what we&rsquo;d do <ArrowRight size={15} />
             </button>
-            <span className="text-[12px]" style={{ color: 'rgba(244,236,226,0.5)' }}>
+            <span className="text-xs" style={{ color: 'rgba(244,236,226,0.72)' }}>
               No commitment — we&rsquo;ll scope it and follow up.
             </span>
           </div>
@@ -226,13 +227,28 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
     }
   };
 
-  // This renders on the public lead page, which is light-only by design, so the
-  // panel keeps its explicit white/navy palette rather than the app's tokens.
+  // This dialog belongs to the audit report, which declares itself a light
+  // document (AuditReportV1). It is portalled out of that subtree, so it has to
+  // declare the same thing for itself rather than inherit it — and it does so
+  // by redefining the tokens, not by painting `bg-white`, so the shadcn parts
+  // inside (DialogTitle, and anything added later) come out right too. Without
+  // this it was a white card with white-ish token text in dark mode.
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-md overflow-hidden rounded-2xl border-0 bg-white p-0 text-[#1a1a1a] shadow-2xl"
+        className="max-w-md overflow-hidden rounded-2xl border-0 p-0 shadow-2xl"
+        style={{
+          colorScheme: "light",
+          "--background": "#ffffff",
+          "--foreground": "#1a1a1a",
+          "--popover": "#ffffff",
+          "--popover-foreground": "#1a1a1a",
+          "--muted-foreground": "#5b6072",
+          "--border": "#e5e7eb",
+          background: "var(--background)",
+          color: "var(--foreground)",
+        }}
       >
         {/* Header */}
         <div className="flex items-start justify-between px-5 pt-5 pb-3">
@@ -241,17 +257,17 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
               {status === 'done' ? "You're on the list" : 'Have Duct execute your fixes'}
             </DialogTitle>
             {status !== 'done' && (
-              <p className="mt-1 text-[13px] text-gray-500">Pick what you&rsquo;d like done. We&rsquo;ll scope it and follow up.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Pick what you&rsquo;d like done. We&rsquo;ll scope it and follow up.</p>
             )}
           </div>
-          <button type="button" onClick={onClose} className="p-1 text-gray-400 hover:text-gray-700" aria-label="Close">
+          <button type="button" onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground" aria-label="Close">
             <X size={18} />
           </button>
         </div>
 
         {status === 'done' ? (
           <div className="px-5 pb-6">
-            <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-4 text-sm text-green-800">
+            <div className="rounded-xl bg-success/5 border border-success/30 px-4 py-4 text-sm text-success">
               Thanks! We&rsquo;ll be in touch at <span className="font-semibold">{email || 'your email'}</span> to scope this out.
             </div>
             <button
@@ -275,25 +291,25 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
                     onClick={() => toggle(key)}
                     className="w-full text-left rounded-xl border px-3.5 py-3 transition-colors"
                     style={{
-                      borderColor: isOn ? DUCT_ORANGE : '#e5e7eb',
-                      background: isOn ? 'rgba(255,92,0,0.05)' : '#fff',
+                      borderColor: isOn ? DUCT_ORANGE : 'var(--border)',
+                      background: isOn ? 'rgba(255,92,0,0.05)' : 'var(--background)',
                     }}
                   >
                     <div className="flex items-center gap-2.5">
                       <span
                         className="inline-flex size-5 shrink-0 items-center justify-center rounded-md"
-                        style={{ background: isOn ? DUCT_ORANGE : '#f3f4f6', color: isOn ? '#fff' : '#9ca3af' }}
+                        style={{ background: isOn ? DUCT_ORANGE : '#eceef2', color: isOn ? '#fff' : '#5b6072' }}
                       >
                         {isOn ? <Check size={13} /> : <Icon size={13} />}
                       </span>
                       <span className="text-sm font-semibold" style={{ color: DUCT_NAVY }}>{label}</span>
                       {count > 0 && (
-                        <span className="ml-auto text-[11px] font-medium" style={{ color: DUCT_ORANGE }}>
+                        <span className="ml-auto text-2xs font-medium" style={{ color: DUCT_ORANGE }}>
                           {count} {count === 1 ? 'fix' : 'fixes'}
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 pl-[30px] text-[12px] leading-snug text-gray-500">{blurb}</p>
+                    <p className="mt-1 pl-[30px] text-xs leading-snug text-muted-foreground">{blurb}</p>
                   </button>
                 );
               })}
@@ -305,11 +321,11 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
               onChange={(e) => setNote(e.target.value)}
               rows={2}
               placeholder="Anything specific? (optional)"
-              className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+              className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus-visible:border-brand"
             />
 
             {status === 'error' && (
-              <p className="mt-2 text-[12px] text-red-600">That didn&rsquo;t send — your choices are still here. Try again.</p>
+              <p className="mt-2 text-xs text-destructive">That didn&rsquo;t send — your choices are still here. Try again.</p>
             )}
 
             <button
@@ -319,9 +335,9 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
               className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white disabled:opacity-50"
               style={{ background: DUCT_ORANGE }}
             >
-              {status === 'submitting' ? <><Loader2 size={15} className="animate-spin" /> Sending…</> : 'Request execution'}
+              {status === 'submitting' ? <><Spinner className="size-4" /> Sending…</> : 'Request execution'}
             </button>
-            <p className="mt-2 text-center text-[11px] text-gray-400">No payment now — we&rsquo;ll scope and quote first.</p>
+            <p className="mt-2 text-center text-2xs text-muted-foreground">No payment now — we&rsquo;ll scope and quote first.</p>
           </div>
         )}
       </DialogContent>
