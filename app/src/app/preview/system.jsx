@@ -204,16 +204,26 @@ export const PRIMITIVES = [
     id: "ui-badge",
     group: "Primitives",
     title: "Badge",
-    state: "5 variants",
-    note: "The canonical status badge. Semantic tokens only — .status-pill hardcodes hexes and is retired on touch.",
+    state: "8 variants",
+    note:
+      "The canonical status badge. The four status variants tint the ground and colour the text, which is the only way a mid green or amber carries a 12px label — `bg-green-500/90 text-white` measured 2.22:1. They carry their own dark pair, so a caller writes no `dark:`.",
     render: () => (
-      <Row label="Variants">
-        {["default", "secondary", "destructive", "outline", "ghost"].map((v) => (
-          <Badge key={v} variant={v}>
-            {v}
-          </Badge>
-        ))}
-      </Row>
+      <div className="flex flex-col gap-4">
+        <Row label="Status">
+          {["success", "warning", "info", "destructive"].map((v) => (
+            <Badge key={v} variant={v}>
+              {v}
+            </Badge>
+          ))}
+        </Row>
+        <Row label="Neutral">
+          {["default", "secondary", "outline", "ghost"].map((v) => (
+            <Badge key={v} variant={v}>
+              {v}
+            </Badge>
+          ))}
+        </Row>
+      </div>
     ),
   },
   {

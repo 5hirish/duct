@@ -77,7 +77,7 @@ export function ClampText({ text, lines = 2, tooltipLines = 4, as: Comp = "span"
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Comp tabIndex={0} className={cn(clampClass(lines), "cursor-default text-left outline-none", className)}>
+        <Comp tabIndex={0} className={cn(clampClass(lines), "cursor-default rounded-sm text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/30", className)}>
           {text}
         </Comp>
       </TooltipTrigger>

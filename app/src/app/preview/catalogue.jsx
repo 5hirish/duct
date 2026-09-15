@@ -39,6 +39,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { StepStatus } from "@/lib/agentSteps";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { canonId } from "./canon";
 
 /** A labelled specimen, so several variants of one rule read as one rule. */
@@ -107,27 +108,18 @@ const EXAMPLES = {
   ),
 
   "Destructive confirm": () => (
-    // Always open: a confirm nobody can see is not a specimen. The anatomy is
-    // the rule — title quotes the object, body states scope and
-    // irreversibility, action is verb + noun.
-    <AlertDialog open>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Disconnect &ldquo;Google Search Console&rdquo;?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Duct forgets these credentials. Reports and scheduled runs that read from
-            Search Console stop working until you connect it again, and reconnecting
-            means signing in with Google once more.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
-          <AlertDialogAction type="button" className={buttonVariants({ variant: "destructive" })}>
-            Disconnect
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    // Always open: a confirm nobody can see is not a specimen — which is also
+    // why four `window.confirm` calls survived a design pass, since /preview
+    // could not render one. The anatomy is the rule: title quotes the object,
+    // body states scope and irreversibility, action is verb + noun.
+    <ConfirmDialog
+      open
+      title="Disconnect “Google Search Console”?"
+      description="Duct forgets these credentials. Reports and scheduled runs that read from Search Console stop working until you connect it again, and reconnecting means signing in with Google once more."
+      cancel="Keep it"
+      action="Disconnect"
+      destructive
+    />
   ),
 
   "Destructive action (the button that opens that confirm)": () => (

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  * surface, and only two of the twelve told a screen reader anything.
  *
  * Colour comes from `currentColor`, so callers tint it the same way they tint
- * text (`text-primary`, `text-blue-500`) instead of restating the ring. Size
+ * text (`text-primary`, `text-info`) instead of restating the ring. Size
  * and any other override go through `className`; tailwind-merge means a passed
  * `size-*` or `border-*` replaces the default rather than fighting it.
  *

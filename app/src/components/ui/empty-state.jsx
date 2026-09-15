@@ -76,7 +76,7 @@ export default function EmptyState({
         // recessed ground and a legend sitting on the border are three
         // independent signals, none of which depend on a colour holding up.
         <div className="relative rounded-xl border border-dashed bg-muted/40 px-4 pb-4 pt-6">
-          <span className="absolute -top-2 left-4 rounded-full border bg-background px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <span className="absolute -top-2 left-4 rounded-full border bg-background px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
             {exampleLabel}
           </span>
           {/* The legend above is real text; the sample below is not. It is
