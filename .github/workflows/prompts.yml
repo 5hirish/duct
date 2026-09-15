@@ -1,0 +1,66 @@
+name: Prompts
+
+permissions:
+  contents: read
+
+# Only when a prompt could have moved. This is a separate workflow rather than
+# a job inside backend.yml because `paths:` filters a whole workflow, not a
+# job: adding a job there would have run this on every backend change, and
+# regenerating a 70KB document to compare it is not free. The list below is
+# "everything that can change an assembled prompt", which is wider than the
+# files with prose in them — registry.py holds each agent's ContextSpec,
+# turn.py holds the block order, and scoring.py is rendered into the audit
+# prompt as a table.
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'backend/agents/**/prompts.py'
+      - 'backend/agents/**/prompts/**'
+      - 'backend/agents/core/persona.py'
+      - 'backend/agents/core/context.py'
+      - 'backend/agents/core/turn.py'
+      - 'backend/agents/core/voice.py'
+      - 'backend/agents/audit/scoring.py'
+      - 'backend/agents/registry.py'
+      - 'backend/service/profile.py'
+      - 'backend/scripts/dump_prompts.py'
+      - 'docs/engineering/agent-prompts.md'
+      - '.github/workflows/prompts.yml'
+  push:
+    branches:
+      - main
+
+jobs:
+  rendered:
+    name: Rendered prompts are current
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install backend dependencies
+        run: poetry install --with dev
+
+      # The failure this catches is a prompt edited without regenerating the
+      # document, which would leave a reviewer reading last week's prompt while
+      # approving this week's change.
+      - name: The checked-in prompts match the code
+        run: poetry run python scripts/dump_prompts.py --check

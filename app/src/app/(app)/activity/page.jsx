@@ -9,10 +9,11 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, History, ShieldCheck, Zap } from "lucide-react";
+import { FileText, History, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
 import LoadError from "@/components/LoadError";
+import EmptyState from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/format";
 import { listActivity } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
@@ -70,7 +71,7 @@ function ActivityRow({ row }) {
           {hasData && (
             <details className="inline-block">
               <summary className="cursor-pointer select-none hover:text-foreground">details</summary>
-              <pre className="mt-1 max-w-full overflow-x-auto rounded bg-muted/40 p-2 text-[11px]">
+              <pre className="mt-1 max-w-full overflow-x-auto rounded bg-muted/40 p-2 text-2xs">
                 {JSON.stringify(row.data, null, 2)}
               </pre>
             </details>
@@ -177,7 +178,20 @@ function ActivityFeed() {
       </Tabs>
 
       {!signedIn && (
-        <p className="app-subtle" style={{ marginTop: 18 }}>Sign in to see project activity.</p>
+        <div style={{ marginTop: 18 }}>
+          <EmptyState
+            icon={LockKeyhole}
+            title="Sign in to see project activity"
+            actions={
+              <Button size="sm" asChild>
+                <Link href="/">Sign in</Link>
+              </Button>
+            }
+          >
+            Every entry names who did it, so the trail starts once there is an account to
+            name.
+          </EmptyState>
+        </div>
       )}
 
       {signedIn && items === null && (
@@ -190,10 +204,23 @@ function ActivityFeed() {
 
       {signedIn && !error && items && items.length === 0 && (
         <div style={{ marginTop: 18 }}>
-          <p className="app-subtle">
-            No activity yet. When an agent proposes changes or writes artifacts for
-            this project, every transition lands here.
-          </p>
+          <EmptyState
+            icon={History}
+            title="No activity yet"
+            // One action, not two. The obvious second was "see what needs
+            // approval", and on a project with no activity there is nothing
+            // to approve — a button that lands on another empty page is worse
+            // than no button, because it spends the reader's trust as well as
+            // their click.
+            actions={
+              <Button size="sm" asChild>
+                <Link href="/insights/organic-growth">Ask a question</Link>
+              </Button>
+            }
+          >
+            Proposals, approvals, rollbacks and artifact versions land here, each with who
+            did it.
+          </EmptyState>
         </div>
       )}
 

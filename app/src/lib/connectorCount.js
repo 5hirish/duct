@@ -22,23 +22,15 @@ export const SESSION_TOKEN_KEYS = {
 };
 
 /**
- * @param sessionTypes   connector types with a refresh token in this browser
- * @param serverTypes    connector types with a stored credential row (repeats
- *                       per account — two Stripe accounts are one source)
- * @param hasAdsDevToken whether the user's Google Ads developer token is present
+ * @param sessionTypes connector types with a refresh token in this browser
+ * @param serverTypes  connector types with a stored credential row (repeats
+ *                     per account — two Stripe accounts are one source)
  * @returns the distinct connector types that count as connected
+ *
+ * Google Ads used to be special-cased out unless a developer token was also
+ * stored. Google sunset those on 2026-09-09, so Ads is now OAuth-only like
+ * every other Google connector and needs no exception here.
  */
-export function resolveConnectedTypes({
-  sessionTypes = [],
-  serverTypes = [],
-  hasAdsDevToken = false,
-} = {}) {
-  const types = new Set([...sessionTypes, ...serverTypes].filter(Boolean));
-  // Google Ads needs the user's own developer token as well as OAuth, and that
-  // token lives outside both sources above (OS keychain on desktop, session
-  // storage on web — see lib/adsCredentials.js). The Connections page calls it
-  // "partial" without one, so counting it here would put the badge back in
-  // disagreement with the page, which is the bug this replaced.
-  if (!hasAdsDevToken) types.delete("google_ads");
-  return types;
+export function resolveConnectedTypes({ sessionTypes = [], serverTypes = [] } = {}) {
+  return new Set([...sessionTypes, ...serverTypes].filter(Boolean));
 }

@@ -68,7 +68,7 @@ function AgentTypeRow({ agent, active }) {
         <div className="flex items-center gap-2">
           <span className={cn("text-sm font-medium", active && "text-primary")}>{agent.label}</span>
           {!agent.available && (
-            <span className="rounded-full bg-muted px-1.5 py-px text-[10px] text-muted-foreground">
+            <span className="rounded-full bg-muted px-1.5 py-px text-2xs text-muted-foreground">
               Soon
             </span>
           )}
@@ -136,7 +136,7 @@ export default function AgentDrawer({ children }) {
 
           {/* Handoff mode — reserved, coming soon */}
           <div className="border-t border-border px-4 py-3">
-            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-widest text-muted-foreground/60">
+            <p className="mb-1.5 text-2xs font-medium uppercase tracking-widest text-muted-foreground">
               Handoff Mode
             </p>
             <div
@@ -156,7 +156,7 @@ export default function AgentDrawer({ children }) {
                 Auto
               </button>
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground/50">
+            <p className="mt-1 text-2xs text-muted-foreground">
               Cross-agent invocations — coming soon
             </p>
           </div>

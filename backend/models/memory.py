@@ -1,7 +1,7 @@
 """Agent memory — one typed, bi-temporal, sourced entry per remembered fact.
 
-Design: `docs/engineering/agent-memory-research.html` §06–07 (the model) and
-`docs/engineering/agent-memory-on-deepagents.md` (the harness wiring).
+Design: `docs/engineering/2026-08-28-agent-memory-research.md` §06–07 (the model) and
+`docs/engineering/2026-08-29-agent-memory-on-deepagents.md` (the harness wiring).
 
 Layer 1 of four. Layer 0 is the evidence that already exists (``agent_events``,
 ``activity_logs``, ``artifacts`` versions) and stays append-only; this table is

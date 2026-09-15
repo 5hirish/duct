@@ -2,7 +2,7 @@
 
 Tauri v2 shell that loads the hosted Duct web app, plus an OS-keychain store for
 bring-your-own provider API keys. Design:
-`docs/engineering/tauri-desktop-byo-keys-plan.md`.
+`docs/engineering/2026-06-18-tauri-desktop-byo-keys-plan.md`.
 
 **Two build shapes, one binary.** The official build is a thin client
 that talks to the hosted API. A self-host build restores `bundle.resources` and
@@ -67,7 +67,51 @@ carries all the code.
   (`app/src/lib/chatgpt.js`, `backend/agents/core/codex.py`). It is not
   `~/.codex/auth.json` on purpose — rotating a refresh token there signs the
   user out of the Codex CLI. Whether the path is *allowed* is the backend's
-  `CHATGPT_AUTH_ENABLED`; the shell only says whether it *can*.
+  `CHATGPT_AUTH_ENABLED`; the shell only says whether it *can*. One sign-in
+  waits on the port at a time: a new `chatgpt_login` replaces a pending one
+  rather than reporting "address in use" — a closed browser tab tells the
+  shell nothing — and `chatgpt_login_cancel` ends it without waiting out the
+  five-minute timeout. The listener is bound *before* the browser opens, so
+  a bind failure never leaves a tab open with nowhere to land, and a
+  callback carrying someone else's `state` is answered and ignored rather
+  than ending the wait.
+
+  **A dev rebuild loses every keychain item, and looks like a bug in the
+  feature.** macOS grants keychain access per application *signature*. A debug
+  bundle is ad-hoc signed, so its identity is derived from the binary and
+  changes with every build — yesterday's item is unreadable today, and the
+  error is a bare OSStatus. Worse, replacing the bundle while the app is
+  running leaves a process whose on-disk identity no longer matches what it
+  saved under, so a sign-in stores fine and then reads back as "not signed in"
+  on the very next read. `scripts/install-dev-app.mjs` now refuses to install
+  over a running copy for exactly this reason, and `describe_keyring_error`
+  names the cause on macOS instead of returning the OSStatus. The real fix, if
+  this ever becomes more than a dev annoyance, is signing debug builds with a
+  stable identity rather than ad-hoc.
+
+  **Why released builds do not have that problem.** `keyring` 3.x on macOS uses
+  the legacy file-keychain API (`SecKeychainAddGenericPassword`), so each item
+  carries an ACL naming the app that wrote it, matched by code-signing
+  *designated requirement*. For a Developer ID build that requirement is the
+  bundle identifier plus the team OU — both stable across versions — so an
+  update, a reinstall, or a self-update keeps every saved credential readable
+  with no prompt. Exactly three things break it, and all three are permanent
+  for every existing install: changing `identifier` in `tauri.conf.json`,
+  changing the Apple Team ID the release is signed under, and renaming a
+  keychain service constant. `check-shell-contract.py` pins the identifier and
+  all three service names for that reason; a change there needs a migration
+  that reads the old name and rewrites it, not just a new constant.
+
+  **Multi-user machines are already isolated, by construction.** The crate asks
+  for `SecPreferencesDomain::User`, which is `~/Library/Keychains/login.keychain-db`
+  — one per macOS account, unlocked by that account's login password, and not
+  readable by another logged-in user. The sidecar's data directory is the
+  per-user `~/Library/Application Support/<identifier>` created `0o700`
+  (`backend/utils/appdirs.py`), and the webview's `localStorage` lives in the
+  app's per-user WebKit store. Nothing is written to `/Library` or a shared
+  temporary path. Windows (Credential Manager) and Linux (Secret Service) are
+  per-user in the same way. **Keep it that way**: a credential written anywhere
+  system-wide would be readable by every account on the machine.
 
   **Sign-in is the one exception, and deliberately so.** A shell without
   `browserAuth` has no legacy path worth keeping: navigating the webview to
@@ -109,12 +153,27 @@ carries all the code.
   handshake). Windows builds are **not** Authenticode-signed yet, so SmartScreen
   warns on first run.
 - **System notifications** go through the `notify` command
-  (`tauri-plugin-notification`, registered unconditionally, so no
-  `notification:*` permission is needed — the same "our command reaches the
-  plugin from Rust" shape as the updater, for the same remote-origin reason).
+  (`tauri-plugin-notification` — the same "our command reaches the plugin from
+  Rust" shape as the updater, for the same remote-origin reason). Registering
+  the plugin still injects a `window.Notification` polyfill into the webview,
+  which invokes `is_permission_granted` on load, so `capabilities/*.json` must
+  permit `notification:allow-is-permission-granted`,
+  `allow-request-permission` and `allow-notify` — the three the polyfill calls.
+  Omitting them does not disable an unused API, it throws a runtime error on
+  every page load.
   The web app decides *when* (`app/src/lib/notify.js`: only while the window is
   not focused) and gates on the `notifications` flag from `get_shell_info`; the
   shell only decides *how*.
+
+  The shell cannot report whether the user has notifications **enabled**: the
+  plugin's desktop `permission_state` returns `Granted` no matter what System
+  Settings says. So the sidebar's row does not assert a state — it offers
+  `open_notification_settings`, which opens the OS page (macOS
+  `x-apple.systempreferences:`, Windows `ms-settings:`) where the real switch
+  is. Gated on `capabilities.notificationSettings`, false on Linux because
+  GNOME, KDE and the rest have no shared page. The command takes no URL, unlike
+  `open_external`: a page that could name the settings URL could name any
+  URL-scheme handler on the machine.
 - **The application menu is built, not defaulted** (`install_app_menu`).
   `Menu::default` is only a starting point, and two of its choices bite:
   - Its Help submenu holds a single About item marked

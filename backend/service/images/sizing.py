@@ -2,21 +2,28 @@
 
 The tools speak ``AspectRatio`` and ``ImageSize`` because that is what a slide
 brief is written in ("9:16, 2K"). Gemini takes exactly those. OpenAI wants a
-pixel ``WIDTHxHEIGHT`` under a set of arithmetic rules, and xAI wants a ratio
-from its own list plus a coarse ``1k``/``2k``. Pure functions, so the mapping
-is testable without a client.
+pixel ``WIDTHxHEIGHT`` under a set of arithmetic rules, and xAI and OpenRouter
+each want a ratio from a fixed list plus a coarse resolution rung. Pure
+functions, so the mapping is testable without a client.
+
+``nearest_aspect_ratio`` is shared rather than written twice. xAI had the only
+fixed list until OpenRouter arrived with one *per model*; a second copy of
+"pick the closest ratio by log-proportion" is how two backends quietly drift
+into answering the same question differently.
 """
 
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 
 from agents.models import AspectRatio
 from service.images.schema import ImageSize
 
 # --- OpenAI -----------------------------------------------------------------
 #
-# gpt-image-2 accepts arbitrary sizes under four rules (Image API guide):
+# Every gpt-image model Duct offers — 2, 2.5-flare, 2.5-sunburst — accepts
+# arbitrary sizes under the same four rules (Image API guide):
 # both edges multiples of 16, no edge over 3840, total pixels within
 # [655,360, 8,294,400], long-to-short ratio at most 3:1. Every AspectRatio in
 # the catalogue is within 3:1, so only the grid and the pixel cap need code.
@@ -72,14 +79,51 @@ def _proportion(ratio: str) -> float:
     return float(width) / float(height)
 
 
-def xai_aspect_ratio(aspect_ratio: AspectRatio) -> str:
-    """The closest ratio xAI accepts — exact when it is in their list."""
+def nearest_aspect_ratio(aspect_ratio: AspectRatio, allowed: Sequence[str]) -> str:
+    """The closest ratio in ``allowed`` — exact when the wanted one is in it.
+
+    Closest by log-proportion, so 9:16 and 16:9 sit the same distance from 1:1
+    and a portrait brief can never be answered with a landscape frame just
+    because the arithmetic was linear.
+    """
     wanted = aspect_ratio.value
-    if wanted in _XAI_ASPECT_RATIOS:
+    if wanted in allowed:
         return wanted
     target = math.log(_proportion(wanted))
-    return min(_XAI_ASPECT_RATIOS, key=lambda r: abs(math.log(_proportion(r)) - target))
+    return min(allowed, key=lambda r: abs(math.log(_proportion(r)) - target))
+
+
+def xai_aspect_ratio(aspect_ratio: AspectRatio) -> str:
+    """The closest ratio xAI accepts — exact when it is in their list."""
+    return nearest_aspect_ratio(aspect_ratio, _XAI_ASPECT_RATIOS)
 
 
 def xai_resolution(image_size: ImageSize) -> str:
     return _XAI_RESOLUTION[image_size]
+
+
+# --- OpenRouter -------------------------------------------------------------
+#
+# ``resolution`` is already Duct's own vocabulary — OpenRouter spells the rungs
+# "512", "1K", "2K", "4K" and ``ImageSize`` spells them "1K"/"2K"/"4K", so the
+# only work is clamping to what a given model serves. The allowed list is
+# per-model (Flux takes no resolution at all, Seedream stops at 2K), which is
+# why it arrives as an argument rather than living here.
+_OPENROUTER_RUNGS: tuple[str, ...] = ("512", "1K", "2K", "4K")
+
+
+def openrouter_resolution(image_size: ImageSize, allowed: Sequence[str]) -> str | None:
+    """The resolution field for a model, or None when it takes none.
+
+    Clamps **down** to the nearest rung the model serves. Down rather than up
+    because the alternative is billing a user for 4K they did not ask for; a
+    slide that is softer than requested is the cheaper way to be wrong.
+    """
+    if not allowed:
+        return None
+    wanted = image_size.value
+    if wanted in allowed:
+        return wanted
+    ranked = [rung for rung in _OPENROUTER_RUNGS if rung in allowed]
+    below = [rung for rung in ranked if _OPENROUTER_RUNGS.index(rung) < _OPENROUTER_RUNGS.index(wanted)]
+    return below[-1] if below else ranked[0]

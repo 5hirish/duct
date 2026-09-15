@@ -4,7 +4,7 @@ The one home for ``project_memories`` (models/memory.py). Everything that
 writes memory goes through :func:`remember`; everything that reads it for a
 prompt goes through :func:`build_memory_context`.
 
-Design invariants (docs/engineering/agent-memory-research.html §07), enforced here:
+Design invariants (docs/engineering/2026-08-28-agent-memory-research.md §07), enforced here:
 
 * **Best-effort, never raises.** A memory write must never break the agent turn
   or the domain write it accompanies — same contract as ``log_activity`` and

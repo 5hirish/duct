@@ -60,6 +60,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from agents.models import Provider
+
 logger = logging.getLogger(__name__)
 
 # OpenAI API keys start with this; a ChatGPT OAuth access token does not.
@@ -90,6 +92,16 @@ _REFRESH_HELD_BY_SHELL = "held-by-desktop-shell"
 # When a JWT carries no ``exp`` claim, assume OpenAI's usual lifetime.
 _DEFAULT_ACCESS_LIFETIME = timedelta(hours=1)
 
+# What every Codex request asks the backend to return alongside the answer.
+#
+# The backend forces ``store=False``, and a stateless Responses call keeps a
+# reasoning item only if it came back encrypted: without this ``include`` the
+# client drops every reasoning block before the next call (see
+# ``_construct_responses_api_input``), so a tool loop re-derives its plan from
+# scratch at every step — the single biggest reason a plan-backed run felt
+# slower than the same model on an API key. Codex CLI sends exactly this.
+REASONING_CARRYOVER = ("reasoning.encrypted_content",)
+
 
 # ---------------------------------------------------------------------------
 # Credential shapes
@@ -113,6 +125,52 @@ def is_subscription_credential(value: str) -> bool:
     if not token.startswith(_JWT_PREFIX) or token.count(".") != 2:
         return False
     return bool(decode_jwt_claims(token, segment=0))
+
+
+# The only provider Duct can reach through a consumer plan.
+#
+# Anthropic disabled third-party OAuth on the Messages API in Feb 2026 and its
+# terms forbid routing a Claude plan through another application at all, so
+# there is no second entry to add here later. That matters because the shape
+# test above answers only "is this a JWT" — it cannot tell a ChatGPT token from
+# any other JWT a user might paste into the wrong box, and every caller that
+# *renders* or *bills* a source has to ask both questions. Asking only the
+# first is how the settings page came to promise an Anthropic subscription
+# that cannot exist.
+SUBSCRIPTION_PROVIDERS = frozenset({Provider.OPENAI})
+
+
+def is_plan_credential(provider: Provider, value: str) -> bool:
+    """True when ``value`` is a plan token *and* ``provider`` has a plan path."""
+    return provider in SUBSCRIPTION_PROVIDERS and is_subscription_credential(value)
+
+
+def is_usable_credential(provider: Provider, value: str) -> bool:
+    """False for a credential this provider could never accept.
+
+    Deliberately narrow: the only shape certain enough to reject on is that a
+    JWT is not an API key. Every vendor Duct talks to issues a prefixed opaque
+    string (``sk-ant-``, ``sk-``, ``AIza``, ``xai-``); the single reason a JWT
+    appears in a provider slot at all is that a ChatGPT plan travels as one,
+    and that is OpenAI's slot. Anywhere else it is stale or mis-pasted.
+
+    Why this exists rather than the caller just checking presence: ``bool(key)``
+    was being reported as ``reachable`` and ``runnable``, so a leftover JWT in
+    the Anthropic slot lit the tile green *and* made ``/models/preview`` promise
+    "Heavy jobs run on claude-opus-5" — a run that 401s. Presence is not
+    reachability, and the difference has to be decided once, here, or each
+    endpoint invents its own answer.
+
+    Do not widen this to per-provider prefixes without moving the prefix table
+    here first: OpenRouter's key may front any OpenAI-compatible gateway, so
+    its shape is genuinely not ours to assert.
+    """
+    value = (value or "").strip()
+    if not value:
+        return False
+    if is_subscription_credential(value):
+        return provider in SUBSCRIPTION_PROVIDERS
+    return True
 
 
 def pack_subscription_credential(access_token: str, account_id: str = "") -> str:
@@ -297,5 +355,6 @@ def build_codex_chat(
         temperature=temperature,
         token_provider=token_provider,
         originator=_originator(),
+        include=list(REASONING_CARRYOVER),
         **kwargs,
     )

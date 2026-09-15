@@ -224,6 +224,12 @@ class InsightsSession(BaseAgentSession):
     # no consolidation on close.
     memory_off: bool = False
 
+    # The autonomy level this run operates at and the model it was stepped
+    # down for, so ``routes/agents.py`` can notice a change made from the
+    # composer and re-state the posture at the next turn.
+    autonomy: str = ""
+    autonomy_model: str = ""
+
 
 def create_insights_session(session_id: str, agent_type: str = "insights") -> InsightsSession:
     """Create and register an insights session with both queues.

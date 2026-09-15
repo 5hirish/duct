@@ -46,9 +46,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import PreferencesDialog from "./PreferencesDialog";
-import { loadPreferences, hasNonDefaultPreferences } from "@/lib/userPreferences";
-import { notificationSurface } from "@/lib/notify";
+import {
+  PROFILE_CHANGED,
+  PROFILE_DEFAULTS,
+  loadProfile,
+} from "@/lib/userProfile";
+import {
+  notificationSurface,
+  canOpenNotificationSettings,
+  openNotificationSettings,
+} from "@/lib/notify";
 import { CONSENT_SETTINGS_EVENT } from "@/lib/consent";
 import { isDesktopShell } from "@/lib/shell";
 
@@ -192,50 +199,79 @@ function SidebarProjectSwitcher() {
  * than one that claims "Off" and corrects itself. */
 function useNotificationPermission() {
   const [permission, setPermission] = useState("unknown");
+  // Only meaningful while `permission` is "system": whether this shell has an
+  // OS page to send the user to.
+  const [hasSettingsPage, setHasSettingsPage] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    notificationSurface().then((surface) => {
+    notificationSurface().then(async (surface) => {
       if (!alive) return;
       // The shell posts through the OS, which owns the switch and has no
-      // permission for the page to request. "system" is that state: on as far
-      // as Duct is concerned, changeable only in System Settings.
+      // permission for the page to request. "system" is that state: Duct will
+      // post, and whether anything appears is settled in System Settings.
       setPermission(surface === "shell" ? "system" : surface === "browser" ? Notification.permission : "none");
+      if (surface !== "shell") return;
+      const canOpen = await canOpenNotificationSettings();
+      if (alive) setHasSettingsPage(canOpen);
     });
     return () => {
       alive = false;
     };
   }, []);
 
-  async function request() {
+  /** The one thing clicking the row does, whichever surface we are on. */
+  async function act() {
+    // The shell cannot ask — `permission_state` there is a constant `Granted`,
+    // so the OS page is the only place the real answer lives or changes.
+    if (permission === "system") {
+      await openNotificationSettings();
+      return;
+    }
     if (permission !== "default") return;
     setPermission(await Notification.requestPermission());
   }
 
-  return { permission, request };
+  return { permission, hasSettingsPage, act };
 }
 
 function NotificationMenuItem() {
-  const { permission, request } = useNotificationPermission();
+  const { permission, hasSettingsPage, act } = useNotificationPermission();
 
   if (permission === "unknown" || permission === "none") return null;
+  return <NotificationRow permission={permission} hasSettingsPage={hasSettingsPage} onAct={act} />;
+}
 
+/** The row itself, given a state rather than detecting one.
+ *
+ * Split from the hook so every state is reachable: two of the four ("System",
+ * "Blocked") cannot be produced in a browser at all, which is exactly why they
+ * are the ones that go unreviewed. `/preview` renders all four side by side. */
+export function NotificationRow({ permission, hasSettingsPage = false, onAct }) {
+  // "system" is the only row whose label depends on more than the permission:
+  // it is an action when the shell can open the OS page and a statement when it
+  // cannot (Linux, or a shell older than `open_notification_settings`).
   const states = {
     default:     { icon: Bell,     badge: "Off",      label: "Enable notifications", clickable: true  },
     granted:     { icon: BellRing, badge: "On",       label: "Notifications",        clickable: false },
     denied:      { icon: BellOff,  badge: "Blocked",  label: "Notifications",        clickable: false },
-    system:      { icon: BellRing, badge: "System",   label: "Notifications",        clickable: false },
+    system: hasSettingsPage
+      ? { icon: BellRing, badge: "System", label: "Notification settings", clickable: true  }
+      : { icon: BellRing, badge: "System", label: "Notifications",         clickable: false },
   };
   const { icon: Icon, badge, label, clickable } = states[permission] ?? states.default;
 
   const hint =
     permission === "denied" ? "Blocked in browser — open Site Settings to re-enable" :
+    permission === "system" && hasSettingsPage ? "Duct posts through the OS — open System Settings to turn them on or off" :
     permission === "system" ? "Handled by the OS — change it in your system notification settings" :
     undefined;
 
   return (
     <DropdownMenuItem
-      onClick={clickable ? request : undefined}
+      // Opening System Settings puts another window in front; closing the menu
+      // first means returning to the app does not land back inside a stale one.
+      onSelect={clickable ? onAct : undefined}
       className={`flex items-center justify-between ${!clickable ? "cursor-default opacity-60" : ""}`}
       title={hint}
     >
@@ -243,9 +279,9 @@ function NotificationMenuItem() {
         <Icon className="size-4" />
         {label}
       </span>
-      <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
+      <span className={`rounded px-1.5 py-0.5 font-mono text-2xs ${
         permission === "granted" ||
-        permission === "system"   ? "bg-green-500/15 text-green-600 dark:text-green-400" :
+        permission === "system"   ? "bg-success/15 text-success" :
         permission === "denied"   ? "bg-destructive/10 text-destructive" :
                                     "bg-muted text-muted-foreground"
       }`}>
@@ -255,33 +291,44 @@ function NotificationMenuItem() {
   );
 }
 
-function PreferencesDialogMenuItem() {
-  const [hasPrefs, setHasPrefs] = useState(false);
+function ProfileMenuItem() {
+  const [set, setSet] = useState(false);
 
+  // The badge answers "have I told Duct anything about myself", which is the
+  // only question this row can answer without opening it. It reads the local
+  // cache rather than the server: the menu opens in a frame, and a fetch to
+  // decorate a menu item is a request nobody asked for.
   useEffect(() => {
-    const check = () => setHasPrefs(hasNonDefaultPreferences(loadPreferences()));
+    const check = () => {
+      const profile = loadProfile();
+      setSet(
+        Boolean(profile.display_name || profile.role || profile.notes || profile.communication_language)
+          || profile.writing_preset !== PROFILE_DEFAULTS.writing_preset,
+      );
+    };
     check();
     window.addEventListener("storage", check);
-    return () => window.removeEventListener("storage", check);
+    window.addEventListener(PROFILE_CHANGED, check);
+    return () => {
+      window.removeEventListener("storage", check);
+      window.removeEventListener(PROFILE_CHANGED, check);
+    };
   }, []);
 
   return (
-    <PreferencesDialog>
-      <DropdownMenuItem
-        onSelect={(e) => e.preventDefault()}
-        className="flex items-center justify-between"
-      >
+    <DropdownMenuItem asChild className="flex items-center justify-between">
+      <Link href="/settings/profile">
         <span className="flex items-center gap-2">
           <SlidersHorizontal className="size-4" />
-          Preferences
+          Profile
         </span>
-        {hasPrefs && (
-          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+        {set && (
+          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-2xs font-medium text-primary">
             Set
           </span>
         )}
-      </DropdownMenuItem>
-    </PreferencesDialog>
+      </Link>
+    </DropdownMenuItem>
   );
 }
 
@@ -316,7 +363,7 @@ function SidebarUserFooter() {
             </span>
             {/* A guest's email is a synthetic install id; the useful second
                 line is what an account would do for them. */}
-            <span className="truncate text-[11px] text-sidebar-foreground/50">
+            <span className="truncate text-2xs text-sidebar-foreground/50">
               {user.guest ? "Sign in to save your work" : user.email}
             </span>
           </div>
@@ -357,10 +404,10 @@ function SidebarUserFooter() {
         <DropdownMenuItem asChild>
           <Link href="/settings/models">
             <Cpu className="size-4" />
-            <span>Models</span>
+            <span>Models &amp; providers</span>
           </Link>
         </DropdownMenuItem>
-        <PreferencesDialogMenuItem />
+        <ProfileMenuItem />
         <NotificationMenuItem />
         <DropdownMenuSeparator />
         {/* Plain new-tab links: installExternalLinkHandler (lib/shell.js)
@@ -544,7 +591,7 @@ export default function AppSidebar() {
             )}
 
             <SidebarGroup className="py-2">
-              <SidebarGroupLabel className="px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              <SidebarGroupLabel className="px-4 text-2xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">
                 {section.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -562,7 +609,7 @@ export default function AppSidebar() {
                           >
                             <Icon className="size-4" />
                             <span>{item.label}</span>
-                            <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-[10px] leading-none text-muted-foreground">
+                            <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-2xs leading-none text-muted-foreground">
                               Soon
                             </span>
                           </SidebarMenuButton>
@@ -602,11 +649,11 @@ export default function AppSidebar() {
                 <Plug className="size-4" />
                 <span>Connections</span>
                 {connectionCount > 0 ? (
-                  <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-px text-[10px] leading-none font-medium text-primary group-data-[collapsible=icon]:hidden">
+                  <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-px text-2xs leading-none font-medium text-primary group-data-[collapsible=icon]:hidden">
                     {connectionCount}
                   </span>
                 ) : (
-                  <span className="ml-auto text-[11px] text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
+                  <span className="ml-auto text-2xs text-muted-foreground group-data-[collapsible=icon]:hidden">
                     New
                   </span>
                 )}

@@ -1,6 +1,6 @@
 """The three-level autonomy ladder, and the invariant it must not break.
 
-Phase 5 of `docs/engineering/autonomous-insights-agent-plan.md`. `manual |
+Phase 5 of `docs/engineering/2026-08-31-autonomous-insights-agent-plan.md`. `manual |
 assisted` becomes `ask | assisted | auto`, a ladder that governs three things
 together — how freely the agent asks, whether it proposes, and whether an
 eligible proposal applies without a click.

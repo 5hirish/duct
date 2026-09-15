@@ -145,7 +145,7 @@ export default function PipelineProgress({
               {running ? (
                 <Spinner className="text-primary" />
               ) : status === StepStatus.SUCCESS ? (
-                <span className="text-green-500 text-sm shrink-0">✓</span>
+                <span className="text-success text-sm shrink-0">✓</span>
               ) : (
                 <span className="size-3.5 shrink-0 rounded-full border border-muted-foreground/30" />
               )}

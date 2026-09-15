@@ -1,6 +1,7 @@
 import importlib
 import os
 import uuid
+from urllib.parse import urlparse
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,7 +16,6 @@ def _load_server_with_env(*, expose_docs=False, docs_password="", docs_user="doc
         "http://localhost:8002/auth/connectors/google_ads/oauth/callback"
     )
     os.environ["FRONTEND_ORIGIN"] = "http://localhost:3003"
-    os.environ["GOOGLE_ADS_DEVELOPER_TOKEN"] = "test-dev-token"
     os.environ["DUCT_API_KEY"] = TEST_DUCT_API_KEY
     os.environ.pop("GEMINI_API_KEY", None)
     # Pin the docs config hermetically. A developer's .env.local may set the
@@ -152,7 +152,10 @@ def test_connector_oauth_authorize_redirects_to_google(server_client, connector)
         follow_redirects=False,
     )
     assert res.status_code == 307
-    assert "accounts.google.com" in res.headers.get("location", "")
+    # The host, not a substring of the URL: "accounts.google.com" also appears
+    # in evil.com/?next=accounts.google.com, so a substring assertion would pass
+    # for a redirect that sends the user somewhere else entirely.
+    assert urlparse(res.headers.get("location", "")).hostname == "accounts.google.com"
 
 
 @pytest.mark.parametrize(

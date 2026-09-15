@@ -100,6 +100,7 @@ from agents.core.deep_session import (
 )
 from agents.core.lc import build_ask_user_tool, inspection_chat_model, interrupt_pause, resolve_chat_model
 from agents.core.quota import credential_identity
+from agents.core.turn import TurnContext, build_turn, spec_for
 from agents.core.session import register_session
 from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
 from agents.engines import Engine, resolve_fallback_models
@@ -287,6 +288,22 @@ def _compose_audience(audience: dict | None) -> str:
                 parts.append(name or desc)
     return "; ".join(parts)
 
+
+
+def _voice_block(user_id) -> str:
+    """The operator's ``<user_context>``, or '' when they never set a profile.
+
+    Best-effort like every other profile read: a content session is worth
+    having without it, and a settings row is not worth failing a run over.
+    """
+    from agents.core.voice import user_context_block
+    from service.profile import get_profile
+
+    try:
+        return user_context_block(get_profile(user_id))
+    except Exception:  # noqa: BLE001 — a preference, never a blocker
+        logger.warning("content: profile unavailable", exc_info=True)
+        return ""
 
 async def _memory_block(session: ContentSession, *, query: str = "") -> str:
     """The project's memory digest for a content run, as a user-turn block.
@@ -632,9 +649,30 @@ class ContentRunner:
             })
             brand = await self._load_project_step(session.project_id, emit)
             opening_prompt = await opening(brand)
-            memory = await _memory_block(session, query=memory_query)
-            if memory:
-                opening_prompt = f"{opening_prompt}\n\n{memory}"
+            # Who is being written for, and in which language. In the opening
+            # turn rather than the system prompt: the orchestrator prompt is
+            # shared across this account's sessions and per-user text in it
+            # would cost the cached prefix on every call.
+            #
+            # Ordered by agents/core/turn.py rather than by hand. The hand
+            # version put the memory digest *after* the ask, which is the one
+            # place it cannot be cached from: memory moves between runs, so
+            # everything before it is what a later run can reuse, and there was
+            # nothing before it.
+            ctx = TurnContext()
+            ctx.set("user_context", await asyncio.to_thread(
+                _voice_block, getattr(session, "user_id", None)
+            ))
+            ctx.set("project_memory", await _memory_block(session, query=memory_query))
+            opening_prompt = build_turn(
+                spec=spec_for(AgentType.TIKTOK_STUDIO),
+                context=ctx,
+                request=opening_prompt,
+                # Content's opening turn is a composed instruction, not the
+                # user's words. Ordering it is the win here; retagging it would
+                # be a prompt change this agent has no eval to catch.
+                wrap_request=False,
+            )
         else:
             brand = await asyncio.to_thread(_load_brand_context, session.project_id)
             opening_prompt = ""

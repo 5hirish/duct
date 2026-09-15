@@ -20,7 +20,7 @@ Next.js App Router report viewer and agent interface.
 
 ## Route structure
 
-Three route groups under `app/`:
+Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the token-gated lead-magnet audit with its own chrome and no auth):
 
 - `(start)/start` — onboarding: the audit *is* the onboarding. One field
   (URL — the root page read back in a second, crawl continuing in the
@@ -38,27 +38,45 @@ Three route groups under `app/`:
   `--tessera-*` tokens in `styles/onboarding.css` and the one celebration
   (`TesseraBurst`) is made of them. Provider choice is a radio-card list
   (`ProviderStep.jsx`), OpenAI first. Design and phases:
-  `docs/engineering/smart-onboarding-plan.md`.
+  `docs/engineering/2026-09-08-smart-onboarding-plan.md`.
   Nothing is **written** until the user confirms the site card: for someone
   already signed in, the crawl's draft would otherwise land in whichever
   project happened to be active and overwrite it. The card says which
   project this becomes, offers a separate one, and asks when two projects
   share the site. The audit that follows says so again from the workspace,
   because that write happens while the user is reading the report.
-- `(auth)/` — login page; links to `/start` for first-timers, and passes a
-  guest's link code to the authorize URL so the account keeps their work.
+- `(auth)/` — the front door, and it is a landing page before it is a login
+  page: the wide half (`components/onboarding/FrontDoor.jsx`) is the free
+  audit — one URL field that hands off to `/start` — and the narrow dark half
+  is sign-in for someone who already has an account. It passes a guest's link
+  code to the authorize URL so the account keeps their work.
   When `lib/signInSources.js` has armed the onboarding bundle it also passes
   `sources=onboarding` (Search Console + Analytics read scopes in the same
   consent) and says so under the button. Only the connector prompt on the
   onboarding audit arms it, and the arming expires; the Share dialog, an
   invitation and a plain visit here stay identity-only.
+  Two things the offer half deliberately does **not** show, both of which read
+  as a demand rather than an offer to someone who has not decided yet: the
+  connector list as pills under the field (it survives as one sentence below
+  the fold, with a "when you're ready" clause), and `/start`'s aqueduct strip
+  rendered dry, which is three chores shown before the first click. Its ink is
+  semantic tokens only — the ground is `--start-ground`, which flips with the
+  theme, and the fixed `--navy` brand hexes it used to paint with measured
+  1.05:1 on it in dark.
 - `(app)/` — authenticated app shell:
-  - `audit/` + `audit/[sessionId]/` — general audit reports
-  - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit variant
+  - `insights/organic-growth/` + `[slug]/` + `generate/` — the Desk, stored
+    insights, generate entry; `insights/session/` — the insights agent
+    workspace
+  - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit hub and live workspace
+  - `content/` — Content Studio hub; `content/plan/` the planner board;
+    `content/posts/[postId]`, `posts/new`, `sessions/new` — the content agent
+    workspace over a post or a plan
+  - `execute/` — change-set review queue: diffs, approve, apply, roll back
   - `connections/` — connector/integration management
-  - `generate/` — report generation workflow
-  - `insights/` + `insights/[slug]/` + `insights/generate/` — insights hub
-  - `insights/organic-growth/` + `[slug]/` + `generate/` — organic growth insights
+  - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
+    library, the cross-agent feed, usage, and user-level memory
+  - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
+  - `generate/` — the retired wizard, now a bare redirect to `/insights/session`
   - `projects/` — project management
   - `project/[projectId]/` — **Project context**, the editor for one
     project: the wizard's five sections, kept, minus creation (a project
@@ -67,7 +85,8 @@ Three route groups under `app/`:
     Deep-link a section with `#about` / `#targets` / `#audience` /
     `#competition` / `#brand`. There is no `/onboarding` route any more —
     "new project" everywhere means `/start`.
-  - `project/[projectId]/members/` — project members + invitations (owner/collaborator)
+  - `project/[projectId]/members/` + `project/[projectId]/memory/` — members
+    and invitations (owner/collaborator); project-scoped memory
 
 Plus two top-level routes outside every group, because their visitor is
 usually signed out and the app shell's guard would lose where they were going:
@@ -78,6 +97,20 @@ then resumes the conversation; the backend hands it only to project members).
 the agent to check what the bundled sign-in connected and bind the property
 (`KICKOFF_MESSAGES` in `AuditWorkspace.jsx`; it rides the session's `client`
 bag and is spent once).
+
+**Every routable segment renders `LocalBackendGate`.** The desktop shell
+bundles its own backend and only learns its loopback port at runtime, so
+`BASE` is repointed once at boot (`lib/localBackend.js`) and the gate holds
+rendering until then. Skipping it is not a slow path, it is a sign-out: the
+session token is stored under one key but signed by whichever backend minted
+it, so a token from the wrong one comes back 401 "Invalid token" and
+`authFetch.endSession` reads any 401 as a dead session. That is what `/start`
+did — it was ungated and mints a guest, so "Audit a site" from inside the
+desktop app replaced the signed-in session with a token the sidecar would
+never accept, and the next request bounced the user to the front door.
+`scripts/check-backend-gate.mjs` (in `npm run check:parity`) holds the rule;
+its `ALLOWED` list is for subtrees that reach no backend at all, and adding to
+it is a claim about the code, not a way to quiet the check.
 
 ## Key utilities
 
@@ -124,6 +157,31 @@ bag and is spent once).
   what every run reads — including the scheduled brief, which has no browser.
   On disagreement the server wins, and every write is a partial so a stale tab
   cannot put back a control it never saw.
+- `components/models/` — the Models & providers page, in parts, because
+  `/preview` can only document a component it can import. `TierSummary` is
+  what the Tiers tab opens with: the setup you already have, in three lines,
+  with the three-way choice behind Customise — **most people bring one key**,
+  and the page it replaced asked all three questions before answering any.
+  Two rules that page is one careless change away from losing, both of which
+  it had already lost once: **say the credential answer once** (`sourcesAgree`
+  decides whether the summary says it for the page or the cards say it each),
+  and **state the fall-through rule once**, in the drawn chain. `UsagePanel`
+  is the whole Usage view and has two homes — the `/usage` route and this
+  page's third tab — so change it there, never fork it into either caller.
+  `ModelPicker` is the **only `SelectGroup` in the app**, and it must keep
+  `position="popper"`: Radix's default `item-aligned` positions the list by
+  aligning the selected item over the trigger and never resolves one inside a
+  group, so the list opens at the viewport's bottom-left corner and the
+  control reads as dead. `DeskComposer` carries the same prop for the same
+  reason. The **Images row is a picker, not a report**: `image_model` on
+  `user_model_settings` names which model draws, and `resolve_image_run`
+  treats it as a preference — an unknown id, or one whose provider has no
+  spendable key, falls through to `IMAGE_PROVIDER_ORDER` rather than failing
+  the run. `/providers/status` takes the same argument and must keep giving
+  the same answer, because that row is a promise about what the run will do.
+  Its `UsageEmpty` is exported for one reason: `/preview` renders fixtures and
+  never the API, and this panel's first paint is a fetch, so without that seam
+  the two states most worth reviewing would be the two nobody could open.
 - `lib/engines.js` — `DEFAULT_ENGINE` and the agent-type list. The engine is
   no longer a user choice: v3 is gone, every agent runs v1, so the Runtime
   tab, the `ENGINES` list and the agent↔engine support map went with it.
@@ -139,7 +197,21 @@ bag and is spent once).
   as "no new version", because a reload prompt nobody needed is what teaches
   people to ignore the one they do. **Never reload for the user** — this app
   holds long agent runs and unsent input.
-- `lib/userPreferences.js` — preference persistence
+- `lib/userProfile.js` + `/settings/profile` — who Duct is answering and how
+  they want to be written to: name, role, one writing preset, the language Duct
+  writes *to them* in, and their own instructions. Server-owned, on the
+  `lib/modelSettings.js` pattern (localStorage paints, the server wins, writes
+  are partial), because the scheduled brief has no browser to send a preference
+  from. One preset where the dialog had two grids: `service/profile.py` derives
+  the `communication_style`/`report_depth` pair from it, so no prompt changed.
+  The page's sample is canned on purpose — a live rewrite is a model call per
+  click. **Communication language is not the project's output language (#125)
+  and not interface localisation (#126):** chat follows this, an artifact
+  follows the project's output language when it has one.
+- `lib/userPreferences.js` — what is left after the profile moved to the
+  server: the per-run dials the composer writes (`thinking`, `tier`,
+  `context_compression`), plus the three fields an agent request still carries
+  for signed-out runs, mirrored from the profile rather than edited here
 - `lib/analytics-client.js` — how to load GTM and push events (never whether)
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
 - `lib/analytics/` — the seam. `index.js` selects a provider from
@@ -177,10 +249,19 @@ bag and is spent once).
   leaves the app believing it is signed in. Opt out with `retireSession: false`
   only where signing out costs the user something they just did — the connector
   save does, because its 401 lands on the way back from the provider.
+  It also records **which backend minted the session** (`AUTH_BACKEND_KEY`,
+  written by `setAuthToken`), because the shell addresses two — its sidecar and
+  the hosted API — and a token from the wrong one is well-formed, unexpired and
+  correctly signed, so nothing else on the client can tell it apart.
+  `reconcileStoredSession()` runs once, from `LocalBackendGate`, and discards a
+  mismatch *quietly*: no event, no parked redirect, no "your session ended".
+  That is the distinction — a mismatch is not an expiry, and treating it as one
+  is what signed people out mid-use. A session with no recorded issuer predates
+  this and is left alone, so upgrading signs nobody out.
 
 ## UI conventions
 
-Full reasoning in `docs/engineering/desktop-adaptive-ui-review.html` (in `duct`).
+Full reasoning in `docs/engineering/2026-09-01-desktop-adaptive-ui-review.html` (in `duct`).
 
 **[`DESIGN.md`](DESIGN.md) is the design & UX companion to this section** —
 the look/feel/voice layer: design tokens as built, the canonical pattern per
@@ -218,6 +299,29 @@ text size. Device units stay `px`: borders, outlines, shadows, radii, 1px optica
 nudges. Prose gets `max-width: var(--measure)` (68ch) or the `.measure` utility —
 never tables, code, or column layouts.
 
+**Two checks hold the design system, and they are not advisory.** Both run in
+`npm run check:parity`, so CI has them:
+
+- `scripts/check-design-system.mjs` (`npm run check:design`) fails on
+  `text-[Npx]`, a raw Tailwind palette class, a hex in JSX, `window.confirm`,
+  `Loader2`, `text-muted-foreground/NN`, and a viewport prefix in a container
+  region. It is a **ratchet**: each rule carries an `allow` map of the files
+  that are genuinely exceptions, each with its reason. Removing a name is
+  permanent. Adding one is a decision you write a sentence for — it is not how
+  you quiet the check, any more than adding a file to
+  `test_harness_boundaries.py`'s allowlist is how you fix a red test.
+- `scripts/check-contrast.mjs` (`npm run check:contrast`) does the WCAG maths
+  on the real oklch values in `tokens.css`/`theme.css` and fails when a pair
+  the app paints drops below its threshold. It also asserts that every
+  `--color-*` utility the app writes is actually **mapped** in `@theme inline`
+  — the defect that started all of this was three correct token values that no
+  class could reach, which is invisible to every other kind of review.
+
+Why both exist rather than a paragraph asking nicely: every finding in
+`docs/engineering/2026-09-06-design-system-contrast-review.md` had been fixed
+once before and had come back. `ui/spinner`'s own docblock records consolidating
+twelve hand-rolled rings; seventeen `Loader2`s had arrived since.
+
 **CSS lives in `src/app/styles/`.** `globals.css` is a manifest of imports and
 nothing else; order is load-bearing (see its header). Add a partial for a new
 concern rather than growing an existing one, and put page-specific styling with
@@ -228,6 +332,15 @@ the page.
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
 - Busy state: `ui/spinner`. Colour comes from `currentColor`.
+- Asking "are you sure?": `ui/confirm-dialog`. `useConfirm()` returns
+  `{ confirm, dialog }` — await `confirm({ title, description, action,
+  destructive })` and render `{dialog}`, which is deliberately close enough to
+  `window.confirm` that moving a call site is one line. `<ConfirmDialog>`
+  directly when the caller already holds what is being confirmed in state.
+- Truncated text (2+ lines): `ui/clamp-text`'s `ClampText` — `line-clamp-N`
+  plus a Radix tooltip carrying the full string, capped separately. Full
+  reasoning (including why a bare `line-clamp` or a native `title` isn't
+  enough) is in `DESIGN.md`'s canon table.
 - Corner notices: `ui/corner-notice`. The bottom-right card that tells you
   something without interrupting you — `UpdateToast` (desktop build available)
   and `ReloadToast` (new web build) are both built from it. Extracted at the
@@ -277,6 +390,13 @@ over SSE on :8012 (pausing where the real backend would), and
 `scripts/smoke-agent-workspaces.mjs` drives all three workspaces through a
 headless browser against it — pause, reload-and-reattach, answer, follow-up,
 turn failure — and screenshots each state. Run it after touching the shell.
+The same mock takes `FIXTURES_DIR` (another set of streams with the same
+filenames), `ROUTES_FILE` (canned JSON for the non-agent routes it would
+otherwise answer with `[]`) and `MEDIA_DIR` (a folder served as
+`/uploads/story/*`, so a post can have a cover); `scripts/shots/shoot.mjs` at
+the repo root uses all three to shoot the README's product images from one
+story, `lib/__fixtures__/kestrel-story.mjs`, whose `shot-*` scenes in
+`/preview` are the component halves of the same week.
 
 The shell borrows deliberately from harnesses built in the open.
 [`docs/engineering/agent-harness-references.md`](../docs/engineering/agent-harness-references.md)
@@ -295,7 +415,12 @@ Rules that follow:
   hook and the backend route already carry any pause event that arrives with
   an `interrupt_id`; the card is the only agent-visible part.
 - **A new protocol event goes in the reducer, with a fixture.** Agent-specific
-  payloads stay in the workspace's `onEvent`.
+  payloads stay in the workspace's `onEvent`. The backend holds the other end:
+  `backend/tests/test_app_event_contract.py` parses `lib/agentEvents.js`,
+  `lib/insightsEvents.js` and every fixture here and fails when an event
+  name, error code, step id or memory kind exists on one side only (legacy
+  `LEGACY_*` values excepted, since the app deploys first). Add the member to
+  both enums in the same change, and record only kinds the backend stores.
 - **Phases are the protocol, not a UI mood.** Only the reducer moves `phase`;
   a workspace that needs a different input policy passes `inputDisabled`
   rather than inventing a state. The default policy keeps the box open while
@@ -310,9 +435,13 @@ Rules that follow:
 - **The status row says what is happening, with a clock.** While the agent
   works the header reads `Working · 1m 12s · Collecting source data` — phase,
   elapsed, and the step in progress (or "Reconnecting to the model (2/4)",
-  "Compacting context"). The context ring beside it is `workspace/ContextRing`
-  over the reducer's `usage`; it is the same ring the insights desk shows for
-  a new thread. A retry counts down (`retrying.until`, anchored on this
+  "Compacting context"). The context ring sits in the composer beside Send —
+  `workspace/ContextRing` over the reducer's `usage`, empty and labelled "New
+  thread" until the first call reports — the same place and the same ring
+  the insights desk shows. The composer (`workspace/ChatInput`) is the desk
+  composer's card: text on top, a footer with the shell's `composerTools`
+  chips (`workspace/ComposerDials` for insights: autonomy, thinking, model
+  tier) on the left and the ring and Send on the right. A retry counts down (`retrying.until`, anchored on this
   client's clock at receipt), and the tooltip carries cost and the cached
   share beside the tokens. After a compaction the ring is empty and says so
   (`usage.last.stale`) until the next call on the thread reports its size.
@@ -373,6 +502,19 @@ no auth, no backend) that mounts one component at a time in the real app's CSS.
 Add scenes to `preview/scenes.jsx`; pick a **surface** (in place, dialog, sheet,
 drawer, alert, notification, page, toolbar) and a **device** (phone, iPad either
 way up, desktop-min, desktop, wide), in light, dark, or both at once.
+
+**A new component gets a preview entry in the same change, not a follow-up.**
+This project is open source, so `/preview` is not only a working tool — it is
+the component library's documentation, the one place a contributor or a future
+agent can see what exists and how it is meant to look without reading every
+call site. Ship one of: a `PRIMITIVES` entry in `preview/system.jsx` for a new
+`components/ui/*` part that has a variant to choose between (the narrow
+exception — a single-appearance part like `separator`, folded into the
+specimens that use it instead of standing alone — is explained at the top of
+that file); a canon row in `DESIGN.md` plus its matching example in
+`preview/catalogue.jsx` for a new canonical pattern; or, short of either, a
+`preview/scenes.jsx` entry so the component can at least be seen in isolation.
+A component with none of these is undocumented, whatever comment describes it.
 
 Two modes, because there are two jobs:
 
@@ -475,12 +617,23 @@ for it every time is why "look at it" gets skipped.
 - No dedicated auth library (next-auth, Clerk, Supabase)
 - No form library (React Hook Form, Formik)
 - No global state library (Redux, Zustand, Jotai)
-- No test suite (Jest, Vitest, Playwright) — E2E tests live in `site/`, not `app/`.
-  This rules out *committed* browser tests; it does not rule out driving a
-  browser to look at what you just built. See "Look at it before you call it
-  done" above — read as a blanket ban, this line is why UI arrives unrendered.
-  `src/app/preview/` is not a test suite either: it is a route that renders
-  components, with no runner, no assertions and no dependency.
+- **Vitest** (`npm test`) covers the pure-logic layer only:
+  `src/lib/__tests__/*.test.js`. No jsdom, no component tests, no E2E — the
+  config pins `environment: "node"` deliberately ("the hook and the
+  components are checked by `next build` and by looking at them"), and E2E
+  tests live in `site/`, not `app/`. A module that touches `window` or
+  `document` is still testable this way if it's plain functions, not
+  components: stub the pieces it reads (`localStorage`, `document.cookie`,
+  `fetch`) on `globalThis` in a `beforeEach` — see `authFetch.test.js` and
+  `consent.test.js` for the pattern. A module whose surface *is* a React
+  component (`AuthProvider`, `AuthGuard`) needs `@testing-library/react` and a
+  `jsdom` environment, neither of which is set up yet — that's a real
+  infrastructure step, not just another test file, so treat adding it as its
+  own change. This rules out *committed* browser tests; it does not rule out
+  driving a browser to look at what you just built. See "Look at it before you
+  call it done" above — read as a blanket ban, this line is why UI arrives
+  unrendered. `src/app/preview/` is not a test suite either: it is a route
+  that renders components, with no runner, no assertions and no dependency.
 - No Supabase anywhere in this project
 
 <!-- BEGIN:nextjs-agent-rules -->

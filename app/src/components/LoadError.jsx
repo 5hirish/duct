@@ -2,8 +2,8 @@
 
 // What a panel shows when its data did not arrive.
 //
-// Deliberately not the empty state. "No proposed changes yet — run an audit and
-// recommended fixes land here" is an invitation to use the product; printing a
+// Deliberately not the empty state. "Nothing proposed yet — run an audit and the
+// fixes land here" is an invitation to use the product; printing a
 // server error in its place tells a new user their account is broken when in
 // fact one request failed. The two are mutually exclusive, and the reason is
 // not cosmetic: a panel that never heard back does not know whether it is

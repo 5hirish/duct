@@ -52,7 +52,6 @@ def db(engine):
 def cfg(monkeypatch):
     config = Configs(
         credentials_encryption_key=FERNET_KEY,
-        google_ads_developer_token="env-dev-token",
         google_oauth_client_id="env-client-id",
         google_oauth_client_secret="env-client-secret",
     )

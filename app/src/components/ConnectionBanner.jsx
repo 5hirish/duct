@@ -75,6 +75,13 @@ export default function ConnectionBanner() {
     <div
       role="status"
       aria-live="polite"
+      // A fixed bar with nothing reserved under it covered the last field of a
+      // form at 375px and the sidebar's account row at 1024px — on the one
+      // screen where the user is being told something has gone wrong and may
+      // need to act on it. `--connection-banner-height` is read by the app
+      // shell's scroll containers (app-shell.css) to pad exactly this much,
+      // and only while the banner is mounted.
+      data-connection-banner=""
       className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 px-4 py-3 shadow-lg backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:left-4 sm:max-w-md sm:rounded-lg sm:border"
     >
       <div className="flex items-start gap-3">

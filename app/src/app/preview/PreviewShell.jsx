@@ -268,13 +268,35 @@ export default function PreviewShell({ canon = [] }) {
   // "all" rather than "" because Radix reserves the empty string: an empty
   // value means "no selection", so an <SelectItem value=""> can never be picked
   // and the trigger would sit permanently blank.
-  const groups = useMemo(
-    () => [
-      { id: "all", label: "All" },
-      ...[...new Set(SCENES.map((s) => s.group))].map((g) => ({ id: g, label: g })),
-    ],
-    [],
-  );
+  //
+  // Alphabetical, with a count per group — first-appearance order was the
+  // order features happened to be built in, which stops meaning anything once
+  // there are more than a handful of groups to scan.
+  const groups = useMemo(() => {
+    const counts = new Map();
+    for (const s of SCENES) counts.set(s.group, (counts.get(s.group) || 0) + 1);
+    return [
+      { id: "all", label: `All (${SCENES.length})` },
+      ...[...counts.keys()]
+        .sort((a, b) => a.localeCompare(b))
+        .map((g) => ({ id: g, label: `${g} (${counts.get(g)})` })),
+    ];
+  }, []);
+
+  // Working scenes, sectioned by group and alphabetised the same way as the
+  // picker above — so "All" reads as the same set of sections the picker can
+  // narrow to, not a different, unordered wall of them.
+  const workingGroups = useMemo(() => {
+    const byGroup = new Map();
+    for (const s of SCENES) {
+      if (group !== "all" && s.group !== group) continue;
+      if (!byGroup.has(s.group)) byGroup.set(s.group, []);
+      byGroup.get(s.group).push(s);
+    }
+    return [...byGroup.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([id, entries]) => ({ id, entries }));
+  }, [group]);
 
   // A canon row and its example are joined by id. A row with no example is a
   // GAP and is listed as one — the alternative is a catalogue that looks
@@ -316,6 +338,7 @@ export default function PreviewShell({ canon = [] }) {
   );
 
   const working = group === "all" ? SCENES : SCENES.filter((s) => s.group === group);
+  const workingSectionCount = workingGroups.length;
   const devices = DEVICES.filter((d) => deviceIds.includes(d.id));
   const themes = themeMode === "both" ? ["light", "dark"] : [themeMode];
   const lens = { inspect, vision, text };
@@ -368,7 +391,9 @@ export default function PreviewShell({ canon = [] }) {
               ? `${systemCount} entries · ${canonRows.length} rules · ${
                   canonRows.length - covered
                 } gaps`
-              : `dev only · ${working.length} scenes`}{" "}
+              : `dev only · ${workingSectionCount} group${workingSectionCount === 1 ? "" : "s"} · ${
+                  working.length
+                } scene${working.length === 1 ? "" : "s"}`}{" "}
             · {devices.length || "no"} device{devices.length === 1 ? "" : "s"}
           </span>
 
@@ -494,31 +519,44 @@ export default function PreviewShell({ canon = [] }) {
                 })}
               </section>
             ))
-          : working.map((scene) => (
-              <section key={scene.id}>
-                <header className="mb-2 flex flex-wrap items-baseline gap-2">
-                  <h2 className="text-sm font-semibold tracking-tight">{scene.title}</h2>
-                  <span className="text-xs text-muted-foreground">{scene.group}</span>
-                  {scene.state && (
-                    <span className="rounded-full border px-1.5 text-xs text-muted-foreground">
-                      {scene.state}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground underline underline-offset-2"
-                    onClick={() => copyUrl(scene.id)}
-                  >
-                    {copied === scene.id ? "copied" : "copy frame URL"}
-                  </button>
-                  {scene.note && (
-                    <p className="basis-full text-xs leading-relaxed text-muted-foreground">
-                      {scene.note}
-                    </p>
-                  )}
-                </header>
+          : workingGroups.map((g) => (
+              <section key={g.id} className="flex flex-col gap-8">
+                {/* A heading only earns its keep when it is disambiguating
+                    something — with one group selected via the picker above,
+                    every scene already shares it, so repeating it here is
+                    the same word twice for no reason. */}
+                {group === "all" && (
+                  <header className="border-b pb-2">
+                    <h2 className="text-sm font-semibold tracking-tight">{g.id}</h2>
+                  </header>
+                )}
 
-                <Frames id={scene.id} title={scene.title} />
+                {g.entries.map((scene) => (
+                  <div key={scene.id}>
+                    <header className="mb-2 flex flex-wrap items-baseline gap-2">
+                      <h3 className="text-sm font-medium tracking-tight">{scene.title}</h3>
+                      {scene.state && (
+                        <span className="rounded-full border px-1.5 text-xs text-muted-foreground">
+                          {scene.state}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground underline underline-offset-2"
+                        onClick={() => copyUrl(scene.id)}
+                      >
+                        {copied === scene.id ? "copied" : "copy frame URL"}
+                      </button>
+                      {scene.note && (
+                        <p className="basis-full text-xs leading-relaxed text-muted-foreground">
+                          {scene.note}
+                        </p>
+                      )}
+                    </header>
+
+                    <Frames id={scene.id} title={scene.title} />
+                  </div>
+                ))}
               </section>
             ))}
       </main>

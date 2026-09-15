@@ -4,9 +4,9 @@
  * The rule is OpenCode's: notify only when the window is not focused, never
  * when it is — a banner over the thing you are already reading is noise. The
  * transport depends on where the app runs: the desktop shell has a `notify`
- * command that goes through the OS (the webview has no Notification API on a
- * remote origin), the browser has `Notification` behind a permission the
- * sidebar menu asks for. Neither is required; without either this is a no-op.
+ * command that goes through the OS, the browser has `Notification` behind a
+ * permission the sidebar menu asks for. Neither is required; without either
+ * this is a no-op.
  */
 
 import { getShellInfo, isDesktopShell } from "./shell";
@@ -38,14 +38,45 @@ export function pageIsBeingLookedAt() {
  *
  * The sidebar's permission item needs this because the two surfaces answer
  * "are notifications on?" in different places. In the shell the OS owns that
- * switch and there is nothing for the page to ask for — but the item used to
- * test `"Notification" in window`, which no desktop webview satisfies, so the
- * desktop app hid the row entirely and left no sign that notices were on.
+ * switch and there is nothing for the page to ask for, so the item cannot be
+ * driven off `Notification.permission` the way the browser's is.
+ *
+ * The shell is asked *first*, and the order is load bearing: the desktop
+ * webview does define `window.Notification`, because `tauri-plugin-notification`
+ * injects a polyfill over it. Testing for the constructor would therefore call
+ * every desktop session a browser one and report a permission the OS never
+ * asked for.
  */
 export async function notificationSurface() {
   if (await shellCanNotify()) return "shell";
   if (typeof window !== "undefined" && "Notification" in window) return "browser";
   return "none";
+}
+
+/**
+ * Whether this shell can open the OS page where notifications are switched on.
+ *
+ * Gated on the capability rather than on `isDesktopShell()`, because a shell
+ * installed before `open_notification_settings` would reject the invoke and the
+ * sidebar would offer a row that does nothing — and on Linux, where the flag is
+ * false because no single such page exists.
+ */
+export async function canOpenNotificationSettings() {
+  const info = await getShellInfo();
+  return Boolean(info?.capabilities?.notificationSettings);
+}
+
+/**
+ * Send the user to the OS notification settings. Resolves to whether it opened;
+ * never throws, so a caller can fall back to saying where to look.
+ */
+export async function openNotificationSettings() {
+  try {
+    await window.__TAURI__.core.invoke("open_notification_settings");
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Whether the browser side is able to notify right now. */

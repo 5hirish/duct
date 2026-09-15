@@ -1,5 +1,7 @@
 # Paid Ads Demo — World-Class Report Design
 
+**Author:** Shirish Kadam · **Date:** 2026-03-28
+
 > **Archived (April 2026).** UX spec for the marketing demo Step 4; implementation lives under `site/`. See [`README.md`](README.md) in this folder.
 
 

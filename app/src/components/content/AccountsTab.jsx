@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Loader2, Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import {
   listLinkedAccounts,
@@ -9,6 +10,7 @@ import {
   saveLinkedAccounts,
 } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import LoadError from "@/components/LoadError";
 
 const POSTBRIDGE_URL = "https://app.post-bridge.com";
 
@@ -33,12 +35,18 @@ export default function AccountsTab({ projectId }) {
   const [linkedIds, setLinkedIds] = useState(() => new Set());
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  // A list that never arrived is not an empty list: the two states used to
+  // share `error` and render as "No accounts available yet", which tells
+  // someone whose request simply failed that they have nothing connected.
+  const [loadError, setLoadError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       setError("");
+      setLoadError("");
       try {
         const [available, linked] = await Promise.all([
           listSocialAccounts(projectId),
@@ -48,13 +56,13 @@ export default function AccountsTab({ projectId }) {
         setAccounts(Array.isArray(available) ? available : []);
         setLinkedIds(new Set((linked || []).map((a) => Number(a.account_id))));
       } catch (e) {
-        if (!cancelled) setError(e.message || "Failed to load accounts.");
+        if (!cancelled) setLoadError(e.message || "");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [projectId]);
+  }, [projectId, reloadKey]);
 
   const grouped = useMemo(() => {
     const map = {};
@@ -74,7 +82,7 @@ export default function AccountsTab({ projectId }) {
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1500);
     } catch (e) {
-      setError(e.message || "Failed to save. Please try again.");
+      setError(e.message || "That didn't save — your selection has been put back. Try again.");
       throw e;
     } finally {
       setSaving(false);
@@ -105,6 +113,16 @@ export default function AccountsTab({ projectId }) {
     return <p className="text-sm text-muted-foreground">Loading accounts…</p>;
   }
 
+  if (loadError) {
+    return (
+      <LoadError
+        what="your PostBridge accounts"
+        detail={loadError}
+        onRetry={() => setReloadKey((k) => k + 1)}
+      />
+    );
+  }
+
   if (accounts.length === 0) {
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border/70 p-10 text-center">
@@ -113,9 +131,8 @@ export default function AccountsTab({ projectId }) {
         </div>
         <h3 className="text-sm font-semibold">No accounts available yet</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          {error
-            ? error
-            : "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."}
+          Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link
+          it to this project.
         </p>
         <Button className="mt-4" asChild>
           <a href={POSTBRIDGE_URL} target="_blank" rel="noreferrer">Connect in PostBridge →</a>
@@ -177,7 +194,7 @@ export default function AccountsTab({ projectId }) {
         })}
       </div>
 
-      <p className="text-xs text-muted-foreground/70">
+      <p className="text-xs text-muted-foreground">
         Profile pictures are resolved from public handles. PostBridge doesn&apos;t expose
         bios or follower counts, so those aren&apos;t shown.
       </p>
@@ -266,9 +283,9 @@ function SaveState({ saving, saved, count }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
       {saving ? (
-        <><Loader2 className="size-3.5 animate-spin" /> Saving…</>
+        <><Spinner className="size-3.5" /> Saving…</>
       ) : saved ? (
-        <><Check className="size-3.5 text-green-500" /> Saved</>
+        <><Check className="size-3.5 text-success" /> Saved</>
       ) : (
         <><span className="font-medium text-foreground tabular-nums">{count}</span> linked</>
       )}

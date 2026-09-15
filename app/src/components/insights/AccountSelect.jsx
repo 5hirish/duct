@@ -18,7 +18,7 @@ export default function AccountSelect({ request, onAnswer, disabled }) {
   const chosen = candidates.find((c) => c.account_id === selected);
 
   return (
-    <div className="my-3 space-y-3 rounded-xl border border-violet-200 bg-violet-50/60 p-4 dark:border-violet-800/60 dark:bg-violet-950/20">
+    <div className="my-3 space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
       <div className="space-y-0.5">
         <p className="text-sm font-semibold">Which {label} account should Duct use?</p>
         <p className="text-xs text-muted-foreground">

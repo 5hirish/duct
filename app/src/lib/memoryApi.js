@@ -112,10 +112,6 @@ export async function resetMemory({ projectId }) {
   return request(`/api/user/projects/${projectId}/memory/reset?confirm=true`, { method: "POST" });
 }
 
-export async function exportMemory({ projectId }) {
-  return request(`/api/user/projects/${projectId}/memory/export`);
-}
-
 // --- User scope (/api/user/memory) ----------------------------------------
 // What Duct knows about the person rather than the account: how they want
 // analysis done, what they read, what they ignore. Crosses projects.
@@ -156,18 +152,4 @@ export async function resetUserMemory() {
   return request("/api/user/memory/reset?confirm=true", { method: "POST" });
 }
 
-export async function exportUserMemory() {
-  return request("/api/user/memory/export");
-}
 
-/** Save an export as a JSON file — the "it's yours" half of pause/reset/export. */
-export function downloadJson(data, filename) {
-  const url = URL.createObjectURL(
-    new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}

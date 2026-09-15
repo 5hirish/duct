@@ -6,8 +6,8 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { acceptInvitation, fetchInvitation } from "@/lib/membersApi";
 import { hydrateProjectsFromBackend, setActiveProjectId } from "@/lib/projects";
@@ -95,7 +95,7 @@ export default function InvitePage({ params }) {
     return (
       <Shell>
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
+          <Spinner className="size-4" />
           Checking your invitation…
         </p>
       </Shell>
@@ -126,12 +126,12 @@ export default function InvitePage({ params }) {
 
   return (
     <Shell>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--orange)]">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand">
         Project invitation
       </p>
       <h1 className="mb-3 font-serif text-2xl leading-snug text-foreground">
         {inviter ? `${inviter} invited you to ` : "You've been invited to "}
-        <em className="text-[var(--orange)]">{invitation.project_name || "a project"}</em>
+        <em className="text-brand">{invitation.project_name || "a project"}</em>
       </h1>
       <p className="mb-6 text-sm text-muted-foreground">
         You&rsquo;ll join as a collaborator — you can open the project, run audits and insights, and
@@ -152,7 +152,7 @@ export default function InvitePage({ params }) {
 
       {signedIn && wrongAccount && (
         <>
-          <p className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-700 dark:text-amber-400">
+          <p className="mb-4 rounded-2xl border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
             This invitation was sent to <strong>{invitation.invited_email}</strong>, but
             you&rsquo;re signed in as <strong>{viewerEmail}</strong>.
           </p>
@@ -172,7 +172,7 @@ export default function InvitePage({ params }) {
 
       {signedIn && !wrongAccount && (
         <Button type="button" className="w-full" onClick={accept} disabled={accepting}>
-          {accepting && <Loader2 className="size-4 animate-spin" />}
+          {accepting && <Spinner className="size-4" />}
           Accept invitation
         </Button>
       )}

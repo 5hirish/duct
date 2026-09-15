@@ -29,6 +29,10 @@ uvicorn = {version = "^0.52", extras = ["standard"]}
 # Not a caret: poetry reads ^0.0.31 as <0.0.32, so a floor is what we want here.
 # FastAPI's own is 0.0.18; Dependabot walks ours forward as releases land.
 python-multipart = ">=0.0.32"
+# 32.0.0 (2026-09-09) dropped developer_token from the client's required
+# config keys, the same day Google sunset developer tokens. Access level now
+# follows the Cloud project that owns the OAuth client, so there is no token
+# left to send. Do not float back below this.
 google-ads = "^32.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.200.0"
@@ -118,7 +122,9 @@ markers = [
 # third-party accounts. Deselect them by default so neither CI nor a developer
 # with keys exported in their shell can fire them by typing `pytest`. Opt in
 # explicitly with `pytest -m live` — a command-line -m overrides this one.
-addopts = ["-m", "not live"]
+# `--durations=10` prints the slowest tests after every run, so a slow one is
+# noticed the day it lands rather than found later by coverage archaeology.
+addopts = ["-m", "not live", "--durations=10"]
 filterwarnings = [
     # Starlette form parser; third-party until FastAPI/Starlette adopts python_multipart import.
     "ignore:Please use `import python_multipart` instead\\.:PendingDeprecationWarning",

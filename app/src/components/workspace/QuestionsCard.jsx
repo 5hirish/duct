@@ -49,7 +49,7 @@ export default function QuestionsCard({
   });
 
   return (
-    <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-4 space-y-4 my-3">
+    <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 space-y-4 my-3">
       <div className="space-y-0.5">
         <p className="text-sm font-semibold">{title}</p>
         <p className="text-xs text-muted-foreground">{hint}</p>
@@ -99,7 +99,7 @@ export default function QuestionsCard({
               aria-label="Your answer"
               value={freeText[q.question] || ""}
               onChange={(e) => handleFreeText(q.question, e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-3xl border border-control bg-input/50 px-3 py-1.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm"
               autoFocus
             />
           )}

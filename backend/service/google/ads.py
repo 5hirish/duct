@@ -26,7 +26,6 @@ def _norm_customer_id(customer_id: str) -> str:
 
 
 def list_accessible_accounts(
-    developer_token: str,
     client_id: str,
     client_secret: str,
     refresh_token: str,
@@ -40,7 +39,6 @@ def list_accessible_accounts(
     function returns an empty list after silently skipping errors.
     """
     creds: dict[str, Any] = {
-        "developer_token": developer_token,
         "client_id": client_id,
         "client_secret": client_secret,
         "refresh_token": refresh_token,
@@ -63,8 +61,10 @@ def list_accessible_accounts(
     if not resource_names:
         logger.warning(
             "Google Ads list_accessible_customers returned no accounts. "
-            "Common causes: developer token still in Test access (production accounts blocked), "
-            "wrong Google user for OAuth, or Ads API not enabled for the Cloud project."
+            "Common causes: the Cloud project that owns the OAuth client is still on Test "
+            "access (production accounts blocked — check its Google Ads API Overview page "
+            "in Cloud Console), wrong Google user for OAuth, or Ads API not enabled for "
+            "that project."
         )
         return []
 
@@ -125,26 +125,19 @@ class GoogleAdsConnector:
     def list_accounts(self, auth: ConnectorAuthContext) -> list[dict[str, Any]]:
         cfg = get_configs()
         rt = (auth.refresh_token or "").strip() or cfg.google_ads_refresh_token
-        dt = (auth.extras.get("developer_token") or "").strip() or cfg.google_ads_developer_token
         cid = cfg.google_oauth_client_id or cfg.google_ads_client_id
         secret = cfg.google_oauth_client_secret or cfg.google_ads_client_secret
         gaps: list[str] = []
         if not rt:
             gaps.append("refresh_token (query param or GOOGLE_ADS_REFRESH_TOKEN env)")
-        if not dt:
-            gaps.append("developer_token (your own token from Connections, or GOOGLE_ADS_DEVELOPER_TOKEN env)")
         if not cid:
             gaps.append("GOOGLE_OAUTH_CLIENT_ID or GOOGLE_ADS_CLIENT_ID")
         if not secret:
             gaps.append("GOOGLE_OAUTH_CLIENT_SECRET or GOOGLE_ADS_CLIENT_SECRET")
         if gaps:
-            raise ValueError(
-                "Missing Google Ads API credentials: "
-                + "; ".join(gaps)
-                + ". OAuth alone is not enough — the Ads API requires a developer token."
-            )
+            raise ValueError("Missing Google Ads API credentials: " + "; ".join(gaps))
         login = (auth.extras.get("login_customer_id") or "").strip() or cfg.google_ads_login_customer_id
-        return list_accessible_accounts(dt, cid, secret, rt, login_customer_id=login)
+        return list_accessible_accounts(cid, secret, rt, login_customer_id=login)
 
 
 GOOGLE_ADS_META = ConnectorMeta(

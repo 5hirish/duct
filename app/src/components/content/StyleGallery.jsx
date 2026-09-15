@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Sparkles, X } from "lucide-react";
 import { listStyles } from "@/lib/contentApi";
+import LoadError from "@/components/LoadError";
 
 // ---------------------------------------------------------------------------
 // Live preview — render the real CSS inside an isolated iframe so global
@@ -86,6 +87,7 @@ export default function StyleGallery() {
   const [baseCss, setBaseCss] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,13 +98,13 @@ export default function StyleGallery() {
         setStyles(Array.isArray(data?.styles) ? data.styles : []);
         setBaseCss(data?.base_css || "");
       } catch (e) {
-        if (!cancelled) setError(e.message || "Failed to load styles.");
+        if (!cancelled) setError(e.message || "");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [reloadKey]);
 
   const grouped = useMemo(() => {
     const g = {};
@@ -119,7 +121,15 @@ export default function StyleGallery() {
       </div>
     );
   }
-  if (error) return <p className="text-sm text-destructive">{error}</p>;
+  if (error) {
+    return (
+      <LoadError
+        what="the slide styles"
+        detail={error}
+        onRetry={() => { setError(""); setLoading(true); setReloadKey((k) => k + 1); }}
+      />
+    );
+  }
 
   return (
     <section className="space-y-6">
@@ -147,18 +157,18 @@ export default function StyleGallery() {
                 <div className="flex flex-1 flex-col gap-2 p-3.5">
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="text-sm font-semibold">{s.name}</h4>
-                    <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">.{s.key}</code>
+                    <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-2xs text-muted-foreground">.{s.key}</code>
                   </div>
                   <p className="text-xs leading-relaxed text-muted-foreground">{s.description}</p>
                   {s.when_to_use && (
-                    <p className="flex items-start gap-1.5 text-[11px] text-foreground/70">
-                      <Check className="mt-0.5 h-3 w-3 shrink-0 text-green-500" />
+                    <p className="flex items-start gap-1.5 text-2xs text-foreground/70">
+                      <Check className="mt-0.5 h-3 w-3 shrink-0 text-success" />
                       <span>{s.when_to_use}</span>
                     </p>
                   )}
                   {s.dont_use_on && (
-                    <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
-                      <X className="mt-0.5 h-3 w-3 shrink-0 text-rose-500" />
+                    <p className="flex items-start gap-1.5 text-2xs text-muted-foreground">
+                      <X className="mt-0.5 h-3 w-3 shrink-0 text-destructive" />
                       <span>{s.dont_use_on}</span>
                     </p>
                   )}

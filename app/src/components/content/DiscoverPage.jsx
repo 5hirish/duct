@@ -9,7 +9,6 @@ import {
   Hash,
   Heart,
   Images,
-  Loader2,
   MessageCircle,
   Music2,
   Play,
@@ -21,6 +20,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { saveDiscoveredReference } from "../../lib/contentApi";
 import { useScraperRun } from "../../hooks/useScraperRun";
@@ -122,8 +122,8 @@ export default function DiscoverPage({ projectId }) {
           <Sparkles className="h-4 w-4 text-primary" /> Discover what&apos;s working
         </h2>
         <p className="mt-0.5 max-w-prose text-xs text-muted-foreground">
-          Scrape real TikTok posts in your niche. Save the best ones — the research sub-agent
-          cites them when proposing topics, so your plan is grounded in what already gets reach.
+          Scrape real posts in your niche. What you save, the research agent cites when it
+          proposes topics.
         </p>
       </header>
 
@@ -154,10 +154,10 @@ export default function DiscoverPage({ projectId }) {
 
             {actorId === "clockworks/tiktok-scraper" ? (
               <div>
-                <label className="text-[11px] font-medium text-muted-foreground">Hashtags</label>
+                <label className="text-2xs font-medium text-muted-foreground">Hashtags</label>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-md border border-border/70 bg-background p-2">
                   {tags.map((t) => (
-                    <span key={t} className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-[11px] font-medium">
+                    <span key={t} className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-2xs font-medium">
                       #{t}
                       <button type="button" onClick={() => setTags(tags.filter((x) => x !== t))} className="text-muted-foreground hover:text-destructive">
                         <X className="h-3 w-3" />
@@ -174,13 +174,13 @@ export default function DiscoverPage({ projectId }) {
                     }}
                     onBlur={addTag}
                     placeholder={tags.length ? "" : "faceshape, colorseason…"}
-                    className="min-w-[120px] flex-1 bg-transparent px-1 py-0.5 text-[11px] outline-none placeholder:text-muted-foreground/60"
+                    className="min-w-[120px] flex-1 rounded-sm bg-transparent px-1 py-0.5 text-2xs outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
                   />
                 </div>
               </div>
             ) : (
               <div>
-                <label className="text-[11px] font-medium text-muted-foreground">Region</label>
+                <label className="text-2xs font-medium text-muted-foreground">Region</label>
                 <Input
                   value={region}
                   onChange={(e) => setRegion(e.target.value.toUpperCase())}
@@ -189,7 +189,7 @@ export default function DiscoverPage({ projectId }) {
                 />
               </div>
             )}
-            <p className="text-[11px] text-muted-foreground/70">{actor?.hint}</p>
+            <p className="text-2xs text-muted-foreground">{actor?.hint}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -199,14 +199,14 @@ export default function DiscoverPage({ projectId }) {
               </Button>
             )}
             <Button onClick={handleRun} disabled={!canRun}>
-              {isRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              {isRunning ? <Spinner className="size-4" /> : <Search className="h-4 w-4" />}
               {isRunning ? `${phase}… ${elapsed}s` : "Start discovery"}
             </Button>
           </div>
         </div>
 
         {(runId || datasetId) && (
-          <p className="mt-2 font-mono text-[10px] text-muted-foreground/50">
+          <p className="mt-2 font-mono text-2xs text-muted-foreground">
             {runId && <>run={runId.slice(0, 12)} </>}{datasetId && <>· dataset={datasetId.slice(0, 12)}</>}
           </p>
         )}
@@ -222,7 +222,7 @@ export default function DiscoverPage({ projectId }) {
       {isRunning && (
         <div className="space-y-3">
           <div className="flex items-center justify-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Spinner className="size-3.5" />
             Scraping on Apify ({elapsed}s) — polling every 3s, results appear as soon as the actor finishes.
           </div>
           <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
@@ -254,7 +254,7 @@ export default function DiscoverPage({ projectId }) {
                   type="button"
                   onClick={() => setSort(s.id)}
                   className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors",
+                    "rounded-full px-2.5 py-1 text-2xs font-medium transition-colors",
                     sort === s.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70",
                   )}
                 >
@@ -297,7 +297,7 @@ function ResultCard({ post, busy, onSave }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={cover} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground/50">
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
             <Play className="h-7 w-7" />
           </div>
         )}
@@ -311,12 +311,12 @@ function ResultCard({ post, busy, onSave }) {
         {/* badges top-right */}
         <div className="absolute right-2 top-2 flex flex-col items-end gap-1">
           {post.is_slideshow && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-2xs font-medium text-white backdrop-blur-sm">
               <Images className="h-3 w-3" /> Slides
             </span>
           )}
           {eng > 0 && (
-            <span className="rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground backdrop-blur-sm">
+            <span className="rounded-full bg-primary/90 px-2 py-0.5 text-2xs font-semibold text-primary-foreground backdrop-blur-sm">
               {(eng * 100).toFixed(1)}% eng
             </span>
           )}
@@ -333,13 +333,13 @@ function ResultCard({ post, busy, onSave }) {
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {tags.map((t) => (
-              <Badge key={t} variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">#{t}</Badge>
+              <Badge key={t} variant="secondary" className="px-1.5 py-0 text-2xs font-normal">#{t}</Badge>
             ))}
           </div>
         )}
 
         {/* metrics */}
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-2xs text-muted-foreground">
           <Metric icon={Heart}         value={post.digg_count} />
           <Metric icon={MessageCircle} value={post.comment_count} />
           <Metric icon={Share2}        value={post.share_count} />
@@ -349,14 +349,14 @@ function ResultCard({ post, busy, onSave }) {
         {/* author + music */}
         <div className="mt-auto space-y-1 pt-1">
           {author && (
-            <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+            <p className="flex items-center gap-1 truncate text-2xs text-muted-foreground">
               <span className="truncate font-medium text-foreground/80">@{author}</span>
-              {verified && <BadgeCheck className="h-3 w-3 shrink-0 text-sky-500" />}
+              {verified && <BadgeCheck className="h-3 w-3 shrink-0 text-info" />}
               {post.author_meta?.fans ? <span className="shrink-0">· {compactNumber(post.author_meta.fans)} fans</span> : null}
             </p>
           )}
           {music && (
-            <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+            <p className="flex items-center gap-1 truncate text-2xs text-muted-foreground">
               <Music2 className="h-3 w-3 shrink-0" /> <span className="truncate">{music}</span>
             </p>
           )}
@@ -364,15 +364,15 @@ function ResultCard({ post, busy, onSave }) {
 
         {/* footer */}
         <div className="flex items-center justify-between gap-2 border-t border-border/40 pt-2">
-          <span className="text-[10px] text-muted-foreground">{formatDate(post.create_time_iso)}</span>
+          <span className="text-2xs text-muted-foreground">{formatDate(post.create_time_iso)}</span>
           <button
             type="button"
             onClick={onSave}
             disabled={busy === "saving" || saved}
             className={cn(
-              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
+              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium transition-colors",
               saved
-                ? "bg-green-500/15 text-green-600 dark:text-green-400"
+                ? "bg-success/15 text-success"
                 : "border border-border hover:bg-muted disabled:opacity-50",
             )}
           >

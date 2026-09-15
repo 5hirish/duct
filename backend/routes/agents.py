@@ -59,6 +59,7 @@ from agents.content.v1.runner import create_draft_session, create_plan_session
 from agents.insights.schema import InsightsRequest, create_insights_session
 from agents.insights.setup import (
     InsightsSetupError,
+    data_sources_block as insights_data_sources,
     memory_blocks as insights_memory_blocks,
     resolve_run as resolve_insights_run,
 )
@@ -70,7 +71,9 @@ from agents.core.session import CLIENT_MESSAGE_ID
 from db.session import get_session as db_session
 from agents.registry import AgentType, get_spec, list_specs
 from config import get_configs
+from agents.core.prompts import xml_block
 from models.auth import User
+from models.project import Project
 from service.artifact_store import (
     ArtifactPersister,
     artifacts_for_conversation,
@@ -89,6 +92,8 @@ from service.memory_consolidation import schedule_consolidation
 from agents.engines import resolve_job_run
 from agents.tiers import Job, tier_fields
 from service.model_settings import get_model_settings
+from service.profile import resolve as resolve_profile
+from agents.core.voice import user_context_block
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso
 
@@ -578,6 +583,10 @@ async def send_message(
             content = _prepend_context(content, primer)
         session.needs_reprime = False
 
+    # The posture is in the opening turn, not the system prompt, so a change
+    # made from the composer would otherwise wait for the next session.
+    content = _refresh_autonomy(session, content)
+
     item: dict = {"role": "user", "content": content}
     if msg.client_message_id:
         item[CLIENT_MESSAGE_ID] = msg.client_message_id
@@ -594,6 +603,52 @@ async def send_message(
         return {"status": "queued", "type": "chat", "delivery": "steer"}
     await session.chat_queue.put(item)  # type: ignore[attr-defined]
     return {"status": "queued", "type": "chat", "delivery": "queue" if busy else "turn"}
+
+
+def _configured_autonomy(project_id: UUID) -> str:
+    """The project's stored level, normalised. Read fresh on every message —
+    the composer writes it through ``PATCH /projects`` and nothing tells the
+    session."""
+    from models.execution import normalize_autonomy
+
+    with next(db_session()) as db:
+        row = db.get(Project, project_id)
+    return normalize_autonomy(getattr(row, "autonomy_level", ""))
+
+
+def _refresh_autonomy(session: Any, content: str | list) -> str | list:
+    """Carry an autonomy change into the next turn.
+
+    The level a run operates at rides in its opening user turn (see
+    ``build_insights_user_prompt``), so a session picked up the project's
+    posture once and never again — the composer chip wrote the project row
+    and the agent it was talking to did not notice until the next session.
+    Compares the project's current level, stepped down for the model the way
+    the run start did, with what the session is running at; on a change it
+    re-states the posture ahead of the message and records the new level.
+    Any failure leaves the message untouched: a posture is context, and a
+    turn must not fail for want of it.
+    """
+    project_id = getattr(session, "artifact_project_id", None)
+    current = getattr(session, "autonomy", "")
+    if project_id is None or not current:
+        return content
+    try:
+        from agents.insights.prompts.autonomous import AUTONOMY_POSTURE
+        from service.execution.policy import effective_autonomy
+
+        level = effective_autonomy(
+            _configured_autonomy(project_id), getattr(session, "autonomy_model", "")
+        )
+    except Exception:
+        logger.debug("agents: autonomy refresh skipped", exc_info=True)
+        return content
+    if level == current:
+        return content
+    session.autonomy = level
+    logger.info("agents: session %s autonomy %s → %s", session.session_id, current, level)
+    posture = AUTONOMY_POSTURE.get(level, "")
+    return _prepend_context(content, xml_block("autonomy", posture)) if posture else content
 
 
 def _inject_working_context(session: Any, content: str | list, version_id: int | None) -> str | list:
@@ -1463,7 +1518,7 @@ async def _start_insights(
     takes a fully-specified request (connectors, accounts, goal, date range)
     decided by a wizard; this one takes a project and a sentence, and the agent
     works out the rest. See
-    ``docs/engineering/autonomous-insights-agent-plan.md``.
+    ``docs/engineering/2026-08-31-autonomous-insights-agent-plan.md``.
     """
     from agents.insights.brief import (
         ARTIFACT_KIND as INSIGHTS_ARTIFACT_KIND,
@@ -1492,6 +1547,7 @@ async def _start_insights(
             user_id=owner_id,
             project_id=req.project_id,
             user_keys=user_keys,
+            tier_override=req.user_preferences.tier,
         )
     except InsightsSetupError as exc:
         raise HTTPException(500, str(exc)) from exc
@@ -1503,6 +1559,10 @@ async def _start_insights(
     if session is not None:
         session.artifact_project_id = project_uuid
         session.memory_off = not req.remember
+        # What this run operates at, so a change made from the composer
+        # mid-conversation can be noticed and applied at the next turn.
+        session.autonomy = run.autonomy
+        session.autonomy_model = getattr(model, "value", str(model))
 
     # ------------------------------------------------------------------
     # Artifact persistence. Every brief the agent writes becomes a version of
@@ -1563,14 +1623,6 @@ async def _start_insights(
             except Exception:
                 logger.debug("agents: insights head event failed", exc_info=True)
 
-    memory = await insights_memory_blocks(
-        run,
-        user_id=owner_id,
-        user_preferences=req.user_preferences,
-        query=req.prompt,
-        remember=req.remember,
-        emit=emit_fn,
-    )
     business_context = format_business_context(req.business_context)
 
     runner = AutonomousInsightsRunner(
@@ -1579,6 +1631,9 @@ async def _start_insights(
         model=model,
         temperature=1.0,
         thinking=req.user_preferences.thinking,
+        verify_provider=run.verify_provider,
+        verify_model=run.verify_model,
+        verify_api_key=run.verify_api_key,
     )
 
     async def pipeline() -> None:
@@ -1599,6 +1654,30 @@ async def _start_insights(
                 # transcript to be readable tomorrow.
                 **tier_fields(run),
             })
+            # Priming — the memory digest and the connector list — runs here,
+            # after the session id has gone back to the browser, and off the
+            # event loop. It used to run before the response: twenty-odd
+            # queries, which against a remote database is ten seconds of
+            # "Connecting…" with no stream to attach to. Both are best-effort
+            # and never raise (see agents/insights/setup.py).
+            #
+            # Neither primes a resumed thread. Its opening turn is the raw
+            # follow-up (or nothing, from the desk), so the digest went unread
+            # — while its MEMORY_RECALLED row landed in the transcript between
+            # the restored history and the next message, attached to no turn.
+            memory = "" if is_resume else await insights_memory_blocks(
+                run,
+                user_id=owner_id,
+                user_preferences=req.user_preferences,
+                query=req.prompt,
+                remember=req.remember,
+                emit=emit_fn,
+            )
+            # Answered before the first model call, so the agent's opening
+            # action is a fetch rather than a lookup of what it could fetch.
+            data_sources = "" if is_resume else await asyncio.to_thread(
+                insights_data_sources, run, user_id=owner_id
+            )
             # run_session emits PIPELINE_FINISHED itself once the opening turn
             # lands, then stays open for follow-ups — so the route must not
             # emit it again on return (that would be the chat loop ending).
@@ -1608,7 +1687,15 @@ async def _start_insights(
                 session=session,
                 prompt=req.prompt,
                 business_context=business_context,
+                # Who is being answered, and how they want it written. Resolved
+                # from the saved profile, which is why it is read here rather
+                # than taken from the request: the browser's copy is a cache,
+                # and a scheduled run has no browser to send one.
+                user_context=user_context_block(
+                    resolve_profile(owner_id, req.user_preferences)
+                ),
                 memory=memory,
+                data_sources=data_sources,
                 project_id=project_uuid,
                 user_id=owner_id,
                 conversation_id=conv_id,

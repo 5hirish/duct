@@ -35,8 +35,8 @@ export default function MarkdownSpec({ children, className = "" }) {
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-4 mb-1">{children}</h4>
           ),
           p: ({ children }) => <p className="my-2.5 text-foreground/80">{children}</p>,
-          ul: ({ children }) => <ul className="list-disc pl-5 my-2.5 space-y-1 marker:text-muted-foreground/50">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal pl-5 my-2.5 space-y-1 marker:text-muted-foreground/50">{children}</ol>,
+          ul: ({ children }) => <ul className="list-disc pl-5 my-2.5 space-y-1 marker:text-muted-foreground">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal pl-5 my-2.5 space-y-1 marker:text-muted-foreground">{children}</ol>,
           li: ({ children }) => <li className="text-foreground/80 leading-relaxed">{children}</li>,
           strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
           em: ({ children }) => <em className="text-foreground/70">{children}</em>,

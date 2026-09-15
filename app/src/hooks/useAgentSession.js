@@ -289,9 +289,14 @@ export function useAgentSession({
       if (handle?.sessionId) stream = await reattach(handle.sessionId, handle.conversationId);
       if (!stream && !dead()) {
         const resuming = Boolean(openBody.conversation_id) || Boolean(handle?.conversationId);
+        // A reload of a `?q=` page still carries the question in `openBody`.
+        // Resuming from the handle must not send it again: the backend runs
+        // a resumed request's prompt as a follow-up turn, so every refresh
+        // re-asked the question and re-ran the whole analysis on top of the
+        // transcript it had just restored.
         const extra =
           !openBody.conversation_id && handle?.conversationId
-            ? { conversation_id: handle.conversationId, resume: true }
+            ? { conversation_id: handle.conversationId, resume: true, prompt: "" }
             : {};
         // A brand-new thread opens with what was asked, the way the backend
         // records it — a transcript that starts with the answer reads wrong.
@@ -338,7 +343,9 @@ export function useAgentSession({
     }
 
     start().catch((err) => {
-      if (!dead()) dispatch({ type: Action.FAILED, error: friendlyErrorMessage(err?.message || "Stream error.") });
+      if (dead()) return;
+      const code = err?.code || "";
+      dispatch({ type: Action.FAILED, error: friendlyErrorMessage(err?.message || "Stream error.", code), code });
     });
 
     return () => {

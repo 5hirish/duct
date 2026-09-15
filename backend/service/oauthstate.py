@@ -15,21 +15,23 @@ from db.session import get_engine
 from models.auth import OAuthState
 from utils.dates import utcnow
 
-# state → (issued_at, code_verifier, flow, link_user_id)
-_memory_states: dict[str, tuple[float, str | None, str, str | None]] = {}
+# state → (issued_at, code_verifier, flow, link_user_id, remember)
+_memory_states: dict[str, tuple[float, str | None, str, str | None, bool]] = {}
 logger = logging.getLogger(__name__)
 
 
 class ConsumedState(NamedTuple):
     """What a consumed state row carried: the flow it belonged to, the PKCE
-    verifier, and — for a sign-in a guest started — which guest to link."""
+    verifier, which guest to link (for a sign-in a guest started), and whether
+    the login page's "keep me signed in" box was ticked."""
 
     flow: str | None
     code_verifier: str | None
     link_user_id: str | None
+    remember: bool = False
 
 
-_NOTHING = ConsumedState(None, None, None)
+_NOTHING = ConsumedState(None, None, None, False)
 
 
 def save_state(
@@ -39,10 +41,11 @@ def save_state(
     ttl_seconds: int,
     *,
     link_user_id: str | None = None,
+    remember: bool = False,
 ) -> None:
     engine = get_engine()
     if engine is None:
-        _memory_states[state] = (time.time(), code_verifier, flow, link_user_id)
+        _memory_states[state] = (time.time(), code_verifier, flow, link_user_id, remember)
         return
     now = utcnow()
     try:
@@ -54,6 +57,7 @@ def save_state(
                     flow=flow,
                     code_verifier=code_verifier,
                     link_user_id=link_user_id,
+                    remember=remember,
                     issued_at=now,
                     expires_at=now + timedelta(seconds=ttl_seconds),
                 )
@@ -61,7 +65,7 @@ def save_state(
             session.commit()
     except SQLAlchemyError:
         logger.warning("OAuth state DB unavailable; falling back to in-memory state store.")
-        _memory_states[state] = (time.time(), code_verifier, flow, link_user_id)
+        _memory_states[state] = (time.time(), code_verifier, flow, link_user_id, remember)
 
 
 def _consume_memory_state_for_flows(
@@ -70,11 +74,11 @@ def _consume_memory_state_for_flows(
     entry = _memory_states.get(state)
     if entry is None:
         return _NOTHING
-    issued_at, code_verifier, stored_flow, link_user_id = entry
+    issued_at, code_verifier, stored_flow, link_user_id, remember = entry
     if stored_flow not in flows or (time.time() - issued_at) > ttl_seconds:
         return _NOTHING
     _memory_states.pop(state, None)
-    return ConsumedState(stored_flow, code_verifier, link_user_id)
+    return ConsumedState(stored_flow, code_verifier, link_user_id, remember)
 
 
 def consume_state(state: str, flow: str, ttl_seconds: int) -> tuple[bool, str | None]:
@@ -120,7 +124,10 @@ def consume_state_full(
                 return _NOTHING
 
             consumed = ConsumedState(
-                oauth_state.flow, oauth_state.code_verifier, oauth_state.link_user_id
+                oauth_state.flow,
+                oauth_state.code_verifier,
+                oauth_state.link_user_id,
+                oauth_state.remember,
             )
             oauth_state.consumed_at = now
             session.add(oauth_state)

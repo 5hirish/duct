@@ -8,6 +8,13 @@ Adding a new agent type:
   2. Add a value to AgentCapability if needed
   3. Define its config Pydantic model (can live anywhere; import here)
   4. Add an entry to AGENT_REGISTRY
+
+``context`` is the fifth thing and the easiest to skip, so it defaults to
+everything on: a new agent reads the operator's profile, the project's business
+context, its memory and its prior reports without asking. Narrow it only where a
+block genuinely does not bear on the work — the cost of one extra block is a few
+hundred tokens, and the cost of a missing one is an agent that does not know who
+it is answering. See ``agents/core/turn.py``.
 """
 
 from __future__ import annotations
@@ -15,7 +22,9 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+from agents.core.turn import DEFAULT_SPEC, ContextSpec
 
 
 class AgentType(StrEnum):
@@ -45,6 +54,16 @@ class AgentSpec(BaseModel):
     config_schema: dict[str, Any] = Field(default_factory=dict)
     active: bool = True
 
+    #: Which shared context blocks this agent's turn carries. Not part of the
+    #: public GET /api/agents payload — it describes how a run is assembled,
+    #: not what a caller may ask for.
+    context: ContextSpec = Field(default=DEFAULT_SPEC, exclude=True)
+
+    # ContextSpec is a plain frozen dataclass, not a BaseModel: it is read on
+    # every turn and never crosses the wire, so it has no reason to pay for
+    # validation. Pydantic needs telling that it is a legitimate field type.
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
 
 # ---------------------------------------------------------------------------
 # Registry
@@ -68,6 +87,10 @@ def _seo_audit_spec() -> AgentSpec:
             AgentCapability.FILE_UPLOAD,
         ],
         config_schema=AuditRequest.model_json_schema(),
+        # An SEO crawl has no use for the paid-ads half of the business context
+        # (budget, CPA, ROAS), and it reaches no connectors, so the data-source
+        # inventory would describe tools it cannot call.
+        context=ContextSpec(paid_section=False, data_sources=False),
     )
 
 
@@ -148,7 +171,10 @@ def _tiktok_studio_spec() -> AgentSpec:
             AgentCapability.FILE_UPLOAD,
         ],
         config_schema=PlanRequest.model_json_schema(),
-        active=True,
+        # Content writes in the brand's voice from the organic side of the
+        # business context; ad budgets and CPA targets say nothing about a
+        # carousel. Prior reports are audits and briefs, not drafts.
+        context=ContextSpec(paid_section=False, prior_reports=False, data_sources=False),
     )
 
 

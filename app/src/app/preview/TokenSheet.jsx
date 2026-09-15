@@ -34,6 +34,8 @@ const PAIRS = [
   ["--destructive", "--destructive-foreground", "Destructive"],
   ["--success", "--success-foreground", "Success"],
   ["--warning", "--warning-foreground", "Warning"],
+  ["--info", "--info-foreground", "Info"],
+  ["--brand", "--brand-foreground", "Brand"],
   ["--sidebar", "--sidebar-foreground", "Sidebar"],
 ];
 
@@ -52,8 +54,22 @@ const INK = [
   "--destructive",
   "--success",
   "--warning",
+  "--info",
+  // The brand orange twice over, which is the point: `--orange` is the literal
+  // `#ff5c00` the site paints and reads 3.10:1 on a light page, `--brand` is
+  // the same hue taken to where a 12px label survives. If these two ever swap
+  // places in someone's head, this row is where it shows.
+  "--brand",
   "--orange",
 ];
+
+/**
+ * Boundaries. `--control` is the edge that says "this is a field", which WCAG
+ * 1.4.11 puts at 3:1 — it exists because `--border` was doing both jobs at
+ * 1.27:1 and therefore neither. `--border` is here beside it so the difference
+ * between a divider and a control edge is visible rather than argued about.
+ */
+const EDGES = ["--control", "--border", "--input", "--ring"];
 
 /** Shapes and edges, which are as much of the system as the colours. */
 const SHAPE = ["--radius", "--r", "--r-lg", "--pill", "--measure", "--measure-tight"];
@@ -151,6 +167,11 @@ export default function TokenSheet() {
         value: value(name),
         ratio: contrastRatio(value(name), value("--background")),
       })),
+      edges: EDGES.map((name) => ({
+        name,
+        value: value(name),
+        ratio: contrastRatio(value(name), value("--background")),
+      })),
       shape: SHAPE.map((name) => ({ name, value: value(name) })),
     });
   }, [tick]);
@@ -195,6 +216,34 @@ export default function TokenSheet() {
               </span>
               <span className="ml-auto font-mono text-xs text-muted-foreground">{i.value}</span>
               <Verdict ratio={i.ratio} needs={4.5} />
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section
+        title="Edges"
+        note="A control's boundary needs 3:1 (WCAG 1.4.11); a divider between things you can already tell apart does not. --control is the first, --border the second — they were one token at 1.27:1, which met neither bar."
+      >
+        <div className="flex flex-col divide-y rounded-xl border">
+          {(rows?.edges || []).map((e) => (
+            <div key={e.name} className="flex items-center gap-3 p-2.5">
+              <span
+                aria-hidden="true"
+                className="size-5 shrink-0 rounded-md border-2"
+                style={{ borderColor: `var(${e.name})` }}
+              />
+              <span className="text-sm font-medium">{e.name}</span>
+              <span className="ml-auto font-mono text-xs text-muted-foreground">{e.value}</span>
+              {/* --border and --input are deliberately allowed to be quiet, so
+                  they are shown against the 3:1 bar without being judged by it. */}
+              {e.name === "--control" || e.name === "--ring" ? (
+                <Verdict ratio={e.ratio} needs={3} />
+              ) : (
+                <span className="font-mono text-xs text-muted-foreground">
+                  {e.ratio ? e.ratio.toFixed(2) : "—"}
+                </span>
+              )}
             </div>
           ))}
         </div>

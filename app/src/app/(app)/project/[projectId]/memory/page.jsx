@@ -19,7 +19,6 @@ import {
   MEMORY_KINDS,
   createMemory,
   deleteMemory,
-  exportMemory,
   getMemory,
   listMemory,
   resetMemory,
@@ -48,7 +47,6 @@ function ProjectMemory({ projectId }) {
       remove: ({ memoryId }) => deleteMemory({ projectId, memoryId }),
       setPaused: ({ paused }) => setMemoryPaused({ projectId, paused }),
       reset: () => resetMemory({ projectId }),
-      exportAll: () => exportMemory({ projectId }),
     }),
     [projectId]
   );
@@ -74,9 +72,8 @@ function ProjectMemory({ projectId }) {
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        What Duct knows about this project, and where each fact came from. Agents read this
-        before every run — confirm what they propose, correct what they got wrong, pin what
-        should always be in view.
+        What Duct knows about this project. Agents read it before every run — confirm,
+        correct, or pin a fact so it stays in view.
       </p>
 
       <MemoryTimeline
@@ -86,8 +83,7 @@ function ProjectMemory({ projectId }) {
         focusId={focusId}
         kinds={MEMORY_KINDS.filter((k) => k !== "artifact")}
         defaultKind="decision"
-        exportFilename={`duct-memory-${projectName || projectId}.json`}
-        resetPrompt="Delete every memory for this project? This cannot be undone — export first if you want a copy."
+        resetPrompt="Delete every memory for this project? This cannot be undone."
         emptyHint="Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
       />
     </section>

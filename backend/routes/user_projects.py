@@ -19,7 +19,7 @@ from models.execution import (
     normalize_autonomy,
 )
 from models.membership import ROLE_COLLABORATOR, ROLE_OWNER
-from models.project import Project
+from models.project import Project, unique_slug
 from service.auth import get_current_user
 from service.membership import (
     accessible_projects,
@@ -138,6 +138,7 @@ def create_project(
     project = Project(
         user_id=user.id,
         name=body.name,
+        slug=unique_slug(session, user.id, body.name),
         company_name=body.company_name,
         pitch=body.pitch,
         industry=body.industry,
@@ -196,7 +197,11 @@ def update_project(
     ).scalars().first()
     is_new = existing is None
     if is_new:
-        project = Project(id=project_id, user_id=user.id)
+        project = Project(
+            id=project_id,
+            user_id=user.id,
+            slug=unique_slug(session, user.id, body.name),
+        )
         session.add(project)
     else:
         # Raises 404 when the caller is neither owner nor collaborator, so an

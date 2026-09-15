@@ -24,7 +24,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AgentChat from "@/components/workspace/AgentChat";
+import ComposerDials from "@/components/workspace/ComposerDials";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
+import { AUTONOMY_ASK } from "@/lib/projectsApi";
+import { getProjectById } from "@/lib/projects";
 import { MarkdownView } from "@/components/artifacts/ArtifactRenderer";
 import { useAgentSession } from "../../hooks/useAgentSession";
 import { getArtifactContent, listArtifactVersions } from "../../lib/artifactsApi";
@@ -50,6 +53,13 @@ export default function InsightsWorkspace({
   // Streamed brief text also lives in a ref: the event callback would
   // otherwise close over a stale value on every chunk.
   const briefRef = useRef("");
+  // The posture this conversation runs at. Seeded from the stored project,
+  // corrected by PIPELINE_STARTED (the backend may step it down for the
+  // model), and changed from the composer chip — which writes the project
+  // and reaches the agent at its next message.
+  const [autonomy, setAutonomy] = useState(
+    () => (projectId && getProjectById(projectId)?.autonomyLevel) || AUTONOMY_ASK,
+  );
 
   const body = useMemo(
     () => ({
@@ -96,7 +106,10 @@ export default function InsightsWorkspace({
         // The runner emits one per data pull, labelled with the window it
         // covers. Anything else with a step_id is ignored rather than guessed at.
         if (event.step_id === InsightsStep.COLLECT_SOURCE_DATA) {
-          setFetched((prev) => [...prev, { label: event.label || "", ok: event.status === "success" }]);
+          setFetched((prev) => [
+            ...prev,
+            { label: event.label || "", ok: event.status === "success", error: event.error || "" },
+          ]);
         }
         break;
       default:
@@ -114,6 +127,11 @@ export default function InsightsWorkspace({
     hydrateThreadState: true,
     onEvent,
   });
+
+  useEffect(() => {
+    const level = agent.started?.autonomy;
+    if (level) setAutonomy(level);
+  }, [agent.started?.autonomy]);
 
   // A stored document in the right pane, from the desk, where opening a brief
   // means opening the thread that argued for it.
@@ -168,6 +186,16 @@ export default function InsightsWorkspace({
   const shown = versions.length ? versions[selected < 0 ? versions.length - 1 : selected] : null;
   const hasBrief = Boolean(shown) || Boolean(writing);
 
+  // A connect asked for mid-run comes back to this thread, resumed — never to
+  // the ?q= form of this page, which would ask the question again from scratch.
+  const connectReturnTo = useMemo(() => {
+    const cid = agent.conversationId || conversationId;
+    if (!cid) return "";
+    const qs = new URLSearchParams({ conversation: cid });
+    if (projectId) qs.set("project", projectId);
+    return `/insights/session?${qs}`;
+  }, [agent.conversationId, conversationId, projectId]);
+
   const chat = (
     <AgentChat
       title="Insights"
@@ -195,10 +223,14 @@ export default function InsightsWorkspace({
       onRetry={handleRetry}
       onStop={() => agent.stop({ keepReady: agent.opened })}
       questionsCopy={QUESTIONS_COPY}
+      connectReturnTo={connectReturnTo}
+      composerTools={
+        <ComposerDials projectId={projectId} autonomy={autonomy} onAutonomyChange={setAutonomy} deferred />
+      }
       inputPlaceholder="Ask about your growth data…"
       inputAriaLabel="Message the insights agent"
       startingLabel="Opening the session…"
-      headerExtra={<AutonomyBadge autonomy={agent.started} />}
+      headerExtra={<AutonomyBadge autonomy={agent.started} level={autonomy} />}
     />
   );
 
@@ -206,7 +238,7 @@ export default function InsightsWorkspace({
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center gap-1 border-b border-border/60 px-2 py-1.5">
         <PaneTab active={pane === "brief"} onClick={() => setPane("brief")}>
-          Brief
+          Artifact
         </PaneTab>
         <PaneTab active={pane === "data"} onClick={() => setPane("data")}>
           Data{fetched.length ? ` · ${fetched.length}` : ""}
@@ -214,9 +246,9 @@ export default function InsightsWorkspace({
         {pane === "brief" && versions.length > 1 && (
           <select
             value={selected < 0 ? versions.length - 1 : selected}
-            aria-label="Brief version"
+            aria-label="Artifact version"
             onChange={(e) => setSelected(Number(e.target.value))}
-            className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-[11px]"
+            className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-2xs"
           >
             {versions.map((v, i) => (
               <option key={v.version} value={i}>
@@ -227,7 +259,10 @@ export default function InsightsWorkspace({
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {/* The brief sits on a muted ground, as a document rather than as
+          more of the page: the chat and the pane were the same white, and
+          the artifact read as a continuation of the transcript. */}
+      <div className={`min-h-0 flex-1 overflow-y-auto ${pane === "brief" ? "bg-muted/40" : ""}`}>
         {pane === "brief" ? <BriefPane brief={shown} writing={writing} empty={!hasBrief} /> : <DataPane fetched={fetched} />}
       </div>
     </div>
@@ -239,7 +274,7 @@ export default function InsightsWorkspace({
       right={viewport}
       storageKey="insights_split_w"
       leftLabel="Chat"
-      rightLabel="Brief"
+      rightLabel="Artifact"
       rightStatus={writing || agent.isRunning ? "busy" : hasBrief ? "ready" : "idle"}
     />
   );
@@ -262,13 +297,15 @@ const AUTONOMY_LABELS = {
  * model driving it is not on the allowlist for `auto`, and saying so is the
  * difference between a considered step-down and an agent that mysteriously
  * keeps asking questions. */
-function AutonomyBadge({ autonomy }) {
-  const level = autonomy?.autonomy || "";
+function AutonomyBadge({ autonomy, level: current = "" }) {
+  // The composer chip is the live value once the person touches it; the
+  // event is what the run opened with.
+  const level = current || autonomy?.autonomy || "";
   const configured = autonomy?.autonomy_configured || "";
   if (!level) return null;
-  const steppedDown = configured && configured !== level;
+  const steppedDown = configured && configured !== level && current === (autonomy?.autonomy || "");
   return (
-    <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs">
       <span className="rounded-full bg-muted px-2 py-0.5 font-medium uppercase tracking-wide">{level}</span>
       <span className="hidden text-muted-foreground @md:inline">{AUTONOMY_LABELS[level] || ""}</span>
       {steppedDown && (
@@ -307,7 +344,7 @@ function BriefPane({ brief, writing, empty }) {
     return (
       <div>
         <BriefHeader title={liveTitle || "Writing…"} sub="being written" />
-        <div className="px-1">
+        <div className="m-4 rounded-xl border border-border bg-card px-3 shadow-sm">
           {sniffFormat(live) === "markdown" ? (
             <MarkdownView source={live} />
           ) : (
@@ -321,8 +358,7 @@ function BriefPane({ brief, writing, empty }) {
   if (empty || !brief) {
     return (
       <p className="p-4 text-xs text-muted-foreground">
-        Nothing written yet. When Duct has an answer worth keeping it writes a brief
-        here — versioned, so you can see what changed between reads.
+        Nothing written yet. An answer worth keeping becomes an artifact here.
       </p>
     );
   }
@@ -330,18 +366,20 @@ function BriefPane({ brief, writing, empty }) {
   return (
     <div>
       <BriefHeader title={brief.title} sub={`v${brief.version} · ${brief.label}`} />
-      {brief.format === "html" ? (
-        <iframe
-          title={brief.title}
-          srcDoc={brief.content}
-          sandbox="allow-modals allow-same-origin"
-          className="h-[74vh] w-full border-0 bg-white"
-        />
-      ) : (
-        <div className="px-1">
-          <MarkdownView source={brief.content} />
-        </div>
-      )}
+      <div className="m-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        {brief.format === "html" ? (
+          <iframe
+            title={brief.title}
+            srcDoc={brief.content}
+            sandbox="allow-modals allow-same-origin"
+            className="block h-[74vh] w-full border-0 bg-white"
+          />
+        ) : (
+          <div className="px-3">
+            <MarkdownView source={brief.content} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -350,7 +388,7 @@ function BriefHeader({ title, sub }) {
   return (
     <div className="flex items-baseline gap-2 border-b border-border/40 px-4 py-2">
       <span className="truncate text-xs font-medium">{title}</span>
-      <span className="shrink-0 text-[11px] text-muted-foreground">{sub}</span>
+      <span className="shrink-0 text-2xs text-muted-foreground">{sub}</span>
     </div>
   );
 }
@@ -360,8 +398,7 @@ function DataPane({ fetched }) {
   if (!fetched.length) {
     return (
       <p className="p-4 text-xs text-muted-foreground">
-        Nothing yet. Duct pulls only what your question needs, and shows each source
-        and the period it covers here.
+        Nothing yet. Each source Duct pulls shows up here, with the period it covers.
       </p>
     );
   }
@@ -369,10 +406,17 @@ function DataPane({ fetched }) {
     <ul className="space-y-1.5 p-4">
       {fetched.map((f, i) => (
         <li key={i} className="flex items-start gap-2 text-xs">
-          <span className={f.ok ? "text-green-500" : "text-destructive"} aria-hidden="true">
+          <span className={f.ok ? "text-success" : "text-destructive"} aria-hidden="true">
             {f.ok ? "✓" : "!"}
           </span>
-          <span className={f.ok ? "" : "text-muted-foreground"}>{f.label}</span>
+          <span className={f.ok ? "" : "text-muted-foreground"}>
+            {f.label}
+            {/* The provider's own sentence. The chat paraphrases a failure;
+                this is where the person debugging it reads the real one. */}
+            {!f.ok && f.error && (
+              <span className="mt-0.5 block break-words font-mono text-2xs text-destructive/80">{f.error}</span>
+            )}
+          </span>
         </li>
       ))}
     </ul>

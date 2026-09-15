@@ -1,0 +1,51 @@
+/* pills — `.status-pill`, the one pill that is not a component.
+
+   It was defined in `ads-report.css` and used in five files that are not the
+   report (the executions queue, the activity feed, the artifact list and its
+   renderer), so it inherited a report's colours and a report's hexes: the
+   yellow tone was built on `#eab308`, which measures 1.9:1 on a light
+   background and is therefore unreadable as the label it is. Tokens now, and
+   living where its callers can see it.
+
+   It is still on `ui/badge`'s retire-on-touch list (DESIGN.md's canon table) —
+   this is the version that is correct while it waits, not a reprieve. */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3125rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  background: var(--muted);
+  text-transform: capitalize;
+}
+
+/* Tint the ground, colour the text — the same contract `ui/badge`'s status
+   variants keep, so the two read as one system while both exist. */
+.status-pill.red {
+  background: color-mix(in oklch, var(--destructive) 18%, var(--card));
+  border-color: color-mix(in oklch, var(--destructive) 38%, var(--border));
+  color: color-mix(in oklch, var(--destructive) 72%, var(--foreground));
+}
+
+.status-pill.yellow {
+  background: color-mix(in oklch, var(--warning) 18%, var(--card));
+  border-color: color-mix(in oklch, var(--warning) 38%, var(--border));
+  color: color-mix(in oklch, var(--warning) 72%, var(--foreground));
+}
+
+.status-pill.green {
+  background: color-mix(in oklch, var(--success) 18%, var(--card));
+  border-color: color-mix(in oklch, var(--success) 38%, var(--border));
+  color: color-mix(in oklch, var(--success) 72%, var(--foreground));
+}
+
+.status-pill.grey {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--muted-foreground);
+}

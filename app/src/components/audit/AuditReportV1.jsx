@@ -18,6 +18,13 @@ const GLOBAL_STYLE = `
 [data-tooltip] { position: relative; cursor: help; }
 [data-tooltip]::after {
   content: attr(data-tooltip);
+  /* display:none rather than opacity alone. At rest this box was still laid
+     out — 220px wide, absolutely positioned off a cell near the right edge —
+     so it added 29px to the document's scroll width on a phone while being
+     completely invisible. The body overflow-x guard used to swallow that,
+     which is the argument for having removed it: a layout bug you cannot see
+     is a layout bug you ship. Costs the 0.15s fade, which nobody will miss. */
+  display: none;
   position: absolute;
   bottom: calc(100% + 6px);
   left: 50%;
@@ -30,6 +37,7 @@ const GLOBAL_STYLE = `
   line-height: 1.5;
   white-space: normal;
   width: 220px;
+  max-width: min(220px, 60vw);
   text-align: left;
   pointer-events: none;
   opacity: 0;
@@ -37,7 +45,7 @@ const GLOBAL_STYLE = `
   transition: opacity 0.15s ease;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
-[data-tooltip]:hover::after { opacity: 1; }
+[data-tooltip]:hover::after { display: block; opacity: 1; }
 details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
 
@@ -104,7 +112,11 @@ function ScoreGauge({ score, band, dark }) {
       className="flex flex-col items-center shrink-0"
       data-tooltip={`${score}/100 — ${label}. Weighted average across all 9 SEO categories.`}
     >
+      {/* `width`/`height` were fixed at 180, so on a phone the gauge kept its
+          size and the hero pushed past the screen — invisible until the body's
+          `overflow-x: hidden` guard came off. The viewBox does the scaling. */}
       <svg viewBox="0 0 180 180" width="180" height="180" role="img"
+        className="h-auto max-w-full"
         aria-label={`Score ${score} out of 100, ${label}`}>
         <circle cx="90" cy="90" r={CIRCLE_R} fill="none"
           stroke={trackStroke} strokeOpacity={dark ? 1 : 0.08} strokeWidth="12" />
@@ -144,7 +156,7 @@ function IssuePill({ issues, warnings, opportunities, categories }) {
           <div key={label} style={{ width: `${(count / total) * 100}%`, background: color }} />
         ))}
       </div>
-      <span className="text-[10px] tabular-nums" style={{ color: 'rgba(244,236,226,0.4)' }}>
+      <span className="text-2xs tabular-nums" style={{ color: 'rgba(244,236,226,0.4)' }}>
         {segs.map(s => `${s.count} ${s.label}`).join(' · ')}
       </span>
     </div>
@@ -170,12 +182,12 @@ function StatsStrip({ data, dateStr, dark }) {
 
   return (
     <div style={{ paddingTop: 12, borderTop: `1px solid ${borderClr}` }}>
-      <div className="grid grid-cols-3 gap-x-4 gap-y-4 @xl:flex @xl:items-center @xl:gap-6 @xl:flex-wrap">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-4 @sm:grid-cols-3 @xl:flex @xl:items-center @xl:gap-6 @xl:flex-wrap">
         {stats.map(({ value, label, color }) => (
           <div key={label} className="min-w-0">
             <div className="font-mono text-lg font-bold leading-none tabular-nums"
               style={{ ...(color ? { color } : valStyle) }}>{value}</div>
-            <div className="text-[10px] uppercase tracking-wide mt-0.5 leading-tight" style={lblStyle}>{label}</div>
+            <div className="text-2xs uppercase tracking-wide mt-0.5 leading-tight" style={lblStyle}>{label}</div>
           </div>
         ))}
       </div>
@@ -211,7 +223,7 @@ function KeySignals({ signals }) {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
             {Icon && <Icon size={15} style={{ color, flexShrink: 0, marginTop: 2 }} strokeWidth={2} />}
-            <p className="text-[14px] leading-snug" style={{ color: 'var(--foreground)' }}>{text}</p>
+            <p className="text-sm leading-snug" style={{ color: 'var(--foreground)' }}>{text}</p>
           </div>
         );
       })}
@@ -264,14 +276,14 @@ function ImpactEffortChips({ impact, effort }) {
   return (
     <div className="flex gap-2 flex-wrap mt-2">
       {impact && (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md"
+        <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-md"
           style={{ background: IMPACT_COLOR[impact] + '18', color: IMPACT_COLOR[impact] }}>
           <Zap size={10} strokeWidth={2.5} />
           {capitalize(impact)} impact
         </span>
       )}
       {effort && (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md"
+        <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-md"
           style={{ background: EFFORT_COLOR[effort] + '18', color: EFFORT_COLOR[effort] }}>
           <Clock size={10} strokeWidth={2.5} />
           {capitalize(effort)} effort
@@ -303,7 +315,7 @@ function CategoryBarChartCSS({ categories }) {
         const color = scoreBarColor(cat.score);
         return (
           <div key={cat.id} className="flex items-center gap-3" data-tooltip={cat.tooltip}>
-            <span className="text-xs @xl:text-sm text-right shrink-0 w-24 @xl:w-44 text-[#6b7280] truncate">{cat.label}</span>
+            <span className="text-xs @xl:text-sm text-right shrink-0 w-24 @xl:w-44 text-muted-foreground truncate">{cat.label}</span>
             <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.07)' }}>
               <div className="h-full rounded-full"
                 style={{
@@ -413,18 +425,18 @@ function ImpactEffortMatrix({ categories }) {
           <div key={q.key} className="rounded-xl p-3 @xl:p-4 space-y-2"
             style={{ background: q.bg, border: `1px solid ${q.border}` }}>
             <div>
-              <p className="text-[13px] font-bold" style={{ color: q.textColor }}>{q.label}</p>
-              <p className="text-[10px] text-[#6b7280]/70">{q.sub}</p>
+              <p className="text-sm font-bold" style={{ color: q.textColor }}>{q.label}</p>
+              <p className="text-2xs text-muted-foreground">{q.sub}</p>
             </div>
             {groups[q.key].length === 0
-              ? <p className="text-[11px] text-[#6b7280]/50 italic">Nothing here</p>
+              ? <p className="text-2xs text-muted-foreground italic">Nothing here</p>
               : (
                 <ul className="space-y-1.5">
                   {groups[q.key].map(f => (
                     <li key={f.id} className="flex items-start gap-2" data-tooltip={f.description || f.title}>
                       <span className="shrink-0 mt-1.5 size-1.5 rounded-full"
                         style={{ background: SEVERITY_DOT[f.severity] ?? '#94a3b8' }} />
-                      <span className="text-[11px] @xl:text-[12px] leading-snug text-[#1a1a1acc] line-clamp-2">{f.title}</span>
+                      <span className="text-2xs @xl:text-xs leading-snug text-foreground line-clamp-2">{f.title}</span>
                     </li>
                   ))}
                 </ul>
@@ -446,7 +458,7 @@ function PassRow({ finding }) {
     <div className="flex items-center gap-3 py-2.5 px-4 rounded-lg"
       style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.14)' }}>
       <CheckCircle2 size={13} color="#10b981" strokeWidth={2} className="shrink-0" />
-      <span className="text-[14px] text-[#1a1a1acc] leading-snug flex-1 min-w-0">{finding.title}</span>
+      <span className="text-sm text-foreground leading-snug flex-1 min-w-0">{finding.title}</span>
     </div>
   );
 }
@@ -471,10 +483,10 @@ function FindingCard({ finding }) {
 
       {/* Colored header row: badge + title */}
       <div className={`flex items-start gap-3 px-3 @xl:px-5 pt-3 pb-3 ${cfg.headerCls}`}>
-        <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 mt-0.5 ${cfg.pill}`}>
+        <span className={`text-2xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 mt-0.5 ${cfg.pill}`}>
           {cfg.label}
         </span>
-        <p className="text-[15px] font-semibold leading-snug text-foreground flex-1 min-w-0">
+        <p className="text-base font-semibold leading-snug text-foreground flex-1 min-w-0">
           {finding.title}
         </p>
       </div>
@@ -491,12 +503,12 @@ function FindingCard({ finding }) {
         {finding.affected_urls?.length > 0 && (
           <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             <div className="flex px-4 py-2 bg-muted/40 border-b border-border/60">
-              <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">URL</span>
-              <span className="w-48 shrink-0 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Measured</span>
+              <span className="flex-1 text-2xs font-bold uppercase tracking-widest text-muted-foreground">URL</span>
+              <span className="w-48 shrink-0 text-2xs font-bold uppercase tracking-widest text-muted-foreground">Measured</span>
             </div>
             {finding.affected_urls.map((u, i) => (
               <div key={i} className={`flex items-start px-4 py-2.5 bg-card${i > 0 ? ' border-t border-border/40' : ''}`}>
-                <code className="flex-1 text-xs font-mono text-muted-foreground/70 break-all pr-3">{u.url}</code>
+                <code className="flex-1 text-xs font-mono text-muted-foreground break-all pr-3">{u.url}</code>
                 <span className="w-48 shrink-0 text-sm font-semibold text-foreground/80">{u.issue_value}</span>
               </div>
             ))}
@@ -540,35 +552,35 @@ function CategoryAccordion({ category, isLast }) {
         <div className="flex items-center gap-3 min-w-0 flex-wrap">
           <div className="size-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
             style={{ background: color + '1a', color }}>{category.score}</div>
-          <span className="text-[15px] font-semibold">{category.label}</span>
+          <span className="text-base font-semibold">{category.label}</span>
           <div className="flex items-center gap-1.5 flex-wrap">
             {category.fail_count > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400">
+              <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400">
                 {category.fail_count} Error{category.fail_count !== 1 ? 's' : ''}
               </span>
             )}
             {category.warn_count > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400">
+              <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400">
                 {category.warn_count} Warning{category.warn_count !== 1 ? 's' : ''}
               </span>
             )}
             {!hasBad && category.opp_count > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-400">
+              <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-400">
                 {category.opp_count} Opp
               </span>
             )}
             {!hasBad && !category.opp_count && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-400 hidden @xl:inline">
+              <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-400 hidden @xl:inline">
                 All clear
               </span>
             )}
           </div>
         </div>
-        <ChevronDown size={15} className="text-[#6b7280] shrink-0 transition-transform duration-200 group-open:rotate-180" />
+        <ChevronDown size={15} className="text-muted-foreground shrink-0 transition-transform duration-200 group-open:rotate-180" />
       </summary>
       <div className="px-3 @xl:px-5 pb-4 pt-3 space-y-3" style={{ background: 'rgba(0,0,0,0.02)' }}>
         {ordered.length === 0 && (
-          <p className="text-sm text-[#6b7280] py-2">No findings for this category.</p>
+          <p className="text-sm text-muted-foreground py-2">No findings for this category.</p>
         )}
 
         {/* Non-pass findings rendered as full cards */}
@@ -579,10 +591,10 @@ function CategoryAccordion({ category, isLast }) {
           <details className="group/pass">
             <summary className="flex items-center gap-2 cursor-pointer select-none py-1.5">
               <CheckCircle2 size={13} color="#10b981" strokeWidth={2} className="shrink-0" />
-              <span className="text-[13px] text-emerald-700 dark:text-emerald-400 font-medium">
+              <span className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
                 {passFindings.length} check{passFindings.length !== 1 ? 's' : ''} passing
               </span>
-              <ChevronDown size={12} className="text-[#6b7280] ml-0.5 transition-transform group-open/pass:rotate-180" />
+              <ChevronDown size={12} className="text-muted-foreground ml-0.5 transition-transform group-open/pass:rotate-180" />
             </summary>
             <div className="ml-5 mt-2 space-y-1.5">
               {passFindings.map(f => <PassRow key={f.id} finding={f} />)}
@@ -621,15 +633,15 @@ function PriorityCard({ priority }) {
           style={{ background: s.rankBg, color: s.rankColor }}>
           {String(priority.rank).padStart(2, '0')}
         </div>
-        <p className="flex-1 min-w-0 text-[15px] font-semibold leading-snug text-[#1a1a1a]">
+        <p className="flex-1 min-w-0 text-base font-semibold leading-snug text-foreground">
           {priority.title}
         </p>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-md ${s.badgeCls}`}>
+          <span className={`text-2xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-md ${s.badgeCls}`}>
             {s.label}
           </span>
           {effortLabel && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md border border-border bg-muted/40 text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2.5 py-1 rounded-md border border-border bg-muted/40 text-muted-foreground">
               <Clock size={10} strokeWidth={2} />
               {effortLabel}
             </span>
@@ -650,7 +662,7 @@ function statColor(value, thresholds) {
   return { text: 'text-green-600 dark:text-green-400' };
 }
 
-const NEUTRAL_COLOR = { text: 'text-[#6b7280]' };
+const NEUTRAL_COLOR = { text: 'text-muted-foreground' };
 
 const CRAWL_STATS = [
   { key: 'avg_ttfb_ms',          label: 'Avg TTFB',  format: v => `${Math.round(v)}ms`, thresholds: { warn: 800, fail: 2000 }, tooltip: 'Time to first byte. Google de-prioritises slow sites for recrawl.' },
@@ -677,7 +689,7 @@ function CrawlSummaryStrip({ summary }) {
             className="rounded-xl px-4 py-4 flex flex-col gap-1"
             style={{ background: cellBg, border: `1px solid ${cellBdr ?? '#e5e7eb'}`, boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}
             data-tooltip={tooltip}>
-            <span className="text-xs text-[#6b7280] font-medium uppercase tracking-wide leading-none">{label}</span>
+            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide leading-none">{label}</span>
             <span className={`text-xl font-bold tabular-nums leading-tight ${color.text}`}>{format(value)}</span>
           </div>
         );
@@ -707,7 +719,7 @@ function WinsStrip({ wins }) {
               onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.12)'; }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = ''; }}>
               <CheckCircle2 size={13} color="#16a34a" className="shrink-0" />
-              <span className="text-[14px] leading-snug">{w}</span>
+              <span className="text-sm leading-snug">{w}</span>
             </div>
           ))}
         </div>
@@ -735,7 +747,7 @@ function RoadmapSection({ roadmap }) {
           const cfg = PHASE_THEME_COLOR[phase.theme] ?? { text: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.2)' };
           return (
             <div key={i} className="rounded-xl bg-card p-5 @xl:p-6 space-y-3"
-              style={{ border: '1px solid var(--border)', boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
+              style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full border"
                   style={{ color: cfg.text, background: cfg.bg, borderColor: cfg.border }}>
@@ -750,13 +762,13 @@ function RoadmapSection({ roadmap }) {
                     : t.note || null;
                   return (
                     <li key={j} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                      <span className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold tabular-nums"
+                      <span className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-2xs font-bold tabular-nums"
                         style={{ background: cfg.text + '18', color: cfg.text }}>
                         {String(j + 1).padStart(2, '0')}
                       </span>
-                      <p className="flex-1 text-[15px] leading-relaxed min-w-0">{t.task}</p>
+                      <p className="flex-1 text-base leading-relaxed min-w-0">{t.task}</p>
                       {effortLabel && (
-                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-border bg-muted/40 text-muted-foreground">
+                        <span className="shrink-0 inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-md border border-border bg-muted/40 text-muted-foreground">
                           <Clock size={10} strokeWidth={2} />
                           {effortLabel}
                         </span>
@@ -809,14 +821,37 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
 
   return (
     <div
-      className="min-h-full text-foreground"
+      className="min-h-full"
       style={{
-        // Neutral chrome adapts to the app theme via CSS vars; the orange radial
-        // accents and the dark hero/accent palette stay fixed (they read on both).
+        // This is a printed thing, and it says so. It used to take its ground
+        // and its ink from the app's tokens while painting sixty fixed hexes
+        // inside them, which is the exact half-way the contrast review named:
+        // in dark mode the chrome inverted and the content did not, so the
+        // finding titles landed at 1.11:1 and the KPI tables stayed white
+        // islands. Declaring `color-scheme: light` makes the report a document
+        // the way the insights brief and every other generated artifact is one
+        // — consistent in both themes, and legible because it is only ever
+        // asked to be legible once. Its container (ArtifactRenderer, the audit
+        // workspace) owns the surrounding surface and sets it off with a
+        // border, rather than this pretending to be part of the page.
+        colorScheme: "light",
+        // Redefining the semantic tokens for this subtree is what makes the
+        // decision hold: the ~30 places inside that already say
+        // `text-foreground` or `var(--border)` keep saying it and now resolve
+        // to the document's palette in BOTH themes, instead of inverting away
+        // from the hexes beside them. Nothing below needs to know.
+        "--background": "#ffffff",
+        "--foreground": "#1a1a1a",
+        "--card": "#ffffff",
+        "--card-foreground": "#1a1a1a",
+        "--muted-foreground": "#5b6072",
+        "--border": "#e5e7eb",
+        "--input": "#e5e7eb",
+        color: "var(--foreground)",
         background: `
           radial-gradient(900px 500px at 90% 0%, rgba(255,92,0,0.07), transparent 60%),
           radial-gradient(700px 600px at -5% 30%, rgba(255,92,0,0.04), transparent 55%),
-          var(--background)
+          #ffffff
         `,
       }}
     >
@@ -933,7 +968,7 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
 
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <footer className="text-center text-xs pt-4 border-t border-[#e5e7eb]/40"
-          style={{ color: 'rgba(13,15,26,0.3)' }}>
+          style={{ color: 'rgba(13,15,26,0.62)' }}>
           Generated by{' '}
           <span style={{ color: DUCT_ORANGE, fontWeight: 600 }}>Duct</span>
           {' '}· getduct.ai

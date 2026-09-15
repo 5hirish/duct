@@ -10,7 +10,12 @@ html {
 }
 
 .app-shell {
+  /* Fallback, then the real thing — `100vh` alone pins to Safari's large
+     (toolbar-hidden) viewport and overshoots the visible window whenever the
+     address bar is showing; `dvh` tracks it. See DESIGN.md "Apple
+     platforms". */
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
 }
 
@@ -57,6 +62,52 @@ html {
   .logo-mark,
   .signin-logo .logo-mark {
     animation: none;
+  }
+
+  /* tw-animate-css's enter/exit system (`animate-in`/`animate-out` — every
+     Radix overlay's open/close, and Reveal's content-load fade) was never
+     gated: only the logo and Tailwind's own animate-pulse/ping/bounce sites
+     were (DESIGN.md "Known gaps"). `!important` on the longhand wins over the
+     unqualified shorthand `animation` property the utility sets, whichever
+     order the cascade puts them in, without touching duration-* overrides
+     that still apply at full motion. */
+  .animate-in,
+  .animate-out {
+    animation-duration: 0.01ms !important;
+  }
+
+  /* The rest of Tailwind's motion, which had zero `motion-reduce:` variants
+     against 34 `animate-*` sites. Per-site variants were never going to hold —
+     the next `animate-pulse` would arrive without one, the way these did — so
+     the rule lives once, here, where a new component is covered by default.
+
+     `animate-spin` is deliberately exempt. WCAG 2.3.3 is about animation from
+     interaction, and a busy ring is the only thing on screen saying a request
+     is still running; freezing it reads as a hung app. It is slowed instead,
+     which keeps the meaning and drops the motion.
+
+     The two pulsing "there is something to see" dots in SplitWorkspace are
+     exactly what 2.3.3 names, and they stop: the dot stays, at full opacity,
+     so the signal survives without the movement. */
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .animate-spin {
+    animation-duration: 2s !important;
+  }
+
+  /* `transition-all` on a card that lifts on hover is motion too. Kept as a
+     transition rather than removed so a colour change still reads as a change
+     rather than a jump cut. */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

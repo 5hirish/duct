@@ -105,3 +105,135 @@ def test_other_providers_are_untouched_by_the_subscription_path(monkeypatch):
     """Gemini and OpenRouter must not acquire a ChatGPT dependency."""
     monkeypatch.setattr(codex, "codex_available", lambda: True)
     assert _llm_for("k", Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH) == "ChatGoogleGenerativeAI"
+
+
+# ---------------------------------------------------------------------------
+# Which providers may claim a plan at all
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "provider",
+    [p for p in Provider if p is not Provider.OPENAI],
+)
+def test_only_openai_can_claim_a_plan(provider):
+    """A JWT in any other provider's slot is a mis-paste, never a subscription.
+
+    The regression this exists for: ``/providers/status`` asked only whether a
+    credential *looked* like a plan token, so a JWT anywhere lit the tile as
+    "Your subscription" — and on Anthropic it did, above a tooltip reading
+    "Using your ChatGPT plan". Anthropic forbids third-party use of a Claude
+    plan and rejects the token at the API, so that tile was advertising a
+    purchase that cannot be made. The label is only as honest as the provider
+    guard in front of it.
+    """
+    # Header + empty payload + a signature segment spelled so the secret
+    # scanner can see it is not one. Only the shape is under test.
+    token = "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE"
+    assert codex.is_subscription_credential(token) is True
+    assert codex.is_plan_credential(provider, token) is False
+    assert codex.is_plan_credential(Provider.OPENAI, token) is True
+
+
+def test_an_api_key_is_never_a_plan_even_on_openai():
+    assert codex.is_plan_credential(Provider.OPENAI, "sk-proj-abc") is False
+    assert codex.is_plan_credential(Provider.OPENAI, "") is False
+
+
+# ---------------------------------------------------------------------------
+# Presence is not reachability
+# ---------------------------------------------------------------------------
+
+
+def test_a_stray_plan_token_is_not_a_key_for_anyone_else():
+    """The bug this pair of guards exists for, end to end.
+
+    ``bool(user_keys.get(provider))`` was the reachability test, so a leftover
+    ChatGPT token in the Anthropic slot reported ``reachable`` *and*
+    ``runnable`` — the tile went green and `/models/preview` promised "Heavy
+    jobs run on claude-opus-5" for a request that would come back 401.
+    """
+    from routes import providers as providers_route
+
+    token = "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE"
+    assert codex.is_usable_credential(Provider.OPENAI, token) is True
+    assert codex.is_usable_credential(Provider.ANTHROPIC, token) is False
+
+    rows = providers_route.providers_status(
+        user_keys={Provider.ANTHROPIC: token}, user=None, db=None
+    )["providers"]
+    row = next(r for r in rows if r["id"] == Provider.ANTHROPIC.value)
+    assert row["reachable"] is False
+    assert row["source"] == "none"
+    # The user still has to go remove it, so the tile needs to be told.
+    assert row["key_mismatch"] is True
+
+    preview = providers_route.models_preview(
+        body=providers_route.TierPreviewRequest(tiers={"heavy": "claude-opus-5"}, engine="v1"),
+        user_keys={Provider.ANTHROPIC: token},
+        user=None,
+        db=None,
+    )
+    heavy = next(t for t in preview["tiers"] if t["id"] == "heavy")
+    assert heavy["runnable"] is False
+
+
+def test_an_ordinary_api_key_is_usable_everywhere():
+    for provider in Provider:
+        assert codex.is_usable_credential(provider, "sk-whatever-123") is True
+        assert codex.is_usable_credential(provider, "  ") is False
+
+
+def test_an_unusable_credential_is_not_the_key_a_run_spends(monkeypatch):
+    """It falls through to the stored key instead of being sent and 401ing."""
+    from agents import engines
+
+    key = engines.resolve_provider_key(
+        Provider.ANTHROPIC,
+        {Provider.ANTHROPIC: "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE"},
+        stored_keys={Provider.ANTHROPIC: "sk-ant-api03-real"},
+    )
+    assert key.key == "sk-ant-api03-real"
+    assert key.source == "stored"
+
+
+# ---------------------------------------------------------------------------
+# What a plan-backed call asks for
+# ---------------------------------------------------------------------------
+
+
+def test_a_plan_call_carries_its_reasoning_across_tool_steps():
+    """The Codex backend forces ``store=False``, and a stateless Responses call
+    keeps a reasoning item only when it came back encrypted. Without the
+    ``include`` the client dropped every reasoning block between tool calls
+    and the model re-planned from scratch at each step."""
+    from langchain_core.messages import HumanMessage
+
+    token = "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE|acct-1"
+    llm = codex.build_codex_chat("gpt-5-mini", api_key=token)
+    payload = llm._get_request_payload([HumanMessage("hi")])
+
+    assert payload["store"] is False
+    assert list(codex.REASONING_CARRYOVER) == payload["include"]
+
+
+def test_the_thread_is_the_prompt_cache_key_on_both_openai_routes():
+    """One conversation, one cache: the key pins every call of a tool loop to
+    the machine that already holds its prefix. A plan token and an API key
+    reach different endpoints and both take it."""
+    from langchain_core.messages import HumanMessage
+
+    from agents.core.lc import PROMPT_CACHE_KEY_FIELD, resolve_chat_model
+
+    plan = resolve_chat_model(
+        Provider.OPENAI, ModelName.GPT_5_MINI, "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE|acct-1",
+        cache_key="thread-1",
+    )
+    key = resolve_chat_model(Provider.OPENAI, ModelName.GPT_5_MINI, "sk-proj-x", cache_key="thread-1")
+    for llm in (plan, key):
+        assert llm._get_request_payload([HumanMessage("hi")])[PROMPT_CACHE_KEY_FIELD] == "thread-1"
+
+    # Other vendors key their caches on content; the kwarg must not leak to
+    # a class that would reject it.
+    other = resolve_chat_model(Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, "sk-ant-x", cache_key="thread-1")
+    assert PROMPT_CACHE_KEY_FIELD not in (getattr(other, "model_kwargs", None) or {})

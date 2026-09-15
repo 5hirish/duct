@@ -141,8 +141,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
       <div>
         <h2 className="text-lg font-semibold tracking-tight">Brand context</h2>
         <p className="text-sm text-muted-foreground">
-          The tone, messaging, pillars, and visual identity the content agent uses. Core
-          business details are inherited from your project setup.
+          The tone, messaging, pillars and visual identity the content agent works from.
         </p>
       </div>
 
@@ -161,8 +160,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
               From project context
             </h3>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Company, website, audience, and brand voice live in your project setup so they
-              stay consistent across audit, insights, and content.
+              Set once in project setup, so audit, insights and content agree.
             </p>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/project/${projectId}#brand`}>
@@ -204,13 +202,13 @@ export default function BrandContextForm({ projectId, onSaved }) {
         </Field>
         <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
           <Field
-            label={<span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-green-500" /> Always say</span>}
+            label={<span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-success" /> Always say</span>}
           >
             <Textarea value={doSay} onChange={e => setDoSay(e.target.value)} rows={3}
               placeholder="knowledgeable friend, science-backed, real results" />
           </Field>
           <Field
-            label={<span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-rose-500" /> Never say</span>}
+            label={<span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-destructive" /> Never say</span>}
           >
             <Textarea value={doNotSay} onChange={e => setDoNotSay(e.target.value)} rows={3}
               placeholder="medical claims, perfect, flawless" />
@@ -228,7 +226,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
             <div key={i} className="rounded-xl border border-border bg-background p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary tabular-nums">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-2xs font-semibold text-primary tabular-nums">
                     {i + 1}
                   </span>
                   Pillar
@@ -267,7 +265,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
             className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="size-4" /> Add pillar
-            <span className="text-xs text-muted-foreground/70">({pillars.length}/8)</span>
+            <span className="text-xs text-muted-foreground">({pillars.length}/8)</span>
           </button>
         </div>
       </Section>
@@ -286,7 +284,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
       {/* Sticky save bar */}
       <div className="sticky bottom-0 -mx-2 flex items-center justify-end gap-3 border-t border-border/60 bg-background/90 px-2 py-3 backdrop-blur">
         {savedAt && (
-          <span className="inline-flex items-center gap-1.5 text-xs text-green-600">
+          <span className="inline-flex items-center gap-1.5 text-xs text-success">
             <Check className="size-3.5" /> Saved {savedAt.toLocaleTimeString()}
           </span>
         )}
@@ -321,8 +319,8 @@ function Section({ icon: Icon, title, hint, children }) {
 function ReadOnly({ label, value, className = "" }) {
   return (
     <div className={className}>
-      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className={`mt-0.5 truncate text-sm ${value ? "text-foreground" : "text-muted-foreground/60"}`}>
+      <dt className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className={`mt-0.5 truncate text-sm ${value ? "text-foreground" : "text-muted-foreground"}`}>
         {value || "Not set"}
       </dd>
     </div>
@@ -334,7 +332,7 @@ function Field({ label, hint, children }) {
     <div className="grid gap-1.5">
       <Label className="text-xs font-medium">{label}</Label>
       {children}
-      {hint && <span className="text-[11px] text-muted-foreground">{hint}</span>}
+      {hint && <span className="text-2xs text-muted-foreground">{hint}</span>}
     </div>
   );
 }

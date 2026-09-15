@@ -13,7 +13,6 @@ router = APIRouter(tags=["connectors"])
 
 class ConnectorAccountsRequest(BaseModel):
     refresh_token: str = ""
-    developer_token: str = ""  # BYO Google Ads API access
     login_customer_id: str = ""  # MCC override
     # Manual-credential connectors (apple_ads, meta_ads, stripe, revenuecat,
     # openai_ads): arbitrary key/value credentials the adapter reads from
@@ -39,7 +38,6 @@ def _list_accounts(connector_id: str, body: ConnectorAccountsRequest) -> dict:
     extras = {
         key: value.strip()
         for key, value in (
-            ("developer_token", body.developer_token),
             ("login_customer_id", body.login_customer_id),
         )
         if value.strip()

@@ -1,0 +1,39 @@
+name: Docs Checks
+
+# The one thing CI can hold a document to: the naming and metadata rule in
+# docs/README.md ("Naming"). A dated file is a record and its Date: must match
+# the filename; an undated file is a reference and its Updated: line may not
+# fall behind the last commit that touched it. Prose quality is a review's
+# job; this only stops a reference from quietly going stale while claiming
+# a date.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'docs/**'
+      - 'scripts/check_docs.py'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: naming and metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The check compares each reference's Updated: line with the date of
+          # the last commit that touched it, which a depth-1 checkout cannot say.
+          fetch-depth: 0
+
+      - name: Check docs
+        run: python3 scripts/check_docs.py

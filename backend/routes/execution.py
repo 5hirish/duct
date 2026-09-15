@@ -54,7 +54,6 @@ router = APIRouter(tags=["execution"])
 
 class CredentialsIn(BaseModel):
     refresh_token: str = ""
-    developer_token: str = ""  # BYO Google Ads API access
     login_customer_id: str = ""
 
 

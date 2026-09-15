@@ -16,6 +16,14 @@ export function monthStartOf(plan) {
   return sd ? new Date(sd.getFullYear(), sd.getMonth(), 1) : null;
 }
 
+/** The day the plan's first slot falls on. A plan that starts on the 8th
+ * proposes its first post for the 8th; anchoring on the month start put a
+ * week plan's proposed days a week early, before its own published ones. */
+export function planStartOf(plan) {
+  const sd = parseDate(plan?.start_date);
+  return sd ? new Date(sd.getFullYear(), sd.getMonth(), sd.getDate()) : null;
+}
+
 function addDays(date, n) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + n);
 }
@@ -30,11 +38,11 @@ const KIND_LABEL = { published: "Published", scheduled: "Scheduled", proposed: "
  * Resolve an item's effective schedule.
  *   day      — the plan.days[] entry (status, etc.)
  *   post     — the linked full post (or null)
- *   monthStart — Date (first of the plan's month) or null
+ *   anchor   — Date the plan's first slot falls on (planStartOf) or null
  *   index    — the item's position in days[] (for the proposed slot)
  * Returns { date, time|null, kind, label, status, hasTime }.
  */
-export function effectiveSchedule(day, post, monthStart, index) {
+export function effectiveSchedule(day, post, anchor, index) {
   const status = post?.status || day?.status || "pending";
   const posted = parseDate(post?.posted_at);
   const scheduled = parseDate(post?.scheduled_at);
@@ -47,8 +55,8 @@ export function effectiveSchedule(day, post, monthStart, index) {
     date = posted; kind = "published"; hasTime = true;
   } else if (scheduled) {
     date = scheduled; kind = "scheduled"; hasTime = true;
-  } else if (monthStart) {
-    date = addDays(monthStart, index || 0); kind = "proposed"; hasTime = false;
+  } else if (anchor) {
+    date = addDays(anchor, index || 0); kind = "proposed"; hasTime = false;
   }
 
   const dateLabel = date ? `${fmtDate(date)}${hasTime ? `, ${fmtTime(date)}` : ""}` : "";

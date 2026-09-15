@@ -57,6 +57,10 @@ _DESKTOP_FLOWS = frozenset({SIGNIN_DESKTOP_FLOW, SIGNIN_SOURCES_DESKTOP_FLOW})
 _SOURCES_FLOWS = frozenset({SIGNIN_SOURCES_FLOW, SIGNIN_SOURCES_DESKTOP_FLOW})
 
 JWT_EXPIRY_SECONDS = 7 * 24 * 60 * 60  # 7 days
+# "Keep me signed in" on the login page. A plain JWT-in-localStorage design
+# has no revoke, so this is a duration choice, not a security boundary — the
+# token is exactly as bearer-valid for 30 days as the 7-day one is for 7.
+REMEMBER_JWT_EXPIRY_SECONDS = 30 * 24 * 60 * 60  # 30 days
 
 
 def _no_store_redirect(url: str, status_code: int = 307) -> RedirectResponse:
@@ -106,11 +110,13 @@ def _create_jwt(
     new_user: bool = False,
     uid: str = "",
     guest: bool = False,
+    remember: bool = False,
 ) -> str:
     cfg = get_configs()
     if not cfg.jwt_secret:
         raise ValueError("JWT_SECRET is not configured.")
     now = datetime.now(timezone.utc)
+    expiry_seconds = REMEMBER_JWT_EXPIRY_SECONDS if remember else JWT_EXPIRY_SECONDS
     payload = {
         "sub": email,
         "name": name,
@@ -127,7 +133,7 @@ def _create_jwt(
         # app show "save your work" instead of an account it never asked for.
         "guest": guest,
         "iat": int(now.timestamp()),
-        "exp": int(now.timestamp()) + JWT_EXPIRY_SECONDS,
+        "exp": int(now.timestamp()) + expiry_seconds,
     }
     return jwt.encode(payload, cfg.jwt_secret, algorithm="HS256")
 
@@ -231,6 +237,7 @@ async def signin_google_authorize(
     client: str = Query(default=""),
     link: str = Query(default=""),
     sources: str = Query(default=""),
+    remember: str = Query(default=""),
 ) -> RedirectResponse:
     """Start Google OAuth for user sign-in.
 
@@ -250,6 +257,10 @@ async def signin_google_authorize(
     resolved id rides the OAuth state to the callback. An invalid or expired
     code is ignored rather than refused — the sign-in still works, it simply
     does not link, and the app says so.
+
+    ``remember`` is the login page's "keep me signed in" box, any non-empty
+    value counting as ticked. It rides the OAuth state the same way ``link``
+    does and picks the JWT's lifetime at the callback.
     """
     cfg = get_configs()
     if turnstile_token:
@@ -301,7 +312,12 @@ async def signin_google_authorize(
     if link and link_user_id is None:
         logger.info("sign-in started with a stale guest link code; proceeding unlinked")
     save_state(
-        state, flow.code_verifier, flow_name, OAUTH_STATE_TTL_SECONDS, link_user_id=link_user_id
+        state,
+        flow.code_verifier,
+        flow_name,
+        OAUTH_STATE_TTL_SECONDS,
+        link_user_id=link_user_id,
+        remember=bool(remember),
     )
     return _no_store_redirect(auth_url, status_code=307)
 
@@ -331,7 +347,7 @@ def signin_google_callback(
 def _signin_google_callback(*, code: str, state: str) -> RedirectResponse:
     if not code or not state:
         return _signin_failure(SIGNIN_ERROR_EXPIRED, 400, "Missing OAuth code or state.")
-    matched_flow, code_verifier, link_user_id = consume_state_full(
+    matched_flow, code_verifier, link_user_id, remember = consume_state_full(
         state, SIGNIN_FLOWS, OAUTH_STATE_TTL_SECONDS
     )
     if matched_flow is None:
@@ -400,7 +416,12 @@ def _signin_google_callback(*, code: str, state: str) -> RedirectResponse:
 
     try:
         token = _create_jwt(
-            normalized_email, name, picture, new_user=upserted.created, uid=upserted.user_id
+            normalized_email,
+            name,
+            picture,
+            new_user=upserted.created,
+            uid=upserted.user_id,
+            remember=remember,
         )
     except ValueError:
         logger.exception("JWT creation failed")

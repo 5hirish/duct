@@ -26,6 +26,8 @@ are already proven in ``tests/test_deepagents_harness.py``.
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import logging
 from typing import Any, Callable
 
@@ -416,12 +418,37 @@ class LangChainAuditRunner:
             # ends, and the UI would leave "working" before the report exists.
             announce_finish=False,
         )
+        # The profile, resolved server-side. Until this call passed it, the
+        # whole operator block was unreachable in v1: the runner took
+        # `user_preferences` and never handed it to the prompt, so role, style
+        # and depth reached the model in no run at all.
+        from agents.preferences import UserPreferences
+        from service.profile import resolve as resolve_profile
+
+        profile = resolve_profile(
+            UUID(owner_id) if owner_id else None, user_preferences
+        )
+        # The saved row wins over whatever this browser happens to be holding.
+        # `resolve` already falls back to the request payload when there is no
+        # row, so overwriting is safe in both directions.
+        prefs = (user_preferences or UserPreferences()).model_copy(
+            update={
+                "role": profile.role,
+                "communication_style": profile.communication_style,
+                "report_depth": profile.report_depth,
+            }
+        )
+        # The whole profile, not three fields off it. Passing the parts is how
+        # `display_name` went missing: it was never one of the parts anyone
+        # remembered to pass.
         await loop.turn(
             build_audit_user_prompt(
                 crawl_result,
                 business_context,
+                prefs,
                 research_context=research_context,
                 extra_context=extra_context,
+                profile=profile,
             )
         )
 

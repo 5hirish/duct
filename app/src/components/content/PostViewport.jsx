@@ -106,7 +106,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
       setDirty(false);
       return updated;
     } catch (err) {
-      setSaveError(err.message || "Failed to save post.");
+      setSaveError(err.message || "Your edits are still here, but they didn't save. Try again.");
       throw err;
     } finally {
       setSaving(false);
@@ -250,7 +250,7 @@ function Labeled({ label, hint, children }) {
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        {hint && <span className="text-[11px] text-muted-foreground/70">{hint}</span>}
+        {hint && <span className="text-2xs text-muted-foreground">{hint}</span>}
       </div>
       {children}
     </div>
@@ -292,7 +292,7 @@ function HashtagInput({ value, onChange }) {
         <Hash className="size-3" />
         <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} onBlur={add}
           aria-label="Add a hashtag"
-          placeholder="Add a tag, press Enter…" className="flex-1 bg-transparent text-xs outline-none" />
+          placeholder="Add a tag, press Enter…" className="flex-1 rounded-sm bg-transparent text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/30" />
       </span>
     </div>
   );
@@ -371,7 +371,7 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }
         <button
           type="button"
           onClick={() => ask(`Regenerate just the image for ${cur.slide_id} — the slide I'm viewing — to match its updated prompt. Leave every other slide exactly as it is.`)}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20 dark:text-amber-400"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-warning/50 bg-warning/10 px-3 py-2 text-xs font-semibold text-warning transition-colors hover:bg-warning/20"
         >
           <RefreshCw className="size-3.5" /> This slide is outdated — regenerate
         </button>
@@ -395,7 +395,7 @@ function DraftingPulse() {
       <Spinner className="size-10 border-primary/30 border-t-primary" />
       <p className="text-sm font-medium">Drafting the post…</p>
       <p className="text-xs text-muted-foreground transition-opacity duration-500">{STREAMING_HINTS[idx]}</p>
-      <p className="max-w-xs text-[10px] text-muted-foreground/60">
+      <p className="max-w-xs text-2xs text-muted-foreground">
         Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds.
       </p>
     </div>

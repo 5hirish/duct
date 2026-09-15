@@ -5,7 +5,7 @@ units, CSS file layout, accessibility basics. This file holds what the app
 should **look, feel, and sound like**: the design system as actually built,
 one canonical pattern per job, and the principles that keep new screens from
 reading as generated defaults. The deep reasoning behind the layout system
-lives in `docs/engineering/desktop-adaptive-ui-review.html`; this file does
+lives in `docs/engineering/2026-09-01-desktop-adaptive-ui-review.html`; this file does
 not repeat it.
 
 Rules cite their source where they came from research (NN/g, Apple HIG,
@@ -135,8 +135,13 @@ values (`p-[13px]`); if the scale doesn't fit, the layout is wrong.
   generated: yes. Anything on the daily path: no.
 - State changes prefer opacity to movement — `PipelineProgress` dims done
   steps rather than moving them; keep that temperament.
-- Everything that loops respects `prefers-reduced-motion` (today only the
-  logo is gated — Known gaps).
+- `prefers-reduced-motion` strips every one-shot `animate-in`/`animate-out`
+  (`base.css`) — every Radix overlay's open/close and `ui/reveal`'s
+  content-load fade go through this, so nothing new needs its own gate.
+  What's still ungated is anything that **loops** — `animate-pulse`/`ping`/
+  `bounce` sites, today only the logo is handled (Known gaps) — because a
+  loop left running is the more serious failure (HIG *Motion*: make it
+  optional) and needs its own audit, not a duration override.
 
 **Icons.** lucide only, one set, default stroke. `size-4` default (the
 Button auto-sizes), `size-3.5`/`size-3` in dense rows, `size-5` for
@@ -336,20 +341,30 @@ are the canonical choices; migrate the others when a change touches them.
 | Card | `rounded-xl border bg-card p-5` (the de-facto shape; restyle `ui/card.tsx` to it and adopt the component, which today has zero importers) | the four other hand-rolled shapes; `.connection-card` CSS |
 | Busy indicator | `ui/spinner` (currentColor, `label` prop for `role="status"`) | `<Loader2 className="animate-spin">` — the fork that grew back after twelve were consolidated |
 | Long-running agent work | `PipelineProgress` (ladder + rotating subtitle) | bare spinners on multi-second waits |
-| Status badge | `ui/badge` with semantic tokens | `.status-pill` (lives in `ads-report.css`, hardcodes hexes, used far outside the report) |
-| Destructive confirm | `ui/alert-dialog`: title quotes the object ("Delete \"Acme\"?"), body states scope + irreversibility, action button is verb + noun ("Delete project") in the *tinted* destructive style | the three `window.confirm` sites; the filled-red `bg-red-600` variant |
+| Status badge | `ui/badge` with a semantic variant — `success`, `warning`, `info`, `destructive`, which tint the ground and colour the text (4.2–5.5:1 in both themes, no `dark:` for the caller). Solid status colour + its `-foreground` partner ONLY where a tint cannot work, meaning a chip over a photograph (`contentStatus.js`'s `solidClass`); `bg-green-500/90 text-white` measured 2.22:1 | `.status-pill` (lives in `ads-report.css`, hardcodes hexes, used far outside the report) |
+| Destructive confirm | `ui/confirm-dialog` — `useConfirm()` gives `{ confirm, dialog }` and awaits a boolean, so a call site reads like the `window.confirm` it replaces; `<ConfirmDialog>` directly when the caller already tracks what is being confirmed. Title quotes the object ("Delete \"Acme\"?"), body states scope + irreversibility, action is verb + noun ("Delete project") in the *tinted* destructive style | `window.confirm` (an OS modal cannot say what will happen, cannot be destructive, and is invisible to `/preview` — which is how four survived a design pass); a fifth hand-written `AlertDialog` block; the filled-red `bg-red-600` variant |
 | Destructive action (the button that opens that confirm) | `Button variant="destructive"` — the tinted style above, already shipped: `bg-destructive/10 text-destructive`. Red **at rest**, not on hover: an action worth confirming is worth seeing before the pointer arrives. Pass `buttonVariants({ variant: "destructive" })` to `AlertDialogAction`, which defaults to the primary variant | hand-rolled danger links; pasting the class string inline; raw palette (`bg-red-600 text-white`) instead of the tokens, which cannot follow the theme; anything that is only red on `:hover` |
 | Dialog actions | `DialogFooter` — bottom of the dialog, below the content they act on, destructive/secondary left and primary rightmost (it reverses to primary-first when the row stacks). Never mid-body | a hand-rolled right-aligned row anywhere above the content |
-| Empty state (whole surface) | dashed panel: `rounded-xl border-dashed p-10 text-center`, `size-12` icon tile, `text-sm font-medium` title, `text-xs text-muted-foreground` body, verb-first `Button size="sm"` CTA | ad-hoc variants; pick this anatomy every time |
+| Empty state (whole surface) | `ui/empty-state`'s `EmptyState` — the dashed panel (`rounded-xl border-dashed p-10 text-center`, `size-12` icon tile, `text-sm font-medium` title, `text-xs text-muted-foreground` body, verb-first `Button size="sm"` CTA) as a component, because four hand-rolled copies of that anatomy had already disagreed about the icon size, the radius and whether there was a CTA at all. Its `example` prop frames a sample of the *filled* surface below the panel — pass the real component over invented props (`UsagePanel`'s `UsageEmpty` is the model), never a mock-up of it, and never for a state the reader has already seen filled | ad-hoc variants; an empty state with nothing to click |
 | Empty state (inside a stable layout) | one muted line in place (`DeskCards`) so the layout doesn't jump | — |
 | First-run | the `DeskDayOne` pattern: labelled example data + a short checklist — "an empty board teaches nothing" | "No X yet" on a first-run surface |
 | Inline error | `text-sm text-destructive` line with `role="alert"`, or the boxed `border-destructive/30 bg-destructive/5` variant for section-level failures | unlabelled error text (only 4 of 31 sites set `role="alert"` today) |
 | Corner notification | the `UpdateToast` anatomy (fixed corner card, `role="status"`, renders null until it has something to say) — there is deliberately **no toast library**; don't add one | — |
-| Loading a page | skeleton mirroring the loaded layout (the Desk pattern) when the shape is known; `Loading…` line for sub-second fetches | anonymous spinners for named work |
+| Loading a page | skeleton mirroring the loaded layout (the Desk pattern) when the shape is known; `Loading…` line for sub-second fetches — `(app)/loading.jsx` is this for any route Next suspends on (a cold navigation, an RSC payload fetch) that doesn't have a more specific fallback of its own | anonymous spinners for named work |
+| Content reveal after a load | `ui/reveal`'s `Reveal` — fade + slight rise (`animate-in fade-in slide-in-from-bottom-1 duration-200`), the motion budget's enter treatment applied to a plain mount instead of a Radix `data-state` open. Wrap the swap from a loading/skeleton branch to the loaded one (Desk pattern) | a skeleton or fetch result popping straight in; a bespoke fade hand-rolled per screen |
+| Truncated text (2+ lines) | `ui/clamp-text`'s `ClampText` — `line-clamp-N` (2 by default) with a Radix tooltip on hover/focus carrying the full string, itself capped (`line-clamp-4`) rather than left to grow forever. `line-clamp` alone is a safe crop — it's paint-only, so screen readers already read the full, untruncated string (CSS Overflow spec) — but gives a sighted mouse or keyboard user no way to read past it; the tooltip is what WCAG SC 1.4.13 (Content on Hover or Focus) is asking for, and it's why this reaches for Radix's tooltip rather than a native `title` (not dismissible, not hoverable, invisible to touch). Where the clamped text already sits inside a `<Link>`/`<button>`, attach `Tooltip`/`TooltipTrigger asChild` to that element instead of nesting a second focusable span in it — one tab stop per row (see `DeskCards.jsx`'s `Item`) | an unbounded block that can push the rest of a fixed-height card or rail off-screen (the failure mode: one long agent-written finding title turning a 3-card row into a 9-line one); a bare `line-clamp-2` with no way to read the rest |
 
 Empty states are onboarding surfaces (NN/g): show what the filled state will
 look like or say exactly what to do, CTA verb-first ("Connect GA4", never
 "Get started").
+
+And **one zero can mean two things.** A count of nothing is ambiguous wherever
+a window or a filter is involved — a first run and a quiet fortnight are the
+same zero and want opposite actions, and telling somebody who spent $6 last
+quarter to go and run something reads as though their data was lost. Where the
+surface can afford one extra read to tell the two apart, do it and say the true
+one (`UsagePanel` probes the widest window); where it cannot, write copy that is
+true of both.
 
 Loading states inform: for anything over ~1s, say what is happening
 ("Reading last 28 days of GSC…") — skeletons read faster than spinners, but
@@ -374,6 +389,16 @@ The container-query system, unit rules and the `@`-scale are in
   every card shows the same four metrics is a table wearing cards. Tables
   get sticky headers *inside their own scroll container*, tabular figures,
   and hover row-highlighting; one vertical scroll container per pane.
+- **Horizontal scroll is for genuinely two-dimensional content only** —
+  a data table, a code block, a wide diagram — each in its own
+  `overflow-x-auto` wrapper so the scrollbar sits under the thing that
+  needs it, not the page (`ChatMarkdown`'s table wrapper, `ArtifactRenderer`'s
+  `<pre>`s). It is never a substitute for a layout that doesn't fit: ordinary
+  content (cards, lists, a row of stats) drops columns or stacks via
+  `@container` instead. WCAG 1.4.10 (Reflow) is the reason — content must
+  work at a 320px-equivalent width without needing scroll in *both*
+  directions, and the exemption is explicitly for content whose meaning
+  depends on a fixed 2-D layout, not for content someone chose not to reflow.
 - **Every number carries a comparison.** A bare total is meaningless
   without a delta, benchmark, or trend beside it (Tufte: "a number is
   meaningless without a trend line"; Few's context mistake). Word-sized
@@ -405,6 +430,102 @@ The container-query system, unit rules and the `@`-scale are in
   below 24×24 CSS px (WCAG 2.5.8). Denser than Material's touch defaults is
   fine here — Linear-dense, made tolerable by consistent spacing and muted
   color — but the floor is the floor.
+
+---
+
+## Apple platforms — web, desktop (Tauri), Safari
+
+We reach people through Safari (the web app, iOS/iPadOS included) and a
+Tauri shell — a native window with a WebKit-family webview on Mac. Apple's
+own guidance targets AppKit/UIKit, not CSS, so this translates the
+principles rather than pointing at APIs nothing here calls.
+
+- **Adapt to the window a person is actually looking at, not the device
+  class** (HIG, *Layout* — "different device screen sizes... orientations...
+  multitasking modes... external display support"). That's the same claim
+  AGENTS.md's `@container` rule makes about the sidebar and the resizable
+  panes; Apple's list is longer only because they also ship the device.
+- **`svh`/`dvh` track Safari's collapsing toolbar; they don't know about the
+  notch.** Dynamic viewport units resize as the address bar hides on scroll,
+  but they carry no safe-area information — on a non-rectangular screen
+  (Dynamic Island, a rounded corner, an iPad in a case) they still have to be
+  paired with `env(safe-area-inset-*)` wherever content can reach an edge.
+  Most of the app already does this (`ChatInput`, `project.css`, the skip
+  link). `.app-shell`'s `min-height: 100vh` in `base.css` is the one shell
+  dimension that isn't tracking Safari's real visible viewport at all —
+  `signin.css`'s two-line `min-height: 100vh; min-height: 100dvh;` fallback
+  (old browsers get the first, everything else overrides it) is the pattern
+  to copy (Known gaps).
+- **Hover is a bonus channel, and this app has never tested that it is.**
+  iOS Safari fires a synthetic hover-then-click on tap, so an untested
+  hover-only affordance doesn't fail loudly on a touchscreen — it just costs
+  a dead first tap nobody notices in a demo. The `@media (hover: hover)`
+  rule under "Tablet / touch" above is exactly this, and the codebase has
+  zero occurrences of that media query today: every `group-hover`-revealed
+  action (the pin buttons in `DeskLists`, row actions app-wide) is unverified
+  on touch (Known gaps).
+- **Removing the tap flash is opt-out, not off.**
+  `-webkit-tap-highlight-color: transparent` — the standard fix for iOS
+  Safari's blue tap rectangle — removes *all* touch feedback if nothing
+  replaces it. Pair it with a real `:active` style; never ship it alone.
+- **Apple's own touch-target floor is 44×44pt, stricter than the WCAG
+  24×24 CSS px floor a few lines up.** Keep 24px as the desktop-density
+  floor — that's a deliberate call already made here — but a touch-primary
+  surface (the phone-width onboarding flow, anything effectively under
+  `@media (hover: none)`) should reach for 44px on its primary actions, not
+  the desktop minimum.
+- **Dynamic Type has a web analogue we already built.** HIG's Dynamic Type —
+  the OS-level text-size preference every well-behaved view has to honor —
+  is what the `rem` unit rule and `/preview`'s `text=125|150|200` lens exist
+  to simulate for a page that has no OS setting to read. A layout that
+  breaks under that lens is a layout that would reject Dynamic Type.
+- **The large-display idiom.** Mac guidance expects people to see more at
+  once on a big display, not the same phone layout stretched wide — it's why
+  `.app-main` caps at 1440px and grows into multi-column at `@4xl` rather
+  than staying a single centered column at every width.
+- **Motion, Apple's three rules.** HIG *Motion*: make it optional (Reduce
+  Motion — the macOS/iOS setting `prefers-reduced-motion` exists to read,
+  which is why it's a system accessibility preference and not a per-app
+  toggle), strive for realism (fake physics reads worse than no motion — a
+  slide that overshoots and settles is doing more work than a linear one to
+  say less), and prefer quick, precise animations over showy ones. That
+  last one is already this file's motion budget (below, "Motion" —
+  `<300ms`, ease-out) arrived at independently.
+- **Materials — we already have one, undocumented as such.** HIG
+  *Materials*: translucency + blur to show there's real content behind an
+  overlay without letting it compete for attention; thicker material (more
+  opaque, more blur) where fine text sits on it, thinner where it's mostly
+  decorative. `corner-notice` and `ConnectionBanner` already do exactly this
+  (`bg-background/95 backdrop-blur-xl`) — name it when adding a new
+  overlay-over-content surface rather than re-deriving the opacity/blur pair
+  from scratch.
+- **Vector for anything that scales, raster only for what can't be.**
+  HIG *Images*: prefer a vector format for interface graphics — the system
+  scales it for free at any resolution — and reserve raster for imagery with
+  photographic detail or baked-in effects, at 2x/3x source so it isn't soft
+  on a Retina/ProMotion display. lucide's SVGs already get this right for
+  free. `MosaicPanel` doesn't: it serves one `.webp` resolution (`width`/
+  `height` from the `size` prop, no `srcset`) scaled up on any 2x+ display —
+  the mosaic art is the one raster asset in the app and the one place this
+  isn't followed (Known gaps).
+- **Page-to-page transitions: investigated, deliberately not wired up yet.**
+  React's `<ViewTransition>` (the zero-dependency way to do HIG-style
+  navigation — crossfades, shared-element morphs, directional slides that
+  match the platform's own push/pop convention) only exists in React's
+  *experimental* release channel. Checked directly against this repo's
+  installed packages: `node_modules/next/dist/compiled/react/` (the stable
+  channel this app builds with) has no `ViewTransition` export; only
+  `react-experimental` does, and Next only switches the whole app onto that
+  channel via one of four `next.config` flags (`blockingSSR`, `taint`,
+  `transitionIndicator`, `gestureTransition` — `needs-experimental-react.js`
+  in the Next source is the ground truth). None are set. That's a
+  production-stability call for the whole app, not a styling one, so it's
+  parked rather than silently flipped — see the vendored
+  `node_modules/next/dist/docs/01-app/02-guides/view-transitions.md` for the
+  full pattern set (morph/reveal/directional-slide/crossfade) whenever it's
+  worth revisiting. Until then: content-level reveals (`ui/reveal`, Canon
+  table) and `(app)/loading.jsx` are the delight budget for loading and
+  navigation, both on the stable channel.
 
 ---
 
@@ -454,6 +575,12 @@ Rules, checkable in review:
 - **Buttons are terse verb(+noun)**: `Retry`, `Later`, `Delete project`,
   `Restart to update`. In-progress labels use the ellipsis character:
   `Saving…`, `Checking…`, `Working…`.
+- **One line per option.** A picker row gets one clause, roughly a dozen
+  words, carrying the fact that tells it apart from the row above it — never
+  the argument for why the choice exists. That argument belongs in the code
+  comment beside the strings; a menu read mid-task is not where a design gets
+  defended. `AUTONOMY_OPTIONS` in `src/lib/projectsApi.js` is the model: the
+  three-sentence version of it filled a dropdown taller than the composer.
 - **No setup sentences, no forced jokes** (Slack: "Get to the point";
   "write like you're having a conversation with one person").
 - Apologize only for serious failures, once.
@@ -520,54 +647,85 @@ The tree, measured against this file. Fix each when a change touches it.
   light/dark pair, desaturated in dark) in `tokens.css`/`theme.css` — one
   change, every component inherits. Until then: `bg-primary` in code, no ad
   hoc `bg-[var(--orange)]`.
-- **Semantic success/warning tokens exist now; most sites still don't use
-  them.** `--success` / `--warning` (+ foregrounds) live beside
-  `--destructive` in `tokens.css`/`theme.css`, and `connector-tiles.css` is
-  migrated. Everything else still re-picks greens and ambers
-  (`text-green-500`, `text-amber-600`…) with hand-managed dark partners, and
-  `contentStatus.js` + `AuditStepProgress` remain two independent maps —
-  migrate on touch. The hand-picks are not merely inconsistent: the common
-  `#eab308` measures **1.9:1** on a light background, so any of them used as
-  label text fails AA. The tokens are picked for it (light 4.96:1 / 4.56:1,
-  dark 9.18:1 / 7.74:1 on `--card`).
+- ~~**Semantic success/warning tokens exist now; most sites still don't use
+  them.**~~ **Closed 2026-09-15.** All 247 raw palette classes are on tokens,
+  `contentStatus.js` is the one status map, and `scripts/check-design-system.mjs`
+  fails the build on a new one. Four more tokens arrived with that sweep:
+  `--info` (a state that is neither a win nor a problem), `--brand` (the brand
+  orange at a lightness that can carry a 12px label — `--orange` stays the
+  literal `#ff5c00` for marks), `--control` (the 3:1 edge that says "this is a
+  field", split out of `--border`, which was doing both jobs at 1.27:1 and
+  therefore neither), and `--text-2xs` (11px, decoration only).
 - **`ui/card` has zero importers** while five card shapes coexist — restyle
   it to the canonical shape, then adopt it.
-- **`Loader2` spinners (7 files)** → `ui/spinner`.
+- ~~**`Loader2` spinners (7 files)**~~ **Closed 2026-09-15** — and held by
+  `check:design`, which is the only reason it will stay closed; it had already
+  been consolidated once.
 - **`.status-pill`** → `ui/badge`; move its colors to tokens. The
   `components/connections/` surfaces are migrated (they now use `ui/badge` or
   a glyph); the rest of the 8 files are not.
-- **`window.confirm` (3 sites)** → `ui/alert-dialog`.
+- ~~**`window.confirm` (3 sites)**~~ **Closed 2026-09-15.** `ui/confirm-dialog`
+  is the shared ask now — `useConfirm()` returns `{ confirm, dialog }` and
+  reads like the native call it replaces, so moving a site is one line.
 - **Off-scale type.** `npm run check:type` enforces the two-size rule above:
   font sizes must land on Tailwind's scale, and files on its clean list can
   never regress. It runs inside `check:parity`, so CI has it. Currently clean:
   `base`, `connector-tiles`, `forms`, `layout-grids`, `mode-selector`,
-  `theme`, `tokens`, `typography`. Still owing, and reported on every run:
-  `ads-report` (15), `generate` (14), `model-tiers` (9), `signin` (7),
-  `chat` (5), `connections` (1), `app-shell` (1). Clean a file, add it to
-  `CLEAN` in the script. Separately, ~300 arbitrary px type values in JSX
-  (`text-[10px]` ×88, `text-[11px]` ×77…) contradict the rem rule in
-  `AGENTS.md`, as does heavy inline `style={{}}` spacing in `execute/page.jsx`
-  and `AuditReportV1.jsx` — neither is covered by the script yet.
+  `project`, `signin`, `theme`, `tokens`, `typography`, `usage`. Still owing,
+  and reported on every run: `ads-report` (15), `generate` (14),
+  `model-tiers` (7), `chat` (5), `onboarding` (2), `app-shell` (1),
+  `connections` (1). Clean a file, add it to `CLEAN` in the script.
+  The ~300 arbitrary px type values in JSX are **gone as of 2026-09-15**:
+  everything at or below 11px became `text-2xs` and everything above landed on
+  the scale, `check:design` fails on a new one, and `execute/page.jsx`'s inline
+  `fontSize` numbers now read `var(--text-xs)` and friends. Its inline
+  `style={{}}` *layout* is still outside the system and still owing.
 
   The rule needed a guard because prose could not hold it: `connector-tiles.css`
   grew **six** sizes between 10px and 16px while this file said "do not invent
   intermediate sizes", and the result was a section heading rendering *smaller*
   than the field label nested inside it — hierarchy inverted, which reads as
   visual noise long before anyone can name the cause.
-- **Hardcoded hexes in JSX and CSS**: `AuditReportV1` score ramp,
-  `ArtifactRenderer` chart colors (use `--chart-1..5`), `themes.js`, and
-  `ads-report.css`, which bypasses the token layer entirely and is
-  effectively light-only.
+- **Hardcoded hexes**: JSX is clean and held by `check:design`;
+  `ads-report.css` is not. `ArtifactRenderer` and the insight blocks now use
+  `--chart-1..5`. `AuditReportV1` keeps its hexes **on purpose** and that is
+  now a stated decision rather than an accident — see *Documents declare
+  themselves* below. `ads-report.css` is the remaining half-way: 34 literals
+  and hard `#fff` table rows inside a themed app. Give it `color-scheme: light`
+  and own it, or move it to tokens; half-way is what produces a white table on
+  a dark page.
+- **Documents declare themselves.** A generated report is a printed thing, not
+  app chrome. `AuditReportV1` says so at its root — `color-scheme: light` plus
+  a redefinition of `--background`/`--foreground`/`--card`/`--muted-foreground`/
+  `--border` for its own subtree — so the ~30 places inside it that say
+  `text-foreground` resolve to document ink in **both** themes instead of
+  inverting away from the fixed hexes beside them. That is the pattern for any
+  new document surface; `ExecutionOffer`'s dialog repeats it because it is
+  portalled out of that subtree and cannot inherit it.
 - **`.measure` never reaches JSX** — prose in React components is uncapped.
 - **Forms never set `aria-invalid`/`aria-describedby`** even though the
   primitives style for them; only 4 of 31 inline-error sites have
   `role="alert"`.
-- **`prefers-reduced-motion` gates only the logo** — the
-  `animate-pulse`/`ping`/`bounce` sites are ungated.
+- ~~**`prefers-reduced-motion` gates only the logo**~~ **Closed 2026-09-15.**
+  `base.css` now stops `animate-pulse`/`ping`/`bounce` globally, slows
+  `animate-spin` rather than freezing it (a stopped busy ring reads as a hung
+  app, and WCAG 2.3.3 is about animation from interaction), and collapses
+  transition durations. One rule, so the next component is covered by default
+  — per-site `motion-reduce:` variants were never going to hold.
 - **The desktop shell does not persist window bounds** or enforce a
   minimum size (HIG expectation; pane ratios are already persisted).
 - **`.app-subtle` (~55 uses)** → `text-sm text-muted-foreground` as files
   are touched; note it silently applies a measure.
+- **`@media (hover: hover)` has zero occurrences in the tree** despite being
+  prescribed twice in this file (above, and "Apple platforms"). Every
+  `group-hover`/`:hover`-revealed action — the pin buttons in `DeskLists`,
+  row actions app-wide — is unverified on a touchscreen; iOS Safari's
+  synthetic hover-then-click on tap means this fails quietly, not loudly.
+- **`MosaicPanel` ships one image resolution.** The mosaic art
+  (`public/art/mosaic/*.webp`) is the only raster interface graphic in the
+  app — everything else is lucide SVG — and it has no 2x/3x source or
+  `srcset`, so it's soft on any Retina/ProMotion display. Regenerate at 2x
+  and add `srcset` when next touched; see "Apple platforms" above.
 
 ---
 
@@ -576,11 +734,17 @@ The tree, measured against this file. Fix each when a change touches it.
 NN/g (delight theory, empty states, skeletons, progressive disclosure,
 complex apps, dashboards & preattentive processing, data tables, sticky
 headers, icon usability, F-pattern & succinct writing) · Apple HIG (windows,
-layout) · Material 3 (window size classes, dark theme) · WCAG 2.2
-(1.4.1, 1.4.3, 1.4.11, 2.5.8) · Refactoring UI · Emil Kowalski, "Great
-Animations" · Rauno Freiberg, interfaces.rauno.me · Linear Method · Family
-values (benji.org) · Slack, Mailchimp, Microsoft voice guides · Dan Saffer,
-*Microinteractions* · Tufte on sparklines · Shneiderman, "The Eyes Have It"
-· Every Layout · Josh Comeau on pixels & accessibility · Ahmad Shadeed on
-container queries · mania.design "Spot the Slop" and related 2025–26
-writing on generated-looking UI.
+layout, adaptivity, Dynamic Type, 44×44pt touch targets, motion, materials,
+images/SF Symbols —
+developer.apple.com/design/human-interface-guidelines/{layout,windows,
+foundations/motion,foundations/materials,foundations/images}) ·
+WebKit blog & bugs.webkit.org on dynamic viewport units and why `vh` pins to
+the large viewport · Apple Developer docs on the safe-area layout guide ·
+Material 3 (window size classes, dark theme) · WCAG 2.2
+(1.4.1, 1.4.3, 1.4.10, 1.4.11, 1.4.13, 2.4.11, 2.5.8) · Refactoring UI ·
+Emil Kowalski, "Great Animations" · Rauno Freiberg, interfaces.rauno.me ·
+Linear Method · Family values (benji.org) · Slack, Mailchimp, Microsoft
+voice guides · Dan Saffer, *Microinteractions* · Tufte on sparklines ·
+Shneiderman, "The Eyes Have It" · Every Layout · Josh Comeau on pixels &
+accessibility · Ahmad Shadeed on container queries · mania.design "Spot the
+Slop" and related 2025–26 writing on generated-looking UI.

@@ -1,5 +1,7 @@
 # Local Security Audit Skill
 
+**Author:** Shirish Kadam · **Updated:** 2026-09-14
+
 This setup provides a local-first security gate for `backend/` and `app/` focused on:
 
 - secrets leakage

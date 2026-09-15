@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.5.0"
+version = "0.7.0"
 description = "Duct desktop shell"
 authors = ["Duct"]
 edition = "2021"
@@ -105,3 +105,42 @@ sentry = { version = "0.49", default-features = false, features = [
 # second window and a second sidecar, with the auth code delivered to the wrong
 # one. Single-instance forwards argv to the running instance instead.
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+
+# ---------------------------------------------------------------------------
+# Build profiles
+#
+# `target/debug` reached 11 GB before anyone measured it. Roughly half of every
+# .rlib is Rust metadata that no profile setting can remove, but a quarter is
+# DWARF, and 60% of that DWARF is `__debug_str` — mangled symbol names,
+# dominated by the objc2 bindings that wrap the whole of AppKit and Foundation.
+# We step through `desktop_lib`; nobody has ever stepped through objc2's
+# generated accessors. So dependencies keep their code and lose their symbols.
+[profile.dev]
+# Backtraces keep file and line. What this drops is variable inspection in
+# lldb, and only for our own crate, which is a fair trade at this size.
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+# The 606 dependencies. Nothing here is ever a debugging target.
+debug = false
+# Dependencies compile once and then run on every launch; `desktop_lib` is the
+# opposite. Optimising them costs a single rebuild and makes a debug build
+# responsive rather than sluggish.
+opt-level = 1
+
+[profile.release]
+codegen-units = 1
+lto = true
+
+# NO `strip` HERE, deliberately, and this is the comment that should stop you
+# adding it. Distributed builds pass `--features crash-reporting`, and sentry
+# is compiled with `backtrace`, but nothing in desktop-release.yml uploads
+# debug files to Sentry. Stripping would fail no build and no test — it would
+# quietly turn every crash report from a shipped binary into a list of hex
+# addresses, and we would find out from an incident. Add `strip = true` only in
+# the same change that adds a `sentry-cli debug-files upload` step.
+#
+# `panic = "abort"` is absent for the neighbouring reason. `release-health` is
+# what turns crash counts into a crash-free rate (see the sentry dependency
+# above); changing the panic strategy underneath a reporter tuned for that
+# ratio is not a binary-size decision, and would need to be argued separately.

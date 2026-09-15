@@ -15,15 +15,15 @@ const CARDS = {
   [AgentEvent.QUESTIONS_REQUIRED]: ({ pause, onAnswer, disabled, questionsCopy }) => (
     <QuestionsCard questions={pause.questions || []} onSubmit={onAnswer} disabled={disabled} {...questionsCopy} />
   ),
-  [AgentEvent.CONNECTION_REQUIRED]: ({ pause, onAnswer, disabled, signInToConnect }) => (
-    <ConnectionRequest request={pause} onAnswer={onAnswer} disabled={disabled} signInToConnect={signInToConnect} />
+  [AgentEvent.CONNECTION_REQUIRED]: ({ pause, onAnswer, disabled, signInToConnect, returnTo }) => (
+    <ConnectionRequest request={pause} onAnswer={onAnswer} disabled={disabled} signInToConnect={signInToConnect} returnTo={returnTo} />
   ),
   [AgentEvent.ACCOUNT_SELECTION_REQUIRED]: ({ pause, onAnswer, disabled }) => (
     <AccountSelect request={pause} onAnswer={onAnswer} disabled={disabled} />
   ),
 };
 
-export default function PauseCard({ pause, onAnswer, disabled = false, questionsCopy, signInToConnect = null }) {
+export default function PauseCard({ pause, onAnswer, disabled = false, questionsCopy, signInToConnect = null, returnTo = "" }) {
   if (!pause) return null;
   const Card = CARDS[pause.event];
   if (!Card) return null;
@@ -37,6 +37,7 @@ export default function PauseCard({ pause, onAnswer, disabled = false, questions
       disabled={disabled}
       questionsCopy={questionsCopy}
       signInToConnect={signInToConnect}
+      returnTo={returnTo}
     />
   );
 }

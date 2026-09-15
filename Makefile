@@ -12,8 +12,8 @@
 
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-backend setup-app setup-site setup-desktop \
-        check check-backend check-app check-site check-desktop check-security \
-        fmt test serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
+        check check-backend check-app check-site check-desktop check-security check-docs \
+        fmt test dump-prompts serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
 
 # ---------------------------------------------------------------------------
 
@@ -45,12 +45,24 @@ setup-desktop: ## Install desktop dependencies (npm + Cargo)
 # Checks — these mirror .github/workflows/*.yml
 # ---------------------------------------------------------------------------
 
-check: check-backend check-app check-site check-desktop check-security ## Run every check CI runs
+check: check-backend check-app check-site check-desktop check-security check-docs ## Run every check CI runs
 	@echo "\n✅ all checks passed"
 
-check-backend: ## Ruff + pytest (mirrors backend.yml)
+check-backend: ## Ruff + pytest + rendered prompts (mirrors backend.yml and prompts.yml)
 	cd backend && poetry run ruff check server.py agents routes service tests utils
 	cd backend && poetry run pytest -q -m "not live" tests
+	# Mirrors prompts.yml. Unlike check-migrations this needs nothing a laptop
+	# lacks, so it belongs in the local gate rather than beside it.
+	cd backend && poetry run python scripts/dump_prompts.py --check
+
+# Not part of `check`: it needs a throwaway Postgres in DATABASE_URL, which a
+# laptop does not have by default and CI provides as a service container.
+# The offline suite runs on SQLite, so this is the only local way to see the
+# drift `alembic check` reports on the pull request.
+check-migrations: ## Apply every migration to an empty Postgres and check the models match (mirrors backend.yml)
+	cd backend && poetry run python scripts/migrations.py upgrade head
+	cd backend && poetry run alembic check
+	cd backend && poetry run alembic downgrade -1 && poetry run alembic upgrade head
 
 # `lint` stays --if-present: app/ has no ESLint config, so that line is a
 # placeholder rather than a gate. `typecheck` was a placeholder too until the
@@ -68,13 +80,17 @@ check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 -c "import xml.dom.minidom as m; m.parse('site/sitemap.xml'); print('sitemap.xml is well-formed')"
 	npm --prefix site run test:e2e
 
-check-desktop: ## Check the Tauri contract and compile the shell
+check-desktop: ## Check the Tauri contract, compile the shell, run its unit tests
 	python3 .github/scripts/check-shell-contract.py
 	cd desktop/src-tauri && cargo check --locked --all-targets
+	cd desktop/src-tauri && cargo test --lib --locked
 
 check-security: ## Secret scan + deep audit (mirrors security-audit.yml)
 	python3 scripts/security/leak_scan.py --all
 	python3 scripts/security/audit.py --mode deep
+
+check-docs: ## Every doc is a dated record or a reference with a current Updated: line (mirrors docs.yml)
+	python3 scripts/check_docs.py
 
 # ---------------------------------------------------------------------------
 # Shortcuts
@@ -82,6 +98,12 @@ check-security: ## Secret scan + deep audit (mirrors security-audit.yml)
 
 test: ## Backend tests only — the fastest useful signal
 	cd backend && poetry run pytest -q -m "not live" tests
+
+# Regenerate after ANY prompt change. `prompts.yml` runs the --check form on a
+# pull request that touches a prompt, so skipping this shows up in review
+# rather than shipping a document describing last week's prompt.
+dump-prompts: ## Re-render docs/engineering/agent-prompts.md from the code
+	cd backend && poetry run python scripts/dump_prompts.py
 
 fmt: ## Auto-fix what ruff can fix
 	cd backend && poetry run ruff check --fix server.py agents routes service tests utils

@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from agents.core.codex import is_subscription_credential
+from agents.core.codex import is_plan_credential, is_usable_credential
 from agents.models import (
     DEFAULT_IMAGE_MODELS,
     IMAGE_PROVIDER_ORDER,
@@ -288,11 +288,15 @@ def resolve_provider_key(
     from config import allow_server_provider_keys, get_configs
 
     supplied = (user_keys or {}).get(provider, "")
-    if supplied and supplied.strip():
+    # A value this provider cannot accept is not a key to spend — fall through
+    # to the stored or env one rather than sending it and collecting a 401.
+    if is_usable_credential(provider, supplied):
         # The header's own shape says whose account this is: a ChatGPT access
         # token is the user's plan, not a key they pasted, and the settings
-        # page words the two differently.
-        source = "subscription" if is_subscription_credential(supplied) else "user"
+        # page words the two differently. Shape alone is not enough — only
+        # OpenAI has a plan path at all, so a JWT in any other slot is a
+        # mis-paste and billing it to "their subscription" would be fiction.
+        source = "subscription" if is_plan_credential(provider, supplied) else "user"
         return ProviderKey(supplied.strip(), provider, source)
 
     saved = (stored_keys or {}).get(provider, "")
@@ -348,6 +352,8 @@ class ImageRun:
 def resolve_image_run(
     user_keys: Mapping[Provider, str] | None = None,
     stored_keys: Mapping[Provider, str] | None = None,
+    *,
+    preferred: str = "",
 ) -> ImageRun | None:
     """Which image-capable provider this run may spend, or None for none.
 
@@ -358,7 +364,29 @@ def resolve_image_run(
     call (``resolve_provider_key``), and the first one with a spendable key
     wins. None is a normal answer — the image tools decline politely — not an
     error, because a content session is worth having without pictures.
+
+    ``preferred`` is the user's saved ``image_model``, and it is a preference
+    rather than an instruction: an unknown id, or one whose provider has no
+    spendable key, falls through to the order above instead of failing. That
+    matches the tier ladder — a pick you cannot pay for steps down, it does not
+    stop the run — and it is what keeps the setting safe to carry across a
+    machine where a different key happens to be present.
     """
+    wanted = preferred_image_model(preferred)
+    if wanted is not None:
+        provider = provider_of(wanted)
+        try:
+            resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+        except ProviderKeyRequired:
+            pass  # asked for, cannot pay for it — fall through to the order
+        else:
+            return ImageRun(
+                provider=provider,
+                model=wanted,
+                api_key=resolved.key,
+                source=resolved.source,
+            )
+
     for provider in IMAGE_PROVIDER_ORDER:
         try:
             resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
@@ -371,6 +399,22 @@ def resolve_image_run(
             source=resolved.source,
         )
     return None
+
+
+def preferred_image_model(preferred: str) -> "ImageModel | None":
+    """The saved pick as a catalogue member, or None for anything else.
+
+    Anything else includes the empty string (nobody picked), a model retired
+    from the catalogue since it was saved, and a chat model id pasted into the
+    field. All three mean the same thing to the caller — resolve normally —
+    so they are one branch rather than three error paths.
+    """
+    if not preferred:
+        return None
+    try:
+        return ImageModel(str(preferred).strip())
+    except ValueError:
+        return None
 
 
 def resolve_run_model(
@@ -470,6 +514,7 @@ def resolve_job_run(
     auto_fallback: bool = True,
     duct_pays: bool = False,
     log_prefix: str = "agent",
+    tier_override: str = "",
 ) -> JobRun:
     """Provider, model and key for ``job`` — the first agent run to read the
     tier map, and the rule that a run lands on a provider the caller can pay.
@@ -485,12 +530,18 @@ def resolve_job_run(
     takes the caller's own provider at the job's tier on that vendor's ladder,
     header keys before saved ones. Only with nothing at all does it raise
     ``ProviderKeyRequired``, the 402 the browser knows how to act on.
+
+    ``tier_override`` is the composer's lift for this one run ("heavy",
+    "standard", "light"); it moves the starting rung and nothing else, and an
+    unknown value is ignored rather than refused — a stale preference must
+    not stop a run.
     """
     from agents.core import quota
     from agents.tiers import (
         JOB_TIER,
         PROVIDER_TRIPLES,
         SKIP_COOLED_DOWN,
+        Tier,
         resolve_tier_model,
         tier_pick,
     )
@@ -532,12 +583,17 @@ def resolve_job_run(
             cooling.add(candidate)
             retry_in[candidate] = left
 
+    try:
+        override = Tier(tier_override) if tier_override else None
+    except ValueError:
+        override = None
     resolution = resolve_tier_model(
         job,
         engine,
         tier_map=dict(tier_map or {}) or None,
         reachable=frozenset(reachable),
         cooling=frozenset(cooling),
+        override_tier=override,
     )
     skipped: tuple[tuple[str, str], ...] = ()
     requested = ""

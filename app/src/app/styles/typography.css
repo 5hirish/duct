@@ -39,3 +39,34 @@
   font-family: var(--font-numeric);
   font-variant-numeric: tabular-nums;
 }
+
+/* Headings have a size before anyone gives them one.
+
+   `h1`–`h3` carried `text-2xl`, `text-xl`, `text-lg`, `text-sm`, `text-xs` and
+   five arbitrary pixel sizes between them, which is not a scale, it is 27
+   independent decisions — and an unstyled heading inherited body size, so the
+   ones nobody had decided about read as body text. Three sizes, one per level,
+   applied only when the element has no `text-*` of its own: Tailwind utilities
+   live in @layer utilities and win over this, so a deliberate override still
+   works and an absent one is no longer a blank.
+
+   Weight is deliberately not set here. The app carries hierarchy with weight
+   and colour (DESIGN.md), so a 12px uppercase eyebrow is still allowed to be
+   an `h3` — it is a section heading to a screen reader either way, which is
+   the half that matters and the half a font-size cannot fix. */
+@layer base {
+  h1 {
+    font-size: var(--text-2xl);
+    line-height: var(--text-2xl--line-height);
+  }
+
+  h2 {
+    font-size: var(--text-lg);
+    line-height: var(--text-lg--line-height);
+  }
+
+  h3 {
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+}

@@ -53,6 +53,11 @@ _LOCAL_MODE_ENV_VARS = (
     "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY", "DUCT_ENV_FILE",
     "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
     "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
+    # The shell's keychain copies, and the signing key bootstrap() writes from
+    # them. JWT_SECRET was missing here while `bootstrap()` has always written
+    # it straight to os.environ, so one desktop test leaked a signing key into
+    # every test that ran after it.
+    "JWT_SECRET", "DUCT_LOCAL_API_KEY", "DUCT_LOCAL_JWT_SECRET",
 )
 
 

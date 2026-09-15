@@ -35,7 +35,7 @@ import { AssistantMarkdown, ThinkingMarkdown } from "./ChatMarkdown";
 import ChatInput from "./ChatInput";
 import ContextRing from "./ContextRing";
 import { TIERS } from "@/lib/modelTiers";
-import { MemoryNote, MemoryRecall, RememberThis } from "./MemoryRows";
+import { MemoryNote, MemoryRecall } from "./MemoryRows";
 import PauseCard from "./PauseCard";
 import StepProgress from "./StepProgress";
 import Todos from "./Todos";
@@ -114,7 +114,7 @@ function TypingIndicator() {
   );
 }
 
-function ChatBubble({ role, text, thinking, streaming, remember, queued = false }) {
+function ChatBubble({ role, text, thinking, streaming, queued = false }) {
   if (role === Row.USER) {
     return (
       <div className="flex justify-end mb-4">
@@ -127,7 +127,7 @@ function ChatBubble({ role, text, thinking, streaming, remember, queued = false 
             <p className="whitespace-pre-wrap break-words">{text}</p>
           </div>
           {queued && (
-            <p className="mt-1 pr-1 text-right text-[11px] text-muted-foreground" title="Sent while the agent was busy; it reads this at its next step.">
+            <p className="mt-1 pr-1 text-right text-2xs text-muted-foreground" title="Sent while the agent was busy; it reads this at its next step.">
               ↳ Queued · picked up at the next step
             </p>
           )}
@@ -145,7 +145,6 @@ function ChatBubble({ role, text, thinking, streaming, remember, queued = false 
             {streaming && <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />}
           </div>
         )}
-        {text && !streaming && remember && <RememberThis text={text} />}
       </div>
     </div>
   );
@@ -170,7 +169,7 @@ function ImageBubble({ image, fullUrl, caption }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={thumb} alt={caption || "Generated image"} loading="lazy" className="block w-44 max-w-full object-cover" />
         </button>
-        {caption && <p className="pl-1 text-[11px] text-muted-foreground">{caption}</p>}
+        {caption && <p className="pl-1 text-2xs text-muted-foreground">{caption}</p>}
       </div>
       <Lightbox open={open} onOpenChange={setOpen} src={full} alt={caption || "Generated image"} />
     </div>
@@ -200,7 +199,7 @@ function ArtifactCard({ artifact }) {
   );
 }
 
-function TranscriptRow({ msg, onRetrySend, remember }) {
+function TranscriptRow({ msg, onRetrySend }) {
   switch (msg.role) {
     case Row.SEND_ERROR:
       return <SendErrorBubble text={msg.text} content={msg.content} code={msg.code} onRetry={onRetrySend} retryable={msg.retryable} />;
@@ -223,7 +222,6 @@ function TranscriptRow({ msg, onRetrySend, remember }) {
           text={msg.text}
           thinking={msg.thinking}
           streaming={msg.streaming}
-          remember={remember}
           queued={Boolean(msg.queued)}
         />
       );
@@ -285,7 +283,7 @@ export function formatElapsed(seconds) {
 /** A quiet centred line in the transcript — "Context compacted". */
 function NoticeRow({ text }) {
   return (
-    <p className="my-3 text-center text-[11px] text-muted-foreground" role="note">
+    <p className="my-3 text-center text-2xs text-muted-foreground" role="note">
       {text}
     </p>
   );
@@ -335,7 +333,7 @@ export default function AgentChat({
   // produced, so it must not flicker away on the next token the way a retry does.
   tierStepDown = null,
   draft = null,
-  // Tokens (lib/agentSession.js `usage`): the ring in the header, the figures
+  // Tokens (lib/agentSession.js `usage`): the ring in the composer, the figures
   // in its tooltip. Null until the first model call has been billed.
   usage = null,
   // History is being summarised to make room — the status row says so.
@@ -347,6 +345,7 @@ export default function AgentChat({
   // The pause card can be on screen before the session it answers to exists
   // (restored from the thread's state on open); keep its buttons off until then.
   answerDisabled = false,
+  // Memory is off for this run — the header says so, quietly.
   remembering = true,
   onAnswer,
   onSendMessage,
@@ -361,6 +360,13 @@ export default function AgentChat({
   // Onboarding only: what a guest's connector prompt needs to route through
   // sign-in instead (see PauseCard). Null everywhere else.
   signInToConnect = null,
+  // Where a connect started from a pause card should land once the OAuth
+  // round trip is done — this conversation, not the Connections page. Empty
+  // means the connector flow's own default.
+  connectReturnTo = "",
+  // The shell's own chips in the composer's footer (ComposerDials for
+  // insights). Null for a shell with no dials.
+  composerTools = null,
   inputPlaceholder,
   inputAriaLabel,
   inputAccept,
@@ -442,14 +448,14 @@ export default function AgentChat({
     <div className="flex flex-col h-full">
       <div
         className={`flex items-center gap-2 border-b px-4 py-2 shrink-0 transition-colors ${
-          waiting ? "border-amber-400/70 bg-amber-50/60 dark:bg-amber-950/20" : "border-border/60"
+          waiting ? "border-warning/70 bg-warning/5" : "border-border/60"
         }`}
       >
         <span className="text-sm font-medium">{title}</span>
         {waiting && (
           <span className="relative flex size-2" aria-hidden="true">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-            <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
+            <span className="relative inline-flex rounded-full size-2 bg-warning" />
           </span>
         )}
         {/* role="status" so a screen reader hears the agent change state —
@@ -462,7 +468,7 @@ export default function AgentChat({
           role="status"
           aria-live="polite"
           className={`text-xs ${
-            waiting ? "text-amber-600 dark:text-amber-400 font-medium" : isFailed ? "text-destructive" : "text-muted-foreground"
+            waiting ? "text-warning font-medium" : isFailed ? "text-destructive" : "text-muted-foreground"
           } ${status.pulse && !waiting && !working ? "animate-pulse" : ""}`}
         >
           — {statusLabel}
@@ -475,14 +481,13 @@ export default function AgentChat({
               title={
                 tierStepDown.detail
                   + (stepDownIn > 0 ? ` — back in about ${Math.ceil(stepDownIn / 60)} min` : "")
-                  + ". Set which model runs each job in Settings → Models."
+                  + ". Set which model runs each job in Settings → Models & providers."
               }
             >
               <ArrowDownRight size={12} aria-hidden="true" />
               {tierLabel(tierStepDown.ran)} · {tierLabel(tierStepDown.requested)} is rate limited
             </span>
           )}
-          {usage?.last && <ContextRing used={contextUsed} details={usage} />}
           {!remembering && (
             <span
               className="inline-flex items-center gap-1 text-xs text-muted-foreground"
@@ -533,16 +538,15 @@ export default function AgentChat({
               key={msg.role === Row.CHANGE_SET_CARD ? msg.changeSet?.change_set_id || i : i}
               msg={msg}
               onRetrySend={onRetrySend}
-              remember={remembering}
             />
           ))}
 
           {isAgentTyping && <TypingIndicator />}
 
-          {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} />}
+          {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} returnTo={connectReturnTo} />}
 
           {reconnecting && !isFailed && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning">
               <Spinner className="size-3" />
               Connection dropped — reconnecting…
             </div>
@@ -594,6 +598,17 @@ export default function AgentChat({
         placeholder={placeholder}
         ariaLabel={inputAriaLabel}
         accept={inputAccept}
+        tools={composerTools}
+        // The ring lives beside Send, where the desk composer has it, and is
+        // there from the first moment: an empty ring says "new thread" where
+        // no ring said nothing.
+        status={
+          usage?.last ? (
+            <ContextRing used={contextUsed} details={usage} />
+          ) : (
+            <ContextRing used={0} label="New thread" />
+          )
+        }
       />
     </div>
   );

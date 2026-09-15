@@ -100,7 +100,7 @@ function LeadSeoAuditInner() {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center">
-          <Spinner className="size-5 text-orange-500" />
+          <Spinner className="size-5 text-brand" />
           <p className="text-sm text-muted-foreground">Verifying your access…</p>
         </div>
       </div>
@@ -112,8 +112,8 @@ function LeadSeoAuditInner() {
     return (
       <div className="flex flex-1 items-center justify-center px-4">
         <div className="max-w-sm w-full rounded-xl border border-border bg-card p-8 text-center shadow-sm">
-          <div className="size-12 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500">
+          <div className="size-12 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 8v4m0 4h.01"/>
             </svg>
@@ -124,7 +124,7 @@ function LeadSeoAuditInner() {
           </p>
           <a
             href={SITE_URL}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand/90 transition-colors"
           >
             Get a new free audit →
           </a>
@@ -152,7 +152,7 @@ export default function LeadSeoAuditPage() {
   return (
     <Suspense fallback={
       <div className="flex flex-1 items-center justify-center">
-        <Spinner className="size-5 text-orange-500" />
+        <Spinner className="size-5 text-brand" />
       </div>
     }>
       <LeadSeoAuditInner />

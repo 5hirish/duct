@@ -73,6 +73,20 @@ GITHUB_SECRETS = frozenset(
         "DUCT_DEVID_CERT_P12",
         "DUCT_DEVID_CERT_PASSWORD",
         "DUCT_DEVID_IDENTITY",
+        # The scheduled connector smoke (connector-smoke.yml) reads the staging
+        # database and refreshes Google tokens with the hosted OAuth client.
+        # Both client-id spellings are listed because the backend reads the
+        # unprefixed pair as a fallback and a given env file may use either.
+        "DATABASE_URL",
+        "CREDENTIALS_ENCRYPTION_KEY",
+        "GOOGLE_WEB_OAUTH_CLIENT_ID",
+        "GOOGLE_WEB_OAUTH_CLIENT_SECRET",
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET",
+        # Whose bound connectors the smoke pulls. A secret rather than a
+        # repository variable: variables are readable by anyone with read
+        # access, and this repository is public.
+        "DUCT_SMOKE_USER_EMAIL",
     }
 )
 

@@ -7,7 +7,7 @@
 // This module also owns what a 401 *means*, so that answer lives in one place
 // rather than being re-decided per page. See `endSession`.
 
-import { BASE, backendApiKey } from "./api.js";
+import { BASE, backendApiKey, backendIdentity } from "./api.js";
 import { isDesktopShell } from "./shell.js";
 
 /** localStorage key holding the Google Sign-In JWT, in a browser. */
@@ -40,6 +40,24 @@ export const AUTH_TOKEN_KEY = "duct_auth_token";
 export const DESKTOP_AUTH_TOKEN_KEY = "duct_auth_token__desktop";
 
 /**
+ * Which backend minted the stored token, recorded beside it.
+ *
+ * `DESKTOP_AUTH_TOKEN_KEY` partitions the shell from a browser tab, but inside
+ * the shell one key still has to serve two backends: the bundled sidecar and
+ * the hosted API, each with its own database and its own JWT secret. A token
+ * from the wrong one is well-formed, correctly signed by *somebody*, and
+ * unexpired — so nothing on the client could tell it apart, and it arrived as
+ * a 401 that `endSession` read as "this session is dead". It was not dead; it
+ * was addressed to a different server. This is the half that was missing.
+ *
+ * A second key rather than wrapping the token in JSON, so a session stored by
+ * an older build still reads back as a token (see `reconcileStoredSession` for
+ * what an unrecorded issuer means).
+ */
+export const AUTH_BACKEND_KEY = "duct_auth_backend";
+export const DESKTOP_AUTH_BACKEND_KEY = "duct_auth_backend__desktop";
+
+/**
  * sessionStorage key naming where to land once signed in. The invite page and
  * `endSession` both park a path here; the sign-in page consumes it and honours
  * same-origin paths only, so a parked value can never become an open redirect.
@@ -56,6 +74,11 @@ export const SESSION_EXPIRED_EVENT = "duct:session-expired";
 /** Which key this shell owns. The web key is unchanged, so no browser session is lost. */
 export function authTokenKey() {
   return isDesktopShell() ? DESKTOP_AUTH_TOKEN_KEY : AUTH_TOKEN_KEY;
+}
+
+/** The issuer key beside it, partitioned the same way and for the same reason. */
+export function authBackendKey() {
+  return isDesktopShell() ? DESKTOP_AUTH_BACKEND_KEY : AUTH_BACKEND_KEY;
 }
 
 export function authToken() {
@@ -75,6 +98,11 @@ export function setAuthToken(token) {
   sessionEnded = false;
   try {
     window.localStorage.setItem(authTokenKey(), token);
+    // Written in the same breath as the token: a token whose issuer went
+    // unrecorded is indistinguishable from one minted by the other backend.
+    const issuer = backendIdentity();
+    if (issuer) window.localStorage.setItem(authBackendKey(), issuer);
+    else window.localStorage.removeItem(authBackendKey());
   } catch {
     /* private mode / storage disabled — the session lasts this page load */
   }
@@ -83,6 +111,7 @@ export function setAuthToken(token) {
 export function clearAuthToken() {
   try {
     window.localStorage.removeItem(authTokenKey());
+    window.localStorage.removeItem(authBackendKey());
   } catch {
     /* nothing stored is the state we wanted anyway */
   }
@@ -90,6 +119,42 @@ export function clearAuthToken() {
 
 export function hasAuthToken() {
   return Boolean(authToken());
+}
+
+/**
+ * Drop a stored session that belongs to a different backend than the one this
+ * page load will talk to. Returns what it decided, for tests and for callers
+ * that want to say so.
+ *
+ * Called once, from `LocalBackendGate`, at the only moment the answer is
+ * knowable: the base is settled and nothing has made a request yet. The point
+ * is that a mismatch is *not* an expired session. Left alone it becomes a 401,
+ * `endSession` retires the session for real — clearing the token, parking a
+ * redirect, telling the user their session ended — and the desktop app bounces
+ * to the front door mid-use. Discarding it here is quiet: the app renders
+ * signed out, which is the truth for the backend it is actually addressing.
+ *
+ * An unrecorded issuer is left alone rather than assumed foreign. Sessions
+ * stored before this existed have none, and discarding those would sign
+ * everybody out once — the exact thing this is here to stop. They keep the old
+ * behaviour until the next sign-in pins them.
+ */
+export function reconcileStoredSession() {
+  if (typeof window === "undefined") return "no-window";
+  let recorded = "";
+  try {
+    recorded = window.localStorage.getItem(authBackendKey()) || "";
+  } catch {
+    return "no-storage";
+  }
+  if (!recorded) return "unpinned";
+
+  const active = backendIdentity();
+  // No configured base is "we do not know yet", not "everything is foreign".
+  if (!active || recorded === active) return "match";
+
+  clearAuthToken();
+  return "discarded";
 }
 
 /** Claims from a JWT without verifying it — display only, never a trust decision. */

@@ -45,13 +45,13 @@ export function CodeBlock({ language, children, compact = false }) {
     <div className="my-3 rounded-lg overflow-hidden border border-border/50">
       {/* Header bar: language + copy button */}
       <div className="flex items-center justify-between px-3 py-1.5 bg-[#21252b] border-b border-white/5">
-        <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest select-none">
+        <span className="text-2xs font-mono text-white/40 uppercase tracking-widest select-none">
           {language || "code"}
         </span>
         <button
           type="button"
           onClick={handleCopy}
-          className="text-[10px] font-medium text-white/40 hover:text-white/80 transition-colors select-none"
+          className="text-2xs font-medium text-white/40 hover:text-white/80 transition-colors select-none"
         >
           {copied ? "✓ copied" : "copy"}
         </button>

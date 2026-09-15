@@ -163,7 +163,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const viewportEl = (
     <div className="flex h-full flex-col overflow-hidden">
       {channelNote && (
-        <div className="shrink-0 border-b border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
+        <div className="shrink-0 border-b border-warning/30 bg-warning/10 px-4 py-2 text-xs text-warning">
           {channelNote}
         </div>
       )}

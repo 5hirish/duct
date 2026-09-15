@@ -73,4 +73,8 @@ def image_client_for(provider: Provider, api_key: str) -> ImageClient:
         from service.xai.images import XAIImageClient
 
         return XAIImageClient(api_key)
+    if provider is Provider.OPENROUTER:
+        from service.openrouter.images import OpenRouterImageClient
+
+        return OpenRouterImageClient(api_key)
     raise ValueError(f"{provider.value} has no image backend")

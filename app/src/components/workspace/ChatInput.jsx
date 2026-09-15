@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ArrowUp, Paperclip, Square, X } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 /**
  * The chat composer every agent shell uses: text, pasted or attached images,
@@ -8,6 +11,15 @@ import { useEffect, useRef, useState } from "react";
  * tokens. The box stays open while it works — a message then is queued for
  * the model's next step, which the caller's placeholder says — and closes
  * only when there is nothing to send to (`disabled`).
+ *
+ * The same object as the desk composer (insights/desk/DeskComposer.jsx): one
+ * card, the text on top, a footer row with what the message runs with on the
+ * left and its cost on the right. It was a bare input with a Send button,
+ * and the person who had chosen a posture and a thinking level on the desk
+ * lost sight of both the moment the conversation opened.
+ *
+ * `tools` is the shell's own chips for that left cluster (ComposerDials, or
+ * nothing); `status` is the right one — the context ring, in practice.
  *
  * Images travel as content blocks ({type:"image", source:{base64…}}) beside
  * the text, which is the Messages API shape both harnesses accept.
@@ -23,6 +35,8 @@ export default function ChatInput({
   // { text, key }: text handed back by the session (a queued message the
   // user stopped before it was read). Applied once per `key`.
   draft = null,
+  tools = null,
+  status = null,
 }) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState([]);
@@ -88,46 +102,30 @@ export default function ChatInput({
     setAttachments((prev) => [...prev, ...newAtts]);
   }
 
+  const canSend = !disabled && (text.trim() || attachments.length > 0);
+
   return (
     <div className="border-t border-border/60 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
-      {attachments.length > 0 && (
-        <div className="flex gap-2 mb-2 flex-wrap">
-          {attachments.map((att, i) => (
-            <div key={i} className="flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs">
-              <span className="truncate max-w-[120px]">{att.name}</span>
-              <button
-                type="button"
-                onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
-                aria-label={`Remove ${att.name}`}
-                className="text-muted-foreground hover:text-foreground ml-1"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="flex items-end gap-2">
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={disabled}
-          title="Attach image"
-          aria-label="Attach image"
-          className="shrink-0 text-muted-foreground hover:text-foreground disabled:opacity-40 p-1"
-        >
-          📎
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept={accept}
-          aria-label="Attach files"
-          multiple
-          className="hidden"
-          onChange={handleFileChange}
-        />
+      <div className="rounded-xl border bg-card focus-within:border-ring">
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-3 pt-3">
+            {attachments.map((att, i) => (
+              <div key={i} className="flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs">
+                <span className="max-w-[120px] truncate">{att.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                  aria-label={`Remove ${att.name}`}
+                  className="-mr-1 ml-0.5 text-muted-foreground hover:text-foreground"
+                >
+                  <X aria-hidden />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <textarea
           rows={1}
@@ -138,31 +136,58 @@ export default function ChatInput({
           aria-label={ariaLabel}
           disabled={disabled}
           placeholder={disabled ? "Waiting for agent…" : placeholder}
-          className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 min-h-[38px] max-h-[120px] overflow-y-auto"
-          style={{ height: "38px" }}
+          className="max-h-[160px] min-h-[44px] w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 pb-1 text-base leading-relaxed outline-none placeholder:text-muted-foreground disabled:opacity-50 md:text-sm"
+          style={{ height: "44px" }}
           onInput={(e) => {
-            e.target.style.height = "38px";
-            e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+            e.target.style.height = "44px";
+            e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
           }}
         />
 
-        {isStreaming && (
-          <button
-            type="button"
-            onClick={onStop}
-            className="shrink-0 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
-          >
-            Stop
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={disabled || (!text.trim() && attachments.length === 0)}
-          className="shrink-0 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
-        >
-          Send
-        </button>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-2.5 pb-2.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => fileRef.current?.click()}
+              disabled={disabled}
+              aria-label="Attach image"
+              className="text-muted-foreground"
+            >
+              <Paperclip aria-hidden />
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept={accept}
+              aria-label="Attach files"
+              multiple
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            {tools}
+          </div>
+
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            {status}
+            {isStreaming && (
+              <Button type="button" variant="destructive" size="xs" onClick={onStop}>
+                <Square className="fill-current" aria-hidden />
+                Stop
+              </Button>
+            )}
+            <Button
+              type="button"
+              size="icon-xs"
+              onClick={handleSend}
+              disabled={!canSend}
+              aria-label="Send"
+            >
+              <ArrowUp className="size-3.5" aria-hidden />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

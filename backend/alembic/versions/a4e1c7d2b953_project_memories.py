@@ -1,7 +1,7 @@
 """project_memories — agent memory (user / project / artifact scopes)
 
 One typed, bi-temporal, provenance-linked entry per remembered fact. See
-models/memory.py and docs/engineering/agent-memory-research.html §06–07.
+models/memory.py and docs/engineering/2026-08-28-agent-memory-research.md §06–07.
 
 Two indexes are deliberately conditional:
 

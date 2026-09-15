@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Index, String, UniqueConstraint
 from models.columns import json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
@@ -15,6 +15,10 @@ class AgentContext(SQLModel, table=True):
     __tablename__ = "agent_contexts"
     __table_args__ = (
         UniqueConstraint("project_id", "agent_id", name="uq_agent_contexts_project_agent"),
+        # Containment lookups into the context blob (`data @> '{...}'`). Created
+        # by c1a96c4da25a and never declared here, so `alembic check` read the
+        # model as authoritative and proposed dropping it.
+        Index("ix_agent_contexts_data_gin", "data", postgresql_using="gin"),
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)

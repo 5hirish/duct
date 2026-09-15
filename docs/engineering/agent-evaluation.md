@@ -1,5 +1,7 @@
 # Agent output QA — the LLM-as-judge eval harness
 
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-14
+
 How we test agents whose output is **subjective** (a TikTok post, an SEO audit, a
 brief), why we do it this way, and where to take it next. The harness lives in
 `backend/tests/eval/`; the first consumer is the content agent

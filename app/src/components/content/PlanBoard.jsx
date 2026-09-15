@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getPlan, listPlans, listPosts } from "@/lib/contentApi";
+import LoadError from "@/components/LoadError";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanCalendar from "@/components/content/PlanCalendar";
 
@@ -29,6 +30,9 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   const [calView, setCalView] = useState("month"); // "month" | "week"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // Bumped by the retry button. Both loads below key off it, because a
+  // failure in either leaves the same empty board.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!projectId) return;
@@ -41,14 +45,14 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
         setPlans(list);
         setActiveId((prev) => prev || initialPlanId || list[0]?.id || "");
       } catch (e) {
-        if (!cancelled) setError(e.message || "Failed to load plans.");
+        if (!cancelled) setError(e.message || "");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, [projectId, reloadKey]);
 
   useEffect(() => {
     if (!activeId || !projectId) { setPlan(null); setPostsById({}); return; }
@@ -65,11 +69,11 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
         for (const p of Array.isArray(posts) ? posts : []) map[p.id] = p;
         setPostsById(map);
       } catch (e) {
-        if (!cancelled) setError(e.message || "Failed to load plan.");
+        if (!cancelled) setError(e.message || "");
       }
     })();
     return () => { cancelled = true; };
-  }, [activeId, projectId]);
+  }, [activeId, projectId, reloadKey]);
 
   const activeMeta = useMemo(
     () => plans.find((p) => p.id === activeId) || plan || null,
@@ -88,7 +92,13 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   }, [plan, activeId, router]);
 
   if (error) {
-    return <p className="text-sm text-destructive">{error}</p>;
+    return (
+      <LoadError
+        what="your content plan"
+        detail={error}
+        onRetry={() => { setError(""); setReloadKey((k) => k + 1); }}
+      />
+    );
   }
   if (loading) {
     return <p className="text-sm text-muted-foreground">Loading plan…</p>;

@@ -37,7 +37,7 @@ async function request(path, { method = "GET", body, fallbackError } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    const message = await errorMessage(res, fallbackError || "Something went wrong.");
+    const message = await errorMessage(res, fallbackError || "That didn't go through — nothing changed.");
     // Keep this route's kinder wording for real failures, but a 401 is a dead
     // session, not a member-list problem — see authFetch's endSession.
     if (endSessionIfUnauthorized(res)) throw new SessionExpiredError(message, res.status);

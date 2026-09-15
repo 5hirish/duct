@@ -56,3 +56,67 @@ jobs:
         # `live` tests are already deselected by addopts in pyproject.toml; the
         # explicit -m keeps that visible here and survives an addopts change.
         run: poetry run pytest -q -m "not live" tests
+
+  # The offline suite runs on in-memory SQLite by design, so nothing above
+  # touches the dialect production runs on. This does: the whole migration
+  # chain applied to a fresh Postgres, then `alembic check`, which fails when
+  # the models have drifted from what the migrations produce — the diff an
+  # `--autogenerate` would have written. A JSONB column, an index only
+  # Postgres accepts, a model change without its migration: all land here on
+  # the pull request rather than on the Railway deploy.
+  migrations:
+    name: Migrations on Postgres
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: duct
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # psycopg3 scheme up front, as content-eval.yml does: alembic uses
+      # DATABASE_URL verbatim and db.session leaves an explicit +psycopg alone.
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/duct
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install backend dependencies
+        run: poetry install --with dev
+
+      - name: Apply every migration to an empty database
+        run: poetry run python scripts/migrations.py upgrade head
+
+      - name: Models match the migrations
+        run: poetry run alembic check
+
+      # Down and back up once: a migration whose downgrade was never run is
+      # the one that strands a rollback on Railway.
+      - name: The newest migration can be undone
+        run: |
+          poetry run alembic downgrade -1
+          poetry run alembic upgrade head

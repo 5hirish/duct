@@ -17,20 +17,52 @@
 // scene covers, so "did anyone look at the error case" is answerable by
 // reading the list.
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
+import FrontDoor from "@/components/onboarding/FrontDoor";
+import Desk from "@/components/insights/Desk";
+import DeskComposer from "@/components/insights/desk/DeskComposer";
+import ComposerDials from "@/components/workspace/ComposerDials";
+import ChatInput from "@/components/workspace/ChatInput";
+import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
 import { FolderOpen, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
+import DeskCards from "@/components/insights/desk/DeskCards";
+import DeskActivity from "@/components/insights/desk/DeskActivity";
+import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
+import ProviderCard from "@/components/connections/ProviderCard";
+import { LOGOS } from "@/components/connections/logos";
+import { PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
+import ContextRing from "@/components/workspace/ContextRing";
+import TierSummary from "@/components/models/TierSummary";
+import TierCard from "@/components/models/TierCard";
+import AdvancedSettings from "@/components/models/AdvancedSettings";
+import { TelemetryPanel } from "@/components/TelemetryCard";
+import ChangeSetCard from "@/components/execution/ChangeSetCard";
+import AuditReportV1 from "@/components/audit/AuditReportV1";
+import MemoryTimeline from "@/components/memory/MemoryTimeline";
+import PlanKanban from "@/components/content/PlanKanban";
+import { MEMORY_KINDS } from "@/lib/memoryApi";
+import { CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/kestrel-story.mjs";
+import VoiceSample from "@/components/profile/VoiceSample";
+import { UsageEmpty } from "@/components/models/UsagePanel";
+import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
+import { NotificationRow } from "@/components/AppSidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   STORAGE_CLOUD,
   STORAGE_KEYCHAIN,
@@ -139,7 +171,304 @@ function Row({ children }) {
   return <div className="flex flex-wrap items-center gap-4">{children}</div>;
 }
 
+/** The front door owns its field, so give the scene somewhere to type. The
+ *  `.landing-start` wrapper is not decoration: it carries `--start-ground`, and
+ *  a panel written for that ground says nothing useful on `--background`. */
+function FrontDoorScene({ error = "" }) {
+  const [url, setUrl] = useState("");
+  return (
+    <div className="landing-start">
+      <FrontDoor url={url} onUrlChange={setUrl} error={error} onSubmit={(e) => e.preventDefault()} />
+    </div>
+  );
+}
+
+/** Autonomy is controlled from the parent in the real Desk — stub that here
+ *  so picking an option actually round-trips back into the trigger's label. */
+function DialsScene() {
+  const [autonomy, setAutonomy] = useState(AUTONOMY_ASK);
+  return <ComposerDials projectId="p1" autonomy={autonomy} onAutonomyChange={setAutonomy} deferred />;
+}
+
+function DeskComposerScene(props) {
+  const [autonomy, setAutonomy] = useState(AUTONOMY_ASK);
+  return <DeskComposer {...props} autonomy={autonomy} onAutonomyChange={setAutonomy} />;
+}
+
+// Long titles on purpose — an agent wrote these, not someone picking a label
+// short enough to fit. This is the case that revealed DeskCards had no
+// line-clamp: a single item could run the card to nine lines and shove its
+// siblings off the bottom.
+const LONG_TITLE =
+  "North-star window: Next 90 days: get net new MRR positive and keep it there. Measured 30-day position — $219.95 of new MRR against $297.86 lost to failed payments plus $209.88 sitting past-due, so the window is still net negative.";
+
+const DESK_BUCKETS = {
+  [NEEDS_YOU]: [
+    { id: "n1", title: "Audit our Google Search performance please.", detail: "Pick up where you left off", tone: "attention", at: "2026-09-09T06:00:00Z" },
+  ],
+  [FOUND]: [
+    { id: "f1", title: "Next growth milestone: 3_repeatable_growth", detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+    { id: "f2", title: LONG_TITLE, detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+    { id: "f3", title: "North-star metric: Net new revenue", detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+  ],
+  [IN_PROGRESS]: [
+    { id: "p1", title: "Audit our Google Search performance please.", detail: "Working", tone: "running", at: "2026-09-09T06:00:00Z" },
+    { id: "p2", title: "Audit our Google Search performance please.", detail: "Working", tone: "running", at: "2026-09-09T06:00:00Z" },
+  ],
+};
+const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
+
+const DESK_ACTIVITY = [
+  { id: "a1", category: "check", action: "checked_search_console", summary: LONG_TITLE, source: "auto", created_at: "2026-09-09T05:57:00Z" },
+  { id: "a2", category: "sync", action: "synced_ga4", summary: "", source: "agent", created_at: "2026-09-09T05:40:00Z" },
+  { id: "a3", category: "change", action: "applied_change", summary: "Applied: pause 3 underperforming ad groups", source: "agent", created_at: "2026-09-08T18:12:00Z" },
+];
+
+// Delayed on purpose: after the first paint, dispatch `visibilitychange` in
+// the frame and confirm the desk stays visible while this re-read is pending.
+const PREVIEW_DESK_DATA = {
+  memories: [],
+  conversations: [
+    {
+      id: "preview-thread",
+      status: "active",
+      run_status: "running",
+      title: "Check our Google Search performance",
+      created_at: "2026-09-09T06:00:00Z",
+      last_active_at: "2026-09-09T06:00:00Z",
+      last_seq: 4,
+    },
+  ],
+  artifacts: [],
+  activity: DESK_ACTIVITY,
+  changeSets: [],
+  sourceCount: 2,
+};
+const loadPreviewDesk = stubLoader(PREVIEW_DESK_DATA, { delayMs: 500 });
+
+// The same desk as it was a moment ago, which is what an overtaken load is
+// carrying: a thread that has since finished, still saying "Working…".
+const PREVIEW_DESK_STALE = {
+  ...PREVIEW_DESK_DATA,
+  activity: [],
+  conversations: [
+    { ...PREVIEW_DESK_DATA.conversations[0], title: "Stale answer — the desk must never show this" },
+  ],
+};
+
+/** Answers out of order on purpose: slow first, fast afterwards. */
+function racingLoader() {
+  let asked = 0;
+  return async function load() {
+    asked += 1;
+    const first = asked === 1;
+    await new Promise((r) => setTimeout(r, first ? 1500 : 150));
+    return first ? PREVIEW_DESK_STALE : PREVIEW_DESK_DATA;
+  };
+}
+
+/**
+ * The race, driven for you.
+ *
+ * The overtaking refresh has to be issued while the first load is still in
+ * flight, and a second and a half is not a window anyone hits from a console —
+ * so the scene fires it rather than asking for it. `useMemo` rather than module
+ * scope: the loader must keep one identity for as long as the desk is mounted
+ * (it is a dependency of the desk's refresh, and a new one every render would
+ * restart the load forever), and must start over on the next mount, or the
+ * scene works once per page load and shows a finished desk ever after.
+ */
+function DeskRaceScene() {
+  const load = useMemo(racingLoader, []);
+  useEffect(() => {
+    const t = setTimeout(() => document.dispatchEvent(new Event("visibilitychange")), 300);
+    return () => clearTimeout(t);
+  }, []);
+  return <Desk projectIdOverride="preview" loadDeskFn={load} />;
+}
+
+
+// ── Models & providers ────────────────────────────────────────────────────
+//
+// The Tiers tab is a summary plus a fold, so the state that matters is which
+// of them a reader lands on and whether the summary is honest when a tier
+// cannot run. Both the collapsed and blocked cases are unreachable on a
+// healthy dev install, which is exactly why they are pinned here.
+
+const MODEL_CATALOGUE = {
+  models: [
+    { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro (preview)", provider: "google_genai", engines: ["v1"] },
+    { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", provider: "google_genai", engines: ["v1"] },
+    { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", provider: "google_genai", engines: ["v1"] },
+    { id: "claude-opus-5", label: "Claude Opus 5", provider: "anthropic", engines: ["v1"] },
+    { id: "claude-sonnet-5", label: "Claude Sonnet 5", provider: "anthropic", engines: ["v1"] },
+    { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", provider: "anthropic", engines: ["v1"] },
+  ],
+  tiers: [
+    { id: "heavy", default_model: "gemini-3.1-pro-preview", jobs: ["analysis", "audit"] },
+    { id: "standard", default_model: "gemini-3.8-flash", jobs: ["verification", "synthesis", "drafting", "chat"] },
+    { id: "light", default_model: "gemini-3.5-flash-lite", jobs: ["research", "memory", "recap"] },
+  ],
+  image_models: [
+    { id: "gemini-3.1-flash-image", label: "Gemini 3.1 Flash Image", provider: "google_genai", default: true },
+    { id: "gemini-3-pro-image", label: "Gemini 3 Pro Image", provider: "google_genai" },
+    { id: "gpt-image-2.5-flare", label: "GPT Image 2.5 Flare", provider: "openai" },
+  ],
+  image_provider_order: ["google_genai", "openai", "xai"],
+  provider_triples: {
+    anthropic: { heavy: "claude-opus-5", standard: "claude-sonnet-5", light: "claude-haiku-4-5" },
+    google_genai: { heavy: "gemini-3.1-pro-preview", standard: "gemini-3.8-flash", light: "gemini-3.5-flash-lite" },
+  },
+};
+
+const MODEL_PROVIDERS = {
+  google_genai: { id: "google_genai", label: "Google Gemini", source: "env", reachable: true, engines: ["v1"] },
+  anthropic: { id: "anthropic", label: "Anthropic", source: "none", reachable: false, engines: ["v1"] },
+  openai: { id: "openai", label: "OpenAI", source: "none", reachable: false, engines: ["v1"] },
+};
+
+const MODEL_PICKS = {
+  heavy: "gemini-3.1-pro-preview",
+  standard: "gemini-3.8-flash",
+  light: "gemini-3.5-flash-lite",
+};
+
+const MODEL_PREVIEW_OK = {
+  heavy: { id: "heavy", provider: "google_genai", model: "gemini-3.1-pro-preview", runnable: true },
+  standard: { id: "standard", provider: "google_genai", model: "gemini-3.8-flash", runnable: true },
+  light: { id: "light", provider: "google_genai", model: "gemini-3.5-flash-lite", runnable: true },
+};
+
+// Heavy set to a provider with no key — the case the summary has to surface
+// rather than hide, since the fold is closed and the cards are not on screen.
+const MODEL_PREVIEW_BLOCKED = {
+  ...MODEL_PREVIEW_OK,
+  heavy: {
+    id: "heavy",
+    provider: "anthropic",
+    model: "claude-opus-5",
+    runnable: false,
+    reason: "no_credential",
+    serves: { model: "gemini-3.8-flash", engine_default: false },
+  },
+};
+
+const MODEL_FILLABLE = [
+  { id: "anthropic", statusId: "anthropic", label: "Anthropic" },
+  { id: "gemini", statusId: "google_genai", label: "Google Gemini" },
+];
+
+function TierSummaryScene({
+  picks,
+  previewByTier,
+  expanded = false,
+  imagePick = "",
+  images = { provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" },
+}) {
+  const [open, setOpen] = useState(expanded);
+  const [image, setImage] = useState(imagePick);
+  return (
+    <TierSummary
+      picks={picks}
+      models={MODEL_CATALOGUE.models}
+      providersById={MODEL_PROVIDERS}
+      previewByTier={previewByTier}
+      expanded={open}
+      onToggle={() => setOpen((v) => !v)}
+      fillable={MODEL_FILLABLE}
+      onFill={() => {}}
+      configuredCount={3}
+      onReset={() => {}}
+      images={images}
+      imageModels={MODEL_CATALOGUE.image_models}
+      imagePick={image}
+      onImageChange={setImage}
+    />
+  );
+}
+
+// Two change sets for the review card: one waiting on a person with a blocked
+// row in it, one that auto-applied and can still be rolled back.
+const SAMPLE_CHANGE_SET = {
+  change_set_id: "cs_1",
+  connector_type: "google_ads",
+  account_name: "Sictec — Search",
+  title: "Cut spend on three converting-nothing search terms",
+  context: "Last 30 days: these three terms took 18% of spend and produced no conversions.",
+  status: "proposed",
+  source: "agent",
+  applied_by: "",
+  changes: [
+    { id: "c1", op_type: "add_negative_keyword", diff: 'Add negative: "free crm template"', status: "pending" },
+    { id: "c2", op_type: "pause_ad_group", diff: "Pause ad group “Brand — Exact”", status: "blocked", destructive: true,
+      guardrail_violations: ["Never pause the Brand campaign — set on this account"] },
+    { id: "c3", op_type: "add_negative_keyword", diff: 'Add negative: "duct tape"', status: "pending",
+      warnings: ["Matches 41 historical queries, 2 of which converted"] },
+  ],
+};
+
+const SAMPLE_CHANGE_SET_APPLIED = {
+  ...SAMPLE_CHANGE_SET,
+  change_set_id: "cs_2",
+  title: "Mark checkout_complete as a key event",
+  context: "",
+  status: "applied",
+  applied_by: "auto",
+  changes: [
+    { id: "c4", op_type: "mark_key_event", diff: "GA4: checkout_complete → key event", status: "applied" },
+    { id: "c5", op_type: "mark_key_event", diff: "GA4: trial_start → key event", status: "rolled_back" },
+  ],
+};
+
 export const SCENES = [
+  {
+    id: "front-door",
+    state: "default — signed out, nothing typed",
+    group: "FrontDoor",
+    title: "The signed-out front door",
+    note: "Check it in dark before anything else: this panel paints on `--start-ground`, which flips with the theme, and it previously used the fixed `--navy` brand hexes for ink — headline 1.05:1, body 2.94:1, both effectively invisible. Then drag the frame through 64rem: the mosaic should move from under the field into a second column beside it, and never sit between the headline and the button. The headline carries no accent colour on purpose — the submit button is the page's one accent.",
+    render: () => <FrontDoorScene />,
+  },
+  {
+    id: "front-door-error",
+    state: "submitted empty — the field's error replaces the reassurance line",
+    group: "FrontDoor",
+    title: "The signed-out front door",
+    note: "One line does two jobs, so check the swap does not move the layout: the hint and the error are the same element, and the error takes `role=\"alert\"` plus `aria-describedby` off the input. The reassurance it replaces (\"Free, no account, and nothing else connected\") is the page's answer to the fear that pointing Duct at a site hands over an ad account, so it must come back the moment the error clears.",
+    render: () => <FrontDoorScene error="Enter your website address." />,
+  },
+  {
+    id: "desk-composer",
+    state: "default — a project with a favicon, no thread yet",
+    group: "DeskComposer",
+    title: "The insights composer",
+    note: "Both Selects here use a custom chip as the trigger's content instead of SelectValue, which is why they're pinned to position=\"popper\" rather than the shadcn default (\"item-aligned\"): item-aligned aligns the selected SelectItem over the trigger by locating it through SelectValue, and silently renders off-screen with nothing to find. Check that both open in place and that picking an option updates the chip's label. Also check the send button's loading spinner and the amber \"no provider connected\" notice (type something, then use the browser's devtools to force a 401 on /api/providers/status) — the notice must not clear the draft.",
+    render: () => (
+      <DeskComposerScene
+        project={{ id: "p1", name: "Sictec Infotech, Inc.", company: { name: "Sictec Infotech, Inc.", website_url: "https://sictec.example" } }}
+        placeholder="Ask about &ldquo;Next growth milestone&rdquo; — or anything else"
+      />
+    ),
+  },
+  {
+    id: "session-composer",
+    state: "inside a running session — dials deferred, ring beside Send",
+    group: "DeskComposer",
+    title: "The session composer",
+    note: "The same card as the desk composer, in the chat shell: attach, the three dials (autonomy, thinking, model tier) on the left, the context ring and Send on the right. `deferred` makes each menu say when the choice lands — autonomy at the next message, thinking and tier at the next session — check the footer line is there in all three menus and that the chips wrap under the text at phone width rather than pushing Send off the card.",
+    render: () => (
+      <div className="max-w-[720px]">
+        <ChatInput
+          onSend={() => {}}
+          isStreaming
+          onStop={() => {}}
+          placeholder="Ask about your growth data…"
+          tools={<DialsScene />}
+          status={<ContextRing used={0.08} label="8% context" />}
+        />
+      </div>
+    ),
+  },
   {
     id: "project-drafted-notice",
     state: "an audit added to a project that already existed",
@@ -226,7 +555,7 @@ export const SCENES = [
     state: "all states",
     group: "ConnectorTile",
     title: "Every state",
-    note: "Connected, partial grant, session-only, not connected, and disabled. The foot is the part that breaks: state left, storage right.",
+    note: "Connected, partial grant, not-yours, session-only, not connected, and disabled. Amber and blue are different claims: partial means degraded, info means it works but the key is Duct's or the machine's, not one the reader added. The foot is the part that breaks: state left, storage right.",
     render: () => (
       <div className="conn-grid">
         <ConnectorTile
@@ -245,6 +574,15 @@ export const SCENES = [
           tone="partial"
           status="Some permissions declined"
           storage={STORAGE_SESSION}
+          onClick={() => {}}
+        />
+        <ConnectorTile
+          logo={LOGO}
+          title="OpenAI"
+          description="GPT models, and image generation for slides and posts."
+          tone="info"
+          status="Duct's key"
+          storage={STORAGE_CLOUD}
           onClick={() => {}}
         />
         <ConnectorTile
@@ -272,6 +610,55 @@ export const SCENES = [
           tone="off"
           status="Coming soon"
           disabled
+        />
+      </div>
+    ),
+  },
+  {
+    id: "provider-key-dialog",
+    state: "openai, no key",
+    group: "ProviderCard",
+    title: "The key dialog",
+    note: "Click the tile. Check: the eye sits inside the field and the field keeps its full width; label/input are tighter than input/notes; the checkbox is a control, not small print. The ChatGPT plan section is the browser variant here \u2014 steps plus the download; in the desktop shell it is the Continue with ChatGPT button itself (with Cancel beside it while it waits), then the signed-in account row carrying Disconnect and Reconnect \u2014 the same pair, in the same variants, as every OAuth connector. Type into the field to see the prefix warning replace the storage line.",
+    render: () => (
+      <div className="conn-grid">
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "openai")}
+          logo={LOGO}
+          status={{ id: "openai", source: "none", reachable: false, stored: false }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "provider-key-loading",
+    state: "nothing answered yet",
+    group: "ProviderCard",
+    title: "Before anything is known",
+    note: "The card asks three things on mount \u2014 the server's status, the keychain, and the ChatGPT sign-in \u2014 and every one of them defaults to \"nothing here\". Rendered as-is that reads \"Not set\", a verdict delivered before the question was asked. Held here with `loading`: the dot pulses, the foot says Checking, and the storage glyph is absent because where a key lives is also a claim. Open it: the key field and the plan section say the same thing rather than offering a sign-in you may already have done.",
+    render: () => (
+      <div className="conn-grid">
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "openai")}
+          logo={LOGO}
+          status={undefined}
+          loading
+        />
+      </div>
+    ),
+  },
+  {
+    id: "provider-key-mismatch",
+    state: "stale value in the slot",
+    group: "ProviderCard",
+    title: "Not a key we can use",
+    note: "What a leftover credential looks like — a JWT that was never an Anthropic key. The server refused it, so the dot is grey and the source reads none, not \"Your key\". Open it: the alert is in the field notes and Remove key is in the footer, which is the whole point of the state. It asks before it drops anything, and the confirm names where the key lives.",
+    render: () => (
+      <div className="conn-grid">
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "anthropic")}
+          logo={LOGO}
+          status={{ id: "anthropic", source: "none", reachable: false, stored: false, key_mismatch: true }}
         />
       </div>
     ),
@@ -429,4 +816,437 @@ export const SCENES = [
       </DialogScene>
     ),
   },
+  {
+    id: "desk-cards-long-title",
+    state: "content",
+    group: "Desk",
+    title: "Cards, an agent-length finding title",
+    note: "Drag the frame through the 448–768px band: three columns to two to one. The long title in “What I found” clamps to two lines instead of pushing its siblings out — hover or tab to it for the rest.",
+    render: () => <DeskCards buckets={DESK_BUCKETS_SHAPED} />,
+  },
+  {
+    id: "desk-background-refresh",
+    state: "a working thread, then a focus refresh",
+    group: "Desk",
+    title: "Desk stays put while it re-reads",
+    note: "Wait for the desk to load, then dispatch a visible `visibilitychange` event. The five-hundred-millisecond stub mimics the refresh: the existing desk must remain on screen rather than returning to its loading skeleton.",
+    render: () => <Desk projectIdOverride="preview" loadDeskFn={loadPreviewDesk} />,
+  },
+  {
+    id: "desk-stale-answer-dropped",
+    state: "two loads in flight, the older one answering last",
+    group: "Desk",
+    title: "Desk drops an answer it has outrun",
+    note: "Nothing to click — watch the first two seconds. The scene issues a background refresh 300ms in, while the first load is still out, and that refresh answers ten times faster: the desk paints from the newer answer, and the skeleton comes down with it even though the load that raised it is still pending. Then keep watching. The older answer lands at a second and a half carrying a desk marked stale, and must change nothing on screen. If “Stale answer” ever appears, ordering has stopped being enforced and the desk can be overwritten by whatever it was told a moment ago. React's dev double-mount replays the race, so the first paint can beat the 300ms mark — the ending is what this is for.",
+    render: () => <DeskRaceScene />,
+  },
+  {
+    id: "desk-activity-long-summary",
+    state: "content",
+    group: "Desk",
+    title: "Activity rail, a long entry",
+    note: "The right rail from the Organic Growth desk. It sizes off its own column, not the window — this scene is deliberately narrow to prove that.",
+    render: () => (
+      <div className="max-w-[288px]">
+        <DeskActivity items={DESK_ACTIVITY} />
+      </div>
+    ),
+  },
+  {
+    id: "context-ring-tones",
+    state: "neutral · amber · destructive, each with usage details",
+    group: "ContextRing",
+    title: "Context ring, the three tones",
+    note: "The gauge beside every agent workspace's status row. Tab or hover each ring for the tooltip's per-call and per-session usage — this is also where a stray local TooltipProvider used to show up as a delay that didn't match the rest of the app.",
+    render: () => (
+      <Row>
+        {[
+          { used: 0.32, tag: "neutral", cached: 41000 },
+          { used: 0.79, tag: "amber", cached: 9000 },
+          { used: 0.95, tag: "destructive", cached: 0 },
+        ].map(({ used, tag, cached }) => (
+          <ContextRing
+            key={tag}
+            used={used}
+            details={{
+              last: { window: 200000, input: Math.round(used * 200000 * 0.8), output: Math.round(used * 200000 * 0.2), cached, model: "claude-sonnet-5" },
+              total: { input: 512000, output: 48000, cached: 180000, calls: 14, cost: 1.86 },
+            }}
+          />
+        ))}
+      </Row>
+    ),
+  },
+  {
+    id: "context-ring-stale",
+    state: "just compacted — no live figure yet",
+    group: "ContextRing",
+    title: "Context ring, right after a compaction",
+    note: "The last reading describes context that no longer exists. The ring reads empty and says so rather than showing a stale percentage; it fills again once the next call on the thread reports a real size.",
+    render: () => (
+      <Row>
+        <ContextRing
+          used={0.87}
+          details={{ last: { window: 200000, input: 174000, output: 8200, stale: true, model: "claude-sonnet-5" }, total: { input: 512000, output: 48000, calls: 14 } }}
+        />
+        <span className="text-xs text-muted-foreground">No details prop — decorative only, as on a thread that hasn&rsquo;t started</span>
+        <ContextRing used={0} />
+      </Row>
+    ),
+  },
+  {
+    id: "notification-row",
+    state: "all four permission states",
+    group: "AppSidebar",
+    title: "The notification row, in every state it has",
+    note: "Lives in the user footer menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Clickability is the thing to check: \"Off\" asks the browser for permission and \"Notification settings\" opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <NotificationRow permission="default" onAct={() => {}} />
+          <NotificationRow permission="granted" />
+          <NotificationRow permission="denied" />
+          <NotificationRow permission="system" hasSettingsPage onAct={() => {}} />
+          <NotificationRow permission="system" />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "model-setup",
+    state: "collapsed, one provider, all three runnable",
+    group: "TierSummary",
+    title: "The setup you already have",
+    note: "What the Models page opens with, and the whole answer for anyone on one key. Check that the provider is named once in the heading rather than three times as a logo per row, that Customise sits hard against the right edge at every width, and that the three model names stay on one line each — they ellipsize rather than wrap, because a two-line model name turns a three-row list into five. The note under the list is the credential answer said once for the page; the tier cards repeat it only when the three disagree.",
+    render: () => <TierSummaryScene picks={MODEL_PICKS} previewByTier={MODEL_PREVIEW_OK} />,
+  },
+  {
+    id: "model-setup-blocked",
+    state: "Heavy has no key",
+    group: "TierSummary",
+    title: "A tier that cannot run, with the fold closed",
+    note: "The state the redesign is most at risk of hiding: the cards that used to carry the warning are behind Customise now, so the summary has to say it. Heavy is struck through and the note names what serves its work instead. The card loses its tinted ground here — an amber border on a primary-tinted gradient reads as decoration rather than as a problem.",
+    render: () => (
+      <TierSummaryScene
+        picks={{ ...MODEL_PICKS, heavy: "claude-opus-5" }}
+        previewByTier={MODEL_PREVIEW_BLOCKED}
+      />
+    ),
+  },
+  {
+    id: "model-tier-cards",
+    state: "expanded — one runnable, one blocked",
+    group: "TierCard",
+    title: "The three tiers, customising",
+    note: "Click a picker — the list must hang under its own trigger. It used to open at the viewport's bottom-left corner and read as a dead control, because Radix's default item-aligned positioning never resolves a selected item inside a SelectGroup and this is the app's only grouped select. The first card is the blocked case; the other two carry a credential chip because showSource is on, which only happens when the three tiers disagree about whose key pays.",
+    render: () => (
+      <div className="mt-tiers">
+        {TIERS.map((tier, index) => (
+          <TierCard
+            key={tier.key}
+            tier={tier}
+            index={index}
+            value={tier.key === "heavy" ? "claude-opus-5" : MODEL_PICKS[tier.key]}
+            models={MODEL_CATALOGUE.models}
+            providersById={MODEL_PROVIDERS}
+            engine="v1"
+            preview={MODEL_PREVIEW_BLOCKED[tier.key]}
+            showSource={tier.key !== "heavy"}
+            onChange={() => {}}
+          />
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: "model-advanced",
+    state: "closed — open it",
+    group: "AdvancedSettings",
+    title: "The fold the page's second half went into",
+    note: "The two switches left after the image row moved up into the setup card. Closed is the state to check first: the summary line has to say what is inside, because both are things somebody arrives looking for by name. Opening it toggles real preferences, so expect the fallback card to report itself unsaved when signed out — that is the state, not a bug.",
+    render: () => (
+      <AdvancedSettings ladder={TIERS.map((tier) => tier.label)} />
+    ),
+  },
+  {
+    id: "voice-sample",
+    state: "each preset, and a language with no sample of its own",
+    group: "VoiceSample",
+    title: "What the writing preset actually means",
+    note: "The profile page's one piece of evidence: the same finding in all three voices, so \"Practitioner\" is a thing you can read rather than a word you have to trust. Canned strings, no model call. Check the three read as genuinely different lengths and registers — if two look alike, the preset behind them is not worth offering — and that the untranslated-language notice says the preview is the limitation, not the agent.",
+    render: () => (
+      <div style={{ display: "grid", gap: 12, maxWidth: 640 }}>
+        <VoiceSample preset="executive" />
+        <VoiceSample preset="practitioner" />
+        <VoiceSample preset="technical" />
+        <VoiceSample preset="practitioner" language="Japanese" />
+      </div>
+    ),
+  },
+  {
+    id: "change-set-card",
+    state: "proposed with a blocked change · applied, auto-applied",
+    group: "ChangeSetCard",
+    title: "The human review gate",
+    note: "The card an agent's proposed changes arrive inside, and the only place a change is approved, rejected or rolled back — so what it must always show is non-negotiable: the destructive flag, guardrail violations and preview errors in full, and whether a set arrived without a click. Check the status marks read as four distinct states at a glance (they were ✓ ✕ ↺ • as text until this pass) and that a long guardrail line wraps under its icon rather than beside it.",
+    render: () => (
+      <div style={{ display: "grid", gap: 16 }}>
+        <ChangeSetCard changeSet={SAMPLE_CHANGE_SET} />
+        <ChangeSetCard changeSet={SAMPLE_CHANGE_SET_APPLIED} />
+      </div>
+    ),
+  },
+  {
+    id: "telemetry-card",
+    state: "on-by-default build · off-by-default build",
+    group: "TelemetryCard",
+    title: "The one data switch",
+    note: "Renders `null` in every build without a DSN, which is why the panel is exported separately from the card that asks the shell — this scene passes the two answers the shell can give. What to check: the Sends / Never-sends columns stack rather than crush at phone width, the check is `text-success` and the exclusions are muted (a promise, not a warning), and that the two-line intro above them does not reflow into a third line in either state. The paragraph this replaced was seventy-two words.",
+    render: () => (
+      <div style={{ display: "grid", gap: 16, maxWidth: 520 }}>
+        <TelemetryPanel enabled defaultOn onToggle={() => {}} />
+        <TelemetryPanel enabled={false} defaultOn={false} onToggle={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "model-images",
+    state: "auto · picked · picked but unreachable",
+    group: "TierSummary",
+    title: "The Images row, in its three states",
+    note: "Images is a fourth row in the setup card rather than a fold in Advanced, because it is a fourth thing Duct runs on your key. Top: nobody picked, and the option says what \"whichever key can draw\" currently resolves to — \"Auto\" alone would make the reader open another surface to find out. Middle: an explicit pick, no note, because the row already says it. Bottom: a pick whose provider has no key — the server resolved past it, and the note has to admit that rather than show a model that will not run.",
+    render: () => (
+      <div style={{ display: "grid", gap: 16 }}>
+        <TierSummaryScene picks={MODEL_PICKS} previewByTier={MODEL_PREVIEW_OK} />
+        <TierSummaryScene
+          picks={MODEL_PICKS}
+          previewByTier={MODEL_PREVIEW_OK}
+          imagePick="gemini-3-pro-image"
+          images={{ provider: "google_genai", model: "gemini-3-pro-image", source: "env" }}
+        />
+        <TierSummaryScene
+          picks={MODEL_PICKS}
+          previewByTier={MODEL_PREVIEW_OK}
+          imagePick="gpt-image-2.5-flare"
+          images={{ provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" }}
+        />
+      </div>
+    ),
+  },
+
+  // ------------------------------------------------------------------ Shots
+  // One customer's week, the same in every frame: these four scenes are what
+  // scripts/shots captures for the README, from the story in
+  // lib/__fixtures__/kestrel-story.mjs. They double as the richest examples of
+  // each component, so they stay here even between screenshot runs.
+  {
+    id: "shot-change-set",
+    state: "proposed — one destructive, one blocked by a guardrail",
+    group: "ChangeSetCard",
+    title: "The review card, from the story",
+    note: "The change the insights agent proposes in Kestrel's week: a pause (destructive, so it asks), two negatives, and a budget raise the account's 25% guardrail blocks. Same object the session emits. What to check: one colour per row at most, the approve button is the plain primary even with a pause in the set, and the footer line says how many changes wait on a person.",
+    render: () => (
+      <div data-shot style={{ maxWidth: 680 }}>
+        <ChangeSetCard changeSet={STORY_CHANGE_SET} />
+      </div>
+    ),
+  },
+  {
+    id: "shot-chatgpt-card",
+    state: "openai, signed in with a ChatGPT plan",
+    group: "ProviderCard",
+    title: "Continue with ChatGPT, signed in",
+    note: "The desktop variant needs the shell: scripts/shots installs a `window.__TAURI__` stub that answers get_shell_info and chatgpt_status before the page loads. In a plain browser this renders the web variant (steps plus the download). Click the tile to open the dialog.",
+    render: () => (
+      <div className="conn-grid">
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "openai")}
+          logo={LOGOS.openai}
+          status={{ id: "openai", source: "subscription", reachable: true, stored: false }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "shot-memory-timeline",
+    state: "eight memories: one superseded, one pinned, one unconfirmed",
+    group: "MemoryTimeline",
+    title: "What Duct remembers about Kestrel",
+    note: "The rows the insights agent recalls in the session. One goal was raised from 700 to 900, so the old value is shown superseded rather than deleted; the CPA target is pinned; the watch the agent wrote this week is still unconfirmed. Every write here is a no-op.",
+    render: () => <StoryMemoryScene />,
+  },
+  {
+    id: "shot-connectors",
+    state: "five connected, four waiting",
+    group: "ConnectorTile",
+    title: "Kestrel's connections",
+    note: "The stack behind the story week: the five sources the insights agent pulls, connected and saved to the account, beside four it has not needed yet. Real logos, the page's own descriptions. What to check: three tiles per row at 1040px, connected and not-connected read as different at a glance without the dot doing all the work.",
+    render: () => (
+      <div className="conn-grid" data-shot style={{ padding: 24 }}>
+        {STORY_CONNECTORS.map((c) => (
+          <ConnectorTile
+            key={c.id}
+            logo={LOGOS[c.id]}
+            title={c.title}
+            description={c.description}
+            tone={c.connected ? "on" : "off"}
+            status={c.connected ? "Connected" : "Not connected"}
+            storage={c.connected ? STORAGE_CLOUD : STORAGE_NONE}
+            onClick={() => {}}
+          />
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: "shot-plan-board",
+    state: "one week: two posted, one drafted, two planned",
+    group: "PlanKanban",
+    title: "The story week on the board",
+    note: "The plan the content agent writes in the story, with the posts it links to. Covers come from the shots mock (MEDIA_DIR); in a plain dev server the two posted cards and the draft show the no-image state instead. The empty Discarded lane is not rendered.",
+    render: () => (
+      <div style={{ height: 640, display: "flex" }}>
+        <PlanKanban plan={STORY_PLAN} postsById={STORY_POSTS} />
+      </div>
+    ),
+  },
+  {
+    id: "audit-report-v1",
+    group: "Audit",
+    title: "SEO report (V1)",
+    state: "A full report, so the document decision can be seen",
+    note:
+      "This is a printed thing rather than app chrome: it declares `color-scheme: light` and redefines the semantic tokens for its own subtree, so it looks the same in a dark app as in a light one. It used to take its ground from the theme while painting sixty fixed hexes inside it, which put the finding titles at 1.11:1 in dark. Open this scene in a DARK frame — that is the whole point of it.",
+    render: () => <AuditReportV1 data={AUDIT_REPORT_V1} />,
+  },
 ];
+
+
+/**
+ * One audit report, enough of it to judge the layout and the theming.
+ * Deliberately not a trimmed stub: the rows that break are a category with no
+ * failures, a finding with affected URLs, and a phase whose tasks carry an
+ * effort estimate.
+ */
+const AUDIT_REPORT_V1 = {
+  url: "https://kestrel.app",
+  generated_at: "2026-09-14T09:00:00Z",
+  overall_score: 68,
+  score_band: "needs_work",
+  headline: "Kestrel ranks for its own name and almost nothing else",
+  key_signals: [
+    "Only 3 of 41 pages earn organic traffic",
+    "No page targets the phrase freelancers actually search",
+    "Core Web Vitals pass on every template",
+  ],
+  strategic_narrative:
+    "Fixing the technical findings below will not move rankings on its own. They are hygiene; the growth comes from the second half of the plan.",
+  pages_crawled: 41,
+  total_sitemap_urls: 44,
+  total_issues: 12,
+  total_warnings: 9,
+  total_opportunities: 6,
+  crawl_summary: {
+    avg_ttfb_ms: 380,
+    pages_with_redirects: 2,
+    spa_pages_count: 0,
+    pages_noindex: 1,
+    pages_missing_title: 3,
+  },
+  wins: [
+    "Every template passes Core Web Vitals",
+    "Structured data is complete on the pricing page",
+    "No page is blocked by robots.txt",
+  ],
+  top_priorities: [
+    { rank: 1, severity: "fail", title: "Three sitemap entries return 404", effort_estimate: "under_1hr" },
+    { rank: 2, severity: "opportunity", title: "Write the pages freelancers actually search for", effort_estimate: "1_to_2_wks" },
+    { rank: 3, severity: "warn", title: "Two templates are missing a canonical", effort_estimate: "2_to_4hrs" },
+  ],
+  categories: [
+    {
+      id: "indexing",
+      label: "Indexing",
+      score: 82,
+      fail_count: 1,
+      warn_count: 2,
+      opp_count: 0,
+      findings: [
+        {
+          id: "f1",
+          severity: "fail",
+          title: "Sitemap lists three pages that 404",
+          description: "A sitemap that points at missing pages spends crawl budget proving they are missing.",
+          impact: "high",
+          effort: "low",
+          affected_urls: ["/guides/old-invoicing", "/pricing-2024", "/blog/launch"],
+        },
+        { id: "f2", severity: "warn", title: "Two templates are missing a canonical", impact: "medium", effort: "low" },
+      ],
+    },
+    {
+      id: "content",
+      label: "Content",
+      score: 41,
+      fail_count: 1,
+      warn_count: 0,
+      opp_count: 4,
+      findings: [
+        {
+          id: "f3",
+          severity: "fail",
+          title: "No page targets a commercial query",
+          description: "Every page reads as an about page. Nothing answers a question someone would search before buying.",
+          impact: "high",
+          effort: "high",
+        },
+      ],
+    },
+    { id: "performance", label: "Performance", score: 91, fail_count: 0, warn_count: 0, opp_count: 1, findings: [] },
+  ],
+  roadmap: [
+    {
+      label: "Week 1",
+      theme: "Unblock",
+      tasks: [
+        { task: "Remove the three dead sitemap entries", effort_estimate: "under_1hr" },
+        { task: "Add canonicals to the two templates", effort_estimate: "2_to_4hrs" },
+      ],
+    },
+    {
+      label: "Weeks 2–4",
+      theme: "Structure",
+      tasks: [{ task: "Publish the invoicing guide", effort_estimate: "1_to_3_days" }],
+    },
+  ],
+};
+
+function StoryMemoryScene() {
+  const api = useMemo(() => {
+    const items = STORY_MEMORIES.map((m) => ({ ...m })).sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));
+    const kinds = Array.from(new Set(items.map((m) => m.kind))).sort();
+    const noop = async () => ({});
+    return {
+      list: async ({ q = "", kind = "", includeSuperseded = true } = {}) => ({
+        items: items.filter(
+          (m) =>
+            (includeSuperseded || m.status !== "superseded") &&
+            (!kind || m.kind === kind) &&
+            (!q || `${m.title} ${m.body}`.toLowerCase().includes(q.toLowerCase())),
+        ),
+        kinds,
+        memory_paused: false,
+      }),
+      get: async ({ memoryId }) => items.find((m) => m.id === memoryId) || null,
+      create: noop, patch: noop, remove: noop, reset: noop, setPaused: noop,
+    };
+  }, []);
+  return (
+    <div style={{ maxWidth: 880, padding: 24 }}>
+      <MemoryTimeline api={api} kinds={MEMORY_KINDS} defaultKind="goal" />
+    </div>
+  );
+}

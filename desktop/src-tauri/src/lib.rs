@@ -44,6 +44,20 @@ fn entry(provider: &str) -> Result<Entry, String> {
 /// silently didn't persist. Name the actual problem instead.
 pub(crate) fn describe_keyring_error(err: KeyringError) -> String {
     let generic = err.to_string();
+    if cfg!(target_os = "macos") {
+        // macOS ties an item's ACL to the code signature of the app that wrote
+        // it. A rebuilt development build is ad-hoc signed, and its identity
+        // changes with every build, so yesterday's item is unreadable today and
+        // the raw error is a bare OSStatus that explains none of that.
+        return match err {
+            KeyringError::NoStorageAccess(_) | KeyringError::PlatformFailure(_) => format!(
+                "the keychain would not release this item ({generic}). macOS grants \
+                 access per application signature, so a rebuilt or re-signed app \
+                 cannot read what an earlier build stored. Saving it again fixes it."
+            ),
+            other => other.to_string(),
+        };
+    }
     if !cfg!(target_os = "linux") {
         return generic;
     }
@@ -62,6 +76,64 @@ pub(crate) fn describe_keyring_error(err: KeyringError) -> String {
 /// same thing.
 const KEYCHAIN_SIDECAR_SERVICE: &str = "ai.getduct.desktop.sidecar";
 const CREDENTIALS_KEY_ACCOUNT: &str = "credentials-encryption-key";
+/// Gates the loopback API the webview talks to.
+const LOCAL_API_KEY_ACCOUNT: &str = "local-api-key";
+/// Signs this install's session tokens.
+const LOCAL_JWT_SECRET_ACCOUNT: &str = "local-jwt-secret";
+
+/// Read a sidecar secret from the keychain, minting it on first run.
+///
+/// **The shell owns these, not the sidecar.** Only one signed binary should
+/// ever touch the keychain: macOS grants access per application signature, so a
+/// second executable reading it doubles both the number of identities that can
+/// drift and the number of ways a user can be shown a keychain prompt. The
+/// sidecar is a separate binary, so the shell reads and passes the value down
+/// the environment instead (`sidecar.rs`). See
+/// `docs/engineering/credential-storage.md` §3.
+///
+/// `mint` encodes the 32 fresh bytes, because the callers disagree about the
+/// alphabet: Fernet wants padded url-safe base64, the rest want unpadded.
+fn sidecar_secret(account: &str, mint: impl Fn(&[u8; 32]) -> String) -> Result<String, String> {
+    let entry = Entry::new(KEYCHAIN_SIDECAR_SERVICE, account).map_err(describe_keyring_error)?;
+
+    match entry.get_password() {
+        Ok(existing) if !existing.trim().is_empty() => return Ok(existing),
+        // An empty stored value is treated as absent and re-minted: it can only
+        // come from a half-finished write, and handing it on would fail later,
+        // somewhere that does not mention the keychain.
+        Ok(_) | Err(KeyringError::NoEntry) => {}
+        Err(e) => return Err(describe_keyring_error(e)),
+    }
+
+    let mut bytes = [0u8; 32];
+    getrandom::fill(&mut bytes).map_err(|e| format!("could not gather randomness: {e}"))?;
+    let value = mint(&bytes);
+    entry.set_password(&value).map_err(describe_keyring_error)?;
+    Ok(value)
+}
+
+/// The `X-API-Key` the webview sends to the loopback sidecar.
+///
+/// It used to be a `0600` file beside the database, which protects it from
+/// other *accounts* on the machine and from nothing running as this user — the
+/// realistic attacker for a desktop app. The keychain gates it on the asking
+/// app's signature instead.
+pub(crate) fn local_api_key() -> Result<String, String> {
+    sidecar_secret(LOCAL_API_KEY_ACCOUNT, |b| {
+        base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE_NO_PAD, b)
+    })
+}
+
+/// The key this install signs its session tokens with.
+///
+/// The sharpest of the local secrets: whoever holds it can mint a valid token
+/// for any user id and drive the whole local API, so a `0600` file was the
+/// weakest link in an otherwise keychain-backed design.
+pub(crate) fn local_jwt_secret() -> Result<String, String> {
+    sidecar_secret(LOCAL_JWT_SECRET_ACCOUNT, |b| {
+        base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE_NO_PAD, b)
+    })
+}
 
 /// The Fernet key the sidecar encrypts stored connector credentials with,
 /// minted on first run and kept in the OS keychain.
@@ -80,24 +152,10 @@ const CREDENTIALS_KEY_ACCOUNT: &str = "credentials-encryption-key";
 /// both treat a failed decrypt as "absent" and degrade to reconnecting — but it
 /// does mean a user who wipes their keychain reconnects their sources.
 pub(crate) fn credentials_encryption_key() -> Result<String, String> {
-    let entry = Entry::new(KEYCHAIN_SIDECAR_SERVICE, CREDENTIALS_KEY_ACCOUNT)
-        .map_err(describe_keyring_error)?;
-
-    match entry.get_password() {
-        Ok(existing) if !existing.trim().is_empty() => return Ok(existing),
-        // An empty stored value is treated as absent and re-minted: it can only
-        // come from a half-finished write, and returning it would hand the
-        // sidecar a key Fernet rejects.
-        Ok(_) | Err(KeyringError::NoEntry) => {}
-        Err(e) => return Err(describe_keyring_error(e)),
-    }
-
-    let mut bytes = [0u8; 32];
-    getrandom::fill(&mut bytes).map_err(|e| format!("could not gather randomness: {e}"))?;
     // Fernet keys are url-safe base64 of exactly 32 bytes, padding included.
-    let key = base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE, bytes);
-    entry.set_password(&key).map_err(describe_keyring_error)?;
-    Ok(key)
+    sidecar_secret(CREDENTIALS_KEY_ACCOUNT, |b| {
+        base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE, b)
+    })
 }
 
 /// Read a stored provider key. Returns "" when none is set.
@@ -160,6 +218,10 @@ fn get_shell_info(app: AppHandle) -> serde_json::Value {
             // "needs you" notices to the OS instead of the webview's missing
             // Notification API. Older shells lack it and stay silent.
             "notifications": true,
+            // `open_notification_settings` exists *and* this OS has a page for
+            // it to open. False on Linux, where it does not — the web app then
+            // offers no "open settings" affordance rather than one that errors.
+            "notificationSettings": NOTIFICATION_SETTINGS_URL.is_some(),
             // The `chatgpt_*` commands exist: the web app may offer "Continue
             // with ChatGPT" and send the access token they mint as the OpenAI
             // credential. Older shells lack them and show the API-key path
@@ -170,10 +232,35 @@ fn get_shell_info(app: AppHandle) -> serde_json::Value {
     })
 }
 
+/// Where the OS keeps this app's notification switch, or `None` where the
+/// desktop has no single such place.
+///
+/// macOS moved the pane to ExtensionKit with the System Settings rewrite in
+/// Ventura; `com.apple.preference.notifications` was the pre-13 spelling. An id
+/// the running OS does not know opens System Settings at its front page rather
+/// than failing, so an older macOS degrades to "you are in the right app".
+///
+/// Linux is `None` on purpose rather than a guess: GNOME, KDE and the rest each
+/// own their own page and there is no scheme that covers them.
+const NOTIFICATION_SETTINGS_URL: Option<&str> = if cfg!(target_os = "macos") {
+    Some("x-apple.systempreferences:com.apple.Notifications-Settings.extension")
+} else if cfg!(windows) {
+    Some("ms-settings:notifications")
+} else {
+    None
+};
+
 /// Show a system notification. The web app decides *when* (only while the
 /// window is not focused — `app/src/lib/notify.js`); this only decides *how*,
 /// which on a remote origin cannot be the plugin's JS bindings for the same
 /// reason as the updater. Title and body are plain text from our own page.
+///
+/// Registering the plugin is not free of the webview, though: it injects a
+/// `window.Notification` polyfill that invokes `plugin:notification|notify` and
+/// friends. Those three commands are permitted in `capabilities/*.json` because
+/// the polyfill calls `is_permission_granted` on load and an ACL denial there
+/// reaches the page as an unhandled rejection — a runtime error on every load,
+/// for an API we do not use. They grant no reach this command did not already.
 #[tauri::command]
 fn notify(app: AppHandle, title: String, body: Option<String>) -> Result<(), String> {
     use tauri_plugin_notification::NotificationExt;
@@ -182,6 +269,26 @@ fn notify(app: AppHandle, title: String, body: Option<String>) -> Result<(), Str
         builder = builder.body(body);
     }
     builder.show().map_err(|e| e.to_string())
+}
+
+/// Open the OS page where notifications for this app are turned on or off.
+///
+/// The sidebar's notification row needs this because the shell cannot answer
+/// "are they on?": the notification plugin's desktop `permission_state` returns
+/// `Granted` unconditionally, whatever the user actually chose in System
+/// Settings. So the row does not assert a state it cannot know — it hands the
+/// user to where the real switch is.
+///
+/// Unlike `open_external` this takes no URL. A page that could name the
+/// settings URL could name any URL-scheme handler on the machine, and the one
+/// destination worth reaching here is a constant.
+#[tauri::command]
+fn open_notification_settings(app: AppHandle) -> Result<(), String> {
+    let url = NOTIFICATION_SETTINGS_URL
+        .ok_or("this desktop has no single notification settings page")?;
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 /// Open a URL in the system's default browser. Restricted to http(s) so the
@@ -337,49 +444,54 @@ fn navigate_webview(app: &AppHandle, path: &str, query: &str) {
     let _ = window.set_focus();
 }
 
-/// Forward `ai.getduct.desktop://auth?auth_code=...` into the webview by
-/// navigating it to `/?auth_code=...`. The login page's existing
-/// `/auth/exchange` path takes it from there; the code is single-use and
-/// expires in seconds, so it is safe to carry in the URL.
+/// Where a deep link sends the webview: `(path, query)`, or `None` for a URL
+/// the shell does not act on.
+///
+/// Pure, so it can be tested without a window. Two routes, one shape:
+///
+/// - `ai.getduct.desktop://auth?auth_code=...` → `/?auth_code=...`. The login
+///   page's existing `/auth/exchange` path takes it from there; the code is
+///   single-use and expires in seconds, so it is safe to carry in the URL.
+/// - `ai.getduct.desktop://connector?connector=...&auth_code=...` →
+///   `/connections?connector=...&auth_code=...`. Connecting a data source is
+///   Google OAuth, which will not run in an embedded webview, so it happens in
+///   the system browser and has to cross back into the app. What crosses is
+///   only a single-use 60-second code — a connector refresh token is
+///   long-lived and never rides in a deep link, which any app claiming the
+///   scheme could read. The connections page redeems it via
+///   `/auth/connectors/exchange`.
+fn deep_link_target(url: &Url) -> Option<(&'static str, String)> {
+    match url.host_str()? {
+        "auth" => {
+            let code = query_param(url, "auth_code")?;
+            safe_deep_link_value(&code).then(|| ("/", format!("auth_code={code}")))
+        }
+        "connector" => {
+            let connector = query_param(url, "connector")?;
+            let code = query_param(url, "auth_code")?;
+            (safe_deep_link_value(&connector) && safe_deep_link_value(&code))
+                .then(|| ("/connections", format!("connector={connector}&auth_code={code}")))
+        }
+        _ => None,
+    }
+}
+
 fn handle_auth_deep_link(app: &AppHandle, url: &Url) {
     if url.host_str() != Some("auth") {
         return;
     }
-    let Some(code) = query_param(url, "auth_code") else {
-        return;
-    };
-    if !safe_deep_link_value(&code) {
-        return;
+    if let Some((path, query)) = deep_link_target(url) {
+        navigate_webview(app, path, &query);
     }
-    navigate_webview(app, "/", &format!("auth_code={code}"));
 }
 
-/// Forward `ai.getduct.desktop://connector?connector=...&auth_code=...` into the
-/// webview by navigating it to `/connections?connector=...&auth_code=...`.
-///
-/// The same shape as the sign-in route, for the same reason: connecting a data
-/// source is Google OAuth, which will not run in an embedded webview, so it
-/// happens in the system browser and has to cross back into the app. What
-/// crosses is only a single-use 60-second code — a connector refresh token is
-/// long-lived and never rides in a deep link, which any app claiming the scheme
-/// could read. The connections page redeems it via `/auth/connectors/exchange`.
 fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
     if url.host_str() != Some("connector") {
         return;
     }
-    let (Some(connector), Some(code)) =
-        (query_param(url, "connector"), query_param(url, "auth_code"))
-    else {
-        return;
-    };
-    if !safe_deep_link_value(&connector) || !safe_deep_link_value(&code) {
-        return;
+    if let Some((path, query)) = deep_link_target(url) {
+        navigate_webview(app, path, &query);
     }
-    navigate_webview(
-        app,
-        "/connections",
-        &format!("connector={connector}&auth_code={code}"),
-    );
 }
 
 /// Menu ids. Namespaced so a future menu can't collide with these.
@@ -744,6 +856,7 @@ pub fn run() {
             delete_provider_key,
             get_shell_info,
             notify,
+            open_notification_settings,
             get_sidecar_info,
             open_external,
             check_for_update,
@@ -752,6 +865,7 @@ pub fn run() {
             set_telemetry_enabled,
             chatgpt::chatgpt_status,
             chatgpt::chatgpt_login,
+            chatgpt::chatgpt_login_cancel,
             chatgpt::chatgpt_credential,
             chatgpt::chatgpt_logout
         ])
@@ -764,4 +878,61 @@ pub fn run() {
                 sidecar::shutdown(app);
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn target(link: &str) -> Option<(&'static str, String)> {
+        deep_link_target(&Url::parse(link).expect("a well-formed link"))
+    }
+
+    #[test]
+    fn a_sign_in_link_lands_on_the_login_page_with_its_code() {
+        assert_eq!(
+            target("ai.getduct.desktop://auth?auth_code=abc-123_XYZ"),
+            Some(("/", "auth_code=abc-123_XYZ".to_string()))
+        );
+    }
+
+    #[test]
+    fn a_connector_link_lands_on_connections_with_both_values() {
+        assert_eq!(
+            target("ai.getduct.desktop://connector?connector=ga4&auth_code=c0de"),
+            Some(("/connections", "connector=ga4&auth_code=c0de".to_string()))
+        );
+    }
+
+    #[test]
+    fn anything_but_a_url_safe_token_is_dropped_rather_than_escaped() {
+        // Any app on the machine can open our scheme; a code carrying query
+        // syntax or a path would otherwise be spliced into the webview URL.
+        assert_eq!(target("ai.getduct.desktop://auth?auth_code=a%26b"), None);
+        assert_eq!(target("ai.getduct.desktop://auth?auth_code=../x"), None);
+        assert_eq!(target("ai.getduct.desktop://auth?auth_code="), None);
+        assert_eq!(target("ai.getduct.desktop://connector?connector=ga4"), None);
+        assert_eq!(target("ai.getduct.desktop://connector?connector=g%2F4&auth_code=c"), None);
+        assert_eq!(target("ai.getduct.desktop://elsewhere?auth_code=abc"), None);
+        let long = "a".repeat(513);
+        assert_eq!(target(&format!("ai.getduct.desktop://auth?auth_code={long}")), None);
+    }
+
+    #[test]
+    fn a_keyring_failure_is_described_in_terms_the_user_can_act_on() {
+        let platform = describe_keyring_error(KeyringError::PlatformFailure(Box::new(
+            std::io::Error::other("errSecItemNotFound (-25300)"),
+        )));
+        // The raw cause survives for a bug report ...
+        assert!(platform.contains("errSecItemNotFound"), "{platform}");
+        if cfg!(target_os = "macos") {
+            // ... and macOS names the signature rule that actually explains it.
+            assert!(platform.contains("Saving it again fixes it"), "{platform}");
+        } else if cfg!(target_os = "linux") {
+            assert!(platform.contains("gnome-keyring"), "{platform}");
+        }
+        // A missing entry is an ordinary answer, not a platform fault: no advice attached.
+        let missing = describe_keyring_error(KeyringError::NoEntry);
+        assert_eq!(missing, KeyringError::NoEntry.to_string());
+    }
 }

@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from "react";
 
+import { reconcileStoredSession } from "../lib/authFetch.js";
 import { initLocalBackend } from "../lib/localBackend.js";
 import { installExternalLinkHandler } from "../lib/shell.js";
 
@@ -27,7 +28,14 @@ export default function LocalBackendGate({ children }) {
     let alive = true;
     initLocalBackend().then((result) => {
       if (!alive) return;
-      if (result.error) setError(result.error);
+      if (result.error) {
+        // The base never moved, so it does not describe the backend this shell
+        // meant to use. Judging the stored session against it would throw away
+        // a session that is still good for the sidecar that failed to start.
+        setError(result.error);
+      } else {
+        reconcileStoredSession();
+      }
       setReady(true);
     });
     // Same subtrees, same shell: this is where the app's own chrome lives, so

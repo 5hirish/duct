@@ -1,4 +1,4 @@
-import { googleAdsByoCredentials } from "./adsCredentials.js";
+import { googleAdsRequestFields } from "./adsCredentials.js";
 import { providerKeyHeaders } from "./providerKeys.js";
 import { consumeSseStream } from "./sse.js";
 // Bearer JWT minted by Google Sign-In. Optional: signed-out sessions omit it and
@@ -27,6 +27,32 @@ const hostedBase = normalizedConfiguredBase || (isProduction ? "" : "http://loca
  */
 export let BASE = hostedBase;
 
+/**
+ * The desktop shell's bundled backend, as a session can refer to it.
+ *
+ * Not its URL: the sidecar binds port 0 and gets a new port every launch, so
+ * the URL identifies a *run*, not a backend. Its database and its JWT secret
+ * both live in one per-install data directory, so one install has exactly one
+ * local backend and this constant names it for as long as that install lasts.
+ */
+export const LOCAL_BACKEND_ID = "local";
+
+/**
+ * Which backend `BASE` currently points at, stable enough to pin a session to.
+ *
+ * A session token is signed by whoever minted it, and the shell can talk to
+ * either the sidecar or the hosted API. Storing this alongside the token is
+ * what lets `authFetch` tell "you are signed out" from "this token belongs to
+ * the other backend" — the second used to arrive as a 401 and retire a session
+ * that was never bad. Empty when no base is configured, which reads as
+ * "unknown" rather than as a mismatch.
+ */
+let backendId = hostedBase;
+
+export function backendIdentity() {
+  return backendId;
+}
+
 /** Must match backend DUCT_API_KEY. Prefer a Next server proxy in production so this is not public. */
 let apiKey = process.env.NEXT_PUBLIC_DUCT_API_KEY || "";
 
@@ -45,6 +71,7 @@ export function backendApiKey() {
 export function useLocalBackend({ url, apiKey: localKey }) {
   BASE = String(url || "").replace(/\/+$/, "");
   apiKey = localKey || "";
+  backendId = LOCAL_BACKEND_ID;
 }
 
 function backendApiHeaders(extra = {}) {
@@ -93,7 +120,7 @@ export async function fetchConnectorAccounts(connectorId, refreshToken, extras =
 }
 
 export async function fetchGoogleAdsAccounts(refreshToken) {
-  return fetchConnectorAccounts("google_ads", refreshToken, await googleAdsByoCredentials());
+  return fetchConnectorAccounts("google_ads", refreshToken, googleAdsRequestFields());
 }
 
 export async function fetchGa4Properties(refreshToken) {
@@ -127,7 +154,6 @@ export async function refreshInsightBriefs(routine) {
     date_from: routine?.custom_date_from || "",
     date_to: routine?.custom_date_to || "",
     refresh_token: refreshToken,
-    developer_token: (await googleAdsByoCredentials()).developer_token,
     ga4_refresh_token: ga4RefreshToken,
     gsc_refresh_token: gscRefreshToken,
     targets: routine?.targets || {},
@@ -278,10 +304,33 @@ export async function createAgentSession(agentType, params) {
     body: JSON.stringify(params),
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Server error ${res.status}`);
+    throw await sessionCreateError(res);
   }
   return res.json(); // { session_id, stream_url, agent_type }
+}
+
+/**
+ * A structured failure (e.g. ProviderKeyRequired's 402, `{detail, code, ...}`)
+ * carries its `code` on the thrown Error so the caller can route it through
+ * the same ErrorCode → copy table a pipeline failure uses, instead of
+ * dumping the raw JSON body as the message.
+ */
+async function sessionCreateError(res) {
+  const text = await res.text();
+  let message = text || `Server error ${res.status}`;
+  let code = "";
+  try {
+    const body = JSON.parse(text);
+    if (body && typeof body === "object") {
+      message = body.detail || message;
+      code = body.code || "";
+    }
+  } catch {
+    /* not JSON — plain text error, message stands */
+  }
+  const err = new Error(message);
+  if (code) err.code = code;
+  return err;
 }
 
 /**

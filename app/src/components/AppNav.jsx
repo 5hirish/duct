@@ -32,6 +32,10 @@ const SEGMENT_LABELS = {
   project: "Project",
   start: "Get started",
   new: "New",
+  // The page is the only thing under /settings, and it owns both questions —
+  // which model, and whose key. Title-casing the segment gave a breadcrumb
+  // reading "Models" under a heading and a menu item that both say more.
+  models: "Models & providers",
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

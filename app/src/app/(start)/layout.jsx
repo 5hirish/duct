@@ -1,9 +1,19 @@
 import Link from "next/link";
 
+import LocalBackendGate from "../../components/LocalBackendGate.jsx";
+
 // The threshold. No AuthGuard — `/start` is where someone arrives before they
 // have an account — and none of the app shell, which needs a project to mean
 // anything. Its own route group rather than `(public)` because that layout
 // is the lead magnet's, with the lead magnet's header.
+//
+// It does need `LocalBackendGate`, though. `/start` mints a guest
+// (`lib/guest.js`) and stores its token under the same key the desktop
+// session uses, so rendering before the API base is settled minted that guest
+// against the *hosted* API while the shell's own requests go to the bundled
+// sidecar. The sidecar answers the resulting token with 401 "Invalid token",
+// which `authFetch` reads as a dead session — so clicking "Audit a site" from
+// inside the app signed the user out.
 export const metadata = {
   robots: { index: false, follow: false },
 };
@@ -28,7 +38,7 @@ export default function StartLayout({ children }) {
         </Link>
       </header>
       <main id="main-content" className="flex flex-1 flex-col" tabIndex={-1}>
-        {children}
+        <LocalBackendGate>{children}</LocalBackendGate>
       </main>
     </div>
   );

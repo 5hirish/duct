@@ -15,15 +15,10 @@ import json
 
 from agents.audit.schema import AuditBusinessContext, AuditResearchContext, CrawlResult, PageSignals
 from agents.audit.scoring import scoring_rules_block
-from agents.core.prompts import MEMORY_DISCIPLINE
+from agents.core.prompts import MEMORY_DISCIPLINE, xml_block
+from agents.core.turn import TurnContext, build_turn, spec_for
 from agents.preferences import UserPreferences
-
-_OUTCOME_LABELS: dict[str, str] = {
-    "revenue":    "Revenue & Growth",
-    "efficiency": "Efficiency & Speed",
-    "risk":       "Risk & Compliance",
-    "quality":    "Quality & Standards",
-}
+from agents.registry import AgentType
 
 _STYLE_GUIDANCE: dict[str, str] = {
     "executive": (
@@ -50,25 +45,27 @@ _DEPTH_GUIDANCE: dict[str, str] = {
 }
 
 
-def _format_user_preferences(prefs: UserPreferences) -> str:
+def _format_report_guidance(prefs: UserPreferences) -> str:
+    """How to shape *this deliverable* for this operator — not who they are.
+
+    The identity half of what used to be ``<user_preferences>`` (name, role,
+    language, their own instructions) moved to the shared ``<user_context>``
+    block, because it is the same fact in every agent and audit having its own
+    spelling of it is how ``display_name`` reached two agents out of three for
+    a release. What stays is the part that is genuinely about an SEO report:
+    "translate signals into outcomes" and "reference the RFC" are advice about
+    this artifact, not about the person, and they have no meaning to the
+    content agent.
+
+    Rendered as its own block rather than folded into ``<user_context>`` so the
+    two can be read apart: one describes the reader, one describes the writing.
+    """
     lines = [
-        f"  role: {prefs.role or 'not specified'}",
-        f"  communication_style: {prefs.communication_style}",
-        f"  report_depth: {prefs.report_depth}",
-        f"  primary_outcome: {_OUTCOME_LABELS.get(prefs.primary_outcome, 'not specified')}",
+        f"Style: {_STYLE_GUIDANCE[prefs.communication_style]}",
         "",
-        "  Style guidance:",
-        f"  {_STYLE_GUIDANCE[prefs.communication_style]}",
-        "",
-        "  Depth guidance:",
-        f"  {_DEPTH_GUIDANCE[prefs.report_depth]}",
+        f"Depth: {_DEPTH_GUIDANCE[prefs.report_depth]}",
     ]
-    if prefs.primary_outcome:
-        lines += [
-            "",
-            f"  Outcome focus: Weight findings and recommendations toward {_OUTCOME_LABELS[prefs.primary_outcome]} impact.",
-        ]
-    return "<user_preferences>\n" + "\n".join(lines) + "\n</user_preferences>"
+    return xml_block("report_guidance", "\n".join(lines))
 
 
 # ---------------------------------------------------------------------------
@@ -603,53 +600,64 @@ def build_audit_user_prompt(
     report_mode: str = "freehand",
     research_context: AuditResearchContext | None = None,
     extra_context: str = "",
+    #: The operator, from ``service/profile.py``. Replaces the old
+    #: ``language``/``notes`` pair: both were fields of this object, passed
+    #: separately, which is how ``display_name`` never arrived.
+    profile: "object | None" = None,
 ) -> str:
+    """The USER turn for an audit run.
+
+    The shared context prefix (business, operator, report guidance, memory) is
+    assembled by ``agents/core/turn.py`` so this agent orders those blocks the
+    same way every other one does — stable before volatile, which is what lets
+    two audits of the same site a month apart share a cached prefix past the
+    system prompt. Everything after the prefix is this run's crawl and is
+    unique to it, so it is built here and stays here.
+    """
+    ctx = TurnContext()
+
+    # One renderer, one set of labels. This block used to be hand-written here,
+    # field by field, with `name:` where the shared formatter says `Business:` —
+    # two spellings of one model (``AuditBusinessContext`` *is*
+    # ``BusinessContext``) that a reader had to diff to know were the same.
+    from agents.core.context import format_business_context
+
+    spec = spec_for(AgentType.SEO_AUDIT)
+    ctx.set(
+        "business_context",
+        format_business_context(
+            business_context,
+            include_paid=spec.paid_section,
+            include_organic=spec.organic_section,
+        ),
+    )
+
+    if profile is not None:
+        from agents.core.voice import user_context_block
+
+        ctx.set("user_context", user_context_block(profile))
+
+    prefs = user_preferences or UserPreferences()
+    if prefs.communication_style != "practitioner" or prefs.report_depth != "balanced":
+        # Only when they asked for something other than the default. An audit
+        # carrying "be signal-driven and actionable" for an account that never
+        # opened the profile page is Duct's own default quoted back at the
+        # model as though a person had chosen it.
+        ctx.set("report_guidance", _format_report_guidance(prefs))
+
+    # Prior reports, stored agent context and the memory digest arrive
+    # pre-rendered from the route (``_project_memory_blocks``), which is the
+    # only caller allowed to decide what this user may read.
+    ctx.set("project_memory", extra_context)
+
     parts: list[str] = []
+    prefix = build_turn(spec=spec, context=ctx)
+    if prefix:
+        parts.append(prefix + "\n")
 
-    # Business context — only emit if any field is set
-    _biz_fields = [
-        business_context.business_name,
-        business_context.business_description,
-        business_context.target_keywords,
-        business_context.competitors,
-        business_context.business_goals,
-        business_context.primary_content_type,
-        business_context.industry,
-        business_context.business_model,
-        business_context.positioning_statement,
-        business_context.audience_segment,
-        business_context.brand_voice,
-        business_context.growth_stage,
-    ]
-    if any(_biz_fields):
-        parts.append("<business_context>")
-        if business_context.business_name:
-            parts.append(f"  name: {business_context.business_name}")
-        if business_context.industry:
-            parts.append(f"  industry: {business_context.industry}")
-        if business_context.business_model:
-            parts.append(f"  business_model: {business_context.business_model}")
-        if business_context.business_description:
-            parts.append(f"  description: {business_context.business_description}")
-        if business_context.positioning_statement:
-            parts.append(f"  positioning: {business_context.positioning_statement}")
-        if business_context.audience_segment:
-            parts.append(f"  audience: {business_context.audience_segment}")
-        if business_context.brand_voice:
-            parts.append(f"  brand_voice: {business_context.brand_voice}")
-        if business_context.growth_stage:
-            parts.append(f"  growth_stage: {business_context.growth_stage}")
-        if business_context.business_goals:
-            parts.append(f"  goals: {business_context.business_goals}")
-        if business_context.target_keywords:
-            parts.append(f"  target_keywords: {', '.join(business_context.target_keywords)}")
-        if business_context.competitors:
-            parts.append(f"  competitors: {', '.join(business_context.competitors)}")
-        if business_context.primary_content_type:
-            parts.append(f"  primary_content_type: {business_context.primary_content_type}")
-        parts.append("</business_context>\n")
-
-    # Research context — enriched competitor analysis from the pre-flight sub-agent
+    # Research context — enriched competitor analysis from the pre-flight
+    # sub-agent. After the shared prefix: it is produced by this run and shares
+    # nothing with the next one, so it belongs on the volatile side.
     if research_context and (research_context.competitors or research_context.content_gaps or research_context.enrichment_notes):
         parts.append("<research_context>")
         if research_context.brand_content_pillars:
@@ -666,22 +674,6 @@ def build_audit_user_prompt(
         for note in research_context.enrichment_notes:
             parts.append(f"  note: {note}")
         parts.append("</research_context>\n")
-
-    # Project memory blocks (prior report summaries, stored agent context) —
-    # per-project data, so it lives here in the user message, never the system
-    # prompt (cached-prefix invariant).
-    if extra_context:
-        parts.append(extra_context.rstrip() + "\n")
-
-    # User preferences — personalise communication style, depth, and outcome focus
-    if user_preferences and any([
-        user_preferences.role,
-        user_preferences.communication_style != "practitioner",
-        user_preferences.report_depth != "balanced",
-        user_preferences.primary_outcome,
-    ]):
-        parts.append(_format_user_preferences(user_preferences))
-        parts.append("")
 
     # Crawl metadata
     parts.append("<crawl_data>")

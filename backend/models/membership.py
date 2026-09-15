@@ -112,6 +112,12 @@ class ProjectInvitation(SQLModel, table=True):
             postgresql_where=text("status = 'pending'"),
         ),
         Index("ix_project_invitations_email_status", "email", "status"),
+        # f1c7b4d92a08 put the uniqueness on a named table constraint and the
+        # lookup on a separate plain index. The column below therefore carries
+        # `index=True` only: writing `unique=True` there as well asked SQLModel
+        # for a UNIQUE index of the same name, so `alembic check` saw a
+        # drop-and-recreate every run while the database was already correct.
+        UniqueConstraint("token_hash", name="uq_project_invitations_token_hash"),
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
@@ -125,9 +131,10 @@ class ProjectInvitation(SQLModel, table=True):
         default=ROLE_COLLABORATOR,
         sa_column=Column(String, nullable=False, server_default=ROLE_COLLABORATOR),
     )
-    # SHA-256 of the plaintext token. Unique so a redeem is a single indexed
-    # lookup and a collision can never map one token to two invitations.
-    token_hash: str = Field(sa_column=Column(String, nullable=False, unique=True, index=True))
+    # SHA-256 of the plaintext token. A redeem is a single indexed lookup, and
+    # `uq_project_invitations_token_hash` above is what makes a collision unable
+    # to map one token to two invitations.
+    token_hash: str = Field(sa_column=Column(String, nullable=False, index=True))
     invited_by_user_id: UUID | None = Field(
         default=None,
         sa_column=Column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True),

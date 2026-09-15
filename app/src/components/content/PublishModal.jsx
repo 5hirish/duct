@@ -15,6 +15,7 @@ import {
   publishPost,
 } from "@/lib/contentApi";
 import { PLATFORM_LABELS } from "@/lib/contentEnums";
+import { friendlyErrorMessage } from "@/lib/agentSession";
 
 /**
  * Publish flow:
@@ -142,7 +143,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
           )}
 
           {stage === "done" && (
-            <div className="text-sm text-green-600 dark:text-green-400 font-medium py-2">
+            <div className="text-sm text-success font-medium py-2">
               ✓ {scheduledAt ? "Post scheduled" : tiktokDraft ? "Saved as TikTok draft" : "Post published"}
             </div>
           )}
@@ -150,7 +151,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
           {stage !== "loading" && stage !== "done" && (
             <>
               {!hasAccounts && (
-                <div className="rounded-md border border-amber-300/40 bg-amber-50/40 dark:bg-amber-950/20 p-3 text-xs">
+                <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs">
                   You don't have any social accounts connected yet. Ask your admin to
                   connect a TikTok / Instagram / YouTube account.
                 </div>
@@ -180,7 +181,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                                 className="accent-primary"
                               />
                               <span className="font-medium">@{a.username}</span>
-                              <span className="text-[10px] text-muted-foreground ml-auto">
+                              <span className="text-2xs text-muted-foreground ml-auto">
                                 #{a.id}
                               </span>
                             </label>
@@ -269,13 +270,10 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   );
 }
 
+// A near-copy of `friendlyErrorMessage` used to live here — same four classes,
+// slightly different wording, so the same failure read differently depending on
+// which surface caught it. One translator now; publishing's own case
+// (POSTBRIDGE) is already in its table.
 function friendlyError(err) {
-  const msg = err?.message || String(err || "");
-  if (!msg) return "Something went wrong. Please try again.";
-  if (/connect/i.test(msg))    return "Publishing isn't connected. Ask your admin to set it up.";
-  if (/rate limit|429/i.test(msg)) return "Hit the rate limit — wait a minute and try again.";
-  if (/network|connection/i.test(msg)) return "Couldn't reach the service. Check your internet and try again.";
-  // Don't leak status codes or stack traces to the user.
-  if (/^\d{3}\b/.test(msg))    return "Publishing failed. Please try again in a moment.";
-  return msg;
+  return friendlyErrorMessage(err?.message || String(err || ""));
 }

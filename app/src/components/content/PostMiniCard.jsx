@@ -10,8 +10,8 @@ import { titleCase } from "@/lib/format";
 const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
 
 const KIND_BADGE = {
-  published: "bg-green-500/15 text-green-600 dark:text-green-400",
-  scheduled: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  published: "bg-success/15 text-success",
+  scheduled: "bg-info/15 text-info",
   proposed: "bg-muted text-muted-foreground",
 };
 
@@ -77,7 +77,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
     const pMeta = primary ? platformMeta(primary) : null;
     inner = (
       <span
-        className={`flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-[11px] leading-tight transition-opacity hover:opacity-80 ${sMeta.softClass}`}
+        className={`flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-2xs leading-tight transition-opacity hover:opacity-80 ${sMeta.softClass}`}
       >
         <TypeIcon className="size-3 shrink-0 opacity-80" aria-hidden />
         <span className="min-w-0 flex-1 truncate font-medium">{title}</span>
@@ -102,7 +102,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={thumb} alt="" className="size-full object-cover" />
               ) : (
-                <div className="flex size-full items-center justify-center text-muted-foreground/30">
+                <div className="flex size-full items-center justify-center text-muted-foreground">
                   <ImageIcon className="size-7" />
                 </div>
               )}
@@ -115,7 +115,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
               {/* bottom-left: via Duct — subtle brand-orange glass */}
               {viaDuct && (
                 <span
-                  className="absolute bottom-2 left-2 rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white shadow-sm backdrop-blur-sm"
+                  className="absolute bottom-2 left-2 rounded-md px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-white shadow-sm backdrop-blur-sm"
                   style={{ backgroundColor: "color-mix(in srgb, var(--orange) 45%, rgba(0,0,0,0.65))" }}
                 >
                   via Duct
@@ -132,11 +132,11 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
           <div className="min-w-0 flex-1 space-y-1.5 p-2.5">
             {/* meta row — color-coded kind pill carries the state; muted date keeps the title the hero */}
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-              <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${KIND_BADGE[kind]}`}>
+              <span className={`rounded-md px-1.5 py-0.5 text-2xs font-medium ${KIND_BADGE[kind]}`}>
                 {KIND_LABEL[kind] || titleCase(kind)}
               </span>
               {dateText && (
-                <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
                   {schedule?.time && <Clock className="size-2.5" />}
                   {dateText}
                 </span>
@@ -144,24 +144,24 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
               {/* without a thumbnail (Week view) these stay inline */}
               {!showThumb && viaDuct && (
                 <span
-                  className="rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
+                  className="rounded-md px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide"
                   style={{ backgroundColor: "color-mix(in oklch, var(--orange) 15%, transparent)", color: "var(--orange)" }}
                 >
                   via Duct
                 </span>
               )}
-              {!showThumb && <TypeIcon className="ml-auto size-3.5 shrink-0 text-muted-foreground/70" />}
+              {!showThumb && <TypeIcon className="ml-auto size-3.5 shrink-0 text-muted-foreground" />}
             </div>
 
-            <p className="line-clamp-2 text-[13px] font-medium leading-snug text-foreground">{title}</p>
+            <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{title}</p>
 
             {/* chips */}
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
               {pillar && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{titleCase(pillar)}</span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">{titleCase(pillar)}</span>
               )}
               {format && (
-                <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] text-muted-foreground">{format}</span>
+                <span className="rounded-full border border-border/70 px-2 py-0.5 text-2xs text-muted-foreground">{format}</span>
               )}
               {!showThumb && platformBadges.length > 0 && (
                 <span className="ml-auto flex items-center gap-1">{platformBadges}</span>

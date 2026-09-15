@@ -1,4 +1,4 @@
-"""The user's model choices: the tier map, and the fallback switch.
+"""The user's model choices: the tier map, the fallback switch, and who draws.
 
 Two verbs and one row. The interesting decision is that this exists at all —
 the map used to live only in ``localStorage``, which meant the scheduled brief,
@@ -35,6 +35,7 @@ class ModelSettingsBody(BaseModel):
     tiers: dict[str, str] | None = None
     auto_fallback: bool | None = None
     engine: str | None = None
+    image_model: str | None = None
 
 
 def _payload(settings) -> dict:
@@ -42,6 +43,7 @@ def _payload(settings) -> dict:
         "tiers": settings.tiers,
         "auto_fallback": settings.auto_fallback,
         "engine": settings.engine,
+        "image_model": settings.image_model,
     }
 
 
@@ -60,5 +62,6 @@ def write_model_settings(
             tiers=body.tiers,
             auto_fallback=body.auto_fallback,
             engine=body.engine,
+            image_model=body.image_model,
         )
     )

@@ -23,6 +23,7 @@ import {
   Share2,
   TrendingUp,
 } from "lucide-react";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { getContentAnalytics } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
@@ -45,7 +46,7 @@ function safeHref(u) {
 }
 
 
-export default function AnalyticsView({ projectId }) {
+export default function AnalyticsView({ projectId, onLinkAccounts }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -142,22 +143,37 @@ export default function AnalyticsView({ projectId }) {
           <RefreshCw className="size-4 animate-spin" /> Fetching analytics from PostBridge…
         </div>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 py-20 text-center">
-          <BarChart2 className="mb-3 size-10 text-muted-foreground/40" />
-          <p className="text-sm font-semibold">No analytics yet</p>
-          <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-            Publish posts through PostBridge and link the accounts in the Accounts tab, then hit Refresh.
-          </p>
-        </div>
+        // "Link the accounts in the Accounts tab" was a correct instruction
+        // with nothing to click, on the one tab where the reader has already
+        // decided they want this to work. The button is that same sentence.
+        <EmptyState
+          icon={BarChart2}
+          title="No analytics yet"
+          actions={
+            <>
+              {onLinkAccounts && (
+                <Button size="sm" onClick={onLinkAccounts}>
+                  Link an account
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => load(true)} disabled={refreshing}>
+                <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
+                {refreshing ? "Syncing…" : "Refresh from PostBridge"}
+              </Button>
+            </>
+          }
+        >
+          Numbers arrive once posts go out through PostBridge and the accounts are linked.
+        </EmptyState>
       ) : (
         <>
           {/* Stat cards */}
           <div className="grid grid-cols-2 gap-3 @4xl:grid-cols-5">
-            <StatCard icon={Eye} label="Views" value={formatNumber(totals.views)} accent="text-sky-500" />
-            <StatCard icon={Heart} label="Likes" value={formatNumber(totals.likes)} accent="text-rose-500" />
-            <StatCard icon={MessageCircle} label="Comments" value={formatNumber(totals.comments)} accent="text-violet-500" />
-            <StatCard icon={Share2} label="Shares" value={formatNumber(totals.shares)} accent="text-emerald-500" />
-            <StatCard icon={TrendingUp} label="Engagement" value={`${engagementRate.toFixed(1)}%`} sub={`${formatNumber(rows.length)} posts · ${formatNumber(avgViews)} avg views`} accent="text-amber-500" />
+            <StatCard icon={Eye} label="Views" value={formatNumber(totals.views)} accent="text-info" />
+            <StatCard icon={Heart} label="Likes" value={formatNumber(totals.likes)} accent="text-destructive" />
+            <StatCard icon={MessageCircle} label="Comments" value={formatNumber(totals.comments)} accent="text-primary" />
+            <StatCard icon={Share2} label="Shares" value={formatNumber(totals.shares)} accent="text-success" />
+            <StatCard icon={TrendingUp} label="Engagement" value={`${engagementRate.toFixed(1)}%`} sub={`${formatNumber(rows.length)} posts · ${formatNumber(avgViews)} avg views`} accent="text-warning" />
           </div>
 
           {/* Charts */}
@@ -262,12 +278,12 @@ export default function AnalyticsView({ projectId }) {
                             <div className="min-w-0 max-w-[320px]">
                               <p className="flex items-center gap-1.5 text-muted-foreground">
                                 <PlatformGlyph platform={r.platform} className="size-3 shrink-0" />
-                                <span className="text-[10px] uppercase tracking-wide">{meta.label}</span>
+                                <span className="text-2xs uppercase tracking-wide">{meta.label}</span>
                                 {r.published_via === "duct" && (
-                                  <span className="rounded-full bg-primary/10 px-1.5 py-px text-[9px] font-semibold text-primary">via Duct</span>
+                                  <span className="rounded-full bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary">via Duct</span>
                                 )}
                                 {r.pillar && (
-                                  <span className="rounded-full bg-muted px-1.5 py-px text-[9px] font-medium text-muted-foreground">{titleCase(r.pillar)}</span>
+                                  <span className="rounded-full bg-muted px-1.5 py-px text-2xs font-medium text-muted-foreground">{titleCase(r.pillar)}</span>
                                 )}
                               </p>
                               <p className="line-clamp-2 text-xs text-foreground">{r.title || <span className="italic text-muted-foreground">No caption</span>}</p>
@@ -307,7 +323,7 @@ function StatCard({ icon: Icon, label, value, sub, accent = "text-foreground" })
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
       </div>
       <p className="mt-1.5 text-2xl font-semibold tabular-nums">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs text-muted-foreground">{sub}</p>}
     </div>
   );
 }

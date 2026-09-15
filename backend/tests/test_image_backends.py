@@ -125,13 +125,13 @@ def _openai_client(**kw):
 
 def test_openai_generate_sends_a_pixel_size_and_asks_for_png():
     client, fake = _openai_client()
-    request = GenerateImageRequest(prompt="a duct", model=ImageModel.GPT_IMAGE_2)
+    request = GenerateImageRequest(prompt="a duct", model=ImageModel.GPT_IMAGE_2_5_FLARE)
 
     images = asyncio.run(client.generate_image(request))
 
     (verb, sent), = fake.calls
     assert verb == "generate"
-    assert sent["model"] == "gpt-image-2"
+    assert sent["model"] == "gpt-image-2.5-flare"
     assert sent["size"] == openai_size(AspectRatio.PORTRAIT_9_16, ImageSize.K2)
     assert sent["output_format"] == "png"
     assert "input_fidelity" not in sent and "aspect_ratio" not in sent
@@ -142,7 +142,7 @@ def test_openai_generate_with_references_is_an_edit():
     """OpenAI has no generate-with-references call; an edit with several
     inputs is that call, and the references keep their role order."""
     client, fake = _openai_client()
-    request = GenerateImageRequest(prompt="same face", model=ImageModel.GPT_IMAGE_2)
+    request = GenerateImageRequest(prompt="same face", model=ImageModel.GPT_IMAGE_2_5_FLARE)
 
     asyncio.run(client.generate_image(request, input_bytes_list=[b"face", b"camera"]))
 
@@ -156,7 +156,7 @@ def test_openai_edit_leads_with_the_base_and_keeps_its_dimensions():
     from uuid import uuid4
 
     client, fake = _openai_client()
-    request = EditImageRequest(prompt="brighter", input_asset_id=uuid4(), model=ImageModel.GPT_IMAGE_2)
+    request = EditImageRequest(prompt="brighter", input_asset_id=uuid4(), model=ImageModel.GPT_IMAGE_2_5_FLARE)
 
     asyncio.run(client.edit_image(request, base_bytes=b"base", mask_bytes=b"mask", style_bytes=b"style"))
 
@@ -169,12 +169,12 @@ def test_openai_edit_leads_with_the_base_and_keeps_its_dimensions():
 
 def test_openai_failures_surface_as_the_shared_error_with_the_status():
     client, _ = _openai_client(fail=type("APIStatusError", (Exception,), {"status_code": 403})("verify your org"))
-    request = GenerateImageRequest(prompt="x", model=ImageModel.GPT_IMAGE_2)
+    request = GenerateImageRequest(prompt="x", model=ImageModel.GPT_IMAGE_2_5_FLARE)
 
     with pytest.raises(ImageAPIError) as excinfo:
         asyncio.run(client.generate_image(request))
     assert excinfo.value.http_status == 403
-    assert "OpenAI (gpt-image-2)" in str(excinfo.value)
+    assert "OpenAI (gpt-image-2.5-flare)" in str(excinfo.value)
 
 
 # --- the xAI client ---------------------------------------------------------
@@ -289,6 +289,170 @@ def test_xai_failures_surface_as_the_shared_error_with_the_status():
     assert "xAI (grok-imagine-image-2.0)" in str(excinfo.value)
 
 
+# --- the OpenRouter client --------------------------------------------------
+
+
+def _openrouter_client(handler):
+    from service.openrouter.images import OpenRouterImageClient
+
+    return OpenRouterImageClient("or-test", transport=httpx.MockTransport(handler))
+
+
+def _capture(payload: dict | None = None):
+    """A handler that records the request and answers with one image."""
+    seen: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["path"] = request.url.path
+        seen["auth"] = request.headers.get("authorization")
+        seen["body"] = json.loads(request.content)
+        return _ok(payload or {"data": [{"b64_json": B64, "media_type": "image/png"}]})
+
+    return seen, handler
+
+
+def test_openrouter_generate_sends_ducts_own_vocabulary():
+    """The whole reason this backend is small: aspect_ratio + resolution + n
+    are the request fields already, so nothing is translated."""
+    seen, handler = _capture()
+    request = GenerateImageRequest(
+        prompt="a duct", model=ImageModel.OR_GEMINI_3_1_FLASH_IMAGE,
+        aspect_ratio=AspectRatio.PORTRAIT_9_16, image_size=ImageSize.K2,
+    )
+
+    images = asyncio.run(_openrouter_client(handler).generate_image(request))
+
+    assert seen["path"].endswith("/images")
+    assert seen["auth"] == "Bearer or-test"
+    body = seen["body"]
+    assert body["model"] == "google/gemini-3.1-flash-image"
+    assert body["aspect_ratio"] == "9:16" and body["resolution"] == "2K"
+    assert "input_references" not in body
+    assert images[0].data == b"generated" and images[0].mime_type == "image/png"
+
+
+def test_openrouter_omits_the_fields_a_model_does_not_serve():
+    """Flux takes no resolution and no 4:5; sending either is a 400, so the
+    ratio is nearest-matched and the field is left off entirely."""
+    seen, handler = _capture()
+    request = GenerateImageRequest(
+        prompt="a duct", model=ImageModel.OR_FLUX_2_PRO,
+        aspect_ratio=AspectRatio.PORTRAIT_4_5, image_size=ImageSize.K4, seed=7,
+    )
+
+    asyncio.run(_openrouter_client(handler).generate_image(request))
+
+    body = seen["body"]
+    assert "resolution" not in body
+    assert body["aspect_ratio"] == "3:4"
+    assert body["seed"] == 7
+
+
+def test_openrouter_leaves_seed_off_a_model_that_has_none():
+    seen, handler = _capture()
+    request = GenerateImageRequest(
+        prompt="a duct", model=ImageModel.OR_GEMINI_3_1_FLASH_IMAGE, seed=7,
+    )
+
+    asyncio.run(_openrouter_client(handler).generate_image(request))
+
+    assert "seed" not in seen["body"]
+
+
+def test_openrouter_clamps_resolution_down_to_what_the_model_serves():
+    """Seedream stops at 2K. Down rather than up, so a 4K brief is answered
+    softer instead of billed higher than it asked for."""
+    seen, handler = _capture()
+    request = GenerateImageRequest(
+        prompt="a duct", model=ImageModel.OR_SEEDREAM_5_PRO, image_size=ImageSize.K4,
+    )
+
+    asyncio.run(_openrouter_client(handler).generate_image(request))
+
+    assert seen["body"]["resolution"] == "2K"
+
+
+def test_openrouter_clamps_the_image_count_instead_of_failing_the_slide():
+    """Three of the four models are single-image. A run that asked for four
+    and got one still has a deliverable; a 400 has nothing."""
+    seen, handler = _capture()
+    request = GenerateImageRequest(
+        prompt="a duct", model=ImageModel.OR_SEEDREAM_5_PRO, number_of_images=4,
+    )
+
+    asyncio.run(_openrouter_client(handler).generate_image(request))
+
+    assert seen["body"]["n"] == 1
+
+
+def test_openrouter_references_ride_as_data_urls_in_order():
+    seen, handler = _capture()
+    request = GenerateImageRequest(prompt="same face", model=ImageModel.OR_SEEDREAM_5_PRO)
+
+    asyncio.run(_openrouter_client(handler).generate_image(
+        request, input_bytes_list=[b"face", b"camera"],
+    ))
+
+    refs = seen["body"]["input_references"]
+    assert [r["type"] for r in refs] == ["image_url", "image_url"]
+    assert [base64.b64decode(r["image_url"]["url"].split(",", 1)[1]) for r in refs] == [b"face", b"camera"]
+
+
+def test_openrouter_edit_leads_with_the_base_and_drops_the_mask():
+    from uuid import uuid4
+
+    seen, handler = _capture()
+    request = EditImageRequest(
+        prompt="brighter", input_asset_id=uuid4(), model=ImageModel.OR_FLUX_2_PRO,
+    )
+
+    asyncio.run(_openrouter_client(handler).edit_image(
+        request, base_bytes=b"base", mask_bytes=b"mask", style_bytes=b"style",
+    ))
+
+    body = seen["body"]
+    refs = [base64.b64decode(r["image_url"]["url"].split(",", 1)[1]) for r in body["input_references"]]
+    assert refs == [b"base", b"style"]
+    # No ratio was asked for, so the edit keeps the source frame.
+    assert "aspect_ratio" not in body and "resolution" not in body
+
+
+def test_openrouter_honours_the_media_type_it_is_given():
+    """Recraft answers SVG, which is the reason it is on the list at all —
+    assuming PNG would hand the asset store bytes under the wrong type."""
+    seen, handler = _capture({"data": [{"b64_json": B64, "media_type": "image/svg+xml"}]})
+    request = GenerateImageRequest(prompt="a logo", model=ImageModel.OR_RECRAFT_V4_VECTOR)
+
+    images = asyncio.run(_openrouter_client(handler).generate_image(request))
+
+    assert images[0].mime_type == "image/svg+xml"
+
+
+def test_openrouter_failures_surface_as_the_shared_error_with_the_status():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(402, text="insufficient credits")
+
+    request = GenerateImageRequest(prompt="x", model=ImageModel.OR_FLUX_2_PRO)
+
+    with pytest.raises(ImageAPIError) as excinfo:
+        asyncio.run(_openrouter_client(handler).generate_image(request))
+    assert excinfo.value.http_status == 402
+    assert "OpenRouter (black-forest-labs/flux.2-pro)" in str(excinfo.value)
+
+
+def test_every_openrouter_image_model_has_a_capability_row():
+    """A model in the enum with no row would reach the wire unclamped and come
+    back as a vendor 400 — a confusing way to find out an addition was half
+    made."""
+    from service.openrouter.images import _CAPS
+
+    listed = {m for m in ImageModel if provider_of(m) is Provider.OPENROUTER}
+    assert listed == set(_CAPS)
+    for model, caps in _CAPS.items():
+        assert caps.aspect_ratios, model
+        assert caps.max_images >= 1 and caps.max_references >= 1, model
+
+
 # --- what the settings page is told ----------------------------------------
 
 
@@ -301,7 +465,7 @@ def test_provider_status_names_the_same_pick_the_run_would_make(monkeypatch):
     out = providers_route.providers_status(
         user_keys={Provider.OPENAI: "sk-test", Provider.XAI: "xai-test"}, user=None, db=None
     )
-    assert out["images"] == {"provider": "openai", "model": "gpt-image-2", "source": "user"}
+    assert out["images"] == {"provider": "openai", "model": "gpt-image-2.5-flare", "source": "user"}
 
 
 def test_provider_status_says_none_when_only_a_chat_provider_is_reachable(monkeypatch):
@@ -319,7 +483,8 @@ def test_the_catalogue_lists_an_image_model_per_drawing_provider():
 
     out = providers_route.models_catalogue()
     by_provider = {row["provider"] for row in out["image_models"]}
-    assert by_provider == {"google_genai", "openai", "xai"}
+    assert by_provider == {"google_genai", "openai", "xai", "openrouter"}
     defaults = {row["provider"]: row["id"] for row in out["image_models"] if row["default"]}
     assert defaults == {p.value: m.value for p, m in DEFAULT_IMAGE_MODELS.items()}
-    assert out["image_provider_order"] == ["google_genai", "openai", "xai"]
+    # OpenRouter last: a gateway is a hop, so a first-party key wins when present.
+    assert out["image_provider_order"] == ["google_genai", "openai", "xai", "openrouter"]

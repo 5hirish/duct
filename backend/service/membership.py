@@ -4,7 +4,7 @@ Every project route resolves access through one of the two helpers here rather
 than comparing ``Project.user_id`` directly, so the owner-only rules and the
 collaborator rules live in a single place.
 
-Access model (see docs/engineering/project-collaboration-plan.md):
+Access model (see docs/engineering/2026-08-16-project-collaboration-plan.md):
 
 - **owner** — the creator. Full control, including inviting and removing
   members, deleting the project, and using their own connector credentials.

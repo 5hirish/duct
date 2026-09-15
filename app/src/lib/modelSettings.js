@@ -29,6 +29,9 @@ export const SETTINGS_DEFAULTS = Object.freeze({
   tiers: {},
   auto_fallback: true,
   engine: "",
+  // Empty means "whichever of my keys can draw", which is what every install
+  // did before the picker existed — not a missing setting.
+  image_model: "",
 });
 
 /**
@@ -48,6 +51,7 @@ export async function fetchModelSettings() {
       tiers: body?.tiers && typeof body.tiers === "object" ? body.tiers : {},
       auto_fallback: body?.auto_fallback !== false,
       engine: String(body?.engine || ""),
+      image_model: String(body?.image_model || ""),
     };
   } catch {
     return { ...SETTINGS_DEFAULTS };

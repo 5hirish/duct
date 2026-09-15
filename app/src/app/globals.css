@@ -37,6 +37,7 @@
 @import "./styles/chat.css";
 @import "./styles/connections.css";
 @import "./styles/ads-report.css";
+@import "./styles/pills.css";
 @import "./styles/generate.css";
 @import "./styles/signin.css";
 @import "./styles/onboarding.css";
@@ -46,4 +47,5 @@
 @import "./styles/mode-selector.css";
 @import "./styles/connector-tiles.css";
 @import "./styles/model-tiers.css";
+@import "./styles/profile.css";
 @import "./styles/usage.css";

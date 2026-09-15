@@ -128,6 +128,28 @@ PROVIDER_TRIPLES: dict[Provider, dict[Tier, ModelName]] = {
         Tier.STANDARD: ModelName.GPT_5_6_TERRA,
         Tier.LIGHT: ModelName.GPT_5_6_LUNA,
     },
+    # OpenRouter — the open-weight ladder, which is what someone reaching for
+    # OpenRouter is usually reaching for; the frontier models it also proxies
+    # are cheaper bought direct. The rungs are the ones ``agents/models.py``
+    # already argues for: kimi-k3 is "the capable end of the open-weight list,
+    # not a volume model", and deepseek v4 pro/flash are "two rungs of one
+    # family". All three carry ``tools``, which is non-negotiable here — every
+    # Duct agent is a tool-calling agent.
+    Provider.OPENROUTER: {
+        Tier.HEAVY: ModelName.OR_KIMI_K3,
+        Tier.STANDARD: ModelName.OR_DEEPSEEK_V4_PRO,
+        Tier.LIGHT: ModelName.OR_DEEPSEEK_V4_FLASH,
+    },
+    # xAI ships one model, so all three rungs are it. That reads odd next to
+    # the ladders above and it is still the honest answer: on an xAI key alone
+    # every job runs on Grok. Naming it three times beats leaving the provider
+    # out of "use one provider for all three", which is what a user with only
+    # this key would have read as "Duct cannot use my key".
+    Provider.XAI: {
+        Tier.HEAVY: ModelName.GROK_4_6,
+        Tier.STANDARD: ModelName.GROK_4_6,
+        Tier.LIGHT: ModelName.GROK_4_6,
+    },
 }
 
 # The provider a fresh install runs on. Google, matching

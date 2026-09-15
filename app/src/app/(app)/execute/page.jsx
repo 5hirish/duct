@@ -125,7 +125,7 @@ function ProvenanceBadges({ cs }) {
 function JsonDetails({ label, value }) {
   if (!value || (typeof value === "object" && Object.keys(value).length === 0)) return null;
   return (
-    <details style={{ fontSize: 12 }}>
+    <details style={{ fontSize: "var(--text-xs)" }}>
       <summary className="app-subtle" style={{ cursor: "pointer", userSelect: "none" }}>
         {label}
       </summary>
@@ -136,7 +136,7 @@ function JsonDetails({ label, value }) {
           borderRadius: 6,
           background: "var(--muted, rgba(128,128,128,0.08))",
           overflowX: "auto",
-          fontSize: 11,
+          fontSize: "var(--text-2xs)",
         }}
       >
         {JSON.stringify(value, null, 2)}
@@ -179,12 +179,12 @@ function DrawerChange({ change, destructive, selectable, checked, onToggle }) {
         )}
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
-            <strong style={{ fontSize: 14 }}>
+            <strong style={{ fontSize: "var(--text-sm)" }}>
               {change.summary || change.op_type}
               {destructive && (
                 <span
                   className="status-pill red"
-                  style={{ marginLeft: 8, fontSize: 11, verticalAlign: "middle" }}
+                  style={{ marginLeft: 8, fontSize: "var(--text-2xs)", verticalAlign: "middle" }}
                 >
                   destructive
                 </span>
@@ -192,33 +192,33 @@ function DrawerChange({ change, destructive, selectable, checked, onToggle }) {
             </strong>
             <Pill status={change.status} />
           </div>
-          <p className="app-subtle" style={{ margin: "2px 0 0", fontSize: 12 }}>{change.op_type}</p>
+          <p className="app-subtle" style={{ margin: "2px 0 0", fontSize: "var(--text-xs)" }}>{change.op_type}</p>
         </div>
       </div>
 
-      {preview.diff && <code style={{ fontSize: 13, whiteSpace: "pre-wrap" }}>{preview.diff}</code>}
+      {preview.diff && <code style={{ fontSize: "var(--text-sm)", whiteSpace: "pre-wrap" }}>{preview.diff}</code>}
       {(preview.warnings || []).map((warning) => (
-        <p key={warning} style={{ margin: 0, fontSize: 13, color: "var(--warning, #b98900)" }}>
+        <p key={warning} style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--warning)" }}>
           ⚠ {warning}
         </p>
       ))}
       {(change.guardrail_violations || []).map((rule) => (
-        <p key={rule} style={{ margin: 0, fontSize: 13, color: "var(--destructive, #e5484d)" }}>
+        <p key={rule} style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
           ⛔ Guardrail: {rule}
         </p>
       ))}
       {preview.error && (
-        <p style={{ margin: 0, fontSize: 13, color: "var(--destructive, #e5484d)" }}>
+        <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
           Preview failed: {preview.error}
         </p>
       )}
       {change.result?.error && (
-        <p style={{ margin: 0, fontSize: 13, color: "var(--destructive, #e5484d)" }}>
+        <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
           Apply failed: {change.result.error}
         </p>
       )}
       {change.result?.rollback_error && (
-        <p style={{ margin: 0, fontSize: 13, color: "var(--destructive, #e5484d)" }}>
+        <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
           Rollback failed: {change.result.rollback_error}
         </p>
       )}
@@ -259,14 +259,14 @@ function DetailDrawer({ cs, destructiveMap, busy, onClose, onAction, projectName
 
         <div style={{ padding: "0 16px 16px", display: "grid", gap: 10 }}>
           {cs.context && (
-            <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>{cs.context}</p>
+            <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>{cs.context}</p>
           )}
 
           {cs.status === "proposed" && approvable.length > 1 && (
             <button
               type="button"
               className="app-subtle"
-              style={{ fontSize: 12, textAlign: "left", cursor: "pointer", background: "none", border: 0, padding: 0 }}
+              style={{ fontSize: "var(--text-xs)", textAlign: "left", cursor: "pointer", background: "none", border: 0, padding: 0 }}
               onClick={() =>
                 setSelected(allSelected ? new Set() : new Set(approvable.map((c) => c.id)))
               }
@@ -330,7 +330,7 @@ function DetailDrawer({ cs, destructiveMap, busy, onClose, onAction, projectName
               </Button>
             )}
             {cs.status === "applying" && (
-              <span className="app-subtle" style={{ fontSize: 13 }}>
+              <span className="app-subtle" style={{ fontSize: "var(--text-sm)" }}>
                 <Spinner
                   className="size-3"
                   style={{ marginRight: 6, verticalAlign: "-2px" }}
@@ -377,7 +377,7 @@ function ConfirmDialog({ confirm, destructiveMap, onCancel, onConfirm }) {
                   : "Each change is reverted using the rollback handle recorded when it was applied."}
               </p>
               {destructive.length > 0 && (
-                <p style={{ margin: "8px 0 0", color: "var(--destructive, #e5484d)" }}>
+                <p style={{ margin: "8px 0 0", color: "var(--destructive)" }}>
                   {destructive.length} destructive change{destructive.length === 1 ? "" : "s"} —{" "}
                   {destructive.map((c) => c.summary || c.op_type).join("; ")}.
                   {action === "apply" && " Destructive operations change what is live for every visitor."}
@@ -417,7 +417,7 @@ function AutonomyPanel({ project, level, onChange, saving, error }) {
         <h2 className="connection-title" style={{ marginBottom: 2 }}>
           Autonomy — {project.name}
         </h2>
-        <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>{current.blurb}</p>
+        <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>{current.blurb}</p>
       </div>
 
       <div role="radiogroup" aria-label="Execution autonomy" style={{ display: "flex", gap: 8 }}>
@@ -446,15 +446,14 @@ function AutonomyPanel({ project, level, onChange, saving, error }) {
       {/* The invariant, stated where the dial is turned. It is the reason the
           top of the ladder is safe to offer at all, and a user who does not
           know it will read "Auto" as "anything". */}
-      <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>
-        At every level: destructive operations — GTM publishes, archives, unlinks — and
-        anything budget- or status-related wait for your approval here. Assisted and Auto
-        share one narrow allowlist (negative/positive keywords, GA4 key events and
-        audiences, GTM workspace edits), and every auto-applied set keeps a rollback handle.
+      <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-xs)" }}>
+        Destructive work waits here at every level — GTM publishes, archives, unlinks,
+        anything touching budget or status. Assisted and Auto share one narrow allowlist:
+        keywords, GA4 key events and audiences, GTM workspace edits.
       </p>
 
       {error && (
-        <p style={{ margin: 0, fontSize: 12, color: "var(--destructive, #e5484d)" }}>
+        <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "var(--destructive)" }}>
           {error.includes("404") || error.toLowerCase().includes("owner")
             ? "Only the project owner can change autonomy."
             : error}
@@ -486,7 +485,7 @@ function GuardrailsPanel() {
       .then(setRows)
       .catch((err) => {
         setRows([]);
-        setError(err.message || "Failed to load guardrails.");
+        setError(err.message || "Couldn't load your guardrails. The queue above is unaffected.");
       });
   }, []);
 
@@ -516,7 +515,7 @@ function GuardrailsPanel() {
       setForm((f) => ({ ...f, rule: "", op_types: "", target_contains: "" }));
       load();
     } catch (err) {
-      setError(err.message || "Failed to create guardrail.");
+      setError(err.message || "That guardrail wasn't saved — nothing on your account changed.");
     } finally {
       setSaving(false);
     }
@@ -527,7 +526,7 @@ function GuardrailsPanel() {
       await deleteGuardrail(id);
       load();
     } catch (err) {
-      setError(err.message || "Failed to delete guardrail.");
+      setError(err.message || "That guardrail is still in place — removing it didn't go through.");
     }
   }
 
@@ -543,20 +542,20 @@ function GuardrailsPanel() {
       </button>
       {open && (
         <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-          <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>
-            Account invariants enforced in code: a change matching a guardrail arrives{" "}
-            <em>blocked</em> and can never auto-apply. Rules are also shown to agents so they
-            propose around them. A rule with no matcher is prose-only guidance.
+          <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>
+            A change that matches a guardrail arrives <em>blocked</em> and can never
+            auto-apply; agents see the rules and propose around them. A rule with no matcher
+            is guidance only.
           </p>
 
           {error && (
-            <p style={{ margin: 0, fontSize: 13, color: "var(--destructive, #e5484d)" }}>{error}</p>
+            <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>{error}</p>
           )}
 
           {rows === null ? (
-            <p className="app-subtle" style={{ fontSize: 13 }}>Loading…</p>
+            <p className="app-subtle" style={{ fontSize: "var(--text-sm)" }}>Loading…</p>
           ) : rows.length === 0 ? (
-            <p className="app-subtle" style={{ fontSize: 13 }}>No guardrails yet.</p>
+            <p className="app-subtle" style={{ fontSize: "var(--text-sm)" }}>No guardrails yet.</p>
           ) : (
             <div style={{ display: "grid", gap: 6 }}>
               {rows.map((g) => (
@@ -566,8 +565,8 @@ function GuardrailsPanel() {
                   style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", padding: "10px 12px" }}
                 >
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 13 }}>{g.rule}</p>
-                    <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>
+                    <p style={{ margin: 0, fontSize: "var(--text-sm)" }}>{g.rule}</p>
+                    <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-xs)" }}>
                       {CONNECTOR_LABEL[g.connector_type] || g.connector_type}
                       {g.account_id ? ` · ${g.account_id}` : " · all accounts"}
                       {(g.match?.op_types || []).length
@@ -585,7 +584,7 @@ function GuardrailsPanel() {
           )}
 
           <form onSubmit={onCreate} className="connection-card" style={{ display: "grid", gap: 8, padding: 12 }}>
-            <strong style={{ fontSize: 13 }}>Add a guardrail</strong>
+            <strong style={{ fontSize: "var(--text-sm)" }}>Add a guardrail</strong>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Select
                 value={form.connector_type}
@@ -750,7 +749,7 @@ export default function ExecutePage() {
       setAutonomy(updated.autonomyLevel);
     } catch (err) {
       setAutonomy(prev);
-      setAutonomyError(err.message || "Failed to update autonomy.");
+      setAutonomyError(err.message || "Autonomy is unchanged — that didn't save.");
     } finally {
       setAutonomySaving(false);
     }
@@ -781,9 +780,8 @@ export default function ExecutePage() {
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Executions</h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Review and approve the changes agents propose to your connected accounts. Every change is
-        previewed and checked against your guardrails; nothing is applied until you approve it, and
-        applied changes keep a rollback handle.
+        Agents propose, you approve. Every change is previewed against your guardrails, and
+        anything applied can be rolled back.
       </p>
 
       <AutonomyPanel
@@ -847,7 +845,7 @@ export default function ExecutePage() {
       ) : filtered.length === 0 ? (
         <p className="app-subtle">
           {changeSets.length === 0
-            ? "No proposed changes yet. Run an audit or insight session — recommended fixes will land here for your approval."
+            ? "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
             : "Nothing matches these filters."}
         </p>
       ) : (
@@ -859,7 +857,7 @@ export default function ExecutePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
                   <div style={{ minWidth: 0 }}>
                     <h2 className="connection-title" style={{ marginBottom: 2 }}>{cs.title}</h2>
-                    <p className="app-subtle" style={{ margin: 0, fontSize: 13 }}>
+                    <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>
                       {CONNECTOR_LABEL[cs.connector_type] || cs.connector_type}
                       {account ? ` · ${account}` : ""}
                       {cs.project_id && projectNames[cs.project_id]
@@ -895,7 +893,7 @@ export default function ExecutePage() {
                     </Button>
                   )}
                   {busyId === cs.id && (
-                    <span className="app-subtle" style={{ fontSize: 13, alignSelf: "center" }}>
+                    <span className="app-subtle" style={{ fontSize: "var(--text-sm)", alignSelf: "center" }}>
                       Working…
                     </span>
                   )}

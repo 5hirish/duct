@@ -24,7 +24,7 @@ Examples:
 /add-connector "Mixpanel" mixpanel
 ```
 
-If the user does **not** ask for a file, deliver the **Connector research memo** in chat. If they ask to save it, write `docs/engineering/connectors/<slug>-research.md` (create `docs/engineering/connectors/` if missing).
+If the user does **not** ask for a file, deliver the **Connector research memo** in chat. If they ask to save it, write it as a dated record, `docs/engineering/YYYY-MM-DD-<slug>-connector-research.md`, with the author and date line every doc carries (`docs/README.md`, Naming).
 
 ---
 

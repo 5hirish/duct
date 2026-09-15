@@ -45,14 +45,14 @@ function Step({ done, title, children }) {
       <span
         className={cn(
           "mt-0.5 flex size-[17px] items-center justify-center rounded-full",
-          done ? "bg-emerald-500/20" : "border-[1.5px] border-primary"
+          done ? "bg-success/20" : "border-[1.5px] border-primary"
         )}
         aria-hidden
       >
-        {done && <Check className="size-2.5 text-emerald-600 dark:text-emerald-400" strokeWidth={3.5} />}
+        {done && <Check className="size-2.5 text-success" strokeWidth={3.5} />}
       </span>
       <div>
-        <p className={cn("text-[13.5px] font-medium leading-snug", done && "text-muted-foreground line-through")}>
+        <p className={cn("text-sm font-medium leading-snug", done && "text-muted-foreground line-through")}>
           {title}
         </p>
         {!done && children}
@@ -66,17 +66,17 @@ function SampleCard({ label, blurb, rows }) {
     <section className="flex flex-col rounded-xl border border-dashed p-5">
       <header className="mb-3 flex items-center gap-2.5">
         <span className="size-[7px] rounded-full bg-muted-foreground/40" aria-hidden />
-        <h2 className="text-[13px] font-bold tracking-tight text-muted-foreground">{label}</h2>
-        <span className="ml-auto rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        <h2 className="text-sm font-bold tracking-tight text-muted-foreground">{label}</h2>
+        <span className="ml-auto rounded-full border px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
           Example
         </span>
       </header>
-      <p className="mb-4 text-[11.5px] leading-relaxed text-muted-foreground">{blurb}</p>
+      <p className="mb-4 text-xs leading-relaxed text-muted-foreground">{blurb}</p>
       <div className="flex flex-col gap-4 opacity-60">
         {rows.map((row) => (
           <div key={row.title}>
-            <p className="text-[13px] font-medium leading-snug">{row.title}</p>
-            <p className="mt-1 text-[11.5px] text-muted-foreground">{row.detail}</p>
+            <p className="text-sm font-medium leading-snug">{row.title}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{row.detail}</p>
           </div>
         ))}
       </div>
@@ -90,21 +90,21 @@ export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-[28px] font-bold leading-tight tracking-tight">
+        <h1 className="text-3xl font-bold leading-tight tracking-tight">
           Duct checks a number before it trusts it.
         </h1>
-        <p className="mt-2.5 max-w-[660px] text-sm leading-relaxed text-muted-foreground">
+        <p className="measure mt-2.5 text-sm leading-relaxed text-muted-foreground">
           Most reporting problems aren&apos;t bad decisions — they&apos;re good decisions made on
           numbers nobody checked. Three steps and this page starts filling itself in.
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr_1fr]">
+      <div className="grid gap-4 @3xl:grid-cols-[1.35fr_1fr_1fr]">
         <section className="flex flex-col rounded-xl border border-destructive/40 bg-card p-5">
           <header className="mb-4 flex items-center gap-2.5">
             <span className="size-[7px] rounded-full bg-destructive" aria-hidden />
-            <h2 className="text-[13px] font-bold tracking-tight">Needs you</h2>
-            <span className="ml-auto text-[11.5px] text-muted-foreground">{done} of 3 done</span>
+            <h2 className="text-sm font-bold tracking-tight">Needs you</h2>
+            <span className="ml-auto text-xs text-muted-foreground">{done} of 3 done</span>
           </header>
 
           <ol className="flex flex-col gap-4">
@@ -113,26 +113,26 @@ export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }
                 click. The project is the thing everything else hangs off —
                 sources, threads and claims are all scoped to one. */}
             <Step done={hasProject} title="Add a project">
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 One site or account. Everything I check hangs off it.
               </p>
-              <Button asChild size="sm" className="mt-2.5 h-7 rounded-full text-[12.5px]">
+              <Button asChild size="sm" className="mt-2.5 h-7 rounded-full text-xs">
                 <Link href="/start">Audit a site</Link>
               </Button>
             </Step>
 
             <Step done={sourceCount > 0} title="Connect one data source">
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 Google Ads, GA4 or Mixpanel. This is the step that changes everything — I
                 can&apos;t check a number I can&apos;t see.
               </p>
-              <Button asChild size="sm" className="mt-2.5 h-7 rounded-full text-[12.5px]">
+              <Button asChild size="sm" className="mt-2.5 h-7 rounded-full text-xs">
                 <Link href="/connections">Connect a source</Link>
               </Button>
             </Step>
 
             <Step done={hasThread} title="Ask me something">
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 Pick one of the questions below, or type your own.
               </p>
             </Step>
@@ -152,7 +152,7 @@ export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }
       </div>
 
       <div>
-        <h2 className="mb-3.5 text-[13px] font-bold uppercase tracking-[0.02em] text-muted-foreground">
+        <h2 className="mb-3.5 text-sm font-bold uppercase tracking-[0.02em] text-muted-foreground">
           Start with a question
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -161,7 +161,7 @@ export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }
               key={q}
               type="button"
               onClick={() => onAsk(q)}
-              className="rounded-full border bg-card px-4 py-2 text-[13px] transition-colors hover:bg-accent"
+              className="rounded-full border bg-card px-4 py-2 text-sm transition-colors hover:bg-accent"
             >
               {q}
             </button>
@@ -170,13 +170,13 @@ export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }
 
         {sourceCount === 0 && (
           <div className="mt-3.5 flex flex-wrap items-center gap-2">
-            <span className="mr-0.5 text-[11.5px] text-muted-foreground">
+            <span className="mr-0.5 text-xs text-muted-foreground">
               Once you connect a source:
             </span>
             {DATA_QUESTIONS.map((q) => (
               <span
                 key={q}
-                className="rounded-full border border-dashed px-3.5 py-1.5 text-[12.5px] text-muted-foreground"
+                className="rounded-full border border-dashed px-3.5 py-1.5 text-xs text-muted-foreground"
               >
                 {q}
               </span>

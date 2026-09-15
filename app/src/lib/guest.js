@@ -19,15 +19,9 @@
 import { BASE } from "./api";
 import { analytics } from "./analytics";
 import { authToken, clearAuthToken, decodeJwtPayload, isTokenValid, setAuthToken } from "./authFetch";
+import { randomId as freshId } from "./randomId";
 
 export const INSTALL_ID_KEY = "duct_install_id";
-
-function freshId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
-}
 
 /** Stable per install, minted once. */
 export function installId() {

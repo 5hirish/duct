@@ -16,7 +16,7 @@
 // That route exists only on that prompt (lib/signInSources.js); every other
 // prompt, and every other sign-in, is unchanged.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,9 @@ import {
   resumeAuditPath,
 } from "@/lib/signInSources";
 import { BASE } from "../../lib/api";
-import { startConnectorOAuth } from "../../lib/connectorAuth";
+import { consumeConnectorConnected, startConnectorOAuth } from "../../lib/connectorAuth";
 
-export default function ConnectionRequest({ request, onAnswer, disabled, signInToConnect = null }) {
+export default function ConnectionRequest({ request, onAnswer, disabled, signInToConnect = null, returnTo = "" }) {
   const router = useRouter();
   // "" | "starting" | "browser" — "browser" is the desktop shell waiting on the
   // system browser, where this window never navigates and the state is the only
@@ -42,11 +42,25 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
   const isManual = authKind === "manual" || !authorizePath;
   const viaSignIn = Boolean(signInToConnect?.conversationId) && !isManual && canSignInToConnect(connectorId);
 
+  // The connect left this page (browser redirect) or this window (desktop
+  // shell), and the Connections page sent the user back here with the
+  // connector flagged as adopted. The card is on screen again because the
+  // thread re-raised its pause; answer it, once the session can take an
+  // answer, rather than making the user press "I've connected it" for a
+  // thing the app already knows happened.
+  const autoAnswered = useRef(false);
+  useEffect(() => {
+    if (disabled || autoAnswered.current) return;
+    if (!consumeConnectorConnected(connectorId)) return;
+    autoAnswered.current = true;
+    onAnswer({ connected: true });
+  }, [connectorId, disabled, onAnswer]);
+
   async function connect() {
     if (phase === "starting") return;
     setPhase("starting");
     try {
-      const mode = await startConnectorOAuth(`${BASE}${authorizePath}`);
+      const mode = await startConnectorOAuth(`${BASE}${authorizePath}`, { returnTo });
       setPhase(mode === "browser" ? "browser" : "starting");
     } catch {
       setPhase("");
@@ -65,7 +79,7 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
   }
 
   return (
-    <div className="my-3 space-y-3 rounded-xl border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-800/60 dark:bg-sky-950/20">
+    <div className="my-3 space-y-3 rounded-xl border border-info/30 bg-info/5 p-4">
       <div className="space-y-0.5">
         <p className="text-sm font-semibold">Connect {label}?</p>
         {reason && <p className="text-xs text-muted-foreground">{reason}</p>}
@@ -125,7 +139,7 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
           Finish signing in in your browser, then come back and press “I've connected it”.
         </p>
       )}
-      <p className="text-[11px] text-muted-foreground/70">
+      <p className="text-2xs text-muted-foreground">
         Skipping is fine — Duct will say what it couldn't check.
       </p>
     </div>

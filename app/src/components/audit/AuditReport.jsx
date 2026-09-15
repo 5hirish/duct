@@ -33,7 +33,7 @@ function VersionPills({ versions, selectedId, onSelect }) {
         </button>
       ))}
       {isOld && (
-        <span className="text-xs text-amber-500 font-medium">older version</span>
+        <span className="text-xs text-warning font-medium">older version</span>
       )}
     </div>
   );
@@ -142,7 +142,7 @@ function InterruptedReport() {
             return (
               <div key={i} className="flex items-center gap-1 py-[1px]">
                 <div className="flex-1 h-px bg-destructive/40" style={{ borderTop: "1px dashed rgba(239,68,68,0.4)" }} />
-                <span className="text-[8px] text-destructive/60 font-medium shrink-0">stopped</span>
+                <span className="text-2xs text-destructive/60 font-medium shrink-0">stopped</span>
               </div>
             );
           }
@@ -200,7 +200,7 @@ function FailedOverlay({ errorMsg, onRetry, hasReport }) {
           >
             ↺ Try again
           </button>
-          <p className="text-[11px] text-muted-foreground/70">
+          <p className="text-2xs text-muted-foreground">
             Usually resolves on the first retry
           </p>
         </div>

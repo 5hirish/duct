@@ -160,20 +160,50 @@ class ImageModel(str, Enum):
     strings; that is fine, ImageAsset.model is a plain str and is never
     re-validated.
 
-    OpenAI. gpt-image-2 only: gpt-image-1.5, gpt-image-1-mini and
-    chatgpt-image-latest shut down on 2026-12-01 (announced 2026-06-02), so
-    listing them would be listing a deadline. Needs API Organization
-    Verification on some accounts, and Tier 1 is capped at 5 images/minute.
+    OpenAI. Three rungs of one family, and the older one is kept on purpose.
+    The 2.5 pair split on *what the call is for* rather than on size: Flare is
+    "fast, high-quality everyday generation" (OpenAI publishes ~half
+    gpt-image-2's latency at higher quality), Sunburst is the editing-precision
+    rung — slower, same token price, better at changing one thing and leaving
+    the rest alone. Flare is the default because a slide run is a batch of
+    everyday generations, and a run that wants Sunburst can name it.
+
+    gpt-image-2 stays listed because both 2.5 models cost twice its token rate
+    and it is still served with no announced shutdown — it is the cheap rung,
+    not a deadline. gpt-image-1.5, gpt-image-1-mini and chatgpt-image-latest
+    are the deadline: they shut down on 2026-12-01 (announced 2026-06-02), so
+    listing them would be listing a date. Needs API Organization Verification
+    on some accounts, and Tier 1 is capped at 5 images/minute.
 
     xAI. grok-imagine-image-2.0 is the id the generation and edit endpoints
     document; the plain ``grok-imagine-image`` alias is the older standard tier.
+
+    OpenRouter. A *deliberately short* list against a catalogue of 52, and the
+    shortness is the design. Three of these four reach vendors no first-party
+    key here can — Seedream, Flux, Recraft — and Recraft emits SVG, which is a
+    capability nothing else in this enum has rather than another raster model.
+    The fourth is the Gemini workhorse, listed because a run needs a cheap
+    default and the gateway bills it at Google's own rate.
+
+    Unlike the OpenRouter *chat* slugs, an unrecognised image slug is **not**
+    passed through: ``ImageModel`` is a Pydantic enum in the content agent's
+    tool schema, so opening it to free-form strings would let a run name a
+    model that does not exist and fail on a slide. Adding one is one line and
+    a ``_CAPS`` row in service/openrouter/images.py — cheap, on purpose, and
+    the right moment for it is when somebody asks for that model by name.
     """
 
     GEMINI_3_1_FLASH_IMAGE      = "gemini-3.1-flash-image"
     GEMINI_3_1_FLASH_LITE_IMAGE = "gemini-3.1-flash-lite-image"
     GEMINI_3_PRO_IMAGE          = "gemini-3-pro-image"
+    GPT_IMAGE_2_5_FLARE         = "gpt-image-2.5-flare"
+    GPT_IMAGE_2_5_SUNBURST      = "gpt-image-2.5-sunburst"
     GPT_IMAGE_2                 = "gpt-image-2"
     GROK_IMAGINE_IMAGE_2        = "grok-imagine-image-2.0"
+    OR_GEMINI_3_1_FLASH_IMAGE   = "google/gemini-3.1-flash-image"
+    OR_SEEDREAM_5_PRO           = "bytedance-seed/seedream-5-0-pro"
+    OR_FLUX_2_PRO               = "black-forest-labs/flux.2-pro"
+    OR_RECRAFT_V4_VECTOR        = "recraft/recraft-v4-styles-vector"
 
 
 # gemini-3.1-flash-image: the high-efficiency, high-volume flash image model
@@ -185,8 +215,9 @@ DEFAULT_IMAGE_MODEL = ImageModel.GEMINI_3_1_FLASH_IMAGE
 # name one, or named one the resolved provider cannot serve.
 DEFAULT_IMAGE_MODELS: dict[Provider, ImageModel] = {
     Provider.GOOGLE_GENAI: ImageModel.GEMINI_3_1_FLASH_IMAGE,
-    Provider.OPENAI:       ImageModel.GPT_IMAGE_2,
+    Provider.OPENAI:       ImageModel.GPT_IMAGE_2_5_FLARE,
     Provider.XAI:          ImageModel.GROK_IMAGINE_IMAGE_2,
+    Provider.OPENROUTER:   ImageModel.OR_GEMINI_3_1_FLASH_IMAGE,
 }
 
 # Which key a run spends on images, when the user brought more than one.
@@ -198,6 +229,11 @@ IMAGE_PROVIDER_ORDER: tuple[Provider, ...] = (
     Provider.GOOGLE_GENAI,
     Provider.OPENAI,
     Provider.XAI,
+    # Last, and last on purpose: a gateway is a hop, so a first-party key for
+    # the same model is the more direct route whenever the user brought one.
+    # Its place in this tuple is what it is here for — a run whose only key is
+    # an OpenRouter one used to resolve to None and decline every picture.
+    Provider.OPENROUTER,
 )
 
 

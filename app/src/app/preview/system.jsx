@@ -15,6 +15,8 @@
 // own, and `sidebar` is an app shell rather than a part. This is a design
 // system, not an inventory.
 
+import { useState } from "react";
+
 import {
   ChevronDown,
   Ellipsis,
@@ -37,10 +39,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Lightbox } from "@/components/ui/lightbox";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -59,6 +63,25 @@ function Row({ label, children }) {
 
 function Stack({ children }) {
   return <div className="flex flex-col gap-5">{children}</div>;
+}
+
+/** Starts open, since a closed overlay is not a specimen — see AlertDialog and
+ *  DropdownMenu below. The button lets it be closed and reopened in place. */
+function LightboxDemo() {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="flex items-center gap-6">
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+        Open image
+      </Button>
+      <Lightbox
+        open={open}
+        onOpenChange={setOpen}
+        src="/art/mosaic/otium.webp"
+        alt="Roman mosaic panel, otium"
+      />
+    </div>
+  );
 }
 
 const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost", "destructive", "link"];
@@ -181,16 +204,26 @@ export const PRIMITIVES = [
     id: "ui-badge",
     group: "Primitives",
     title: "Badge",
-    state: "5 variants",
-    note: "The canonical status badge. Semantic tokens only — .status-pill hardcodes hexes and is retired on touch.",
+    state: "8 variants",
+    note:
+      "The canonical status badge. The four status variants tint the ground and colour the text, which is the only way a mid green or amber carries a 12px label — `bg-green-500/90 text-white` measured 2.22:1. They carry their own dark pair, so a caller writes no `dark:`.",
     render: () => (
-      <Row label="Variants">
-        {["default", "secondary", "destructive", "outline", "ghost"].map((v) => (
-          <Badge key={v} variant={v}>
-            {v}
-          </Badge>
-        ))}
-      </Row>
+      <div className="flex flex-col gap-4">
+        <Row label="Status">
+          {["success", "warning", "info", "destructive"].map((v) => (
+            <Badge key={v} variant={v}>
+              {v}
+            </Badge>
+          ))}
+        </Row>
+        <Row label="Neutral">
+          {["default", "secondary", "outline", "ghost"].map((v) => (
+            <Badge key={v} variant={v}>
+              {v}
+            </Badge>
+          ))}
+        </Row>
+      </div>
     ),
   },
   {
@@ -276,6 +309,29 @@ export const PRIMITIVES = [
         <div className="flex items-center gap-2.5">
           <Switch id="pv-sw-dis" disabled />
           <Label htmlFor="pv-sw-dis">Slack delivery (connect Slack first)</Label>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "ui-checkbox",
+    group: "Primitives",
+    title: "Checkbox",
+    state: "checked · unchecked · disabled",
+    note: "The other half of the Switch rule: a choice that is submitted with a form, not applied the moment it is touched. Sign-in's \"keep me signed in\" is the canonical one — it does nothing until the form goes.",
+    render: () => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2.5">
+          <Checkbox id="pv-cb-on" defaultChecked />
+          <Label htmlFor="pv-cb-on">Keep me signed in for 30 days</Label>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <Checkbox id="pv-cb-off" />
+          <Label htmlFor="pv-cb-off">Include draft pages in the crawl</Label>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <Checkbox id="pv-cb-dis" disabled />
+          <Label htmlFor="pv-cb-dis">Compare to last quarter (needs 90 days of data)</Label>
         </div>
       </div>
     ),
@@ -418,5 +474,13 @@ export const PRIMITIVES = [
         </span>
       </div>
     ),
+  },
+  {
+    id: "ui-lightbox",
+    group: "Primitives",
+    title: "Lightbox",
+    state: "open",
+    note: "Full-bleed image zoom, built on ui/dialog — portal, focus trap, Escape and scroll lock come free rather than a second hand-rolled fixed inset-0. Click the image, or Escape, to close.",
+    render: () => <LightboxDemo />,
   },
 ];

@@ -15,12 +15,14 @@ the membership gate is the copy that eventually forgets to check.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Any, Callable
 from uuid import UUID
 
 from agents.core.events import AgentEvent
+from agents.core.prompts import xml_block
 from agents.engines import resolve_job_run, resolve_run_model
 from agents.tiers import Job
 from agents.models import ModelName, Provider
@@ -32,6 +34,7 @@ from service.execution.policy import effective_autonomy
 from service.membership import member_role
 from service.model_settings import get_model_settings
 from service.memory import build_memory_context, seed_user_preferences, touch_recall
+from service.connector_scopes import SCOPE_PARTIAL, SCOPE_UNKNOWN
 from service.provider_keys import stored_keys_for
 
 logger = logging.getLogger(__name__)
@@ -68,6 +71,15 @@ class InsightsRun:
     tier_skipped: tuple[tuple[str, str], ...] = ()
     tier_retry_in: float = 0.0
 
+    # What the verifier runs on. ``Job.VERIFICATION`` sits a tier below
+    # ``Job.ANALYSIS`` in the map, and until this field existed the subagent
+    # silently inherited the analyst's model — the heaviest rung, reasoning
+    # over twelve checks, before the analyst had written a word. None means
+    # "same as the analysis", which is what a hand-built run (the tests) gets.
+    verify_provider: Provider | None = None
+    verify_model: ModelName | str | None = None
+    verify_api_key: str = ""
+
 
 def resolve_model(
     engine_override: str = "",
@@ -91,8 +103,14 @@ def resolve_run(
     user_id: UUID | None,
     project_id: Any,
     user_keys: dict[Provider, str] | None = None,
+    tier_override: str = "",
 ) -> InsightsRun:
-    """Model + membership-checked project scope + the autonomy the run gets."""
+    """Model + membership-checked project scope + the autonomy the run gets.
+
+    ``tier_override`` lifts the analysis — the pass that writes the brief —
+    and only that: the verifier keeps its own rung whatever the composer
+    asked for, because "run this on Heavy" means the answer, not the checks.
+    """
     # The unattended brief has no headers at all, so without this it would be
     # the one insights path still reaching for the server key.
     stored = stored_keys_for(user_id)
@@ -111,11 +129,33 @@ def resolve_run(
         tier_map=settings.tiers,
         auto_fallback=settings.auto_fallback,
         log_prefix="insights",
+        tier_override=tier_override,
     )
     provider, model, api_key = job.provider, job.model, job.api_key
     # Only an Anthropic key drives the artifact summariser; on any other
     # provider a brief persists without a digest rather than with a broken one.
     summary_key = api_key if provider is Provider.ANTHROPIC else ""
+
+    # The verifier's own rung. Best-effort: the analysis resolved, so a key
+    # exists, and the checking pass falling back to the analyst's model is a
+    # slower run rather than a failed one.
+    verify_provider: Provider | None = None
+    verify_model: ModelName | str | None = None
+    verify_api_key = ""
+    try:
+        verify = resolve_job_run(
+            Job.VERIFICATION,
+            engine_override=engine_override or settings.engine,
+            user_keys=user_keys,
+            stored_keys=stored,
+            tier_map=settings.tiers,
+            auto_fallback=settings.auto_fallback,
+            log_prefix="insights-verify",
+        )
+        if (verify.provider, verify.model) != (provider, model):
+            verify_provider, verify_model, verify_api_key = verify.provider, verify.model, verify.api_key
+    except Exception:
+        logger.warning("insights: verification tier unresolved — verifier runs on the analysis model", exc_info=True)
 
     scoped: UUID | None = None
     configured = AUTONOMY_ASK
@@ -148,7 +188,74 @@ def resolve_run(
         tier_requested=job.tier_requested,
         tier_skipped=job.tier_skipped,
         tier_retry_in=job.tier_retry_in,
+        verify_provider=verify_provider,
+        verify_model=verify_model,
+        verify_api_key=verify_api_key,
     )
+
+
+# The status vocabulary is ListDataSources' own (service/connector_access.py);
+# the phrasing beside each is what the tool's description promises the model.
+# A scope grant is named only when it limits what a fetch can reach — a
+# complete grant, or a manual connector with no grant at all, adds nothing.
+_SCOPE_WORTH_NAMING = frozenset({SCOPE_PARTIAL, SCOPE_UNKNOWN})
+_SOURCE_STATUS_HINTS = {
+    "bound": "ready to use",
+    "available": "authorized, no account chosen — SelectAccount resolves it",
+    "not_connected": "nothing stored — RequestConnection if the analysis needs it",
+}
+
+
+def render_data_sources(sources: list[dict]) -> str:
+    """The ``<data_sources>`` block for the opening turn, from ListDataSources'
+    rows. One line per connector, same ids and statuses the tool reports, so
+    the model reads the block and the tool result in one vocabulary."""
+    lines: list[str] = []
+    for src in sources:
+        status = str(src.get("status") or "")
+        line = f"- {src.get('connector_id', '')}: {status}"
+        hint = _SOURCE_STATUS_HINTS.get(status, "")
+        if status == "bound" and (src.get("account_id") or src.get("account_name")):
+            account = str(src.get("account_id") or "")
+            name = str(src.get("account_name") or "")
+            line += f" → {account}" + (f' "{name}"' if name else "")
+        elif hint:
+            line += f" ({hint})"
+        if status == "not_connected" and src.get("auth_kind") == "manual":
+            line += " · API key, added on the Connections page"
+        if src.get("scope_status") in _SCOPE_WORTH_NAMING:
+            line += f" · scopes: {src['scope_status']}"
+        lines.append(line)
+    if not lines:
+        return ""
+    return xml_block(
+        "data_sources",
+        "What this project can reach right now — the same list ListDataSources "
+        "returns. Call the tool again only after a connection or account changes.\n"
+        + "\n".join(lines),
+    )
+
+
+def data_sources_block(run: InsightsRun, *, user_id: UUID | None) -> str:
+    """ListDataSources, answered before the first model call.
+
+    The agent's first action on nearly every run was to call the tool — a
+    whole model round trip, with reasoning, to learn a list the server had at
+    hand. Per-project, so it rides in the USER turn beside the memory digest,
+    never in the cached system prefix. Best-effort: with no block the tool is
+    still mounted, and the prompt tells the agent to call it.
+    """
+    if run.project_id is None or user_id is None:
+        return ""
+    try:
+        from service.connector_access import list_data_sources
+
+        with next(db_session()) as db:
+            sources = list_data_sources(db, user_id=user_id, project_id=run.project_id)
+        return render_data_sources([s.as_dict() for s in sources])
+    except Exception:
+        logger.warning("insights: data sources block unavailable", exc_info=True)
+        return ""
 
 
 async def memory_blocks(
@@ -170,7 +277,8 @@ async def memory_blocks(
     """
     if run.project_id is None or not remember:
         return ""
-    try:
+
+    def _build():
         with next(db_session()) as db:
             # Declared preferences become user-scope memory first, so the digest
             # carries them and the agent reads them from one place.
@@ -184,6 +292,13 @@ async def memory_blocks(
                 subject=query,
             )
             touch_recall(db, context.recalled_ids)
+            return context
+
+    try:
+        # A worker thread, not the event loop: this is a dozen-plus queries,
+        # and every SSE stream on the process stalls for the duration of a
+        # synchronous one.
+        context = await asyncio.to_thread(_build)
     except Exception:
         logger.warning("insights: memory blocks unavailable", exc_info=True)
         return ""

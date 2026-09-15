@@ -95,12 +95,11 @@ export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
             gap. The break is the only orange in the panel, so the eye lands on
             the failure before it reads a word of the copy. */}
         <MosaicPanel name={MOSAIC.fractum} className="mb-6" />
-        <p className="app-subtle" style={{ marginBottom: 10 }}>
-          This page could not be loaded.
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight" style={{ marginBottom: 10 }}>Something went wrong</h1>
+        <h1 className="text-2xl font-semibold tracking-tight" style={{ marginBottom: 10 }}>
+          This page stopped working
+        </h1>
         <p className="app-subtle" style={{ fontSize: 14, lineHeight: 1.55 }}>
-          We logged this issue. Share the details below so we can trace it quickly.
+          It&rsquo;s logged on our side. Copy the details below if you report it.
         </p>
 
         <div className="generate-alert-detail" style={{ marginTop: 16 }}>

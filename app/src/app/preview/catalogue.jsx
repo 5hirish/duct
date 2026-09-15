@@ -31,11 +31,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import EmptyState from "@/components/ui/empty-state";
+import { ClampText, ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { StepStatus } from "@/lib/agentSteps";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { canonId } from "./canon";
 
 /** A labelled specimen, so several variants of one rule read as one rule. */
@@ -104,27 +108,18 @@ const EXAMPLES = {
   ),
 
   "Destructive confirm": () => (
-    // Always open: a confirm nobody can see is not a specimen. The anatomy is
-    // the rule — title quotes the object, body states scope and
-    // irreversibility, action is verb + noun.
-    <AlertDialog open>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Disconnect &ldquo;Google Search Console&rdquo;?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Duct forgets these credentials. Reports and scheduled runs that read from
-            Search Console stop working until you connect it again, and reconnecting
-            means signing in with Google once more.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
-          <AlertDialogAction type="button" className={buttonVariants({ variant: "destructive" })}>
-            Disconnect
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    // Always open: a confirm nobody can see is not a specimen — which is also
+    // why four `window.confirm` calls survived a design pass, since /preview
+    // could not render one. The anatomy is the rule: title quotes the object,
+    // body states scope and irreversibility, action is verb + noun.
+    <ConfirmDialog
+      open
+      title="Disconnect “Google Search Console”?"
+      description="Duct forgets these credentials. Reports and scheduled runs that read from Search Console stop working until you connect it again, and reconnecting means signing in with Google once more."
+      cancel="Keep it"
+      action="Disconnect"
+      destructive
+    />
   ),
 
   "Destructive action (the button that opens that confirm)": () => (
@@ -159,19 +154,39 @@ const EXAMPLES = {
     </div>
   ),
 
+  // The specimen renders `ui/empty-state` rather than restating its markup:
+  // this row is the reason the component exists, and a catalogue entry that
+  // hand-rolls the thing it documents is how the four forks started.
   "Empty state (whole surface)": () => (
-    <div className="rounded-xl border border-dashed p-10 text-center">
-      <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-muted">
-        <Inbox className="size-5 text-muted-foreground" aria-hidden="true" />
-      </div>
-      <p className="mt-3 text-sm font-medium">No briefs yet</p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Connect a source and Duct writes the first one for you.
-      </p>
-      <Button size="sm" className="mt-4">
-        Connect a source
-      </Button>
-    </div>
+    <EmptyState
+      icon={Inbox}
+      title="No briefs yet"
+      actions={<Button size="sm">Connect a source</Button>}
+    >
+      Connect a source and Duct writes the first one for you.
+    </EmptyState>
+  ),
+
+  // Same component, teaching instead of reporting: the `example` slot takes
+  // the real filled component over invented props, dimmed and out of the
+  // accessibility tree.
+  "Empty state (with an example)": () => (
+    <EmptyState
+      icon={Inbox}
+      title="No briefs yet"
+      exampleLabel="Example brief"
+      actions={<Button size="sm">Connect a source</Button>}
+      example={
+        <div className="rounded-xl border bg-card p-5">
+          <p className="text-sm font-medium">Ads says 4,212. Stripe settled 1,890.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Nobody had compared them. The gap is refunds and failed cards.
+          </p>
+        </div>
+      }
+    >
+      Connect a source and Duct writes the first one for you.
+    </EmptyState>
   ),
 
   "Empty state (inside a stable layout)": () => (
@@ -242,6 +257,33 @@ const EXAMPLES = {
           <FileText className="size-3.5" aria-hidden="true" />
           Loading…
         </p>
+      </Specimen>
+    </div>
+  ),
+
+  "Truncated text (2+ lines)": () => (
+    // The case the rule exists for: an agent-written finding title long
+    // enough to run a fixed-height card or rail off-screen if it isn't capped.
+    <div className="flex max-w-sm flex-col gap-6">
+      <Specimen label="Self-contained — its own tab stop, clamp and tooltip trigger">
+        <ClampText
+          text="North-star window: Next 90 days: get net new MRR positive and keep it there. Measured 30-day position — $219.95 of new MRR against $297.86 lost to failed payments plus $209.88 sitting past-due, so the window is still net negative."
+          className="text-sm"
+        />
+      </Specimen>
+      <Specimen label="Inside an existing Link — clampClass + ClampTooltipContent on that element, no second tab stop">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <a href="#" className="text-sm font-medium underline-offset-2 hover:underline">
+              <span className={clampClass(2)}>
+                Checked Search Console: organic clicks up 18% week over week, led by
+                three pages that moved onto page one after last month&rsquo;s content
+                refresh landed in the index.
+              </span>
+            </a>
+          </TooltipTrigger>
+          <ClampTooltipContent text="Checked Search Console: organic clicks up 18% week over week, led by three pages that moved onto page one after last month's content refresh landed in the index." />
+        </Tooltip>
       </Specimen>
     </div>
   ),

@@ -1,5 +1,7 @@
 # Runbook: Claude Code on the web
 
+**Author:** Shirish Kadam · **Updated:** 2026-09-14
+
 **What this doc is for:** Running [Claude Code on the web](https://code.claude.com/docs/en/claude-code-on-the-web) (cloud sessions at [claude.ai/code](https://claude.ai/code)) against this monorepo. Cloud sessions run on Anthropic-managed VMs that clone the repo fresh, so anything that isn't committed (your local `~/.claude`, `.env*` files, `claude mcp add` servers) is **not** present. This is the one place to come back to for the setup-script text and the account-connect step.
 
 **Stack reminder:** [`backend/`](../../backend/) is Python + **Poetry**; [`app/`](../../app/) is Next.js on Cloudflare Workers + **npm**. The cloud image ships Python, poetry, and Node pre-installed but does not run our installs — that's what the setup script below is for.

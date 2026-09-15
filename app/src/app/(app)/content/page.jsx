@@ -81,7 +81,9 @@ export default function ContentLandingPage() {
 
       {tab === "plan"      && <PlanTab      projectId={projectId} />}
       {tab === "posts"     && <PostsTab     projectId={projectId} />}
-      {tab === "analytics" && <AnalyticsView projectId={projectId} />}
+      {tab === "analytics" && (
+        <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
+      )}
       {tab === "discover"  && <DiscoverPage projectId={projectId} />}
       {tab === "library"   && <LibraryTab   projectId={projectId} />}
       {tab === "brand"     && <BrandTab     projectId={projectId} />}
@@ -195,7 +197,7 @@ function PostsTab({ projectId }) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="aspect-[4/5] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
         ))}
@@ -240,7 +242,7 @@ function PostsTab({ projectId }) {
           No {filter} posts.
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4">
           {visible.map((p) => <PostCard key={p.id} post={p} />)}
         </div>
       )}

@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ArtifactRenderer, { CONTENT_TYPES, UnifiedDiffView } from "@/components/artifacts/ArtifactRenderer";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   deleteArtifact,
   diffArtifact,
@@ -89,6 +90,7 @@ export default function ArtifactViewerPage() {
   const [content, setContent] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const { confirm, dialog } = useConfirm();
   const [showChanges, setShowChanges] = useState(false);
   const [diff, setDiff] = useState(null); // {diff, base_version, target_version, summary?}
 
@@ -148,7 +150,13 @@ export default function ArtifactViewerPage() {
   }
 
   async function handleDelete() {
-    if (!window.confirm("Delete this artifact and all of its versions?")) return;
+    const ok = await confirm({
+      title: "Delete this artifact?",
+      description: "Every version of it goes with it. This cannot be undone.",
+      action: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await deleteArtifact(artifact.id);
@@ -163,6 +171,7 @@ export default function ArtifactViewerPage() {
 
   return (
     <section>
+      {dialog}
       <div className="page-toolbar-back" style={{ gap: 10, flexWrap: "wrap" }}>
         <Button variant="ghost" size="sm" asChild>
           <Link href="/artifacts">← Artifacts</Link>
@@ -243,7 +252,7 @@ export default function ArtifactViewerPage() {
       </div>
 
       {error && (
-        <p className="app-subtle" style={{ color: "var(--destructive, #b91c1c)" }}>{error}</p>
+        <p className="app-subtle" style={{ color: "var(--destructive, var(--destructive))" }}>{error}</p>
       )}
       {!artifact && !error && <p className="app-subtle">Loading…</p>}
 

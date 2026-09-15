@@ -289,7 +289,6 @@ def resolve_read_credentials(
     cfg = get_configs()
     resolved = {
         "refresh_token": str(stored.get("refresh_token") or "").strip(),
-        "developer_token": str(stored.get("developer_token") or "").strip() or cfg.google_ads_developer_token,
         "login_customer_id": str(stored.get("login_customer_id") or "").strip() or cfg.google_ads_login_customer_id,
         "client_id": cfg.google_oauth_client_id or cfg.google_ads_client_id,
         "client_secret": cfg.google_oauth_client_secret or cfg.google_ads_client_secret,

@@ -42,25 +42,32 @@ export const TIERS = [
     label: "Heavy",
     icon: "anvil",
     tagline: "The work you act on",
-    blurb: "Slow and expensive on purpose. Reserved for the analysis that becomes your decision.",
   },
   {
     key: "standard",
     label: "Standard",
     icon: "scale",
     tagline: "Most of what runs",
-    blurb: "Real reasoning at ordinary cost. Where Duct spends most of its time.",
-    fallbackFor: "heavy",
   },
   {
     key: "light",
     label: "Light",
     icon: "feather",
     tagline: "High volume, low judgement",
-    blurb: "Reading pages, remembering context, naming things. Should be the cheapest model you own.",
-    fallbackFor: "standard",
   },
 ];
+
+/**
+ * What to call a model on screen.
+ *
+ * Comes from the catalogue so it cannot drift from what actually runs. `label`
+ * is absent for a model the backend has not named yet, and the id is the right
+ * fallback — it is what the user would paste into a support thread.
+ */
+export function modelLabel(model) {
+  return model?.label || model?.id || "";
+}
+
 
 export const TIER_KEYS = TIERS.map((tier) => tier.key);
 
@@ -69,55 +76,66 @@ export function getTier(key) {
 }
 
 /**
- * What each internal job is, in words a growth marketer recognises.
- *
- * The backend's `Job` enum names steps for what they produce; these are the
- * same steps described by what the user would see. Shown only inside the
- * "what runs here" disclosure — this is an explanation, not a control.
- */
-export const JOB_LABELS = {
-  analysis: "Writes your brief",
-  audit: "Scores your site",
-  verification: "Proves a number before it's used",
-  synthesis: "Structures the findings",
-  drafting: "Writes content and captions",
-  chat: "Answers your follow-up questions",
-  research: "Reads pages and connector data",
-  memory: "Remembers context between sessions",
-  recap: "Summaries and titles",
-};
-
-/**
  * Whose account pays. `source` comes from `/providers/status`.
  *
  * "Duct's key" used to cover both a self-hosted env file and our hosted
  * account, which are the same config field and opposite answers to the only
  * question the chip exists to answer. The backend now splits them.
+ *
+ * Two rules these labels have to keep, both learned the hard way:
+ *
+ * 1. **Say the vendor, not the category.** `subscription` read "Your
+ *    subscription", which is true of whichever tile it lands on — so when a
+ *    bug put it on Anthropic, the chip was still grammatical and nobody could
+ *    see it was lying. "Your ChatGPT plan" is wrong out loud on any other
+ *    tile, which is the point.
+ * 2. **Only `user` and `stored` are green.** Those are the two the reader did
+ *    something to get. `env` is a key that happens to be on the machine and
+ *    `cloud` is ours; both make a run possible, neither is an answer to "have
+ *    I set this up", and four green ticks under a heading that says "bring
+ *    your own keys" reads as done when nothing has been brought.
  */
 export const SOURCE_LABELS = {
   user: "Your key",
   stored: "Your saved key",
-  env: "From env",
-  cloud: "Duct cloud",
-  subscription: "Your subscription",
+  env: "This computer's key",
+  cloud: "Duct's key",
+  subscription: "Your ChatGPT plan",
   none: "Not set",
+};
+
+/**
+ * The same fact as a whole sentence, for the one place it is said for the
+ * entire page rather than pinned to a tile.
+ *
+ * SOURCE_DETAIL is written as a clause because it lands in a `title=`; read
+ * on its own under the summary card it is a fragment, and a fragment is what
+ * a sentence written for somewhere else always sounds like.
+ */
+export const SOURCE_SENTENCE = {
+  user: "Running on the key you pasted — this browser session only.",
+  stored: "Running on your saved key, the one that also funds scheduled runs.",
+  env: "Running on a key already on this computer, not one you added here.",
+  cloud: "Running on Duct's own key — we are paying for these runs.",
+  subscription: "Running on the ChatGPT plan you signed in with on this desktop.",
+  none: "No key set for these models yet.",
 };
 
 /** Longer form, for the provider tiles where there is room for a clause. */
 export const SOURCE_DETAIL = {
-  user: "Using the key you provided",
-  stored: "Using your saved key — also serves scheduled runs",
-  env: "Using a key from this instance's environment",
-  cloud: "Using Duct's hosted key — our account is paying",
-  subscription: "Using your ChatGPT plan, signed in on this desktop",
+  user: "Using the key you pasted — this browser session only",
+  stored: "Using your saved key — the one that also funds scheduled runs",
+  env: "Using a key already on the machine running Duct, not one you added here",
+  cloud: "Using Duct's own key — we're paying for this run",
+  subscription: "Using the ChatGPT plan you signed in with on this desktop",
   none: "No key set",
 };
 
-/** A source that costs the user nothing is worth showing differently. */
+/** Green is reserved for a key the reader put there themselves. */
 export const SOURCE_TONE = {
   user: "ok",
   stored: "ok",
-  env: "ok",
+  env: "info",
   cloud: "info",
   subscription: "ok",
   none: "warn",
@@ -166,6 +184,29 @@ export function saveModelMap(map) {
   } catch {
     /* private mode / storage disabled — the map stays at its defaults */
   }
+}
+
+/**
+ * The one answer to "whose key pays" when all three tiers give the same one,
+ * and `""` when they do not.
+ *
+ * Three callers ask, for three reasons, and they must not disagree: the
+ * summary says the answer once when there is one, the tier cards say it
+ * per-card when there is not, and the Images row stays silent when its own
+ * answer is the one already on screen. Written as the *value* rather than as
+ * a boolean because two of those three need to print it, and a predicate plus
+ * a separate lookup is how the page ends up both saying it once and saying it
+ * four times.
+ *
+ * `""` while any tier is unresolved: "they agree" is a claim, and three
+ * pending answers are not three matching ones.
+ */
+export function agreedSource(previewByTier = {}, providersById = {}) {
+  const sources = TIER_KEYS.map(
+    (key) => providersById[previewByTier[key]?.provider]?.source
+  ).filter(Boolean);
+  if (sources.length !== TIER_KEYS.length) return "";
+  return new Set(sources).size === 1 ? sources[0] : "";
 }
 
 /** The tier picks alone, which is what every agent request carries. */

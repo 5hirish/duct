@@ -26,6 +26,7 @@ from sqlmodel import Session
 
 from agents.engines import (
     ENGINE_SUPPORTED_PROVIDERS,
+    preferred_image_model,
     PROVIDER_CONFIG_ATTR,
     Engine,
     resolve_engine_model,
@@ -49,8 +50,13 @@ from agents.tiers import (
     Tier,
     resolve_tier_model,
 )
-from agents.core.codex import is_subscription_credential
+from agents.core.codex import (
+    is_plan_credential,
+    is_subscription_credential,
+    is_usable_credential,
+)
 from config import allow_server_provider_keys, get_configs
+from service.model_settings import get_model_settings
 from db.session import get_session as db_session
 from models.auth import User
 from service.auth import (
@@ -71,26 +77,33 @@ router = APIRouter(tags=["providers"])
 
 # Shown on the tile. Kept here rather than in the browser bundle for the same
 # reason as the model list: one source, and it is the side that knows.
+#
+# Written for someone buying an API key, not for someone reading this file: no
+# engine names, no SDK names, no model ids. The last set said "the Claude Agent
+# SDK (v3)" — an engine deleted months earlier — which is what a string nobody
+# reads as copy decays into. `app/src/lib/providerKeys.js` carries the same
+# sentences for the tiles the browser paints before this answers; they have to
+# match, so change both.
 _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
     Provider.ANTHROPIC: (
         "Anthropic",
-        "Claude models. The only provider the Claude Agent SDK (v3) accepts.",
+        "Claude models. Needs an API key — a Claude Pro or Max plan can't be used here.",
     ),
     Provider.OPENAI: (
         "OpenAI",
-        "GPT models on the LangChain (v1) engine, and gpt-image-2 for images.",
+        "GPT models and images, or your own ChatGPT Plus or Pro plan.",
     ),
     Provider.GOOGLE_GENAI: (
         "Google Gemini",
-        "Gemini models, and Duct's first choice for images.",
+        "Gemini models. Duct's first pick for drawing images.",
     ),
     Provider.OPENROUTER: (
         "OpenRouter",
-        "One key, 500+ models — and any OpenAI-compatible gateway you point it at.",
+        "One key, 500+ models — and any OpenAI-compatible service you point it at.",
     ),
     Provider.XAI: (
         "xAI",
-        "Grok models on the LangChain (v1) engine, and Grok Imagine for images.",
+        "Grok models, and Grok's own image generation.",
     ),
 }
 
@@ -115,6 +128,59 @@ _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.GROK_4_6.value: Tier.HEAVY,
 }
 
+# The name a person would say out loud, keyed by model id.
+#
+# The picker used to render the id itself, so the answer to "which model am I
+# on" was `gemini-3.1-pro-preview` — punctuation a marketer has to decode
+# before they can compare it to the row above. The id still ships and is still
+# shown underneath, because it is what a support thread needs.
+#
+# A model missing from this map falls back to its id, which is exactly the old
+# behaviour. That is deliberate: a new model appearing unlabelled is a cosmetic
+# regression, and making this map mandatory would mean a failing test every
+# time the catalogue gained a row.
+_MODEL_LABEL: dict[str, str] = {
+    ModelName.GPT_5_6_SOL.value: "GPT-5.6 Sol",
+    ModelName.GPT_5_6_TERRA.value: "GPT-5.6 Terra",
+    ModelName.GPT_5_6_LUNA.value: "GPT-5.6 Luna",
+    ModelName.GPT_5_MINI.value: "GPT-5 mini",
+    ModelName.GPT_4O.value: "GPT-4o",
+    ModelName.GPT_4O_MINI.value: "GPT-4o mini",
+    ModelName.GEMINI_3_1_PRO_PREVIEW.value: "Gemini 3.1 Pro (preview)",
+    ModelName.GEMINI_3_8_FLASH.value: "Gemini 3.8 Flash",
+    ModelName.GEMINI_3_5_FLASH_LITE.value: "Gemini 3.5 Flash-Lite",
+    ModelName.GEMINI_2_5_FLASH.value: "Gemini 2.5 Flash",
+    ModelName.CLAUDE_FABLE.value: "Claude Fable 5.1",
+    ModelName.CLAUDE_OPUS.value: "Claude Opus 5",
+    ModelName.CLAUDE_SONNET.value: "Claude Sonnet 5",
+    ModelName.CLAUDE_HAIKU.value: "Claude Haiku 4.5",
+    ModelName.GROK_4_6.value: "Grok 4.6",
+    ModelName.OR_DEEPSEEK_V4_FLASH.value: "DeepSeek V4 Flash",
+    ModelName.OR_DEEPSEEK_V4_PRO.value: "DeepSeek V4 Pro",
+    ModelName.OR_QWEN3_8_FLASH.value: "Qwen3.8 Flash",
+    ModelName.OR_KIMI_K3.value: "Kimi K3",
+    ModelName.OR_GLM_5_3_FLASH.value: "GLM-5.3 Flash",
+    ModelName.OR_CLAUDE_OPUS.value: "Claude Opus 5",
+    ModelName.OR_CLAUDE_SONNET.value: "Claude Sonnet 5",
+    ModelName.OR_GPT_5_MINI.value: "GPT-5 mini",
+    # The image models are not tier picks, but they are rendered in the same
+    # sentence as one, and a raw id beside a name reads as a different kind
+    # of thing.
+    ImageModel.GEMINI_3_1_FLASH_IMAGE.value: "Gemini 3.1 Flash Image",
+    ImageModel.GEMINI_3_1_FLASH_LITE_IMAGE.value: "Gemini 3.1 Flash-Lite Image",
+    ImageModel.GEMINI_3_PRO_IMAGE.value: "Gemini 3 Pro Image",
+    ImageModel.GPT_IMAGE_2_5_FLARE.value: "GPT Image 2.5 Flare",
+    ImageModel.GPT_IMAGE_2_5_SUNBURST.value: "GPT Image 2.5 Sunburst",
+    ImageModel.GPT_IMAGE_2_5_FLARE.value: "GPT Image 2.5 Flare",
+    ImageModel.GPT_IMAGE_2_5_SUNBURST.value: "GPT Image 2.5 Sunburst",
+    ImageModel.GPT_IMAGE_2.value: "GPT Image 2",
+    ImageModel.GROK_IMAGINE_IMAGE_2.value: "Grok Imagine 2.0",
+    ImageModel.OR_GEMINI_3_1_FLASH_IMAGE.value: "Gemini 3.1 Flash Image",
+    ImageModel.OR_SEEDREAM_5_PRO.value: "Seedream 5 Pro",
+    ImageModel.OR_FLUX_2_PRO.value: "FLUX.2 Pro",
+    ImageModel.OR_RECRAFT_V4_VECTOR.value: "Recraft V4 Vector (SVG)",
+}
+
 
 def _engines_for(provider: Provider) -> list[str]:
     return [e.value for e in Engine if provider in ENGINE_SUPPORTED_PROVIDERS.get(e, frozenset())]
@@ -135,7 +201,7 @@ def providers_status(
     * ``stored``       — this user's saved key, decrypted per run
     * ``env``          — this instance's own env file (desktop, or local dev)
     * ``cloud``        — Duct's hosted key; our account is paying
-    * ``subscription`` — the operator's Claude subscription on this machine
+    * ``subscription`` — the user's own ChatGPT plan, signed in on this desktop
     * ``none``         — nothing; this provider cannot be reached
 
     The env/cloud split matters: they are the same config field and completely
@@ -166,12 +232,16 @@ def providers_status(
     providers = []
     for provider in Provider:
         label, description = _PROVIDER_LABELS.get(provider, (provider.value, ""))
-        has_user = bool(user_keys.get(provider))
+        # Not `bool(...)`: a supplied value that this provider cannot accept
+        # is not a key, and calling it one is what made the Anthropic tile
+        # green for a stale ChatGPT token.
+        supplied = user_keys.get(provider) or ""
+        has_user = is_usable_credential(provider, supplied)
         has_stored = provider in saved
         has_server = server_usable and bool(
             getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), "")
         )
-        if has_user and is_subscription_credential(user_keys[provider]):
+        if has_user and is_plan_credential(provider, user_keys[provider]):
             source = "subscription"
         elif has_user:
             source = "user"
@@ -192,11 +262,16 @@ def providers_status(
             # provider can be serving from `user` and still have one saved. The
             # settings page needs to know to offer "Forget".
             "stored": has_stored,
+            # Something was sent for this provider and it is not a credential
+            # it could ever accept. Distinct from `source`, because the user
+            # still has to go remove it even when a stored key is serving.
+            "key_mismatch": bool(supplied) and not has_user,
             "engines": _engines_for(provider),
         })
     return {
         "providers": providers,
-        "images": _images_status(providers),
+        # The saved pick, so the row promises the run's own answer.
+        "images": _images_status(providers, get_model_settings(user.id if user else None).image_model),
         # The desktop shell decides whether it *can* offer "Continue with
         # ChatGPT"; this decides whether it *may*. An undocumented backend
         # needs a switch that does not wait for an app release.
@@ -204,7 +279,7 @@ def providers_status(
     }
 
 
-def _images_status(providers: list[dict]) -> dict:
+def _images_status(providers: list[dict], preferred: str = "") -> dict:
     """Which provider the image tools would spend, given the tiles above.
 
     Same preference order as ``resolve_image_run`` and the same reachability
@@ -212,8 +287,23 @@ def _images_status(providers: list[dict]) -> dict:
     the run agree by construction. ``source`` is ``none`` when no image-capable
     provider is reachable — the row then asks for a key rather than naming a
     model nothing can run.
+
+    ``preferred`` mirrors the same argument on ``resolve_image_run``, including
+    the fall-through: a saved pick whose provider has no key resolves to the
+    order below. The page has to render what will actually happen, and "the
+    model you chose, which cannot run" is the one answer it must not give.
     """
     by_id = {row["id"]: row for row in providers}
+    wanted = preferred_image_model(preferred)
+    if wanted is not None:
+        row = by_id.get(provider_of(wanted).value)
+        if row and row["reachable"]:
+            return {
+                "provider": row["id"],
+                "model": wanted.value,
+                "source": row["source"],
+            }
+
     for provider in IMAGE_PROVIDER_ORDER:
         row = by_id.get(provider.value)
         if row and row["reachable"]:
@@ -398,7 +488,7 @@ async def verify_provider_key(
     except asyncio.TimeoutError:
         return {"ok": False, "code": VERIFY_UNREACHABLE, "model": str(getattr(model, "value", model)), "detail": "The provider did not answer in time."}
     except Exception as exc:  # noqa: BLE001 — every failure is an answer here
-        code = _verify_code(exc, subscription=is_subscription_credential(key))
+        code = _verify_code(exc, subscription=is_plan_credential(provider, key))
         logger.info("verify: %s on %s failed as %s", provider.value, getattr(model, "value", model), code)
         return {
             "ok": False,
@@ -435,6 +525,7 @@ def models_catalogue() -> dict:
             continue
         models.append({
             "id": model.value,
+            "label": _MODEL_LABEL.get(model.value, model.value),
             "provider": provider.value,
             "tier_hint": (_MODEL_TIER_HINT.get(model.value) or Tier.STANDARD).value,
             "engines": _engines_for(provider),
@@ -461,6 +552,7 @@ def models_catalogue() -> dict:
         "image_models": [
             {
                 "id": model.value,
+                "label": _MODEL_LABEL.get(model.value, model.value),
                 "provider": provider_of(model).value,
                 "default": DEFAULT_IMAGE_MODELS.get(provider_of(model)) is model,
             }
@@ -508,7 +600,7 @@ def models_preview(
     reachable = {
         provider
         for provider in Provider
-        if user_keys.get(provider)
+        if is_usable_credential(provider, user_keys.get(provider) or "")
         or provider in stored
         or (server_usable and getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), ""))
     }

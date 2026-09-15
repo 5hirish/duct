@@ -1,5 +1,7 @@
 # Agent harnesses we learn from
 
+**Author:** Shirish Kadam · **Updated:** 2026-09-14
+
 Three coding-agent harnesses are being built in the open, by teams that hit
 every problem our agent shell hits — reconnect, resume, pauses that outlive a
 process, streaming that does not flicker, errors a user can act on — a year

@@ -71,21 +71,37 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
   **Images are a second provider inside a content run, and not a fixed one.**
   The conversation runs on whatever key the user brought for chat; the pictures
-  run on whatever *image-capable* key they brought — Gemini, OpenAI or xAI, in
-  that order of preference (`agents/models.IMAGE_PROVIDER_ORDER`). The seam is
+  run on whatever *image-capable* key they brought — Gemini, OpenAI, xAI or
+  OpenRouter, in that order of preference
+  (`agents/models.IMAGE_PROVIDER_ORDER`; the gateway is last because a
+  first-party key for the same model is one hop fewer). The seam is
   `service/images/`: one request shape, one `ImageAPIError`, one factory
-  (`image_client_for`), three backends (`service/google/gemini/client.py`,
-  `service/openai/images.py`, `service/xai/images.py`). `routes/content.py`
+  (`image_client_for`), four backends (`service/google/gemini/client.py`,
+  `service/openai/images.py`, `service/xai/images.py`,
+  `service/openrouter/images.py`). `routes/content.py`
   resolves the image run once per session (`agents/engines.resolve_image_run`)
   and stashes provider + key on it; the tools spend that or decline, and the
-  decline names all three providers. The agent's tool schema still defaults to
-  the Gemini model id, so `image_model_for` swaps in the resolved provider's
-  default rather than refusing — the agent asked for an image, not a Google
-  image. Adding a backend means a client module, an `ImageModel` entry whose
-  prefix `provider_of` recognises, a `DEFAULT_IMAGE_MODELS` row, and a branch in
+  decline names every provider that would unblock the user. The agent's tool
+  schema still defaults to the Gemini model id, so `image_model_for` swaps in
+  the resolved provider's default rather than refusing — the agent asked for an
+  image, not a Google image. Adding a backend means a client module, an
+  `ImageModel` entry whose prefix `provider_of` recognises, a
+  `DEFAULT_IMAGE_MODELS` row, and a branch in
   the factory; `/providers/status` and `/models/catalogue` derive the settings
   page's Images row from those same tables, so nothing in the browser lists a
-  model. The ChatGPT-subscription route (`agents/core/codex.py`) is deliberately
+  model.
+
+  **The OpenRouter backend is a short list, not a catalogue.** They front 52
+  image models; `ImageModel` names four, because it is a Pydantic enum in the
+  content agent's tool schema and opening it to free-form slugs — the way the
+  *chat* catalogue deliberately does — would let a run invent a model and fail
+  on a slide. Three of the four reach vendors no first-party key here can
+  (Seedream, Flux, Recraft, the last emitting SVG); the fourth is the cheap
+  Gemini workhorse. Adding one is an enum line plus a `_CAPS` row in
+  `service/openrouter/images.py`, and that row is not optional: the four models
+  disagree about `resolution`, ratio lists and how many images one call may
+  return, so every request is clamped to the table and the clamp is logged
+  rather than sent hopefully. The ChatGPT-subscription route (`agents/core/codex.py`) is deliberately
   not an image backend: it can draw through Codex's hosted tool, but OpenAI's
   own docs scope subscription sign-in to Codex products and it is Plus-and-up,
   per-minute-quota'd, and unofficial — the wrong thing to put a customer's slide
@@ -251,6 +267,26 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   (`"properties.keyEvents.list"`). The GTM fake in `test_execution_policy.py`
   stays where it is on purpose: it keeps container state so it can answer a read
   that follows a write, which is a different job from replaying canned answers.
+- **A fetcher's test fakes the transport, not the client.** The client-level
+  fakes above are right for an executor, where the mutation it sends is what
+  matters. They never run the code that *builds* a read request, and that is
+  where GA4 landing pages were broken for six weeks (`StringFilter` imported
+  from the wrong module) with every test green. So each read fetcher has a
+  request-shape test one layer down: `FakeWire` replaces `httpx.request`
+  beneath `service/rest.py` so a whole Meta, Apple, Stripe or RevenueCat pull
+  runs with the vendor's own encoding, headers and pagination real
+  (`test_rest_connector_requests.py`); `RecordingHttp` plus
+  `discovery_build_offline` let `googleapiclient` build Search Console and the
+  GA4 admin API from the discovery document it ships, so method names and
+  parameters are validated offline (`test_gsc_fetchers.py`); the GA4 Data API
+  test fakes only `BetaAnalyticsDataClient` and lets the real request types
+  build the report; and `FakeAdsClient.search_stream` answers the Google Ads
+  read fetchers with real `GoogleAdsRow` protos and logs the GAQL in `queries`
+  (`test_google_ads_fetchers.py`). When you add a fetcher, add one of these
+  with it — assert on the request that would have gone over the wire, then on
+  the parsed rows. `test_vendor_contracts.py` covers what none of them can:
+  that every lazily imported SDK name and every GAQL field still exists in the
+  installed package.
 
 ### Desktop (local sidecar) mode
 
@@ -283,7 +319,13 @@ see the engine consolidation review (duct-cloud, private) §7–8.
 Schema changes are applied **manually** with Alembic — a normal local dev step,
 distinct from an app deploy (the global "deploys go through CI/CD" rule is about
 shipping app code, not running migrations). Nothing runs migrations
-automatically: `railway.json` only starts uvicorn and there is no CI migration job.
+automatically: `railway.json` only starts uvicorn. CI does *verify* them —
+`backend.yml`'s `migrations` job applies the whole chain to an empty
+Postgres 16, runs `alembic check` (fails on any model/migration drift, the
+diff `--autogenerate` would have written) and undoes the newest one once.
+The offline suite runs on SQLite and cannot see any of that;
+`make check-migrations` is the same three steps against whatever throwaway
+Postgres `DATABASE_URL` names.
 
 - Apply: from `backend/`, run `alembic upgrade head`. The DB URL resolves from
   `backend/.env.local` (the Railway TCP proxy) via `config.get_configs()`.
@@ -348,6 +390,18 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
   (which serves both the live session and the scheduled brief), content via
   `routes/content._resolve_run_model`. `resolve_run_model` remains for callers
   that have no job to name.
+- `models/settings.py` + `service/profile.py` + `routes/profile.py` — the
+  operator profile: name, role, writing preset, the language Duct writes to
+  them in, and their own instructions. Same argument as the tier map below,
+  applied to voice. Two rules worth knowing: **the server row is the truth and
+  the request payload is the fallback** (`resolve`), so a signed-out audit
+  still gets the voice picked in the browser; and **the preset derives the
+  older `communication_style`/`report_depth` pair** rather than replacing it,
+  so every prompt that reads those is unchanged. Rendered for a run by
+  `agents/core/voice.user_context_block` into the `<user_context>` block — in
+  the USER turn, never the system prompt, because
+  `build_insights_system_prompt` is cache-stable and one per-customer string
+  in it costs the cached prefix on every call.
 - `models/settings.py` + `service/model_settings.py` — the tier map and the
   fallback switch, keyed by user. They used to live in `localStorage` and ride
   on each request, which meant the scheduled brief — the run whose owner is
@@ -364,7 +418,7 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
   Recorded in `ReportedRetryMiddleware._give_up`, consumed by
   `agents/tiers.resolve_tier_model`'s `cooling` set, reported to the browser
   as `tier_skipped` on `PIPELINE_STARTED`. See
-  `docs/engineering/quota-aware-tier-ladder.md`.
+  `docs/engineering/2026-09-08-quota-aware-tier-ladder.md`.
 - `POST /api/providers/{id}/verify` — one real completion on the provider's
   Light model, classified into `invalid_key` / `no_billing` / `model_access`
   / `rate_limited` / `unreachable`, or for a ChatGPT credential
@@ -377,7 +431,7 @@ automatically: `railway.json` only starts uvicorn and there is no CI migration j
   audit's user turn (`draft_project`) is the trigger, so the cached prefix is
   identical across every other audit.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
-- `routes/project_members.py` — project members + email invitations (`docs/engineering/project-collaboration-plan.md`)
+- `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`
 
@@ -581,6 +635,60 @@ don't fit.
   set (`pytest tests/test_memory_retrieval.py -s` prints the per-axis report);
   it exists because it caught the AND-everything query bug that made questions
   retrieve nothing, so extend it before tuning retrieval by feel.
+- `agents/core/turn.py` — **how every agent's user turn is built.** An agent
+  declares a `ContextSpec` in `agents/registry.py` (which shared blocks it
+  wants); a run renders a `TurnContext`; `build_turn` orders them. A new agent
+  that declares nothing gets everything — business context, the operator's
+  profile, stored agent context, prior reports, memory, data sources — which is
+  the right default, because an extra block costs a few hundred tokens and a
+  missing one costs an agent that does not know who it is answering. That was
+  not hypothetical: `display_name` reached insights and content and silently
+  missed audit for a release, because audit described the operator its own way.
+
+  Two rules this module exists to hold, both enforced by `tests/test_turn.py`:
+
+  - **Per-user and per-project text goes in the USER turn, never the system
+    prompt.** The system prompt is the cached prefix; one customer's name in it
+    gives every account a prefix of its own and loses the hit on every call of
+    every run. The test builds a profile of distinctive strings and fails if
+    any of them appear in a system prompt.
+  - **`BLOCK_ORDER` is stable-first, volatile-last, and it is a cache decision
+    rather than a formatting one.** Inside one session the order is free (turn
+    one is the prefix for turn two either way). It pays *across* runs: two
+    insights runs on the same project a week apart share a system prompt, and
+    if both turns open with byte-identical `<business_context>` and
+    `<user_context>` the cached prefix extends past the system prompt into the
+    turn. Lead with the memory digest instead and the match ends at the first
+    block, because memory moved in between. Do not "tidy" that tuple into
+    declaration order.
+
+  An agent with a block of its own may set an unlisted tag — it renders after
+  the ordered blocks and before the request. Anything a *second* agent starts
+  using belongs in `BLOCK_ORDER`, where its cache position is a decision
+  somebody made on purpose.
+
+- `scripts/dump_prompts.py` — **regenerate after any prompt change**
+  (`make dump-prompts`). It renders every agent's system prompt and a sample
+  assembled turn to [`docs/engineering/agent-prompts.md`](../docs/engineering/agent-prompts.md),
+  checked in, so a prompt change lands in the pull request as prose rather than
+  as a Python string edit a reviewer has to assemble in their head.
+  `prompts.yml` runs the `--check` form on a PR that touched a prompt, and
+  `make check-backend` runs it locally.
+
+  We looked at the prompt file formats (Prompty, dotprompt, POML, BAML) and did
+  not adopt one. They solve prompts-as-swappable-config, edited outside the
+  repository and hot-reloaded without a deploy. Duct's prompts are composed:
+  `agents/content/prompts.py` alone has 47 interpolation sites and 22 branches,
+  audit assembles its scoring table from `agents/audit/scoring.py` and varies
+  its tool guidance on whether the provider does vision. Moving that into
+  Handlebars or Jinja moves real logic into a template language with no types
+  and no tests. **The reviewability problem was never the storage format** — it
+  was that nobody could read the assembled result. That is what the dump fixes.
+
+  The output must stay deterministic: no timestamps, no run ids. A
+  non-deterministic byte fails `--check` on every unrelated pull request, and a
+  check that cries wolf gets switched off.
+
 - `agents/core/lc.py` — the LangChain adapter every V1 runner shares:
   `resolve_chat_model` (model transport) and `stream_agent` (LangChain stream →
   the `AgentEvent` vocabulary), plus `build_ask_user_tool`, the LangChain half

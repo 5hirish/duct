@@ -1,6 +1,6 @@
 """Autonomous insights session — assembly, event contract, and the chat loop.
 
-Phase 1 of `docs/engineering/autonomous-insights-agent-plan.md`: insights stops
+Phase 1 of `docs/engineering/2026-08-31-autonomous-insights-agent-plan.md`: insights stops
 being a request-shaped pipeline and becomes a session like audit and content.
 What matters, and what these pin:
 
@@ -144,6 +144,32 @@ def test_user_turn_carries_the_per_project_blocks():
     assert "Acme" in out
     assert "Target CPA is $45" in out
     assert "<request>" in out and "how is paid search doing?" in out
+
+
+def test_user_turn_carries_what_the_project_can_reach():
+    """ListDataSources, answered before the first model call: the block rides
+    in the user turn (per-project, never the cached prefix) and the prompt
+    tells the agent to read it rather than call the tool first."""
+    from agents.insights.setup import render_data_sources
+
+    block = render_data_sources([
+        {"connector_id": "google_ads", "status": "bound", "account_id": "123-456", "account_name": "Acme"},
+        {"connector_id": "gsc", "status": "available"},
+        {"connector_id": "ga4", "status": "not_connected", "auth_kind": "oauth"},
+        {"connector_id": "mixpanel", "status": "not_connected", "auth_kind": "manual"},
+    ])
+    out = build_insights_user_prompt(prompt="how is the site doing?", data_sources=block)
+
+    assert "<data_sources>" in out
+    assert 'google_ads: bound → 123-456 "Acme"' in out
+    assert "gsc: available" in out and "SelectAccount" in out
+    assert "ga4: not_connected" in out and "RequestConnection" in out
+    assert "mixpanel: not_connected" in out and "Connections page" in out
+    # The prefix names the block so the agent reads it; the block itself is
+    # per-project and never enters the cached system prompt.
+    assert "<data_sources>" in build_insights_system_prompt()
+    assert "123-456" not in build_insights_system_prompt()
+    assert render_data_sources([]) == ""
 
 
 def test_empty_prompt_becomes_an_opening_instruction():
@@ -868,3 +894,157 @@ async def test_a_run_that_wrote_nothing_says_so(emitted):
 
     assert brief == {}
     assert AgentEvent.ARTIFACT_VERSION not in [e["event"] for e in emitted.events]
+
+
+# ---------------------------------------------------------------------------
+# Stream translation: only the model's words are the agent's words
+# ---------------------------------------------------------------------------
+
+
+async def test_a_steered_user_message_is_not_streamed_back_as_the_agent(emitted):
+    """SteerMiddleware writes the user's mid-turn message into the thread as
+    a HumanMessage from a graph node, and LangGraph's messages stream carries
+    every message a node writes. Streamed on, "I have connected GA4 now" came
+    back as a grey bubble under the user's own blue one."""
+    from langchain_core.messages import AIMessageChunk, HumanMessage, ToolMessage
+
+    class _Agent:
+        async def astream(self, _input, _config, stream_mode):
+            yield "messages", (HumanMessage(content="I have connected GA4 now"), {"langgraph_node": "SteerMiddleware.before_model"})
+            yield "messages", (ToolMessage(content='{"status": "ok"}', tool_call_id="t1"), {"langgraph_node": "tools"})
+            yield "messages", (AIMessageChunk(content="Pulling GA4 now."), {"langgraph_node": "model"})
+
+    async def _no_artifact(_raw, _text):
+        return None
+
+    await lc.stream_agent(_Agent(), "hi", emitted, on_artifact_close=_no_artifact)
+
+    texts = [e["text"] for e in emitted.events if e.get("event") == AgentEvent.AGENT_MESSAGE_CHUNK]
+    assert "".join(texts) == "Pulling GA4 now."
+
+
+# ---------------------------------------------------------------------------
+# The verifier runs on its own rung
+# ---------------------------------------------------------------------------
+
+
+def test_the_verifier_resolves_through_its_own_job(monkeypatch):
+    """Job.VERIFICATION is a tier below Job.ANALYSIS in the map, and the
+    subagent used to inherit the analyst's model regardless. The run carries
+    both, and the runner builds the verifier on the second."""
+    from agents.engines import JobRun
+    from agents.insights import setup
+    from agents.models import ModelName, Provider
+    from agents.tiers import Job
+
+    class _Settings:
+        engine = ""
+        tiers = {}
+        auto_fallback = True
+
+    seen: list[Job] = []
+
+    def _job_run(job, **_kwargs):
+        seen.append(job)
+        model = ModelName.GPT_5_6_SOL if job is Job.ANALYSIS else ModelName.GPT_5_6_TERRA
+        return JobRun(provider=Provider.OPENAI, model=model, api_key="sk-proj-x", source="header")
+
+    monkeypatch.setattr(setup, "resolve_job_run", _job_run)
+    monkeypatch.setattr(setup, "stored_keys_for", lambda _uid: {})
+    monkeypatch.setattr(setup, "get_model_settings", lambda _uid: _Settings())
+
+    run = setup.resolve_run(user_id=None, project_id=None, user_keys={Provider.OPENAI: "sk-proj-x"})
+
+    assert seen == [Job.ANALYSIS, Job.VERIFICATION]
+    assert run.model is ModelName.GPT_5_6_SOL
+    assert run.verify_model is ModelName.GPT_5_6_TERRA and run.verify_provider is Provider.OPENAI
+
+    runner = AutonomousInsightsRunner(
+        api_key=run.api_key, provider=run.provider, model=run.model,
+        verify_provider=run.verify_provider, verify_model=run.verify_model, verify_api_key=run.verify_api_key,
+    )
+    built: list = []
+    monkeypatch.setattr(
+        "agents.insights.v1.runner.build_verify_subagent",
+        lambda tools, model=None: built.append(model) or {"name": "verify", "description": "", "system_prompt": "", "tools": tools},
+    )
+    runner.build_agent(remember=False, execute=False, interactive=False)
+    assert built and getattr(built[0], "model_name", "") == ModelName.GPT_5_6_TERRA.value
+
+
+def test_a_hand_built_run_keeps_the_verifier_on_the_analysis_model():
+    """No verify fields → no second model: the tests' fake-model seam and any
+    caller that resolved nothing must not fire a real provider call."""
+    runner = AutonomousInsightsRunner(api_key="sk-x")
+    assert runner._verify is None
+
+
+# ---------------------------------------------------------------------------
+# The composer's dials reach the run
+# ---------------------------------------------------------------------------
+
+
+def test_the_tier_lift_reaches_the_analysis_and_not_the_verifier(monkeypatch):
+    """"Run this on Heavy" means the answer, not the checks: the composer's
+    tier rides on the analysis job only."""
+    from agents.engines import JobRun
+    from agents.insights import setup
+    from agents.models import ModelName, Provider
+    from agents.tiers import Job
+
+    class _Settings:
+        engine = ""
+        tiers = {}
+        auto_fallback = True
+
+    seen: dict[Job, str] = {}
+
+    def _job_run(job, **kwargs):
+        seen[job] = kwargs.get("tier_override", "")
+        return JobRun(provider=Provider.OPENAI, model=ModelName.GPT_5_MINI, api_key="sk-proj-x", source="header")
+
+    monkeypatch.setattr(setup, "resolve_job_run", _job_run)
+    monkeypatch.setattr(setup, "stored_keys_for", lambda _uid: {})
+    monkeypatch.setattr(setup, "get_model_settings", lambda _uid: _Settings())
+
+    setup.resolve_run(user_id=None, project_id=None, user_keys={Provider.OPENAI: "sk-proj-x"}, tier_override="heavy")
+    assert seen == {Job.ANALYSIS: "heavy", Job.VERIFICATION: ""}
+
+
+def test_a_stale_tier_preference_never_stops_a_run():
+    """An unknown tier word is ignored, not refused — see resolve_job_run."""
+    from agents.preferences import UserPreferences
+
+    assert UserPreferences(tier="light").tier == "light"
+    assert UserPreferences().tier == ""
+
+
+async def test_an_autonomy_change_is_restated_at_the_next_turn(session, monkeypatch):
+    """The posture lives in the opening user turn, so a session used to keep
+    the level it opened with until the next session. The chat route now
+    re-reads the project per message and prepends the new posture once."""
+    import routes.agents as routes_agents
+
+    session.artifact_project_id = uuid.uuid4()
+    session.autonomy = "ask"
+    session.autonomy_model = "claude-opus-5"
+    levels = iter(["ask", "assisted", "assisted"])
+    monkeypatch.setattr(routes_agents, "_configured_autonomy", lambda _pid: next(levels))
+
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="first"), user=None)
+    assert session.chat_queue.get_nowait()["content"] == "first"          # unchanged: same level
+
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="second"), user=None)
+    queued = session.chat_queue.get_nowait()["content"]
+    assert queued.startswith("<autonomy>") and "ASSISTED" in queued and queued.endswith("second")
+    assert session.autonomy == "assisted"
+
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="third"), user=None)
+    assert session.chat_queue.get_nowait()["content"] == "third"          # stated once, not every turn
+
+
+async def test_a_session_without_a_project_keeps_its_message_untouched(session):
+    session.artifact_project_id = None
+    session.autonomy = "ask"
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="hi"), user=None)
+    assert session.chat_queue.get_nowait()["content"] == "hi"

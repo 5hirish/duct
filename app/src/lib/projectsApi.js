@@ -39,17 +39,17 @@ export const AUTONOMY_OPTIONS = [
   {
     value: AUTONOMY_ASK,
     label: "Ask",
-    blurb: "Agents ask freely and propose changes; nothing touches an account until you approve it here.",
+    blurb: "Agents propose; nothing runs until you approve it here.",
   },
   {
     value: AUTONOMY_ASSISTED,
     label: "Assisted",
-    blurb: "Agents ask only when it changes the answer. Reversible, guardrail-clean changes on the allowlist apply on their own; everything else waits here.",
+    blurb: "Reversible changes on the allowlist apply on their own; the rest waits here.",
   },
   {
     value: AUTONOMY_AUTO,
     label: "Auto",
-    blurb: "Agents interrupt as little as possible and record assumptions in the brief instead. Applies exactly the same allowlist as Assisted — fewer interruptions, not a wider reach.",
+    blurb: "Same allowlist as Assisted, fewer questions; assumptions go in the brief.",
   },
 ];
 

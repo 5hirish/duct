@@ -1,15 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BASE } from "../../../lib/api";
-import {
-  clearAdsDeveloperToken,
-  getAdsDeveloperToken,
-  getAdsLoginCustomerId,
-  setAdsDeveloperToken,
-  setAdsLoginCustomerId,
-} from "../../../lib/adsCredentials";
+import { getAdsLoginCustomerId, setAdsLoginCustomerId } from "../../../lib/adsCredentials";
 import {
   bindProjectConnector,
   deleteServerConnector,
@@ -20,7 +15,12 @@ import {
   saveServerConnector,
   unbindProjectConnector,
 } from "../../../lib/connectorsApi";
-import { CONNECTOR_TOKEN_KEYS, exchangeConnectorCode } from "../../../lib/connectorAuth";
+import {
+  CONNECTOR_TOKEN_KEYS,
+  consumeConnectorReturn,
+  exchangeConnectorCode,
+  markConnectorConnected,
+} from "../../../lib/connectorAuth";
 import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
 import { getActiveProject } from "../../../lib/projects";
 
@@ -40,12 +40,11 @@ import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSel
 import { LOGOS } from "../../../components/connections/logos";
 
 export default function ConnectionsPage() {
+  const router = useRouter();
   const [ga4Connected, setGa4Connected] = useState(false);
   const [gscConnected, setGscConnected] = useState(false);
   const [gtmConnected, setGtmConnected] = useState(false);
   const [gadsOauthConnected, setGadsOauthConnected] = useState(false);
-  const [gadsDevTokenSaved, setGadsDevTokenSaved] = useState(false);
-  const [devTokenInput, setDevTokenInput] = useState("");
   const [mccInput, setMccInput] = useState("");
   const [signedIn, setSignedIn] = useState(false);
   const [connectError, setConnectError] = useState("");
@@ -85,19 +84,17 @@ export default function ConnectionsPage() {
   }
 
   // Upserts replace the stored blob whole, so a Google Ads sync must always
-  // carry all three fields (refresh token + developer token + MCC).
+  // carry both fields (refresh token + MCC).
   async function syncGadsToServer() {
     if (!hasAuthToken()) return;
     const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
     if (!refreshToken) return;
-    const developerToken = (await getAdsDeveloperToken()) || "";
     const loginCustomerId = getAdsLoginCustomerId() || "";
     try {
       await saveServerConnector({
         connector_type: "google_ads",
         credentials: {
           refresh_token: refreshToken,
-          developer_token: developerToken,
           login_customer_id: loginCustomerId,
         },
         granted_scopes: grantedScopesFor("google_ads"),
@@ -199,6 +196,22 @@ export default function ConnectionsPage() {
     else await syncTokenToServer(connectorType, refreshToken);
   }
 
+  // A connect that started from a conversation ends back in it. Only after
+  // the server row is written: the agent answers "connected" by re-reading
+  // the database, not by trusting the browser, so returning a beat early
+  // would have it report the source as still missing.
+  async function returnToRequester(connectorType, pending) {
+    const back = consumeConnectorReturn();
+    if (!back) return;
+    try {
+      await pending;
+    } catch {
+      /* the card keeps its manual "I've connected it" button for this case */
+    }
+    markConnectorConnected(connectorType);
+    router.replace(back);
+  }
+
   async function removeServerRow(connectorType) {
     const row = serverRows[connectorType];
     if (!row) return;
@@ -248,19 +261,22 @@ export default function ConnectionsPage() {
     setGa4Connected(!!sessionStorage.getItem("ga4_refresh_token"));
     setGscConnected(!!sessionStorage.getItem("gsc_refresh_token"));
     setGtmConnected(!!sessionStorage.getItem("gtm_refresh_token"));
-    getAdsDeveloperToken().then((token) => setGadsDevTokenSaved(!!token));
 
     const authed = hasAuthToken();
     setSignedIn(authed);
+    const synced = [];
     if (authed) {
       refreshServerRows();
       // Persist newly-arrived OAuth tokens server-side (encrypted) so agent
       // executions and scheduled pulls can run without this browser tab.
-      if (arrived.gads_refresh_token) syncGadsToServer();
-      if (arrived.ga4_refresh_token) syncTokenToServer("ga4", arrived.ga4_refresh_token);
-      if (arrived.gsc_refresh_token) syncTokenToServer("gsc", arrived.gsc_refresh_token);
-      if (arrived.gtm_refresh_token) syncTokenToServer("gtm", arrived.gtm_refresh_token);
+      if (arrived.gads_refresh_token) synced.push(syncGadsToServer());
+      if (arrived.ga4_refresh_token) synced.push(syncTokenToServer("ga4", arrived.ga4_refresh_token));
+      if (arrived.gsc_refresh_token) synced.push(syncTokenToServer("gsc", arrived.gsc_refresh_token));
+      if (arrived.gtm_refresh_token) synced.push(syncTokenToServer("gtm", arrived.gtm_refresh_token));
     }
+    // One grant per callback, so the first arrival names the connector.
+    const arrivedKey = Object.keys(arrived)[0];
+    if (arrivedKey) returnToRequester(connectorTypeForStorageKey(arrivedKey), Promise.all(synced));
 
     // Desktop shell: the OAuth ran in the system browser and came home through
     // the shell's deep link, which navigates this window to
@@ -275,9 +291,11 @@ export default function ConnectionsPage() {
       window.history.replaceState(null, "", window.location.pathname);
       setConnectError("");
       exchangeConnectorCode(codeParam)
-        .then(({ connector_type, refresh_token, granted_scopes }) =>
-          adoptConnectorToken(connector_type || connectorParam, refresh_token, granted_scopes || ""),
-        )
+        .then(({ connector_type, refresh_token, granted_scopes }) => {
+          const type = connector_type || connectorParam;
+          // adoptConnectorToken awaits the server sync, so the return waits too.
+          return returnToRequester(type, adoptConnectorToken(type, refresh_token, granted_scopes || ""));
+        })
         .catch(() =>
           setConnectError(
             "That connection didn't finish — the link expires after a minute. Please try again.",
@@ -388,15 +406,9 @@ export default function ConnectionsPage() {
     };
   }
 
-  async function saveGadsApiAccess(event) {
+  async function saveGadsManagerAccount(event) {
     event.preventDefault();
-    const token = devTokenInput.trim();
     const mcc = mccInput.replace(/-/g, "").trim();
-    if (token) {
-      await setAdsDeveloperToken(token);
-      setGadsDevTokenSaved(true);
-      setDevTokenInput("");
-    }
     setAdsLoginCustomerId(mcc);
     setMccInput(mcc);
     await syncGadsToServer();
@@ -406,11 +418,8 @@ export default function ConnectionsPage() {
     sessionStorage.removeItem("gads_refresh_token");
     sessionStorage.removeItem("gads_customer_id");
     notifyConnectorsChanged();
-    await clearAdsDeveloperToken();
     setAdsLoginCustomerId("");
     setGadsOauthConnected(false);
-    setGadsDevTokenSaved(false);
-    setDevTokenInput("");
     setMccInput("");
     await removeServerRow("google_ads");
   }
@@ -448,8 +457,6 @@ export default function ConnectionsPage() {
   const ga4Authorized = ga4Connected || !!serverRows.ga4;
   const gscAuthorized = gscConnected || !!serverRows.gsc;
   const gtmAuthorized = gtmConnected || !!serverRows.gtm;
-
-  const gadsConnected = gadsAuthorized && gadsDevTokenSaved;
 
   // Authorized is not the same as fully permitted. Google's consent screen has
   // a tickbox per scope, so a connector can hold a valid token and still be
@@ -522,36 +529,13 @@ export default function ConnectionsPage() {
           <div className="conn-grid">
             <OAuthConnectorCard
               title="Google Ads"
-              description="Campaign performance including spend, clicks, impressions, conversions, and ROAS."
+              description="Spend, clicks, impressions, conversions and ROAS, per campaign."
               logo={LOGOS.google_ads}
-              connected={gadsConnected}
+              connected={gadsAuthorized}
               oauthConnected={gadsAuthorized}
-              tone={
-                gadsConnected
-                  ? toneFor(true, "google_ads")
-                  : gadsAuthorized || gadsDevTokenSaved
-                    ? "partial"
-                    : "off"
-              }
+              tone={toneFor(gadsAuthorized, "google_ads")}
               {...scopeProps("google_ads")}
-              status={
-                gadsConnected
-                  ? "Connected"
-                  : gadsAuthorized
-                    ? "Add developer token"
-                    : gadsDevTokenSaved
-                      ? "Sign in with Google"
-                      : "Not connected"
-              }
-              pillStatus={
-                gadsConnected
-                  ? "Connected"
-                  : gadsAuthorized
-                    ? "Needs developer token"
-                    : gadsDevTokenSaved
-                      ? "Needs Google sign-in"
-                      : "Not connected"
-              }
+              status={connectionStatusFor(gadsAuthorized, "google_ads")}
               authorizeUrl={`${BASE}/auth/connectors/google_ads/oauth/authorize`}
               onDisconnect={signOutGads}
               signedIn={signedIn}
@@ -559,30 +543,11 @@ export default function ConnectionsPage() {
               rows={serverRowsAll.google_ads || []}
               {...mappingProps("google_ads")}
             >
-              <form onSubmit={saveGadsApiAccess} style={{ display: "grid", gap: 10 }}>
+              <form onSubmit={saveGadsManagerAccount} style={{ display: "grid", gap: 10 }}>
                 <p className="conn-hint">
-                  Duct&rsquo;s Google Ads API access is pending Google approval — bring your own{" "}
-                  <a
-                    className="app-link"
-                    href="https://developers.google.com/google-ads/api/docs/get-started/dev-token"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    developer token
-                  </a>{" "}
-                  from your manager account. It stays on this device and is only sent with your requests.
+                  Signing in with Google is all Duct needs. If your accounts sit under a manager
+                  account, name it here so Duct reads the child accounts through it.
                 </p>
-                <div className="conn-field">
-                  <Label htmlFor="gads-dev-token">Developer token</Label>
-                  <Input
-                    id="gads-dev-token"
-                    type="password"
-                    autoComplete="off"
-                    placeholder={gadsDevTokenSaved ? "Saved — paste to replace" : "Paste your developer token"}
-                    value={devTokenInput}
-                    onChange={(e) => setDevTokenInput(e.target.value)}
-                  />
-                </div>
                 <div className="conn-field">
                   <Label htmlFor="gads-mcc">Manager account ID (MCC, optional)</Label>
                   <Input
@@ -594,13 +559,8 @@ export default function ConnectionsPage() {
                   />
                 </div>
                 <div>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="secondary"
-                    disabled={!devTokenInput.trim() && !gadsDevTokenSaved}
-                  >
-                    Save API access
+                  <Button type="submit" size="sm" variant="secondary" disabled={!gadsAuthorized}>
+                    Save manager account
                   </Button>
                 </div>
               </form>
@@ -608,7 +568,7 @@ export default function ConnectionsPage() {
 
             <OAuthConnectorCard
               title="Google Search Console"
-              description="Organic search queries, clicks, impressions, and average position data for SEO reporting."
+              description="Search queries, clicks, impressions and average position."
               logo={LOGOS.gsc}
               connected={gscAuthorized}
               oauthConnected={gscAuthorized}
@@ -625,7 +585,7 @@ export default function ConnectionsPage() {
 
             <OAuthConnectorCard
               title="Google Analytics"
-              description="Website traffic, sessions, engagement, and conversion trend data for performance reporting."
+              description="Traffic, sessions, engagement and conversions."
               logo={LOGOS.ga4}
               connected={ga4Authorized}
               oauthConnected={ga4Authorized}
@@ -642,7 +602,7 @@ export default function ConnectionsPage() {
 
             <OAuthConnectorCard
               title="Google Tag Manager"
-              description="Tags, variables, and container versions — measurement fixes with staged publishes and one-command rollback."
+              description="Tags, variables and container versions — staged, with rollback."
               logo={LOGOS.gtm}
               connected={gtmAuthorized}
               oauthConnected={gtmAuthorized}
@@ -660,7 +620,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="meta_ads"
               title="Meta Ads"
-              description="Facebook and Instagram campaign performance including spend, reach, conversions, and CPA."
+              description="Facebook and Instagram spend, reach, conversions and CPA."
               logo={LOGOS.meta_ads}
               fields={[
                 {
@@ -694,7 +654,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="stripe"
               title="Stripe"
-              description="Settled revenue, subscriptions, refunds, and payment outcomes — the money truth your ad platforms get reconciled against."
+              description="Settled revenue, subscriptions, refunds and payment outcomes."
               logo={LOGOS.stripe}
               fields={[
                 {
@@ -719,7 +679,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="apple_ads"
               title="Apple Search Ads"
-              description="App Store search campaign performance — spend, taps, and installs by campaign and search term."
+              description="Spend, taps and installs, by campaign and search term."
               logo={LOGOS.apple_ads}
               fields={[
                 { key: "client_id", label: "Client ID", placeholder: "SEARCHADS.xxxxxxxx-…" },
@@ -748,7 +708,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="revenuecat"
               title="RevenueCat"
-              description="Mobile subscription truth — trials, renewals, refunds, grace periods, and MRR across the App Store and Play."
+              description="Trials, renewals, refunds and MRR across the App Store and Play."
               logo={LOGOS.revenuecat}
               fields={[
                 {
@@ -774,7 +734,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="openai_ads"
               title="OpenAI Ads"
-              description="ChatGPT Ads campaign delivery — impressions, clicks, and spend (conversions live only in Ads Manager)."
+              description="Impressions, clicks and spend. Conversions stay in Ads Manager."
               logo={LOGOS.openai_ads}
               fields={[
                 {
@@ -797,7 +757,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="mixpanel"
               title="Mixpanel"
-              description="Cross-platform event truth — signups, logins, and upgrades under one name across web and app, the reference your ad platforms and GA4 get reconciled against."
+              description="Signups, logins and upgrades, one name across web and app."
               logo={LOGOS.mixpanel}
               fields={[
                 { key: "service_account_username", label: "Service account username", placeholder: "duct.xxxxxx.mp-service-account" },
@@ -840,7 +800,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="clarity"
               title="Microsoft Clarity"
-              description="What paid clicks do after landing — rage clicks, dead clicks, quick-backs, and script errors per page (last 3 days)."
+              description="Rage clicks, dead clicks, quick-backs and script errors, per page."
               logo={LOGOS.clarity}
               fields={[
                 {
@@ -873,7 +833,7 @@ export default function ConnectionsPage() {
             <ManualConnectorCard
               type="growthbook"
               title="GrowthBook"
-              description="Experiment health — which tests are live, whether they are still bucketing users, and per-metric results. Read-only."
+              description="Which tests are live, whether they still bucket, per-metric results."
               logo={LOGOS.growthbook}
               fields={[
                 {
@@ -903,7 +863,7 @@ export default function ConnectionsPage() {
             <ConnectorTile
               logo={LOGOS.hubspot}
               title="HubSpot"
-              description="CRM lifecycle and pipeline outcomes to tie paid and organic traffic to downstream revenue."
+              description="CRM lifecycle stages, pipeline and closed revenue."
               tone="off"
               status="Coming soon"
               disabled

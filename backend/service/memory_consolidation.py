@@ -1,6 +1,6 @@
 """Post-session consolidation — the "dream" that turns a transcript into memory.
 
-Phase 2 of the memory design (docs/engineering/agent-memory-research.html §07).
+Phase 2 of the memory design (docs/engineering/2026-08-28-agent-memory-research.md §07).
 An agent writing `RememberFact` mid-run catches what it *noticed*; consolidation
 catches what the session as a whole *established* — the conclusion nobody
 bothered to write down, the incident that quietly resolved, the target the user

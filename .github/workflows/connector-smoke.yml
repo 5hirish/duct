@@ -1,0 +1,76 @@
+name: Connector Smoke
+
+# Pulls every data source one real user has bound, against the real vendors,
+# and fails on anything but "ok". The offline suite proves each fetcher builds
+# the right request; only the vendor can prove the request is still accepted.
+# A change on their side — a retired API version, a scope Google stopped
+# honouring, a refresh token the hosted OAuth client cannot use — shows up here
+# as a red scheduled run instead of as a support thread.
+#
+# Reads the staging database, so it needs the same secrets the hosted API has.
+# Required repository secrets (pushed by scripts/push_env_to_github.py from
+# a gitignored backend/.env.test):
+#   DATABASE_URL                    — the staging Postgres (proxy URL)
+#   CREDENTIALS_ENCRYPTION_KEY      — decrypts connector_credentials rows
+#   GOOGLE_WEB_OAUTH_CLIENT_ID      — the hosted OAuth client; a token minted
+#   GOOGLE_WEB_OAUTH_CLIENT_SECRET    by the desktop client fails here, which
+#                                     is a finding, not a misconfiguration
+#                                     (the unprefixed GOOGLE_OAUTH_CLIENT_*
+#                                     pair is the backend's fallback spelling)
+#   DUCT_SMOKE_USER_EMAIL           — whose bound connectors to pull. A secret,
+#                                     not a variable: variables are readable
+#                                     by anyone with read access to a public
+#                                     repository.
+#
+# Status only reaches the log and the step summary — no rows, no names.
+
+on:
+  schedule:
+    # Monday 06:00 UTC, before the week's first briefs are read.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: connector-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: pull every bound connector
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install backend dependencies
+        run: poetry install --with dev
+
+      - name: Pull every bound connector
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CREDENTIALS_ENCRYPTION_KEY: ${{ secrets.CREDENTIALS_ENCRYPTION_KEY }}
+          GOOGLE_WEB_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_WEB_OAUTH_CLIENT_ID }}
+          GOOGLE_WEB_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_WEB_OAUTH_CLIENT_SECRET }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          DUCT_SMOKE_USER_EMAIL: ${{ secrets.DUCT_SMOKE_USER_EMAIL }}
+        # -rs surfaces the skip reason when a secret is missing, so an
+        # unconfigured run reads as "not configured" rather than as green.
+        run: poetry run pytest -m live tests/test_connector_smoke.py -s -rs
