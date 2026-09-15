@@ -28,7 +28,7 @@ uvicorn = {version = "^0.52", extras = ["standard"]}
 # which is why every deploy died on "Form data requires python-multipart".
 # Not a caret: poetry reads ^0.0.31 as <0.0.32, and this is FastAPI's own floor.
 python-multipart = ">=0.0.18"
-google-ads = "^31.4"
+google-ads = "^32.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.200.0"
 google-genai = "^2.22"
