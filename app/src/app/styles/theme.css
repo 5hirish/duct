@@ -182,7 +182,11 @@
   body {
     font-family: var(--sans);
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    /* `overflow-x: hidden` used to live here. Nothing overflowed, which is
+       the problem: the guard means the next component that does gets clipped
+       silently instead of showing up in review as a horizontal scrollbar. A
+       layout bug you cannot see is a layout bug you ship — and taking it off
+       immediately surfaced two that had been hiding behind it. */
     padding-top: env(safe-area-inset-top);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);

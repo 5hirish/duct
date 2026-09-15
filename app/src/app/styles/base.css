@@ -75,6 +75,40 @@ html {
   .animate-out {
     animation-duration: 0.01ms !important;
   }
+
+  /* The rest of Tailwind's motion, which had zero `motion-reduce:` variants
+     against 34 `animate-*` sites. Per-site variants were never going to hold —
+     the next `animate-pulse` would arrive without one, the way these did — so
+     the rule lives once, here, where a new component is covered by default.
+
+     `animate-spin` is deliberately exempt. WCAG 2.3.3 is about animation from
+     interaction, and a busy ring is the only thing on screen saying a request
+     is still running; freezing it reads as a hung app. It is slowed instead,
+     which keeps the meaning and drops the motion.
+
+     The two pulsing "there is something to see" dots in SplitWorkspace are
+     exactly what 2.3.3 names, and they stop: the dot stays, at full opacity,
+     so the signal survives without the movement. */
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .animate-spin {
+    animation-duration: 2s !important;
+  }
+
+  /* `transition-all` on a card that lifts on hover is motion too. Kept as a
+     transition rather than removed so a colour change still reads as a change
+     rather than a jump cut. */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 

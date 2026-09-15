@@ -119,3 +119,33 @@
 }
 
 
+
+/* Room for the connection banner, only while there is one.
+
+   `ConnectionBanner` is `position: fixed` at the bottom, so it used to sit on
+   top of whatever the page ended with — a form's last field at 375px, the
+   sidebar's theme toggle and account row at 1024px. `:has()` lets the shell
+   notice the banner is mounted and reserve its height, so nothing is ever
+   hidden behind it, and the reservation disappears with the banner rather
+   than being padding the layout carries forever.
+
+   The height is generous on purpose: the bar wraps to two lines at narrow
+   widths, and over-reserving costs a little whitespace while under-reserving
+   costs the thing the banner was covering. */
+body:has([data-connection-banner]) .app-main,
+body:has([data-connection-banner]) .app-main-wide {
+  padding-bottom: 6.5rem;
+}
+
+/* Above `sm` the banner is a card in the bottom-left corner rather than a
+   full-width bar, so it is shorter and it is over the sidebar, not the page. */
+@media (min-width: 40rem) {
+  body:has([data-connection-banner]) .app-main,
+  body:has([data-connection-banner]) .app-main-wide {
+    padding-bottom: 1.5rem;
+  }
+
+  body:has([data-connection-banner]) [data-slot="sidebar-footer"] {
+    padding-bottom: 5.5rem;
+  }
+}
