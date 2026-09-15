@@ -36,6 +36,8 @@ class Artifact(SQLModel, table=True):
     __table_args__ = (
         UniqueConstraint("group_id", "version", name="uq_artifacts_group_version"),
         Index("ix_artifacts_project_created", "project_id", "created_at"),
+        # Resolving /artifacts/<project>/<slug>. From c8f3a1d92b4e.
+        Index("ix_artifacts_project_slug", "project_id", "slug"),
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)

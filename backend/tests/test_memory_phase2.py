@@ -67,7 +67,7 @@ def owner(db):
 
 @pytest.fixture
 def project(db, owner):
-    row = Project(user_id=owner.id, name="Phase 2")
+    row = Project(user_id=owner.id, name="Phase 2", slug="phase-2")
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -150,7 +150,7 @@ def test_apply_rejects_kinds_the_model_invented(db, project, service_db):
 
 
 def test_close_and_archive_are_scoped_to_the_project(db, owner, project, service_db):
-    other = Project(user_id=owner.id, name="Other")
+    other = Project(user_id=owner.id, name="Other", slug="other")
     db.add(other)
     db.commit()
     db.refresh(other)

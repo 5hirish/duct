@@ -81,7 +81,7 @@ def owner(db):
 
 @pytest.fixture
 def project(db, owner):
-    row = Project(user_id=owner.id, name="Memory Test")
+    row = Project(user_id=owner.id, name="Memory Test", slug="memory-test")
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -248,7 +248,7 @@ def test_content_hash_is_stable_across_whitespace_and_case():
 # ---------------------------------------------------------------------------
 
 def test_project_isolation_is_absolute(db, owner, project):
-    other = Project(user_id=owner.id, name="Other")
+    other = Project(user_id=owner.id, name="Other", slug="other")
     db.add(other)
     db.commit()
     db.refresh(other)
@@ -312,7 +312,7 @@ def test_short_id_round_trips_within_the_project(db, project):
 
 
 def test_short_id_does_not_resolve_across_projects(db, owner, project):
-    other = Project(user_id=owner.id, name="Other")
+    other = Project(user_id=owner.id, name="Other", slug="other")
     db.add(other)
     db.commit()
     row = _write(db, project, title="Private to A")
@@ -669,7 +669,7 @@ def test_delete_reopens_whatever_the_entry_had_closed(client, db, project):
 
 
 def test_routes_404_outside_the_project(client, db, owner, project):
-    other = Project(user_id=owner.id, name="Other")
+    other = Project(user_id=owner.id, name="Other", slug="other")
     db.add(other)
     db.commit()
     db.refresh(other)

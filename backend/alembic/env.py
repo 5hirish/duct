@@ -28,16 +28,34 @@ config.set_main_option("sqlalchemy.url", database_url)
 target_metadata = SQLModel.metadata
 
 
-def include_object(obj, name, type_, reflected, compare_to) -> bool:
-    """Hide LangGraph's checkpointer tables from `--autogenerate`.
+# Indexes over a SQL *expression* rather than plain columns. SQLAlchemy can see
+# that they exist but reflects the expression as an opaque blob, so autogenerate
+# has nothing to compare against the model and reports the index as dropped on
+# every run. Alembic's own documentation names this as the case for a filter.
+# Each one is created by raw DDL in the revision named beside it and is
+# Postgres-only, which is also why it cannot be declared in `__table_args__`
+# without breaking the SQLite path the desktop sidecar runs on.
+EXPRESSION_INDEXES = {
+    "ix_project_memories_fts": "a4e1c7d2b953 — GIN over to_tsvector(title || body)",
+}
 
-    They live in this database but are owned and migrated by LangGraph, so they
-    are absent from `SQLModel.metadata`. Without this filter autogenerate reads
-    that absence as "dropped" and writes an `op.drop_table` for each one — a
-    revision that would delete every in-flight conversation on the next deploy.
-    See `db.migrate.LANGGRAPH_TABLES`.
+
+def include_object(obj, name, type_, reflected, compare_to) -> bool:
+    """What `--autogenerate` and `alembic check` are allowed to see.
+
+    LangGraph's checkpointer tables live in this database but are owned and
+    migrated by LangGraph, so they are absent from `SQLModel.metadata`. Without
+    this filter autogenerate reads that absence as "dropped" and writes an
+    `op.drop_table` for each one — a revision that would delete every in-flight
+    conversation on the next deploy. See `db.migrate.LANGGRAPH_TABLES`.
+
+    Expression indexes are the second case, for the reason above the constant.
+    Both are exclusions from *comparison* only: the objects are still created,
+    still used, and still dropped by their own downgrade.
     """
     if type_ == "table" and name in LANGGRAPH_TABLES:
+        return False
+    if type_ == "index" and name in EXPRESSION_INDEXES:
         return False
     return True
 

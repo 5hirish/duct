@@ -7,14 +7,22 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from models.columns import json_column, utc_datetime
+from sqlalchemy import UniqueConstraint
 from sqlmodel import Column, Field, SQLModel
 
 
 class LeadMagnet(SQLModel, table=True):
     __tablename__ = "lead_magnets"
+    # a3f8e1c7d902 created the table with a table-level unique constraint on
+    # access_token AND a unique index over the same column, which is redundant
+    # (Postgres backs a unique constraint with an index) but is what is in the
+    # database. Declaring it rather than dropping it: `alembic check` compares
+    # the model against reality, and reality is not wrong enough to be worth a
+    # DDL migration against production.
+    __table_args__ = (UniqueConstraint("access_token", name="lead_magnets_access_token_key"),)
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    email: str
+    email: str = Field(index=True)
     website_url: str
     magnet_type: str = Field(default="seo_audit")
     access_token: str = Field(unique=True, index=True)
@@ -30,7 +38,7 @@ class LeadMagnet(SQLModel, table=True):
     )
     report_generated_at: Optional[datetime] = Field(
         default=None,
-        sa_column=Column(utc_datetime(), nullable=True),
+        sa_column=Column(utc_datetime(), nullable=True, index=True),
     )
     email_sent_at: Optional[datetime] = Field(
         default=None,

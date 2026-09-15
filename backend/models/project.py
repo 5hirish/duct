@@ -2,18 +2,57 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, ForeignKey, String, UniqueConstraint
 from models.columns import json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
 
+_SLUG_RE = re.compile(r"[^a-z0-9]+")
+
+
+def slugify(value: str) -> str:
+    """A project's URL-safe name. Mirrors the backfill in f6fa9305fb03."""
+    return _SLUG_RE.sub("-", (value or "").lower()).strip("-") or "project"
+
+
+def unique_slug(db, user_id: UUID, wanted: str, *, exclude: UUID | None = None) -> str:
+    """`wanted`, or `wanted-2`, `wanted-3`... whichever is free for this user.
+
+    `uq_projects_user_slug` has existed since f6fa9305fb03, which backfilled
+    every slug from the project name with exactly this counter. Nothing has
+    written the column since, so every project created after that migration
+    kept the empty-string default -- which the constraint permits once per user
+    and rejects on their second project. That is an IntegrityError on a plain
+    "create project", so this is not tidiness. The content agent reads
+    `proj.slug` too, and has been reading "" for every project.
+    """
+    from sqlalchemy import select as _select
+
+    stmt = _select(Project.slug).where(Project.user_id == user_id)
+    if exclude is not None:
+        stmt = stmt.where(Project.id != exclude)
+    taken = set(db.execute(stmt).scalars().all())
+
+    base = slugify(wanted)
+    if base not in taken:
+        return base
+    n = 2
+    while f"{base}-{n}" in taken:
+        n += 1
+    return f"{base}-{n}"
+
+
 class Project(SQLModel, table=True):
     __tablename__ = "projects"
+    # A slug is unique per owner, not globally — two people may both have a
+    # project called "growth". Created by f6fa9305fb03.
+    __table_args__ = (UniqueConstraint("user_id", "slug", name="uq_projects_user_slug"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
     user_id: UUID = Field(
