@@ -341,8 +341,8 @@ are the canonical choices; migrate the others when a change touches them.
 | Card | `rounded-xl border bg-card p-5` (the de-facto shape; restyle `ui/card.tsx` to it and adopt the component, which today has zero importers) | the four other hand-rolled shapes; `.connection-card` CSS |
 | Busy indicator | `ui/spinner` (currentColor, `label` prop for `role="status"`) | `<Loader2 className="animate-spin">` — the fork that grew back after twelve were consolidated |
 | Long-running agent work | `PipelineProgress` (ladder + rotating subtitle) | bare spinners on multi-second waits |
-| Status badge | `ui/badge` with semantic tokens | `.status-pill` (lives in `ads-report.css`, hardcodes hexes, used far outside the report) |
-| Destructive confirm | `ui/alert-dialog`: title quotes the object ("Delete \"Acme\"?"), body states scope + irreversibility, action button is verb + noun ("Delete project") in the *tinted* destructive style | the three `window.confirm` sites; the filled-red `bg-red-600` variant |
+| Status badge | `ui/badge` with a semantic variant — `success`, `warning`, `info`, `destructive`, which tint the ground and colour the text (4.2–5.5:1 in both themes, no `dark:` for the caller). Solid status colour + its `-foreground` partner ONLY where a tint cannot work, meaning a chip over a photograph (`contentStatus.js`'s `solidClass`); `bg-green-500/90 text-white` measured 2.22:1 | `.status-pill` (lives in `ads-report.css`, hardcodes hexes, used far outside the report) |
+| Destructive confirm | `ui/confirm-dialog` — `useConfirm()` gives `{ confirm, dialog }` and awaits a boolean, so a call site reads like the `window.confirm` it replaces; `<ConfirmDialog>` directly when the caller already tracks what is being confirmed. Title quotes the object ("Delete \"Acme\"?"), body states scope + irreversibility, action is verb + noun ("Delete project") in the *tinted* destructive style | `window.confirm` (an OS modal cannot say what will happen, cannot be destructive, and is invisible to `/preview` — which is how four survived a design pass); a fifth hand-written `AlertDialog` block; the filled-red `bg-red-600` variant |
 | Destructive action (the button that opens that confirm) | `Button variant="destructive"` — the tinted style above, already shipped: `bg-destructive/10 text-destructive`. Red **at rest**, not on hover: an action worth confirming is worth seeing before the pointer arrives. Pass `buttonVariants({ variant: "destructive" })` to `AlertDialogAction`, which defaults to the primary variant | hand-rolled danger links; pasting the class string inline; raw palette (`bg-red-600 text-white`) instead of the tokens, which cannot follow the theme; anything that is only red on `:hover` |
 | Dialog actions | `DialogFooter` — bottom of the dialog, below the content they act on, destructive/secondary left and primary rightmost (it reverses to primary-first when the row stacks). Never mid-body | a hand-rolled right-aligned row anywhere above the content |
 | Empty state (whole surface) | `ui/empty-state`'s `EmptyState` — the dashed panel (`rounded-xl border-dashed p-10 text-center`, `size-12` icon tile, `text-sm font-medium` title, `text-xs text-muted-foreground` body, verb-first `Button size="sm"` CTA) as a component, because four hand-rolled copies of that anatomy had already disagreed about the icon size, the radius and whether there was a CTA at all. Its `example` prop frames a sample of the *filled* surface below the panel — pass the real component over invented props (`UsagePanel`'s `UsageEmpty` is the model), never a mock-up of it, and never for a state the reader has already seen filled | ad-hoc variants; an empty state with nothing to click |
@@ -647,23 +647,26 @@ The tree, measured against this file. Fix each when a change touches it.
   light/dark pair, desaturated in dark) in `tokens.css`/`theme.css` — one
   change, every component inherits. Until then: `bg-primary` in code, no ad
   hoc `bg-[var(--orange)]`.
-- **Semantic success/warning tokens exist now; most sites still don't use
-  them.** `--success` / `--warning` (+ foregrounds) live beside
-  `--destructive` in `tokens.css`/`theme.css`, and `connector-tiles.css` is
-  migrated. Everything else still re-picks greens and ambers
-  (`text-green-500`, `text-amber-600`…) with hand-managed dark partners, and
-  `contentStatus.js` + `AuditStepProgress` remain two independent maps —
-  migrate on touch. The hand-picks are not merely inconsistent: the common
-  `#eab308` measures **1.9:1** on a light background, so any of them used as
-  label text fails AA. The tokens are picked for it (light 4.96:1 / 4.56:1,
-  dark 9.18:1 / 7.74:1 on `--card`).
+- ~~**Semantic success/warning tokens exist now; most sites still don't use
+  them.**~~ **Closed 2026-09-15.** All 247 raw palette classes are on tokens,
+  `contentStatus.js` is the one status map, and `scripts/check-design-system.mjs`
+  fails the build on a new one. Four more tokens arrived with that sweep:
+  `--info` (a state that is neither a win nor a problem), `--brand` (the brand
+  orange at a lightness that can carry a 12px label — `--orange` stays the
+  literal `#ff5c00` for marks), `--control` (the 3:1 edge that says "this is a
+  field", split out of `--border`, which was doing both jobs at 1.27:1 and
+  therefore neither), and `--text-2xs` (11px, decoration only).
 - **`ui/card` has zero importers** while five card shapes coexist — restyle
   it to the canonical shape, then adopt it.
-- **`Loader2` spinners (7 files)** → `ui/spinner`.
+- ~~**`Loader2` spinners (7 files)**~~ **Closed 2026-09-15** — and held by
+  `check:design`, which is the only reason it will stay closed; it had already
+  been consolidated once.
 - **`.status-pill`** → `ui/badge`; move its colors to tokens. The
   `components/connections/` surfaces are migrated (they now use `ui/badge` or
   a glyph); the rest of the 8 files are not.
-- **`window.confirm` (3 sites)** → `ui/alert-dialog`.
+- ~~**`window.confirm` (3 sites)**~~ **Closed 2026-09-15.** `ui/confirm-dialog`
+  is the shared ask now — `useConfirm()` returns `{ confirm, dialog }` and
+  reads like the native call it replaces, so moving a site is one line.
 - **Off-scale type.** `npm run check:type` enforces the two-size rule above:
   font sizes must land on Tailwind's scale, and files on its clean list can
   never regress. It runs inside `check:parity`, so CI has it. Currently clean:
@@ -672,26 +675,43 @@ The tree, measured against this file. Fix each when a change touches it.
   and reported on every run: `ads-report` (15), `generate` (14),
   `model-tiers` (7), `chat` (5), `onboarding` (2), `app-shell` (1),
   `connections` (1). Clean a file, add it to `CLEAN` in the script.
-  Separately, ~300 arbitrary px type values in JSX
-  (`text-[10px]` ×88, `text-[11px]` ×77…) contradict the rem rule in
-  `AGENTS.md`, as does heavy inline `style={{}}` spacing in `execute/page.jsx`
-  and `AuditReportV1.jsx` — neither is covered by the script yet.
+  The ~300 arbitrary px type values in JSX are **gone as of 2026-09-15**:
+  everything at or below 11px became `text-2xs` and everything above landed on
+  the scale, `check:design` fails on a new one, and `execute/page.jsx`'s inline
+  `fontSize` numbers now read `var(--text-xs)` and friends. Its inline
+  `style={{}}` *layout* is still outside the system and still owing.
 
   The rule needed a guard because prose could not hold it: `connector-tiles.css`
   grew **six** sizes between 10px and 16px while this file said "do not invent
   intermediate sizes", and the result was a section heading rendering *smaller*
   than the field label nested inside it — hierarchy inverted, which reads as
   visual noise long before anyone can name the cause.
-- **Hardcoded hexes in JSX and CSS**: `AuditReportV1` score ramp,
-  `ArtifactRenderer` chart colors (use `--chart-1..5`), `themes.js`, and
-  `ads-report.css`, which bypasses the token layer entirely and is
-  effectively light-only.
+- **Hardcoded hexes**: JSX is clean and held by `check:design`;
+  `ads-report.css` is not. `ArtifactRenderer` and the insight blocks now use
+  `--chart-1..5`. `AuditReportV1` keeps its hexes **on purpose** and that is
+  now a stated decision rather than an accident — see *Documents declare
+  themselves* below. `ads-report.css` is the remaining half-way: 34 literals
+  and hard `#fff` table rows inside a themed app. Give it `color-scheme: light`
+  and own it, or move it to tokens; half-way is what produces a white table on
+  a dark page.
+- **Documents declare themselves.** A generated report is a printed thing, not
+  app chrome. `AuditReportV1` says so at its root — `color-scheme: light` plus
+  a redefinition of `--background`/`--foreground`/`--card`/`--muted-foreground`/
+  `--border` for its own subtree — so the ~30 places inside it that say
+  `text-foreground` resolve to document ink in **both** themes instead of
+  inverting away from the fixed hexes beside them. That is the pattern for any
+  new document surface; `ExecutionOffer`'s dialog repeats it because it is
+  portalled out of that subtree and cannot inherit it.
 - **`.measure` never reaches JSX** — prose in React components is uncapped.
 - **Forms never set `aria-invalid`/`aria-describedby`** even though the
   primitives style for them; only 4 of 31 inline-error sites have
   `role="alert"`.
-- **`prefers-reduced-motion` gates only the logo** — the
-  `animate-pulse`/`ping`/`bounce` sites are ungated.
+- ~~**`prefers-reduced-motion` gates only the logo**~~ **Closed 2026-09-15.**
+  `base.css` now stops `animate-pulse`/`ping`/`bounce` globally, slows
+  `animate-spin` rather than freezing it (a stopped busy ring reads as a hung
+  app, and WCAG 2.3.3 is about animation from interaction), and collapses
+  transition durations. One rule, so the next component is covered by default
+  — per-site `motion-reduce:` variants were never going to hold.
 - **The desktop shell does not persist window bounds** or enforce a
   minimum size (HIG expectation; pane ratios are already persisted).
 - **`.app-subtle` (~55 uses)** → `text-sm text-muted-foreground` as files

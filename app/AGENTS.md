@@ -299,6 +299,29 @@ text size. Device units stay `px`: borders, outlines, shadows, radii, 1px optica
 nudges. Prose gets `max-width: var(--measure)` (68ch) or the `.measure` utility —
 never tables, code, or column layouts.
 
+**Two checks hold the design system, and they are not advisory.** Both run in
+`npm run check:parity`, so CI has them:
+
+- `scripts/check-design-system.mjs` (`npm run check:design`) fails on
+  `text-[Npx]`, a raw Tailwind palette class, a hex in JSX, `window.confirm`,
+  `Loader2`, `text-muted-foreground/NN`, and a viewport prefix in a container
+  region. It is a **ratchet**: each rule carries an `allow` map of the files
+  that are genuinely exceptions, each with its reason. Removing a name is
+  permanent. Adding one is a decision you write a sentence for — it is not how
+  you quiet the check, any more than adding a file to
+  `test_harness_boundaries.py`'s allowlist is how you fix a red test.
+- `scripts/check-contrast.mjs` (`npm run check:contrast`) does the WCAG maths
+  on the real oklch values in `tokens.css`/`theme.css` and fails when a pair
+  the app paints drops below its threshold. It also asserts that every
+  `--color-*` utility the app writes is actually **mapped** in `@theme inline`
+  — the defect that started all of this was three correct token values that no
+  class could reach, which is invisible to every other kind of review.
+
+Why both exist rather than a paragraph asking nicely: every finding in
+`docs/engineering/2026-09-06-design-system-contrast-review.md` had been fixed
+once before and had come back. `ui/spinner`'s own docblock records consolidating
+twelve hand-rolled rings; seventeen `Loader2`s had arrived since.
+
 **CSS lives in `src/app/styles/`.** `globals.css` is a manifest of imports and
 nothing else; order is load-bearing (see its header). Add a partial for a new
 concern rather than growing an existing one, and put page-specific styling with
@@ -309,6 +332,11 @@ the page.
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
 - Busy state: `ui/spinner`. Colour comes from `currentColor`.
+- Asking "are you sure?": `ui/confirm-dialog`. `useConfirm()` returns
+  `{ confirm, dialog }` — await `confirm({ title, description, action,
+  destructive })` and render `{dialog}`, which is deliberately close enough to
+  `window.confirm` that moving a call site is one line. `<ConfirmDialog>`
+  directly when the caller already holds what is being confirmed in state.
 - Truncated text (2+ lines): `ui/clamp-text`'s `ClampText` — `line-clamp-N`
   plus a Radix tooltip carrying the full string, capped separately. Full
   reasoning (including why a bare `line-clamp` or a native `title` isn't
