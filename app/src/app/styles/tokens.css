@@ -59,14 +59,33 @@
      the 270 primary to stay a status colour rather than a second accent. */
   --info: oklch(0.52 0.15 250);
   --info-foreground: oklch(1 0 0);
+  /* The brand orange, as a colour you can put words on. `--orange` above is
+     the literal `#ff5c00` the site paints and stays exactly that, because a
+     logo mark is not a contrast question; but white on it measures 3.10:1 and
+     the lead-magnet CTA and the audit upsell banner were both setting 12-13px
+     white on it. Same hue, taken down to where a small label survives: 4.6:1.
+     If the open accent decision (DESIGN.md, "Known gaps") ever lands on
+     orange, `--primary` points here and nothing else moves. */
+  --brand: oklch(0.58 0.18 45);
+  --brand-foreground: oklch(1 0 0);
+  /* Two different jobs, which is why one token could not do both. `--border`
+     separates things that are already distinguishable — a card from the page,
+     a row from the next row — and is decorative, so a whisper is correct.
+     `--control` is the edge that tells you *this is a field you can type in*,
+     which WCAG 1.4.11 puts at 3:1, and at 1.27:1 the old shared value was not
+     telling anybody anything. `--input` stays the fill behind a field and the
+     track behind a switch; it is a surface, not a boundary. */
   --border: oklch(0.92 0.005 80);
   --input: oklch(0.92 0.005 80);
+  --control: oklch(0.62 0.012 80);
   --ring: oklch(0.52 0.22 270);
+  /* Series colours clear 3:1 against the canvas so adjacent marks stay apart
+     for a low-vision reader; the old `--chart-3`/`-5` sat at 2.6 and 1.9. */
   --chart-1: oklch(0.52 0.22 270);
   --chart-2: oklch(0.3 0.05 265);
-  --chart-3: oklch(0.72 0.16 60);
+  --chart-3: oklch(0.62 0.17 48);
   --chart-4: oklch(0.55 0.08 265);
-  --chart-5: oklch(0.8 0.12 80);
+  --chart-5: oklch(0.58 0.11 165);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0.01 80);
   --sidebar-foreground: oklch(0.18 0.03 265);
