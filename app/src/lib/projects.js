@@ -7,6 +7,7 @@ import {
   hasAuthToken,
   upsertProjectRemote,
 } from "./projectsApi";
+import { randomId as createId } from "./randomId";
 
 const PROJECTS_STORAGE_KEY = "duct_projects";
 const ACTIVE_PROJECT_ID_STORAGE_KEY = "duct_active_project_id";
@@ -121,12 +122,6 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function createId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
 
 /**
  * Newest first, id as the tie-break. Order has to be a pure function of the
