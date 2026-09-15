@@ -26,12 +26,13 @@ uvicorn = {version = "^0.52", extras = ["standard"]}
 # app missing it does not degrade, it fails to boot. It was only ever present
 # transitively through a dev dependency, and Railway installs --only main,
 # which is why every deploy died on "Form data requires python-multipart".
-# Not a caret: poetry reads ^0.0.31 as <0.0.32, and this is FastAPI's own floor.
-python-multipart = ">=0.0.18"
+# Not a caret: poetry reads ^0.0.31 as <0.0.32, so a floor is what we want here.
+# FastAPI's own is 0.0.18; Dependabot walks ours forward as releases land.
+python-multipart = ">=0.0.32"
 google-ads = "^32.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.200.0"
-google-genai = "^2.22"
+google-genai = "^2.23"
 python-dotenv = "^1.2"
 pydantic = "^2.13"
 pydantic-settings = "^2.15"
@@ -40,15 +41,15 @@ langchain-openai = "^1.6"
 langchain-google-genai = "^4.4"
 langchain-anthropic = "^1.7"
 langgraph = "^1.1"
-pyjwt = "^2.8"
+pyjwt = "^2.14"
 httpx = "^0.28"
 # Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
 # when the 'r2' storage backend is active.
 boto3 = "^1.43"
 sqlmodel = "^0.0.42"
-alembic = "^1.19"
+alembic = "^1.20"
 psycopg = {version = "^3.3", extras = ["binary"]}
-sentry-sdk = "^2.68.1"
+sentry-sdk = "^2.69.1"
 dlt = "^1.30.0"
 selectolax = ">=0.4.11"
 extruct = ">=0.16"
@@ -67,7 +68,7 @@ deepagents = "0.7.13"   # exact: 0.x with no stability policy; changes behaviour
 # transitively via google-adk, which has since been removed with the v2 engine.
 opentelemetry-api = "^1.44"
 reportlab = ">=4.2"
-cloudflare = ">=4.1"
+cloudflare = ">=5.7.0"
 # Durable conversation state (agents/core/checkpoint.py). Both, not one: the
 # same app serves Postgres on Railway and SQLite in the desktop sidecar, and the
 # checkpointer follows DATABASE_URL rather than forcing a database of its own.
