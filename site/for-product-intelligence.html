@@ -21,13 +21,12 @@
 <meta name="twitter:description" content="Stop tab-switching. Duct connects Mixpanel, Clarity, GrowthBook, and GA4 into one daily PM brief."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
-<link rel="stylesheet" href="/assets/demo.css"/>
 <script src="assets/config.js" defer></script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebPage","name":"Duct for Product Intelligence","url":"https://getduct.ai/for-product-intelligence","description":"Stop tab-switching. Duct connects your product stack and surfaces the cross-tool insights PMs need — automatically.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for product intelligence?","acceptedAnswer":{"@type":"Answer","text":"Duct connects Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot into one daily PM brief. It surfaces cross-tool correlations, detects anomalies, and answers plain-English questions without SQL."}},{"@type":"Question","name":"What tools does Duct connect to, and how hard is setup?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting."}},{"@type":"Question","name":"Is my product data safe with Duct?","acceptedAnswer":{"@type":"Answer","text":"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."}},{"@type":"Question","name":"How is Duct different from using Mixpanel dashboards directly?","acceptedAnswer":{"@type":"Answer","text":"Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."}},{"@type":"Question","name":"Does Duct for product intelligence cost anything?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it."}},{"@type":"Question","name":"What does the daily PM briefing actually contain?","acceptedAnswer":{"@type":"Answer","text":"The daily briefing surfaces what changed across your product stack overnight: anomalies in activation or retention from Mixpanel, spikes in support volume from HubSpot, blocked tickets in GrowthBook, and session replay patterns from Clarity. Duct cross-correlates these signals and delivers plain-English explanations of what is blocking adoption and what to ship next."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for product intelligence?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that reads Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot together. Ask why activation dropped and it answers with the cause and its sources, proposes a change, applies it when you approve, and remembers the decision for next time."}},{"@type":"Question","name":"What tools does Duct connect to, and how hard is setup?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting."}},{"@type":"Question","name":"Is my product data safe with Duct?","acceptedAnswer":{"@type":"Answer","text":"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."}},{"@type":"Question","name":"How is Duct different from using Mixpanel dashboards directly?","acceptedAnswer":{"@type":"Answer","text":"Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."}},{"@type":"Question","name":"Does Duct for product intelligence cost anything?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."}},{"@type":"Question","name":"What does an answer actually look like?","acceptedAnswer":{"@type":"Answer","text":"A short reply in the chat with the finding and the change it proposes, and a brief beside it: the numbers it used, the sources it read, and a checklist of what to do this week. Every number is re-checked by a second agent before it reaches you, and the brief is saved and versioned in the project."}}]}
 </script>
 <style>
   .skip-link {
@@ -47,8 +46,10 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<!-- NAV (shared: site/partials/nav-for-pages.html) -->
-<div data-duct-partial="/partials/nav-for-pages.html"></div>
+<!-- EXPERIMENT: three real jobs with product shots instead of an interactive walkthrough demo. Hypothesis: PMs convert on seeing the answer to their own question, not on clicking through a mock brief. Measured by download clicks per visit (GTM). -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 
@@ -56,14 +57,13 @@
 
 <section class="hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Product intelligence beta · Free &amp; open source</div>
-<h1>Stop guessing why adoption drops.<br/>Start shipping what lifts <em>retention.</em></h1>
-<p class="hero-sub">Duct connects Mixpanel, Clarity, GrowthBook, and GA4 into one daily product brief with cross-tool signals and clear next actions.</p>
+<h1>Stop tab-switching.<br/>Start <em>knowing.</em></h1>
+<p class="hero-sub">Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources, and the change it proposes.</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
 <a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Star on GitHub</a>
 </div>
 <p class="hero-footnote">Free during beta · No credit card · For PMs at 20-200 person companies</p>
-<p style="margin-top:16px;font-size:13px;color:var(--navy-3)">or <a href="#demo" style="color:var(--orange);text-decoration:underline;text-underline-offset:3px">try the live demo ↓</a> — no signup required</p>
 </section>
 
 <!-- PRODUCT SHOT (from docs/assets/readme, shot by scripts/shots/shoot.mjs) -->
@@ -86,263 +86,7 @@
 </div>
 </div>
 
-<div data-duct-partial="/partials/compare-flow-product.html"></div>
 
-<!-- WALKTHROUGH DEMO -->
-
-<!-- EXPERIMENT: Does an interactive tool-selection → goal → analysis walkthrough (pick your stack → pick your metric → see a realistic product brief) drive more qualified signups than a static feature list for PM-targeted traffic? -->
-
-<section class="wt-section" id="demo">
-<span id="demo-report" class="demo-fragment-target" tabindex="-1" aria-hidden="true"></span>
-<div class="wt-outer">
-<div class="reveal">
-<p class="tag" style="justify-content:center;display:flex">Interactive Demo</p>
-<h2>Your product stack. <em>One brief.</em></h2>
-<p class="sub">Try the workflow your team would use to turn scattered signals into one operator-ready product brief.</p>
-</div>
-
-<div class="wt-progress reveal" role="tablist" aria-label="Demo steps">
-<div class="wt-dot active" id="prog-1"></div>
-<div class="wt-dot" id="prog-2"></div>
-<div class="wt-dot" id="prog-3"></div>
-<div class="wt-dot" id="prog-4"></div>
-</div>
-
-<div class="wt-card reveal" aria-live="polite">
-<div class="wt-steps-stage">
-
-<!-- STEP 1: Tool selection -->
-<div class="wt-step active" id="demo-step-1" role="region" aria-labelledby="demo-step-1-title">
-<p class="wt-step-label">Step 1 of 4</p>
-<p class="wt-step-title" id="demo-step-1-title">Which tools are you connecting?</p>
-<p class="wt-step-sub">Select all that apply — Duct correlates signals across everything you pick.</p>
-<div class="plat-grid">
-<button class="plat-btn" id="plat-mixpanel" onclick="wtTogglePlatform('Mixpanel', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/mixpanel.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>Mixpanel</span>
-  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
-</button>
-<button class="plat-btn" id="plat-hubspot" onclick="wtTogglePlatform('HubSpot', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/hubspot.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>HubSpot</span>
-  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
-</button>
-<button class="plat-btn" id="plat-growthbook" onclick="wtTogglePlatform('GrowthBook', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/growthbook.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>GrowthBook</span>
-  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
-</button>
-<button class="plat-btn" id="plat-clarity" onclick="wtTogglePlatform('Clarity', this)" aria-pressed="false">
-  <img class="plat-icon" src="assets/icons/clarity.svg" width="20" height="20" alt="" aria-hidden="true"/>
-  <span>Clarity</span>
-  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
-</button>
-</div>
-<p class="wt-min-note" id="plat-hint">Select at least 2 to see cross-tool signals</p>
-<div class="wt-nav">
-<button class="btn btn-orange wt-next" id="wt-next-1" onclick="wtGoTo(2)" disabled>Set your goal →</button>
-</div>
-</div>
-
-<!-- STEP 2: Goal selection -->
-<div class="wt-step" id="demo-step-2" role="region" aria-labelledby="demo-step-2-title" inert>
-<p class="wt-step-label">Step 2 of 4</p>
-<p class="wt-step-title" id="demo-step-2-title">What are you tracking?</p>
-<p class="wt-step-sub">Duct watches only what moves your north star — not everything, just the right things.</p>
-<div class="metric-grid">
-<button class="metric-card" onclick="wtSelectMetric('retention', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-down"/></svg></span>
-  <div>
-    <p class="metric-title">Retention Health</p>
-    <p class="metric-desc">Catch DAU drops and cohort decay before they compound — see which tool is the upstream cause.</p>
-  </div>
-  <span class="metric-radio" aria-hidden="true"></span>
-</button>
-<button class="metric-card" onclick="wtSelectMetric('adoption', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg></span>
-  <div>
-    <p class="metric-title">Feature Adoption</p>
-    <p class="metric-desc">Find which features users actually use — and which ones they hit once and abandon.</p>
-  </div>
-  <span class="metric-radio" aria-hidden="true"></span>
-</button>
-<button class="metric-card" onclick="wtSelectMetric('tickets', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#headphones"/></svg></span>
-  <div>
-    <p class="metric-title">Support Signals</p>
-    <p class="metric-desc">Surface what HubSpot tickets reveal about your product — before they become churn.</p>
-  </div>
-  <span class="metric-radio" aria-hidden="true"></span>
-</button>
-</div>
-<div class="wt-nav">
-<button class="wt-back visible" onclick="wtGoTo(1)">← Back</button>
-<button class="btn btn-orange wt-next" id="wt-next-2" onclick="wtGoTo(3)" disabled>Analyse →</button>
-</div>
-</div>
-
-<!-- STEP 3: Analysing -->
-<div class="wt-step" id="demo-step-3" role="region" aria-labelledby="demo-step-3-title" inert>
-<p class="wt-step-label">Step 3 of 4</p>
-<p class="wt-step-title" id="demo-step-3-title">Duct is analysing your stack…</p>
-<p class="wt-step-sub" style="margin-bottom:0">Using 90 days of example data from your selected tools.</p>
-<div class="analyzing-lines" id="al-lines">
-<div class="analyzing-line" id="al-1">
-  <span class="al-spinner" aria-hidden="true"></span>
-  Reading user event data from Mixpanel…
-</div>
-<div class="analyzing-line" id="al-2">
-  <span class="al-spinner" aria-hidden="true"></span>
-  Correlating support signals with product changes…
-</div>
-<div class="analyzing-line" id="al-3">
-  <span class="al-spinner" aria-hidden="true"></span>
-  Surfacing adoption and retention anomalies…
-</div>
-</div>
-</div>
-
-<!-- STEP 4: Brief -->
-<div class="wt-step" id="demo-step-4" role="region" aria-labelledby="demo-step-4-title" inert>
-<p class="wt-step-label">Step 4 of 4</p>
-<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px">
-  <div>
-    <p class="wt-step-title" id="demo-step-4-title" style="margin-bottom:4px">Your brief is ready</p>
-    <p class="wt-step-sub" id="wt-brief-sub" style="margin-bottom:0">Here's what Duct found across your product stack.</p>
-  </div>
-  <button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo" style="flex-shrink:0;margin-top:2px">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/></svg>
-    Restart
-  </button>
-</div>
-
-<div class="report-preview">
-  <div class="report-preview-inner" id="report-preview-host">
-    <div id="duct-report-root">
-    <div class="rpt-header rpt-header--modal">
-      <p class="rpt-meta" id="rpt-meta"></p>
-      <div class="rpt-verdict rpt-verdict--modal" id="rpt-verdict"></div>
-    </div>
-
-    <div class="rpt-hero-visual" id="rpt-hero-visual">
-      <div class="kpi-hero-block">
-        <p class="kpi-hero-label" id="rpt-hero-label"></p>
-        <p class="kpi-hero-value" id="rpt-hero-val"></p>
-        <div class="kpi-hero-delta" id="rpt-hero-delta-row"></div>
-      </div>
-      <div class="kpi-sparkline-block">
-        <p class="kpi-sparkline-label">7-day activity (indexed)</p>
-        <div class="kpi-sparkline-svg" id="rpt-sparkline" aria-hidden="true"></div>
-      </div>
-    </div>
-
-    <div class="rpt-bar-block" id="rpt-roas-bars-wrap">
-      <p class="rpt-bar-label" id="rpt-bar-label-text">Metric by segment</p>
-      <div id="rpt-roas-bars"></div>
-    </div>
-
-    <div class="rpt-section-heading">
-      <p class="rpt-section-label">Also tracking</p>
-      <p class="rpt-section-hint" id="rpt-kpi-hint"></p>
-    </div>
-    <div class="kpi-strip" role="group" aria-label="Supporting metrics">
-      <div class="kpi-chip" data-kpi-key="retention">
-        <div class="kpi-chip-head">
-          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 7L13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg></span>
-          <p class="kpi-label">Retention</p>
-        </div>
-        <p class="kpi-value" id="rpt-kpi-retention-val"></p>
-        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-retention-trend" aria-hidden="true"></span><span id="rpt-kpi-retention-delta"></span></div>
-      </div>
-      <div class="kpi-chip" data-kpi-key="dau">
-        <div class="kpi-chip-head">
-          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-          <p class="kpi-label">DAU</p>
-        </div>
-        <p class="kpi-value" id="rpt-kpi-dau-val"></p>
-        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-dau-trend" aria-hidden="true"></span><span id="rpt-kpi-dau-delta"></span></div>
-      </div>
-      <div class="kpi-chip" data-kpi-key="adoption">
-        <div class="kpi-chip-head">
-          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-          <p class="kpi-label">Adoption</p>
-        </div>
-        <p class="kpi-value" id="rpt-kpi-adoption-val"></p>
-        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-adoption-trend" aria-hidden="true"></span><span id="rpt-kpi-adoption-delta"></span></div>
-      </div>
-      <div class="kpi-chip" data-kpi-key="tickets">
-        <div class="kpi-chip-head">
-          <span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v4l3 3"/></svg></span>
-          <p class="kpi-label">Open Tickets</p>
-        </div>
-        <p class="kpi-value" id="rpt-kpi-tickets-val"></p>
-        <div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-tickets-trend" aria-hidden="true"></span><span id="rpt-kpi-tickets-delta"></span></div>
-      </div>
-    </div>
-
-    <p class="rpt-section-label">Signals</p>
-    <div id="rpt-signals"></div>
-
-    <div class="rpt-disclosure">
-      <button type="button" class="rpt-disclosure-btn" id="rpt-camp-toggle" aria-expanded="false" aria-controls="rpt-camp-panel">
-        <span>Segment breakdown<span class="rpt-disclosure-meta" id="rpt-camp-meta"></span></span>
-        <span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span>
-      </button>
-      <div class="rpt-disclosure-panel" id="rpt-camp-panel" hidden>
-        <div class="camp-table-wrap">
-          <table class="camp-table">
-            <thead>
-              <tr>
-                <th>Segment</th>
-                <th>Active Users</th>
-                <th>Adoption</th>
-                <th>Retention</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="rpt-camp-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="rpt-disclosure">
-      <button type="button" class="rpt-disclosure-btn" id="rpt-ue-toggle" aria-expanded="false" aria-controls="rpt-ue-panel">
-        <span>Product health<span class="rpt-disclosure-meta" id="rpt-ue-summary"></span></span>
-        <span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span>
-      </button>
-      <div class="rpt-disclosure-panel" id="rpt-ue-panel" hidden>
-        <div class="unit-econ">
-          <p class="unit-econ-title">Engagement quality</p>
-          <div class="unit-econ-row">
-            <span>Feature stickiness (DAU/MAU)</span>
-            <span class="unit-econ-val" id="rpt-ue-cps"></span>
-          </div>
-          <div class="unit-econ-row">
-            <span>NPS proxy <span style="color:#6b6f82">(Target: 40+)</span></span>
-            <span class="unit-econ-val" id="rpt-ue-ltv"></span>
-          </div>
-          <div class="unit-econ-row">
-            <span>Verdict</span>
-            <span class="unit-econ-val" id="rpt-ue-verdict"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <p class="rpt-sources" id="rpt-footer-sources"></p>
-    </div><!-- /#duct-report-root -->
-  </div>
-</div>
-
-<a href="#demo-report" class="view-report-btn" id="view-full-report-link">View full brief &#8594;</a>
-<p style="font-size:12px;color:var(--navy-3);margin:0 0 10px;text-align:center">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p>
-</div>
-
-</div><!-- /.wt-steps-stage -->
-</div><!-- /.wt-card -->
-</div><!-- /.wt-outer -->
-</section>
 
 <!-- PROBLEM -->
 
@@ -394,64 +138,74 @@ Retention drop → support spike → replay friction → release timing. One sto
 
 <section class="how" id="how">
 <div class="how-inner">
-<p class="tag">How It Works</p>
-<h2>Clarity in <em>three steps</em></h2>
+<p class="tag">How it works</p>
+<h2>Connect. Ask. <em>Approve.</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
 <div class="steps">
 <div class="step reveal">
 <span class="step-num">01</span>
-<span class="step-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
 <p class="step-title">Connect your stack</p>
-<p class="step-body">One-click OAuth integrations to the tools you already use. Duct reads to build your brief and changes nothing unless you approve it. Under 5 minutes to set up.</p>
+<p class="step-body">One-click OAuth to Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot. Reporting needs read access only; nothing is exported by hand.</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
-<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
-<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
-<circle cx="16" cy="16" r="3" fill="white"/>
-</svg>
-</span>
-<p class="step-title">Define what matters</p>
-<p class="step-body">Tell Duct your north star metric and the features you're watching. It tracks only what affects them — not everything, just the right things.</p>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
+<p class="step-title">Ask the question</p>
+<p class="step-body">Type it the way you would ask a colleague. Duct reads every connected tool for it, shows the sources, and a second agent re-checks the numbers before you see them.</p>
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
-<span class="step-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg></span>
-<p class="step-title">Get clear intelligence</p>
-<p class="step-body">A daily digest with cross-tool correlations, anomaly alerts, and plain-English summaries — ready before your morning standup.</p>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg></span>
+<p class="step-title">Approve the change</p>
+<p class="step-body">When the answer is a change, it arrives as a change set with a preview and a guardrail check. Apply it, or don&rsquo;t. It remembers either way.</p>
 </div>
 </div>
 </div>
 </section>
 
-<!-- FEATURES -->
+<!-- WHAT IT DOES -->
 
-<section class="features" id="features">
+<section class="jobs" id="features">
+<div class="jobs-inner">
 <div class="reveal">
-<p class="tag">Features</p>
-<h2>Built for PMs who <em>move fast</em></h2>
+<p class="tag">What it does</p>
+<h2>What it does <em>for a PM.</em></h2>
 </div>
-<div class="feat-grid">
-<div class="feat reveal">
-<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg> Connect</span>
-<p class="feat-title">Cross-tool correlation</p>
-<p class="feat-body">Link analytics, support, experiment history, and replay evidence across Mixpanel, HubSpot, GrowthBook, and Clarity in one view.</p>
+<div class="job-grid">
+<article class="job reveal" style="transition-delay:0.05s">
+<div class="job-shot"><img src="assets/media/insights-session.webp" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, a proposed change waiting for approval, and the brief beside it"/></div>
+<div class="job-body">
+<h3>Why did activation drop?</h3>
+<dl>
+<dt>When</dt><dd>A number moves on Monday and nobody knows why.</dd>
+<dt>Today</dt><dd>Mixpanel, Clarity and GrowthBook in three tabs, three hours, still a guess.</dd>
+<dt>With Duct</dt><dd class="with">It reads all of them for the one question and answers with the cause, the sources, and the change it proposes.</dd>
+</dl>
 </div>
-<div class="feat reveal" style="transition-delay:.08s">
-<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mail"/></svg> Digest</span>
-<p class="feat-title">Daily PM briefing</p>
-<p class="feat-body">A concise morning summary of what changed, what correlated, and what needs attention next.</p>
+</article>
+<article class="job reveal" style="transition-delay:0.1s">
+<div class="job-shot"><img src="assets/media/review-card.webp" width="1088" height="936" loading="lazy" alt="A change-set card: pause one campaign, one change blocked by a guardrail, Reject and Apply buttons"/></div>
+<div class="job-body">
+<h3>Acts, with your approval</h3>
+<dl>
+<dt>When</dt><dd>The answer is &ldquo;mark that GA4 event&rdquo; or &ldquo;pause that campaign&rdquo;.</dd>
+<dt>Today</dt><dd>A ticket to engineering, or you do it by hand and forget to tell anyone.</dd>
+<dt>With Duct</dt><dd class="with">A change set with a preview and a guardrail check. It applies when you press Apply, and not before.</dd>
+</dl>
 </div>
-<div class="feat reveal" style="transition-delay:.14s">
-<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#bell-ring"/></svg> Alerts</span>
-<p class="feat-title">Anomaly detection</p>
-<p class="feat-body">Get an alert when unusual changes appear, before issues compound into churn or team fire drills.</p>
+</article>
+<article class="job reveal" style="transition-delay:0.15s">
+<div class="job-shot"><img src="assets/media/memory-timeline.webp" width="2008" height="1990" loading="lazy" alt="The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"/></div>
+<div class="job-body">
+<h3>Remembers the decision</h3>
+<dl>
+<dt>When</dt><dd>Next week&rsquo;s question depends on last week&rsquo;s call.</dd>
+<dt>Today</dt><dd>A Notion doc nobody re-reads before asking again.</dd>
+<dt>With Duct</dt><dd class="with">Targets, decisions and what it learned, on a timeline you can correct. The next answer starts from there.</dd>
+</dl>
 </div>
-<div class="feat reveal" style="transition-delay:.2s">
-<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg> Ask</span>
-<p class="feat-title">Plain-English queries</p>
-<p class="feat-body">Ask plain-English questions and get clear answers from connected tools, without SQL or dashboard digging.</p>
+</article>
 </div>
 </div>
 </section>
@@ -491,17 +245,6 @@ Retention drop → support spike → replay friction → release timing. One sto
 </div>
 </section>
 
-<!-- STATS -->
-
-<section class="stats">
-<div class="stats-inner">
-<div class="reveal"><span class="stat-n">7+</span><span class="stat-l">Integrations at launch</span></div>
-<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~3h</span><span class="stat-l">Saved per PM per week</span></div>
-<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
-<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">SQL queries required</span></div>
-</div>
-</section>
-
 <!-- FAQ -->
 
 <section class="faq" id="faq">
@@ -513,7 +256,7 @@ Retention drop → support spike → replay friction → release timing. One sto
 <div class="faq-list reveal" style="transition-delay:.1s">
 <details class="faq-item">
 <summary class="faq-q">What is Duct for product intelligence?</summary>
-<p class="faq-a">Duct connects Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot into one daily PM brief. It surfaces cross-tool correlations, detects anomalies, and answers plain-English questions without SQL.</p>
+<p class="faq-a">An open-source AI agent that reads Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot together. Ask why activation dropped and it answers with the cause and its sources, proposes a change, applies it when you approve, and remembers the decision for next time.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">What tools does Duct connect to, and how hard is setup?</summary>
@@ -532,8 +275,8 @@ Retention drop → support spike → replay friction → release timing. One sto
 <p class="faq-a">Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. <a href="/open-source#pricing">What will cost money</a> is spelled out on the open-source page.</p>
 </details>
 <details class="faq-item">
-<summary class="faq-q">What does the daily PM briefing actually contain?</summary>
-<p class="faq-a">The daily briefing highlights changes across activation, retention, support volume, issue flow, and replay patterns, then explains what is blocking adoption and what to ship next.</p>
+<summary class="faq-q">What does an answer actually look like?</summary>
+<p class="faq-a">A short reply in the chat with the finding and the change it proposes, and a brief beside it: the numbers it used, the sources it read, and a checklist of what to do this week. Every number is re-checked by a second agent before it reaches you, and the brief is saved and versioned in the project.</p>
 </details>
 </div>
 </div>
@@ -544,29 +287,10 @@ Retention drop → support spike → replay friction → release timing. One sto
 
 </main>
 
-<!-- REPORT MODAL -->
-<div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="rpt-meta">
-  <div class="modal-sheet">
-    <div class="modal-topbar">
-      <h2 class="modal-topbar-title" id="modal-title">Product Intelligence Report</h2>
-      <button type="button" class="modal-close" id="modal-close-btn" onclick="closeReportModal()" aria-label="Close report">&times;</button>
-    </div>
-    <div class="modal-body-scroll" id="modal-report-scroll-host"></div>
-    <div class="modal-cta-bar">
-      <div class="modal-cta-form">
-        <a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
-      </div>
-      <p class="modal-cta-note">Free during beta &middot; No credit card &middot; Connects in under 5 minutes</p>
-    </div>
-  </div>
-</div>
-<!-- END REPORT MODAL -->
 
 <!-- FOOTER (shared: site/partials/footer-expanded.html) -->
 <div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
 
-<script src="assets/demo-product.js"></script>
-<script src="assets/demo.js"></script>
 <script src="assets/duct-partials.js"></script>
 <script src="assets/duct.js" defer></script>
 <script src="assets/duct-download.js" defer></script>

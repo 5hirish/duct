@@ -4,320 +4,101 @@ description: Create a new audience-specific landing page following the for-*.htm
 argument-hint: "<audience-slug> \"<title suffix>\" \"<hero headline>\" \"<hero subtext>\""
 ---
 
-Creates a new `for-<audience-slug>.html` variant page for a specific audience segment.
-Keeps the existing Duct design, CSS, and HTML structure — only copy and audience-specific content change.
-
-## Usage
+Creates a new `for-<audience-slug>.html` page for one audience. Keeps the site's
+design, CSS and structure; only the copy and the shots change.
 
 ```
-/new-page <audience-slug> "<title suffix>" "<hero headline>" "<hero subtext>"
+/new-page for-engineering-teams "for Engineering Teams" "Stop losing signal in the noise." "Duct connects Sentry, Linear and GA4 and answers why the error rate moved."
 ```
 
-Example:
-```
-/new-page for-engineering-teams "for Engineering Teams" "Stop losing signal in the noise." "Duct connects Jira, Linear, Sentry, and Datadog into a weekly engineering brief."
-```
+## Before writing: answer three questions
 
----
+1. **What job does this audience hire Duct for?** The outcome, not the
+   feature. "Know why activation dropped before standup", not "cross-tool
+   aggregation".
+2. **What is the specific pain?** Two conflicting signals in one sentence.
+   "Search Console says impressions are up. GA4 says trials are flat."
+3. **Which tools do they live in?** Name them in the subheadline. It is the
+   highest-leverage line on the page.
 
-## Before writing: answer these three questions
+And the one `AGENTS.md` asks first: **what is the hypothesis?** It goes in the
+`<!-- EXPERIMENT: -->` comment after the GTM noscript.
 
-Do not start writing until you can answer all three. The answers drive every copy decision.
+## The page, in order
 
-1. **What job does this audience hire Duct to do?** Name the outcome, not the feature. "Stop spending Monday mornings pulling data from five tools" — not "cross-tool data aggregation."
-2. **What is the specific, concrete pain?** Describe the situation. "Search Console shows impressions up. GA4 says signups are flat. You don't know which to trust." — not "data silos."
-3. **What exact tools do they live in?** Name them. Naming the audience's actual tools in the subheadline is often the single highest-impact copy decision on the page.
-
----
-
-## Page narrative (keep this sequence)
-
-The page is a single argument. Each section earns the next. Do not reorder.
+Copy `site/for-product-intelligence.html`. Every `for-*` page keeps this
+sequence; each section earns the next.
 
 ```
-Hero           → Clear claim: this is for you, here's what you get
-Tool strip     → Signal: these are tools you already use
-Problem        → You understand their exact pain (specific, not generic)
-How it works   → The mechanism in 3 sequential steps
-Features       → Proof points for the mechanism
-Audience       → Name exactly who fits — and who doesn't (with inline CTA)
-Stats          → Quantify the proof
-Final CTA      → One decision
+Hero          Stop X. Start <em>Y</em>. Tools named in the sub. Download + Star on GitHub.
+Shot          One README screenshot under the hero (.shot). The page's heaviest element.
+Tool strip    The marquee: the tools this audience recognises.
+Problem       "You're doing the right thing. But no one <em>connected it</em>." Three pain
+              bullets, the disconnected-tools diagram, one "After Duct" sentence.
+What it does  Three .job cards: a shot plus When / Today / With Duct.
+How it works  Connect / Ask / Approve. Name the tools in step one. Keep the channel.
+Who it's for  "The [role] who owns [thing] without a [resource]". Four fit cards,
+              the last one "Not yet". Inline CTA: That's me — download Duct ↓
+FAQ           Five or six real questions. The JSON-LD is rebuilt from the <details>.
+CTA           The shared partial.
 ```
 
-No testimonials section — this is an MVP/early-stage product. The `.quotes` section in the base template should be removed from new pages.
-
----
-
-## Step 1 — Copy the base template
-
-Copy `site/for-product-intelligence.html` → `site/for-<audience-slug>.html`.
-Remove the entire `<!-- TESTIMONIALS -->` section (`.quotes`) from the copy.
-
----
-
-## Step 2 — `<head>` metadata
-
-- `<title>` → `Duct <title-suffix> — <7-word value descriptor>`
-- Canonical URL → `https://getduct.ai/for-<audience-slug>`
-- `og:url` → same as canonical
-- `og:title` / `twitter:title` → match `<title>`
-- `og:description` (120–140 chars) → answers "what does this help me do?" for this audience; must not be the headline verbatim
-- `twitter:description` (120–140 chars) → shorter variant; must differ from `og:description`
-- JSON-LD `description` → one-sentence JTBD framing for the audience
-
----
-
-## Step 3 — Nav subtitle
-
-The small label next to the logo. Change it to the audience label, e.g. `for engineering teams`.
-
----
-
-## Step 4 — Hero section (highest leverage — spend most time here)
-
-The 8-second test: a stranger should immediately understand "this is for me and here's what I get." Every word that doesn't advance that goal is dead weight.
-
-### Urgency pill
-
-Keep the scarcity signal: `Early access · N spots remaining`
-
-### Headline
-
-**Spec:** 5–10 words, ≤60 characters. Outcome-led, not feature-led.
-
-**Avoid:** powerful, seamless, robust, end-to-end, all-in-one, transformative. These words carry zero signal.
-
-**The best-performing pattern from the existing pages:**
-> `Stop [specific painful thing].<br/>Start <em>[desirable outcome].</em>`
-
-Examples from live pages:
-- "Stop tab-switching. Start *knowing.*"
-- "Stop publishing blind. Start *compounding.*"
-
-Both follow the same structure: name what they're trapped in → name what they want instead. The `<em>` tag goes on the aspirational word, not the pain word.
-
-Other proven patterns:
-- `[JTBD] that won't [bad outcome]` — "Product insights that won't take all morning"
-- `[Task] shouldn't be harder than [other task]` — "Reading your data shouldn't be harder than collecting it"
-- `[Desirable outcome].<br/>No <em>[painful means].</em>` — "Know what's happening. No SQL required."
-
-**StoryBrand frame:** Your customer is the hero facing a problem. Duct is the guide. The headline names what the customer achieves — not what Duct built.
-
-### Subheadline
-
-1–2 sentences. Answers: *how* it works + *who* it's for. Names the audience's specific tools.
-
-Why tool-naming works: it signals "made for me" within 3 words. "Duct connects Mixpanel, Intercom, and Linear" reads differently to a PM than "Duct connects your tools." Be that specific.
-
-Must complement the headline — not restate it.
-
-### CTA button
-
-2–5 words, names the outcome not the action. Never: "Submit", "Learn more", "Sign up".
-Good: `Download Duct ↓`, `Get the desktop app ↓`
-
-The site has one CTA — downloading the desktop app. There is no email capture or waitlist, so never write `Get early access →`, `Join waitlist →` or a copy that implies one.
-
-Use the same button copy at both hero and final CTA. Changing it between positions creates confusion about what the main action is.
-
-### Trust signals
-
-Below (not inside) the button, one line of micro-copy kills the top objection.
-Format: `Free during beta · No credit card · [one more relevant trust signal]`
-
-### Hero footnote
-
-One line, anchors who this is for and reduces wrong-fit signups.
-Format: `Free during beta · No credit card · For [role] at [company size] companies`
-Both role and company size should be honest and specific to this audience.
-
----
-
-## Step 5 — Tool strip
-
-Update the `.marquee` spans with the tools this specific audience actually uses. These are the tools they should recognise from their own stack.
-
----
-
-## Step 6 — Problem section (second-highest leverage)
-
-**Job:** Make the visitor feel viscerally recognised. "This company gets me" is the conversion trigger — not information, but recognition.
-
-**Source of copy:** Use the audience's own language. Don't paraphrase how they describe the problem — mirror it. If you know how they phrase it (from sales calls, reviews, Reddit), use those words.
-
-### Problem headline
-
-Names the failure mode, not the general topic. Use `<em>` on the key phrase.
-
-**The best-performing pattern from the existing pages:**
-> `You're [doing the right thing].<br/>But no one <em>[specific failure].</em>`
-
-Examples from live pages:
-- "The answer is in your tools. But no one *connected them.*"
-- "You're producing content. But no one *connected it* to growth."
-
-This pattern is powerful because it validates the audience first ("you're doing the right thing") before naming the gap. It doesn't make them feel stupid — it makes them feel let down by their tools.
-
-### Pain bullets
-
-3 bullets. Each is a specific scenario, not a category description.
-
-**What makes a pain bullet work:**
-- Name two conflicting signals in the same sentence: "Search Console shows impressions up. GA4 says signups are flat." — the reader feels the specific frustration of not knowing which to trust
-- Show the downstream cost: "Ahrefs flagged a keyword opportunity three weeks ago. It's still sitting in a tab." — the cost isn't the tab, it's the compounding loss
-- Be honest about wasted time: "You spend Monday mornings pulling rank data, session stats, and content metrics from five different tools just to decide what to work on."
-
-Specificity is a filter — the more precisely you describe the pain, the stronger the ICP response, and wrong-fit visitors self-exit.
-
-### Diagram (`.diag` block)
-
-Shows the chaos-to-clarity transformation. Must use this audience's actual tool stack.
-
-The structure: 4 disconnected tools (each showing one specific signal) → one "After Duct" sentence connecting them all into a single story.
-
-**What makes the "After Duct" sentence work:** It's a narrative — verb-led, connecting cause to effect across all four tools in one sentence. From the live pages:
-- "Retention drop → Intercom spike → bug fix timing → churn. One story, automatically connected."
-- "Rising keyword → low-KD gap → missing content → conversion drop. One story, automatically connected."
-
-The formula: `[Signal A] → [Signal B] → [Signal C] → [outcome]. One story, automatically connected.`
-
-Keep the macOS window chrome (the three dots) and `dim` class pattern — the visual weight difference between the first tool and the faded ones reinforces the "disconnected" feeling.
-
----
-
-## Step 7 — How it works
-
-Three steps showing a sequential workflow (not a feature list). The customer experiences them in order: connect → configure → receive.
-
-The three step titles are universal. Update `.step-body` copy when the audience has specific framing concerns:
-- Engineering teams: emphasise "read-only — Duct never writes to your repos or opens tickets"
-- Growth teams: emphasise what the weekly brief contains and when it arrives
-
----
-
-## Step 8 — Features
-
-Keep all four feature cards. The features are the same product — only the framing changes per audience.
-
-Frame each feature around the outcome the audience cares about, not the mechanism. The feature label (emoji + category) stays; `feat-title` and `feat-body` change to speak to this audience's specific angle.
-
----
-
-## Step 9 — Audience section
-
-**Section headline:** Name the exact person, their responsibility, and the resource they're missing.
-Pattern: `The [role] who owns [responsibility] without a [resource they lack]`
-
-From live pages: "The PM who owns *growth* without a data team" / "The growth lead who owns *organic* without a dedicated SEO team"
-
-**Supporting copy:** 2–3 sentences that read like you're inside their head. Describe their constraint and the outcome they want — not aspirationally, but descriptively of their actual situation.
-
-**Inline CTA:** Keep the mid-section button `That's me — download Duct ↓`. This is the page's highest-intent click because it comes from a section explicitly about the reader. Don't change the copy unless the action changes.
-
-**Audience fit cards:** 4 cards total.
-- Card 1 (primary ICP, `hi` class): `Perfect fit` — the exact person this page is for
-- Cards 2–3: `Great fit` — adjacent roles who also benefit
-- Card 4 (greyed out, `opacity:.45`, `off` badge class): `Not yet` — explicitly name who this is NOT for
-
-The "Not yet" card is one of the highest-trust signals on the page. It says: we know our limits, we're not selling to everyone. It also improves signup quality.
-
----
-
-## Step 10 — Stats bar
-
-4 numbers. Keep the format: large number + short label. Keep the `0` stat — a zero is a punchline ("0 SQL queries required", "0 manual data exports needed") and stands out visually among non-zero stats.
-
-Only update if this audience has different proof priorities. Keep 4 stats and the stagger animation.
-
----
-
-## Step 11 — Final CTA
-
-**Job:** One decision. Reinforce why, reduce the last hesitation. No new information.
-
-- Headline echoes the hero's urgency signal: `Join the first <em>25 teams</em>`
-- Supporting copy names the 1:1 onboarding offer — personalise it if the audience has specific needs
-- Button copy: identical to the hero CTA (consistency matters)
-- Trust note: mirrors the urgency signal + trust signals: `N spots remaining · No spam · Unsubscribe anytime`
-
----
-
-## Step 12 — Accent colour
-
-Every page gets a colour. It should match the emotional register of the audience's domain — the way orange reads as energy/urgency and green reads as growth/nature for the existing pages.
-
-**Existing pages (for consistency reference):**
-- `for-product-intelligence` → orange `#FF5C00` / hover `#e05000` — intensity, speed, analytical fire
-- `for-organic-growth` → sage green `#2e9e6b` / hover `#228055` — growth, compounding, nature
-
-**Pre-decided palette for common audience types — pick the best match:**
-
-| Audience type | Colour | Hex | Hover hex | Rationale |
-|---|---|---|---|---|
-| Engineering / infrastructure | Indigo | `#4F46E5` | `#3730A3` | Precision, reliability, technical depth |
-| Sales / revenue | Teal | `#0891B2` | `#0E7490` | Pipeline, momentum, professional energy |
-| Founders / operators | Amber | `#D97706` | `#B45309` | Decisiveness, warmth, early-stage grit |
-| Data / analytics | Slate blue | `#3B5BDB` | `#2F4AC5` | Structured thinking, intelligence, clarity |
-| Marketing / brand | Violet | `#7C3AED` | `#6D28D9` | Creativity, differentiation, attention |
-| Customer success / support | Sky | `#0284C7` | `#0369A1` | Trust, calm, reliability |
-| Finance / ops | Cool grey-blue | `#475569` | `#334155` | Professionalism, precision, control |
-
-If the audience doesn't fit any row, choose based on tone: warm colours (orange, amber) = urgency/action; cool colours (indigo, slate, teal) = precision/trust; mid colours (green, violet) = growth/creativity.
-
-**How to add it:** Add a `<style>` block at the bottom of `<head>` — copy the pattern from `for-organic-growth.html`. Replace `--green` and `--green-h` with your chosen colour variables. The block overrides CSS variables, not individual selectors.
-
----
-
-## Step 13 — Sitemap
-
-Add to `sitemap.xml`:
-```xml
-<url>
-  <loc>https://getduct.ai/for-<audience-slug></loc>
-  <changefreq>weekly</changefreq>
-  <priority>0.9</priority>
-</url>
-```
-
----
-
-## Mobile check (do this before calling it done)
-
-Review at 375px width. The hero must be fully legible without horizontal scroll. Check:
-- Headline, subhead, and CTA button all visible above the fold — nothing cut off
-- All body text is at least 16px (check duct.css doesn't have overrides for small screens)
-- CTA button is large enough for a thumb tap — no crowding from adjacent elements
-- No images or heavy assets added — the design uses CSS gradients, keep it that way
-
----
-
-## Checklist
-
-**Copy quality**
-- [ ] Headline ≤60 chars, outcome-led, no cliché words
-- [ ] Subheadline names this audience's exact tools
-- [ ] Problem headline validates the audience ("you're doing the right thing") before naming the gap
-- [ ] Each pain bullet names two conflicting signals or a specific downstream cost
-- [ ] Diag "After Duct" follows the `[A] → [B] → [C] → [outcome]. One story, automatically connected.` formula
-- [ ] "Not yet" audience card names who this is NOT for
-
-**Conversion mechanics**
-- [ ] Hero footnote names role and company size honestly
-- [ ] Inline audience CTA present: `That's me — download Duct ↓`
-- [ ] Hero and final CTA use identical button copy
-- [ ] Trust micro-copy below both CTAs
-
-**Structure**
-- [ ] Testimonials section removed
-- [ ] Correct section order: Hero → Strip → Problem → How → Features → Audience → Stats → CTA → Footer
-
-**Technical**
-- [ ] Accent colour chosen from palette and `<style>` block added to `<head>`
-- [ ] Canonical URL correct and unique
-- [ ] All `og:` and `twitter:` tags written fresh (not copied from base)
-- [ ] Nav subtitle updated to new audience label
-- [ ] Both CTAs are `<a href="/download" data-duct-download>` — working links before JS runs
-- [ ] Added to `sitemap.xml`
-- [ ] No `<!-- TODO -->` or placeholder text
-- [ ] Mobile check at 375px passed
+No testimonials, no stats band, no interactive demo. All three were on these
+pages once and all three were removed: fake quotes, invented numbers, and a
+mock brief that lost to a real screenshot.
+
+## Section notes
+
+**`<head>`.** Title `Duct <suffix> — <seven-word value line>`, canonical
+`https://getduct.ai/for-<slug>`, `og:description` and `twitter:description`
+120–140 characters and different from each other, `WebPage` plus `FAQPage`
+JSON-LD.
+
+**Hero.** Headline ≤60 characters, `<em>` on the aspiration, never on the pain.
+No "powerful", "seamless", "all-in-one". Button copy is `Download Duct ↓` at the
+top and the bottom, always `href="/download" data-duct-download`. Footnote:
+`Free · No credit card · For [role] at [size] companies`, honest on both.
+
+**Shot.** Pick the README image that shows this audience's job:
+`insights-session` (a question answered across tools), `review-card` (a change
+waiting for approval), `content-plan` (a week on a board), `memory-timeline`.
+Cap `.shot-frame` at the image's 1x width so a 2x capture never upscales. If the
+job has no shot, add a scenario to `scripts/shots/scenarios.mjs` and shoot it;
+do not draw a mock.
+
+**Problem.** Mirror the audience's own words. The diagram keeps the window
+chrome and the `dim` pattern; the "After Duct" line is
+`[A] → [B] → [C] → [outcome]. One story, automatically connected.`
+
+**Jobs.** Three cards, three different shots. *When* is a moment, *Today* is
+the cost, *With Duct* is what it reads and what it proposes. Numbers beat
+adjectives.
+
+**How it works.** The bodies are shared across pages on purpose; only the tools
+in step one change.
+
+**Who it's for.** The "Not yet" card is the most trusted line on the page. Name
+who this is not for.
+
+**FAQ.** Write the answers in the page's voice; search engines quote them. The
+money answer is the site's one sentence: *free with your own keys, always; a
+paid plan later bundles the models; nothing open today moves behind it*, with a
+link to `/open-source#pricing`.
+
+**Icons.** Sprite only: `<svg class="ic" aria-hidden="true"><use
+href="/assets/icons.svg#name"/></svg>`. A missing name goes into
+`scripts/build_site_icons.py`.
+
+**Accent.** One `<style>` block overriding `--orange` and `--orange-h`, nothing
+else. Warm for urgency (orange, amber), cool for precision (indigo, slate,
+teal), mid for growth (green, violet).
+
+## Done means
+
+- [ ] Hypothesis in the `EXPERIMENT` comment
+- [ ] Headline ≤60 chars, tools named in the sub, both CTAs identical
+- [ ] One shot, three job cards, no mock of a screen that exists
+- [ ] "Not yet" card names who it is not for
+- [ ] No emoji, no stats band, no testimonials, no demo
+- [ ] Added to `site/sitemap.xml`; `make check-site` green
+- [ ] Reviewed at 1440 and 390 px: two-line hero, nothing horizontal

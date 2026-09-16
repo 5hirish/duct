@@ -21,13 +21,12 @@
 <meta name="twitter:description" content="Stop publishing blind. Duct connects Search Console, GA4, Tag Manager and Clarity into a weekly action brief."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
-<link rel="stylesheet" href="/assets/demo.css"/>
 <script src="assets/config.js" defer></script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebPage","name":"Duct for Organic Growth","url":"https://getduct.ai/for-organic-growth","description":"Stop publishing blind. Duct connects your organic growth stack and delivers a weekly action brief tied to your goals.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for organic growth?","acceptedAnswer":{"@type":"Answer","text":"Duct connects Google Search Console, GA4, Tag Manager, Microsoft Clarity and Mixpanel into one weekly action brief. It tells growth teams exactly which pages to update, which queries to target, and what to publish next."}},{"@type":"Question","name":"How does Duct connect to my SEO and content tools?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads and Stripe via one-click OAuth. Setup takes under five minutes and your first weekly brief lands in your inbox after connecting."}},{"@type":"Question","name":"Does Duct store my SEO data or share it with third parties?","acceptedAnswer":{"@type":"Answer","text":"Duct stores the reports it generates for you and the data needed to produce them, so briefs stay comparable week to week. It never sells your data or shares it with third parties for their own purposes. Data in transit is encrypted via TLS, OAuth tokens are encrypted at rest and never exposed to the browser, and you can delete your data at any time."}},{"@type":"Question","name":"How is Duct different from using Search Console directly?","acceptedAnswer":{"@type":"Answer","text":"Search Console shows you queries and positions in isolation. Duct correlates ranking, traffic, behaviour and conversion signals across Search Console, GA4, Clarity and Mixpanel, then surfaces prioritised actions instead of disconnected dashboards."}},{"@type":"Question","name":"What does Duct for organic growth cost?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it."}},{"@type":"Question","name":"What kind of actions does the weekly organic brief recommend?","acceptedAnswer":{"@type":"Answer","text":"Each week, Duct delivers prioritized actions like pages losing rankings that need updating, keyword gaps where competitors are weakening, content briefs for high-opportunity topics, and traffic anomaly alerts. It cross-references Search Console impression trends with Search Console backlink changes and GA4 conversion data to rank actions by projected impact on organic growth."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for organic growth?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that reads Google Search Console, GA4, Tag Manager, Microsoft Clarity and Mixpanel together. Ask which content is converting and it answers with the pages to update and the queries to target; a free SEO audit runs on any URL without an account; and Content Studio plans, drafts and publishes the week's posts."}},{"@type":"Question","name":"How does Duct connect to my SEO and content tools?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads and Stripe via one-click OAuth. Setup takes under five minutes and your first weekly brief lands in your inbox after connecting."}},{"@type":"Question","name":"Does Duct store my SEO data or share it with third parties?","acceptedAnswer":{"@type":"Answer","text":"Duct stores the reports it generates for you and the data needed to produce them, so briefs stay comparable week to week. It never sells your data or shares it with third parties for their own purposes. Data in transit is encrypted via TLS, OAuth tokens are encrypted at rest and never exposed to the browser, and you can delete your data at any time."}},{"@type":"Question","name":"How is Duct different from using Search Console directly?","acceptedAnswer":{"@type":"Answer","text":"Search Console shows you queries and positions in isolation. Duct correlates ranking, traffic, behaviour and conversion signals across Search Console, GA4, Clarity and Mixpanel, then surfaces prioritised actions instead of disconnected dashboards."}},{"@type":"Question","name":"What does Duct for organic growth cost?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."}},{"@type":"Question","name":"What kind of actions does Duct recommend?","acceptedAnswer":{"@type":"Answer","text":"Pages losing rankings and the query they lost, clusters that earn trials versus clusters that only earn traffic, technical fixes from the audit in priority order, and the posts worth making next. Each one names its sources, and when the action is a change in a connected tool, it arrives as a change set you approve."}}]}
 </script>
 <style>
   /* Green accent overrides — warm sage tuned to match the orange tone weight */
@@ -78,6 +77,14 @@
     color: var(--green-h);
     background: color-mix(in srgb, var(--green) 14%, white);
   }
+
+/* The SEO audit has no product shot yet, so its card is a CSS mock (same as the home page). */
+.job-mock { height: 100%; padding: 22px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.job-mock-url { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--white); border-radius: var(--r); padding: 10px 12px; font-size: 13px; color: var(--navy-3); }
+.job-mock-url b { margin-left: auto; font-weight: 600; color: var(--white); background: var(--orange); border-radius: var(--pill); padding: 3px 10px; font-size: 11px; }
+.job-mock-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--navy); }
+.job-mock-sev { font-size: 10px; font-weight: 600; border-radius: 4px; padding: 2px 6px; background: #ffeaea; color: #b53838; }
+.job-mock-sev.med { background: #fff4dd; color: #8a5a00; }
 </style>
 </head>
 <body>
@@ -88,8 +95,10 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<!-- NAV (shared: site/partials/nav-for-pages.html) -->
-<div data-duct-partial="/partials/nav-for-pages.html"></div>
+<!-- EXPERIMENT: the free SEO audit and two product shots instead of an interactive walkthrough demo. Hypothesis: content teams convert on a real audit and a real plan, not on a mock weekly brief. Measured by download clicks per visit (GTM). -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 
@@ -97,14 +106,13 @@
 
 <section class="hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Organic growth beta · Free &amp; open source</div>
-<h1>Stop guessing what to publish next.<br/>Start shipping what grows <em>organic.</em></h1>
-<p class="hero-sub">Duct connects Search Console, GA4, Tag Manager, and Clarity into one weekly organic brief with ranked next actions.</p>
+<h1>Stop publishing blind.<br/>Start <em>compounding.</em></h1>
+<p class="hero-sub">Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week&rsquo;s posts on a board.</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
 <a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Star on GitHub</a>
 </div>
 <p class="hero-footnote">Free during beta · No credit card · For growth teams at 20–200 person companies</p>
-<p style="margin-top:16px;font-size:13px;color:var(--navy-3)">or <a href="#demo" style="color:var(--orange);text-decoration:underline;text-underline-offset:3px">try the live demo ↓</a> — no signup required</p>
 </section>
 
 <!-- PRODUCT SHOT (from docs/assets/readme, shot by scripts/shots/shoot.mjs) -->
@@ -127,15 +135,7 @@
 </div>
 </div>
 
-<div data-duct-partial="/partials/compare-flow-organic.html"></div>
 
-<!-- WALKTHROUGH DEMO -->
-
-<!-- EXPERIMENT: Does an interactive SEO-tool-selection → goal → analysis walkthrough (pick your stack → pick your goal → see a realistic organic growth brief) drive more qualified signups than a static feature list for organic-growth traffic? -->
-
-<section class="wt-section" id="demo">
-<span id="demo-report" class="demo-fragment-target" tabindex="-1" aria-hidden="true"></span>
-<div class="wt-outer"><div class="reveal"><p class="tag" style="justify-content:center;display:flex">Interactive Demo</p><h2>Your content stack. <em>One brief.</em></h2><p class="sub">Try the workflow your team would use to turn SEO noise into one clear weekly growth brief.</p></div><div class="wt-progress reveal" role="tablist" aria-label="Demo steps"><div class="wt-dot active" id="prog-1"></div><div class="wt-dot" id="prog-2"></div><div class="wt-dot" id="prog-3"></div><div class="wt-dot" id="prog-4"></div></div><div class="wt-card reveal" aria-live="polite"><div class="wt-steps-stage"><div class="wt-step active" id="demo-step-1" role="region" aria-labelledby="demo-step-1-title"><p class="wt-step-label">Step 1 of 4</p><p class="wt-step-title" id="demo-step-1-title">Which tools are you connecting?</p><p class="wt-step-sub">Select all that apply — Duct correlates ranking, traffic, and conversion signals across the stack.</p><div class="plat-grid"><button class="plat-btn" onclick="wtTogglePlatform('GSC', this)" aria-pressed="false"><img class="plat-icon" src="assets/icons/googlesearchconsole.svg" width="20" height="20" alt="" aria-hidden="true"/><span>Google Search Console</span><span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span></button><button class="plat-btn" onclick="wtTogglePlatform('Clarity', this)" aria-pressed="false"><img class="plat-icon" src="assets/icons/clarity.svg" width="20" height="20" alt="" aria-hidden="true"/><span>Clarity</span><span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span></button><button class="plat-btn" onclick="wtTogglePlatform('GA4', this)" aria-pressed="false"><img class="plat-icon" src="assets/icons/googleanalytics.svg" width="20" height="20" alt="" aria-hidden="true"/><span>GA4</span><span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span></button><button class="plat-btn" onclick="wtTogglePlatform('Mixpanel', this)" aria-pressed="false"><img class="plat-icon" src="assets/icons/mixpanel.svg" width="20" height="20" alt="" aria-hidden="true"/><span>Mixpanel</span><span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span></button></div><p class="wt-min-note" id="plat-hint">Select at least 2 to see cross-tool signals</p><div class="wt-nav"><button class="btn btn-orange wt-next" id="wt-next-1" onclick="wtGoTo(2)" disabled>Set your goal →</button></div></div><div class="wt-step" id="demo-step-2" role="region" aria-labelledby="demo-step-2-title" inert><p class="wt-step-label">Step 2 of 4</p><p class="wt-step-title" id="demo-step-2-title">What are you optimising for?</p><p class="wt-step-sub">Duct keeps the brief focused on the organic outcome you care about this quarter.</p><div class="metric-grid"><button class="metric-card" onclick="wtSelectMetric('rankings', this)" aria-pressed="false"><span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-up"/></svg></span><div><p class="metric-title">Grow Rankings</p><p class="metric-desc">Find pages slipping, keyword clusters rising, and quick wins sitting in positions 4–15.</p></div><span class="metric-radio" aria-hidden="true"></span></button><button class="metric-card" onclick="wtSelectMetric('signups', this)" aria-pressed="false"><span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#magnet"/></svg></span><div><p class="metric-title">Drive Trial Signups</p><p class="metric-desc">Surface which content clusters convert to trial, not just which ones inflate traffic reports.</p></div><span class="metric-radio" aria-hidden="true"></span></button><button class="metric-card" onclick="wtSelectMetric('clusters', this)" aria-pressed="false"><span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#map"/></svg></span><div><p class="metric-title">Own Topic Clusters</p><p class="metric-desc">Measure topical authority, cluster gaps, and the coverage opportunities competitors still own.</p></div><span class="metric-radio" aria-hidden="true"></span></button></div><div class="wt-nav"><button class="wt-back visible" onclick="wtGoTo(1)">← Back</button><button class="btn btn-orange wt-next" id="wt-next-2" onclick="wtGoTo(3)" disabled>Analyse →</button></div></div><div class="wt-step" id="demo-step-3" role="region" aria-labelledby="demo-step-3-title" inert><p class="wt-step-label">Step 3 of 4</p><p class="wt-step-title" id="demo-step-3-title">Duct is analysing your stack…</p><p class="wt-step-sub" style="margin-bottom:0">Using 90 days of example data from your selected tools.</p><div class="analyzing-lines"><div class="analyzing-line"><span class="al-spinner" aria-hidden="true"></span>Reading keyword and ranking data…</div><div class="analyzing-line"><span class="al-spinner" aria-hidden="true"></span>Mapping content clusters to conversion paths…</div><div class="analyzing-line"><span class="al-spinner" aria-hidden="true"></span>Identifying ranking opportunities and traffic drops…</div></div></div><div class="wt-step" id="demo-step-4" role="region" aria-labelledby="demo-step-4-title" inert><p class="wt-step-label">Step 4 of 4</p><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px"><div><p class="wt-step-title" id="demo-step-4-title" style="margin-bottom:4px">Your brief is ready</p><p class="wt-step-sub" id="wt-brief-sub" style="margin-bottom:0">Here's what Duct found across your content stack.</p></div><button onclick="wtRestart()" class="wt-restart-btn" aria-label="Restart demo" style="flex-shrink:0;margin-top:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/></svg>Restart</button></div><div class="report-preview"><div class="report-preview-inner" id="report-preview-host"><div id="duct-report-root"><div class="rpt-header rpt-header--modal"><p class="rpt-meta" id="rpt-meta"></p><div class="rpt-verdict rpt-verdict--modal" id="rpt-verdict"></div></div><div class="rpt-hero-visual"><div class="kpi-hero-block"><p class="kpi-hero-label" id="rpt-hero-label"></p><p class="kpi-hero-value" id="rpt-hero-val"></p><div class="kpi-hero-delta" id="rpt-hero-delta-row"></div></div><div class="kpi-sparkline-block"><p class="kpi-sparkline-label">7-day activity (indexed)</p><div class="kpi-sparkline-svg" id="rpt-sparkline" aria-hidden="true"></div></div></div><div class="rpt-bar-block"><p class="rpt-bar-label" id="rpt-bar-label-text">Metric by cluster</p><div id="rpt-roas-bars"></div></div><div class="rpt-section-heading"><p class="rpt-section-label">Also tracking</p><p class="rpt-section-hint" id="rpt-kpi-hint"></p></div><div class="kpi-strip" role="group" aria-label="Supporting metrics"><div class="kpi-chip" data-kpi-key="sessions"><div class="kpi-chip-head"><span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-6"/></svg></span><p class="kpi-label">Organic Sessions</p></div><p class="kpi-value" id="rpt-kpi-sessions-val"></p><div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-sessions-trend" aria-hidden="true"></span><span id="rpt-kpi-sessions-delta"></span></div></div><div class="kpi-chip" data-kpi-key="signups"><div class="kpi-chip-head"><span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></span><p class="kpi-label">Trial Signups</p></div><p class="kpi-value" id="rpt-kpi-signups-val"></p><div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-signups-trend" aria-hidden="true"></span><span id="rpt-kpi-signups-delta"></span></div></div><div class="kpi-chip" data-kpi-key="position"><div class="kpi-chip-head"><span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><p class="kpi-label">Avg Position</p></div><p class="kpi-value" id="rpt-kpi-position-val"></p><div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-position-trend" aria-hidden="true"></span><span id="rpt-kpi-position-delta"></span></div></div><div class="kpi-chip" data-kpi-key="keywords"><div class="kpi-chip-head"><span class="kpi-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 8h14"/><path d="M5 16h14"/></svg></span><p class="kpi-label">Keywords Ranked</p></div><p class="kpi-value" id="rpt-kpi-keywords-val"></p><div class="kpi-delta"><span class="kpi-trend" id="rpt-kpi-keywords-trend" aria-hidden="true"></span><span id="rpt-kpi-keywords-delta"></span></div></div></div><p class="rpt-section-label">Signals</p><div id="rpt-signals"></div><div class="rpt-disclosure"><button type="button" class="rpt-disclosure-btn" id="rpt-camp-toggle" aria-expanded="false" aria-controls="rpt-camp-panel"><span>Keyword breakdown<span class="rpt-disclosure-meta" id="rpt-camp-meta"></span></span><span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span></button><div class="rpt-disclosure-panel" id="rpt-camp-panel" hidden><div class="camp-table-wrap"><table class="camp-table"><thead><tr><th>Cluster</th><th>Position</th><th>Sessions</th><th>Action</th><th>Priority</th></tr></thead><tbody id="rpt-camp-tbody"></tbody></table></div></div></div><div class="rpt-disclosure"><button type="button" class="rpt-disclosure-btn" id="rpt-ue-toggle" aria-expanded="false" aria-controls="rpt-ue-panel"><span>Content ROI<span class="rpt-disclosure-meta" id="rpt-ue-summary"></span></span><span class="rpt-disclosure-chevron" aria-hidden="true">&#9660;</span></button><div class="rpt-disclosure-panel" id="rpt-ue-panel" hidden><div class="unit-econ"><p class="unit-econ-title">Organic efficiency</p><div class="unit-econ-row"><span>Cost per trial equivalent</span><span class="unit-econ-val" id="rpt-ue-cps"></span></div><div class="unit-econ-row"><span>LTV : content cost</span><span class="unit-econ-val" id="rpt-ue-ltv"></span></div><div class="unit-econ-row"><span>Verdict</span><span class="unit-econ-val" id="rpt-ue-verdict"></span></div></div></div></div><p class="rpt-sources" id="rpt-footer-sources"></p></div></div></div><a href="#demo-report" class="view-report-btn" id="view-full-report-link">View full brief &#8594;</a><p style="font-size:12px;color:var(--navy-3);margin:0 0 10px;text-align:center">Free during beta &middot; Connects in under 5 minutes &middot; No data stored without your approval</p></div></div></div></section>
 
 <!-- PROBLEM -->
 
@@ -187,64 +187,81 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 
 <section class="how" id="how">
 <div class="how-inner">
-<p class="tag">How It Works</p>
-<h2>Clarity in <em>three steps</em></h2>
+<p class="tag">How it works</p>
+<h2>Connect. Ask. <em>Approve.</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
 <div class="steps">
 <div class="step reveal">
 <span class="step-num">01</span>
-<span class="step-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
 <p class="step-title">Connect your stack</p>
-<p class="step-body">One-click integrations to Search Console, GA4, Tag Manager, and Clarity. Duct reads to build your brief and changes nothing unless you approve it. Under 5 minutes to set up.</p>
+<p class="step-body">One-click OAuth to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity and Mixpanel. Reporting needs read access only; nothing is exported by hand.</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
-<span class="step-icon" style="filter:none;display:block;margin-bottom:18px">
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<circle cx="16" cy="16" r="14" stroke="white" stroke-width="2"/>
-<circle cx="16" cy="16" r="8" stroke="white" stroke-width="2"/>
-<circle cx="16" cy="16" r="3" fill="white"/>
-</svg>
-</span>
-<p class="step-title">Define your north star</p>
-<p class="step-body">Tell Duct your growth goal — organic signups, keyword cluster ownership, channel growth — and it tracks only what moves those numbers, not everything.</p>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
+<p class="step-title">Ask the question</p>
+<p class="step-body">Type it the way you would ask a colleague. Duct reads every connected tool for it, shows the sources, and a second agent re-checks the numbers before you see them.</p>
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
-<span class="step-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg></span>
-<p class="step-title">Get a weekly action brief</p>
-<p class="step-body">Weekly briefs in your inbox with ranked actions, keyword gaps, conversion signals, and plain-English summaries.</p>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg></span>
+<p class="step-title">Approve the change</p>
+<p class="step-body">When the answer is a change, it arrives as a change set with a preview and a guardrail check. Apply it, or don&rsquo;t. It remembers either way.</p>
 </div>
 </div>
 </div>
 </section>
 
-<!-- FEATURES -->
+<!-- WHAT IT DOES -->
 
-<section class="features" id="features">
+<section class="jobs" id="features">
+<div class="jobs-inner">
 <div class="reveal">
-<p class="tag">Features</p>
-<h2>Built for growth teams who <em>move fast</em></h2>
+<p class="tag">What it does</p>
+<h2>What it does for <em>organic.</em></h2>
 </div>
-<div class="feat-grid">
-<div class="feat reveal">
-<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg> Connect</span>
-<p class="feat-title">Cross-tool correlation</p>
-<p class="feat-body">Link rank changes, traffic shifts, on-page behaviour, and conversion signals across Search Console, GA4, and Clarity in one view.</p>
+<div class="job-grid">
+<article class="job reveal" style="transition-delay:0.05s">
+<div class="job-shot"><img src="assets/media/insights-session.webp" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, a proposed change waiting for approval, and the brief beside it"/></div>
+<div class="job-body">
+<h3>Which content actually converts?</h3>
+<dl>
+<dt>When</dt><dd>Search Console says impressions are up. GA4 says trials are flat.</dd>
+<dt>Today</dt><dd>Two exports, a pivot table, and a guess about which cluster to feed.</dd>
+<dt>With Duct</dt><dd class="with">It reads Search Console, GA4 and Clarity together and answers which cluster earns trials, with the pages to update first.</dd>
+</dl>
 </div>
-<div class="feat reveal" style="transition-delay:.08s">
-<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mail"/></svg> Brief</span>
-<p class="feat-title">Weekly action brief</p>
-<p class="feat-body">A prioritised list of this week's highest-impact organic actions, tied directly to your current growth goal.</p>
+</article>
+<article class="job reveal" style="transition-delay:.1s">
+<div class="job-shot">
+<div class="job-mock" aria-hidden="true">
+<div class="job-mock-url"><span>yoursite.com</span><b>12 fixes</b></div>
+<div class="job-mock-row"><span class="job-mock-sev">High</span>Duplicate titles on 14 pages</div>
+<div class="job-mock-row"><span class="job-mock-sev">High</span>63 images without alt text</div>
+<div class="job-mock-row"><span class="job-mock-sev med">Medium</span>No canonical on tagged URLs</div>
 </div>
-<div class="feat reveal" style="transition-delay:.14s">
-<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#bell-ring"/></svg> Alerts</span>
-<p class="feat-title">Keyword and traffic alerts</p>
-<p class="feat-body">Get an alert when rankings jump, traffic drops, or conversion gaps open up before momentum is lost.</p>
 </div>
-<div class="feat reveal" style="transition-delay:.2s">
-<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg> Ask</span>
-<p class="feat-title">Plain-English queries</p>
-<p class="feat-body">Ask plain-English questions and get clear answers from your connected tools, without dashboards or exports.</p>
+<div class="job-body">
+<h3>SEO audit</h3>
+<dl>
+<dt>When</dt><dd>A site needs a look before the next sprint.</dd>
+<dt>Today</dt><dd>A paid crawler, a spreadsheet, a consultant.</dd>
+<dt>With Duct</dt><dd class="with">Paste the URL. No account. The fixes come back in priority order, with the page each one lives on.</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:0.15s">
+<div class="job-shot"><img src="assets/media/content-plan.webp" width="2208" height="1532" loading="lazy" alt="A week of posts on a board: two published, one drafted, two planned"/></div>
+<div class="job-body">
+<h3>A week of content on a board</h3>
+<dl>
+<dt>When</dt><dd>The week&rsquo;s posts are due and the plan is in three places.</dd>
+<dt>Today</dt><dd>A doc, a design tool, and five upload boxes.</dd>
+<dt>With Duct</dt><dd class="with">Content Studio plans the week on a board, drafts each post with its slides, and publishes to nine networks. The numbers come back to the card.</dd>
+</dl>
+</div>
+</article>
 </div>
 </div>
 </section>
@@ -284,17 +301,6 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 </div>
 </section>
 
-<!-- STATS -->
-
-<section class="stats">
-<div class="stats-inner">
-<div class="reveal"><span class="stat-n">9+</span><span class="stat-l">Integrations at launch</span></div>
-<div class="reveal" style="transition-delay:.1s"><span class="stat-n">~4h</span><span class="stat-l">Saved per week on reporting</span></div>
-<div class="reveal" style="transition-delay:.2s"><span class="stat-n">10min</span><span class="stat-l">To first insight after setup</span></div>
-<div class="reveal" style="transition-delay:.3s"><span class="stat-n">0</span><span class="stat-l">Manual data exports needed</span></div>
-</div>
-</section>
-
 <!-- FAQ -->
 
 <section class="faq" id="faq">
@@ -306,7 +312,7 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 <div class="faq-list reveal" style="transition-delay:.1s">
 <details class="faq-item">
 <summary class="faq-q">What is Duct for organic growth?</summary>
-<p class="faq-a">Duct connects Google Search Console, GA4, Tag Manager, Microsoft Clarity and Mixpanel into one weekly action brief. It tells growth teams exactly which pages to update, which queries to target, and what to publish next.</p>
+<p class="faq-a">An open-source AI agent that reads Google Search Console, GA4, Tag Manager, Microsoft Clarity and Mixpanel together. Ask which content is converting and it answers with the pages to update and the queries to target; a free SEO audit runs on any URL without an account; and Content Studio plans, drafts and publishes the week's posts.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">How does Duct connect to my SEO and content tools?</summary>
@@ -325,8 +331,8 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 <p class="faq-a">Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. <a href="/open-source#pricing">What will cost money</a> is spelled out on the open-source page.</p>
 </details>
 <details class="faq-item">
-<summary class="faq-q">What kind of actions does the weekly organic brief recommend?</summary>
-<p class="faq-a">Each week, Duct highlights pages losing rankings, keyword gaps, high-opportunity content briefs, and anomaly alerts. Actions are ranked by projected impact using cross-tool signals.</p>
+<summary class="faq-q">What kind of actions does Duct recommend?</summary>
+<p class="faq-a">Pages losing rankings and the query they lost, clusters that earn trials versus clusters that only earn traffic, technical fixes from the audit in priority order, and the posts worth making next. Each one names its sources, and when the action is a change in a connected tool, it arrives as a change set you approve.</p>
 </details>
 </div>
 </div>
@@ -337,15 +343,10 @@ Rising keyword → low-KD gap → missing content → conversion drop. One story
 
 </main>
 
-<!-- REPORT MODAL -->
-<div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="rpt-meta"><div class="modal-sheet"><div class="modal-topbar"><h2 class="modal-topbar-title" id="modal-title">Organic Growth Report</h2><button type="button" class="modal-close" id="modal-close-btn" onclick="closeReportModal()" aria-label="Close report">&times;</button></div><div class="modal-body-scroll" id="modal-report-scroll-host"></div><div class="modal-cta-bar"><div class="modal-cta-form"><a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a></div><p class="modal-cta-note">Free during beta &middot; No credit card &middot; Connects in under 5 minutes</p></div></div></div>
-<!-- END REPORT MODAL -->
 
 <!-- FOOTER (shared: site/partials/footer-expanded.html) -->
 <div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
 
-<script src="assets/demo-organic.js"></script>
-<script src="assets/demo.js"></script>
 <script src="assets/duct-partials.js"></script>
 <script src="assets/duct.js" defer></script>
 <script src="assets/duct-download.js" defer></script>

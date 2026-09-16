@@ -39,8 +39,17 @@ used consistently. That economy is the style; keep it.
   background instead of per-card borders (`.pain-grid`, `.feat-grid`).
 - **Fluid display type**: `clamp()` on `h1`/`h2` only — body sizes are
   fixed, spacing is fixed. Don't extend `clamp()` to spacing.
-- **The logo is text**: lowercase Georgia `duct` + the orange dot. The dot
-  is the brand's one graphic element.
+- **The logo is text**: lowercase Georgia `duct` + the orange dot.
+- **The aqueduct is the visual argument.** `.channel` (two lines of channel,
+  arches under it, orange water moving through) divides a hero from what
+  follows; the Roman threshold mosaics from the app (`assets/art/`) sit where
+  someone arrives: download, about, 404. Both come from the name (`/about`,
+  "where the name comes from") and nowhere else on the web, which is the
+  point. Product shots (`assets/media/`) carry the rest of the weight; the
+  site draws no other illustration.
+- **Icons are one Lucide sprite** (`assets/icons.svg`, `.ic`, `currentColor`,
+  `1em`). No emoji anywhere: they rendered differently per platform and had
+  to be forced white on navy with a filter.
 
 **Structure numbers**: container `max-width: 1160px`, side padding 52px →
 24px mobile; section padding 96–100px → 64px mobile; primary breakpoint
@@ -49,9 +58,10 @@ Buttons are one `.btn` pill base + `-orange`/`-dark`/`-ghost` variants and
 `-lg`; hover is darken + `translateY(-2px)` + tinted shadow on the primary.
 
 **What the site deliberately does not have**: dark mode, photography,
-testimonials (the `.quotes` CSS is dead until real quotes exist — never
-fake them), a `<form>` element or any email capture at all (the download CTA
-contract in `AGENTS.md`), or any runtime dependency beyond `marked` on the blog.
+testimonials (never fake them), invented stats bands, an interactive demo (the
+walkthrough was retired in September 2026; a real screenshot beat it), a
+`<form>` element or any email capture at all (the download CTA contract in
+`AGENTS.md`), or any runtime dependency beyond `marked` on the blog.
 
 ---
 
@@ -240,9 +250,10 @@ Rules, checkable in review:
 - **Social proof stays honest.** Real numbers ("9+ tools", "10 minutes to
   connect") over fake logos or invented testimonials — the dead `.quotes`
   CSS stays dead until real quotes exist.
-- **The demo is the best salesman** — it shows the product reasoning over
-  real-looking numbers. Prefer extending the demo (a new variant per
-  `AGENTS.md`) to adding another static feature grid.
+- **The product is the best salesman.** One `.shot` under the hero and three
+  `.job` cards (*When / Today / With Duct*) with README screenshots beat both
+  the old interactive demo and a static feature grid. If a job has no shot,
+  add a scenario to `scripts/shots/scenarios.mjs` rather than drawing a mock.
 - **Prose gets a measure everywhere**: caps exist (`700px` prose, `500px`
   hero sub) but a few blocks run ~120 characters; anything textual gets a
   max-width in the 45–75ch band.
@@ -296,8 +307,8 @@ the *landing-page* tells:
 | Uniform card grids, nothing featured | One heavier element per page; break a grid when the argument needs it |
 | Centered-everything | Asymmetric working sections; center only display moments |
 | Fake testimonials/logos | Real numbers or nothing |
-| Emoji standing in for an icon system | Emoji are the current system — used consistently and `aria-hidden` — but migrate to one inline-SVG set when touched (the white-on-navy `filter: brightness(0) invert(1)` hack renders differently per platform) |
-| Stock three-step "How it works" copy | The steps exist; write their bodies in voice ("Connect your tools" is the flattest copy on the site) |
+| Emoji standing in for an icon system | Gone. One Lucide sprite, `currentColor`, `aria-hidden`; add names to `scripts/build_site_icons.py` |
+| Stock three-step "How it works" copy | *Connect / Ask / Approve*, with the tools named and the approval gate stated; the channel runs above the steps |
 | One OG image for 24 pages | Per-page OG images, compressed |
 
 ---
@@ -328,13 +339,11 @@ the *landing-page* tells:
 
 ## Known gaps — close on touch
 
-- **14 pages load Google Fonts that nothing uses** (`Instrument Serif` +
-  `DM Sans` on `for-paid-ads` and all tools) — render-blocking, zero
-  visual effect. Delete the `<link>`s.
+- **The tools pages load Google Fonts that nothing uses** (`Instrument
+  Serif` + `DM Sans`) — render-blocking, zero visual effect. Delete the
+  `<link>`s. (`for-paid-ads` is done.)
 - **Accent strategy**: `for-organic-growth.html`'s `--green` + ~35 hand
-  overrides → the one-line `--orange` override; its demo markup is also
-  minified onto a single 14KB line and inlined instead of linking
-  `demo.css` like `for-paid-ads` does.
+  overrides → the one-line `--orange` override.
 - **Token splits to make**: `--brand` (fixed, logo dot/favicon) vs the
   overridable accent; a text-safe accent (≥4.5:1) for links and labels;
   the success green `#1a9e5c` currently invented inline in `duct.js`.
