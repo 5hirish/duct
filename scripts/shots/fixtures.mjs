@@ -4,7 +4,7 @@
 // hatches the mock understands — `{ __answer__ }` answers the pending
 // question, `{ __send__ }` is the user typing the next message.
 import { readFileSync } from "node:fs";
-import { BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, DRAFT_POST, MEMORIES, PLAN, PRODUCT_CHANGE_SET, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import { ANSWERS, BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, DRAFT_POST, MEMORIES, PLAN, PRODUCT_CHANGE_SET, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 // The backend's slide CSS, rendered once from agents/content/templates.py
 // (see assets/slides-head.html for how). The live slide preview reads its
@@ -76,6 +76,7 @@ export function insightsFrames() {
   ];
 }
 
+const sources = (key) => ANSWERS[key].sources.flatMap((s, i) => step(`collect_source_data:${s.id}:${i}`, s.label, s.id));
 const recall = (ids) => ids.map((id) => {
   const m = MEMORIES.find((x) => x.id === id);
   return { id, memory_id: `00000000-0000-4000-8000-${id.replace(/\D/g, "").padStart(12, "0")}`, title: m.title, kind: m.kind };
@@ -87,7 +88,6 @@ const recall = (ids) => ids.map((id) => {
 // No brief this time, so the chat carries the whole answer.
 export function productFrames() {
   const a = STORY.numbers.activation;
-  const range = "25 Aug → 14 Sep";
   return [
     { event: "pipeline_started", status: "running", autonomy: "ask", autonomy_configured: "assisted" },
     { event: "memory_recalled", memories: recall(["mem-android", "mem-clarity", "mem-pref"]) },
@@ -96,9 +96,7 @@ export function productFrames() {
       { content: "Split activation by platform and cohort", status: "pending" },
       { content: "Write it up and propose what to track", status: "pending" },
     ] },
-    ...step("collect_source_data:ga4", `ga4 onboarding funnel by platform · ${range}`, "ga4"),
-    ...step("collect_source_data:clarity", `clarity rage clicks by screen · ${range}`, "clarity"),
-    ...step("collect_source_data:stripe", `stripe trial starts · ${range}`, "stripe"),
+    ...sources("product"),
     { event: "thinking_chunk", text: "iOS is flat. Android moved the day the rebuild shipped. " },
     { event: "thinking_chunk", text: "Check the Connect bank step before blaming the release as a whole." },
     say("One thing before I split this."),
@@ -117,7 +115,7 @@ export function productFrames() {
       { content: "Write it up and propose what to track", status: "in_progress" },
     ] },
     ...step("verify", "verification sub-agent · re-checking 5 numbers"),
-    say(`Connect bank it is. **Android activation fell from ${a.androidBefore} to ${a.androidAfter} on 2 Sep, the day the rebuild shipped. iOS did not move.** The rebuild put the bank step behind a system permission prompt, and Android users who tap Deny land on an empty screen: that is where this week's three rage-click clusters are. Two events to track below, so next week's brief can prove the fix.`),
+    say(`Connect bank it is. ${ANSWERS.product.answer}`),
     { event: "execution_proposed", change_set: PRODUCT_CHANGE_SET },
     { event: "memory_written", memories: [
       { id: "mem-activation", memory_id: "00000000-0000-4000-8000-000000000098", title: `Android activation dropped to ${a.androidAfter} after the 2 Sep rebuild; the permission prompt is the cause`, kind: "conclusion" },
@@ -138,7 +136,6 @@ export function productFrames() {
 // retention, and no brief: the numbers are in the answer.
 export function paidFrames() {
   const n = STORY.numbers;
-  const range = `${STORY.week.start} → ${STORY.week.end}`;
   return [
     { event: "pipeline_started", status: "running", autonomy: "ask", autonomy_configured: "assisted" },
     { event: "memory_recalled", memories: recall(["mem-cpa", "mem-legacy", "mem-brief"]) },
@@ -147,10 +144,7 @@ export function paidFrames() {
       { content: "Cost every campaign against the €12 target", status: "pending" },
       { content: "Propose the moves", status: "pending" },
     ] },
-    ...step("collect_source_data:google_ads", `google ads campaigns · ${range}`, "google_ads"),
-    ...step("collect_source_data:google_ads_terms", `google ads search terms · ${range}`, "google_ads"),
-    ...step("collect_source_data:ga4", `ga4 signups by campaign · ${range}`, "ga4"),
-    ...step("collect_source_data:stripe", `stripe subscriptions · ${range}`, "stripe"),
+    ...sources("paid"),
     { event: "thinking_chunk", text: "PMax is €7.40 over target and brand search is €3.30 under. " },
     { event: "thinking_chunk", text: "Read the search terms before touching budgets." },
     say("One thing before I move anything."),
@@ -169,7 +163,7 @@ export function paidFrames() {
       { content: "Propose the moves", status: "in_progress" },
     ] },
     ...step("verify", "verification sub-agent · re-checking 6 numbers"),
-    say(`The CPA it is. **${n.pmaxSpend} of this week's spend went to Performance Max at €${n.pmaxCpa} a signup, against the €${STORY.targets.cpa} target.** Brand search is at €${n.brandCpa} and capped by its €40 budget. Two template-hunter search terms spent ${n.templateTermsSpend} for zero signups. The moves are below: two apply on your say-so, the budget raise is over the guardrail so it needs you.`),
+    say(`The CPA it is. ${ANSWERS.paid.answer}`),
     { event: "execution_proposed", change_set: CHANGE_SET },
     { event: "memory_written", memories: [
       { id: "mem-terms", memory_id: "00000000-0000-4000-8000-000000000097", title: "Watch PMax search terms weekly for template hunters", kind: "watch" },

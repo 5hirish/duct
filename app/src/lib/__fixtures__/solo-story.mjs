@@ -236,6 +236,45 @@ export const CHANGE_SET_HISTORY = Object.freeze([
   },
 ]);
 
+// One question per audience, and the answer the insights agent gives. The
+// session shots open with the question and end on the answer; the answer
+// cards on the landing pages show only this, so the two cannot disagree.
+// Sources are the steps the agent reports, in order; `recalled` the memories
+// it opened with.
+export const ANSWERS = Object.freeze({
+  product: {
+    question: "Why did activation drop after the Android onboarding release?",
+    recalled: ["mem-android", "mem-clarity"],
+    sources: [
+      { id: "ga4", label: "ga4 onboarding funnel by platform · 25 Aug → 14 Sep" },
+      { id: "clarity", label: "clarity rage clicks by screen · 25 Aug → 14 Sep" },
+      { id: "stripe", label: "stripe trial starts · 25 Aug → 14 Sep" },
+    ],
+    answer: `**Android activation fell from ${STORY.numbers.activation.androidBefore} to ${STORY.numbers.activation.androidAfter} on 2 Sep, the day the rebuild shipped. iOS did not move.** The rebuild put the bank step behind a system permission prompt, and Android users who tap Deny land on an empty screen: that is where this week's three rage-click clusters are. Two events to track below, so next week's brief can prove the fix.`,
+  },
+  paid: {
+    question: "Where is the ads budget leaking this week?",
+    recalled: ["mem-cpa", "mem-legacy"],
+    sources: [
+      { id: "google_ads", label: `google ads campaigns · ${STORY.week.start} → ${STORY.week.end}` },
+      { id: "google_ads", label: `google ads search terms · ${STORY.week.start} → ${STORY.week.end}` },
+      { id: "ga4", label: `ga4 signups by campaign · ${STORY.week.start} → ${STORY.week.end}` },
+      { id: "stripe", label: `stripe subscriptions · ${STORY.week.start} → ${STORY.week.end}` },
+    ],
+    answer: `**${STORY.numbers.pmaxSpend} of this week's spend went to Performance Max at €${STORY.numbers.pmaxCpa} a signup, against the €${STORY.targets.cpa} target.** Brand search is at €${STORY.numbers.brandCpa} and capped by its €40 budget. Two template-hunter search terms spent ${STORY.numbers.templateTermsSpend} for zero signups. The moves are below: two apply on your say-so, the budget raise is over the guardrail so it needs you.`,
+  },
+  organic: {
+    question: "Which content actually converts?",
+    recalled: ["mem-brief"],
+    sources: [
+      { id: "search_console", label: `search console clicks by page · ${STORY.week.start} → ${STORY.week.end}` },
+      { id: "ga4", label: `ga4 trials by landing page · ${STORY.week.start} → ${STORY.week.end}` },
+      { id: "clarity", label: `clarity quick-backs by page · ${STORY.week.start} → ${STORY.week.end}` },
+    ],
+    answer: `**The tax cluster earns 61% of organic trials from 28% of the clicks. Invoicing gets 41% of the clicks and earns 9%.** The three invoicing pages on page one lose people at the pricing paragraph, where Clarity shows the quick-backs. Update those three first. *${STORY.numbers.blogPost}* is already on page one for two target terms and needs nothing.`,
+  },
+});
+
 // The brief the insights agent writes: a self-contained HTML report, the way
 // the agents actually deliver one (the artifact pane renders it in a frame).
 // Sized for the pane, not for print: a verdict, the numbers, then findings.

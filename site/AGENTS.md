@@ -126,8 +126,10 @@ hand for the site; if a shot is missing, add a scenario there. The `.shot`
 frame shows one under a hero, the `.job` cards show three with *When / Today /
 With Duct* copy (home, download and the `for-*` pages share both). Each
 `for-*` hero gets the session shot asked from its audience's side
-(`product-session`, `paid-session`, the signups `insights-session`), not the
-same image with a different caption.
+(`product-session`, `paid-session`, the content `content-session`), not the
+same image with a different caption. Job cards take a focused shot, never a
+whole window: at card size a window is a grey smear, an `answer-*` card is a
+question and its answer.
 
 Every image inside `.shot-frame`, `.job-shot`, `.what-shot` or `.dl-hero-shot`
 opens full-size over the page on click or Enter; `duct.js` adds the markup and

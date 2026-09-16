@@ -52,7 +52,11 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
-import { CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
+import { ANSWERS as STORY_ANSWERS, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
+import { TranscriptRow } from "@/components/workspace/AgentChat";
+import StepProgress from "@/components/workspace/StepProgress";
+import { Row as ChatRow } from "@/lib/agentSession";
+import { StepStatus } from "@/lib/agentSteps";
 import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
@@ -1113,6 +1117,26 @@ export const SCENES = [
       </div>
     ),
   },
+  // One question, the sources read, the answer: the transcript with nothing
+  // around it. Three audiences ask the story week three things; the copy
+  // comes from the story so the card never says something the session does not.
+  ...Object.entries(STORY_ANSWERS).map(([key, a]) => ({
+    id: `shot-answer-${key}`,
+    state: `${key} · ${a.sources.length} sources read`,
+    group: "AgentChat",
+    title: `An answer, alone: ${a.question}`,
+    note: "The rows of a session with the workspace removed: the user bubble, the memories it opened with, the collected-source steps done, the assistant bubble. 600px wide so the capture lands near 3:2, the landing pages' card window; wider and the crop takes the question. What to check: the user bubble stays at 82% and right-aligned, the steps read as muted history not live progress, and bold inside the answer is one span per finding, never a whole paragraph.",
+    render: () => (
+      <div data-shot style={{ maxWidth: 600, padding: "20px 20px 8px" }} className="bg-card">
+        <TranscriptRow msg={{ role: ChatRow.USER, text: a.question }} />
+        <TranscriptRow msg={{ role: ChatRow.MEMORY_RECALL, memories: a.recalled.map((id) => { const m = STORY_MEMORIES.find((x) => x.id === id); return { id, memory_id: id, title: m.title, kind: m.kind }; }) }} />
+        <div className="mb-4">
+          <StepProgress steps={a.sources.map((s, i) => ({ step_id: `collect_source_data:${s.id}:${i}`, label: s.label, status: StepStatus.SUCCESS, connector_id: s.id }))} />
+        </div>
+        <TranscriptRow msg={{ role: ChatRow.ASSISTANT, text: a.answer }} />
+      </div>
+    ),
+  })),
   {
     id: "audit-report-v1",
     group: "Audit",

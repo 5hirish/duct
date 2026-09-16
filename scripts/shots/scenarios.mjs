@@ -4,7 +4,7 @@
 // Every scenario returns what to capture: a locator, `{ element, radius }`
 // for a floating surface, or nothing for the whole viewport. Add an image by
 // adding an entry; the runner does the rest.
-import { PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import { ANSWERS, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 export const SCENARIOS = [
   {
@@ -33,8 +33,8 @@ export const SCENARIOS = [
   // the chat unreadable. The override is capture-only; the app has no such
   // mode, and should not grow one for a screenshot.
   ...[
-    { id: "product-session", q: "Why did activation drop after the Android onboarding release?", answer: /^Connect bank/, proposed: "Track the permission dead end", last: "ask for the permission after the first budget" },
-    { id: "paid-session", q: "Where is the ads budget leaking this week?", answer: /^The €12 CPA/, proposed: "Pause Performance Max, keep brand search", last: "The Legacy brand campaign stays untouched" },
+    { id: "product-session", q: ANSWERS.product.question, answer: /^Connect bank/, proposed: "Track the permission dead end", last: "ask for the permission after the first budget" },
+    { id: "paid-session", q: ANSWERS.paid.question, answer: /^The €12 CPA/, proposed: "Pause Performance Max, keep brand search", last: "The Legacy brand campaign stays untouched" },
   ].map((s) => ({
     id: s.id,
     kind: "page",
@@ -111,6 +111,22 @@ export const SCENARIOS = [
       return page.locator("[data-preview-content]");
     },
   },
+  // The answer alone: one question, the sources it read, what it found. The
+  // job cards on the landing pages want this, not a whole window at a third
+  // of its size.
+  ...["product", "paid", "organic"].map((key) => ({
+    id: `answer-${key}`,
+    kind: "scene",
+    scene: `shot-answer-${key}`,
+    viewport: { width: 820, height: 900 },
+    theme: "light",
+    frame: "card",
+    async run({ page }) {
+      await page.getByText(ANSWERS[key].question).waitFor({ timeout: 15000 });
+      await page.waitForTimeout(300);
+      return page.locator("[data-shot]");
+    },
+  })),
   {
     id: "review-card",
     kind: "scene",
