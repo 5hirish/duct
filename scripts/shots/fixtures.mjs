@@ -4,7 +4,7 @@
 // hatches the mock understands — `{ __answer__ }` answers the pending
 // question, `{ __send__ }` is the user typing the next message.
 import { readFileSync } from "node:fs";
-import { ANSWERS, BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, DRAFT_POST, MEMORIES, PLAN, PRODUCT_CHANGE_SET, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import { ANSWERS, BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, DRAFT_POST, MEMORIES, PAID_BRIEF_HTML, PLAN, PRODUCT_BRIEF_HTML, PRODUCT_CHANGE_SET, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 // The backend's slide CSS, rendered once from agents/content/templates.py
 // (see assets/slides-head.html for how). The live slide preview reads its
@@ -85,7 +85,6 @@ const recall = (ids) => ids.map((id) => {
 // The same week asked from the product side: not "why are signups down" but
 // "why did activation drop". Same rebuild, same rage clicks, same Android
 // cohort; what it proposes is two GA4 key events, not a paused campaign.
-// No brief this time, so the chat carries the whole answer.
 export function productFrames() {
   const a = STORY.numbers.activation;
   return [
@@ -115,7 +114,8 @@ export function productFrames() {
       { content: "Write it up and propose what to track", status: "in_progress" },
     ] },
     ...step("verify", "verification sub-agent · re-checking 5 numbers"),
-    say(`Connect bank it is. ${ANSWERS.product.answer}`),
+    say(`Connect bank it is. ${ANSWERS.product.answer} The brief is on the right.`),
+    { event: "artifact_version", version_id: 1, label: "Version 1", payload: { title: `Activation brief · ${STORY.week.label}`, format: "html", content: PRODUCT_BRIEF_HTML } },
     { event: "execution_proposed", change_set: PRODUCT_CHANGE_SET },
     { event: "memory_written", memories: [
       { id: "mem-activation", memory_id: "00000000-0000-4000-8000-000000000098", title: `Android activation dropped to ${a.androidAfter} after the 2 Sep rebuild; the permission prompt is the cause`, kind: "conclusion" },
@@ -133,7 +133,7 @@ export function productFrames() {
 
 // The same week asked from the paid side: where is the budget leaking. Same
 // change set as the signups session, reached from the spend rather than the
-// retention, and no brief: the numbers are in the answer.
+// retention.
 export function paidFrames() {
   const n = STORY.numbers;
   return [
@@ -163,7 +163,8 @@ export function paidFrames() {
       { content: "Propose the moves", status: "in_progress" },
     ] },
     ...step("verify", "verification sub-agent · re-checking 6 numbers"),
-    say(`The CPA it is. ${ANSWERS.paid.answer}`),
+    say(`The CPA it is. ${ANSWERS.paid.answer} The brief is on the right.`),
+    { event: "artifact_version", version_id: 1, label: "Version 1", payload: { title: `Spend brief · ${STORY.week.label}`, format: "html", content: PAID_BRIEF_HTML } },
     { event: "execution_proposed", change_set: CHANGE_SET },
     { event: "memory_written", memories: [
       { id: "mem-terms", memory_id: "00000000-0000-4000-8000-000000000097", title: "Watch PMax search terms weekly for template hunters", kind: "watch" },

@@ -6,6 +6,15 @@
 // adding an entry; the runner does the rest.
 import { ANSWERS, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
+// Every window shot is taken with the app's sidebar closed: the page is the
+// product, and at a third of its size the sidebar is a column of grey text
+// that takes a quarter of the frame. The toggle is the product's own; the
+// state is a cookie the app would set the same way.
+async function closeSidebar(page) {
+  await page.getByRole("button", { name: "Toggle Sidebar" }).click();
+  await page.waitForTimeout(350);
+}
+
 export const SCENARIOS = [
   {
     id: "insights-session",
@@ -15,6 +24,7 @@ export const SCENARIOS = [
     frame: "window",
     async run({ page, app }) {
       await page.goto(`${app}/insights/session?q=${encodeURIComponent("Why are signups down when ROAS is up?")}&project=${STORY.project.id}`);
+      await closeSidebar(page);
       await page.getByText("Which matters more this week?", { exact: true }).waitFor({ timeout: 60000 });
       await page.getByRole("button", { name: /^Retention/ }).click();
       await page.getByRole("button", { name: /Continue/ }).click();
@@ -28,27 +38,27 @@ export const SCENARIOS = [
       return null;
     },
   },
-  // The same workspace with the artifact pane hidden: these two sessions
-  // write no brief, and at a third of its size on a page the pane only made
-  // the chat unreadable. The override is capture-only; the app has no such
-  // mode, and should not grow one for a screenshot.
+  // The same workspace asked from the product side and the paid side: a
+  // question, one clarifying answer, the brief on the right, the change set
+  // below. Same shape as the signups session, different week's worth of copy.
   ...[
-    { id: "product-session", q: ANSWERS.product.question, answer: /^Connect bank/, proposed: "Track the permission dead end", last: "ask for the permission after the first budget" },
-    { id: "paid-session", q: ANSWERS.paid.question, answer: /^The €12 CPA/, proposed: "Pause Performance Max, keep brand search", last: "The Legacy brand campaign stays untouched" },
+    { id: "product-session", q: ANSWERS.product.question, answer: /^Connect bank/, brief: "Android activation halved", proposed: "Track the permission dead end", last: "ask for the permission after the first budget" },
+    { id: "paid-session", q: ANSWERS.paid.question, answer: /^The €12 CPA/, brief: "Performance Max buys signups", proposed: "Pause Performance Max, keep brand search", last: "The Legacy brand campaign stays untouched" },
   ].map((s) => ({
     id: s.id,
     kind: "page",
-    viewport: { width: 1180, height: 900 },
+    viewport: { width: 1440, height: 900 },
     theme: "light",
     frame: "window",
     async run({ page, app }) {
       await page.goto(`${app}/insights/session?q=${encodeURIComponent(s.q)}&project=${STORY.project.id}`);
-      await page.addStyleTag({ content: "#insights_split_w-left { width: 100% !important; border-right: 0 !important; } #insights_split_w-left ~ div { display: none !important; }" });
+      await closeSidebar(page);
       await page.getByRole("button", { name: s.answer }).waitFor({ timeout: 60000 });
       await page.getByRole("button", { name: s.answer }).click();
       await page.getByRole("button", { name: /Continue/ }).click();
       await page.getByText(s.proposed).waitFor({ timeout: 60000 });
       await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 30000 });
+      await page.frameLocator("iframe[title]").getByText(s.brief).waitFor({ timeout: 30000 });
       await page.getByText(s.last).scrollIntoViewIfNeeded();
       await page.waitForTimeout(600);
       return null;
@@ -62,6 +72,7 @@ export const SCENARIOS = [
     frame: "window",
     async run({ page, app }) {
       await page.goto(`${app}/execute`);
+      await closeSidebar(page);
       await page.getByText("Pause Performance Max, keep brand search").first().waitFor({ timeout: 60000 });
       // The queue as it is: this week's proposal waiting on Approve all, the
       // three that already went through under it. The drawer stays closed;
@@ -78,6 +89,7 @@ export const SCENARIOS = [
     frame: "window",
     async run({ page, app }) {
       await page.goto(`${app}/content/posts/new?plan_id=${PLAN.id}&day=2`);
+      await closeSidebar(page);
       await page.getByText("Slide 1 is in so you can see the look").waitFor({ timeout: 60000 });
       // The slide renders in a sandboxed frame; give its image and fonts a moment.
       await page.frameLocator('iframe[title="slide 1 preview"]').locator("img.bg").waitFor({ timeout: 30000 });

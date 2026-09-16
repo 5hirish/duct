@@ -275,14 +275,13 @@ export const ANSWERS = Object.freeze({
   },
 });
 
-// The brief the insights agent writes: a self-contained HTML report, the way
+// The briefs the insights agent writes: self-contained HTML reports, the way
 // the agents actually deliver one (the artifact pane renders it in a frame).
-// Sized for the pane, not for print: a verdict, the numbers, then findings.
+// Sized for the pane, not for print: a verdict, the numbers, one chart, then
+// findings. One builder, three briefs, so the three sessions share a look
+// and a change to the layout reaches all of them.
 const n = STORY.numbers;
-export const BRIEF_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>Signups · week of ${STORY.week.label}</title>
-<style>
-:root{--tx:#1a1d26;--mut:#6b7280;--line:#e6e7ea;--card:#fff;--bg:#fff;--crit:#c2410c;--warn:#b45309;--good:#15803d;--accent:#5b5bd6}
+const BRIEF_CSS = `:root{--tx:#1a1d26;--mut:#6b7280;--line:#e6e7ea;--card:#fff;--bg:#fff;--crit:#c2410c;--warn:#b45309;--good:#15803d;--accent:#5b5bd6}
 *{box-sizing:border-box;margin:0}
 body{font:14px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);padding:20px 22px 32px}
 h1{font-size:19px;font-weight:650;letter-spacing:-.01em}
@@ -307,44 +306,129 @@ h2{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
 .finding h3{font-size:13px;font-weight:600;margin-bottom:2px}
 .finding p{font-size:12.5px;color:#3f4350}
 ol{padding-left:18px;font-size:13px}ol li{margin-bottom:5px}
-footer{color:var(--mut);font-size:11px;margin-top:24px}
-</style></head><body>
-<h1>Signups are down. ROAS is up. Same campaign.</h1>
-<p class="sub">Week of ${STORY.week.label} · Google Ads, GA4, Stripe, Clarity, Search Console</p>
+footer{color:var(--mut);font-size:11px;margin-top:24px}`;
+const kpi = (v, l, d, tone = "flat") => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div><div class="d ${tone}">${d}</div></div>`;
+const bar = (label, pct, tone = "", text = `${pct}%`) => `<div class="bar"><span>${label}</span><i class="${tone}" style="width:${pct}%"></i><b>${text}</b></div>`;
+const finding = (tone, h, p) => `<div class="finding ${tone}"><h3>${h}</h3><p>${p}</p></div>`;
 
-<div class="verdict"><b>The short version.</b> Performance Max is buying signups at €${n.pmaxCpa} who leave within a week. The ROAS gain is hiding a retention problem, not describing a win.</div>
+function brief({ title, h1, sources, verdict, kpis, chart, findings, todo }) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>${title} · week of ${STORY.week.label}</title>
+<style>
+${BRIEF_CSS}
+</style></head><body>
+<h1>${h1}</h1>
+<p class="sub">Week of ${STORY.week.label} · ${sources}</p>
+
+<div class="verdict"><b>The short version.</b> ${verdict}</div>
 
 <h2>The numbers</h2>
 <div class="kpis">
-  <div class="kpi"><div class="v">${n.signups}</div><div class="l">Signups</div><div class="d down">▼ 9% · target ${STORY.targets.weeklySignups}</div></div>
-  <div class="kpi"><div class="v">${n.mrr}</div><div class="l">MRR</div><div class="d up">▲ ${n.mrrDelta.replace("+", "")}</div></div>
-  <div class="kpi"><div class="v">${n.roasDelta}</div><div class="l">ROAS</div><div class="d flat">almost all from PMax</div></div>
-  <div class="kpi"><div class="v">€${n.pmaxCpa}</div><div class="l">CPA · PMax</div><div class="d down">▲ €7.40 over target</div></div>
-  <div class="kpi"><div class="v">€${n.brandCpa}</div><div class="l">CPA · Brand search</div><div class="d up">▼ €3.30 under target</div></div>
-  <div class="kpi"><div class="v">${n.rageClickClusters}</div><div class="l">Rage-click clusters</div><div class="d down">all Android</div></div>
+${kpis.join("\n")}
 </div>
 
-<h2>7-day retention by source</h2>
+<h2>${chart.heading}</h2>
 <div class="bars">
-  <div class="bar"><span>Organic</span><i class="good" style="width:54%"></i><b>54%</b></div>
-  <div class="bar"><span>Brand search</span><i class="good" style="width:51%"></i><b>51%</b></div>
-  <div class="bar"><span>PMax · iOS</span><i style="width:44%"></i><b>44%</b></div>
-  <div class="bar"><span>PMax · Android</span><i class="bad" style="width:31%"></i><b>31%</b></div>
+${chart.rows.join("\n")}
 </div>
 
 <h2>Findings</h2>
-<div class="finding crit"><h3>PMax Android users churn ${n.androidRetentionDrop} faster than organic</h3><p>31% retained at day 7 against 54%. The cohort started on 4 Sep, two days after the onboarding rebuild.</p></div>
-<div class="finding warn"><h3>They get stuck on the Connect bank screen</h3><p>Three rage-click clusters this week, all Android, all from the PMax cohort. Fix the screen before buying more of them.</p></div>
-<div class="finding good"><h3>Organic is quietly working</h3><p>Impressions up ${n.organicImpressionsDelta}. <i>${n.blogPost}</i> ranks on page one for two target terms.</p></div>
+${findings.join("\n")}
 
 <h2>What to do</h2>
 <ol>
-  <li>Pause <i>Performance Max · Freelancers</i> until the Android screen is fixed. Proposed in chat, waiting for you.</li>
-  <li>Add the two negatives bringing in template hunters.</li>
-  <li>Give brand search more budget. Over the 25% guardrail, so that one is yours to make.</li>
+${todo.map((t) => `  <li>${t}</li>`).join("\n")}
 </ol>
 <footer>Every number re-checked by the verification sub-agent · ${STORY.week.label}</footer>
 </body></html>`;
+}
+
+// Why are signups down when ROAS is up: the growth lead's question.
+export const BRIEF_HTML = brief({
+  title: "Signups",
+  h1: "Signups are down. ROAS is up. Same campaign.",
+  sources: "Google Ads, GA4, Stripe, Clarity, Search Console",
+  verdict: `Performance Max is buying signups at €${n.pmaxCpa} who leave within a week. The ROAS gain is hiding a retention problem, not describing a win.`,
+  kpis: [
+    kpi(n.signups, "Signups", `▼ 9% · target ${STORY.targets.weeklySignups}`, "down"),
+    kpi(n.mrr, "MRR", `▲ ${n.mrrDelta.replace("+", "")}`, "up"),
+    kpi(n.roasDelta, "ROAS", "almost all from PMax"),
+    kpi(`€${n.pmaxCpa}`, "CPA · PMax", "▲ €7.40 over target", "down"),
+    kpi(`€${n.brandCpa}`, "CPA · Brand search", "▼ €3.30 under target", "up"),
+    kpi(n.rageClickClusters, "Rage-click clusters", "all Android", "down"),
+  ],
+  chart: { heading: "7-day retention by source", rows: [
+    bar("Organic", 54, "good"), bar("Brand search", 51, "good"), bar("PMax · iOS", 44), bar("PMax · Android", 31, "bad"),
+  ] },
+  findings: [
+    finding("crit", `PMax Android users churn ${n.androidRetentionDrop} faster than organic`, "31% retained at day 7 against 54%. The cohort started on 4 Sep, two days after the onboarding rebuild."),
+    finding("warn", "They get stuck on the Connect bank screen", "Three rage-click clusters this week, all Android, all from the PMax cohort. Fix the screen before buying more of them."),
+    finding("good", "Organic is quietly working", `Impressions up ${n.organicImpressionsDelta}. <i>${n.blogPost}</i> ranks on page one for two target terms.`),
+  ],
+  todo: [
+    "Pause <i>Performance Max · Freelancers</i> until the Android screen is fixed. Proposed in chat, waiting for you.",
+    "Add the two negatives bringing in template hunters.",
+    "Give brand search more budget. Over the 25% guardrail, so that one is yours to make.",
+  ],
+});
+
+// Why did activation drop: the same week from the product side.
+export const PRODUCT_BRIEF_HTML = brief({
+  title: "Activation",
+  h1: "Android activation halved the day the rebuild shipped.",
+  sources: "GA4, Clarity, Stripe",
+  verdict: `The 2 Sep rebuild put Connect bank behind a system permission prompt. Android users who tap Deny land on an empty screen and never come back. iOS, which has no prompt, did not move.`,
+  kpis: [
+    kpi(n.activation.androidAfter, "Activation · Android", `▼ from ${n.activation.androidBefore} before 2 Sep`, "down"),
+    kpi(n.activation.iosAfter, "Activation · iOS", `${n.activation.iosBefore} before · unchanged`),
+    kpi(n.rageClickClusters, "Rage-click clusters", "all on the empty screen", "down"),
+    kpi("−11%", "Trial starts", "all of it Android", "down"),
+    kpi("31%", "Day-7 retention · Android", "54% organic", "down"),
+    kpi("2 Sep", "Rebuild shipped", "the day the drop starts"),
+  ],
+  chart: { heading: "Activation by platform, before and after 2 Sep", rows: [
+    bar("iOS · before", 63, "good"), bar("iOS · after", 61, "good"), bar("Android · before", 58), bar("Android · after", 34, "bad"),
+  ] },
+  findings: [
+    finding("crit", "Deny the permission and the funnel ends", "The prompt has no path back to Connect bank. GA4 shows the drop in the step after it; Clarity shows where people click when nothing happens."),
+    finding("warn", "The rage clicks are the same screen", "Three clusters this week, all Android, all on the empty screen, all from users who signed up after 2 Sep."),
+    finding("good", "The rest of the rebuild is fine", "iOS activation, time to first budget and trial starts on iOS are inside their usual week-to-week range."),
+  ],
+  todo: [
+    "Ask for the permission after the first budget, not before it. The fix is in the app.",
+    "Track <i>bank_permission_denied</i> and <i>connect_bank_retry</i> as key events. Proposed in chat, waiting for you.",
+    "Keep Performance Max off Android until the screen is fixed: it is buying the users who hit it.",
+  ],
+});
+
+// Where is the budget leaking: the same week from the paid side.
+export const PAID_BRIEF_HTML = brief({
+  title: "Spend",
+  h1: `Performance Max buys signups at €${n.pmaxCpa}. The target is €${STORY.targets.cpa}.`,
+  sources: "Google Ads, GA4, Stripe",
+  verdict: `${n.pmaxSpend} of this week's spend went to one campaign that runs €7.40 over target and whose Android signups churn ${n.androidRetentionDrop} faster than organic. Brand search is under target and capped by its own budget.`,
+  kpis: [
+    kpi("€2,420", "Paid spend", `${n.pmaxSpend} of it PMax`),
+    kpi("142", "Paid signups", "PMax 110 · Brand 32"),
+    kpi("€17.0", "Blended CPA", `▲ €5.00 over target`, "down"),
+    kpi(`€${n.pmaxCpa}`, "CPA · PMax", "▲ €7.40 over target", "down"),
+    kpi(`€${n.brandCpa}`, "CPA · Brand search", "▼ €3.30 under target", "up"),
+    kpi(n.templateTermsSpend, "Wasted on two terms", "zero signups", "down"),
+  ],
+  chart: { heading: `CPA by campaign against the €${STORY.targets.cpa} target`, rows: [
+    bar("Brand search", 35, "good", `€${n.brandCpa}0`), bar("PMax · iOS", 64, "", "€16.10"), bar("PMax · Android", 91, "bad", "€22.80"),
+  ] },
+  findings: [
+    finding("crit", "PMax is over target and buying churners", `€${n.pmaxCpa} a signup, and the Android half of them retain at 31% against 54% organic. The ROAS looks fine because it is measured before they leave.`),
+    finding("warn", "Two search terms spent €212 for nothing", "“free budgeting app” and “excel budget template” bring template hunters, not freelancers. Negatives proposed in chat."),
+    finding("good", "Brand search hits its cap by mid-afternoon", `€${n.brandCpa} a signup and half of them stay. The €40 daily budget is the only thing holding it back.`),
+  ],
+  todo: [
+    "Pause <i>Performance Max · Freelancers</i>. Proposed in chat, waiting for you.",
+    "Add the two negatives. Proposed in chat.",
+    "Raise brand search to €60 a day. Over the 25% guardrail, so that one is yours to make.",
+  ],
+});
 
 // The content plan for the story week. Five days on the board: two published,
 // one drafted and scheduled, two still planned. TikTok first, because that is
