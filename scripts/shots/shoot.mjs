@@ -68,7 +68,9 @@ try {
     await context.route(/^http:\/\/localhost:8002\//, (route) =>
       route.continue({
         url: route.request().url().replace("http://localhost:8002", MOCK),
-        headers: { ...route.request().headers(), "x-duct-shot": sc.id },
+        // A scenario that replays another's stream (the phone capture of a
+        // desktop session) names it in `stream`; otherwise the id is the key.
+        headers: { ...route.request().headers(), "x-duct-shot": sc.stream || sc.id },
       }));
     if (sc.shell) await context.addInitScript(shellStub, sc.shell);
     const page = await context.newPage();
@@ -142,13 +144,16 @@ async function waitFor(url, ms) {
   throw new Error(`mock backend did not answer at ${url}`);
 }
 
-// A window (title bar with three dots) or a bare card (rounded, shadowed),
-// on a soft brand gradient with generous padding. All sizes in output
-// pixels, so the frame scales with the capture's density.
+// A window (title bar with three dots), a bare card (rounded, shadowed) or a
+// phone (a dark bezel round a tall capture), on a soft brand gradient with
+// generous padding. All sizes in output pixels, so the frame scales with the
+// capture's density.
 async function frame(raw, kind, ownRadius) {
   const img = sharp(raw);
   const { width: w, height: h } = await img.metadata();
-  const pad = 48 * SCALE, radius = (ownRadius || 12) * SCALE, bar = kind === "window" ? 30 * SCALE : 0;
+  const phone = kind === "phone";
+  const pad = 48 * SCALE, radius = (ownRadius || (phone ? 34 : 12)) * SCALE, bar = kind === "window" ? 30 * SCALE : 0;
+  const bezel = phone ? 9 * SCALE : 0;
   const W = w + pad * 2, H = h + bar + pad * 2;
   const x = pad, y = pad;
   const dot = (cx, fill) => `<circle cx="${cx}" cy="${y + bar / 2}" r="${5 * SCALE}" fill="${fill}"/>`;
@@ -162,7 +167,8 @@ async function frame(raw, kind, ownRadius) {
       </filter>
     </defs>
     <rect width="${W}" height="${H}" fill="url(#bg)"/>
-    <rect x="${x}" y="${y}" width="${w}" height="${h + bar}" rx="${radius}" fill="#ffffff" filter="url(#shadow)"/>
+    ${bezel ? `<rect x="${x - bezel}" y="${y - bezel}" width="${w + bezel * 2}" height="${h + bezel * 2}" rx="${radius + bezel}" fill="#1a1d26" filter="url(#shadow)"/>` : ""}
+    <rect x="${x}" y="${y}" width="${w}" height="${h + bar}" rx="${radius}" fill="#ffffff" ${bezel ? "" : 'filter="url(#shadow)"'}/>
     ${bar ? `<path d="M${x},${y + radius} a${radius},${radius} 0 0 1 ${radius},-${radius} h${w - radius * 2} a${radius},${radius} 0 0 1 ${radius},${radius} v${bar - radius} h-${w} z" fill="#f3f3f1"/>
       <line x1="${x}" y1="${y + bar}" x2="${x + w}" y2="${y + bar}" stroke="#e3e3df" stroke-width="${SCALE}"/>
       ${dot(x + 16 * SCALE, "#ff5f57")}${dot(x + 32 * SCALE, "#febc2e")}${dot(x + 48 * SCALE, "#28c840")}` : ""}

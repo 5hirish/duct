@@ -131,6 +131,12 @@ same image with a different caption. Job cards take a focused shot, never a
 whole window: at card size a window is a grey smear, an `answer-*` card is a
 question and its answer.
 
+A hero shot has a phone capture beside it (`<id>-mobile.webp`, the same
+session at 390px, ending on the artifact tab, in a phone bezel). The page
+serves it below 860px through `<picture>` on a `.shot-frame.has-phone`, so a
+phone shows a phone, not a window at a tenth of its size. Shoot both when a
+session changes; the phone scenario replays the desktop one's stream.
+
 Every image inside `.shot-frame`, `.job-shot`, `.what-shot` or `.dl-hero-shot`
 opens full-size over the page on click or Enter; `duct.js` adds the markup and
 `duct.css` holds the `.lightbox` rules. On a phone the enlarged shot is wider

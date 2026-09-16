@@ -63,9 +63,10 @@ top and the bottom, always `href="/download" data-duct-download`. Footnote:
 exist: `product-session` (why did activation drop), `paid-session` (where is
 the budget leaking), `insights-session` (why are signups down); each ends on
 its brief in the artifact pane, with the sidebar closed so the canvas is the
-picture. A new audience gets a new one: its answer in `ANSWERS`, its brief
+picture, and a `-mobile` phone capture served below 860px through
+`<picture>`. A new audience gets a new one: its answer in `ANSWERS`, its brief
 through `brief()` in the story, its stream in `scripts/shots/fixtures.mjs`, a
-scenario in `scenarios.mjs`, then shoot it.
+desktop and a phone scenario in `scenarios.mjs`, then shoot both.
 The job cards take focused shots, never a whole window: `answer-<audience>`
 (one question, the sources read, the answer; a new audience adds its entry to
 `ANSWERS` in the story and gets the card for free), `review-card`,
