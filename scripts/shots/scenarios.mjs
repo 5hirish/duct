@@ -29,6 +29,22 @@ export const SCENARIOS = [
     },
   },
   {
+    id: "executions",
+    kind: "page",
+    viewport: { width: 1440, height: 900 },
+    theme: "light",
+    frame: "window",
+    async run({ page, app }) {
+      await page.goto(`${app}/execute`);
+      await page.getByText("Pause Performance Max, keep brand search").first().waitFor({ timeout: 60000 });
+      // The queue as it is: this week's proposal waiting on Approve all, the
+      // three that already went through under it. The drawer stays closed;
+      // its overlay blurs the whole window.
+      await page.waitForTimeout(500);
+      return null;
+    },
+  },
+  {
     id: "content-session",
     kind: "page",
     viewport: { width: 1440, height: 900 },

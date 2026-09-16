@@ -145,6 +145,8 @@ export const CHANGE_SET = Object.freeze({
     "PMax · Freelancers costs €19.40 a signup against the €12 target and its Android users leave within a week. Brand search stays on at €8.70.",
   status: "proposed",
   source: "insights",
+  project_id: STORY.project.id,
+  created_at: "2026-09-12T07:02:00Z",
   auto_apply_eligible: false,
   applied_by: null,
   changes: [
@@ -164,6 +166,45 @@ export const CHANGE_SET = Object.freeze({
     },
   ],
 });
+
+// What sits under it on the Executions page: the changes Solo already let
+// through this quarter, so the queue reads as a record and not a single card.
+// The Legacy pause is the one the memory timeline says to leave alone.
+export const CHANGE_SET_HISTORY = Object.freeze([
+  {
+    change_set_id: "cs_solo_0905", id: "cs_solo_0905",
+    connector_type: "google_ads", account_id: STORY.ads.accountId, account_name: STORY.ads.accountName,
+    title: "Add negatives from last week's search terms",
+    context: "Two template-hunter queries spent €212 for zero signups.",
+    status: "applied", source: "insights", project_id: STORY.project.id,
+    created_at: "2026-09-05T07:40:00Z", auto_apply_eligible: false, applied_by: "maya@example.com",
+    changes: [
+      { id: "c1", op_type: "add_negative_keywords", status: "applied", diff: 'Add negatives “budget template excel”, “free invoice generator”' },
+    ],
+  },
+  {
+    change_set_id: "cs_solo_0902", id: "cs_solo_0902",
+    connector_type: "ga4", account_id: "ga4-solo", account_name: "Solo web + app",
+    title: "Mark connect_bank as a key event",
+    context: "The onboarding rebuild moved the bank step; the funnel needs the new event.",
+    status: "applied", source: "insights", project_id: STORY.project.id,
+    created_at: "2026-09-02T09:15:00Z", auto_apply_eligible: true, applied_by: "maya@example.com",
+    changes: [
+      { id: "c1", op_type: "mark_key_event", status: "applied", diff: "Mark connect_bank as a key event" },
+    ],
+  },
+  {
+    change_set_id: "cs_solo_0821", id: "cs_solo_0821",
+    connector_type: "google_ads", account_id: STORY.ads.accountId, account_name: STORY.ads.accountName,
+    title: "Pause Brand · Legacy until the rebrand ships",
+    context: "The old brand name still gets 40 clicks a day that land on a redirect.",
+    status: "applied", source: "user", project_id: STORY.project.id,
+    created_at: "2026-08-21T10:05:00Z", auto_apply_eligible: false, applied_by: "maya@example.com",
+    changes: [
+      { id: "c1", op_type: "pause_campaign", status: "applied", destructive: true, diff: `Pause ${STORY.ads.campaigns.legacy}` },
+    ],
+  },
+]);
 
 // The brief the insights agent writes: a self-contained HTML report, the way
 // the agents actually deliver one (the artifact pane renders it in a frame).

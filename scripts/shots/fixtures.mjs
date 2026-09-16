@@ -4,7 +4,7 @@
 // hatches the mock understands — `{ __answer__ }` answers the pending
 // question, `{ __send__ }` is the user typing the next message.
 import { readFileSync } from "node:fs";
-import { BRIEF_HTML, CHANGE_SET, DRAFT_POST, MEMORIES, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import { BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, DRAFT_POST, MEMORIES, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 // The backend's slide CSS, rendered once from agents/content/templates.py
 // (see assets/slides-head.html for how). The live slide preview reads its
@@ -132,5 +132,13 @@ export function routes() {
       { connector_type: "clarity", status: "connected", account_name: "Solo Android" },
     ],
     "GET /api/content/plans": [{ id: PLAN.id, name: PLAN.name, start_date: PLAN.start_date }],
+    // The Executions page: this week's proposal on top of what already went through.
+    "GET /api/execute": [CHANGE_SET, ...CHANGE_SET_HISTORY],
+    "GET /api/execute/ops": [
+      { op_type: "pause_campaign", destructive: true },
+      { op_type: "add_negative_keywords", destructive: false },
+      { op_type: "set_campaign_budget", destructive: false },
+      { op_type: "mark_key_event", destructive: false },
+    ],
   };
 }
