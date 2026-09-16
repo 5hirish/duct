@@ -1,12 +1,8 @@
 // Every number and name in the film comes from the story fixture the README
 // screenshots and the /preview scenes already use, so the three cannot drift.
-// The one deliberate difference: the company is called Solo on screen. The
-// fixture still says Kestrel until it is renamed and the README re-shot, so
-// the swap happens here, in one place, and nowhere else.
-import { CHANGE_SET, MEMORIES, PLAN, STORY } from "../../../app/src/lib/__fixtures__/kestrel-story.mjs";
+import { CHANGE_SET, MEMORIES, PLAN, STORY } from "../../../app/src/lib/__fixtures__/solo-story.mjs";
 
-export const COMPANY = "Solo";
-export const brand = (s) => String(s).replaceAll(STORY.company.name, COMPANY);
+export const COMPANY = STORY.company.name;
 
 export const USER = STORY.user;
 export const ASKER = { name: "Jonas", initials: "JO" };
@@ -15,9 +11,9 @@ export const TARGETS = STORY.targets;
 export const WEEK = STORY.week;
 export const WEEK_SHORT = "week of 8 Sep";
 export const CAMPAIGN = {
-  pmax: brand(STORY.ads.campaigns.pmax),
-  brand: brand(STORY.ads.campaigns.brand),
-  account: brand(STORY.ads.accountName),
+  pmax: STORY.ads.campaigns.pmax,
+  brand: STORY.ads.campaigns.brand,
+  account: STORY.ads.accountName,
 };
 
 export const QUESTION = "why are signups down this week?";
@@ -34,8 +30,8 @@ export const MEMORY = {
 const change = (id) => CHANGE_SET.changes.find((c) => c.id === id);
 export const CHANGE = {
   title: CHANGE_SET.title,
-  pause: { ...change("c1"), diff: brand(change("c1").diff) },
-  budget: { ...change("c3"), diff: brand(change("c3").diff) },
+  pause: change("c1"),
+  budget: change("c3"),
 };
 
 // The five sources the brief cites, in the order the session reads them.

@@ -52,7 +52,7 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
-import { CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/kestrel-story.mjs";
+import { CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
@@ -1040,14 +1040,14 @@ export const SCENES = [
   // ------------------------------------------------------------------ Shots
   // One customer's week, the same in every frame: these four scenes are what
   // scripts/shots captures for the README, from the story in
-  // lib/__fixtures__/kestrel-story.mjs. They double as the richest examples of
+  // lib/__fixtures__/solo-story.mjs. They double as the richest examples of
   // each component, so they stay here even between screenshot runs.
   {
     id: "shot-change-set",
     state: "proposed — one destructive, one blocked by a guardrail",
     group: "ChangeSetCard",
     title: "The review card, from the story",
-    note: "The change the insights agent proposes in Kestrel's week: a pause (destructive, so it asks), two negatives, and a budget raise the account's 25% guardrail blocks. Same object the session emits. What to check: one colour per row at most, the approve button is the plain primary even with a pause in the set, and the footer line says how many changes wait on a person.",
+    note: "The change the insights agent proposes in Solo's week: a pause (destructive, so it asks), two negatives, and a budget raise the account's 25% guardrail blocks. Same object the session emits. What to check: one colour per row at most, the approve button is the plain primary even with a pause in the set, and the footer line says how many changes wait on a person.",
     render: () => (
       <div data-shot style={{ maxWidth: 680 }}>
         <ChangeSetCard changeSet={STORY_CHANGE_SET} />
@@ -1074,7 +1074,7 @@ export const SCENES = [
     id: "shot-memory-timeline",
     state: "eight memories: one superseded, one pinned, one unconfirmed",
     group: "MemoryTimeline",
-    title: "What Duct remembers about Kestrel",
+    title: "What Duct remembers about Solo",
     note: "The rows the insights agent recalls in the session. One goal was raised from 700 to 900, so the old value is shown superseded rather than deleted; the CPA target is pinned; the watch the agent wrote this week is still unconfirmed. Every write here is a no-op.",
     render: () => <StoryMemoryScene />,
   },
@@ -1082,7 +1082,7 @@ export const SCENES = [
     id: "shot-connectors",
     state: "five connected, four waiting",
     group: "ConnectorTile",
-    title: "Kestrel's connections",
+    title: "Solo's connections",
     note: "The stack behind the story week: the five sources the insights agent pulls, connected and saved to the account, beside four it has not needed yet. Real logos, the page's own descriptions. What to check: three tiles per row at 1040px, connected and not-connected read as different at a glance without the dot doing all the work.",
     render: () => (
       <div className="conn-grid" data-shot style={{ padding: 24 }}>
@@ -1132,11 +1132,11 @@ export const SCENES = [
  * effort estimate.
  */
 const AUDIT_REPORT_V1 = {
-  url: "https://kestrel.app",
+  url: "https://solobudget.app",
   generated_at: "2026-09-14T09:00:00Z",
   overall_score: 68,
   score_band: "needs_work",
-  headline: "Kestrel ranks for its own name and almost nothing else",
+  headline: "Solo ranks for its own name and almost nothing else",
   key_signals: [
     "Only 3 of 41 pages earn organic traffic",
     "No page targets the phrase freelancers actually search",

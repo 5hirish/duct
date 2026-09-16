@@ -4,7 +4,7 @@
 // Every scenario returns what to capture: a locator, `{ element, radius }`
 // for a floating surface, or nothing for the whole viewport. Add an image by
 // adding an entry; the runner does the rest.
-import { PLAN, STORY } from "../../app/src/lib/__fixtures__/kestrel-story.mjs";
+import { PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 export const SCENARIOS = [
   {
@@ -91,7 +91,7 @@ export const SCENARIOS = [
     // signed-in ChatGPT plan. Installed before any script on the page runs.
     shell: {
       get_shell_info: { version: "0.6.0", capabilities: { browserAuth: true, browserConnectors: true, localSidecar: false, autoUpdate: true, notifications: true, chatgptAuth: true } },
-      chatgpt_status: { connected: true, plan_type: "plus", email: STORY.user.email, account_id: "acct_kestrel" },
+      chatgpt_status: { connected: true, plan_type: "plus", email: STORY.user.email, account_id: "acct_solo" },
       get_provider_key: null,
     },
     async run({ page }) {

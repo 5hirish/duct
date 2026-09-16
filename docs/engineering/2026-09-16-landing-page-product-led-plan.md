@@ -49,7 +49,7 @@ that are specific to this repo, not generic:
 1. **The product is React + Tailwind + the same tokens.** The compositions
    can import `app/src/components/ui/*` (Badge, Button, Card, the review
    card, the status pills) and the token sheet, and animate *real* UI states
-   fed by the Kestrel story fixtures. The video shows the product without
+   fed by the Solo story fixtures. The video shows the product without
    recording it, and it cannot drift from the product the way a designer's
    mock does.
 2. **An agent writes it.** Remotion is code; springs, sequences and
@@ -91,7 +91,7 @@ the five minutes it takes now. 30 s hard cap, 30 fps, 1600×1000 (16:10, the
 window's ratio), loops: the last frame dissolves into the first. Brand:
 `site/DESIGN.md` tokens, Georgia display with the italic orange second beat,
 system sans for UI, navy ground for the type beats, off-white for the app.
-Every number is one the README already shows (Kestrel story).
+Every number is one the README already shows (Solo story).
 
 The delight is in three devices, used once each: a clock that runs the wrong
 way, a cursor with intent, and a reply that lands back where the question
@@ -176,7 +176,7 @@ published as an artifact) is the storyboard tool, not the render tool. Use it
 three times:
 
 1. **Storyboard**: nine artboards at 1600×1000, one per scene, with the
-   Kestrel numbers and the site tokens, so the film is signed off as stills
+   Solo numbers and the site tokens, so the film is signed off as stills
    before a frame is rendered. Tweak in the canvas; the agent reads it back.
 2. **Posters and tile stills**: the poster frames and the reduced-motion
    fallbacks are exports from the same boards, so they match the loops.

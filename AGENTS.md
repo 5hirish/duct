@@ -161,7 +161,7 @@ Check here before hand-rolling env or secret plumbing:
 - `envfile.py` — shared dotenv parser used by the above.
 - `security/audit.py`, `security/leak_scan.py` — repo hygiene, both run in CI.
 - `shots/shoot.mjs` — product screenshots from the real app for the README and
-  the site: one story (`app/src/lib/__fixtures__/kestrel-story.mjs`) feeds the
+  the site: one story (`app/src/lib/__fixtures__/solo-story.mjs`) feeds the
   mock agent backend and the `/preview` scenes, Playwright captures at 2x, and
   `sharp` frames the result. Needs the app dev server; adds no dependency.
 

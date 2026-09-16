@@ -35,10 +35,8 @@ sandbox; render from a normal shell.
 ## Rules of the stage
 
 - **Numbers come from the fixture.** `src/story.js` imports
-  `app/src/lib/__fixtures__/kestrel-story.mjs`, the same story the README
-  screenshots and `/preview` scenes use. The one deliberate difference is the
-  company name (Solo on screen; the fixture still says Kestrel), and that swap
-  lives in `story.js` alone.
+  `app/src/lib/__fixtures__/solo-story.mjs`, the same story the README
+  screenshots and `/preview` scenes use, so the three cannot drift.
 - **Tokens come from the app.** `src/index.css` imports the app's
   `tokens.css`; `src/lib/tokens.js` lists the resolved values for the places
   that need a number (SVG, gradients). Change a colour in the app and the

@@ -4,7 +4,7 @@
 // hatches the mock understands — `{ __answer__ }` answers the pending
 // question, `{ __send__ }` is the user typing the next message.
 import { readFileSync } from "node:fs";
-import { BRIEF_HTML, CHANGE_SET, DRAFT_POST, MEMORIES, PLAN, STORY } from "../../app/src/lib/__fixtures__/kestrel-story.mjs";
+import { BRIEF_HTML, CHANGE_SET, DRAFT_POST, MEMORIES, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 // The backend's slide CSS, rendered once from agents/content/templates.py
 // (see assets/slides-head.html for how). The live slide preview reads its
@@ -44,7 +44,7 @@ export function insightsFrames() {
     { event: "thinking_chunk", text: "ROAS is up but signups are down. " },
     { event: "thinking_chunk", text: "Split retention by campaign before saying anything." },
     say("One thing before I write this up."),
-    { event: "questions_required", interrupt_id: "int_kestrel_1", questions: [
+    { event: "questions_required", interrupt_id: "int_solo_1", questions: [
       { question: "Which matters more this week?", header: "Goal", options: [
         { label: "Signups", description: "Hit 900 signups, retention second" },
         { label: "Retention", description: "Keep the signups that stay" },
@@ -84,7 +84,7 @@ export function contentFrames() {
   const withoutImage = { ...DRAFT_POST, slides: DRAFT_POST.slides.map((s) => ({ ...s, image_url: "", image_prompt_used: "" })) };
   return [
     { event: "pipeline_started", status: "running", channel: "tiktok", channel_supported: true, channel_label: "TikTok" },
-    ...step("load_project", "Loading Kestrel"),
+    ...step("load_project", "Loading Solo"),
     { event: "step_started", step_id: "enriching", label: "Reading the plan and the last 30 posts", status: "running" },
     ...step("dispatch_subagent:research_pillar", "Sub-agent · how freelancers talk about tax money"),
     { event: "step_finished", step_id: "enriching", status: "success" },
@@ -126,10 +126,10 @@ export function routes() {
     ],
     [`GET /api/user/projects/${STORY.project.id}/data-sources`]: [
       { connector_type: "google_ads", status: "connected", account_name: STORY.ads.accountName },
-      { connector_type: "ga4", status: "connected", account_name: "Kestrel web + app" },
+      { connector_type: "ga4", status: "connected", account_name: "Solo web + app" },
       { connector_type: "search_console", status: "connected", account_name: STORY.company.site },
-      { connector_type: "stripe", status: "connected", account_name: "Kestrel" },
-      { connector_type: "clarity", status: "connected", account_name: "Kestrel Android" },
+      { connector_type: "stripe", status: "connected", account_name: "Solo" },
+      { connector_type: "clarity", status: "connected", account_name: "Solo Android" },
     ],
     "GET /api/content/plans": [{ id: PLAN.id, name: PLAN.name, start_date: PLAN.start_date }],
   };

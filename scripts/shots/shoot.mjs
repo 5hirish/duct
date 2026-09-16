@@ -27,7 +27,7 @@ const { chromium } = req(req.resolve("playwright", { paths: [join(REPO, "site")]
 const sharp = req(req.resolve("sharp", { paths: [join(REPO, "app")] }));
 const { SCENARIOS } = await import("./scenarios.mjs");
 const fixtures = await import("./fixtures.mjs");
-const { STORY } = await import("../../app/src/lib/__fixtures__/kestrel-story.mjs");
+const { STORY } = await import("../../app/src/lib/__fixtures__/solo-story.mjs");
 
 const APP = process.env.APP || "http://localhost:3003";
 const MOCK_PORT = Number(process.env.MOCK_PORT || 8012);

@@ -1,6 +1,6 @@
 // One customer's week, told the same way in every product screenshot.
 //
-// Kestrel is a fictional budgeting app for freelancers. Its growth lead, Maya,
+// Solo is a fictional budgeting app for freelancers. Its growth lead, Maya,
 // has connected the stack, set a CPA target, and is having a week where paid
 // acquisition looks great on ROAS and terrible on retention. Every image on
 // the README and the landing page is a frame of that one story, so the
@@ -15,9 +15,9 @@
 
 export const STORY = Object.freeze({
   company: {
-    name: "Kestrel",
+    name: "Solo",
     tagline: "Budgeting for freelancers",
-    site: "kestrelbudget.app",
+    site: "solobudget.app",
     industry: "Personal finance app (iOS, Android, web)",
     currency: "€",
   },
@@ -28,8 +28,8 @@ export const STORY = Object.freeze({
     initials: "ML",
   },
   project: {
-    id: "kestrel",
-    name: "Kestrel",
+    id: "solo",
+    name: "Solo",
   },
   week: {
     label: "8–14 Sep 2026",
@@ -42,11 +42,11 @@ export const STORY = Object.freeze({
   },
   ads: {
     accountId: "493-221-0815",
-    accountName: "Kestrel · EU",
+    accountName: "Solo · EU",
     campaigns: {
-      brand: "Kestrel · Search · Brand EU",
-      pmax: "Kestrel · Performance Max · Freelancers",
-      legacy: "Kestrel · Brand · Legacy",
+      brand: "Solo · Search · Brand EU",
+      pmax: "Solo · Performance Max · Freelancers",
+      legacy: "Solo · Brand · Legacy",
     },
   },
   numbers: {
@@ -78,7 +78,7 @@ export const CONNECTORS = Object.freeze([
   { id: "apple_ads", title: "Apple Search Ads", description: "Spend, taps and installs, by campaign and search term.", connected: false },
 ]);
 
-// What the insights agent remembers about Kestrel before it starts. The same
+// What the insights agent remembers about Solo before it starts. The same
 // rows appear on the memory timeline, so a chip in the chat and a row on the
 // page are visibly the same fact.
 export const MEMORIES = Object.freeze([
@@ -90,7 +90,7 @@ export const MEMORIES = Object.freeze([
   },
   {
     id: "mem-legacy", short_id: "lgcy", kind: "decision", status: "confirmed", pinned: false,
-    title: "Leave “Kestrel · Brand · Legacy” paused until the rebrand ships",
+    title: "Leave “Solo · Brand · Legacy” paused until the rebrand ships",
     body: "Maya: do not propose changes to it until the new brand terms are live.",
     source_type: "user", recorded_at: "2026-08-26T14:40:00Z", observed_at: "2026-08-26", recall_count: 6,
   },
@@ -135,8 +135,8 @@ export const MEMORIES = Object.freeze([
 // The change the insights agent proposes this week. Same object on the review
 // queue and inside the insights session.
 export const CHANGE_SET = Object.freeze({
-  change_set_id: "cs_kestrel_0912",
-  id: "cs_kestrel_0912",
+  change_set_id: "cs_solo_0912",
+  id: "cs_solo_0912",
   connector_type: "google_ads",
   account_id: STORY.ads.accountId,
   account_name: STORY.ads.accountName,
@@ -238,7 +238,7 @@ footer{color:var(--mut);font-size:11px;margin-top:24px}
 
 // The content plan for the story week. Five days on the board: two published,
 // one drafted and scheduled, two still planned. TikTok first, because that is
-// where Kestrel's freelancers are.
+// where Solo's freelancers are.
 const PILLARS = ["Money habits", "Tax without fear", "Invoicing", "Behind the app"];
 const DAYS = [
   { topic: "What a freelancer's September looks like", pillar: "Money habits", hook_type: "story", post_type: "slideshow" },
@@ -250,7 +250,7 @@ const DAYS = [
 const STATUS = ["posted", "posted", "draft", "pending", "pending"];
 
 export const PLAN = Object.freeze({
-  id: "plan_kestrel_w37",
+  id: "plan_solo_w37",
   name: `Week of ${STORY.week.label}`,
   start_date: STORY.week.start,
   character: "Practical, warm, a little dry. Numbers over adjectives.",
@@ -296,8 +296,8 @@ export const POSTS = Object.freeze(
         scheduled_at: d.status === "draft" ? dayAt(i) : null,
         thumbnail_url: COVERS[d.post_id],
         slide_count: d.post_type === "video" ? 1 : 6,
-        caption: `${d.topic} — the short version. Full breakdown in Kestrel.`,
-        hashtags: ["freelance", "budgeting", "selfemployed", "kestrel"],
+        caption: `${d.topic} — the short version. Full breakdown in Solo.`,
+        hashtags: ["freelance", "budgeting", "selfemployed", "solo"],
       },
     ]),
   ),
@@ -316,15 +316,15 @@ export const DRAFT_POST = Object.freeze({
   day_index: 2,
   layout: "full-bleed",
   tiktok_title: "The 12% rule for tax money",
-  caption: "Every payment that lands, move 12% out the same day. Not 30%, not “whatever is left”. It is not your tax rate, it is the amount you will not miss. Full breakdown in Kestrel.",
-  hashtags: ["freelancetax", "selfemployed", "moneyhabits", "kestrel"],
+  caption: "Every payment that lands, move 12% out the same day. Not 30%, not “whatever is left”. It is not your tax rate, it is the amount you will not miss. Full breakdown in Solo.",
+  hashtags: ["freelancetax", "selfemployed", "moneyhabits", "solo"],
   slides: [
     { slide_id: "slide-01", kind: "photo", role: "hook", caption_style: "hook", headline: "The 12% rule", subtext: "for tax money", image_prompt: TAX_PROMPT, image_prompt_used: TAX_PROMPT, image_url: COVERS.post_3, aspect_ratio: "9:16" },
     { slide_id: "slide-02", kind: "text", role: "finding", caption_style: "body-neutral", headline: "Every payment that lands: move 12% out the same day.", subtext: "Before rent. Before coffee." },
     { slide_id: "slide-03", kind: "photo", role: "finding", caption_style: "cap-stroke", headline: "Not 30%. Not “whatever is left”.", image_prompt: "Close-up of a hand moving a single coin from a small pile to a jar, wooden table, soft morning light", aspect_ratio: "9:16" },
     { slide_id: "slide-04", kind: "text", role: "reveal", caption_style: "body-neutral", headline: "It is not your tax rate.", subtext: "It is the amount you will not miss." },
     { slide_id: "slide-05", kind: "photo", role: "bridge", caption_style: "cap-whisper", headline: "One account. Named “not mine”.", image_prompt: "A phone on a desk showing a plain banking screen with one highlighted account, out of focus, warm light, no readable text", aspect_ratio: "9:16" },
-    { slide_id: "slide-06", kind: "photo", role: "cta", caption_style: "cap-pill", headline: "Save this for the 25th.", subtext: "Kestrel moves it for you.", image_prompt: "The same freelancer desk at golden hour, jar now fuller, laptop closed, calm", aspect_ratio: "9:16" },
+    { slide_id: "slide-06", kind: "photo", role: "cta", caption_style: "cap-pill", headline: "Save this for the 25th.", subtext: "Solo moves it for you.", image_prompt: "The same freelancer desk at golden hour, jar now fuller, laptop closed, calm", aspect_ratio: "9:16" },
   ],
 });
 
