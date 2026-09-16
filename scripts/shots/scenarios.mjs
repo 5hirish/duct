@@ -64,48 +64,6 @@ export const SCENARIOS = [
       return null;
     },
   })),
-  // The same two sessions on a phone, ending on the artifact tab: the brief is
-  // the thing, and at 390px the chat and the brief are two tabs, not two
-  // panes. The landing pages serve these below the tablet breakpoint in place
-  // of the window, which at phone width was a picture of small grey text.
-  ...[
-    { id: "product-session-mobile", stream: "product-session", q: ANSWERS.product.question, answer: /^Connect bank/, brief: "Android activation halved", proposed: "Track the permission dead end" },
-    { id: "paid-session-mobile", stream: "paid-session", q: ANSWERS.paid.question, answer: /^The €12 CPA/, brief: "Performance Max buys signups", proposed: "Pause Performance Max, keep brand search" },
-  ].map((s) => ({
-    id: s.id,
-    stream: s.stream,
-    kind: "page",
-    viewport: { width: 390, height: 780 },
-    theme: "light",
-    frame: "phone",
-    async run({ page, app }) {
-      await page.goto(`${app}/insights/session?q=${encodeURIComponent(s.q)}&project=${STORY.project.id}`);
-      await page.getByRole("button", { name: s.answer }).waitFor({ timeout: 60000 });
-      await page.getByRole("button", { name: s.answer }).click();
-      await page.getByRole("button", { name: /Continue/ }).click();
-      await page.getByText(s.proposed).waitFor({ timeout: 60000 });
-      await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 30000 });
-      await page.getByRole("button", { name: "Artifact" }).click();
-      await page.frameLocator("iframe[title]").getByText(s.brief).waitFor({ timeout: 30000 });
-      await page.waitForTimeout(600);
-      return null;
-    },
-  })),
-  {
-    id: "content-session-mobile",
-    kind: "page",
-    viewport: { width: 390, height: 780 },
-    theme: "light",
-    frame: "phone",
-    async run({ page, app }) {
-      await page.goto(`${app}/content/posts/new?plan_id=${PLAN.id}&day=2`);
-      await page.getByText("Slide 1 is in so you can see the look").waitFor({ timeout: 60000 });
-      await page.getByRole("button", { name: "Post draft" }).click();
-      await page.frameLocator('iframe[title="slide 1 preview"]').locator("img.bg").waitFor({ timeout: 30000 });
-      await page.waitForTimeout(1200);
-      return null;
-    },
-  },
   {
     id: "executions",
     kind: "page",

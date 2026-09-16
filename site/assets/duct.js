@@ -677,10 +677,7 @@ function build() {
   pic = document.createElement('img');
   // On a phone the shot is wider than the screen; start in the middle, where
   // the conversation is, rather than on the app's sidebar.
-  pic.addEventListener('load', function() {
-    pic.classList.toggle('portrait', pic.naturalHeight > pic.naturalWidth);
-    centre();
-  });
+  pic.addEventListener('load', centre);
   scroller.appendChild(pic);
   closeBtn = document.createElement('button');
   closeBtn.type = 'button';

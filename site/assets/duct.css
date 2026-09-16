@@ -230,12 +230,6 @@ animation: fadeUp .5s .24s ease both;
 .shot { padding: 0 52px 72px; }
 .shot-frame { margin: 0 auto; max-width: 1160px; }
 .shot-frame img { display: block; width: 100%; height: auto; border-radius: var(--r-lg); }
-/* Below the tablet breakpoint a hero shot swaps to its phone capture through
-   <picture>; the frame narrows so the phone stands at its own width. */
-.shot-frame picture { display: block; }
-@media (max-width: 860px) {
-  .shot-frame.has-phone img { max-width: 320px; margin: 0 auto; }
-}
 .shot-frame figcaption { margin-top: 14px; font-size: 13px; color: var(--navy-3); text-align: center; line-height: 1.6; }
 
 /* ── THE CHANNEL ── the aqueduct as a divider: two lines of channel, arches under
@@ -515,7 +509,6 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
 }
 /* ── LIGHTBOX (click-to-enlarge product shots; duct.js adds the markup) ── */
 .zoomable { cursor: zoom-in; }
-.zoomable:focus:not(:focus-visible) { outline: none; }
 .lightbox { position: fixed; inset: 0; z-index: 300; background: rgba(13,15,26,.88); opacity: 0; transition: opacity .2s; }
 .lightbox.is-open { opacity: 1; }
 .lightbox-scroll { position: absolute; inset: 0; overflow: auto; -webkit-overflow-scrolling: touch; padding: 64px 24px 32px; text-align: center; cursor: zoom-out; }
@@ -527,8 +520,6 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
      shot squeezed to 360px is the thumbnail they just tapped. Pan to read. */
   .lightbox-scroll { padding: 64px 16px 24px; text-align: left; }
   .lightbox-scroll img { width: 1000px; max-width: none; }
-  /* A phone shot is already phone-shaped: show it whole, no panning. */
-  .lightbox-scroll img.portrait { width: 100%; max-width: 420px; margin: 0 auto; display: block; }
 }
 
 @media (max-width: 600px) {
