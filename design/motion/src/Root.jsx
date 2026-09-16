@@ -10,5 +10,5 @@ loadDmSans("normal", { weights: ["400", "500", "600", "700"], subsets: ["latin"]
 loadMono("normal", { weights: ["500"], subsets: ["latin"] });
 
 export const RemotionRoot = () => (
-  <Composition id="Film" component={Film} durationInFrames={DURATION} fps={FPS} width={WIDTH} height={HEIGHT} />
+  <Composition id="Film" component={Film} durationInFrames={DURATION} fps={FPS} width={WIDTH} height={HEIGHT} defaultProps={{ sound: true }} />
 );

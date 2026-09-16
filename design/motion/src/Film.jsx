@@ -3,6 +3,7 @@ import { C, FONT } from "./lib/tokens.js";
 import { ease } from "./lib/motion.js";
 import { Clock, clockText } from "./ui/Clock.jsx";
 import { Ground } from "./ui/Ground.jsx";
+import { Sound } from "./Sound.jsx";
 import { Scene0Ask } from "./scenes/Scene0Ask.jsx";
 import { Scene1OldWay } from "./scenes/Scene1OldWay.jsx";
 import { Scene2Collapse } from "./scenes/Scene2Collapse.jsx";
@@ -69,7 +70,9 @@ const clockAt = (frame) => {
   return { text: clockText(9 * 60 + 7), opacity: 0 };
 };
 
-export const Film = () => {
+// `sound` is on for every render; the hero plays the file muted anyway, and
+// the social cuts want it. Off is for a silent preview in Studio.
+export const Film = ({ sound = true }) => {
   const frame = useCurrentFrame();
   const closeAt = Math.round(BEATS.at(-1).at * FPS);
   const navy = ease(frame, closeAt, 15) * (1 - ease(frame, DURATION - 10, 10));
@@ -89,6 +92,7 @@ export const Film = () => {
         );
       })}
       <Clock text={clock.text} rewind={clock.rewind} opacity={clock.opacity ?? 1} />
+      {sound ? <Sound fps={FPS} durationInFrames={DURATION} /> : null}
     </AbsoluteFill>
   );
 };

@@ -7,7 +7,7 @@
   "scripts": {
     "sync-assets": "node sync-assets.mjs",
     "studio": "npm run sync-assets && remotion studio",
-    "render:film": "npm run sync-assets && remotion render Film out/demo.mp4 --codec h264 --crf 24 && remotion render Film out/demo.webm --codec vp9 --crf 38 && npm run -s poster",
+    "render:film": "npm run sync-assets && remotion render Film out/demo.mp4 --codec h264 --crf 24 --audio-bitrate 96k && remotion render Film out/demo.webm --codec vp9 --crf 38 --audio-bitrate 80k && npm run -s poster",
     "poster": "remotion still Film out/demo-poster.png --frame 520 && ffmpeg -y -loglevel error -i out/demo-poster.png -quality 80 out/demo-poster.webp",
     "publish:media": "node publish-media.mjs",
     "lint": "remotion compositions"

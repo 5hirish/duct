@@ -53,6 +53,21 @@ sandbox; render from a normal shell.
   and the motion notes per beat; when the film and the boards disagree, fix
   whichever is wrong and keep them agreeing.
 
+## Sound
+
+`src/Sound.jsx` holds one music bed and a UI sound per beat, with times on the
+film's own clock; re-time a beat in `Film.jsx` and move its cue with it. The
+film prop `sound` (default on) drops the whole layer for a silent render. The
+landing page plays the file muted regardless (browsers block autoplay with
+sound); the sound is for the social and YouTube cuts.
+
+- `audio/sfx/*.wav` are the remotion.media set (usable without attribution,
+  peaks normalised to −3 dB).
+- `audio/music/music.mp3` is the first 31 s of **"Deliberate Thought" by Kevin
+  MacLeod (incompetech.com)**, licensed under Creative Commons: By Attribution
+  4.0, https://creativecommons.org/licenses/by/4.0/. Any page or post that
+  publishes a render with sound carries that credit.
+
 ## Licence
 
 Remotion is free for individuals and companies of up to three people. Check
