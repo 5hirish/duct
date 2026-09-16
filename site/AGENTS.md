@@ -131,8 +131,10 @@ same image with a different caption. Job cards take a focused shot, never a
 whole window: at card size a window is a grey smear, an `answer-*` card is a
 question and its answer.
 
-Every image inside `.shot-frame`, `.job-shot`, `.what-shot` or `.dl-hero-shot`
-opens full-size over the page on click or Enter; `duct.js` adds the markup and
+Every image inside `.shot-frame`, `.job-shot`, `.what-shot`, `.dl-hero-shot` or
+any element carrying `data-zoom` opens full-size over the page on click or Enter
+(`data-zoom-src` on the image names a longer version to open instead, the way
+the SEO audit page shows the top of the report and opens all of it); `duct.js` adds the markup and
 `duct.css` holds the `.lightbox` rules. On a phone the enlarged shot is wider
 than the screen on purpose, so it can be read by panning. A new product image
 gets this for free by using one of those four containers.

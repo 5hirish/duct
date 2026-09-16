@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 
-<!-- EXPERIMENT: Does an interactive URL-input → scan tease → email gate → real SEO audit
-     drive more qualified leads than a standard email-capture landing page for events? -->
+<!-- EXPERIMENT: URL first, email second. The visitor gives a URL before anything is asked of
+     them, watches the scan, then trades an email for the report they can already see. Hypothesis:
+     a lead who has seen their own domain in the scanner converts at a higher rate than one asked
+     for an email cold. Measured by seo_audit_scan → seo_audit_lead in GTM. -->
 
 <html lang="en">
 <head>
@@ -11,91 +13,56 @@
 <link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
 <title>Free SEO Audit — See exactly what's hurting your rankings | Duct</title>
 <link rel="canonical" href="https://getduct.ai/seo-audit"/>
-<meta name="description" content="Get a free, instant SEO audit for your website. Duct scans your pages, scores your signals, and delivers a prioritized action plan in minutes. No credit card needed."/>
+<meta name="description" content="Paste your URL and get a real SEO audit in minutes: a score, every issue on the page it lives on, and the fixes in order. Free, no account, from the open-source Duct audit agent."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/seo-audit"/>
 <meta property="og:title" content="Free SEO Audit — See exactly what's hurting your rankings"/>
-<meta property="og:description" content="Enter your website URL and get a full SEO audit in minutes. Uncover hidden issues, quick wins, and a prioritized action plan — free, no card needed."/>
+<meta property="og:description" content="Paste your URL, watch the crawl, get the report: a score, every issue on its page, the fixes in order. Free and open source, no account needed."/>
 <meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Free SEO Audit — See exactly what's hurting your rankings"/>
-<meta name="twitter:description" content="Enter your website URL and get a full SEO audit in minutes. Uncover hidden issues, quick wins, and a prioritized action plan — free."/>
+<meta name="twitter:description" content="A real SEO audit of your site in minutes: score, issues on their pages, fixes in order. Free, no account, open source."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
 <script src="assets/config.js"></script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","name":"Free SEO Audit by Duct","url":"https://getduct.ai/seo-audit","description":"Enter your website URL and get a full, AI-powered SEO audit in minutes. Uncover hidden technical issues, keyword gaps, and a prioritized action plan — completely free.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+{"@context":"https://schema.org","@type":"WebPage","name":"Free SEO Audit by Duct","url":"https://getduct.ai/seo-audit","description":"Paste your URL and get a real SEO audit in minutes: a score, every issue on the page it lives on, and the fixes in order. Free, no account, from the open-source Duct audit agent.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is it really free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. It runs on our keys. Your email gets you the report, and that is the whole trade."}}, {"@type": "Question", "name": "How long does it take?", "acceptedAnswer": {"@type": "Answer", "text": "Two to four minutes, depending on how many pages your sitemap lists."}}, {"@type": "Question", "name": "What do you do with my email?", "acceptedAnswer": {"@type": "Answer", "text": "We send the report summary. Unsubscribe any time. Never sold, never shared."}}, {"@type": "Question", "name": "Is it the same audit as in the app?", "acceptedAnswer": {"@type": "Answer", "text": "The same open-source agent. In the app it runs on your own keys and keeps your reports."}}]}
 </script>
 <style>
 /* ── SEO Audit lead magnet — page-specific styles ── */
-:root {
-  --orange: #c0543c;
-  --orange-h: #a84430;
-  --navy: #0d1117;
-  --navy-2: #1c2128;
-  --navy-3: #6e7681;
-  --cream: #faf8f5;
-  --border: #e4e8ec;
-}
+/* The accent, and only the accent: terracotta, one shade warmer than the
+   site's orange, so the page reads as Duct's and as its own thing. */
+:root { --orange: #c0543c; --orange-h: #a84430; }
+.skip-link { position: absolute; top: -100px; left: 16px; z-index: 200; padding: 10px 16px; background: var(--navy); color: #fff; border-radius: 8px; }
+.skip-link:focus { top: 16px; }
 
-/* ── State machine: show/hide sections ── */
-[data-lm-state="idle"]    .lm-scanning,
-[data-lm-state="idle"]    .lm-gate       { display: none; }
+/* ── State machine: the page is one of four things at a time ── */
+[data-lm-state="idle"] .lm-scanning,
+[data-lm-state="idle"] .lm-gate { display: none; }
 [data-lm-state="scanning"] .lm-hero,
-[data-lm-state="scanning"] .lm-gate      { display: none; }
-[data-lm-state="gate"]    .lm-hero,
-[data-lm-state="gate"]    .lm-scanning   { display: none; }
+[data-lm-state="scanning"] .lm-gate { display: none; }
+[data-lm-state="gate"] .lm-hero,
+[data-lm-state="gate"] .lm-scanning,
 [data-lm-state="submitting"] .lm-hero,
 [data-lm-state="submitting"] .lm-scanning { display: none; }
 
-/* ── Hero ── */
-.lm-hero {
-  max-width: 780px;
-  margin: 0 auto;
-  padding: 80px 24px 60px;
-  text-align: center;
-}
-.lm-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--navy-3);
-  background: #fff;
-  margin-bottom: 28px;
-}
-.lm-badge-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--orange);
-  animation: lm-pulse 2s ease-in-out infinite;
-}
-@keyframes lm-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: .35; }
-}
-.lm-hero h1 {
-  font-size: clamp(2rem, 5vw, 3.25rem);
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -.025em;
-  color: var(--navy);
-  margin: 0 0 20px;
-}
-.lm-hero h1 em { font-style: normal; color: var(--orange); }
-.lm-hero .lm-sub {
-  font-size: 1.125rem;
-  color: var(--navy-3);
-  line-height: 1.6;
-  margin: 0 0 40px;
-}
+/* ── Hero: the ask on the left, the reward on the right ── */
+.lm-hero { padding: 120px 52px 40px; }
+.lm-hero-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: center; }
+.lm-hero h1 { font-size: clamp(38px, 4.6vw, 58px); line-height: 1.06; letter-spacing: -1.5px; margin: 22px 0 18px; }
+.lm-hero .sub { max-width: 40ch; margin: 0 0 28px; }
+.lm-hero .lm-url-form { margin-left: 0; }
+.lm-hero-shot { position: relative; margin: 0; }
+/* The report is taller than the copy beside it. Show its top, the score and
+   the first findings, fading out: there is more, and a click opens all of it. */
+.lm-hero-shot-crop { aspect-ratio: 5 / 4; overflow: hidden; border-radius: var(--r-lg); -webkit-mask-image: linear-gradient(#000 78%, transparent); mask-image: linear-gradient(#000 78%, transparent); }
+.lm-hero-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.lm-hero-shot figcaption { margin-top: 10px; font-size: 13px; color: var(--navy-3); text-align: center; }
 
 /* URL input */
 .lm-url-form {
@@ -205,34 +172,7 @@
   margin: 0;
 }
 
-/* Trust strip */
-.lm-trust {
-  max-width: 780px;
-  margin: 0 auto;
-  padding: 0 24px 72px;
-  text-align: center;
-}
-.lm-trust-label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--navy-3);
-  margin: 0 0 18px;
-}
-.lm-trust-logos {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-.lm-trust-logo {
-  font-size: 14px;
-  font-weight: 600;
-  color: #c0cad4;
-  letter-spacing: -.01em;
-}
+.lm-footnote { font-size: 12px; color: var(--navy-3); margin: 10px 0 0; }
 
 /* ── Scanning section ── */
 .lm-scanning {
@@ -401,119 +341,13 @@
 @keyframes lm-spin { to { transform: rotate(360deg); } }
 .lm-step-icon { font-size: 15px; flex-shrink: 0; }
 
-/* ── Gate section ── */
-.lm-gate {
-  position: relative;
-  /* Full-bleed: the blurred report fills the whole section and the unlock card
-     floats over it — no nested "card on a card". */
-  overflow: hidden;
-}
-.lm-gate-wrap {
-  position: relative;
-  /* Fill the viewport below the 62px fixed nav so the report reads as a real,
-     full page being unlocked rather than a small framed card. */
-  min-height: calc(100vh - 62px);
-  overflow: hidden;
-}
-
-/* Blurred report preview — a real-looking, full-bleed report page sits behind
-   the unlock card, framing it on every side so the gate reads as "unlock THIS".
-   Blurred enough to be unreadable, kept colourful so it looks finished. */
-.lm-report-blur {
-  filter: blur(7px) saturate(0.95);
-  pointer-events: none;
-  user-select: none;
-  background: #fff;
-  /* top padding clears the 62px fixed nav */
-  padding: 104px clamp(20px, 7vw, 88px) 72px;
-  min-height: calc(100vh - 62px);
-}
-.lm-rpt-inner {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-/* Header summary stats (right of the score) */
-.lm-rpt-stats { display: flex; gap: 24px; }
-.lm-rpt-stat { text-align: center; }
-.lm-rpt-stat-num { display: block; font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1.1; }
-.lm-rpt-stat-lbl { font-size: 11px; color: var(--navy-3); }
-/* Two-column body: category scores | top findings */
-.lm-rpt-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px 44px;
-  margin-top: 24px;
-}
-.lm-rpt-col-title {
-  font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--navy-3); margin: 0 0 14px; text-align: left;
-}
-@media (max-width: 640px) {
-  .lm-rpt-grid  { grid-template-columns: 1fr; }
-  .lm-rpt-stats { display: none; }
-}
-.lm-rpt-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.lm-rpt-score-wrap {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-.lm-rpt-score {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 6px solid var(--orange);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--orange);
-  background: #fff;
-  flex-shrink: 0;
-}
-.lm-rpt-meta { text-align: left; }
-.lm-rpt-title { font-size: 20px; font-weight: 700; color: var(--navy); margin: 0 0 4px; }
-.lm-rpt-sub   { font-size: 13px; color: var(--navy-3); margin: 0; }
-.lm-rpt-issue-bar {
-  height: 8px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #c0392b 0 30%, #e67e22 30% 55%, #2980b9 55% 80%, #27ae60 80%);
-  margin-bottom: 24px;
-}
-.lm-rpt-cats { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-.lm-rpt-cat {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-}
-.lm-rpt-cat-label { font-size: 13px; color: var(--navy); width: 130px; flex-shrink: 0; }
-.lm-rpt-cat-bar-wrap { flex: 1; height: 8px; background: #eaecef; border-radius: 4px; overflow: hidden; }
-.lm-rpt-cat-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #e67e22, #f39c12); }
-.lm-rpt-cat-score { font-size: 13px; font-weight: 700; color: var(--navy-3); width: 32px; text-align: right; flex-shrink: 0; }
-.lm-rpt-findings { display: flex; flex-direction: column; gap: 8px; }
-.lm-rpt-finding {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  border-left: 3px solid;
-  background: #fafbfc;
-  text-align: left;
-}
-.lm-rpt-finding.err  { border-color: #c0392b; }
-.lm-rpt-finding.warn { border-color: #e67e22; }
-.lm-rpt-finding.opp  { border-color: #2980b9; }
-.lm-rpt-finding-text { font-size: 13px; color: var(--navy); }
-.lm-rpt-finding-desc { font-size: 12px; color: var(--navy-3); margin-top: 2px; }
-
+/* ── Gate: the real report, blurred, with the unlock card over it ── */
+.lm-gate { position: relative; overflow: hidden; }
+.lm-gate-wrap { position: relative; }
+/* Capped and faded at the foot: enough report to want, not a second page of blur
+   to scroll past, and the unlock card lands in the first screen. */
+.lm-report-blur { filter: blur(7px) saturate(.95); pointer-events: none; user-select: none; padding: 92px clamp(20px, 7vw, 88px) 0; max-height: 720px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+.lm-report-blur img { display: block; width: 100%; max-width: 1000px; height: auto; margin: 0 auto; border-radius: var(--r-lg); }
 /* Lock overlay — a light scrim that lets the blurred report show through around
    the unlock card (rather than a near-solid sheet that hides it). The card below
    carries the contrast for the form, so this stays mostly see-through. */
@@ -565,6 +399,7 @@
   margin: 0 0 24px;
 }
 
+.lm-lock-icon .ic { font-size: 22px; color: #fff; }
 /* Email form in gate */
 .lm-email-form {
   display: flex;
@@ -642,211 +477,87 @@
   }
 }
 
-/* Turnstile widget */
-.lm-turnstile-wrap {
-  margin: 14px 0 4px;
-  display: flex;
-  justify-content: center;
-}
+.lm-turnstile-wrap { margin: 14px 0 4px; display: flex; justify-content: center; }
+.lm-gate-error { font-size: 13px; color: #c0392b; margin: 8px 0 0; min-height: 20px; }
+.lm-gate-note { font-size: 12px; color: var(--navy-3); margin: 10px 0 0; }
 
-.lm-gate-error {
-  font-size: 13px;
-  color: #c0392b;
-  margin: 8px 0 0;
-  min-height: 20px;
-}
-.lm-gate-note {
-  font-size: 12px;
-  color: var(--navy-3);
-  margin: 10px 0 0;
-}
+/* ── What the report says: four cards, one line each ── */
+.lm-what { padding: 88px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.lm-what-inner { max-width: 1160px; margin: 0 auto; }
+.lm-what-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+.lm-feat { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 26px 24px; }
+.lm-feat-icon { font-size: 28px; color: var(--orange); display: block; margin-bottom: 14px; }
+.lm-feat h3 { font-family: var(--serif); font-size: 20px; line-height: 1.25; margin: 0 0 8px; color: var(--navy); }
+.lm-feat p { font-size: 14.5px; color: var(--navy-3); line-height: 1.6; margin: 0; }
 
-/* ── Below-fold feature strip ── */
-.lm-features {
-  background: var(--cream);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 56px 24px;
-}
-.lm-features-inner {
-  max-width: 900px;
-  margin: 0 auto;
-  text-align: center;
-}
-.lm-features h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--navy);
-  margin: 0 0 8px;
-}
-.lm-features h2 em { font-style: normal; color: var(--orange); }
-.lm-features-sub {
-  font-size: 15px;
-  color: var(--navy-3);
-  margin: 0 0 48px;
-}
-.lm-feat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
-  text-align: left;
-}
-.lm-feat {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-}
-.lm-feat-icon {
-  font-size: 24px;
-  margin-bottom: 12px;
-  display: block;
-}
-.lm-feat-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--navy);
-  margin: 0 0 6px;
-}
-.lm-feat-body {
-  font-size: 14px;
-  color: var(--navy-3);
-  line-height: 1.55;
-  margin: 0;
-}
+/* ── Trust strip ── */
+.lm-trust { display: flex; justify-content: center; gap: 12px 36px; flex-wrap: wrap; padding: 26px 24px; border-bottom: 1px solid var(--border); }
+.lm-trust span { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--navy); }
+.lm-trust .ic { font-size: 17px; color: var(--orange); }
 
-/* ── FAQ ── */
-.lm-faq {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 64px 24px;
-}
-.lm-faq h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--navy);
-  text-align: center;
-  margin: 0 0 36px;
-}
-.lm-faq-item {
-  border-bottom: 1px solid var(--border);
-}
-.lm-faq-item summary {
-  padding: 18px 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--navy);
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.lm-faq-item summary::-webkit-details-marker { display: none; }
-.lm-faq-item summary::after {
-  content: '+';
-  font-size: 20px;
-  color: var(--navy-3);
-  flex-shrink: 0;
-  transition: transform .2s;
-}
-.lm-faq-item[open] summary::after {
-  content: '−';
-}
-.lm-faq-a {
-  font-size: 14px;
-  color: var(--navy-3);
-  line-height: 1.65;
-  padding: 0 0 18px;
-  margin: 0;
-}
+/* ── Closing form on navy ── */
+.lm-cta { padding: 104px 52px; text-align: center; background: var(--navy); }
+.lm-cta h2 { color: #fff; font-size: clamp(34px, 5vw, 54px); margin-bottom: 34px; }
+.lm-cta h2 em { color: var(--orange); }
+.lm-cta .lm-url-form { border-color: transparent; }
+.lm-cta .lm-footnote { color: rgba(255,255,255,.55); }
+.lm-cta .lm-url-error { color: #ffb4a6; }
 
-/* ── Final CTA ── */
-.lm-cta {
-  text-align: center;
-  padding: 64px 24px max(80px, calc(80px + env(safe-area-inset-bottom, 0px)));
-  background: var(--cream);
-  border-top: 1px solid var(--border);
+@media (max-width: 1000px) {
+  .lm-hero-inner { grid-template-columns: 1fr; gap: 36px; }
+  .lm-what-grid { grid-template-columns: 1fr 1fr; }
 }
-.lm-cta h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--navy);
-  margin: 0 0 10px;
+@media (max-width: 860px) {
+  .lm-hero { padding: 100px 24px 32px; }
+  .lm-what, .lm-cta { padding: 64px 24px; }
 }
-.lm-cta p {
-  font-size: 15px;
-  color: var(--navy-3);
-  margin: 0 0 28px;
-}
-.lm-cta .lm-url-btn {
-  display: inline-flex;
-  font-size: 16px;
-  padding: 14px 28px;
+@media (max-width: 600px) {
+  .lm-what-grid { grid-template-columns: 1fr; }
+  .lm-hero-shot-crop { aspect-ratio: 4 / 3; }
 }
 </style>
 </head>
 <body data-lm-state="idle">
-
-<a href="#main-content" style="position:absolute;top:-100%;left:16px;z-index:300;padding:10px 20px;background:var(--navy);color:#fff;font-size:14px;font-weight:500;border-radius:var(--r);text-decoration:none;transition:top .15s" onfocus="this.style.top='16px'" onblur="this.style.top='-100%'">Skip to content</a>
-
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<a href="#main-content" class="skip-link">Skip to content</a>
 
-<!-- NAV -->
+<!-- NAV (this page only: site/partials/nav-seo-audit.html) -->
 <div data-duct-partial="/partials/nav-seo-audit.html"></div>
 
 <main id="main-content">
 
-<!-- ═══════════════════════════════════════════
-     HERO (state: idle)
-════════════════════════════════════════════ -->
+<!-- HERO (state: idle) -->
 <section class="lm-hero">
-  <div class="lm-badge">
-    <span class="lm-badge-dot" aria-hidden="true"></span>
-    Free audit · No sign-up required
-  </div>
-
-  <h1>See exactly what's<br/>hurting your <em>rankings.</em></h1>
-
-  <p class="lm-sub">
-    Duct crawls your site, scores every SEO signal, and delivers a prioritized<br/>
-    action plan in minutes. Free — enter your URL to get started.
-  </p>
-
-  <div class="lm-url-form" role="group" aria-label="Website URL input">
-    <span class="lm-url-prefix" aria-hidden="true">https://</span>
-    <input
-      type="url"
-      id="lmUrl"
-      class="lm-url-input"
-      placeholder="your-site.com"
-      aria-label="Your website URL"
-      autocomplete="url"
-      autocapitalize="off"
-      spellcheck="false"
-    />
-    <button class="lm-url-btn" id="lmUrlBtn" onclick="lmStartScan()" aria-label="Analyze my site">
-      <span class="lm-btn-idle">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-        Analyze my site
-      </span>
-      <span class="lm-btn-checking" aria-hidden="true">Checking…</span>
-    </button>
-  </div>
-  <p class="lm-url-error" id="lmUrlError" role="alert" aria-live="polite"></p>
-  <p class="lm-footnote">Free · No credit card · Takes ~2 minutes to generate</p>
+<div class="lm-hero-inner">
+<div>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free &middot; No account &middot; Open source</div>
+<h1>See exactly what&rsquo;s hurting your <em>rankings.</em></h1>
+<p class="sub">Paste your URL. Duct crawls every page, scores it, and hands you the fixes in order.</p>
+<div class="lm-url-form" role="group" aria-label="Website URL">
+<span class="lm-url-prefix" aria-hidden="true">https://</span>
+<input type="url" id="lmUrl" class="lm-url-input" placeholder="your-site.com" aria-label="Your website URL" autocomplete="url" autocapitalize="off" spellcheck="false"/>
+<button class="lm-url-btn" id="lmUrlBtn" onclick="lmStartScan('lmUrl')" aria-label="Audit my site">
+<span class="lm-btn-idle">Audit my site <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span>
+<span class="lm-btn-checking" aria-hidden="true">Checking…</span>
+</button>
+</div>
+<p class="lm-url-error" id="lmUrlError" role="alert" aria-live="polite"></p>
+<p class="lm-footnote">Free &middot; No credit card &middot; Two to four minutes</p>
+</div>
+<figure class="lm-hero-shot" data-zoom>
+<div class="lm-hero-shot-crop">
+<img src="assets/media/audit-report.webp" data-zoom-src="assets/media/audit-report-full.webp" width="2088" height="2912" alt="An SEO audit report from Duct for solobudget.app: a score of 68 out of 100, three signals, crawl health, what is going right, the competitive landscape, and the five things to fix first" fetchpriority="high"/>
+</div>
+<figcaption>A real report, all nine categories. Click to read it.</figcaption>
+</figure>
+</div>
 </section>
 
-
-
-<!-- ═══════════════════════════════════════════
-     SCANNING (state: scanning)
-════════════════════════════════════════════ -->
+<!-- SCANNING (state: scanning) -->
 <section class="lm-scanning" aria-live="polite" aria-label="Scanning your site">
   <p class="lm-scanning-label">Scanning</p>
   <p class="lm-scanning-url" id="lmScanningUrl"></p>
-
   <!-- Browser mockup -->
   <div class="lm-browser" role="img" aria-label="Browser preview with scan animation">
     <div class="lm-browser-bar">
@@ -902,229 +613,108 @@
   </div>
 </section>
 
-
-<!-- ═══════════════════════════════════════════
-     EMAIL GATE (state: gate | submitting)
-════════════════════════════════════════════ -->
+<!-- EMAIL GATE (state: gate | submitting) -->
 <section class="lm-gate" aria-label="Unlock your SEO report">
   <div class="lm-gate-wrap">
-    <!-- Blurred report preview (aria-hidden — purely visual) -->
     <div class="lm-report-blur" aria-hidden="true">
-      <div class="lm-rpt-inner">
-        <div class="lm-rpt-header">
-          <div class="lm-rpt-score-wrap">
-            <div class="lm-rpt-score">72</div>
-            <div class="lm-rpt-meta">
-              <p class="lm-rpt-title">SEO Report</p>
-              <p class="lm-rpt-sub">your-site.com · 35 pages · 14 issues found</p>
-            </div>
-          </div>
-          <div class="lm-rpt-stats">
-            <div class="lm-rpt-stat"><span class="lm-rpt-stat-num">7</span><span class="lm-rpt-stat-lbl">Critical</span></div>
-            <div class="lm-rpt-stat"><span class="lm-rpt-stat-num">12</span><span class="lm-rpt-stat-lbl">Warnings</span></div>
-            <div class="lm-rpt-stat"><span class="lm-rpt-stat-num">9</span><span class="lm-rpt-stat-lbl">Quick wins</span></div>
-          </div>
-        </div>
-        <div class="lm-rpt-issue-bar"></div>
-
-        <div class="lm-rpt-grid">
-          <!-- Left: category scores -->
-          <div class="lm-rpt-col">
-            <p class="lm-rpt-col-title">Category scores</p>
-            <div class="lm-rpt-cats">
-              <div class="lm-rpt-cat">
-                <span class="lm-rpt-cat-label">Technical SEO</span>
-                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:68%"></div></div>
-                <span class="lm-rpt-cat-score">68</span>
-              </div>
-              <div class="lm-rpt-cat">
-                <span class="lm-rpt-cat-label">On-Page</span>
-                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:54%;background:linear-gradient(90deg,#e67e22,#e74c3c)"></div></div>
-                <span class="lm-rpt-cat-score">54</span>
-              </div>
-              <div class="lm-rpt-cat">
-                <span class="lm-rpt-cat-label">Content Signals</span>
-                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:82%;background:linear-gradient(90deg,#27ae60,#2ecc71)"></div></div>
-                <span class="lm-rpt-cat-score">82</span>
-              </div>
-              <div class="lm-rpt-cat">
-                <span class="lm-rpt-cat-label">Performance</span>
-                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:71%"></div></div>
-                <span class="lm-rpt-cat-score">71</span>
-              </div>
-              <div class="lm-rpt-cat">
-                <span class="lm-rpt-cat-label">Structured Data</span>
-                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:60%"></div></div>
-                <span class="lm-rpt-cat-score">60</span>
-              </div>
-              <div class="lm-rpt-cat">
-                <span class="lm-rpt-cat-label">Internal Linking</span>
-                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:75%;background:linear-gradient(90deg,#27ae60,#2ecc71)"></div></div>
-                <span class="lm-rpt-cat-score">75</span>
-              </div>
-              <div class="lm-rpt-cat">
-                <span class="lm-rpt-cat-label">E-E-A-T Signals</span>
-                <div class="lm-rpt-cat-bar-wrap"><div class="lm-rpt-cat-bar" style="width:48%;background:linear-gradient(90deg,#e67e22,#e74c3c)"></div></div>
-                <span class="lm-rpt-cat-score">48</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: top findings -->
-          <div class="lm-rpt-col">
-            <p class="lm-rpt-col-title">Top findings</p>
-            <div class="lm-rpt-findings">
-              <div class="lm-rpt-finding err">
-                <div>
-                  <div class="lm-rpt-finding-text">Missing meta descriptions on 6 pages</div>
-                  <div class="lm-rpt-finding-desc">High impact · /blog, /pricing, /features…</div>
-                </div>
-              </div>
-              <div class="lm-rpt-finding warn">
-                <div>
-                  <div class="lm-rpt-finding-text">Title tags too long on 4 pages</div>
-                  <div class="lm-rpt-finding-desc">Medium impact · Average 68 chars (max 60)</div>
-                </div>
-              </div>
-              <div class="lm-rpt-finding opp">
-                <div>
-                  <div class="lm-rpt-finding-text">Quick win: 12 pages ranking 4–15</div>
-                  <div class="lm-rpt-finding-desc">Opportunity · Refreshing could capture 2–3× traffic</div>
-                </div>
-              </div>
-              <div class="lm-rpt-finding err">
-                <div>
-                  <div class="lm-rpt-finding-text">8 pages missing structured data</div>
-                  <div class="lm-rpt-finding-desc">High impact · No Article / FAQ schema detected</div>
-                </div>
-              </div>
-              <div class="lm-rpt-finding warn">
-                <div>
-                  <div class="lm-rpt-finding-text">Thin content on 5 blog posts</div>
-                  <div class="lm-rpt-finding-desc">Medium impact · Under 300 words each</div>
-                </div>
-              </div>
-              <div class="lm-rpt-finding opp">
-                <div>
-                  <div class="lm-rpt-finding-text">Add internal links to 3 cornerstone pages</div>
-                  <div class="lm-rpt-finding-desc">Opportunity · Strengthen topical authority</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <img src="assets/media/audit-report.webp" width="2088" height="2912" alt="" loading="lazy"/>
     </div>
-
-    <!-- Lock overlay -->
     <div class="lm-lock-overlay" id="lmLockOverlay">
       <div class="lm-lock-card">
-        <div class="lm-lock-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-        </div>
+        <div class="lm-lock-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg></div>
         <p class="lm-lock-headline" id="lmLockHeadline">Your report is ready</p>
-        <p class="lm-lock-sub">Enter your email to unlock the full SEO audit</p>
-
-        <div class="lm-email-form" role="group" aria-label="Email input to unlock report">
-          <input
-            type="email"
-            id="lmEmail"
-            class="lm-email-input"
-            placeholder="you@company.com"
-            aria-label="Your email address"
-            autocomplete="email"
-            autocapitalize="off"
-            spellcheck="false"
-          />
-          <button class="lm-email-btn" id="lmEmailBtn" onclick="lmSubmitLead()">
-            Unlock report →
-          </button>
+        <p class="lm-lock-sub">Your email opens it here and gets you a copy.</p>
+        <div class="lm-email-form" role="group" aria-label="Email to unlock the report">
+          <input type="email" id="lmEmail" class="lm-email-input" placeholder="you@company.com" aria-label="Your email address" autocomplete="email" autocapitalize="off" spellcheck="false"/>
+          <button class="lm-email-btn" id="lmEmailBtn" onclick="lmSubmitLead()">Unlock report &rarr;</button>
         </div>
-
-        <!-- Cloudflare Turnstile -->
-        <div class="lm-turnstile-wrap">
-          <div id="lmTurnstile" aria-label="Security verification"></div>
-        </div>
-
+        <div class="lm-turnstile-wrap"><div id="lmTurnstile" aria-label="Security verification"></div></div>
         <p class="lm-gate-error" id="lmGateError" role="alert" aria-live="polite"></p>
-        <p class="lm-gate-note">No spam. We'll send your report summary. Unsubscribe any time.</p>
+        <p class="lm-gate-note">No spam. Unsubscribe any time.</p>
       </div>
     </div>
   </div>
 </section>
 
+<div class="channel" aria-hidden="true"></div>
 
-<!-- ═══════════════════════════════════════════
-     BELOW-FOLD: FEATURES
-════════════════════════════════════════════ -->
-<section class="lm-features reveal">
-  <div class="lm-features-inner">
-    <h2>What your <em>audit covers</em></h2>
-    <p class="lm-features-sub">A full technical and content analysis — not just a score.</p>
-    <div class="lm-feat-grid">
-      <div class="lm-feat">
-        <span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#search"/></svg></span>
-        <p class="lm-feat-title">Technical issues</p>
-        <p class="lm-feat-body">Missing meta tags, broken links, redirect chains, slow TTFB, noindex errors, and more — scanned automatically.</p>
-      </div>
-      <div class="lm-feat">
-        <span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
-        <p class="lm-feat-title">Scoring by category</p>
-        <p class="lm-feat-body">Technical SEO, on-page signals, content quality, and performance — each scored and ranked so you know where to focus.</p>
-      </div>
-      <div class="lm-feat">
-        <span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg></span>
-        <p class="lm-feat-title">Prioritized action plan</p>
-        <p class="lm-feat-body">Every finding is ranked by impact × effort. Quick wins first. Big bets next. Clear, specific recommendations.</p>
-      </div>
-      <div class="lm-feat">
-        <span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#map"/></svg></span>
-        <p class="lm-feat-title">Full site crawl</p>
-        <p class="lm-feat-body">Duct reads your sitemap and crawls your pages — not just the homepage. Every issue is traced back to the exact URL.</p>
-      </div>
-    </div>
-  </div>
+<!-- WHAT THE REPORT SAYS -->
+<section class="lm-what reveal">
+<div class="lm-what-inner">
+<p class="tag">What you get</p>
+<h2>Not a score. <em>A list of fixes.</em></h2>
+<div class="lm-what-grid">
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#search"/></svg></span>
+<h3>Every issue, on its page</h3>
+<p>Each finding names the URL it lives on.</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+<h3>Scored by category</h3>
+<p>Crawl health, on-page, content, structured data, Core Web Vitals.</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg></span>
+<h3>Fixes in order</h3>
+<p>Errors first, then warnings, then the opportunities.</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#map"/></svg></span>
+<h3>The whole site</h3>
+<p>Every page in your sitemap, not just the one you typed.</p>
+</div>
+</div>
+</div>
 </section>
 
+<div class="lm-trust reveal" aria-label="What to know before you paste">
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg> Open source, MIT</span>
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> No account, no card</span>
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg> The same agent as in the app</span>
+</div>
 
-<!-- ═══════════════════════════════════════════
-     FAQ
-════════════════════════════════════════════ -->
-<section class="lm-faq reveal">
-  <h2>Frequently asked questions</h2>
-
-  <details class="lm-faq-item">
-    <summary>Is this actually free?</summary>
-    <p class="lm-faq-a">Yes — completely free. We ask for your email so we can send you the report summary and follow up. No credit card, no subscription, no catch.</p>
-  </details>
-  <details class="lm-faq-item">
-    <summary>How does Duct audit my site?</summary>
-    <p class="lm-faq-a">Duct crawls your sitemap, reads your pages, and runs them through an AI-powered SEO analysis pipeline. It checks technical signals (meta tags, redirects, TTFB), on-page signals (titles, headings, content), and surface keyword and content gaps.</p>
-  </details>
-  <details class="lm-faq-item">
-    <summary>How long does it take?</summary>
-    <p class="lm-faq-a">Most audits complete in 2–4 minutes, depending on the size of your site. You'll see a live progress indicator while it runs.</p>
-  </details>
-  <details class="lm-faq-item">
-    <summary>What happens after the audit?</summary>
-    <p class="lm-faq-a">You get the full interactive report — scores, findings, and a prioritized action plan. You can download it, share it, and optionally sign up to save it and run follow-up audits.</p>
-  </details>
+<!-- FAQ (shared .faq styles) -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Four <em>questions</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+<details class="faq-item">
+<summary class="faq-q">Is it really free?</summary>
+<p class="faq-a">Yes. It runs on our keys. Your email gets you the report, and that is the whole trade.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">How long does it take?</summary>
+<p class="faq-a">Two to four minutes, depending on how many pages your sitemap lists.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">What do you do with my email?</summary>
+<p class="faq-a">We send the report summary. Unsubscribe any time. Never sold, never shared.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Is it the same audit as in the app?</summary>
+<p class="faq-a">The same open-source agent. In the app it runs on your own keys and keeps your reports.</p>
+</details>
+</div>
+</div>
 </section>
 
-
-<!-- ═══════════════════════════════════════════
-     FINAL CTA
-════════════════════════════════════════════ -->
-<section class="lm-cta reveal">
-  <h2>Ready to see what Duct finds?</h2>
-  <p>Enter your URL above and get your free SEO audit in minutes.</p>
-  <button class="lm-url-btn" onclick="window.scrollTo({top:0,behavior:'smooth'});document.getElementById('lmUrl').focus()">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-    Get my free audit →
-  </button>
+<!-- CLOSING FORM -->
+<section class="lm-cta reveal" id="cta">
+<h2>What is Duct going to find <em>on yours?</em></h2>
+<div class="lm-url-form" role="group" aria-label="Website URL">
+<span class="lm-url-prefix" aria-hidden="true">https://</span>
+<input type="url" id="lmUrl2" class="lm-url-input" placeholder="your-site.com" aria-label="Your website URL" autocomplete="url" autocapitalize="off" spellcheck="false"/>
+<button class="lm-url-btn" id="lmUrl2Btn" onclick="lmStartScan('lmUrl2')" aria-label="Audit my site">
+<span class="lm-btn-idle">Audit my site <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span>
+<span class="lm-btn-checking" aria-hidden="true">Checking…</span>
+</button>
+</div>
+<p class="lm-url-error" id="lmUrl2Error" role="alert" aria-live="polite"></p>
+<p class="lm-footnote">Free &middot; No credit card &middot; Two to four minutes</p>
 </section>
 
 </main>
@@ -1132,9 +722,7 @@
 <!-- FOOTER -->
 <div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
 
-<!-- ═══════════════════════════════════════════
-     LEAD MAGNET STATE MACHINE
-════════════════════════════════════════════ -->
+<!-- LEAD MAGNET STATE MACHINE -->
 <script>
 (function () {
   'use strict';
@@ -1167,6 +755,12 @@
     }
   }
 
+  // GTM reads these; without them the funnel is a page view and nothing else.
+  function track(event) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: event });
+  }
+
   function normalizeUrl(raw) {
     raw = raw.trim();
     if (!raw) return '';
@@ -1184,16 +778,20 @@
 
   // ── Phase 1: URL → scan animation ─────────────────────────────────────────
 
-  window.lmStartScan = function () {
-    var raw = document.getElementById('lmUrl').value;
-    var errEl = document.getElementById('lmUrlError');
-    var btn = document.getElementById('lmUrlBtn');
+  // Two forms call this, the hero's and the closing one's: `inputId` names
+  // the input, and its button and error line share the id as a prefix.
+  window.lmStartScan = function (inputId) {
+    inputId = inputId || 'lmUrl';
+    var input = document.getElementById(inputId);
+    var raw = input.value;
+    var errEl = document.getElementById(inputId + 'Error');
+    var btn = document.getElementById(inputId + 'Btn');
     errEl.textContent = '';
 
     var url = normalizeUrl(raw);
     if (!url || !/^https?:\/\/.+\..+/.test(url)) {
       errEl.textContent = 'Please enter a valid website URL (e.g. your-site.com)';
-      document.getElementById('lmUrl').focus();
+      input.focus();
       return;
     }
 
@@ -1208,8 +806,8 @@
         btn.disabled = false;
         btn.classList.remove('is-checking');
         if (!data.ok) {
-          errEl.textContent = data.reason || 'We couldn\'t reach that site — please double-check the URL.';
-          document.getElementById('lmUrl').focus();
+          errEl.textContent = data.reason || 'We couldn\'t reach that site. Please double-check the URL.';
+          input.focus();
           return;
         }
         lmRunScan(url);
@@ -1230,8 +828,11 @@
     document.getElementById('lmScanningUrl').textContent = domain;
     document.getElementById('lmBrowserAddr').textContent = domain;
 
-    // Transition to scanning state
+    // Transition to scanning state. The closing form sits at the foot of the
+    // page; the scan plays at the top, so go there.
     setState('scanning');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    track('seo_audit_scan');
 
     // Reveal steps with stagger
     setTimeout(function () { showStepVisible('lmStep1'); }, 400);
@@ -1336,6 +937,7 @@
         return res.json();
       })
       .then(function (data) {
+        track('seo_audit_lead');
         window.location.href =
           appUrl +
           '/lead/seo-audit?url=' +
@@ -1363,12 +965,14 @@
         if (e.key === 'Enter') window.lmSubmitLead();
       });
     }
-    var urlInput = document.getElementById('lmUrl');
-    if (urlInput) {
-      urlInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') window.lmStartScan();
-      });
-    }
+    ['lmUrl', 'lmUrl2'].forEach(function (id) {
+      var urlInput = document.getElementById(id);
+      if (urlInput) {
+        urlInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') window.lmStartScan(id);
+        });
+      }
+    });
   });
 })();
 </script>

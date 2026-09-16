@@ -360,8 +360,7 @@ the *landing-page* tells:
 - **Five shadow recipes, no shadow tokens; no spacing scale** — tokenize
   when a page is touched, don't add a sixth.
 - **`.skip-link` re-declared inline on 6+ pages** (it's in `duct.css`);
-  five pages have no skip link at all (`about`, `404`, `privacy`, `terms`,
-  `seo-audit`).
+  four pages have no skip link at all (`about`, `404`, `privacy`, `terms`).
 - **Semantic drift**: 20–22px serif "titles" marked up as `<p>`
   (`.feat-title`, `.step-title`) — they read as headings but aren't in the
   outline; `role="list"` on the blog grid overrides the links' semantics.

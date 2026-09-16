@@ -661,7 +661,7 @@ window.addEventListener('resize', function() {
 // opens the same file over the page at a size where it reads, pannable in
 // both directions; Escape, the button or the backdrop closes it.
 (function() {
-var imgs = document.querySelectorAll('.shot-frame img, .job-shot img, .what-shot img, .dl-hero-shot img');
+var imgs = document.querySelectorAll('.shot-frame img, .job-shot img, .what-shot img, .dl-hero-shot img, [data-zoom] img');
 if (!imgs.length) return;
 var box = null, scroller = null, pic = null, closeBtn = null, opener = null;
 
@@ -677,7 +677,12 @@ function build() {
   pic = document.createElement('img');
   // On a phone the shot is wider than the screen; start in the middle, where
   // the conversation is, rather than on the app's sidebar.
-  pic.addEventListener('load', centre);
+  pic.addEventListener('load', function() {
+    // Never upscale: a 1x capture (the full audit report) stays at its own
+    // width rather than being stretched to the 1400px the 2x shots get.
+    pic.style.maxWidth = Math.min(pic.naturalWidth, 1400) + 'px';
+    centre();
+  });
   scroller.appendChild(pic);
   closeBtn = document.createElement('button');
   closeBtn.type = 'button';
@@ -700,7 +705,9 @@ function centre() {
 function open(img) {
   if (!box) build();
   opener = img;
-  pic.src = img.currentSrc || img.src;
+  // A shot can point at a longer version of itself for the enlarged view
+  // (the audit report: the page shows its top, the lightbox all of it).
+  pic.src = img.getAttribute('data-zoom-src') || img.currentSrc || img.src;
   pic.alt = img.alt || '';
   box.hidden = false;
   scroller.scrollTop = 0;
