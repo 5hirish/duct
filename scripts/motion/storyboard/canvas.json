@@ -1,0 +1,26 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",   "title": "0 · The ask · 0–3 s",           "x": 0,    "y": 0,    "w": 1600, "h": 1000 },
+    { "file": "Scene1.dc.html", "title": "1 · The old way · 3–7 s",       "x": 1700, "y": 0,    "w": 1600, "h": 1000 },
+    { "file": "Scene2.dc.html", "title": "2 · Collapse · 7–9 s",          "x": 3400, "y": 0,    "w": 1600, "h": 1000 },
+    { "file": "Scene3.dc.html", "title": "3 · Reads across · 9–14 s",     "x": 0,    "y": 1240, "w": 1600, "h": 1000 },
+    { "file": "Scene4.dc.html", "title": "4 · Acts, with approval · 14–19 s", "x": 1700, "y": 1240, "w": 1600, "h": 1000 },
+    { "file": "Scene5.dc.html", "title": "5 · Remembers · 19–22 s",       "x": 3400, "y": 1240, "w": 1600, "h": 1000 },
+    { "file": "Scene6.dc.html", "title": "6 · The reply · 22–26 s",       "x": 0,    "y": 2480, "w": 1600, "h": 1000 },
+    { "file": "Scene7.dc.html", "title": "7 · Same desk · 26–28 s",       "x": 1700, "y": 2480, "w": 1600, "h": 1000 },
+    { "file": "Scene8.dc.html", "title": "8 · The ask · 28–30 s",         "x": 3400, "y": 2480, "w": 1600, "h": 1000 }
+  ],
+  "annotations": [
+    { "id": "film", "x": 0, "y": -300, "w": 900, "text": "Duct · one Monday · 30 s at 30 fps, 1600×1000, loops.\nOne canvas, not nine cuts: every scene change is a camera move (scale + translate, 1.5–2.5 s, cubic-bezier 0.4/0/0.2/1). The only hard cut is into scene 8.\nGround: the README frame gradient (warm #fff1e8 → #f7f4f0 → cool #e9ecf5, 135°) with the same lifted shadow, so a light app separates from a light film and the video matches the screenshots on the page. Render with a touch of grain so the gradient does not band in H.264.\nEvery number is from the story fixture (app/src/lib/__fixtures__/kestrel-story.mjs); the company is called Solo on screen, Duct sits in the sidebar header as in the app." },
+    { "id": "s0", "x": 0, "y": -130, "w": 700, "text": "0–3 s · Bubble springs in from below (damping 0.6); typing dots loop. Clock 09:02 sits top-right for the whole film." },
+    { "id": "s1", "x": 1700, "y": -130, "w": 700, "text": "3–7 s · Five windows fan out of the bubble on staggered springs; numbers flicker; the clock spins 09:02 → 11:40. Caption lands last." },
+    { "id": "s2", "x": 3400, "y": -130, "w": 700, "text": "7–9 s · Tabs scale to a point and land as the five marks in the sidebar. Clock REWINDS to 09:02 with one tick. One frame of orange as they land. Ground stays the README gradient." },
+    { "id": "s3", "x": 0, "y": 1110, "w": 700, "text": "9–14 s · Question types with human cadence (1–3 frame intervals, 6-frame pause after the comma). Pill springs in; Ads · GA4 · Stripe chips land TOGETHER, counters interpolate. Finding numbers overshoot-spring; underline is a width tween." },
+    { "id": "s4", "x": 1700, "y": 1110, "w": 700, "text": "14–19 s · Change card scales 0.85→1 from the finding (origin-anchored, 300 ms). Cursor on a bezier to Apply; press 0.96→1; check springs. Right pane: brief lines fade-up, 120 ms stagger. The moment Apply lands, the first checklist item ticks itself (box fills, strike draws left→right, 250 ms); the other two stay open. Citation chips pulse once." },
+    { "id": "s5", "x": 3400, "y": 1110, "w": 700, "text": "19–22 s · Camera slides to Memory. Top card stamps in 1.3→1 with a two-frame ink bleed. Clock ticks to 09:07." },
+    { "id": "s6", "x": 0, "y": 2350, "w": 700, "text": "22–26 s · Camera returns to the thread. Maya's reply scales in from the question (origin-anchored). Attachment slides in; reaction pops with 1.2 overshoot. Hold 40 frames." },
+    { "id": "s7", "x": 1700, "y": 2350, "w": 700, "text": "26–28 s · Thread blurs. Two cards Y-flip in, 80 ms stagger; the three covers fade in last. No copy beyond the two headers." },
+    { "id": "s8", "x": 3400, "y": 2350, "w": 700, "text": "28–30 s · Hard cut. Palette interpolates to navy over 500 ms. Line one rises 24 px; the orange beat lands 400 ms later. Then the ChatGPT pill springs in with a 1.2 overshoot and one ring pulse (the ONE thing to remember from this card). Buttons fade-up after it. Cross-dissolve to scene 0 for the loop." }
+  ],
+  "launch": { "view": "canvas" }
+}

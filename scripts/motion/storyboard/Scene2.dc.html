@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #0D0F1A; }
+    a { color: #FF5C00; } a:hover { color: #e05000; }
+    .app { font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif; color: #0b111f; }
+    .nav { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 14px; color: #4d535f; }
+    .nav-active { background: #f3f1ee; color: #0b111f; font-weight: 500; }
+    .mark { width: 22px; height: 22px; border-radius: 6px; background: #ffffff; border: 1px solid #e6e4e1; padding: 4px; box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="position: relative; width: 1600px; height: 1000px; background: linear-gradient(135deg, #fff1e8 0%, #f7f4f0 55%, #e9ecf5 100%); overflow: hidden;">
+  <div style="position: absolute; top: 40px; right: 48px; display: flex; align-items: center; gap: 10px; font-family: ui-monospace, Menlo, monospace; font-size: 26px; color: #6b6f82; letter-spacing: 0.02em;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF5C00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    <span style="color: #FF5C00;">Mon 09:02</span>
+  </div>
+  <div style="position: absolute; top: 40px; left: 48px; font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #6b6f82;">Scene 2 · Collapse · 7–9 s</div>
+
+  <div class="app" style="position: absolute; left: 120px; top: 120px; width: 1360px; height: 800px; background: #ffffff; border: 1px solid #e6e4e1; border-radius: 14px; box-shadow: 0 20px 40px rgba(13,15,26,0.18); display: flex; overflow: hidden;">
+    <div style="width: 256px; background: #fefaf3; border-right: 1px solid #e6e4e1; display: flex; flex-direction: column; padding: 16px 12px; box-sizing: border-box; gap: 4px;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px 10px;">
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; letter-spacing: -0.01em; color: #0b111f;">duct<span style="width: 8px; height: 8px; border-radius: 50%; background: #FF5C00; display: inline-block;"></span></span>
+        <span style="font-size: 12px; color: rgba(11,17,31,0.4);">app</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 6px 8px; border: 1px solid #e6e4e1; border-radius: 8px; background: #ffffff; font-size: 13px;">
+        <span style="width: 22px; height: 22px; border-radius: 6px; background: #2a2d3e; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0;">S</span>
+        <span style="flex-grow: 1; font-weight: 500;">Solo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a857e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
+      </div>
+      <div class="nav nav-active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 4 4 5-6"/></svg>Insights</div>
+      <div class="nav"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16"/></svg>Content</div>
+      <div class="nav"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Audit</div>
+      <div class="nav"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4M8 12H4M20 12h-4M12 20v-4"/><circle cx="12" cy="12" r="3"/></svg>Connections</div>
+      <div class="nav"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8h4M15 12h4M5 16h4"/></svg>Memory</div>
+      <div style="flex-grow: 1;"></div>
+      <div style="padding: 0 12px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8a857e;">Connected</div>
+      <div style="display: flex; gap: 6px; padding: 0 12px;">
+        <img class="mark" src="google-ads.svg" alt="">
+        <img class="mark" src="googleanalytics.svg" alt="">
+        <img class="mark" src="stripe.svg" alt="">
+        <img class="mark" src="clarity.svg" alt="">
+        <img class="mark" src="googlesearchconsole.svg" alt="">
+      </div>
+    </div>
+    <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; color: #4d535f;">
+        <span style="width: 14px; height: 14px; border-radius: 50%; background: #FF5C00; display: inline-block;"></span>
+        <span style="font-size: 16px;">Same question. Ask it here.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
