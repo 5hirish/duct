@@ -59,12 +59,14 @@ No "powerful", "seamless", "all-in-one". Button copy is `Download Duct ↓` at t
 top and the bottom, always `href="/download" data-duct-download`. Footnote:
 `Free · No credit card · For [role] at [size] companies`, honest on both.
 
-**Shot.** Pick the README image that shows this audience's job:
-`insights-session` (a question answered across tools), `review-card` (a change
-waiting for approval), `content-plan` (a week on a board), `memory-timeline`.
-Cap `.shot-frame` at the image's 1x width so a 2x capture never upscales. If the
-job has no shot, add a scenario to `scripts/shots/scenarios.mjs` and shoot it;
-do not draw a mock.
+**Shot.** The hero shot is a session asked from this audience's side. Three
+exist: `product-session` (why did activation drop), `paid-session` (where is
+the budget leaking), `insights-session` (why are signups down, with the
+brief). A new audience gets a new one: add its stream to
+`scripts/shots/fixtures.mjs` and a scenario to `scenarios.mjs`, and shoot it.
+The job cards take `review-card`, `content-plan`, `memory-timeline`,
+`connectors`. Cap `.shot-frame` at the image's 1x width so a 2x capture never
+upscales. Never draw a mock of a screen that exists.
 
 **Problem.** Mirror the audience's own words. The diagram keeps the window
 chrome and the `dim` pattern; the "After Duct" line is

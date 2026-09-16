@@ -61,6 +61,11 @@ export const STORY = Object.freeze({
     rageClickClusters: 3,
     organicImpressionsDelta: "+23%",
     blogPost: "Freelancer tax calendar 2026",
+    // Activation = reached Connect bank within a day of signing up. The
+    // fortnight before the 2 Sep Android rebuild against the fortnight after.
+    activation: { androidBefore: "58%", androidAfter: "34%", iosBefore: "63%", iosAfter: "61%" },
+    pmaxSpend: "€2,140",
+    templateTermsSpend: "€212",
   },
 });
 
@@ -164,6 +169,31 @@ export const CHANGE_SET = Object.freeze({
       diff: `Raise ${STORY.ads.campaigns.brand} budget €40 → €60 a day`,
       guardrail_violations: ["Over the 25% budget guardrail on this account, so it needs you"],
     },
+  ],
+});
+
+// What the insights agent proposes when the question is about the product
+// rather than the spend: nothing in the ad accounts moves, the funnel gains
+// the two events the rebuild introduced so next week's brief can prove the
+// fix. Auto-apply eligible, because a key event is reversible in one click.
+export const PRODUCT_CHANGE_SET = Object.freeze({
+  change_set_id: "cs_solo_0913",
+  id: "cs_solo_0913",
+  connector_type: "ga4",
+  account_id: "ga4-solo",
+  account_name: "Solo web + app",
+  title: "Track the permission dead end",
+  context:
+    "The rebuild added a system permission prompt before Connect bank. Two events it emits, made key events, so the funnel shows who tapped Deny and who came back.",
+  status: "proposed",
+  source: "insights",
+  project_id: STORY.project.id,
+  created_at: "2026-09-13T07:10:00Z",
+  auto_apply_eligible: true,
+  applied_by: null,
+  changes: [
+    { id: "c1", op_type: "create_key_event", status: "pending", diff: "Mark bank_permission_denied as a key event" },
+    { id: "c2", op_type: "create_key_event", status: "pending", diff: "Mark connect_bank_retry as a key event" },
   ],
 });
 

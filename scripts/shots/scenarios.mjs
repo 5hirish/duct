@@ -28,6 +28,32 @@ export const SCENARIOS = [
       return null;
     },
   },
+  // The same workspace with the artifact pane hidden: these two sessions
+  // write no brief, and at a third of its size on a page the pane only made
+  // the chat unreadable. The override is capture-only; the app has no such
+  // mode, and should not grow one for a screenshot.
+  ...[
+    { id: "product-session", q: "Why did activation drop after the Android onboarding release?", answer: /^Connect bank/, proposed: "Track the permission dead end", last: "ask for the permission after the first budget" },
+    { id: "paid-session", q: "Where is the ads budget leaking this week?", answer: /^The €12 CPA/, proposed: "Pause Performance Max, keep brand search", last: "The Legacy brand campaign stays untouched" },
+  ].map((s) => ({
+    id: s.id,
+    kind: "page",
+    viewport: { width: 1180, height: 900 },
+    theme: "light",
+    frame: "window",
+    async run({ page, app }) {
+      await page.goto(`${app}/insights/session?q=${encodeURIComponent(s.q)}&project=${STORY.project.id}`);
+      await page.addStyleTag({ content: "#insights_split_w-left { width: 100% !important; border-right: 0 !important; } #insights_split_w-left ~ div { display: none !important; }" });
+      await page.getByRole("button", { name: s.answer }).waitFor({ timeout: 60000 });
+      await page.getByRole("button", { name: s.answer }).click();
+      await page.getByRole("button", { name: /Continue/ }).click();
+      await page.getByText(s.proposed).waitFor({ timeout: 60000 });
+      await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 30000 });
+      await page.getByText(s.last).scrollIntoViewIfNeeded();
+      await page.waitForTimeout(600);
+      return null;
+    },
+  })),
   {
     id: "executions",
     kind: "page",

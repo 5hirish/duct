@@ -17,7 +17,7 @@
 // backend uses; the app cannot tell them apart, which is the point.
 import http from "node:http";
 import { createReadStream, existsSync } from "node:fs";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -33,6 +33,14 @@ const fixtures = {
   tiktok_studio: JSON.parse(readFileSync(`${FIX}/content-plan.json`, "utf8")),
   audit_seo: JSON.parse(readFileSync(`${FIX}/audit-run.json`, "utf8")),
 };
+// `<agent>@<name>.json` beside the defaults is a stream for one caller: a
+// session created with an `x-duct-shot: <name>` header gets it instead of the
+// agent's default. scripts/shots uses it to tell three insights stories
+// against one mock without restarting it between screenshots.
+for (const file of readdirSync(FIX)) {
+  const m = file.match(/^([a-z_]+)@(.+)\.json$/);
+  if (m) fixtures[`${m[1]}@${m[2]}`] = JSON.parse(readFileSync(join(FIX, file), "utf8"));
+}
 const ROUTES = process.env.ROUTES_FILE ? JSON.parse(readFileSync(process.env.ROUTES_FILE, "utf8")) : {};
 const MEDIA_DIR = process.env.MEDIA_DIR || "";
 const MEDIA_TYPES = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
@@ -115,7 +123,8 @@ const server = http.createServer(async (req, res) => {
     const type = m[1];
     const body = await readBody(req);
     const id = randomUUID();
-    const frames = fixtures[type] || fixtures.insights;
+    const shot = req.headers["x-duct-shot"];
+    const frames = (shot && fixtures[`${type}@${shot}`]) || fixtures[type] || fixtures.insights;
     const conversationId = body.conversation_id || `conv-${id.slice(0, 8)}`;
     const session = { id, type, frames, cursor: 0, waiting: null, wake: null, conversationId, res: null };
     if (body.resume) {

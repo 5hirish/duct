@@ -124,7 +124,10 @@ Product images are the README shots in `assets/media/`, re-made by
 `scripts/shots/shoot.mjs` from one story fixture. Never screenshot the app by
 hand for the site; if a shot is missing, add a scenario there. The `.shot`
 frame shows one under a hero, the `.job` cards show three with *When / Today /
-With Duct* copy (home, download and the `for-*` pages share both).
+With Duct* copy (home, download and the `for-*` pages share both). Each
+`for-*` hero gets the session shot asked from its audience's side
+(`product-session`, `paid-session`, the signups `insights-session`), not the
+same image with a different caption.
 
 ## Discoverability files
 

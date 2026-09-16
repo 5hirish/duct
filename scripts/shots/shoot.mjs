@@ -42,6 +42,10 @@ mkdirSync(OUT, { recursive: true });
 // --- story → mock backend inputs -------------------------------------------
 const build = mkdtempSync(join(tmpdir(), "duct-shots-"));
 writeFileSync(join(build, "insights-pause.json"), JSON.stringify(fixtures.insightsFrames()));
+// One agent, three sessions: the mock serves `<agent>@<scenario>.json` to the
+// scenario named in the x-duct-shot header, the default file to everyone else.
+writeFileSync(join(build, "insights@product-session.json"), JSON.stringify(fixtures.productFrames()));
+writeFileSync(join(build, "insights@paid-session.json"), JSON.stringify(fixtures.paidFrames()));
 writeFileSync(join(build, "content-plan.json"), JSON.stringify(fixtures.contentFrames()));
 writeFileSync(join(build, "audit-run.json"), JSON.stringify(fixtures.auditFrames()));
 writeFileSync(join(build, "routes.json"), JSON.stringify(fixtures.routes()));
@@ -62,7 +66,10 @@ try {
       viewport: sc.viewport, deviceScaleFactor: SCALE, colorScheme: sc.theme || "light", locale: "en-GB", timezoneId: "Europe/Madrid",
     });
     await context.route(/^http:\/\/localhost:8002\//, (route) =>
-      route.continue({ url: route.request().url().replace("http://localhost:8002", MOCK) }));
+      route.continue({
+        url: route.request().url().replace("http://localhost:8002", MOCK),
+        headers: { ...route.request().headers(), "x-duct-shot": sc.id },
+      }));
     if (sc.shell) await context.addInitScript(shellStub, sc.shell);
     const page = await context.newPage();
     page.setDefaultTimeout(60000);
