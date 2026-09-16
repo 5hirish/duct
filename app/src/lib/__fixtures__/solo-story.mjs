@@ -430,6 +430,196 @@ export const PAID_BRIEF_HTML = brief({
   ],
 });
 
+// The SEO audit of solobudget.app, as the audit agent writes it: nine
+// categories, every finding tied to a page and a value, five priorities in
+// the order to do them, a plan in three phases. Same week, same site, same
+// facts as the organic answer (the tax pillar converts, the invoicing pages
+// get the clicks and lose them at the pricing paragraph). Shape is the
+// backend's StructuredAuditData; the app renders it with AuditReportV1.
+const U = (url, issue_value) => ({ url, issue_value });
+const F = (id, severity, title, description, tooltip, affected_urls, recommendation, impact, effort) =>
+  ({ id, severity, title, description, tooltip, affected_urls, recommendation, impact, effort });
+
+export const AUDIT_REPORT = Object.freeze({
+  url: `https://${STORY.company.site}`,
+  generated_at: "2026-09-14T09:00:00Z",
+  overall_score: 68,
+  score_band: "needs_work",
+  headline: "Three invoicing pages win the clicks and lose the trial at the pricing paragraph",
+  key_signals: [
+    "3 tax pages earn 61% of organic trials",
+    "Invoicing pages: 41% of clicks, 9% of trials",
+    "Every template passes Core Web Vitals",
+  ],
+  strategic_narrative:
+    "Solo competes with Ledgerly and Tallyo for the same freelancer, and both outrank it on the queries that lead to a trial: “freelance tax calculator”, “invoice template for freelancers”, “quarterly tax estimate”. Solo wins on tax habits, the one pillar neither competitor writes about with any care, and that pillar produces 61% of organic trials from 28% of the clicks. The invoicing cluster gets the clicks and loses them: three pages on page one, a pricing paragraph that reads as a wall, quick-backs at 44%. The plan below is hygiene first, then the pricing paragraph, then the two guides the competitors own and Solo does not have.",
+  pages_crawled: 41,
+  total_sitemap_urls: 44,
+  total_issues: 8,
+  total_warnings: 9,
+  total_opportunities: 4,
+  crawl_summary: { avg_ttfb_ms: 380, pages_with_redirects: 2, spa_pages_count: 0, pages_noindex: 1, pages_missing_title: 3, pages_missing_h1: 0 },
+  wins: [
+    "Every template passes Core Web Vitals",
+    "Article schema on every guide, SoftwareApplication on pricing",
+    "No page blocked by robots.txt",
+    "The tax calendar ranks on page one for two target terms",
+  ],
+  top_priorities: [
+    { rank: 1, title: "Rewrite the pricing paragraph on the three invoicing pages", why_it_matters: "41% of organic clicks land on these pages and 44% leave without a second one.", severity: "fail", affected_url_count: 3, category_id: "on_page_seo", finding_id: "invoicing-pricing-wall" },
+    { rank: 2, title: "Remove the three sitemap entries that 404", why_it_matters: "Crawl budget spent proving pages are missing; Search Console flags all three.", severity: "fail", affected_url_count: 3, category_id: "technical_foundation", finding_id: "sitemap-404" },
+    { rank: 3, title: "Link the tax calendar from every invoicing page", why_it_matters: "The page that converts is three clicks from the pages that get the traffic.", severity: "fail", affected_url_count: 3, category_id: "internal_linking", finding_id: "tax-calendar-deep" },
+    { rank: 4, title: "Write the quarterly tax estimate guide", why_it_matters: "Both competitors rank for it, Solo has no page, and the tax pillar already converts.", severity: "opportunity", affected_url_count: 0, category_id: "blog_content_strategy", finding_id: "gap-quarterly-estimate" },
+    { rank: 5, title: "Put an author and a date on every guide", why_it_matters: "No guide says who wrote it; the competitors' do, and trust is the E-E-A-T factor that weighs most.", severity: "fail", affected_url_count: 12, category_id: "eeat_signals", finding_id: "no-author" },
+  ],
+  categories: [
+    {
+      id: "on_page_seo", label: "On-page SEO", score: 52, tooltip: "Titles, headings, body copy and images on each page: what the page says it is about, and whether a reader agrees.",
+      fail_count: 2, warn_count: 1, pass_count: 1, opp_count: 0,
+      findings: [
+        F("invoicing-pricing-wall", "fail", "The pricing paragraph on the invoicing pages reads as a wall", "The three invoicing pages rank on page one and lose 44% of visitors at the same 190-word paragraph; Clarity shows the quick-backs on it.", "People arrive, hit a dense block about prices, and leave without reading further.",
+          [U("/invoicing", "quick-backs 44%"), U("/invoice-template", "quick-backs 41%"), U("/late-payment-letter", "quick-backs 39%")],
+          "Split the paragraph into a three-row price table and move the free-tier line to the top.", "critical", "low"),
+        F("title-brand-only", "fail", "Three posts are titled with the brand name alone", "Three guides carry the title “Solo” and nothing else, so search results show the brand where the topic should be.", "The title is what shows up as the blue link in Google; “Solo” tells a searcher nothing.",
+          [U("/guides/vat-for-freelancers", "title: “Solo”"), U("/guides/set-aside-tax", "title: “Solo”"), U("/guides/first-invoice", "title: “Solo”")],
+          "Title each guide with its question, under 60 characters, brand last.", "high", "low"),
+        F("imgs-no-alt", "warn", "28 images have no alt text", "Screenshots in the guides carry no alt text, so image search and screen readers get nothing from them.", "Alt text is the one-line description a browser reads when it cannot show the image.",
+          [U("/guides/first-invoice", "9 images"), U("/guides/set-aside-tax", "7 images"), U("/blog/september-freelancer", "12 images")],
+          "Describe what each screenshot shows in one line; skip decorative ones with an empty alt.", "medium", "low"),
+        F("h1-present", "pass", "An H1 on every page describes the page", "Every crawled page has one H1 and it names the topic, not the brand.", "The main heading tells search engines and readers what the page is about.", [], "", "low", "low"),
+      ],
+    },
+    {
+      id: "technical_foundation", label: "Technical foundation", score: 56, tooltip: "Whether search engines can reach, read and index the pages at all: sitemap, status codes, redirects, noindex, render mode.",
+      fail_count: 1, warn_count: 3, pass_count: 2, opp_count: 0,
+      findings: [
+        F("sitemap-404", "fail", "The sitemap lists three pages that return 404", "Three sitemap entries point at pages that no longer exist, so every crawl spends budget confirming they are missing.", "A sitemap is the list of pages you ask Google to visit; three of them are dead.",
+          [U("/guides/old-invoicing", "HTTP 404"), U("/pricing-2024", "HTTP 404"), U("/blog/launch", "HTTP 404")],
+          "Remove the three entries from the sitemap, or redirect each to its replacement.", "high", "low"),
+        F("redirect-once", "warn", "Two templates redirect once before they load", "Two landing pages answer with a 301 to their trailing-slash twin, one hop on every visit and every crawl.", "A redirect is a detour; each one costs a little time and a little trust.",
+          [U("/pricing", "301 → /pricing/"), U("/download", "301 → /download/")],
+          "Link the final URL directly and drop the redirect.", "medium", "low"),
+        F("noindex-guide", "warn", "One guide is noindex by mistake", "The VAT guide carries a noindex tag left over from its draft, so it cannot rank for the term it was written for.", "noindex tells Google to leave the page out of results.",
+          [U("/guides/vat-for-freelancers", "noindex")],
+          "Remove the noindex tag and resubmit the page in Search Console.", "high", "low"),
+        F("sitemap-lastmod", "warn", "Sitemap lastmod is the deploy date on every page", "All 44 entries share one lastmod, so the sitemap says nothing about which pages changed.", "lastmod is the sitemap's way of saying “this page changed”; the same date everywhere says nothing.",
+          [U("/sitemap.xml", "44 × 2026-09-01")],
+          "Set lastmod from each page's real change date.", "low", "low"),
+        F("ttfb", "pass", "Average time to first byte is 380 ms", "Every page answers well under the one-second mark.", "How long the server takes to start replying.", [], "", "low", "low"),
+        F("no-spa", "pass", "No page depends on JavaScript to render its content", "All 41 pages deliver their text in the HTML.", "Search engines read the raw page; content that needs scripts to appear is easy to miss.", [], "", "low", "low"),
+      ],
+    },
+    {
+      id: "blog_content_strategy", label: "Blog and content strategy", score: 79, tooltip: "Whether the content answers what the audience searches for, and whether it is kept fresh.",
+      fail_count: 1, warn_count: 1, pass_count: 1, opp_count: 2,
+      findings: [
+        F("no-commercial-query", "fail", "No page targets a query someone searches before buying", "Every landing page reads as an about page; nothing answers “invoice template for freelancers” or “freelance tax calculator”, the two queries competitors rank for.", "Commercial queries are the searches people make when they are ready to pick a tool.",
+          [U("/", "brand query only"), U("/pricing", "brand query only")],
+          "Give each commercial query a page of its own with the query in the title and H1.", "critical", "high"),
+        F("stale-posts", "warn", "Four posts have not been updated in 19 months", "Four 2025 posts still rank on page two and have not been touched since they were written.", "Search engines prefer pages that are kept current, especially on topics that change yearly.",
+          [U("/blog/tax-deadlines-2025", "lastmod 2025-02-11"), U("/blog/invoice-mistakes", "lastmod 2025-02-20"), U("/blog/quarterly-review", "lastmod 2025-03-02"), U("/blog/freelance-rates", "lastmod 2025-03-15")],
+          "Refresh the four with this year's figures and a new date.", "medium", "medium"),
+        F("gap-quarterly-estimate", "opportunity", "There is no quarterly tax estimate guide", "Ledgerly and Tallyo both rank for “quarterly tax estimate freelancer”; Solo's tax pillar is the strongest on the site and has no page for it.", "A topic the competitors cover and the site does not.",
+          [], "Write the guide in the tax pillar's voice and link it from the tax calendar.", "high", "medium"),
+        F("gap-invoice-template", "opportunity", "The invoice template query has no page of its own", "“Invoice template for freelancers” is answered halfway down /invoicing; a dedicated page would rank for it.", "A query that deserves its own page, not a paragraph on another one.",
+          [], "Create /invoice-template-for-freelancers with the template itself above the fold.", "high", "medium"),
+        F("tax-pillar-depth", "pass", "The tax pillar posts each run over 900 words", "The five tax posts answer their question in full and rank for it.", "Depth is the sign a page actually answers the question.", [], "", "low", "low"),
+      ],
+    },
+    {
+      id: "internal_linking", label: "Internal linking", score: 79, tooltip: "How pages link to each other: whether authority flows to the pages that matter and whether any are stranded.",
+      fail_count: 1, warn_count: 1, pass_count: 1, opp_count: 0,
+      findings: [
+        F("tax-calendar-deep", "fail", "The tax calendar is three clicks from the invoicing pages", "The page that converts best is reachable from the pages that get the most traffic only through the blog index.", "Pages that link to each other pass on their standing; the best page here is left out.",
+          [U("/invoicing", "0 links to tax calendar"), U("/invoice-template", "0 links to tax calendar"), U("/late-payment-letter", "0 links to tax calendar")],
+          "Add a “next: your tax calendar” link at the end of each invoicing page.", "high", "low"),
+        F("orphan-posts", "warn", "Six posts have no inbound internal link", "Six older posts are reachable only from the sitemap, so neither readers nor crawlers arrive at them.", "A page nothing links to is invisible in practice.",
+          [U("/blog/freelance-rates", "0 inbound"), U("/blog/quarterly-review", "0 inbound"), U("/blog/invoice-mistakes", "0 inbound")],
+          "Link each from the most related guide, or fold it into one.", "medium", "low"),
+        F("nav-reach", "pass", "The navigation reaches every landing page in one click", "All eight landing pages sit in the header or footer.", "One click from the home page is as close as a page can be.", [], "", "low", "low"),
+      ],
+    },
+    {
+      id: "eeat_signals", label: "E-E-A-T signals", score: 71, tooltip: "Experience, expertise, authority and trust: who is behind the content, and whether the site says so.",
+      fail_count: 2, warn_count: 1, pass_count: 1, opp_count: 0,
+      findings: [
+        F("no-author", "fail", "No guide names an author", "All twelve guides are published without a name, a role or a date, on a topic where the competitors' guides carry all three.", "Readers and search engines both want to know who is speaking and when.",
+          [U("/guides/first-invoice", "no author, no date"), U("/guides/set-aside-tax", "no author, no date"), U("/guides/vat-for-freelancers", "no author, no date")],
+          "Add an author line with a role and a published date to every guide.", "high", "low"),
+        F("about-thin", "fail", "The about page names no one", "The about page has no team, no address and no company registration, so nothing on the site vouches for the app.", "Trust signals are the boring facts: who, where, since when.",
+          [U("/about", "no team, no address")],
+          "Add the founder, the company, the address and a support contact.", "high", "low"),
+        F("no-reviews", "warn", "No reviews or ratings anywhere on the site", "The pricing page makes claims without a single quote, rating or named customer.", "Other people's words carry more weight than your own.",
+          [U("/pricing", "0 reviews")],
+          "Add three named quotes and a link to the app-store rating.", "medium", "medium"),
+        F("legal-pages", "pass", "Privacy and terms are present and linked from every page", "Both pages exist and sit in the footer.", "The legal pages are the minimum sign of a real company.", [], "", "low", "low"),
+      ],
+    },
+    {
+      id: "geo_aio", label: "AI search visibility", score: 88, tooltip: "Whether AI answers can quote the site: a direct answer up top, questions answered in full, a file that tells crawlers what is here.",
+      fail_count: 1, warn_count: 0, pass_count: 1, opp_count: 1,
+      findings: [
+        F("no-direct-answer", "fail", "No guide answers its question in the first paragraph", "Every guide opens with a story; the answer arrives in paragraph four, past where an AI answer would quote it.", "AI answers lift the first clear sentence that answers the question.",
+          [U("/guides/set-aside-tax", "answer at ¶4"), U("/guides/first-invoice", "answer at ¶5"), U("/guides/vat-for-freelancers", "answer at ¶3")],
+          "Open each guide with a two-sentence answer, then tell the story.", "high", "low"),
+        F("faq-blocks", "opportunity", "FAQ blocks on the tax pillar would be quoted", "The tax posts get the questions in comments and support; none of them carry a Q&A block.", "A question with a short answer under it is the easiest thing for an AI to cite.",
+          [], "Add three questions and answers to each tax post, with FAQ schema.", "medium", "low"),
+        F("llms-txt", "pass", "llms.txt is present and current", "The file lists the guides and the pricing page.", "A short file telling AI crawlers what the site is and where the good pages are.", [], "", "low", "low"),
+      ],
+    },
+    {
+      id: "structured_data", label: "Structured data", score: 97, tooltip: "Schema markup that lets search engines show rich results: articles, software, FAQs.",
+      fail_count: 0, warn_count: 1, pass_count: 2, opp_count: 0,
+      findings: [
+        F("faq-schema-missing", "warn", "FAQ content without FAQ schema", "Two pages carry a question-and-answer section with no FAQPage markup, so it cannot show as a rich result.", "Schema is a label that tells Google what a block of content is.",
+          [U("/pricing", "4 Q&As, no schema"), U("/download", "3 Q&As, no schema")],
+          "Wrap both sections in FAQPage JSON-LD.", "low", "low"),
+        F("article-schema", "pass", "Article schema on every guide", "All twelve guides carry Article markup with headline and dates.", "Article markup marks the page as a piece of writing.", [], "", "low", "low"),
+        F("software-schema", "pass", "SoftwareApplication markup on the pricing page", "Price, platform and category are declared.", "Software markup lets Google show price and platform in results.", [], "", "low", "low"),
+      ],
+    },
+    {
+      id: "open_graph_social", label: "Open Graph and social", score: 97, tooltip: "How a link to the site looks when it is shared: title, description and image.",
+      fail_count: 0, warn_count: 1, pass_count: 1, opp_count: 0,
+      findings: [
+        F("og-image-shared", "warn", "Twelve guides share one Open Graph image", "Every guide previews with the same logo card, so a shared link says nothing about the guide.", "The preview image is the poster for a shared link.",
+          [U("/guides/*", "12 × og-default.png")],
+          "Give each guide its own image, the first screenshot will do.", "low", "low"),
+        F("og-present", "pass", "og:title and og:description on every page", "All 41 pages preview with a title and a description.", "The text under a shared link.", [], "", "low", "low"),
+      ],
+    },
+    {
+      id: "off_page_authority", label: "Off-page authority", score: 74, tooltip: "Who links to the site. Graded fully only with Search Console or Ahrefs connected; the crawl sees a part of it.",
+      fail_count: 0, warn_count: 0, pass_count: 0, opp_count: 1,
+      findings: [
+        F("connect-gsc", "opportunity", "Connect Search Console to grade this category", "From the crawl alone, eleven domains link to the tax calendar and none to the invoicing pages; the full picture needs Search Console or Ahrefs.", "Backlinks are votes from other sites; the crawl can only see the ones it stumbles on.",
+          [U("/guides/tax-calendar-2026", "11 referring domains seen")],
+          "Connect Search Console in Duct and rerun the audit.", "medium", "low"),
+      ],
+    },
+  ],
+  roadmap: [
+    { label: "Week 1", theme: "Unblock", tasks: [
+      { task: "Remove the three dead sitemap entries", effort_estimate: "under_1hr" },
+      { task: "Drop the noindex on the VAT guide", effort_estimate: "under_1hr" },
+      { task: "Retitle the three brand-only posts", effort_estimate: "2_to_4hrs" },
+      { task: "Add alt text to the 28 screenshots", effort_estimate: "2_to_4hrs" },
+    ] },
+    { label: "Weeks 2–4", theme: "Structure", tasks: [
+      { task: "Rewrite the pricing paragraph on the three invoicing pages as a table", effort_estimate: "1_to_3_days" },
+      { task: "Link the tax calendar from every invoicing page", effort_estimate: "2_to_4hrs" },
+      { task: "Add author and date to the twelve guides", effort_estimate: "1_to_3_days" },
+      { task: "Open each guide with the answer", effort_estimate: "1_to_3_days" },
+    ] },
+    { label: "Months 2–3", theme: "Compound", tasks: [
+      { task: "Write the quarterly tax estimate guide", effort_estimate: "1_to_2_wks" },
+      { task: "Build the invoice template page", effort_estimate: "1_to_2_wks" },
+      { task: "Refresh the four stale posts", effort_estimate: "1_to_3_days" },
+      { task: "Add FAQ blocks and schema to the tax pillar", effort_estimate: "ongoing", note: "One post a week; measure AI citations in Search Console." },
+    ] },
+  ],
+});
+
 // The content plan for the story week. Five days on the board: two published,
 // one drafted and scheduled, two still planned. TikTok first, because that is
 // where Solo's freelancers are.

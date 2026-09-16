@@ -52,7 +52,7 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
-import { ANSWERS as STORY_ANSWERS, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
+import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow } from "@/components/workspace/AgentChat";
 import StepProgress from "@/components/workspace/StepProgress";
 import { Row as ChatRow } from "@/lib/agentSession";
@@ -1143,8 +1143,8 @@ export const SCENES = [
     title: "SEO report (V1)",
     state: "A full report, so the document decision can be seen",
     note:
-      "This is a printed thing rather than app chrome: it declares `color-scheme: light` and redefines the semantic tokens for its own subtree, so it looks the same in a dark app as in a light one. It used to take its ground from the theme while painting sixty fixed hexes inside it, which put the finding titles at 1.11:1 in dark. Open this scene in a DARK frame — that is the whole point of it.",
-    render: () => <AuditReportV1 data={AUDIT_REPORT_V1} />,
+      "Solo's audit from the story: nine categories, every finding on a page with a value, five priorities, a three-phase plan. scripts/shots captures it for the lead-magnet page. This is a printed thing rather than app chrome: it declares `color-scheme: light` and redefines the semantic tokens for its own subtree, so it looks the same in a dark app as in a light one. It used to take its ground from the theme while painting sixty fixed hexes inside it, which put the finding titles at 1.11:1 in dark. Open this scene in a DARK frame — that is the whole point of it.",
+    render: () => <AuditReportV1 data={STORY_AUDIT} />,
   },
 ];
 
@@ -1155,99 +1155,6 @@ export const SCENES = [
  * failures, a finding with affected URLs, and a phase whose tasks carry an
  * effort estimate.
  */
-const AUDIT_REPORT_V1 = {
-  url: "https://solobudget.app",
-  generated_at: "2026-09-14T09:00:00Z",
-  overall_score: 68,
-  score_band: "needs_work",
-  headline: "Solo ranks for its own name and almost nothing else",
-  key_signals: [
-    "Only 3 of 41 pages earn organic traffic",
-    "No page targets the phrase freelancers actually search",
-    "Core Web Vitals pass on every template",
-  ],
-  strategic_narrative:
-    "Fixing the technical findings below will not move rankings on its own. They are hygiene; the growth comes from the second half of the plan.",
-  pages_crawled: 41,
-  total_sitemap_urls: 44,
-  total_issues: 12,
-  total_warnings: 9,
-  total_opportunities: 6,
-  crawl_summary: {
-    avg_ttfb_ms: 380,
-    pages_with_redirects: 2,
-    spa_pages_count: 0,
-    pages_noindex: 1,
-    pages_missing_title: 3,
-  },
-  wins: [
-    "Every template passes Core Web Vitals",
-    "Structured data is complete on the pricing page",
-    "No page is blocked by robots.txt",
-  ],
-  top_priorities: [
-    { rank: 1, severity: "fail", title: "Three sitemap entries return 404", effort_estimate: "under_1hr" },
-    { rank: 2, severity: "opportunity", title: "Write the pages freelancers actually search for", effort_estimate: "1_to_2_wks" },
-    { rank: 3, severity: "warn", title: "Two templates are missing a canonical", effort_estimate: "2_to_4hrs" },
-  ],
-  categories: [
-    {
-      id: "indexing",
-      label: "Indexing",
-      score: 82,
-      fail_count: 1,
-      warn_count: 2,
-      opp_count: 0,
-      findings: [
-        {
-          id: "f1",
-          severity: "fail",
-          title: "Sitemap lists three pages that 404",
-          description: "A sitemap that points at missing pages spends crawl budget proving they are missing.",
-          impact: "high",
-          effort: "low",
-          affected_urls: ["/guides/old-invoicing", "/pricing-2024", "/blog/launch"],
-        },
-        { id: "f2", severity: "warn", title: "Two templates are missing a canonical", impact: "medium", effort: "low" },
-      ],
-    },
-    {
-      id: "content",
-      label: "Content",
-      score: 41,
-      fail_count: 1,
-      warn_count: 0,
-      opp_count: 4,
-      findings: [
-        {
-          id: "f3",
-          severity: "fail",
-          title: "No page targets a commercial query",
-          description: "Every page reads as an about page. Nothing answers a question someone would search before buying.",
-          impact: "high",
-          effort: "high",
-        },
-      ],
-    },
-    { id: "performance", label: "Performance", score: 91, fail_count: 0, warn_count: 0, opp_count: 1, findings: [] },
-  ],
-  roadmap: [
-    {
-      label: "Week 1",
-      theme: "Unblock",
-      tasks: [
-        { task: "Remove the three dead sitemap entries", effort_estimate: "under_1hr" },
-        { task: "Add canonicals to the two templates", effort_estimate: "2_to_4hrs" },
-      ],
-    },
-    {
-      label: "Weeks 2–4",
-      theme: "Structure",
-      tasks: [{ task: "Publish the invoicing guide", effort_estimate: "1_to_3_days" }],
-    },
-  ],
-};
-
 function StoryMemoryScene() {
   const api = useMemo(() => {
     const items = STORY_MEMORIES.map((m) => ({ ...m })).sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));

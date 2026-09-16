@@ -140,6 +140,42 @@ export const SCENARIOS = [
     },
   })),
   {
+    // The audit report as a lead sees it, whole: score, priorities, nine
+    // categories of findings, the plan. The lead-magnet page shows its top as
+    // the reward, opens all of it on click, and blurs it behind the email
+    // gate; before, the page drew its own mock.
+    id: "audit-report",
+    kind: "scene",
+    scene: "audit-report-v1",
+    viewport: { width: 980, height: 1400 },
+    theme: "light",
+    frame: "card",
+    async run({ page }) {
+      await page.getByText("solobudget.app").first().waitFor({ timeout: 15000 });
+      await page.waitForTimeout(400);
+      // The top: verdict, signals, crawl health, wins, the landscape and the
+      // priorities. The whole report at 2x is taller than WebP allows.
+      const box = await page.locator("[data-preview-content]").boundingBox();
+      return { clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, 1360) } };
+    },
+  },
+  {
+    // The same report, all of it, for the page's click-to-enlarge. Shot at 1x
+    // (SCALE=1 node scripts/shots/shoot.mjs audit-report-full): nine categories
+    // of findings run past 16,000px at 2x, which WebP refuses.
+    id: "audit-report-full",
+    kind: "scene",
+    scene: "audit-report-v1",
+    viewport: { width: 980, height: 1400 },
+    theme: "light",
+    frame: "card",
+    async run({ page }) {
+      await page.getByText("solobudget.app").first().waitFor({ timeout: 15000 });
+      await page.waitForTimeout(400);
+      return page.locator("[data-preview-content]");
+    },
+  },
+  {
     id: "review-card",
     kind: "scene",
     scene: "shot-change-set",
