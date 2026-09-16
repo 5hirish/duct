@@ -1,0 +1,24 @@
+{
+  "name": "duct-motion",
+  "private": true,
+  "description": "Remotion compositions for the Duct launch film and the landing-page loops. Renders land in site/assets/media; nothing here ships to the site at runtime.",
+  "type": "module",
+  "sideEffects": ["*.css"],
+  "scripts": {
+    "sync-assets": "node sync-assets.mjs",
+    "studio": "npm run sync-assets && remotion studio",
+    "render:film": "npm run sync-assets && remotion render Film out/demo.mp4 --codec h264 --crf 24 && remotion render Film out/demo.webm --codec vp9 --crf 38 && npm run -s poster",
+    "poster": "remotion still Film out/demo-poster.png --frame 520 && ffmpeg -y -loglevel error -i out/demo-poster.png -quality 80 out/demo-poster.webp",
+    "publish:media": "node publish-media.mjs",
+    "lint": "remotion compositions"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.525",
+    "@remotion/google-fonts": "4.0.525",
+    "@remotion/tailwind-v4": "4.0.525",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.525",
+    "tailwindcss": "^4.2.2"
+  }
+}
