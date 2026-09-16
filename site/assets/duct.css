@@ -221,6 +221,14 @@ animation: fadeUp .5s .24s ease both;
 }
 .hero-footnote { font-size: 12px; color: var(--navy-3); margin-top: 16px; animation: fadeUp .5s .32s ease both; }
 
+/* ── PRODUCT SHOT ── a README screenshot, the for-* pages' one heavy element. The shots
+   already carry their own frame and shadow (scripts/shots/shoot.mjs), so no chrome here;
+   each page caps the width at the shot's 1x size so a 2x capture is never upscaled. */
+.shot { padding: 0 52px 72px; }
+.shot-frame { margin: 0 auto; max-width: 1160px; }
+.shot-frame img { display: block; width: 100%; height: auto; border-radius: var(--r-lg); }
+.shot-frame figcaption { margin-top: 14px; font-size: 13px; color: var(--navy-3); text-align: center; line-height: 1.6; }
+
 /* ── STRIP ── */
 .strip { padding: 36px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overflow: hidden; }
 .strip-label { text-align: center; font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 22px; }
@@ -601,6 +609,7 @@ nav { padding: 0 24px; }
 .nav-toggle { display: inline-flex; }
 .hero { padding: 100px 24px 60px; }
 .hero-form { flex-direction: column; align-items: stretch; max-width: 320px; margin: 0 auto; }
+.shot { padding: 0 24px 56px; }
 .problem { grid-template-columns: 1fr; gap: 48px; padding: 64px 24px; }
 .steps { grid-template-columns: 1fr; }
 .step { border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
