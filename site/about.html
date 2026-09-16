@@ -59,24 +59,27 @@
 </script>
 <style>
 /* ── ABOUT-ONLY STYLES ── */
-.about-hero {
-  min-height: 80vh;
-  display: flex; align-items: center; justify-content: center; flex-direction: column;
-  text-align: center; padding: 140px 52px 80px;
+.about-hero { padding: 140px 52px 72px; }
+.about-hero-inner {
+  max-width: 1160px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; align-items: center;
 }
 .about-hero h1 {
   font-family: var(--serif);
-  font-size: clamp(44px, 7vw, 82px);
-  line-height: 1.04; letter-spacing: -2px; color: var(--navy);
-  max-width: 800px; margin-bottom: 28px;
+  font-size: clamp(40px, 5.4vw, 66px);
+  line-height: 1.06; letter-spacing: -1.5px; color: var(--navy);
+  margin-bottom: 26px;
   animation: fadeUp .5s .08s ease both;
 }
 .about-hero h1 em { font-style: italic; color: var(--orange); }
 .about-hero-sub {
-  font-size: 19px; font-weight: 300; color: var(--navy-3);
-  max-width: 560px; line-height: 1.75; margin: 0 auto;
+  font-size: 18px; font-weight: 300; color: var(--navy-3);
+  max-width: 54ch; line-height: 1.75;
   animation: fadeUp .5s .16s ease both;
 }
+.about-hero-art { justify-self: end; animation: fadeUp .6s .24s ease both; }
+.about-hero-art .mosaic { width: 320px; height: 320px; }
+.about-hero-cap { font-size: 12px; color: var(--navy-3); margin-top: 12px; text-align: center; font-family: var(--serif); font-style: italic; }
 
 /* Manifesto */
 .manifesto { padding: 0 52px 100px; max-width: 720px; margin: 0 auto; }
@@ -177,9 +180,14 @@
 .origin-body p { font-size: 16px; font-weight: 300; line-height: 1.85; color: var(--navy-3); margin-bottom: 20px; text-align: left; }
 .origin-body p:last-child { margin-bottom: 0; }
 .origin-body em { font-style: italic; color: var(--navy); }
+.origin-panel { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: center; margin-top: 44px; padding-top: 40px; border-top: 1px solid var(--border); text-align: left; }
+.origin-panel .mosaic { width: 240px; height: 240px; }
+.origin-panel figcaption { font-size: 15px; font-weight: 300; line-height: 1.8; color: var(--navy-3); }
+.origin-panel em { font-style: italic; color: var(--navy); }
 @media (max-width: 860px) {
   .origin { padding: 64px 24px; }
   .origin-arches { margin-bottom: 28px; }
+  .origin-panel { grid-template-columns: 1fr; justify-items: center; text-align: center; }
 }
 
 /* Maker card — the person behind the repo */
@@ -219,8 +227,13 @@
 .about-cta h2 { font-size: clamp(32px, 5vw, 52px); margin-bottom: 18px; }
 .about-cta .sub { max-width: 420px; margin: 0 auto 36px; }
 
+@media (max-width: 960px) {
+  .about-hero-inner { grid-template-columns: 1fr; gap: 36px; }
+  .about-hero-art { justify-self: start; }
+  .about-hero-art .mosaic { width: 260px; height: 260px; }
+}
 @media (max-width: 860px) {
-  .about-hero { padding: 110px 24px 60px; }
+  .about-hero { padding: 110px 24px 56px; }
   .manifesto { padding: 0 24px 64px; }
   .what-we-build { padding: 64px 24px; }
   .what-grid { grid-template-columns: 1fr; }
@@ -251,9 +264,19 @@
 
 <!-- HERO -->
 <section class="about-hero">
-  <h1>Built because my tools wouldn't talk.<br/>Open because it <em>reads all of them.</em></h1>
-  <p class="about-hero-sub">Every product team runs 8&ndash;12 tools. Each one sees a sliver. I got tired of being the integration layer between them, so I wrote one. Then I put it on GitHub under MIT, because a thing that reads your whole business has to be readable back.</p>
+  <div class="about-hero-inner">
+    <div>
+      <h1>Built because my tools wouldn't talk.<br/>Open because it <em>reads all of them.</em></h1>
+      <p class="about-hero-sub">Every product team runs 8&ndash;12 tools. Each one sees a sliver. I got tired of being the integration layer between them, so I wrote one. Then I put it on GitHub under MIT, because a thing that reads your whole business has to be readable back.</p>
+    </div>
+    <div class="about-hero-art">
+      <img class="mosaic" src="assets/art/fons.webp" width="640" height="640" alt="" aria-hidden="true"/>
+      <p class="about-hero-cap">FONS. The spring, before anything has run. The app&rsquo;s front door.</p>
+    </div>
+  </div>
 </section>
+
+<div class="channel" aria-hidden="true"></div>
 
 <!-- MANIFESTO -->
 <section class="manifesto">
@@ -296,6 +319,10 @@
       <p class="reveal">Most of that engineering was invisible. The aqueducts ran underground and unremarkable for miles, and the arches everyone photographs exist only because a valley got in the way. The N&icirc;mes aqueduct fell about twelve metres across fifty kilometres &mdash; a slope you could not see standing next to it, held steady over every kind of ground in between.</p>
       <p class="reveal">Your business already has the data. Ads, analytics, search, support, revenue &mdash; the springs are fine. What is missing is the channel: something that crosses a dozen APIs and three operating systems and arrives where the decision actually gets made. When an aqueduct works, nobody thinks about the aqueduct. They just have water.</p>
     </div>
+    <figure class="origin-panel reveal">
+      <img class="mosaic" src="assets/art/otium.webp" width="640" height="640" loading="lazy" alt="A Roman mosaic: water running full through a channel, a pigeon asleep on the rim, the inscription OTIVM"/>
+      <figcaption>It is also why the app greets you with Roman threshold mosaics instead of robots. This one is <em>OTIVM</em>, leisure: everything caught up, the water running full, the pigeon asleep.</figcaption>
+    </figure>
   </div>
 </section>
 

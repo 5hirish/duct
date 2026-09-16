@@ -62,63 +62,6 @@
 
 /* The diagnostic card reads as a miniature Duct report: a scan that ran,
    found nothing, and still ends with a recommendation. */
-.error-report {
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  text-align: left;
-  margin-bottom: 32px;
-  background: var(--white);
-}
-.error-report-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 18px;
-  background: var(--off);
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  color: var(--navy-3);
-}
-.error-report-head .dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--miss); flex: none;
-}
-.error-report-row {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  padding: 13px 18px;
-  font-size: 14px;
-  border-bottom: 1px solid var(--border);
-}
-.error-report-row .label { flex: 1; color: var(--navy-2); }
-.error-report-row .val {
-  font-size: 13px;
-  color: var(--miss);
-  font-variant-numeric: tabular-nums;
-}
-.error-report-foot {
-  display: flex;
-  gap: 12px;
-  padding: 15px 18px;
-  background: var(--orange);
-  color: #fff;
-}
-.error-report-foot .mark { flex: none; line-height: 1.5; }
-.error-report-foot strong {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  opacity: .85;
-  margin-bottom: 3px;
-}
-.error-report-foot p { font-size: 14px; line-height: 1.5; }
 
 .error-actions {
   display: flex;
@@ -147,6 +90,10 @@
   .error-actions .btn { width: 100%; }
   .error-elsewhere .sep { padding: 0 5px; }
 }
+.error-art { margin: 36px auto 40px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.error-art .mosaic { width: 260px; height: 260px; }
+.error-art figcaption { font-size: 13px; color: var(--navy-3); font-family: var(--serif); font-style: italic; }
+.error-art figcaption em { font-style: normal; color: var(--navy); letter-spacing: .08em; }
 </style>
 </head>
 <body>
@@ -163,31 +110,10 @@
 
   <p class="error-lede">We checked every connected source. Zero results. The URL you're after hasn't been indexed, shipped, or synthesised — yet.</p>
 
-  <div class="error-report" aria-hidden="true">
-    <div class="error-report-head">
-      <span class="dot"></span>
-      <span>Lookup complete · 3 sources</span>
-    </div>
-    <div class="error-report-row">
-      <span class="label">URL lookup</span>
-      <span class="val">not found</span>
-    </div>
-    <div class="error-report-row">
-      <span class="label">Cross-tool search</span>
-      <span class="val">0 results</span>
-    </div>
-    <div class="error-report-row">
-      <span class="label">Duct intelligence</span>
-      <span class="val">no signal</span>
-    </div>
-    <div class="error-report-foot">
-      <span class="mark"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg></span>
-      <div>
-        <strong>Recommended action</strong>
-        <p>Head back home. We'll surface what actually matters.</p>
-      </div>
-    </div>
-  </div>
+  <figure class="error-art">
+    <img class="mosaic" src="/assets/art/cdiv.webp" width="640" height="640" alt="" aria-hidden="true"/>
+    <figcaption><em>CDIV.</em> A Roman road ends at a milestone. So does this one.</figcaption>
+  </figure>
 
   <div class="error-actions">
     <a href="/" class="btn btn-orange btn-lg">Back to home &rarr;</a>
