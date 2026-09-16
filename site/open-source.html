@@ -49,15 +49,28 @@
 .where-head { max-width: 640px; margin-bottom: 40px; }
 .where-head h2 { margin-bottom: 14px; }
 .where-head .sub { max-width: 56ch; }
-.where-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); }
-.where-table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 720px; }
-.where-table th, .where-table td { text-align: left; padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; }
-.where-table thead th { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); background: var(--off); }
-.where-table thead th:first-child { width: 26%; }
-.where-table tbody th { font-weight: 500; color: var(--navy); }
-.where-table td { font-weight: 300; color: var(--navy-3); }
-.where-table td strong { font-weight: 600; color: var(--navy); }
-.where-table tbody tr:last-child th, .where-table tbody tr:last-child td { border-bottom: none; }
+.where-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.where-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 22px; }
+.where-card-head { display: flex; align-items: center; gap: 14px; }
+.where-card-head .ic { font-size: 26px; color: var(--orange); }
+.where-card-head h3 { font-family: var(--serif); font-size: 22px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
+.where-card-head p { font-size: 14px; color: var(--navy-3); margin-top: 2px; }
+.zones { display: grid; gap: 10px; }
+.zone { border-radius: var(--r); padding: 14px 16px 16px; border: 1.5px dashed var(--border); }
+.zone-you { background: #fff5ee; border-color: #f7c9ad; }
+.zone-cloud { background: #eef0f7; border-color: #cfd4e6; }
+.zone-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-2); margin-bottom: 10px; }
+.zone-label .ic { font-size: 15px; }
+.zone-items { display: flex; flex-wrap: wrap; gap: 8px; }
+.zone-item { display: inline-flex; align-items: center; gap: 7px; background: var(--white); border: 1px solid var(--border); border-radius: var(--pill); padding: 6px 12px 6px 9px; font-size: 13px; color: var(--navy); }
+.zone-item .ic { font-size: 15px; color: var(--navy-3); }
+.zone-item small { color: var(--navy-3); font-size: 12px; }
+.zone-empty { font-size: 14px; color: var(--navy-3); font-style: italic; font-family: var(--serif); }
+.where-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; border-top: 1px solid var(--border); padding-top: 18px; }
+.where-facts li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--navy); line-height: 1.5; }
+.where-facts .ic { font-size: 18px; flex-shrink: 0; margin-top: 2px; color: var(--success, #10883c); }
+.where-facts li.no .ic { color: var(--navy-3); }
+.where-facts li.no { color: var(--navy-3); }
 .where-note { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 16px; max-width: 72ch; }
 .where-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
 
@@ -87,6 +100,7 @@
 
 @media (max-width: 1100px) {
   .why-inner { grid-template-columns: 1fr; }
+  .where-grid { grid-template-columns: 1fr; }
   .host-inner { grid-template-columns: 1fr; gap: 36px; }
 }
 @media (max-width: 860px) {
@@ -153,26 +167,62 @@
 <div class="where-head reveal">
 <p class="tag">What runs where</p>
 <h2>Same code. <em>Two ways to run it.</em></h2>
-<p class="sub">The downloaded app is a thin shell over an API we host. A self-hosted install is the whole thing on your machine or your server. Worth being precise, because "private" is a word everyone uses and few explain.</p>
+<p class="sub">Download the app and we run the service behind it. Clone the code and every part of it runs on your machine or your server. Here is what sits where, in plain words.</p>
 </div>
-<div class="where-scroll reveal" style="transition-delay:.1s">
-<table class="where-table">
-<thead>
-<tr><th scope="col"></th><th scope="col">The desktop app</th><th scope="col">Self-hosted</th></tr>
-</thead>
-<tbody>
-<tr><th scope="row">Model access</th><td><strong>Your keys, in your OS keychain</strong>, sent with a request only while a job runs. Or sign in with your ChatGPT plan and hold no key at all.</td><td>Your keys, in the keychain or an env file on your server.</td></tr>
-<tr><th scope="row">Connector authorisations</th><td>Encrypted in Duct's database, decrypted only to make a call you asked for.</td><td><strong>Your database.</strong></td></tr>
-<tr><th scope="row">Projects, briefs, memory</th><td>Duct's cloud, so they are there on your next device and one invite adds a teammate.</td><td>SQLite on your disk, or Postgres on your server.</td></tr>
-<tr><th scope="row">Account</th><td>Google sign-in.</td><td><strong>None.</strong></td></tr>
-<tr><th scope="row">Analytics and crash reports</th><td>On by default, with a switch in Preferences.</td><td><strong>Not compiled in.</strong> A build you make reports nothing.</td></tr>
-<tr><th scope="row">Updates</th><td>Signed, automatic.</td><td>You build them.</td></tr>
-<tr><th scope="row">Who keeps it running</th><td>We do.</td><td>You do.</td></tr>
-<tr><th scope="row">Price</th><td>Free.</td><td>Free.</td></tr>
-</tbody>
-</table>
+<div class="where-grid reveal" style="transition-delay:.1s">
+<article class="where-card">
+<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#monitor"/></svg><div><h3>The desktop app</h3><p>Download it. We run the service behind it.</p></div></div>
+<div class="zones">
+<div class="zone zone-you">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Stays on your computer</span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Your AI keys <small>· in the keychain</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#user-round"/></svg> Your ChatGPT sign-in</span>
 </div>
-<p class="where-note reveal">The full detail, row by row, is in the <a href="/privacy">privacy policy</a>. The desktop app never stores a model key server-side; the option to save one with us is switched off in the app.</p>
+</div>
+<div class="zone zone-cloud">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> Kept by Duct, encrypted</span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Your tool logins <small>· Google Ads, GA4&hellip;</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projects, briefs, memory</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg> Your account <small>· Google</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg> Usage stats <small>· switch off in Preferences</small></span>
+</div>
+</div>
+</div>
+<ul class="where-facts">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Free. You pay your AI provider, or use your ChatGPT plan.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Your briefs follow you to your next computer; one invite adds a teammate.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Updates itself. We keep it running.</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Needs a Google sign-in.</li>
+</ul>
+</article>
+<article class="where-card">
+<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg><div><h3>Self-hosted</h3><p>Clone it. Everything runs where you put it.</p></div></div>
+<div class="zones">
+<div class="zone zone-you">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> On your computer or your server</span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Your AI keys</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Your tool logins</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projects, briefs, memory</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg> The database itself</span>
+</div>
+</div>
+<div class="zone zone-cloud">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> Kept by Duct</span>
+<p class="zone-empty">Nothing. It never talks to us.</p>
+</div>
+</div>
+<ul class="where-facts">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Free. Same code, same agents, no held-back edition.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> No account with us at all.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Reports nothing back: usage stats are not even compiled in.</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> You update it and keep it running.</li>
+</ul>
+</article>
+</div>
+<p class="where-note reveal">The full detail is in the <a href="/privacy">privacy policy</a>. Whichever way you run it, we never hold an AI key of yours: the desktop app keeps it in your keychain and sends it only while a job runs.</p>
 </div>
 </section>
 
