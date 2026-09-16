@@ -656,6 +656,84 @@ window.addEventListener('resize', function() {
 });
 })();
 
+// Click-to-enlarge for product shots. A page shows the app at a third of its
+// size, a phone at a tenth, and the text in a shot is the argument. A tap
+// opens the same file over the page at a size where it reads, pannable in
+// both directions; Escape, the button or the backdrop closes it.
+(function() {
+var imgs = document.querySelectorAll('.shot-frame img, .job-shot img, .what-shot img, .dl-hero-shot img');
+if (!imgs.length) return;
+var box = null, scroller = null, pic = null, closeBtn = null, opener = null;
+
+function build() {
+  box = document.createElement('div');
+  box.className = 'lightbox';
+  box.hidden = true;
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Enlarged screenshot');
+  scroller = document.createElement('div');
+  scroller.className = 'lightbox-scroll';
+  pic = document.createElement('img');
+  // On a phone the shot is wider than the screen; start in the middle, where
+  // the conversation is, rather than on the app's sidebar.
+  pic.addEventListener('load', centre);
+  scroller.appendChild(pic);
+  closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'lightbox-close';
+  closeBtn.setAttribute('aria-label', 'Close');
+  closeBtn.textContent = '×';
+  box.appendChild(scroller);
+  box.appendChild(closeBtn);
+  document.body.appendChild(box);
+  scroller.addEventListener('click', function(e) { if (e.target === scroller) close(); });
+  closeBtn.addEventListener('click', close);
+}
+
+function centre() {
+  if (!scroller) return;
+  var extra = scroller.scrollWidth - scroller.clientWidth;
+  if (extra > 0) scroller.scrollLeft = extra / 2;
+}
+
+function open(img) {
+  if (!box) build();
+  opener = img;
+  pic.src = img.currentSrc || img.src;
+  pic.alt = img.alt || '';
+  box.hidden = false;
+  scroller.scrollTop = 0;
+  centre();
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(function() {
+    box.classList.add('is-open');
+    closeBtn.focus();
+  });
+}
+
+function close() {
+  if (!box || box.hidden) return;
+  box.classList.remove('is-open');
+  box.hidden = true;
+  document.body.style.overflow = '';
+  if (opener && opener.focus) opener.focus();
+}
+
+Array.prototype.forEach.call(imgs, function(img) {
+  img.classList.add('zoomable');
+  img.setAttribute('tabindex', '0');
+  img.setAttribute('role', 'button');
+  img.setAttribute('aria-label', (img.alt ? img.alt + '. ' : '') + 'Enlarge');
+  img.addEventListener('click', function() { open(img); });
+  img.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(img); }
+  });
+});
+
+window.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
+})();
+
 // UTM params — persist to sessionStorage and attach to dataLayer on pageload
 (function() {
 var params = new URLSearchParams(window.location.search);

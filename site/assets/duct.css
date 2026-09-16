@@ -507,6 +507,21 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
 .field textarea.field-invalid {
   border-color: #ef4444;
 }
+/* ── LIGHTBOX (click-to-enlarge product shots; duct.js adds the markup) ── */
+.zoomable { cursor: zoom-in; }
+.lightbox { position: fixed; inset: 0; z-index: 300; background: rgba(13,15,26,.88); opacity: 0; transition: opacity .2s; }
+.lightbox.is-open { opacity: 1; }
+.lightbox-scroll { position: absolute; inset: 0; overflow: auto; -webkit-overflow-scrolling: touch; padding: 64px 24px 32px; text-align: center; cursor: zoom-out; }
+.lightbox-scroll img { display: inline-block; width: 100%; max-width: 1400px; height: auto; border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.5); cursor: default; vertical-align: top; }
+.lightbox-close { position: fixed; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.16); color: #fff; font-size: 30px; line-height: 44px; padding: 0; cursor: pointer; }
+.lightbox-close:hover, .lightbox-close:focus-visible { background: rgba(255,255,255,.3); outline: none; }
+@media (max-width: 860px) {
+  /* Wider than the phone on purpose: the point is to read the shot, and a
+     shot squeezed to 360px is the thumbnail they just tapped. Pan to read. */
+  .lightbox-scroll { padding: 64px 16px 24px; text-align: left; }
+  .lightbox-scroll img { width: 1000px; max-width: none; }
+}
+
 @media (max-width: 600px) {
   .hero-pill { font-size: 11px; padding: 5px 12px; gap: 7px; }
   .tool-card > .tool-form-error {

@@ -129,6 +129,12 @@ With Duct* copy (home, download and the `for-*` pages share both). Each
 (`product-session`, `paid-session`, the signups `insights-session`), not the
 same image with a different caption.
 
+Every image inside `.shot-frame`, `.job-shot`, `.what-shot` or `.dl-hero-shot`
+opens full-size over the page on click or Enter; `duct.js` adds the markup and
+`duct.css` holds the `.lightbox` rules. On a phone the enlarged shot is wider
+than the screen on purpose, so it can be read by panning. A new product image
+gets this for free by using one of those four containers.
+
 ## Discoverability files
 
 | File | Purpose |
