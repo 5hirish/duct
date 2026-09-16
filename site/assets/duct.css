@@ -200,6 +200,7 @@ display: inline-flex; align-items: center; gap: 8px;
 padding: 5px 14px; border-radius: var(--pill);
 border: 1.5px solid var(--orange);
 font-size: 12px; font-weight: 500; color: var(--orange);
+white-space: nowrap; max-width: 100%;
 margin-bottom: 40px; animation: fadeUp .5s ease both;
 }
 .hero-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
@@ -507,6 +508,7 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
   border-color: #ef4444;
 }
 @media (max-width: 600px) {
+  .hero-pill { font-size: 11px; padding: 5px 12px; gap: 7px; }
   .tool-card > .tool-form-error {
     margin: -8px 24px 22px;
   }
