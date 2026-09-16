@@ -9,7 +9,7 @@ const cleanRoutes = [
 
 // Content pages that must render but are not required to be linked from the
 // home page's own nav (they live in the footer and the simple nav).
-const contentRoutes = ["/about", "/doctrine", "/changelog/"];
+const contentRoutes = ["/about", "/open-source", "/doctrine", "/changelog/"];
 
 const POST_PATH = "/blog/why-your-seo-metrics-arent-telling-you-the-full-story";
 
