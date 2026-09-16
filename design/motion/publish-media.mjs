@@ -9,7 +9,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const media = join(here, "..", "..", "site", "assets", "media");
 mkdirSync(media, { recursive: true });
 
-const LIMIT_BYTES = { "demo.mp4": 3_000_000, "demo.webm": 2_000_000, "demo-poster.webp": 80_000 };
+// The plan budgeted a silent film; the sound adds ~0.3 MB to each, so the
+// webm line moved from 2 to 2.5 MB rather than crushing the picture.
+const LIMIT_BYTES = { "demo.mp4": 3_000_000, "demo.webm": 2_500_000, "demo-poster.webp": 80_000 };
 for (const [name, limit] of Object.entries(LIMIT_BYTES)) {
   const from = join(here, "out", name);
   const size = statSync(from).size;
