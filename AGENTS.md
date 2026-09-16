@@ -58,6 +58,7 @@ the area you are editing; site conventions do not apply to `backend/`.
 | `site/` | Static HTML/CSS/JS, no build step | [`site/AGENTS.md`](site/AGENTS.md) |
 | `docs/` | Engineering plans and reference material | [`docs/README.md`](docs/README.md) |
 | `scripts/` | Deploy/env plumbing and repo hygiene | below |
+| `design/` | Storyboards (Claude Design) and the Remotion film | [`design/motion/README.md`](design/motion/README.md) |
 
 Product strategy, GTM and deployment runbooks live in a separate private
 repository. Documents here occasionally cite them; those citations state their

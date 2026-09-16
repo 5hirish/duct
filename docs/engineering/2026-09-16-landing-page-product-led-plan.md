@@ -61,7 +61,7 @@ that are specific to this repo, not generic:
    TikTok and LinkedIn, and a 16:9 with music for YouTube and Product Hunt.
    `calculateMetadata` handles the sizes; nothing is redrawn.
 
-It lives in `scripts/motion/` as its own package with its own `node_modules`,
+It lives in `design/motion/` as its own package with its own `node_modules`,
 never in `site/`. Renders are committed to `site/assets/media/` (a 2–3 MB mp4
 per re-render is acceptable; re-render rarely, not on every tweak). Licence:
 free for companies of up to three people; check the count before the first
@@ -262,7 +262,7 @@ day, they go between 4 and 6.
 
 0. Storyboard in Claude Design: nine boards, signed off as stills. Half a
    day, and it is the only step where taste is cheap to change.
-1. `scripts/motion/`: the Remotion project, the token bridge to `app/`'s
+1. `design/motion/`: the Remotion project, the token bridge to `app/`'s
    components, and the 30 s film rendered to `site/assets/media/`. Everything
    else needs the video.
 2. Landing page rewrite against the table above, with the video.
