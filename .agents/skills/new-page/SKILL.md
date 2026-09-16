@@ -69,7 +69,9 @@ scenario in `scenarios.mjs`, then shoot it.
 The job cards take focused shots, never a whole window: `answer-<audience>`
 (one question, the sources read, the answer; a new audience adds its entry to
 `ANSWERS` in the story and gets the card for free), `review-card`,
-`content-plan`, `memory-timeline`, `connectors`. Cap `.shot-frame` at the
+`content-plan`, `memory-timeline`, `connectors`, and `audit-report` (the
+story's `AUDIT_REPORT_HTML`, a document like the briefs; an `html` scenario
+in `scenarios.mjs` needs no app to shoot). Cap `.shot-frame` at the
 image's 1x width so a 2x capture never upscales. Never draw a mock of a
 screen that exists.
 

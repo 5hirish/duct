@@ -82,11 +82,14 @@ try {
         await page.waitForFunction(() => window.__preview?.ready === true);
         await page.evaluate(() => document.fonts.ready);
       }
+      if (sc.kind === "html") await page.setContent(sc.html, { waitUntil: "load" });
       const target = await sc.run({ page, app: APP, story: STORY });
       await page.evaluate(() => document.fonts.ready);
       // The dev server's issues badge is not part of the product.
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-      const raw = target?.clip ? await page.screenshot({ type: "png", clip: target.clip })
+      // A clip taller than the viewport is cut to it unless the capture is of
+      // the whole page (the audit report, a document longer than any screen).
+      const raw = target?.clip ? await page.screenshot({ type: "png", clip: target.clip, fullPage: target.clip.height > sc.viewport.height })
         : target?.element ? await target.element.screenshot({ type: "png" })
         : target ? await target.screenshot({ type: "png" }) : await page.screenshot({ type: "png" });
       // WebP at 90: a sixth of the PNG for the photo-heavy frames, and text

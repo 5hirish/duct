@@ -1143,7 +1143,7 @@ export const SCENES = [
     title: "SEO report (V1)",
     state: "A full report, so the document decision can be seen",
     note:
-      "Solo's audit from the story: nine categories, every finding on a page with a value, five priorities, a three-phase plan. scripts/shots captures it for the lead-magnet page. This is a printed thing rather than app chrome: it declares `color-scheme: light` and redefines the semantic tokens for its own subtree, so it looks the same in a dark app as in a light one. It used to take its ground from the theme while painting sixty fixed hexes inside it, which put the finding titles at 1.11:1 in dark. Open this scene in a DARK frame — that is the whole point of it.",
+      "Solo's audit from the story: nine categories, every finding on a page with a value, five priorities, a three-phase plan. (The lead-magnet page shows the same audit as the document the agent hands over, AUDIT_REPORT_HTML in the story, in the briefs' language; scripts/shots captures that one straight from the HTML.) This is a printed thing rather than app chrome: it declares `color-scheme: light` and redefines the semantic tokens for its own subtree, so it looks the same in a dark app as in a light one. It used to take its ground from the theme while painting sixty fixed hexes inside it, which put the finding titles at 1.11:1 in dark. Open this scene in a DARK frame — that is the whole point of it.",
     render: () => <AuditReportV1 data={STORY_AUDIT} />,
   },
 ];

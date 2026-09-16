@@ -620,6 +620,168 @@ export const AUDIT_REPORT = Object.freeze({
   ],
 });
 
+// The same audit as the agent hands it over, on the briefs' CSS, and the one
+// document on the site that has to sell a URL paste on its own: it is looked
+// at, not read, and it speaks the language of the person pasting, which is
+// keywords, clusters, positions and gaps. A navy header with the score ring
+// and what was read; three signals as big numbers; the clusters on a
+// position map; the page-two keywords worth a push; the topics competitors
+// own; nine score tiles; five fixes of eight words each. What makes it
+// Duct's is in the header and the first signal: Search Console positions
+// weighed by GA4 trials, so the opportunity is the keywords whose pages
+// already convert, and a memory recalled from an earlier brief.
+const AUDIT_CSS = `
+body{max-width:820px;margin:0 auto;padding:16px 18px 24px}
+.hd{background:#0d0f1a;color:#f4ece2;border-radius:14px;padding:20px 22px 18px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;margin-bottom:10px;position:relative;overflow:hidden}
+.hd:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,#ff5c00,#ff8c42 60%,transparent)}
+.hd .u{font-size:12px;color:#ff8c42;margin-bottom:8px}
+.hd h1{font-size:24px;line-height:1.2;color:#fff;font-weight:650;letter-spacing:-.015em;max-width:440px}
+.hd .ch{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.hd .ch span{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#f4ece2;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:3px 10px 3px 8px}
+.hd .ch i{width:7px;height:7px;border-radius:50%;background:#8b8fa8;flex:none}
+.hd .ch .gsc i{background:#4285f4}.hd .ch .ga4 i{background:#e37400}.hd .ch .clr i{background:#3aa0ff}.hd .ch .mem i{background:#a78bfa}
+.ring{position:relative;width:128px;height:128px;flex:none}
+.ring svg{width:128px;height:128px;transform:rotate(-90deg)}
+.ring .n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.ring .n b{font-size:40px;font-weight:650;letter-spacing:-.02em;color:#fff;font-variant-numeric:tabular-nums}
+.ring .n span{font-size:10px;color:#ff8c42;margin-top:6px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.sig{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.sg{border-radius:12px;padding:14px 14px 12px;border:1px solid var(--line);background:#fafafa;display:grid;gap:2px}
+.sg .v{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.sg .l{font-size:12.5px;color:var(--tx);margin-top:6px;line-height:1.3}
+.sg .s{font-size:11px;color:var(--mut)}
+.sg.good{background:#f0faf3;border-color:#cfeeda}.sg.good .v{color:var(--good)}
+.sg.warn{background:#fff7ed;border-color:#fbd9b9}.sg.warn .v{color:#c2410c}
+.sg.bad{background:#fdf1ec;border-color:#f6cbb8}.sg.bad .v{color:var(--crit)}
+h2{margin:18px 0 8px}
+.map{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px 12px}
+.ax{display:grid;grid-template-columns:150px 1fr 40px;gap:12px;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ax .z{display:grid;grid-template-columns:1fr 1fr 1fr}
+.ax .z span:nth-child(2){text-align:center}.ax .z span:nth-child(3){text-align:right}
+.cl{display:grid;grid-template-columns:150px 1fr 40px;gap:12px;align-items:center;padding:8px 0;font-size:12.5px}
+.cl+.cl{border-top:1px solid #f1f1f3}
+.cl .c b{display:block;font-weight:600}.cl .c span{font-size:11px;color:var(--mut)}
+.cl .tr{position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,#e5f6ea 0,#e5f6ea 33.3%,#fdf3e1 33.3%,#fdf3e1 66.6%,#f4f4f6 66.6%)}
+.cl .tr i{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.cl .tr i.good{background:#22a353}.cl .tr i.warn{background:#e59a2a}.cl .tr i.bad{background:#dc4f2b}
+.cl .tr i.none{background:#fff;border:2px dashed #b8bac6;box-shadow:none}
+.cl .p{text-align:right;font-weight:650;font-variant-numeric:tabular-nums}
+.cl .p.none{color:var(--mut);font-weight:500}
+.kw{display:grid;grid-template-columns:34px 1fr 124px 176px;gap:12px;align-items:center;padding:7px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:5px;font-size:12.5px}
+.kw .pos{width:34px;height:26px;border-radius:7px;background:#fdf3e1;color:#b45309;font-weight:650;font-size:12px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.kw .q{font-weight:600}
+.kw .vol{display:grid;grid-template-columns:1fr 54px;align-items:center;gap:8px;font-size:11px;color:var(--mut)}
+.kw .vol i{display:block;height:6px;border-radius:3px;background:#ececef;overflow:hidden}
+.kw .vol i:after{content:"";display:block;height:100%;width:var(--w);border-radius:3px;background:var(--accent)}
+.kw .vol b{font-weight:600;color:var(--tx);text-align:right;font-variant-numeric:tabular-nums}
+.kw code{font:11px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--mut);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gap{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12.5px}
+.gap .g{display:grid;grid-template-columns:1fr 92px 92px 92px;align-items:center;padding:8px 14px}
+.gap .g+.g{border-top:1px solid #f1f1f3}
+.gap .g.h{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;background:#fafafa}
+.gap .g b{font-weight:600}
+.gap .g span{text-align:center;font-variant-numeric:tabular-nums}
+.gap .ok{color:var(--good);font-weight:600}.gap .no{color:var(--crit);font-weight:650}
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cat{background:#fafafa;border:1px solid var(--line);border-radius:10px;padding:10px 12px 11px;display:grid;gap:6px}
+.cat .r{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--mut)}
+.cat .r b{font-size:22px;font-weight:650;letter-spacing:-.01em;color:var(--tx);font-variant-numeric:tabular-nums}
+.cat i{display:block;height:6px;border-radius:3px;background:#ececef;overflow:hidden}
+.cat i:after{content:"";display:block;height:100%;width:var(--w);border-radius:3px;background:var(--accent)}
+.cat.bad i:after{background:#ef7a55}.cat.bad .r b{color:var(--crit)}
+.cat.good i:after{background:#57c47a}.cat.good .r b{color:var(--good)}
+.fix{display:grid;grid-template-columns:28px 1fr 96px 64px;gap:12px;align-items:center;padding:9px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:6px;font-size:13px}
+.fix .k{width:26px;height:26px;border-radius:8px;font-size:12px;font-weight:650;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--mut)}
+.fix.crit .k{background:var(--crit)}.fix.warn .k{background:var(--warn)}
+.fix h3{font-size:13px;font-weight:600}
+.fix .w{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mut)}
+.fix .w i{display:block;flex:1;height:6px;border-radius:3px;background:#ececef;overflow:hidden}
+.fix .w i:after{content:"";display:block;height:100%;width:var(--w);border-radius:3px;background:#ef7a55}
+.fix.warn .w i:after{background:#f0b35a}
+.fix .e{font-size:11px;color:var(--mut);text-align:right;white-space:nowrap}
+footer{margin-top:16px}`;
+
+const R = 56, CIRC = 2 * Math.PI * R;
+const ring = (score) => `<div class="ring"><svg viewBox="0 0 128 128"><circle cx="64" cy="64" r="${R}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="10"/><circle cx="64" cy="64" r="${R}" fill="none" stroke="#ff5c00" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(CIRC * score / 100).toFixed(1)} ${CIRC.toFixed(1)}"/></svg><div class="n"><b>${score}</b><span>needs work</span></div></div>`;
+const signal = (tone, v, l, s) => `<div class="sg ${tone}"><div class="v">${v}</div><div class="l">${l}</div><div class="s">${s}</div></div>`;
+// Position map: 1–30 across the track, page one in the green third.
+const cluster = (name, meta, pos, tone) =>
+  `<div class="cl"><div class="c"><b>${name}</b><span>${meta}</span></div><div class="tr">${pos ? `<i class="${tone}" style="left:${Math.min(pos, 30) / 30 * 100}%"></i>` : `<i class="none" style="left:100%"></i>`}</div><div class="p${pos ? "" : " none"}">${pos ? pos.toFixed(1) : "none"}</div></div>`;
+const kw = (q, pos, vol, max, url) =>
+  `<div class="kw"><div class="pos">${pos}</div><div class="q">${q}</div><div class="vol"><i style="--w:${Math.round(vol / max * 100)}%"></i><b>${vol.toLocaleString("en-GB")}</b></div><code>${url}</code></div>`;
+const gapRow = (topic, a, b, c) =>
+  `<div class="g"><b>${topic}</b><span class="${a ? "ok" : "no"}">${a ? "#" + a : "✗"}</span><span class="${b ? "ok" : "no"}">${b ? "#" + b : "✗"}</span><span class="${c ? "ok" : "no"}">${c ? "#" + c : "✗"}</span></div>`;
+const cat = (label, score) =>
+  `<div class="cat ${score < 60 ? "bad" : score >= 85 ? "good" : ""}" style="--w:${score}%"><div class="r"><span>${label}</span><b>${score}</b></div><i></i></div>`;
+const fix = (k, tone, h, impact, effort) =>
+  `<div class="fix ${tone}"><div class="k">${k}</div><h3>${h}</h3><div class="w"><i style="--w:${impact}%"></i></div><span class="e">${effort}</span></div>`;
+
+export const AUDIT_REPORT_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>SEO audit · ${STORY.company.site} · 14 Sep 2026</title>
+<style>
+${BRIEF_CSS}
+${AUDIT_CSS}
+</style></head><body>
+<div class="hd">
+  <div>
+    <div class="u">${STORY.company.site} · 14 Sep 2026 · 41 pages · 212 keywords</div>
+    <h1>Six keywords are one push from page one.</h1>
+    <div class="ch"><span><i></i>Crawl</span><span class="gsc"><i></i>Search Console</span><span class="ga4"><i></i>GA4</span><span class="clr"><i></i>Clarity</span><span><i></i>Ledgerly · Tallyo</span><span class="mem"><i></i>Recalled · 7 Sep brief</span></div>
+  </div>
+  ${ring(AUDIT_REPORT.overall_score)}
+</div>
+
+<div class="sig">
+${signal("good", "11.4k", "searches a month on page two, on pages that already convert", "Search Console × GA4")}
+${signal("warn", "2 pages", "compete for “freelance invoice template”", "cannibalisation · Search Console")}
+${signal("bad", "3 topics", "both competitors rank for, Solo has no page", "Ledgerly · Tallyo")}
+</div>
+
+<h2>Keyword clusters · average position</h2>
+<div class="map">
+  <div class="ax"><span>cluster</span><div class="z"><span>page 1</span><span>page 2</span><span>page 3+</span></div><span>pos</span></div>
+${cluster("Freelance taxes", "14 keywords · 8.2k/mo", 4.1, "good")}
+${cluster("Invoicing", "9 keywords · 12.6k/mo", 6.8, "good")}
+${cluster("Late payments", "5 keywords · 3.4k/mo", 9.2, "warn")}
+${cluster("Budgeting for freelancers", "7 keywords · 5.1k/mo", 13.5, "warn")}
+${cluster("VAT and registration", "6 keywords · 2.7k/mo", 22.0, "bad")}
+${cluster("Quarterly estimates", "0 pages · 3.9k/mo", 0, "")}
+</div>
+
+<h2>Hidden opportunities · page two, high volume</h2>
+${[
+  kw("freelance invoice template", 11, 2400, 2400, "/invoice-template"),
+  kw("budget app for freelancers", 13, 2100, 2400, "/"),
+  kw("how much to set aside for tax freelance", 12, 1900, 2400, "/guides/set-aside-tax"),
+  kw("late payment letter template", 14, 1600, 2400, "/late-payment-letter"),
+  kw("quarterly tax estimate freelancer", 16, 1300, 2400, "none yet"),
+  kw("vat for freelancers", 19, 1100, 2400, "/guides/vat-for-freelancers"),
+].join("\n")}
+
+<h2>Topics the competitors own</h2>
+<div class="gap">
+  <div class="g h"><span style="text-align:left">topic</span><span>Ledgerly</span><span>Tallyo</span><span>Solo</span></div>
+${gapRow("quarterly tax estimate", 3, 5, 0)}
+${gapRow("freelance tax calculator", 2, 4, 0)}
+${gapRow("invoice template for freelancers", 6, 8, 11)}
+</div>
+
+<h2>Scores by category</h2>
+<div class="cats">
+${AUDIT_REPORT.categories.map((c) => cat(c.label, c.score)).join("\n")}
+</div>
+
+<h2>Fix these first</h2>
+${[
+  fix("1", "crit", "Merge the two invoice-template pages into one", 100, "1–3 days"),
+  fix("2", "crit", "Link the six page-two keywords from the tax guides", 85, "2–4 hrs"),
+  fix("3", "warn", "Write the quarterly tax estimate guide", 70, "1–2 wks"),
+  fix("4", "warn", "Remove 3 dead sitemap URLs and a stray noindex", 50, "under 1 hr"),
+  fix("5", "warn", "Put an author and a date on 12 guides", 40, "1–3 days"),
+].join("\n")}
+<footer>Every number re-checked by the verification sub-agent · Search Console, GA4 and Clarity read for ${STORY.week.label}</footer>
+</body></html>`;
+
 // The content plan for the story week. Five days on the board: two published,
 // one drafted and scheduled, two still planned. TikTok first, because that is
 // where Solo's freelancers are.

@@ -129,7 +129,12 @@ With Duct* copy (home, download and the `for-*` pages share both). Each
 (`product-session`, `paid-session`, the content `content-session`), not the
 same image with a different caption. Job cards take a focused shot, never a
 whole window: at card size a window is a grey smear, an `answer-*` card is a
-question and its answer.
+question and its answer. The SEO audit page shows the report itself
+(`audit-report`, its top; `audit-report-full`, all of it), captured from the
+story's `AUDIT_REPORT_HTML`: a document in the same language as the briefs
+on every other page, with what it read, what it recalled and a verdict
+before any number, because the sample is the whole argument for pasting a
+URL. Change the audit in the story, not in the page.
 
 Every image inside `.shot-frame`, `.job-shot`, `.what-shot`, `.dl-hero-shot` or
 any element carrying `data-zoom` opens full-size over the page on click or Enter

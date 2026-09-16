@@ -1,10 +1,12 @@
 // One entry per image. `page` scenarios drive the real app against the mock
 // backend; `scene` scenarios open a /preview frame, which needs no backend
-// for its data (covers still come from the mock's media folder).
+// for its data (covers still come from the mock's media folder); `html`
+// scenarios load a document from the story straight into the page, for the
+// reports the agents hand over as self-contained HTML.
 // Every scenario returns what to capture: a locator, `{ element, radius }`
 // for a floating surface, or nothing for the whole viewport. Add an image by
 // adding an entry; the runner does the rest.
-import { ANSWERS, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import { ANSWERS, AUDIT_REPORT_HTML, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 // Every window shot is taken with the app's sidebar closed: the page is the
 // product, and at a third of its size the sidebar is a column of grey text
@@ -140,39 +142,34 @@ export const SCENARIOS = [
     },
   })),
   {
-    // The audit report as a lead sees it, whole: score, priorities, nine
-    // categories of findings, the plan. The lead-magnet page shows its top as
-    // the reward, opens all of it on click, and blurs it behind the email
-    // gate; before, the page drew its own mock.
+    // The audit as the agent hands it over: the story's AUDIT_REPORT_HTML,
+    // a document in the briefs' language. Not the app's structured renderer
+    // (AuditReportV1, the `audit-report-v1` scene): the lead-magnet page
+    // shows the report the way every other page shows a brief, and a
+    // document needs no app to be captured. The top: headline, score, what
+    // was read and recalled, the verdict, the numbers.
     id: "audit-report",
-    kind: "scene",
-    scene: "audit-report-v1",
-    viewport: { width: 980, height: 1400 },
+    kind: "html",
+    html: AUDIT_REPORT_HTML,
+    viewport: { width: 760, height: 1200 },
     theme: "light",
     frame: "card",
     async run({ page }) {
-      await page.getByText("solobudget.app").first().waitFor({ timeout: 15000 });
-      await page.waitForTimeout(400);
-      // The top: verdict, signals, crawl health, wins, the landscape and the
-      // priorities. The whole report at 2x is taller than WebP allows.
-      const box = await page.locator("[data-preview-content]").boundingBox();
-      return { clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, 1360) } };
+      const box = await page.locator("body").boundingBox();
+      return { clip: { x: 0, y: 0, width: 760, height: Math.min(box.height, 760) } };
     },
   },
   {
-    // The same report, all of it, for the page's click-to-enlarge. Shot at 1x
-    // (SCALE=1 node scripts/shots/shoot.mjs audit-report-full): nine categories
-    // of findings run past 16,000px at 2x, which WebP refuses.
+    // The same document, all of it, for the page's click-to-enlarge.
     id: "audit-report-full",
-    kind: "scene",
-    scene: "audit-report-v1",
-    viewport: { width: 980, height: 1400 },
+    kind: "html",
+    html: AUDIT_REPORT_HTML,
+    viewport: { width: 760, height: 1200 },
     theme: "light",
     frame: "card",
     async run({ page }) {
-      await page.getByText("solobudget.app").first().waitFor({ timeout: 15000 });
-      await page.waitForTimeout(400);
-      return page.locator("[data-preview-content]");
+      const box = await page.locator("body").boundingBox();
+      return { clip: { x: 0, y: 0, width: 760, height: box.height } };
     },
   },
   {
