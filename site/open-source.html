@@ -51,6 +51,9 @@
 .where-head .sub { max-width: 56ch; }
 .where-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .where-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 22px; }
+.where-card.pick { position: relative; border: 1.5px solid var(--orange); box-shadow: 0 16px 48px rgba(255,92,0,.10); }
+.where-badge { position: absolute; top: -14px; left: 24px; display: inline-flex; align-items: center; gap: 6px; background: var(--orange); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--pill); }
+.where-badge .ic { font-size: 13px; }
 .where-card-head { display: flex; align-items: center; gap: 14px; }
 .where-card-head .ic { font-size: 26px; color: var(--orange); }
 .where-card-head h3 { font-family: var(--serif); font-size: 22px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
@@ -61,16 +64,22 @@
 .zone-cloud { background: #eef0f7; border-color: #cfd4e6; }
 .zone-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-2); margin-bottom: 10px; }
 .zone-label .ic { font-size: 15px; }
+.zone-label small { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--navy-3); font-size: 12px; white-space: nowrap; }
+.pick .zone-cloud { background: #eef7f0; border-color: #bfe0c7; }
+.pick .zone-cloud .zone-label .ic { color: var(--success, #10883c); }
 .zone-items { display: flex; flex-wrap: wrap; gap: 8px; }
 .zone-item { display: inline-flex; align-items: center; gap: 7px; background: var(--white); border: 1px solid var(--border); border-radius: var(--pill); padding: 6px 12px 6px 9px; font-size: 13px; color: var(--navy); }
 .zone-item .ic { font-size: 15px; color: var(--navy-3); }
-.zone-item small { color: var(--navy-3); font-size: 12px; }
+.zone-item small { color: var(--navy-3); font-size: 12px; white-space: nowrap; }
+.zone-label, .zone-item { flex-wrap: wrap; }
 .zone-empty { font-size: 14px; color: var(--navy-3); font-style: italic; font-family: var(--serif); }
 .where-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; border-top: 1px solid var(--border); padding-top: 18px; }
 .where-facts li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--navy); line-height: 1.5; }
 .where-facts .ic { font-size: 18px; flex-shrink: 0; margin-top: 2px; color: var(--success, #10883c); }
 .where-facts li.no .ic { color: var(--navy-3); }
 .where-facts li.no { color: var(--navy-3); }
+.where-cta { margin-top: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.where-fit { font-size: 13px; color: var(--navy-3); line-height: 1.4; max-width: 30ch; }
 .where-note { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 16px; max-width: 72ch; }
 .where-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
 
@@ -167,11 +176,12 @@
 <div class="where-head reveal">
 <p class="tag">What runs where</p>
 <h2>Same code. <em>Two ways to run it.</em></h2>
-<p class="sub">Download the app and we run the service behind it. Clone the code and every part of it runs on your machine or your server. Here is what sits where, in plain words.</p>
+<p class="sub">Download the app and we run the service behind it: sign in, connect a tool, ask. Clone the code and every part of it is yours to run. Here is what sits where, in plain words.</p>
 </div>
 <div class="where-grid reveal" style="transition-delay:.1s">
-<article class="where-card">
-<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#monitor"/></svg><div><h3>The desktop app</h3><p>Download it. We run the service behind it.</p></div></div>
+<article class="where-card pick">
+<span class="where-badge"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg> Most people start here</span>
+<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#monitor"/></svg><div><h3>The desktop app</h3><p>Download it. Sign in. Connected in two minutes.</p></div></div>
 <div class="zones">
 <div class="zone zone-you">
 <span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Stays on your computer</span>
@@ -181,32 +191,39 @@
 </div>
 </div>
 <div class="zone zone-cloud">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> Kept by Duct, encrypted</span>
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg> Duct carries for you <small>· encrypted</small></span>
 <div class="zone-items">
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Your tool logins <small>· Google Ads, GA4&hellip;</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projects, briefs, memory</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg> Your account <small>· Google</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg> Usage stats <small>· switch off in Preferences</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Tool logins <small>· connect once, every device</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projects, briefs, memory <small>· synced</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg> Teammates <small>· one invite</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg> Usage stats <small>· off in Preferences</small></span>
 </div>
 </div>
 </div>
 <ul class="where-facts">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Free. You pay your AI provider, or use your ChatGPT plan.</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Your briefs follow you to your next computer; one invite adds a teammate.</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Updates itself. We keep it running.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Free. Bring your keys, or the ChatGPT plan you already pay for.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Google Ads, GA4 and the rest connect with one click. Nothing to register.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Your briefs follow you to your next computer. One invite adds a teammate.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Signed builds that update themselves. We run the service and the database.</li>
 <li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Needs a Google sign-in.</li>
 </ul>
+<div class="where-cta">
+<a class="btn btn-orange" href="/download" data-duct-download>Download Duct ↓</a>
+<span class="where-fit">Mac, Windows, Linux · free · no credit card</span>
+</div>
 </article>
 <article class="where-card">
-<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg><div><h3>Self-hosted</h3><p>Clone it. Everything runs where you put it.</p></div></div>
+<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg><div><h3>Self-hosted</h3><p>Clone it. You run every part of it.</p></div></div>
 <div class="zones">
 <div class="zone zone-you">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> On your computer or your server</span>
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> On your computer or your server <small>· all of it</small></span>
 <div class="zone-items">
 <span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Your AI keys</span>
 <span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Your tool logins</span>
 <span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projects, briefs, memory</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg> The database itself</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg> The database</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#settings-2"/></svg> Sign-in and OAuth apps <small>· you register them</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#refresh-cw"/></svg> Backups and upgrades</span>
 </div>
 </div>
 <div class="zone zone-cloud">
@@ -216,10 +233,15 @@
 </div>
 <ul class="where-facts">
 <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Free. Same code, same agents, no held-back edition.</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> No account with us at all.</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Reports nothing back: usage stats are not even compiled in.</li>
-<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> You update it and keep it running.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> No account with us. Usage stats are not even compiled in.</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> You register your own Google OAuth app before Ads or GA4 will connect.</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> The database, the backups and every upgrade are yours to run and keep running.</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Nothing follows you to another machine unless you host it as a server yourself.</li>
 </ul>
+<div class="where-cta">
+<a class="btn btn-ghost" href="#self-host">How to self-host ↓</a>
+<span class="where-fit">For a rule about where data lives, or to read the code.</span>
+</div>
 </article>
 </div>
 <p class="where-note reveal">The full detail is in the <a href="/privacy">privacy policy</a>. Whichever way you run it, we never hold an AI key of yours: the desktop app keeps it in your keychain and sends it only while a job runs.</p>
