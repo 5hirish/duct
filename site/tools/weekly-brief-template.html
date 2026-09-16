@@ -108,7 +108,7 @@
   }
   .role-card:hover { border-color: var(--orange); }
   .role-card.selected { border-color: var(--orange); background: #eff6ff; }
-  .role-icon { font-size: 28px; }
+  .role-icon { font-size: 28px; color: var(--orange); display: inline-flex; }
   .role-name { font-size: 14px; font-weight: 600; color: var(--navy); }
   .role-desc { font-size: 12px; color: var(--navy-3); line-height: 1.4; }
 
@@ -270,17 +270,17 @@
       <p class="step-sub">Your brief structure changes based on what you own. Pick the one that fits.</p>
       <div class="role-grid">
         <button class="role-card" data-role="growth-pm" aria-pressed="false">
-          <span class="role-icon" aria-hidden="true">📊</span>
+          <span class="role-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
           <span class="role-name">Growth PM</span>
           <span class="role-desc">Product-led growth, activation, retention, feature adoption</span>
         </button>
         <button class="role-card" data-role="performance-marketer" aria-pressed="false">
-          <span class="role-icon" aria-hidden="true">📣</span>
+          <span class="role-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
           <span class="role-name">Performance Marketer</span>
           <span class="role-desc">Paid acquisition, ROAS, CAC, pipeline from paid channels</span>
         </button>
         <button class="role-card" data-role="seo-lead" aria-pressed="false">
-          <span class="role-icon" aria-hidden="true">🌱</span>
+          <span class="role-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
           <span class="role-name">SEO Lead</span>
           <span class="role-desc">Organic traffic, keyword rankings, content performance</span>
         </button>
@@ -300,42 +300,42 @@
         <button class="tool-btn" data-tool="ga4" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/googleanalytics.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>GA4</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="mixpanel" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/mixpanel.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Mixpanel</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="hubspot" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/hubspot.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>HubSpot</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="google-ads" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/google-ads.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Google Ads</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="ahrefs" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/ahrefs.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Ahrefs</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="gsc" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/googlesearchconsole.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Search Console</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="meta-ads" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/meta.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Meta Ads</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="linkedin-ads" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/linkedin.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>LinkedIn Ads</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
       </div>
       <p id="tool-min-note" style="font-size:12px;color:var(--navy-3);margin-top:14px">Select at least one tool to continue.</p>
@@ -368,7 +368,7 @@
       <div class="output-header">
         <h3>Your weekly brief template</h3>
         <button class="copy-btn" id="copy-btn" aria-label="Copy brief template to clipboard">
-          <span aria-hidden="true">📋</span>
+          <span aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#clipboard-list"/></svg></span>
           <span id="copy-label">Copy to clipboard</span>
         </button>
       </div>
@@ -566,7 +566,7 @@
 
     for (var i = 1; i <= 3; i++) {
       var dot = document.getElementById('dot-' + i);
-      if (i < n) { dot.className = 'step-dot done'; dot.textContent = '✓'; }
+      if (i < n) { dot.className = 'step-dot done'; dot.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>'; }
       else if (i === n) { dot.className = 'step-dot active'; dot.textContent = String(i); }
       else { dot.className = 'step-dot'; dot.textContent = String(i); }
     }

@@ -1066,22 +1066,22 @@
     <p class="lm-features-sub">A full technical and content analysis — not just a score.</p>
     <div class="lm-feat-grid">
       <div class="lm-feat">
-        <span class="lm-feat-icon">🔍</span>
+        <span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#search"/></svg></span>
         <p class="lm-feat-title">Technical issues</p>
         <p class="lm-feat-body">Missing meta tags, broken links, redirect chains, slow TTFB, noindex errors, and more — scanned automatically.</p>
       </div>
       <div class="lm-feat">
-        <span class="lm-feat-icon">📊</span>
+        <span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
         <p class="lm-feat-title">Scoring by category</p>
         <p class="lm-feat-body">Technical SEO, on-page signals, content quality, and performance — each scored and ranked so you know where to focus.</p>
       </div>
       <div class="lm-feat">
-        <span class="lm-feat-icon">⚡</span>
+        <span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg></span>
         <p class="lm-feat-title">Prioritized action plan</p>
         <p class="lm-feat-body">Every finding is ranked by impact × effort. Quick wins first. Big bets next. Clear, specific recommendations.</p>
       </div>
       <div class="lm-feat">
-        <span class="lm-feat-icon">🗺️</span>
+        <span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#map"/></svg></span>
         <p class="lm-feat-title">Full site crawl</p>
         <p class="lm-feat-body">Duct reads your sitemap and crawls your pages — not just the homepage. Every issue is traced back to the exact URL.</p>
       </div>
@@ -1162,7 +1162,7 @@
       var icon = document.createElement('span');
       icon.className = 'lm-step-icon';
       icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = '✓';
+      icon.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>';
       spinner.parentNode.replaceChild(icon, spinner);
     }
   }

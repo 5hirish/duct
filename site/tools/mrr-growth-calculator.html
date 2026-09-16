@@ -321,16 +321,16 @@
 
   var THRESHOLDS = {
     netGrowth: [
-      { min: 40, level: 'green', badge: '✓ Strong', context: 'High momentum across the full period.' },
-      { min: 15, level: 'amber', badge: '⚠ Moderate', context: 'Positive growth, but execution consistency matters.' },
-      { min: 0, level: 'amber', badge: '⚠ Low', context: 'Growing, but at a pace that may miss aggressive targets.' },
-      { min: -999, level: 'red', badge: '✗ Contraction', context: 'MRR decreased across the selected period.' }
+      { min: 40, level: 'green', badge: 'Strong', context: 'High momentum across the full period.' },
+      { min: 15, level: 'amber', badge: 'Moderate', context: 'Positive growth, but execution consistency matters.' },
+      { min: 0, level: 'amber', badge: 'Low', context: 'Growing, but at a pace that may miss aggressive targets.' },
+      { min: -999, level: 'red', badge: 'Contraction', context: 'MRR decreased across the selected period.' }
     ],
     cmgr: [
-      { min: 15, level: 'green', badge: '✓ Hypergrowth', context: 'Excellent monthly compounding for an early-stage SaaS.' },
-      { min: 5, level: 'amber', badge: '⚠ Healthy', context: 'Solid compounding. Focus on maintaining consistency.' },
-      { min: 0, level: 'amber', badge: '⚠ Flat', context: 'Positive but slow monthly growth.' },
-      { min: -999, level: 'red', badge: '✗ Declining', context: 'Negative monthly compounding; investigate churn and expansion mix.' }
+      { min: 15, level: 'green', badge: 'Hypergrowth', context: 'Excellent monthly compounding for an early-stage SaaS.' },
+      { min: 5, level: 'amber', badge: 'Healthy', context: 'Solid compounding. Focus on maintaining consistency.' },
+      { min: 0, level: 'amber', badge: 'Flat', context: 'Positive but slow monthly growth.' },
+      { min: -999, level: 'red', badge: 'Declining', context: 'Negative monthly compounding; investigate churn and expansion mix.' }
     ]
   };
 
@@ -457,8 +457,8 @@
         reqLevel = 'red';
       }
       var reqBadge = reqLevel === 'green'
-        ? '✓ Within reach'
-        : (reqLevel === 'amber' ? '⚠ Stretch' : '✗ Aggressive');
+        ? 'Within reach'
+        : (reqLevel === 'amber' ? 'Stretch' : 'Aggressive');
       var reqCardContext = targetBelowCurrent
         ? 'Compound monthly rate from current MRR to reach the lower target in the same number of months. Negative CMGR means contraction each month.'
         : 'Monthly growth needed from current MRR to hit target in the same number of months.';

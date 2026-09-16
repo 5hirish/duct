@@ -197,12 +197,12 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) row.removeChild(row.firstChild);
     var lvl = roi >= 100 ? 'green' : (roi >= 20 ? 'amber' : 'red');
-    row.appendChild(card('ROI', roi.toFixed(2) + '%', lvl, lvl === 'green' ? '✓ Strong' : (lvl === 'amber' ? '⚠ Moderate' : '✗ Weak'), 'Return on investment from attributed revenue and spend.'));
+    row.appendChild(card('ROI', roi.toFixed(2) + '%', lvl, lvl === 'green' ? 'Strong' : (lvl === 'amber' ? 'Moderate' : 'Weak'), 'Return on investment from attributed revenue and spend.'));
     row.appendChild(card('Net Profit', money(profit), profit >= 0 ? 'green' : 'red', profit >= 0 ? 'Positive' : 'Negative', 'Revenue minus spend for the selected period.'));
     row.appendChild(card('Revenue', money(revenue), 'neutral', 'Observed', 'Attributed revenue included in this calculation.'));
     if (!isNaN(targetRoi)) {
       var reqRevenue = spend * (1 + targetRoi / 100);
-      row.appendChild(card('Revenue for Target ROI', money(reqRevenue), reqRevenue <= revenue ? 'green' : 'amber', reqRevenue <= revenue ? '✓ Achieved' : '⚠ Gap', 'Revenue needed at current spend to reach target ROI.'));
+      row.appendChild(card('Revenue for Target ROI', money(reqRevenue), reqRevenue <= revenue ? 'green' : 'amber', reqRevenue <= revenue ? 'Achieved' : 'Gap', 'Revenue needed at current spend to reach target ROI.'));
     }
     if (!isNaN(margin) && margin >= 0 && margin <= 100) {
       var marginRevenue = revenue * (margin / 100);

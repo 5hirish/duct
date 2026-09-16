@@ -197,7 +197,7 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) row.removeChild(row.firstChild);
     var lvl = cpc <= 1.5 ? 'green' : (cpc <= 4 ? 'amber' : 'red');
-    row.appendChild(card('CPC', '$' + cpc.toFixed(2), lvl, lvl === 'green' ? '✓ Efficient' : (lvl === 'amber' ? '⚠ Moderate' : '✗ Expensive'), 'Cost per click from your campaign data.'));
+    row.appendChild(card('CPC', '$' + cpc.toFixed(2), lvl, lvl === 'green' ? 'Efficient' : (lvl === 'amber' ? 'Moderate' : 'Expensive'), 'Cost per click from your campaign data.'));
     row.appendChild(card('Spend', money(spend), 'neutral', 'Observed', 'Total spend included in this calculation.'));
     row.appendChild(card('Clicks', num(clicks), 'neutral', 'Observed', 'Click volume delivered in the selected period.'));
     if (!isNaN(targetCpc) && targetCpc > 0) {
@@ -206,7 +206,7 @@
     }
     if (!isNaN(budget) && budget > 0) {
       var reqCpc = budget / clicks;
-      row.appendChild(card('Required CPC', '$' + reqCpc.toFixed(2), reqCpc >= cpc ? 'green' : 'amber', reqCpc >= cpc ? '✓ Within budget' : '⚠ Needs efficiency', 'CPC threshold to stay inside budget at this click volume.'));
+      row.appendChild(card('Required CPC', '$' + reqCpc.toFixed(2), reqCpc >= cpc ? 'green' : 'amber', reqCpc >= cpc ? 'Within budget' : 'Needs efficiency', 'CPC threshold to stay inside budget at this click volume.'));
     }
     var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
     if (cpc <= 1.5) addP(body, 'Your CPC is efficient. Validate conversion quality so low click costs still drive pipeline.');

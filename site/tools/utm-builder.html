@@ -368,7 +368,7 @@
     if (state === 'valid') {
       input.classList.add('inp-valid');
       badge.className = 'field-badge b-show b-valid';
-      badge.textContent = '✓';
+      badge.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>';
     } else if (state === 'warn') {
       input.classList.add('inp-warn');
       badge.className = 'field-badge b-show b-warn';
@@ -377,7 +377,7 @@
     } else if (state === 'error') {
       input.classList.add('inp-error');
       badge.className = 'field-badge b-show b-error';
-      badge.textContent = '✗';
+      badge.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#x"/></svg>';
       msg.className = 'field-msg m-error';
     }
   }
@@ -477,10 +477,10 @@
     compliance.style.opacity = '1';
     if (hasWarning) {
       compliance.style.color = '#92400e';
-      compliance.textContent = '⚠ Check warnings below';
+      compliance.textContent = 'Check warnings below';
     } else {
       compliance.style.color = '#15803d';
-      compliance.textContent = '✓ GA4 compliant';
+      compliance.textContent = 'GA4 compliant';
     }
 
     var warnings = [];

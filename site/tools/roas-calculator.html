@@ -205,7 +205,7 @@
     while (row.firstChild) row.removeChild(row.firstChild);
 
     var lvl = roas >= 4 ? 'green' : (roas >= 2 ? 'amber' : 'red');
-    row.appendChild(card('ROAS', roas.toFixed(2) + '×', lvl, lvl === 'green' ? '✓ Strong' : (lvl === 'amber' ? '⚠ Mixed' : '✗ Weak'), 'Revenue divided by ad spend (standard ROAS definition).'));
+    row.appendChild(card('ROAS', roas.toFixed(2) + '×', lvl, lvl === 'green' ? 'Strong' : (lvl === 'amber' ? 'Mixed' : 'Weak'), 'Revenue divided by ad spend (standard ROAS definition).'));
 
     row.appendChild(card('Ad Spend', money(spend), 'neutral', 'Baseline', 'Spend included in this ROAS calculation.'));
     row.appendChild(card('Attributed Revenue', money(revenue), 'neutral', 'Observed', 'Conversion value attributed to this spend.'));
@@ -213,8 +213,8 @@
     if (!isNaN(targetRoas) && targetRoas > 0) {
       var reqRev = spend * targetRoas;
       var maxSpend = revenue / targetRoas;
-      row.appendChild(card('Revenue @ Target ROAS', money(reqRev), reqRev <= revenue ? 'green' : 'amber', reqRev <= revenue ? '✓ Hit or beat' : '⚠ Gap', 'Revenue needed at current spend to reach target ROAS.'));
-      row.appendChild(card('Max Spend @ Target', money(maxSpend), maxSpend >= spend ? 'green' : 'amber', maxSpend >= spend ? '✓ Within cap' : '⚠ Over target', 'Highest spend that keeps ROAS at or above target at observed revenue.'));
+      row.appendChild(card('Revenue @ Target ROAS', money(reqRev), reqRev <= revenue ? 'green' : 'amber', reqRev <= revenue ? 'Hit or beat' : 'Gap', 'Revenue needed at current spend to reach target ROAS.'));
+      row.appendChild(card('Max Spend @ Target', money(maxSpend), maxSpend >= spend ? 'green' : 'amber', maxSpend >= spend ? 'Within cap' : 'Over target', 'Highest spend that keeps ROAS at or above target at observed revenue.'));
     }
 
     if (!isNaN(margin) && margin > 0 && margin <= 100) {

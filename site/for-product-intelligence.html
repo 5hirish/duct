@@ -120,22 +120,22 @@
 <button class="plat-btn" id="plat-mixpanel" onclick="wtTogglePlatform('Mixpanel', this)" aria-pressed="false">
   <img class="plat-icon" src="assets/icons/mixpanel.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Mixpanel</span>
-  <span class="plat-check" aria-hidden="true">✓</span>
+  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
 </button>
 <button class="plat-btn" id="plat-hubspot" onclick="wtTogglePlatform('HubSpot', this)" aria-pressed="false">
   <img class="plat-icon" src="assets/icons/hubspot.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>HubSpot</span>
-  <span class="plat-check" aria-hidden="true">✓</span>
+  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
 </button>
 <button class="plat-btn" id="plat-growthbook" onclick="wtTogglePlatform('GrowthBook', this)" aria-pressed="false">
   <img class="plat-icon" src="assets/icons/growthbook.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>GrowthBook</span>
-  <span class="plat-check" aria-hidden="true">✓</span>
+  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
 </button>
 <button class="plat-btn" id="plat-clarity" onclick="wtTogglePlatform('Clarity', this)" aria-pressed="false">
   <img class="plat-icon" src="assets/icons/clarity.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Clarity</span>
-  <span class="plat-check" aria-hidden="true">✓</span>
+  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
 </button>
 </div>
 <p class="wt-min-note" id="plat-hint">Select at least 2 to see cross-tool signals</p>
@@ -151,7 +151,7 @@
 <p class="wt-step-sub">Duct watches only what moves your north star — not everything, just the right things.</p>
 <div class="metric-grid">
 <button class="metric-card" onclick="wtSelectMetric('retention', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true">📉</span>
+  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-down"/></svg></span>
   <div>
     <p class="metric-title">Retention Health</p>
     <p class="metric-desc">Catch DAU drops and cohort decay before they compound — see which tool is the upstream cause.</p>
@@ -159,7 +159,7 @@
   <span class="metric-radio" aria-hidden="true"></span>
 </button>
 <button class="metric-card" onclick="wtSelectMetric('adoption', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true">🚀</span>
+  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg></span>
   <div>
     <p class="metric-title">Feature Adoption</p>
     <p class="metric-desc">Find which features users actually use — and which ones they hit once and abandon.</p>
@@ -167,7 +167,7 @@
   <span class="metric-radio" aria-hidden="true"></span>
 </button>
 <button class="metric-card" onclick="wtSelectMetric('tickets', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true">🎧</span>
+  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#headphones"/></svg></span>
   <div>
     <p class="metric-title">Support Signals</p>
     <p class="metric-desc">Surface what HubSpot tickets reveal about your product — before they become churn.</p>
@@ -351,9 +351,9 @@
 <p class="tag">The Problem</p>
 <h2>The answer is already in your tools.<br/>But no one is <em>connecting the dots.</em></h2>
 <ul class="pain-list">
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Mixpanel says feature use is steady. Clarity shows users rage-clicking through setup. You do not know which signal deserves priority.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> GrowthBook says the rollout hit 100%. HubSpot says confusion continues. Clarity shows users still getting stuck in the same flow.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend 3 hours a week manually aggregating data that should take 10 minutes.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-help"/></svg></span> Mixpanel says feature use is steady. Clarity shows users rage-clicking through setup. You do not know which signal deserves priority.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg></span> GrowthBook says the rollout hit 100%. HubSpot says confusion continues. Clarity shows users still getting stuck in the same flow.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#timer"/></svg></span> You spend 3 hours a week manually aggregating data that should take 10 minutes.</li>
 </ul>
 </div>
 <div class="diag reveal">
@@ -383,7 +383,7 @@
 <div class="diag-info"><b>Clarity</b><s aria-hidden="true">Replay shows 41% of users stall on teammate invite</s></div>
 </div>
 <div class="diag-result">
-<strong>✦ After Duct</strong>
+<strong><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg> After Duct</strong>
 Retention drop → support spike → replay friction → release timing. One story, automatically connected.
 </div>
 </div>
@@ -399,7 +399,7 @@ Retention drop → support spike → replay friction → release timing. One sto
 <div class="steps">
 <div class="step reveal">
 <span class="step-num">01</span>
-<span class="step-icon" aria-hidden="true">🔌</span>
+<span class="step-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
 <p class="step-title">Connect your stack</p>
 <p class="step-body">One-click OAuth integrations to the tools you already use. Duct reads to build your brief and changes nothing unless you approve it. Under 5 minutes to set up.</p>
 </div>
@@ -417,7 +417,7 @@ Retention drop → support spike → replay friction → release timing. One sto
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
-<span class="step-icon" aria-hidden="true">✦</span>
+<span class="step-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg></span>
 <p class="step-title">Get clear intelligence</p>
 <p class="step-body">A daily digest with cross-tool correlations, anomaly alerts, and plain-English summaries — ready before your morning standup.</p>
 </div>
@@ -434,22 +434,22 @@ Retention drop → support spike → replay friction → release timing. One sto
 </div>
 <div class="feat-grid">
 <div class="feat reveal">
-<span class="feat-label">🔗 Connect</span>
+<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg> Connect</span>
 <p class="feat-title">Cross-tool correlation</p>
 <p class="feat-body">Link analytics, support, experiment history, and replay evidence across Mixpanel, HubSpot, GrowthBook, and Clarity in one view.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.08s">
-<span class="feat-label">📬 Digest</span>
+<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mail"/></svg> Digest</span>
 <p class="feat-title">Daily PM briefing</p>
 <p class="feat-body">A concise morning summary of what changed, what correlated, and what needs attention next.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.14s">
-<span class="feat-label">🚨 Alerts</span>
+<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#bell-ring"/></svg> Alerts</span>
 <p class="feat-title">Anomaly detection</p>
 <p class="feat-body">Get an alert when unusual changes appear, before issues compound into churn or team fire drills.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.2s">
-<span class="feat-label">🗣️ Ask</span>
+<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg> Ask</span>
 <p class="feat-title">Plain-English queries</p>
 <p class="feat-body">Ask plain-English questions and get clear answers from connected tools, without SQL or dashboard digging.</p>
 </div>
@@ -468,22 +468,22 @@ Retention drop → support spike → replay friction → release timing. One sto
 </div>
 <div class="aud-cards reveal">
 <div class="aud-card hi">
-<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg></span>
 <div><span class="aud-name">Growth PM</span><span class="aud-role">20-200 person SaaS</span></div>
 <span class="aud-badge">Perfect fit</span>
 </div>
 <div class="aud-card">
-<span class="aud-av" style="background:#e8f4ff" aria-hidden="true">📣</span>
+<span class="aud-av" style="background:#e8f4ff" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
 <div><span class="aud-name">Product Marketer</span><span class="aud-role">Tracking feature launches</span></div>
 <span class="aud-badge">Great fit</span>
 </div>
 <div class="aud-card">
-<span class="aud-av" style="background:#efffef" aria-hidden="true">📈</span>
+<span class="aud-av" style="background:#efffef" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-up"/></svg></span>
 <div><span class="aud-name">Founding PM</span><span class="aud-role">Wearing many hats</span></div>
 <span class="aud-badge">Great fit</span>
 </div>
 <div class="aud-card" style="opacity:.45">
-<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#building-2"/></svg></span>
 <div><span class="aud-name">Enterprise Data Team</span><span class="aud-role">500+ with dedicated analysts</span></div>
 <span class="aud-badge off">Not yet</span>
 </div>

@@ -36,6 +36,9 @@ overflow-x: hidden;
 }
 
 /* ── SHARED ── */
+/* Icons: one Lucide sprite (assets/icons.svg, built by scripts/build_site_icons.py).
+   1em so an icon takes the size its container gave the emoji it replaced. */
+.ic { width: 1em; height: 1em; display: inline-block; vertical-align: -.125em; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .tag {
 display: inline-flex; align-items: center; gap: 6px;
 font-size: 11px; font-weight: 600; letter-spacing: .1em;
@@ -117,7 +120,7 @@ font-size: 13px; transition: background .15s, color .15s;
 .dm-item[aria-current="page"] { background: var(--off); color: var(--navy); }
 .dm-item[aria-current="page"] .dm-text span { color: var(--navy-2); }
 .dm-item.disabled { opacity: .4; pointer-events: none; }
-.dm-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+.dm-icon { font-size: 17px; flex-shrink: 0; margin-top: 2px; color: var(--orange); display: inline-flex; }
 .dm-text strong { display: block; font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 1px; }
 .dm-text span { font-size: 11px; color: var(--navy-3); }
 .dm-sep { height: 1px; background: var(--border); margin: 6px 4px; }
@@ -248,7 +251,7 @@ font-size: 14px; color: var(--navy-3); line-height: 1.65;
 transition: border-color .2s, transform .2s;
 }
 .pain-item:hover { border-color: var(--orange); transform: translateX(4px); color: var(--navy-2); }
-.pi-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.pi-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; color: var(--orange); display: inline-flex; }
 
 .diag { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
 .diag-header { padding: 14px 20px; background: var(--navy); display: flex; align-items: center; gap: 8px; }
@@ -526,7 +529,7 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
 .step:last-child { border-right: none; }
 .step:hover { background: rgba(255,255,255,.03); }
 .step-num { font-family: var(--serif); font-size: 11px; color: var(--orange); letter-spacing: .08em; margin-bottom: 24px; display: block; }
-.step-icon { font-size: 30px; margin-bottom: 18px; display: block; filter: brightness(0) invert(1); }
+.step-icon { font-size: 30px; margin-bottom: 18px; display: block; color: var(--orange); }
 .step:last-child .step-icon { filter: none; color: #fff; font-size: 30px; }
 .step-title { font-family: var(--serif); font-size: 22px; color: #fff; margin-bottom: 12px; letter-spacing: -.2px; }
 .step-body { font-size: 14px; font-weight: 300; color: rgba(255,255,255,.5); line-height: 1.72; }
@@ -547,7 +550,7 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
 .aud-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 16px 20px; display: flex; align-items: center; gap: 14px; transition: border-color .2s; }
 .aud-card.hi { border-color: var(--orange); }
 .aud-card:hover { border-color: var(--orange); }
-.aud-av { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.aud-av { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--navy); }
 .aud-name { font-size: 14px; font-weight: 500; color: var(--navy); display: block; }
 .aud-role { font-size: 12px; color: var(--navy-3); }
 .aud-badge { margin-left: auto; flex-shrink: 0; padding: 4px 10px; border-radius: var(--pill); font-size: 11px; font-weight: 500; color: var(--orange); border: 1px solid var(--orange); }

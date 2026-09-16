@@ -318,10 +318,10 @@
   DuctToolFormError.bindClear(ERR, fieldIds);
 
   function levelForRate(value) {
-    if (value >= 6) return { level: 'green', badge: '✓ Strong', context: 'High engagement quality relative to audience size.' };
-    if (value >= 3) return { level: 'amber', badge: '⚠ Healthy', context: 'Good engagement. Keep testing hooks and creative variations.' };
-    if (value >= 1) return { level: 'amber', badge: '⚠ Average', context: 'Baseline engagement. Improvement likely depends on stronger positioning and format testing.' };
-    return { level: 'red', badge: '✗ Low', context: 'Low engagement signal. Revisit topic relevance, hook strength, and distribution timing.' };
+    if (value >= 6) return { level: 'green', badge: 'Strong', context: 'High engagement quality relative to audience size.' };
+    if (value >= 3) return { level: 'amber', badge: 'Healthy', context: 'Good engagement. Keep testing hooks and creative variations.' };
+    if (value >= 1) return { level: 'amber', badge: 'Average', context: 'Baseline engagement. Improvement likely depends on stronger positioning and format testing.' };
+    return { level: 'red', badge: 'Low', context: 'Low engagement signal. Revisit topic relevance, hook strength, and distribution timing.' };
   }
 
   function fmtPercent(value) {

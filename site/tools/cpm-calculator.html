@@ -197,7 +197,7 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) row.removeChild(row.firstChild);
     var lvl = cpm <= 5 ? 'green' : (cpm <= 12 ? 'amber' : 'red');
-    row.appendChild(makeCard('CPM', '$' + cpm.toFixed(2), lvl, lvl === 'green' ? '✓ Efficient' : (lvl === 'amber' ? '⚠ Moderate' : '✗ Expensive'), 'Cost per 1,000 impressions from current campaign data.'));
+    row.appendChild(makeCard('CPM', '$' + cpm.toFixed(2), lvl, lvl === 'green' ? 'Efficient' : (lvl === 'amber' ? 'Moderate' : 'Expensive'), 'Cost per 1,000 impressions from current campaign data.'));
     row.appendChild(makeCard('Spend', fmtMoney(spend), 'neutral', 'Observed', 'Total cost used in this calculation.'));
     row.appendChild(makeCard('Impressions', fmtNum(impressions), 'neutral', 'Observed', 'Total delivered impression volume.'));
     if (!isNaN(targetCpm) && targetCpm > 0) {
@@ -207,7 +207,7 @@
     }
     if (!isNaN(budget) && budget > 0) {
       var reqCpm = (budget / impressions) * 1000;
-      row.appendChild(makeCard('Required CPM', '$' + reqCpm.toFixed(2), reqCpm >= cpm ? 'green' : 'amber', reqCpm >= cpm ? '✓ Within budget' : '⚠ Needs efficiency', 'CPM threshold to stay within the specified budget.'));
+      row.appendChild(makeCard('Required CPM', '$' + reqCpm.toFixed(2), reqCpm >= cpm ? 'green' : 'amber', reqCpm >= cpm ? 'Within budget' : 'Needs efficiency', 'CPM threshold to stay within the specified budget.'));
     }
     var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
     if (cpm <= 5) addP(body, 'Your CPM is efficient. Next, validate downstream quality so low-cost reach converts.');

@@ -198,7 +198,7 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) row.removeChild(row.firstChild);
     var lvl = cpa <= 50 ? 'green' : (cpa <= 120 ? 'amber' : 'red');
-    row.appendChild(card('CPA', '$' + cpa.toFixed(2), lvl, lvl === 'green' ? '✓ Efficient' : (lvl === 'amber' ? '⚠ Moderate' : '✗ High'), 'Cost per acquisition from your campaign data.'));
+    row.appendChild(card('CPA', '$' + cpa.toFixed(2), lvl, lvl === 'green' ? 'Efficient' : (lvl === 'amber' ? 'Moderate' : 'High'), 'Cost per acquisition from your campaign data.'));
     row.appendChild(card('Spend', money(spend), 'neutral', 'Observed', 'Total spend included in this calculation.'));
     row.appendChild(card('Conversions', num(conv), 'neutral', 'Observed', 'Attributed conversions/acquisitions.'));
     if (!isNaN(targetCpa) && targetCpa > 0) {
@@ -207,7 +207,7 @@
     }
     if (!isNaN(budget) && budget > 0) {
       var reqCpa = budget / conv;
-      row.appendChild(card('Required CPA', '$' + reqCpa.toFixed(2), reqCpa >= cpa ? 'green' : 'amber', reqCpa >= cpa ? '✓ In budget' : '⚠ Needs efficiency', 'CPA threshold needed to stay inside budget at current conversion volume.'));
+      row.appendChild(card('Required CPA', '$' + reqCpa.toFixed(2), reqCpa >= cpa ? 'green' : 'amber', reqCpa >= cpa ? 'In budget' : 'Needs efficiency', 'CPA threshold needed to stay inside budget at current conversion volume.'));
     }
     var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
     if (cpa <= 50) addP(body, 'Your CPA is healthy. Double-check lead quality so low acquisition cost translates to revenue.');

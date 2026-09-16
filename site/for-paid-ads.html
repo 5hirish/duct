@@ -110,9 +110,9 @@
 <p class="tag">The Problem</p>
 <h2>The signal is in your platforms.<br/>But none of them <em>talk to each other.</em></h2>
 <ul class="pain-list">
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">😵‍💫</span> Google says ROAS is up. Meta says CPA spiked. Your spreadsheet says something else entirely. You don't know which to trust.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">🕳️</span> A campaign that crushed it last month is tanking now. You don't know if it's the creative, the audience, or the algorithm.</li>
-<li class="pain-item"><span class="pi-icon" aria-hidden="true">⏱️</span> You spend four hours every week pulling CSVs from three platforms to build a report that's already stale by Monday.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-help"/></svg></span> Google says ROAS is up. Meta says CPA spiked. Your spreadsheet says something else entirely. You don't know which to trust.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg></span> A campaign that crushed it last month is tanking now. You don't know if it's the creative, the audience, or the algorithm.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#timer"/></svg></span> You spend four hours every week pulling CSVs from three platforms to build a report that's already stale by Monday.</li>
 </ul>
 </div>
 <div class="diag reveal">
@@ -142,7 +142,7 @@
 <div class="diag-info"><b>HubSpot</b><s aria-hidden="true">3 deals closed from paid this week</s></div>
 </div>
 <div class="diag-result">
-<strong>✦ After Duct</strong>
+<strong><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg> After Duct</strong>
 Meta CPA spike was audience overlap with Google — excluding existing Google converters cut Meta CPA by 24%.
 </div>
 </div>
@@ -180,22 +180,22 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <button class="plat-btn" id="plat-google" onclick="wtTogglePlatform('Google Ads', this)" aria-pressed="false">
   <img class="plat-icon" src="assets/icons/google-ads.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Google Ads</span>
-  <span class="plat-check" aria-hidden="true">✓</span>
+  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
 </button>
 <button class="plat-btn" id="plat-meta" onclick="wtTogglePlatform('Meta', this)" aria-pressed="false">
   <img class="plat-icon" src="assets/icons/meta.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Meta Ads</span>
-  <span class="plat-check" aria-hidden="true">✓</span>
+  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
 </button>
 <button class="plat-btn" id="plat-apple-ads" onclick="wtTogglePlatform('Apple Search Ads', this)" aria-pressed="false">
   <img class="plat-icon" src="assets/icons/apple-search-ads.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>Apple Search Ads</span>
-  <span class="plat-check" aria-hidden="true">✓</span>
+  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
 </button>
 <button class="plat-btn" id="plat-openai-ads" onclick="wtTogglePlatform('OpenAI Ads', this)" aria-pressed="false">
   <img class="plat-icon" src="assets/icons/openai-ads.svg" width="20" height="20" alt="" aria-hidden="true"/>
   <span>OpenAI Ads</span>
-  <span class="plat-check" aria-hidden="true">✓</span>
+  <span class="plat-check" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
 </button>
 </div>
 <p class="wt-min-note" id="plat-hint">Select at least 2 to see cross-channel signals</p>
@@ -211,7 +211,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <p class="wt-step-sub">Duct watches only what moves your number — not everything, just the right things.</p>
 <div class="metric-grid">
 <button class="metric-card" onclick="wtSelectMetric('cac', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true">📉</span>
+  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-down"/></svg></span>
   <div>
     <p class="metric-title">Lower CAC</p>
     <p class="metric-desc">Acquire customers for less — find which channels deliver the cheapest qualified pipeline.</p>
@@ -219,7 +219,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
   <span class="metric-radio" aria-hidden="true"></span>
 </button>
 <button class="metric-card" onclick="wtSelectMetric('roas', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true">💰</span>
+  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#coins"/></svg></span>
   <div>
     <p class="metric-title">Higher ROAS</p>
     <p class="metric-desc">Squeeze more return from every ad dollar — see which creative and audience combos over-deliver.</p>
@@ -227,7 +227,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
   <span class="metric-radio" aria-hidden="true"></span>
 </button>
 <button class="metric-card" onclick="wtSelectMetric('pipeline', this)" aria-pressed="false">
-  <span class="metric-icon" aria-hidden="true">🚀</span>
+  <span class="metric-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg></span>
   <div>
     <p class="metric-title">More pipeline</p>
     <p class="metric-desc">Grow qualified deals in CRM — correlate ad signals with HubSpot deal stage.</p>
@@ -415,7 +415,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 <div class="steps">
 <div class="step reveal">
 <span class="step-num">01</span>
-<span class="step-icon" aria-hidden="true">🔌</span>
+<span class="step-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
 <p class="step-title">Connect your ad stack</p>
 <p class="step-body">One-click OAuth integrations to Google Ads, Meta Ads, Apple Search Ads, and your CRM. Duct reads to build your brief and changes nothing unless you approve it. Under 5 minutes to set up.</p>
 </div>
@@ -433,7 +433,7 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
-<span class="step-icon" aria-hidden="true">✦</span>
+<span class="step-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg></span>
 <p class="step-title">Get your daily ad brief</p>
 <p class="step-body">A morning digest with cross-platform correlations, budget reallocation signals, and anomaly alerts — ready before you open a single ad dashboard.</p>
 </div>
@@ -450,22 +450,22 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 </div>
 <div class="feat-grid">
 <div class="feat reveal">
-<span class="feat-label">🔗 Attribution</span>
+<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg> Attribution</span>
 <p class="feat-title">Cross-platform signal mapping</p>
 <p class="feat-body">See how Google search intent feeds Meta retargeting, how organic content amplifies paid conversion, and which channels compound vs. cannibalise each other.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.08s">
-<span class="feat-label">📬 Digest</span>
+<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mail"/></svg> Digest</span>
 <p class="feat-title">Daily ad intelligence brief</p>
 <p class="feat-body">A crisp morning summary of what moved across all platforms, what correlated, and what to act on today. Reads in under 2 minutes — no dashboards required.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.14s">
-<span class="feat-label">🚨 Alerts</span>
+<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#bell-ring"/></svg> Alerts</span>
 <p class="feat-title">Creative fatigue &amp; anomaly detection</p>
 <p class="feat-body">Get an alert when a campaign suddenly shifts — CTR drops, CPA spikes, or budget pacing goes off-track — before you notice it in a Monday report.</p>
 </div>
 <div class="feat reveal" style="transition-delay:.2s">
-<span class="feat-label">💰 Budget</span>
+<span class="feat-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#coins"/></svg> Budget</span>
 <p class="feat-title">Cross-channel reallocation signals</p>
 <p class="feat-body">"Where should I shift $500 this week?" Just ask. Duct queries pipeline data across your ad platforms and CRM and returns a plain-English recommendation.</p>
 </div>
@@ -484,22 +484,22 @@ Meta CPA spike was audience overlap with Google — excluding existing Google co
 </div>
 <div class="aud-cards reveal">
 <div class="aud-card hi">
-<span class="aud-av" style="background:#e8f0fe" aria-hidden="true">📊</span>
+<span class="aud-av" style="background:#e8f0fe" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
 <div><span class="aud-name">Performance Marketer</span><span class="aud-role">20–200 person SaaS</span></div>
 <span class="aud-badge">Perfect fit</span>
 </div>
 <div class="aud-card">
-<span class="aud-av" style="background:#fff0e5" aria-hidden="true">🚀</span>
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg></span>
 <div><span class="aud-name">Growth Lead</span><span class="aud-role">Owns paid + organic</span></div>
 <span class="aud-badge">Great fit</span>
 </div>
 <div class="aud-card">
-<span class="aud-av" style="background:#efffef" aria-hidden="true">📣</span>
+<span class="aud-av" style="background:#efffef" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
 <div><span class="aud-name">Founding Marketer</span><span class="aud-role">Wearing many hats</span></div>
 <span class="aud-badge">Great fit</span>
 </div>
 <div class="aud-card" style="opacity:.45">
-<span class="aud-av" style="background:#f5f5f5" aria-hidden="true">🏢</span>
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#building-2"/></svg></span>
 <div><span class="aud-name">Enterprise Media Buyer</span><span class="aud-role">500+ with dedicated agency</span></div>
 <span class="aud-badge off">Not yet</span>
 </div>

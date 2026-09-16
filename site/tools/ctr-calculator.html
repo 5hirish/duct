@@ -263,9 +263,9 @@
   DuctToolFormError.bindClear(ERR, fieldIds);
 
   function rateState(v) {
-    if (v >= 3) return { level: 'green', badge: '✓ Strong', context: 'Strong click attraction for many channels and intents.' };
-    if (v >= 1) return { level: 'amber', badge: '⚠ Average', context: 'Decent performance; test hooks and targeting for lift.' };
-    return { level: 'red', badge: '✗ Low', context: 'Low click interest. Rework message relevance and creative.' };
+    if (v >= 3) return { level: 'green', badge: 'Strong', context: 'Strong click attraction for many channels and intents.' };
+    if (v >= 1) return { level: 'amber', badge: 'Average', context: 'Decent performance; test hooks and targeting for lift.' };
+    return { level: 'red', badge: 'Low', context: 'Low click interest. Rework message relevance and creative.' };
   }
 
   function pct(v) { return v.toFixed(2) + '%'; }
@@ -336,7 +336,7 @@
       var projected = impressions * (targetCtr / 100);
       var lift = projected - clicks;
       var lvl = targetCtr <= ctr ? 'green' : (targetCtr <= ctr * 1.35 ? 'amber' : 'red');
-      var badge = lvl === 'green' ? '✓ Within reach' : (lvl === 'amber' ? '⚠ Stretch' : '✗ Aggressive');
+      var badge = lvl === 'green' ? 'Within reach' : (lvl === 'amber' ? 'Stretch' : 'Aggressive');
       var liftContext = lift >= 0
         ? 'Additional clicks needed versus current performance to hit your target CTR at this impression volume.'
         : 'You are above target CTR; this is how many fewer clicks you could have at the target rate with the same impressions.';
@@ -347,7 +347,7 @@
     if (!isNaN(targetClicks) && targetClicks > 0) {
       var reqCtr = (targetClicks / impressions) * 100;
       var reqLvl = reqCtr <= ctr ? 'green' : (reqCtr <= ctr * 1.35 ? 'amber' : 'red');
-      var reqBadge = reqLvl === 'green' ? '✓ On pace' : (reqLvl === 'amber' ? '⚠ Stretch' : '✗ Gap');
+      var reqBadge = reqLvl === 'green' ? 'On pace' : (reqLvl === 'amber' ? 'Stretch' : 'Gap');
       row.appendChild(makeCard('Required CTR', pct(reqCtr), reqLvl, reqBadge, 'CTR needed at current impression volume to hit your click goal.'));
     }
 
