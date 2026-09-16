@@ -269,6 +269,36 @@ entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('in')
 }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
 
+// GitHub stars in the nav. Shown only once the number means something
+// (>= 100); below that the label stays "GitHub" rather than advertising a
+// small count. Cached for an hour so a page view is not an API call.
+(function() {
+var els = document.querySelectorAll('[data-duct-stars]');
+if (!els.length || !window.fetch) return;
+var KEY = 'duct-stars', MIN = 100, TTL = 60 * 60 * 1000;
+function show(n) {
+  if (n < MIN) return;
+  var t = n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+  Array.prototype.forEach.call(els, function(el) {
+    el.textContent = '\u2605 ' + t;
+    el.setAttribute('aria-label', n + ' stars on GitHub');
+  });
+}
+try {
+  var c = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (c && Date.now() - c.t < TTL) { show(c.n); return; }
+} catch (e) {}
+fetch('https://api.github.com/repos/5hirish/duct', { headers: { Accept: 'application/vnd.github+json' } })
+  .then(function(r) { return r.ok ? r.json() : null; })
+  .then(function(j) {
+    if (!j) return;
+    var n = j.stargazers_count | 0;
+    try { localStorage.setItem(KEY, JSON.stringify({ n: n, t: Date.now() })); } catch (e) {}
+    show(n);
+  })
+  .catch(function() {});
+})();
+
 // Nav shadow (passive + rAF throttled)
 (function() {
 var nav = document.getElementById('nav');
