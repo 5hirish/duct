@@ -516,14 +516,13 @@ export default function AgentChat({
       <Todos todos={todos} />
 
       <div className="flex-1 relative min-h-0">
+        {/* Scrollbar styling is global (styles/base.css). This pane used to
+            carry its own webkit-only rules, which is how it ended up the one
+            scroll area in the app with a 3px thumb. */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="absolute inset-0 overflow-y-auto px-4 py-4
-            [&::-webkit-scrollbar]:w-[3px]
-            [&::-webkit-scrollbar-thumb]:rounded-full
-            [&::-webkit-scrollbar-thumb]:bg-border/60
-            [&::-webkit-scrollbar-track]:bg-transparent"
+          className="absolute inset-0 overflow-y-auto px-4 py-4"
         >
           {phase === Phase.STARTING && (
             <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">

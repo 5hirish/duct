@@ -446,7 +446,7 @@ export default function ProjectContextPage() {
           <Progress value={inputProgressPercent} className="h-1.5" />
         </div>
 
-        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin" role="list" aria-label="Project context sections">
+        <div className="flex items-center gap-3 overflow-x-auto pb-1" role="list" aria-label="Project context sections">
           {stepProgress.map((stepItem, index) => {
             const stepNumber = index + 1;
             const isActive = step === stepNumber;

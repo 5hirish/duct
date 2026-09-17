@@ -304,8 +304,9 @@ never tables, code, or column layouts.
 
 - `scripts/check-design-system.mjs` (`npm run check:design`) fails on
   `text-[Npx]`, a raw Tailwind palette class, a hex in JSX, `window.confirm`,
-  `Loader2`, `text-muted-foreground/NN`, and a viewport prefix in a container
-  region. It is a **ratchet**: each rule carries an `allow` map of the files
+  `Loader2`, `text-muted-foreground/NN`, a hand-rolled scrollbar
+  (`::-webkit-scrollbar`, `scrollbar-thin`), and a viewport prefix in a
+  container region. It is a **ratchet**: each rule carries an `allow` map of the files
   that are genuinely exceptions, each with its reason. Removing a name is
   permanent. Adding one is a decision you write a sentence for — it is not how
   you quiet the check, any more than adding a file to
