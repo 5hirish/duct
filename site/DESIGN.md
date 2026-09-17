@@ -39,8 +39,17 @@ used consistently. That economy is the style; keep it.
   background instead of per-card borders (`.pain-grid`, `.feat-grid`).
 - **Fluid display type**: `clamp()` on `h1`/`h2` only — body sizes are
   fixed, spacing is fixed. Don't extend `clamp()` to spacing.
-- **The logo is text**: lowercase Georgia `duct` + the orange dot. The dot
-  is the brand's one graphic element.
+- **The logo is text**: lowercase Georgia `duct` + the orange dot.
+- **The aqueduct is the visual argument.** `.channel` (two lines of channel,
+  arches under it, orange water moving through) divides a hero from what
+  follows; the Roman threshold mosaics from the app (`assets/art/`) sit where
+  someone arrives: download, about, 404. Both come from the name (`/about`,
+  "where the name comes from") and nowhere else on the web, which is the
+  point. Product shots (`assets/media/`) carry the rest of the weight; the
+  site draws no other illustration.
+- **Icons are one Lucide sprite** (`assets/icons.svg`, `.ic`, `currentColor`,
+  `1em`). No emoji anywhere: they rendered differently per platform and had
+  to be forced white on navy with a filter.
 
 **Structure numbers**: container `max-width: 1160px`, side padding 52px →
 24px mobile; section padding 96–100px → 64px mobile; primary breakpoint
@@ -49,9 +58,10 @@ Buttons are one `.btn` pill base + `-orange`/`-dark`/`-ghost` variants and
 `-lg`; hover is darken + `translateY(-2px)` + tinted shadow on the primary.
 
 **What the site deliberately does not have**: dark mode, photography,
-testimonials (the `.quotes` CSS is dead until real quotes exist — never
-fake them), a `<form>` element or any email capture at all (the download CTA
-contract in `AGENTS.md`), or any runtime dependency beyond `marked` on the blog.
+testimonials (never fake them), invented stats bands, an interactive demo (the
+walkthrough was retired in September 2026; a real screenshot beat it), a
+`<form>` element or any email capture at all (the download CTA contract in
+`AGENTS.md`), or any runtime dependency beyond `marked` on the blog.
 
 ---
 
@@ -240,9 +250,10 @@ Rules, checkable in review:
 - **Social proof stays honest.** Real numbers ("9+ tools", "10 minutes to
   connect") over fake logos or invented testimonials — the dead `.quotes`
   CSS stays dead until real quotes exist.
-- **The demo is the best salesman** — it shows the product reasoning over
-  real-looking numbers. Prefer extending the demo (a new variant per
-  `AGENTS.md`) to adding another static feature grid.
+- **The product is the best salesman.** One `.shot` under the hero and three
+  `.job` cards (*When / Today / With Duct*) with README screenshots beat both
+  the old interactive demo and a static feature grid. If a job has no shot,
+  add a scenario to `scripts/shots/scenarios.mjs` rather than drawing a mock.
 - **Prose gets a measure everywhere**: caps exist (`700px` prose, `500px`
   hero sub) but a few blocks run ~120 characters; anything textual gets a
   max-width in the 45–75ch band.
@@ -274,13 +285,18 @@ The vocabulary is small and consistent — keep it that way:
   One idea per H2; front-load the H2s — they are what scanners read.
 - Post titles are Title Case; everything else sentence case. Excerpts on
   the index must match the post's front-matter excerpt — they drifted once.
-- Card art is currently an emoji on a brand-tinted gradient `div`. That's
-  the interim canon — consistent tint direction (135deg, brand-family
-  colors), one emoji, `aria-hidden`. Real per-post cover images (and
-  per-post OG images — today one 670KB PNG serves every page on the site)
-  are the upgrade path.
-- A post teaches the reader to *stop doing manual work* — the two live
+- Card art is the post's own Open Graph card, drawn by
+  `scripts/build_og_images.mjs` from the front matter: kicker, title, author
+  and read time, no excerpt (it sits under the cover). One image per post
+  serves the share preview and the index, which is why the index box keeps
+  the card's 1200:630 ratio rather than 16:9.
+- A post teaches the reader to *stop doing manual work*; the two live
   posts' shape ("The old way… The new way…") is the house post structure.
+  The post itself carries no pitch: the generator's bridge closer (the same
+  block the tools pages end on, with a session shot) is where Duct appears.
+- The blog speaks in the product's current voice: read, ask, approve,
+  download. "Brief in your inbox" and "join the beta" were the previous
+  product and were removed on 2026-09-17; do not bring them back.
 
 ---
 
@@ -296,9 +312,8 @@ the *landing-page* tells:
 | Uniform card grids, nothing featured | One heavier element per page; break a grid when the argument needs it |
 | Centered-everything | Asymmetric working sections; center only display moments |
 | Fake testimonials/logos | Real numbers or nothing |
-| Emoji standing in for an icon system | Emoji are the current system — used consistently and `aria-hidden` — but migrate to one inline-SVG set when touched (the white-on-navy `filter: brightness(0) invert(1)` hack renders differently per platform) |
-| Stock three-step "How it works" copy | The steps exist; write their bodies in voice ("Connect your tools" is the flattest copy on the site) |
-| One OG image for 24 pages | Per-page OG images, compressed |
+| Emoji standing in for an icon system | Gone. One Lucide sprite, `currentColor`, `aria-hidden`; add names to `scripts/build_site_icons.py` |
+| Stock three-step "How it works" copy | *Connect / Ask / Approve*, with the tools named and the approval gate stated; the channel runs above the steps |
 
 ---
 
@@ -328,22 +343,22 @@ the *landing-page* tells:
 
 ## Known gaps — close on touch
 
-- **14 pages load Google Fonts that nothing uses** (`Instrument Serif` +
-  `DM Sans` on `for-paid-ads` and all tools) — render-blocking, zero
-  visual effect. Delete the `<link>`s.
+- **The tools pages load Google Fonts that nothing uses** (`Instrument
+  Serif` + `DM Sans`) — render-blocking, zero visual effect. Delete the
+  `<link>`s. (`for-paid-ads` is done.)
 - **Accent strategy**: `for-organic-growth.html`'s `--green` + ~35 hand
-  overrides → the one-line `--orange` override; its demo markup is also
-  minified onto a single 14KB line and inlined instead of linking
-  `demo.css` like `for-paid-ads` does.
+  overrides → the one-line `--orange` override.
 - **Token splits to make**: `--brand` (fixed, logo dot/favicon) vs the
   overridable accent; a text-safe accent (≥4.5:1) for links and labels;
   the success green `#1a9e5c` currently invented inline in `duct.js`.
 - **Contrast fixes**: `.stats` band labels, accent-colored body links,
-  `.tag-soon`/amber badges, `.sev-high` at 10px.
+  `.tag-soon`/amber badges (11px is the floor now; nothing sits at 10px).
 - **Focus-visible styles exist only in `demo.css`** — `.btn`, nav links,
   `.faq-q`, cards all ride the UA default, which is invisible on orange.
-- **`.reveal` has no no-JS fallback** — content is invisible if `duct.js`
-  fails; nav/footer/CTAs also all arrive via `duct-partials.js` fetch.
+- **`.reveal` without JS**: `@media (scripting: none)` now shows every
+  section for a no-script visitor; a `duct.js` that fails to *load* still
+  leaves them hidden, and nav/footer/CTAs all arrive via `duct-partials.js`
+  fetch.
 - **`prefers-reduced-motion`** covers 3 demo transitions; extend to
   `.reveal`, `fadeUp`, the marquee, the logo pulse, smooth scroll.
 - **Dead code**: `.quotes`/`.qcard` family; `.prose pre/code` unexercised;
@@ -351,8 +366,7 @@ the *landing-page* tells:
 - **Five shadow recipes, no shadow tokens; no spacing scale** — tokenize
   when a page is touched, don't add a sixth.
 - **`.skip-link` re-declared inline on 6+ pages** (it's in `duct.css`);
-  five pages have no skip link at all (`about`, `404`, `privacy`, `terms`,
-  `seo-audit`).
+  four pages have no skip link at all (`about`, `404`, `privacy`, `terms`).
 - **Semantic drift**: 20–22px serif "titles" marked up as `<p>`
   (`.feat-title`, `.step-title`) — they read as headings but aren't in the
   outline; `role="list"` on the blog grid overrides the links' semantics.

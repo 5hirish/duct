@@ -52,7 +52,11 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
-import { CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/kestrel-story.mjs";
+import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
+import { TranscriptRow } from "@/components/workspace/AgentChat";
+import StepProgress from "@/components/workspace/StepProgress";
+import { Row as ChatRow } from "@/lib/agentSession";
+import { StepStatus } from "@/lib/agentSteps";
 import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
@@ -1040,14 +1044,14 @@ export const SCENES = [
   // ------------------------------------------------------------------ Shots
   // One customer's week, the same in every frame: these four scenes are what
   // scripts/shots captures for the README, from the story in
-  // lib/__fixtures__/kestrel-story.mjs. They double as the richest examples of
+  // lib/__fixtures__/solo-story.mjs. They double as the richest examples of
   // each component, so they stay here even between screenshot runs.
   {
     id: "shot-change-set",
     state: "proposed — one destructive, one blocked by a guardrail",
     group: "ChangeSetCard",
     title: "The review card, from the story",
-    note: "The change the insights agent proposes in Kestrel's week: a pause (destructive, so it asks), two negatives, and a budget raise the account's 25% guardrail blocks. Same object the session emits. What to check: one colour per row at most, the approve button is the plain primary even with a pause in the set, and the footer line says how many changes wait on a person.",
+    note: "The change the insights agent proposes in Solo's week: a pause (destructive, so it asks), two negatives, and a budget raise the account's 25% guardrail blocks. Same object the session emits. What to check: one colour per row at most, the approve button is the plain primary even with a pause in the set, and the footer line says how many changes wait on a person.",
     render: () => (
       <div data-shot style={{ maxWidth: 680 }}>
         <ChangeSetCard changeSet={STORY_CHANGE_SET} />
@@ -1074,7 +1078,7 @@ export const SCENES = [
     id: "shot-memory-timeline",
     state: "eight memories: one superseded, one pinned, one unconfirmed",
     group: "MemoryTimeline",
-    title: "What Duct remembers about Kestrel",
+    title: "What Duct remembers about Solo",
     note: "The rows the insights agent recalls in the session. One goal was raised from 700 to 900, so the old value is shown superseded rather than deleted; the CPA target is pinned; the watch the agent wrote this week is still unconfirmed. Every write here is a no-op.",
     render: () => <StoryMemoryScene />,
   },
@@ -1082,7 +1086,7 @@ export const SCENES = [
     id: "shot-connectors",
     state: "five connected, four waiting",
     group: "ConnectorTile",
-    title: "Kestrel's connections",
+    title: "Solo's connections",
     note: "The stack behind the story week: the five sources the insights agent pulls, connected and saved to the account, beside four it has not needed yet. Real logos, the page's own descriptions. What to check: three tiles per row at 1040px, connected and not-connected read as different at a glance without the dot doing all the work.",
     render: () => (
       <div className="conn-grid" data-shot style={{ padding: 24 }}>
@@ -1113,14 +1117,34 @@ export const SCENES = [
       </div>
     ),
   },
+  // One question, the sources read, the answer: the transcript with nothing
+  // around it. Three audiences ask the story week three things; the copy
+  // comes from the story so the card never says something the session does not.
+  ...Object.entries(STORY_ANSWERS).map(([key, a]) => ({
+    id: `shot-answer-${key}`,
+    state: `${key} · ${a.sources.length} sources read`,
+    group: "AgentChat",
+    title: `An answer, alone: ${a.question}`,
+    note: "The rows of a session with the workspace removed: the user bubble, the memories it opened with, the collected-source steps done, the assistant bubble. 600px wide so the capture lands near 3:2, the landing pages' card window; wider and the crop takes the question. What to check: the user bubble stays at 82% and right-aligned, the steps read as muted history not live progress, and bold inside the answer is one span per finding, never a whole paragraph.",
+    render: () => (
+      <div data-shot style={{ maxWidth: 600, padding: "20px 20px 8px" }} className="bg-card">
+        <TranscriptRow msg={{ role: ChatRow.USER, text: a.question }} />
+        <TranscriptRow msg={{ role: ChatRow.MEMORY_RECALL, memories: a.recalled.map((id) => { const m = STORY_MEMORIES.find((x) => x.id === id); return { id, memory_id: id, title: m.title, kind: m.kind }; }) }} />
+        <div className="mb-4">
+          <StepProgress steps={a.sources.map((s, i) => ({ step_id: `collect_source_data:${s.id}:${i}`, label: s.label, status: StepStatus.SUCCESS, connector_id: s.id }))} />
+        </div>
+        <TranscriptRow msg={{ role: ChatRow.ASSISTANT, text: a.answer }} />
+      </div>
+    ),
+  })),
   {
     id: "audit-report-v1",
     group: "Audit",
     title: "SEO report (V1)",
     state: "A full report, so the document decision can be seen",
     note:
-      "This is a printed thing rather than app chrome: it declares `color-scheme: light` and redefines the semantic tokens for its own subtree, so it looks the same in a dark app as in a light one. It used to take its ground from the theme while painting sixty fixed hexes inside it, which put the finding titles at 1.11:1 in dark. Open this scene in a DARK frame — that is the whole point of it.",
-    render: () => <AuditReportV1 data={AUDIT_REPORT_V1} />,
+      "Solo's audit from the story: nine categories, every finding on a page with a value, five priorities, a three-phase plan. (The lead-magnet page shows the same audit as the document the agent hands over, AUDIT_REPORT_HTML in the story, in the briefs' language; scripts/shots captures that one straight from the HTML.) This is a printed thing rather than app chrome: it declares `color-scheme: light` and redefines the semantic tokens for its own subtree, so it looks the same in a dark app as in a light one. It used to take its ground from the theme while painting sixty fixed hexes inside it, which put the finding titles at 1.11:1 in dark. Open this scene in a DARK frame — that is the whole point of it.",
+    render: () => <AuditReportV1 data={STORY_AUDIT} />,
   },
 ];
 
@@ -1131,99 +1155,6 @@ export const SCENES = [
  * failures, a finding with affected URLs, and a phase whose tasks carry an
  * effort estimate.
  */
-const AUDIT_REPORT_V1 = {
-  url: "https://kestrel.app",
-  generated_at: "2026-09-14T09:00:00Z",
-  overall_score: 68,
-  score_band: "needs_work",
-  headline: "Kestrel ranks for its own name and almost nothing else",
-  key_signals: [
-    "Only 3 of 41 pages earn organic traffic",
-    "No page targets the phrase freelancers actually search",
-    "Core Web Vitals pass on every template",
-  ],
-  strategic_narrative:
-    "Fixing the technical findings below will not move rankings on its own. They are hygiene; the growth comes from the second half of the plan.",
-  pages_crawled: 41,
-  total_sitemap_urls: 44,
-  total_issues: 12,
-  total_warnings: 9,
-  total_opportunities: 6,
-  crawl_summary: {
-    avg_ttfb_ms: 380,
-    pages_with_redirects: 2,
-    spa_pages_count: 0,
-    pages_noindex: 1,
-    pages_missing_title: 3,
-  },
-  wins: [
-    "Every template passes Core Web Vitals",
-    "Structured data is complete on the pricing page",
-    "No page is blocked by robots.txt",
-  ],
-  top_priorities: [
-    { rank: 1, severity: "fail", title: "Three sitemap entries return 404", effort_estimate: "under_1hr" },
-    { rank: 2, severity: "opportunity", title: "Write the pages freelancers actually search for", effort_estimate: "1_to_2_wks" },
-    { rank: 3, severity: "warn", title: "Two templates are missing a canonical", effort_estimate: "2_to_4hrs" },
-  ],
-  categories: [
-    {
-      id: "indexing",
-      label: "Indexing",
-      score: 82,
-      fail_count: 1,
-      warn_count: 2,
-      opp_count: 0,
-      findings: [
-        {
-          id: "f1",
-          severity: "fail",
-          title: "Sitemap lists three pages that 404",
-          description: "A sitemap that points at missing pages spends crawl budget proving they are missing.",
-          impact: "high",
-          effort: "low",
-          affected_urls: ["/guides/old-invoicing", "/pricing-2024", "/blog/launch"],
-        },
-        { id: "f2", severity: "warn", title: "Two templates are missing a canonical", impact: "medium", effort: "low" },
-      ],
-    },
-    {
-      id: "content",
-      label: "Content",
-      score: 41,
-      fail_count: 1,
-      warn_count: 0,
-      opp_count: 4,
-      findings: [
-        {
-          id: "f3",
-          severity: "fail",
-          title: "No page targets a commercial query",
-          description: "Every page reads as an about page. Nothing answers a question someone would search before buying.",
-          impact: "high",
-          effort: "high",
-        },
-      ],
-    },
-    { id: "performance", label: "Performance", score: 91, fail_count: 0, warn_count: 0, opp_count: 1, findings: [] },
-  ],
-  roadmap: [
-    {
-      label: "Week 1",
-      theme: "Unblock",
-      tasks: [
-        { task: "Remove the three dead sitemap entries", effort_estimate: "under_1hr" },
-        { task: "Add canonicals to the two templates", effort_estimate: "2_to_4hrs" },
-      ],
-    },
-    {
-      label: "Weeks 2–4",
-      theme: "Structure",
-      tasks: [{ task: "Publish the invoicing guide", effort_estimate: "1_to_3_days" }],
-    },
-  ],
-};
-
 function StoryMemoryScene() {
   const api = useMemo(() => {
     const items = STORY_MEMORIES.map((m) => ({ ...m })).sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));

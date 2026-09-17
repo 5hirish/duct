@@ -16,3 +16,15 @@
 /llms.txt
   Content-Type: text/plain; charset=utf-8
   Cache-Control: public, max-age=3600
+
+# Cloudflare Pages revalidates every asset on every view by default. The
+# shots, art, cards and icons change only with a deliberate reshoot, so a
+# repeat visitor can keep them for a week instead of asking each time.
+/assets/media/*
+  Cache-Control: public, max-age=604800
+/assets/art/*
+  Cache-Control: public, max-age=604800
+/assets/og/*
+  Cache-Control: public, max-age=604800
+/assets/icons/*
+  Cache-Control: public, max-age=604800

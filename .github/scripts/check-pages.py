@@ -22,7 +22,12 @@ DYNAMIC_META = set()
 # Error/utility pages — skip all SEO checks (no canonical, OG, Twitter needed).
 ERROR_PAGES = {"404.html"}
 
-REQUIRED_OG = {"og:type", "og:url", "og:title", "og:description", "og:image", "og:site_name"}
+# Width and height let Facebook and LinkedIn draw the card on the first share
+# instead of leaving it blank until their crawler has fetched the image once.
+REQUIRED_OG = {
+    "og:type", "og:url", "og:title", "og:description", "og:image",
+    "og:image:width", "og:image:height", "og:site_name",
+}
 REQUIRED_TWITTER = {"twitter:card", "twitter:title", "twitter:description", "twitter:image"}
 
 CANONICAL_BASE = "https://getduct.ai"
@@ -51,6 +56,9 @@ class PageChecker(HTMLParser):
         self._saw_body = False
         self.ld_blocks = []
         self._in_ld = False
+        # Every local image the page references, src and srcset alike. A shot
+        # variant that was never generated is a broken picture, not a slow one.
+        self.image_refs = []
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -88,6 +96,14 @@ class PageChecker(HTMLParser):
                 self.og_props.add(prop)
             if name in REQUIRED_TWITTER:
                 self.twitter_props.add(name)
+
+        if tag == "img":
+            if attrs.get("src"):
+                self.image_refs.append(attrs["src"])
+            for cand in attrs.get("srcset", "").split(","):
+                cand = cand.strip().split(" ")[0]
+                if cand:
+                    self.image_refs.append(cand)
 
         if tag == "script":
             if attrs.get("type", "").lower() == "application/ld+json":
@@ -165,6 +181,16 @@ class PageChecker(HTMLParser):
         if missing_tw:
             self.errors.append(f"Missing Twitter meta tags: {', '.join(sorted(missing_tw))}")
 
+        # Images resolve
+        for ref in self.image_refs:
+            if ref.startswith(("http://", "https://", "data:", "//")):
+                continue
+            path = ref.split("?")[0]
+            base = self.site_root if path.startswith("/") else self.page_dir
+            target = os.path.normpath(os.path.join(base, path.lstrip("/")))
+            if not os.path.isfile(target):
+                self.errors.append(f"Image not found: {ref}")
+
         # CSS
         if not self.has_css:
             self.errors.append(f"Missing <link rel='stylesheet' href='{asset_prefix}duct.css'>")
@@ -190,6 +216,8 @@ def check_file(filepath, site_root):
         content = f.read()
 
     checker = PageChecker(rel)
+    checker.site_root = site_root
+    checker.page_dir = os.path.dirname(filepath)
     checker.feed(content)
     checker.run_checks(rel)
     return checker.errors, checker.warnings
@@ -201,7 +229,8 @@ def main():
     html_files = sorted(
         glob.glob(os.path.join(site_root, "*.html")) +
         glob.glob(os.path.join(site_root, "blog", "*.html")) +
-        glob.glob(os.path.join(site_root, "changelog", "*.html"))
+        glob.glob(os.path.join(site_root, "changelog", "*.html")) +
+        glob.glob(os.path.join(site_root, "tools", "*.html"))
     )
 
     total_errors = 0

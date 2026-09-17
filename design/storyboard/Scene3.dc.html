@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #0D0F1A; }
+    a { color: #FF5C00; } a:hover { color: #e05000; }
+    .app { font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif; color: #0b111f; }
+    .nav { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 14px; color: #4d535f; }
+    .nav-active { background: #f3f1ee; color: #0b111f; font-weight: 500; }
+    .mark { width: 22px; height: 22px; border-radius: 6px; background: #ffffff; border: 1px solid #e6e4e1; padding: 4px; box-sizing: border-box; }
+    .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid #e6e4e1; background: #ffffff; font-size: 13px; font-weight: 500; }
+    .chip img { width: 16px; height: 16px; }
+    .count { font-family: ui-monospace, Menlo, monospace; color: #4d535f; font-weight: 400; }
+  </style>
+</helmet>
+<div style="position: relative; width: 1600px; height: 1000px; background: linear-gradient(135deg, #fff1e8 0%, #f7f4f0 55%, #e9ecf5 100%); overflow: hidden;">
+  <div style="position: absolute; top: 40px; right: 48px; display: flex; align-items: center; gap: 10px; font-family: ui-monospace, Menlo, monospace; font-size: 26px; color: #6b6f82; letter-spacing: 0.02em;">
+    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #FF5C00;"></span>
+    <span>Mon 09:03</span>
+  </div>
+  <div style="position: absolute; top: 40px; left: 48px; font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #6b6f82;">Scene 3 · Reads across · 9–14 s</div>
+
+  <div class="app" style="position: absolute; left: 120px; top: 120px; width: 1360px; height: 800px; background: #ffffff; border: 1px solid #e6e4e1; border-radius: 14px; box-shadow: 0 20px 40px rgba(13,15,26,0.18); display: flex; overflow: hidden;">
+    <div style="width: 256px; background: #fefaf3; border-right: 1px solid #e6e4e1; display: flex; flex-direction: column; padding: 16px 12px; box-sizing: border-box; gap: 4px;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px 10px;">
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; letter-spacing: -0.01em; color: #0b111f;">duct<span style="width: 8px; height: 8px; border-radius: 50%; background: #FF5C00; display: inline-block;"></span></span>
+        <span style="font-size: 12px; color: rgba(11,17,31,0.4);">app</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 6px 8px; border: 1px solid #e6e4e1; border-radius: 8px; background: #ffffff; font-size: 13px;">
+        <span style="width: 22px; height: 22px; border-radius: 6px; background: #2a2d3e; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0;">S</span>
+        <span style="flex-grow: 1; font-weight: 500;">Solo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a857e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
+      </div>
+      <div class="nav nav-active">Insights</div>
+      <div class="nav">Content</div>
+      <div class="nav">Audit</div>
+      <div class="nav">Connections</div>
+      <div class="nav">Memory</div>
+      <div style="flex-grow: 1;"></div>
+      <div style="display: flex; gap: 6px; padding: 0 12px;">
+        <img class="mark" src="google-ads.svg" alt="">
+        <img class="mark" src="googleanalytics.svg" alt="">
+        <img class="mark" src="stripe.svg" alt="">
+        <img class="mark" src="clarity.svg" alt="">
+        <img class="mark" src="googlesearchconsole.svg" alt="">
+      </div>
+    </div>
+
+    <div style="width: 600px; border-right: 1px solid #e6e4e1; display: flex; flex-direction: column; box-sizing: border-box;">
+      <div style="padding: 18px 24px; border-bottom: 1px solid #e6e4e1; font-size: 13px; color: #4d535f;">Insights · week of 8 Sep</div>
+      <div style="display: flex; flex-direction: column; gap: 18px; padding: 24px; flex-grow: 1;">
+        <div style="align-self: flex-end; max-width: 85%; background: #f3f1ee; color: #0b111f; border-radius: 10px 10px 4px 10px; padding: 10px 14px; font-size: 15px;">why are signups down this week?</div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: #ffffff; border: 1px solid #e6e4e1; box-shadow: 0 6px 20px rgba(13,15,26,0.08); font-size: 13px; color: #4d535f;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #FF5C00; display: inline-block;"></span>
+            reading <span style="color: #0b111f; font-weight: 500;">Ads · GA4 · Stripe</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span class="chip"><img src="google-ads.svg" alt="">Ads <span class="count">3 campaigns</span></span>
+            <span class="chip"><img src="googleanalytics.svg" alt="">GA4 <span class="count">812 signups</span></span>
+            <span class="chip"><img src="stripe.svg" alt="">Stripe <span class="count">€18,400 MRR</span></span>
+          </div>
+        </div>
+
+        <div style="align-self: flex-start; max-width: 92%; background: #f3f1ee; color: #0b111f; border-radius: 4px 10px 10px 10px; padding: 16px 18px; font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; gap: 14px;">
+            <div style="flex: 1; background: #ffffff; border: 1px solid #e6e4e1; border-radius: 10px; padding: 12px 14px;">
+              <div style="font-size: 28px; font-weight: 600; color: #10883c; letter-spacing: -0.02em;">ROAS ↑ 14%</div>
+              <div style="font-size: 12px; color: #4d535f; margin-top: 2px;">almost all from Performance Max</div>
+            </div>
+            <div style="flex: 1; background: #ffffff; border: 1px solid #e6e4e1; border-radius: 10px; padding: 12px 14px;">
+              <div style="font-size: 28px; font-weight: 600; color: #c9000c; letter-spacing: -0.02em;">Android D7 ↓ 2.4×</div>
+              <div style="font-size: 12px; color: #4d535f; margin-top: 2px;">PMax cohort vs organic, 31% vs 54%</div>
+            </div>
+          </div>
+          <div>Performance Max is buying signups at <strong>€19.40</strong> against a <strong>€12</strong> target, and its Android users leave within a week. <span style="border-bottom: 3px solid #FF5C00; padding-bottom: 1px; font-weight: 500;">You're paying to acquire churners.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; background: #fbfaf8;">
+      <div style="padding: 18px 24px; border-bottom: 1px solid #e6e4e1; font-size: 13px; color: #4d535f;">Brief</div>
+      <div style="display: flex; flex-direction: column; gap: 12px; padding: 28px; color: #8a857e; font-size: 14px;">
+        <div style="height: 22px; width: 70%; border-radius: 6px; background: #f3f1ee;"></div>
+        <div style="height: 14px; width: 90%; border-radius: 6px; background: #f3f1ee;"></div>
+        <div style="height: 14px; width: 60%; border-radius: 6px; background: #f3f1ee;"></div>
+        <div style="margin-top: 8px;">writing…</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

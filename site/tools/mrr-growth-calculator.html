@@ -13,15 +13,14 @@
 <meta property="og:url" content="https://getduct.ai/tools/mrr-growth-calculator"/>
 <meta property="og:title" content="MRR Growth Rate Calculator — Free Tool by Duct"/>
 <meta property="og:description" content="Calculate MRR growth rate, compound monthly growth, and target growth requirements instantly."/>
-<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-mrr-growth-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="MRR Growth Rate Calculator — Free Tool by Duct"/>
 <meta name="twitter:description" content="Free SaaS MRR growth calculator with benchmark-style interpretation and action insights."/>
-<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-mrr-growth-calculator.jpg"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js"></script>
 <script type="application/ld+json">
@@ -89,11 +88,7 @@
   @media (max-width: 640px) { .tool-results { padding: 24px; } }
   .tool-results.visible { display: block; }
 
-  .results-row {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;
-  }
-  @media (max-width: 860px) { .results-row { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 420px) { .results-row { grid-template-columns: 1fr; } }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
 
   .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
   .result-card.green { border-color: #22c55e; background: #f0fdf4; }
@@ -120,12 +115,6 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
-  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
-  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
-  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
-  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
-  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -166,7 +155,7 @@
 <a href="#main-content" class="skip-link">Skip to content</a>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 
-<div data-duct-partial="/partials/nav-tools.html"></div>
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 
@@ -219,10 +208,10 @@
 
       <div class="tool-cta">
         <div class="tool-cta-text">
-          <p>Growth trajectory mapped — now catch slowdowns before quarter close.</p>
-          <p>Duct tracks MRR velocity weekly and highlights where acquisition, expansion, or churn is changing the trend.</p>
+          <p>Growth over one stretch of months. The question is what changed under the slope.</p>
+          <p>Duct reads your ads, analytics and revenue tools, answers that question, and proposes the change. You approve it.</p>
         </div>
-        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+        <a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a>
       </div>
 
       <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
@@ -236,9 +225,15 @@
 
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">CMGR tells you momentum. It doesn't tell you what changed underneath the slope.</p>
-    <p class="duct-bridge-body">To act early, you need growth velocity connected to new logo flow, expansion, and churn pressure. Duct unifies those weekly signals into one brief so revenue teams know where to intervene first.</p>
-    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">CMGR tells you momentum. It doesn't tell you what changed underneath the slope.</p>
+      <p class="duct-bridge-body">Duct reads MRR beside new logos, expansion and churn, says which of the three changed the slope, and proposes where to act first.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: asked why signups are down when ROAS is up, the agent reads ads, analytics and revenue together, proposes a change waiting for approval on the left, and writes the brief on the right"//>
+      <figcaption>Ask why signups are down when ROAS is up. Duct reads ads, analytics and revenue together, names the cohort that is leaving, and proposes the change. You approve.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -321,16 +316,16 @@
 
   var THRESHOLDS = {
     netGrowth: [
-      { min: 40, level: 'green', badge: '✓ Strong', context: 'High momentum across the full period.' },
-      { min: 15, level: 'amber', badge: '⚠ Moderate', context: 'Positive growth, but execution consistency matters.' },
-      { min: 0, level: 'amber', badge: '⚠ Low', context: 'Growing, but at a pace that may miss aggressive targets.' },
-      { min: -999, level: 'red', badge: '✗ Contraction', context: 'MRR decreased across the selected period.' }
+      { min: 40, level: 'green', badge: 'Strong', context: 'High momentum across the full period.' },
+      { min: 15, level: 'amber', badge: 'Moderate', context: 'Positive growth, but execution consistency matters.' },
+      { min: 0, level: 'amber', badge: 'Low', context: 'Growing, but at a pace that may miss aggressive targets.' },
+      { min: -999, level: 'red', badge: 'Contraction', context: 'MRR decreased across the selected period.' }
     ],
     cmgr: [
-      { min: 15, level: 'green', badge: '✓ Hypergrowth', context: 'Excellent monthly compounding for an early-stage SaaS.' },
-      { min: 5, level: 'amber', badge: '⚠ Healthy', context: 'Solid compounding. Focus on maintaining consistency.' },
-      { min: 0, level: 'amber', badge: '⚠ Flat', context: 'Positive but slow monthly growth.' },
-      { min: -999, level: 'red', badge: '✗ Declining', context: 'Negative monthly compounding; investigate churn and expansion mix.' }
+      { min: 15, level: 'green', badge: 'Hypergrowth', context: 'Excellent monthly compounding for an early-stage SaaS.' },
+      { min: 5, level: 'amber', badge: 'Healthy', context: 'Solid compounding. Focus on maintaining consistency.' },
+      { min: 0, level: 'amber', badge: 'Flat', context: 'Positive but slow monthly growth.' },
+      { min: -999, level: 'red', badge: 'Declining', context: 'Negative monthly compounding; investigate churn and expansion mix.' }
     ]
   };
 
@@ -345,9 +340,9 @@
   function fmtCurrency(value) {
     var abs = Math.abs(value);
     var sign = value < 0 ? '-' : '';
-    if (abs >= 1000000) return sign + '$' + (abs / 1000000).toFixed(2) + 'm';
-    if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1) + 'k';
-    return sign + '$' + abs.toFixed(0);
+    if (abs >= 1000000) return sign + (abs / 1000000).toFixed(2) + 'm';
+    if (abs >= 1000) return sign + (abs / 1000).toFixed(1) + 'k';
+    return sign + abs.toFixed(0);
   }
 
   function fmtPercent(value) {
@@ -457,8 +452,8 @@
         reqLevel = 'red';
       }
       var reqBadge = reqLevel === 'green'
-        ? '✓ Within reach'
-        : (reqLevel === 'amber' ? '⚠ Stretch' : '✗ Aggressive');
+        ? 'Within reach'
+        : (reqLevel === 'amber' ? 'Stretch' : 'Aggressive');
       var reqCardContext = targetBelowCurrent
         ? 'Compound monthly rate from current MRR to reach the lower target in the same number of months. Negative CMGR means contraction each month.'
         : 'Monthly growth needed from current MRR to hit target in the same number of months.';
@@ -514,6 +509,7 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) { row.removeChild(row.firstChild); }
   });
+  DuctToolExample.seed(['inp-start-mrr', 'inp-end-mrr', 'inp-months', 'inp-target'], 'calc-btn', 'results-section');
 }());
 </script>
 

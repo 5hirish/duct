@@ -4,17 +4,16 @@
  *
  *   node scripts/social/render.mjs
  *
- * Writes two PNGs, because the two destinations want different sizes and
- * different pitches:
+ * Writes one PNG:
  *
- *   site/assets/og-image.png      1200x630  — the marketing site. 23 pages
- *                                 already point <meta og:image> at this path,
- *                                 and the file did not exist, so every share
- *                                 of getduct.ai rendered without a card.
  *   .github/social-preview.png    1280x640  — GitHub. Cannot be set from a file
  *                                 in the repo; upload it by hand at
  *                                 Settings -> Social preview. Kept in the repo
  *                                 so the next person does not have to redraw it.
+ *
+ * It used to write site/assets/og-image.png as well, the one og:image every
+ * page shared. Each page draws its own card now (scripts/build_og_images.mjs),
+ * so that output is gone rather than left to drift from them.
  *
  * Uses the Playwright already installed for the site's smoke tests, so this
  * adds no dependency. Fonts are the system serif/sans the brand uses, so run
@@ -43,18 +42,6 @@ const TEMPLATE = "file://" + resolve(HERE, "template.html");
 const SOURCES = "Google Ads|GA4|Search Console|Mixpanel|Stripe";
 
 const CARDS = [
-  {
-    out: "site/assets/og-image.png",
-    width: 1200,
-    height: 630,
-    params: {
-      w: 1200, h: 630, h1: 64, subsize: 25,
-      headline: "The intelligence layer<br>your stack was <em>missing</em>.",
-      sub: "Reads across your product and marketing tools and tells you what they mean together — as a decision brief, not another dashboard.",
-      sources: SOURCES,
-      tag: "getduct.ai",
-    },
-  },
   {
     out: ".github/social-preview.png",
     width: 1280,

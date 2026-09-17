@@ -58,6 +58,7 @@ the area you are editing; site conventions do not apply to `backend/`.
 | `site/` | Static HTML/CSS/JS, no build step | [`site/AGENTS.md`](site/AGENTS.md) |
 | `docs/` | Engineering plans and reference material | [`docs/README.md`](docs/README.md) |
 | `scripts/` | Deploy/env plumbing and repo hygiene | below |
+| `design/` | Storyboards (Claude Design) and the Remotion film | [`design/motion/README.md`](design/motion/README.md) |
 
 Product strategy, GTM and deployment runbooks live in a separate private
 repository. Documents here occasionally cite them; those citations state their
@@ -160,7 +161,7 @@ Check here before hand-rolling env or secret plumbing:
 - `envfile.py` — shared dotenv parser used by the above.
 - `security/audit.py`, `security/leak_scan.py` — repo hygiene, both run in CI.
 - `shots/shoot.mjs` — product screenshots from the real app for the README and
-  the site: one story (`app/src/lib/__fixtures__/kestrel-story.mjs`) feeds the
+  the site: one story (`app/src/lib/__fixtures__/solo-story.mjs`) feeds the
   mock agent backend and the `/preview` scenes, Playwright captures at 2x, and
   `sharp` frames the result. Needs the app dev server; adds no dependency.
 

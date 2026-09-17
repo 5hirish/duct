@@ -13,15 +13,14 @@
 <meta property="og:url" content="https://getduct.ai/tools/weekly-brief-template"/>
 <meta property="og:title" content="Weekly Marketing Brief Template Generator — Free Tool by Duct"/>
 <meta property="og:description" content="Get a customised weekly marketing report template for your exact tool stack. Free, instant, copy with one click."/>
-<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-weekly-brief-template.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Weekly Marketing Brief Template Generator — Free Tool by Duct"/>
 <meta name="twitter:description" content="Generate a customised weekly marketing brief template for your role and tool stack. Free, instant, no signup."/>
-<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-weekly-brief-template.jpg"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js"></script>
 <script type="application/ld+json">
@@ -108,7 +107,7 @@
   }
   .role-card:hover { border-color: var(--orange); }
   .role-card.selected { border-color: var(--orange); background: #eff6ff; }
-  .role-icon { font-size: 28px; }
+  .role-icon { font-size: 28px; color: var(--orange); display: inline-flex; }
   .role-name { font-size: 14px; font-weight: 600; color: var(--navy); }
   .role-desc { font-size: 12px; color: var(--navy-3); line-height: 1.4; }
 
@@ -131,6 +130,9 @@
     object-fit: contain;
     flex-shrink: 0;
   }
+  /* Two tools have no logo file (Ahrefs, LinkedIn Ads); a sprite glyph at
+     the same size keeps the row aligned instead of a broken image. */
+  svg.tool-icon { font-size: 22px; color: var(--navy-3); }
 
   /* North star input */
   .ns-input {
@@ -185,12 +187,6 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
-  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
-  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
-  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
-  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
-  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -237,7 +233,7 @@
 <a href="#main-content" class="skip-link">Skip to content</a>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 
-<div data-duct-partial="/partials/nav-tools.html"></div>
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 
@@ -270,17 +266,17 @@
       <p class="step-sub">Your brief structure changes based on what you own. Pick the one that fits.</p>
       <div class="role-grid">
         <button class="role-card" data-role="growth-pm" aria-pressed="false">
-          <span class="role-icon" aria-hidden="true">📊</span>
+          <span class="role-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
           <span class="role-name">Growth PM</span>
           <span class="role-desc">Product-led growth, activation, retention, feature adoption</span>
         </button>
         <button class="role-card" data-role="performance-marketer" aria-pressed="false">
-          <span class="role-icon" aria-hidden="true">📣</span>
+          <span class="role-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
           <span class="role-name">Performance Marketer</span>
           <span class="role-desc">Paid acquisition, ROAS, CAC, pipeline from paid channels</span>
         </button>
         <button class="role-card" data-role="seo-lead" aria-pressed="false">
-          <span class="role-icon" aria-hidden="true">🌱</span>
+          <span class="role-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
           <span class="role-name">SEO Lead</span>
           <span class="role-desc">Organic traffic, keyword rankings, content performance</span>
         </button>
@@ -300,42 +296,42 @@
         <button class="tool-btn" data-tool="ga4" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/googleanalytics.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>GA4</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="mixpanel" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/mixpanel.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Mixpanel</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="hubspot" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/hubspot.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>HubSpot</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="google-ads" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/google-ads.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Google Ads</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="ahrefs" aria-pressed="false">
-          <img class="tool-icon" src="../assets/icons/ahrefs.svg" width="22" height="22" alt="" aria-hidden="true"/>
+          <svg class="ic tool-icon" aria-hidden="true"><use href="/assets/icons.svg#search"/></svg>
           <span>Ahrefs</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="gsc" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/googlesearchconsole.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Search Console</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="meta-ads" aria-pressed="false">
           <img class="tool-icon" src="../assets/icons/meta.svg" width="22" height="22" alt="" aria-hidden="true"/>
           <span>Meta Ads</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="linkedin-ads" aria-pressed="false">
-          <img class="tool-icon" src="../assets/icons/linkedin.svg" width="22" height="22" alt="" aria-hidden="true"/>
+          <svg class="ic tool-icon" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg>
           <span>LinkedIn Ads</span>
-          <span class="tool-check">✓</span>
+          <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
       </div>
       <p id="tool-min-note" style="font-size:12px;color:var(--navy-3);margin-top:14px">Select at least one tool to continue.</p>
@@ -368,17 +364,17 @@
       <div class="output-header">
         <h3>Your weekly brief template</h3>
         <button class="copy-btn" id="copy-btn" aria-label="Copy brief template to clipboard">
-          <span aria-hidden="true">📋</span>
+          <span aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#clipboard-list"/></svg></span>
           <span id="copy-label">Copy to clipboard</span>
         </button>
       </div>
       <div class="brief-box" id="brief-box" role="region" aria-label="Generated brief template"></div>
       <div class="tool-cta">
         <div class="tool-cta-text">
-          <p>Template generated — now replace manual weekly reporting with signal-driven updates.</p>
-          <p>Duct pulls your actual tool data into the same brief structure each week so your team can decide faster.</p>
+          <p>The template is written. The question is who fills it every week.</p>
+          <p>Duct reads your ads, analytics and revenue tools, answers that question, and proposes the change. You approve it.</p>
         </div>
-        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+        <a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a>
       </div>
       <div class="insight-panel">
         <p class="insight-label">Before you fill this in</p>
@@ -394,9 +390,15 @@
 
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">A template tells you how to write a brief. It doesn't tell you what changed this week.</p>
-    <p class="duct-bridge-body">That requires pulling clean signals from your actual tools, synthesizing them, and surfacing one clear priority action. Duct automates that weekly workflow so leaders get a true brief, not another manual report draft.</p>
-    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">A template tells you how to write a brief. It doesn't tell you what changed this week.</p>
+      <p class="duct-bridge-body">Duct reads your actual tools, writes the brief with what changed, why, and one action, and remembers what you decided last week.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: asked why signups are down when ROAS is up, the agent reads ads, analytics and revenue together, proposes a change waiting for approval on the left, and writes the brief on the right"//>
+      <figcaption>Ask why signups are down when ROAS is up. Duct reads ads, analytics and revenue together, names the cohort that is leaving, and proposes the change. You approve.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -566,7 +568,7 @@
 
     for (var i = 1; i <= 3; i++) {
       var dot = document.getElementById('dot-' + i);
-      if (i < n) { dot.className = 'step-dot done'; dot.textContent = '✓'; }
+      if (i < n) { dot.className = 'step-dot done'; dot.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>'; }
       else if (i === n) { dot.className = 'step-dot active'; dot.textContent = String(i); }
       else { dot.className = 'step-dot'; dot.textContent = String(i); }
     }

@@ -199,7 +199,10 @@ function ArtifactCard({ artifact }) {
   );
 }
 
-function TranscriptRow({ msg, onRetrySend }) {
+// Exported for the preview's answer scenes, which show a question, the steps
+// and the answer without the workspace around them. The chat itself is the
+// only other caller.
+export function TranscriptRow({ msg, onRetrySend }) {
   switch (msg.role) {
     case Row.SEND_ERROR:
       return <SendErrorBubble text={msg.text} content={msg.content} code={msg.code} onRetry={onRetrySend} retryable={msg.retryable} />;

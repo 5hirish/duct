@@ -7,18 +7,20 @@
 <link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
 <title>Download Duct for Desktop — Mac, Windows and Linux</title>
 <link rel="canonical" href="https://getduct.ai/download"/>
-<meta name="description" content="Duct on your desktop for Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Bring your own model keys — they stay in your OS keychain."/>
+<meta name="description" content="Duct on your desktop for Mac, Windows and Linux. Ask across your ads, analytics and revenue tools, approve the fix, and keep your model keys in your own keychain."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/download"/>
 <meta property="og:title" content="Download Duct for Desktop"/>
-<meta property="og:description" content="Duct in a native window on Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Your keys stay in your OS keychain."/>
-<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:description" content="Your whole growth stack in one window on Mac, Windows and Linux. Signed, self-updating, free with your own keys. Nothing to host."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/download.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Download Duct for Desktop"/>
-<meta name="twitter:description" content="Duct in a native window on Mac, Windows and Linux. Signed, notarized, and it keeps itself up to date. Your keys stay in your OS keychain."/>
-<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta name="twitter:description" content="Duct in a native window on Mac, Windows and Linux. Signed, self-updating, and your model keys stay in your OS keychain."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/download.jpg"/>
 <link rel="stylesheet" href="assets/duct.css"/>
 <script src="assets/config.js" defer></script>
 <script type="application/ld+json">
@@ -37,71 +39,79 @@
 </script>
 <style>
 /* ── DOWNLOAD-ONLY STYLES ── */
-.dl-hero { text-align: center; padding: 120px 24px 40px; max-width: 780px; margin: 0 auto; }
-.dl-hero h1 { margin-bottom: 18px; }
-.dl-hero .sub { color: var(--navy-3); max-width: 560px; margin: 0 auto; }
-.dl-version { margin-top: 20px; font-size: 13px; color: var(--navy-3); }
 
-.dl-grid-wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
-.dl-grid {
-  display: grid; gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(226px, 1fr));
-  align-items: stretch;
-}
+/* Hero: copy on the left, the app on the right. This is the conversion page,
+   so the product is above the fold, not below the platform grid. */
+.dl-hero { padding: 120px 52px 56px; }
+.dl-hero-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
+.dl-hero h1 { font-size: clamp(38px, 4.6vw, 58px); line-height: 1.06; letter-spacing: -1.5px; margin: 22px 0 18px; }
+.dl-hero .sub { max-width: 46ch; margin: 0; }
+.dl-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 30px; }
+.dl-hero-note { font-size: 12px; color: var(--navy-3); margin-top: 14px; }
+.dl-version { display: inline; }
+.dl-hero-shot { position: relative; }
+.dl-hero-shot img { display: block; width: 100%; height: auto; border-radius: var(--r-lg); }
 
+/* Platform grid */
+.dl-grid-wrap { max-width: 1160px; margin: 0 auto; padding: 40px 52px 0; }
+.dl-grid-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.dl-grid-head h2 { font-size: clamp(24px, 3vw, 32px); margin: 0; }
+.dl-grid-note { font-size: 13px; color: var(--navy-3); margin: 0; max-width: 52ch; text-align: right; }
+.dl-grid-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+.dl-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(226px, 1fr)); align-items: stretch; }
 .dl-card {
   position: relative; display: flex; flex-direction: column; align-items: center;
-  text-align: center; gap: 8px;
-  padding: 30px 20px 22px;
-  border: 1px solid var(--border); border-radius: var(--r-lg);
-  background: var(--white);
+  text-align: center; gap: 8px; padding: 30px 20px 22px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
   transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 .dl-card:hover { border-color: var(--navy-3); transform: translateY(-2px); }
 .dl-card-icon { color: var(--navy); margin-bottom: 2px; }
-.dl-card h2 { font-size: 19px; margin: 0; }
+.dl-card h3 { font-family: var(--serif); font-size: 19px; margin: 0; color: var(--navy); }
 .dl-card-hint { font-size: 12.5px; color: var(--navy-3); margin: 0; min-height: 32px; }
 .dl-card-btn { margin-top: 8px; width: 100%; }
 .dl-card-meta { font-size: 12px; color: var(--navy-3); margin: 0; }
-
 /* The detected platform. Border plus badge plus weight — never colour alone,
    which is invisible to anyone who cannot separate orange from grey. */
-.dl-card.is-detected {
-  border-color: var(--orange); border-width: 2px;
-  box-shadow: 0 10px 30px rgba(255, 107, 53, .12);
-  padding: 29px 19px 21px; /* keep the 2px border from resizing the card */
-}
-.dl-card-badge {
-  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-  background: var(--orange); color: #fff;
-  font-size: 11px; font-weight: 700; letter-spacing: .04em;
-  padding: 4px 12px; border-radius: var(--pill); white-space: nowrap;
-}
+.dl-card.is-detected { border-color: var(--orange); border-width: 2px; box-shadow: 0 10px 30px rgba(255, 92, 0, .12); padding: 29px 19px 21px; }
+.dl-card-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--orange); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 4px 12px; border-radius: var(--pill); white-space: nowrap; }
 
-.dl-grid-note { text-align: center; font-size: 13px; color: var(--navy-3); margin-top: 22px; }
+/* What you get: three job cards, shared styles */
+.dl-jobs { padding: 80px 52px 0; }
+
+/* SALVE: the app greets you with a mosaic, so the page does too */
+.salve { padding: 96px 52px; }
+.salve-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 280px 1fr; gap: 56px; align-items: center; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 40px 48px; background: var(--off); }
+.salve h2 { margin-bottom: 14px; }
+.salve p { font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.8; max-width: 58ch; }
+.salve p + p { margin-top: 12px; }
+.salve em { font-style: italic; color: var(--navy); }
+.salve a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
 
 /* Two ways to run it */
-.dl-modes { max-width: 1040px; margin: 72px auto 0; padding: 0 24px; }
-.dl-modes-head { text-align: center; max-width: 660px; margin: 0 auto 40px; }
+.dl-modes { max-width: 1160px; margin: 0 auto; padding: 0 52px; }
+.dl-modes-head { max-width: 660px; margin: 0 0 36px; }
 .dl-modes-head h2 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 14px; }
-.dl-modes-sub { font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--navy-3); }
+.dl-modes-sub { font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--navy-3); max-width: 60ch; }
 .dl-modes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 .dl-mode { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 32px 30px; background: var(--white); }
 .dl-mode-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--orange); }
 .dl-mode-title { font-family: var(--serif); font-size: 22px; color: var(--navy); margin: 10px 0 12px; }
 .dl-mode-body { font-size: 14px; font-weight: 300; line-height: 1.75; color: var(--navy-3); margin-bottom: 18px; }
 .dl-mode-list { list-style: none; padding: 0; margin: 0; }
-.dl-mode-list li { position: relative; padding-left: 18px; font-size: 14px; font-weight: 300; line-height: 1.7; color: var(--navy-3); margin-bottom: 9px; }
-.dl-mode-list li::before { content: ''; position: absolute; left: 2px; top: 10px; width: 5px; height: 5px; border-radius: 50%; background: var(--orange); opacity: .55; }
+.dl-mode-list li { position: relative; padding-left: 26px; font-size: 14px; font-weight: 300; line-height: 1.7; color: var(--navy-3); margin-bottom: 9px; }
+.dl-mode-list li .ic { position: absolute; left: 0; top: 4px; color: var(--orange); font-size: 16px; }
 .dl-mode-list strong { font-weight: 600; color: var(--navy); }
 .dl-mode-cta { margin-top: 18px; font-size: 14px; }
-.dl-mode-cta a { color: var(--orange); text-decoration: none; font-weight: 500; }
-.dl-mode-cta a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.dl-mode-cta a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); font-weight: 500; }
 
 .dl-where { margin-top: 48px; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 32px 30px; background: var(--off); }
 .dl-where-title { font-family: var(--serif); font-size: 20px; color: var(--navy); margin-bottom: 6px; }
 .dl-where-sub { font-size: 14px; font-weight: 300; color: var(--navy-3); margin-bottom: 20px; }
 .dl-where-scroll { overflow-x: auto; }
+/* The table keeps its four columns and scrolls sideways on a phone; without
+   the wrapper the box clipped its right half. */
+.dl-where-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .dl-where-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
 .dl-where-table th, .dl-where-table td { text-align: left; padding: 11px 14px 11px 0; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; }
 .dl-where-table th { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); }
@@ -109,24 +119,31 @@
 .dl-where-table tbody td:first-child { font-weight: 500; color: var(--navy); }
 .dl-where-table tbody tr:last-child td { border-bottom: none; }
 .dl-where-note { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 16px; }
-.dl-where-note a { color: var(--orange); text-decoration: none; }
-.dl-where-note a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.dl-where-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
 
-@media (max-width: 860px) {
-  .dl-modes-grid { grid-template-columns: 1fr; }
-  .dl-mode, .dl-where { padding: 26px 22px; }
-}
-.dl-notes { max-width: 720px; margin: 56px auto 96px; padding: 0 24px; font-size: 13px; color: var(--navy-3); }
+.dl-notes { max-width: 720px; margin: 56px auto 96px; padding: 0 52px; font-size: 13px; color: var(--navy-3); }
 .dl-notes p { margin-bottom: 10px; }
 .dl-notes code { font-size: 12px; }
 
-@media (max-width: 560px) {
-  .dl-hero { padding-top: 96px; }
+@media (max-width: 1000px) {
+  .dl-hero-inner { grid-template-columns: 1fr; gap: 36px; }
+  .salve-inner { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 32px 24px; }
+  .salve p { margin-left: auto; margin-right: auto; }
+}
+@media (max-width: 860px) {
+  .dl-hero { padding: 100px 24px 40px; }
+  .dl-grid-wrap, .dl-jobs, .salve, .dl-modes, .dl-notes { padding-left: 24px; padding-right: 24px; }
+  .dl-grid-head { flex-direction: column; align-items: flex-start; }
+  .dl-grid-note { text-align: left; }
+  .dl-modes-grid { grid-template-columns: 1fr; }
+  .dl-mode, .dl-where { padding: 26px 22px; }
   .dl-card-hint { min-height: 0; }
 }
 </style>
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
 
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
@@ -136,11 +153,23 @@
 
 <main id="main-content">
 
+<!-- HERO -->
 <section class="dl-hero">
-  <h1>Duct, in a window<br/>that stays <em>open</em></h1>
-  <p class="sub">Your brief and your alerts without a browser tab to lose. Sign in
-  with Google, connect your stack, and it keeps itself up to date.</p>
-  <p class="dl-version" id="dl-version" hidden></p>
+  <div class="dl-hero-inner">
+    <div>
+      <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free &middot; Open source &middot; Signed builds</div>
+      <h1>Your whole stack,<br/>in one <em>window.</em></h1>
+      <p class="sub">Ask why signups dropped and get an answer that read Google Ads, GA4 and Stripe together. Approve the fix from the same card. Your model keys never leave your keychain.</p>
+      <div class="dl-actions">
+        <a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
+        <a class="btn btn-ghost btn-lg" href="#platforms">All platforms</a>
+      </div>
+      <p class="dl-hero-note"><span data-duct-download-meta>macOS, Windows and Linux &middot; Free &middot; No credit card</span> <span class="dl-version" id="dl-version" hidden></span></p>
+    </div>
+    <div class="dl-hero-shot">
+      <img src="assets/media/insights-session.webp" srcset="assets/media/insights-session-768.webp 768w, assets/media/insights-session-1536.webp 1536w, assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" fetchpriority="high" width="3072" height="2052" alt="The Duct desktop app: an insights session with a proposed change waiting for approval on the left, the brief it wrote on the right" fetchpriority="high"//>
+    </div>
+  </div>
 </section>
 
 <!-- Each href is a permanent URL: GitHub redirects releases/latest/download/
@@ -150,13 +179,17 @@
      script only adds the version, the size and the highlight, none of which
      anyone needs in order to download. Cards are never rendered from
      JavaScript. -->
-<section class="dl-grid-wrap">
+<section class="dl-grid-wrap" id="platforms">
+  <div class="dl-grid-head">
+    <h2>Pick your <em>platform</em></h2>
+    <p class="dl-grid-note">Every build is on <a href="https://github.com/5hirish/duct/releases">the releases page</a> with SHA-256 checksums. Or <a href="/open-source#self-host">self-host it</a>: same code, nothing touches our servers.</p>
+  </div>
   <div class="dl-grid" id="dl-grid">
 
     <article class="dl-card" data-dl-card="macos">
       <span class="dl-card-badge" hidden>Your platform</span>
       <img class="dl-card-icon" src="assets/icons/apple.svg" width="30" height="30" alt="" aria-hidden="true"/>
-      <h2>macOS</h2>
+      <h3>macOS</h3>
       <p class="dl-card-hint">Universal &middot; Apple silicon and Intel</p>
       <a class="btn btn-orange dl-card-btn" href="https://github.com/5hirish/duct/releases/latest/download/Duct-macOS-universal.dmg" download>Download &darr;</a>
       <p class="dl-card-meta">.dmg</p>
@@ -165,7 +198,7 @@
     <article class="dl-card" data-dl-card="windows">
       <span class="dl-card-badge" hidden>Your platform</span>
       <img class="dl-card-icon" src="assets/icons/windows.svg" width="30" height="30" alt="" aria-hidden="true"/>
-      <h2>Windows</h2>
+      <h3>Windows</h3>
       <p class="dl-card-hint">Windows 10 and later</p>
       <a class="btn btn-orange dl-card-btn" href="https://github.com/5hirish/duct/releases/latest/download/Duct-Windows-x64-setup.exe" download>Download &darr;</a>
       <p class="dl-card-meta">.exe installer</p>
@@ -174,7 +207,7 @@
     <article class="dl-card" data-dl-card="linux-appimage">
       <span class="dl-card-badge" hidden>Your platform</span>
       <img class="dl-card-icon" src="assets/icons/linux.svg" width="30" height="30" alt="" aria-hidden="true"/>
-      <h2>Linux</h2>
+      <h3>Linux</h3>
       <p class="dl-card-hint">Runs on any distribution</p>
       <a class="btn btn-orange dl-card-btn" href="https://github.com/5hirish/duct/releases/latest/download/Duct-Linux-x86_64.AppImage" download>Download &darr;</a>
       <p class="dl-card-meta">.AppImage</p>
@@ -183,16 +216,61 @@
     <article class="dl-card" data-dl-card="linux-deb">
       <span class="dl-card-badge" hidden>Your platform</span>
       <img class="dl-card-icon" src="assets/icons/linux.svg" width="30" height="30" alt="" aria-hidden="true"/>
-      <h2>Debian / Ubuntu</h2>
+      <h3>Debian / Ubuntu</h3>
       <p class="dl-card-hint">apt-based distributions</p>
       <a class="btn btn-orange dl-card-btn" href="https://github.com/5hirish/duct/releases/latest/download/Duct-Linux-amd64.deb" download>Download &darr;</a>
       <p class="dl-card-meta">.deb</p>
     </article>
 
   </div>
-  <p class="dl-grid-note" id="dl-grid-note">
-    Every build is on <a href="https://github.com/5hirish/duct/releases">the releases page</a>, with SHA-256 checksums.
-  </p>
+</section>
+
+<div class="channel" aria-hidden="true" style="margin-top:56px"></div>
+
+<!-- WHAT YOU GET -->
+<section class="jobs dl-jobs">
+  <div class="jobs-inner">
+    <div class="reveal">
+      <p class="tag">What you get</p>
+      <h2>Reads across. Acts with approval.<br/><em>Remembers.</em></h2>
+    </div>
+    <div class="job-grid">
+      <article class="job reveal" style="transition-delay:.05s">
+        <div class="job-shot"><img src="assets/media/connectors.webp" srcset="assets/media/connectors-768.webp 768w, assets/media/connectors-1536.webp 1536w, assets/media/connectors.webp 2208w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2208" height="1134" loading="lazy" alt="The Connections page with twelve tools, five of them connected"//></div>
+        <div class="job-body">
+          <h3>Reads across tools</h3>
+          <p>Twelve connectors. Ads, analytics, revenue and session replays, read together for one question.</p>
+        </div>
+      </article>
+      <article class="job reveal" style="transition-delay:.1s">
+        <div class="job-shot"><img src="assets/media/review-card.webp" srcset="assets/media/review-card-768.webp 768w, assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="A change-set card: pause one campaign, one change blocked by a guardrail, Reject and Apply buttons"//></div>
+        <div class="job-body">
+          <h3>Acts, with your approval</h3>
+          <p>It proposes the change, shows what it touches, and applies it only when you press Apply.</p>
+        </div>
+      </article>
+      <article class="job reveal" style="transition-delay:.15s">
+        <div class="job-shot"><img src="assets/media/memory-timeline.webp" srcset="assets/media/memory-timeline-768.webp 768w, assets/media/memory-timeline-1536.webp 1536w, assets/media/memory-timeline.webp 2008w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2008" height="1990" loading="lazy" alt="The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"//></div>
+        <div class="job-body">
+          <h3>Remembers</h3>
+          <p>Targets, decisions and what it learned, on a timeline you can correct.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- SALVE -->
+<section class="salve">
+  <div class="salve-inner reveal">
+    <img class="mosaic" src="assets/art/salve.webp" width="640" height="640" loading="lazy" alt="A Roman threshold mosaic: an open arched doorway with water beyond, inscribed SALVE"/>
+    <div>
+      <p class="tag">First run</p>
+      <h2>It says hello <em>with a mosaic.</em></h2>
+      <p><em>SALVE.</em> The app greets you with a Roman threshold panel, the kind set into a doorway, and asks for your first tool. There is one for an empty basin when nothing has run yet, one for a broken arch when a connection fails, and one for when everything is caught up and the water runs full.</p>
+      <p>Why aqueducts? Because they never made a drop of water. <a href="/about">They carried it.</a></p>
+    </div>
+  </div>
 </section>
 
 <!-- TWO WAYS TO RUN IT -->
@@ -209,10 +287,10 @@
       <h3 class="dl-mode-title">Sign in and start</h3>
       <p class="dl-mode-body">Download, sign in with Google, connect your stack. Your projects and briefs live in Duct&rsquo;s cloud, so they are there on your laptop and your desktop both, and adding a teammate to a project takes one invite. Nothing to host, nothing to keep running.</p>
       <ul class="dl-mode-list">
-        <li><strong>Free while Duct is in early access.</strong> No card.</li>
-        <li><strong>Your model keys stay in your OS keychain</strong> and are sent with a request when a job runs. We never store them.</li>
-        <li><strong>Invite teammates</strong> to a project and share the same work.</li>
-        <li><strong>Updates itself</strong> on macOS, Windows and Linux.</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><strong>Free with your own keys.</strong> No account fee, no card.</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><strong>Your model keys stay in your OS keychain</strong> and are sent with a request when a job runs. We never store them.</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg><strong>Invite teammates</strong> to a project and share the same work.</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#refresh-cw"/></svg><strong>Updates itself</strong> on macOS, Windows and Linux.</li>
       </ul>
     </div>
 
@@ -221,12 +299,12 @@
       <h3 class="dl-mode-title">Nothing touches our servers</h3>
       <p class="dl-mode-body">Duct is MIT licensed, and that includes the backend the app talks to. Host it on your own server, or build the desktop shell with the backend bundled inside it, and every part of the loop runs where you decide. No account with us, no data with us.</p>
       <ul class="dl-mode-list">
-        <li><strong>Your database, your storage,</strong> your retention rules.</li>
-        <li><strong>The same connectors and agents</strong> &mdash; there is no held-back edition.</li>
-        <li><strong>No sign-up required.</strong></li>
-        <li><strong>You operate it</strong> &mdash; updates, backups and uptime are yours.</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><strong>Your database, your storage,</strong> your retention rules.</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg><strong>The same connectors and agents.</strong> There is no held-back edition.</li>
+        <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><strong>No sign-up required.</strong></li>
+        <li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg><strong>You operate it.</strong> Updates, backups and uptime are yours.</li>
       </ul>
-      <p class="dl-mode-cta"><a href="https://github.com/5hirish/duct#quickstart" rel="noopener">How to run it yourself &rarr;</a></p>
+      <p class="dl-mode-cta"><a href="/open-source#self-host">How to run it yourself &rarr;</a></p>
     </div>
   </div>
 
@@ -234,6 +312,7 @@
     <h3 class="dl-where-title">Where your things actually live</h3>
     <p class="dl-where-sub">Worth being precise about, because &ldquo;private&rdquo; is a word everyone uses and few explain.</p>
     <div class="dl-where-scroll">
+    <div class="dl-where-wrap">
     <table class="dl-where-table">
       <thead>
         <tr><th scope="col">Using the desktop app</th><th scope="col">On your device</th><th scope="col">In Duct&rsquo;s cloud</th></tr>
@@ -247,6 +326,7 @@
       </tbody>
     </table>
     </div>
+    </div>
     <p class="dl-where-note">Run it yourself and every row moves to your side of the table. The full detail is in the <a href="/privacy">privacy policy</a>.</p>
   </div>
 </section>
@@ -255,7 +335,7 @@
   <p><strong>macOS</strong> &mdash; universal, runs on Apple silicon and Intel. Requires macOS 12 or later. Signed and notarized by Apple, so it opens without a warning.</p>
   <p><strong>Windows</strong> &mdash; Windows 10 and later. The installer is not yet code-signed, so SmartScreen will say &ldquo;Windows protected your PC&rdquo; on first run: click <em>More info</em> &rarr; <em>Run anyway</em>. We are fixing this.</p>
   <p><strong>Linux</strong> &mdash; the AppImage runs anywhere (<code>chmod +x</code> it first); the .deb is for Debian and Ubuntu. Provider keys need a keyring daemon running &mdash; GNOME Keyring, KWallet or KeePassXC.</p>
-  <p><strong>Your model keys stay yours.</strong> Duct is bring-your-own-key: paste an Anthropic, OpenAI or Gemini key and the desktop app keeps it in your OS keychain rather than a browser tab. You are billed by the provider, not by us.</p>
+  <p><strong>Your model keys stay yours.</strong> Duct is bring-your-own-key: paste an Anthropic, OpenAI or Gemini key and the desktop app keeps it in your OS keychain rather than a browser tab. Or sign in with the ChatGPT plan you already have. You are billed by the provider, not by us.</p>
 </section>
 
 </main>
@@ -302,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
       var v = document.getElementById('dl-version');
       if (data.version) {
-        v.textContent = 'Latest release: v' + data.version;
+        v.textContent = '· Latest release v' + data.version;
         v.hidden = false;
       }
     })

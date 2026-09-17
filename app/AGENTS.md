@@ -395,7 +395,7 @@ filenames), `ROUTES_FILE` (canned JSON for the non-agent routes it would
 otherwise answer with `[]`) and `MEDIA_DIR` (a folder served as
 `/uploads/story/*`, so a post can have a cover); `scripts/shots/shoot.mjs` at
 the repo root uses all three to shoot the README's product images from one
-story, `lib/__fixtures__/kestrel-story.mjs`, whose `shot-*` scenes in
+story, `lib/__fixtures__/solo-story.mjs`, whose `shot-*` scenes in
 `/preview` are the component halves of the same week.
 
 The shell borrows deliberately from harnesses built in the open.

@@ -21,7 +21,8 @@ Regeneration is the only way these copies change, so they cannot drift.
 
 The Markdown subset
 -------------------
-Deliberately small: h2, paragraphs, ordered and bullet lists, bold, links.
+Deliberately small: h2, paragraphs, ordered and bullet lists, bold, links,
+and a `---` rule.
 Anything else — code fences, tables, images, blockquotes, h1, h3+ — raises
 rather than rendering wrong. A generator that silently mangles a construct is
 worse than one that refuses, because nobody reads generated output.
@@ -49,7 +50,7 @@ OUT_DIR = SITE / "blog"
 PARTIALS = SITE / "partials"
 
 BASE = "https://getduct.ai"
-OG_IMAGE = f"{BASE}/assets/og-image.png"
+OG_DIR = SITE / "assets" / "og"
 GTM_ID = "GTM-PKL589SW"
 AUTHOR = {
     "name": "Shirish Kadam",
@@ -116,6 +117,13 @@ def render_markdown(body: str, slug: str) -> str:
                     f"{slug}: unsupported Markdown ({why}) at line {i + 1}. "
                     f"Extend render_markdown() in scripts/build_blog.py before using it."
                 )
+
+        # A rule between the body and the closing pitch. Both live posts end
+        # with one, and it rendered as a literal "---" paragraph before.
+        if line == "---":
+            blocks.append("<hr/>")
+            i += 1
+            continue
 
         if line.startswith("#"):
             level = len(line) - len(line.lstrip("#"))
@@ -199,6 +207,14 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
     canonical = f"{BASE}/blog/{slug}"
     published = to_iso(fm["date"])
 
+    # Each post's card is drawn by scripts/build_og_images.mjs from the same
+    # front matter and doubles as its cover on the index. A post without one
+    # would share the site's generic card, which is what this used to do.
+    og_file = OG_DIR / f"blog-{slug}.jpg"
+    if not og_file.exists():
+        raise PostError(f"{slug}: no card at site/assets/og/{og_file.name}. Run: node scripts/build_og_images.mjs")
+    og_image = f"{BASE}/assets/og/{og_file.name}"
+
     ld = {
         "@context": "https://schema.org",
         "@type": "Article",
@@ -209,7 +225,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
         "articleSection": fm["category"],
         "author": {"@type": "Person", **AUTHOR},
         "publisher": {"@type": "Organization", "name": "Duct", "url": BASE},
-        "image": OG_IMAGE,
+        "image": og_image,
         "mainEntityOfPage": canonical,
     }
 
@@ -217,22 +233,22 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
     prev_post = siblings[idx - 1] if idx > 0 else None
     next_post = siblings[idx + 1] if idx + 1 < len(siblings) else None
 
+    # The header's "Blog" link was the only way back to the index from a post.
     nav_links = []
     if prev_post:
         nav_links.append(
             f'<a class="article-nav-prev" href="/blog/{prev_post["slug"]}">← {esc(prev_post["title"])}</a>'
         )
+    nav_links.append('<a class="article-nav-all" href="/blog/">All posts</a>')
     if next_post:
         nav_links.append(
             f'<a class="article-nav-next" href="/blog/{next_post["slug"]}">{esc(next_post["title"])} →</a>'
         )
     nav_block = (
-        f'<nav class="article-nav" aria-label="More articles">\n' + "\n".join(nav_links) + "\n</nav>"
-        if nav_links
-        else ""
+        '<nav class="article-nav" aria-label="More articles">\n' + "\n".join(nav_links) + "\n</nav>"
     )
 
-    full_title = f"{title} — Duct Insights"
+    full_title = f"{title} — Duct blog"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -248,7 +264,9 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
 <meta property="og:url" content="{canonical}"/>
 <meta property="og:title" content="{esc(full_title)}"/>
 <meta property="og:description" content="{esc(excerpt)}"/>
-<meta property="og:image" content="{OG_IMAGE}"/>
+<meta property="og:image" content="{og_image}"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta property="article:author" content="{AUTHOR['name']}"/>
 <meta property="article:section" content="{esc(fm['category'])}"/>
@@ -256,7 +274,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="{esc(full_title)}"/>
 <meta name="twitter:description" content="{esc(excerpt)}"/>
-<meta name="twitter:image" content="{OG_IMAGE}"/>
+<meta name="twitter:image" content="{og_image}"/>
 <link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js" defer></script>
@@ -301,6 +319,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
 }}
 .article-nav a:hover {{ color: var(--navy); }}
 .article-nav-next {{ margin-left: auto; text-align: right; }}
+.article-nav-all {{ font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }}
 @media (max-width: 640px) {{
   .post-author {{ flex-direction: column; gap: 16px; }}
   .article-nav {{ flex-direction: column; gap: 16px; }}
@@ -337,7 +356,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
   <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="{AUTHOR['name']}"/>
   <div>
     <p class="post-author-name">{AUTHOR['name']}</p>
-    <p class="post-author-bio">Product manager and engineer in Valencia. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
     <div class="post-author-links">
       <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
       <a href="https://x.com/5hirish" rel="noopener">X</a>
@@ -350,7 +369,22 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
 {nav_block}
 </main>
 
-{load_partial('cta-blog.html')}
+<!-- The closer is the product, not a pitch: the same bridge the tools pages
+     end on, with a session shot, so a post is not the one page on the site
+     that ends in text alone. -->
+<section class="duct-bridge" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Reading three tools together is the whole job. Duct does it on your machine.</p>
+      <p class="duct-bridge-body">Ask why signups dropped. Duct reads Search Console, GA4 and your ads and revenue tools together, answers with the sources it read, and proposes the change. You approve it. Open source, free with your own keys.</p>
+      <p class="duct-bridge-actions"><a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a><a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a></p>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"//>
+      <figcaption>Why are signups down? Asked once, answered from four tools.</figcaption>
+    </figure>
+  </div>
+</section>
 
 {load_partial('footer-expanded.html')}
 

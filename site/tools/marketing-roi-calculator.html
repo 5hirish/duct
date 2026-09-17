@@ -13,15 +13,14 @@
 <meta property="og:url" content="https://getduct.ai/tools/marketing-roi-calculator"/>
 <meta property="og:title" content="Marketing ROI Calculator — Free Tool by Duct"/>
 <meta property="og:description" content="Calculate marketing ROI, net profit, and break-even targets from spend and attributable revenue."/>
-<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-marketing-roi-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Marketing ROI Calculator — Free Tool by Duct"/>
 <meta name="twitter:description" content="Free ROI calculator for marketing campaigns with profitability and target-planning scenarios."/>
-<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-marketing-roi-calculator.jpg"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js"></script>
 <script type="application/ld+json">
@@ -50,9 +49,7 @@
   .tool-results { border-top:1px solid var(--border); padding:36px 40px; display:none; }
   @media (max-width:640px) { .tool-results { padding:24px; } }
   .tool-results.visible { display:block; }
-  .results-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
-  @media (max-width:860px) { .results-row { grid-template-columns:1fr 1fr; } }
-  @media (max-width:420px) { .results-row { grid-template-columns:1fr; } }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
   .result-card { border:1.5px solid var(--border); border-radius:var(--r); padding:20px; }
   .result-card.green { border-color:#22c55e; background:#f0fdf4; }
   .result-card.amber { border-color:#f59e0b; background:#fffbeb; }
@@ -72,18 +69,12 @@
   .insight-panel { margin-top:24px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:20px 24px; }
   .insight-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:10px; }
   .insight-panel p { font-size:14px; color:var(--navy-3); line-height:1.7; margin:0 0 8px; }
-  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
-  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
-  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
-  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
-  .duct-bridge-link:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
-<div data-duct-partial="/partials/nav-tools.html"></div>
+<div data-duct-partial="/partials/nav-home.html"></div>
 <main id="main-content">
 <div class="tool-hero">
   <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
@@ -124,10 +115,10 @@
       <div class="results-row" id="results-row"></div>
       <div class="tool-cta">
         <div class="tool-cta-text">
-          <p>ROI clarified — now decide what to fund next.</p>
-          <p>Duct turns ROI, acquisition cost, and conversion movement into a weekly brief so growth leaders can act before margin slips.</p>
+          <p>ROI for one period. The question is which lever changed it.</p>
+          <p>Duct reads your ads, analytics and revenue tools, answers that question, and proposes the change. You approve it.</p>
         </div>
-        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+        <a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a>
       </div>
       <div id="insight-panel" class="insight-panel" hidden>
         <p class="insight-label">What this means</p>
@@ -138,9 +129,15 @@
 </div>
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">ROI tells you if a period was profitable. It doesn't tell you which lever changed the outcome.</p>
-    <p class="duct-bridge-body">To fix or scale performance, you need ROI read alongside traffic cost, conversion quality, and channel mix shifts. Duct delivers that full picture each week in one decision-ready brief.</p>
-    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">ROI tells you if a period was profitable. It doesn't tell you which lever changed the outcome.</p>
+      <p class="duct-bridge-body">Duct reads ROI beside traffic cost, conversion quality and channel mix, says which lever moved it, and proposes what to do about it.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/paid-session.webp" srcset="../assets/media/paid-session-768.webp 768w, ../assets/media/paid-session-1536.webp 1536w, ../assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: asked where the ads budget is leaking, the agent costs every campaign against the CPA target, proposes a pause, two negatives and a budget raise, and writes the spend brief on the right"//>
+      <figcaption>Ask where the budget leaks. Duct costs every campaign against your CPA target, proposes the pause, the negatives and the budget shift, and waits for your yes.</figcaption>
+    </figure>
   </div>
 </section>
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
@@ -162,7 +159,7 @@
   var fieldIds = ['inp-spend', 'inp-revenue', 'inp-target-roi', 'inp-margin'];
   DuctToolFormError.bindClear(ERR, fieldIds);
 
-  function money(v) { return '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
+  function money(v) { return (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
   function card(label, display, level, badge, context) {
     var c = document.createElement('div'); c.className = 'result-card ' + level;
     var l = document.createElement('div'); l.className = 'result-label'; l.textContent = label;
@@ -197,12 +194,12 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) row.removeChild(row.firstChild);
     var lvl = roi >= 100 ? 'green' : (roi >= 20 ? 'amber' : 'red');
-    row.appendChild(card('ROI', roi.toFixed(2) + '%', lvl, lvl === 'green' ? '✓ Strong' : (lvl === 'amber' ? '⚠ Moderate' : '✗ Weak'), 'Return on investment from attributed revenue and spend.'));
+    row.appendChild(card('ROI', roi.toFixed(2) + '%', lvl, lvl === 'green' ? 'Strong' : (lvl === 'amber' ? 'Moderate' : 'Weak'), 'Return on investment from attributed revenue and spend.'));
     row.appendChild(card('Net Profit', money(profit), profit >= 0 ? 'green' : 'red', profit >= 0 ? 'Positive' : 'Negative', 'Revenue minus spend for the selected period.'));
     row.appendChild(card('Revenue', money(revenue), 'neutral', 'Observed', 'Attributed revenue included in this calculation.'));
     if (!isNaN(targetRoi)) {
       var reqRevenue = spend * (1 + targetRoi / 100);
-      row.appendChild(card('Revenue for Target ROI', money(reqRevenue), reqRevenue <= revenue ? 'green' : 'amber', reqRevenue <= revenue ? '✓ Achieved' : '⚠ Gap', 'Revenue needed at current spend to reach target ROI.'));
+      row.appendChild(card('Revenue for Target ROI', money(reqRevenue), reqRevenue <= revenue ? 'green' : 'amber', reqRevenue <= revenue ? 'Achieved' : 'Gap', 'Revenue needed at current spend to reach target ROI.'));
     }
     if (!isNaN(margin) && margin >= 0 && margin <= 100) {
       var marginRevenue = revenue * (margin / 100);
@@ -227,6 +224,7 @@
     document.getElementById('insight-panel').setAttribute('hidden', '');
     var row = document.getElementById('results-row'); while (row.firstChild) row.removeChild(row.firstChild);
   });
+  DuctToolExample.seed(['inp-spend', 'inp-revenue', 'inp-target-roi', 'inp-margin'], 'calc-btn', 'results-section');
 }());
 </script>
 <script src="../assets/duct-partials.js"></script>

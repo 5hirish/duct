@@ -1,0 +1,11 @@
+@import "tailwindcss";
+/* The app's own tokens, imported rather than copied, so a colour changed in
+   the product changes in the film on the next render. */
+@import "../../../app/src/app/styles/tokens.css";
+
+:root {
+  /* The app resolves these from next/font; the film loads the same faces
+     through @remotion/google-fonts and points the tokens at them. */
+  --font-dm-sans: "DM Sans";
+  --font-jetbrains-mono: "JetBrains Mono";
+}

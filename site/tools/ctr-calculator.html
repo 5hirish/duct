@@ -13,15 +13,14 @@
 <meta property="og:url" content="https://getduct.ai/tools/ctr-calculator"/>
 <meta property="og:title" content="CTR Calculator — Free Tool by Duct"/>
 <meta property="og:description" content="Calculate click-through rate (CTR), projected clicks, and lift scenarios with instant interpretation."/>
-<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-ctr-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="CTR Calculator — Free Tool by Duct"/>
 <meta name="twitter:description" content="Free click-through rate calculator with practical benchmark interpretation for paid and organic channels."/>
-<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-ctr-calculator.jpg"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js"></script>
 <script type="application/ld+json">
@@ -71,9 +70,7 @@
   @media (max-width: 640px) { .tool-results { padding: 24px; } }
   .tool-results.visible { display: block; }
 
-  .results-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
-  @media (max-width: 860px) { .results-row { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 420px) { .results-row { grid-template-columns: 1fr; } }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
 
   .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
   .result-card.green { border-color: #22c55e; background: #f0fdf4; }
@@ -92,12 +89,6 @@
   .tool-cta { margin-top: 28px; background: var(--navy); border-radius: var(--r); padding: 28px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
-  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
-  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
-  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
-  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
-  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -120,7 +111,7 @@
 <a href="#main-content" class="skip-link">Skip to content</a>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 
-<div data-duct-partial="/partials/nav-tools.html"></div>
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 <div class="tool-hero">
@@ -165,10 +156,10 @@
       <div class="results-row" id="results-row"></div>
       <div class="tool-cta">
         <div class="tool-cta-text">
-          <p>CTR measured — now identify which creative to double down on.</p>
-          <p>Duct tracks weekly CTR and downstream conversion shifts so teams can catch fatigue before spend efficiency drops.</p>
+          <p>One CTR, once. The question is which creative is tiring.</p>
+          <p>Duct reads your ads, analytics and revenue tools, answers that question, and proposes the change. You approve it.</p>
         </div>
-        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+        <a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a>
       </div>
       <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
         <p class="insight-label">What this means</p>
@@ -180,9 +171,15 @@
 
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">CTR tells you who clicked. It doesn't tell you whether that traffic produced business impact.</p>
-    <p class="duct-bridge-body">To make better decisions, CTR needs to be tied to CPC, conversion rate, and channel-level outcomes week by week. Duct does that synthesis and highlights where messaging or targeting needs intervention first.</p>
-    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">CTR tells you who clicked. It doesn't tell you whether that traffic produced business impact.</p>
+      <p class="duct-bridge-body">Duct reads CTR beside CPC, conversion rate and what each channel earned, and names the creative or the audience to fix first.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/paid-session.webp" srcset="../assets/media/paid-session-768.webp 768w, ../assets/media/paid-session-1536.webp 1536w, ../assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: asked where the ads budget is leaking, the agent costs every campaign against the CPA target, proposes a pause, two negatives and a budget raise, and writes the spend brief on the right"//>
+      <figcaption>Ask where the budget leaks. Duct costs every campaign against your CPA target, proposes the pause, the negatives and the budget shift, and waits for your yes.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -263,9 +260,9 @@
   DuctToolFormError.bindClear(ERR, fieldIds);
 
   function rateState(v) {
-    if (v >= 3) return { level: 'green', badge: '✓ Strong', context: 'Strong click attraction for many channels and intents.' };
-    if (v >= 1) return { level: 'amber', badge: '⚠ Average', context: 'Decent performance; test hooks and targeting for lift.' };
-    return { level: 'red', badge: '✗ Low', context: 'Low click interest. Rework message relevance and creative.' };
+    if (v >= 3) return { level: 'green', badge: 'Strong', context: 'Strong click attraction for many channels and intents.' };
+    if (v >= 1) return { level: 'amber', badge: 'Average', context: 'Decent performance; test hooks and targeting for lift.' };
+    return { level: 'red', badge: 'Low', context: 'Low click interest. Rework message relevance and creative.' };
   }
 
   function pct(v) { return v.toFixed(2) + '%'; }
@@ -336,7 +333,7 @@
       var projected = impressions * (targetCtr / 100);
       var lift = projected - clicks;
       var lvl = targetCtr <= ctr ? 'green' : (targetCtr <= ctr * 1.35 ? 'amber' : 'red');
-      var badge = lvl === 'green' ? '✓ Within reach' : (lvl === 'amber' ? '⚠ Stretch' : '✗ Aggressive');
+      var badge = lvl === 'green' ? 'Within reach' : (lvl === 'amber' ? 'Stretch' : 'Aggressive');
       var liftContext = lift >= 0
         ? 'Additional clicks needed versus current performance to hit your target CTR at this impression volume.'
         : 'You are above target CTR; this is how many fewer clicks you could have at the target rate with the same impressions.';
@@ -347,7 +344,7 @@
     if (!isNaN(targetClicks) && targetClicks > 0) {
       var reqCtr = (targetClicks / impressions) * 100;
       var reqLvl = reqCtr <= ctr ? 'green' : (reqCtr <= ctr * 1.35 ? 'amber' : 'red');
-      var reqBadge = reqLvl === 'green' ? '✓ On pace' : (reqLvl === 'amber' ? '⚠ Stretch' : '✗ Gap');
+      var reqBadge = reqLvl === 'green' ? 'On pace' : (reqLvl === 'amber' ? 'Stretch' : 'Gap');
       row.appendChild(makeCard('Required CTR', pct(reqCtr), reqLvl, reqBadge, 'CTR needed at current impression volume to hit your click goal.'));
     }
 
@@ -374,6 +371,7 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) { row.removeChild(row.firstChild); }
   });
+  DuctToolExample.seed(['inp-impressions', 'inp-clicks', 'inp-target-ctr', 'inp-target-clicks'], 'calc-btn', 'results-section');
 }());
 </script>
 

@@ -13,15 +13,14 @@
 <meta property="og:url" content="https://getduct.ai/tools/engagement-rate-calculator"/>
 <meta property="og:title" content="Engagement Rate Calculator — Free Tool by Duct"/>
 <meta property="og:description" content="Measure engagement rate by followers, reach, or impressions and benchmark content performance instantly."/>
-<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-engagement-rate-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Engagement Rate Calculator — Free Tool by Duct"/>
 <meta name="twitter:description" content="Free calculator for engagement rate by followers, reach, and impressions with practical quality benchmarks."/>
-<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-engagement-rate-calculator.jpg"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js"></script>
 <script type="application/ld+json">
@@ -89,11 +88,7 @@
   @media (max-width: 640px) { .tool-results { padding: 24px; } }
   .tool-results.visible { display: block; }
 
-  .results-row {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;
-  }
-  @media (max-width: 860px) { .results-row { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 420px) { .results-row { grid-template-columns: 1fr; } }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
 
   .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
   .result-card.green { border-color: #22c55e; background: #f0fdf4; }
@@ -120,12 +115,6 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
-  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
-  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
-  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
-  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
-  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -158,7 +147,7 @@
 <a href="#main-content" class="skip-link">Skip to content</a>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 
-<div data-duct-partial="/partials/nav-tools.html"></div>
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 
@@ -216,10 +205,10 @@
 
       <div class="tool-cta">
         <div class="tool-cta-text">
-          <p>Engagement normalized — now focus on posts that actually move outcomes.</p>
-          <p>Duct tracks weekly engagement shifts with traffic and conversion signals so teams can act on resonance, not vanity spikes.</p>
+          <p>One rate, one post. The question is which posts bring signups.</p>
+          <p>Duct reads your ads, analytics and revenue tools, answers that question, and proposes the change. You approve it.</p>
         </div>
-        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+        <a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a>
       </div>
 
       <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
@@ -233,9 +222,15 @@
 
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">Engagement rate tells you interaction quality. It doesn't tell you if that attention turned into pipeline.</p>
-    <p class="duct-bridge-body">To make confident content decisions, engagement has to be read with click-through, conversion, and channel performance over time. Duct connects those signals weekly so teams can scale what truly works.</p>
-    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Engagement rate tells you interaction quality. It doesn't tell you if that attention turned into pipeline.</p>
+      <p class="duct-bridge-body">Duct reads engagement beside clicks, signups and revenue over time, so the posts that bring customers are told apart from the ones that bring likes.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/content-session.webp" srcset="../assets/media/content-session-768.webp 768w, ../assets/media/content-session-1536.webp 1536w, ../assets/media/content-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Content Studio drafting a carousel: the agent's progress and its note on the left, the first slide rendered on the right with the approve button under it"//>
+      <figcaption>Content Studio drafts the post from the plan, renders the first slide so you can see the look, and waits for a yes before it makes the rest.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -318,10 +313,10 @@
   DuctToolFormError.bindClear(ERR, fieldIds);
 
   function levelForRate(value) {
-    if (value >= 6) return { level: 'green', badge: '✓ Strong', context: 'High engagement quality relative to audience size.' };
-    if (value >= 3) return { level: 'amber', badge: '⚠ Healthy', context: 'Good engagement. Keep testing hooks and creative variations.' };
-    if (value >= 1) return { level: 'amber', badge: '⚠ Average', context: 'Baseline engagement. Improvement likely depends on stronger positioning and format testing.' };
-    return { level: 'red', badge: '✗ Low', context: 'Low engagement signal. Revisit topic relevance, hook strength, and distribution timing.' };
+    if (value >= 6) return { level: 'green', badge: 'Strong', context: 'High engagement quality relative to audience size.' };
+    if (value >= 3) return { level: 'amber', badge: 'Healthy', context: 'Good engagement. Keep testing hooks and creative variations.' };
+    if (value >= 1) return { level: 'amber', badge: 'Average', context: 'Baseline engagement. Improvement likely depends on stronger positioning and format testing.' };
+    return { level: 'red', badge: 'Low', context: 'Low engagement signal. Revisit topic relevance, hook strength, and distribution timing.' };
   }
 
   function fmtPercent(value) {
@@ -452,6 +447,7 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) { row.removeChild(row.firstChild); }
   });
+  DuctToolExample.seed(['inp-engagements', 'inp-followers', 'inp-reach', 'inp-impressions', 'inp-posts'], 'calc-btn', 'results-section');
 }());
 </script>
 

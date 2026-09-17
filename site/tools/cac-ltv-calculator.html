@@ -13,15 +13,14 @@
 <meta property="og:url" content="https://getduct.ai/tools/cac-ltv-calculator"/>
 <meta property="og:title" content="CAC / LTV Calculator for SaaS — Free Tool by Duct"/>
 <meta property="og:description" content="Calculate your SaaS CAC, LTV, LTV:CAC ratio, and payback period. Free, instant, no signup."/>
-<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-cac-ltv-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="CAC / LTV Calculator for SaaS — Free Tool by Duct"/>
 <meta name="twitter:description" content="Free SaaS CAC and LTV calculator with instant health scores vs industry benchmarks."/>
-<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-cac-ltv-calculator.jpg"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js"></script>
 <script type="application/ld+json">
@@ -89,11 +88,7 @@
   @media (max-width: 600px) { .tool-results { padding: 24px; } }
   .tool-results.visible { display: block; }
 
-  .results-row {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;
-  }
-  @media (max-width: 700px) { .results-row { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 400px) { .results-row { grid-template-columns: 1fr; } }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
 
   .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
   .result-card.green { border-color: #22c55e; background: #f0fdf4; }
@@ -121,12 +116,6 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
-  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
-  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
-  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
-  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
-  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -167,7 +156,7 @@
 <a href="#main-content" class="skip-link">Skip to content</a>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 
-<div data-duct-partial="/partials/nav-tools.html"></div>
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 
@@ -225,10 +214,10 @@
 
       <div class="tool-cta">
         <div class="tool-cta-text">
-          <p>Unit economics scored — now spot trend risk before it hits plan.</p>
-          <p>Duct tracks CAC, LTV, and payback weekly so SaaS teams see compression early and act faster.</p>
+          <p>CAC and LTV for one period. The question is which channel is moving them.</p>
+          <p>Duct reads your ads, analytics and revenue tools, answers that question, and proposes the change. You approve it.</p>
         </div>
-        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+        <a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a>
       </div>
 
       <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
@@ -242,9 +231,15 @@
 
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">LTV:CAC tells you model health now. It doesn't tell you where the next deterioration starts.</p>
-    <p class="duct-bridge-body">That requires tracking the weekly movement behind the ratio: acquisition costs, conversion quality, and retention pressure. Duct connects those signals into one operating brief so growth teams can intervene before unit economics break.</p>
-    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">LTV:CAC tells you model health now. It doesn't tell you where the next deterioration starts.</p>
+      <p class="duct-bridge-body">Duct reads Google Ads, GA4 and Stripe together, so when the ratio slips it can say which channel's customers stopped staying, and propose where the budget goes instead.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: asked why signups are down when ROAS is up, the agent reads ads, analytics and revenue together, proposes a change waiting for approval on the left, and writes the brief on the right"//>
+      <figcaption>Ask why signups are down when ROAS is up. Duct reads ads, analytics and revenue together, names the cohort that is leaving, and proposes the change. You approve.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -328,14 +323,14 @@
 
   var THRESHOLDS = {
     ltvcac: [
-      { min: 3,   level: 'green', badge: '✓ Healthy',     context: 'Above 3:1. Strong unit economics.' },
-      { min: 2,   level: 'amber', badge: '⚠ Marginal',    context: 'Between 2–3:1. Improve CAC or reduce churn.' },
-      { min: 0,   level: 'red',   badge: '✗ Unsustainable', context: 'Below 2:1. Not viable at scale.' }
+      { min: 3,   level: 'green', badge: 'Healthy',     context: 'Above 3:1. Strong unit economics.' },
+      { min: 2,   level: 'amber', badge: 'Marginal',    context: 'Between 2–3:1. Improve CAC or reduce churn.' },
+      { min: 0,   level: 'red',   badge: 'Unsustainable', context: 'Below 2:1. Not viable at scale.' }
     ],
     payback: [
-      { max: 12,  level: 'green', badge: '✓ Healthy',     context: 'Under 12 months to recover CAC.' },
-      { max: 18,  level: 'amber', badge: '⚠ Marginal',    context: '12–18 months. Watch early churn.' },
-      { max: 999, level: 'red',   badge: '✗ High risk',   context: 'Over 18 months. May not recoup before churn.' }
+      { max: 12,  level: 'green', badge: 'Healthy',     context: 'Under 12 months to recover CAC.' },
+      { max: 18,  level: 'amber', badge: 'Marginal',    context: '12–18 months. Watch early churn.' },
+      { max: 999, level: 'red',   badge: 'High risk',   context: 'Over 18 months. May not recoup before churn.' }
     ]
   };
 
@@ -351,8 +346,8 @@
 
   function fmtCurrency(v) {
     return v >= 1000
-      ? '$' + (v / 1000).toFixed(1) + 'k'
-      : '$' + v.toFixed(0);
+      ? (v / 1000).toFixed(1) + 'k'
+      : v.toFixed(0);
   }
 
   function makeCard(label, display, level, badge, context) {
@@ -496,6 +491,7 @@
     document.getElementById('reset-btn').style.display = 'none';
     document.getElementById('insight-panel').setAttribute('hidden', '');
   });
+  DuctToolExample.seed(['inp-customers', 'inp-spend', 'inp-arpu', 'inp-lifespan', 'inp-gross-margin'], 'calc-btn', 'results-section');
 }());
 </script>
 

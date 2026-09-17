@@ -27,7 +27,7 @@ const { chromium } = req(req.resolve("playwright", { paths: [join(REPO, "site")]
 const sharp = req(req.resolve("sharp", { paths: [join(REPO, "app")] }));
 const { SCENARIOS } = await import("./scenarios.mjs");
 const fixtures = await import("./fixtures.mjs");
-const { STORY } = await import("../../app/src/lib/__fixtures__/kestrel-story.mjs");
+const { STORY } = await import("../../app/src/lib/__fixtures__/solo-story.mjs");
 
 const APP = process.env.APP || "http://localhost:3003";
 const MOCK_PORT = Number(process.env.MOCK_PORT || 8012);
@@ -42,6 +42,10 @@ mkdirSync(OUT, { recursive: true });
 // --- story → mock backend inputs -------------------------------------------
 const build = mkdtempSync(join(tmpdir(), "duct-shots-"));
 writeFileSync(join(build, "insights-pause.json"), JSON.stringify(fixtures.insightsFrames()));
+// One agent, three sessions: the mock serves `<agent>@<scenario>.json` to the
+// scenario named in the x-duct-shot header, the default file to everyone else.
+writeFileSync(join(build, "insights@product-session.json"), JSON.stringify(fixtures.productFrames()));
+writeFileSync(join(build, "insights@paid-session.json"), JSON.stringify(fixtures.paidFrames()));
 writeFileSync(join(build, "content-plan.json"), JSON.stringify(fixtures.contentFrames()));
 writeFileSync(join(build, "audit-run.json"), JSON.stringify(fixtures.auditFrames()));
 writeFileSync(join(build, "routes.json"), JSON.stringify(fixtures.routes()));
@@ -62,7 +66,10 @@ try {
       viewport: sc.viewport, deviceScaleFactor: SCALE, colorScheme: sc.theme || "light", locale: "en-GB", timezoneId: "Europe/Madrid",
     });
     await context.route(/^http:\/\/localhost:8002\//, (route) =>
-      route.continue({ url: route.request().url().replace("http://localhost:8002", MOCK) }));
+      route.continue({
+        url: route.request().url().replace("http://localhost:8002", MOCK),
+        headers: { ...route.request().headers(), "x-duct-shot": sc.id },
+      }));
     if (sc.shell) await context.addInitScript(shellStub, sc.shell);
     const page = await context.newPage();
     page.setDefaultTimeout(60000);
@@ -75,11 +82,14 @@ try {
         await page.waitForFunction(() => window.__preview?.ready === true);
         await page.evaluate(() => document.fonts.ready);
       }
+      if (sc.kind === "html") await page.setContent(sc.html, { waitUntil: "load" });
       const target = await sc.run({ page, app: APP, story: STORY });
       await page.evaluate(() => document.fonts.ready);
       // The dev server's issues badge is not part of the product.
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-      const raw = target?.clip ? await page.screenshot({ type: "png", clip: target.clip })
+      // A clip taller than the viewport is cut to it unless the capture is of
+      // the whole page (the audit report, a document longer than any screen).
+      const raw = target?.clip ? await page.screenshot({ type: "png", clip: target.clip, fullPage: target.clip.height > sc.viewport.height })
         : target?.element ? await target.element.screenshot({ type: "png" })
         : target ? await target.screenshot({ type: "png" }) : await page.screenshot({ type: "png" });
       // WebP at 90: a sixth of the PNG for the photo-heavy frames, and text

@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #0D0F1A; }
+    a { color: #FF5C00; } a:hover { color: #e05000; }
+    .app { font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif; color: #0b111f; }
+    .nav { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 14px; color: #4d535f; }
+    .nav-active { background: #f3f1ee; color: #0b111f; font-weight: 500; }
+    .kpi { background: #ffffff; border: 1px solid #e6e4e1; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+    .kpi .v { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+    .kpi .l { font-size: 11px; color: #4d535f; }
+    .kpi .d { font-size: 11px; }
+    .cite { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 999px; border: 1px solid #e6e4e1; background: #ffffff; font-size: 11px; color: #4d535f; }
+    .cite img { width: 12px; height: 12px; }
+  </style>
+</helmet>
+<div style="position: relative; width: 1600px; height: 1000px; background: linear-gradient(135deg, #fff1e8 0%, #f7f4f0 55%, #e9ecf5 100%); overflow: hidden;">
+  <div style="position: absolute; top: 40px; right: 48px; display: flex; align-items: center; gap: 10px; font-family: ui-monospace, Menlo, monospace; font-size: 26px; color: #6b6f82; letter-spacing: 0.02em;">
+    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #FF5C00;"></span>
+    <span>Mon 09:05</span>
+  </div>
+  <div style="position: absolute; top: 40px; left: 48px; font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #6b6f82;">Scene 4 · Acts, with approval · 14–19 s</div>
+
+  <div class="app" style="position: absolute; left: 120px; top: 120px; width: 1360px; height: 800px; background: #ffffff; border: 1px solid #e6e4e1; border-radius: 14px; box-shadow: 0 20px 40px rgba(13,15,26,0.18); display: flex; overflow: hidden;">
+    <div style="width: 256px; background: #fefaf3; border-right: 1px solid #e6e4e1; display: flex; flex-direction: column; padding: 16px 12px; box-sizing: border-box; gap: 4px;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px 10px;">
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; letter-spacing: -0.01em; color: #0b111f;">duct<span style="width: 8px; height: 8px; border-radius: 50%; background: #FF5C00; display: inline-block;"></span></span>
+        <span style="font-size: 12px; color: rgba(11,17,31,0.4);">app</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 6px 8px; border: 1px solid #e6e4e1; border-radius: 8px; background: #ffffff; font-size: 13px;">
+        <span style="width: 22px; height: 22px; border-radius: 6px; background: #2a2d3e; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0;">S</span>
+        <span style="flex-grow: 1; font-weight: 500;">Solo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a857e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>
+      </div>
+      <div class="nav nav-active">Insights</div>
+      <div class="nav">Content</div>
+      <div class="nav">Audit</div>
+      <div class="nav">Connections</div>
+      <div class="nav">Memory</div>
+    </div>
+
+    <div style="width: 600px; border-right: 1px solid #e6e4e1; display: flex; flex-direction: column; box-sizing: border-box;">
+      <div style="padding: 18px 24px; border-bottom: 1px solid #e6e4e1; font-size: 13px; color: #4d535f;">Insights · week of 8 Sep</div>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 24px; flex-grow: 1;">
+        <div style="align-self: flex-start; max-width: 92%; background: #f3f1ee; color: #0b111f; border-radius: 4px 10px 10px 10px; padding: 10px 14px; font-size: 14px; line-height: 1.5;">Performance Max is buying signups at €19.40 who leave within a week. I'd pause it and keep brand search on.</div>
+
+        <div style="position: relative; max-width: 460px; border: 1px solid #e6e4e1; border-radius: 12px; background: #ffffff; overflow: hidden;">
+          <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(61,83,229,0.10); color: #3d53e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div style="flex-grow: 1; min-width: 0;">
+              <div style="font-size: 14px; font-weight: 600; line-height: 1.3;">Pause Performance Max, keep brand search</div>
+              <div style="font-size: 12px; color: #4d535f; margin-top: 2px;">Google Ads · Solo · EU</div>
+            </div>
+            <span style="padding: 2px 8px; border-radius: 999px; background: #f3f1ee; color: #4d535f; font-size: 11px; font-weight: 500;">Pending</span>
+          </div>
+          <div style="border-top: 1px solid rgba(230,228,225,0.6); display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid rgba(230,228,225,0.6);">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: rgba(77,83,95,0.5); margin-top: 8px; flex-shrink: 0;"></span>
+              <div style="flex-grow: 1;">
+                <div style="font-size: 14px; line-height: 1.3;">Pause PMax · Freelancers</div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9a6500; margin-top: 3px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"/><path d="M12 9v4M12 17h.01"/></svg>
+                  Spent €2,140 in the last 7 days
+                </div>
+              </div>
+              <span style="padding: 2px 8px; border-radius: 999px; border: 1px solid #e6e4e1; color: #4d535f; font-size: 11px;">Destructive</span>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: rgba(77,83,95,0.5); margin-top: 8px; flex-shrink: 0;"></span>
+              <div style="flex-grow: 1;">
+                <div style="font-size: 14px; line-height: 1.3; color: #4d535f;">Raise Brand EU budget €40 → €60 a day</div>
+                <div style="font-size: 12px; color: #4d535f; margin-top: 3px;">Over the 25% guardrail · needs you</div>
+              </div>
+              <span style="padding: 2px 8px; border-radius: 999px; border: 1px solid #e6e4e1; color: #4d535f; font-size: 11px;">Blocked</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(230,228,225,0.6); padding: 12px 16px;">
+            <div style="flex-grow: 1; font-size: 12px; color: #4d535f;">1 destructive, 1 blocked · both wait for you</div>
+            <span style="padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #0b111f;">Reject</span>
+            <span style="padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; background: #3d53e5; color: #ffffff; transform: scale(0.96); box-shadow: 0 0 0 4px rgba(61,83,229,0.18);">Apply</span>
+          </div>
+          <svg style="position: absolute; right: 12px; bottom: 0px;" width="28" height="28" viewBox="0 0 24 24" fill="#0D0F1A" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"><path d="M5 3l14 8.5-6.2 1.6L9.5 20 5 3z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; background: #fbfaf8;">
+      <div style="padding: 18px 24px; border-bottom: 1px solid #e6e4e1; font-size: 13px; color: #4d535f;">Signups · week of 8 Sep</div>
+      <div style="display: flex; flex-direction: column; gap: 18px; padding: 28px;">
+        <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 26px; line-height: 1.2; letter-spacing: -0.01em;">Signups are down. ROAS is up. Same campaign.</div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+          <div class="kpi"><div class="v">812</div><div class="l">Signups</div><div class="d" style="color: #c9000c;">▼ 9% · target 900</div></div>
+          <div class="kpi"><div class="v">+14%</div><div class="l">ROAS</div><div class="d" style="color: #4d535f;">almost all from PMax</div></div>
+          <div class="kpi"><div class="v">€19.40</div><div class="l">CPA · PMax</div><div class="d" style="color: #c9000c;">▲ €7.40 over target</div></div>
+          <div class="kpi"><div class="v">€8.70</div><div class="l">CPA · Brand search</div><div class="d" style="color: #10883c;">▼ €3.30 under target</div></div>
+        </div>
+        <div style="font-size: 13px; line-height: 1.55; color: #0b111f;"><strong>The short version.</strong> The ROAS gain is hiding a retention problem, not describing a win.</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8a857e;">Do this week</div>
+          <div style="display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; background: #ffffff; border: 1px solid #e6e4e1; border-radius: 10px;"><span style="width: 18px; height: 18px; border-radius: 5px; background: #3d53e5; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></span><div style="flex-grow: 1; min-width: 0;"><div style="font-size: 13px; font-weight: 500; line-height: 1.3; text-decoration: line-through; color: #4d535f;">Pause Performance Max · Freelancers</div><div style="font-size: 11px; color: #4d535f; margin-top: 2px;">Duct · applied when you press Apply · €2,140 a week back</div></div></div>
+          <div style="display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; background: #ffffff; border: 1px solid #e6e4e1; border-radius: 10px;"><span style="width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #d5d3cf; background: #ffffff; display: inline-block; flex-shrink: 0; margin-top: 1px; box-sizing: border-box;"></span><div style="flex-grow: 1; min-width: 0;"><div style="font-size: 13px; font-weight: 500; line-height: 1.3;">Raise brand search budget €40 → €60 a day</div><div style="font-size: 11px; color: #4d535f; margin-top: 2px;">Needs you · over the 25% guardrail</div></div></div>
+          <div style="display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; background: #ffffff; border: 1px solid #e6e4e1; border-radius: 10px;"><span style="width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #d5d3cf; background: #ffffff; display: inline-block; flex-shrink: 0; margin-top: 1px; box-sizing: border-box;"></span><div style="flex-grow: 1; min-width: 0;"><div style="font-size: 13px; font-weight: 500; line-height: 1.3;">Fix the Connect bank screen on Android</div><div style="font-size: 11px; color: #4d535f; margin-top: 2px;">Engineering · 3 rage-click clusters, all in the PMax cohort</div></div></div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span class="cite"><img src="google-ads.svg" alt="">Google Ads</span>
+          <span class="cite"><img src="googleanalytics.svg" alt="">GA4</span>
+          <span class="cite"><img src="stripe.svg" alt="">Stripe</span>
+          <span class="cite"><img src="clarity.svg" alt="">Clarity</span>
+          <span class="cite"><img src="googlesearchconsole.svg" alt="">Search Console</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

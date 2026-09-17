@@ -13,15 +13,14 @@
 <meta property="og:url" content="https://getduct.ai/tools/saas-metrics-calculator"/>
 <meta property="og:title" content="SaaS Metrics Benchmark Calculator — Free Tool by Duct"/>
 <meta property="og:description" content="See how your churn, LTV:CAC, and trial-to-paid rate compare to SaaS benchmarks. Free, instant, no signup."/>
-<meta property="og:image" content="https://getduct.ai/assets/og-image.png"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-saas-metrics-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="SaaS Metrics Benchmark Calculator — Free Tool by Duct"/>
 <meta name="twitter:description" content="Colour-coded SaaS benchmarks for churn, LTV:CAC, CAC payback, and trial-to-paid. Free and instant."/>
-<meta name="twitter:image" content="https://getduct.ai/assets/og-image.png"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-saas-metrics-calculator.jpg"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js"></script>
 <script type="application/ld+json">
@@ -137,12 +136,6 @@
   }
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
-  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
-  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
-  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
-  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
-  .duct-bridge-link:hover { text-decoration:underline; }
 
   .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -183,7 +176,7 @@
 <a href="#main-content" class="skip-link">Skip to content</a>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 
-<div data-duct-partial="/partials/nav-tools.html"></div>
+<div data-duct-partial="/partials/nav-home.html"></div>
 
 <main id="main-content">
 
@@ -250,10 +243,10 @@
       <div class="results-grid" id="results-grid"></div>
       <div class="tool-cta">
         <div class="tool-cta-text">
-          <p>Benchmarks mapped — now focus on the metric that will bend growth.</p>
-          <p>Duct tracks churn, CAC payback, and conversion shifts weekly so SaaS operators can act before economics degrade.</p>
+          <p>Scores against the median, today. The question is what moved since last week.</p>
+          <p>Duct reads your ads, analytics and revenue tools, answers that question, and proposes the change. You approve it.</p>
         </div>
-        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+        <a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a>
       </div>
 <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
         <p class="insight-label">What this means</p>
@@ -266,9 +259,15 @@
 
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">Benchmark scores tell you where you stand. They don't tell you what changed this week.</p>
-    <p class="duct-bridge-body">To run growth well, you need weekly visibility on why churn, CAC, and conversion moved across channels and product stages. Duct delivers that synthesis so SaaS teams can take action before problems become quarter-long misses.</p>
-    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Benchmark scores tell you where you stand. They don't tell you what changed this week.</p>
+      <p class="duct-bridge-body">Duct reads churn, CAC and conversion across your tools every time you ask, says what moved and why, and proposes the fix before it becomes a quarter.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: asked why signups are down when ROAS is up, the agent reads ads, analytics and revenue together, proposes a change waiting for approval on the left, and writes the brief on the right"//>
+      <figcaption>Ask why signups are down when ROAS is up. Duct reads ads, analytics and revenue together, names the cohort that is leaving, and proposes the change. You approve.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -345,36 +344,36 @@
     churn: {
       label: 'Monthly Churn Rate',
       thresholds: [
-        { max: 2,   level: 'green', badge: '✓ Good',       context: "Below 2% monthly churn. You're in the top tier — focus on reducing it further as you scale.", source: 'Median: 2–3% · ChartMogul 2024' },
-        { max: 4,   level: 'amber', badge: '⚠ Needs work', context: "Between 2–4% monthly churn. Industry average. At this rate you're replacing ~30–40% of your base per year.", source: 'Median: 2–3% · ChartMogul 2024' },
-        { max: 999, level: 'red',   badge: '✗ Critical',   context: "Above 4% monthly churn. You're losing nearly half your revenue base annually. This is the number to fix first.", source: 'Median: 2–3% · ChartMogul 2024' }
+        { max: 2,   level: 'green', badge: 'Good',       context: "Below 2% monthly churn. You're in the top tier — focus on reducing it further as you scale.", source: 'Median: 2–3% · ChartMogul 2024' },
+        { max: 4,   level: 'amber', badge: 'Needs work', context: "Between 2–4% monthly churn. Industry average. At this rate you're replacing ~30–40% of your base per year.", source: 'Median: 2–3% · ChartMogul 2024' },
+        { max: 999, level: 'red',   badge: 'Critical',   context: "Above 4% monthly churn. You're losing nearly half your revenue base annually. This is the number to fix first.", source: 'Median: 2–3% · ChartMogul 2024' }
       ],
       format: function (v) { return v.toFixed(1) + '%'; }
     },
     ltvcac: {
       label: 'LTV:CAC Ratio',
       thresholds: [
-        { min: 3,   level: 'green', badge: '✓ Good',       context: "Above 3:1. Strong unit economics. You recover more than 3× your acquisition cost over a customer's lifetime.", source: 'Target: >3:1 · OpenView / David Skok' },
-        { min: 2,   level: 'amber', badge: '⚠ Needs work', context: "Between 2–3:1. Marginal. You're covering costs but growth is expensive relative to what customers return.", source: 'Target: >3:1 · OpenView / David Skok' },
-        { min: 0,   level: 'red',   badge: '✗ Critical',   context: "Below 2:1. Unsustainable. Fix churn or CAC before scaling acquisition spend.", source: 'Target: >3:1 · OpenView / David Skok' }
+        { min: 3,   level: 'green', badge: 'Good',       context: "Above 3:1. Strong unit economics. You recover more than 3× your acquisition cost over a customer's lifetime.", source: 'Target: >3:1 · OpenView / David Skok' },
+        { min: 2,   level: 'amber', badge: 'Needs work', context: "Between 2–3:1. Marginal. You're covering costs but growth is expensive relative to what customers return.", source: 'Target: >3:1 · OpenView / David Skok' },
+        { min: 0,   level: 'red',   badge: 'Critical',   context: "Below 2:1. Unsustainable. Fix churn or CAC before scaling acquisition spend.", source: 'Target: >3:1 · OpenView / David Skok' }
       ],
       format: function (v) { return v.toFixed(2) + ':1'; }
     },
     payback: {
       label: 'CAC Payback Period',
       thresholds: [
-        { max: 12,  level: 'green', badge: '✓ Good',       context: "Under 12 months to recover acquisition cost. Healthy — you break even before most churn risk materialises.", source: 'Target: <12 months · OpenView 2024' },
-        { max: 18,  level: 'amber', badge: '⚠ Needs work', context: "12–18 months payback. Manageable but you're exposed if churn spikes in the first year.", source: 'Target: <12 months · OpenView 2024' },
-        { max: 999, level: 'red',   badge: '✗ Critical',   context: "Over 18 months payback. High-risk — customers may churn before you recoup acquisition cost.", source: 'Target: <12 months · OpenView 2024' }
+        { max: 12,  level: 'green', badge: 'Good',       context: "Under 12 months to recover acquisition cost. Healthy — you break even before most churn risk materialises.", source: 'Target: <12 months · OpenView 2024' },
+        { max: 18,  level: 'amber', badge: 'Needs work', context: "12–18 months payback. Manageable but you're exposed if churn spikes in the first year.", source: 'Target: <12 months · OpenView 2024' },
+        { max: 999, level: 'red',   badge: 'Critical',   context: "Over 18 months payback. High-risk — customers may churn before you recoup acquisition cost.", source: 'Target: <12 months · OpenView 2024' }
       ],
       format: function (v) { return v.toFixed(1) + ' months'; }
     },
     trial: {
       label: 'Trial-to-Paid Rate',
       thresholds: [
-        { min: 25,  level: 'green', badge: '✓ Good',       context: "Above 25% trial-to-paid. Strong onboarding and product-market fit signal.", source: 'Median: 15–25% · OpenView SaaS benchmarks' },
-        { min: 15,  level: 'amber', badge: '⚠ Needs work', context: "15–25% trial-to-paid. Average for B2B SaaS. Onboarding improvements typically move this needle fastest.", source: 'Median: 15–25% · OpenView SaaS benchmarks' },
-        { min: 0,   level: 'red',   badge: '✗ Critical',   context: "Below 15% trial-to-paid. Most trial users are leaving — usually a product fit or onboarding problem.", source: 'Median: 15–25% · OpenView SaaS benchmarks' }
+        { min: 25,  level: 'green', badge: 'Good',       context: "Above 25% trial-to-paid. Strong onboarding and product-market fit signal.", source: 'Median: 15–25% · OpenView SaaS benchmarks' },
+        { min: 15,  level: 'amber', badge: 'Needs work', context: "15–25% trial-to-paid. Average for B2B SaaS. Onboarding improvements typically move this needle fastest.", source: 'Median: 15–25% · OpenView SaaS benchmarks' },
+        { min: 0,   level: 'red',   badge: 'Critical',   context: "Below 15% trial-to-paid. Most trial users are leaving — usually a product fit or onboarding problem.", source: 'Median: 15–25% · OpenView SaaS benchmarks' }
       ],
       format: function (v) { return v.toFixed(1) + '%'; }
     }
@@ -569,6 +568,7 @@
     document.getElementById('reset-btn').style.display = 'none';
     document.getElementById('insight-panel').setAttribute('hidden', '');
   });
+  DuctToolExample.seed(['inp-mrr', 'inp-churn', 'inp-cac', 'inp-arpu', 'inp-gross-margin', 'inp-ltv', 'inp-trial'], 'calc-btn', 'results-section');
 }());
 </script>
 

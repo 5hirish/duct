@@ -269,6 +269,36 @@ entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('in')
 }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
 
+// GitHub stars in the nav. Shown only once the number means something
+// (>= 100); below that the label stays "GitHub" rather than advertising a
+// small count. Cached for an hour so a page view is not an API call.
+(function() {
+var els = document.querySelectorAll('[data-duct-stars]');
+if (!els.length || !window.fetch) return;
+var KEY = 'duct-stars', MIN = 100, TTL = 60 * 60 * 1000;
+function show(n) {
+  if (n < MIN) return;
+  var t = n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+  Array.prototype.forEach.call(els, function(el) {
+    el.textContent = '\u2605 ' + t;
+    el.setAttribute('aria-label', n + ' stars on GitHub');
+  });
+}
+try {
+  var c = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (c && Date.now() - c.t < TTL) { show(c.n); return; }
+} catch (e) {}
+fetch('https://api.github.com/repos/5hirish/duct', { headers: { Accept: 'application/vnd.github+json' } })
+  .then(function(r) { return r.ok ? r.json() : null; })
+  .then(function(j) {
+    if (!j) return;
+    var n = j.stargazers_count | 0;
+    try { localStorage.setItem(KEY, JSON.stringify({ n: n, t: Date.now() })); } catch (e) {}
+    show(n);
+  })
+  .catch(function() {});
+})();
+
 // Nav shadow (passive + rAF throttled)
 (function() {
 var nav = document.getElementById('nav');
@@ -624,6 +654,93 @@ window.addEventListener('keydown', function(e) {
 window.addEventListener('resize', function() {
   if (window.innerWidth > 860 && drawer.classList.contains('is-open')) closeDrawer();
 });
+})();
+
+// Click-to-enlarge for product shots. A page shows the app at a third of its
+// size, a phone at a tenth, and the text in a shot is the argument. A tap
+// opens the same file over the page at a size where it reads, pannable in
+// both directions; Escape, the button or the backdrop closes it.
+(function() {
+var imgs = document.querySelectorAll('.shot-frame img, .job-shot img, .what-shot img, .dl-hero-shot img, [data-zoom] img');
+if (!imgs.length) return;
+var box = null, scroller = null, pic = null, closeBtn = null, opener = null;
+
+function build() {
+  box = document.createElement('div');
+  box.className = 'lightbox';
+  box.hidden = true;
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Enlarged screenshot');
+  scroller = document.createElement('div');
+  scroller.className = 'lightbox-scroll';
+  pic = document.createElement('img');
+  // On a phone the shot is wider than the screen; start in the middle, where
+  // the conversation is, rather than on the app's sidebar.
+  pic.addEventListener('load', function() {
+    // Never upscale: a 1x capture (the full audit report) stays at its own
+    // width rather than being stretched to the 1400px the 2x shots get.
+    pic.style.maxWidth = Math.min(pic.naturalWidth, 1400) + 'px';
+    centre();
+  });
+  scroller.appendChild(pic);
+  closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'lightbox-close';
+  closeBtn.setAttribute('aria-label', 'Close');
+  closeBtn.textContent = '×';
+  box.appendChild(scroller);
+  box.appendChild(closeBtn);
+  document.body.appendChild(box);
+  scroller.addEventListener('click', function(e) { if (e.target === scroller) close(); });
+  closeBtn.addEventListener('click', close);
+}
+
+function centre() {
+  if (!scroller) return;
+  var extra = scroller.scrollWidth - scroller.clientWidth;
+  if (extra > 0) scroller.scrollLeft = extra / 2;
+}
+
+function open(img) {
+  if (!box) build();
+  opener = img;
+  // A shot can point at a longer version of itself for the enlarged view
+  // (the audit report: the page shows its top, the lightbox all of it).
+  // img.src, not currentSrc: with srcset a phone's current candidate is the
+  // 768px variant, and the lightbox exists to show the full-size capture.
+  pic.src = img.getAttribute('data-zoom-src') || img.src;
+  pic.alt = img.alt || '';
+  box.hidden = false;
+  scroller.scrollTop = 0;
+  centre();
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(function() {
+    box.classList.add('is-open');
+    closeBtn.focus();
+  });
+}
+
+function close() {
+  if (!box || box.hidden) return;
+  box.classList.remove('is-open');
+  box.hidden = true;
+  document.body.style.overflow = '';
+  if (opener && opener.focus) opener.focus();
+}
+
+Array.prototype.forEach.call(imgs, function(img) {
+  img.classList.add('zoomable');
+  img.setAttribute('tabindex', '0');
+  img.setAttribute('role', 'button');
+  img.setAttribute('aria-label', (img.alt ? img.alt + '. ' : '') + 'Enlarge');
+  img.addEventListener('click', function() { open(img); });
+  img.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(img); }
+  });
+});
+
+window.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
 })();
 
 // UTM params — persist to sessionStorage and attach to dataLayer on pageload
