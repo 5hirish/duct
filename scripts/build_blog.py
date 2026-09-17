@@ -240,7 +240,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
         else ""
     )
 
-    full_title = f"{title} — Duct Insights"
+    full_title = f"{title} — Duct blog"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
