@@ -31,7 +31,7 @@ import { FolderOpen, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import DeskCards from "@/components/insights/desk/DeskCards";
-import DeskActivity from "@/components/insights/desk/DeskActivity";
+import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
@@ -192,6 +192,23 @@ function FrontDoorScene({ error = "" }) {
 function DialsScene() {
   const [autonomy, setAutonomy] = useState(AUTONOMY_ASK);
   return <ComposerDials projectId="p1" autonomy={autonomy} onAutonomyChange={setAutonomy} deferred />;
+}
+
+function DeskActivityCollapseScene() {
+  const [collapsed, setCollapsed] = useState(true);
+  return (
+    <div className={`grid gap-y-8 ${activityGridClass(collapsed)}`}>
+      <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
+        The content column. It takes the rail&rsquo;s width back when the rail folds, which is
+        the whole point of the control — so this stand-in is here to be watched, not read.
+      </div>
+      <DeskActivity
+        items={DESK_ACTIVITY}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((v) => !v)}
+      />
+    </div>
+  );
 }
 
 function DeskComposerScene(props) {
@@ -855,6 +872,14 @@ export const SCENES = [
         <DeskActivity items={DESK_ACTIVITY} />
       </div>
     ),
+  },
+  {
+    id: "desk-activity-collapsed",
+    state: "collapsed, with the real toggle",
+    group: "Desk",
+    title: "Activity rail, folded away",
+    note: "Click the strip to expand and the header control to fold it back — this is the desk's own control and its own grid, imported rather than retyped. Collapsing is @3xl-only: fold it, then drag this frame below 48rem and the rail comes back whole, because a 2.75rem strip in a stacked full-width column saves nothing.",
+    render: () => <DeskActivityCollapseScene />,
   },
   {
     id: "context-ring-tones",
