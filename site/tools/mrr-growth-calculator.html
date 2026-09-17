@@ -86,11 +86,7 @@
   @media (max-width: 640px) { .tool-results { padding: 24px; } }
   .tool-results.visible { display: block; }
 
-  .results-row {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;
-  }
-  @media (max-width: 860px) { .results-row { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 420px) { .results-row { grid-template-columns: 1fr; } }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
 
   .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
   .result-card.green { border-color: #22c55e; background: #f0fdf4; }
@@ -342,9 +338,9 @@
   function fmtCurrency(value) {
     var abs = Math.abs(value);
     var sign = value < 0 ? '-' : '';
-    if (abs >= 1000000) return sign + '$' + (abs / 1000000).toFixed(2) + 'm';
-    if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1) + 'k';
-    return sign + '$' + abs.toFixed(0);
+    if (abs >= 1000000) return sign + (abs / 1000000).toFixed(2) + 'm';
+    if (abs >= 1000) return sign + (abs / 1000).toFixed(1) + 'k';
+    return sign + abs.toFixed(0);
   }
 
   function fmtPercent(value) {
@@ -511,6 +507,7 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) { row.removeChild(row.firstChild); }
   });
+  DuctToolExample.seed(['inp-start-mrr', 'inp-end-mrr', 'inp-months', 'inp-target'], 'calc-btn', 'results-section');
 }());
 </script>
 

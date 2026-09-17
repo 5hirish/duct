@@ -86,11 +86,7 @@
   @media (max-width: 600px) { .tool-results { padding: 24px; } }
   .tool-results.visible { display: block; }
 
-  .results-row {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;
-  }
-  @media (max-width: 700px) { .results-row { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 400px) { .results-row { grid-template-columns: 1fr; } }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
 
   .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
   .result-card.green { border-color: #22c55e; background: #f0fdf4; }
@@ -348,8 +344,8 @@
 
   function fmtCurrency(v) {
     return v >= 1000
-      ? '$' + (v / 1000).toFixed(1) + 'k'
-      : '$' + v.toFixed(0);
+      ? (v / 1000).toFixed(1) + 'k'
+      : v.toFixed(0);
   }
 
   function makeCard(label, display, level, badge, context) {
@@ -493,6 +489,7 @@
     document.getElementById('reset-btn').style.display = 'none';
     document.getElementById('insight-panel').setAttribute('hidden', '');
   });
+  DuctToolExample.seed(['inp-customers', 'inp-spend', 'inp-arpu', 'inp-lifespan', 'inp-gross-margin'], 'calc-btn', 'results-section');
 }());
 </script>
 

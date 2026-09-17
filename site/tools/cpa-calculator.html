@@ -47,9 +47,7 @@
   .tool-results { border-top:1px solid var(--border); padding:36px 40px; display:none; }
   @media (max-width:640px) { .tool-results { padding:24px; } }
   .tool-results.visible { display:block; }
-  .results-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
-  @media (max-width:860px) { .results-row { grid-template-columns:1fr 1fr; } }
-  @media (max-width:420px) { .results-row { grid-template-columns:1fr; } }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
   .result-card { border:1.5px solid var(--border); border-radius:var(--r); padding:20px; }
   .result-card.green { border-color:#22c55e; background:#f0fdf4; }
   .result-card.amber { border-color:#f59e0b; background:#fffbeb; }
@@ -160,7 +158,7 @@
   var fieldIds = ['inp-spend', 'inp-conversions', 'inp-target-cpa', 'inp-budget'];
   DuctToolFormError.bindClear(ERR, fieldIds);
 
-  function money(v) { return '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
+  function money(v) { return (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
   function num(v) { return v >= 1000000 ? (v / 1000000).toFixed(2) + 'm' : (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0)); }
   function card(label, display, level, badge, context) {
     var c = document.createElement('div'); c.className = 'result-card ' + level;
@@ -195,7 +193,7 @@
     var row = document.getElementById('results-row');
     while (row.firstChild) row.removeChild(row.firstChild);
     var lvl = cpa <= 50 ? 'green' : (cpa <= 120 ? 'amber' : 'red');
-    row.appendChild(card('CPA', '$' + cpa.toFixed(2), lvl, lvl === 'green' ? 'Efficient' : (lvl === 'amber' ? 'Moderate' : 'High'), 'Cost per acquisition from your campaign data.'));
+    row.appendChild(card('CPA', cpa.toFixed(2), lvl, lvl === 'green' ? 'Efficient' : (lvl === 'amber' ? 'Moderate' : 'High'), 'Cost per acquisition from your campaign data.'));
     row.appendChild(card('Spend', money(spend), 'neutral', 'Observed', 'Total spend included in this calculation.'));
     row.appendChild(card('Conversions', num(conv), 'neutral', 'Observed', 'Attributed conversions/acquisitions.'));
     if (!isNaN(targetCpa) && targetCpa > 0) {
@@ -204,7 +202,7 @@
     }
     if (!isNaN(budget) && budget > 0) {
       var reqCpa = budget / conv;
-      row.appendChild(card('Required CPA', '$' + reqCpa.toFixed(2), reqCpa >= cpa ? 'green' : 'amber', reqCpa >= cpa ? 'In budget' : 'Needs efficiency', 'CPA threshold needed to stay inside budget at current conversion volume.'));
+      row.appendChild(card('Required CPA', reqCpa.toFixed(2), reqCpa >= cpa ? 'green' : 'amber', reqCpa >= cpa ? 'In budget' : 'Needs efficiency', 'CPA threshold needed to stay inside budget at current conversion volume.'));
     }
     var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
     if (cpa <= 50) addP(body, 'Your CPA is healthy. Double-check lead quality so low acquisition cost translates to revenue.');
@@ -223,6 +221,7 @@
     document.getElementById('insight-panel').setAttribute('hidden', '');
     var row = document.getElementById('results-row'); while (row.firstChild) row.removeChild(row.firstChild);
   });
+  DuctToolExample.seed(['inp-spend', 'inp-conversions', 'inp-target-cpa', 'inp-budget'], 'calc-btn', 'results-section');
 }());
 </script>
 <script src="../assets/duct-partials.js"></script>

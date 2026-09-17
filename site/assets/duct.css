@@ -503,6 +503,16 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
 .tool-card > .tool-form-error.show {
   display: block;
 }
+/* The worked example a calculator opens on (assets/tool-validation.js) */
+.tool-example-note {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-radius: var(--r);
+  background: var(--off);
+  border: 1px dashed var(--border);
+  font-size: 13px;
+  color: var(--navy-3);
+}
 .field input.field-invalid,
 .field textarea.field-invalid {
   border-color: #ef4444;
