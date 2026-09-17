@@ -21,7 +21,8 @@ Regeneration is the only way these copies change, so they cannot drift.
 
 The Markdown subset
 -------------------
-Deliberately small: h2, paragraphs, ordered and bullet lists, bold, links.
+Deliberately small: h2, paragraphs, ordered and bullet lists, bold, links,
+and a `---` rule.
 Anything else — code fences, tables, images, blockquotes, h1, h3+ — raises
 rather than rendering wrong. A generator that silently mangles a construct is
 worse than one that refuses, because nobody reads generated output.
@@ -116,6 +117,13 @@ def render_markdown(body: str, slug: str) -> str:
                     f"{slug}: unsupported Markdown ({why}) at line {i + 1}. "
                     f"Extend render_markdown() in scripts/build_blog.py before using it."
                 )
+
+        # A rule between the body and the closing pitch. Both live posts end
+        # with one, and it rendered as a literal "---" paragraph before.
+        if line == "---":
+            blocks.append("<hr/>")
+            i += 1
+            continue
 
         if line.startswith("#"):
             level = len(line) - len(line.lstrip("#"))
