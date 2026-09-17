@@ -6,7 +6,13 @@ module.exports = defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  // Two workers everywhere, not only on CI. Locally the default (half the
+  // cores) opened four Chromium contexts at once, each playing the home
+  // page's film, and desktop contexts then took longer than the 30 s test
+  // timeout to tear down: three consent tests failing on a machine where
+  // the same twelve pass in 23 s with two workers. The Makefile mirrors CI,
+  // so the local run has to see what CI sees.
+  workers: 2,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://127.0.0.1:4317",
