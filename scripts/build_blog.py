@@ -356,7 +356,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
   <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="{AUTHOR['name']}"/>
   <div>
     <p class="post-author-name">{AUTHOR['name']}</p>
-    <p class="post-author-bio">Product manager and engineer in Valencia. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
     <div class="post-author-links">
       <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
       <a href="https://x.com/5hirish" rel="noopener">X</a>

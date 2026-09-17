@@ -2,7 +2,7 @@
 
 > Duct is an open-source (MIT) AI agent for product and growth teams. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, remembers what it learns about your business, and, with your approval, changes things in those tools for you. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct.
 
-Duct is built and maintained by Shirish Kadam in Valencia, Spain. It answers questions a single dashboard cannot ("why did signups drop last week", "which content converts", "where is the ads budget leaking") by reading the tools together rather than one at a time, and every number in an answer is re-checked by a verification sub-agent before it reaches you.
+Duct is built and maintained by Shirish Kadam in Spain. It answers questions a single dashboard cannot ("why did signups drop last week", "which content converts", "where is the ads budget leaking") by reading the tools together rather than one at a time, and every number in an answer is re-checked by a verification sub-agent before it reaches you.
 
 ## Three agents
 
@@ -50,7 +50,7 @@ Calculators and generators that run in the browser, no account: [SaaS metrics be
 
 ## Maintainer
 
-- [Shirish Kadam](https://shirishkadam.com): Product manager and engineer in Valencia, Spain. Also runs [Ship with AI](https://youtube.com/@5hirish) on YouTube and posts as [@5hirish](https://x.com/5hirish).
+- [Shirish Kadam](https://shirishkadam.com): Product manager and engineer in Spain. Also runs [Ship with AI](https://youtube.com/@5hirish) on YouTube and posts as [@5hirish](https://x.com/5hirish).
 
 ## Optional
 
