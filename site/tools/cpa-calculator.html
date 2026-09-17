@@ -122,10 +122,10 @@
       <div class="results-row" id="results-row"></div>
       <div class="tool-cta">
         <div class="tool-cta-text">
-          <p>CPA pressure-tested — now choose the campaigns to scale.</p>
-          <p>Duct turns CPA, conversion, and spend trends into a weekly brief so teams can catch profitability drift before it compounds.</p>
+          <p>One CPA, one campaign, once. The question is which campaign to cut.</p>
+          <p>Duct reads your ads, analytics and revenue tools, answers that question, and proposes the change. You approve it.</p>
         </div>
-        <a href="#cta" class="btn btn-orange">Get your free brief&nbsp;→</a>
+        <a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a>
       </div>
       <div id="insight-panel" class="insight-panel" hidden>
         <p class="insight-label">What this means</p>
@@ -137,8 +137,8 @@
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
     <p class="duct-bridge-headline">CPA tells you acquisition cost. It doesn't tell you which channels are improving margin.</p>
-    <p class="duct-bridge-body">That requires joining CPA with click quality, close rates, and downstream revenue by campaign. Duct does that every week, so performance teams can decide faster where to cut and where to scale.</p>
-    <a href="#cta" class="duct-bridge-link">See how Duct works&nbsp;→</a>
+    <p class="duct-bridge-body">Duct reads CPA beside click quality, close rate and revenue by campaign, says which campaigns to cut and which to scale, and waits for your yes.</p>
+    <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
   </div>
 </section>
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
@@ -210,7 +210,7 @@
     if (cpa <= 50) addP(body, 'Your CPA is healthy. Double-check lead quality so low acquisition cost translates to revenue.');
     else if (cpa <= 120) addP(body, 'CPA is workable but sensitive. Improve conversion rate and audience quality before scaling spend.');
     else addP(body, 'CPA is expensive. Tighten targeting and post-click funnel efficiency before increasing budget.');
-    addP(body, 'To beat dashboard-only calculators, track CPA alongside CPC and CTR weekly so you can identify which lever is causing efficiency drift.');
+    addP(body, 'Read CPA beside CPC and CTR: when CPA drifts, one of the two usually moved first.');
     document.getElementById('insight-panel').removeAttribute('hidden');
     document.getElementById('results-section').classList.add('visible');
     document.getElementById('reset-btn').style.display = '';
