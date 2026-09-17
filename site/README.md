@@ -52,15 +52,12 @@ In CI, the `Site Checks` workflow runs these smoke tests and uploads Playwright 
 
 ## Social preview
 
-`assets/og-image.png` is the `og:image` for all 23 pages. It is generated, not
-hand-drawn — edit `scripts/social/template.html` and re-run:
-
-```bash
-node scripts/social/render.mjs
-```
-
-That also writes `.github/social-preview.png`, the GitHub repository card, which
-has to be uploaded by hand at Settings → Social preview.
+Every page has its own Open Graph card in `assets/og/`, drawn by
+`node scripts/build_og_images.mjs` from a table in that script; blog posts get
+theirs from their front matter, and the same image is the post's cover on the
+blog index. The GitHub repository card is separate: `node scripts/social/render.mjs`
+writes `.github/social-preview.png`, which has to be uploaded by hand at
+Settings → Social preview.
 
 ## Conventions
 
