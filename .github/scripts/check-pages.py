@@ -56,6 +56,9 @@ class PageChecker(HTMLParser):
         self._saw_body = False
         self.ld_blocks = []
         self._in_ld = False
+        # Every local image the page references, src and srcset alike. A shot
+        # variant that was never generated is a broken picture, not a slow one.
+        self.image_refs = []
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -93,6 +96,14 @@ class PageChecker(HTMLParser):
                 self.og_props.add(prop)
             if name in REQUIRED_TWITTER:
                 self.twitter_props.add(name)
+
+        if tag == "img":
+            if attrs.get("src"):
+                self.image_refs.append(attrs["src"])
+            for cand in attrs.get("srcset", "").split(","):
+                cand = cand.strip().split(" ")[0]
+                if cand:
+                    self.image_refs.append(cand)
 
         if tag == "script":
             if attrs.get("type", "").lower() == "application/ld+json":
@@ -170,6 +181,16 @@ class PageChecker(HTMLParser):
         if missing_tw:
             self.errors.append(f"Missing Twitter meta tags: {', '.join(sorted(missing_tw))}")
 
+        # Images resolve
+        for ref in self.image_refs:
+            if ref.startswith(("http://", "https://", "data:", "//")):
+                continue
+            path = ref.split("?")[0]
+            base = self.site_root if path.startswith("/") else self.page_dir
+            target = os.path.normpath(os.path.join(base, path.lstrip("/")))
+            if not os.path.isfile(target):
+                self.errors.append(f"Image not found: {ref}")
+
         # CSS
         if not self.has_css:
             self.errors.append(f"Missing <link rel='stylesheet' href='{asset_prefix}duct.css'>")
@@ -195,6 +216,8 @@ def check_file(filepath, site_root):
         content = f.read()
 
     checker = PageChecker(rel)
+    checker.site_root = site_root
+    checker.page_dir = os.path.dirname(filepath)
     checker.feed(content)
     checker.run_checks(rel)
     return checker.errors, checker.warnings

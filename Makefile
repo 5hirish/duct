@@ -77,6 +77,10 @@ check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 
 check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 .github/scripts/check-pages.py
+	# Local only: a variant older than its shot means a reshoot was copied in
+	# without regenerating them. CI cannot tell (checkout resets mtimes), so
+	# there check-pages.py's "every srcset file exists" is the whole guard.
+	node scripts/build_media_variants.mjs --check
 	python3 -c "import xml.dom.minidom as m; m.parse('site/sitemap.xml'); print('sitemap.xml is well-formed')"
 	npm --prefix site run test:e2e
 

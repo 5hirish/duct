@@ -707,7 +707,9 @@ function open(img) {
   opener = img;
   // A shot can point at a longer version of itself for the enlarged view
   // (the audit report: the page shows its top, the lightbox all of it).
-  pic.src = img.getAttribute('data-zoom-src') || img.currentSrc || img.src;
+  // img.src, not currentSrc: with srcset a phone's current candidate is the
+  // 768px variant, and the lightbox exists to show the full-size capture.
+  pic.src = img.getAttribute('data-zoom-src') || img.src;
   pic.alt = img.alt || '';
   box.hidden = false;
   scroller.scrollTop = 0;
