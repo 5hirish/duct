@@ -127,7 +127,7 @@ font-size: 13px; transition: background .15s, color .15s;
 .dm-text span { font-size: 11px; color: var(--navy-3); }
 .dm-sep { height: 1px; background: var(--border); margin: 6px 4px; }
 .tag-soon {
-font-size: 10px; font-weight: 600; padding: 2px 7px;
+font-size: 11px; font-weight: 600; padding: 2px 7px;
 border-radius: 4px; background: #fff7e6; color: #c9a84c;
 border: 1px solid rgba(201,168,76,.3);
 margin-left: auto; flex-shrink: 0; align-self: center;
@@ -267,7 +267,7 @@ animation: fadeUp .5s .24s ease both;
 .job h3 { font-family: var(--serif); font-size: 22px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
 .job p { font-size: 14px; color: var(--navy-3); line-height: 1.7; }
 .job dl { display: grid; grid-template-columns: 72px 1fr; gap: 8px 12px; margin: 0; }
-.job dt { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); padding-top: 4px; }
+.job dt { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); padding-top: 4px; }
 .job dd { font-size: 14px; color: var(--navy-3); line-height: 1.65; margin: 0; }
 .job dd.with { color: var(--navy); }
 @media (max-width: 860px) {
@@ -310,7 +310,7 @@ border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
 .diag-info { flex: 1; }
 .diag-info b { display: block; font-weight: 500; font-size: 12px; color: var(--navy); }
 .diag-info s { font-size: 11px; color: var(--navy-3); font-style: normal; }
-.diag-divider { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--navy-3); }
+.diag-divider { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--navy-3); }
 .diag-divider::before, .diag-divider::after { content: ''; flex: 1; height: 1px; border-top: 1px dashed var(--border); }
 .diag-result { padding: 14px 16px; background: var(--orange); border-radius: var(--r); font-size: 13px; color: #fff; line-height: 1.6; }
 .diag-result strong { font-weight: 600; display: block; margin-bottom: 3px; }
@@ -381,7 +381,9 @@ footer:not(.footer-expanded) { padding: 44px 52px; border-top: 1px solid var(--b
 .footer-brand p { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 10px; max-width: 220px; line-height: 1.65; }
 .footer-cols { display: flex; gap: 52px; flex-wrap: wrap; }
 .footer-col h4 { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 14px; }
-.footer-col a { display: block; font-size: 13px; font-weight: 300; color: var(--navy-3); text-decoration: none; margin-bottom: 9px; transition: color .2s; }
+/* Padding, not margin, between the links: the same rhythm, but a thumb has
+   the whole 25px row to hit instead of a 16px line. */
+.footer-col a { display: block; font-size: 13px; font-weight: 300; color: var(--navy-3); text-decoration: none; padding: 4px 0 5px; transition: color .2s; }
 .footer-col a:hover { color: var(--navy); }
 .footer-bottom-row { max-width: 1160px; margin: 28px auto 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .footer-bottom-row span { font-size: 12px; color: var(--navy-3); }
