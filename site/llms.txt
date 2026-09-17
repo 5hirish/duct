@@ -1,39 +1,40 @@
 # Duct
 
-> Duct is an open-source (MIT) AI agent that reads across product, marketing and revenue tools together and answers questions a single dashboard cannot. Run it on your own machine with your own model API keys, self-host it, or use the hosted version at getduct.ai.
+> Duct is an open-source (MIT) AI agent for product and growth teams. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, remembers what it learns about your business, and, with your approval, changes things in those tools for you. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct.
 
-Duct is built and maintained by Shirish Kadam in Valencia, Spain. The full source — FastAPI backend, agents, Next.js app and Tauri desktop shell — is at https://github.com/5hirish/duct under the MIT licence.
+Duct is built and maintained by Shirish Kadam in Valencia, Spain. It answers questions a single dashboard cannot ("why did signups drop last week", "which content converts", "where is the ads budget leaking") by reading the tools together rather than one at a time, and every number in an answer is re-checked by a verification sub-agent before it reaches you.
 
-It connects 12 sources: Google Ads, Google Analytics 4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Duct reads by default; when it can fix something it prepares a change set, shows a preview and a guardrail check, and waits for a human to approve. There is no agent-facing approve or apply tool — that boundary is enforced in code, not in a prompt.
+## Three agents
 
-Intended for product managers, growth leads and marketing teams who need cross-tool insight without a data team, and for engineers who would rather run the thing themselves than trust a black box.
+- [Insights](https://getduct.ai/): Ask a question across ads, analytics and revenue. Duct reads Google Ads, GA4, Stripe and the rest together, names the cause with its sources, writes a brief that is saved and versioned, and proposes the change (pause a campaign, add negatives, track an event). Nothing is applied until a human approves; there is no agent-facing apply tool, the boundary is in code.
+- [SEO audit](https://getduct.ai/seo-audit): Paste a URL and Duct crawls the site, reads the technical and content signals, and hands back a scored report: keyword clusters on a position map, page-two opportunities, the topics competitors own, nine category scores and the fixes in order. Free, no account, the front door to the product.
+- [Content Studio](https://getduct.ai/for-organic-growth): A plan on a board, a post per card, slides and images generated for each, and one click to publish to TikTok, Instagram, LinkedIn, YouTube, Threads, X, Facebook, Pinterest and Bluesky. Results come back onto the card so the next plan learns from the last one.
 
-## Free Tools
+## How it works
 
-- [SaaS Metrics Benchmark Calculator](https://getduct.ai/tools/saas-metrics-calculator): Free interactive calculator that benchmarks your SaaS metrics — monthly churn, LTV:CAC ratio, CAC payback period, and trial-to-paid conversion rate — against industry medians from OpenView 2024 and ChartMogul 2023. Enter MRR, churn rate, CAC, and LTV (or auto-calculate from ARPU and churn). Results are colour-coded green/amber/red. For B2B SaaS founders, growth leads, and CFOs.
-- [Weekly Marketing Brief Template Generator](https://getduct.ai/tools/weekly-brief-template): Free multi-step generator that builds a customised weekly marketing report template based on your role (Growth PM, Performance Marketer, or SEO Lead) and tool stack (GA4, Mixpanel, HubSpot, Google Ads, Ahrefs, Search Console, Meta Ads, LinkedIn Ads). Outputs the right metric slots and section headers per tool. Copy with one click.
-- [CAC / LTV Calculator](https://getduct.ai/tools/cac-ltv-calculator): Free SaaS unit economics calculator. Enter monthly new customers, total sales and marketing spend, ARPU, and customer lifespan. Instantly calculates CAC, LTV, LTV:CAC ratio, and CAC payback period with health scores and one-line interpretations. Benchmarks from OpenView, SaaStr, and Bessemer Venture Partners.
-- [MRR Growth Rate Calculator](https://getduct.ai/tools/mrr-growth-calculator): Free SaaS growth calculator for tracking net MRR growth and compound monthly growth rate (CMGR) across any period. Enter starting MRR, ending MRR, and months to get growth diagnostics, plus optional required CMGR to reach a target MRR.
-- [Engagement Rate Calculator](https://getduct.ai/tools/engagement-rate-calculator): Free engagement rate calculator for content and growth teams. Compute engagement rate by followers, reach, and impressions, plus average engagements per post, with practical interpretation bands for weak/healthy/high-performing content.
-- [CTR Calculator](https://getduct.ai/tools/ctr-calculator): Free click-through rate calculator for paid and organic channels. Enter impressions and clicks to calculate CTR, then model projected clicks at target CTR and required CTR to hit click goals.
-- [CPM Calculator](https://getduct.ai/tools/cpm-calculator): Free cost-per-mille calculator for campaign planning. Enter spend and impressions to calculate CPM, projected spend at target CPM, and required CPM to stay inside budget.
-- [CPC Calculator](https://getduct.ai/tools/cpc-calculator): Free cost-per-click calculator for campaign planning. Enter spend and clicks to calculate CPC, projected spend at target CPC, and required CPC to stay inside budget.
-- [CPA Calculator](https://getduct.ai/tools/cpa-calculator): Free cost-per-acquisition calculator for marketers. Enter spend and conversions to calculate CPA, projected conversions at target CPA, and required CPA to stay within budget.
-- [Marketing ROI Calculator](https://getduct.ai/tools/marketing-roi-calculator): Free marketing ROI calculator. Enter spend and attributed revenue to calculate ROI, net profit, and target-revenue scenarios for campaign planning.
-- [ROAS Calculator](https://getduct.ai/tools/roas-calculator): Free ROAS (return on ad spend) calculator for paid media. Enter ad spend and attributed revenue to get ROAS as a multiple, optional target ROAS scenarios (revenue gap and max efficient spend), and optional gross-margin contribution ROAS.
+- It reads by default. When it can fix something it prepares a change set, shows a preview and a guardrail check, and waits for approval. Changes can be rolled back.
+- It remembers: goals, decisions, conclusions from earlier briefs, per project and per user, with a timeline of what it learned and when.
+- Connectors: Google Ads, Google Analytics 4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe, RevenueCat, HubSpot. Google connects with OAuth, read-only unless more is granted; the rest take a key. Credentials are encrypted at rest and scoped to one project.
+- Models: bring your own API key (OpenAI, Anthropic, Google), or sign in with a ChatGPT subscription on the desktop app. Keys live in the OS keychain.
+- Pricing: free with your own keys, always. A paid plan later bundles the models so nobody has to hold keys; nothing open today moves behind it.
 
-## Core pages
+## Pages
 
-- [Home](https://getduct.ai/): Overview of Duct — what it does, who it's for, and how to download the desktop app.
-- [Open source](https://getduct.ai/open-source): Why Duct is MIT licensed, what runs where in the desktop app versus a self-hosted install, how to self-host it, and what will and will not cost money: free with your own keys, always; a paid plan later bundles the models.
-- [For Product Intelligence](https://getduct.ai/for-product-intelligence): How Duct connects Mixpanel, Intercom, Linear, and Salesforce into a daily PM brief with cross-tool correlations and anomaly alerts.
-- [For Organic Growth](https://getduct.ai/for-organic-growth): How Duct surfaces SEO and content performance signals from Search Console, Ahrefs, and GA4 into a weekly action brief.
-- [For Paid Ads](https://getduct.ai/for-paid-ads): How Duct unifies Google Ads, Meta, LinkedIn, and X signals into one paid performance brief with cross-channel recommendations.
-- [Free SEO Audit](https://getduct.ai/seo-audit): Runs an AI-powered technical and content SEO audit against a sitemap and returns a scored, prioritised report.
-- [Doctrine](https://getduct.ai/doctrine): The seven opinions Duct is built on, each linked to the file that enforces it — approval-gated execution, renting rather than marrying an agent harness, membership-based authorization, and why agent-written contributions are welcome.
-- [About](https://getduct.ai/about): Duct is built and maintained by Shirish Kadam in Valencia, Spain. MIT licensed. Also carries the origin of the name: duct is Latin ductus, "a leading", the word inside aquaeductus — Rome's aqueducts carried water they did not make, which is what Duct does with the data already in your stack.
-- [Changelog](https://getduct.ai/changelog/): Release notes for Duct, newest first, covering April 2026 onward — new connectors, agent and model upgrades, execution controls, and desktop builds, each written as what changed and why it matters. RSS at https://getduct.ai/changelog/feed.xml.
-- [Blog](https://getduct.ai/blog/): Articles on product intelligence, SEO strategy, and growth analytics for SaaS teams.
+- [Home](https://getduct.ai/): What Duct does, the 30-second film, and the download.
+- [Download](https://getduct.ai/download): The desktop app for Mac, Windows and Linux. Free, no credit card.
+- [Open source](https://getduct.ai/open-source): Why it is MIT, what runs where in the desktop app versus a self-hosted install, how to self-host, and the pricing promise.
+- [For product teams](https://getduct.ai/for-product-intelligence): Why activation dropped, from Mixpanel, Clarity, GrowthBook and GA4 read together.
+- [For SEO and content teams](https://getduct.ai/for-organic-growth): Which content converts, from Search Console, GA4 and Clarity; the free audit; the content plan.
+- [For performance marketers](https://getduct.ai/for-paid-ads): Why CPA moved, from Google Ads, Meta, GA4 and Stripe; the pause or the shift, applied on approval.
+- [Free SEO audit](https://getduct.ai/seo-audit): Run one on any URL.
+- [Doctrine](https://getduct.ai/doctrine): The seven opinions the project is built on, each linked to the file that enforces it.
+- [About](https://getduct.ai/about): Who builds it and why it went open source. Duct is Latin ductus, "a leading", the word inside aquaeductus.
+- [Changelog](https://getduct.ai/changelog/): Release notes, newest first. RSS at https://getduct.ai/changelog/feed.xml.
+- [Blog](https://getduct.ai/blog/): Articles on growth, SEO and product intelligence. RSS at https://getduct.ai/blog/feed.xml.
+
+## Free tools
+
+Calculators and generators that run in the browser, no account: [SaaS metrics benchmarks](https://getduct.ai/tools/saas-metrics-calculator), [CAC and LTV](https://getduct.ai/tools/cac-ltv-calculator), [MRR growth](https://getduct.ai/tools/mrr-growth-calculator), [CTR](https://getduct.ai/tools/ctr-calculator), [CPM](https://getduct.ai/tools/cpm-calculator), [CPC](https://getduct.ai/tools/cpc-calculator), [CPA](https://getduct.ai/tools/cpa-calculator), [ROAS](https://getduct.ai/tools/roas-calculator), [marketing ROI](https://getduct.ai/tools/marketing-roi-calculator), [engagement rate](https://getduct.ai/tools/engagement-rate-calculator), a [UTM builder](https://getduct.ai/tools/utm-builder) and a [weekly brief template](https://getduct.ai/tools/weekly-brief-template). Index at https://getduct.ai/tools/.
 
 ## Blog posts
 
@@ -42,16 +43,14 @@ Intended for product managers, growth leads and marketing teams who need cross-t
 
 ## Open source
 
-- [Duct on GitHub](https://github.com/5hirish/duct): The whole project is MIT licensed — FastAPI backend, the agents, Next.js app and a Tauri v2 desktop shell. The downloaded app is a thin shell over the hosted API with model keys in the OS keychain; a self-host build bundles the backend (SQLite on disk, loopback only). No account is needed to run it yourself.
-- [Open source, on the site](https://getduct.ai/open-source): The trust page: what runs where, self-host commands, and the pricing promise.
-- [The Duct Doctrine](https://getduct.ai/doctrine): The seven positions the project is built on, each linked to the file that enforces it.
-- [Contributing](https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md): Setup, the checks CI runs, and the conventions. Agent-written contributions are explicitly welcome; the PR template asks where an agent helped so a reviewer knows where to look hardest.
+- [Duct on GitHub](https://github.com/5hirish/duct): MIT licensed end to end: FastAPI backend, the agents, the Next.js app and a Tauri v2 desktop shell. The downloaded app is a thin shell over the hosted API with model keys in the OS keychain; a self-host build bundles the backend.
+- [Contributing](https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md): Setup, the checks CI runs, and the conventions. Agent-written contributions are welcome; the PR template asks where an agent helped so a reviewer knows where to look hardest.
 - [Discussions](https://github.com/5hirish/duct/discussions): Questions, ideas and design debate.
 - [Changelog](https://github.com/5hirish/duct/blob/main/CHANGELOG.md)
 
 ## Maintainer
 
-- [Shirish Kadam](https://shirishkadam.com): Product manager and engineer in Valencia, Spain. Built and scaled B2B products at fin-tech and ed-tech companies, largely AI/ML systems at scale, and is a long-time open-source contributor. Also runs [Ship with AI](https://youtube.com/@5hirish) on YouTube, a separate channel about building apps with AI coding tools, and posts as [@5hirish](https://x.com/5hirish).
+- [Shirish Kadam](https://shirishkadam.com): Product manager and engineer in Valencia, Spain. Also runs [Ship with AI](https://youtube.com/@5hirish) on YouTube and posts as [@5hirish](https://x.com/5hirish).
 
 ## Optional
 
