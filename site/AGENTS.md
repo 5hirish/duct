@@ -188,8 +188,10 @@ Every HTML page must have:
 - canonical
 - description
 - robots
-- OG tags
-- Twitter tags
+- OG tags and Twitter tags, pointing at the page's own card in `assets/og/`
+  (`node scripts/build_og_images.mjs` draws them all from its table; a new
+  page adds a row there and runs it. Blog posts keep the shared
+  `assets/og-image.png` until they get covers.)
 - shared stylesheet
 - `config.js` then `duct.js`
 - GTM noscript iframe immediately after `<body>`

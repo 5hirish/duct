@@ -288,8 +288,8 @@ The vocabulary is small and consistent — keep it that way:
 - Card art is currently an emoji on a brand-tinted gradient `div`. That's
   the interim canon — consistent tint direction (135deg, brand-family
   colors), one emoji, `aria-hidden`. Real per-post cover images (and
-  per-post OG images — today one 670KB PNG serves every page on the site)
-  are the upgrade path.
+  per-post OG images: every other page has its own card now, drawn by
+  `scripts/build_og_images.mjs`; posts still share one) are the upgrade path.
 - A post teaches the reader to *stop doing manual work* — the two live
   posts' shape ("The old way… The new way…") is the house post structure.
 
@@ -309,7 +309,6 @@ the *landing-page* tells:
 | Fake testimonials/logos | Real numbers or nothing |
 | Emoji standing in for an icon system | Gone. One Lucide sprite, `currentColor`, `aria-hidden`; add names to `scripts/build_site_icons.py` |
 | Stock three-step "How it works" copy | *Connect / Ask / Approve*, with the tools named and the approval gate stated; the channel runs above the steps |
-| One OG image for 24 pages | Per-page OG images, compressed |
 
 ---
 
