@@ -128,6 +128,9 @@
     object-fit: contain;
     flex-shrink: 0;
   }
+  /* Two tools have no logo file (Ahrefs, LinkedIn Ads); a sprite glyph at
+     the same size keeps the row aligned instead of a broken image. */
+  svg.tool-icon { font-size: 22px; color: var(--navy-3); }
 
   /* North star input */
   .ns-input {
@@ -315,7 +318,7 @@
           <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="ahrefs" aria-pressed="false">
-          <img class="tool-icon" src="../assets/icons/ahrefs.svg" width="22" height="22" alt="" aria-hidden="true"/>
+          <svg class="ic tool-icon" aria-hidden="true"><use href="/assets/icons.svg#search"/></svg>
           <span>Ahrefs</span>
           <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
@@ -330,7 +333,7 @@
           <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
         <button class="tool-btn" data-tool="linkedin-ads" aria-pressed="false">
-          <img class="tool-icon" src="../assets/icons/linkedin.svg" width="22" height="22" alt="" aria-hidden="true"/>
+          <svg class="ic tool-icon" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg>
           <span>LinkedIn Ads</span>
           <span class="tool-check"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg></span>
         </button>
