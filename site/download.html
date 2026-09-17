@@ -109,6 +109,9 @@
 .dl-where-title { font-family: var(--serif); font-size: 20px; color: var(--navy); margin-bottom: 6px; }
 .dl-where-sub { font-size: 14px; font-weight: 300; color: var(--navy-3); margin-bottom: 20px; }
 .dl-where-scroll { overflow-x: auto; }
+/* The table keeps its four columns and scrolls sideways on a phone; without
+   the wrapper the box clipped its right half. */
+.dl-where-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .dl-where-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
 .dl-where-table th, .dl-where-table td { text-align: left; padding: 11px 14px 11px 0; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; }
 .dl-where-table th { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); }
@@ -164,7 +167,7 @@
       <p class="dl-hero-note"><span data-duct-download-meta>macOS, Windows and Linux &middot; Free &middot; No credit card</span> <span class="dl-version" id="dl-version" hidden></span></p>
     </div>
     <div class="dl-hero-shot">
-      <img src="assets/media/insights-session.webp" width="3072" height="2052" alt="The Duct desktop app: an insights session with a proposed change waiting for approval on the left, the brief it wrote on the right" fetchpriority="high"/>
+      <img src="assets/media/insights-session.webp" width="3072" height="2052" alt="The Duct desktop app: an insights session with a proposed change waiting for approval on the left, the brief it wrote on the right" fetchpriority="high"//>
     </div>
   </div>
 </section>
@@ -233,21 +236,21 @@
     </div>
     <div class="job-grid">
       <article class="job reveal" style="transition-delay:.05s">
-        <div class="job-shot"><img src="assets/media/connectors.webp" width="2208" height="1134" loading="lazy" alt="The Connections page with twelve tools, five of them connected"/></div>
+        <div class="job-shot"><img src="assets/media/connectors.webp" width="2208" height="1134" loading="lazy" alt="The Connections page with twelve tools, five of them connected"//></div>
         <div class="job-body">
           <h3>Reads across tools</h3>
           <p>Twelve connectors. Ads, analytics, revenue and session replays, read together for one question.</p>
         </div>
       </article>
       <article class="job reveal" style="transition-delay:.1s">
-        <div class="job-shot"><img src="assets/media/review-card.webp" width="1088" height="936" loading="lazy" alt="A change-set card: pause one campaign, one change blocked by a guardrail, Reject and Apply buttons"/></div>
+        <div class="job-shot"><img src="assets/media/review-card.webp" width="1088" height="936" loading="lazy" alt="A change-set card: pause one campaign, one change blocked by a guardrail, Reject and Apply buttons"//></div>
         <div class="job-body">
           <h3>Acts, with your approval</h3>
           <p>It proposes the change, shows what it touches, and applies it only when you press Apply.</p>
         </div>
       </article>
       <article class="job reveal" style="transition-delay:.15s">
-        <div class="job-shot"><img src="assets/media/memory-timeline.webp" width="2008" height="1990" loading="lazy" alt="The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"/></div>
+        <div class="job-shot"><img src="assets/media/memory-timeline.webp" width="2008" height="1990" loading="lazy" alt="The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"//></div>
         <div class="job-body">
           <h3>Remembers</h3>
           <p>Targets, decisions and what it learned, on a timeline you can correct.</p>
@@ -309,6 +312,7 @@
     <h3 class="dl-where-title">Where your things actually live</h3>
     <p class="dl-where-sub">Worth being precise about, because &ldquo;private&rdquo; is a word everyone uses and few explain.</p>
     <div class="dl-where-scroll">
+    <div class="dl-where-wrap">
     <table class="dl-where-table">
       <thead>
         <tr><th scope="col">Using the desktop app</th><th scope="col">On your device</th><th scope="col">In Duct&rsquo;s cloud</th></tr>
@@ -321,6 +325,7 @@
         <tr><td>Your account</td><td>&mdash;</td><td>Google sign-in: name, email, avatar</td></tr>
       </tbody>
     </table>
+    </div>
     </div>
     <p class="dl-where-note">Run it yourself and every row moves to your side of the table. The full detail is in the <a href="/privacy">privacy policy</a>.</p>
   </div>
