@@ -115,12 +115,6 @@
     .tool-cta { margin: 24px 24px 0; padding: 22px 20px; }
   }
 
-  .duct-bridge { max-width: 720px; margin: 0 auto 56px; padding: 0 24px; }
-  .duct-bridge-inner { border-left: 3px solid var(--orange); padding: 20px 28px; background: #eff6ff; border-radius: 0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family: var(--serif); font-size: clamp(18px, 2.5vw, 22px); color: var(--navy); font-weight: 400; line-height: 1.35; margin: 0 0 12px; }
-  .duct-bridge-body { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin: 0 0 16px; }
-  .duct-bridge-link { font-size: 14px; font-weight: 500; color: var(--orange); text-decoration: none; }
-  .duct-bridge-link:hover { text-decoration: underline; }
 
   .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
   .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
@@ -310,9 +304,15 @@
 
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">UTM parameters tell GA4 where traffic came from. They don't tell you if it was worth it.</p>
-    <p class="duct-bridge-body">Duct crosses GA4 with your ad spend, conversions and email, so each tagged campaign is judged by what it earned, not by what it brought in.</p>
-    <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">UTM parameters tell GA4 where traffic came from. They don't tell you if it was worth it.</p>
+      <p class="duct-bridge-body">Duct crosses GA4 with your ad spend, conversions and email, so each tagged campaign is judged by what it earned, not by what it brought in.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/paid-session.webp" width="3072" height="2052" loading="lazy" alt="An insights session: asked where the ads budget is leaking, the agent costs every campaign against the CPA target, proposes a pause, two negatives and a budget raise, and writes the spend brief on the right"/>
+      <figcaption>Ask where the budget leaks. Duct costs every campaign against your CPA target, proposes the pause, the negatives and the budget shift, and waits for your yes.</figcaption>
+    </figure>
   </div>
 </section>
 

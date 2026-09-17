@@ -67,12 +67,6 @@
   .insight-panel { margin-top:24px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:20px 24px; }
   .insight-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:10px; }
   .insight-panel p { font-size:14px; color:var(--navy-3); line-height:1.7; margin:0 0 8px; }
-  .duct-bridge { max-width:720px; margin:0 auto 56px; padding:0 24px; }
-  .duct-bridge-inner { border-left:3px solid var(--orange); padding:20px 28px; background:#eff6ff; border-radius:0 var(--r) var(--r) 0; }
-  .duct-bridge-headline { font-family:var(--serif); font-size:clamp(18px,2.5vw,22px); color:var(--navy); font-weight:400; line-height:1.35; margin:0 0 12px; }
-  .duct-bridge-body { font-size:15px; color:var(--navy-3); line-height:1.75; margin:0 0 16px; }
-  .duct-bridge-link { font-size:14px; font-weight:500; color:var(--orange); text-decoration:none; }
-  .duct-bridge-link:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -133,9 +127,15 @@
 </div>
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
-    <p class="duct-bridge-headline">CPC tells you traffic cost. It doesn't tell you if those clicks turn into revenue.</p>
-    <p class="duct-bridge-body">Duct follows the click from the ad account into GA4 and your revenue tool, so an expensive channel is named before it drains the budget.</p>
-    <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">CPC tells you traffic cost. It doesn't tell you if those clicks turn into revenue.</p>
+      <p class="duct-bridge-body">Duct follows the click from the ad account into GA4 and your revenue tool, so an expensive channel is named before it drains the budget.</p>
+      <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/paid-session.webp" width="3072" height="2052" loading="lazy" alt="An insights session: asked where the ads budget is leaking, the agent costs every campaign against the CPA target, proposes a pause, two negatives and a budget raise, and writes the spend brief on the right"/>
+      <figcaption>Ask where the budget leaks. Duct costs every campaign against your CPA target, proposes the pause, the negatives and the budget shift, and waits for your yes.</figcaption>
+    </figure>
   </div>
 </section>
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">

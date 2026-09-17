@@ -487,6 +487,21 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
   max-width: 52ch;
 }
 
+/* ── TOOL BRIDGE ── on a tools/* page, the product beside the tool's one answer:
+   the headline says what the calculator cannot tell you, the shot shows the
+   agent telling it. Shared here because twelve pages carry it; the shot is a
+   .shot-frame so it opens in the lightbox like every other product image. */
+.duct-bridge { max-width: 1160px; margin: 0 auto 64px; padding: 0 24px; }
+.duct-bridge-inner { display: grid; grid-template-columns: 5fr 7fr; gap: 40px; align-items: center; padding: 36px 40px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.duct-bridge-headline { font-family: var(--serif); font-size: clamp(22px, 2.6vw, 30px); color: var(--navy); line-height: 1.25; letter-spacing: -.2px; margin: 0 0 14px; }
+.duct-bridge-body { font-size: 15.5px; color: var(--navy-3); line-height: 1.7; margin: 0 0 18px; }
+.duct-bridge-link { font-size: 14px; font-weight: 600; color: var(--orange); text-decoration: none; }
+.duct-bridge-link:hover { text-decoration: underline; }
+.duct-bridge-shot { margin: 0; min-width: 0; }
+.duct-bridge-shot img { box-shadow: 0 12px 40px rgba(13, 15, 26, .14); }
+.duct-bridge-shot figcaption { text-align: left; margin-top: 10px; }
+@media (max-width: 860px) { .duct-bridge-inner { grid-template-columns: 1fr; gap: 24px; padding: 24px; } }
+
 /* Inline validation — tool calculators (see assets/tool-validation.js) */
 .tool-card > .tool-form-error {
   display: none;
