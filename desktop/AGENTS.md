@@ -134,11 +134,33 @@ carries all the code.
   SQLite in the per-user data dir, and prints one JSON handshake line the shell
   reads. The web app gets it via `get_sidecar_info` and repoints its API base
   (`app/src/lib/localBackend.js`), gated on the `localSidecar` capability.
-  Build it before bundling — `cd backend && poetry run pyinstaller
-  duct_sidecar.spec --noconfirm` — because `bundle.resources` copies
-  `backend/dist/duct-sidecar/` verbatim and a stale or missing build ships a
-  broken app. It is **onedir, never onefile**: a onefile binary unpacks to a
-  temp dir at startup and does not survive signing + notarization.
+  Build it with `npm --prefix desktop run sidecar`, because `bundle.resources`
+  copies `backend/dist/duct-sidecar/` verbatim and a stale or missing build
+  ships a broken app. After the first one you rarely will:
+  `scripts/ensure-sidecar-fresh.mjs` is a `pre*` hook on every
+  sidecar-shipping script and refreezes in the same command whenever the
+  backend has moved ahead; `DUCT_SKIP_SIDECAR_CHECK=1` opts out. The freeze is
+  **onedir, never onefile**: a onefile binary unpacks to a temp dir at startup
+  and does not survive signing + notarization.
+
+  **Never run `pyinstaller duct_sidecar.spec` at this directory directly.** It
+  deletes its output directory before rebuilding, and a dev build ships no
+  sidecar of its own — `tauri.dev.conf.json` sets no `bundle.resources`, so
+  `sidecar.rs` resolves `backend/dist/duct-sidecar/` at *runtime*. Freezing in
+  place therefore strips the binary and every dylib out from under a sidecar a
+  running app is executing. It presents as "Duct's local backend stopped
+  responding", which reads as an app bug and is not one. The script freezes to
+  `dist/.staging` and renames it into place, so the displaced directory stays
+  whole for whatever is still running from it and is swept on the next
+  refreeze.
+
+  **Stop what you started.** `open` hands the dev bundle to launchd, so no
+  debug session owns it, VS Code's Stop cannot close it, and no `postDebugTask`
+  can attach — every launch outlives the thing that launched it. The
+  `Duct: stop everything` task in `.vscode/tasks.json` is the one command that
+  clears all of it. Quit the app rather than killing it: a graceful quit
+  reaches `RunEvent::Exit`, which stops the sidecar, while SIGTERM to the shell
+  skips it and leaves an orphan holding its loopback port.
 - **Windows and Linux** ship from the same pipeline: NSIS on Windows, deb +
   AppImage on Linux. They still need their own runners even without the sidecar
   — Tauri bundles are not cross-compiled — and a *sidecar* build additionally

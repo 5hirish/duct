@@ -45,10 +45,10 @@
       "problemMatcher": []
     },
     {
-      "//": "Manual: the dev bundle is launched detached, so no debug session owns it. Kills the shell, which takes its sidecar with it.",
+      "//": "Manual: the dev bundle is launched detached, so no debug session owns it. Quit first, kill second: a graceful quit reaches RunEvent::Exit, which stops the sidecar; SIGTERM to the shell skips it and leaves an orphan holding its loopback port. The pkill pair is the fallback for an app that is already gone or wedged.",
       "label": "Desktop: stop Duct Dev app",
       "type": "shell",
-      "command": "pkill -f \"Duct Dev.app\" >/dev/null 2>&1 || true; pkill -f \"duct-sidecar\" >/dev/null 2>&1 || true",
+      "command": "osascript -e 'quit app \"Duct Dev\"' >/dev/null 2>&1 || true; sleep 1; pkill -f \"Duct Dev.app\" >/dev/null 2>&1 || true; pkill -f \"duct-sidecar\" >/dev/null 2>&1 || true",
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
@@ -72,6 +72,19 @@
       "dependsOn": [
         "Backend: stop uvicorn (8002)",
         "Site: stop dev server (8090)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "//": "One command for the end of a session. The desktop app is launched detached via `open`, so no debug session owns it and Stop cannot close it — without this, every desktop launch leaves an app and its sidecar running until someone notices. Touches only Duct's own ports; other projects on this machine are not its business.",
+      "label": "Duct: stop everything",
+      "dependsOn": [
+        "Desktop: stop Duct Dev app",
+        "App: stop dev server (3003)",
+        "Backend: stop uvicorn (8002)",
+        "Site: stop dev server (8090)",
+        "Phoenix: stop (6006)"
       ],
       "dependsOrder": "parallel",
       "problemMatcher": []

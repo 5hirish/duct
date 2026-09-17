@@ -10,11 +10,12 @@
     "dev": "tauri dev",
     "dev:local": "tauri dev --config src-tauri/tauri.local.conf.json",
     "install:dev-app": "node scripts/install-dev-app.mjs",
+    "sidecar": "node scripts/ensure-sidecar-fresh.mjs --force",
     "postbuild:dev": "node scripts/install-dev-app.mjs",
-    "prebuild:selfhost": "node scripts/check-sidecar-fresh.mjs",
-    "prebuild:dev": "node scripts/check-sidecar-fresh.mjs",
-    "predev": "node scripts/check-sidecar-fresh.mjs",
-    "predev:local": "node scripts/check-sidecar-fresh.mjs",
+    "prebuild:selfhost": "node scripts/ensure-sidecar-fresh.mjs",
+    "prebuild:dev": "node scripts/ensure-sidecar-fresh.mjs",
+    "predev": "node scripts/ensure-sidecar-fresh.mjs",
+    "predev:local": "node scripts/ensure-sidecar-fresh.mjs",
     "tauri": "tauri"
   },
   "devDependencies": {

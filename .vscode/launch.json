@@ -84,15 +84,15 @@
       "postDebugTask": "App: stop dev server (3003)"
     },
     {
-      "//": "Freezes the backend into backend/dist/duct-sidecar. Required before the desktop app can run: bundle.resources copies this directory verbatim, so a missing or stale build ships a broken app. Takes ~3 min.",
+      "//": "Freezes the backend into backend/dist/duct-sidecar. Run this once, before the first desktop launch: a missing build ships a broken app. After that the desktop configurations refreeze it themselves when the backend has moved ahead (the npm pre* hooks), so this is for the first freeze and for forcing one. NOT plain `pyinstaller`: that deletes its output directory before rebuilding, which strips the binary and dylibs from under a sidecar the running app is executing. The script stages the freeze and swaps it in instead. Takes ~3 min.",
       "name": "Desktop: Build sidecar",
       "type": "node-terminal",
       "request": "launch",
-      "command": "poetry run pyinstaller duct_sidecar.spec --noconfirm",
-      "cwd": "${workspaceFolder}/backend"
+      "command": "npm run sidecar",
+      "cwd": "${workspaceFolder}/desktop"
     },
     {
-      "//": "Local-first desktop: the shell spawns the frozen sidecar on a loopback port and the web app repoints at it, so no uvicorn and no Railway. `dev:local` starts the Next dev server itself via beforeDevCommand. Run 'Desktop: Build sidecar' first — sidecar.rs falls back to backend/dist/duct-sidecar, so a stale build there is what you get.",
+      "//": "Local-first desktop: the shell spawns the frozen sidecar on a loopback port and the web app repoints at it, so no uvicorn and no Railway. `dev:local` starts the Next dev server itself via beforeDevCommand. sidecar.rs falls back to backend/dist/duct-sidecar, so that freeze is what you get — `predev:local` refreezes it first when the backend is ahead, which costs ~3 min on the run after a backend change.",
       "name": "Desktop: Tauri dev (sidecar backend)",
       "type": "node-terminal",
       "request": "launch",
@@ -100,11 +100,11 @@
       "cwd": "${workspaceFolder}/desktop"
     },
     {
-      "//": "Builds the dev-variant bundle (own identifier + ai.getduct.desktop.dev scheme, so it coexists with TestFlight), waits for the Next dev server, then opens it against backend/.env.local. Unlike `tauri dev` this is a registered .app, so the sign-in deep link works. Rebuild is incremental (~15s); web changes still hot-reload. `open` hands the app to launchd, which does NOT inherit this shell's environment — hence `--env`, the only way the sidecar learns which env to embody. `--stderr` captures the app's log (including the sidecar's, relayed by sidecar.rs) where you can actually read it. NOTE: this session ends immediately, so Stop cannot close the app and no postDebugTask can be attached — quit it yourself, or run the 'Desktop: stop Duct Dev app' task. Force-quitting skips RunEvent::Exit and orphans its Python sidecar.",
+      "//": "Builds the dev-variant bundle (own identifier + ai.getduct.desktop.dev scheme, so it coexists with TestFlight), waits for the Next dev server, then opens it against backend/.env.local. Unlike `tauri dev` this is a registered .app, so the sign-in deep link works. Rebuild is incremental (~15s); web changes still hot-reload. A backend change costs ~3 min more on the next run, because `prebuild:dev` refreezes the sidecar rather than bundling the old one. `open` hands the app to launchd, which does NOT inherit this shell's environment — hence `--env`, the only way the sidecar learns which env to embody. Keep that argument quoted: VS Code substitutes ${workspaceFolder} as literal text before the shell parses the line, so a workspace path containing a space otherwise splits into a bogus second file operand and a DUCT_ENV_FILE truncated at the space — which every Configs default then silently papers over. `--stderr` captures the app's log (including the sidecar's, relayed by sidecar.rs) where you can actually read it. NOTE: this session ends immediately, so Stop cannot close the app and no postDebugTask can be attached — quit it yourself, or run the 'Desktop: stop Duct Dev app' task. Force-quitting skips RunEvent::Exit and orphans its Python sidecar.",
       "name": "Desktop: Duct Dev app (local env)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
       "cwd": "${workspaceFolder}/desktop"
     },
     {
@@ -112,7 +112,7 @@
       "name": "Desktop: Duct Dev app (prod env)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env DUCT_ENV_FILE=${workspaceFolder}/backend/.env.prod --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.prod\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
       "cwd": "${workspaceFolder}/desktop"
     },
     {
