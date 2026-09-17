@@ -10,7 +10,7 @@
 // renderer resolves from the system, so run this on a machine that has it
 // (a Mac does) and commit the output.
 import { createRequire } from "node:module";
-import { statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,6 +18,7 @@ const REPO = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const req = createRequire(import.meta.url);
 const sharp = req(req.resolve("sharp", { paths: [join(REPO, "app")] }));
 const MEDIA = join(REPO, "site/assets/media");
+const POSTS = join(REPO, "site/blog/posts");
 const OUT = join(REPO, "site/assets/og");
 const W = 1200, H = 630, LIMIT = 150 * 1024;
 
@@ -37,6 +38,7 @@ const PAGES = {
   "terms": { title: "Terms of service.", sub: "The terms for the hosted app and the desktop download." },
   "changelog": { title: "What changed in Duct.", sub: "Release notes, newest first: connectors, agents, desktop builds." },
   "tools": { title: "Free tools for growth teams.", sub: "Calculators and generators that run in your browser. No account." },
+  "blog": { title: "What your tools don't tell you on their own.", sub: "Writing on organic growth, product intelligence and the numbers that only make sense read together." },
   "tools/saas-metrics-calculator": { title: "SaaS metrics benchmark calculator.", sub: "Churn, LTV:CAC, payback and trial-to-paid against industry medians.", shot: "insights-session.webp" },
   "tools/cac-ltv-calculator": { title: "CAC and LTV calculator.", sub: "CAC, LTV, the ratio and payback, with benchmark context.", shot: "insights-session.webp" },
   "tools/mrr-growth-calculator": { title: "MRR growth rate calculator.", sub: "Net MRR growth, CMGR, and the rate you need to hit a target.", shot: "insights-session.webp" },
@@ -51,6 +53,27 @@ const PAGES = {
   "tools/engagement-rate-calculator": { title: "Engagement rate calculator.", sub: "Engagement by followers, reach or impressions, comparable across posts.", shot: "content-session.webp" },
 };
 
+// Blog posts draw their own row from front matter, so a new post needs no
+// entry here: its category is the kicker, the author and read time the line
+// under the title. The same card is the cover on the blog index, which is why
+// the excerpt is left off it: it sits right under the cover there already.
+function blogCards() {
+  const cards = {};
+  for (const file of readdirSync(POSTS).filter((f) => f.endsWith(".md")).sort()) {
+    const front = readFileSync(join(POSTS, file), "utf8").split(/^---\s*$/m)[1] ?? "";
+    const field = (key) => {
+      const m = front.match(new RegExp(`^${key}:\\s*"?(.*?)"?\\s*$`, "m"));
+      if (!m) throw new Error(`${file}: front matter has no ${key}`);
+      return m[1];
+    };
+    cards[`blog/${file.slice(0, -3)}`] = {
+      kicker: field("category"), title: field("title"),
+      sub: `By ${field("author")} · ${field("readTime")} min read`,
+    };
+  }
+  return cards;
+}
+
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/'/g, "&#39;");
 function wrap(text, max) {
   const lines = []; let cur = "";
@@ -61,7 +84,7 @@ function wrap(text, max) {
   return lines;
 }
 
-async function card(slug, { title, sub, shot }) {
+async function card(slug, { title, sub, shot, kicker }) {
   const withShot = Boolean(shot);
   const titleLines = wrap(title, withShot ? 18 : 30);
   const size = titleLines.length > 2 ? 54 : 64;
@@ -75,6 +98,7 @@ async function card(slug, { title, sub, shot }) {
     <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1e8"/><stop offset=".55" stop-color="#f7f4f0"/><stop offset="1" stop-color="#e9ecf5"/></linearGradient></defs>
     <rect width="${W}" height="${H}" fill="url(#bg)"/>
     <text x="${x}" y="112" font-family="Georgia, serif" font-size="44" fill="#0d0f1a">duct</text><circle cx="${x + 112}" cy="98" r="9" fill="#ff5c00"/>
+    ${kicker ? `<rect x="${x}" y="${y - size - 22}" width="22" height="3" rx="1.5" fill="#ff5c00"/><text x="${x + 32}" y="${y - size - 12}" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="bold" letter-spacing="2.5" fill="#ff5c00">${esc(kicker.toUpperCase())}</text>` : ""}
     ${titleLines.map((l, i) => `<text x="${x}" y="${y + i * size * 1.12}" font-family="Georgia, serif" font-size="${size}" font-weight="bold" fill="#0d0f1a" letter-spacing="-1">${esc(l)}</text>`).join("")}
     ${subLines.map((l, i) => `<text x="${x}" y="${subY + i * 34}" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="#4b5068">${esc(l)}</text>`).join("")}
     <text x="${x}" y="${H - 56}" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#7a7f95">getduct.ai · open source · MIT</text>
@@ -95,6 +119,7 @@ async function card(slug, { title, sub, shot }) {
   return size_;
 }
 
+const ALL = { ...PAGES, ...blogCards() };
 let total = 0;
-for (const [slug, spec] of Object.entries(PAGES)) total += await card(slug, spec);
-console.log(`${Object.keys(PAGES).length} cards in site/assets/og, ${Math.round(total / 1024)} KB together`);
+for (const [slug, spec] of Object.entries(ALL)) total += await card(slug, spec);
+console.log(`${Object.keys(ALL).length} cards in site/assets/og, ${Math.round(total / 1024)} KB together`);
