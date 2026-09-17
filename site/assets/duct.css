@@ -555,15 +555,24 @@ footer:not(.footer-expanded) { flex-direction: column; align-items: flex-start; 
 .zoomable { cursor: zoom-in; }
 .lightbox { position: fixed; inset: 0; z-index: 300; background: rgba(13,15,26,.88); opacity: 0; transition: opacity .2s; }
 .lightbox.is-open { opacity: 1; }
-.lightbox-scroll { position: absolute; inset: 0; overflow: auto; -webkit-overflow-scrolling: touch; padding: 64px 24px 32px; text-align: center; cursor: zoom-out; }
-.lightbox-scroll img { display: inline-block; width: 100%; max-width: 1400px; height: auto; border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.5); cursor: default; vertical-align: top; }
-.lightbox-close { position: fixed; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.16); color: #fff; font-size: 30px; line-height: 44px; padding: 0; cursor: pointer; }
-.lightbox-close:hover, .lightbox-close:focus-visible { background: rgba(255,255,255,.3); outline: none; }
+/* The enlarged shot fits the screen first: a whole screenshot nobody has to
+   scroll to see. Zooming is the second step, and only then does it scroll. */
+.lightbox-scroll { position: absolute; inset: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 64px 24px 72px; cursor: zoom-out; }
+.lightbox-scroll img { max-width: 100%; max-height: 100%; width: auto; height: auto; border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.5); cursor: default; }
+.lightbox.can-zoom .lightbox-scroll img { cursor: zoom-in; }
+/* Flex centring clips whatever overflows to the left, so the zoomed view goes
+   back to a scrolling block. */
+.lightbox.is-zoomed .lightbox-scroll { display: block; overflow: auto; -webkit-overflow-scrolling: touch; text-align: center; }
+.lightbox.is-zoomed .lightbox-scroll img { max-width: none; max-height: none; vertical-align: top; cursor: zoom-out; }
+.lightbox-close { position: fixed; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.22); background: rgba(13,15,26,.72); color: #fff; font-size: 30px; line-height: 40px; padding: 0; cursor: pointer; }
+.lightbox-close:hover, .lightbox-close:focus-visible { background: rgba(13,15,26,.92); outline: none; }
+.lightbox-zoom { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); display: none; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(13,15,26,.72); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; letter-spacing: .01em; cursor: pointer; }
+.lightbox.can-zoom .lightbox-zoom { display: inline-flex; }
+.lightbox-zoom:hover, .lightbox-zoom:focus-visible { background: rgba(13,15,26,.92); outline: none; }
+.lightbox-zoom .ic { width: 15px; height: 15px; }
 @media (max-width: 860px) {
-  /* Wider than the phone on purpose: the point is to read the shot, and a
-     shot squeezed to 360px is the thumbnail they just tapped. Pan to read. */
-  .lightbox-scroll { padding: 64px 16px 24px; text-align: left; }
-  .lightbox-scroll img { width: 1000px; max-width: none; }
+  .lightbox-scroll { padding: 60px 12px 68px; }
+  .lightbox.is-zoomed .lightbox-scroll { text-align: left; }
 }
 
 @media (max-width: 600px) {
