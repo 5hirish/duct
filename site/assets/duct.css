@@ -392,6 +392,10 @@ footer:not(.footer-expanded) { padding: 44px 52px; border-top: 1px solid var(--b
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity .55s ease, transform .55s ease; }
 .reveal.in { opacity: 1; transform: translateY(0); }
+/* Without scripting nothing adds .in, and every revealed section stayed at
+   opacity 0: a blank page for a no-JS visitor and for any crawler that does
+   not run scripts. */
+@media (scripting: none) { .reveal { opacity: 1; transform: none; } }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 860px) {
