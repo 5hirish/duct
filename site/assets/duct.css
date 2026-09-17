@@ -235,12 +235,17 @@ animation: fadeUp .5s .24s ease both;
 /* ── THE CHANNEL ── the aqueduct as a divider: two lines of channel, arches under
    it, water moving through. Masks, so colour follows the section; the fade on
    the container keeps the ends from ending. */
-.channel { position: relative; height: 64px; max-width: 1160px; margin: 0 auto; pointer-events: none; -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
+.channel { position: relative; height: 64px; max-width: 1160px; margin: 0 auto; pointer-events: none; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
 .channel::before, .channel::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; right: 0; -webkit-mask-repeat: repeat-x; mask-repeat: repeat-x; -webkit-mask-size: 80px 64px; mask-size: 80px 64px; -webkit-mask-position: 0 0; mask-position: 0 0; }
 .channel::before { background: var(--navy); opacity: .22; -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 64'><g fill='none' stroke='black' stroke-width='2'><path d='M0 5h80M0 13h80'/><path d='M12 64V44a28 28 0 0 1 56 0V64'/></g></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 64'><g fill='none' stroke='black' stroke-width='2'><path d='M0 5h80M0 13h80'/><path d='M12 64V44a28 28 0 0 1 56 0V64'/></g></svg>"); }
 .channel::after { left: -80px; background: var(--orange); -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 64'><path d='M0 9h80' fill='none' stroke='black' stroke-width='2' stroke-dasharray='12 12'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 64'><path d='M0 9h80' fill='none' stroke='black' stroke-width='2' stroke-dasharray='12 12'/></svg>"); animation: flow 2.4s linear infinite; }
 .channel.on-dark::before { background: #fff; opacity: .28; }
-/* Translate, never animate mask-position: moving the mask repaints the layer every frame, and ten headless browsers doing that in parallel turned a two-minute test run into a thirty-minute one. A transform composites. The water starts one tile to the left so a tile's travel loops seamlessly. */
+/* The water starts one tile to the left and travels one tile to the right, so
+   without `overflow: hidden` on the channel its box ran 80px past the page:
+   invisible under the fade, but enough to make a phone's viewport 59px too
+   wide, pan the page sideways, and put the consent banner's copy over its
+   own buttons. Body's overflow-x guard does not stop that on mobile Chromium.
+   Translate, never animate mask-position: moving the mask repaints the layer every frame, and ten headless browsers doing that in parallel turned a two-minute test run into a thirty-minute one. A transform composites. The water starts one tile to the left so a tile's travel loops seamlessly. */
 @keyframes flow { to { transform: translateX(80px); } }
 @media (prefers-reduced-motion: reduce) { .channel::after { animation: none; } }
 
