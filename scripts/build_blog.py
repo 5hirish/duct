@@ -249,6 +249,8 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
 <meta property="og:title" content="{esc(full_title)}"/>
 <meta property="og:description" content="{esc(excerpt)}"/>
 <meta property="og:image" content="{OG_IMAGE}"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta property="article:author" content="{AUTHOR['name']}"/>
 <meta property="article:section" content="{esc(fm['category'])}"/>

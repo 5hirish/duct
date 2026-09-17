@@ -22,7 +22,12 @@ DYNAMIC_META = set()
 # Error/utility pages — skip all SEO checks (no canonical, OG, Twitter needed).
 ERROR_PAGES = {"404.html"}
 
-REQUIRED_OG = {"og:type", "og:url", "og:title", "og:description", "og:image", "og:site_name"}
+# Width and height let Facebook and LinkedIn draw the card on the first share
+# instead of leaving it blank until their crawler has fetched the image once.
+REQUIRED_OG = {
+    "og:type", "og:url", "og:title", "og:description", "og:image",
+    "og:image:width", "og:image:height", "og:site_name",
+}
 REQUIRED_TWITTER = {"twitter:card", "twitter:title", "twitter:description", "twitter:image"}
 
 CANONICAL_BASE = "https://getduct.ai"
