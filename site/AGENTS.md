@@ -190,8 +190,8 @@ Every HTML page must have:
 - robots
 - OG tags and Twitter tags, pointing at the page's own card in `assets/og/`
   (`node scripts/build_og_images.mjs` draws them all from its table; a new
-  page adds a row there and runs it. Blog posts keep the shared
-  `assets/og-image.png` until they get covers.)
+  page adds a row there and runs it. Blog posts need no row: the builder
+  reads their front matter, and the card is also the post's cover.)
 - shared stylesheet
 - `config.js` then `duct.js`
 - GTM noscript iframe immediately after `<body>`
@@ -307,21 +307,33 @@ not fork it.
 Posts live in `site/blog/posts/<slug>.md` with required front matter: `title`,
 `date`, `author`, `category`, `excerpt`, `readTime`.
 
-**Then run the generator and commit its output:**
+**Then draw its card, run the generator, and commit both outputs:**
 
 ```bash
+node scripts/build_og_images.mjs       # writes site/assets/og/blog-<slug>.jpg from the front matter
 python3 scripts/build_blog.py          # writes site/blog/<slug>.html
 python3 scripts/build_blog.py --check  # what CI runs; fails if the tree is stale
 ```
 
+The generator refuses a post whose card is missing rather than falling back
+to a shared image. The card is the post's `og:image` and its cover on the
+index, so the index card for a new post is
+`<img class="blog-card-img" src="../assets/og/blog-<slug>.jpg" width="1200" height="630" loading="lazy" alt=""/>`,
+with the excerpt under it copied from the front matter.
+
 Posts are pre-rendered, not rendered in the browser. They used to be, and a
 crawler without JavaScript received 49 characters of body text plus a canonical
-of `/blog/post` shared by every post. The generator inlines the nav, CTA and
+of `/blog/post` shared by every post. The generator inlines the nav and
 footer partials for the same reason: a runtime `fetch` is not a crawlable link.
 
-The Markdown subset is deliberately small — h2, paragraphs, ordered and bullet
-lists, bold, links. Anything else raises rather than rendering wrong. Extend
-`render_markdown()` before using a new construct.
+The Markdown subset is deliberately small: h2, paragraphs, ordered and bullet
+lists, bold, links, a `---` rule. Anything else raises rather than rendering
+wrong. Extend `render_markdown()` before using a new construct.
+
+A post ends where its argument ends. Do not write a pitch or a download line
+into the Markdown: the generator closes every post with the same bridge the
+tools pages use (headline, one paragraph, Download, a session shot), so the
+product is shown, not described, and the copy changes in one place.
 
 Also add the post to `site/sitemap.xml` and an `<item>` to `site/blog/feed.xml`.
 

@@ -285,13 +285,18 @@ The vocabulary is small and consistent — keep it that way:
   One idea per H2; front-load the H2s — they are what scanners read.
 - Post titles are Title Case; everything else sentence case. Excerpts on
   the index must match the post's front-matter excerpt — they drifted once.
-- Card art is currently an emoji on a brand-tinted gradient `div`. That's
-  the interim canon — consistent tint direction (135deg, brand-family
-  colors), one emoji, `aria-hidden`. Real per-post cover images (and
-  per-post OG images: every other page has its own card now, drawn by
-  `scripts/build_og_images.mjs`; posts still share one) are the upgrade path.
-- A post teaches the reader to *stop doing manual work* — the two live
+- Card art is the post's own Open Graph card, drawn by
+  `scripts/build_og_images.mjs` from the front matter: kicker, title, author
+  and read time, no excerpt (it sits under the cover). One image per post
+  serves the share preview and the index, which is why the index box keeps
+  the card's 1200:630 ratio rather than 16:9.
+- A post teaches the reader to *stop doing manual work*; the two live
   posts' shape ("The old way… The new way…") is the house post structure.
+  The post itself carries no pitch: the generator's bridge closer (the same
+  block the tools pages end on, with a session shot) is where Duct appears.
+- The blog speaks in the product's current voice: read, ask, approve,
+  download. "Brief in your inbox" and "join the beta" were the previous
+  product and were removed on 2026-09-17; do not bring them back.
 
 ---
 
