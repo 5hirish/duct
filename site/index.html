@@ -315,6 +315,14 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 (function () {
   var film = document.getElementById('hero-film');
   if (!film) return;
+  // A phone draws the film 340px wide; the 1600px encode is 2 MB of pixels it
+  // never shows. Under 860px the 720px cut plays instead, at a quarter of the
+  // bytes. The sources are swapped before anything is fetched (preload=none).
+  if (window.matchMedia && window.matchMedia('(max-width: 860px)').matches) {
+    var cut = film.canPlayType('video/webm') ? 'demo-phone.webm' : 'demo-phone.mp4';
+    while (film.firstChild) film.removeChild(film.firstChild);
+    film.src = 'assets/media/' + cut;
+  }
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reduce && 'IntersectionObserver' in window) {
     new IntersectionObserver(function (entries) {
