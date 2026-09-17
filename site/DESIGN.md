@@ -352,11 +352,13 @@ the *landing-page* tells:
   overridable accent; a text-safe accent (≥4.5:1) for links and labels;
   the success green `#1a9e5c` currently invented inline in `duct.js`.
 - **Contrast fixes**: `.stats` band labels, accent-colored body links,
-  `.tag-soon`/amber badges, `.sev-high` at 10px.
+  `.tag-soon`/amber badges (11px is the floor now; nothing sits at 10px).
 - **Focus-visible styles exist only in `demo.css`** — `.btn`, nav links,
   `.faq-q`, cards all ride the UA default, which is invisible on orange.
-- **`.reveal` has no no-JS fallback** — content is invisible if `duct.js`
-  fails; nav/footer/CTAs also all arrive via `duct-partials.js` fetch.
+- **`.reveal` without JS**: `@media (scripting: none)` now shows every
+  section for a no-script visitor; a `duct.js` that fails to *load* still
+  leaves them hidden, and nav/footer/CTAs all arrive via `duct-partials.js`
+  fetch.
 - **`prefers-reduced-motion`** covers 3 demo transitions; extend to
   `.reveal`, `fadeUp`, the marquee, the logo pulse, smooth scroll.
 - **Dead code**: `.quotes`/`.qcard` family; `.prose pre/code` unexercised;
