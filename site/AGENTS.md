@@ -258,6 +258,24 @@ goal, watch a mock brief render). It was removed in September 2026: it sold a
 brief service the product no longer is, cost ~1,400 lines of CSS and JS, and
 lost to a real screenshot every time. Do not bring it back as a "quick win".
 
+## Free tools (`tools/`)
+
+Thirteen pages: an index and twelve calculators and generators, each with
+its own inline `<style>` and script, the blue accent (`--orange` overridden
+in the page), the site nav (`nav-home`) and the tools closing CTA
+(`cta-tools`). Three pitch slots per tool, in the site's voice: the navy box
+under the results (what this tool answered once, then the question Duct
+answers with real numbers), the `duct-bridge` paragraph, and the CTA
+partial. The button is Download, never a form.
+
+A calculator opens on a worked example: `DuctToolExample.seed()` in
+`assets/tool-validation.js` fills the fields from their own `e.g.`
+placeholders and runs once, with a note saying so; the first keystroke
+clears it. A new calculator gets the call at the end of its script and
+placeholders that make a sensible example. Outputs carry no currency symbol
+(the inputs say "in your currency"). The results grid auto-fits, so any
+number of cards lays out. `check-pages.py` covers this folder.
+
 ## New changelog entry
 
 Run `/add-changelog-entry`. It reads the git range since the last published
