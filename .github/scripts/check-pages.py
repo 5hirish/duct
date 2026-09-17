@@ -201,7 +201,8 @@ def main():
     html_files = sorted(
         glob.glob(os.path.join(site_root, "*.html")) +
         glob.glob(os.path.join(site_root, "blog", "*.html")) +
-        glob.glob(os.path.join(site_root, "changelog", "*.html"))
+        glob.glob(os.path.join(site_root, "changelog", "*.html")) +
+        glob.glob(os.path.join(site_root, "tools", "*.html"))
     )
 
     total_errors = 0
