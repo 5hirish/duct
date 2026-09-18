@@ -457,6 +457,12 @@ class ConversationRecorder:
 
     async def record_user(self, content: Any) -> None:
         await self._append(EventKind.USER, {"content": content})
+
+    async def record_context(self, data: dict) -> None:
+        """The run's inputs as the model saw them (EventKind.CONTEXT). Written
+        once per run, before the first model call, by the runner that composed
+        the turn — it is the only place every block is in one hand."""
+        await self._append(EventKind.CONTEXT, _jsonable(data))
         await self._set_status(RunStatus.RUNNING)
 
     async def record_answer(self, answers: dict) -> None:

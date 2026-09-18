@@ -1052,3 +1052,63 @@ async def test_a_session_without_a_project_keeps_its_message_untouched(session):
     session.autonomy = "ask"
     await send_message("insights", session.session_id, AgentMessage(type="chat", content="hi"), user=None)
     assert session.chat_queue.get_nowait()["content"] == "hi"
+
+
+# ---------------------------------------------------------------------------
+# What the model saw is written down
+# ---------------------------------------------------------------------------
+
+class _ContextRecorder:
+    """Only the recorder surface run_session touches."""
+
+    def __init__(self) -> None:
+        self.contexts: list[dict] = []
+
+    async def record_context(self, data: dict) -> None:
+        self.contexts.append(data)
+
+    async def record_tool_use(self, *a, **k) -> None:  # noqa: D401 - tool traffic, not under test
+        pass
+
+    async def record_tool_result(self, *a, **k) -> None:
+        pass
+
+
+async def test_the_run_records_the_turn_the_model_actually_read(session, emitted):
+    """The USER row is the sentence typed; the model read a composed turn under
+    a system prompt that changes with the code. A session that stores only the
+    former cannot be reviewed against what its answer was a function of."""
+    session.recorder = _ContextRecorder()
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("One campaign."),
+        session=session, prompt="why did CPA jump?",
+        business_context="<business_context>Acme sells anvils.</business_context>",
+        memory="<project_memory>CPA target is $40.</project_memory>",
+        chat_idle_timeout=0.01,
+    )
+
+    [ctx] = session.recorder.contexts
+    assert ctx["agent_type"] == "insights"
+    assert ctx["resume"] is False
+    assert len(ctx["system_prompt_sha256"]) == 64 and ctx["system_prompt_chars"] > 1000
+    assert ctx["blocks"]["prompt"] == "why did CPA jump?"
+    assert ctx["blocks"]["memory"].startswith("<project_memory>")
+    # The stored turn is the composed one, with every block in it.
+    assert "Acme sells anvils." in ctx["turn"] and "CPA target" in ctx["turn"]
+    assert ctx["turn"].rstrip().endswith("why did CPA jump?") or "why did CPA jump?" in ctx["turn"]
+
+
+async def test_a_resumed_thread_records_its_own_context(session, emitted):
+    """Resume takes the raw follow-up with no priming, and says so in the row,
+    so a reviewer does not go looking for a digest that was never read."""
+    session.recorder = _ContextRecorder()
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("Still one campaign."),
+        session=session, prompt="and last week?", conversation_id=uuid.uuid4(), resume=True,
+        chat_idle_timeout=0.01,
+    )
+
+    [ctx] = session.recorder.contexts
+    assert ctx["resume"] is True
+    assert ctx["turn"] == "and last week?"
+    assert ctx["blocks"]["memory"] == "" and ctx["blocks"]["data_sources"] == ""

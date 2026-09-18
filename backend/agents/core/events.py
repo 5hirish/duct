@@ -26,6 +26,9 @@ ordering removes it. Drop the frontend's legacy branches once both are out.
 
 from __future__ import annotations
 
+import hashlib
+from typing import Any
+
 from enum import StrEnum
 
 
@@ -143,6 +146,14 @@ class EventKind(StrEnum):
     # reloaded transcript shows why the last reply is missing, with the same
     # code the live client acted on. A stop is a failure with code "cancelled".
     FAILURE = "failure"
+    # What the model was actually given for a run: the composed opening turn
+    # and the blocks it was built from (business context, the user's profile,
+    # the memory digest, the connector list), the model, and a fingerprint of
+    # the system prompt. The USER row holds only the sentence the person
+    # typed; without this, a session could not be reviewed or replayed
+    # because the half of the input that shaped the answer was never written
+    # down. One per run_session; a resumed thread records its own.
+    CONTEXT = "context"
 
 
 class RunStatus(StrEnum):
@@ -314,4 +325,41 @@ AG_UI_EVENT_KIND: dict[EventKind, str] = {
     EventKind.TOOL_USE:    "ToolCallStart",
     EventKind.TOOL_RESULT: "ToolCallResult",
     EventKind.FAILURE:     "RunError",
+    # The run's inputs: AG-UI has RunStarted for "a run began" but no event
+    # for what it was given, so this is a custom event like the pause pair.
+    EventKind.CONTEXT:     "Custom",
 }
+
+
+def run_context(
+    *,
+    agent_type: str,
+    provider: Any,
+    model: Any,
+    thinking: Any = None,
+    system_prompt: str,
+    turn: str,
+    resume: bool,
+    blocks: dict[str, Any],
+) -> dict[str, Any]:
+    """The CONTEXT event's payload, built the same way by every runner.
+
+    The system prompt is stored as a fingerprint, not text: it is ~5k tokens
+    of code-owned prose, identical across customers, and it lives in the
+    repository (docs/engineering/agent-prompts.md renders it). A reviewer
+    matches the hash to a commit; storing the text would multiply every
+    thread's size by the one thing already under version control. The
+    composed turn IS stored, because it is per-run and nothing else holds
+    it."""
+    text = system_prompt or ""
+    return {
+        "agent_type": agent_type,
+        "provider": str(getattr(provider, "value", provider) or ""),
+        "model": str(getattr(model, "value", model) or ""),
+        "thinking": str(getattr(thinking, "value", thinking) or ""),
+        "system_prompt_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest() if text else "",
+        "system_prompt_chars": len(text),
+        "resume": bool(resume),
+        "turn": turn,
+        "blocks": dict(blocks),
+    }

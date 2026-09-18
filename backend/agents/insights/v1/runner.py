@@ -68,7 +68,7 @@ from agents.core.deep_session import (
     recorder_tool_hooks,
     subagent_step_hooks,
 )
-from agents.core.events import AgentEvent, AgentStep, StepStatus
+from agents.core.events import AgentEvent, AgentStep, StepStatus, run_context
 from agents.core.lc import (
     build_ask_user_tool,
     inspection_chat_model,
@@ -203,6 +203,8 @@ class AutonomousInsightsRunner:
         interactive: bool = True,
         compress: bool = True,
         system_prompt: str = "",
+        on_system_prompt: Callable[[str], None] | None = None,
+        replay: dict[tuple[str, str, str], str] | None = None,
     ) -> Any:
         """Assemble the agent: memory tools, mid-run questions, planning.
 
@@ -226,6 +228,16 @@ class AutonomousInsightsRunner:
         system prompt says so in its own words, because an agent that plans
         around a question it will never get to ask produces a brief with a hole
         in it rather than a stated assumption.
+
+        ``replay`` seeds FetchData with a stored session's tool bodies and
+        closes the connectors (see ``build_data_tools_lc``); the replay script
+        is its one caller.
+
+        ``on_system_prompt`` receives the prompt text the agent was built with.
+        The prompt depends on what got mounted (execution tools, the
+        interactive shape), which only this function knows; the caller that
+        records a run's context needs its fingerprint without re-deriving
+        those decisions.
         """
         # Recorded before the default is filled in: a caller-supplied model is
         # a deliberate choice (tests, and any caller that already resolved one),
@@ -329,6 +341,7 @@ class AutonomousInsightsRunner:
             log_prefix="insights-v1",
             on_fetch=_on_fetch,
             on_fetch_start=_on_fetch_start,
+            replay=replay,
         )
         tools += data_tools
 
@@ -376,6 +389,15 @@ class AutonomousInsightsRunner:
                 self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
             )
 
+        prompt_text = system_prompt or build_insights_system_prompt(
+            capabilities=(
+                CAPABILITIES_PHASE_3 if interactive else CAPABILITIES_UNATTENDED
+            ),
+            can_execute=bool(execution_tools),
+        )
+        if on_system_prompt is not None:
+            on_system_prompt(prompt_text)
+
         return build_deep_session_agent(
             llm=llm,
             tools=tools,
@@ -384,12 +406,7 @@ class AutonomousInsightsRunner:
             # mixing the two costs the analyst its whole window before it writes
             # a word. See agents/insights/subagents/verify.py.
             subagents=[build_verify_subagent(data_tools, model=verify_llm)],
-            system_prompt=system_prompt or build_insights_system_prompt(
-                capabilities=(
-                    CAPABILITIES_PHASE_3 if interactive else CAPABILITIES_UNATTENDED
-                ),
-                can_execute=bool(execution_tools),
-            ),
+            system_prompt=prompt_text,
             limits=LIMITS,
             session=session,
             fallbacks=fallbacks,
@@ -427,6 +444,9 @@ class AutonomousInsightsRunner:
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
         resume: bool = False,
         compress: bool = True,
+        replay: dict[tuple[str, str, str], str] | None = None,
+        interactive: bool = True,
+        execute: bool = True,
     ) -> None:
         """Run the opening turn, then stay open for follow-ups until idle.
 
@@ -455,6 +475,7 @@ class AutonomousInsightsRunner:
         the agent asks; what may auto-apply is decided in
         ``service/execution/policy.py`` at propose time, not from this string.
         """
+        system_prompt_used = {"text": ""}
         agent = self.build_agent(
             llm=llm,
             session=session,
@@ -465,6 +486,10 @@ class AutonomousInsightsRunner:
             conversation_id=conversation_id,
             remember=remember,
             compress=compress,
+            on_system_prompt=lambda text: system_prompt_used.update(text=text),
+            replay=replay,
+            interactive=interactive,
+            execute=execute,
         )
 
         # The verifier's dispatch shows as a running chip for the minute or so
@@ -508,6 +533,36 @@ class AutonomousInsightsRunner:
             artifact_format=artifact_format,
             autonomy=autonomy,
         )
+        # The transcript's USER row is the sentence the person typed. The
+        # model read this whole turn, built from blocks the route resolved
+        # (memory digest, connector list, profile), under a system prompt that
+        # changes with the code. Written down here so a session can be
+        # reviewed or replayed against what its answer was actually a
+        # function of — see scripts/session_bundle.py and the session-audit
+        # skill. Best-effort like every recorder write.
+        recorder = getattr(session, "recorder", None)
+        if recorder is not None:
+            await recorder.record_context(
+                run_context(
+                    agent_type=str(AgentType.INSIGHTS),
+                    provider=self.provider,
+                    model=self.model,
+                    thinking=self._thinking,
+                    system_prompt=system_prompt_used["text"],
+                    turn=opening,
+                    resume=is_resume,
+                    blocks={
+                        "prompt": prompt,
+                        "business_context": business_context,
+                        "user_context": user_context,
+                        "memory": memory,
+                        "data_sources": data_sources,
+                        "artifact_format": artifact_format,
+                        "autonomy": autonomy,
+                        "compress": compress,
+                    },
+                )
+            )
         await loop.run(opening, resume=is_resume, chat_idle_timeout=chat_idle_timeout)
 
     def _summariser_model(self, llm: Any) -> Any:

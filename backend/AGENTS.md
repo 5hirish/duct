@@ -681,6 +681,27 @@ don't fit.
   using belongs in `BLOCK_ORDER`, where its cache position is a decision
   somebody made on purpose.
 
+- `scripts/session_bundle.py` — pull one stored session (the context the
+  model read, every tool call with its payload, artifact versions, memories,
+  cost) into a folder for review; `make session-bundle ID=<conversation id>`
+  or `ID=list`. Read-only, redacts on the way out, and the folder is
+  customer data: it goes in the private audit home, never here. The
+  `session-audit` skill (`.agents/skills/session-audit/`) is the review
+  procedure built on it. The pull is only as good as what the recorder
+  wrote: `EventKind.CONTEXT` (one row per `run_session`, written by the
+  runner that composed the turn — the insights runner today) holds the
+  composed opening turn, its blocks and the system prompt's fingerprint,
+  because the USER row is only the sentence the person typed. A runner
+  that assembles its own turn and does not record a CONTEXT row cannot be
+  audited against what its model saw; give it one before relying on the
+  skill for that agent.
+- `scripts/session_replay.py` — re-run a bundled session on exactly its
+  own data with the current prompt and any model (`make session-replay
+  BUNDLE=<dir>`). FetchData is seeded from the bundle and the connectors
+  are closed (`replay=` in `build_data_tools_lc`: a pull the original never
+  made returns `not_in_replay`), no recorder, no persister, no memory or
+  execution tools. It is how a prompt proposal is checked against the run
+  that motivated it before it ships, and it spends a real model call.
 - `scripts/dump_prompts.py` — **regenerate after any prompt change**
   (`make dump-prompts`). It renders every agent's system prompt and a sample
   assembled turn to [`docs/engineering/agent-prompts.md`](../docs/engineering/agent-prompts.md),

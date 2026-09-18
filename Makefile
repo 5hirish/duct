@@ -110,6 +110,12 @@ test: ## Backend tests only — the fastest useful signal
 dump-prompts: ## Re-render docs/engineering/agent-prompts.md from the code
 	cd backend && poetry run python scripts/dump_prompts.py
 
+session-bundle: ## Pull one agent session for review: make session-bundle ID=<conversation id> [OUT=dir]; ID=list to browse
+	cd backend && poetry run python scripts/session_bundle.py $(ID) $(if $(OUT),--out $(OUT)) --prompt-check
+
+session-replay: ## Re-run a bundled session on its own data with today's prompt/model: make session-replay BUNDLE=<dir> [ARGS="--model ... --tier heavy"]
+	cd backend && poetry run python scripts/session_replay.py $(BUNDLE) $(ARGS)
+
 fmt: ## Auto-fix what ruff can fix
 	cd backend && poetry run ruff check --fix server.py agents routes service tests utils
 
