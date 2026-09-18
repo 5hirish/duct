@@ -12,7 +12,19 @@ kept, which is exactly when it mattered most.
 So the port is a vendor-neutral one: emit the OpenTelemetry GenAI semantic
 conventions ourselves, from our side of the boundary. Whatever harness runs
 underneath, the spans look the same, and they land wherever OTLP is pointed
-(Sentry today) rather than wherever the framework vendor prefers.
+rather than wherever the framework vendor prefers.
+
+Where the spans go
+------------------
+Nowhere, until ``configure_tracing`` installs a provider. For a year the spans
+below were opened faithfully and dropped on the floor: the API package's
+``get_tracer`` hands back a no-op unless something has called
+``set_tracer_provider``, and nothing had. The launch config even set an
+``OTEL_ENDPOINT`` that no code read. ``server.py`` now calls
+``configure_tracing`` with ``OTEL_EXPORTER_OTLP_ENDPOINT`` — the standard
+variable, so a Phoenix on ``:6006`` locally and any OTLP collector in
+production are the same one-line change — and leaves tracing off when it is
+unset, which is what every test and every self-host build gets.
 
 Stability, stated honestly
 --------------------------
@@ -66,10 +78,25 @@ GEN_AI_TOOL_NAME = "gen_ai.tool.name"
 GEN_AI_TOOL_CALL_ID = "gen_ai.tool.call.id"
 GEN_AI_TOOL_TYPE = "gen_ai.tool.type"
 
+# Not GenAI semconv: the OpenInference attribute Phoenix groups its trace view
+# by (LLM / TOOL / AGENT columns, latency per kind). A plain string attribute,
+# no dependency, ignored by any backend that does not know it — cheap enough
+# to carry so the local trace UI is legible rather than a flat list of spans.
+OPENINFERENCE_SPAN_KIND = "openinference.span.kind"
+SPAN_KIND_LLM = "LLM"
+SPAN_KIND_TOOL = "TOOL"
+SPAN_KIND_AGENT = "AGENT"
+
 # --- Operation names -------------------------------------------------------
 OP_CHAT = "chat"
 OP_EXECUTE_TOOL = "execute_tool"
 OP_INVOKE_AGENT = "invoke_agent"
+
+# What the exporter appends to a bare collector URL. Phoenix, the collector
+# and Sentry all take traces at this path; a value that already ends in it is
+# left alone so a full URL works too.
+OTLP_TRACES_PATH = "/v1/traces"
+SERVICE_NAME = "duct-backend"
 
 # Duct's Provider values → the convention's provider vocabulary. OpenRouter is
 # not in the enum (it is a gateway, not a model vendor); the convention's own
@@ -93,6 +120,44 @@ def _tracer() -> Any | None:
     except ImportError:
         return None
     return trace.get_tracer("duct.agents", SEMCONV_VERSION)
+
+
+def configure_tracing(endpoint: str, *, environment: str = "") -> Any | None:
+    """Install a tracer provider that ships spans to ``endpoint`` over OTLP/HTTP.
+
+    Returns the provider, or None when ``endpoint`` is empty or the SDK is not
+    installed — both mean "tracing off", and neither is an error: the spans
+    above degrade to no-ops exactly as they always have. Batched export, so a
+    burst of tool spans never blocks the event loop on the collector.
+
+    Process-global and set-once by OpenTelemetry's design; a second call
+    (a test module that installed its own in-memory provider first) logs and
+    keeps the existing one rather than fighting it.
+    """
+    endpoint = (endpoint or "").strip()
+    if not endpoint:
+        return None
+    try:
+        from opentelemetry import trace
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    except ImportError:
+        logger.warning("telemetry: OTEL_EXPORTER_OTLP_ENDPOINT is set but the OTel SDK is not installed")
+        return None
+
+    url = endpoint.rstrip("/")
+    if not url.endswith(OTLP_TRACES_PATH):
+        url += OTLP_TRACES_PATH
+    attributes = {"service.name": SERVICE_NAME}
+    if environment:
+        attributes["deployment.environment"] = environment
+    provider = TracerProvider(resource=Resource.create(attributes))
+    provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=url)))
+    trace.set_tracer_provider(provider)
+    logger.info("telemetry: exporting agent spans to %s", url)
+    return provider
 
 
 class _NoopSpan:
@@ -136,6 +201,11 @@ def model_span(
 
     provider_name = _PROVIDER_NAMES.get(provider, provider)
     with tracer.start_as_current_span(f"{operation} {model}") as span:
+        _set(
+            span,
+            OPENINFERENCE_SPAN_KIND,
+            SPAN_KIND_AGENT if operation == OP_INVOKE_AGENT else SPAN_KIND_LLM,
+        )
         _set(span, GEN_AI_OPERATION_NAME, operation)
         _set(span, GEN_AI_PROVIDER_NAME, provider_name)
         # Emitted alongside provider.name because the rename is mid-flight and
@@ -172,6 +242,7 @@ def tool_span(
         return
 
     with tracer.start_as_current_span(f"{OP_EXECUTE_TOOL} {tool_name}") as span:
+        _set(span, OPENINFERENCE_SPAN_KIND, SPAN_KIND_TOOL)
         _set(span, GEN_AI_OPERATION_NAME, OP_EXECUTE_TOOL)
         _set(span, GEN_AI_TOOL_NAME, tool_name)
         _set(span, GEN_AI_TOOL_CALL_ID, tool_call_id)

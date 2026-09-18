@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import logging
+import secrets
 import sys
 import time
 from contextlib import AsyncExitStack, asynccontextmanager
@@ -29,6 +31,7 @@ import service.clarity.fetch  # noqa: F401 — registers connectors before route
 import service.growthbook.fetch  # noqa: F401 — registers connectors before routes import
 
 from agents.core.errors import classify_error
+from agents.core.telemetry import configure_tracing
 from agents.engines import ProviderKeyRequired
 from config import cors_kwargs, get_configs
 from db.migrate import ensure_schema
@@ -49,7 +52,27 @@ _cfg = get_configs()
 # stays colourised in a TTY (%(levelprefix)s) — what terminal level-highlighting
 # keys on — while degrading to plain text when piped (prod / log files).
 # The `,%(msecs)` in the default asctime gives millisecond precision for free.
-_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(logname)s: %(message)s"
+# `%(request_id)s` is the correlation id — see RequestIdFilter.
+_LOG_FORMAT = "%(asctime)s %(levelprefix)s %(logname)s [%(request_id)s]: %(message)s"
+
+# The correlation id of the request a log line belongs to. A contextvar, so it
+# follows the request through `asyncio.to_thread` and into any task the
+# handler spawns: an agent session's whole run logs under the id of the POST
+# that created it, which is the transaction a person actually wants to follow
+# ("everything that happened because I pressed Send"). Echoed back as
+# `X-Request-Id`, and honoured when the caller sends one, so the app can
+# quote the id from a failed response and every line for it is one grep.
+REQUEST_ID_HEADER = "x-request-id"
+_REQUEST_ID_BYTES = 4  # 8 hex chars: unique enough per process, short enough to read
+_request_id: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="-")
+
+
+class RequestIdFilter(logging.Filter):
+    """Stamps every record with the current request id (or "-" outside one)."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.request_id = _request_id.get()
+        return True
 
 # Uvicorn logs *every* server lifecycle line — startup, shutdown, reload — on a
 # logger literally named `uvicorn.error`, so a healthy boot reads like a stack of
@@ -71,6 +94,7 @@ _log_formatter = DisplayNameFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isa
 
 _app_handler = logging.StreamHandler()
 _app_handler.setFormatter(_log_formatter)
+_app_handler.addFilter(RequestIdFilter())
 for _ns in ("agents", "routes", "service", "duct.access"):
     _log = logging.getLogger(_ns)
     _log.setLevel(logging.INFO)
@@ -82,6 +106,7 @@ for _ns in ("agents", "routes", "service", "duct.access"):
 for _uv in ("uvicorn", "uvicorn.error"):
     for _h in logging.getLogger(_uv).handlers:
         _h.setFormatter(_log_formatter)
+        _h.addFilter(RequestIdFilter())
 _uv_access = logging.getLogger("uvicorn.access")
 _uv_access.handlers = []
 _uv_access.propagate = False
@@ -107,10 +132,16 @@ class AccessLogMiddleware:
             return
         start = time.perf_counter()
         status = {"code": 0}
+        request_id = _incoming_request_id(scope) or secrets.token_hex(_REQUEST_ID_BYTES)
+        token = _request_id.set(request_id)
 
         async def _send(message):
             if message["type"] == "http.response.start":
                 status["code"] = message["status"]
+                message["headers"] = [
+                    *message.get("headers", []),
+                    (REQUEST_ID_HEADER.encode("latin-1"), request_id.encode("latin-1")),
+                ]
             await send(message)
 
         try:
@@ -131,6 +162,19 @@ class AccessLogMiddleware:
                 status["code"],
                 elapsed_ms,
             )
+            _request_id.reset(token)
+
+
+def _incoming_request_id(scope) -> str:
+    """The caller's ``X-Request-Id``, if it sent a sane one. Bounded and
+    printable-ASCII only: it goes straight into log lines and a response
+    header, and a header is attacker-controlled input."""
+    for name, value in scope.get("headers", ()):
+        if name == REQUEST_ID_HEADER.encode("latin-1"):
+            candidate = value.decode("latin-1", "replace").strip()
+            if 0 < len(candidate) <= 64 and candidate.isascii() and candidate.isprintable():
+                return candidate
+    return ""
 
 
 def _is_localhost_url(url: str) -> bool:
@@ -181,6 +225,11 @@ if _cfg.sentry_dsn and (
         before_send=_scrub_sensitive_headers,
     )
     logging.getLogger(__name__).info("Sentry SDK initialized for backend.")
+
+# Agent traces. Off unless OTEL_EXPORTER_OTLP_ENDPOINT is set; a no-op costs
+# nothing and the spans were being opened either way.
+configure_tracing(_cfg.otel_exporter_otlp_endpoint, environment=_cfg.app_env)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

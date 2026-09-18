@@ -66,11 +66,14 @@ trafilatura = ">=2.2.0"
 # agents/core/compaction.py degrades to plain JSON wherever it is absent.
 headroom-ai = "~0.37"
 deepagents = "0.7.13"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
-# OTel GenAI spans for the LangChain (v1) path — v3 gets tracing from the
-# Claude Agent SDK, v1 does not. The API only; an exporter is configured at
-# runtime (Sentry OTLP today). Declared explicitly because it used to arrive
-# transitively via google-adk, which has since been removed with the v2 engine.
+# OTel GenAI spans for the agents (agents/core/telemetry.py). The API is what
+# the spans are opened with; the SDK and the OTLP/HTTP exporter are what
+# `configure_tracing` installs when OTEL_EXPORTER_OTLP_ENDPOINT is set
+# (Phoenix locally, any collector in production). Declared explicitly because
+# the API used to arrive transitively via google-adk, removed with v2.
 opentelemetry-api = "^1.44"
+opentelemetry-sdk = "^1.44"
+opentelemetry-exporter-otlp-proto-http = "^1.44"
 reportlab = ">=4.2"
 cloudflare = ">=5.7.0"
 # Durable conversation state (agents/core/checkpoint.py). Both, not one: the
@@ -106,8 +109,6 @@ pytest-asyncio = "^1.0"
 ruff = "^0.16"
 arize-phoenix = "^20.3.0"
 pyinstaller = "^6.11"
-# In-memory span exporter for tests/test_telemetry.py.
-opentelemetry-sdk = "^1.41"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
