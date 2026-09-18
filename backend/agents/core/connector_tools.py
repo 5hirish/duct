@@ -51,6 +51,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from agents.core.errors import ErrorCode, classify_error
 from agents.core.events import AgentEvent
 from agents.core.session import BaseAgentSession, PauseFn, make_future_pause
 from agents.core.telemetry import tool_span
@@ -235,6 +236,19 @@ async def _run(fn: Callable, *args: Any, **kwargs: Any) -> Any:
         return await asyncio.to_thread(fn, *args, **kwargs)
     except Exception as exc:  # noqa: BLE001
         logger.exception("connector_tools: %s failed", getattr(fn, "__name__", fn))
+        if classify_error(exc) is ErrorCode.CONNECTOR_EXPIRED:
+            # Google's `invalid_grant` on a token refresh. Raw, it reached the
+            # model as an opaque error it then spent a turn puzzling over; as
+            # a status it is an instruction.
+            return {
+                "status": "reauth_required",
+                "message": (
+                    "The stored credential was rejected (expired or revoked). Nothing "
+                    "from this source works until the user reconnects it on the "
+                    "Connections page — call RequestConnection if the analysis needs "
+                    "it, and do not retry this source again this session."
+                ),
+            }
         return {"status": "error", "message": str(exc)}
 
 

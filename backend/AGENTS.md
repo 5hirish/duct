@@ -192,7 +192,17 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   picks one; unset takes the first with credentials (Cloudflare, then Resend) and
   falls back to `console`, which logs, so dev/CI/self-host need no vendor account.
   Same shape as the app's analytics seam, for the same reason: a fork swaps one file.
-- **Observability:** Sentry error tracking; optional OpenTelemetry tracing — V1 emits its own GenAI spans (`agents/core/telemetry.py`).
+- **Observability:** Sentry error tracking; OpenTelemetry tracing of every
+  agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
+  over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
+  it is unset. Locally that is Phoenix: run the "Phoenix" launch config, set
+  the variable to `http://localhost:6006`, and every FetchData and verifier
+  dispatch is a span with its own latency. Every log line carries a request
+  id (`[a1b2c3d4]`, from `X-Request-Id` when the caller sends one, minted
+  otherwise, echoed in the response); an agent run logs under the id of the
+  request that created its session, so one grep follows one press of Send.
+  Each turn ends with a `turn 198.0s: 4 tool calls …` line naming the slowest
+  three, which answers "where did the time go" without a SQL script.
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
   `railpack.json` sits beside it and configures the **builder**, where
   `railway.json` configures **Railway**. It exists for one line —

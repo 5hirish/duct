@@ -32,6 +32,8 @@ import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import DeskCards from "@/components/insights/desk/DeskCards";
 import DeskActivity from "@/components/insights/desk/DeskActivity";
+import SplitWorkspace from "@/components/workspace/SplitWorkspace";
+import { BriefPane, DataPane } from "@/components/insights/InsightsWorkspace";
 import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
@@ -222,6 +224,37 @@ const DESK_BUCKETS = {
 };
 const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
 
+// A brief the way the agent actually writes one: a decision up top, the
+// evidence as a table, the gaps as a list. Enough element kinds to catch a
+// missing typography rule.
+const BRIEF_MARKDOWN = `## Cut the blog from the plan; double down on the comparison pages
+
+Organic sessions are flat week on week, but the mix moved. The three comparison
+pages now carry **41% of non-brand clicks**, up from 29%, while the blog lost
+position on every query it ranked for.
+
+### What the numbers say
+
+| Page | Clicks | Δ vs prior week | Avg. position |
+| --- | ---: | ---: | ---: |
+| /compare/duct-vs-looker | 812 | +38% | 4.2 |
+| /compare/duct-vs-hex | 540 | +22% | 6.1 |
+| /blog/weekly-review-template | 133 | −44% | 11.8 |
+
+### What to do this week
+
+1. Add a \`Pricing\` section to the two comparison pages; both rank for pricing queries they do not answer.
+2. Redirect the three thinnest blog posts to the comparison hub rather than rewriting them.
+3. Hold the ad budget for the blog cluster until the redirect settles.
+
+### Could not verify
+
+- Search Console's token expired on Tuesday, so the query-level split is from the 7 days before that.
+- GA4 key events were renamed mid-week; \`sign_up\` counts before Wednesday are not comparable.
+
+> A number nobody checked should never be presented with the same confidence as one that was.
+`;
+
 const DESK_ACTIVITY = [
   { id: "a1", category: "check", action: "checked_search_console", summary: LONG_TITLE, source: "auto", created_at: "2026-09-09T05:57:00Z" },
   { id: "a2", category: "sync", action: "synced_ga4", summary: "", source: "agent", created_at: "2026-09-09T05:40:00Z" },
@@ -331,6 +364,14 @@ const MODEL_PROVIDERS = {
   openai: { id: "openai", label: "OpenAI", source: "none", reachable: false, engines: ["v1"] },
 };
 
+// The one credential that is a live provider and no way to draw: a ChatGPT
+// plan reaches the Codex backend, and the image API is a different door.
+const MODEL_PROVIDERS_ON_PLAN = {
+  ...MODEL_PROVIDERS,
+  google_genai: { ...MODEL_PROVIDERS.google_genai, source: "none", reachable: false },
+  openai: { id: "openai", label: "OpenAI", source: "subscription", reachable: true, engines: ["v1"] },
+};
+
 const MODEL_PICKS = {
   heavy: "gemini-3.1-pro-preview",
   standard: "gemini-3.8-flash",
@@ -368,6 +409,7 @@ function TierSummaryScene({
   expanded = false,
   imagePick = "",
   images = { provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" },
+  providersById = MODEL_PROVIDERS,
 }) {
   const [open, setOpen] = useState(expanded);
   const [image, setImage] = useState(imagePick);
@@ -375,7 +417,7 @@ function TierSummaryScene({
     <TierSummary
       picks={picks}
       models={MODEL_CATALOGUE.models}
-      providersById={MODEL_PROVIDERS}
+      providersById={providersById}
       previewByTier={previewByTier}
       expanded={open}
       onToggle={() => setOpen((v) => !v)}
@@ -857,6 +899,61 @@ export const SCENES = [
     ),
   },
   {
+    id: "insights-panes-empty",
+    state: "empty · empty with a CTA",
+    group: "InsightsWorkspace",
+    title: "Artifact and Data, with nothing in them",
+    note: "Both right-pane tabs of an insights thread before anything lands. They were bare muted sentences until now, which is the shape ui/empty-state exists to replace. Only Data gets a button: its usual cause is that nothing is connected, which is fixable from here, while no artifact yet is just a young thread.",
+    render: () => (
+      <div className="grid gap-6 @3xl:grid-cols-2">
+        <BriefPane empty />
+        <DataPane fetched={[]} />
+      </div>
+    ),
+  },
+  {
+    id: "brief-markdown",
+    state: "a written markdown brief",
+    group: "InsightsWorkspace",
+    title: "A markdown brief, typeset",
+    note: "The Artifact pane with a brief the agent wrote in markdown. Twelve components asked for `prose` for months while the typography plugin was never installed, so every one of these rendered as unstyled text and looked broken. This scene is the proof the plugin is loaded: headings step down, lists get bullets, tables get rules, and dark mode inverts.",
+    render: () => (
+      <div className="max-w-3xl">
+        <BriefPane
+          brief={{
+            title: "Organic growth, week of 8 Sept",
+            version: 2,
+            label: "Update 2",
+            format: "markdown",
+            content: BRIEF_MARKDOWN,
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "split-workspace-collapse",
+    state: "open · right pane folded",
+    group: "SplitWorkspace",
+    title: "Folding the viewport away",
+    note: "The chevron on the divider folds the right pane so the chat takes the whole width, and it returns in the same place. Desktop only and stored per storageKey, so a thread you always read as chat stays that way. Drag this frame below 48rem and the mobile segmented control takes over instead — collapsing there would leave that control pointing at nothing, which is why it is hidden.",
+    render: () => (
+      <div className="h-[26rem] overflow-hidden rounded-xl border border-border">
+        <SplitWorkspace
+          storageKey="preview_split_collapse"
+          leftLabel="Chat"
+          rightLabel="Artifact"
+          left={
+            <div className="p-4 text-sm text-muted-foreground">
+              The chat pane, which widens to the whole frame when the viewport folds away.
+            </div>
+          }
+          right={<BriefPane empty />}
+        />
+      </div>
+    ),
+  },
+  {
     id: "context-ring-tones",
     state: "neutral · amber · destructive, each with usage details",
     group: "ContextRing",
@@ -1018,10 +1115,10 @@ export const SCENES = [
   },
   {
     id: "model-images",
-    state: "auto · picked · picked but unreachable",
+    state: "auto · picked · picked but unreachable · nothing can draw",
     group: "TierSummary",
-    title: "The Images row, in its three states",
-    note: "Images is a fourth row in the setup card rather than a fold in Advanced, because it is a fourth thing Duct runs on your key. Top: nobody picked, and the option says what \"whichever key can draw\" currently resolves to — \"Auto\" alone would make the reader open another surface to find out. Middle: an explicit pick, no note, because the row already says it. Bottom: a pick whose provider has no key — the server resolved past it, and the note has to admit that rather than show a model that will not run.",
+    title: "The Images row, in its four states",
+    note: "Images is a fourth row in the setup card rather than a fold in Advanced, because it is a fourth thing Duct runs on your key. Top: nobody picked, and the option says what \"whichever key can draw\" currently resolves to — \"Auto\" alone would make the reader open another surface to find out. Second: an explicit pick, no note, because the row already says it. Third: a pick whose provider has no key — the server resolved past it, and the note has to admit that rather than show a model that will not run. Bottom: signed in with ChatGPT and nothing else. The note has to name the plan, because the OpenAI tile on the next tab is green and \"no key of yours can draw\" would read as a bug rather than as an answer.",
     render: () => (
       <div style={{ display: "grid", gap: 16 }}>
         <TierSummaryScene picks={MODEL_PICKS} previewByTier={MODEL_PREVIEW_OK} />
@@ -1036,6 +1133,12 @@ export const SCENES = [
           previewByTier={MODEL_PREVIEW_OK}
           imagePick="gpt-image-2.5-flare"
           images={{ provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" }}
+        />
+        <TierSummaryScene
+          picks={MODEL_PICKS}
+          previewByTier={MODEL_PREVIEW_OK}
+          providersById={MODEL_PROVIDERS_ON_PLAN}
+          images={{ provider: null, model: null, source: "none" }}
         />
       </div>
     ),

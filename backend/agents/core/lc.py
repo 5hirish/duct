@@ -55,7 +55,7 @@ from agents.core.session import (
     make_future_pause,
 )
 from agents.core.stream import DuctArtifactStreamParser
-from agents.core.telemetry import model_span
+from agents.core.telemetry import OP_INVOKE_AGENT, model_span
 from agents.models import (
     cost_usd,
     context_window_for,
@@ -856,10 +856,24 @@ class ReportedRetryMiddleware(AgentMiddleware):
                 note_exhausted(self.identity, self.provider, seconds=retry_after_seconds(exc))
         return True
 
+    def _span(self, request):
+        """One ``chat`` span per attempt. This middleware is the innermost
+        wrapper around the model call, so a span opened here measures the
+        provider and nothing else — the turn-level span in ``stream_agent``
+        measures everything, and the difference between them is the tool
+        time."""
+        chat = getattr(request, "model", None)
+        name = getattr(chat, "model_name", None) or getattr(chat, "model", None) or "unknown"
+        return model_span(
+            provider=self.provider.value if self.provider is not None else "unknown",
+            model=str(name),
+        )
+
     async def awrap_model_call(self, request, handler):  # type: ignore[override]
         for attempt in range(1, self.attempts + 1):
             try:
-                return await handler(request)
+                with self._span(request):
+                    return await handler(request)
             except Exception as exc:
                 if self._give_up(exc, attempt):
                     raise
@@ -871,7 +885,8 @@ class ReportedRetryMiddleware(AgentMiddleware):
     def wrap_model_call(self, request, handler):  # type: ignore[override]
         for attempt in range(1, self.attempts + 1):
             try:
-                return handler(request)
+                with self._span(request):
+                    return handler(request)
             except Exception as exc:
                 if self._give_up(exc, attempt):
                     raise
@@ -879,6 +894,48 @@ class ReportedRetryMiddleware(AgentMiddleware):
                 self._report(exc, attempt, delay)
                 time.sleep(delay)
         raise AssertionError("unreachable")  # pragma: no cover
+
+
+class TurnClock:
+    """Where one turn's wall-clock went, for the line logged at its end.
+
+    The transcript already holds every timestamp; this prints the answer
+    instead of leaving it to an evening with a SQL script. Tool calls are
+    timed from the ``tool_use`` in the model's message to the matching
+    ``tool`` message, so a sub-agent dispatch counts as one long tool call,
+    which is what it costs the person waiting. Parallel calls overlap, so
+    the tool total can exceed the turn — read it as "time the model was
+    waiting on something", not as a partition of the turn.
+    """
+
+    SLOWEST_SHOWN = 3
+
+    def __init__(self) -> None:
+        self.started = time.perf_counter()
+        self._open: dict[str, tuple[str, float]] = {}
+        self._done: list[tuple[str, float]] = []
+
+    def tool_started(self, name: str, tool_use_id: str) -> None:
+        self._open[tool_use_id] = (name, time.perf_counter())
+
+    def tool_finished(self, name: str, tool_use_id: str) -> None:
+        opened = self._open.pop(tool_use_id, None)
+        started = opened[1] if opened else time.perf_counter()
+        self._done.append((opened[0] if opened else name, time.perf_counter() - started))
+
+    def summary(self) -> str:
+        elapsed = time.perf_counter() - self.started
+        if not self._done:
+            return f"turn {elapsed:.1f}s, no tool calls"
+        tools = sum(seconds for _, seconds in self._done)
+        slowest = ", ".join(
+            f"{name} {seconds:.1f}s"
+            for name, seconds in sorted(self._done, key=lambda item: -item[1])[: self.SLOWEST_SHOWN]
+        )
+        return (
+            f"turn {elapsed:.1f}s: {len(self._done)} tool calls {tools:.1f}s "
+            f"(slowest {slowest}), model+overhead ~{max(elapsed - tools, 0):.1f}s"
+        )
 
 
 async def stream_agent(
@@ -931,19 +988,32 @@ async def stream_agent(
         log_prefix=log_prefix,
     )
 
-    # V3 gets OTel traces free from the Claude Agent SDK; V1 does not, so the
-    # span is emitted here. Same convention either way — see core/telemetry.py.
+    # The turn is an `invoke_agent` span; each model call inside it is a
+    # `chat` span from ReportedRetryMiddleware and each tool call a span from
+    # its binder. See core/telemetry.py for where they go.
     usage = UsageTracker(model)
     compacting = False
+    clock = TurnClock()
 
     async def _on_compacted() -> None:
         nonlocal compacting
         compacting = False
         await emit({"event": AgentEvent.CONTEXT_COMPACTED})
 
+    async def _timed_tool_use(name: str, tool_input: Any, tool_use_id: str) -> None:
+        clock.tool_started(name, tool_use_id)
+        if on_tool_use is not None:
+            await on_tool_use(name, tool_input, tool_use_id)
+
+    async def _timed_tool_result(name: str, result: Any, tool_use_id: str, is_error: bool) -> None:
+        clock.tool_finished(name, tool_use_id)
+        if on_tool_result is not None:
+            await on_tool_result(name, result, tool_use_id, is_error)
+
     with model_span(
         provider=(provider or Provider.ANTHROPIC).value,
         model=getattr(model, "value", model) or "unknown",
+        operation=OP_INVOKE_AGENT,
         conversation_id=conversation_id,
         agent_name=log_prefix,
     ):
@@ -969,8 +1039,8 @@ async def stream_agent(
                 await _dispatch_updates(
                     chunk,
                     on_todo=on_todo,
-                    on_tool_use=on_tool_use,
-                    on_tool_result=on_tool_result,
+                    on_tool_use=_timed_tool_use,
+                    on_tool_result=_timed_tool_result,
                     on_compacted=_on_compacted,
                 )
                 continue
@@ -1031,4 +1101,5 @@ async def stream_agent(
             "error": "The agent paused on something this app cannot answer. Try rephrasing.",
         })
     await emit({"event": AgentEvent.MESSAGE_STOP})
+    logger.info("%s: %s", log_prefix, clock.summary())
     return pauses

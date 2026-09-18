@@ -48,7 +48,7 @@ from langgraph.types import Command
 
 from agents.core.checkpoint import get_checkpointer
 from agents.core.errors import ErrorCode, classify_error, error_payload
-from agents.core.events import AgentEvent, StepStatus
+from agents.core.events import AgentEvent, AgentStep, StepStatus
 from agents.core.lc import (
     ReportedRetryMiddleware,
     SeenImagePruneMiddleware,
@@ -191,6 +191,7 @@ def build_deep_session_agent(
     fallbacks: list[Any] | None = None,
     checkpointer: Any = None,
     prune_seen_images: bool = False,
+    planning: bool = True,
     identity: str = "",
     provider: Provider | None = None,
 ) -> Any:
@@ -202,6 +203,12 @@ def build_deep_session_agent(
     real provider calls out of a fake-model test. ``prune_seen_images`` is
     for a runner whose tools hand the model pictures: the bytes leave the
     durable thread after the model call that looked at them.
+
+    ``planning`` mounts ``write_todos``. Content keeps it: the checklist is
+    the deliverable's own progress. Insights turns it off, measured: in a
+    198-second brief, two of five model turns did nothing but rewrite the
+    todo list, at 11 and 25 seconds each, and the workspace already shows
+    every fetch and the verifier as steps derived from the tool traffic.
 
     ``identity`` and ``provider`` are how a final rate limit gets recorded
     against the credential that hit it (``agents/core/quota.py``), so the next
@@ -223,9 +230,9 @@ def build_deep_session_agent(
         subagents=list(subagents or []),
         system_prompt=system_prompt,
         middleware=[
-            # Planning is opt-in since deepagents 0.7. The todo stream is what
-            # makes a long autonomous run legible — the workspace renders it.
-            TodoListMiddleware(),
+            # Planning is opt-in since deepagents 0.7, and per runner here —
+            # see the docstring for which agent wants it and why.
+            *([TodoListMiddleware()] if planning else []),
             # Explicit rather than default, to drop the shell tool — see
             # FILESYSTEM_TOOLS.
             FilesystemMiddleware(backend=backend, tools=list(FILESYSTEM_TOOLS)),
@@ -287,6 +294,75 @@ def recorder_tool_hooks(recorder: Any) -> tuple[Callable, Callable]:
             await recorder.record_tool_result(name, result, tool_use_id, is_error=is_error)
 
     return on_tool_use, on_tool_result
+
+
+# deepagents' sub-agent dispatch tool and the argument naming which one.
+TASK_TOOL = "task"
+TASK_SUBAGENT_ARG = "subagent_type"
+_DISPATCH_SUMMARY_CHARS = 160
+_DISPATCH_RESULT_CHARS = 240
+
+
+def subagent_step_hooks(
+    emit: EmitFn,
+    on_tool_use: Callable[[str, Any, str], Awaitable[None]],
+    on_tool_result: Callable[[str, Any, str, bool], Awaitable[None]],
+    *,
+    session_id: str = "",
+) -> tuple[Callable, Callable]:
+    """Surface every ``task`` dispatch as a ``dispatch_subagent:<name>`` step.
+
+    Wraps a pair of tool hooks (usually ``recorder_tool_hooks``) so the
+    workspace shows a sub-agent running — as a chip, for as long as it runs —
+    with no model turn spent narrating it. Content wrote this for its
+    research and drafting sub-agents; insights is the second consumer, for
+    the verifier, which is the single longest thing in a brief.
+
+    The task tool's result does not repeat which sub-agent ran, so dispatch
+    order is kept and closed FIFO — parallel dispatches of the same sub-agent
+    share a chip anyway.
+    """
+    from collections import deque
+
+    dispatched: deque[str] = deque()
+
+    def _step(sub: str) -> dict:
+        step = {
+            "event": AgentEvent.STEP_STARTED,
+            "step_id": f"{AgentStep.DISPATCH_SUBAGENT.value}:{sub}",
+            "label": f"Sub-agent · {sub}",
+        }
+        if session_id:
+            step["session_id"] = session_id
+        return step
+
+    async def _on_tool_use(name: str, tool_input: Any, tool_use_id: str) -> None:
+        await on_tool_use(name, tool_input, tool_use_id)
+        if name != TASK_TOOL:
+            return
+        args = tool_input if isinstance(tool_input, dict) else {}
+        sub = str(args.get(TASK_SUBAGENT_ARG) or "unknown")
+        dispatched.append(sub)
+        await emit({
+            **_step(sub),
+            "summary": str(args.get("description") or "")[:_DISPATCH_SUMMARY_CHARS],
+            "status": StepStatus.RUNNING,
+        })
+
+    async def _on_tool_result(name: str, result: Any, tool_use_id: str, is_error: bool) -> None:
+        await on_tool_result(name, result, tool_use_id, is_error)
+        if name != TASK_TOOL or not dispatched:
+            return
+        sub = dispatched.popleft()
+        text = result if isinstance(result, str) else str(result)
+        await emit({
+            **_step(sub),
+            "event": AgentEvent.STEP_FINISHED,
+            "summary": text[:_DISPATCH_RESULT_CHARS],
+            "status": StepStatus.ERROR if is_error else StepStatus.SUCCESS,
+        })
+
+    return _on_tool_use, _on_tool_result
 
 
 # ---------------------------------------------------------------------------
@@ -557,10 +633,13 @@ __all__ = [
     "RECURSION_SLACK",
     "SUPERSTEPS_PER_MODEL_CALL",
     "SUMMARIZATION_FLOOR_TOKENS",
+    "TASK_SUBAGENT_ARG",
+    "TASK_TOOL",
     "DeepSession",
     "RunLimits",
     "build_deep_session_agent",
     "fallback_chain",
     "inspect_thread",
     "recorder_tool_hooks",
+    "subagent_step_hooks",
 ]

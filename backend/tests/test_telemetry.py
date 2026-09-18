@@ -180,3 +180,57 @@ def test_degrades_to_noop_without_opentelemetry(monkeypatch):
     with t.tool_span(tool_name="X"):
         pass
     assert _spans() == []
+
+
+# ---------------------------------------------------------------------------
+# Wiring: the provider that makes any of the above leave the process
+# ---------------------------------------------------------------------------
+
+def test_no_endpoint_means_no_provider():
+    """Unset is off, and off must be free — every test and self-host build
+    runs this way."""
+    assert t.configure_tracing("") is None
+    assert t.configure_tracing("   ") is None
+
+
+def test_endpoint_builds_a_batching_otlp_http_exporter_at_the_traces_path():
+    """A bare collector URL gets the standard traces path; a full one is
+    kept. The provider is returned rather than asserted global, because this
+    module already installed the in-memory one and OTel is set-once."""
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    provider = t.configure_tracing("http://localhost:6006/", environment="test")
+    assert provider is not None
+    processors = provider._active_span_processor._span_processors
+    assert len(processors) == 1 and isinstance(processors[0], BatchSpanProcessor)
+    exporter = processors[0].span_exporter
+    assert isinstance(exporter, OTLPSpanExporter)
+    assert exporter._endpoint == "http://localhost:6006/v1/traces"
+    attrs = provider.resource.attributes
+    assert attrs["service.name"] == t.SERVICE_NAME
+    assert attrs["deployment.environment"] == "test"
+    provider.shutdown()
+
+    full = t.configure_tracing("https://collector.example/v1/traces")
+    assert full._active_span_processor._span_processors[0].span_exporter._endpoint == (
+        "https://collector.example/v1/traces"
+    )
+    full.shutdown()
+
+
+def test_spans_carry_the_phoenix_kind():
+    """The OpenInference kind is what makes the local trace UI a table
+    rather than a list; a backend that does not know it ignores it."""
+    with t.model_span(provider="openai", model="gpt-x"):
+        pass
+    with t.model_span(provider="openai", model="gpt-x", operation=t.OP_INVOKE_AGENT):
+        pass
+    with t.tool_span(tool_name="FetchData"):
+        pass
+    kinds = {s.name: s.attributes[t.OPENINFERENCE_SPAN_KIND] for s in _spans()}
+    assert kinds == {
+        "chat gpt-x": t.SPAN_KIND_LLM,
+        "invoke_agent gpt-x": t.SPAN_KIND_AGENT,
+        "execute_tool FetchData": t.SPAN_KIND_TOOL,
+    }

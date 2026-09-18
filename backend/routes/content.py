@@ -248,7 +248,9 @@ def _attach_image_run(
         sess.image_api_key = ""
         sess.gemini_api_key = ""
         return
-    if run.source in ("cloud", "subscription"):
+    # Not "subscription": ``resolve_image_run`` refuses a plan credential
+    # outright, so the only source here that costs Duct money is the hosted key.
+    if run.source == "cloud":
         logger.info("content: images billed to Duct (%s/%s)", run.provider.value, run.source)
     sess.image_provider = run.provider
     sess.image_api_key = run.api_key

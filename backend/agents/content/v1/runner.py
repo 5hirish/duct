@@ -97,6 +97,7 @@ from agents.core.deep_session import (
     fallback_chain,
     inspect_thread,
     recorder_tool_hooks,
+    subagent_step_hooks,
 )
 from agents.core.lc import build_ask_user_tool, inspection_chat_model, interrupt_pause, resolve_chat_model
 from agents.core.quota import credential_identity
@@ -154,15 +155,7 @@ ASK_USER_DESCRIPTION = (
     "for something already in the brand context or the project memory."
 )
 
-# The tool the harness dispatches sub-agents through, and its argument that
-# names which one. deepagents' own names — pinned here so a rename in a minor
-# shows up as a missing step chip in the harness test, not a silent one.
-TASK_TOOL = "task"
-TASK_SUBAGENT_ARG = "subagent_type"
-
-# Cap on what a step chip shows of a dispatch brief or a sub-agent's report.
-_SUMMARY_CHARS = 160
-_RESULT_CHARS = 240
+# Cap on what a step chip shows of a stage's detail.
 _STEP_SUMMARY_CHARS = 140
 
 
@@ -808,43 +801,11 @@ class ContentRunner:
             session.todos = todos
             await emit({"event": ContentEvent.TODO_UPDATE, "todos": todos})
 
-        record_use, record_result = recorder_tool_hooks(recorder)
-
-        # The task tool's result does not repeat which sub-agent ran, so the
-        # dispatch order is kept and closed FIFO — parallel dispatches of the
-        # same sub-agent share a chip anyway.
-        dispatched: deque[str] = deque()
-
-        async def _on_tool_use(name: str, tool_input: Any, tool_use_id: str) -> None:
-            await record_use(name, tool_input, tool_use_id)
-            if name != TASK_TOOL:
-                return
-            args = tool_input if isinstance(tool_input, dict) else {}
-            sub = str(args.get(TASK_SUBAGENT_ARG) or "unknown")
-            dispatched.append(sub)
-            await emit({
-                "event": ContentEvent.STEP_STARTED,
-                "session_id": session_id,
-                "step_id": f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub}",
-                "label": f"Sub-agent · {sub}",
-                "summary": str(args.get("description") or "")[:_SUMMARY_CHARS],
-                "status": StepStatus.RUNNING,
-            })
-
-        async def _on_tool_result(name: str, result: Any, tool_use_id: str, is_error: bool) -> None:
-            await record_result(name, result, tool_use_id, is_error)
-            if name != TASK_TOOL or not dispatched:
-                return
-            sub = dispatched.popleft()
-            text = result if isinstance(result, str) else str(result)
-            await emit({
-                "event": ContentEvent.STEP_FINISHED,
-                "session_id": session_id,
-                "step_id": f"{ContentStep.DISPATCH_SUBAGENT.value}:{sub}",
-                "label": f"Sub-agent · {sub}",
-                "summary": text[:_RESULT_CHARS],
-                "status": StepStatus.ERROR if is_error else StepStatus.SUCCESS,
-            })
+        # Every sub-agent dispatch becomes a step chip; shared with insights,
+        # whose verifier is the second consumer (agents/core/deep_session.py).
+        _on_tool_use, _on_tool_result = subagent_step_hooks(
+            emit, *recorder_tool_hooks(recorder), session_id=session_id
+        )
 
         async def _on_artifact(raw: str, turn_text: str) -> None:
             await _publish_artifact(raw, emit, session_id)

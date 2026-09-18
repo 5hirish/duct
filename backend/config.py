@@ -304,6 +304,10 @@ class Configs(BaseSettings):
     sentry_profile_session_sample_rate: float = 1.0
     sentry_profile_lifecycle: str = "trace"
     sentry_enable_localhost: bool = False
+    # Where the agent's OpenTelemetry spans go (agents/core/telemetry.py).
+    # The standard OTel variable name, so Phoenix locally and a collector in
+    # production are the same setting. Unset means tracing is off.
+    otel_exporter_otlp_endpoint: str = ""
 
     model_config = SettingsConfigDict(
         env_file=_settings_env_files(),

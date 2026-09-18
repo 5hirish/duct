@@ -30,6 +30,7 @@ ICONS = [
     # navigation and actions
     "arrow-right", "arrow-down", "download", "external-link", "chevron-down",
     "play", "volume-2", "volume-x", "copy", "refresh-cw", "settings-2",
+    "zoom-in", "minimize-2",
     # what Duct does
     "chart-column", "chart-line", "trending-up", "trending-down", "sparkles",
     "zap", "link", "plug", "search", "message-square", "mail", "bell-ring",

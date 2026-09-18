@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MessageSquare, PanelRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageSquare, PanelRight } from "lucide-react";
 
 /**
  * SplitWorkspace — the shared chat-left / viewport-right shell for every agent
@@ -76,17 +76,37 @@ export default function SplitWorkspace({
   // client's markup disagree with the prerendered HTML.
   const [leftWidth, setLeftWidth] = useState(clampSplit(initialSplit));
   const [mobilePane, setMobilePane] = useState("left"); // "left" | "right"
+  // Desktop only, and stored apart from the ratio so folding the pane away
+  // does not overwrite the width it should come back to. Same reason it is
+  // adopted in an effect rather than in the initializer: a localStorage read
+  // during render disagrees with the prerendered markup.
+  const [rightCollapsed, setRightCollapsed] = useState(false);
   const containerRef = useRef(null);
   const collapsedFrom = useRef(null); // where Enter should restore to
+
+  const collapsedKey = `${storageKey}_right_collapsed`;
 
   useEffect(() => {
     try {
       const stored = Number(localStorage.getItem(storageKey));
       if (Number.isFinite(stored) && stored > 0) setLeftWidth(clampSplit(stored));
+      setRightCollapsed(localStorage.getItem(collapsedKey) === "1");
     } catch {
       // storage unavailable (private mode, embedded webview) — keep the default
     }
-  }, [storageKey]);
+  }, [storageKey, collapsedKey]);
+
+  const toggleRight = useCallback(() => {
+    setRightCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(collapsedKey, next ? "1" : "0");
+      } catch {
+        // ignore storage write errors
+      }
+      return next;
+    });
+  }, [collapsedKey]);
 
   const commit = useCallback(
     (pct) => {
@@ -110,6 +130,9 @@ export default function SplitWorkspace({
 
   function onPointerDown(e) {
     if (e.button !== 0 && e.pointerType === "mouse") return;
+    // Nothing to size when one pane is folded away; the handle is only the
+    // mount for the reopen control at that point.
+    if (rightCollapsed) return;
     e.preventDefault();
     // Capture keeps the drag alive over the iframes in the right pane.
     e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -134,6 +157,7 @@ export default function SplitWorkspace({
   // WAI-ARIA window splitter keys: arrows nudge, Shift+arrow jumps, Home/End
   // go to the extremes, Enter collapses the primary pane and restores it.
   function onKeyDown(e) {
+    if (rightCollapsed) return;
     const step = e.shiftKey ? KEY_STEP_LARGE : KEY_STEP;
     let next = null;
     if (e.key === "ArrowLeft") next = leftWidth - step;
@@ -171,7 +195,9 @@ export default function SplitWorkspace({
         {/* Left pane — toggled on mobile, split on md+ */}
         <div
           id={`${storageKey}-left`}
-          className={`@container ${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 md:flex md:w-[var(--split)] md:min-w-[17.5rem]`}
+          className={`@container ${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 md:flex ${
+            rightCollapsed ? "md:w-full" : "md:w-[var(--split)] md:min-w-[17.5rem]"
+          }`}
         >
           {left}
         </div>
@@ -191,16 +217,57 @@ export default function SplitWorkspace({
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
           onKeyDown={onKeyDown}
-          onDoubleClick={() => commit(initialSplit)}
-          title="Drag to resize — double-click to reset, arrow keys to nudge"
-          className="group hidden w-3 shrink-0 cursor-col-resize touch-none select-none items-center justify-center focus-visible:outline-none md:flex"
+          onDoubleClick={() => (rightCollapsed ? undefined : commit(initialSplit))}
+          title={rightCollapsed ? "" : "Drag to resize — double-click to reset, arrow keys to nudge"}
+          className={`group relative hidden w-3 shrink-0 touch-none select-none items-center justify-center focus-visible:outline-none md:flex ${
+            rightCollapsed ? "cursor-default" : "cursor-col-resize"
+          }`}
         >
-          <div className="h-full w-px bg-border/60 transition-colors group-hover:bg-primary/30 group-focus-visible:bg-primary group-focus-visible:w-0.5" />
+          <div
+            className={`h-full w-px bg-border/60 transition-colors ${
+              rightCollapsed ? "" : "group-hover:bg-primary/30 group-focus-visible:w-0.5 group-focus-visible:bg-primary"
+            }`}
+          />
+
+          {/* Sits on the handle rather than inside either pane: the panes'
+              contents belong to the caller, and every one of them already
+              fills its own header. `stopPropagation` keeps a click on the
+              button from also starting a drag on the separator under it. */}
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={toggleRight}
+            aria-expanded={!rightCollapsed}
+            aria-controls={`${storageKey}-right`}
+            title={rightCollapsed ? `Show ${rightLabel}` : `Hide ${rightLabel}`}
+            // `right-0` once collapsed: the handle is then the container's
+            // last 0.75rem, and a button wider than it, centred, loses its
+            // right half to the overflow clip — which is the one state where
+            // this control is the only way back.
+            className={`absolute top-1/2 z-10 -translate-y-1/2 rounded-md border border-border bg-card p-0.5 text-muted-foreground opacity-70 transition hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+              rightCollapsed ? "right-0" : ""
+            }`}
+          >
+            {rightCollapsed ? (
+              <ChevronLeft className="size-3.5" aria-hidden />
+            ) : (
+              <ChevronRight className="size-3.5" aria-hidden />
+            )}
+            <span className="sr-only">
+              {rightCollapsed ? `Show ${rightLabel}` : `Hide ${rightLabel}`}
+            </span>
+          </button>
         </div>
 
         {/* Right pane — toggled on mobile, split on md+. Single mount. */}
         <div
-          className={`@container ${mobilePane === "right" ? "flex" : "hidden"} min-w-0 flex-1 flex-col overflow-hidden md:flex md:min-w-[17.5rem]`}
+          id={`${storageKey}-right`}
+          className={`@container ${mobilePane === "right" ? "flex" : "hidden"} min-w-0 flex-1 flex-col overflow-hidden ${
+            // Collapsing is a desktop affordance only: on mobile the panes are
+            // already one at a time, so hiding this one there would leave the
+            // segmented control pointing at nothing.
+            rightCollapsed ? "md:hidden" : "md:flex md:min-w-[17.5rem]"
+          }`}
         >
           {right}
         </div>

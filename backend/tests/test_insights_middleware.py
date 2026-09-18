@@ -102,9 +102,10 @@ def test_summarization_still_wraps_our_pruning(stack):
     assert stack.index("SummarizationMiddleware") < stack.index("ContextEditingMiddleware")
 
 
-def test_the_planning_loop_and_virtual_filesystem_survived(stack):
-    """Both are load-bearing: the UI renders todos, and the FS must stay virtual."""
-    assert "TodoListMiddleware" in stack
+def test_no_planning_loop_and_the_virtual_filesystem_survived(stack):
+    """Planning is off for insights on purpose (deep_session.build_deep_session_agent
+    says why); the FS must stay virtual."""
+    assert "TodoListMiddleware" not in stack
     assert "FilesystemMiddleware" in stack
 
 

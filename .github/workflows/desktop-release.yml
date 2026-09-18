@@ -125,10 +125,35 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # Preflight — the questions that do not need a build to answer
+  # ---------------------------------------------------------------------------
+  #
+  # A release publishes an immutable, indexed page, and `release-notes.mjs`
+  # degrades to a compare link when CHANGELOG.md has no section for the version.
+  # That degradation is right at publish time — thin notes beat a release that
+  # cannot be cut — but it made 0.5.0 and 0.7.0 ship with none, silently, while
+  # the public changelog sat two releases behind the installer the download page
+  # was handing out. Asking here costs ten seconds and happens before three
+  # platforms build, so the fix is to write the section and push again.
+  preflight:
+    name: release notes exist
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Refuse to release a version with no changelog section
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./desktop/src-tauri/tauri.conf.json').version")"
+          python3 scripts/check_changelog_sync.py --version "$VERSION"
+
+  # ---------------------------------------------------------------------------
   # macOS — Developer ID, notarized, DMG
   # ---------------------------------------------------------------------------
   macos:
     name: macOS (Developer ID DMG)
+    needs: preflight
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -272,6 +297,7 @@ jobs:
     name: Linux (deb + AppImage)
     # Pinned, not `-latest`: the glibc the runner links against sets the oldest
     # distro the AppImage will start on, so moving up silently drops users.
+    needs: preflight
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -342,6 +368,7 @@ jobs:
   # Signing slots in here later via Tauri's `windows.signCommand`.
   windows:
     name: Windows (NSIS)
+    needs: preflight
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

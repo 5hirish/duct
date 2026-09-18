@@ -52,7 +52,9 @@ function safeJson(text) {
 
 export function MarkdownView({ source }) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-3xl px-1 py-2">
+    // The plugin wraps inline code in literal backticks by default, which
+    // reads as unrendered markdown next to a real code style.
+    <div className="prose prose-sm dark:prose-invert max-w-3xl px-1 py-2 prose-code:before:content-none prose-code:after:content-none">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{source}</ReactMarkdown>
     </div>
   );

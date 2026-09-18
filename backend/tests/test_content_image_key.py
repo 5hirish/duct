@@ -83,15 +83,21 @@ def test_the_tools_module_cannot_reach_config_at_all():
 def _patch_resolution(monkeypatch, *, stored=None, raises=False):
     """Stand in for ``resolve_provider_key`` with the real precedence — header,
     then saved, then env — minus the config read, so the order the image
-    resolver walks providers in is what is under test."""
+    resolver walks providers in is what is under test.
+
+    ``plan_ok`` is honoured rather than accepted and dropped: it is the whole
+    subject of two tests below, and a fake that ignored it would pass them
+    while the real resolver failed."""
+    from agents.core.codex import is_plan_credential
     from agents.engines import ProviderKey, ProviderKeyRequired
 
     monkeypatch.setattr(content_routes, "stored_keys_for", lambda _owner: stored or {})
 
-    def _resolve(provider, user_keys=None, *, stored_keys=None, duct_pays=False):
+    def _resolve(provider, user_keys=None, *, stored_keys=None, duct_pays=False, plan_ok=True):
         supplied = (user_keys or {}).get(provider)
-        if supplied:
-            return ProviderKey(supplied, provider, "user")
+        plan = is_plan_credential(provider, supplied or "")
+        if supplied and (plan_ok or not plan):
+            return ProviderKey(supplied, provider, "subscription" if plan else "user")
         saved = (stored_keys or {}).get(provider)
         if saved:
             return ProviderKey(saved, provider, "stored")
@@ -100,6 +106,12 @@ def _patch_resolution(monkeypatch, *, stored=None, raises=False):
         return ProviderKey("from-env", provider, "env")
 
     monkeypatch.setattr(engines, "resolve_provider_key", _resolve)
+
+
+# Header + empty payload + a signature segment spelled so the secret scanner
+# can see it is not one. Only the shape is under test — see
+# tests/test_subscription_auth_routing.py, which uses the same string.
+PLAN_TOKEN = "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE"
 
 
 def _session_under(monkeypatch):
@@ -151,6 +163,34 @@ def test_gemini_is_preferred_when_more_than_one_key_can_draw(monkeypatch):
         "sid", {Provider.OPENAI: "sk-mine", Provider.GOOGLE_GENAI: "AIza-mine", Provider.XAI: "xai-mine"}
     )
     assert session.image_provider is Provider.GOOGLE_GENAI
+
+
+def test_a_chatgpt_plan_does_not_draw(monkeypatch):
+    """The credential that reads as an OpenAI key everywhere else and buys no
+    pictures anywhere. It authenticates ``chatgpt.com/backend-api/codex``;
+    ``service/openai/images.py`` calls ``api.openai.com``, which has never
+    heard of it. Before the guard, a desktop user signed in with ChatGPT and
+    holding no other key resolved OpenAI as their image provider and collected
+    a 401 per slide — with the settings page promising gpt-image on their plan
+    the whole time."""
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, raises=True)
+
+    content_routes._attach_image_run("sid", {Provider.OPENAI: PLAN_TOKEN})
+    assert session.image_provider is None
+    assert session.image_api_key == ""
+
+
+def test_a_saved_openai_key_draws_when_the_plan_cannot(monkeypatch):
+    """A plan is not a veto, it is a value this call cannot spend. The header
+    still wins the *conversation*; images fall through to the saved key, which
+    is the one credential in the room that can buy one."""
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, stored={Provider.OPENAI: "sk-saved"}, raises=True)
+
+    content_routes._attach_image_run("sid", {Provider.OPENAI: PLAN_TOKEN})
+    assert session.image_provider is Provider.OPENAI
+    assert session.image_api_key == "sk-saved"
 
 
 def test_a_chat_only_key_does_not_draw(monkeypatch):
@@ -274,12 +314,22 @@ def test_the_settings_page_promises_what_the_run_will_do(monkeypatch):
     tell."""
     from routes.providers import _images_status
 
-    tiles = [
-        {"id": "google_genai", "reachable": True, "source": "user"},
-        {"id": "openai", "reachable": False, "source": "none"},
-    ]
-    assert _images_status(tiles, ImageModel.GEMINI_3_PRO_IMAGE.value)["model"] == (
+    sources = {"google_genai": "user", "openai": "none"}
+    assert _images_status(sources, ImageModel.GEMINI_3_PRO_IMAGE.value)["model"] == (
         ImageModel.GEMINI_3_PRO_IMAGE.value
     )
     # Picked OpenAI, no OpenAI key — the row names what will really draw.
-    assert _images_status(tiles, ImageModel.GPT_IMAGE_2_5_FLARE.value)["provider"] == "google_genai"
+    assert _images_status(sources, ImageModel.GPT_IMAGE_2_5_FLARE.value)["provider"] == "google_genai"
+
+
+def test_the_images_row_does_not_offer_a_plan_it_cannot_spend():
+    """The tile is honest — OpenAI *is* reachable on a ChatGPT plan — and the
+    Images row still must not name it, because the run will not. The two facts
+    live in different fields for exactly this reason."""
+    from routes.providers import _images_status
+
+    assert _images_status({"openai": "none"}) == {
+        "provider": None, "model": None, "source": "none",
+    }
+    # ...and the saved key underneath the plan is what the row names instead.
+    assert _images_status({"openai": "stored"})["source"] == "stored"

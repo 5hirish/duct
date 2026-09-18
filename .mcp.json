@@ -39,6 +39,10 @@
         "@railway/mcp-server"
       ]
     },
+    "phoenix": {
+      "type": "http",
+      "url": "http://localhost:6006/mcp"
+    },
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"

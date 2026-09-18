@@ -658,12 +658,18 @@ window.addEventListener('resize', function() {
 
 // Click-to-enlarge for product shots. A page shows the app at a third of its
 // size, a phone at a tenth, and the text in a shot is the argument. A tap
-// opens the same file over the page at a size where it reads, pannable in
-// both directions; Escape, the button or the backdrop closes it.
+// opens the whole shot at the largest size the screen holds, so nobody has to
+// scroll to see what they just tapped; tapping again zooms to where the small
+// type reads, pannable in both directions. Escape, the button or the backdrop
+// closes it.
 (function() {
 var imgs = document.querySelectorAll('.shot-frame img, .job-shot img, .what-shot img, .dl-hero-shot img, [data-zoom] img');
 if (!imgs.length) return;
-var box = null, scroller = null, pic = null, closeBtn = null, opener = null;
+// How much bigger the zoomed view is than the fitted one: enough that the
+// labels in a screenshot read, little enough that a phone is not panning
+// across eight screens of pixels.
+var ZOOM = 2.5;
+var box = null, scroller = null, pic = null, closeBtn = null, zoomBtn = null, opener = null;
 
 function build() {
   box = document.createElement('div');
@@ -675,13 +681,10 @@ function build() {
   scroller = document.createElement('div');
   scroller.className = 'lightbox-scroll';
   pic = document.createElement('img');
-  // On a phone the shot is wider than the screen; start in the middle, where
-  // the conversation is, rather than on the app's sidebar.
-  pic.addEventListener('load', function() {
-    // Never upscale: a 1x capture (the full audit report) stays at its own
-    // width rather than being stretched to the 1400px the 2x shots get.
-    pic.style.maxWidth = Math.min(pic.naturalWidth, 1400) + 'px';
-    centre();
+  pic.addEventListener('load', function() { fit(); page(); });
+  pic.addEventListener('click', function(e) {
+    var r = pic.getBoundingClientRect();
+    toggle((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
   });
   scroller.appendChild(pic);
   closeBtn = document.createElement('button');
@@ -689,17 +692,64 @@ function build() {
   closeBtn.className = 'lightbox-close';
   closeBtn.setAttribute('aria-label', 'Close');
   closeBtn.textContent = '×';
+  zoomBtn = document.createElement('button');
+  zoomBtn.type = 'button';
+  zoomBtn.className = 'lightbox-zoom';
+  zoomBtn.addEventListener('click', function() { toggle(0.5, 0.5); });
   box.appendChild(scroller);
   box.appendChild(closeBtn);
+  box.appendChild(zoomBtn);
   document.body.appendChild(box);
   scroller.addEventListener('click', function(e) { if (e.target === scroller) close(); });
   closeBtn.addEventListener('click', close);
 }
 
-function centre() {
-  if (!scroller) return;
-  var extra = scroller.scrollWidth - scroller.clientWidth;
-  if (extra > 0) scroller.scrollLeft = extra / 2;
+function zoomed() { return box.classList.contains('is-zoomed'); }
+
+function label() {
+  var out = zoomed();
+  zoomBtn.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#' +
+    (out ? 'minimize-2' : 'zoom-in') + '"/></svg>' + (out ? 'Fit to screen' : 'Zoom in');
+  zoomBtn.setAttribute('aria-pressed', out ? 'true' : 'false');
+}
+
+// The fitted view, and whether zooming would show anything it does not: an
+// image the screen already holds at its own size has nothing left to reveal.
+function fit() {
+  box.classList.remove('is-zoomed');
+  pic.style.width = '';
+  scroller.scrollTop = 0;
+  scroller.scrollLeft = 0;
+  box.classList.toggle('can-zoom', pic.naturalWidth > pic.clientWidth * 1.15);
+  label();
+}
+
+// A page-shaped capture (the full audit report is 1712 x 3974) fitted to the
+// screen is a thumbnail of a document, so it opens at the width of the window
+// and scrolls down, the way the page it shows does. The button still fits it.
+function page() {
+  if (!box.classList.contains('can-zoom') || zoomed()) return;
+  if (pic.clientWidth && pic.clientWidth < scroller.clientWidth * 0.6) zoomIn(0.5, 0);
+}
+
+function toggle(fx, fy) {
+  if (!box.classList.contains('can-zoom')) return;
+  if (zoomed()) return fit();
+  zoomIn(fx, fy);
+}
+
+function zoomIn(fx, fy) {
+  // Wide enough to read: a multiple of the fitted size, or the full width of
+  // the window for a shot so tall that fitting it left it a thumbnail (the
+  // audit report). Never past the pixels the capture actually has.
+  var target = Math.min(pic.naturalWidth, Math.max(Math.round(pic.clientWidth * ZOOM), scroller.clientWidth));
+  box.classList.add('is-zoomed');
+  pic.style.width = target + 'px';
+  label();
+  // Keep what they pointed at under the pointer, rather than jumping to the
+  // corner of a shot three times the size of the screen.
+  scroller.scrollLeft = fx * scroller.scrollWidth - scroller.clientWidth / 2;
+  scroller.scrollTop = fy * scroller.scrollHeight - scroller.clientHeight / 2;
 }
 
 function open(img) {
@@ -712,9 +762,11 @@ function open(img) {
   pic.src = img.getAttribute('data-zoom-src') || img.src;
   pic.alt = img.alt || '';
   box.hidden = false;
-  scroller.scrollTop = 0;
-  centre();
   document.body.style.overflow = 'hidden';
+  fit();
+  // A cached image is already decoded and no load event follows it, so the
+  // fitted size is known here; a fresh one is measured when it arrives.
+  if (pic.complete && pic.naturalWidth) page();
   requestAnimationFrame(function() {
     box.classList.add('is-open');
     closeBtn.focus();
