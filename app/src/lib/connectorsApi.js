@@ -69,6 +69,7 @@ export { resolveConnectedTypes } from "./connectorCount";
 export const CONNECTORS_CHANGED = "duct:connectors-changed";
 
 export function notifyConnectorsChanged() {
+  sourceCountCache.clear();
   if (typeof window !== "undefined") window.dispatchEvent(new Event(CONNECTORS_CHANGED));
 }
 
@@ -143,6 +144,25 @@ export function listAccountDataSources() {
  * answering "zero" then is its own lie.
  */
 export async function countConnectedSources(projectId) {
+  const key = projectId || "";
+  const hit = sourceCountCache.get(key);
+  if (hit && Date.now() - hit.at < SOURCE_COUNT_TTL_MS) return hit.promise;
+  const promise = countConnectedSourcesUncached(projectId);
+  sourceCountCache.set(key, { at: Date.now(), promise });
+  return promise;
+}
+
+// The sidebar badge asks on mount, focus, every project switch and every
+// cross-tab storage write; the desk asks on open, on visibility and every 30
+// seconds while a thread runs. Same question, same project, answered by a
+// server round trip each time — 47 of them in one evening's session, at a
+// median 2.3 s against a remote database. One answer per project per TTL,
+// in-flight calls shared, and `notifyConnectorsChanged` drops the cache so
+// a connection made a second ago is not hidden behind it.
+const SOURCE_COUNT_TTL_MS = 20_000;
+const sourceCountCache = new Map();
+
+async function countConnectedSourcesUncached(projectId) {
   let rows = null;
   try {
     rows = await (projectId ? listProjectDataSources(projectId) : listAccountDataSources());
