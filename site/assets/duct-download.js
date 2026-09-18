@@ -109,6 +109,10 @@
    * failure mode. The element's existing text and href stay as the fallback
    * for a platform we do not build for. */
   function wire() {
+    // Only on the download page. Everywhere else a Download button is a link
+    // to that page: a visitor who has not seen what the app is should land on
+    // the page that shows it, not on a 90 MB installer from a nav button.
+    if (!/^\/download(\.html)?$/.test(location.pathname)) return;
     var nodes = document.querySelectorAll('[data-duct-download]');
     if (!nodes.length) return;
 
@@ -131,11 +135,10 @@
   /* The download click, which is the top of the desktop funnel and was the one
    * conversion on this site nobody was counting.
    *
-   * Delegated, because `wire()` rewrites these anchors and the /download page
-   * lists every installer directly — one listener covers both, and anchors that
-   * appear later. Matching on the release prefix as well as the attribute means
-   * a per-platform link on /download counts even though it never needed
-   * upgrading.
+   * Delegated, because `wire()` rewrites the download page's anchors and the
+   * page lists every installer directly — one listener covers both, and
+   * anchors that appear later. Matching on the release prefix is what makes a
+   * per-platform link count and a link to /download not.
    *
    * Queued on dataLayer whether or not GTM has loaded; if the visitor declined
    * cookies it never loads and the array is simply never drained. */
@@ -145,7 +148,9 @@
   }
 
   document.addEventListener('click', function (ev) {
-    var el = ev.target && ev.target.closest && ev.target.closest('a[data-duct-download], a[href*="' + LATEST + '"]');
+    // Only anchors that hand out an installer; a Download button that links
+    // to /download is navigation, not a download.
+    var el = ev.target && ev.target.closest && ev.target.closest('a[href*="' + LATEST + '"]');
     if (!el) return;
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event: 'download_started', os: osForHref(el.getAttribute('href') || '') });
