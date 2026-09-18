@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* `prose` for rendered markdown — briefs, chat, connector notes. Twelve
+ * components used the classes for months with the plugin never installed, so
+ * every markdown brief rendered as unstyled text and looked broken. */
+@plugin "@tailwindcss/typography";
 
 /* ---------------------------------------------------------------------------
  * Duct's own CSS, split by concern.

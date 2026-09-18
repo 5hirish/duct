@@ -7,11 +7,13 @@ import remarkBreaks from "remark-breaks"; // honor single newlines as line break
 import { CodeBlock, resolveCode } from "./CodeBlock";
 import { healTail, splitSettled } from "../../lib/markdownStream";
 
-// Explicit per-element styling — the app has NO @tailwindcss/typography plugin,
-// so `prose` classes are no-ops and Tailwind's preflight strips heading sizes,
-// list bullets and paragraph margins. Style every element directly so markdown
-// renders, not blobs. Two maps: the assistant bubble at reading size, and the
-// reasoning block a notch smaller and quieter.
+// Explicit per-element styling rather than `prose`. Written when the app had
+// no @tailwindcss/typography plugin (it does now, for the brief pane); kept
+// because a chat bubble is not an article — the sizes step down from the
+// bubble's own text size, inline code is brand-tinted, and links open in a new
+// tab — and a component map is the plugin's own escape hatch for exactly that.
+// Two maps: the assistant bubble at reading size, and the reasoning block a
+// notch smaller and quieter.
 
 const ASSISTANT_COMPONENTS = {
   h1: ({ children }) => <h1 className="text-lg font-bold text-foreground mt-4 mb-2 first:mt-0">{children}</h1>,

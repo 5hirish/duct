@@ -224,6 +224,37 @@ const DESK_BUCKETS = {
 };
 const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
 
+// A brief the way the agent actually writes one: a decision up top, the
+// evidence as a table, the gaps as a list. Enough element kinds to catch a
+// missing typography rule.
+const BRIEF_MARKDOWN = `## Cut the blog from the plan; double down on the comparison pages
+
+Organic sessions are flat week on week, but the mix moved. The three comparison
+pages now carry **41% of non-brand clicks**, up from 29%, while the blog lost
+position on every query it ranked for.
+
+### What the numbers say
+
+| Page | Clicks | Δ vs prior week | Avg. position |
+| --- | ---: | ---: | ---: |
+| /compare/duct-vs-looker | 812 | +38% | 4.2 |
+| /compare/duct-vs-hex | 540 | +22% | 6.1 |
+| /blog/weekly-review-template | 133 | −44% | 11.8 |
+
+### What to do this week
+
+1. Add a \`Pricing\` section to the two comparison pages; both rank for pricing queries they do not answer.
+2. Redirect the three thinnest blog posts to the comparison hub rather than rewriting them.
+3. Hold the ad budget for the blog cluster until the redirect settles.
+
+### Could not verify
+
+- Search Console's token expired on Tuesday, so the query-level split is from the 7 days before that.
+- GA4 key events were renamed mid-week; \`sign_up\` counts before Wednesday are not comparable.
+
+> A number nobody checked should never be presented with the same confidence as one that was.
+`;
+
 const DESK_ACTIVITY = [
   { id: "a1", category: "check", action: "checked_search_console", summary: LONG_TITLE, source: "auto", created_at: "2026-09-09T05:57:00Z" },
   { id: "a2", category: "sync", action: "synced_ga4", summary: "", source: "agent", created_at: "2026-09-09T05:40:00Z" },
@@ -877,6 +908,26 @@ export const SCENES = [
       <div className="grid gap-6 @3xl:grid-cols-2">
         <BriefPane empty />
         <DataPane fetched={[]} />
+      </div>
+    ),
+  },
+  {
+    id: "brief-markdown",
+    state: "a written markdown brief",
+    group: "InsightsWorkspace",
+    title: "A markdown brief, typeset",
+    note: "The Artifact pane with a brief the agent wrote in markdown. Twelve components asked for `prose` for months while the typography plugin was never installed, so every one of these rendered as unstyled text and looked broken. This scene is the proof the plugin is loaded: headings step down, lists get bullets, tables get rules, and dark mode inverts.",
+    render: () => (
+      <div className="max-w-3xl">
+        <BriefPane
+          brief={{
+            title: "Organic growth, week of 8 Sept",
+            version: 2,
+            label: "Update 2",
+            format: "markdown",
+            content: BRIEF_MARKDOWN,
+          }}
+        />
       </div>
     ),
   },
