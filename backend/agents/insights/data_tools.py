@@ -88,11 +88,22 @@ FETCH_DESCRIPTION = (
     "Fetch one entity of live data for this project. The account, property or site and "
     "the credentials are resolved server-side from the project's connections — you name "
     "the entity and the window, nothing else. Returns the data plus the exact window it "
-    "covers; cite that window whenever you cite a number from it. A non-'ok' status is an "
+    "covers; cite that window whenever you cite a number from it. Fetching an entity and "
+    "window already fetched this session returns the same result instantly, so re-asking "
+    "costs nothing. A non-'ok' status is an "
     "instruction: 'needs_account' means call SelectAccount first, 'not_connected' means "
-    "the project lacks that source, 'fetch_failed' means say what you could not read "
+    "the project lacks that source, 'reauth_required' means the source is dead until the "
+    "user reconnects it, 'fetch_failed' means say what you could not read "
     "rather than retrying the same call."
 )
+
+# Session-scoped cache of successful pulls, keyed on (entity, window). The
+# verifier runs in its own context and cannot see what the analyst fetched
+# a minute ago, so it fetches it again — in the run this was measured on, a
+# single GA4 report took 45 seconds and the verifier asked for it twice.
+# Small on purpose: a session touches a handful of entities, and the cache
+# lives exactly as long as the tool closure does.
+FETCH_CACHE_MAX = 64
 
 NOTES_DESCRIPTION = (
     "Read Duct's hard-won notes on one connector before you interpret its numbers: the "
@@ -151,10 +162,21 @@ def build_data_tools_lc(
     if user_id is None:
         return tools
 
+    cache: dict[tuple[str, str, str], str] = {}
+
     async def fetch_data(entity_id: str, date_from: str = "", date_to: str = "") -> str:
         import asyncio
 
-        with tool_span(tool_name="FetchData", agent_name=log_prefix):
+        key = (entity_id.strip(), date_from.strip(), date_to.strip())
+        with tool_span(tool_name="FetchData", agent_name=log_prefix) as span:
+            cached = cache.get(key)
+            if cached is not None:
+                # No step events for a hit: the pull already showed up on the
+                # ladder once, and a second identical row would read as a
+                # second network call.
+                span.set_attribute("duct.cache_hit", True)
+                logger.info("%s: FetchData(%s) served from the session cache", log_prefix, key[0])
+                return cached
             if on_fetch_start is not None:
                 try:
                     await _maybe_await(on_fetch_start(entity_id.strip(), date_from.strip(), date_to.strip()))
@@ -182,7 +204,13 @@ def build_data_tools_lc(
             # Off the loop: compaction is CPU-bound Rust, tens of ms on the
             # largest payloads, and this runs inside a server holding other
             # customers' streams open.
-            return await asyncio.to_thread(_truncate, result, compress=compress)
+            body = await asyncio.to_thread(_truncate, result, compress=compress)
+            # Only a pull that worked is worth remembering — a failure should
+            # be retried when the agent narrows the window or the token is
+            # refreshed, not replayed.
+            if result.get("status") == "ok" and len(cache) < FETCH_CACHE_MAX:
+                cache[key] = body
+            return body
 
     tools.append(
         StructuredTool.from_function(

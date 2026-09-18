@@ -9,11 +9,17 @@ Why ``create_deep_agent`` rather than ``create_agent``
 -----------------------------------------------------
 ``backend/CLAUDE.md``'s rung rule says to pick the lowest layer that works, and
 it classified insights as a ``create_agent`` job. That was right for a pipeline
-with one tool loop and no planning. The autonomous shape needs four things
-``create_agent`` does not have: a planning loop the UI already renders
-(``write_todos`` → ``TODO_UPDATE``), subagents for the verification pass,
-skills for the ten connector knowledge packs, and the ``interrupt_on`` upgrade
-path for human review. So the rung moves up for this agent, deliberately.
+with one tool loop. The autonomous shape needs what ``create_agent`` does not
+have: subagents for the verification pass, the virtual scratch space, and the
+``interrupt_on`` upgrade path for human review. So the rung moves up for this
+agent, deliberately.
+
+The planning loop (``write_todos``) was a fourth reason and is now off for
+this agent: measured on a real brief, two of five model turns did nothing but
+rewrite the checklist, 36 seconds of a 198-second run. Progress is derived
+from the tool traffic instead — every fetch is a step, and the verifier's
+dispatch is a chip — so the person sees the same thing without the model
+spending a turn to say it.
 
 Two safety properties worth stating, because they are the reason an autonomous
 loop is shippable here at all:
@@ -60,6 +66,7 @@ from agents.core.deep_session import (
     fallback_chain,
     inspect_thread,
     recorder_tool_hooks,
+    subagent_step_hooks,
 )
 from agents.core.events import AgentEvent, AgentStep, StepStatus
 from agents.core.lc import (
@@ -386,6 +393,7 @@ class AutonomousInsightsRunner:
             limits=LIMITS,
             session=session,
             fallbacks=fallbacks,
+            planning=False,  # see the module docstring
             # Same condition as the fallback chain, for the same reason: a
             # caller that handed us its own model handed us no credential, so
             # there is nobody to cool down when the provider says no.
@@ -459,10 +467,11 @@ class AutonomousInsightsRunner:
             compress=compress,
         )
 
-        async def _on_todo(todos: list) -> None:
-            await emit({"event": AgentEvent.TODO_UPDATE, "todos": todos})
-
-        on_tool_use, on_tool_result = recorder_tool_hooks(getattr(session, "recorder", None))
+        # The verifier's dispatch shows as a running chip for the minute or so
+        # it takes, instead of a silent gap between two fetch rows.
+        on_tool_use, on_tool_result = subagent_step_hooks(
+            emit, *recorder_tool_hooks(getattr(session, "recorder", None)), session_id=session_id
+        )
 
         # Version counter for this session's brief. One artifact group per
         # session (the route mints or resumes the group id); each closing tag
@@ -483,7 +492,6 @@ class AutonomousInsightsRunner:
             log_prefix="insights-v1",
             summariser=self._summariser_model(llm),
             on_artifact_close=_on_artifact,
-            on_todo=_on_todo,
             on_tool_use=on_tool_use,
             on_tool_result=on_tool_result,
         )

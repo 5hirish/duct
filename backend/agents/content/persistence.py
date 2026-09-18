@@ -84,14 +84,21 @@ _SUMMARY_TIMEOUT = 45.0
 
 def _next_seq(db: Session, conversation_id: UUID) -> int:
     """Atomically allocate the next per-conversation seq (no MAX+1 race) and
-    bump last_active_at. Returns the new seq."""
+    bump last_active_at. Returns the new seq.
+
+    Does not commit: the caller's insert shares the transaction, so the row
+    lock this UPDATE takes orders concurrent appends and the seq can never
+    be allocated without its event. It used to commit here and again after
+    the insert — four round trips per event, and every one of them is a
+    full trip to the database host when the sidecar runs against a remote
+    one.
+    """
     row = db.execute(
         update(AgentConversation)
         .where(AgentConversation.id == conversation_id)
         .values(last_seq=AgentConversation.last_seq + 1, last_active_at=utcnow())
         .returning(AgentConversation.last_seq)
     ).first()
-    db.commit()
     return int(row[0]) if row else 0
 
 
@@ -110,7 +117,7 @@ def set_run_status(
 
 
 def append_event(db: Session, conversation_id: UUID, kind: str | EventKind, data: dict) -> None:
-    """Append one event to the conversation log."""
+    """Append one event to the conversation log, in one transaction."""
     seq = _next_seq(db, conversation_id)
     # Store the plain value, never "EventKind.TOOL_USE" — the column is free-text.
     db.add(AgentEventRow(conversation_id=conversation_id, seq=seq, kind=str(kind), data=data))

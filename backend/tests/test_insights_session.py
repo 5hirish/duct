@@ -194,10 +194,14 @@ def test_filesystem_tools_are_virtual_not_the_real_disk():
     assert "Bash" not in names and "bash" not in names
 
 
-def test_planning_is_mounted():
-    """Task planning became opt-in in deepagents 0.7 — assert it is actually on,
-    since the todo stream is what makes a long autonomous run legible."""
-    assert "write_todos" in _tool_names(RUNNER.build_agent(llm=_fake("ok")))
+def test_planning_is_off_and_the_verifier_is_on():
+    """No ``write_todos`` for insights: measured, two of five model turns in a
+    brief did nothing but rewrite the checklist. Progress comes from the tool
+    traffic instead (fetch steps, the verifier's dispatch chip), so the
+    sub-agent tool is the one that must be there."""
+    names = _tool_names(RUNNER.build_agent(llm=_fake("ok")))
+    assert "write_todos" not in names
+    assert "task" in names
 
 
 def test_memory_tools_need_a_project(session, emitted):

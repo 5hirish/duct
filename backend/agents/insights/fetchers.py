@@ -35,6 +35,7 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
+from agents.core.errors import ErrorCode, classify_error
 from agents.insights.catalog.base import _CATALOGS
 from utils.dates import last_n_days
 
@@ -283,6 +284,23 @@ def fetch_entity(
         data = spec.call(account_id, window_from, window_to, creds)
     except Exception as exc:  # noqa: BLE001 — reported to the agent, never raised
         logger.warning("insights: fetch %s failed", entity_id, exc_info=True)
+        if classify_error(exc) is ErrorCode.CONNECTOR_EXPIRED:
+            # A revoked or expired grant is not a fetch that failed; it is a
+            # source that is gone until a human reconnects it. Said as such,
+            # so the agent stops there instead of trying the next entity on
+            # the same dead token and reporting "an API error".
+            return {
+                "status": "reauth_required",
+                "entity_id": entity_id,
+                "connector_id": spec.connector_id,
+                "account_id": account_id,
+                "message": (
+                    f"{spec.connector_id} rejected its stored credential (expired or "
+                    "revoked). Nothing from this source can be fetched until the user "
+                    "reconnects it on the Connections page — call RequestConnection "
+                    "if the analysis needs it, and do not fetch from it again this session."
+                ),
+            }
         return {
             "status": "fetch_failed",
             "entity_id": entity_id,
