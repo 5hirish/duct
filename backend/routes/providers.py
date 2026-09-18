@@ -230,6 +230,13 @@ def providers_status(
     server_source = "env" if (cfg.duct_local or cfg.app_env == "local") else "cloud"
 
     providers = []
+    # What the *image* tools would see for the same provider, which is not
+    # always what the tile says: a ChatGPT plan drives the conversation and
+    # cannot buy a picture (agents/engines.resolve_image_run), so the image
+    # row resolves that provider as if the plan were not there. Kept beside
+    # the tiles rather than inside them because it is not a fact about the
+    # provider, it is a fact about one kind of call.
+    image_sources: dict[str, str] = {}
     for provider in Provider:
         label, description = _PROVIDER_LABELS.get(provider, (provider.value, ""))
         # Not `bool(...)`: a supplied value that this provider cannot accept
@@ -252,6 +259,13 @@ def providers_status(
         else:
             source = "none"
 
+        if source == "subscription":
+            image_sources[provider.value] = (
+                "stored" if has_stored else server_source if has_server else "none"
+            )
+        else:
+            image_sources[provider.value] = source
+
         providers.append({
             "id": provider.value,
             "label": label,
@@ -271,7 +285,9 @@ def providers_status(
     return {
         "providers": providers,
         # The saved pick, so the row promises the run's own answer.
-        "images": _images_status(providers, get_model_settings(user.id if user else None).image_model),
+        "images": _images_status(
+            image_sources, get_model_settings(user.id if user else None).image_model
+        ),
         # The desktop shell decides whether it *can* offer "Continue with
         # ChatGPT"; this decides whether it *may*. An undocumented backend
         # needs a switch that does not wait for an app release.
@@ -279,38 +295,43 @@ def providers_status(
     }
 
 
-def _images_status(providers: list[dict], preferred: str = "") -> dict:
-    """Which provider the image tools would spend, given the tiles above.
+def _images_status(image_sources: dict[str, str], preferred: str = "") -> dict:
+    """Which provider the image tools would spend, given the sources above.
 
-    Same preference order as ``resolve_image_run`` and the same reachability
-    the tiles already computed, so the Images row on the settings page and
-    the run agree by construction. ``source`` is ``none`` when no image-capable
+    Same preference order as ``resolve_image_run`` and the same credentials the
+    tiles were just built from, so the Images row on the settings page and the
+    run agree by construction. ``source`` is ``none`` when no image-capable
     provider is reachable — the row then asks for a key rather than naming a
     model nothing can run.
+
+    It reads ``image_sources`` rather than the tiles themselves because the two
+    disagree for exactly one credential: a ChatGPT plan is a live OpenAI tile
+    and no way to draw at all. Reading the tile is what made this row promise
+    "gpt-image-2.5-flare, on your ChatGPT plan" to a desktop user whose every
+    image then came back 401.
 
     ``preferred`` mirrors the same argument on ``resolve_image_run``, including
     the fall-through: a saved pick whose provider has no key resolves to the
     order below. The page has to render what will actually happen, and "the
     model you chose, which cannot run" is the one answer it must not give.
     """
-    by_id = {row["id"]: row for row in providers}
     wanted = preferred_image_model(preferred)
     if wanted is not None:
-        row = by_id.get(provider_of(wanted).value)
-        if row and row["reachable"]:
+        picked = provider_of(wanted).value
+        if image_sources.get(picked, "none") != "none":
             return {
-                "provider": row["id"],
+                "provider": picked,
                 "model": wanted.value,
-                "source": row["source"],
+                "source": image_sources[picked],
             }
 
     for provider in IMAGE_PROVIDER_ORDER:
-        row = by_id.get(provider.value)
-        if row and row["reachable"]:
+        source = image_sources.get(provider.value, "none")
+        if source != "none":
             return {
                 "provider": provider.value,
                 "model": DEFAULT_IMAGE_MODELS[provider].value,
-                "source": row["source"],
+                "source": source,
             }
     return {"provider": None, "model": None, "source": "none"}
 

@@ -101,7 +101,14 @@ export default function TierSummary({
   // Only when something is wrong. A working image pick is already on screen.
   let imageNote = "";
   if (images && !images.provider) {
-    imageNote = "No key of yours can generate images yet — add one on the Providers tab.";
+    // Naming the plan matters here: their OpenAI tile is green, so "no key of
+    // yours can draw" reads as a bug rather than as an answer. The plan
+    // reaches the Codex backend and the image API is a different door — see
+    // agents/engines.resolve_image_run.
+    imageNote =
+      providersById?.openai?.source === "subscription"
+        ? "Your ChatGPT plan can run the chat models but cannot generate images — add an image key on the Providers tab."
+        : "No key of yours can generate images yet — add one on the Providers tab.";
   } else if (imagePick && images?.model && imagePick !== images.model) {
     // The server resolved past the pick: its provider has no spendable key.
     imageNote = `No key for ${nameOf(imagePick) || imagePick}, so images are drawn with ${drawn}.`;

@@ -267,6 +267,7 @@ def resolve_provider_key(
     *,
     stored_keys: Mapping[Provider, str] | None = None,
     duct_pays: bool = False,
+    plan_ok: bool = True,
 ) -> ProviderKey:
     """The key this run may spend, in precedence order, or raise.
 
@@ -281,6 +282,13 @@ def resolve_provider_key(
     audit is demand gen, not a customer's run. Pass it as an expression at the
     call site (``duct_pays=req.lead_magnet``) so the condition stays readable.
 
+    ``plan_ok=False`` says this particular call cannot spend a ChatGPT plan,
+    whatever the provider would accept elsewhere. Only images pass it today:
+    the plan reaches ``chatgpt.com/backend-api/codex`` and nothing else, so a
+    caller that talks to ``api.openai.com`` gets a 401 from a credential every
+    other layer just called reachable. Treated as "not a key for this call"
+    rather than as an error, so a stored API key underneath it still serves.
+
     Kept free of any DB or request import: the caller merges what it has and
     this decides. ``service/provider_keys.py`` is the piece that loads stored
     keys, and it is the only thing that needs a session.
@@ -288,15 +296,18 @@ def resolve_provider_key(
     from config import allow_server_provider_keys, get_configs
 
     supplied = (user_keys or {}).get(provider, "")
+    plan = is_plan_credential(provider, supplied)
     # A value this provider cannot accept is not a key to spend — fall through
     # to the stored or env one rather than sending it and collecting a 401.
-    if is_usable_credential(provider, supplied):
+    # A plan token under ``plan_ok=False`` is the same statement one layer in:
+    # OpenAI accepts it, this call cannot, so it is not a key here either.
+    if is_usable_credential(provider, supplied) and (plan_ok or not plan):
         # The header's own shape says whose account this is: a ChatGPT access
         # token is the user's plan, not a key they pasted, and the settings
         # page words the two differently. Shape alone is not enough — only
         # OpenAI has a plan path at all, so a JWT in any other slot is a
         # mis-paste and billing it to "their subscription" would be fiction.
-        source = "subscription" if is_plan_credential(provider, supplied) else "user"
+        source = "subscription" if plan else "user"
         return ProviderKey(supplied.strip(), provider, source)
 
     saved = (stored_keys or {}).get(provider, "")
@@ -371,12 +382,23 @@ def resolve_image_run(
     matches the tier ladder — a pick you cannot pay for steps down, it does not
     stop the run — and it is what keeps the setting safe to carry across a
     machine where a different key happens to be present.
+
+    A ChatGPT plan is never spendable here, on any provider. ``service/openai/
+    images.py`` calls ``api.openai.com/v1/images``, which takes an API key and
+    nothing else, while the plan token only authenticates the Codex backend.
+    Before this, a desktop user signed in with ChatGPT and holding no other key
+    resolved OpenAI as their image provider (it is second in
+    ``IMAGE_PROVIDER_ORDER``), the settings page promised gpt-image on their
+    plan, and every picture came back 401. ``plan_ok=False`` makes that
+    provider fall through to their stored key, or out of the running.
     """
     wanted = preferred_image_model(preferred)
     if wanted is not None:
         provider = provider_of(wanted)
         try:
-            resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+            resolved = resolve_provider_key(
+                provider, user_keys, stored_keys=stored_keys, plan_ok=False
+            )
         except ProviderKeyRequired:
             pass  # asked for, cannot pay for it — fall through to the order
         else:
@@ -389,7 +411,9 @@ def resolve_image_run(
 
     for provider in IMAGE_PROVIDER_ORDER:
         try:
-            resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+            resolved = resolve_provider_key(
+                provider, user_keys, stored_keys=stored_keys, plan_ok=False
+            )
         except ProviderKeyRequired:
             continue
         return ImageRun(
