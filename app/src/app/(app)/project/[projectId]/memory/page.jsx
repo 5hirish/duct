@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SkeletonList } from "@/components/ui/skeleton";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import { hasAuthToken } from "@/lib/authFetch";
 import { getProjectById } from "@/lib/projects";
@@ -94,7 +95,7 @@ function ProjectMemory({ projectId }) {
 export default function ProjectMemoryPage({ params }) {
   const { projectId } = use(params);
   return (
-    <Suspense fallback={<p className="app-subtle">Loading…</p>}>
+    <Suspense fallback={<SkeletonList rows={4} label="Loading memories" />}>
       <ProjectMemory projectId={projectId} />
     </Suspense>
   );

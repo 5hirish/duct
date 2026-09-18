@@ -35,6 +35,7 @@ const CLEAN = new Set([
   // `.status-pill`, lifted out of ads-report.css so the five call sites that
   // are not the report stop inheriting a report's palette. Came out clean.
   "pills.css",
+  "skeleton.css",
   // Split out of generate.css when the wizard became the Project context
   // page; it came out clean, so it goes straight onto the ratchet.
   "project.css",

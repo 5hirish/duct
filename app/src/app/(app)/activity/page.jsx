@@ -17,6 +17,7 @@ import EmptyState from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/format";
 import { listActivity } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
+import { SkeletonList } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CATEGORY_TABS = [
@@ -195,7 +196,7 @@ function ActivityFeed() {
       )}
 
       {signedIn && items === null && (
-        <p className="app-subtle" style={{ marginTop: 18 }}>Loading…</p>
+        <SkeletonList rows={5} label="Loading activity" style={{ marginTop: 18 }} />
       )}
 
       {signedIn && error && (
@@ -257,7 +258,7 @@ export default function ActivityPage() {
               Activity
             </h1>
           </div>
-          <p className="app-subtle">Loading…</p>
+          <SkeletonList rows={5} label="Loading activity" style={{ marginTop: 18 }} />
         </section>
       }
     >

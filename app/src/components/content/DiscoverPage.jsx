@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { saveDiscoveredReference } from "../../lib/contentApi";
 import { useScraperRun } from "../../hooks/useScraperRun";
@@ -227,7 +228,7 @@ export default function DiscoverPage({ projectId }) {
           </div>
           <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="aspect-[3/4] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
+              <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
             ))}
           </div>
         </div>

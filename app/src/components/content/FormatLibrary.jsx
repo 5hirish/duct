@@ -16,6 +16,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import EmptyState from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAutoSlug } from "@/lib/slug";
 import {
@@ -192,7 +193,7 @@ export default function FormatLibrary({ projectId }) {
       {loading ? (
         <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-44 animate-pulse rounded-xl border border-border/50 bg-muted/30" />
+            <Skeleton key={i} className="h-44 rounded-xl" />
           ))}
         </div>
       ) : formats.length === 0 ? (

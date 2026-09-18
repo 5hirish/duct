@@ -332,7 +332,11 @@ the page.
 
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
-- Busy state: `ui/spinner`. Colour comes from `currentColor`.
+- Busy state: `ui/spinner`. Colour comes from `currentColor`. For content
+  that has a shape, the wait is `ui/skeleton` (`Skeleton`, `SkeletonText`,
+  `SkeletonList`, `SkeletonDocument`) — its shimmer is one CSS rule in
+  `styles/skeleton.css`, and `check:design` rejects a hand-rolled
+  `animate-pulse bg-muted` box.
 - Asking "are you sure?": `ui/confirm-dialog`. `useConfirm()` returns
   `{ confirm, dialog }` — await `confirm({ title, description, action,
   destructive })` and render `{dialog}`, which is deliberately close enough to

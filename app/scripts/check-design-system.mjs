@@ -126,6 +126,13 @@ const RULES = [
     allow: new Map(),
   },
   {
+    id: "no-hand-rolled-skeleton",
+    why: "ui/skeleton is the one loading placeholder, and its look (a sheen over the muted ground, styles/skeleton.css) is defined once. Four content grids had rolled their own pulsing bg-muted boxes beside it, so the same wait looked like two different apps.",
+    fix: "<Skeleton className=\"aspect-[4/5]\" /> from components/ui/skeleton, or SkeletonText / SkeletonList / SkeletonDocument for the three shapes that kept being retyped.",
+    re: /\banimate-pulse\b(?=[^"'`]*\bbg-muted(?![\w-]))|\bbg-muted(?:\/\d+)?(?![\w-])(?=[^"'`]*\banimate-pulse\b)/g,
+    allow: new Map(),
+  },
+  {
     id: "no-opacity-on-muted",
     why: "--muted-foreground is 7.8:1 because secondary text still has to be read. Halving it is not a lighter shade, it is 3.9:1, and the sites doing it were the 10px ones.",
     fix: "Use text-muted-foreground as it is; if it needs to be quieter, it needs to be less text.",

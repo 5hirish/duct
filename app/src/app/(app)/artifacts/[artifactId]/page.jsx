@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ArtifactRenderer, { CONTENT_TYPES, UnifiedDiffView } from "@/components/artifacts/ArtifactRenderer";
 import { Button } from "@/components/ui/button";
+import { SkeletonDocument } from "@/components/ui/skeleton";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   deleteArtifact,
@@ -254,7 +255,7 @@ export default function ArtifactViewerPage() {
       {error && (
         <p className="app-subtle" style={{ color: "var(--destructive, var(--destructive))" }}>{error}</p>
       )}
-      {!artifact && !error && <p className="app-subtle">Loading…</p>}
+      {!artifact && !error && <SkeletonDocument label="Loading the artifact" />}
 
       {showChanges && diff && (
         <div style={{ marginBottom: 14 }}>

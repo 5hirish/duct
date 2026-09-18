@@ -8,6 +8,7 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import InsightsWorkspace from "@/components/insights/InsightsWorkspace";
+import { SkeletonDocument } from "@/components/ui/skeleton";
 import { getActiveProjectId } from "@/lib/projects";
 
 function Session() {
@@ -36,7 +37,7 @@ function Session() {
 
 export default function InsightsSessionPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading…</div>}>
+    <Suspense fallback={<SkeletonDocument className="p-8" label="Loading the thread" />}>
       <Session />
     </Suspense>
   );

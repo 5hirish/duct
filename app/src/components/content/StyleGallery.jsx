@@ -116,7 +116,7 @@ export default function StyleGallery() {
     return (
       <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2 @2xl:grid-cols-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-[460px] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
+          <Skeleton key={i} className="h-[460px] rounded-xl" />
         ))}
       </div>
     );

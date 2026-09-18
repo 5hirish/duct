@@ -58,6 +58,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { SkeletonList } from "@/components/ui/skeleton";
 import LoadError from "@/components/LoadError";
 import { isSessionExpired } from "@/lib/authFetch";
 import { formatDate, relativeTime, titleCase } from "@/lib/format";
@@ -638,7 +639,7 @@ export default function MemoryTimeline({
       )}
 
       {!signedIn && <p className="app-subtle">Sign in to see this.</p>}
-      {signedIn && !loadError && items === null && <p className="app-subtle">Loading…</p>}
+      {signedIn && !loadError && items === null && <SkeletonList rows={4} label="Loading memories" />}
 
       {linked && (
         <div className="overflow-hidden rounded-xl border border-border">

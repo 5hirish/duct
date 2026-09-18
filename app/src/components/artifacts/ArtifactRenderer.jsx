@@ -21,6 +21,7 @@ import {
   YAxis,
 } from "recharts";
 import AuditReportV1 from "@/components/audit/AuditReportV1";
+import { SkeletonDocument } from "@/components/ui/skeleton";
 
 export const CONTENT_TYPES = {
   REPORT_JSON: "application/vnd.duct.report+json",
@@ -255,7 +256,7 @@ export default function ArtifactRenderer({ artifact, content }) {
     return <AuditReportV1 data={structured} />;
   }
   if (ct === CONTENT_TYPES.HTML) {
-    if (content == null) return <p className="app-subtle text-sm p-2">Loading…</p>;
+    if (content == null) return <SkeletonDocument className="p-2" label="Loading the artifact" />;
     return (
       <iframe
         title={artifact.title || "Artifact"}
@@ -266,10 +267,10 @@ export default function ArtifactRenderer({ artifact, content }) {
     );
   }
   if (content == null) {
-    return (
-      <p className="app-subtle text-sm p-2">
-        {artifact?.has_content ? "Loading…" : "This artifact has no stored content to render."}
-      </p>
+    return artifact?.has_content ? (
+      <SkeletonDocument className="p-2" label="Loading the artifact" />
+    ) : (
+      <p className="app-subtle text-sm p-2">This artifact has no stored content to render.</p>
     );
   }
   switch (ct) {

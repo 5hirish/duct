@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -397,7 +398,14 @@ export default function ProjectContextPage() {
     return (
       <section>
         <h1 className="text-2xl font-semibold tracking-tight mb-2">Project context</h1>
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <div className="flex max-w-2xl flex-col gap-5" role="status" aria-label="Loading the project">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Skeleton className="h-3.5 w-28 rounded" />
+              <Skeleton className="h-9" />
+            </div>
+          ))}
+        </div>
       </section>
     );
   }

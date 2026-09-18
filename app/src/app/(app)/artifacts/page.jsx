@@ -14,6 +14,7 @@ import EmptyState from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/format";
 import { listArtifacts } from "../../../lib/artifactsApi";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mirrors models/artifact.py's `kind` — what an artifact *is*, not who made it.
@@ -97,7 +98,11 @@ export default function ArtifactsPage() {
       )}
 
       {signedIn && items === null && (
-        <p className="app-subtle" style={{ marginTop: 18 }}>Loading…</p>
+        <div className="connection-grid" style={{ marginTop: 18 }} role="status" aria-label="Loading artifacts">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
       )}
 
       {signedIn && error && <LoadError what="your artifacts" detail={error} />}

@@ -15,7 +15,7 @@
 // approximation. An example that drifts is worse than a missing one — a
 // missing one is honest.
 
-import { CircleAlert, FileText, Inbox } from "lucide-react";
+import { CircleAlert, Inbox } from "lucide-react";
 
 import DeskDayOne from "@/components/insights/desk/DeskDayOne";
 import PipelineProgress from "@/components/PipelineProgress";
@@ -34,7 +34,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import EmptyState from "@/components/ui/empty-state";
 import { ClampText, ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonDocument, SkeletonList } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { StepStatus } from "@/lib/agentSteps";
@@ -252,11 +252,13 @@ const EXAMPLES = {
           <Skeleton className="mt-4 h-24 w-full rounded-lg" />
         </div>
       </Specimen>
-      <Specimen label="Sub-second fetch">
-        <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <FileText className="size-3.5" aria-hidden="true" />
-          Loading…
-        </p>
+      <Specimen label="A list (SkeletonList)">
+        <SkeletonList rows={3} />
+      </Specimen>
+      <Specimen label="A document (SkeletonDocument)">
+        <div className="rounded-xl border bg-card p-5">
+          <SkeletonDocument />
+        </div>
       </Specimen>
     </div>
   ),
