@@ -23,7 +23,11 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { Database, FileText } from "lucide-react";
 import AgentChat from "@/components/workspace/AgentChat";
+import EmptyState from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import ComposerDials from "@/components/workspace/ComposerDials";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
@@ -334,7 +338,10 @@ function PaneTab({ active, onClick, children }) {
 
 /** The deliverable. A finished version when there is one, otherwise the one
  *  being written — which is the same document a few seconds earlier. */
-function BriefPane({ brief, writing, empty }) {
+// Exported for /preview only, the UsagePanel/UsageEmpty precedent: these two
+// panes' empty states are the states a reviewer most needs to open and the
+// ones no fixture-free gallery could otherwise reach.
+export function BriefPane({ brief, writing, empty }) {
   // While it streams there is no parsed version yet, so the front matter has
   // to come off here and the format has to be read from the bytes.
   const live = useMemo(() => stripFrontMatter(writing), [writing]);
@@ -357,9 +364,16 @@ function BriefPane({ brief, writing, empty }) {
 
   if (empty || !brief) {
     return (
-      <p className="p-4 text-xs text-muted-foreground">
-        Nothing written yet. An answer worth keeping becomes an artifact here.
-      </p>
+      // No CTA on purpose, which is the one case ui/empty-state allows. What
+      // fills this pane is the agent deciding an answer is worth keeping, and
+      // the control for that is the composer already on screen beside it — a
+      // button here could only say "go and type over there".
+      <div className="p-4">
+        <EmptyState icon={FileText} title="Nothing written yet">
+          An answer worth keeping becomes an artifact here, and versions pile up as it is
+          rewritten.
+        </EmptyState>
+      </div>
     );
   }
 
@@ -394,12 +408,26 @@ function BriefHeader({ title, sub }) {
 }
 
 /** What the agent pulled, and the window each pull covers. */
-function DataPane({ fetched }) {
+export function DataPane({ fetched }) {
   if (!fetched.length) {
     return (
-      <p className="p-4 text-xs text-muted-foreground">
-        Nothing yet. Each source Duct pulls shows up here, with the period it covers.
-      </p>
+      // This one does get a CTA, because its most common cause is actionable:
+      // the pane stays empty for a whole thread when nothing is connected, and
+      // that is the state the agent spends the conversation apologising for.
+      <div className="p-4">
+        <EmptyState
+          icon={Database}
+          title="No sources pulled yet"
+          actions={
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/connections">Check connections</Link>
+            </Button>
+          }
+        >
+          Each source Duct reads shows up here with the period it covers, and the provider&rsquo;s
+          own words when a pull fails.
+        </EmptyState>
+      </div>
     );
   }
   return (
