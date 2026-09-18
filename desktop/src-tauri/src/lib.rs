@@ -499,6 +499,28 @@ fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
 const MENU_RELOAD: &str = "view:reload";
 #[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
 const MENU_DEVTOOLS: &str = "view:devtools";
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+const MENU_PHOENIX: &str = "window:phoenix";
+
+/// Where the dev build's "Open Phoenix" item goes: the trace UI the sidecar
+/// exports to when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`open --env` in the
+/// launch config). Read from that variable so the menu and the exporter can
+/// never point at two different collectors, with the launch config's port as
+/// the fallback for a shell started without it.
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+const PHOENIX_DEFAULT_URL: &str = "http://localhost:6006";
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+const OTLP_TRACES_PATH: &str = "/v1/traces";
+
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+fn phoenix_url() -> String {
+    std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
+        .ok()
+        .map(|raw| raw.trim().trim_end_matches('/').to_string())
+        .filter(|url| !url.is_empty())
+        .map(|url| url.trim_end_matches(OTLP_TRACES_PATH).to_string())
+        .unwrap_or_else(|| PHOENIX_DEFAULT_URL.to_string())
+}
 #[cfg(desktop)]
 const MENU_HOME: &str = "help:home";
 #[cfg(desktop)]
@@ -706,6 +728,26 @@ fn install_app_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
         None => menu.append(&view)?,
     }
 
+    // Dev builds only: the trace UI this sidecar exports to, one click from
+    // the window it is tracing. Appended to the default Window submenu rather
+    // than replacing it, so the OS-provided items (Minimize, Zoom, the window
+    // list on macOS) stay exactly as the platform draws them.
+    #[cfg(any(debug_assertions, feature = "devtools"))]
+    if let Some(window_menu) = items
+        .iter()
+        .find(|item| item.id().as_ref() == WINDOW_SUBMENU_ID)
+        .and_then(|item| item.as_submenu())
+    {
+        window_menu.append(&PredefinedMenuItem::separator(app)?)?;
+        window_menu.append(&MenuItem::with_id(
+            app,
+            MENU_PHOENIX,
+            "Open Phoenix Traces",
+            true,
+            None::<&str>,
+        )?)?;
+    }
+
     // Drop the default's Help before appending ours, or macOS shows two.
     if let Some(existing) = menu
         .items()?
@@ -738,6 +780,13 @@ fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
     // user with no back button and no tabs.
     if let Some((_, url)) = HELP_LINKS.iter().find(|(menu_id, _)| *menu_id == id) {
         let _ = app.opener().open_url(*url, None::<&str>);
+        return;
+    }
+    // Same rule as Help: a trace UI belongs in a real browser with tabs, not
+    // in the product's window.
+    #[cfg(any(debug_assertions, feature = "devtools"))]
+    if id == MENU_PHOENIX {
+        let _ = app.opener().open_url(phoenix_url(), None::<&str>);
         return;
     }
 
