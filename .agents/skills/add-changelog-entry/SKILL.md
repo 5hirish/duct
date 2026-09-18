@@ -247,9 +247,16 @@ strip. Do not paginate — one long page is what earns the links.
 ## Verify before you call it done
 
 ```bash
-python3 .github/scripts/check-pages.py   # what CI runs over the page itself
+python3 .github/scripts/check-pages.py        # what CI runs over the page itself
+python3 scripts/check_changelog_sync.py       # this page against CHANGELOG.md
 cd site && python3 dev_server.py --port 8090
 ```
+
+`check_changelog_sync.py` is the reason this entry cannot be forgotten: it fails
+when the newest dated version in `CHANGELOG.md` is not the newest badge on this
+page, or when the newest entry has no feed item. It runs in `make check-site`
+and in `site.yml`, and the release workflow runs it against the version being
+released before anything builds.
 
 - [ ] `check-pages.py` passes — canonical without `.html`, JSON-LD parses, OG
       and Twitter tags complete

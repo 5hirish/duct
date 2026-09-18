@@ -28,7 +28,7 @@
 <meta name="twitter:image:alt" content="Duct changelog — what shipped, release by release"/>
 <link rel="alternate" type="application/rss+xml" title="Duct Changelog" href="/changelog/feed.xml"/>
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Duct Changelog", "url": "https://getduct.ai/changelog/", "description": "Every release of Duct in plain English: new connectors, agent and model upgrades, execution controls, and desktop builds.", "inLanguage": "en", "isPartOf": {"@type": "WebSite", "name": "Duct", "url": "https://getduct.ai"}, "about": {"@type": "SoftwareApplication", "name": "Duct", "applicationCategory": "BusinessApplication", "operatingSystem": "Web, macOS, Windows, Linux", "softwareVersion": "0.4.1", "releaseNotes": "https://getduct.ai/changelog/", "publisher": {"@type": "Organization", "name": "Alleviate Lab", "url": "https://getduct.ai"}}, "mainEntity": {"@type": "ItemList", "itemListOrder": "https://schema.org/ItemListOrderDescending", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "A download that just opens", "url": "https://getduct.ai/changelog/#2026-09-07"}, {"@type": "ListItem", "position": 2, "name": "Bring your own models", "url": "https://getduct.ai/changelog/#2026-09-02"}, {"@type": "ListItem", "position": 3, "name": "Duct starts remembering", "url": "https://getduct.ai/changelog/#2026-08-30"}, {"@type": "ListItem", "position": 4, "name": "From insight to execution", "url": "https://getduct.ai/changelog/#2026-08-27"}, {"@type": "ListItem", "position": 5, "name": "Duct runs on your machine", "url": "https://getduct.ai/changelog/#2026-08-20"}, {"@type": "ListItem", "position": 6, "name": "Sign in like a desktop app", "url": "https://getduct.ai/changelog/#2026-07-31"}, {"@type": "ListItem", "position": 7, "name": "Your keys, your machine", "url": "https://getduct.ai/changelog/#2026-06-19"}, {"@type": "ListItem", "position": 8, "name": "A studio for content", "url": "https://getduct.ai/changelog/#2026-05-28"}, {"@type": "ListItem", "position": 9, "name": "The first report", "url": "https://getduct.ai/changelog/#2026-04-06"}]}}
+{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Duct Changelog", "url": "https://getduct.ai/changelog/", "description": "Every release of Duct in plain English: new connectors, agent and model upgrades, execution controls, and desktop builds.", "inLanguage": "en", "isPartOf": {"@type": "WebSite", "name": "Duct", "url": "https://getduct.ai"}, "about": {"@type": "SoftwareApplication", "name": "Duct", "applicationCategory": "BusinessApplication", "operatingSystem": "Web, macOS, Windows, Linux", "softwareVersion": "0.7.0", "releaseNotes": "https://getduct.ai/changelog/", "publisher": {"@type": "Organization", "name": "Alleviate Lab", "url": "https://getduct.ai"}}, "mainEntity": {"@type": "ItemList", "itemListOrder": "https://schema.org/ItemListOrderDescending", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Agents that know your business", "url": "https://getduct.ai/changelog/#2026-09-15"}, {"@type": "ListItem", "position": 2, "name": "Start with a report", "url": "https://getduct.ai/changelog/#2026-09-09"}, {"@type": "ListItem", "position": 3, "name": "A download that just opens", "url": "https://getduct.ai/changelog/#2026-09-07"}, {"@type": "ListItem", "position": 4, "name": "Bring your own models", "url": "https://getduct.ai/changelog/#2026-09-02"}, {"@type": "ListItem", "position": 5, "name": "Duct starts remembering", "url": "https://getduct.ai/changelog/#2026-08-30"}, {"@type": "ListItem", "position": 6, "name": "From insight to execution", "url": "https://getduct.ai/changelog/#2026-08-27"}, {"@type": "ListItem", "position": 7, "name": "Duct runs on your machine", "url": "https://getduct.ai/changelog/#2026-08-20"}, {"@type": "ListItem", "position": 8, "name": "Sign in like a desktop app", "url": "https://getduct.ai/changelog/#2026-07-31"}, {"@type": "ListItem", "position": 9, "name": "Your keys, your machine", "url": "https://getduct.ai/changelog/#2026-06-19"}, {"@type": "ListItem", "position": 10, "name": "A studio for content", "url": "https://getduct.ai/changelog/#2026-05-28"}, {"@type": "ListItem", "position": 11, "name": "The first report", "url": "https://getduct.ai/changelog/#2026-04-06"}]}}
 </script>
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js" defer></script>
@@ -67,6 +67,105 @@
 <p class="cl-source">Every change, including the ones only a contributor would notice, is in <a href="https://github.com/5hirish/duct/blob/main/CHANGELOG.md" rel="noopener">CHANGELOG.md</a>. Duct is open source.</p>
 
 <div class="cl-wrap">
+
+<!-- RELEASE: 2026-09-15 -->
+<article class="cl-release" id="2026-09-15" aria-labelledby="r-2026-09-15">
+<div class="cl-rail">
+<span class="cl-date">Sep 15, 2026</span>
+<a class="cl-version" href="https://github.com/5hirish/duct/releases/tag/desktop-v0.7.0" rel="noopener">Desktop 0.7.0</a>
+<a class="cl-permalink" href="#2026-09-15" aria-label="Permalink to the September 15, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-09-15">Agents that know your business</h2>
+<p class="cl-lede">Your profile stopped being a dialog in one browser and became something every agent reads: who you are, how you write, how deep you want the answer, and the time zone your week starts in.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Workspace</p>
+<ul class="cl-list">
+<li><strong>A profile worth filling in, on its own page.</strong> Role, business and voice follow your account instead of one browser, so a second device and the scheduled brief see what you filled in once.</li>
+<li><strong>Every agent reads it.</strong> The audit, insights and content agents all render the same profile. The audit had been collecting preferences it never passed on, so role and depth changed nothing.</li>
+<li><strong>Your week starts in your time zone,</strong> which is what &ldquo;last week&rdquo; has to mean for a brief to line up with your dashboards.</li>
+<li><strong>Signed out, you land on the audit,</strong> not on a login form.</li>
+<li><strong>A ChatGPT sign-in can be cancelled and replaced,</strong> and &ldquo;keep me signed in&rdquo; holds a Google session for 30 days.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Insights</p>
+<ul class="cl-list">
+<li><strong>A run starts knowing what it can reach,</strong> on the tier the job deserves, rather than discovering a missing connector halfway through an answer.</li>
+<li><strong>A connection asked for mid-conversation comes back to the conversation.</strong> You connect the tool and the answer continues where it stopped.</li>
+<li><strong>A reload restores the thread</strong> instead of re-asking the question, and the desk no longer blanks itself when you switch back to the window.</li>
+<li><strong>A request that failed says so,</strong> instead of rendering as an empty list and reading like &ldquo;there is nothing here&rdquo;.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Connectors</p>
+<ul class="cl-list">
+<li><strong>Google Analytics reports that came back empty now return rows.</strong> Landing-page pulls used a filter shape GA4 rejects, and key events were still being asked for under the name Google deprecated.</li>
+<li><strong>Connecting Google Ads no longer needs a developer token.</strong> Google retired them on 9 September; the connection is a Google sign-in and nothing else.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Models &amp; agents</p>
+<ul class="cl-list">
+<li><strong>Pick the model that draws.</strong> OpenAI&rsquo;s GPT Image 2.5 pair, Flare by default, and an OpenRouter key can draw too instead of being declined every picture.</li>
+<li><strong>xAI and OpenRouter are one click</strong> in the tier map, and the models page opens with the setup you already have rather than an empty form.</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- RELEASE: 2026-09-09 -->
+<article class="cl-release" id="2026-09-09" aria-labelledby="r-2026-09-09">
+<div class="cl-rail">
+<span class="cl-date">Sep 9, 2026</span>
+<a class="cl-version" href="https://github.com/5hirish/duct/releases/tag/desktop-v0.5.0" rel="noopener">Desktop 0.5.0</a>
+<a class="cl-permalink" href="#2026-09-09" aria-label="Permalink to the September 9, 2026 release"># permalink</a>
+</div>
+<div class="cl-body">
+<h2 class="cl-title" id="r-2026-09-09">Start with a report</h2>
+<p class="cl-lede">Duct opens with one field now: your URL. The crawl starts before you sign in, and the first thing you see is a report about your own site rather than an eleven-question setup wizard.</p>
+
+<div class="cl-group">
+<p class="cl-group-label">Workspace</p>
+<ul class="cl-list">
+<li><strong>One field instead of eleven questions.</strong> The crawl begins the moment the URL validates, and Duct drafts the project from what it read — each field marked as taken from your site or as Duct&rsquo;s guess, so confirming it is a click.</li>
+<li><strong>An account when there is something to keep.</strong> The audit runs first; signing in arrives when there is a report worth saving or sharing.</li>
+<li><strong>A report you can hand to whoever owns the number.</strong> Sharing is membership: the link opens for the people you invite and is a 404 for everyone else.</li>
+<li><strong>Search Console is asked for once, after the report</strong> — one Google consent that creates the account and grants the read access, instead of signing in twice for the same thing.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Models &amp; agents</p>
+<ul class="cl-list">
+<li><strong>The tiers you set are the ones that run.</strong> The Heavy, Standard and Light map lived in your browser and no run ever read it — you could set Heavy to Opus, watch a run choose Gemini, and have no way to tell which was lying. It follows your account now, the scheduled brief included.</li>
+<li><strong>A model out of quota no longer ends the run.</strong> When a provider keeps refusing, Duct remembers for a few minutes and routes the next run to another key in your map rather than spending four more attempts on the same wall.</li>
+<li><strong>Runs spend the key you actually hold,</strong> a ChatGPT plan included. A pasted key is tested with one real call, so &ldquo;invalid key&rdquo;, &ldquo;no billing on this account&rdquo; and &ldquo;your account cannot see this model&rdquo; arrive as three different sentences.</li>
+<li><strong>Pictures draw on whichever image-capable key you brought,</strong> rather than one vendor&rsquo;s.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Insights</p>
+<ul class="cl-list">
+<li><strong>A connector&rsquo;s numbers reach the agent whole.</strong> A large pull used to be cut mid-structure — on a 900-row search-terms report that is two thirds of the numbers gone, with no way for the agent to know which ones. Every row survives now, folded into a compact table on the way in.</li>
+<li><strong>What a run cost, on the key that paid for it.</strong> Tokens and spend broken down by agent, by model and by provider, because which agent is expensive, which model is, and which provider is are three different decisions.</li>
+</ul>
+</div>
+
+<div class="cl-group">
+<p class="cl-group-label">Security</p>
+<ul class="cl-list">
+<li><strong>Analytics ask first.</strong> Nothing loads or is stored until you answer, and declining means the tag manager never loads at all. The desktop app never asks, because it stores nothing to consent to.</li>
+<li><strong>A failed key check no longer echoes your key</strong> back in its error, and usage limits are counted against a credential&rsquo;s identity rather than its value, so a leaked key confirms nothing about who holds it.</li>
+</ul>
+</div>
+</div>
+</article>
 
 <!-- RELEASE: 2026-09-07 -->
 <article class="cl-release" id="2026-09-07" aria-labelledby="r-2026-09-07">

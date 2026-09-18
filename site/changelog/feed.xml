@@ -6,7 +6,23 @@
     <atom:link href="https://getduct.ai/changelog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>What shipped in Duct — new connectors, agent and model upgrades, execution controls, and desktop builds.</description>
     <language>en</language>
-    <lastBuildDate>Mon, 07 Sep 2026 09:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 15 Sep 2026 09:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>Agents that know your business</title>
+      <link>https://getduct.ai/changelog/#2026-09-15</link>
+      <guid isPermaLink="false">duct-changelog-2026-09-15</guid>
+      <pubDate>Tue, 15 Sep 2026 09:00:00 GMT</pubDate>
+      <description>Your profile moved out of one browser and into something every agent reads: role, business, voice, depth and the time zone your week starts in. Insights runs open knowing which connectors they can reach, a connection asked for mid-conversation returns to it, and a reload restores the thread instead of re-asking the question. Google Analytics reports that came back empty now return rows, Google Ads no longer needs a developer token, and you can choose which model draws your pictures.</description>
+    </item>
+
+    <item>
+      <title>Start with a report</title>
+      <link>https://getduct.ai/changelog/#2026-09-09</link>
+      <guid isPermaLink="false">duct-changelog-2026-09-09</guid>
+      <pubDate>Wed, 09 Sep 2026 09:00:00 GMT</pubDate>
+      <description>Duct opens with one field: your URL. The crawl starts before you sign in, and the first thing you see is a report about your own site instead of an eleven-question wizard. The model tiers you set are now the ones your runs use, including scheduled briefs; a model out of quota routes to another key instead of ending the run; and a usage view shows what each run cost on the key that paid for it. Analytics ask before they measure anything.</description>
+    </item>
 
     <item>
       <title>A download that just opens</title>

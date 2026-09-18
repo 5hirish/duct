@@ -18,6 +18,8 @@ on:
     # so this can only ever remove work from a PR, never from a release.
     paths:
       - 'site/**'
+      - 'CHANGELOG.md'
+      - 'scripts/check_changelog_sync.py'
       - '.github/workflows/site.yml'
   push:
     branches:
@@ -39,6 +41,12 @@ jobs:
 
       - name: "🔎 Check HTML page requirements"
         run: python3 .github/scripts/check-pages.py
+
+      # The public changelog is written by hand and the download page resolves
+      # the real latest release at page load, so only a check keeps them from
+      # drifting apart — 0.5.0 and 0.7.0 shipped while the page still said 0.4.1.
+      - name: "🗒️ Check the public changelog matches CHANGELOG.md"
+        run: python3 scripts/check_changelog_sync.py
 
       - name: "📋 Validate sitemap.xml and blog feed"
         run: |

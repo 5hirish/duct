@@ -77,6 +77,7 @@ check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 
 check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 .github/scripts/check-pages.py
+	python3 scripts/check_changelog_sync.py
 	# Local only: a variant older than its shot means a reshoot was copied in
 	# without regenerating them. CI cannot tell (checkout resets mtimes), so
 	# there check-pages.py's "every srcset file exists" is the whole guard.
