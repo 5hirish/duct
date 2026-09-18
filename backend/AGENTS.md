@@ -195,9 +195,13 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Observability:** Sentry error tracking; OpenTelemetry tracing of every
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
-  it is unset. Locally that is Phoenix: run the "Phoenix" launch config, set
-  the variable to `http://localhost:6006`, and every FetchData and verifier
-  dispatch is a span with its own latency. Every log line carries a request
+  it is unset. Locally that is Phoenix: the "Duct: App + API + Phoenix" and
+  "Duct: Desktop + API + Phoenix" launch compounds start it and point the
+  API (and, for the desktop one, the sidecar via a second `open --env`) at
+  `http://localhost:6006`, and every FetchData and verifier dispatch is a span
+  with its own latency. Phoenix's own MCP server is registered in `.mcp.json`
+  at `/mcp` on the same port, so an agent can read the traces of a slow run
+  instead of querying the transcript table. Every log line carries a request
   id (`[a1b2c3d4]`, from `X-Request-Id` when the caller sends one, minted
   otherwise, echoed in the response); an agent run logs under the id of the
   request that created its session, so one grep follows one press of Send.

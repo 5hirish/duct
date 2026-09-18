@@ -128,9 +128,14 @@ falls back to `http://localhost:8002` outside production:
 cd backend && poetry run uvicorn server:app --port 8002 --reload
 ```
 
-From VS Code, **`Duct: Desktop (local sidecar)`** runs the sidecar shape, and
-**`Duct: Desktop (tauri dev — no sign-in) + API`** runs uvicorn on 8002 plus
-`dev:local` in one go, stopping uvicorn on exit — both in `.vscode/launch.json`.
+From VS Code (`.vscode/launch.json`), **`Desktop: Tauri dev (sidecar
+backend)`** runs the sidecar shape without sign-in, **`Duct: Desktop + API`**
+runs uvicorn on 8002, the Next dev server and the registered dev bundle, and
+**`Duct: Desktop + API + Phoenix`** is the same with every agent turn, model
+call and tool call traced into Phoenix on 6006 — the sidecar learns the
+collector through a second `open --env`, since launchd inherits nothing from
+the shell. Phoenix's MCP server (`.mcp.json`) is then up too, so an agent can
+read the traces of a slow run rather than the transcript table.
 
 Keychain `invoke` works from the dev server because `http://localhost:3003` is
 already listed under `remote.urls` in `src-tauri/capabilities/default.json`.
