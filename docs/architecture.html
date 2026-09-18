@@ -131,7 +131,7 @@
 <div class="wrap">
   <header class="mast">
     <h1>Duct architecture</h1>
-    <span class="meta"><b>Author</b> Shirish Kadam · <b>Updated</b> 2026-09-14</span>
+    <span class="meta"><b>Author</b> Shirish Kadam · <b>Updated</b> 2026-09-17</span>
   </header>
   <p class="lede">
     A map of how Duct is put together. Pick the job you came to do and follow the stops, or start wide and click
@@ -455,8 +455,8 @@ const DATA = {
         text: "Finds the bundled backend, starts it with secrets the shell minted, reads one handshake line for the port, stops it on exit.",
         files: ["desktop/src-tauri/src/sidecar.rs"] },
       { id: "d-frozen", lane: 1, label: "duct-sidecar", sub: "the frozen backend",
-        text: "The backend packaged with PyInstaller. Only the self-host config bundles it. Stale copies are the usual mystery bug.",
-        files: ["backend/duct_sidecar.spec", "desktop/scripts/check-sidecar-fresh.mjs"] },
+        text: "The backend packaged with PyInstaller. Only the self-host config bundles it. Stale copies were the usual mystery bug, so the build refreezes it rather than shipping one.",
+        files: ["backend/duct_sidecar.spec", "desktop/scripts/ensure-sidecar-fresh.mjs"] },
       { id: "d-conf", lane: 2, label: "tauri.conf.json", sub: "+ overlays",
         text: "The official build loads the hosted app and bundles nothing. Overlays for dev and self-host swap what they need.",
         files: ["desktop/src-tauri/tauri.conf.json", "desktop/src-tauri/tauri.selfhost.conf.json"] },

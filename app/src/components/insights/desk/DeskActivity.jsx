@@ -7,10 +7,27 @@
 // as much as any single row. Times are relative; on a page you open once a day,
 // "18 minutes ago" is the useful half of "08:42".
 
-import { History } from "lucide-react";
+import { History, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { relativeTime } from "@/lib/desk";
 import { ClampText } from "@/components/ui/clamp-text";
 import { cn } from "@/lib/utils";
+
+/** The panel the collapse control owns, named so `aria-controls` can point at it. */
+const PANEL_ID = "desk-activity";
+
+/**
+ * The desk row's columns, which are the rail's geometry rather than the desk's.
+ *
+ * Exported because `/preview` renders this rail beside a stand-in column, and a
+ * scene that retyped these would be a replica — it would keep passing while the
+ * real row changed underneath it. The gutter narrows with the rail: 2.75rem of
+ * strip with an 11-unit gap beside it reads as a stray element, not an edge.
+ */
+export function activityGridClass(collapsed) {
+  return collapsed
+    ? "gap-x-5 @3xl:grid-cols-[minmax(0,1fr)_2.75rem]"
+    : "gap-x-11 @3xl:grid-cols-[minmax(0,1fr)_288px]";
+}
 
 // Colour marks the exception, never the routine.
 function ringClass(entry) {
@@ -29,12 +46,65 @@ function actionLabel(entry) {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-export default function DeskActivity({ items }) {
+export default function DeskActivity({ items, collapsed = false, onToggle }) {
+  // Collapsing is a split-layout affordance and nothing else. Below @3xl the
+  // rail is stacked under the content at full width, where a 2.75rem strip
+  // would be neither smaller nor clearer — so the strip and the control are
+  // @3xl-only and the stacked rail ignores the preference entirely. Doing it
+  // in CSS rather than by reading a breakpoint in JS keeps one DOM for both.
+  if (collapsed) {
+    return (
+      <aside className="min-w-0">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={false}
+          aria-controls={PANEL_ID}
+          className="sticky top-20 hidden w-11 flex-col items-center gap-2.5 rounded-lg border border-border py-3 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring @3xl:flex"
+        >
+          <PanelRightOpen className="size-4" aria-hidden />
+          <span className="text-2xs font-bold tabular-nums" aria-hidden>
+            {items.length}
+          </span>
+          <span className="rotate-180 text-2xs font-bold uppercase tracking-[0.08em] [writing-mode:vertical-rl]">
+            Activity
+          </span>
+        </button>
+
+        {/* Stacked layout: no split to reclaim, so the rail stays whole. */}
+        <div className="@3xl:hidden">
+          <ActivityPanel items={items} />
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <aside className="min-w-0">
+      <ActivityPanel items={items} onToggle={onToggle} />
+    </aside>
+  );
+}
+
+function ActivityPanel({ items, onToggle }) {
+  return (
+    <div id={PANEL_ID}>
       <h2 className="mb-5 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.02em] text-muted-foreground">
         <History className="size-3.5" aria-hidden />
         Activity
+        {onToggle && (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded
+            aria-controls={PANEL_ID}
+            title="Hide activity"
+            className="ml-auto hidden rounded-sm p-1 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring @3xl:inline-flex"
+          >
+            <PanelRightClose className="size-3.5" aria-hidden />
+            <span className="sr-only">Hide activity</span>
+          </button>
+        )}
       </h2>
 
       {items.length === 0 ? (
@@ -71,6 +141,6 @@ export default function DeskActivity({ items }) {
           ))}
         </div>
       )}
-    </aside>
+    </div>
   );
 }

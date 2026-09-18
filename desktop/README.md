@@ -65,21 +65,34 @@ app keeps talking to Railway. Adding it back is what `tauri.selfhost.conf.json`
 does.
 
 You want it locally when developing against a local backend, and in any build
-meant to run without Duct's infrastructure. Build it before `tauri dev` or a
-`build:selfhost`, because `bundle.resources` copies the output directory
-verbatim and a stale or missing build produces an app that opens straight to an
-error screen:
+meant to run without Duct's infrastructure. `bundle.resources` copies the output
+directory verbatim, so a stale or missing build produces an app that opens
+straight to an error screen — which is why the `pre*` hooks on every
+sidecar-shipping script run `scripts/ensure-sidecar-fresh.mjs` first. It
+compares the freeze against the backend's newest `.py`, spec, lockfile and
+`pyproject.toml`, and **refreezes in place** when the freeze is behind, so a
+`npm run build:dev` on a changed backend just takes three minutes longer instead
+of stopping. `DUCT_SKIP_SIDECAR_CHECK=1` bundles a known-stale freeze anyway.
+
+The first freeze is the one you run by hand — until `backend/dist/duct-sidecar`
+exists the hook assumes you meant the hosted API and says nothing:
 
 ```bash
-cd backend
-poetry install --with dev
-poetry run pyinstaller duct_sidecar.spec --noconfirm   # ~3 min, ~390 MB on arm64
+cd backend && poetry install --with dev
+npm --prefix desktop run sidecar   # ~3 min, ~480 MB on arm64
 ```
+
+Use that rather than calling `pyinstaller` yourself. PyInstaller deletes its
+output directory before rebuilding, and a dev build resolves
+`backend/dist/duct-sidecar/` at runtime rather than carrying its own copy, so an
+in-place freeze strips the binary out from under a sidecar a running app is
+executing. The script stages the build and renames it into place instead.
 
 That writes `backend/dist/duct-sidecar/`. The shell spawns the binary inside it,
 reads one JSON handshake line (loopback URL, port, per-install API key, data
-dir) and hands it to the web app, which points its API base there. Rebuild it
-whenever backend code changes — the frozen copy does not pick up edits.
+dir) and hands it to the web app, which points its API base there. The frozen
+copy does not pick up edits, so after that first one the freshness hook rebuilds
+it for you whenever backend code changes.
 
 Runtime state lives in the per-user data dir — `~/Library/Application Support/ai.getduct.desktop/`
 on macOS, `%APPDATA%\Duct` on Windows, `~/.local/share/duct` on Linux
