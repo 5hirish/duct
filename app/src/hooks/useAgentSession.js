@@ -97,6 +97,11 @@ export function useAgentSession({
   // and the session never notifies.
   notifyAs = "",
   onEvent,
+  // The stored rows of a resumed thread, verbatim, before the live stream
+  // opens. The transcript is mapped for the chat here; a workspace with a
+  // pane that the transcript does not cover (insights' Data pane reads the
+  // tool traffic) rebuilds it from the same rows rather than fetching twice.
+  onHydrate,
 }) {
   const [state, dispatch] = useReducer(reduceAgentSession, initialAgentState);
   useAgentNotifications(state, notifyAs);
@@ -111,6 +116,8 @@ export function useAgentSession({
   // Latest props/state for callbacks created once per effect.
   const onEventRef = useRef(onEvent);
   onEventRef.current = onEvent;
+  const onHydrateRef = useRef(onHydrate);
+  onHydrateRef.current = onHydrate;
 
   // Artifacts announce themselves twice on the versioned agents — a
   // `artifact_version` while it streams and an `artifact_updated` when the card
@@ -212,6 +219,7 @@ export function useAgentSession({
         if (dead()) return;
         const messages = mapEventsToMessages(events);
         dispatch({ type: Action.HYDRATE, messages, suppressThinking: true });
+        onHydrateRef.current?.(events || []);
       } catch {
         /* see above */
       }

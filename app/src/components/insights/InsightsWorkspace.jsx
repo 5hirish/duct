@@ -28,18 +28,24 @@ import { Database, FileText } from "lucide-react";
 import AgentChat from "@/components/workspace/AgentChat";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { Skeleton, SkeletonDocument } from "@/components/ui/skeleton";
 import ComposerDials from "@/components/workspace/ComposerDials";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { getProjectById } from "@/lib/projects";
 import { MarkdownView } from "@/components/artifacts/ArtifactRenderer";
+import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { useAgentSession } from "../../hooks/useAgentSession";
-import { getArtifactContent, listArtifactVersions } from "../../lib/artifactsApi";
+import { getArtifactContent, listArtifacts, listArtifactVersions } from "../../lib/artifactsApi";
 import { InsightsEvent, InsightsStep } from "../../lib/insightsEvents";
 import { frontMatterTitle, sniffFormat, stripFrontMatter } from "../../lib/brief";
+import { fetchedFromEvents } from "../../lib/insightsHistory";
 import { loadPreferences } from "../../lib/userPreferences";
 
 const AGENT_TYPE = "insights";
+// `openedGroup` for the brief being written in this session, which has no
+// stored group id until its first version lands.
+const LIVE_GROUP = "live";
 
 export default function InsightsWorkspace({
   projectId,
@@ -54,6 +60,24 @@ export default function InsightsWorkspace({
   const [selected, setSelected] = useState(-1);   // -1 = follow the latest
   const [writing, setWriting] = useState("");
   const [pane, setPane] = useState("brief");      // brief | data
+  // Every document this thread has written (latest version per group), and
+  // which one the pane is showing: null is the gallery, LIVE_GROUP is the
+  // one being written in this session, otherwise a stored group's id.
+  const [docs, setDocs] = useState([]);
+  const [openedGroup, setOpenedGroup] = useState(null);
+  const openedGroupRef = useRef(null);
+  openedGroupRef.current = openedGroup;
+  // Bumped when a version lands, so the gallery learns about the new group.
+  const [docsRefresh, setDocsRefresh] = useState(0);
+  // A later open supersedes an earlier one still loading.
+  const openTokenRef = useRef(0);
+  // What the pane is waiting on. `opening` is a document's versions on their
+  // way in; `docsPending` is the thread's document list on a reopen, before
+  // we know whether there is anything to show at all. Either way the pane
+  // shows the shape of a brief rather than "Nothing written yet", which used
+  // to flash for the half-second before the brief you came back for arrived.
+  const [opening, setOpening] = useState(false);
+  const [docsPending, setDocsPending] = useState(Boolean(conversationId));
   // Streamed brief text also lives in a ref: the event callback would
   // otherwise close over a stale value on every chunk.
   const briefRef = useRef("");
@@ -103,6 +127,8 @@ export default function InsightsWorkspace({
           },
         ].sort((a, b) => a.version - b.version));
         setSelected(-1);  // a new version is what you want to be looking at
+        setOpenedGroup(LIVE_GROUP);
+        setDocsRefresh((n) => n + 1);
         setPane("brief");
         break;
       }
@@ -110,10 +136,9 @@ export default function InsightsWorkspace({
         // The runner emits one per data pull, labelled with the window it
         // covers. Anything else with a step_id is ignored rather than guessed at.
         if (event.step_id === InsightsStep.COLLECT_SOURCE_DATA) {
-          setFetched((prev) => [
-            ...prev,
-            { label: event.label || "", ok: event.status === "success", error: event.error || "" },
-          ]);
+          const row = { label: event.label || "", ok: event.status === "success", error: event.error || "" };
+          // A reattached run replays pulls the stored history already listed.
+          setFetched((prev) => (prev.some((f) => f.label === row.label && f.ok === row.ok) ? prev : [...prev, row]));
         }
         break;
       default:
@@ -130,6 +155,9 @@ export default function InsightsWorkspace({
     handleKey: `${AGENT_TYPE}:${projectId || ""}:${conversationId || `q:${initialPrompt}`}`,
     hydrateThreadState: true,
     onEvent,
+    // The Data pane on a reopened thread: every pull is in the stored tool
+    // traffic, so it lists the same rows it showed live.
+    onHydrate: (events) => setFetched(fetchedFromEvents(events)),
   });
 
   useEffect(() => {
@@ -137,48 +165,90 @@ export default function InsightsWorkspace({
     if (level) setAutonomy(level);
   }, [agent.started?.autonomy]);
 
-  // A stored document in the right pane, from the desk, where opening a brief
-  // means opening the thread that argued for it.
+  // Put a stored document in the right pane: every version of its group,
+  // newest selected. `id` is any version's id; the route resolves the group.
+  const openGroup = useCallback(async (id) => {
+    const token = ++openTokenRef.current;
+    setOpening(true);
+    try {
+      const rows = await listArtifactVersions(id);
+      const ordered = [...rows].sort((a, b) => a.version - b.version);
+      const loaded = await Promise.all(
+        ordered.map(async (row) => {
+          let content = "";
+          try {
+            content = row.has_content ? await getArtifactContent(row.id) : "";
+          } catch {
+            /* a version whose bytes are gone still belongs in the picker */
+          }
+          return {
+            version: row.version,
+            label: `Version ${row.version}`,
+            title: row.title || "Growth brief",
+            // The stored MIME type is authoritative; sniffing is the fallback
+            // for rows written before content_type was recorded.
+            format: (row.content_type || "").includes("html") ? "html" : sniffFormat(content),
+            content,
+          };
+        }),
+      );
+      if (token !== openTokenRef.current) return;
+      setVersions(loaded);
+      setSelected(-1);
+      setOpenedGroup(ordered[0]?.group_id || id);
+      setPane("brief");
+    } catch {
+      /* the thread still opens; the pane just starts empty */
+    } finally {
+      // Only the newest open owns the flag; a superseded one must not clear
+      // it under the load that replaced it.
+      if (token === openTokenRef.current) setOpening(false);
+    }
+  }, []);
+
+  // From the desk, where opening a brief means opening the thread that
+  // argued for it: the named document goes straight into the pane.
   useEffect(() => {
-    if (!artifactId) return undefined;
+    if (artifactId) openGroup(artifactId);
+  }, [artifactId, openGroup]);
+
+  // Reopening a thread by id alone used to leave the pane empty however many
+  // briefs the thread had written — only the desk's ?artifact= link loaded
+  // one. Now the thread's documents are listed on open: one is shown as it
+  // was, several become the gallery, and nothing needs a click to see the
+  // brief you came back for.
+  useEffect(() => {
+    if (!conversationId || !projectId) {
+      setDocsPending(false);
+      return undefined;
+    }
     let cancelled = false;
-    (async () => {
-      try {
-        const rows = await listArtifactVersions(artifactId);
-        const ordered = [...rows].sort((a, b) => a.version - b.version);
-        const loaded = await Promise.all(
-          ordered.map(async (row) => {
-            let content = "";
-            try {
-              content = row.has_content ? await getArtifactContent(row.id) : "";
-            } catch {
-              /* a version whose bytes are gone still belongs in the picker */
-            }
-            return {
-              version: row.version,
-              label: `Version ${row.version}`,
-              title: row.title || "Growth brief",
-              // The stored MIME type is authoritative; sniffing is the fallback
-              // for rows written before content_type was recorded.
-              format: (row.content_type || "").includes("html") ? "html" : sniffFormat(content),
-              content,
-            };
-          }),
-        );
+    listArtifacts({ projectId, agentType: AGENT_TYPE, conversationId })
+      .then((rows) => {
         if (cancelled) return;
-        setVersions((prev) => {
-          const byVersion = new Map(loaded.map((v) => [v.version, v]));
-          for (const v of prev) byVersion.set(v.version, v);
-          return [...byVersion.values()].sort((a, b) => a.version - b.version);
-        });
-        setSelected(-1);
-        setPane("brief");
-      } catch {
-        /* the thread still opens; the pane just starts empty */
-      }
-    })();
+        const list = Array.isArray(rows) ? rows : [];
+        setDocs(list);
+        if (!artifactId && list.length === 1 && openedGroupRef.current === null) {
+          openGroup(list[0].id);
+        }
+      })
+      .catch(() => {
+        /* the list is a convenience; the thread still opens */
+      })
+      .finally(() => {
+        if (!cancelled) setDocsPending(false);
+      });
     return () => { cancelled = true; };
-  }, [artifactId]);
+  }, [conversationId, projectId, artifactId, docsRefresh, openGroup]);
+
+  function showGallery() {
+    openTokenRef.current += 1;  // drop a load still in flight
+    setOpening(false);
+    setOpenedGroup(null);
+    setVersions([]);
+    setSelected(-1);
+    setPane("brief");
+  }
 
   function handleRetry() {
     setFetched([]);
@@ -189,6 +259,12 @@ export default function InsightsWorkspace({
 
   const shown = versions.length ? versions[selected < 0 ? versions.length - 1 : selected] : null;
   const hasBrief = Boolean(shown) || Boolean(writing);
+  // A document on its way in, or a reopened thread whose list has not come
+  // back yet: the pane keeps a brief's shape rather than declaring it empty.
+  const loadingBrief = !writing && (opening || (docsPending && !hasBrief));
+  // The gallery is for choosing between several; a single document, or one
+  // being written right now, is simply shown.
+  const gallery = docs.length > 1 && openedGroup === null && !writing && !opening;
 
   // A connect asked for mid-run comes back to this thread, resumed — never to
   // the ?q= form of this page, which would ask the question again from scratch.
@@ -247,12 +323,23 @@ export default function InsightsWorkspace({
         <PaneTab active={pane === "data"} onClick={() => setPane("data")}>
           Data{fetched.length ? ` · ${fetched.length}` : ""}
         </PaneTab>
+        {pane === "brief" && docs.length > 1 && openedGroup !== null && (
+          <button
+            type="button"
+            onClick={showGallery}
+            className="ml-auto rounded-md px-2 py-1 text-2xs text-muted-foreground hover:text-foreground"
+          >
+            All documents · {docs.length}
+          </button>
+        )}
         {pane === "brief" && versions.length > 1 && (
           <select
             value={selected < 0 ? versions.length - 1 : selected}
             aria-label="Artifact version"
             onChange={(e) => setSelected(Number(e.target.value))}
-            className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-2xs"
+            className={`rounded-md border border-input bg-background px-2 py-1 text-2xs ${
+              docs.length > 1 ? "ml-1" : "ml-auto"
+            }`}
           >
             {versions.map((v, i) => (
               <option key={v.version} value={i}>
@@ -267,7 +354,13 @@ export default function InsightsWorkspace({
           more of the page: the chat and the pane were the same white, and
           the artifact read as a continuation of the transcript. */}
       <div className={`min-h-0 flex-1 overflow-y-auto ${pane === "brief" ? "bg-muted/40" : ""}`}>
-        {pane === "brief" ? <BriefPane brief={shown} writing={writing} empty={!hasBrief} /> : <DataPane fetched={fetched} />}
+        {pane !== "brief" ? (
+          <DataPane fetched={fetched} />
+        ) : gallery ? (
+          <ArtifactGallery docs={docs} onOpen={(doc) => openGroup(doc.id)} />
+        ) : (
+          <BriefPane brief={shown} writing={writing} empty={!hasBrief} loading={loadingBrief} />
+        )}
       </div>
     </div>
   );
@@ -279,7 +372,7 @@ export default function InsightsWorkspace({
       storageKey="insights_split_w"
       leftLabel="Chat"
       rightLabel="Artifact"
-      rightStatus={writing || agent.isRunning ? "busy" : hasBrief ? "ready" : "idle"}
+      rightStatus={writing || agent.isRunning || loadingBrief ? "busy" : hasBrief ? "ready" : "idle"}
     />
   );
 }
@@ -341,7 +434,7 @@ function PaneTab({ active, onClick, children }) {
 // Exported for /preview only, the UsagePanel/UsageEmpty precedent: these two
 // panes' empty states are the states a reviewer most needs to open and the
 // ones no fixture-free gallery could otherwise reach.
-export function BriefPane({ brief, writing, empty }) {
+export function BriefPane({ brief, writing, empty, loading }) {
   // While it streams there is no parsed version yet, so the front matter has
   // to come off here and the format has to be read from the bytes.
   const live = useMemo(() => stripFrontMatter(writing), [writing]);
@@ -357,6 +450,23 @@ export function BriefPane({ brief, writing, empty }) {
           ) : (
             <pre className="whitespace-pre-wrap p-3 text-xs">{live}</pre>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && !brief) {
+    return (
+      // The pane's own anatomy, drawn in skeleton: the header strip, then a
+      // document card. It swaps texture for words when the bytes land, and
+      // never claims the thread is empty while the answer is still on its way.
+      <div>
+        <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2.5">
+          <Skeleton className="h-3 w-40 rounded" />
+          <Skeleton className="h-2.5 w-16 rounded" />
+        </div>
+        <div className="m-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+          <SkeletonDocument label="Loading the brief" />
         </div>
       </div>
     );

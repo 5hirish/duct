@@ -381,7 +381,10 @@ places and nowhere else:
   cleanup, transcript hydration before the live stream, the reconnect loop
   (reattach to the live session, then resume the conversation), pause answers
   by `interrupt_id`, and the per-tab reload handle (`lib/agentSessionHandle.js`)
-  that lets a reloaded tab reattach instead of re-running the prompt.
+  that lets a reloaded tab reattach instead of re-running the prompt. Its
+  `onHydrate` hands a workspace the stored rows verbatim, for a pane the
+  transcript does not cover — insights rebuilds its Data pane from the tool
+  traffic with `lib/insightsHistory.js` rather than fetching the thread twice.
 
 A workspace composes `useAgentSession` + `workspace/AgentChat` +
 `workspace/SplitWorkspace` and keeps only what its agent owns: the right pane,

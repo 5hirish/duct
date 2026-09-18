@@ -34,6 +34,8 @@ import DeskCards from "@/components/insights/desk/DeskCards";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { BriefPane, DataPane } from "@/components/insights/InsightsWorkspace";
+import { fetchedFromEvents } from "@/lib/insightsHistory";
+import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
@@ -271,6 +273,22 @@ position on every query it ranked for.
 
 > A number nobody checked should never be presented with the same confidence as one that was.
 `;
+
+const GALLERY_HTML = `<!doctype html><html><head><style>
+body{font-family:system-ui;margin:0;padding:32px;color:black;background:white}h1{font-size:28px;margin:0 0 8px}
+.k{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.k div{border:1px solid silver;border-radius:10px;padding:14px}.k b{display:block;font-size:24px}
+p{line-height:1.5;max-width:60ch}.bar{height:10px;background:darkorange;border-radius:5px;width:64%;margin:6px 0 16px}
+</style></head><body><h1>Paid ads, week of 1 Sept</h1><p>Spend is up 12% on flat conversions; the new broad-match campaign is where the money went.</p>
+<div class="k"><div>Spend<b>€4,120</b></div><div>Conversions<b>61</b></div><div>CPA<b>€67.5</b></div></div>
+<div class="bar"></div><p>Three of the four new ad groups have no negative keywords yet, and the search-terms report shows them matching on competitor names.</p></body></html>`;
+
+const GALLERY_DOCS = [
+  { id: "g1", group_id: "g1", title: "Organic growth, week of 8 Sept", version: 3, version_count: 3, content_type: "text/markdown", has_content: true, created_at: new Date(Date.now() - 2 * 3600_000).toISOString() },
+  { id: "g2", group_id: "g2", title: "Paid ads, week of 1 Sept", version: 1, version_count: 1, content_type: "text/html", has_content: true, created_at: new Date(Date.now() - 6 * 86400_000).toISOString() },
+  { id: "never", group_id: "g3", title: "Landing-page audit, 24 Aug", version: 2, version_count: 2, content_type: "text/markdown", has_content: true, created_at: new Date(Date.now() - 20 * 86400_000).toISOString() },
+];
+const GALLERY_CONTENT = { g1: BRIEF_MARKDOWN, g2: GALLERY_HTML };
 
 const DESK_ACTIVITY = [
   { id: "a1", category: "check", action: "checked_search_console", summary: LONG_TITLE, source: "auto", created_at: "2026-09-09T05:57:00Z" },
@@ -929,6 +947,39 @@ export const SCENES = [
     ),
   },
   {
+    id: "data-pane-reopened",
+    state: "three pulls, one failed, rebuilt from history",
+    group: "InsightsWorkspace",
+    title: "The Data pane on a reopened thread",
+    note: "What the pane lists after a thread is reopened. It came back empty on any reopened thread until now, because it filled only from live step events; these rows are read back from the stored tool traffic (lib/insightsHistory) through the same fixture shape the backend records, so what you see here is what the transcript has.",
+    render: () => (
+      <div className="max-w-xl">
+        <DataPane
+          fetched={fetchedFromEvents([
+            { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t1", input: { entity_id: "gsc_queries" } } },
+            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t1", output: JSON.stringify({ status: "ok", entity_id: "gsc_queries", date_from: "2026-08-20", date_to: "2026-09-17" }) } },
+            { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t2", input: { entity_id: "ga4_traffic" } } },
+            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t2", output: JSON.stringify({ status: "ok", entity_id: "ga4_traffic", date_from: "2026-08-20", date_to: "2026-09-17" }) } },
+            { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t3", input: { entity_id: "google_ads_campaigns" } } },
+            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t3", output: JSON.stringify({ status: "reauth_required", entity_id: "google_ads_campaigns", date_from: "2026-08-20", date_to: "2026-09-17", message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it on the Connections page." }) } },
+          ])}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "brief-loading",
+    state: "a document on its way in",
+    group: "InsightsWorkspace",
+    title: "The brief, loading",
+    note: "A reopened thread while its document list or the brief's versions are still in flight. Used to flash \"Nothing written yet\" for the half-second before the brief arrived; now it holds the pane's own shape in the shimmer every wait shares (ui/skeleton, styles/skeleton.css). Reduced motion keeps the blocks and drops the sweep.",
+    render: () => (
+      <div className="max-w-3xl">
+        <BriefPane loading />
+      </div>
+    ),
+  },
+  {
     id: "brief-markdown",
     state: "a written markdown brief",
     group: "InsightsWorkspace",
@@ -944,6 +995,24 @@ export const SCENES = [
             format: "markdown",
             content: BRIEF_MARKDOWN,
           }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "artifact-gallery",
+    state: "three documents · one still loading",
+    group: "InsightsWorkspace",
+    title: "A thread with several documents",
+    note: "What the Artifact pane shows when a reopened thread has written more than one brief: portrait cards with the top of the real document drawn small inside, then title, version and age. Clicking one opens it in the pane. A thread with exactly one brief skips this and shows it directly. Reopening by thread id alone used to show nothing at all, whatever the thread had written.",
+    render: () => (
+      <div className="@container max-w-3xl">
+        <ArtifactGallery
+          docs={GALLERY_DOCS}
+          onOpen={() => {}}
+          loadContent={(id) =>
+            id === "never" ? new Promise(() => {}) : Promise.resolve(GALLERY_CONTENT[id])
+          }
         />
       </div>
     ),
