@@ -17,7 +17,7 @@ runs this skill (Claude Code, Codex, OpenCode, a person) is the "other
 agent"; the ledger records which one, so over time it says how Duct's
 insights agent compares with a frontier agent given the same inputs.
 
-**Rubric v1.** Bump the version and log the change in the ledger when a
+**Rubric v1.1.** Bump the version and log the change in the ledger when a
 dimension is added or redefined.
 
 ## Ground rules
@@ -134,12 +134,27 @@ moves nothing is the cheapest possible way to learn a proposal was a guess.
 
 ## Phase 3. Grade
 
-Now read Duct's `assistant` rows and `artifacts/`. Score every dimension
-1 to 5 for Duct **and for your attempt**, each with a one-line reason and
-evidence (`[seq]` references, artifact line numbers, tool file names). A 5
-is "nothing to improve", a 3 is "usable with a caveat", a 1 is "wrong or
-missing". Grade your own attempt as hard as Duct's and say where you could
-not be objective.
+Now read Duct's `assistant` rows and `artifacts/`.
+
+**First, the side by side** (rubric v1.1). Before scoring, put the two
+chat replies in full and the first screen of each brief into the record,
+verbatim, and fill the counted-evidence table in `record-template.md`:
+words, table rows, figures cited, totals present, findings, actions with
+an expected effect, "could not check" bullets and how many are template,
+and audit-speak the person should never see. The first audit scored two
+briefs 4 and 4 on style and 3 and 4 on information when one had twice
+the figures, totals the other lacked, and eight template bullets the
+other did not; a 1 to 5 score with one line of evidence flattened that
+into "close". The counts are what the maintainer reads first, and the
+scores below are their explanation.
+
+Then score every dimension 1 to 5 for Duct **and for your attempt**, each
+with a one-line reason and evidence (`[seq]` references, artifact line
+numbers, tool file names). A 5 is "nothing to improve", a 3 is "usable
+with a caveat", a 1 is "wrong or missing". Grade your own attempt as hard
+as Duct's and say where you could not be objective. Information and Style
+scores must be consistent with the counts: a brief with half the figures
+and a pasted template does not score within one point of the other.
 
 **Run** (how the agent worked)
 
