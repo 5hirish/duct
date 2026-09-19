@@ -42,6 +42,16 @@ export function isSvgArtifact(row) {
 }
 
 /**
+ * Whether the thumbnail can draw this row at all. A structured report or a
+ * JSON table is bytes the document renderers would show as source, which
+ * is a wall of braces at 40% scale; those rows get the icon instead.
+ */
+export function hasThumbnail(row) {
+  const ct = (row?.content_type || "").toLowerCase();
+  return ct === "text/markdown" || ct === "text/html" || ct === "image/svg+xml";
+}
+
+/**
  * The top of a document, drawn at thumbnail scale inside a clipped box.
  * `html` picks the renderer; `content` is the whole document or a prefix.
  */
@@ -92,7 +102,7 @@ export function DocumentThumbnail({ content, html = false, svg = false, classNam
  * of its group, with `version_count`); `loadContent` fetches its bytes for
  * the thumbnail and is a prop so /preview can hand in a fixture.
  */
-export function ArtifactCard({ doc, onOpen, loadContent = getArtifactContent }) {
+export function ArtifactCard({ doc, onOpen, loadContent = getArtifactContent, label = "" }) {
   const [content, setContent] = useState(null);
   const [failed, setFailed] = useState(false);
 
@@ -100,7 +110,7 @@ export function ArtifactCard({ doc, onOpen, loadContent = getArtifactContent }) 
     let cancelled = false;
     setContent(null);
     setFailed(false);
-    if (!doc.has_content) {
+    if (!doc.has_content || !hasThumbnail(doc)) {
       setFailed(true);
       return undefined;
     }
@@ -139,6 +149,12 @@ export function ArtifactCard({ doc, onOpen, loadContent = getArtifactContent }) 
           {title}
         </button>
         <span className="flex items-center gap-2 text-2xs text-muted-foreground">
+          {label && (
+            <>
+              <span className="rounded-full border border-border px-1.5 py-px capitalize">{label}</span>
+              <span aria-hidden="true">·</span>
+            </>
+          )}
           <span>{versionLabel}</span>
           <span aria-hidden="true">·</span>
           <span>{relativeTime(doc.created_at)}</span>
@@ -148,12 +164,20 @@ export function ArtifactCard({ doc, onOpen, loadContent = getArtifactContent }) 
   );
 }
 
-/** The cards, on a responsive grid sized by the pane rather than the window. */
-export function ArtifactGallery({ docs, onOpen, loadContent = getArtifactContent }) {
+/** The cards, on a responsive grid sized by the pane rather than the window.
+ * `labelFor` gives a card its small pill (the library shows the kind; a
+ * thread's pane, where every card is a brief, shows none). */
+export function ArtifactGallery({ docs, onOpen, loadContent = getArtifactContent, labelFor, className = "p-4" }) {
   return (
-    <div className="grid grid-cols-2 gap-4 p-4 @lg:grid-cols-3 @2xl:grid-cols-4">
+    <div className={cn("grid grid-cols-2 gap-4 @lg:grid-cols-3 @2xl:grid-cols-4", className)}>
       {docs.map((doc) => (
-        <ArtifactCard key={doc.group_id || doc.id} doc={doc} onOpen={onOpen} loadContent={loadContent} />
+        <ArtifactCard
+          key={doc.group_id || doc.id}
+          doc={doc}
+          onOpen={onOpen}
+          loadContent={loadContent}
+          label={labelFor ? labelFor(doc) : ""}
+        />
       ))}
     </div>
   );
