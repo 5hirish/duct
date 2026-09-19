@@ -65,21 +65,34 @@ app keeps talking to Railway. Adding it back is what `tauri.selfhost.conf.json`
 does.
 
 You want it locally when developing against a local backend, and in any build
-meant to run without Duct's infrastructure. Build it before `tauri dev` or a
-`build:selfhost`, because `bundle.resources` copies the output directory
-verbatim and a stale or missing build produces an app that opens straight to an
-error screen:
+meant to run without Duct's infrastructure. `bundle.resources` copies the output
+directory verbatim, so a stale or missing build produces an app that opens
+straight to an error screen — which is why the `pre*` hooks on every
+sidecar-shipping script run `scripts/ensure-sidecar-fresh.mjs` first. It
+compares the freeze against the backend's newest `.py`, spec, lockfile and
+`pyproject.toml`, and **refreezes in place** when the freeze is behind, so a
+`npm run build:dev` on a changed backend just takes three minutes longer instead
+of stopping. `DUCT_SKIP_SIDECAR_CHECK=1` bundles a known-stale freeze anyway.
+
+The first freeze is the one you run by hand — until `backend/dist/duct-sidecar`
+exists the hook assumes you meant the hosted API and says nothing:
 
 ```bash
-cd backend
-poetry install --with dev
-poetry run pyinstaller duct_sidecar.spec --noconfirm   # ~3 min, ~390 MB on arm64
+cd backend && poetry install --with dev
+npm --prefix desktop run sidecar   # ~3 min, ~480 MB on arm64
 ```
+
+Use that rather than calling `pyinstaller` yourself. PyInstaller deletes its
+output directory before rebuilding, and a dev build resolves
+`backend/dist/duct-sidecar/` at runtime rather than carrying its own copy, so an
+in-place freeze strips the binary out from under a sidecar a running app is
+executing. The script stages the build and renames it into place instead.
 
 That writes `backend/dist/duct-sidecar/`. The shell spawns the binary inside it,
 reads one JSON handshake line (loopback URL, port, per-install API key, data
-dir) and hands it to the web app, which points its API base there. Rebuild it
-whenever backend code changes — the frozen copy does not pick up edits.
+dir) and hands it to the web app, which points its API base there. The frozen
+copy does not pick up edits, so after that first one the freshness hook rebuilds
+it for you whenever backend code changes.
 
 Runtime state lives in the per-user data dir — `~/Library/Application Support/ai.getduct.desktop/`
 on macOS, `%APPDATA%\Duct` on Windows, `~/.local/share/duct` on Linux
@@ -115,12 +128,18 @@ falls back to `http://localhost:8002` outside production:
 cd backend && poetry run uvicorn server:app --port 8002 --reload
 ```
 
-From VS Code, **`Duct: Desktop (local sidecar)`** runs the sidecar shape, and
-**`Duct: Desktop (tauri dev — no sign-in) + API`** runs uvicorn on 8002 plus
-`dev:local` in one go, stopping uvicorn on exit — both in `.vscode/launch.json`.
-Zed runs neither (it implements no `compounds`); its equivalents are the
-**`Desktop: Tauri dev (sidecar backend)`** and **`Duct: Desktop + API`** tasks
-in `.zed/tasks.json`, and **`Duct: stop everything`** when you are done.
+From VS Code (`.vscode/launch.json`), **`Desktop: Tauri dev (sidecar
+backend)`** runs the sidecar shape without sign-in, **`Duct: Desktop + API`**
+runs uvicorn on 8002, the Next dev server and the registered dev bundle, and
+**`Duct: Desktop + API + Phoenix`** is the same with every agent turn, model
+call and tool call traced into Phoenix on 6006 — the sidecar learns the
+collector through a second `open --env`, since launchd inherits nothing from
+the shell. Phoenix's MCP server (`.mcp.json`) is then up too, so an agent can
+read the traces of a slow run rather than the transcript table.
+
+Zed runs none of the compounds (it implements no `compounds`); its equivalents
+are the **`Desktop: Tauri dev (sidecar backend)`** and **`Duct: Desktop + API`**
+tasks in `.zed/tasks.json`, plus **`Duct: stop everything`** when you are done.
 
 Keychain `invoke` works from the dev server because `http://localhost:3003` is
 already listed under `remote.urls` in `src-tauri/capabilities/default.json`.

@@ -112,10 +112,24 @@ const RULES = [
     allow: new Map(),
   },
   {
+    id: "no-hand-rolled-scrollbar",
+    why: "Scrollbars are defined once in styles/base.css. The two sites this replaced disagreed with each other and with the app: the agent transcript had a webkit-only 3px thumb, and the project page carried `scrollbar-thin`, a plugin class nothing here installs, so it styled nothing while looking like a decision.",
+    fix: "Nothing. The global rule in styles/base.css already covers a new scroll area; change it there if the treatment itself is wrong.",
+    re: /::-webkit-scrollbar|\bscrollbar-(?:thin|thumb|track|none)\b/g,
+    allow: new Map(),
+  },
+  {
     id: "no-loader2",
     why: "ui/spinner exists because twelve hand-rolled rings were consolidated into it. Seventeen Loader2s arrived afterwards, because nothing checked.",
     fix: "<Spinner /> from components/ui/spinner — it takes its colour from currentColor.",
     re: /\bLoader2\b/g,
+    allow: new Map(),
+  },
+  {
+    id: "no-hand-rolled-skeleton",
+    why: "ui/skeleton is the one loading placeholder, and its look (a sheen over the muted ground, styles/skeleton.css) is defined once. Four content grids had rolled their own pulsing bg-muted boxes beside it, so the same wait looked like two different apps.",
+    fix: "<Skeleton className=\"aspect-[4/5]\" /> from components/ui/skeleton, or SkeletonText / SkeletonList / SkeletonDocument for the three shapes that kept being retyped.",
+    re: /\banimate-pulse\b(?=[^"'`]*\bbg-muted(?![\w-]))|\bbg-muted(?:\/\d+)?(?![\w-])(?=[^"'`]*\banimate-pulse\b)/g,
     allow: new Map(),
   },
   {

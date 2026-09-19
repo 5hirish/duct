@@ -210,7 +210,7 @@ it is a claim about the code, not a way to quiet the check.
   follows the project's output language when it has one.
 - `lib/userPreferences.js` — what is left after the profile moved to the
   server: the per-run dials the composer writes (`thinking`, `tier`,
-  `context_compression`), plus the three fields an agent request still carries
+  `preferred_artifact_format`, `context_compression`), plus the three fields an agent request still carries
   for signed-out runs, mirrored from the profile rather than edited here
 - `lib/analytics-client.js` — how to load GTM and push events (never whether)
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
@@ -304,8 +304,9 @@ never tables, code, or column layouts.
 
 - `scripts/check-design-system.mjs` (`npm run check:design`) fails on
   `text-[Npx]`, a raw Tailwind palette class, a hex in JSX, `window.confirm`,
-  `Loader2`, `text-muted-foreground/NN`, and a viewport prefix in a container
-  region. It is a **ratchet**: each rule carries an `allow` map of the files
+  `Loader2`, `text-muted-foreground/NN`, a hand-rolled scrollbar
+  (`::-webkit-scrollbar`, `scrollbar-thin`), and a viewport prefix in a
+  container region. It is a **ratchet**: each rule carries an `allow` map of the files
   that are genuinely exceptions, each with its reason. Removing a name is
   permanent. Adding one is a decision you write a sentence for — it is not how
   you quiet the check, any more than adding a file to
@@ -331,7 +332,11 @@ the page.
 
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
-- Busy state: `ui/spinner`. Colour comes from `currentColor`.
+- Busy state: `ui/spinner`. Colour comes from `currentColor`. For content
+  that has a shape, the wait is `ui/skeleton` (`Skeleton`, `SkeletonText`,
+  `SkeletonList`, `SkeletonDocument`) — its shimmer is one CSS rule in
+  `styles/skeleton.css`, and `check:design` rejects a hand-rolled
+  `animate-pulse bg-muted` box.
 - Asking "are you sure?": `ui/confirm-dialog`. `useConfirm()` returns
   `{ confirm, dialog }` — await `confirm({ title, description, action,
   destructive })` and render `{dialog}`, which is deliberately close enough to
@@ -376,7 +381,10 @@ places and nowhere else:
   cleanup, transcript hydration before the live stream, the reconnect loop
   (reattach to the live session, then resume the conversation), pause answers
   by `interrupt_id`, and the per-tab reload handle (`lib/agentSessionHandle.js`)
-  that lets a reloaded tab reattach instead of re-running the prompt.
+  that lets a reloaded tab reattach instead of re-running the prompt. Its
+  `onHydrate` hands a workspace the stored rows verbatim, for a pane the
+  transcript does not cover — insights rebuilds its Data pane from the tool
+  traffic with `lib/insightsHistory.js` rather than fetching the thread twice.
 
 A workspace composes `useAgentSession` + `workspace/AgentChat` +
 `workspace/SplitWorkspace` and keeps only what its agent owns: the right pane,
@@ -441,7 +449,7 @@ Rules that follow:
   the insights desk shows. The composer (`workspace/ChatInput`) is the desk
   composer's card: text on top, a footer with the shell's `composerTools`
   chips (`workspace/ComposerDials` for insights: autonomy, thinking, model
-  tier) on the left and the ring and Send on the right. A retry counts down (`retrying.until`, anchored on this
+  tier, brief format) on the left and the ring and Send on the right. A retry counts down (`retrying.until`, anchored on this
   client's clock at receipt), and the tooltip carries cost and the cached
   share beside the tokens. After a compaction the ring is empty and says so
   (`usage.last.stale`) until the next call on the thread reports its size.

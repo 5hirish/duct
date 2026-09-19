@@ -20,8 +20,10 @@ mod chatgpt;
 mod sidecar;
 mod telemetry;
 
+use std::time::Duration;
+
 use keyring::{Entry, Error as KeyringError};
-use tauri::{AppHandle, Manager, Url};
+use tauri::{webview::PageLoadEvent, AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_opener::OpenerExt;
 
@@ -499,6 +501,28 @@ fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
 const MENU_RELOAD: &str = "view:reload";
 #[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
 const MENU_DEVTOOLS: &str = "view:devtools";
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+const MENU_PHOENIX: &str = "window:phoenix";
+
+/// Where the dev build's "Open Phoenix" item goes: the trace UI the sidecar
+/// exports to when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`open --env` in the
+/// launch config). Read from that variable so the menu and the exporter can
+/// never point at two different collectors, with the launch config's port as
+/// the fallback for a shell started without it.
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+const PHOENIX_DEFAULT_URL: &str = "http://localhost:6006";
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+const OTLP_TRACES_PATH: &str = "/v1/traces";
+
+#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
+fn phoenix_url() -> String {
+    std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
+        .ok()
+        .map(|raw| raw.trim().trim_end_matches('/').to_string())
+        .filter(|url| !url.is_empty())
+        .map(|url| url.trim_end_matches(OTLP_TRACES_PATH).to_string())
+        .unwrap_or_else(|| PHOENIX_DEFAULT_URL.to_string())
+}
 #[cfg(desktop)]
 const MENU_HOME: &str = "help:home";
 #[cfg(desktop)]
@@ -706,6 +730,26 @@ fn install_app_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
         None => menu.append(&view)?,
     }
 
+    // Dev builds only: the trace UI this sidecar exports to, one click from
+    // the window it is tracing. Appended to the default Window submenu rather
+    // than replacing it, so the OS-provided items (Minimize, Zoom, the window
+    // list on macOS) stay exactly as the platform draws them.
+    #[cfg(any(debug_assertions, feature = "devtools"))]
+    if let Some(window_menu) = items
+        .iter()
+        .find(|item| item.id().as_ref() == WINDOW_SUBMENU_ID)
+        .and_then(|item| item.as_submenu())
+    {
+        window_menu.append(&PredefinedMenuItem::separator(app)?)?;
+        window_menu.append(&MenuItem::with_id(
+            app,
+            MENU_PHOENIX,
+            "Open Phoenix Traces",
+            true,
+            None::<&str>,
+        )?)?;
+    }
+
     // Drop the default's Help before appending ours, or macOS shows two.
     if let Some(existing) = menu
         .items()?
@@ -740,6 +784,13 @@ fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
         let _ = app.opener().open_url(*url, None::<&str>);
         return;
     }
+    // Same rule as Help: a trace UI belongs in a real browser with tabs, not
+    // in the product's window.
+    #[cfg(any(debug_assertions, feature = "devtools"))]
+    if id == MENU_PHOENIX {
+        let _ = app.opener().open_url(phoenix_url(), None::<&str>);
+        return;
+    }
 
     let Some(window) = app.get_webview_window("main") else {
         return;
@@ -758,6 +809,118 @@ fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
         }
         _ => {}
     }
+}
+
+/// The splash window, shown while the hosted app loads.
+const SPLASH_LABEL: &str = "splash";
+
+/// How long the splash waits before revealing the main window anyway.
+///
+/// `on_page_load` is the happy path, but it never fires if the hosted app is
+/// unreachable — offline, DNS down, the host erroring. A hidden main window
+/// behind a splash that never dismisses is an app with no way in and no way to
+/// quit but Force Quit, which is strictly worse than the blank window this
+/// replaces. The deadline buys that guarantee for a few seconds of ugliness in
+/// the case where something is already broken.
+///
+/// Thirty seconds because this is an escape hatch, not a loading timer: a debug
+/// build on a busy machine was measured taking 5.5 s to finish loading the
+/// hosted app, and a deadline close to that reveals a half-loaded window on any
+/// slow network. The splash says so itself after six seconds, so the user is
+/// not left guessing while it waits.
+const SPLASH_DEADLINE: Duration = Duration::from_secs(30);
+
+/// Reveal the real window and dismiss the splash.
+///
+/// Idempotent on purpose: the page-load hook and the deadline race each other
+/// by design, and whichever arrives second finds the work already done. Every
+/// error is ignored for the same reason — a window that is already visible or
+/// already closed is the outcome we wanted.
+fn reveal_main_window(app: &AppHandle) {
+    if let Some(main) = app.get_webview_window("main") {
+        let _ = main.show();
+        let _ = main.set_focus();
+    }
+    if let Some(splash) = app.get_webview_window(SPLASH_LABEL) {
+        let _ = splash.close();
+    }
+}
+
+/// Marker file recording that the first-run greeting has been shown.
+const GREETED_MARKER: &str = "greeted";
+
+/// The splash window's size, normally and on a first launch.
+///
+/// The taller one holds the `salve` panel and the line under the wordmark. The
+/// size is fixed when the window is built, which is why the first-run decision
+/// is made here in Rust and handed to the page, rather than the page deciding
+/// for itself from storage the window has already been sized without.
+const SPLASH_SIZE: (f64, f64) = (380.0, 150.0);
+const SPLASH_FIRST_RUN_SIZE: (f64, f64) = (380.0, 330.0);
+
+/// Whether this is the first launch on this machine, claiming it if so.
+///
+/// Writes the marker up front rather than once the app has finished loading,
+/// because the two ways this can go wrong are not equal: a greeting missed
+/// after a crash on the very first launch costs nothing, and a greeting shown
+/// on every launch until one succeeds is a bug the user has to watch repeat.
+///
+/// Every failure answers "no" for the same reason. If the data directory
+/// cannot be found or written, the marker could not be recorded either, so
+/// greeting now would mean greeting again next time.
+///
+/// Takes the directory rather than looking it up so the decision can be tested
+/// without an app, an environment variable, or the real data directory.
+fn claim_first_run_in(dir: &std::path::Path) -> bool {
+    let marker = dir.join(GREETED_MARKER);
+    if marker.exists() {
+        return false;
+    }
+    if std::fs::create_dir_all(dir).is_err() {
+        return false;
+    }
+    std::fs::write(&marker, b"").is_ok()
+}
+
+/// `claim_first_run_in` against the real data directory.
+fn claim_first_run() -> bool {
+    telemetry::default_data_dir()
+        .map(|dir| claim_first_run_in(&dir))
+        .unwrap_or(false)
+}
+
+/// Open the splash window.
+///
+/// Built here rather than declared in `tauri.conf.json` because Tauri
+/// *replaces* `app.windows` when it merges a config: the dev and self-host
+/// configs each carry their own copy of that array, so a window declared in the
+/// base config would silently vanish from both. The Rust runs identically for
+/// all three build shapes, which is the same reason `sidecar::is_available`
+/// probes at runtime instead of being compiled two ways.
+fn open_splash(app: &AppHandle, first_run: bool) -> tauri::Result<()> {
+    let (width, height) = if first_run {
+        SPLASH_FIRST_RUN_SIZE
+    } else {
+        SPLASH_SIZE
+    };
+
+    let mut builder =
+        WebviewWindowBuilder::new(app, SPLASH_LABEL, WebviewUrl::App("index.html".into()))
+            .title("Duct")
+            .inner_size(width, height)
+            .resizable(false)
+            .decorations(false)
+            .center();
+
+    if first_run {
+        // An injected global rather than a query string: `WebviewUrl::App`
+        // takes a path, and a `?` in a path is a question about encoding this
+        // does not need to answer. The script runs before the document's own.
+        builder = builder.initialization_script("window.__DUCT_FIRST_RUN__ = true;");
+    }
+
+    builder.build()?;
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -786,8 +949,14 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
         // The deep link itself is forwarded for us; all that is left is to put
-        // the existing window in front of the user.
-        if let Some(window) = app.get_webview_window("main") {
+        // the existing window in front of the user. Which window that is
+        // depends on timing: until the hosted app finishes loading, `main` is
+        // still hidden, and focusing a hidden window activates the app with
+        // nothing on screen. Prefer whatever is actually visible.
+        let visible_main = app
+            .get_webview_window("main")
+            .filter(|w| w.is_visible().unwrap_or(false));
+        if let Some(window) = visible_main.or_else(|| app.get_webview_window(SPLASH_LABEL)) {
             let _ = window.unminimize();
             let _ = window.set_focus();
         }
@@ -802,7 +971,38 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .manage(SidecarState::default())
         .on_menu_event(handle_menu_event)
+        // The main window is configured hidden, so something has to reveal it.
+        // This fires for every navigation the app makes, not just the first;
+        // `reveal_main_window` is idempotent, so the later ones cost nothing.
+        .on_page_load(|webview, payload| {
+            if webview.label() == "main" && payload.event() == PageLoadEvent::Finished {
+                reveal_main_window(webview.app_handle());
+            }
+        })
         .setup(|app| {
+            // First, before anything else in setup: the whole point is to put
+            // pixels on screen while the network is still resolving. The main
+            // window points at the hosted app, which measured between 0.3 s and
+            // 2.3 s just to return the document, before a byte of script runs.
+            // Claimed before the window is built, not inside it: this writes
+            // to disk, and a reader of `open_splash` should not have to guess
+            // that opening a window spends the one first run this install has.
+            let first_run = claim_first_run();
+            if let Err(err) = open_splash(app.handle(), first_run) {
+                // A missing splash is cosmetic. A main window that stays hidden
+                // is not, so stop waiting for a page load and show it now.
+                eprintln!("duct: could not open the splash window: {err}");
+                reveal_main_window(app.handle());
+            }
+
+            // The deadline behind `SPLASH_DEADLINE`: a load that never finishes
+            // must not mean a window that never appears.
+            let deadline_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(SPLASH_DEADLINE);
+                reveal_main_window(&deadline_handle);
+            });
+
             // macOS registers the scheme from the bundle's Info.plist. Linux and
             // Windows register it from the *installer*, so a build that was run
             // rather than installed — `tauri dev`, a CI smoke test, an
@@ -883,6 +1083,46 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A directory that does not exist yet, so the test exercises the same
+    /// path a real first launch takes on a machine with no data directory.
+    fn scratch_dir(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "duct-test-{name}-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        dir
+    }
+
+    #[test]
+    fn the_greeting_is_claimed_once_and_never_again() {
+        let dir = scratch_dir("first-run");
+
+        assert!(claim_first_run_in(&dir), "the first launch is a first run");
+        assert!(
+            !claim_first_run_in(&dir),
+            "the second launch is not, or the greeting repeats forever"
+        );
+        assert!(dir.join(GREETED_MARKER).exists());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn an_unwritable_data_dir_is_not_a_first_run() {
+        // If the marker cannot be written, greeting now would mean greeting
+        // again on every launch, which is worse than never greeting at all.
+        // A path under a regular *file* cannot be created as a directory.
+        let blocker = scratch_dir("blocked");
+        std::fs::create_dir_all(blocker.parent().unwrap()).unwrap();
+        std::fs::write(&blocker, b"not a directory").unwrap();
+
+        assert!(!claim_first_run_in(&blocker.join("data")));
+
+        let _ = std::fs::remove_file(&blocker);
+    }
 
     fn target(link: &str) -> Option<(&'static str, String)> {
         deep_link_target(&Url::parse(link).expect("a well-formed link"))

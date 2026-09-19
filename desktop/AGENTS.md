@@ -19,9 +19,88 @@ carries all the code.
 
 ## Stack
 
-- **Tauri v2** (Rust core) + the system webview. No bundled frontend in the
-  alpha — the window loads the hosted URL (`app.getduct.ai`, set in
-  `src-tauri/tauri.conf.json`). GA may switch to a bundled static export.
+- **Tauri v2** (Rust core) + the system webview. The main window loads the
+  hosted URL (`app.getduct.ai`, set in `src-tauri/tauri.conf.json`). GA may
+  switch to a bundled static export.
+- **The main window starts hidden, behind a splash.** Loading a remote URL
+  means an empty frame for as long as the network takes — measured at 0.3–2.3 s
+  just to return the document, and 5.5 s to finish loading on a busy machine.
+  So `main` is `"visible": false` in all three configs, `desktop/src/` holds a
+  splash that paints with no network at all, and `on_page_load` shows the real
+  window and closes the splash once the app has loaded.
+
+  Three things here are load bearing:
+  - **The splash window is built in Rust (`open_splash`), not declared in
+    config.** Tauri *replaces* `app.windows` when merging a `--config` overlay,
+    and the dev and self-host configs each carry their own copy of that array —
+    a window declared only in the base config vanishes from both, silently.
+  - **`"visible": false` must be set in every config that defines `windows`**,
+    for the same reason. All three do.
+  - **`SPLASH_DEADLINE` reveals the window regardless after 30 s.**
+    `on_page_load` never fires if the hosted app is unreachable, and a hidden
+    main window behind a splash that never dismisses is an app with no way in
+    and no way out but Force Quit. Keep the deadline well clear of a real slow
+    load or it reveals a half-rendered window; the splash itself explains the
+    wait after six seconds.
+
+  `desktop/src/` is the `frontendDist`, and until this it was still the
+  unmodified `create-tauri-app` scaffold — a "Welcome to Tauri" page with a
+  greet form calling a command that does not exist. It shipped in every bundle
+  and was never shown.
+
+  **The splash has no subresources, and that is the design.** It exists to
+  paint before the network resolves, so it must render from one document: no
+  stylesheet request, no script file, no web font. The brand tokens are copied
+  from `site/assets/duct.css` by hand rather than imported, for that reason —
+  there are four, keep them in step. `salve.webp` is the single exception and
+  is loaded only on a first run (below).
+
+  **What fills the wait.** The status line under the bar holds a rotating
+  one-line aqueduct remark, and at `SLOW_AFTER_MS` (8 s) it stops and is
+  replaced by "Still connecting. Check your network." Two constraints on
+  anything added here:
+  - **One line at 380 px.** The row is a fixed 16 px so nothing shifts when the
+    slow message arrives; a wrapping line breaks that and a line nobody can
+    finish reading in a glance makes the wait feel *longer*, which is the
+    opposite of the point. The widest current line measures 291 px of 340 px
+    available.
+  - **It stops being funny at 8 s.** Past that something is actually wrong, and
+    a quip sitting on top of a real failure is the part users resent.
+
+  These strings are **English only and deliberately not translated.** The
+  splash has no i18n catalogue and cannot get one without adding the
+  subresource the window exists to avoid; it is pre-authentication, so there is
+  no `interface_language` to read yet either. A non-English user sees English
+  for two seconds. If that ever stops being acceptable, the fix is to drop the
+  line entirely for non-English locales, not to fetch a catalogue here.
+
+- **The first launch is greeted once.** `claim_first_run` looks for a `greeted`
+  marker in the app data dir; if it is absent it writes one and returns true,
+  and `open_splash` then builds a 380×330 window (instead of 380×150) and
+  injects `window.__DUCT_FIRST_RUN__`, which makes the page show the `salve`
+  mosaic and the product line in place of the rotating remark.
+
+  - **Rust decides, not the page.** The window size is fixed when the window is
+    built, before a webview exists, so `localStorage` cannot be what answers
+    this. The injected global is used rather than a query string because
+    `WebviewUrl::App` takes a path and a `?` in a path is an encoding question
+    worth not asking. `?first=1` does the same thing when the file is opened
+    directly in a browser, which is the only way to review it without a build.
+  - **The marker is written up front, not on success.** A greeting missed after
+    a crash on the very first launch costs nothing; a greeting repeating every
+    launch until one succeeds is a bug the user watches happen. Every failure
+    path — no data dir, unwritable directory — answers "not a first run" for
+    the same reason: if the marker cannot be recorded, greeting now means
+    greeting again next time.
+  - **`desktop/src/salve.webp` is a copy of `app/public/art/mosaic/salve.webp`**
+    and can drift from it. It is duplicated because `frontendDist` is bundled
+    from `desktop/src/` alone. Re-copy it if the panel is regenerated.
+  - Why only here: `app/DESIGN.md` puts panels *where someone arrives*, and
+    says the rarer the surface the more it can afford. A splash is the least
+    rare surface in the product, so it earns the least — but a first launch is
+    the arrival `salve` was drawn for, and showing it every time would both
+    cost a 118 KB decode on the one surface that cannot afford it and wear out
+    an illustration whose whole meaning is "first run".
 - **Keychain** via the `keyring` crate; commands in `src-tauri/src/lib.rs`
   (`get_provider_key` / `set_provider_key` / `delete_provider_key`). The web app
   calls them through `window.__TAURI__.core.invoke` (`app/src/lib/providerKeys.js`).
@@ -134,11 +213,33 @@ carries all the code.
   SQLite in the per-user data dir, and prints one JSON handshake line the shell
   reads. The web app gets it via `get_sidecar_info` and repoints its API base
   (`app/src/lib/localBackend.js`), gated on the `localSidecar` capability.
-  Build it before bundling — `cd backend && poetry run pyinstaller
-  duct_sidecar.spec --noconfirm` — because `bundle.resources` copies
-  `backend/dist/duct-sidecar/` verbatim and a stale or missing build ships a
-  broken app. It is **onedir, never onefile**: a onefile binary unpacks to a
-  temp dir at startup and does not survive signing + notarization.
+  Build it with `npm --prefix desktop run sidecar`, because `bundle.resources`
+  copies `backend/dist/duct-sidecar/` verbatim and a stale or missing build
+  ships a broken app. After the first one you rarely will:
+  `scripts/ensure-sidecar-fresh.mjs` is a `pre*` hook on every
+  sidecar-shipping script and refreezes in the same command whenever the
+  backend has moved ahead; `DUCT_SKIP_SIDECAR_CHECK=1` opts out. The freeze is
+  **onedir, never onefile**: a onefile binary unpacks to a temp dir at startup
+  and does not survive signing + notarization.
+
+  **Never run `pyinstaller duct_sidecar.spec` at this directory directly.** It
+  deletes its output directory before rebuilding, and a dev build ships no
+  sidecar of its own — `tauri.dev.conf.json` sets no `bundle.resources`, so
+  `sidecar.rs` resolves `backend/dist/duct-sidecar/` at *runtime*. Freezing in
+  place therefore strips the binary and every dylib out from under a sidecar a
+  running app is executing. It presents as "Duct's local backend stopped
+  responding", which reads as an app bug and is not one. The script freezes to
+  `dist/.staging` and renames it into place, so the displaced directory stays
+  whole for whatever is still running from it and is swept on the next
+  refreeze.
+
+  **Stop what you started.** `open` hands the dev bundle to launchd, so no
+  debug session owns it, VS Code's Stop cannot close it, and no `postDebugTask`
+  can attach — every launch outlives the thing that launched it. The
+  `Duct: stop everything` task in `.vscode/tasks.json` is the one command that
+  clears all of it. Quit the app rather than killing it: a graceful quit
+  reaches `RunEvent::Exit`, which stops the sidecar, while SIGTERM to the shell
+  skips it and leaves an orphan holding its loopback port.
 - **Windows and Linux** ship from the same pipeline: NSIS on Windows, deb +
   AppImage on Linux. They still need their own runners even without the sidecar
   — Tauri bundles are not cross-compiled — and a *sidecar* build additionally

@@ -20,6 +20,17 @@
       "stopAll": true
     },
     {
+      "//": "The desktop stack with every agent turn, model call and tool call traced into Phoenix, and Phoenix's own MCP (.mcp.json → http://localhost:6006/mcp) up for an agent to query the traces. Phoenix is listed first so it is listening before the sidecar's first batch; the exporter would retry anyway, but the first turn's spans are the ones you launched this for. The API is the traced uvicorn variant so a browser tab against :8002 lands in the same trace store as the sidecar.",
+      "name": "Duct: Desktop + API + Phoenix",
+      "configurations": [
+        "Phoenix: OTEL traces UI (:6006)",
+        "Backend: FastAPI (uvicorn verbose)",
+        "App: dev server",
+        "Desktop: Duct Dev app (local env, traced)"
+      ],
+      "stopAll": true
+    },
+    {
       "//": "Dev-variant bundle against a locally-run Railway-shaped API. Registered .app, so the sign-in deep link works.",
       "name": "Duct: Desktop + API",
       "configurations": [
@@ -105,6 +116,14 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
+      "cwd": "${workspaceFolder}/desktop"
+    },
+    {
+      "//": "The local-env launch above, with the sidecar exporting spans to Phoenix on :6006. A second `--env` is the only way in: launchd does not inherit this shell, and putting OTEL_EXPORTER_OTLP_ENDPOINT in .env.local would turn tracing on for every desktop launch and log an export failure per batch whenever Phoenix is not running. `open --env` may be repeated (it rejects only single-letter names). Part of the 'Duct: Desktop + API + Phoenix' compound; on its own, start Phoenix first or the spans go nowhere.",
+      "name": "Desktop: Duct Dev app (local env, traced)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local\" --env \"OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:6006\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log · traces: http://localhost:6006'",
       "cwd": "${workspaceFolder}/desktop"
     },
     {

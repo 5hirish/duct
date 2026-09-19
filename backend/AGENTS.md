@@ -195,9 +195,13 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Observability:** Sentry error tracking; OpenTelemetry tracing of every
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
-  it is unset. Locally that is Phoenix: run the "Phoenix" launch config, set
-  the variable to `http://localhost:6006`, and every FetchData and verifier
-  dispatch is a span with its own latency. Every log line carries a request
+  it is unset. Locally that is Phoenix: the "Duct: App + API + Phoenix" and
+  "Duct: Desktop + API + Phoenix" launch compounds start it and point the
+  API (and, for the desktop one, the sidecar via a second `open --env`) at
+  `http://localhost:6006`, and every FetchData and verifier dispatch is a span
+  with its own latency. Phoenix's own MCP server is registered in `.mcp.json`
+  at `/mcp` on the same port, so an agent can read the traces of a slow run
+  instead of querying the transcript table. Every log line carries a request
   id (`[a1b2c3d4]`, from `X-Request-Id` when the caller sends one, minted
   otherwise, echoed in the response); an agent run logs under the id of the
   request that created its session, so one grep follows one press of Send.
@@ -677,6 +681,27 @@ don't fit.
   using belongs in `BLOCK_ORDER`, where its cache position is a decision
   somebody made on purpose.
 
+- `scripts/session_bundle.py` — pull one stored session (the context the
+  model read, every tool call with its payload, artifact versions, memories,
+  cost) into a folder for review; `make session-bundle ID=<conversation id>`
+  or `ID=list`. Read-only, redacts on the way out, and the folder is
+  customer data: it goes in the private audit home, never here. The
+  `session-audit` skill (`.agents/skills/session-audit/`) is the review
+  procedure built on it. The pull is only as good as what the recorder
+  wrote: `EventKind.CONTEXT` (one row per `run_session`, written by the
+  runner that composed the turn — the insights runner today) holds the
+  composed opening turn, its blocks and the system prompt's fingerprint,
+  because the USER row is only the sentence the person typed. A runner
+  that assembles its own turn and does not record a CONTEXT row cannot be
+  audited against what its model saw; give it one before relying on the
+  skill for that agent.
+- `scripts/session_replay.py` — re-run a bundled session on exactly its
+  own data with the current prompt and any model (`make session-replay
+  BUNDLE=<dir>`). FetchData is seeded from the bundle and the connectors
+  are closed (`replay=` in `build_data_tools_lc`: a pull the original never
+  made returns `not_in_replay`), no recorder, no persister, no memory or
+  execution tools. It is how a prompt proposal is checked against the run
+  that motivated it before it ships, and it spends a real model call.
 - `scripts/dump_prompts.py` — **regenerate after any prompt change**
   (`make dump-prompts`). It renders every agent's system prompt and a sample
   assembled turn to [`docs/engineering/agent-prompts.md`](../docs/engineering/agent-prompts.md),

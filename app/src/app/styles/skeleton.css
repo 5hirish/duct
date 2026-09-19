@@ -1,0 +1,54 @@
+/* --- skeleton --------------------------------------------------------------
+   The one look for "this is where content will be": ui/skeleton's `Skeleton`
+   and the shapes built on it (SkeletonText, SkeletonList, SkeletonDocument).
+
+   A sheen sweeping across a muted block, not the stock `animate-pulse` fade.
+   The fade reads as the block itself flickering; the sweep reads as light
+   passing over a surface that is already there, which is the promise a
+   skeleton makes — the layout is settled, only the words are in flight.
+   Every skeleton on a page shares one clock, so the sweep crosses the whole
+   page as one pass rather than a dozen blocks blinking out of step.
+
+   Nothing to install: it is one gradient and one keyframe. The sheen is the
+   page ground showing through in light (a soft white over warm grey), and a
+   little foreground lifted into the muted navy in dark — `--background`
+   would darken there, so the two themes borrow from opposite ends.
+   ------------------------------------------------------------------------- */
+
+.skeleton {
+  --skeleton-sheen: color-mix(in oklab, var(--background) 85%, transparent);
+  background-color: var(--muted);
+  background-image: linear-gradient(
+    100deg,
+    transparent 40%,
+    var(--skeleton-sheen) 50%,
+    transparent 60%
+  );
+  /* The image is three boxes wide so the band starts and ends fully off the
+     block: a sweep that fades in mid-surface looks like a rendering glitch. */
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+.dark .skeleton {
+  --skeleton-sheen: color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+/* The block stays, the light does not. base.css gates Tailwind's own
+   animate-* utilities the same way; this rule lives with the thing it gates. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
+}

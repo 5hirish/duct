@@ -665,6 +665,10 @@ msgstr "Una receta reutilizable — estructura de diapositivas, estilos de subt�
 msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
 msgstr "Una clave guardada ya está en uso. Pega una nueva para reemplazarla, o elige Eliminar clave para olvidarla."
 
+#: src/components/workspace/ComposerDials.jsx
+msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
+msgstr "Una página con estilo, con sus propios gráficos y tablas ordenables. Cuesta más escribir, se lee mejor, se envía como un solo archivo"
+
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
 msgstr "la cuenta de un compañero de equipo"
@@ -898,6 +902,11 @@ msgstr "todas las cuentas"
 #: src/components/audit/AuditReportV1.jsx
 msgid "All clear"
 msgstr "Todo despejado"
+
+#. placeholder {0}: docs.length
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents · {0}"
+msgstr "Todos los documentos · {0}"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
@@ -1371,6 +1380,10 @@ msgstr "La voz de marca se hereda; el tono la afina para el contenido."
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Brief"
 msgstr "Informe"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Brief: {label}"
+msgstr "Informe: {label}"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
@@ -2249,6 +2262,10 @@ msgstr "documento"
 msgid "Document"
 msgstr "Documento"
 
+#: src/components/artifacts/ArtifactCards.jsx
+msgid "Document preview"
+msgstr "Vista previa del documento"
+
 #: src/app/(app)/artifacts/page.jsx
 msgid "Documents"
 msgstr "Documentos"
@@ -2342,6 +2359,10 @@ msgstr "inicio de duct"
 #: src/components/ConnectionBanner.jsx
 msgid "Duct needs a connection. Your work is saved and will still be here."
 msgstr "Duct necesita una conexión. Tu trabajo está guardado y seguirá aquí."
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
+msgstr "Duct elige por informe: markdown para una lectura rápida, una página cuando el diseño o un gráfico lo justifica"
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
@@ -2653,6 +2674,10 @@ msgstr "Error al enviar"
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Fairly sure"
 msgstr "Bastante seguro"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
+msgstr "Rápido y más económico. Encabezados, texto y tablas; se pega en un documento"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Faster, lighter"
@@ -3050,6 +3075,10 @@ msgstr "guardado en el llavero de esta máquina"
 msgid "Hide {rightText}"
 msgstr "Ocultar {rightText}"
 
+#: src/components/insights/desk/DeskActivity.jsx
+msgid "Hide activity"
+msgstr "Ocultar actividad"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Hide changes"
 msgstr "Ocultar cambios"
@@ -3122,6 +3151,10 @@ msgstr "Cómo te gusta que trabajen contigo. Cada agente lee esto, en cada proye
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Hreflang"
 msgstr "Hreflang"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "HTML"
+msgstr "HTML"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "https://example.com"
@@ -3483,6 +3516,11 @@ msgstr "llms.txt"
 msgid "Load older activity"
 msgstr "Cargar actividad anterior"
 
+#: src/app/(app)/content/page.jsx
+#: src/app/(app)/loading.jsx
+msgid "Loading"
+msgstr "Cargando"
+
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Loading {many}…"
 msgstr "Cargando {many}…"
@@ -3490,6 +3528,14 @@ msgstr "Cargando {many}…"
 #: src/components/content/AccountsTab.jsx
 msgid "Loading accounts…"
 msgstr "Cargando cuentas…"
+
+#: src/app/(app)/activity/page.jsx
+msgid "Loading activity"
+msgstr "Cargando actividad"
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Loading artifacts"
+msgstr "Cargando artefactos"
 
 #: src/app/(app)/audit/seo/[sessionId]/page.jsx
 msgid "Loading audit session…"
@@ -3499,9 +3545,17 @@ msgstr "Cargando sesión de auditoría…"
 msgid "Loading brand context…"
 msgstr "Cargando contexto de marca…"
 
+#: src/app/(app)/execute/page.jsx
+msgid "Loading change sets"
+msgstr "Cargando conjuntos de cambios"
+
 #: src/lib/contentEvents.js
 msgid "Loading format + avatar libraries"
 msgstr "Cargando bibliotecas de formato + avatares"
+
+#: src/app/(app)/execute/page.jsx
+msgid "Loading guardrails"
+msgstr "Cargando límites"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Loading insight…"
@@ -3510,6 +3564,11 @@ msgstr "Cargando hallazgo…"
 #: src/components/ProjectMembers.jsx
 msgid "Loading members…"
 msgstr "Cargando miembros…"
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Loading memories"
+msgstr "Cargando memorias"
 
 #: src/components/models/ModelPicker.jsx
 msgid "Loading models…"
@@ -3536,6 +3595,19 @@ msgstr "Cargando proyecto"
 msgid "Loading session…"
 msgstr "Cargando sesión…"
 
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Loading the artifact"
+msgstr "Cargando el artefacto"
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Loading the project"
+msgstr "Cargando el proyecto"
+
+#: src/app/(app)/insights/session/page.jsx
+msgid "Loading the thread"
+msgstr "Cargando el hilo"
+
 #: src/lib/contentEvents.js
 msgid "Loading topic + brand context"
 msgstr "Cargando tema + contexto de marca"
@@ -3553,18 +3625,8 @@ msgid "Loading your models…"
 msgstr "Cargando tus modelos…"
 
 #: src/app/(app)/activity/page.jsx
-#: src/app/(app)/artifacts/[artifactId]/page.jsx
-#: src/app/(app)/artifacts/page.jsx
-#: src/app/(app)/content/page.jsx
-#: src/app/(app)/execute/page.jsx
-#: src/app/(app)/insights/session/page.jsx
-#: src/app/(app)/loading.jsx
-#: src/app/(app)/project/[projectId]/memory/page.jsx
-#: src/app/(app)/project/[projectId]/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(auth)/page.js
-#: src/components/artifacts/ArtifactRenderer.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "Loading…"
 msgstr "Cargando…"
 
@@ -3633,6 +3695,10 @@ msgstr "Mapeando temas durante 30 días…"
 #: src/components/audit/AuditReport.jsx
 msgid "Mapping your site structure"
 msgstr "Mapeando la estructura de tu sitio"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Markdown"
+msgstr "Markdown"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Marketing managers at SaaS startups"
@@ -4975,7 +5041,6 @@ msgid "Project settings → API keys → Secret API key (V2) with the read scope
 msgstr "Ajustes del proyecto → Claves API → Clave API secreta (V2) con los ámbitos de lectura. Las claves SDK públicas (appl_/goog_) no pueden leer la API REST."
 
 #: src/app/(app)/memory/page.jsx
-#: src/app/(app)/settings/profile/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/commands/AppCommands.jsx
 msgid "Projects"
@@ -5625,8 +5690,8 @@ msgid "Schema, meta titles & descriptions, llms.txt and FAQ markup — generated
 msgstr "Esquema, meta títulos y descripciones, llms.txt y marcado de preguntas frecuentes — generados y listos para pegar."
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "score {score}"
-msgstr "puntuación {score}"
+#~ msgid "score {score}"
+#~ msgstr "puntuación {score}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Score {score} out of 100, {label}"
@@ -6900,7 +6965,6 @@ msgstr "Desanclar {label}"
 msgid "Unspecified industry"
 msgstr "Industria no especificada"
 
-#: src/app/(app)/artifacts/page.jsx
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Untitled"
 msgstr "Sin título"
@@ -7022,8 +7086,8 @@ msgid "v{version} · {label}"
 msgstr "v{version} · {label}"
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
-msgstr "v{version} · {versionCount, plural, one {# versión} other {# versiones}}"
+#~ msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
+#~ msgstr "v{version} · {versionCount, plural, one {# versión} other {# versiones}}"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "v{version} of {versionCount}"
@@ -7217,6 +7281,10 @@ msgstr "Lo que encontré"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What is my site actually about?"
 msgstr "¿De qué trata realmente mi sitio?"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "What shape the brief takes"
+msgstr "Qué forma toma el informe"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"
@@ -7558,6 +7626,10 @@ msgstr "Tu propuesta en una línea"
 #: src/components/content/AccountsTab.jsx
 msgid "your PostBridge accounts"
 msgstr "tus cuentas de PostBridge"
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Your projects"
+msgstr "Tus proyectos"
 
 #: src/components/TelemetryCard.jsx
 msgid "Your provider API keys"

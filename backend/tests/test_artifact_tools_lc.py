@@ -99,6 +99,13 @@ async def test_editing_a_report_is_refused(monkeypatch):
     assert "report flow" in result
 
 
+def test_svg_is_writable_and_downloads_with_its_own_extension():
+    from service.artifact_store import AGENT_WRITABLE_TYPES, SVG, extension_for
+
+    assert SVG in AGENT_WRITABLE_TYPES
+    assert extension_for(SVG) == "svg"
+
+
 async def test_an_unknown_content_type_is_refused_before_any_write():
     result = await _call(
         _tools(), "CreateArtifact",

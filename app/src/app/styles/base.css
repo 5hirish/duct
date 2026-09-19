@@ -9,6 +9,26 @@ html {
   scroll-padding-top: 4rem;
 }
 
+/* Scrollbars, defined once for the whole app.
+
+   Every browser we ship to supports the two standard properties now, so there
+   is no reason left to reach for `::-webkit-scrollbar` — which is what the
+   agent transcript did, giving that one pane a 3px thumb nothing else in the
+   app had. The project page meanwhile carried `scrollbar-thin`, a class from a
+   Tailwind plugin this project does not install: it styled nothing at all and
+   read, to anyone scanning the markup, as though the question had been
+   answered. One rule here is what makes a new scroll area correct without
+   opting in, and `check-design-system.mjs` fails the pair that came before it.
+
+   `thin` because these are panes inside a layout rather than the document
+   itself, and a transparent track so the bar belongs to whatever surface it
+   sits on. Both values are tokens, so the dark theme follows with no second
+   rule — `next-themes` puts `.dark` on this very element. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 35%, transparent) transparent;
+}
+
 .app-shell {
   /* Fallback, then the real thing — `100vh` alone pins to Safari's large
      (toolbar-hidden) viewport and overshoots the visible window whenever the

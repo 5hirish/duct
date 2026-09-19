@@ -104,6 +104,8 @@ FETCH_DESCRIPTION = (
 # Small on purpose: a session touches a handful of entities, and the cache
 # lives exactly as long as the tool closure does.
 FETCH_CACHE_MAX = 64
+# The connector a replay miss is attributed to, so it is countable as a step.
+REPLAY_CONNECTOR = "replay"
 
 NOTES_DESCRIPTION = (
     "Read Duct's hard-won notes on one connector before you interpret its numbers: the "
@@ -121,8 +123,17 @@ def build_data_tools_lc(
     log_prefix: str = "agent",
     on_fetch: Callable[[str, dict], Any] | None = None,
     on_fetch_start: Callable[[str, str, str], Any] | None = None,
+    replay: dict[tuple[str, str, str], str] | None = None,
 ) -> list:
     """FetchData + ReadConnectorNotes as LangChain tools.
+
+    ``replay`` seeds the session cache with stored tool bodies keyed the way
+    the cache is — ``(entity_id, date_from, date_to)`` as the model asked —
+    and closes the connectors: a pull the seed does not cover comes back as
+    ``status: "not_in_replay"`` instead of reaching a provider. That is how
+    a stored session is re-run on exactly its own data (scripts/session_replay.py)
+    to compare a prompt or a model against the answer it produced the first
+    time. Hermetic by construction, not by discipline.
 
     Without a user there is nothing to resolve credentials from, so only the
     notes tool is mounted — reading them is still useful, and a fetch tool that
@@ -162,7 +173,8 @@ def build_data_tools_lc(
     if user_id is None:
         return tools
 
-    cache: dict[tuple[str, str, str], str] = {}
+    cache: dict[tuple[str, str, str], str] = dict(replay or {})
+    replaying = replay is not None
 
     async def fetch_data(entity_id: str, date_from: str = "", date_to: str = "") -> str:
         import asyncio
@@ -170,6 +182,54 @@ def build_data_tools_lc(
         key = (entity_id.strip(), date_from.strip(), date_to.strip())
         with tool_span(tool_name="FetchData", agent_name=log_prefix) as span:
             cached = cache.get(key)
+            if replaying and cached is not None and on_fetch is not None:
+                # A live session's cache hit is silent (the ladder listed the
+                # pull when it was made). In a replay the seed IS the session's
+                # pulls, so the first use of one is the moment it enters this
+                # run; without a step the replay's reader cannot tell which
+                # seeded pulls the model read.
+                try:
+                    served = json.loads(cached)
+                    if isinstance(served, dict):
+                        await _maybe_await(on_fetch(key[0], served))
+                except (ValueError, TypeError):
+                    pass
+                except Exception:  # noqa: BLE001 — UI sugar, never fatal
+                    logger.debug("insights: on_fetch hook failed", exc_info=True)
+            if cached is None and replaying:
+                span.set_attribute("duct.replay_miss", True)
+                logger.info("%s: FetchData(%s) not in the replay seed", log_prefix, key)
+                # The model read the first wording of this as an outage and
+                # wrote about GA4 being down. It is not down; it is a replay,
+                # and these are the pulls it can have.
+                available = [
+                    f"{e}" + (f" for {f} to {t}" if f else " with the default window")
+                    for (e, f, t) in cache
+                ]
+                miss = {
+                    "status": "not_in_replay",
+                    "entity_id": key[0],
+                    # Named so the step the miss becomes is countable by the
+                    # replay script and readable on a ladder.
+                    "connector_id": REPLAY_CONNECTOR,
+                    "date_from": key[1],
+                    "date_to": key[2],
+                    "available": available,
+                    "message": (
+                        "Not an outage: this is a replay of a stored session on the data "
+                        "it fetched, and this pull was not among them. The pulls available "
+                        f"in this replay are: {'; '.join(available) or 'none'}. Use those, "
+                        "and say what this one would have added."
+                    ),
+                }
+                # A miss is a step like a failed pull: the replay's reader must
+                # see which asks the seed could not answer.
+                if on_fetch is not None:
+                    try:
+                        await _maybe_await(on_fetch(key[0], miss))
+                    except Exception:  # noqa: BLE001 — UI sugar, never fatal
+                        logger.debug("insights: on_fetch hook failed", exc_info=True)
+                return json.dumps(miss)
             if cached is not None:
                 # No step events for a hit: the pull already showed up on the
                 # ladder once, and a second identical row would read as a

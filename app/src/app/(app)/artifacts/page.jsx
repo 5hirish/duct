@@ -1,21 +1,25 @@
 "use client";
 
 // Artifact library — durable agent outputs (reports first) for the active
-// project. Lists the newest version per artifact group; click through to the
-// viewer at /artifacts/[artifactId].
+// project. Lists the newest version per artifact group as the same thumbnail
+// cards a thread's pane shows, so a document is recognised by its own first
+// screen rather than by an icon; click through to the viewer at
+// /artifacts/[artifactId].
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FileText, LockKeyhole } from "lucide-react";
-import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
+import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
 import LoadError from "@/components/LoadError";
 import EmptyState from "@/components/ui/empty-state";
-import { relativeTime } from "@/lib/format";
 import { listArtifacts } from "../../../lib/artifactsApi";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mirrors models/artifact.py's `kind` — what an artifact *is*, not who made it.
@@ -28,6 +32,7 @@ const KIND_TABS = [
 
 export default function ArtifactsPage() {
   const { t, i18n } = useLingui();
+  const router = useRouter();
   const [project, setProject] = useState(null);
   const [signedIn, setSignedIn] = useState(true);
   const [kind, setKind] = useState("");
@@ -104,7 +109,15 @@ export default function ArtifactsPage() {
       )}
 
       {signedIn && items === null && (
-        <p className="app-subtle" style={{ marginTop: 18 }}><Trans>Loading…</Trans></p>
+        <div
+          className="@container mt-4 grid grid-cols-2 gap-4 @lg:grid-cols-3 @2xl:grid-cols-4"
+          role="status"
+          aria-label={t`Loading artifacts`}
+        >
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
+          ))}
+        </div>
       )}
 
       {signedIn && error && <LoadError what={t`your artifacts`} detail={error} />}
@@ -134,50 +147,17 @@ export default function ArtifactsPage() {
       )}
 
       {signedIn && items && items.length > 0 && (
-        <div className="connection-grid" style={{ marginTop: 18 }}>
-          {items.map((artifact) => {
-            const score = artifact.meta?.overall_score;
-            const version = artifact.version;
-            const versionCount = artifact.version_count;
-            return (
-              <Link
-                key={artifact.id}
-                href={`/artifacts/${artifact.id}`}
-                className="connection-card"
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <div className="connection-card-head">
-                  <div className="connection-logo" aria-hidden="true">
-                    <FileText size={22} />
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <h2 className="connection-title">{artifact.title || artifact.filename || t`Untitled`}</h2>
-                    <p className="connection-description" style={{ marginBottom: 0 }}>
-                      {artifact.summary
-                        ? `${artifact.summary.slice(0, 140)}${artifact.summary.length > 140 ? "…" : ""}`
-                        : artifact.meta?.url || ""}
-                    </p>
-                  </div>
-                </div>
-                <div className="connection-status-row" style={{ flexWrap: "wrap", gap: 6 }}>
-                  <span className="status-pill grey">{artifact.kind}</span>
-                  {Number.isFinite(score) && (
-                    <span className="status-pill green"><Trans>score {score}</Trans></span>
-                  )}
-                  {versionCount > 1 && (
-                    <span className="status-pill grey">
-                      <Trans>
-                        v{version} · <Plural value={versionCount} one="# version" other="# versions" />
-                      </Trans>
-                    </span>
-                  )}
-                  <span className="app-subtle" style={{ marginLeft: "auto", fontSize: 12 }}>
-                    {relativeTime(artifact.created_at)}
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
+        // `@container` because the gallery sizes its columns by its parent,
+        // the way it does inside a split pane, not by the window.
+        <div className="@container">
+          <ArtifactGallery
+            docs={items}
+            onOpen={(doc) => router.push(`/artifacts/${doc.id}`)}
+            labelFor={(doc) =>
+              Number.isFinite(doc.meta?.overall_score) ? `${doc.kind} · ${doc.meta.overall_score}` : doc.kind
+            }
+            className="mt-4"
+          />
         </div>
       )}
     </section>

@@ -20,15 +20,21 @@ import { getActiveProjectId, getProjectById, PROJECTS_CHANGED } from "@/lib/proj
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Reveal } from "@/components/ui/reveal";
+import { cn } from "@/lib/utils";
 import DeskCards from "./desk/DeskCards";
 import DeskLists from "./desk/DeskLists";
-import DeskActivity from "./desk/DeskActivity";
+import DeskActivity, { activityGridClass } from "./desk/DeskActivity";
 import DeskComposer from "./desk/DeskComposer";
 import DeskDayOne from "./desk/DeskDayOne";
 import { useRelativeTime } from "./desk/useRelativeTime";
 
 // How often the desk re-reads its lists while a thread is working.
 const DESK_POLL_MS = 30_000;
+
+// Whether the Activity rail is folded away, remembered per browser. A viewing
+// preference for one person on one machine, so localStorage rather than the
+// profile — nothing else needs to know, and the scheduled brief has no rail.
+const ACTIVITY_COLLAPSED_KEY = "duct_desk_activity_collapsed";
 
 const EMPTY = {
   memories: [], conversations: [], artifacts: [], activity: [], changeSets: [], sourceCount: 0,
@@ -47,6 +53,31 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
   const [data, setData] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
   const [autonomy, setAutonomy] = useState(AUTONOMY_ASK);
+  // Expanded on both server and first client paint, then corrected from
+  // storage in an effect: reading localStorage during render is a hydration
+  // mismatch, and the rail is the half of the desk it is safe to be briefly
+  // wrong about.
+  const [activityCollapsed, setActivityCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setActivityCollapsed(window.localStorage.getItem(ACTIVITY_COLLAPSED_KEY) === "1");
+    } catch {
+      // Private mode or blocked storage: the default stands.
+    }
+  }, []);
+
+  const toggleActivity = useCallback(() => {
+    setActivityCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(ACTIVITY_COLLAPSED_KEY, next ? "1" : "0");
+      } catch {
+        // Not worth failing a click the user can simply repeat next visit.
+      }
+      return next;
+    });
+  }, []);
 
   // The active project can change from the sidebar switcher without a
   // navigation, so this listens rather than reading once.
@@ -193,8 +224,13 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
   }
 
   const topFinding = buckets.found[0]?.title || "";
+
+  // `mt-auto` belongs on the sticky element itself, not on a wrapper around it.
+  // A sticky box can only travel inside its parent's content box, and a wrapper
+  // sized to exactly one child gives it nowhere to go — so this read as sticky,
+  // passed review as sticky, and scrolled away like any other block.
   const composer = (
-    <div className="sticky bottom-0 -mx-4 mt-10 bg-gradient-to-t from-background from-70% px-4 pb-4 pt-6">
+    <div className="sticky bottom-0 -mx-4 mt-auto bg-gradient-to-t from-background from-70% px-4 pb-4 pt-10">
       <DeskComposer
         project={project}
         autonomy={autonomy}
@@ -233,7 +269,7 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
           hasThread={data.conversations.length > 0}
           onAsk={ask}
         />
-        <div className="mt-auto">{composer}</div>
+        {composer}
       </div>
     );
   }
@@ -246,7 +282,7 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
           sidebar and the Activity rail itself both eat into the window
           without moving a `lg:` breakpoint, so viewport-based collapse was
           firing far later than the space actually ran out. */}
-      <div className="grid gap-x-11 gap-y-8 @3xl:grid-cols-[minmax(0,1fr)_288px]">
+      <div className={cn("grid gap-y-8", activityGridClass(activityCollapsed))}>
         {/* Its own container: once split, this column is narrower than
             `.app-main`, and DeskCards/DeskLists need to size off that, not
             the ancestor the row-vs-stacked decision above just used. */}
@@ -295,10 +331,14 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
           />
         </div>
 
-        <DeskActivity items={data.activity} />
+        <DeskActivity
+          items={data.activity}
+          collapsed={activityCollapsed}
+          onToggle={toggleActivity}
+        />
       </div>
 
-      <div className="mt-auto">{composer}</div>
+      {composer}
     </Reveal>
   );
 }

@@ -320,8 +320,8 @@ def test_the_default_adapter_is_the_audit_one():
 # The format preference
 # ---------------------------------------------------------------------------
 
-def test_markdown_is_the_default_deliverable():
-    assert UserPreferences().preferred_artifact_format == "markdown"
+def test_html_is_the_default_deliverable():
+    assert UserPreferences().preferred_artifact_format == "html"
 
 
 def test_the_format_preference_never_reaches_the_system_prompt():
@@ -338,6 +338,7 @@ def test_the_format_preference_never_reaches_the_system_prompt():
 @pytest.mark.parametrize("fmt,marker", [
     ("markdown", "no HTML wrapper"),
     ("html", "self-contained HTML document"),
+    ("auto", "Choose the format per brief"),
 ])
 def test_the_preference_steers_the_user_turn(fmt, marker):
     turn = build_insights_user_prompt(prompt="why did CPA jump?", artifact_format=fmt)

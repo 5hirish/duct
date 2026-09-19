@@ -26,6 +26,7 @@
         "label": "main",
         "title": "Duct (dev build)",
         "url": "http://localhost:3003",
+        "visible": false,
         "width": 1200,
         "height": 800,
         "minWidth": 900,

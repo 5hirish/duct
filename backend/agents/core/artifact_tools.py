@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 _TYPES_LINE = (
     "Allowed content types: text/markdown (memos/plans/briefs), text/html "
     "(self-contained page), text/csv, text/vnd.mermaid (diagram source), "
+    "image/svg+xml (one figure: a funnel, a timeline, a hand-drawn chart), "
     'application/vnd.duct.table+json ({"columns": [...], "rows": [[...]]}), '
     "application/vnd.duct.chart+json (chart spec the app renders), "
     "application/vnd.duct.diff+json (proposed-change preview)."

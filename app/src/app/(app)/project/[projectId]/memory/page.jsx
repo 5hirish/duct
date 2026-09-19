@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Users } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
+import { SkeletonList } from "@/components/ui/skeleton";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import { hasAuthToken } from "@/lib/authFetch";
 import { getProjectById } from "@/lib/projects";
@@ -96,9 +97,10 @@ function ProjectMemory({ projectId }) {
 
 // useSearchParams needs a Suspense boundary in the App Router.
 export default function ProjectMemoryPage({ params }) {
+  const { t } = useLingui();
   const { projectId } = use(params);
   return (
-    <Suspense fallback={<p className="app-subtle"><Trans>Loading…</Trans></p>}>
+    <Suspense fallback={<SkeletonList rows={4} label={t`Loading memories`} />}>
       <ProjectMemory projectId={projectId} />
     </Suspense>
   );

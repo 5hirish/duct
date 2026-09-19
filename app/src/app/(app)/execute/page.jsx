@@ -57,6 +57,7 @@ import {
   rollbackChangeSet,
 } from "../../../lib/executionApi";
 import { Spinner } from "@/components/ui/spinner";
+import { SkeletonList } from "@/components/ui/skeleton";
 
 const STATUS_PILL = {
   proposed: "yellow",
@@ -590,7 +591,7 @@ function GuardrailsPanel() {
           )}
 
           {rows === null ? (
-            <p className="app-subtle" style={{ fontSize: "var(--text-sm)" }}><Trans>Loading…</Trans></p>
+            <SkeletonList rows={2} label={t`Loading guardrails`} />
           ) : rows.length === 0 ? (
             <p className="app-subtle" style={{ fontSize: "var(--text-sm)" }}><Trans>No guardrails yet.</Trans></p>
           ) : (
@@ -883,7 +884,7 @@ export default function ExecutePage() {
       </div>
 
       {error ? null : changeSets === null ? (
-        <p className="app-subtle"><Trans>Loading…</Trans></p>
+        <SkeletonList rows={3} label={t`Loading change sets`} />
       ) : filtered.length === 0 ? (
         <p className="app-subtle">
           {changeSets.length === 0

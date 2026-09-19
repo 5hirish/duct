@@ -58,10 +58,12 @@ class UserPreferences(BaseModel):
     # they carry. It stays a preference rather than a constant only so someone
     # who suspects the shape can rule it out in one click.
 
-    preferred_artifact_format: Literal["markdown", "html"] = "markdown"
-    # markdown — a written brief (default): renders in-app, copies into a doc,
-    #            diffs cleanly between versions
-    # html     — a self-contained styled page, for something that gets forwarded
+    preferred_artifact_format: Literal["markdown", "html", "auto"] = "html"
+    # html     — a self-contained styled page with its own charts (default):
+    #            the thing that gets forwarded; costs more output tokens
+    # markdown — a written brief: faster and cheaper, renders in-app, copies
+    #            into a doc, diffs cleanly between versions
+    # auto     — the agent picks per deliverable, and says which it chose
     #
     # "dashboard" (the block renderers under app/src/components/insight-blocks)
     # is deliberately absent: those blocks resolve their rows from an assembled

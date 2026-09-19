@@ -659,6 +659,10 @@ msgstr ""
 msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
 msgstr ""
 
+#: src/components/workspace/ComposerDials.jsx
+msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
+msgstr ""
+
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
 msgstr ""
@@ -891,6 +895,11 @@ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "All clear"
+msgstr ""
+
+#. placeholder {0}: docs.length
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents · {0}"
 msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
@@ -1364,6 +1373,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Brief"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Brief: {label}"
 msgstr ""
 
 #: src/app/(app)/artifacts/page.jsx
@@ -2243,6 +2256,10 @@ msgstr ""
 msgid "Document"
 msgstr ""
 
+#: src/components/artifacts/ArtifactCards.jsx
+msgid "Document preview"
+msgstr ""
+
 #: src/app/(app)/artifacts/page.jsx
 msgid "Documents"
 msgstr ""
@@ -2335,6 +2352,10 @@ msgstr ""
 
 #: src/components/ConnectionBanner.jsx
 msgid "Duct needs a connection. Your work is saved and will still be here."
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
 msgstr ""
 
 #: src/components/AppSidebar.jsx
@@ -2646,6 +2667,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Fairly sure"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
 msgstr ""
 
 #: src/app/(app)/audit/seo/page.jsx
@@ -3044,6 +3069,10 @@ msgstr ""
 msgid "Hide {rightText}"
 msgstr ""
 
+#: src/components/insights/desk/DeskActivity.jsx
+msgid "Hide activity"
+msgstr ""
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Hide changes"
 msgstr ""
@@ -3115,6 +3144,10 @@ msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Hreflang"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "HTML"
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
@@ -3477,12 +3510,25 @@ msgstr ""
 msgid "Load older activity"
 msgstr ""
 
+#: src/app/(app)/content/page.jsx
+#: src/app/(app)/loading.jsx
+msgid "Loading"
+msgstr ""
+
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Loading {many}…"
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
 msgid "Loading accounts…"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Loading activity"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Loading artifacts"
 msgstr ""
 
 #: src/app/(app)/audit/seo/[sessionId]/page.jsx
@@ -3493,8 +3539,16 @@ msgstr ""
 msgid "Loading brand context…"
 msgstr ""
 
+#: src/app/(app)/execute/page.jsx
+msgid "Loading change sets"
+msgstr ""
+
 #: src/lib/contentEvents.js
 msgid "Loading format + avatar libraries"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Loading guardrails"
 msgstr ""
 
 #: src/components/LocalInsightDetail.jsx
@@ -3503,6 +3557,11 @@ msgstr ""
 
 #: src/components/ProjectMembers.jsx
 msgid "Loading members…"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Loading memories"
 msgstr ""
 
 #: src/components/models/ModelPicker.jsx
@@ -3530,6 +3589,19 @@ msgstr ""
 msgid "Loading session…"
 msgstr ""
 
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Loading the artifact"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Loading the project"
+msgstr ""
+
+#: src/app/(app)/insights/session/page.jsx
+msgid "Loading the thread"
+msgstr ""
+
 #: src/lib/contentEvents.js
 msgid "Loading topic + brand context"
 msgstr ""
@@ -3547,18 +3619,8 @@ msgid "Loading your models…"
 msgstr ""
 
 #: src/app/(app)/activity/page.jsx
-#: src/app/(app)/artifacts/[artifactId]/page.jsx
-#: src/app/(app)/artifacts/page.jsx
-#: src/app/(app)/content/page.jsx
-#: src/app/(app)/execute/page.jsx
-#: src/app/(app)/insights/session/page.jsx
-#: src/app/(app)/loading.jsx
-#: src/app/(app)/project/[projectId]/memory/page.jsx
-#: src/app/(app)/project/[projectId]/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(auth)/page.js
-#: src/components/artifacts/ArtifactRenderer.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "Loading…"
 msgstr ""
 
@@ -3626,6 +3688,10 @@ msgstr ""
 
 #: src/components/audit/AuditReport.jsx
 msgid "Mapping your site structure"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Markdown"
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
@@ -4969,7 +5035,6 @@ msgid "Project settings → API keys → Secret API key (V2) with the read scope
 msgstr ""
 
 #: src/app/(app)/memory/page.jsx
-#: src/app/(app)/settings/profile/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/commands/AppCommands.jsx
 msgid "Projects"
@@ -5619,8 +5684,8 @@ msgid "Schema, meta titles & descriptions, llms.txt and FAQ markup — generated
 msgstr ""
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "score {score}"
-msgstr ""
+#~ msgid "score {score}"
+#~ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Score {score} out of 100, {label}"
@@ -6894,7 +6959,6 @@ msgstr ""
 msgid "Unspecified industry"
 msgstr ""
 
-#: src/app/(app)/artifacts/page.jsx
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Untitled"
 msgstr ""
@@ -7016,8 +7080,8 @@ msgid "v{version} · {label}"
 msgstr ""
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
-msgstr ""
+#~ msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
+#~ msgstr ""
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "v{version} of {versionCount}"
@@ -7210,6 +7274,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What is my site actually about?"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "What shape the brief takes"
 msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
@@ -7551,6 +7619,10 @@ msgstr ""
 
 #: src/components/content/AccountsTab.jsx
 msgid "your PostBridge accounts"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Your projects"
 msgstr ""
 
 #: src/components/TelemetryCard.jsx

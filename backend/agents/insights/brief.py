@@ -40,7 +40,15 @@ from utils.strings import slugify
 # Formats a brief can be written in. See agents/preferences.py for why
 # "dashboard" is not among them yet.
 FORMATS: tuple[str, ...] = ("markdown", "html")
-DEFAULT_FORMAT = "markdown"
+
+# What a person may ASK for: one of the formats, or "auto", which hands the
+# choice to the agent per deliverable. HTML is the default because a brief
+# is the thing that gets forwarded, and a styled page with its own charts
+# reads better than a wall of markdown; the cost is more output tokens, which
+# the composer's Brief dial says out loud. Storage never uses this: the
+# content type of what arrived comes from ``sniff_format`` on the bytes.
+PREFERRED_FORMATS: tuple[str, ...] = (*FORMATS, "auto")
+DEFAULT_FORMAT = "html"
 
 CONTENT_TYPE: dict[str, str] = {"markdown": MARKDOWN, "html": HTML}
 
@@ -144,8 +152,10 @@ def brief_artifact_version(body: dict) -> ArtifactVersion:
     version = int(body.get("version_id") or 1)
     label = str(body.get("label") or f"Version {version}")
     title = str(payload.get("title") or DEFAULT_TITLE)
-    fmt = str(payload.get("format") or DEFAULT_FORMAT)
     content = str(payload.get("content") or "")
+    # The bytes decide, never a default: a payload without a format is
+    # sniffed, so an HTML preference can never serve markdown as text/html.
+    fmt = str(payload.get("format") or sniff_format(content))
     stem = slugify(title) or "growth-brief"
     meta = {"label": label, "format": fmt, "chars": len(content)}
     declared = str(payload.get("declared_format") or "")

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   listPosts,
 } from "@/lib/contentApi";
@@ -62,8 +63,10 @@ export default function ContentLandingPage() {
 
   if (!projectId) {
     return (
-      <div className="max-w-2xl mx-auto py-12 px-6 text-center text-sm text-muted-foreground">
-        <Trans>Loading…</Trans>
+      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4" role="status" aria-label={t`Loading`}>
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
+        ))}
       </div>
     );
   }
@@ -228,7 +231,7 @@ function PostsTab({ projectId }) {
     return (
       <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="aspect-[4/5] animate-pulse rounded-xl border border-border/50 bg-muted/30" />
+          <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
         ))}
       </div>
     );

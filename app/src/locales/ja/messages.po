@@ -665,6 +665,10 @@ msgstr "下書きエージェントが従う、再利用可能なレシピ — �
 msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
 msgstr "保存済みのキーはすでに使用中です。新しいキーを貼り付けて置き換えるか、「キーを削除」を選択して忘れてください。"
 
+#: src/components/workspace/ComposerDials.jsx
+msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
+msgstr "独自のグラフと並べ替え可能なテーブルを備えたスタイル付きページ。作成コストは高くなりますが、読みやすく、1つのファイルとして転送できます"
+
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
 msgstr "チームメイトのアカウント"
@@ -898,6 +902,11 @@ msgstr "すべての広告アカウント"
 #: src/components/audit/AuditReportV1.jsx
 msgid "All clear"
 msgstr "問題なし"
+
+#. placeholder {0}: docs.length
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents · {0}"
+msgstr "すべてのドキュメント · {0}"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
@@ -1371,6 +1380,10 @@ msgstr "ブランドボイスは継承されます。トーンはコンテンツ
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Brief"
 msgstr "ブリーフ"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Brief: {label}"
+msgstr "ブリーフ: {label}"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
@@ -2249,6 +2262,10 @@ msgstr "ドキュメント"
 msgid "Document"
 msgstr "ドキュメント"
 
+#: src/components/artifacts/ArtifactCards.jsx
+msgid "Document preview"
+msgstr "ドキュメントプレビュー"
+
 #: src/app/(app)/artifacts/page.jsx
 msgid "Documents"
 msgstr "ドキュメント"
@@ -2342,6 +2359,10 @@ msgstr "Ductホーム"
 #: src/components/ConnectionBanner.jsx
 msgid "Duct needs a connection. Your work is saved and will still be here."
 msgstr "Ductには接続が必要です。あなたの作業は保存されており、ここに残っています。"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
+msgstr "Ductがブリーフごとに選択: 短い読み物にはMarkdown、レイアウトやグラフが適している場合はページ"
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
@@ -2653,6 +2674,10 @@ msgstr "送信に失敗しました"
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Fairly sure"
 msgstr "ほぼ確実"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
+msgstr "高速で安価。見出し、テキスト、テーブル。ドキュメントに貼り付けられます"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Faster, lighter"
@@ -3050,6 +3075,10 @@ msgstr "このマシンのキーチェーンに保持されます"
 msgid "Hide {rightText}"
 msgstr "{rightText}を非表示にする"
 
+#: src/components/insights/desk/DeskActivity.jsx
+msgid "Hide activity"
+msgstr "アクティビティを非表示"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Hide changes"
 msgstr "変更を非表示にする"
@@ -3122,6 +3151,10 @@ msgstr "あなたがどのように協力したいか。すべてのエージェ
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Hreflang"
 msgstr "Hreflang"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "HTML"
+msgstr "HTML"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "https://example.com"
@@ -3483,6 +3516,11 @@ msgstr "llms.txt"
 msgid "Load older activity"
 msgstr "古いアクティビティを読み込む"
 
+#: src/app/(app)/content/page.jsx
+#: src/app/(app)/loading.jsx
+msgid "Loading"
+msgstr "読み込み中"
+
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Loading {many}…"
 msgstr "{many}を読み込み中…"
@@ -3490,6 +3528,14 @@ msgstr "{many}を読み込み中…"
 #: src/components/content/AccountsTab.jsx
 msgid "Loading accounts…"
 msgstr "アカウントを読み込み中…"
+
+#: src/app/(app)/activity/page.jsx
+msgid "Loading activity"
+msgstr "アクティビティを読み込み中"
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Loading artifacts"
+msgstr "アーティファクトを読み込み中"
 
 #: src/app/(app)/audit/seo/[sessionId]/page.jsx
 msgid "Loading audit session…"
@@ -3499,9 +3545,17 @@ msgstr "監査セッションを読み込み中…"
 msgid "Loading brand context…"
 msgstr "ブランドコンテキストを読み込み中…"
 
+#: src/app/(app)/execute/page.jsx
+msgid "Loading change sets"
+msgstr "変更セットを読み込み中"
+
 #: src/lib/contentEvents.js
 msgid "Loading format + avatar libraries"
 msgstr "フォーマットとアバターライブラリを読み込み中"
+
+#: src/app/(app)/execute/page.jsx
+msgid "Loading guardrails"
+msgstr "ガードレールを読み込み中"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Loading insight…"
@@ -3510,6 +3564,11 @@ msgstr "インサイトを読み込み中…"
 #: src/components/ProjectMembers.jsx
 msgid "Loading members…"
 msgstr "メンバーを読み込み中…"
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Loading memories"
+msgstr "メモリを読み込み中"
 
 #: src/components/models/ModelPicker.jsx
 msgid "Loading models…"
@@ -3536,6 +3595,19 @@ msgstr "プロジェクトを読み込み中"
 msgid "Loading session…"
 msgstr "セッションを読み込み中…"
 
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Loading the artifact"
+msgstr "アーティファクトを読み込み中"
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Loading the project"
+msgstr "プロジェクトを読み込み中"
+
+#: src/app/(app)/insights/session/page.jsx
+msgid "Loading the thread"
+msgstr "スレッドを読み込み中"
+
 #: src/lib/contentEvents.js
 msgid "Loading topic + brand context"
 msgstr "トピックとブランドコンテキストを読み込み中"
@@ -3553,18 +3625,8 @@ msgid "Loading your models…"
 msgstr "モデルを読み込み中…"
 
 #: src/app/(app)/activity/page.jsx
-#: src/app/(app)/artifacts/[artifactId]/page.jsx
-#: src/app/(app)/artifacts/page.jsx
-#: src/app/(app)/content/page.jsx
-#: src/app/(app)/execute/page.jsx
-#: src/app/(app)/insights/session/page.jsx
-#: src/app/(app)/loading.jsx
-#: src/app/(app)/project/[projectId]/memory/page.jsx
-#: src/app/(app)/project/[projectId]/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(auth)/page.js
-#: src/components/artifacts/ArtifactRenderer.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "Loading…"
 msgstr "読み込み中…"
 
@@ -3633,6 +3695,10 @@ msgstr "30日間のトピックをマッピング中…"
 #: src/components/audit/AuditReport.jsx
 msgid "Mapping your site structure"
 msgstr "サイト構造をマッピング中"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Markdown"
+msgstr "Markdown"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Marketing managers at SaaS startups"
@@ -4975,7 +5041,6 @@ msgid "Project settings → API keys → Secret API key (V2) with the read scope
 msgstr "プロジェクト設定 → APIキー → 読み取りスコープを持つシークレットAPIキー (V2)。公開SDKキー (appl_/goog_) はREST APIを読み取ることができません。"
 
 #: src/app/(app)/memory/page.jsx
-#: src/app/(app)/settings/profile/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/commands/AppCommands.jsx
 msgid "Projects"
@@ -5625,8 +5690,8 @@ msgid "Schema, meta titles & descriptions, llms.txt and FAQ markup — generated
 msgstr "スキーマ、メタタイトルとディスクリプション、llms.txt、FAQマークアップ — 生成され、貼り付け準備ができています。"
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "score {score}"
-msgstr "スコア {score}"
+#~ msgid "score {score}"
+#~ msgstr "スコア {score}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Score {score} out of 100, {label}"
@@ -6900,7 +6965,6 @@ msgstr "ピン留めを解除 {label}"
 msgid "Unspecified industry"
 msgstr "未指定の業界"
 
-#: src/app/(app)/artifacts/page.jsx
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Untitled"
 msgstr "無題"
@@ -7022,8 +7086,8 @@ msgid "v{version} · {label}"
 msgstr "v{version} · {label}"
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
-msgstr "v{version} · {versionCount, plural, one {# バージョン} other {# バージョン}}"
+#~ msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
+#~ msgstr "v{version} · {versionCount, plural, one {# バージョン} other {# バージョン}}"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "v{version} of {versionCount}"
@@ -7217,6 +7281,10 @@ msgstr "私が見つけたもの"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What is my site actually about?"
 msgstr "私のサイトは実際には何についてですか？"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "What shape the brief takes"
+msgstr "ブリーフの形式"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"
@@ -7558,6 +7626,10 @@ msgstr "ワンラインピッチ"
 #: src/components/content/AccountsTab.jsx
 msgid "your PostBridge accounts"
 msgstr "PostBridgeアカウント"
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Your projects"
+msgstr "あなたのプロジェクト"
 
 #: src/components/TelemetryCard.jsx
 msgid "Your provider API keys"

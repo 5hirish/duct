@@ -22,6 +22,7 @@ import {
 } from "recharts";
 import { Trans, useLingui } from "@lingui/react/macro";
 import AuditReportV1 from "@/components/audit/AuditReportV1";
+import { SkeletonDocument } from "@/components/ui/skeleton";
 
 export const CONTENT_TYPES = {
   REPORT_JSON: "application/vnd.duct.report+json",
@@ -32,7 +33,27 @@ export const CONTENT_TYPES = {
   MARKDOWN: "text/markdown",
   HTML: "text/html",
   CSV: "text/csv",
+  SVG: "image/svg+xml",
 };
+
+/** Turn SVG source into a URL an <img> can show. */
+export function svgDataUrl(source) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source || "")}`;
+}
+
+/**
+ * An SVG artifact as a picture. An <img> is the one way to show
+ * agent-authored SVG that runs no script, fires no event handler and loads
+ * no external resource, whatever the source contains; inlining it would need
+ * the sanitiser MermaidView uses and still allow external image hrefs.
+ */
+export function SvgView({ source, title = "" }) {
+  return (
+    <div className="flex justify-center p-3">
+      <img src={svgDataUrl(source)} alt={title || "Figure"} className="max-h-[74vh] max-w-full" />
+    </div>
+  );
+}
 
 // The five chart series the theme defines, which are contrast-checked against
 // both canvases (scripts/check-contrast.mjs) and move when the theme does; the
@@ -262,26 +283,34 @@ export default function ArtifactRenderer({ artifact, content }) {
     return <AuditReportV1 data={structured} />;
   }
   if (ct === CONTENT_TYPES.HTML) {
-    if (content == null) return <p className="app-subtle text-sm p-2"><Trans>Loading…</Trans></p>;
+    if (content == null) return <SkeletonDocument className="p-2" label={t`Loading the artifact`} />;
     return (
       <iframe
         title={artifact.title || t`Artifact`}
         srcDoc={content}
-        sandbox="allow-modals allow-same-origin"
+        // Scripts run so a brief's chart or sortable table works; same-origin
+        // is withheld so the page runs in an opaque origin with no reach into
+        // the app, its cookies or its storage. The old pair (same-origin, no
+        // scripts) was the inert version of the unsafe combination.
+        sandbox="allow-scripts allow-modals"
         className="block h-[74vh] w-full rounded-lg border border-border bg-card"
       />
     );
   }
   if (content == null) {
-    return (
+    return artifact?.has_content ? (
+      <SkeletonDocument className="p-2" label={t`Loading the artifact`} />
+    ) : (
       <p className="app-subtle text-sm p-2">
-        {artifact?.has_content ? <Trans>Loading…</Trans> : <Trans>This artifact has no stored content to render.</Trans>}
+        <Trans>This artifact has no stored content to render.</Trans>
       </p>
     );
   }
   switch (ct) {
     case CONTENT_TYPES.MARKDOWN:
       return <MarkdownView source={content} />;
+    case CONTENT_TYPES.SVG:
+      return <SvgView source={content} title={artifact?.title} />;
     case CONTENT_TYPES.MERMAID:
       return <MermaidView source={content} />;
     case CONTENT_TYPES.TABLE_JSON:

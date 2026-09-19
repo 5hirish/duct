@@ -19,6 +19,7 @@ import EmptyState from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/format";
 import { listActivity } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
+import { SkeletonList } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CATEGORY_TABS = [
@@ -207,7 +208,7 @@ function ActivityFeed() {
       )}
 
       {signedIn && items === null && (
-        <p className="app-subtle" style={{ marginTop: 18 }}><Trans>Loading…</Trans></p>
+        <SkeletonList rows={5} label={t`Loading activity`} style={{ marginTop: 18 }} />
       )}
 
       {signedIn && error && (
@@ -260,6 +261,8 @@ function ActivityFeed() {
 }
 
 export default function ActivityPage() {
+  const { t } = useLingui();
+
   // useSearchParams requires a Suspense boundary in the App Router.
   return (
     <Suspense
@@ -271,7 +274,7 @@ export default function ActivityPage() {
               <Trans>Activity</Trans>
             </h1>
           </div>
-          <p className="app-subtle"><Trans>Loading…</Trans></p>
+          <SkeletonList rows={5} label={t`Loading activity`} style={{ marginTop: 18 }} />
         </section>
       }
     >

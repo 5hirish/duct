@@ -66,6 +66,9 @@ pnpm-debug.log*
 # Cursor local state
 .cursor/hooks/state/
 .playwright-mcp/
+# Session bundles pulled by backend/scripts/session_bundle.py when the
+# private audit home (../duct-cloud/docs/audits) is not beside this checkout.
+.audits/
 
 # Environment and local secrets
 .env

@@ -101,7 +101,8 @@ describe("migrateLegacyPreferences", () => {
     const left = loadPreferences();
     // Retired: gone from the blob, not lingering as "".
     expect(left.primary_outcome).toBeUndefined();
-    expect(left.preferred_artifact_format).toBeUndefined();
+    // Back as a composer dial, so an old choice is kept rather than dropped.
+    expect(left.preferred_artifact_format).toBe("html");
     // Still per-device, still written by the composer, not by the profile.
     expect(left.thinking).toBe("deep");
     expect(left.tier).toBe("heavy");

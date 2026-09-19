@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -430,7 +431,14 @@ export default function ProjectContextPage() {
     return (
       <section>
         <h1 className="text-2xl font-semibold tracking-tight mb-2"><Trans>Project context</Trans></h1>
-        <p className="text-sm text-muted-foreground"><Trans>Loading…</Trans></p>
+        <div className="flex max-w-2xl flex-col gap-5" role="status" aria-label={t`Loading the project`}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Skeleton className="h-3.5 w-28 rounded" />
+              <Skeleton className="h-9" />
+            </div>
+          ))}
+        </div>
       </section>
     );
   }
@@ -483,7 +491,7 @@ export default function ProjectContextPage() {
           <Progress value={inputProgressPercent} className="h-1.5" />
         </div>
 
-        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin" role="list" aria-label={t`Project context sections`}>
+        <div className="flex items-center gap-3 overflow-x-auto pb-1" role="list" aria-label={t`Project context sections`}>
           {stepProgress.map((stepItem, index) => {
             const stepNumber = index + 1;
             const isActive = step === stepNumber;
