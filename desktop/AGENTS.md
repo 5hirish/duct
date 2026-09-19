@@ -47,6 +47,25 @@ carries all the code.
   unmodified `create-tauri-app` scaffold — a "Welcome to Tauri" page with a
   greet form calling a command that does not exist. It shipped in every bundle
   and was never shown.
+
+  **What fills the wait.** The status line under the bar holds a rotating
+  one-line aqueduct remark, and at `SLOW_AFTER_MS` (8 s) it stops and is
+  replaced by "Still connecting. Check your network." Two constraints on
+  anything added here:
+  - **One line at 380 px.** The row is a fixed 16 px so nothing shifts when the
+    slow message arrives; a wrapping line breaks that, and a line nobody can
+    finish reading in a glance makes the wait feel *longer*, which is the
+    opposite of the point. The widest current line measures 291 px of the
+    340 px available.
+  - **It stops being funny at 8 s.** Past that something is actually wrong, and
+    a quip sitting on top of a real failure is the part users resent.
+
+  These strings are **English only and deliberately not translated.** The
+  splash has no i18n catalogue and cannot get one without adding the
+  subresource the window exists to avoid; it is pre-authentication, so there is
+  no `interface_language` to read yet either. A non-English user sees English
+  for a couple of seconds. If that ever stops being acceptable, the fix is to
+  drop the line for non-English locales, not to fetch a catalogue here.
 - **Keychain** via the `keyring` crate; commands in `src-tauri/src/lib.rs`
   (`get_provider_key` / `set_provider_key` / `delete_provider_key`). The web app
   calls them through `window.__TAURI__.core.invoke` (`app/src/lib/providerKeys.js`).

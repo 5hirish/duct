@@ -113,8 +113,13 @@
         transition: width 0.1s linear;
       }
 
-      /* Reserved, not conditionally inserted: the message appears mid-wait, and
-         a layout shift at that moment is exactly when it would be noticed. */
+      /* Reserved at a fixed height, and occupied from the first frame. The
+         height is what stops the 8s message shifting the layout; keeping a
+         line in it the whole time is what stops that message *appearing*,
+         which is one less event during the wait it is reporting on.
+
+         Absolutely positioned, so `left`/`right` size the box and only
+         `text-align` actually centres the text. */
       .status {
         position: absolute;
         bottom: 16px;
@@ -125,13 +130,9 @@
         height: 16px;
         text-align: center;
         font-size: 12px;
+        line-height: 16px;
         color: var(--navy-3);
-        opacity: 0;
-        transition: opacity 0.4s ease;
-      }
-
-      .status.is-shown {
-        opacity: 1;
+        transition: opacity 0.22s ease;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -144,7 +145,7 @@
           display: none;
         }
         .status {
-          opacity: 1;
+          transition: none;
         }
       }
     </style>
@@ -154,7 +155,7 @@
     <main class="splash">
       <p class="logo"><span>Duct</span><span class="logo-mark"></span></p>
       <div class="track"><div class="fill" id="fill"></div></div>
-      <p class="status" id="status">Starting up</p>
+      <p class="status" id="status"></p>
     </main>
 
     <script>
@@ -178,8 +179,28 @@
       const SLOW_AFTER_MS = 8000;
       const SLOW_MESSAGE = "Still connecting. Check your network.";
 
+      // Aqueduct lines, because the product is named after one. Each is one
+      // line at 380px (measured, widest 291px of 340px available) and each
+      // turns back on the wait itself, so it reads as a remark about right now
+      // rather than as trivia. A fact you have to stop and read is worse than
+      // silence in a window that lives two seconds.
+      const ROTATE_MS = 3200;
+      const FADE_MS = 220;
+      const QUIPS = [
+        "Aqua Claudia: 69 km, all downhill.",
+        "Eleven aqueducts fed Rome. You have one.",
+        "Aqua Virgo, 19 BC. Still running today.",
+        "The Pont du Gard drops 2.5 cm over 456 m.",
+        "Segovia's aqueduct was built without mortar.",
+        "No pumps in Rome. Gravity and patience.",
+        "34 cm of fall per kilometre. Precise work.",
+        "Rome measured water in quinariae. We prefer rows.",
+        "Frontinus audited the water. You audit the spend.",
+      ];
+
       const fill = document.getElementById("fill");
       const status = document.getElementById("status");
+      const stillness = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       // Start ahead of zero. An indicator that sits at nothing for its first
       // frame reads as a hang, and this is the frame the user actually sees.
@@ -191,9 +212,32 @@
         fill.style.width = progress + "%";
       }, TICK_MS);
 
+      // Random start, so two launches in a row are not the same line twice.
+      let i = Math.floor(Math.random() * QUIPS.length);
+      status.textContent = QUIPS[i];
+
+      // Rotation is decoration and the 8s message is information, so reduced
+      // motion drops the first and keeps the second.
+      const rotation = stillness
+        ? null
+        : setInterval(() => {
+            status.style.opacity = "0";
+            setTimeout(() => {
+              i = (i + 1) % QUIPS.length;
+              status.textContent = QUIPS[i];
+              status.style.opacity = "1";
+            }, FADE_MS);
+          }, ROTATE_MS);
+
       setTimeout(() => {
-        status.textContent = SLOW_MESSAGE;
-        status.classList.add("is-shown");
+        // Past here something is actually wrong, so stop being funny. A quip
+        // sitting on top of a real failure is the part people resent.
+        if (rotation) clearInterval(rotation);
+        status.style.opacity = "0";
+        setTimeout(() => {
+          status.textContent = SLOW_MESSAGE;
+          status.style.opacity = "1";
+        }, FADE_MS);
       }, SLOW_AFTER_MS);
     </script>
   </body>
