@@ -14,7 +14,8 @@ const { test, expect } = require("@playwright/test");
  * underneath most of these, not an artefact of the fixture.
  */
 
-const ORIGIN = "http://localtest.me:4317";
+const { PORT } = require("./port");
+const ORIGIN = `http://localtest.me:${PORT}`;
 const GTM_PATTERN = /googletagmanager\.com/;
 
 /** Records GTM requests and stops them leaving the machine. */
