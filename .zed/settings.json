@@ -1,0 +1,94 @@
+{
+  // Build output nobody opens on purpose. Excluded rather than merely
+  // filtered, because Zed scans and searches these on demand and they are
+  // ~93k of the 167k files on disk. node_modules and backend/.venv are
+  // deliberately absent: an excluded path is invisible to go-to-definition
+  // too, and following a symbol into a dependency is worth the scan.
+  // "..." keeps Zed's own defaults (.git, .DS_Store, and the rest).
+  "file_scan_exclusions": [
+    "...",
+    "**/desktop/src-tauri/target",
+    "**/backend/dist",
+    "**/backend/build",
+    "**/app/.next",
+    "**/app/.open-next",
+    "**/.ruff_cache",
+    "**/__pycache__",
+    "**/.history"
+  ],
+
+  // Wider than Zed's default list, because this repository is public and its
+  // history is public with it: a credential that reaches a model's context is
+  // one paste away from a log. Everything here is material whose only real
+  // remedy is rotation. Pairs with `redact_private_values` in user settings.
+  "private_files": [
+    "**/.env*",
+    "**/*.pem",
+    "**/*.key",
+    "**/*.cert",
+    "**/*.crt",
+    "**/secrets.yml",
+    "**/*.p12",
+    "**/*.jks",
+    "**/*.keystore",
+    "**/credentials.json",
+    "**/google-services.json",
+    "**/GoogleService-Info.plist",
+    "**/key.properties"
+  ],
+
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        // The Cargo project is not at the repo root, so say where it is rather
+        // than letting rust-analyzer scan 167k files to find one Cargo.toml.
+        "linkedProjects": ["desktop/src-tauri/Cargo.toml"],
+
+        // rust-analyzer runs its own `cargo check`. Sharing target/ with the
+        // CLI means the two take turns on the same lock: run
+        // `make serve-desktop` while the editor is checking and one of them
+        // sits on "waiting for file lock on build directory". A separate dir
+        // costs roughly 1 GB of .rmeta and buys back every one of those.
+        "cargo": { "targetDir": true }
+      }
+    }
+  },
+
+  // Zed's translation of `.mcp.json` — same servers, its own key and shape.
+  // Zed does NOT expand `${VAR}`, so a server needing a token gets no `env`
+  // block here: export it in the shell you launch Zed from, or put the value
+  // in your own user settings. A literal `${VAR}` would be passed through as
+  // eight characters and fail as if the token were wrong.
+  // **Never write a real token into this file** — this repository is public.
+  "context_servers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "shadcn@latest", "mcp"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "sentry": {
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server@latest"]
+    },
+    "railway": {
+      "command": "npx",
+      "args": ["-y", "@railway/mcp-server"]
+    },
+    // Only up while the Phoenix task is running; a dead entry costs a
+    // connection attempt, not a broken agent.
+    "phoenix": { "url": "http://localhost:6006/mcp" },
+    "github": { "url": "https://api.githubcopilot.com/mcp/" },
+    "figma": { "url": "https://mcp.figma.com/mcp" },
+    "cloudflare-docs": { "url": "https://docs.mcp.cloudflare.com/mcp" },
+    "cloudflare-builds": { "url": "https://builds.mcp.cloudflare.com/mcp" },
+    "cloudflare-bindings": { "url": "https://bindings.mcp.cloudflare.com/mcp" },
+    "cloudflare-observability": { "url": "https://observability.mcp.cloudflare.com/mcp" }
+  }
+}

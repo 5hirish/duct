@@ -57,8 +57,8 @@ python3 -m http.server 8090 --directory site
 Then open `http://localhost:8090/`.
 
 For Cloudflare-style routing (extensionless URLs), use `python3 dev_server.py
---port 8090` from inside `site/` — the VS Code task **Serve site on :8090** does
-exactly that. Only one process can bind 8090; `Address already in use` means a
+--port 8090` from inside `site/` — the VS Code task **Serve site on :8090** and
+the Zed task **Site: dev server (:8090)** both do exactly that. Only one process can bind 8090; `Address already in use` means a
 previous `dev_server.py` is still running, so stop it rather than picking
 another port (the tests assume 8090).
 

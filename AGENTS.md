@@ -22,21 +22,26 @@ harness's own directory holds a symlink to that folder.
 .cursor/skills/<name>  -> ../../.agents/skills/<name>
 ```
 
-Codex, Copilot and OpenCode read `.agents/skills/` directly and need no
-symlink. Claude Code and Cursor scan only their own directories, but both
-follow a symlinked skill folder. A skill **must** be a directory holding a file
+Codex, Copilot, OpenCode and Zed read `.agents/skills/` directly and need no
+symlink — Zed's project skill root *is* `<worktree>/.agents/skills/`, so every
+skill here was already a Zed skill before Zed was ever opened on this repo.
+Claude Code and Cursor scan only their own directories, but both follow a
+symlinked skill folder. A skill **must** be a directory holding a file
 named exactly `SKILL.md`: the flat `.claude/skills/<name>.md` layout this
 replaces was not a supported form, so Claude Code discovered none of these
 skills at all. Adding one means creating the directory and both symlinks —
 copies drift, so never copy.
 
 MCP servers get no such shared file, because none can exist: VS Code names the
-key `servers` rather than `mcpServers`, Codex is TOML, and Cursor expands
+key `servers` rather than `mcpServers`, Codex is TOML, Zed calls them
+`context_servers` and puts them among its other settings, and Cursor expands
 `${env:VAR}` where Claude Code expands `${VAR}`. The project list lives in
 `.mcp.json`, which Claude Code prompts to trust on first use; `.cursor/mcp.json`
-is Cursor's generated copy of the same set. Credentials in both are `${VAR}`
-references — **never write a real token into either file**, this repository is
-public.
+and the `context_servers` block of `.zed/settings.json` are the generated
+copies of the same set. Credentials in the first two are `${VAR}` references;
+Zed expands nothing, so a server needing a token carries no `env` block there
+and reads it from the shell Zed was launched from. **Never write a real token
+into any of them** — this repository is public.
 
 There was previously a root `AGENTS.md` holding auto-accumulated "learned
 preferences" separate from `CLAUDE.md`. Two files describing one repo drift, and
@@ -107,6 +112,19 @@ Codex Desktop worktrees use `.codex/environments/environment.toml`. It runs
 as actions in the app. It contains no credentials; local secrets stay outside
 the repository.
 
+Two editors are configured, `.vscode/` and `.zed/`, and each holds the same
+material in its own shape because neither format is a superset of the other:
+the LSP and exclusion settings that keep rust-analyzer off 167k files, the
+dev-server tasks, and the debug configurations. Two
+differences are worth knowing before editing either. Zed merges
+`.vscode/tasks.json` into its own task list, so a task can appear twice and
+both copies must work; and Zed implements no task dependencies, which is why
+the stop tasks in both files call `scripts/dev_stop.sh` instead of fanning out
+over each other. Zed reads `.vscode/launch.json` only when `.zed/debug.json` is
+absent, and it supports neither `compounds` nor `node-terminal`, so the
+multi-process launches live in `.zed/tasks.json` rather than being translated
+into debug configurations that would not run.
+
 Dev ports are pinned deliberately, not framework defaults, so they stay clear of
 other local stacks: Next.js **3003**, FastAPI **8002**, static site **8090**.
 Only one process can bind a port — `Address already in use` on 8090 usually
@@ -159,6 +177,9 @@ Check here before hand-rolling env or secret plumbing:
 - `bootstrap_env_test.sh` — copy local dev env files to the gitignored
   `.env.test` targets.
 - `envfile.py` — shared dotenv parser used by the above.
+- `dev_stop.sh` — stop what a dev session started: `all`, or any of `backend`,
+  `app`, `site`, `phoenix`, `desktop`. Both editors' stop tasks call it, so the
+  kill list exists once.
 - `security/audit.py`, `security/leak_scan.py` — repo hygiene, both run in CI.
 - `shots/shoot.mjs` — product screenshots from the real app for the README and
   the site: one story (`app/src/lib/__fixtures__/solo-story.mjs`) feeds the

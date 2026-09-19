@@ -1,5 +1,6 @@
 {
   "version": "2.0.0",
+  "//": "The stop tasks are one line each because the kill list lives in scripts/dev_stop.sh. It was inline here until Zed joined VS Code as an editor of this repo: Zed merges this file into its own task list but implements neither dependsOn nor dependsOrder, so a stop task written as a fan-out over five others silently stopped nothing there. One script, two editors, no second list to forget.",
   "tasks": [
     {
       "label": "Serve site on :8090",
@@ -25,7 +26,8 @@
     {
       "label": "App: stop dev server (3003)",
       "type": "shell",
-      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :3003 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi",
+      "command": "./scripts/dev_stop.sh app",
+      "options": { "cwd": "${workspaceFolder}" },
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
@@ -36,7 +38,8 @@
     {
       "label": "Phoenix: stop (6006)",
       "type": "shell",
-      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :6006 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"phoenix.server.main\" >/dev/null 2>&1 || true",
+      "command": "./scripts/dev_stop.sh phoenix",
+      "options": { "cwd": "${workspaceFolder}" },
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
@@ -45,10 +48,11 @@
       "problemMatcher": []
     },
     {
-      "//": "Manual: the dev bundle is launched detached, so no debug session owns it. Quit first, kill second: a graceful quit reaches RunEvent::Exit, which stops the sidecar; SIGTERM to the shell skips it and leaves an orphan holding its loopback port. The pkill pair is the fallback for an app that is already gone or wedged.",
+      "//": "Manual: the dev bundle is launched detached, so no debug session owns it. Quit first, kill second — the reasoning is in the script.",
       "label": "Desktop: stop Duct Dev app",
       "type": "shell",
-      "command": "osascript -e 'quit app \"Duct Dev\"' >/dev/null 2>&1 || true; sleep 1; pkill -f \"Duct Dev.app\" >/dev/null 2>&1 || true; pkill -f \"duct-sidecar\" >/dev/null 2>&1 || true",
+      "command": "./scripts/dev_stop.sh desktop",
+      "options": { "cwd": "${workspaceFolder}" },
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
@@ -59,7 +63,8 @@
     {
       "label": "Backend: stop uvicorn (8002)",
       "type": "shell",
-      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8002 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"uvicorn server:app\" >/dev/null 2>&1 || true",
+      "command": "./scripts/dev_stop.sh backend",
+      "options": { "cwd": "${workspaceFolder}" },
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
@@ -69,30 +74,34 @@
     },
     {
       "label": "Duct: stop Site + API (8002, 8090)",
-      "dependsOn": [
-        "Backend: stop uvicorn (8002)",
-        "Site: stop dev server (8090)"
-      ],
-      "dependsOrder": "parallel",
+      "type": "shell",
+      "command": "./scripts/dev_stop.sh backend site",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
       "problemMatcher": []
     },
     {
       "//": "One command for the end of a session. The desktop app is launched detached via `open`, so no debug session owns it and Stop cannot close it — without this, every desktop launch leaves an app and its sidecar running until someone notices. Touches only Duct's own ports; other projects on this machine are not its business.",
       "label": "Duct: stop everything",
-      "dependsOn": [
-        "Desktop: stop Duct Dev app",
-        "App: stop dev server (3003)",
-        "Backend: stop uvicorn (8002)",
-        "Site: stop dev server (8090)",
-        "Phoenix: stop (6006)"
-      ],
-      "dependsOrder": "parallel",
+      "type": "shell",
+      "command": "./scripts/dev_stop.sh all",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
       "problemMatcher": []
     },
     {
       "label": "Site: stop dev server (8090)",
       "type": "shell",
-      "command": "if command -v lsof >/dev/null 2>&1; then pids=$(lsof -t -i :8090 2>/dev/null || true); if [ -n \"$pids\" ]; then kill -9 $pids >/dev/null 2>&1 || true; fi; fi; pkill -f \"dev_server.py\" >/dev/null 2>&1 || true",
+      "command": "./scripts/dev_stop.sh site",
+      "options": { "cwd": "${workspaceFolder}" },
       "presentation": {
         "reveal": "silent",
         "panel": "dedicated",
