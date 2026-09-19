@@ -852,14 +852,14 @@ if (window.__DUCT_PARTIALS_READY) {
 // The select in the nav partial and the links in the footer both go to the
 // SAME page in the chosen language, never to its home page: someone reading
 // the CPA calculator in Spanish who picks German wants the German calculator.
-// The page's own hreflang alternates say where that is. A page with none
-// (blog posts, the changelog) exists only in English, so the switch goes to
-// the chosen language's home instead of a 404 at /es/blog/….
 // No automatic redirect anywhere — a crawler and a person must get the page
 // the URL names — and the choice is remembered only so the app can read it.
 (function () {
+  // A closed table, never a string built from the select's value or a link's
+  // attribute: the chosen code only ever selects one of these constants, so
+  // nothing read from the DOM reaches the href (CodeQL js/xss-through-dom).
+  var PATH_PREFIX = { en: '', es: '/es', 'pt-br': '/pt-br', de: '/de', ja: '/ja' };
   var PREFIXES = ['es', 'pt-br', 'de', 'ja'];
-  var TAGS = { en: 'en', es: 'es', 'pt-br': 'pt-BR', de: 'de', ja: 'ja' };
   function currentPrefix() {
     var path = location.pathname;
     for (var i = 0; i < PREFIXES.length; i++) {
@@ -869,26 +869,30 @@ if (window.__DUCT_PARTIALS_READY) {
     return 'en';
   }
   function samePageIn(code) {
-    var alternates = document.querySelectorAll('link[rel="alternate"][hreflang]');
-    if (!alternates.length) return (code === 'en' ? '/' : '/' + code + '/');
-    for (var i = 0; i < alternates.length; i++) {
-      if (alternates[i].getAttribute('hreflang') === TAGS[code]) {
-        // The alternate is the canonical, absolute address; keep only its
-        // path so a preview or a local server stays on its own origin.
-        var a = document.createElement('a');
-        a.href = alternates[i].getAttribute('href');
-        return a.pathname + location.search + location.hash;
-      }
+    if (!Object.prototype.hasOwnProperty.call(PATH_PREFIX, code)) return null;
+    var url = new URL(location.origin);
+    // The generator mirrors every translated page at the same path under its
+    // prefix and gives it hreflang alternates. A page without any (blog
+    // posts, the changelog) exists only in English, so the switch goes to
+    // the chosen language's home instead of a 404 at /es/blog/….
+    if (!document.querySelector('link[rel="alternate"][hreflang]')) {
+      url.pathname = PATH_PREFIX[code] + '/';
+      return url;
     }
     var path = location.pathname;
     var cur = currentPrefix();
     if (cur !== 'en') path = path.slice(cur.length + 1) || '/';
-    return (code === 'en' ? '' : '/' + code) + path + location.search + location.hash;
+    url.pathname = PATH_PREFIX[code] + path;
+    url.search = location.search;
+    url.hash = location.hash;
+    return url;
   }
   function onChange(e) {
     var code = e.target.value;
+    var url = samePageIn(code);
+    if (!url) return;
     try { localStorage.setItem('duct_site_lang', code); } catch (err) { /* private mode */ }
-    location.href = samePageIn(code);
+    location.assign(url.href);
   }
   function bind() {
     var selects = document.querySelectorAll('select[data-duct-lang]');
@@ -901,7 +905,9 @@ if (window.__DUCT_PARTIALS_READY) {
     var links = document.querySelectorAll('a[data-duct-lang-link]');
     for (var j = 0; j < links.length; j++) {
       var code = links[j].getAttribute('data-duct-lang-link');
-      links[j].setAttribute('href', samePageIn(code));
+      var url = samePageIn(code);
+      if (!url) continue;
+      links[j].setAttribute('href', url.pathname + url.search + url.hash);
       if (code === currentPrefix()) links[j].setAttribute('aria-current', 'true');
     }
   }
