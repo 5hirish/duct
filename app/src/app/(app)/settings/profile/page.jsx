@@ -24,7 +24,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -162,8 +162,11 @@ export default function ProfilePage() {
           {saved}
         </span>
         <Button asChild variant="ghost" size="sm" className="ml-auto">
+          {/* A shortcut, not a back link: the arrow read as "you came from
+              projects", which is rarely where a settings page was opened
+              from. The folder says what it is. */}
           <Link href="/projects">
-            <ArrowLeft className="size-4" /> Projects
+            <FolderKanban className="size-4" /> Your projects
           </Link>
         </Button>
       </div>
