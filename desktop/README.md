@@ -118,6 +118,9 @@ cd backend && poetry run uvicorn server:app --port 8002 --reload
 From VS Code, **`Duct: Desktop (local sidecar)`** runs the sidecar shape, and
 **`Duct: Desktop (tauri dev — no sign-in) + API`** runs uvicorn on 8002 plus
 `dev:local` in one go, stopping uvicorn on exit — both in `.vscode/launch.json`.
+Zed runs neither (it implements no `compounds`); its equivalents are the
+**`Desktop: Tauri dev (sidecar backend)`** and **`Duct: Desktop + API`** tasks
+in `.zed/tasks.json`, and **`Duct: stop everything`** when you are done.
 
 Keychain `invoke` works from the dev server because `http://localhost:3003` is
 already listed under `remote.urls` in `src-tauri/capabilities/default.json`.

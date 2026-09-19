@@ -1,0 +1,32 @@
+// Debug configurations for Zed. Zed falls back to `.vscode/launch.json` only
+// when this file is absent, and that file is mostly `compounds` and
+// `node-terminal` entries Zed has no equivalent for — those live in
+// `.zed/tasks.json` instead, where they belong. What is left here is the part
+// that is genuinely a debugger: Python with breakpoints.
+//
+// The desktop shell has no configuration on purpose. `open` hands the dev
+// bundle to launchd, so no debug session can own it; run the Tauri task and
+// read `/tmp/duct-desktop.log`, then `Duct: stop everything`.
+[
+  {
+    "label": "Backend: Pytest (all)",
+    "adapter": "Debugpy",
+    "request": "launch",
+    "module": "pytest",
+    "args": ["tests", "-v", "--tb=short"],
+    "cwd": "$ZED_WORKTREE_ROOT/backend",
+    "justMyCode": true
+  },
+  {
+    // No `--reload`: the reloader runs the app in a child process the debugger
+    // does not own, so every breakpoint you set silently never binds. Restart
+    // the session instead.
+    "label": "Backend: FastAPI (breakpoints, :8002)",
+    "adapter": "Debugpy",
+    "request": "launch",
+    "module": "uvicorn",
+    "args": ["server:app", "--host", "127.0.0.1", "--port", "8002"],
+    "cwd": "$ZED_WORKTREE_ROOT/backend",
+    "justMyCode": true
+  }
+]
