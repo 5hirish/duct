@@ -797,6 +797,49 @@ fn reveal_main_window(app: &AppHandle) {
     }
 }
 
+/// Marker file recording that the first-run greeting has been shown.
+const GREETED_MARKER: &str = "greeted";
+
+/// The splash window's size, normally and on a first launch.
+///
+/// The taller one holds the `salve` panel and the line under the wordmark. The
+/// size is fixed when the window is built, which is why the first-run decision
+/// is made here in Rust and handed to the page, rather than the page deciding
+/// for itself from storage the window has already been sized without.
+const SPLASH_SIZE: (f64, f64) = (380.0, 150.0);
+const SPLASH_FIRST_RUN_SIZE: (f64, f64) = (380.0, 330.0);
+
+/// Whether this is the first launch on this machine, claiming it if so.
+///
+/// Writes the marker up front rather than once the app has finished loading,
+/// because the two ways this can go wrong are not equal: a greeting missed
+/// after a crash on the very first launch costs nothing, and a greeting shown
+/// on every launch until one succeeds is a bug the user has to watch repeat.
+///
+/// Every failure answers "no" for the same reason. If the data directory
+/// cannot be found or written, the marker could not be recorded either, so
+/// greeting now would mean greeting again next time.
+///
+/// Takes the directory rather than looking it up so the decision can be tested
+/// without an app, an environment variable, or the real data directory.
+fn claim_first_run_in(dir: &std::path::Path) -> bool {
+    let marker = dir.join(GREETED_MARKER);
+    if marker.exists() {
+        return false;
+    }
+    if std::fs::create_dir_all(dir).is_err() {
+        return false;
+    }
+    std::fs::write(&marker, b"").is_ok()
+}
+
+/// `claim_first_run_in` against the real data directory.
+fn claim_first_run() -> bool {
+    telemetry::default_data_dir()
+        .map(|dir| claim_first_run_in(&dir))
+        .unwrap_or(false)
+}
+
 /// Open the splash window.
 ///
 /// Built here rather than declared in `tauri.conf.json` because Tauri
@@ -805,14 +848,29 @@ fn reveal_main_window(app: &AppHandle) {
 /// base config would silently vanish from both. The Rust runs identically for
 /// all three build shapes, which is the same reason `sidecar::is_available`
 /// probes at runtime instead of being compiled two ways.
-fn open_splash(app: &AppHandle) -> tauri::Result<()> {
-    WebviewWindowBuilder::new(app, SPLASH_LABEL, WebviewUrl::App("index.html".into()))
-        .title("Duct")
-        .inner_size(380.0, 150.0)
-        .resizable(false)
-        .decorations(false)
-        .center()
-        .build()?;
+fn open_splash(app: &AppHandle, first_run: bool) -> tauri::Result<()> {
+    let (width, height) = if first_run {
+        SPLASH_FIRST_RUN_SIZE
+    } else {
+        SPLASH_SIZE
+    };
+
+    let mut builder =
+        WebviewWindowBuilder::new(app, SPLASH_LABEL, WebviewUrl::App("index.html".into()))
+            .title("Duct")
+            .inner_size(width, height)
+            .resizable(false)
+            .decorations(false)
+            .center();
+
+    if first_run {
+        // An injected global rather than a query string: `WebviewUrl::App`
+        // takes a path, and a `?` in a path is a question about encoding this
+        // does not need to answer. The script runs before the document's own.
+        builder = builder.initialization_script("window.__DUCT_FIRST_RUN__ = true;");
+    }
+
+    builder.build()?;
     Ok(())
 }
 
@@ -877,7 +935,11 @@ pub fn run() {
             // pixels on screen while the network is still resolving. The main
             // window points at the hosted app, which measured between 0.3 s and
             // 2.3 s just to return the document, before a byte of script runs.
-            if let Err(err) = open_splash(app.handle()) {
+            // Claimed before the window is built, not inside it: this writes
+            // to disk, and a reader of `open_splash` should not have to guess
+            // that opening a window spends the one first run this install has.
+            let first_run = claim_first_run();
+            if let Err(err) = open_splash(app.handle(), first_run) {
                 // A missing splash is cosmetic. A main window that stays hidden
                 // is not, so stop waiting for a page load and show it now.
                 eprintln!("duct: could not open the splash window: {err}");
@@ -972,6 +1034,46 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A directory that does not exist yet, so the test exercises the same
+    /// path a real first launch takes on a machine with no data directory.
+    fn scratch_dir(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "duct-test-{name}-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        dir
+    }
+
+    #[test]
+    fn the_greeting_is_claimed_once_and_never_again() {
+        let dir = scratch_dir("first-run");
+
+        assert!(claim_first_run_in(&dir), "the first launch is a first run");
+        assert!(
+            !claim_first_run_in(&dir),
+            "the second launch is not, or the greeting repeats forever"
+        );
+        assert!(dir.join(GREETED_MARKER).exists());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn an_unwritable_data_dir_is_not_a_first_run() {
+        // If the marker cannot be written, greeting now would mean greeting
+        // again on every launch, which is worse than never greeting at all.
+        // A path under a regular *file* cannot be created as a directory.
+        let blocker = scratch_dir("blocked");
+        std::fs::create_dir_all(blocker.parent().unwrap()).unwrap();
+        std::fs::write(&blocker, b"not a directory").unwrap();
+
+        assert!(!claim_first_run_in(&blocker.join("data")));
+
+        let _ = std::fs::remove_file(&blocker);
+    }
 
     fn target(link: &str) -> Option<(&'static str, String)> {
         deep_link_target(&Url::parse(link).expect("a well-formed link"))
