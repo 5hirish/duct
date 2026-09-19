@@ -852,10 +852,14 @@ if (window.__DUCT_PARTIALS_READY) {
 // The select in the nav partial and the links in the footer both go to the
 // SAME page in the chosen language, never to its home page: someone reading
 // the CPA calculator in Spanish who picks German wants the German calculator.
+// The page's own hreflang alternates say where that is. A page with none
+// (blog posts, the changelog) exists only in English, so the switch goes to
+// the chosen language's home instead of a 404 at /es/blog/….
 // No automatic redirect anywhere — a crawler and a person must get the page
 // the URL names — and the choice is remembered only so the app can read it.
 (function () {
   var PREFIXES = ['es', 'pt-br', 'de', 'ja'];
+  var TAGS = { en: 'en', es: 'es', 'pt-br': 'pt-BR', de: 'de', ja: 'ja' };
   function currentPrefix() {
     var path = location.pathname;
     for (var i = 0; i < PREFIXES.length; i++) {
@@ -865,6 +869,17 @@ if (window.__DUCT_PARTIALS_READY) {
     return 'en';
   }
   function samePageIn(code) {
+    var alternates = document.querySelectorAll('link[rel="alternate"][hreflang]');
+    if (!alternates.length) return (code === 'en' ? '/' : '/' + code + '/');
+    for (var i = 0; i < alternates.length; i++) {
+      if (alternates[i].getAttribute('hreflang') === TAGS[code]) {
+        // The alternate is the canonical, absolute address; keep only its
+        // path so a preview or a local server stays on its own origin.
+        var a = document.createElement('a');
+        a.href = alternates[i].getAttribute('href');
+        return a.pathname + location.search + location.hash;
+      }
+    }
     var path = location.pathname;
     var cur = currentPrefix();
     if (cur !== 'en') path = path.slice(cur.length + 1) || '/';

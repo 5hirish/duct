@@ -61,6 +61,23 @@ test("the switcher keeps the page and changes the language", async ({ page }) =>
   await expect(page).toHaveURL(/\/tools\/cpa-calculator$/);
 });
 
+test("on an English-only page the switcher goes to the language's home", async ({ page }) => {
+  // Blog posts and the changelog are not translated and carry no hreflang
+  // alternates; /es/blog/… does not exist, so the switch must land somewhere
+  // that does.
+  // Posts are pre-rendered with their partials inline, so there is no
+  // partials-ready event here; the rewritten footer link is the ready signal.
+  await page.goto("/blog/keyword-gap-analysis-without-a-spreadsheet");
+  await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0);
+  await expect(page.locator('a[data-duct-lang-link="de"]')).toHaveAttribute("href", "/de/");
+  if (!(await page.locator("select[data-duct-lang]").first().isVisible())) {
+    await page.locator(".nav-toggle").click();
+  }
+  await page.locator("select[data-duct-lang]:visible").first().selectOption("es");
+  await expect(page).toHaveURL(/\/es\/$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+});
+
 test("translated pages carry the JavaScript strings", async ({ page }) => {
   await page.goto("/de/");
   const dict = await page.evaluate(() => window.DUCT_I18N || null);
