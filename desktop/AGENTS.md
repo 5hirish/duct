@@ -48,15 +48,22 @@ carries all the code.
   greet form calling a command that does not exist. It shipped in every bundle
   and was never shown.
 
+  **The splash has no subresources, and that is the design.** It exists to
+  paint before the network resolves, so it must render from one document: no
+  stylesheet request, no script file, no web font. The brand tokens are copied
+  from `site/assets/duct.css` by hand rather than imported, for that reason —
+  there are four, keep them in step. `salve.webp` is the single exception and
+  is loaded only on a first run (below).
+
   **What fills the wait.** The status line under the bar holds a rotating
   one-line aqueduct remark, and at `SLOW_AFTER_MS` (8 s) it stops and is
   replaced by "Still connecting. Check your network." Two constraints on
   anything added here:
   - **One line at 380 px.** The row is a fixed 16 px so nothing shifts when the
-    slow message arrives; a wrapping line breaks that, and a line nobody can
+    slow message arrives; a wrapping line breaks that and a line nobody can
     finish reading in a glance makes the wait feel *longer*, which is the
-    opposite of the point. The widest current line measures 291 px of the
-    340 px available.
+    opposite of the point. The widest current line measures 291 px of 340 px
+    available.
   - **It stops being funny at 8 s.** Past that something is actually wrong, and
     a quip sitting on top of a real failure is the part users resent.
 
@@ -64,8 +71,36 @@ carries all the code.
   splash has no i18n catalogue and cannot get one without adding the
   subresource the window exists to avoid; it is pre-authentication, so there is
   no `interface_language` to read yet either. A non-English user sees English
-  for a couple of seconds. If that ever stops being acceptable, the fix is to
-  drop the line for non-English locales, not to fetch a catalogue here.
+  for two seconds. If that ever stops being acceptable, the fix is to drop the
+  line entirely for non-English locales, not to fetch a catalogue here.
+
+- **The first launch is greeted once.** `claim_first_run` looks for a `greeted`
+  marker in the app data dir; if it is absent it writes one and returns true,
+  and `open_splash` then builds a 380×330 window (instead of 380×150) and
+  injects `window.__DUCT_FIRST_RUN__`, which makes the page show the `salve`
+  mosaic and the product line in place of the rotating remark.
+
+  - **Rust decides, not the page.** The window size is fixed when the window is
+    built, before a webview exists, so `localStorage` cannot be what answers
+    this. The injected global is used rather than a query string because
+    `WebviewUrl::App` takes a path and a `?` in a path is an encoding question
+    worth not asking. `?first=1` does the same thing when the file is opened
+    directly in a browser, which is the only way to review it without a build.
+  - **The marker is written up front, not on success.** A greeting missed after
+    a crash on the very first launch costs nothing; a greeting repeating every
+    launch until one succeeds is a bug the user watches happen. Every failure
+    path — no data dir, unwritable directory — answers "not a first run" for
+    the same reason: if the marker cannot be recorded, greeting now means
+    greeting again next time.
+  - **`desktop/src/salve.webp` is a copy of `app/public/art/mosaic/salve.webp`**
+    and can drift from it. It is duplicated because `frontendDist` is bundled
+    from `desktop/src/` alone. Re-copy it if the panel is regenerated.
+  - Why only here: `app/DESIGN.md` puts panels *where someone arrives*, and
+    says the rarer the surface the more it can afford. A splash is the least
+    rare surface in the product, so it earns the least — but a first launch is
+    the arrival `salve` was drawn for, and showing it every time would both
+    cost a 118 KB decode on the one surface that cannot afford it and wear out
+    an illustration whose whole meaning is "first run".
 - **Keychain** via the `keyring` crate; commands in `src-tauri/src/lib.rs`
   (`get_provider_key` / `set_provider_key` / `delete_provider_key`). The web app
   calls them through `window.__TAURI__.core.invoke` (`app/src/lib/providerKeys.js`).

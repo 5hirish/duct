@@ -135,6 +135,39 @@
         transition: opacity 0.22s ease;
       }
 
+      /* First run only. The greeting is built by script rather than written
+         here so that a normal launch never references salve.webp at all: a
+         hidden <img> is still a decode this window cannot afford. */
+      .panel {
+        width: 128px;
+        height: 128px;
+        margin-bottom: 16px;
+        border-radius: 3px;
+        display: block;
+        /* Fades rather than snapping, so a slow decode never flashes. */
+        animation: settle 0.5s ease both;
+      }
+
+      @keyframes settle {
+        from {
+          opacity: 0;
+          transform: scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .line {
+        margin: 10px 0 0;
+        padding: 0 28px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--navy-3);
+        text-align: center;
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .logo-mark {
           animation: none;
@@ -143,6 +176,9 @@
            motion is gone, so drop it and let the words do the work. */
         .track {
           display: none;
+        }
+        .panel {
+          animation: none;
         }
         .status {
           transition: none;
@@ -153,24 +189,19 @@
 
   <body>
     <main class="splash">
+      <span id="panel-slot"></span>
       <p class="logo"><span>Duct</span><span class="logo-mark"></span></p>
+      <span id="line-slot"></span>
       <div class="track"><div class="fill" id="fill"></div></div>
       <p class="status" id="status"></p>
     </main>
 
     <script>
-      // A trickle, not a progress bar: this window has no way to know how the
-      // hosted app's load is going, and inventing a percentage would be a lie
-      // told to the one person who can tell it is a lie.
-      //
-      // What it does honestly is decay toward a ceiling it never reaches, so
-      // the bar always moves, never stalls at zero, and never sits full while
-      // the user waits. The shell closes this window the moment the app is
-      // ready, which is almost always before the bar gets far — so the usual
-      // experience is an indicator cut off early, which reads as arriving
-      // sooner than promised rather than as a wait that ended.
       const CEILING = 92;
       const TICK_MS = 100;
+      // 0.045 reached ~91% by nine seconds, which is a bar that has visibly
+      // given up while the app is still coming. 0.01 keeps it moving for the
+      // whole plausible range of waits without ever looking nearly done.
       const EASE = 0.01;
 
       // Long enough that a normal start never shows it, short enough that a
@@ -178,6 +209,14 @@
       // loaded machine, so 8s means "this is no longer normal".
       const SLOW_AFTER_MS = 8000;
       const SLOW_MESSAGE = "Still connecting. Check your network.";
+
+      // Rust decides this, because the window size depends on it and the size
+      // is fixed before the webview exists — the page cannot be what reads it.
+      // The query string is the same switch for opening this file straight in
+      // a browser, which is the only way to review it without a build.
+      const FIRST_RUN =
+        window.__DUCT_FIRST_RUN__ === true ||
+        new URLSearchParams(location.search).get("first") === "1";
 
       // Aqueduct lines, because the product is named after one. Each is one
       // line at 380px (measured, widest 291px of 340px available) and each
@@ -202,6 +241,17 @@
       const status = document.getElementById("status");
       const stillness = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+      // A trickle, not a progress bar: this window has no way to know how the
+      // hosted app's load is going, and inventing a percentage would be a lie
+      // told to the one person who can tell it is a lie.
+      //
+      // What it does honestly is decay toward a ceiling it never reaches, so
+      // the bar always moves, never stalls at zero, and never sits full while
+      // the user waits. The shell closes this window the moment the app is
+      // ready, which is almost always before the bar gets far — so the usual
+      // experience is an indicator cut off early, which reads as arriving
+      // sooner than promised rather than as a wait that ended.
+      //
       // Start ahead of zero. An indicator that sits at nothing for its first
       // frame reads as a hang, and this is the frame the user actually sees.
       let progress = 6;
@@ -212,15 +262,36 @@
         fill.style.width = progress + "%";
       }, TICK_MS);
 
-      // Random start, so two launches in a row are not the same line twice.
-      let i = Math.floor(Math.random() * QUIPS.length);
-      status.textContent = QUIPS[i];
+      let rotation = null;
 
-      // Rotation is decoration and the 8s message is information, so reduced
-      // motion drops the first and keeps the second.
-      const rotation = stillness
-        ? null
-        : setInterval(() => {
+      if (FIRST_RUN) {
+        // The one arrival that can afford an illustration. app/DESIGN.md: a
+        // panel goes where someone arrives, and the rarer the surface the more
+        // it can afford — this surface is seen once per install, and `salve`
+        // is the threshold panel drawn for exactly this moment.
+        const panel = document.createElement("img");
+        panel.className = "panel";
+        panel.src = "salve.webp";
+        panel.alt = "";
+        document.getElementById("panel-slot").replaceWith(panel);
+
+        const line = document.createElement("p");
+        line.className = "line";
+        line.textContent = "Your ads, analytics and revenue, read together.";
+        document.getElementById("line-slot").replaceWith(line);
+
+        // No quips here. The greeting is already the content budget for this
+        // window, and two things to read is how a short wait starts feeling
+        // long.
+      } else {
+        // Random start, so two launches in a row are not the same line twice.
+        let i = Math.floor(Math.random() * QUIPS.length);
+        status.textContent = QUIPS[i];
+
+        // Rotation is decoration and the 8s message is information, so
+        // reduced motion drops the first and keeps the second.
+        if (!stillness) {
+          rotation = setInterval(() => {
             status.style.opacity = "0";
             setTimeout(() => {
               i = (i + 1) % QUIPS.length;
@@ -228,6 +299,8 @@
               status.style.opacity = "1";
             }, FADE_MS);
           }, ROTATE_MS);
+        }
+      }
 
       setTimeout(() => {
         // Past here something is actually wrong, so stop being funny. A quip
