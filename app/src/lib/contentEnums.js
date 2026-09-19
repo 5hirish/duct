@@ -9,6 +9,8 @@
  * model id.
  */
 
+import { msg } from "@lingui/core/macro";
+
 export const Platform = Object.freeze({
   TIKTOK:          "tiktok",
   INSTAGRAM:       "instagram",
@@ -44,12 +46,15 @@ export const PostStatus = Object.freeze({
   DISCARDED: "discarded",
 });
 
+// Message descriptors, not strings: this table is module-level, so it is
+// rendered with `i18n._(POST_STATUS_LABELS[status])` in the component that
+// shows it. PLATFORM_LABELS above stays plain — those are brand names.
 export const POST_STATUS_LABELS = Object.freeze({
-  [PostStatus.PENDING]:   "Pending",
-  [PostStatus.DRAFT]:     "Draft",
-  [PostStatus.SCHEDULED]: "Scheduled",
-  [PostStatus.POSTED]:    "Posted",
-  [PostStatus.DISCARDED]: "Discarded",
+  [PostStatus.PENDING]:   msg`Pending`,
+  [PostStatus.DRAFT]:     msg`Draft`,
+  [PostStatus.SCHEDULED]: msg`Scheduled`,
+  [PostStatus.POSTED]:    msg`Posted`,
+  [PostStatus.DISCARDED]: msg`Discarded`,
 });
 
 export const AspectRatio = Object.freeze({

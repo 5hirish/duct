@@ -18,6 +18,13 @@
  * language and only this preview cannot.
  */
 
+import { Trans } from "@lingui/react/macro";
+
+// Not in the interface catalogue on purpose. These are what the *agent* writes,
+// in the communication language chosen above — a different axis from the
+// interface language (see "Three language fields" in AGENTS.md). Routing the
+// English fallback through the catalogue would show a German-interface user a
+// German sample under a note that says "Shown in English".
 const SAMPLES = {
   executive: {
     English: "Paid search wasted $1,840 last month. Three terms, no conversions. Cutting them pays for the quarter's tooling.",
@@ -52,7 +59,7 @@ export default function VoiceSample({ preset = "practitioner", language = "" }) 
 
   return (
     <figure className="pf-sample">
-      <figcaption className="pf-sample-cap">A finding, written for you</figcaption>
+      <figcaption className="pf-sample-cap"><Trans>A finding, written for you</Trans></figcaption>
       {/* aria-live so a screen reader hears the rewrite the sighted user sees;
           without it the sample is a silent change on a control that appears to
           do nothing. */}
@@ -61,7 +68,7 @@ export default function VoiceSample({ preset = "practitioner", language = "" }) 
       </blockquote>
       {untranslated && (
         <p className="pf-sample-note">
-          Shown in English. Duct still writes to you in {language}; only this preview does not.
+          <Trans>Shown in English. Duct still writes to you in {language}; only this preview does not.</Trans>
         </p>
       )}
     </figure>

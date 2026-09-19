@@ -4,6 +4,7 @@
  * vocabulary in lib/agentEvents.js; `AuditEvent` is that object.
  */
 
+import { msg } from "@lingui/core/macro";
 import { AgentEvent } from "./agentEvents";
 
 // The shared vocabulary, under the name this file has always exported. The
@@ -18,10 +19,12 @@ export const AuditStep = Object.freeze({
   SYNTHESIZE_AUDIT: "synthesize_audit",
 });
 
+// Message descriptors, not strings: this table is module-level, so it is
+// rendered with `i18n._(STEP_LABELS[id])` in the component that shows it.
 export const STEP_LABELS = Object.freeze({
-  [AuditStep.RESOLVE_URL]:      "Resolving website",
-  [AuditStep.FETCH_SITEMAP]:    "Fetching sitemap",
-  [AuditStep.CRAWL_PAGES]:      "Crawling pages",
-  [AuditStep.ENRICHING]:        "Researching competitors",
-  [AuditStep.SYNTHESIZE_AUDIT]: "AI synthesis",
+  [AuditStep.RESOLVE_URL]:      msg`Resolving website`,
+  [AuditStep.FETCH_SITEMAP]:    msg`Fetching sitemap`,
+  [AuditStep.CRAWL_PAGES]:      msg`Crawling pages`,
+  [AuditStep.ENRICHING]:        msg`Researching competitors`,
+  [AuditStep.SYNTHESIZE_AUDIT]: msg`AI synthesis`,
 });

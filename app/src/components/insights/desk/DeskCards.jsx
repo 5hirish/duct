@@ -7,34 +7,63 @@
 // urgent; the other two are things to read, not things to do.
 
 import Link from "next/link";
-import { CARD_LIMIT, NEEDS_YOU, FOUND, IN_PROGRESS, relativeTime } from "@/lib/desk";
+import { msg } from "@lingui/core/macro";
+import { Plural, useLingui } from "@lingui/react/macro";
+import { CARD_LIMIT, NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
 import { cn } from "@/lib/utils";
+import { useRelativeTime } from "./useRelativeTime";
 
 const CARDS = [
   {
     key: NEEDS_YOU,
-    label: "Needs you",
+    label: msg`Needs you`,
     dot: "bg-destructive",
     ring: "border-destructive/40",
-    empty: "Nothing is waiting on you.",
+    empty: msg`Nothing is waiting on you.`,
   },
   {
     key: FOUND,
-    label: "What I found",
+    label: msg`What I found`,
     dot: "bg-[var(--orange)]",
     ring: "border-border",
-    empty: "Nothing checked yet.",
+    empty: msg`Nothing checked yet.`,
   },
   {
     key: IN_PROGRESS,
-    label: "In progress",
+    label: msg`In progress`,
     dot: "bg-primary",
     ring: "border-border",
-    empty: "Nothing running.",
+    empty: msg`Nothing running.`,
   },
 ];
+
+// The words for lib/desk.js's codes. The rule lives there and cannot carry
+// copy (it runs under plain node, no macro pass); the sentences live here.
+const TITLE = {
+  untitled_thread: msg`Untitled thread`,
+  untitled_change_set: msg`Untitled change set`,
+};
+
+const DETAIL = {
+  // certainty(): a finding, and how far Duct trusts it
+  unconfirmed: msg`Not confirmed`,
+  checked: msg`Checked`,
+  low: msg`Low confidence`,
+  fair: msg`Fairly sure`,
+  // an incident nobody has resolved
+  unclosed: msg`Nobody has closed this`,
+  // a change set past the approval click
+  applying: msg`Applying now`,
+  approved: msg`Approved, waiting to run`,
+  // conversationCard(): a thread, by its run status
+  waiting: msg`Waiting on your answer`,
+  failed: msg`The last turn failed`,
+  working: msg`Working`,
+  stopped: msg`Stopped — pick up where it left off`,
+  resume: msg`Pick up where you left off`,
+};
 
 const TONE_CLASS = {
   sure: "text-success",
@@ -61,6 +90,22 @@ export function itemHref(item) {
 // trigger is the row itself, not a second focusable span, so tabbing the
 // card still lands on one stop per item (AGENTS.md accessibility rule).
 function Item({ item }) {
+  const { i18n } = useLingui();
+  const relative = useRelativeTime();
+  const title = item.title || (TITLE[item.titleCode] ? i18n._(TITLE[item.titleCode]) : "");
+  const count = item.count ?? 0;
+  const detail =
+    item.detailCode === "changes_to_approve" ? (
+      <Plural value={count} one="# change to approve" other="# changes to approve" />
+    ) : item.detailCode === "failed" && item.error ? (
+      // The backend's own reason for the failure, when it gave one.
+      item.error
+    ) : DETAIL[item.detailCode] ? (
+      i18n._(DETAIL[item.detailCode])
+    ) : (
+      ""
+    );
+  const ago = relative(item.at);
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -68,19 +113,20 @@ function Item({ item }) {
           href={itemHref(item)}
           className="group block rounded-md -mx-2 px-2 py-1.5 transition-colors hover:bg-accent/60"
         >
-          <p className={cn(clampClass(2), "text-sm font-medium leading-snug")}>{item.title}</p>
+          <p className={cn(clampClass(2), "text-sm font-medium leading-snug")}>{title}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            <span className={cn(TONE_CLASS[item.tone] || "text-muted-foreground")}>{item.detail}</span>
-            {item.at && <span> · {relativeTime(item.at)}</span>}
+            <span className={cn(TONE_CLASS[item.tone] || "text-muted-foreground")}>{detail}</span>
+            {ago && <span> · {ago}</span>}
           </p>
         </Link>
       </TooltipTrigger>
-      <ClampTooltipContent text={item.title} />
+      <ClampTooltipContent text={title} />
     </Tooltip>
   );
 }
 
 export default function DeskCards({ buckets }) {
+  const { i18n } = useLingui();
   const byKey = {
     [NEEDS_YOU]: buckets.needsYou,
     [FOUND]: buckets.found,
@@ -97,16 +143,16 @@ export default function DeskCards({ buckets }) {
           <section
             key={card.key}
             className={cn("flex flex-col rounded-xl border bg-card p-5", card.ring)}
-            aria-label={card.label}
+            aria-label={i18n._(card.label)}
           >
             <header className="mb-4 flex items-center gap-2.5">
               <span className={cn("size-[7px] rounded-full", card.dot)} aria-hidden />
-              <h2 className="text-sm font-bold tracking-tight">{card.label}</h2>
+              <h2 className="text-sm font-bold tracking-tight">{i18n._(card.label)}</h2>
               <span className="text-sm text-muted-foreground">{items.length || ""}</span>
             </header>
 
             {shown.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{card.empty}</p>
+              <p className="text-xs text-muted-foreground">{i18n._(card.empty)}</p>
             ) : (
               <div className="flex flex-col gap-3.5">
                 {shown.map((item) => (
@@ -117,7 +163,7 @@ export default function DeskCards({ buckets }) {
 
             {rest > 0 && (
               <p className="mt-auto pt-4 text-xs text-muted-foreground">
-                {rest} more not shown
+                <Plural value={rest} one="# more not shown" other="# more not shown" />
               </p>
             )}
           </section>

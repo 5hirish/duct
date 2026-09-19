@@ -226,11 +226,17 @@ def check_file(filepath, site_root):
 def main():
     repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     site_root = os.path.join(repo_root, "site")
+    # The generated language trees (scripts/build_site_i18n.py) hold the same
+    # pages under /es/, /de/ … and must pass the same checks: a localised page
+    # with an .html canonical or a broken OG card is still a broken page.
+    locale_dirs = ["es", "pt-br", "de", "ja"]
     html_files = sorted(
         glob.glob(os.path.join(site_root, "*.html")) +
         glob.glob(os.path.join(site_root, "blog", "*.html")) +
         glob.glob(os.path.join(site_root, "changelog", "*.html")) +
-        glob.glob(os.path.join(site_root, "tools", "*.html"))
+        glob.glob(os.path.join(site_root, "tools", "*.html")) +
+        [f for d in locale_dirs for f in glob.glob(os.path.join(site_root, d, "*.html"))] +
+        [f for d in locale_dirs for f in glob.glob(os.path.join(site_root, d, "tools", "*.html"))]
     )
 
     total_errors = 0

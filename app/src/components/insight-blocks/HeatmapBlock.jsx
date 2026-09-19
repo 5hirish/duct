@@ -2,8 +2,10 @@
 
 import { ResponsiveHeatMap } from "@nivo/heatmap";
 import { numericField } from "../../lib/insightData";
+import { useLingui } from "@lingui/react/macro";
 
 export default function HeatmapBlock({ title, rows, xField, yField, groupBy, insightNote = "" }) {
+  const { t } = useLingui();
   if (!rows?.length || !xField || !yField || !groupBy) return null;
 
   const xValues = [...new Set(rows.map((row) => String(row?.[xField] ?? "-")))];
@@ -21,7 +23,7 @@ export default function HeatmapBlock({ title, rows, xField, yField, groupBy, ins
 
   return (
     <section>
-      <p className="rpt-section-label">{title || "Heatmap"}</p>
+      <p className="rpt-section-label">{title || t`Heatmap`}</p>
       <div style={{ width: "100%", height: 320 }}>
         <ResponsiveHeatMap
           data={data}

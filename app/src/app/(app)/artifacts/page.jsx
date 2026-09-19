@@ -10,6 +10,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FileText, LockKeyhole } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
@@ -22,13 +24,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mirrors models/artifact.py's `kind` — what an artifact *is*, not who made it.
 const KIND_TABS = [
-  { value: "", label: "All" },
-  { value: "report", label: "Reports" },
-  { value: "brief", label: "Briefs" },
-  { value: "document", label: "Documents" },
+  { value: "", label: msg`All` },
+  { value: "report", label: msg`Reports` },
+  { value: "brief", label: msg`Briefs` },
+  { value: "document", label: msg`Documents` },
 ];
 
 export default function ArtifactsPage() {
+  const { t, i18n } = useLingui();
   const router = useRouter();
   const [project, setProject] = useState(null);
   const [signedIn, setSignedIn] = useState(true);
@@ -63,23 +66,27 @@ export default function ArtifactsPage() {
     };
   }, [project, kind, signedIn]);
 
+  const projectName = project?.name || t`this project`;
+
   return (
     <section>
       <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Artifacts</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Artifacts</Trans></h1>
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        Everything your agents have produced for{" "}
-        <strong>{project?.name || "this project"}</strong> — reports, documents, exports.
-        Stored durably; open one to view, download, or continue its chat.
+        <Trans>
+          Everything your agents have produced for{" "}
+          <strong>{projectName}</strong> — reports, documents, exports.
+          Stored durably; open one to view, download, or continue its chat.
+        </Trans>
       </p>
 
       <Tabs value={kind} onValueChange={setKind}>
         <TabsList>
           {KIND_TABS.map((tab) => (
             <TabsTrigger key={tab.value || "all"} value={tab.value}>
-              {tab.label}
+              {i18n._(tab.label)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -89,14 +96,14 @@ export default function ArtifactsPage() {
         <div style={{ marginTop: 18 }}>
           <EmptyState
             icon={LockKeyhole}
-            title="Sign in to see your saved artifacts"
+            title={t`Sign in to see your saved artifacts`}
             actions={
               <Button size="sm" asChild>
-                <Link href="/">Sign in</Link>
+                <Link href="/"><Trans>Sign in</Trans></Link>
               </Button>
             }
           >
-            Reports are stored against your account, so they survive the tab that made them.
+            <Trans>Reports are stored against your account, so they survive the tab that made them.</Trans>
           </EmptyState>
         </div>
       )}
@@ -105,7 +112,7 @@ export default function ArtifactsPage() {
         <div
           className="@container mt-4 grid grid-cols-2 gap-4 @lg:grid-cols-3 @2xl:grid-cols-4"
           role="status"
-          aria-label="Loading artifacts"
+          aria-label={t`Loading artifacts`}
         >
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
@@ -113,26 +120,28 @@ export default function ArtifactsPage() {
         </div>
       )}
 
-      {signedIn && error && <LoadError what="your artifacts" detail={error} />}
+      {signedIn && error && <LoadError what={t`your artifacts`} detail={error} />}
 
       {signedIn && !error && items && items.length === 0 && (
         <div style={{ marginTop: 18 }}>
           <EmptyState
             icon={FileText}
-            title="No artifacts yet"
+            title={t`No artifacts yet`}
             actions={
               <>
                 <Button size="sm" asChild>
-                  <Link href="/audit/seo">Run an SEO audit</Link>
+                  <Link href="/audit/seo"><Trans>Run an SEO audit</Trans></Link>
                 </Button>
                 <Button size="sm" variant="ghost" asChild>
-                  <Link href="/insights/organic-growth">Ask a question</Link>
+                  <Link href="/insights/organic-growth"><Trans>Ask a question</Trans></Link>
                 </Button>
               </>
             }
           >
-            Run an audit with your project selected and its report lands here — versioned, so
-            you can read what changed between two runs of the same check.
+            <Trans>
+              Run an audit with your project selected and its report lands here — versioned, so
+              you can read what changed between two runs of the same check.
+            </Trans>
           </EmptyState>
         </div>
       )}

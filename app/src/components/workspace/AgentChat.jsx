@@ -25,6 +25,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDownRight, Brain } from "lucide-react";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Lightbox } from "@/components/ui/lightbox";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
@@ -57,14 +59,14 @@ function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }
     <div className="flex justify-end mb-2">
       <div className="max-w-[85%] space-y-1">
         <div className="rounded-2xl rounded-br-sm px-3 py-2 text-sm bg-destructive/10 border border-destructive/30 text-destructive">
-          <p className="text-xs font-medium mb-0.5">{content ? "Failed to send" : "That turn failed"}</p>
+          <p className="text-xs font-medium mb-0.5">{content ? <Trans>Failed to send</Trans> : <Trans>That turn failed</Trans>}</p>
           <p className="text-xs text-destructive/80">{text}</p>
         </div>
-        {action === ErrorAction.SETTINGS && <Link href="/settings/models" className={link}>Open model settings →</Link>}
-        {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}>Open connections →</Link>}
+        {action === ErrorAction.SETTINGS && <Link href="/settings/models" className={link}><Trans>Open model settings →</Trans></Link>}
+        {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}><Trans>Open connections →</Trans></Link>}
         {action === ErrorAction.RETRY && content && onRetry && retryable && (
           <button type="button" onClick={() => onRetry(content)} className={link}>
-            ↺ Retry
+            <Trans>↺ Retry</Trans>
           </button>
         )}
       </div>
@@ -84,7 +86,7 @@ function ThinkingBlock({ thinking, streaming }) {
         className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         <span className="font-mono" aria-hidden="true">{expanded ? "▾" : "▸"}</span>
-        <span>{expanded ? "Hide" : "Show"} reasoning{streaming ? "…" : ""}</span>
+        <span>{expanded ? <Trans>Hide reasoning</Trans> : <Trans>Show reasoning</Trans>}{streaming ? "…" : ""}</span>
       </button>
       {expanded && (
         <div className="mt-1.5 rounded-lg px-3.5 py-3 bg-muted/40 border border-border/40">
@@ -115,6 +117,7 @@ function TypingIndicator() {
 }
 
 function ChatBubble({ role, text, thinking, streaming, queued = false }) {
+  const { t } = useLingui();
   if (role === Row.USER) {
     return (
       <div className="flex justify-end mb-4">
@@ -127,8 +130,8 @@ function ChatBubble({ role, text, thinking, streaming, queued = false }) {
             <p className="whitespace-pre-wrap break-words">{text}</p>
           </div>
           {queued && (
-            <p className="mt-1 pr-1 text-right text-2xs text-muted-foreground" title="Sent while the agent was busy; it reads this at its next step.">
-              ↳ Queued · picked up at the next step
+            <p className="mt-1 pr-1 text-right text-2xs text-muted-foreground" title={t`Sent while the agent was busy; it reads this at its next step.`}>
+              <Trans>↳ Queued · picked up at the next step</Trans>
             </p>
           )}
         </div>
@@ -153,25 +156,27 @@ function ChatBubble({ role, text, thinking, streaming, queued = false }) {
 /** A generated image in the transcript: the inline data URI for an instant
  * thumbnail, the full-res URL in a lightbox on click. */
 function ImageBubble({ image, fullUrl, caption }) {
+  const { t } = useLingui();
   const [open, setOpen] = useState(false);
   const thumb = image || fullUrl;
   const full = fullUrl || image;
   if (!thumb) return null;
+  const alt = caption || t`Generated image`;
   return (
     <div className="flex justify-start mb-4">
       <div className="max-w-[82%] space-y-1">
         <button
           type="button"
           onClick={() => setOpen(true)}
-          title="View full screen"
+          title={t`View full screen`}
           className="block overflow-hidden rounded-2xl rounded-bl-sm border border-border/60 bg-muted/40 transition-opacity hover:opacity-95"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={thumb} alt={caption || "Generated image"} loading="lazy" className="block w-44 max-w-full object-cover" />
+          <img src={thumb} alt={alt} loading="lazy" className="block w-44 max-w-full object-cover" />
         </button>
         {caption && <p className="pl-1 text-2xs text-muted-foreground">{caption}</p>}
       </div>
-      <Lightbox open={open} onOpenChange={setOpen} src={full} alt={caption || "Generated image"} />
+      <Lightbox open={open} onOpenChange={setOpen} src={full} alt={alt} />
     </div>
   );
 }
@@ -239,11 +244,11 @@ function FailedAction({ action, retryable, onRetry, retryLabel, onStartFresh }) 
   const button = "mt-3 w-full rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/20 transition-colors text-center";
   switch (action) {
     case ErrorAction.SETTINGS:
-      return <Link href="/settings/models" className={button}>Open model settings</Link>;
+      return <Link href="/settings/models" className={button}><Trans>Open model settings</Trans></Link>;
     case ErrorAction.CONNECTIONS:
-      return <Link href="/connections" className={button}>Open connections</Link>;
+      return <Link href="/connections" className={button}><Trans>Open connections</Trans></Link>;
     case ErrorAction.FRESH:
-      if (onStartFresh) return <button type="button" onClick={onStartFresh} className={button}>Start a fresh conversation</button>;
+      if (onStartFresh) return <button type="button" onClick={onStartFresh} className={button}><Trans>Start a fresh conversation</Trans></button>;
       return null;
     case ErrorAction.NONE:
       return null;
@@ -293,12 +298,12 @@ function NoticeRow({ text }) {
 }
 
 const PHASE_STATUS = {
-  [Phase.STARTING]:  { label: "Connecting…",     pulse: true },
-  [Phase.PIPELINE]:  { label: "Working…",        pulse: true },
-  [Phase.QUESTIONS]: { label: "Waiting for you", pulse: false },
-  [Phase.READY]:     { label: "Ready",           pulse: false },
-  [Phase.CHATTING]:  { label: "Thinking…",       pulse: true },
-  [Phase.FAILED]:    { label: "Failed",          pulse: false },
+  [Phase.STARTING]:  { label: msg`Connecting…`,     pulse: true },
+  [Phase.PIPELINE]:  { label: msg`Working…`,        pulse: true },
+  [Phase.QUESTIONS]: { label: msg`Waiting for you`, pulse: false },
+  [Phase.READY]:     { label: msg`Ready`,           pulse: false },
+  [Phase.CHATTING]:  { label: msg`Thinking…`,       pulse: true },
+  [Phase.FAILED]:    { label: msg`Failed`,          pulse: false },
 };
 
 // ---------------------------------------------------------------------------
@@ -313,12 +318,12 @@ const PHASE_STATUS = {
  * unrecognised key falls back to itself rather than to a wrong label, because
  * a chip that confidently names the wrong tier is worse than a scruffy one.
  */
-function tierLabel(key) {
-  return TIERS.find((tier) => tier.key === key)?.label || key || "a fallback model";
+function tierLabel(key, i18n) {
+  return TIERS.find((tier) => tier.key === key)?.label || key || i18n._(msg`a fallback model`);
 }
 
 export default function AgentChat({
-  title = "Agent Chat",
+  title,
   phase,
   steps = [],
   todos = [],
@@ -373,13 +378,20 @@ export default function AgentChat({
   inputPlaceholder,
   inputAriaLabel,
   inputAccept,
-  startingLabel = "Starting session…",
-  failedTitle = "Session failed",
-  retryLabel = "↺ Retry",
+  startingLabel,
+  failedTitle,
+  retryLabel,
   readyHint = null,
   headerExtra = null,
   footer = null,
 }) {
+  const { t, i18n } = useLingui();
+  // The copy props default to the shell's own words, resolved here rather than
+  // in the signature so they follow the interface language.
+  const titleText = title ?? t`Agent Chat`;
+  const startingText = startingLabel ?? t`Starting session…`;
+  const failedText = failedTitle ?? t`Session failed`;
+  const retryText = retryLabel ?? t`↺ Retry`;
   const scrollRef = useRef(null);
   const isAtBottom = useRef(true);
   const prevMsgLen = useRef(0);
@@ -430,22 +442,38 @@ export default function AgentChat({
   const stepDownIn = tierStepDown?.until
     ? Math.max(0, Math.ceil((tierStepDown.until - Date.now()) / 1000))
     : 0;
+  const attempt = retrying?.attempt;
+  const attempts = retrying?.max;
   const activity = retrying
-    ? `Reconnecting to the model (${retrying.attempt}/${retrying.max})${retryIn > 0 ? ` · retry in ${retryIn}s` : ""}`
+    ? (retryIn > 0
+      ? t`Reconnecting to the model (${attempt}/${attempts}) · retry in ${retryIn}s`
+      : t`Reconnecting to the model (${attempt}/${attempts})`)
     : compacting
-      ? "Compacting context"
+      ? t`Compacting context`
       : runningStep?.label || "";
+  const phaseLabel = i18n._(status.label);
   const statusLabel = reconnecting && !isFailed
-    ? "Reconnecting…"
+    ? t`Reconnecting…`
     : working
-      ? [status.label.replace(/…$/, ""), formatElapsed(elapsed), activity].filter(Boolean).join(" · ")
-      : status.label;
+      ? [phaseLabel.replace(/…$/, ""), formatElapsed(elapsed), activity].filter(Boolean).join(" · ")
+      : phaseLabel;
   const contextUsed = usage?.last?.window ? (usage.last.input + usage.last.output) / usage.last.window : 0;
   // The box stays open while the agent works: say where a message goes.
   const placeholder = inputPlaceholder
-    || (working ? "Add a thought — it goes in at the next step"
-      : waiting ? "Answer above, or leave a note for after"
+    || (working ? t`Add a thought — it goes in at the next step`
+      : waiting ? t`Answer above, or leave a note for after`
         : undefined);
+  // The step-down chip's tooltip: the backend's own sentence, the countdown,
+  // then where to change it — assembled from whole messages.
+  const stepDownMinutes = Math.ceil(stepDownIn / 60);
+  const stepDownTitle = tierStepDown
+    ? [
+        tierStepDown.detail + (stepDownIn > 0 ? t` — back in about ${stepDownMinutes} min` : "") + ".",
+        t`Set which model runs each job in Settings → Models & providers.`,
+      ].join(" ")
+    : "";
+  const ranTier = tierStepDown ? tierLabel(tierStepDown.ran, i18n) : "";
+  const requestedTier = tierStepDown ? tierLabel(tierStepDown.requested, i18n) : "";
 
   return (
     <div className="flex flex-col h-full">
@@ -454,7 +482,7 @@ export default function AgentChat({
           waiting ? "border-warning/70 bg-warning/5" : "border-border/60"
         }`}
       >
-        <span className="text-sm font-medium">{title}</span>
+        <span className="text-sm font-medium">{titleText}</span>
         {waiting && (
           <span className="relative flex size-2" aria-hidden="true">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
@@ -481,33 +509,29 @@ export default function AgentChat({
           {tierStepDown && (
             <span
               className="inline-flex items-center gap-1 text-xs text-muted-foreground"
-              title={
-                tierStepDown.detail
-                  + (stepDownIn > 0 ? ` — back in about ${Math.ceil(stepDownIn / 60)} min` : "")
-                  + ". Set which model runs each job in Settings → Models & providers."
-              }
+              title={stepDownTitle}
             >
               <ArrowDownRight size={12} aria-hidden="true" />
-              {tierLabel(tierStepDown.ran)} · {tierLabel(tierStepDown.requested)} is rate limited
+              <Trans>{ranTier} · {requestedTier} is rate limited</Trans>
             </span>
           )}
           {!remembering && (
             <span
               className="inline-flex items-center gap-1 text-xs text-muted-foreground"
-              title="Nothing from project memory is read into this session, and nothing it concludes is written back."
+              title={t`Nothing from project memory is read into this session, and nothing it concludes is written back.`}
             >
               <Brain size={12} aria-hidden="true" />
-              Not remembering
+              <Trans>Not remembering</Trans>
             </span>
           )}
           {onStartFresh && canStartFresh && (
             <button
               type="button"
               onClick={onStartFresh}
-              title="Abandon this conversation and start a new one (what it produced is kept)"
+              title={t`Abandon this conversation and start a new one (what it produced is kept)`}
               className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             >
-              ↺ Start fresh
+              <Trans>↺ Start fresh</Trans>
             </button>
           )}
         </span>
@@ -527,7 +551,7 @@ export default function AgentChat({
           {phase === Phase.STARTING && (
             <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
               <Spinner className="size-3" />
-              {startingLabel}
+              {startingText}
             </div>
           )}
 
@@ -550,7 +574,7 @@ export default function AgentChat({
           {reconnecting && !isFailed && (
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning">
               <Spinner className="size-3" />
-              Connection dropped — reconnecting…
+              <Trans>Connection dropped — reconnecting…</Trans>
             </div>
           )}
 
@@ -559,7 +583,7 @@ export default function AgentChat({
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 text-destructive text-base leading-none" aria-hidden="true">✕</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-destructive mb-1">{failedTitle}</p>
+                  <p className="text-sm font-medium text-destructive mb-1">{failedText}</p>
                   <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorMsg}</p>
                 </div>
               </div>
@@ -567,7 +591,7 @@ export default function AgentChat({
                 action={errorAction(errorCode)}
                 retryable={errorRetryable}
                 onRetry={onRetry}
-                retryLabel={retryLabel}
+                retryLabel={retryText}
                 onStartFresh={onStartFresh}
               />
             </div>
@@ -583,7 +607,7 @@ export default function AgentChat({
               onClick={scrollToLatest}
               className="pointer-events-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all"
             >
-              ↓ New message
+              <Trans>↓ New message</Trans>
             </button>
           </div>
         )}
@@ -608,7 +632,7 @@ export default function AgentChat({
           usage?.last ? (
             <ContextRing used={contextUsed} details={usage} />
           ) : (
-            <ContextRing used={0} label="New thread" />
+            <ContextRing used={0} label={t`New thread`} />
           )
         }
       />

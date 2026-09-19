@@ -7,6 +7,9 @@
  * can tell "not a public address" from "no answer" without matching prose.
  */
 
+import { i18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
+
 import { BASE, backendAuthedHeaders } from "./api";
 import { providerKeyHeaders } from "./providerKeys";
 
@@ -28,10 +31,13 @@ async function failure(res) {
     detail = null;
   }
   const structured = detail && typeof detail === "object" ? detail : null;
+  const status = res.status;
   const message =
     structured?.message ||
     (typeof detail === "string" ? detail : "") ||
-    (res.status === 429 ? "That is a lot of sites in a row — try again in a few minutes." : `Request failed (${res.status}).`);
+    (status === 429
+      ? i18n._(msg`That is a lot of sites in a row — try again in a few minutes.`)
+      : i18n._(msg`Request failed (${status}).`));
   return new OnboardingError(message, {
     reason: structured?.reason || "",
     status: res.status,

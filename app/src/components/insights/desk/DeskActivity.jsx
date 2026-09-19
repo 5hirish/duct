@@ -8,7 +8,8 @@
 // "18 minutes ago" is the useful half of "08:42".
 
 import { History, PanelRightClose, PanelRightOpen } from "lucide-react";
-import { relativeTime } from "@/lib/desk";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { useRelativeTime } from "./useRelativeTime";
 import { ClampText } from "@/components/ui/clamp-text";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +68,7 @@ export default function DeskActivity({ items, collapsed = false, onToggle }) {
             {items.length}
           </span>
           <span className="rotate-180 text-2xs font-bold uppercase tracking-[0.08em] [writing-mode:vertical-rl]">
-            Activity
+            <Trans>Activity</Trans>
           </span>
         </button>
 
@@ -87,30 +88,35 @@ export default function DeskActivity({ items, collapsed = false, onToggle }) {
 }
 
 function ActivityPanel({ items, onToggle }) {
+  const { t } = useLingui();
+  const ago = useRelativeTime();
+
   return (
     <div id={PANEL_ID}>
       <h2 className="mb-5 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.02em] text-muted-foreground">
         <History className="size-3.5" aria-hidden />
-        Activity
+        <Trans>Activity</Trans>
         {onToggle && (
           <button
             type="button"
             onClick={onToggle}
             aria-expanded
             aria-controls={PANEL_ID}
-            title="Hide activity"
+            title={t`Hide activity`}
             className="ml-auto hidden rounded-sm p-1 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring @3xl:inline-flex"
           >
             <PanelRightClose className="size-3.5" aria-hidden />
-            <span className="sr-only">Hide activity</span>
+            <span className="sr-only"><Trans>Hide activity</Trans></span>
           </button>
         )}
       </h2>
 
       {items.length === 0 ? (
         <p className="text-xs leading-relaxed text-muted-foreground">
-          Nothing yet. Every sync, check and change lands here — with what it found and how to
-          undo it.
+          <Trans>
+            Nothing yet. Every sync, check and change lands here — with what it found and how to
+            undo it.
+          </Trans>
         </p>
       ) : (
         <div className="relative pl-[22px]">
@@ -133,8 +139,8 @@ function ActivityPanel({ items, onToggle }) {
                 className="rounded-sm text-xs leading-snug focus-visible:ring-2 focus-visible:ring-ring"
               />
               <p className="mt-0.5 text-2xs text-muted-foreground">
-                {relativeTime(entry.created_at)}
-                {entry.source === "auto" && " · ran on its own"}
+                {ago(entry.created_at)}
+                {entry.source === "auto" && <>{" · "}<Trans>ran on its own</Trans></>}
                 {entry.source === "agent" && " · Duct"}
               </p>
             </div>

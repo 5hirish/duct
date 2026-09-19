@@ -17,6 +17,7 @@
 // form inline would set the height of every card in the grid.
 
 import { useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +53,7 @@ export default function ManualConnectorCard({
   onEntityChange,
   mappingBusy,
 }) {
+  const { t } = useLingui();
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({});
   const [accounts, setAccounts] = useState(null); // null = not verified yet
@@ -90,7 +92,8 @@ export default function ManualConnectorCard({
     setNotice("");
     const missing = fields.filter((f) => !f.optional && !(values[f.key] || "").trim());
     if (missing.length) {
-      setError(`Missing: ${missing.map((f) => f.label).join(", ")}`);
+      const names = missing.map((f) => f.label).join(", ");
+      setError(t`Missing: ${names}`);
       return;
     }
     setBusy(true);
@@ -104,14 +107,16 @@ export default function ManualConnectorCard({
       if (rows.length === 1 || pickedAccount) {
         const chosen = rows.find((r) => r.account_id === pickedAccount) || rows[0] || {};
         await persist(creds, chosen);
-        setNotice(
-          `Verified${chosen.account_name ? ` — ${chosen.account_name}` : ""}. Credentials saved (encrypted).`
-          + (warning ? ` ⚠ ${warning}` : "")
-        );
+        const accountName = chosen.account_name;
+        const verified = accountName
+          ? t`Verified — ${accountName}. Credentials saved (encrypted).`
+          : t`Verified. Credentials saved (encrypted).`;
+        setNotice(verified + (warning ? ` ⚠ ${warning}` : ""));
       } else if (rows.length > 1) {
-        setNotice(`Verified — ${rows.length} accounts reachable. Pick one below to finish.`);
+        const count = rows.length;
+        setNotice(t`Verified — ${count} accounts reachable. Pick one below to finish.`);
       } else {
-        setNotice("Credentials verified, but no accounts are reachable with them.");
+        setNotice(t`Credentials verified, but no accounts are reachable with them.`);
       }
     } catch (err) {
       setAccounts(null);
@@ -123,7 +128,7 @@ export default function ManualConnectorCard({
 
   async function persist(creds, account) {
     if (!signedIn) {
-      throw new Error("Sign in to save — manual credentials are stored server-side (encrypted) so agents and scheduled pulls can use them.");
+      throw new Error(t`Sign in to save — manual credentials are stored server-side (encrypted) so agents and scheduled pulls can use them.`);
     }
     const blob = { ...creds };
     if (account?.account_id) blob[accountField] = account.account_id;
@@ -150,7 +155,8 @@ export default function ManualConnectorCard({
     try {
       const chosen = (accounts || []).find((r) => r.account_id === accountId);
       await persist(credentialDict(), chosen);
-      setNotice(`Saved — ${chosen?.account_name || accountId}.`);
+      const accountName = chosen?.account_name || accountId;
+      setNotice(t`Saved — ${accountName}.`);
     } catch (err) {
       setError(err.message || String(err));
     } finally {
@@ -158,11 +164,15 @@ export default function ManualConnectorCard({
     }
   }
 
+  const accountCount = serverRowList.length;
+  const firstAccountName = connected ? serverRowList[0].account_name : "";
   const status = connected
-    ? serverRowList.length > 1
-      ? `Connected — ${serverRowList.length} accounts`
-      : `Connected${serverRowList[0].account_name ? ` — ${serverRowList[0].account_name}` : ""}`
-    : "Not connected";
+    ? accountCount > 1
+      ? t`Connected — ${accountCount} accounts`
+      : firstAccountName
+        ? t`Connected — ${firstAccountName}`
+        : t`Connected`
+    : t`Not connected`;
 
   return (
     <>
@@ -203,9 +213,9 @@ export default function ManualConnectorCard({
           <div className="conn-dialog-section">
             {serverRowList.map((row) => (
               <div key={row.id} className="conn-account-row">
-                <span>{row.account_name || row.account_id || "Default account"}</span>
+                <span>{row.account_name || row.account_id || t`Default account`}</span>
                 <Button type="button" variant="outline" size="sm" onClick={() => onRemoveRow?.(row.id)}>
-                  Remove
+                  <Trans>Remove</Trans>
                 </Button>
               </div>
             ))}
@@ -216,7 +226,7 @@ export default function ManualConnectorCard({
                 size="sm"
                 onClick={() => setAdding((isOpen) => !isOpen)}
               >
-                {adding ? "Cancel" : "Add another account"}
+                {adding ? <Trans>Cancel</Trans> : <Trans>Add another account</Trans>}
               </Button>
             </div>
           </div>
@@ -227,15 +237,16 @@ export default function ManualConnectorCard({
             {docsUrl && (
               <p className="conn-hint">
                 <a className="app-link" href={docsUrl} target="_blank" rel="noreferrer">
-                  {docsLabel || "Where to find these credentials"}
+                  {docsLabel || <Trans>Where to find these credentials</Trans>}
                 </a>
               </p>
             )}
-            {fields.map((f) => (
+            {fields.map((f) => {
+              const fieldLabel = f.label;
+              return (
               <div key={f.key} className="conn-field">
                 <Label htmlFor={`${type}-${f.key}`}>
-                  {f.label}
-                  {f.optional ? " (optional)" : ""}
+                  {f.optional ? <Trans>{fieldLabel} (optional)</Trans> : fieldLabel}
                 </Label>
                 {f.multiline ? (
                   <textarea
@@ -260,14 +271,15 @@ export default function ManualConnectorCard({
                 )}
                 {f.hint && <p className="conn-hint">{f.hint}</p>}
               </div>
-            ))}
+              );
+            })}
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <Button type="submit" size="sm" disabled={busy || !signedIn}>
-                {busy ? "Verifying…" : "Verify & save"}
+                {busy ? <Trans>Verifying…</Trans> : <Trans>Verify & save</Trans>}
               </Button>
               {!signedIn && (
                 <span className="conn-hint">
-                  Sign in first — credentials are stored encrypted server-side.
+                  <Trans>Sign in first — credentials are stored encrypted server-side.</Trans>
                 </span>
               )}
             </div>
@@ -276,7 +288,9 @@ export default function ManualConnectorCard({
 
         {accounts && accounts.length > 1 && formOpen && (
           <div className="conn-dialog-section">
-            <p className="conn-hint">Pick the account to use:</p>
+            <p className="conn-hint">
+              <Trans>Pick the account to use:</Trans>
+            </p>
             {accounts.map((a) => (
               <Button
                 key={a.account_id || a.account_name}

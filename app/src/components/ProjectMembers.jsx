@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Mail, RotateCw, Trash2, TriangleAlert, UserPlus, X } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,7 @@ function RowShell({ children }) {
 }
 
 export default function ProjectMembers({ projectId, onLeft }) {
+  const { t, i18n } = useLingui();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -98,7 +100,8 @@ export default function ProjectMembers({ projectId, onLeft }) {
       // address in the params — who was invited is not ours to send to GA4.
       trackEvent(AnalyticsEvent.TeamMemberInvited);
       setEmail("");
-      setNotice(`Invitation sent to ${address.toLowerCase()}.`);
+      const sentTo = address.toLowerCase();
+      setNotice(t`Invitation sent to ${sentTo}.`);
       await load();
     } catch (err) {
       setInviteError(err.message);
@@ -127,10 +130,11 @@ export default function ProjectMembers({ projectId, onLeft }) {
     setPendingRemoval(null);
     if (!target) return;
     const leaving = target.is_you;
+    const removed = target.email;
     await runRowAction(
       target.user_id,
       () => removeMember(projectId, leaving ? "me" : target.user_id),
-      leaving ? "" : `${target.email} no longer has access.`
+      leaving ? "" : t`${removed} no longer has access.`
     );
     if (leaving) onLeft?.();
   }
@@ -139,7 +143,7 @@ export default function ProjectMembers({ projectId, onLeft }) {
     return (
       <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
         <Spinner className="size-4" />
-        Loading members…
+        <Trans>Loading members…</Trans>
       </div>
     );
   }
@@ -152,6 +156,8 @@ export default function ProjectMembers({ projectId, onLeft }) {
     );
   }
 
+  const removalTarget = pendingRemoval?.email || t`this member`;
+
   return (
     <div className="space-y-5">
       {/* Invite form — owner only */}
@@ -162,8 +168,8 @@ export default function ProjectMembers({ projectId, onLeft }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="teammate@company.com"
-              aria-label="Email address to invite"
+              placeholder={t`teammate@company.com`}
+              aria-label={t`Email address to invite`}
               autoComplete="off"
               className="@md:flex-1"
             />
@@ -173,17 +179,19 @@ export default function ProjectMembers({ projectId, onLeft }) {
               ) : (
                 <UserPlus className="size-4" />
               )}
-              Send invite
+              <Trans>Send invite</Trans>
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            They&rsquo;ll get an email with a link that works only for this address. Collaborators
-            can edit the project and run agents; only you can invite people or delete it.
+            <Trans>
+              They’ll get an email with a link that works only for this address. Collaborators
+              can edit the project and run agents; only you can invite people or delete it.
+            </Trans>
           </p>
         </form>
       ) : (
         <p className="text-sm text-muted-foreground">
-          You&rsquo;re a collaborator on this project. Only the owner can change who has access.
+          <Trans>You’re a collaborator on this project. Only the owner can change who has access.</Trans>
         </p>
       )}
 
@@ -194,8 +202,10 @@ export default function ProjectMembers({ projectId, onLeft }) {
         <p className="flex items-start gap-2 rounded-2xl border border-warning/30 bg-warning/5 p-3 text-xs text-warning">
           <TriangleAlert className="mt-px size-4 shrink-0" />
           <span>
-            Email delivery isn&rsquo;t configured on this environment, so invitations are logged
-            server-side instead of sent. Set <code>RESEND_API_KEY</code> to deliver them.
+            <Trans>
+              Email delivery isn’t configured on this environment, so invitations are logged
+              server-side instead of sent. Set <code>RESEND_API_KEY</code> to deliver them.
+            </Trans>
           </span>
         </p>
       )}
@@ -203,45 +213,48 @@ export default function ProjectMembers({ projectId, onLeft }) {
       {/* Members */}
       <div>
         <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Members
+          <Trans>Members</Trans>
         </h3>
         <ul>
-          {data.members.map((member) => (
-            <RowShell key={member.user_id}>
-              <Avatar member={member} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
-                  {member.full_name || member.email}
-                  {member.is_you && (
-                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">(you)</span>
+          {data.members.map((member) => {
+            const memberEmail = member.email;
+            return (
+              <RowShell key={member.user_id}>
+                <Avatar member={member} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {member.full_name || member.email}
+                    {member.is_you && (
+                      <span className="ml-1.5 text-xs font-normal text-muted-foreground"><Trans>(you)</Trans></span>
+                    )}
+                  </p>
+                  {member.full_name && (
+                    <p className="truncate text-xs text-muted-foreground">{member.email}</p>
                   )}
-                </p>
-                {member.full_name && (
-                  <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                </div>
+                <Badge variant={member.role === "owner" ? "default" : "secondary"}>
+                  {member.role === "owner" ? t`Owner` : t`Collaborator`}
+                </Badge>
+                {member.role !== "owner" && (isOwner || member.is_you) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
+                    aria-label={member.is_you ? t`Leave this project` : t`Remove ${memberEmail}`}
+                    disabled={busyId === member.user_id}
+                    onClick={() => setPendingRemoval(member)}
+                  >
+                    {busyId === member.user_id ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      <Trash2 className="size-4" />
+                    )}
+                  </Button>
                 )}
-              </div>
-              <Badge variant={member.role === "owner" ? "default" : "secondary"}>
-                {member.role === "owner" ? "Owner" : "Collaborator"}
-              </Badge>
-              {member.role !== "owner" && (isOwner || member.is_you) && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
-                  aria-label={member.is_you ? "Leave this project" : `Remove ${member.email}`}
-                  disabled={busyId === member.user_id}
-                  onClick={() => setPendingRemoval(member)}
-                >
-                  {busyId === member.user_id ? (
-                    <Spinner className="size-4" />
-                  ) : (
-                    <Trash2 className="size-4" />
-                  )}
-                </Button>
-              )}
-            </RowShell>
-          ))}
+              </RowShell>
+            );
+          })}
         </ul>
       </div>
 
@@ -249,65 +262,72 @@ export default function ProjectMembers({ projectId, onLeft }) {
       {isOwner && data.invitations.length > 0 && (
         <div>
           <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Pending invitations
+            <Trans>Pending invitations</Trans>
           </h3>
           <ul>
-            {data.invitations.map((invitation) => (
-              <RowShell key={invitation.id}>
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
-                  <Mail className="size-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{invitation.email}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {invitation.is_expired
-                      ? `Expired ${relativeDays(invitation.expires_at)}`
-                      : `Invited · expires ${relativeDays(invitation.expires_at)}`}
-                  </p>
-                </div>
-                <Badge variant={invitation.is_expired ? "destructive" : "outline"}>
-                  {invitation.is_expired ? "Expired" : "Invited"}
-                </Badge>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground"
-                  aria-label={`Resend invitation to ${invitation.email}`}
-                  disabled={busyId === invitation.id}
-                  onClick={() =>
-                    runRowAction(
-                      invitation.id,
-                      () => resendInvitation(projectId, invitation.id),
-                      `New invitation sent to ${invitation.email}.`
-                    )
-                  }
-                >
-                  {busyId === invitation.id ? (
-                    <Spinner className="size-4" />
-                  ) : (
-                    <RotateCw className="size-4" />
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
-                  aria-label={`Revoke invitation to ${invitation.email}`}
-                  disabled={busyId === invitation.id}
-                  onClick={() =>
-                    runRowAction(
-                      invitation.id,
-                      () => revokeInvitation(projectId, invitation.id),
-                      `Invitation to ${invitation.email} revoked.`
-                    )
-                  }
-                >
-                  <X className="size-4" />
-                </Button>
-              </RowShell>
-            ))}
+            {data.invitations.map((invitation) => {
+              const invitee = invitation.email;
+              // relativeDays speaks English ("in 6 days"): the sentence around
+              // it is translated, the fragment is not, until lib/format takes
+              // a locale.
+              const when = relativeDays(invitation.expires_at, { locale: i18n.locale });
+              return (
+                <RowShell key={invitation.id}>
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
+                    <Mail className="size-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{invitation.email}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {invitation.is_expired
+                        ? t`Expired ${when}`
+                        : t`Invited · expires ${when}`}
+                    </p>
+                  </div>
+                  <Badge variant={invitation.is_expired ? "destructive" : "outline"}>
+                    {invitation.is_expired ? t`Expired` : t`Invited`}
+                  </Badge>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground"
+                    aria-label={t`Resend invitation to ${invitee}`}
+                    disabled={busyId === invitation.id}
+                    onClick={() =>
+                      runRowAction(
+                        invitation.id,
+                        () => resendInvitation(projectId, invitation.id),
+                        t`New invitation sent to ${invitee}.`
+                      )
+                    }
+                  >
+                    {busyId === invitation.id ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      <RotateCw className="size-4" />
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
+                    aria-label={t`Revoke invitation to ${invitee}`}
+                    disabled={busyId === invitation.id}
+                    onClick={() =>
+                      runRowAction(
+                        invitation.id,
+                        () => revokeInvitation(projectId, invitation.id),
+                        t`Invitation to ${invitee} revoked.`
+                      )
+                    }
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </RowShell>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -322,23 +342,23 @@ export default function ProjectMembers({ projectId, onLeft }) {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {pendingRemoval?.is_you
-                ? "Leave this project?"
-                : `Remove ${pendingRemoval?.email || "this member"}?`}
+                ? t`Leave this project?`
+                : t`Remove ${removalTarget}?`}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pendingRemoval?.is_you
-                ? "You'll lose access to this project immediately. The owner can invite you again."
-                : "They lose access immediately. Anything they already created stays with the project. You can invite them again later."}
+                ? t`You'll lose access to this project immediately. The owner can invite you again.`
+                : t`They lose access immediately. Anything they already created stays with the project. You can invite them again later.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+            <AlertDialogCancel type="button"><Trans>Cancel</Trans></AlertDialogCancel>
             <AlertDialogAction
               type="button"
               className={buttonVariants({ variant: "destructive" })}
               onClick={confirmRemoval}
             >
-              {pendingRemoval?.is_you ? "Leave project" : "Remove"}
+              {pendingRemoval?.is_you ? <Trans>Leave project</Trans> : <Trans>Remove</Trans>}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

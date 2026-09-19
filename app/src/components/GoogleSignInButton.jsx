@@ -1,5 +1,6 @@
 "use client";
 
+import { useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +20,13 @@ export default function GoogleSignInButton({
   disabled = false,
   isLoading = false,
   className,
-  label = "Sign in with Google",
-  loadingLabel = "Signing in...",
+  label,
+  loadingLabel,
 }) {
+  const { t } = useLingui();
+  // Defaults resolved here, not in the parameter list: `t` needs the hook.
+  label ??= t`Sign in with Google`;
+  loadingLabel ??= t`Signing in...`;
   return (
     <Button
       type="button"

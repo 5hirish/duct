@@ -66,6 +66,7 @@ import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
 import { NotificationRow } from "@/components/AppSidebar";
+import { LanguageMenuItem } from "@/components/LanguageMenu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -229,16 +230,16 @@ const LONG_TITLE =
 
 const DESK_BUCKETS = {
   [NEEDS_YOU]: [
-    { id: "n1", title: "Audit our Google Search performance please.", detail: "Pick up where you left off", tone: "attention", at: "2026-09-09T06:00:00Z" },
+    { id: "n1", title: "Audit our Google Search performance please.", detailCode: "resume", tone: "attention", at: "2026-09-09T06:00:00Z" },
   ],
   [FOUND]: [
-    { id: "f1", title: "Next growth milestone: 3_repeatable_growth", detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f2", title: LONG_TITLE, detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f3", title: "North-star metric: Net new revenue", detail: "Checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+    { id: "f1", title: "Next growth milestone: 3_repeatable_growth", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+    { id: "f2", title: LONG_TITLE, detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
+    { id: "f3", title: "North-star metric: Net new revenue", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
   ],
   [IN_PROGRESS]: [
-    { id: "p1", title: "Audit our Google Search performance please.", detail: "Working", tone: "running", at: "2026-09-09T06:00:00Z" },
-    { id: "p2", title: "Audit our Google Search performance please.", detail: "Working", tone: "running", at: "2026-09-09T06:00:00Z" },
+    { id: "p1", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
+    { id: "p2", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
   ],
 };
 const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
@@ -1126,6 +1127,23 @@ export const SCENES = [
     ),
   },
   {
+    id: "language-menu-item",
+    state: "sub-menu open on the current language",
+    group: "AppSidebar",
+    title: "The language row in the account menu",
+    note: "Sits under Profile in the user footer menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <LanguageMenuItem />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
     id: "model-setup",
     state: "collapsed, one provider, all three runnable",
     group: "TierSummary",
@@ -1178,7 +1196,7 @@ export const SCENES = [
     title: "The fold the page's second half went into",
     note: "The two switches left after the image row moved up into the setup card. Closed is the state to check first: the summary line has to say what is inside, because both are things somebody arrives looking for by name. Opening it toggles real preferences, so expect the fallback card to report itself unsaved when signed out — that is the state, not a bug.",
     render: () => (
-      <AdvancedSettings ladder={TIERS.map((tier) => tier.label)} />
+      <AdvancedSettings ladder={TIERS.map((tier) => tier.label.message)} />
     ),
   },
   {

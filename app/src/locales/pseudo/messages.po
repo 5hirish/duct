@@ -1,0 +1,7675 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-09-19 02:14+0200\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: pseudo\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/components/workspace/AgentChat.jsx
+msgid " — back in about {stepDownMinutes} min"
+msgstr ""
+
+#: src/components/onboarding/Aqueduct.jsx
+msgid "— current step"
+msgstr ""
+
+#: src/components/onboarding/Aqueduct.jsx
+msgid "— done"
+msgstr ""
+
+#: src/components/onboarding/Aqueduct.jsx
+msgid "— skipped"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "· {fans} fans"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "· set to <0>{configured}</0>, stepped down for this model"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "(no caption)"
+msgstr ""
+
+#: src/components/content/PostMiniCard.jsx
+msgid "(untitled)"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "(you)"
+msgstr ""
+
+#. placeholder {0}: total.calls
+#: src/components/workspace/ContextRing.jsx
+msgid "{0, plural, one {# call} other {# calls}}"
+msgstr ""
+
+#. placeholder {0}: items.length
+#: src/components/memory/MemoryTimeline.jsx
+msgid "{0, plural, one {# match} other {# matches}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{blogPosts, plural, one {# post} other {# posts}}"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{cached} cached{cachedShare}"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "{changeCount, plural, one {# change} other {# changes}}"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "{charCount, plural, one {# char} other {# chars}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{competitorCount, plural, one {# competitor} other {# competitors}}"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{competitors, plural, one {# competitor} other {# competitors}}"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "{connectionCount, plural, one {Connections · # active} other {Connections · # active}}"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "{connectorName} connected"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{contentGaps, plural, one {# gap} other {# gaps}}"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "{count, plural, one {# fix we can generate} other {# fixes we can generate}}"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "{count, plural, one {# fix} other {# fixes}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{crawledPages, plural, one {# page} other {# pages}}"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "{dayCount, plural, one {# day} other {# days}}"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "{destructiveCount, plural, one {# destructive change} other {# destructive changes}} — {destructiveNames}."
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "{dialName} {dialDefault} · whatever this model does anyway"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "{done} of 3 done"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "{done}/{total} categories"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "{drafted, plural, one {# drafted field to confirm} other {# drafted fields to confirm}}"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "{earlierTokens} tokens"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{effortWord} effort"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "{engRate}% eng"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "{eventCount, plural, one {# event} other {# events}}"
+msgstr ""
+
+#: src/components/content/PlanCalendar.jsx
+msgid "{extra, plural, one {+# more} other {+# more}}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{failCount, plural, one {# Error} other {# Errors}}"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "{fieldLabel} (optional)"
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "{found, plural, one {# finding on file.} other {# findings on file.}}"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "{from} – {to}"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "{granted} of {total} granted"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{hreflangCount, plural, one {# lang} other {# langs}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{images} total"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{images} total, {missingAlt} missing alt"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{impactWord} impact"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{input} in"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "{inputProgressPercent}% complete"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{internalLinks} internal · {externalLinks} external"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "{inviter} invited you to <0>{projectName}</0>"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{issues, plural, one {# error} other {# errors}}"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "{label} — coming soon"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "{label} API key"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{landingPages, plural, one {# landing page} other {# landing pages}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{landingPages, plural, one {# page} other {# pages}}"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{llmsLines} lines"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "{messageCount, plural, one {# message} other {# messages}}"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "{missing, plural, one {Connected · # permission missing} other {Connected · # permissions missing}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{n} chars"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/members/page.jsx
+msgid "{name} · Members"
+msgstr ""
+
+#: src/components/content/StyleGallery.jsx
+msgid "{name} preview"
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "{newCount} new, {resolvedCount} resolved"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "{notesLeft, plural, one {# character left} other {# characters left}}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{oppCount} Opp"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{opportunities, plural, one {# opportunity} other {# opportunities}}"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{output} out"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "{pages, plural, one {# page} other {# pages}}"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "{pages, plural, one {Read # page} other {Read # pages}}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{passCount, plural, one {# check passing} other {# checks passing}}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{passCount} passing"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "{pending, plural, one {Approve & generate # image — one by one} other {Approve & generate # images — one by one}}"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{percent}% context"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "{percent}% of tokens"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "{phase}… {elapsed}s"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "{planAccount} — no API key, no extra bill."
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "{postCount, plural, one {# post} other {# posts}}"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "{postCount} posts · {avgViewsText} avg views"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "{posts, plural, one {# post} other {# posts}}"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+msgid "{projectName} · Memory"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "{ranTier} · {requestedTier} is rate limited"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "{ready} of {total} will apply · {blocked, plural, one {# needs a person} other {# need a person}}"
+msgstr ""
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "{recalledCount, plural, one {Recalled # memory} other {Recalled # memories}}"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "{removed} no longer has access."
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "{rest, plural, one {# more not shown} other {# more not shown}}"
+msgstr ""
+
+#: src/components/commands/CommandPalette.jsx
+msgid "{resultCount, plural, one {# command} other {# commands}}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{robotsLines} lines"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "{slideCount, plural, one {# slide} other {# slides}}"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "{slides, plural, one {# slide} other {# slides}}"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "{summary} Operator takeaway: {takeaway}"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "{theme} · Generated: {generatedAt}"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "{tierName} has no key and nothing below it can run either."
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "{tierName} has no key, so that work runs on {servesName} instead."
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+msgid "{tierName} jobs run on <0>{servesName}</0> — this engine's default."
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+msgid "{tierName} jobs run on <0>{servesName}</0> until you add a key."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "{tokens} tokens · {calls, plural, one {# call} other {# calls}}"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "{tokens} tokens · {calls, plural, one {# call} other {# calls}} · {cached} cached"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "{tokensIn} in · {tokensOut} out"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "{total, plural, one {Granted} other {All # granted}}"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{used} of {window}"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "{views, plural, one {# view} other {# views}}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "{warnings, plural, one {# warning} other {# warnings}}"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "{windowCurrent} vs {windowPrevious}"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "{windowCurrent} vs previous (indexed)"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "{wordCount} words"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "# My Format\n"
+"\n"
+"## Slide Structure\n"
+"\n"
+"| Slide | Type |\n"
+"|-------|------|\n"
+"| 1 | Hook |"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "← Artifacts"
+msgstr ""
+
+#: src/app/(app)/insights/organic-growth/[slug]/page.jsx
+#: src/components/LocalInsightDetail.jsx
+msgid "← Back to insights"
+msgstr ""
+
+#: src/components/commands/CommandPalette.jsx
+msgid "↑↓ to move · ↵ to run · esc to close"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "↓ New message"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "↳ Queued · picked up at the next step"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "↺ Retry"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "↺ Retry audit"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "↺ Start fresh"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "↺ Try again"
+msgstr ""
+
+#: src/components/ProjectSwitcher.jsx
+msgid "+ New project"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "< 1 hr"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "<0>{count}</0> linked"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "<0>{deletingName}</0> will be removed. Posts already drafted with it are unaffected, but the agent can no longer pull it. This can’t be undone."
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "<0>{resultCount}</0> {resultCount, plural, one {post found} other {posts found}}"
+msgstr ""
+
+#: src/components/insight-blocks/SignalListBlock.jsx
+msgid "<0>Action:</0> {action}"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "<0>Differentiators:</0> {differentiators}"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "<0>Digest:</0> {digest}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "<0>Fix: </0>{recommendation}"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "<0>Incident ID:</0> {incidentId}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "<0>Limited scan: </0>Based on {pagesCrawled} of {sitemapUrls} sitemap pages."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "<0>Pillars:</0> {pillars}"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "<0>Route:</0> {route}"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "<0>When:</0> {occurredAt}"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+#: src/components/audit/AuditStepProgress.jsx
+#: src/components/content/PlanViewport.jsx
+#: src/components/PipelineProgress.jsx
+msgid "~3 min"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "⛔ Guardrail: {rule}"
+msgstr ""
+
+#: src/components/workspace/CodeBlock.jsx
+msgid "✓ copied"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "✓ Report ready — ask me anything about the findings."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "✦ Reasoned"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "1–2 wks"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "1–3 days"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "2–4 hrs"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "23 came from your own team"
+msgstr ""
+
+#: src/lib/usageApi.js
+msgid "30 days"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+#: src/components/content/PlanViewport.jsx
+msgid "30-day plan"
+msgstr ""
+
+#: src/lib/usageApi.js
+msgid "7 days"
+msgstr ""
+
+#: src/lib/usageApi.js
+msgid "90 days"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "A change that matches a guardrail arrives <0>blocked</0> and can never auto-apply; agents see the rules and propose around them. A rule with no matcher is guidance only."
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "a fallback model"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "A few words the agent applies to visuals."
+msgstr ""
+
+#: src/components/profile/VoiceSample.jsx
+msgid "A finding, written for you"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "A key is scoped to ONE ad account — make sure it's the right one."
+msgstr ""
+
+#: src/components/ReloadToast.jsx
+msgid "A new version of Duct is ready"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "A one-off: project memory is neither read nor written. The report is still saved."
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "a project"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "A project starts from a site. Duct reads it and drafts the rest — name, industry, competitors — for you to correct."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
+msgstr ""
+
+#: src/components/connections/ProjectAccountSelect.jsx
+msgid "a teammate's account"
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+msgid "A tier whose model has no key falls through to the next one along."
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Abandon this conversation and start a new one (what it produced is kept)"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "About"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "About your business"
+msgstr ""
+
+#: src/components/CookieConsent.jsx
+msgid "Accept"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "Accept invitation"
+msgstr ""
+
+#: src/components/connections/ProjectAccountSelect.jsx
+msgid "Account"
+msgstr ""
+
+#: src/components/connections/ProjectAccountSelect.jsx
+msgid "Account default"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Account id"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Account id (blank = all)"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Account: {accountName}"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "accounts"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Acme Inc."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+#: src/components/onboarding/FrontDoor.jsx
+msgid "acme.com"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Action"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Action Plan"
+msgstr ""
+
+#: src/components/commands/CommandPalette.jsx
+msgid "Actions"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Active"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/app/(app)/audit/seo/page.jsx
+#: src/components/insights/desk/DeskActivity.jsx
+#: src/lib/navigation.js
+msgid "Activity"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Ad account id"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Adaptive thinking"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Add a guardrail"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Add a hashtag"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Add a project"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Add a tag"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Add a tag, press Enter…"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Add a thought — it goes in at the next step"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Add another account"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Add guardrail"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Add one or more names, separated by commas."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Add pillar"
+msgstr ""
+
+#: src/app/(app)/memory/page.jsx
+msgid "Add something about how you work"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Added to your {draftedName} project"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Adding it up…"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Adding…"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Additional business context"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Ads API key"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Ads says 4,212. Stripe settled 1,890."
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+#: src/components/models/AdvancedSettings.jsx
+msgid "Advanced"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/app/(app)/execute/page.jsx
+#: src/components/workspace/StepProgress.jsx
+msgid "agent"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Agent"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "Agent Chat"
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+msgid "Agent selector"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Agent-proposed"
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+msgid "Agents"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Agents propose, you approve. Every change is previewed against your guardrails, and anything applied can be rolled back."
+msgstr ""
+
+#: src/lib/projectsApi.js
+msgid "Agents propose; nothing runs until you approve it here."
+msgstr ""
+
+#: src/lib/auditEvents.js
+msgid "AI synthesis"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "AI synthesis finished but no report was generated."
+msgstr ""
+
+#: src/lib/engines.js
+msgid "AI-drafted blog posts from audit findings."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "AI-ready fixes"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "all"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/app/(app)/artifacts/page.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "All"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "all accounts"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "All clear"
+msgstr ""
+
+#. placeholder {0}: docs.length
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents · {0}"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "All posts <0>· {rowCount}</0>"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/app/(app)/project/[projectId]/members/page.jsx
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+msgid "All projects"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "All sources"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "All statuses"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Already using Duct?"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "alt ×{missingAlt}"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Always say"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "An A/B test live 74 days with nobody in it."
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "An answer worth keeping becomes an artifact here, and versions pile up as it is rewritten."
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Analysing internal linking patterns…"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Analysis effort"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "analytics"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Analytics"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "analytics reporting, growth intelligence, SEO audit (comma-separated)"
+msgstr ""
+
+#: src/components/ContextCompressionCard.jsx
+msgid "Analytics rows reach the model as a compact table, not raw JSON — about half the tokens, every number unchanged."
+msgstr ""
+
+#: src/components/ContextCompressionCard.jsx
+msgid "Analytics rows reach the model as raw JSON. A large pull gets cut short, so a brief can be written without the rows that were dropped."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "and"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "another user"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Answer above, or leave a note for after"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "Anthropic"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Anything else Duct should know"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Anything specific (optional)"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Anything specific? (optional)"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/ProviderCard.jsx
+msgid "API key"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "App secret"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "Apple Search Ads"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Apple's API access guide"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Applied"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Applied automatically"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Applies from your next message"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Applies from your next session"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Applies to the bundled backend next time you open Duct."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Apply"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Apply (destructive)"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Apply {count, plural, one {# change} other {# changes}} to {connector}?"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Apply failed: {applyError}"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Apply now"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Applying changes…"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Applying now"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Applying…"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Approve {selectedCount} selected"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Approve & apply"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Approve all"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Approved"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Approved — ready to apply"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Approved, waiting to run"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Archive"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Archive this conversation (its report artifacts stay in the library)"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Are my conversions real people?"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "artifact"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+#: src/components/artifacts/ArtifactRenderer.jsx
+#: src/components/insights/InsightsWorkspace.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Artifact"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Artifact not found."
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Artifact version"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/app/(app)/artifacts/page.jsx
+#: src/components/insights/desk/DeskLists.jsx
+#: src/lib/navigation.js
+msgid "Artifacts"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+#: src/lib/projectsApi.js
+msgid "Ask"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+#: src/components/workspace/ChatInput.jsx
+msgid "Ask a follow-up question…"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/app/(app)/artifacts/page.jsx
+#: src/components/models/UsagePanel.jsx
+msgid "Ask a question"
+msgstr ""
+
+#: src/components/ChatSidebar.jsx
+msgid "Ask a question about the data, like \"Which campaign wastes the most spend?\" or \"Why is CPA high on mobile?\""
+msgstr ""
+
+#: src/components/ChatSidebar.jsx
+msgid "Ask a question..."
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "Ask about “{topFinding}” — or anything else"
+msgstr ""
+
+#: src/components/ChatSidebar.jsx
+msgid "Ask about this insight"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Ask about your growth data…"
+msgstr ""
+
+#: src/components/insights/desk/DeskComposer.jsx
+msgid "Ask Duct"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Ask Duct to refine the plan or post…"
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "Ask me anything about your site"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Ask me something"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "Ask whoever invited you to send a new one, or <0>sign in</0> if you already have access."
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Asks freely · nothing applies without you"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Asks when it matters · allowlisted changes apply on their own"
+msgstr ""
+
+#: src/lib/projectsApi.js
+msgid "Assisted"
+msgstr ""
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Attach files"
+msgstr ""
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Attach image"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/content/BrandContextForm.jsx
+msgid "Audience"
+msgstr ""
+
+#: src/components/AppNav.jsx
+#: src/lib/engines.js
+msgid "Audit"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+#: src/components/insights/desk/DeskDayOne.jsx
+#: src/components/models/UsagePanel.jsx
+msgid "Audit a site"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "audit date"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Audit failed"
+msgstr ""
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid "Audit my site"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Audits it in about three minutes"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/components/workspace/ComposerDials.jsx
+msgid "auto"
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+#: src/components/workspace/ComposerDials.jsx
+#: src/lib/projectsApi.js
+msgid "Auto"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Auto — whichever key can draw"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Auto · {drawn}"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "auto-applied"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Autonomy — {projectName}"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Autonomy is unchanged — that didn't save."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Avg TTFB"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Awaiting review"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Back"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/app/(app)/settings/models/page.jsx
+msgid "Back to Insights"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Back to manage projects"
+msgstr ""
+
+#: src/app/(public)/layout.jsx
+msgid "Back to site"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Balanced"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Balancing pillars and formats…"
+msgstr ""
+
+#: src/components/insight-blocks/BarChartBlock.jsx
+msgid "Bar chart"
+msgstr ""
+
+#: src/components/content/StyleGallery.jsx
+msgid "Base styles"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "being written"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Best engagement"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Between"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Big Bets"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Blocked"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Blocked in browser — open Site Settings to re-enable"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "blocks: {blockedOps}"
+msgstr ""
+
+#: src/lib/engines.js
+msgid "Blog"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Blog / Articles"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Bold"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "brand"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Brand context"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/content/BrandContextForm.jsx
+msgid "Brand voice"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Brand voice is inherited; tone fine-tunes it for content."
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Brief"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Brief: {label}"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Briefs"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+#: src/components/PipelineProgress.jsx
+msgid "Building report"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Building slide HTML"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Building your plan"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Business context"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Business description"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Business model"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Business name"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Business settings → Users → System users → Generate token with scope ads_read (+ business_management for account discovery). System User tokens don't expire; regular user tokens die in ~60 days."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "By agent"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "By hashtag"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "By model"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "By provider"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "By signing in, you agree to our <0>Terms of Service</0> and <1>Privacy Policy</1>"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Cached input"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Calendar"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Campaign"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Campaign breakdown"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "Can change"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "Can read"
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "Can't reach Duct"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Can't reach the provider"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/app/(app)/projects/page.jsx
+#: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/ProviderCard.jsx
+#: src/components/content/FormatLibrary.jsx
+#: src/components/content/PublishModal.jsx
+#: src/components/memory/MemoryTimeline.jsx
+#: src/components/onboarding/ProviderStep.jsx
+#: src/components/ProjectMembers.jsx
+msgid "Cancel"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Canonical"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Caption"
+msgstr ""
+
+#: src/components/content/StyleGallery.jsx
+msgid "Captions"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Capture durable business context that applies across paid, organic, and product intelligence use cases."
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Casting your narrator…"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "casual, punchy"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Category Scores"
+msgstr ""
+
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Change {n}"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "change set {id}"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Changes apply to future drafts that pull this format."
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Changes v{baseVersion} → v{targetVersion}"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "charged at a fraction of the rate"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+#: src/components/workspace/SplitWorkspace.jsx
+msgid "Chat"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "ChatGPT sign-in isn't available for this account right now"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Check connections"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY."
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Checked"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Checking structured data coverage…"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "Checking your invitation…"
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+#: src/components/connections/ProviderCard.jsx
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Checking…"
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "Choose {entity}"
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "Choose {entity} for {projectName}"
+msgstr ""
+
+#: src/components/models/ModelPicker.jsx
+msgid "Choose a model"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Choosing hashtags…"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Clarity Data Export API docs"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Claude · a few cents per audit"
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Clear"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Client ID"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Client-rendered pages — Google Wave 1 may see empty content."
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Close"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Closed"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Collaborator"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "color"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Colors and style applied to images and slides."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/lib/engines.js
+msgid "Coming soon"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Comma-separated distinct_id substrings to exclude. Mixpanel has no internal-traffic filter — QA accounts corrupt every funnel until excluded."
+msgstr ""
+
+#: src/components/commands/CommandPalette.jsx
+msgid "Command palette"
+msgstr ""
+
+#: src/components/commands/CommandPalette.jsx
+msgid "Commands"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Comments"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Commit edits"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Community"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Compacting context"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Company"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Company name"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Competition"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Competitive Landscape"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "competitor1.com, competitor2.com (comma-separated)"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Competitors"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Complete security check to continue."
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Composing findings and priorities…"
+msgstr ""
+
+#: src/components/insight-blocks/PieChartBlock.jsx
+msgid "Composition"
+msgstr ""
+
+#: src/components/ContextCompressionCard.jsx
+msgid "Compress connector data before it reaches the model"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Confidence"
+msgstr ""
+
+#: src/components/connections/ConnectorTile.jsx
+msgid "Configure {title}"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Confirm"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "Connect {label}"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "Connect {label}?"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+#: src/components/onboarding/ProviderRequiredCard.jsx
+msgid "Connect a model"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Connect a source"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect in PostBridge →"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Connect one data source"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/app/(auth)/desktop-auth/page.js
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected — {accountCount} accounts"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected — {firstAccountName}"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Connecting…"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Connection dropped — reconnecting…"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Connection link expired"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/AppNav.jsx
+#: src/components/AppSidebar.jsx
+msgid "Connections"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Connections — add a source"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Connector"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Consultant / Agency"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Consumer"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Content agent"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Content gaps"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Content goal"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Content pillars"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+#: src/components/AppNav.jsx
+#: src/components/content/ContentWorkspace.jsx
+#: src/lib/navigation.js
+#: src/lib/usageApi.js
+msgid "Content Studio"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/workspace/ContextRing.jsx
+msgid "Context"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "context compacted"
+msgstr ""
+
+#: src/components/ContextCompressionCard.jsx
+msgid "Context compression"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "Context used: {percent} percent. Show token usage."
+msgstr ""
+
+#: src/components/workspace/QuestionsCard.jsx
+msgid "Continue →"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Continue audit →"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Continue chat"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Continue in your browser…"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Continue with ChatGPT"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Continue with your Google account"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Controls how deeply the AI reasons about your site before writing findings."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "conversation"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "conversation turns {firstTurn}–{lastTurn}"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Conversions"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Cookie settings"
+msgstr ""
+
+#: src/components/CookieConsent.jsx
+msgid "Cookies, honestly"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+#: src/components/audit/ShareReport.jsx
+msgid "Copied"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "Copied debug info"
+msgstr ""
+
+#: src/components/workspace/CodeBlock.jsx
+msgid "copy"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Copy"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "Copy debug info"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Copy details"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "Copy failed"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Could not change that."
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "Could not list {many}. {listError}"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Could not refresh - showing saved data."
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Could not remember"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Could not save that."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Could only read the front page — the audit will use that"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Couldn't load analytics."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Couldn't load brand context."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Couldn't load your guardrails. The queue above is unaffected."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Couldn't read that site."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Couldn't read your Google account"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Couldn't save. Please try again."
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Crash reports & usage"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Crawl errors"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Crawl Health"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Crawl your site, surface issues, and get an AI-generated report with actionable recommendations."
+msgstr ""
+
+#: src/lib/auditEvents.js
+msgid "Crawling pages"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Create a restricted key (Stripe dashboard)"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Create a RESTRICTED key with read access to Subscriptions, Charges, Invoices, Customers, Products and Prices. Duct only ever reads."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Create a System User token (Business settings)"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Create format"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Create your first format"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Credentials verified, but no accounts are reachable with them."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Critical"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Critical impact"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "CRM lifecycle stages, pipeline and closed revenue."
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+msgid "Cross-agent invocations — coming soon"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Current growth stage (milestone-based)"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Current state (snapshot before change)"
+msgstr ""
+
+#: src/components/connections/ProjectAccountSelect.jsx
+msgid "Currently mapped to {foreignName} — a teammate's connector."
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Customise"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Dark mode"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Data"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Data Export API token"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Data residency"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Date"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Dates"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Dates resolve in UTC{offsetSuffix}. Pick your zone so \"last week\" means your week."
+msgstr ""
+
+#: src/components/content/PostCard.jsx
+msgid "Day {dayNumber}"
+msgstr ""
+
+#: src/components/CookieConsent.jsx
+msgid "Decline"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "Declined"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Deeper analysis"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Default"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Default account"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Default slides"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Define a reusable post recipe. The spec doc is what the drafting agent reads."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Define your North Star metric and current growth stage. Channel-specific KPIs stay in report generation."
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+#: src/components/content/FormatLibrary.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Delete"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Delete “{pendingName}”?"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Delete {name}"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+msgid "Delete every memory for this project? This cannot be undone."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Delete every memory here?"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Delete everything"
+msgstr ""
+
+#: src/app/(app)/memory/page.jsx
+msgid "Delete everything Duct has learned about how you work? This cannot be undone."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Delete failed."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Delete format"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Delete project"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Delete project?"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Delete this artifact?"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Delete this format?"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Deleting…"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Deselect all ({selectedCount}/{approvableCount} selected)"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+msgid "destructive"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Destructive operations change what is live for every visitor."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status. Assisted and Auto share one narrow allowlist: keywords, GA4 key events and audiences, GTM workspace edits."
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "details"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Deutsch"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Developer / Engineer"
+msgstr ""
+
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Diagram failed to render ({error}) — source below."
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Did anything stop working?"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Did the revenue actually arrive?"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Discard"
+msgstr ""
+
+#: src/lib/contentEnums.js
+msgid "Discarded"
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+#: src/components/connections/ProviderCard.jsx
+msgid "Disconnect"
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+msgid "Disconnect “{title}”?"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Disconnect your ChatGPT plan?"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "discover"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Discover what's working"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Dismiss project update"
+msgstr ""
+
+#: src/components/ReloadToast.jsx
+#: src/components/UpdateToast.jsx
+msgid "Dismiss update notification"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Docs / Help"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "document"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Document"
+msgstr ""
+
+#: src/components/artifacts/ArtifactCards.jsx
+msgid "Document preview"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Documents"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Don’t have time to fix these? Duct can execute <0>{totalFixes}</0> of them for you."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+#: src/components/models/TierSummary.jsx
+msgid "Done"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "DONE FOR YOU"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Download"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Download HTML report"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "draft"
+msgstr ""
+
+#: src/lib/contentEnums.js
+msgid "Draft"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Drafting post"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Drafting the post…"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Drafts your project from what it finds"
+msgstr ""
+
+#: src/components/workspace/SplitWorkspace.jsx
+msgid "Drag to resize — double-click to reset, arrow keys to nudge"
+msgstr ""
+
+#: src/components/UpdateToast.jsx
+msgid "Duct {version} is available"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Duct checks a number before it trusts it."
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Duct couldn’t open your browser to finish signing in. Check that you have a default browser set, then try again."
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Duct filled in what it learned from your site. Anything you had entered yourself was left alone, and every drafted field is marked."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Duct forgets the key {storageSentence}. Runs that need {providerName} fall back to your ChatGPT plan. Duct cannot show you this key again, so make sure you have it somewhere else if you still need it."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Duct forgets the key {storageSentence}. Runs that need {providerName} stop working until you paste a new one. Duct cannot show you this key again, so make sure you have it somewhere else if you still need it."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Duct forgets the sign-in held in this machine’s keychain, and stops running {providerName} models on your plan. Your ChatGPT account is untouched — reconnecting takes one sign-in. To revoke Duct’s access at OpenAI as well, do that in your ChatGPT settings."
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+msgid "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
+msgstr ""
+
+#: src/components/workspace/QuestionsCard.jsx
+msgid "Duct has a quick question"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "duct home"
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "Duct needs a connection. Your work is saved and will still be here."
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Duct posts through the OS — open System Settings to turn them on or off"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+msgid "Duct runs on your own provider keys — paste one below, and its card says where that key is kept. Use a restricted or budget-capped key if your provider offers one."
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+msgid "Duct sends each job to the rung it deserves. Pick what sits on each one."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Duct should open automatically. If it doesn’t, use the button below."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Duct's guess"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Duct's key"
+msgstr ""
+
+#: src/components/LocalBackendGate.jsx
+msgid "Duct’s local backend didn’t start"
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "Duct's local backend is still running, so your saved work is fine. Agents need a connection to reach model providers."
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "Duct's local backend stopped responding"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Duct's pick for the job — Heavy for a brief, Standard for a follow-up"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "e.g. A meal-planning app for busy families."
+msgstr ""
+
+#: src/app/(app)/memory/page.jsx
+msgid "e.g. Always compare to the same period last year"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "e.g. Drive trial signups via saveable beauty education"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "e.g. Increase trial signups from organic search"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "e.g. Limited sales capacity, high onboarding drop-off, or long implementation cycles."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "e.g. Notion, HubSpot, in-house spreadsheets"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "e.g. Reach 500 weekly active users with at least 40% week-4 retention."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "e.g. Real-time AI analysis of YOUR actual selfie — not a static quiz."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "e.g. Strong Q4 seasonality, long enterprise sales cycle, or limited engineering bandwidth."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "e.g. tbnrkp3gk9 (from the Clarity URL)"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "e.g. Team of 3, founder-led sales, runway for 8 months."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Each change is reverted using the rollback handle recorded when it was applied."
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "Each item shows up in one card only — sorted by who’s holding it."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Each redirect hop bleeds crawl budget and PageRank."
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Each source Duct reads shows up here with the period it covers, and the provider’s own words when a pull fails."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "EC private key (PEM)"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Edit"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Edit format"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Edit project context"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "edited by you"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "editorial / minimal / bold"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Email address to invite"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>RESEND_API_KEY</0> to deliver them."
+msgstr ""
+
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Empty dataset."
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Enable notifications"
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "Encrypted on Duct's servers, so any device — and any report that runs while you are away — can use it."
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "Encrypted on this computer only, so nothing running elsewhere can use it, including scheduled reports."
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Engagement"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "English"
+msgstr ""
+
+#: src/app/(auth)/page.js
+#: src/app/(start)/start/page.jsx
+msgid "Enter your website address."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Enterprise"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Error"
+msgstr ""
+
+#: src/components/ChatSidebar.jsx
+msgid "Error: {error}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "errors"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Español"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "EU and India projects live on their own hosts — a wrong region looks like a bad secret."
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Evaluating title tags and meta descriptions…"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Every agent reads this, on every project. Only you can see it."
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Every dashboard called it healthy"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Every entry names who did it, so the trail starts once there is an account to name."
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Every measurement, the method, notes for whoever builds the fix"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Every version of it goes with it. This cannot be undone."
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "Everything above still works. To grant the rest, choose Reconnect and tick them on Google’s consent screen."
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Everything that changed on <0>{projectName}</0> — who proposed it, who approved it, what was applied or rolled back."
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Everything your agents have produced for <0>{projectName}</0> — reports, documents, exports. Stored durably; open one to view, download, or continue its chat."
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Evidence: {evidence}"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Example"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Example month"
+msgstr ""
+
+#: src/lib/navigation.js
+msgid "Execute"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Execution"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Execution autonomy"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/lib/navigation.js
+msgid "Executions"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Executive"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Executive (CMO, VP, Director)"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Expand into new markets"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Expired"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Expired {when}"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Export {format}"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Facebook and Instagram spend, reach, conversions and CPA."
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "faceshape, colorseason…"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "FAIL"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+#: src/components/insights/desk/DeskLists.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "Failed"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Failed to send"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Fairly sure"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Faster, lighter"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Fetching analytics from PostBridge…"
+msgstr ""
+
+#: src/lib/auditEvents.js
+msgid "Fetching sitemap"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Fill-In"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Filtered to one conversation · <0>show all</0>"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Finalizing report"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Findings by Category"
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+msgid "Finish in your browser — Google won’t sign you in inside an app window. This card updates on its own when you’re done. <0>Open it again</0>"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Finish in your browser…"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "Finish signing in in your browser, then come back and press “I’ve connected it”."
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Finish signing in with Google in your browser — this window will continue automatically."
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "first line is the hook — 2–3 sentences"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "First line is the hook. Keep it 2–3 sentences."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Fix These First"
+msgstr ""
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "Forget"
+msgstr ""
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "Forget \"{title}\"?"
+msgstr ""
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "Forgotten."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Format D — UGC / Raw Authentic"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Format spec"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "format-d"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+#: src/components/content/FormatLibrary.jsx
+msgid "Formats"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "found"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Found it."
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Founder / CEO"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Français"
+msgstr ""
+
+#: src/app/(public)/layout.jsx
+msgid "Free SEO Audit"
+msgstr ""
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid "Free, no account, and nothing else connected."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Friendly"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "from"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "From Ads Manager → Settings → API keys"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "From Clarity → Settings → Data Export"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "From date"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "From project context"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "From your site"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Gemini · a free tier covers a first audit"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Generate an EC P-256 key pair, upload the PUBLIC half at ads.apple.com → Account Settings → API, then paste the private key here. Apple has no browser sign-in for this — key material is the official method."
+msgstr ""
+
+#: src/components/AppNav.jsx
+msgid "Generate Insight"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Generated at {generatedAt} · {sourceFile}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Generated by <0>Duct</0> · getduct.ai"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "Generated image"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Generated image · image {imageNo}"
+msgstr ""
+
+#: src/app/(app)/insights/organic-growth/[slug]/page.jsx
+msgid "Generated: {generatedAt}"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Generating 30-day plan"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+#: src/components/PipelineProgress.jsx
+msgid "Generating report"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Get a key"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Get a key from {providerName} →"
+msgstr ""
+
+#: src/app/(public)/lead/seo-audit/page.jsx
+msgid "Get a new free audit →"
+msgstr ""
+
+#: src/components/AppNav.jsx
+msgid "Get started"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Get the desktop app →"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Get the full audit →"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Go back to the Duct desktop app and start again — it usually works second time."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Go back to the Duct desktop app and start the connection again."
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "Go to {itemLabel}"
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "Go to Connections"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "Go to home"
+msgstr ""
+
+#: src/app/not-found.js
+msgid "Go to Home"
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "Go to Memory"
+msgstr ""
+
+#: src/app/not-found.js
+msgid "Go to Sign In"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Good"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "Google Ads"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Google Ads, GA4 or Mixpanel. This is the step that changes everything — I can’t check a number I can’t see."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "Google Analytics"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Google declined the exchange, which is almost always temporary. Try again from the app."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Google didn't complete the connection"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Google didn't complete the sign-in"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Google didn't grant lasting access"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "Google Gemini"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "Google Search Console"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Google sent no refresh token, which happens when you've approved Duct before. Try again and approve the access screen."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Google signed you in but sent no account details. Try again, or use a different Google account."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "Google Tag Manager"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Google will also ask to share Search Console and Analytics with Duct — read-only, and either box can be left unticked."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "GPT-5.6 · about a cent per audit"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Grok · a few cents per audit"
+msgstr ""
+
+#: src/components/ChatSidebar.jsx
+msgid "Grounded in the data from {accountName}"
+msgstr ""
+
+#: src/lib/navigation.js
+msgid "Growth"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Growth brief"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Growth Manager"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Growth stage context or constraints <0>(optional)</0>"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "GrowthBook"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "GrowthBook REST API docs"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Guardrail rule"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Guardrails"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Guest"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Handled by the OS — change it in your system notification settings"
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+msgid "Handoff Mode"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+#: src/components/content/PostViewport.jsx
+msgid "Hashtags"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Have Duct execute your fixes"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Healthy"
+msgstr ""
+
+#: src/components/insight-blocks/HeatmapBlock.jsx
+msgid "Heatmap"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Heavy"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Heavy — the deep model"
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "held for this browser session"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "held in this machine’s keychain"
+msgstr ""
+
+#: src/components/workspace/SplitWorkspace.jsx
+msgid "Hide {rightText}"
+msgstr ""
+
+#: src/components/insights/desk/DeskActivity.jsx
+msgid "Hide activity"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Hide changes"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Hide key"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Hide reasoning"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Hide superseded"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "High"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "High effort"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "High impact"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "High impact · Low effort"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "High impact · More effort"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "High volume, low judgement"
+msgstr ""
+
+#: src/components/content/StyleGallery.jsx
+msgid "Hooks"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "House rules, the metric you actually care about, how you want to be argued with. This wins when it disagrees with the setting above."
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "How Duct writes"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "How freely Duct may act"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "How hard the model should think"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "How posts sound and what they must (or must not) say."
+msgstr ""
+
+#: src/app/(app)/memory/page.jsx
+msgid "How you like to be worked with. Every agent reads this, on every project, and only you can see it."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Hreflang"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "HTML"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "https://example.com"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "https://growthbook.example.com (leave empty for GrowthBook Cloud)"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "https://yoursite.com"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "HubSpot"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Human-friendly title"
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+msgid "Human-in-the-loop agent handoffs — coming soon"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "I have an account"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "I'll do this later"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "I’ve connected it"
+msgstr ""
+
+#: src/components/onboarding/ProviderRequiredCard.jsx
+msgid "I've read {host} and drafted your project from what I found. Connect a model and I'll start the audit."
+msgstr ""
+
+#: src/components/onboarding/ProviderRequiredCard.jsx
+msgid "I've read {pagesRead, plural, one {# page} other {# pages}} of {host} and drafted your project from what I found. Connect a model and I'll start the audit."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "id — auto-slugged from name"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Identity"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "If a stranger asked what you do, what would you say?"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Image"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+#: src/components/models/TierSummary.jsx
+msgid "Images"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Impact × Effort"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Impact and money first, few actions, no jargon"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Impressions, clicks and spend. Conversions stay in Ads Manager."
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "In progress"
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "In your keychain"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Include {name}"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Includes a pause. It can be rolled back from here."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/content/BrandContextForm.jsx
+msgid "Industry"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Initial audit"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Insight not found"
+msgstr ""
+
+#: src/components/AppNav.jsx
+#: src/components/insights/InsightsWorkspace.jsx
+#: src/lib/engines.js
+msgid "Insights"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Install the desktop app. Signing in hands the result back to a program on your computer, which a web page cannot receive."
+msgstr ""
+
+#: src/components/UpdateToast.jsx
+msgid "Installing…"
+msgstr ""
+
+#: src/components/LanguageMenu.jsx
+msgid "Interface language"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Internal-traffic patterns"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Interrupts rarely · same allowlist as Assisted"
+msgstr ""
+
+#: src/app/(public)/lead/seo-audit/page.jsx
+msgid "Invalid or expired link"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Invitation sent to {sentTo}."
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Invitation to {invitee} revoked."
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "Invitation unavailable"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Invite a teammate"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/members/page.jsx
+msgid "Invite teammates to collaborate on this project. Everyone here shares the same reports, audits, and content."
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Invited"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Invited · expires {when}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Issue distribution across all findings"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "It’s logged on our side. Copy the details below if you report it."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "It's logged on our side. Try again, and send us the details below if it keeps happening."
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Italiano"
+msgstr ""
+
+#: src/components/insights/desk/useRelativeTime.js
+msgid "just now"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Kanban"
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+#: src/components/connections/ProviderCard.jsx
+msgid "Keep it"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Keep it separate — start a new project instead"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Keep me signed in for 30 days"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Keep this post — adds it to your board"
+msgstr ""
+
+#: src/components/AutoFallbackCard.jsx
+msgid "Keep working when you hit a limit"
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "Kept only until you close the app, and reports that run without you cannot use it."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Key ID"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Keys usually start with “{keyPrefix}”."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "knowledgeable friend, science-backed, real results"
+msgstr ""
+
+#: src/components/insight-blocks/KpiStripBlock.jsx
+msgid "KPI strip"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Label only — the token already selects the project."
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Landing Pages"
+msgstr ""
+
+#: src/components/LanguageMenu.jsx
+msgid "Language"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "Last call"
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "Last checked {lastChecked}. {sourceCount, plural, one {# source connected.} other {# sources connected.}}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+#: src/components/ReloadToast.jsx
+#: src/components/UpdateToast.jsx
+msgid "Later"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Leave project"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Leave this project"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Leave this project?"
+msgstr ""
+
+#: src/components/workspace/QuestionsCard.jsx
+msgid "Let Duct decide"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Lets the AI reason internally before responding. Improves accuracy on complex sites."
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "library"
+msgstr ""
+
+#: src/lib/navigation.js
+msgid "Library"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Lifecycle/CRM"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Light"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Light — the cheap one"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Light mode"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Likes"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Link"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Link all"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Link an account"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Linked"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Linked accounts"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Linked from chat — outside the filters below"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Linked styles"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Links"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Live data as of {refreshedAt}"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Live performance from PostBridge across your linked accounts."
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Live refresh ready"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "llms.txt"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Load older activity"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+#: src/app/(app)/loading.jsx
+msgid "Loading"
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "Loading {many}…"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Loading accounts…"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Loading activity"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Loading artifacts"
+msgstr ""
+
+#: src/app/(app)/audit/seo/[sessionId]/page.jsx
+msgid "Loading audit session…"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Loading brand context…"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Loading change sets"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Loading format + avatar libraries"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Loading guardrails"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Loading insight…"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Loading members…"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Loading memories"
+msgstr ""
+
+#: src/components/models/ModelPicker.jsx
+msgid "Loading models…"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Loading plan…"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Loading post history"
+msgstr ""
+
+#: src/app/(app)/content/posts/[postId]/page.jsx
+msgid "Loading post…"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Loading project"
+msgstr ""
+
+#: src/app/(app)/content/posts/new/page.jsx
+#: src/app/(app)/content/sessions/new/page.jsx
+msgid "Loading session…"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Loading the artifact"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Loading the project"
+msgstr ""
+
+#: src/app/(app)/insights/session/page.jsx
+msgid "Loading the thread"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Loading topic + brand context"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Loading your brand & pillars"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Loading your connected accounts…"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Loading your models…"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/app/(app)/settings/models/page.jsx
+#: src/app/(auth)/page.js
+msgid "Loading…"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Local"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Log out"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Looking up where {providerName}'s key comes from."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Looks right"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Low"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Low confidence"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Low effort"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Low impact"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Lower impact · Low effort"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Lower impact · More effort"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Lowercase, numbers, hyphens only"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+#: src/components/AppSidebar.jsx
+#: src/components/commands/AppCommands.jsx
+msgid "Manage projects"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Manager account ID (MCC, optional)"
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+msgid "Manual"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Mapping topics across 30 days…"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Mapping your site structure"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Markdown"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Marketing managers at SaaS startups"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Match my messages"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Measured"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Measuring E-E-A-T signals…"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "medical claims, perfect, flawless"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Medium"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Medium effort"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Medium impact"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/members/page.jsx
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/ProjectMembers.jsx
+msgid "Members"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Members of {name}"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Memory"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Memory body"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Memory is paused. Nothing new is being remembered; everything below stays readable and still reaches the agents."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Memory kind"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Memory of {name}"
+msgstr ""
+
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Mermaid render failed."
+msgstr ""
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Message the agent"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Message the audit agent"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Message the content agent"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Message the insights agent"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "Meta Ads"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Meta desc"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "Microsoft Clarity"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Mid-market"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "missing"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Missing title tags are a direct ranking signal failure."
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Missing: {names}"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Mixed providers"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "Mixpanel"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Mixpanel service accounts guide"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "Model"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Model calls"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Model for generating images"
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+msgid "Model for the {tierName} tier"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Model provider"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Model: {label}"
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+#: src/components/AppNav.jsx
+#: src/components/AppSidebar.jsx
+msgid "Models & providers"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Month"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Monthly plan"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "Monthly plans, post drafts, formats, and analytics for {projectName}."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "More"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Most of what runs"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Most recent"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Most reporting problems aren’t bad decisions — they’re good decisions made on numbers nobody checked. Three steps and this page starts filling itself in."
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Most saved"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "My timezone"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Name"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Name — e.g. Face Shape Analysis"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Narrator: {narrator}"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Narrator: {narrator} · {voice}"
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "Navigate"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Nederlands"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Needed only if the token lacks business_management (no account discovery)."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Needs Work"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+#: src/components/insights/desk/DeskCards.jsx
+#: src/components/insights/desk/DeskDayOne.jsx
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Needs you"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Never say"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Never sends"
+msgstr ""
+
+#: src/components/AppNav.jsx
+#: src/components/AppSidebar.jsx
+msgid "New"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "New accounts start at $0. Add a small amount on the billing page — an audit costs cents — then verify again."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "New format"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "New invitation sent to {invitee}."
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "New project"
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "New project — audit a site"
+msgstr ""
+
+#: src/components/insights/desk/DeskComposer.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "New thread"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "New: {newFindings}"
+msgstr ""
+
+#: src/components/content/PlanCalendar.jsx
+msgid "Next month"
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "Next slide"
+msgstr ""
+
+#: src/components/content/PlanCalendar.jsx
+msgid "Next week"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Nightly check"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "No {filterLabel} posts."
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "No {many} match “{query}”."
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "No {many} reachable with this connection."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "No account needed. Nothing is sent anywhere but your own model provider."
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "No accounts available yet"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "No activity yet"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "No analytics yet"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "No API key needed"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "No artifacts yet"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "No base styles available."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "no canonical"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "No caption"
+msgstr ""
+
+#: src/components/commands/CommandPalette.jsx
+msgid "No commands match “{query}”."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "No commitment — we’ll scope it and follow up."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "No competitor research was returned for this audit."
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "No earlier version to compare."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "No findings for this category."
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "No format-attributed posts yet."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "No formats yet"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "No guardrails yet."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "No H1"
+msgstr ""
+
+#: src/components/models/ModelPicker.jsx
+msgid "no key"
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+msgid "No key"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "No key for {picked}, so images are drawn with {drawn}."
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "No key of yours can generate images yet — add one on the Providers tab."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "No key set"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "No key set for these models yet."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "no meta desc"
+msgstr ""
+
+#: src/components/content/PostCard.jsx
+msgid "No metrics yet"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "No model calls in this window."
+msgstr ""
+
+#: src/components/insights/desk/DeskComposer.jsx
+msgid "No model provider is connected, so this can’t run yet. <0>Connect one in Settings → Models & providers →</0> — what you typed is still here when you come back."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "No payment now — we’ll scope and quote first."
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "No pillar-attributed posts yet."
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "No plan yet for this project."
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "No posts yet. Generate a plan and draft posts from the board."
+msgstr ""
+
+#: src/components/content/PostCard.jsx
+msgid "No preview yet"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "no price for these models"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "No project"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "No projects yet"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "No provider recorded."
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "No results returned. Try different hashtags or a wider niche."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "no schema"
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "No slides yet"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "No sources pulled yet"
+msgstr ""
+
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "No textual changes between these versions."
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "No threads yet. Ask something below and one starts."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "No title"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "No viewport configured."
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "No website URL"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Nobody had compared them"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Nobody has closed this"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "noindex"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Noindex"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Non-profit"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "none"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "None of these — start a new one"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "North Star metric"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Not a key we can use"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Not confirmed"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Not connected"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Not enough dated posts to chart a trend yet."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "not found"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "Not granted"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Not it — try another"
+msgstr ""
+
+#: src/components/models/ModelPicker.jsx
+msgid "not on {engine}"
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+msgid "Not on this engine"
+msgstr ""
+
+#: src/components/content/PostCard.jsx
+msgid "Not published"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "Not recorded"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "not relevant"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Not relevant"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Not remembering"
+msgstr ""
+
+#: src/components/AutoFallbackCard.jsx
+msgid "Not saved — sign in to keep this setting across your devices."
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Not saved to your account. It is kept on this device; try again in a moment."
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Not saying"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Not scheduled"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+#: src/lib/modelTiers.js
+msgid "Not set"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Not started"
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "Not stored"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Note"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Notes"
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+msgid "Nothing below this tier can run either — add a key to use {tierName}."
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Nothing checked yet."
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Nothing from project memory is read into this session, and nothing it concludes is written back."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Nothing has run on your key yet"
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "Nothing has run yet. {sourceCount, plural, one {# source connected.} other {# sources connected.}}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Nothing here"
+msgstr ""
+
+#: src/components/content/PlanKanban.jsx
+msgid "Nothing here yet."
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Nothing is waiting on you."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Nothing is wrong with the key. Give it a moment and verify again."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Nothing matches that filter."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Nothing matches these filters."
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "Nothing needs you right now."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Nothing ran in the last {windowDays} days"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Nothing ran in this window."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+msgid "Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Nothing running."
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "Nothing stored yet."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Nothing to preview yet."
+msgstr ""
+
+#: src/components/insights/Desk.jsx
+msgid "Nothing to report yet."
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Nothing written yet"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Nothing written yet. Artifacts a thread produces collect here."
+msgstr ""
+
+#: src/components/insights/desk/DeskActivity.jsx
+msgid "Nothing yet. Every sync, check and change lands here — with what it found and how to undo it."
+msgstr ""
+
+#: src/app/(app)/memory/page.jsx
+msgid "Nothing yet. Set your preferences from the sidebar, or add a rule here — 'give me the number first, then the why' is a good start."
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Notification settings"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Notifications"
+msgstr ""
+
+#: src/components/PipelineProgress.jsx
+msgid "now"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Numbers arrive once posts go out through PostBridge and the accounts are linked."
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Off"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Off by default — Duct runs its backend here, and nothing leaves unless you say so."
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "older version"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "On"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "On by default, so a crash tells us something without you having to report it."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "On request"
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "On this device"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "On-page content rewrites"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Once you connect a source:"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "One Google sign-in does both: it saves this project to an account and lets Duct read Search Console and Analytics. Read-only, and you can untick either at Google."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "One key, hundreds of models"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "One memorable line"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "One memorable line."
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "One moment — Duct has a quick question"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "One sentence on what you do."
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "One site or account. Everything I check hangs off it."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "One-line description — what this pillar covers."
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "One-sentence description of what you do"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Ongoing"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Only a sample of your sitemap was scanned."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Only if 'Require App Secret' is on"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Only members of this project can open the link. Nothing here is public."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Only the project owner can change autonomy."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Op types to block, comma-separated (optional)"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Open"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Open <0>Settings → Models & providers → OpenAI</0> and choose <1>Continue with ChatGPT</1>."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Open billing"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Open chat"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Open connections"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Open connections →"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+#: src/app/(start)/start/page.jsx
+msgid "Open Duct"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Open model settings"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Open model settings →"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "Open plan board →"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Open post"
+msgstr ""
+
+#: src/components/commands/CommandPaletteTrigger.jsx
+msgid "Open the command palette"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Open the console"
+msgstr ""
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "Open the project timeline"
+msgstr ""
+
+#: src/components/content/PlanCalendar.jsx
+msgid "Open week of {dayLabel}"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "OpenAI"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "OpenAI Ads"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "OpenAI Ads API quickstart"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "OpenAI has changed what third-party apps may do with this plan. An API key works regardless."
+msgstr ""
+
+#: src/components/insights/desk/DeskComposer.jsx
+msgid "Opening session…"
+msgstr ""
+
+#: src/app/open/audit/[conversationId]/page.jsx
+msgid "Opening the report…"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Opening the session…"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "Opening…"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "OpenRouter"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Operation types"
+msgstr ""
+
+#: src/components/insight-blocks/NarrativeBlock.jsx
+msgid "Operator takeaway: {takeaway}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "OPP"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "opportunities"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Opportunity"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Optional — improves report quality"
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "Optional — the agent will ask if you leave this unset."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "or paste an API key"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Or use your ChatGPT plan"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Organic"
+msgstr ""
+
+#: src/components/AppNav.jsx
+#: src/lib/navigation.js
+#: src/lib/usageApi.js
+msgid "Organic Growth"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Organization settings → Service Accounts → Add. Grant it the project(s) Duct should read. Project tokens and API secrets cannot read the Query API."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/models/UsagePanel.jsx
+#: src/components/workspace/QuestionsCard.jsx
+#: src/lib/usageApi.js
+#: src/lib/userProfile.js
+msgid "Other"
+msgstr ""
+
+#: src/components/AutoFallbackCard.jsx
+msgid "Out of quota, the job runs on the next model down — {chain} — and Duct says which. Your scheduled brief still arrives."
+msgstr ""
+
+#: src/components/AutoFallbackCard.jsx
+msgid "Out of quota, the job runs on the next model down — and Duct says which. Your scheduled brief still arrives."
+msgstr ""
+
+#: src/components/AutoFallbackCard.jsx
+msgid "Out of quota, the run stops and shows you the limit. Nothing switches models for you, so that morning's brief does not arrive."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "over {windowDays} days"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Owner"
+msgstr ""
+
+#: src/app/not-found.js
+msgid "Page not found"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "pages crawled"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Pages excluded from the index. Verify these are intentional."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Pages without an H1 miss the primary on-page relevance signal."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Paid"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Paid Ads"
+msgstr ""
+
+#: src/lib/navigation.js
+msgid "Paid Ads Intelligence"
+msgstr ""
+
+#: src/lib/engines.js
+msgid "Paid media & organic growth intelligence."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Pain points, goals, motivations..."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Partially applied"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Partly applied"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Partnerships"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "PASS"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Paste a key first"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Paste your key"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Pause remembering"
+msgstr ""
+
+#: src/lib/contentEnums.js
+msgid "Pending"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Pending invitations"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "Permissions"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Persona description"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Pick a color"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Pick at least one account."
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Pick one of the questions below, or type your own."
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Pick the account to use:"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Pick up where you left off"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Pick what you’d like done. We’ll scope it and follow up."
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Picking the hook…"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Pillar"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Pin"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Pin {label}"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Pinned"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Pipeline stopped early: {error} — your partial report is still available above."
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "plan"
+msgstr ""
+
+#: src/components/AppNav.jsx
+msgid "Plan"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Plan {shortId}"
+msgstr ""
+
+#: src/lib/contentSchedule.js
+msgid "Planned"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Planning crawl"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Playful"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Plus and Pro meter GPT usage in five-hour windows. Wait for it to reset, or use an API key to keep going."
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Português"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Post"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Post draft"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Post now"
+msgstr ""
+
+#: src/components/content/PostCard.jsx
+msgid "post preview"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Post published"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Post scheduled"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "posted"
+msgstr ""
+
+#: src/lib/contentEnums.js
+msgid "Posted"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Posted {postedOn}"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "posts"
+msgstr ""
+
+#: src/components/AppNav.jsx
+msgid "Posts"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Practitioner"
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "Preferences"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "preferences · {field}"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "present"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+#: src/components/content/FormatLibrary.jsx
+#: src/components/workspace/SplitWorkspace.jsx
+msgid "Preview"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Preview failed: {previewError}"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Previous audits"
+msgstr ""
+
+#: src/components/content/PlanCalendar.jsx
+msgid "Previous month"
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "Previous slide"
+msgstr ""
+
+#: src/components/content/PlanCalendar.jsx
+msgid "Previous week"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Primary color"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Primary content type"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Primary growth motions"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Primary persona name"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Primary segment"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Primary SEO goal"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Print report"
+msgstr ""
+
+#: src/lib/navigation.js
+msgid "Product"
+msgstr ""
+
+#: src/lib/navigation.js
+msgid "Product Intelligence"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "Product Manager"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Product Pages"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Product-led"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Professional"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+#: src/components/AppSidebar.jsx
+msgid "Profile"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Profile pictures are resolved from public handles. PostBridge doesn't expose bios or follower counts, so those aren't shown."
+msgstr ""
+
+#: src/components/workspace/Todos.jsx
+msgid "Progress"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+#: src/components/AppNav.jsx
+msgid "Project"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/members/page.jsx
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Project context"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Project context sections"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Project id"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "Project invitation"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Project not found. It may have been deleted, or you may not be a member."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "project settings · {field}"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Project settings → API keys → Secret API key (V2) with the read scopes. Public SDK keys (appl_/goog_) cannot read the REST API."
+msgstr ""
+
+#: src/app/(app)/memory/page.jsx
+#: src/components/AppNav.jsx
+#: src/components/commands/AppCommands.jsx
+msgid "Projects"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Proposals, approvals, rollbacks and artifact versions land here, each with who did it."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Proposed by you"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Proposed target + payload"
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+msgid "Providers"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Public sector"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Publish"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Publish post"
+msgstr ""
+
+#: src/lib/contentSchedule.js
+msgid "Published"
+msgstr ""
+
+#: src/components/content/PostCard.jsx
+msgid "Published {publishedOn}"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "qa-, @yourcompany.com, test-account"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Quick Wins"
+msgstr ""
+
+#: src/components/LocalBackendGate.jsx
+msgid "Quit and reopen Duct. If it keeps happening, the app bundle may be incomplete — reinstall it."
+msgstr ""
+
+#: src/components/models/AdvancedSettings.jsx
+msgid "Quota fallback and context compression"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Rage clicks, dead clicks, quick-backs and script errors, per page."
+msgstr ""
+
+#: src/components/insights/desk/DeskActivity.jsx
+msgid "ran on its own"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Read my site"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Reading and parsing your pages"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Reading the rest of the site…"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Reading…"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Reads what a search engine sees"
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "Ready"
+msgstr ""
+
+#: src/components/onboarding/ProviderRequiredCard.jsx
+msgid "Ready when you are"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Real problems from a real account. Nothing lands here unchecked."
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Real upgrades: 13, not 36."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "recalled {recalls}×"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Recommended"
+msgstr ""
+
+#: src/components/insight-blocks/ActionListBlock.jsx
+msgid "Recommended actions"
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "recomputed at the next call"
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+#: src/components/connections/ProviderCard.jsx
+msgid "Reconnect"
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+msgid "Reconnect to save it to your account."
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reconnecting to the model ({attempt}/{attempts})"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reconnecting to the model ({attempt}/{attempts}) · retry in {retryIn}s"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reconnecting…"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "recorded"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Recorded {recordedAgo}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Redirects"
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "Refresh"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Refresh from PostBridge"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Refresh now"
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Refreshing live data..."
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "Refreshing..."
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Region"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Reject"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Rejected"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Rejecting…"
+msgstr ""
+
+#: src/components/ReloadToast.jsx
+msgid "Reload"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Remember"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Remember it"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Remember it on Duct, encrypted, so it survives a refresh and can fund scheduled checks."
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Remember selection"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Remember this key on Duct"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Remember this session"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Remembered ✓"
+msgstr ""
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "Remembered:"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Remembering…"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/connections/ManualConnectorCard.jsx
+#: src/components/ProjectMembers.jsx
+msgid "Remove"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Remove {item}"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Remove {memberEmail}"
+msgstr ""
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Remove {name}"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Remove {removalTarget}?"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Remove key"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Remove this pillar"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Remove your {providerName} key?"
+msgstr ""
+
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "Rendering diagram…"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+#: src/components/insights/desk/DeskLists.jsx
+#: src/components/LocalInsightDetail.jsx
+msgid "Report"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Report a bug"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Report link"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Reports"
+msgstr ""
+
+#: src/components/connections/ProjectAccountSelect.jsx
+msgid "Reports and agent runs for this project use this account. Other projects keep their own."
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "Reports and agent runs use this {one}."
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Reports are stored against your account, so they survive the tab that made them."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Request execution"
+msgstr ""
+
+#: src/lib/onboardingApi.js
+msgid "Request failed ({status})."
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+#: src/lib/auditEvents.js
+msgid "Researching competitors"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Researching pillars and synthesizing the plan…"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Researching trends & history"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Researching trends + history"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Resend invitation to {invitee}"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Reset"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Reset failed."
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+#: src/app/(app)/settings/profile/page.jsx
+#: src/components/models/TierSummary.jsx
+msgid "Reset to defaults"
+msgstr ""
+
+#: src/components/workspace/SplitWorkspace.jsx
+msgid "Resize panes"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Resolved: {resolvedFindings}"
+msgstr ""
+
+#: src/lib/auditEvents.js
+msgid "Resolving website"
+msgstr ""
+
+#: src/components/UpdateToast.jsx
+msgid "Restart to update"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Restore this version"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Restricted API key"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Result"
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "Retry"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Reusable post recipes the drafting agent pulls at generation time."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "RevenueCat"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "RevenueCat API keys guide"
+msgstr ""
+
+#: src/lib/projectsApi.js
+msgid "Reversible changes on the allowlist apply on their own; the rest waits here."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Review"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Review what changed"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Reviewing Open Graph completeness…"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Reviewing your content pillars…"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Revise with Duct"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Revoke invitation to {invitee}"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Risk"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "ROAS by campaign"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "robots.txt"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Roll back"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Roll back {count, plural, one {# applied change} other {# applied changes}}?"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Rollback failed: {rollbackError}"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Rollback result"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Rolled back"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Rolling back…"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Rule, e.g. “Never pause the Brand campaign”"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Run an audit with your project selected and its report lands here — versioned, so you can read what changed between two runs of the same check."
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Run an SEO audit"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Run SEO Audit →"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Running on a key already on this computer, not one you added here."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Running on Duct's own key — we are paying for these runs."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Running on the ChatGPT plan you signed in with on this desktop."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Running on the key you pasted — this browser session only."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Running on your saved key, the one that also funds scheduled runs."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Runs GPT models on a plan you already pay for. Signing in opens your browser; Duct never sees your password or your chats."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history."
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Runs whether you are here or not"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Sales-led"
+msgstr ""
+
+#: src/lib/projectsApi.js
+msgid "Same allowlist as Assisted, fewer questions; assumptions go in the brief."
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "sandboxed"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+#: src/components/content/DiscoverPage.jsx
+#: src/components/content/PostViewport.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Save"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Save & Next"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Save as draft"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Save as TikTok draft (post manually from the app)"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Save brand"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Save changes"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Save failed."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Save manager account"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Save project"
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+#: src/app/(app)/settings/profile/page.jsx
+#: src/components/content/AccountsTab.jsx
+#: src/components/content/DiscoverPage.jsx
+#: src/components/content/PostViewport.jsx
+msgid "Saved"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Saved — {accountName}."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Saved {savedAtText}"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Saved as TikTok draft"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "saved on this device"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Saved on this device until you sign in. A signed-in profile follows you, and the scheduled brief can read it."
+msgstr ""
+
+#: src/components/insights/AccountSelect.jsx
+msgid "Saved to this project, so you won’t be asked again."
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "Saved to your account"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "saved to your Duct account"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+#: src/components/content/BrandContextForm.jsx
+#: src/components/content/DiscoverPage.jsx
+#: src/components/content/FormatLibrary.jsx
+#: src/components/content/PostViewport.jsx
+msgid "Saving…"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Scan couldn't finish"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Scan cut short"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Scanning trending sounds & hooks…"
+msgstr ""
+
+#: src/components/insight-blocks/ScatterBlock.jsx
+msgid "Scatter"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Schedule for:"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Schedule post"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "scheduled"
+msgstr ""
+
+#: src/lib/contentEnums.js
+#: src/lib/contentSchedule.js
+#: src/lib/contentStatus.js
+msgid "Scheduled"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Scheduled {scheduledOn}"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Scheduled runs happen with no app open, so they always need a key."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Schema"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Schema, meta titles & descriptions, llms.txt and FAQ markup — generated and ready to paste."
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+#~ msgid "score {score}"
+#~ msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Score {score} out of 100, {label}"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "score {scoreBefore} → {scoreAfter}"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Scoring each SEO category…"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Scoring signals & building findings"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Scrape real posts in your niche. What you save, the research agent cites when it proposes topics."
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Scraping on Apify ({elapsed}s) — polling every 3s, results appear as soon as the actor finishes."
+msgstr ""
+
+#: src/components/commands/CommandPaletteTrigger.jsx
+msgid "Search"
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "Search {many}"
+msgstr ""
+
+#: src/components/commands/CommandPalette.jsx
+msgid "Search commands"
+msgstr ""
+
+#: src/components/commands/CommandPalette.jsx
+msgid "Search commands…"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Search memory"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Search memory…"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Search queries, clicks, impressions and average position."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Secondary color"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Secret API key (V2)"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Security check failed to load. Please refresh and try again."
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Security verification"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "See what we’d do"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Select a plan"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "Select a project in the sidebar to use the content agent."
+msgstr ""
+
+#: src/app/(app)/content/plan/page.jsx
+msgid "Select a project in the sidebar to view its plan."
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Select a project to edit its configuration, or manage existing projects safely."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Select all ({selectedCount}/{approvableCount} selected)"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Select business model..."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Select Industry and Business model first to load relevant North Star options."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Select industry..."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Select North Star metric..."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Select primary segment..."
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+#: src/components/ProjectSwitcher.jsx
+msgid "Select project"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Select some text first"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Select type…"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Select voice..."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Select your current milestone..."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Self-hosted API URL"
+msgstr ""
+
+#: src/components/ChatSidebar.jsx
+#: src/components/insights/desk/DeskComposer.jsx
+#: src/components/workspace/ChatInput.jsx
+msgid "Send"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Send crash reports and usage data"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "Send invite"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Sending…"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Sends"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Sent while the agent was busy; it reads this at its next step."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Sent with each request, never stored by Duct unless you ask."
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "SEO / Content Lead"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "SEO audit"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+#: src/components/AppNav.jsx
+#: src/lib/navigation.js
+#: src/lib/usageApi.js
+msgid "SEO Audit"
+msgstr ""
+
+#: src/lib/engines.js
+msgid "SEO audit and content gap analysis."
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+#: src/components/audit/AuditReportV1.jsx
+msgid "SEO Audit Report"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "SEO Report"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Sequencing the posting cadence…"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Service account secret"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Service account username"
+msgstr ""
+
+#: src/components/AppNav.jsx
+msgid "Session"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Session failed"
+msgstr ""
+
+#: src/components/AppNav.jsx
+msgid "Sessions"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Set"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Set once in project setup, so audit, insights and content agree."
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Set which model runs each job in Settings → Models & providers."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Settings → API Keys. A read-only key is enough — Duct never flips flags."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Settled revenue, subscriptions, refunds and payment outcomes."
+msgstr ""
+
+#: src/components/onboarding/Aqueduct.jsx
+msgid "Setup steps"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Share"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Share this report"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Shared by {owner}"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Shares"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Sharing is by membership, and a member needs a name. Sign in with Google and this project, the report and the conversation come with you — nothing is lost."
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Shirish"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Short description"
+msgstr ""
+
+#: src/components/workspace/SplitWorkspace.jsx
+msgid "Show {rightText}"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Show {widest} days"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Show changes"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Show Duct in"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Show key"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Show less signals"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Show more signals"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Show reasoning"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Show superseded"
+msgstr ""
+
+#: src/components/profile/VoiceSample.jsx
+msgid "Shown in English. Duct still writes to you in {language}; only this preview does not."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Shown once when the account is created"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/app/(app)/artifacts/page.jsx
+#: src/app/(auth)/page.js
+#: src/app/(start)/layout.jsx
+#: src/components/models/UsagePanel.jsx
+msgid "Sign in"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Sign in again"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Sign in and share"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "Sign in as <0>{invitedEmail}</0> to accept. We’ll create your account if you don’t have one."
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Sign in first — credentials are stored encrypted server-side."
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Sign in to keep this"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Sign in to save — manual credentials are stored server-side (encrypted) so agents and scheduled pulls can use them."
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+msgid "Sign in to save it to your account."
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Sign in to save your work"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Sign in to see project activity"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Sign in to see this."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Sign in to see what your runs cost"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Sign in to see your saved artifacts"
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Sign in to share this"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Sign in with ChatGPT again"
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+#: src/components/GoogleSignInButton.jsx
+msgid "Sign in with Google"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "Sign in with Google to connect"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Sign-in is unavailable on this deployment: no API endpoint is configured. If this is your install, set <0>NEXT_PUBLIC_API_BASE</0> and redeploy."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Sign-in isn't configured"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Sign-in link expired"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+#: src/components/insight-blocks/SignalListBlock.jsx
+msgid "Signals"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Signed in as <0>{planAccount}</0>"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Signed in to {planName}"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Signed in with Google, but saving the connection to your account failed, so it will only last this browser session. Try Reconnect once you're back online."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Signing in with Google is all Duct needs. If your accounts sit under a manager account, name it here so Duct reads the child accounts through it."
+msgstr ""
+
+#: src/app/(auth)/page.js
+#: src/components/GoogleSignInButton.jsx
+msgid "Signing in..."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Signups, logins and upgrades, one name across web and app."
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Sitemap"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Sketching image prompts…"
+msgstr ""
+
+#: src/components/insights/AccountSelect.jsx
+msgid "Skip"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "Skip — carry on without it"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Skip for now"
+msgstr ""
+
+#: src/app/layout.js
+msgid "Skip to main content"
+msgstr ""
+
+#: src/components/insights/ConnectionRequest.jsx
+msgid "Skipping is fine — Duct will say what it couldn’t check."
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "Slide {n}"
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "Slide {n} · {kind}"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Slide {slideNo}"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Slide {slideNo} · image {imageNo}"
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "slide {slideNo} preview"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Slides"
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "Slides appear here as the agent drafts them."
+msgstr ""
+
+#: src/components/content/SlidesCarousel.jsx
+msgid "Slides preview"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Slug"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Slug is required."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Slug must be lowercase letters, numbers, and hyphens only."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "SMB"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Some accounts need verification or a higher usage tier first. Try another provider, or come back once the account is verified."
+msgstr ""
+
+#: src/components/audit/ShareReport.jsx
+msgid "Someone new? Invite them and send the link."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Something broke on our side"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Something interrupted the audit. Your site is fine — this was on our end."
+msgstr ""
+
+#: src/components/AgentDrawer.jsx
+#: src/components/AppSidebar.jsx
+msgid "Soon"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Source: {source}"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "SPA pages"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Spec document (Markdown)"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Spend"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Spend, clicks, impressions, conversions and ROAS, per campaign."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Spend, taps and installs, by campaign and search term."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Spending is per account, and every figure on this page is a charge on your own provider key."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Spent"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Stable key — lowercase, hyphens"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Standard"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Standard — the everyday model"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Start a fresh conversation"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Start discovery"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Start over"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Start with a question"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Start with your website. Duct reads it, audits it, and builds your project from what it finds. An account can wait until there is something worth keeping."
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Starting audit…"
+msgstr ""
+
+#: src/components/LocalBackendGate.jsx
+msgid "Starting Duct…"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Starting session…"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Stay connected"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Step I of III · Your site"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Step II of III · Your model"
+msgstr ""
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Stop"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "stopped"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Stopped"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Stopped — pick up where it left off"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "stored for this provider"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "Stripe"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Studying what's worked before…"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Style"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "Styles"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Sub-agent"
+msgstr ""
+
+#: src/components/workspace/StepProgress.jsx
+msgid "Sub-agents"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Suggest an improvement"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "superseded"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Superseded"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "Switch account"
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "Switch to {projectName}"
+msgstr ""
+
+#: src/components/ThemeToggle.jsx
+msgid "Switch to dark mode"
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "Switch to dark theme"
+msgstr ""
+
+#: src/components/ThemeToggle.jsx
+msgid "Switch to light mode"
+msgstr ""
+
+#: src/components/commands/AppCommands.jsx
+msgid "Switch to light theme"
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+msgid "Switched to {providerLabel}"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Syncing…"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Synthesizing 30-day plan"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Synthesizing your 30-day plan"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Synthesizing your 30-day plan…"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+#: src/components/memory/MemoryTimeline.jsx
+msgid "System"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "System User access token"
+msgstr ""
+
+#: src/components/insight-blocks/TableBlock.jsx
+msgid "Table"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Tagline"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Tagline and description used across posts."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Tags, variables and container versions — staged, with rollback."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Target contains"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "target contains “{targetContains}”"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Target contains (optional)"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Target keywords"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Targets"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Team ID"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "teammate@company.com"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+#: src/lib/userProfile.js
+msgid "Technical"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Tell us who you are and what you do. This anchors every audit and report we generate."
+msgstr ""
+
+#: src/components/content/StyleGallery.jsx
+msgid "Text cards"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "That connection came back incomplete — please try again."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "That connection didn't finish — the link expires after a minute. Please try again."
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "That didn't save — your selection has been put back. Try again."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "That didn’t send — your choices are still here. Try again."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "That format could not be deleted — it is still in the library."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "That guardrail is still in place — removing it didn't go through."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "That guardrail wasn't saved — nothing on your account changed."
+msgstr ""
+
+#: src/lib/onboardingApi.js
+msgid "That is a lot of sites in a row — try again in a few minutes."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "That key was rejected"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "That turn failed"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "That's us — continue"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."
+msgstr ""
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "The agents stop seeing it from the next turn."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "the API"
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "The app is online but Duct's servers are not responding. This is usually brief."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "The audit"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "The audit didn't start. Check the address and try again."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "The audit is on us. Our agents turn these findings into ready-to-ship fixes — so you ship the work, not just the to-do list."
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "The backend that runs inside the app is not answering. Quitting and reopening Duct restarts it."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "The ChatGPT sign-in has lapsed"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "The error and stack trace of a crash"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "The exact message is below. Try again, or use a different provider."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "the execution queue"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "The fact in one line — with its number or date if it has one."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "The key works, but the account has no credit"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "The last turn failed"
+msgstr ""
+
+#: src/app/not-found.js
+msgid "The page you are looking for does not exist or has moved."
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "The pipeline ended unexpectedly. Your partial report is still available."
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "The pipeline stopped early — your partial results are still visible above."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "The provider is rate-limiting right now"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "The provider returned something Duct didn't expect"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "The SEO audit"
+msgstr ""
+
+#: src/components/content/StyleGallery.jsx
+msgid "The shared, brand-agnostic slide styles the builder inlines so captions stay consistent. Formats link to these. More styles & categories coming."
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "The signal, the number behind it, what to do next"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "The site answered <0>{httpStatus}</0> to our crawler, so this audit will be thin — it may sit behind a bot wall."
+msgstr ""
+
+#: src/components/content/StyleGallery.jsx
+msgid "the slide styles"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "The token IS the project. Clarity allows 10 API requests per project per day; verifying spends 1 and each Duct pull spends 2."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "The tone, messaging, pillars and visual identity the content agent works from."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "The work you act on"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Theme: {themeLabel}"
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "They lose access immediately. Anything they already created stays with the project. You can invite them again later."
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "They’ll get an email with a link that works only for this address. Collaborators can edit the project and run agents; only you can invite people or delete it."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Thin or weak page and blog copy rewritten for search intent and your keywords."
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Thinking: {label}"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Thinking…"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "This account can't use that model yet"
+msgstr ""
+
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "This artifact has no stored content to render."
+msgstr ""
+
+#: src/app/(public)/lead/seo-audit/page.jsx
+msgid "This audit link is no longer valid. Links expire after 24 hours. Please enter your website again to get a fresh audit."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "This computer's key"
+msgstr ""
+
+#: src/components/connections/ConnectorPermissions.jsx
+msgid "This connection was made before Duct recorded which permissions Google granted. Reconnect to find out — nothing is assumed either way."
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "This connector has no {many} to choose from."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "This connector isn't configured"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "This device"
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+msgid "This engine runs Anthropic models only, so {tierNameLower} jobs run on <0>{servesName}</0> — this engine's default."
+msgstr ""
+
+#: src/components/models/TierCard.jsx
+msgid "This engine runs Anthropic models only, so {tierNameLower} jobs run on <0>{servesName}</0> until you add a key."
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+msgid "this engine’s default"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "This format has no spec document yet. Click <0>Edit</0> to add one."
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "This invitation link is invalid, expired, or has already been used."
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "This invitation was sent to <0>{invitedEmail}</0>, but you’re signed in as <1>{viewerEmail}</1>."
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "This is a quick scan. Sign up for a deeper audit with competitor analysis, keyword gaps, and a prioritized action plan."
+msgstr ""
+
+#: src/components/LoadError.jsx
+msgid "This is usually temporary — try again in a moment."
+msgstr ""
+
+#: src/components/LocalInsightDetail.jsx
+msgid "This locally-stored insight may have been cleared from your browser."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "This looks like a client-rendered app, so the crawler may see very little — the same as a search engine."
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "this member"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "This mutates the live account. Applied changes record a rollback handle."
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "This page stopped working"
+msgstr ""
+
+#: src/components/content/PlanCalendar.jsx
+msgid "This plan has no start date, so it can't be placed on a calendar yet."
+msgstr ""
+
+#: src/app/(app)/content/posts/[postId]/page.jsx
+msgid "this post"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+#: src/app/(app)/artifacts/page.jsx
+#: src/app/(app)/audit/seo/page.jsx
+#: src/app/(app)/connections/page.jsx
+msgid "this project"
+msgstr ""
+
+#: src/components/insights/desk/DeskComposer.jsx
+msgid "This project"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "this project's activity"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+msgid "this project's memory"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "This removes the project and its configuration from this browser, and cannot be undone. Saved reports stay where they are."
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "This run reads project memory, and what it concludes is written back."
+msgstr ""
+
+#: src/app/not-found.js
+msgid "This screen doesn't exist or has moved. Nothing is wrong with your install."
+msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+msgid "This session"
+msgstr ""
+
+#: src/lib/credentialStorage.js
+msgid "This session only"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "This slide is outdated — regenerate"
+msgstr ""
+
+#: src/components/ReloadToast.jsx
+msgid "This tab is running an older build. Reloading picks up the new one — finish anything you have in progress first, it will not wait for you."
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "This version of Duct can’t complete sign-in. Update the app from <0>getduct.ai/download</0> and try again."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "thread"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Threads"
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+msgid "Tiers"
+msgstr ""
+
+#: src/components/insight-blocks/TimeSeriesBlock.jsx
+msgid "Time series"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Time to first byte. Google de-prioritises slow sites for recrawl."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Time window"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "Title"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "To date"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Tokens"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Tone"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Top + recent posts for hashtags you care about. Best for finding what's actually working in the niche."
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Top plays"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Top posts by views"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Traffic, sessions, engagement and conversions."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Translated metadata and a complete hreflang map so you can rank in new markets."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Translation & localization"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Trend feed"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Trending posts in a region — good for sound + format discovery."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Trials, renewals, refunds and MRR across the App Store and Play."
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+#: src/components/LoadError.jsx
+msgid "Try again"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Trying again won't help — Duct doesn't recognise the connector this link names."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Trying again won't help — this build shipped without its Google sign-in credentials."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Trying again won't help — this build shipped without that connector's credentials."
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Turn off to audit a different business or competitor — only the fields below are used."
+msgstr ""
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
+msgstr ""
+
+#: src/components/workspace/QuestionsCard.jsx
+msgid "Type your answer…"
+msgstr ""
+
+#: src/components/AppErrorPanel.jsx
+msgid "Unavailable"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "unconfirmed"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Undated"
+msgstr ""
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "Undo"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Unknown connector"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Unlink all"
+msgstr ""
+
+#: src/components/connections/ProjectAccountSelect.jsx
+msgid "Unnamed account"
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
+msgid "Unnamed project"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Unpin"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Unpin {label}"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Unspecified industry"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Untitled"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Untitled change set"
+msgstr ""
+
+#: src/components/content/PostCard.jsx
+#: src/components/content/PostViewport.jsx
+msgid "Untitled post"
+msgstr ""
+
+#: src/app/(app)/projects/page.jsx
+msgid "Untitled project"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Untitled thread"
+msgstr ""
+
+#: src/components/UpdateToast.jsx
+msgid "Update failed: {error}"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Update failed."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Update the desktop app — this version can’t run the sign-in."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Updated {updated}"
+msgstr ""
+
+#: src/app/(app)/settings/models/page.jsx
+#: src/app/(app)/usage/page.jsx
+#: src/lib/navigation.js
+msgid "Usage"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Use {projectName}'s business context"
+msgstr ""
+
+#: src/components/connections/ProjectBinding.jsx
+msgid "Use for {projectName}"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Use one provider for all three"
+msgstr ""
+
+#: src/components/AutoFallbackCard.jsx
+msgid "Use the next model down when a provider is out of quota"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Use the plan you already pay for"
+msgstr ""
+
+#: src/components/insights/AccountSelect.jsx
+msgid "Use this account →"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Use this plan"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Using a key already on the machine running Duct, not one you added here"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Using Duct's own key — we're paying for this run"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Using fallback options while config service is unavailable."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Using the ChatGPT plan you signed in with on this desktop"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Using the key you pasted — this browser session only"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Using the TikTok playbook — no dedicated {channelLabel} agent yet."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Using your saved key — the one that also funds scheduled runs"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "Usually resolves on the first retry"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+msgid "v{id} — {label}"
+msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "v{version}"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "v{version} — {label}"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "v{version} · {label}"
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+#~ msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
+#~ msgstr ""
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "v{version} of {versionCount}"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Value proposition"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Verified — {accountName}. Credentials saved (encrypted)."
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Verified — {count} accounts reachable. Pick one below to finish."
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Verified. Credentials saved (encrypted)."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Verify & continue"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Verify & save"
+msgstr ""
+
+#: src/app/(public)/lead/seo-audit/page.jsx
+msgid "Verifying your access…"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Verifying…"
+msgstr ""
+
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
+msgid "Version"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Version {version}"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostCard.jsx
+#: src/components/content/PostMiniCard.jsx
+msgid "via Duct"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "View →"
+msgstr ""
+
+#: src/components/workspace/AgentChat.jsx
+msgid "View full screen"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Views"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Views by format"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Views by pillar"
+msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Views over time"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Visual identity"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Voice & messaging"
+msgstr ""
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Waiting for agent…"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "Waiting for you"
+msgstr ""
+
+#: src/components/connections/OAuthConnectorCard.jsx
+#: src/components/connections/ProviderCard.jsx
+msgid "Waiting for your browser…"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Waiting on your answer"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Want Duct to execute these fixes for you?"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Want the full picture?"
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "Want these done for you? Request execution →"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "WARN"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "Warning"
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "warnings"
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Watch"
+msgstr ""
+
+#: src/components/LoadError.jsx
+msgid "We couldn’t load {what}."
+msgstr ""
+
+#: src/components/CookieConsent.jsx
+msgid "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves exactly the same. <0>Privacy Policy</0>"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Website"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Website <0>(optional)</0>"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Website URL <0>*</0>"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Website URL is required."
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Week"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "What currently limits this metric most? <0>(optional)</0>"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "What do you do?"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "What does success look like in the next 90 days?"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "What does success look like?"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+msgid "What Duct knows about this project. Agents read it before every run — confirm, correct, or pin a fact so it stays in view."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "What happens next"
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "What I found"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "What is my site actually about?"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "What shape the brief takes"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "What should Duct call you?"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "What was observed, why it matters, how to apply it."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "What you uniquely offer."
+msgstr ""
+
+#: src/components/audit/AuditReportV1.jsx
+msgid "What’s Going Right"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "When to post"
+msgstr ""
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid "When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Where do competitors beat me?"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Where does the data come from?"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Where the funnel actually breaks"
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Where to find these credentials"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "Where to post"
+msgstr ""
+
+#: src/components/insights/AccountSelect.jsx
+msgid "Which {label} account should Duct use?"
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Which model each tier means is set in Settings → Models"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Which model runs which job is set in <0>Models & providers</0>."
+msgstr ""
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Which model tier runs this"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Which pages should rank and don't?"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Which screens and features you open"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Which tests are live, whether they still bucket, per-metric results."
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Who do customers compare you against most often?"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Why it matters, and how an agent should apply it"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Why it matters, and how an agent should apply it. Optional."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Will be encrypted and stored on Duct, so scheduled runs use your key too."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Will be kept in this browser session only — cleared when you close the tab, and unavailable to scheduled runs."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Will be stored in your OS keychain on this machine."
+msgstr ""
+
+#: src/components/GoogleAdsReport.js
+msgid "Win"
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Work still moving — mine or yours. Nothing here waits on you."
+msgstr ""
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Working"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+#: src/components/PipelineProgress.jsx
+msgid "Working on your report…"
+msgstr ""
+
+#: src/components/workspace/Todos.jsx
+msgid "working…"
+msgstr ""
+
+#: src/app/(app)/audit/seo/page.jsx
+#: src/app/(app)/execute/page.jsx
+#: src/components/content/PublishModal.jsx
+#: src/components/insights/desk/DeskLists.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "Working…"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Write to me in"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Writing post metadata"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Writing slide copy"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Writing the caption…"
+msgstr ""
+
+#: src/components/audit/AuditReport.jsx
+#: src/components/PipelineProgress.jsx
+msgid "Writing your report…"
+msgstr ""
+
+#: src/components/PipelineProgress.jsx
+msgid "writing…"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Writing…"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "xAI"
+msgstr ""
+
+#: src/components/audit/AuditStepProgress.jsx
+msgid "yes"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "you"
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "You"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "You can close this tab."
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "You have more than one project for this site. Which should this audit update?"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "You signed out of ChatGPT or removed Duct from it. Sign in again and Duct picks up where it left off."
+msgstr ""
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "You'd pick this back up here"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "You’ll join as a collaborator — you can open the project, run audits and insights, and work on content with the rest of the team."
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "You'll lose access to this project immediately. The owner can invite you again."
+msgstr ""
+
+#: src/components/ProjectMembers.jsx
+msgid "You’re a collaborator on this project. Only the owner can change who has access."
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "You're offline"
+msgstr ""
+
+#. placeholder {0}: update.currentVersion
+#: src/components/UpdateToast.jsx
+msgid "You’re on {0}. Updating restarts the app."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "You're on the list"
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "You’re signed in"
+msgstr ""
+
+#: src/app/invite/[token]/page.jsx
+msgid "You've been invited to <0>{projectName}</0>"
+msgstr ""
+
+#: src/components/ChatSidebar.jsx
+msgid "your account"
+msgstr ""
+
+#: src/components/workspace/QuestionsCard.jsx
+msgid "Your answer"
+msgstr ""
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Your answer decides what Duct looks at. Skip if you'd rather it choose."
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Your answers sharpen the findings. Skip if you'd rather Duct decide."
+msgstr ""
+
+#: src/components/workspace/QuestionsCard.jsx
+msgid "Your answers sharpen the result. Skip if you'd rather Duct decide."
+msgstr ""
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "your artifacts"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "your ChatGPT account"
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Your ChatGPT account"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+#: src/lib/modelTiers.js
+msgid "Your ChatGPT plan"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Your ChatGPT plan can run the chat models but cannot generate images — add an image key on the Providers tab."
+msgstr ""
+
+#: src/components/onboarding/ProviderStep.jsx
+msgid "Your ChatGPT plan's window is used up"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Your ChatGPT sign-in is saved, but this build cannot read it: {planReadError}"
+msgstr ""
+
+#: src/components/ConnectionBanner.jsx
+msgid "Your connection is fine but Duct's servers are not responding. This is usually brief."
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "your content plan"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Your core themes. The agent runs one research sub-agent per pillar."
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Your data, or anything you generate"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Your edits are still here, but they didn't save. Try again."
+msgstr ""
+
+#: src/components/audit/ExecutionOffer.jsx
+msgid "your email"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Your first agent run fills this in. Below is a normal month."
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "your formats"
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Your key"
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Your key is used before the plan. Scheduled runs happen with no app open, so they always need a key."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "Your key was charged {charged} across {earlierCalls, plural, one {# model call} other {# model calls}} in the last {widest} days. This window is just a quiet one."
+msgstr ""
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "your memory"
+msgstr ""
+
+#: src/app/(app)/memory/page.jsx
+#: src/components/AppSidebar.jsx
+msgid "Your memory"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Your model"
+msgstr ""
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Your one-line pitch"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "your PostBridge accounts"
+msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Your projects"
+msgstr ""
+
+#: src/components/TelemetryCard.jsx
+msgid "Your provider API keys"
+msgstr ""
+
+#: src/components/audit/AuditWorkspace.jsx
+msgid "Your report is on the right. Ask me to explain a finding, suggest a fix, or update the report."
+msgstr ""
+
+#: src/lib/modelTiers.js
+msgid "Your saved key"
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Your session ended. Sign in again and we'll take you back to where you were."
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Your site"
+msgstr ""
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid "Your site has a problem list.<0>Duct finds it in about three minutes.</0>"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Your three tiers run on different keys — open Customise to see which."
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "your usage"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+#: src/components/onboarding/FrontDoor.jsx
+msgid "Your website"
+msgstr ""
+
+#: src/app/(start)/start/page.jsx
+msgid "Your website is enough to start. Duct reads it now and keeps reading while you set up the rest."
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "हिन्दी"
+msgstr ""
+
+#: src/lib/userProfile.js
+msgid "日本語"
+msgstr ""

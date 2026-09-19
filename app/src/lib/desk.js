@@ -4,6 +4,13 @@
 // `npm run check:desk` outside a browser — same arrangement as
 // connectorCount.js and slideDoc.js.
 //
+// It also carries no words. Everything here that reaches the screen is a
+// code plus the data behind it (`{ code: "waiting" }`, `{ detailCode:
+// "changes_to_approve", count: 3 }`); the components that render the desk own
+// the sentences, through Lingui. The plain-node check above is why: it cannot
+// run the `msg` macro, and a module that mixed English into its return values
+// was the one part of the desk a Spanish user still read in English.
+//
 // ONE RULE. Every item lands in exactly one bucket, decided by a single
 // question: *who is holding it?* Topic-based cards (a "goals" card, a
 // "problems" card) put a blocked goal in two places at once, and the moment a
@@ -17,12 +24,6 @@
 export const NEEDS_YOU = "needs_you";
 export const FOUND = "found";
 export const IN_PROGRESS = "in_progress";
-
-export const BUCKETS = [
-  { key: NEEDS_YOU, label: "Needs you", blurb: "Nothing here moves without you." },
-  { key: FOUND, label: "What I found", blurb: "Checked, with the dates attached." },
-  { key: IN_PROGRESS, label: "In progress", blurb: "Waiting on Duct or on the clock." },
-];
 
 /** How many items one card shows before it starts counting the rest. */
 export const CARD_LIMIT = 3;
@@ -69,33 +70,37 @@ export function routeConversation(conv) {
   return IN_PROGRESS;
 }
 
-/** The desk card's words for a thread, from its run status. */
+/**
+ * The desk card's line for a thread, from its run status, as a code the card
+ * turns into words: `waiting` | `failed` | `working` | `stopped` | `resume`.
+ * `error` is the backend's own message for a failed turn, and may be empty.
+ */
 export function conversationCard(conv) {
   switch (conv?.run_status) {
     case "paused":
-      return { detail: "Waiting on your answer", tone: "attention" };
+      return { code: "waiting", tone: "attention", error: "" };
     case "failed":
-      return { detail: conv.run_error?.error || "The last turn failed", tone: "attention" };
+      return { code: "failed", tone: "attention", error: conv.run_error?.error || "" };
     case "running":
-      return { detail: "Working", tone: "running" };
+      return { code: "working", tone: "running", error: "" };
     case "cancelled":
-      return { detail: "Stopped — pick up where it left off", tone: "running" };
+      return { code: "stopped", tone: "running", error: "" };
     default:
-      return { detail: "Pick up where you left off", tone: "running" };
+      return { code: "resume", tone: "running", error: "" };
   }
 }
 
 /**
- * How sure Duct is, in words a person can act on.
+ * How sure Duct is: `unconfirmed` | `checked` | `low` | `fair`.
  *
  * A memory the agent wrote but nobody has confirmed is NOT a warning — it is
  * simply not yet corroborated, and saying so is more honest than a green tick.
  */
 export function certainty(row) {
-  if (row?.status === "proposed") return { label: "Not confirmed", tone: "unsure" };
-  if (row?.confidence === "high") return { label: "Checked", tone: "sure" };
-  if (row?.confidence === "low") return { label: "Low confidence", tone: "unsure" };
-  return { label: "Fairly sure", tone: "partial" };
+  if (row?.status === "proposed") return { code: "unconfirmed", tone: "unsure" };
+  if (row?.confidence === "high") return { code: "checked", tone: "sure" };
+  if (row?.confidence === "low") return { code: "low", tone: "unsure" };
+  return { code: "fair", tone: "partial" };
 }
 
 /** Ranking inside a card: importance first, then how recently we learned it. */
@@ -110,7 +115,14 @@ function byWeight(a, b) {
  * Fold the three sources into the three cards.
  *
  * Items are a common shape so a card renders one way regardless of which table
- * a row came from: { id, type, title, detail, at, weight, href, tone }.
+ * a row came from: { id, type, title, titleCode, detailCode, count, error,
+ * at, weight, tone }.
+ *
+ * `title` is the row's own; when it has none, `titleCode` names the fallback
+ * (`untitled_thread` | `untitled_change_set`). `detailCode` is one of the
+ * certainty codes above, `unclosed` for an open incident,
+ * `changes_to_approve` (with `count`) | `applying` | `approved` for a change
+ * set, or a `conversationCard` code (with `error`) for a thread.
  */
 export function buildDesk({ memories = [], changeSets = [], conversations = [] } = {}) {
   const out = { [NEEDS_YOU]: [], [FOUND]: [], [IN_PROGRESS]: [] };
@@ -124,7 +136,7 @@ export function buildDesk({ memories = [], changeSets = [], conversations = [] }
       type: "memory",
       kind: row.kind,
       title: row.title,
-      detail: bucket === FOUND ? sure.label : "Nobody has closed this",
+      detailCode: bucket === FOUND ? sure.code : "unclosed",
       tone: bucket === FOUND ? sure.tone : "alert",
       at: row.recorded_at || row.observed_at || "",
       weight: row.importance ?? 5,
@@ -140,13 +152,15 @@ export function buildDesk({ memories = [], changeSets = [], conversations = [] }
     out[bucket].push({
       id: `change_set:${set.id}`,
       type: "change_set",
-      title: set.title || "Untitled change set",
-      detail:
+      title: set.title || "",
+      titleCode: set.title ? "" : "untitled_change_set",
+      detailCode:
         bucket === NEEDS_YOU
-          ? `${count} change${count === 1 ? "" : "s"} to approve`
+          ? "changes_to_approve"
           : set.status === "applying"
-            ? "Applying now"
-            : "Approved, waiting to run",
+            ? "applying"
+            : "approved",
+      count,
       tone: bucket === NEEDS_YOU ? "alert" : "running",
       at: set.updated_at || set.created_at || "",
       // Above every memory: a change set is a mutation someone is waiting on.
@@ -162,8 +176,10 @@ export function buildDesk({ memories = [], changeSets = [], conversations = [] }
     out[bucket].push({
       id: `conversation:${conv.id}`,
       type: "conversation",
-      title: conv.title || "Untitled thread",
-      detail: card.detail,
+      title: conv.title || "",
+      titleCode: conv.title ? "" : "untitled_thread",
+      detailCode: card.code,
+      error: card.error,
       tone: card.tone,
       at: conv.last_active_at || conv.created_at || "",
       // A thread waiting on its owner outranks one merely open.
@@ -186,18 +202,21 @@ export function buildDesk({ memories = [], changeSets = [], conversations = [] }
 
 /**
  * The tile shown beside an artifact: type at a glance, before the words.
- * `tone` picks the colour; the caller owns the glyph.
+ * `tone` picks the colour; `code` picks the label (`brief` | `report` |
+ * `data` | `image` | `document`, or `kind` when the artifact's own kind is
+ * the best word for it, in which case `kind` carries that raw string); the
+ * caller owns the glyph and the words.
  */
 export function artifactLook(artifact) {
   const kind = (artifact?.kind || "").toLowerCase();
   const type = (artifact?.content_type || "").toLowerCase();
   if (kind === "brief" || type.includes("markdown")) {
-    return { label: "Brief", tone: "brief" };
+    return { code: "brief", kind, tone: "brief" };
   }
-  if (kind === "report") return { label: "Report", tone: "report" };
-  if (type.includes("json") || type.includes("csv")) return { label: "Data", tone: "data" };
-  if (type.startsWith("image/")) return { label: "Image", tone: "image" };
-  return { label: kind ? kind[0].toUpperCase() + kind.slice(1) : "Document", tone: "data" };
+  if (kind === "report") return { code: "report", kind, tone: "report" };
+  if (type.includes("json") || type.includes("csv")) return { code: "data", kind, tone: "data" };
+  if (type.startsWith("image/")) return { code: "image", kind, tone: "image" };
+  return { code: kind ? "kind" : "document", kind, tone: "data" };
 }
 
 /** Pinned first, then newest. The same order in both tabs. */
@@ -209,56 +228,54 @@ export function pinnedFirst(rows, at = (r) => r.created_at) {
 }
 
 // ---------------------------------------------------------------------------
-// Words for times and totals
+// Times and totals
 // ---------------------------------------------------------------------------
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-/** "18 minutes ago" beats "08:42" on a page you read once a day. */
-export function relativeTime(iso, now = Date.now()) {
+/**
+ * "18 minutes ago" beats "08:42" on a page you read once a day.
+ *
+ * Rendered by `Intl` in the interface language: minutes and hours, then days
+ * (`numeric: "auto"` says "yesterday" for one), then a short date once it is
+ * more than a week old. Returns `""` both for no usable timestamp and for
+ * under a minute — the one word `Intl` does not have is "just now", so the
+ * caller renders that when it passed a timestamp and got nothing back. A
+ * clock skew (the timestamp in the future) reads as under a minute, never as
+ * the future.
+ */
+export function relativeTime(iso, { now = Date.now(), locale } = {}) {
   if (!iso) return "";
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return "";
   const delta = now - then;
-  if (delta < 0) return "just now";
-  if (delta < MINUTE) return "just now";
-  if (delta < HOUR) {
-    const n = Math.floor(delta / MINUTE);
-    return `${n} minute${n === 1 ? "" : "s"} ago`;
-  }
-  if (delta < DAY) {
-    const n = Math.floor(delta / HOUR);
-    return `${n} hour${n === 1 ? "" : "s"} ago`;
-  }
-  if (delta < 2 * DAY) return "Yesterday";
-  if (delta < 7 * DAY) return `${Math.floor(delta / DAY)} days ago`;
-  return new Date(then).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  if (delta < MINUTE) return "";
+  const lang = locale || undefined;
+  const rtf = new Intl.RelativeTimeFormat(lang, { numeric: "auto" });
+  if (delta < HOUR) return rtf.format(-Math.floor(delta / MINUTE), "minute");
+  if (delta < DAY) return rtf.format(-Math.floor(delta / HOUR), "hour");
+  if (delta < 7 * DAY) return rtf.format(-Math.floor(delta / DAY), "day");
+  return new Date(then).toLocaleDateString(lang, { day: "numeric", month: "short" });
 }
 
+/** The three things the top of the page can say. */
+export const HEADLINE_NEEDS_YOU = "needs_you";
+export const HEADLINE_CLEAR = "clear";
+export const HEADLINE_NOTHING = "nothing";
+
 /**
- * The one sentence at the top of the page.
+ * The facts behind the one sentence at the top of the page.
  *
  * It states what is true, never what would be nice. When nothing is blocked it
- * says so plainly rather than inventing urgency, and when nothing has run yet
- * it admits that instead of reporting a zero as if it were a result.
+ * says so plainly rather than inventing urgency (`clear`), and when nothing
+ * has run yet it admits that (`hasRun` false) instead of reporting a zero as
+ * if it were a result. `state` is which of the three sentences applies; the
+ * counts and `lastRunAt` are what that sentence and its sub line are made of.
  */
-export function headline({ needsYou = 0, found = 0, lastRunAt = "", sourceCount = 0, now = Date.now() } = {}) {
-  const parts = [];
-  if (lastRunAt) parts.push(`Last checked ${relativeTime(lastRunAt, now)}.`);
-  else parts.push("Nothing has run yet.");
-  parts.push(`${sourceCount} source${sourceCount === 1 ? "" : "s"} connected.`);
-  const sub = parts.join(" ");
-
-  if (needsYou > 0) {
-    return { title: `${needsYou} thing${needsYou === 1 ? "" : "s"} need${needsYou === 1 ? "s" : ""} you.`, sub };
-  }
-  if (found > 0) {
-    return {
-      title: "Nothing needs you right now.",
-      sub: `${found} finding${found === 1 ? "" : "s"} on file. ${sub}`,
-    };
-  }
-  return { title: "Nothing to report yet.", sub };
+export function headline({ needsYou = 0, found = 0, lastRunAt = "", sourceCount = 0 } = {}) {
+  const state =
+    needsYou > 0 ? HEADLINE_NEEDS_YOU : found > 0 ? HEADLINE_CLEAR : HEADLINE_NOTHING;
+  return { state, needsYou, found, hasRun: Boolean(lastRunAt), lastRunAt, sourceCount };
 }

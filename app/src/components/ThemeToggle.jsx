@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
+import { useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
+  const { t } = useLingui();
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
 
@@ -34,7 +36,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon-sm"
       className="rounded-full text-muted-foreground hover:text-foreground"
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? t`Switch to light mode` : t`Switch to dark mode`}
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >
       {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}

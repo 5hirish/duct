@@ -9,6 +9,8 @@
 // applied with an "auto" badge and a rollback handle.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Select,
@@ -70,31 +72,31 @@ const STATUS_PILL = {
 };
 
 const STATUS_LABEL = {
-  proposed: "Awaiting review",
-  approved: "Approved — ready to apply",
-  applying: "Applying…",
-  applied: "Applied",
-  partial: "Partially applied",
-  failed: "Failed",
-  rejected: "Rejected",
-  rolled_back: "Rolled back",
+  proposed: msg`Awaiting review`,
+  approved: msg`Approved — ready to apply`,
+  applying: msg`Applying…`,
+  applied: msg`Applied`,
+  partial: msg`Partially applied`,
+  failed: msg`Failed`,
+  rejected: msg`Rejected`,
+  rolled_back: msg`Rolled back`,
 };
 
 const STATUS_FILTERS = [
-  { value: "", label: "All statuses" },
-  { value: "proposed", label: "Awaiting review" },
-  { value: "approved", label: "Approved" },
-  { value: "applied", label: "Applied" },
-  { value: "partial", label: "Partially applied" },
-  { value: "failed", label: "Failed" },
-  { value: "rejected", label: "Rejected" },
-  { value: "rolled_back", label: "Rolled back" },
+  { value: "", label: msg`All statuses` },
+  { value: "proposed", label: msg`Awaiting review` },
+  { value: "approved", label: msg`Approved` },
+  { value: "applied", label: msg`Applied` },
+  { value: "partial", label: msg`Partially applied` },
+  { value: "failed", label: msg`Failed` },
+  { value: "rejected", label: msg`Rejected` },
+  { value: "rolled_back", label: msg`Rolled back` },
 ];
 
 const SOURCE_FILTERS = [
-  { value: "", label: "All sources" },
-  { value: "agent", label: "Agent-proposed" },
-  { value: "user", label: "Proposed by you" },
+  { value: "", label: msg`All sources` },
+  { value: "agent", label: msg`Agent-proposed` },
+  { value: "user", label: msg`Proposed by you` },
 ];
 
 const CONNECTOR_LABEL = {
@@ -107,9 +109,10 @@ const CONNECTOR_LABEL = {
 const GUARDRAIL_CONNECTORS = ["google_ads", "ga4", "gtm", "mixpanel"];
 
 function Pill({ status }) {
+  const { i18n } = useLingui();
   return (
     <span className={`status-pill ${STATUS_PILL[status] || "grey"}`}>
-      {STATUS_LABEL[status] || status}
+      {STATUS_LABEL[status] ? i18n._(STATUS_LABEL[status]) : status}
     </span>
   );
 }
@@ -117,8 +120,8 @@ function Pill({ status }) {
 function ProvenanceBadges({ cs }) {
   return (
     <>
-      {cs.source === "agent" && <span className="status-pill green">agent</span>}
-      {cs.applied_by === "auto" && <span className="status-pill yellow">auto-applied</span>}
+      {cs.source === "agent" && <span className="status-pill green"><Trans>agent</Trans></span>}
+      {cs.applied_by === "auto" && <span className="status-pill yellow"><Trans>auto-applied</Trans></span>}
     </>
   );
 }
@@ -157,7 +160,12 @@ function changeApprovable(change) {
 }
 
 function DrawerChange({ change, destructive, selectable, checked, onToggle }) {
+  const { t } = useLingui();
   const preview = change.preview || {};
+  const name = change.summary || change.op_type;
+  const previewError = preview.error;
+  const applyError = change.result?.error;
+  const rollbackError = change.result?.rollback_error;
   return (
     <div
       style={{
@@ -175,7 +183,7 @@ function DrawerChange({ change, destructive, selectable, checked, onToggle }) {
             onChange={onToggle}
             disabled={!changeApprovable(change)}
             style={{ marginTop: 3 }}
-            aria-label={`Include ${change.summary || change.op_type}`}
+            aria-label={t`Include ${name}`}
           />
         )}
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -187,7 +195,7 @@ function DrawerChange({ change, destructive, selectable, checked, onToggle }) {
                   className="status-pill red"
                   style={{ marginLeft: 8, fontSize: "var(--text-2xs)", verticalAlign: "middle" }}
                 >
-                  destructive
+                  <Trans>destructive</Trans>
                 </span>
               )}
             </strong>
@@ -205,29 +213,29 @@ function DrawerChange({ change, destructive, selectable, checked, onToggle }) {
       ))}
       {(change.guardrail_violations || []).map((rule) => (
         <p key={rule} style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
-          ⛔ Guardrail: {rule}
+          <Trans>⛔ Guardrail: {rule}</Trans>
         </p>
       ))}
-      {preview.error && (
+      {previewError && (
         <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
-          Preview failed: {preview.error}
+          <Trans>Preview failed: {previewError}</Trans>
         </p>
       )}
-      {change.result?.error && (
+      {applyError && (
         <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
-          Apply failed: {change.result.error}
+          <Trans>Apply failed: {applyError}</Trans>
         </p>
       )}
-      {change.result?.rollback_error && (
+      {rollbackError && (
         <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
-          Rollback failed: {change.result.rollback_error}
+          <Trans>Rollback failed: {rollbackError}</Trans>
         </p>
       )}
 
-      <JsonDetails label="Current state (snapshot before change)" value={change.current} />
-      <JsonDetails label="Proposed target + payload" value={{ target: change.target, payload: change.payload }} />
-      <JsonDetails label="Result" value={change.result} />
-      <JsonDetails label="Rollback result" value={change.rollback_result} />
+      <JsonDetails label={t`Current state (snapshot before change)`} value={change.current} />
+      <JsonDetails label={t`Proposed target + payload`} value={{ target: change.target, payload: change.payload }} />
+      <JsonDetails label={t`Result`} value={change.result} />
+      <JsonDetails label={t`Rollback result`} value={change.rollback_result} />
     </div>
   );
 }
@@ -243,6 +251,8 @@ function DetailDrawer({ cs, destructiveMap, busy, onClose, onAction, projectName
   const account = cs.account_name || cs.account_id;
   const approvable = cs.changes.filter(changeApprovable);
   const allSelected = selected.size === approvable.length;
+  const selectedCount = selected.size;
+  const approvableCount = approvable.length;
 
   return (
     <Sheet open onOpenChange={(open) => !open && onClose()}>
@@ -272,7 +282,11 @@ function DetailDrawer({ cs, destructiveMap, busy, onClose, onAction, projectName
                 setSelected(allSelected ? new Set() : new Set(approvable.map((c) => c.id)))
               }
             >
-              {allSelected ? "Deselect all" : "Select all"} ({selected.size}/{approvable.length} selected)
+              {allSelected ? (
+                <Trans>Deselect all ({selectedCount}/{approvableCount} selected)</Trans>
+              ) : (
+                <Trans>Select all ({selectedCount}/{approvableCount} selected)</Trans>
+              )}
             </button>
           )}
 
@@ -308,26 +322,26 @@ function DetailDrawer({ cs, destructiveMap, busy, onClose, onAction, projectName
                     })
                   }
                 >
-                  Approve {allSelected ? "all" : `${selected.size} selected`}
+                  {allSelected ? <Trans>Approve all</Trans> : <Trans>Approve {selectedCount} selected</Trans>}
                 </Button>
                 <Button size="sm" variant="outline" disabled={busy} onClick={() => onAction("reject", cs)}>
-                  Reject
+                  <Trans>Reject</Trans>
                 </Button>
               </>
             )}
             {cs.status === "approved" && (
               <>
                 <Button size="sm" disabled={busy} onClick={() => onAction("apply", cs)}>
-                  Apply now
+                  <Trans>Apply now</Trans>
                 </Button>
                 <Button size="sm" variant="outline" disabled={busy} onClick={() => onAction("reject", cs)}>
-                  Reject
+                  <Trans>Reject</Trans>
                 </Button>
               </>
             )}
             {(cs.status === "applied" || cs.status === "partial") && (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => onAction("rollback", cs)}>
-                Roll back
+                <Trans>Roll back</Trans>
               </Button>
             )}
             {cs.status === "applying" && (
@@ -336,7 +350,7 @@ function DetailDrawer({ cs, destructiveMap, busy, onClose, onAction, projectName
                   className="size-3"
                   style={{ marginRight: 6, verticalAlign: "-2px" }}
                 />
-                Applying changes…
+                <Trans>Applying changes…</Trans>
               </span>
             )}
           </div>
@@ -360,44 +374,60 @@ function ConfirmDialog({ confirm, destructiveMap, onCancel, onConfirm }) {
       : cs.changes.filter((c) => c.status === "applied");
   const destructive = relevant.filter((c) => destructiveMap[c.op_type]);
   const connector = CONNECTOR_LABEL[cs.connector_type] || cs.connector_type;
+  const count = relevant.length;
+  const destructiveCount = destructive.length;
+  const destructiveNames = destructive.map((c) => c.summary || c.op_type).join("; ");
 
   return (
     <AlertDialog open onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {action === "apply"
-              ? `Apply ${relevant.length} change${relevant.length === 1 ? "" : "s"} to ${connector}?`
-              : `Roll back ${relevant.length} applied change${relevant.length === 1 ? "" : "s"}?`}
+            {action === "apply" ? (
+              <Trans>
+                Apply <Plural value={count} one="# change" other="# changes" /> to {connector}?
+              </Trans>
+            ) : (
+              <Trans>
+                Roll back <Plural value={count} one="# applied change" other="# applied changes" />?
+              </Trans>
+            )}
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div>
               <p style={{ margin: 0 }}>
                 {action === "apply"
-                  ? "This mutates the live account. Applied changes record a rollback handle."
-                  : "Each change is reverted using the rollback handle recorded when it was applied."}
+                  ? <Trans>This mutates the live account. Applied changes record a rollback handle.</Trans>
+                  : <Trans>Each change is reverted using the rollback handle recorded when it was applied.</Trans>}
               </p>
-              {destructive.length > 0 && (
+              {destructiveCount > 0 && (
                 <p style={{ margin: "8px 0 0", color: "var(--destructive)" }}>
-                  {destructive.length} destructive change{destructive.length === 1 ? "" : "s"} —{" "}
-                  {destructive.map((c) => c.summary || c.op_type).join("; ")}.
-                  {action === "apply" && " Destructive operations change what is live for every visitor."}
+                  <Trans>
+                    <Plural value={destructiveCount} one="# destructive change" other="# destructive changes" /> —{" "}
+                    {destructiveNames}.
+                  </Trans>
+                  {action === "apply" && (
+                    <>
+                      {" "}
+                      <Trans>Destructive operations change what is live for every visitor.</Trans>
+                    </>
+                  )}
                 </p>
               )}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel><Trans>Cancel</Trans></AlertDialogCancel>
           <AlertDialogAction
-            className={destructive.length > 0 ? buttonVariants({ variant: "destructive" }) : undefined}
+            className={destructiveCount > 0 ? buttonVariants({ variant: "destructive" }) : undefined}
             onClick={onConfirm}
           >
             {action === "apply"
-              ? destructive.length > 0
-                ? "Apply (destructive)"
-                : "Apply"
-              : "Roll back"}
+              ? destructiveCount > 0
+                ? <Trans>Apply (destructive)</Trans>
+                : <Trans>Apply</Trans>
+              : <Trans>Roll back</Trans>}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -410,18 +440,20 @@ function ConfirmDialog({ confirm, destructiveMap, onCancel, onConfirm }) {
 // ---------------------------------------------------------------------------
 
 function AutonomyPanel({ project, level, onChange, saving, error }) {
+  const { t, i18n } = useLingui();
   if (!project || !level) return null;
   const current = AUTONOMY_OPTIONS.find((o) => o.value === level) || AUTONOMY_OPTIONS[0];
+  const projectName = project.name;
   return (
     <article className="connection-card" style={{ display: "grid", gap: 10, marginBottom: 16 }}>
       <div>
         <h2 className="connection-title" style={{ marginBottom: 2 }}>
-          Autonomy — {project.name}
+          <Trans>Autonomy — {projectName}</Trans>
         </h2>
-        <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>{current.blurb}</p>
+        <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>{i18n._(current.blurb)}</p>
       </div>
 
-      <div role="radiogroup" aria-label="Execution autonomy" style={{ display: "flex", gap: 8 }}>
+      <div role="radiogroup" aria-label={t`Execution autonomy`} style={{ display: "flex", gap: 8 }}>
         {AUTONOMY_OPTIONS.map((opt) => {
           const selected = opt.value === level;
           return (
@@ -438,7 +470,7 @@ function AutonomyPanel({ project, level, onChange, saving, error }) {
                   : "border-border text-muted-foreground hover:text-foreground hover:border-border/80"
               }`}
             >
-              {opt.label}
+              {i18n._(opt.label)}
             </button>
           );
         })}
@@ -448,15 +480,17 @@ function AutonomyPanel({ project, level, onChange, saving, error }) {
           top of the ladder is safe to offer at all, and a user who does not
           know it will read "Auto" as "anything". */}
       <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-xs)" }}>
-        Destructive work waits here at every level — GTM publishes, archives, unlinks,
-        anything touching budget or status. Assisted and Auto share one narrow allowlist:
-        keywords, GA4 key events and audiences, GTM workspace edits.
+        <Trans>
+          Destructive work waits here at every level — GTM publishes, archives, unlinks,
+          anything touching budget or status. Assisted and Auto share one narrow allowlist:
+          keywords, GA4 key events and audiences, GTM workspace edits.
+        </Trans>
       </p>
 
       {error && (
         <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "var(--destructive)" }}>
           {error.includes("404") || error.toLowerCase().includes("owner")
-            ? "Only the project owner can change autonomy."
+            ? <Trans>Only the project owner can change autonomy.</Trans>
             : error}
         </p>
       )}
@@ -469,6 +503,7 @@ function AutonomyPanel({ project, level, onChange, saving, error }) {
 // ---------------------------------------------------------------------------
 
 function GuardrailsPanel() {
+  const { t } = useLingui();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState(null);
   const [error, setError] = useState("");
@@ -486,9 +521,9 @@ function GuardrailsPanel() {
       .then(setRows)
       .catch((err) => {
         setRows([]);
-        setError(err.message || "Couldn't load your guardrails. The queue above is unaffected.");
+        setError(err.message || t`Couldn't load your guardrails. The queue above is unaffected.`);
       });
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (open && rows === null) load();
@@ -516,7 +551,7 @@ function GuardrailsPanel() {
       setForm((f) => ({ ...f, rule: "", op_types: "", target_contains: "" }));
       load();
     } catch (err) {
-      setError(err.message || "That guardrail wasn't saved — nothing on your account changed.");
+      setError(err.message || t`That guardrail wasn't saved — nothing on your account changed.`);
     } finally {
       setSaving(false);
     }
@@ -527,7 +562,7 @@ function GuardrailsPanel() {
       await deleteGuardrail(id);
       load();
     } catch (err) {
-      setError(err.message || "That guardrail is still in place — removing it didn't go through.");
+      setError(err.message || t`That guardrail is still in place — removing it didn't go through.`);
     }
   }
 
@@ -539,14 +574,16 @@ function GuardrailsPanel() {
         className="text-sm font-semibold text-muted-foreground uppercase tracking-wider"
         style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
       >
-        {open ? "▾" : "▸"} Guardrails{Array.isArray(rows) && rows.length ? ` (${rows.length})` : ""}
+        {open ? "▾" : "▸"} <Trans>Guardrails</Trans>{Array.isArray(rows) && rows.length ? ` (${rows.length})` : ""}
       </button>
       {open && (
         <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
           <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>
-            A change that matches a guardrail arrives <em>blocked</em> and can never
-            auto-apply; agents see the rules and propose around them. A rule with no matcher
-            is guidance only.
+            <Trans>
+              A change that matches a guardrail arrives <em>blocked</em> and can never
+              auto-apply; agents see the rules and propose around them. A rule with no matcher
+              is guidance only.
+            </Trans>
           </p>
 
           {error && (
@@ -554,12 +591,15 @@ function GuardrailsPanel() {
           )}
 
           {rows === null ? (
-            <SkeletonList rows={2} label="Loading guardrails" />
+            <SkeletonList rows={2} label={t`Loading guardrails`} />
           ) : rows.length === 0 ? (
-            <p className="app-subtle" style={{ fontSize: "var(--text-sm)" }}>No guardrails yet.</p>
+            <p className="app-subtle" style={{ fontSize: "var(--text-sm)" }}><Trans>No guardrails yet.</Trans></p>
           ) : (
             <div style={{ display: "grid", gap: 6 }}>
-              {rows.map((g) => (
+              {rows.map((g) => {
+                const blockedOps = (g.match?.op_types || []).join(", ");
+                const targetContains = g.match?.target_contains;
+                return (
                 <div
                   key={g.id}
                   className="connection-card"
@@ -569,23 +609,22 @@ function GuardrailsPanel() {
                     <p style={{ margin: 0, fontSize: "var(--text-sm)" }}>{g.rule}</p>
                     <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-xs)" }}>
                       {CONNECTOR_LABEL[g.connector_type] || g.connector_type}
-                      {g.account_id ? ` · ${g.account_id}` : " · all accounts"}
-                      {(g.match?.op_types || []).length
-                        ? ` · blocks: ${g.match.op_types.join(", ")}`
-                        : ""}
-                      {g.match?.target_contains ? ` · target contains “${g.match.target_contains}”` : ""}
+                      {g.account_id ? ` · ${g.account_id}` : <> · <Trans>all accounts</Trans></>}
+                      {blockedOps ? <> · <Trans>blocks: {blockedOps}</Trans></> : ""}
+                      {targetContains ? <> · <Trans>target contains “{targetContains}”</Trans></> : ""}
                     </p>
                   </div>
                   <Button type="button" size="sm" variant="ghost" onClick={() => onDelete(g.id)}>
-                    Remove
+                    <Trans>Remove</Trans>
                   </Button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           <form onSubmit={onCreate} className="connection-card" style={{ display: "grid", gap: 8, padding: 12 }}>
-            <strong style={{ fontSize: "var(--text-sm)" }}>Add a guardrail</strong>
+            <strong style={{ fontSize: "var(--text-sm)" }}><Trans>Add a guardrail</Trans></strong>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Select
                 value={form.connector_type}
@@ -604,18 +643,18 @@ function GuardrailsPanel() {
               </Select>
               <input
                 value={form.account_id}
-                aria-label="Account id"
+                aria-label={t`Account id`}
                 onChange={(e) => setForm((f) => ({ ...f, account_id: e.target.value }))}
-                placeholder="Account id (blank = all)"
+                placeholder={t`Account id (blank = all)`}
                 className="rounded-md border border-input bg-transparent px-2 text-sm"
                 style={{ height: 32, width: 200 }}
               />
             </div>
             <input
               value={form.rule}
-              aria-label="Guardrail rule"
+              aria-label={t`Guardrail rule`}
               onChange={(e) => setForm((f) => ({ ...f, rule: e.target.value }))}
-              placeholder="Rule, e.g. “Never pause the Brand campaign”"
+              placeholder={t`Rule, e.g. “Never pause the Brand campaign”`}
               className="rounded-md border border-input bg-transparent px-2 text-sm"
               style={{ height: 32 }}
               required
@@ -623,24 +662,24 @@ function GuardrailsPanel() {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <input
                 value={form.op_types}
-                aria-label="Operation types"
+                aria-label={t`Operation types`}
                 onChange={(e) => setForm((f) => ({ ...f, op_types: e.target.value }))}
-                placeholder="Op types to block, comma-separated (optional)"
+                placeholder={t`Op types to block, comma-separated (optional)`}
                 className="rounded-md border border-input bg-transparent px-2 text-sm"
                 style={{ height: 32, flex: 1, minWidth: 220 }}
               />
               <input
                 value={form.target_contains}
-                aria-label="Target contains"
+                aria-label={t`Target contains`}
                 onChange={(e) => setForm((f) => ({ ...f, target_contains: e.target.value }))}
-                placeholder="Target contains (optional)"
+                placeholder={t`Target contains (optional)`}
                 className="rounded-md border border-input bg-transparent px-2 text-sm"
                 style={{ height: 32, width: 200 }}
               />
             </div>
             <div>
               <Button type="submit" size="sm" disabled={saving || !form.rule.trim()}>
-                {saving ? "Adding…" : "Add guardrail"}
+                {saving ? <Trans>Adding…</Trans> : <Trans>Add guardrail</Trans>}
               </Button>
             </div>
           </form>
@@ -655,6 +694,7 @@ function GuardrailsPanel() {
 // ---------------------------------------------------------------------------
 
 export default function ExecutePage() {
+  const { t, i18n } = useLingui();
   const [changeSets, setChangeSets] = useState(null);
   const [destructiveMap, setDestructiveMap] = useState({});
   const [error, setError] = useState(null);
@@ -750,7 +790,7 @@ export default function ExecutePage() {
       setAutonomy(updated.autonomyLevel);
     } catch (err) {
       setAutonomy(prev);
-      setAutonomyError(err.message || "Autonomy is unchanged — that didn't save.");
+      setAutonomyError(err.message || t`Autonomy is unchanged — that didn't save.`);
     } finally {
       setAutonomySaving(false);
     }
@@ -762,8 +802,8 @@ export default function ExecutePage() {
   );
   const projectOptions = useMemo(() => {
     const ids = new Set((changeSets || []).map((cs) => cs.project_id).filter(Boolean));
-    return [...ids].map((id) => ({ id, name: projectNames[id] || "Unnamed project" }));
-  }, [changeSets, projectNames]);
+    return [...ids].map((id) => ({ id, name: projectNames[id] || t`Unnamed project` }));
+  }, [changeSets, projectNames, t]);
 
   const filtered = (changeSets || []).filter(
     (cs) =>
@@ -778,11 +818,13 @@ export default function ExecutePage() {
   return (
     <section>
       <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Executions</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Executions</Trans></h1>
       </div>
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Agents propose, you approve. Every change is previewed against your guardrails, and
-        anything applied can be rolled back.
+        <Trans>
+          Agents propose, you approve. Every change is previewed against your guardrails, and
+          anything applied can be rolled back.
+        </Trans>
       </p>
 
       <AutonomyPanel
@@ -793,7 +835,7 @@ export default function ExecutePage() {
         error={autonomyError}
       />
 
-      {error && <LoadError what="the execution queue" detail={error} onRetry={load} />}
+      {error && <LoadError what={t`the execution queue`} detail={error} onRetry={load} />}
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
         <Select value={statusFilter || "all"} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}>
@@ -803,7 +845,7 @@ export default function ExecutePage() {
           <SelectContent>
             {STATUS_FILTERS.map((f) => (
               <SelectItem key={f.value || "all"} value={f.value || "all"}>
-                {f.label}
+                {i18n._(f.label)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -815,7 +857,7 @@ export default function ExecutePage() {
           <SelectContent>
             {SOURCE_FILTERS.map((f) => (
               <SelectItem key={f.value || "all"} value={f.value || "all"}>
-                {f.label}
+                {i18n._(f.label)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -829,30 +871,31 @@ export default function ExecutePage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All projects</SelectItem>
+              <SelectItem value="all"><Trans>All projects</Trans></SelectItem>
               {projectOptions.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.name}
                 </SelectItem>
               ))}
-              <SelectItem value="none">No project</SelectItem>
+              <SelectItem value="none"><Trans>No project</Trans></SelectItem>
             </SelectContent>
           </Select>
         )}
       </div>
 
       {error ? null : changeSets === null ? (
-        <SkeletonList rows={3} label="Loading change sets" />
+        <SkeletonList rows={3} label={t`Loading change sets`} />
       ) : filtered.length === 0 ? (
         <p className="app-subtle">
           {changeSets.length === 0
-            ? "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
-            : "Nothing matches these filters."}
+            ? <Trans>Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval.</Trans>
+            : <Trans>Nothing matches these filters.</Trans>}
         </p>
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
           {filtered.map((cs) => {
             const account = cs.account_name || cs.account_id;
+            const changeCount = cs.changes.length;
             return (
               <article key={cs.id} className="connection-card" style={{ display: "grid", gap: 6 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
@@ -864,8 +907,8 @@ export default function ExecutePage() {
                       {cs.project_id && projectNames[cs.project_id]
                         ? ` · ${projectNames[cs.project_id]}`
                         : ""}{" "}
-                      · {new Date(cs.created_at).toLocaleString()} · {cs.changes.length} change
-                      {cs.changes.length === 1 ? "" : "s"}
+                      · {new Date(cs.created_at).toLocaleString()} ·{" "}
+                      <Plural value={changeCount} one="# change" other="# changes" />
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -876,26 +919,26 @@ export default function ExecutePage() {
 
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <Button type="button" size="sm" variant="secondary" onClick={() => setDrawerId(cs.id)}>
-                    Review
+                    <Trans>Review</Trans>
                   </Button>
                   {cs.status === "proposed" && (
                     <Button size="sm" disabled={busyId === cs.id} onClick={() => onAction("approve", cs)}>
-                      Approve all
+                      <Trans>Approve all</Trans>
                     </Button>
                   )}
                   {cs.status === "approved" && (
                     <Button size="sm" disabled={busyId === cs.id} onClick={() => onAction("apply", cs)}>
-                      Apply now
+                      <Trans>Apply now</Trans>
                     </Button>
                   )}
                   {(cs.status === "applied" || cs.status === "partial") && (
                     <Button size="sm" variant="outline" disabled={busyId === cs.id} onClick={() => onAction("rollback", cs)}>
-                      Roll back
+                      <Trans>Roll back</Trans>
                     </Button>
                   )}
                   {busyId === cs.id && (
                     <span className="app-subtle" style={{ fontSize: "var(--text-sm)", alignSelf: "center" }}>
-                      Working…
+                      <Trans>Working…</Trans>
                     </span>
                   )}
                 </div>

@@ -1,5 +1,6 @@
 const { defineConfig, devices } = require("@playwright/test");
 const path = require("path");
+const { PORT } = require("./tests/e2e/port");
 
 module.exports = defineConfig({
   testDir: "./tests/e2e",
@@ -15,14 +16,14 @@ module.exports = defineConfig({
   workers: 2,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://127.0.0.1:4317",
+    baseURL: `http://127.0.0.1:${PORT}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
   webServer: {
     command: `node "${path.resolve(__dirname, "tests/e2e/static-server.js")}"`,
-    port: 4317,
+    port: PORT,
     reuseExistingServer: false,
     timeout: 30 * 1000,
   },

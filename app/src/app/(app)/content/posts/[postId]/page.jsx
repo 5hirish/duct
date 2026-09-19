@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Trans, useLingui } from "@lingui/react/macro";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PostViewport from "@/components/content/PostViewport";
 import PublishModal from "@/components/content/PublishModal";
@@ -26,6 +27,7 @@ import LoadError from "@/components/LoadError";
  * wrapped in a "Revise with Duct →" CTA.
  */
 export default function PostDetailPage() {
+  const { t } = useLingui();
   const { postId } = useParams();
   const router = useRouter();
   const [post, setPost] = useState(null);
@@ -58,14 +60,14 @@ export default function PostDetailPage() {
   if (err) {
     return (
       <div className="mx-auto w-full max-w-2xl px-4">
-        <LoadError what="this post" detail={err} onRetry={() => { setErr(""); setReloadKey((k) => k + 1); }} />
+        <LoadError what={t`this post`} detail={err} onRetry={() => { setErr(""); setReloadKey((k) => k + 1); }} />
       </div>
     );
   }
   if (!post) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading post…</p>
+        <p className="text-sm text-muted-foreground"><Trans>Loading post…</Trans></p>
       </div>
     );
   }

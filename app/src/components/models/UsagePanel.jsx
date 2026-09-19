@@ -41,6 +41,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Cpu, KeyRound, Layers, LockKeyhole, Wallet } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { hasAuthToken } from "@/lib/authFetch";
 import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/ui/empty-state";
@@ -97,9 +99,9 @@ const SAMPLE_USAGE = Object.freeze({
 });
 
 const SAMPLE_MODEL_NAMES = {
-  heavy: "Heavy — the deep model",
-  standard: "Standard — the everyday model",
-  light: "Light — the cheap one",
+  heavy: msg`Heavy — the deep model`,
+  standard: msg`Standard — the everyday model`,
+  light: msg`Light — the cheap one`,
 };
 
 /** One number, said plainly. */
@@ -119,6 +121,7 @@ function Stat({ label, value, hint }) {
  * a breakdown rather than a list.
  */
 function Breakdown({ title, icon: Icon, rows, total, labelFor, empty }) {
+  const { t } = useLingui();
   return (
     <section className="usage-panel">
       <h2 className="usage-panel-title">
@@ -131,6 +134,10 @@ function Breakdown({ title, icon: Icon, rows, total, labelFor, empty }) {
         <ul className="usage-rows">
           {rows.map((row) => {
             const cost = formatCost(row.cost_usd);
+            const percent = Math.round(share(row.total_tokens, total) * 100);
+            const tokens = formatTokens(row.total_tokens);
+            const cached = formatTokens(row.cached_tokens);
+            const calls = row.calls;
             return (
               <li key={row.key} className="usage-row">
                 <div className="usage-row-head">
@@ -143,13 +150,21 @@ function Breakdown({ title, icon: Icon, rows, total, labelFor, empty }) {
                 <div
                   className="usage-bar"
                   role="img"
-                  aria-label={`${Math.round(share(row.total_tokens, total) * 100)}% of tokens`}
+                  aria-label={t`${percent}% of tokens`}
                 >
                   <span style={{ width: `${share(row.total_tokens, total) * 100}%` }} />
                 </div>
                 <div className="usage-row-foot app-subtle">
-                  {formatTokens(row.total_tokens)} tokens · {row.calls.toLocaleString()} calls
-                  {row.cached_tokens > 0 ? ` · ${formatTokens(row.cached_tokens)} cached` : ""}
+                  {row.cached_tokens > 0 ? (
+                    <Trans>
+                      {tokens} tokens ·{" "}
+                      <Plural value={calls} one="# call" other="# calls" /> · {cached} cached
+                    </Trans>
+                  ) : (
+                    <Trans>
+                      {tokens} tokens · <Plural value={calls} one="# call" other="# calls" />
+                    </Trans>
+                  )}
                 </div>
               </li>
             );
@@ -166,60 +181,64 @@ function Breakdown({ title, icon: Icon, rows, total, labelFor, empty }) {
  * real thing are the same component or the sample is a lie about the product.
  */
 function UsageReport({ usage, modelName }) {
+  const { t, i18n } = useLingui();
   const total = usage.total || EMPTY_USAGE.total;
   const cost = formatCost(total.cost_usd);
   const cachedShare = total.input_tokens
     ? Math.round((total.cached_tokens / total.input_tokens) * 100)
     : 0;
+  const windowDays = usage.window_days;
+  const tokensIn = formatTokens(total.input_tokens);
+  const tokensOut = formatTokens(total.output_tokens);
 
   return (
     <>
       <div className="usage-stats">
         <Stat
-          label="Spent"
+          label={t`Spent`}
           value={cost ?? "—"}
-          hint={cost ? `over ${usage.window_days} days` : "no price for these models"}
+          hint={cost ? t`over ${windowDays} days` : t`no price for these models`}
         />
         <Stat
-          label="Tokens"
+          label={t`Tokens`}
           value={formatTokens(total.total_tokens)}
-          hint={`${formatTokens(total.input_tokens)} in · ${formatTokens(total.output_tokens)} out`}
+          hint={t`${tokensIn} in · ${tokensOut} out`}
         />
-        <Stat label="Model calls" value={total.calls.toLocaleString()} />
+        <Stat label={t`Model calls`} value={total.calls.toLocaleString()} />
         {/* Cached input is the one number here a user can act on without
             changing anything: it is the discount prompt caching already
             won them, and it goes down when a prompt churns. */}
         <Stat
-          label="Cached input"
+          label={t`Cached input`}
           value={`${cachedShare}%`}
-          hint="charged at a fraction of the rate"
+          hint={t`charged at a fraction of the rate`}
         />
       </div>
 
       <div className="usage-grid">
         <Breakdown
-          title="By agent"
+          title={t`By agent`}
           icon={Layers}
           rows={usage.by_agent}
           total={total.total_tokens}
-          labelFor={agentLabel}
-          empty="Nothing ran in this window."
+          labelFor={(key) => i18n._(agentLabel(key))}
+          empty={t`Nothing ran in this window.`}
         />
         <Breakdown
-          title="By model"
+          title={t`By model`}
           icon={Cpu}
           rows={usage.by_model}
           total={total.total_tokens}
           labelFor={modelName}
-          empty="No model calls in this window."
+          empty={t`No model calls in this window.`}
         />
         <Breakdown
-          title="By provider"
+          title={t`By provider`}
           icon={KeyRound}
           rows={usage.by_provider}
           total={total.total_tokens}
-          labelFor={providerLabel}
-          empty="No provider recorded."
+          labelFor={(key) => i18n._(providerLabel(key))}
+          empty={t`No provider recorded.`}
         />
       </div>
     </>
@@ -237,28 +256,39 @@ function UsageReport({ usage, modelName }) {
  * readings, so it is the whole prop list.
  */
 export function UsageEmpty({ windowDays, earlier = null, onWiden }) {
+  const { t, i18n } = useLingui();
+  const widest = WIDEST_WINDOW_DAYS;
   if (earlier) {
     const cost = formatCost(earlier.cost_usd);
+    const earlierTokens = formatTokens(earlier.total_tokens);
+    const earlierCalls = earlier.calls;
+    // What the key was charged: a dollar figure, or the tokens when no price
+    // is known for these models (the same rule `Breakdown` follows).
+    const charged = cost ?? t`${earlierTokens} tokens`;
     return (
       // Ran before, just not lately. The action is a wider window, not a nudge
       // to go and spend money they have already spent.
       <EmptyState
         icon={Wallet}
-        title={`Nothing ran in the last ${windowDays} days`}
+        title={t`Nothing ran in the last ${windowDays} days`}
         actions={
           <>
             <Button size="sm" onClick={onWiden}>
-              Show {WIDEST_WINDOW_DAYS} days
+              <Trans>Show {widest} days</Trans>
             </Button>
             <Button size="sm" variant="ghost" asChild>
-              <Link href="/insights/organic-growth">Ask a question</Link>
+              <Link href="/insights/organic-growth">
+                <Trans>Ask a question</Trans>
+              </Link>
             </Button>
           </>
         }
       >
-        Your key was charged {cost ?? `${formatTokens(earlier.total_tokens)} tokens`} across{" "}
-        {earlier.calls.toLocaleString()} model calls in the last {WIDEST_WINDOW_DAYS} days. This
-        window is just a quiet one.
+        <Trans>
+          Your key was charged {charged} across{" "}
+          <Plural value={earlierCalls} one="# model call" other="# model calls" /> in the last{" "}
+          {widest} days. This window is just a quiet one.
+        </Trans>
       </EmptyState>
     );
   }
@@ -269,21 +299,27 @@ export function UsageEmpty({ windowDays, earlier = null, onWiden }) {
     // survive being put into a sentence.
     <EmptyState
       icon={Wallet}
-      title="Nothing has run on your key yet"
-      exampleLabel="Example month"
-      example={<UsageReport usage={SAMPLE_USAGE} modelName={(key) => SAMPLE_MODEL_NAMES[key]} />}
+      title={t`Nothing has run on your key yet`}
+      exampleLabel={t`Example month`}
+      example={
+        <UsageReport usage={SAMPLE_USAGE} modelName={(key) => i18n._(SAMPLE_MODEL_NAMES[key])} />
+      }
       actions={
         <>
           <Button size="sm" asChild>
-            <Link href="/insights/organic-growth">Ask a question</Link>
+            <Link href="/insights/organic-growth">
+              <Trans>Ask a question</Trans>
+            </Link>
           </Button>
           <Button size="sm" variant="ghost" asChild>
-            <Link href="/start">Audit a site</Link>
+            <Link href="/start">
+              <Trans>Audit a site</Trans>
+            </Link>
           </Button>
         </>
       }
     >
-      Your first agent run fills this in. Below is a normal month.
+      <Trans>Your first agent run fills this in. Below is a normal month.</Trans>
     </EmptyState>
   );
 }
@@ -298,6 +334,7 @@ export function UsageEmpty({ windowDays, earlier = null, onWiden }) {
  * tab that link would land on the tab it was clicked from.
  */
 export default function UsagePanel({ catalogue = null, standalone = false }) {
+  const { t, i18n } = useLingui();
   const [usage, setUsage] = useState(EMPTY_USAGE);
   // What the widest window holds, read only when the chosen one came back
   // empty. Null means "not asked, or asked and it was empty too" — either way
@@ -345,17 +382,19 @@ export default function UsagePanel({ catalogue = null, standalone = false }) {
 
   const modelName = (id) => {
     const model = (catalogue?.models ?? []).find((entry) => entry.id === id);
-    return model ? modelLabel(model) : id || "Other";
+    return model ? modelLabel(model) : id || t`Other`;
   };
 
   return (
     <>
       <div className="usage-head">
         <p className="app-subtle mt-lede">
-          What Duct spent running your agents. These are charges on your own provider key —
-          Duct never bills them.
+          <Trans>
+            What Duct spent running your agents. These are charges on your own provider key —
+            Duct never bills them.
+          </Trans>
         </p>
-        <div className="usage-windows" role="group" aria-label="Time window">
+        <div className="usage-windows" role="group" aria-label={t`Time window`}>
           {WINDOWS.map((w) => (
             <Button
               key={w.days}
@@ -364,7 +403,7 @@ export default function UsagePanel({ catalogue = null, standalone = false }) {
               onClick={() => setWindowDays(w.days)}
               aria-pressed={w.days === windowDays}
             >
-              {w.label}
+              {i18n._(w.label)}
             </Button>
           ))}
         </div>
@@ -373,20 +412,26 @@ export default function UsagePanel({ catalogue = null, standalone = false }) {
       {state === "signed-out" ? (
         <EmptyState
           icon={LockKeyhole}
-          title="Sign in to see what your runs cost"
+          title={t`Sign in to see what your runs cost`}
           actions={
             <Button size="sm" asChild>
-              <Link href="/">Sign in</Link>
+              <Link href="/">
+                <Trans>Sign in</Trans>
+              </Link>
             </Button>
           }
         >
-          Spending is per account, and every figure on this page is a charge on your own
-          provider key.
+          <Trans>
+            Spending is per account, and every figure on this page is a charge on your own
+            provider key.
+          </Trans>
         </EmptyState>
       ) : state === "error" ? (
-        <LoadError what="your usage" detail={error} onRetry={() => load(windowDays)} />
+        <LoadError what={t`your usage`} detail={error} onRetry={() => load(windowDays)} />
       ) : state === "loading" ? (
-        <p className="app-subtle usage-empty-line">Adding it up…</p>
+        <p className="app-subtle usage-empty-line">
+          <Trans>Adding it up…</Trans>
+        </p>
       ) : total.calls === 0 ? (
         <UsageEmpty
           windowDays={usage.window_days}
@@ -399,8 +444,10 @@ export default function UsagePanel({ catalogue = null, standalone = false }) {
 
           {standalone && (
             <p className="app-subtle usage-foot">
-              Which model runs which job is set in{" "}
-              <Link href="/settings/models">Models &amp; providers</Link>.
+              <Trans>
+                Which model runs which job is set in{" "}
+                <Link href="/settings/models">Models & providers</Link>.
+              </Trans>
             </p>
           )}
         </>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Duct para equipes de produto — Agente de IA de código aberto que lê Mixpanel, Clarity, GrowthBook e GA4 juntos</title>
+<link rel="canonical" href="https://getduct.ai/pt-br/for-product-intelligence"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/for-product-intelligence"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/for-product-intelligence"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/for-product-intelligence"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/for-product-intelligence"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/for-product-intelligence"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/for-product-intelligence"/>
+<!-- hreflang:end -->
+<meta name="description" content="Pergunte por que a ativação caiu. O Duct, um agente de IA de código aberto para equipes de produto e crescimento, lê Mixpanel, Clarity, GrowthBook e GA4 juntos e responde com a causa, as fontes e a alteração que propõe."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/pt-br/for-product-intelligence"/>
+<meta property="og:title" content="Duct para equipes de produto — Agente de IA de código aberto que lê Mixpanel, Clarity, GrowthBook e GA4 juntos"/>
+<meta property="og:description" content="Pergunte por que a ativação caiu. O Duct lê Mixpanel, Clarity, GrowthBook e GA4 juntos e responde com a causa, as fontes e a correção que propõe."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/for-product-intelligence.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct para equipes de produto — Agente de IA de código aberto que lê Mixpanel, Clarity, GrowthBook e GA4 juntos"/>
+<meta name="twitter:description" content="Agente de IA de código aberto para equipes de produto: Mixpanel, Clarity, GrowthBook e GA4 lidos em conjunto, a causa nomeada, a correção proposta."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/for-product-intelligence.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, honestamente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos o Google Analytics para ver quais páginas geram um cadastro. Esse é o único uso — sem segmentação de anúncios, sem perfis, nada vendido. Recuse e o site se comporta exatamente da mesma forma.","Privacy Policy":"Política de Privacidade","Decline":"Recusar","Accept":"Aceitar","{n} stars on GitHub":"{n} estrelas no GitHub","UTM Builder":"Construtor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de Benchmark de Métricas SaaS","Weekly Marketing Brief Generator":"Gerador de Resumo Semanal de Marketing","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de Taxa de Crescimento de MRR","Engagement Rate Calculator":"Calculadora de Taxa de Engajamento","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de Marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Menu":"Menu","Free Tools":"Ferramentas gratuitas","Solutions":"Soluções","Download Duct ↓":"Baixar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de tela ampliada","Close":"Fechar","Fit to screen":"Ajustar à tela","Zoom in":"Ampliar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 e posterior","Runs on any distribution":"Funciona em qualquer distribuição","Debian and Ubuntu":"Debian e Ubuntu","Download ↓":"Baixar ↓","Download for {label} ↓":"Baixar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de exemplo. Altere qualquer campo e calcule novamente para os seus."};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Duct for Product Intelligence","url":"https://getduct.ai/for-product-intelligence","description":"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources and the change it proposes. Open source, MIT.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for product intelligence?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that reads Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot together. Ask why activation dropped and it answers with the cause and its sources, proposes a change, applies it when you approve, and remembers the decision for next time."}},{"@type":"Question","name":"What tools does Duct connect to, and how hard is setup?","acceptedAnswer":{"@type":"Answer","text":"Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting."}},{"@type":"Question","name":"Is my product data safe with Duct?","acceptedAnswer":{"@type":"Answer","text":"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."}},{"@type":"Question","name":"How is Duct different from using Mixpanel dashboards directly?","acceptedAnswer":{"@type":"Answer","text":"Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."}},{"@type":"Question","name":"Does Duct for product intelligence cost anything?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."}},{"@type":"Question","name":"What does an answer actually look like?","acceptedAnswer":{"@type":"Answer","text":"A short reply in the chat with the finding and the change it proposes, and a brief beside it: the numbers it used, the sources it read, and a checklist of what to do this week. Every number is re-checked by a second agent before it reaches you, and the brief is saved and versioned in the project."}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Pular para o conteúdo</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EXPERIMENT: three real jobs with product shots instead of an interactive walkthrough demo. Hypothesis: PMs convert on seeing the answer to their own question, not on clicking through a mock brief. Measured by download clicks per visit (GTM). -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/pt-br/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+
+<section class="hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Beta de inteligência de produto · Gratuito e de código aberto</div>
+<h1>Pare de trocar de aba.<br/>Comece a <em>saber.</em></h1>
+<p class="hero-sub">Pergunte por que a ativação caiu. O Duct lê Mixpanel, Clarity, GrowthBook e GA4 juntos e responde com a causa, as fontes e a alteração que propõe.</p>
+<div class="hero-form">
+<a class="btn btn-orange btn-lg" href="/pt-br/download" data-duct-download>Baixar Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Marcar com estrela no GitHub</a>
+</div>
+<p class="hero-footnote">Grátis durante a fase beta · Não precisa de cartão de crédito · Para PMs em empresas de 20 a 200 pessoas</p>
+</section>
+
+<!-- PRODUCT SHOT (from docs/assets/readme, shot by scripts/shots/shoot.mjs) -->
+<section class="shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/product-session.webp" srcset="/assets/media/product-session-768.webp 768w, /assets/media/product-session-1536.webp 1536w, /assets/media/product-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" fetchpriority="high" width="3072" height="2052" alt="Uma sessão de insights: perguntado por que a ativação caiu após o lançamento do Android, o agente nomeia o dia, a plataforma e a tela, propõe dois eventos-chave do GA4, e escreve o resumo de ativação à direita"/>
+<figcaption>Pergunte por que a ativação caiu. O Duct lê GA4, Clarity e Stripe antes e depois do lançamento, nomeia a tela, e propõe o que rastrear para que o resumo da próxima semana possa comprovar a correção.</figcaption>
+</figure>
+</section>
+
+<!-- TOOL STRIP -->
+
+<div class="strip">
+<p class="strip-label">Conecta-se às ferramentas que você já usa</p>
+<div class="marquee" aria-hidden="true">
+<span>Mixpanel</span><span>Microsoft Clarity</span><span>GrowthBook</span><span>GA4</span>
+<span>HubSpot</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
+<span>Mixpanel</span><span>Microsoft Clarity</span><span>GrowthBook</span><span>GA4</span>
+<span>HubSpot</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
+</div>
+</div>
+
+
+
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">O Problema</p>
+<h2>A resposta já está nas suas ferramentas.<br/>Mas ninguém está <em>conectando os pontos.</em></h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-help"/></svg></span> Mixpanel diz que o uso do recurso está estável. Clarity mostra usuários clicando furiosamente durante a configuração. Você não sabe qual sinal merece prioridade.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg></span> GrowthBook diz que o lançamento atingiu 100%. HubSpot diz que a confusão continua. Clarity mostra usuários ainda presos no mesmo fluxo.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#timer"/></svg></span> Você gasta 3 horas por semana agregando dados manualmente o que deveria levar 10 minutos.</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header" aria-hidden="true">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#f0ecff"><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt="Mixpanel"/></span>
+<div class="diag-info"><b>Mixpanel</b><s aria-hidden="true">A retenção caiu 4% esta semana</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">sem conexão</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e6f3fd"><img src="/assets/icons/hubspot.svg" width="18" height="18" alt="HubSpot"/></span>
+<div class="diag-info"><b>HubSpot</b><s aria-hidden="true">32 tickets sobre atrito no onboarding</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">sem conexão</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#eeeffe"><img src="/assets/icons/growthbook.svg" width="18" height="18" alt="GrowthBook"/></span>
+<div class="diag-info"><b>GrowthBook</b><s aria-hidden="true">Correção de onboarding — lançada na terça-feira</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">sem conexão</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#ede8f2"><img src="/assets/icons/clarity.svg" width="18" height="18" alt="Microsoft Clarity"/></span>
+<div class="diag-info"><b>Clarity</b><s aria-hidden="true">A reprodução mostra que 41% dos usuários travam no convite de colega de equipe</s></div>
+</div>
+<div class="diag-result">
+<strong><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg> Depois do Duct</strong> Queda na retenção → pico de suporte → atrito no replay → tempo de lançamento. Uma história, conectada automaticamente.
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how" id="how">
+<div class="how-inner">
+<p class="tag">Como funciona</p>
+<h2>Conecte. Pergunte. <em>Aprove.</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
+<p class="step-title">Conecte sua stack</p>
+<p class="step-body">OAuth de um clique para Mixpanel, Microsoft Clarity, GrowthBook, GA4 e HubSpot. A geração de relatórios precisa apenas de acesso de leitura; nada é exportado manualmente.</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
+<p class="step-title">Faça a pergunta</p>
+<p class="step-body">Digite como você perguntaria a um colega. Duct lê todas as ferramentas conectadas para isso, mostra as fontes, e um segundo agente verifica novamente os números antes que você os veja.</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg></span>
+<p class="step-title">Aprovar a alteração</p>
+<p class="step-body">Quando a resposta é uma alteração, ela chega como um conjunto de alterações com uma prévia e uma verificação de segurança. Aplique, ou não. Ele se lembra de qualquer forma.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHAT IT DOES -->
+
+<section class="jobs" id="features">
+<div class="jobs-inner">
+<div class="reveal">
+<p class="tag">O que ele faz</p>
+<h2>O que ele faz <em>para um PM.</em></h2>
+</div>
+<div class="job-grid">
+<article class="job reveal" style="transition-delay:0.05s">
+<div class="job-shot"><img src="/assets/media/answer-product.webp" srcset="/assets/media/answer-product-768.webp 768w, /assets/media/answer-product.webp 1392w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1392" height="920" loading="lazy" alt="Uma pergunta e sua resposta: por que a ativação caiu, lida do GA4, Clarity e Stripe, nomeando o dia, a plataforma e a tela"/></div>
+<div class="job-body">
+<h3>Por que a ativação caiu?</h3>
+<dl>
+<dt>Quando</dt><dd>Um número muda na segunda-feira e ninguém sabe por quê.</dd>
+<dt>Hoje</dt><dd>Mixpanel, Clarity e GrowthBook em três abas, três horas, ainda é um palpite.</dd>
+<dt>Com o Duct</dt><dd class="with">Ele lê todos eles para a única pergunta e responde com a causa, as fontes e a alteração que propõe.</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:0.1s">
+<div class="job-shot"><img src="/assets/media/review-card.webp" srcset="/assets/media/review-card-768.webp 768w, /assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="Um cartão de conjunto de alterações: pausar uma campanha, uma alteração bloqueada por uma barreira de segurança, botões Rejeitar e Aplicar"/></div>
+<div class="job-body">
+<h3>Age, com sua aprovação</h3>
+<dl>
+<dt>Quando</dt><dd>A resposta é “marcar aquele evento do GA4” ou “pausar aquela campanha”.</dd>
+<dt>Hoje</dt><dd>Um ticket para a engenharia, ou você faz manualmente e esquece de avisar alguém.</dd>
+<dt>Com o Duct</dt><dd class="with">Um conjunto de alterações com uma prévia e uma verificação de limite. Ele é aplicado quando você pressiona Aplicar, e não antes.</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:0.15s">
+<div class="job-shot"><img src="/assets/media/memory-timeline.webp" srcset="/assets/media/memory-timeline-768.webp 768w, /assets/media/memory-timeline-1536.webp 1536w, /assets/media/memory-timeline.webp 2008w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2008" height="1990" loading="lazy" alt="A linha do tempo da Memória: uma meta de CPA, uma decisão, um evento e o que o agente aprendeu esta semana"/></div>
+<div class="job-body">
+<h3>Lembra da decisão</h3>
+<dl>
+<dt>Quando</dt><dd>A pergunta da próxima semana depende da chamada da semana passada.</dd>
+<dt>Hoje</dt><dd>Um documento do Notion que ninguém relê antes de perguntar novamente.</dd>
+<dt>Com o Duct</dt><dd class="with">Metas, decisões e o que ele aprendeu, em uma linha do tempo que você pode corrigir. A próxima resposta começa a partir daí.</dd>
+</dl>
+</div>
+</article>
+</div>
+</div>
+</section>
+
+<!-- AUDIENCE -->
+
+<section class="audience" id="who">
+<div class="aud-inner">
+<div class="reveal">
+<p class="tag">Para Quem É</p>
+<h2>O PM que é responsável pelo <em>crescimento</em> sem uma equipe de dados</h2>
+<p class="sub" style="margin-top:16px">Você não tem analistas para se apoiar. Você não tem tempo para SQL. Você precisa da imagem completa, rápido — e precisa que esteja certa.</p>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">Sou eu — baixe o Duct ↓</a>
+</div>
+<div class="aud-cards reveal">
+<div class="aud-card hi">
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg></span>
+<div><span class="aud-name">PM de Crescimento</span><span class="aud-role">SaaS de 20 a 200 pessoas</span></div>
+<span class="aud-badge">Ideal para você</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#e8f4ff" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+<div><span class="aud-name">Marketing de Produto</span><span class="aud-role">Monitorando lançamentos de recursos</span></div>
+<span class="aud-badge">Ótimo ajuste</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#efffef" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-up"/></svg></span>
+<div><span class="aud-name">PM Fundador</span><span class="aud-role">Fazendo muitas coisas</span></div>
+<span class="aud-badge">Ótimo ajuste</span>
+</div>
+<div class="aud-card" style="opacity:.45">
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#building-2"/></svg></span>
+<div><span class="aud-name">Equipe de Dados Corporativos</span><span class="aud-role">Mais de 500 com analistas dedicados</span></div>
+<span class="aud-badge off">Ainda não</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Perguntas <em>frequentes</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+<details class="faq-item">
+<summary class="faq-q">O que é o Duct para inteligência de produto?</summary>
+<p class="faq-a">Um agente de IA de código aberto que lê Mixpanel, Microsoft Clarity, GrowthBook, GA4 e HubSpot juntos. Pergunte por que a ativação caiu e ele responde com a causa e suas fontes, propõe uma alteração, aplica-a quando você aprova, e lembra da decisão para a próxima vez.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">A quais ferramentas o Duct se conecta, e quão difícil é a configuração?</summary>
+<p class="faq-a">O Duct se conecta a Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat e Google Ads com OAuth de um clique. A configuração leva menos de cinco minutos e seu primeiro resumo diário de PM chega na sua caixa de entrada após a conexão.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Meus dados de produto estão seguros com o Duct?</summary>
+<p class="faq-a">Seus dados são criptografados em trânsito via TLS, e os tokens OAuth são criptografados em repouso e nunca expostos ao navegador. O Duct lê suas ferramentas para construir o resumo e não altera nada nelas, a menos que você aprove uma alteração específica primeiro. O acesso é restrito aos membros do projeto que você convida, e você pode desconectar uma fonte ou excluir seus dados a qualquer momento.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Como o Duct é diferente de usar os painéis do Mixpanel diretamente?</summary>
+<p class="faq-a">Painéis de ferramenta única mostram métricas isoladas. O Duct correlaciona análises de produto, comportamento de sessão, resultados de experimentos e sinais de receita para que você possa priorizar o que lançar em seguida sem correlação manual.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">O Duct para inteligência de produto custa alguma coisa?</summary>
+<p class="faq-a">Grátis com suas próprias chaves, sempre. O Duct é licenciado pelo MIT: você paga seu provedor de modelo diretamente, ou entra com o plano ChatGPT que você já tem. Um plano pago posterior agrupa os modelos para equipes que preferem não ter chaves; nada aberto hoje se move por trás dele. <a href="/pt-br/open-source#pricing">O que custará dinheiro</a> está detalhado na página de código aberto.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Como uma resposta realmente se parece?</summary>
+<p class="faq-a">Uma resposta curta no chat com a constatação e a alteração que propõe, e um resumo ao lado: os números que usou, as fontes que leu e uma lista do que fazer esta semana. Cada número é verificado novamente por um segundo agente antes de chegar a você, e o resumo é salvo e versionado no projeto.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-for-pages.html) -->
+<div data-duct-partial="/pt-br/partials/cta-for-pages.html"></div>
+
+</main>
+
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/pt-br/partials/footer-expanded.html"><div class="legal-fallback"><a href="/pt-br/">Duct</a><a href="/pt-br/about">Sobre</a><a href="/pt-br/privacy">Política de privacidade</a><a href="/pt-br/terms">Termos de serviço</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

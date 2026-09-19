@@ -14,6 +14,7 @@
 // step's label and state are real text, and the current one carries
 // aria-current.
 
+import { useLingui } from "@lingui/react/macro";
 import { cn } from "@/lib/utils";
 
 export const STEP_DONE = "done";
@@ -38,6 +39,7 @@ const COURSE_H = 12;
  *   fractions allowed while a step is in progress)
  */
 export default function Aqueduct({ steps, water = 0, className }) {
+  const { t } = useLingui();
   const n = Math.max(steps.length, 1);
   const seg = WIDTH / n;
   const reach = Math.max(0, Math.min(water, n)) / n;
@@ -117,24 +119,31 @@ export default function Aqueduct({ steps, water = 0, className }) {
         )}
         <rect x="0" y={GROUND_Y} width={WIDTH} height="6" className="aqueduct-ground" />
       </svg>
-      <ol className="aqueduct-steps" aria-label="Setup steps">
-        {steps.map((step, i) => (
-          <li
-            key={step.key}
-            className={cn("aqueduct-step", `aqueduct-step-${step.state}`)}
-            aria-current={step.state === STEP_ACTIVE ? "step" : undefined}
-          >
-            <span className="aqueduct-step-index" aria-hidden="true">
-              {["I", "II", "III", "IV", "V"][i] || i + 1}
-            </span>
-            <span className="aqueduct-step-label">{step.label}</span>
-            <span className="sr-only">
-              {step.state === STEP_DONE && " — done"}
-              {step.state === STEP_ACTIVE && " — current step"}
-              {step.state === STEP_DRY && " — skipped"}
-            </span>
-          </li>
-        ))}
+      <ol className="aqueduct-steps" aria-label={t`Setup steps`}>
+        {steps.map((step, i) => {
+          // Read after the label, so the screen reader hears "Your site — done".
+          const note =
+            step.state === STEP_DONE
+              ? t`— done`
+              : step.state === STEP_ACTIVE
+                ? t`— current step`
+                : step.state === STEP_DRY
+                  ? t`— skipped`
+                  : "";
+          return (
+            <li
+              key={step.key}
+              className={cn("aqueduct-step", `aqueduct-step-${step.state}`)}
+              aria-current={step.state === STEP_ACTIVE ? "step" : undefined}
+            >
+              <span className="aqueduct-step-index" aria-hidden="true">
+                {["I", "II", "III", "IV", "V"][i] || i + 1}
+              </span>
+              <span className="aqueduct-step-label">{step.label}</span>
+              <span className="sr-only">{note ? ` ${note}` : null}</span>
+            </li>
+          );
+        })}
       </ol>
     </div>
   );

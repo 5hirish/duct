@@ -1,15 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { STEP_LABELS as BACKEND_STEP_LABELS, AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
 import { Spinner } from "@/components/ui/spinner";
 
+// Message descriptors (the backend table is one too); StepRow resolves them.
 const STEP_LABELS = {
   ...BACKEND_STEP_LABELS,
-  plan_crawl:    "Planning crawl",
-  render_report: "Finalizing report",
+  plan_crawl:    msg`Planning crawl`,
+  render_report: msg`Finalizing report`,
 };
+
+// Lives outside JSX so the literal-string check does not read a CSS rule as copy.
+const STEP_FILL_KEYFRAMES = `@keyframes duct-step-fill { from { width: 0% } to { width: 85% } }`;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,7 +51,7 @@ function Pill({ children, variant = "default" }) {
 
 function CharCount({ n, lo, hi }) {
   const variant = !n ? "danger" : n < lo || n > hi ? "warn" : "ok";
-  return <Pill variant={variant}>{n} chars</Pill>;
+  return <Pill variant={variant}><Trans>{n} chars</Trans></Pill>;
 }
 
 // ---------------------------------------------------------------------------
@@ -56,29 +62,33 @@ function SitemapDetails({ payload }) {
   const p = payload || {};
   const hasRobots = p.robots_txt_found;
   const hasLlms   = p.llms_txt_found;
+  const robotsLines = p.robots_txt_lines;
+  const llmsLines = p.llms_txt_lines;
+  const landingPages = p.landing_page_urls?.length ?? 0;
+  const blogPosts = p.blog_post_urls?.length ?? 0;
 
   return (
     <div className="space-y-3 text-xs">
       {/* Sitemap */}
       <div className="flex items-start gap-2">
-        <span className="text-muted-foreground shrink-0 w-16">Sitemap</span>
+        <span className="text-muted-foreground shrink-0 w-16"><Trans>Sitemap</Trans></span>
         {p.sitemap_url
           ? <span className="font-mono text-2xs break-all text-foreground/80">{p.sitemap_url}</span>
-          : <Pill variant="warn">not found</Pill>}
+          : <Pill variant="warn"><Trans>not found</Trans></Pill>}
       </div>
 
       {/* robots.txt */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground w-16 shrink-0">robots.txt</span>
+          <span className="text-muted-foreground w-16 shrink-0"><Trans>robots.txt</Trans></span>
           {hasRobots ? (
             <>
-              <Pill variant="ok">found</Pill>
+              <Pill variant="ok"><Trans>found</Trans></Pill>
               <span className="text-muted-foreground">{fmt(p.robots_txt_bytes)}</span>
-              <span className="text-muted-foreground">{p.robots_txt_lines} lines</span>
+              <span className="text-muted-foreground"><Trans>{robotsLines} lines</Trans></span>
             </>
           ) : (
-            <Pill variant="warn">not found</Pill>
+            <Pill variant="warn"><Trans>not found</Trans></Pill>
           )}
         </div>
         {hasRobots && p.robots_txt_preview && (
@@ -91,15 +101,15 @@ function SitemapDetails({ payload }) {
       {/* llms.txt */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground w-16 shrink-0">llms.txt</span>
+          <span className="text-muted-foreground w-16 shrink-0"><Trans>llms.txt</Trans></span>
           {hasLlms ? (
             <>
-              <Pill variant="ok">found</Pill>
+              <Pill variant="ok"><Trans>found</Trans></Pill>
               <span className="text-muted-foreground">{fmt(p.llms_txt_bytes)}</span>
-              <span className="text-muted-foreground">{p.llms_txt_lines} lines</span>
+              <span className="text-muted-foreground"><Trans>{llmsLines} lines</Trans></span>
             </>
           ) : (
-            <Pill variant="warn">not found</Pill>
+            <Pill variant="warn"><Trans>not found</Trans></Pill>
           )}
         </div>
         {hasLlms && p.llms_txt_preview && (
@@ -110,9 +120,9 @@ function SitemapDetails({ payload }) {
       </div>
 
       {/* Landing pages */}
-      {p.landing_page_urls?.length > 0 && (
+      {landingPages > 0 && (
         <div className="space-y-1">
-          <span className="text-muted-foreground">{p.landing_page_urls.length} landing page{p.landing_page_urls.length !== 1 ? "s" : ""}</span>
+          <span className="text-muted-foreground"><Plural value={landingPages} one="# landing page" other="# landing pages" /></span>
           <div className="max-h-28 overflow-y-auto rounded bg-muted/40 px-2 py-1.5 space-y-0.5">
             {p.landing_page_urls.map((url) => (
               <div key={url} className="font-mono text-2xs text-foreground/70 truncate" title={url}>{url}</div>
@@ -122,9 +132,9 @@ function SitemapDetails({ payload }) {
       )}
 
       {/* Blog posts */}
-      {p.blog_post_urls?.length > 0 && (
+      {blogPosts > 0 && (
         <div className="space-y-1">
-          <span className="text-muted-foreground">{p.blog_post_urls.length} blog post{p.blog_post_urls.length !== 1 ? "s" : ""}</span>
+          <span className="text-muted-foreground"><Plural value={blogPosts} one="# blog post" other="# blog posts" /></span>
           <div className="max-h-24 overflow-y-auto rounded bg-muted/40 px-2 py-1.5 space-y-0.5">
             {p.blog_post_urls.map((url) => (
               <div key={url} className="font-mono text-2xs text-foreground/70 truncate" title={url}>{url}</div>
@@ -141,17 +151,25 @@ function SitemapDetails({ payload }) {
 // ---------------------------------------------------------------------------
 
 function PageRow({ page }) {
+  const { t } = useLingui();
   const [open, setOpen] = useState(false);
+  const missingAlt = page.images_missing_alt;
   const issues = [];
-  if (page.is_noindex)           issues.push({ label: "noindex",       v: "danger" });
-  if (!page.has_canonical)       issues.push({ label: "no canonical",  v: "warn"   });
-  if (!page.has_schema_org)      issues.push({ label: "no schema",     v: "warn"   });
-  if (page.images_missing_alt)   issues.push({ label: `alt ×${page.images_missing_alt}`, v: "warn" });
-  if (!page.meta_description_chars) issues.push({ label: "no meta desc", v: "danger" });
+  if (page.is_noindex)           issues.push({ label: t`noindex`,       v: "danger" });
+  if (!page.has_canonical)       issues.push({ label: t`no canonical`,  v: "warn"   });
+  if (!page.has_schema_org)      issues.push({ label: t`no schema`,     v: "warn"   });
+  if (page.images_missing_alt)   issues.push({ label: t`alt ×${missingAlt}`, v: "warn" });
+  if (!page.meta_description_chars) issues.push({ label: t`no meta desc`, v: "danger" });
 
   const statusColour = page.http_status >= 200 && page.http_status < 300 ? "text-success"
                      : page.http_status >= 300 && page.http_status < 400 ? "text-warning"
                      : "text-destructive";
+
+  const wordCount = page.word_count;
+  const images = page.images;
+  const internalLinks = page.internal_links;
+  const externalLinks = page.external_links;
+  const hreflangCount = page.hreflang_count;
 
   return (
     <div className="rounded border border-border/50 overflow-hidden">
@@ -167,7 +185,7 @@ function PageRow({ page }) {
         <div className="flex-1 min-w-0 space-y-0.5">
           <div className="font-mono text-2xs text-foreground/80 truncate">{page.url}</div>
           <div className="flex flex-wrap gap-1">
-            <span className="text-2xs text-muted-foreground">{page.word_count} words</span>
+            <span className="text-2xs text-muted-foreground"><Trans>{wordCount} words</Trans></span>
             {issues.map(i => <Pill key={i.label} variant={i.v}>{i.label}</Pill>)}
           </div>
         </div>
@@ -182,43 +200,47 @@ function PageRow({ page }) {
         <div className="px-2.5 pb-2.5 space-y-2 border-t border-border/40 pt-2 bg-muted/20">
           {/* Title */}
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-2xs text-muted-foreground w-14 shrink-0">Title</span>
-            <span className="text-2xs text-foreground/80 flex-1 min-w-0">{page.title || <em className="text-destructive/70">missing</em>}</span>
+            <span className="text-2xs text-muted-foreground w-14 shrink-0"><Trans>Title</Trans></span>
+            <span className="text-2xs text-foreground/80 flex-1 min-w-0">{page.title || <em className="text-destructive/70"><Trans>missing</Trans></em>}</span>
             <CharCount n={page.title_chars} lo={30} hi={70} />
           </div>
 
           {/* Meta description */}
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-2xs text-muted-foreground w-14 shrink-0">Meta desc</span>
-            <span className="text-2xs text-foreground/80 flex-1 min-w-0 break-words">{page.meta_description || <em className="text-destructive/70">missing</em>}</span>
+            <span className="text-2xs text-muted-foreground w-14 shrink-0"><Trans>Meta desc</Trans></span>
+            <span className="text-2xs text-foreground/80 flex-1 min-w-0 break-words">{page.meta_description || <em className="text-destructive/70"><Trans>missing</Trans></em>}</span>
             <CharCount n={page.meta_description_chars} lo={140} hi={160} />
           </div>
 
           {/* Body preview */}
           {page.body_preview && (
             <div className="flex items-start gap-2">
-              <span className="text-2xs text-muted-foreground w-14 shrink-0 mt-0.5">Preview</span>
+              <span className="text-2xs text-muted-foreground w-14 shrink-0 mt-0.5"><Trans>Preview</Trans></span>
               <p className="text-2xs text-muted-foreground leading-relaxed line-clamp-3 flex-1">{page.body_preview}</p>
             </div>
           )}
 
           {/* Signal grid */}
           <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 text-2xs @sm:grid-cols-2">
-            <span className="text-muted-foreground">Canonical</span>
+            <span className="text-muted-foreground"><Trans>Canonical</Trans></span>
             <span className={page.has_canonical ? "text-success" : "text-destructive/70"}>
-              {page.has_canonical ? page.canonical : "missing"}
+              {page.has_canonical ? page.canonical : t`missing`}
             </span>
-            <span className="text-muted-foreground">Schema</span>
+            <span className="text-muted-foreground"><Trans>Schema</Trans></span>
             <span className={page.has_schema_org ? "text-success" : "text-muted-foreground"}>
-              {page.has_schema_org ? (page.schema_types?.join(", ") || "yes") : "none"}
+              {page.has_schema_org ? (page.schema_types?.join(", ") || t`yes`) : t`none`}
             </span>
-            <span className="text-muted-foreground">Images</span>
-            <span>{page.images} total{page.images_missing_alt ? `, ${page.images_missing_alt} missing alt` : ""}</span>
-            <span className="text-muted-foreground">Links</span>
-            <span>{page.internal_links} internal · {page.external_links} external</span>
+            <span className="text-muted-foreground"><Trans>Images</Trans></span>
+            <span>
+              {missingAlt
+                ? <Trans>{images} total, {missingAlt} missing alt</Trans>
+                : <Trans>{images} total</Trans>}
+            </span>
+            <span className="text-muted-foreground"><Trans>Links</Trans></span>
+            <span><Trans>{internalLinks} internal · {externalLinks} external</Trans></span>
             {page.hreflang_count > 0 && <>
-              <span className="text-muted-foreground">Hreflang</span>
-              <span>{page.hreflang_count} lang{page.hreflang_count !== 1 ? "s" : ""}</span>
+              <span className="text-muted-foreground"><Trans>Hreflang</Trans></span>
+              <span><Plural value={hreflangCount} one="# lang" other="# langs" /></span>
             </>}
           </div>
         </div>
@@ -239,7 +261,7 @@ function CrawlDetails({ payload }) {
       </div>
       {errors.length > 0 && (
         <div className="rounded border border-destructive/20 bg-destructive/5 p-2 space-y-0.5">
-          <p className="text-2xs font-medium text-destructive">Crawl errors</p>
+          <p className="text-2xs font-medium text-destructive"><Trans>Crawl errors</Trans></p>
           {errors.map((e, i) => (
             <p key={i} className="font-mono text-2xs text-destructive/80 break-all">{e}</p>
           ))}
@@ -258,40 +280,45 @@ function EnrichingDetails({ payload }) {
   const competitors = p.competitors || [];
   const gaps = p.content_gaps || [];
   const notes = p.enrichment_notes || [];
+  const competitorCount = competitors.length;
 
   if (!competitors.length && !gaps.length && !notes.length) {
-    return <p className="text-2xs text-muted-foreground italic">No competitor research was returned for this audit.</p>;
+    return <p className="text-2xs text-muted-foreground italic"><Trans>No competitor research was returned for this audit.</Trans></p>;
   }
 
   return (
     <div className="space-y-3 text-xs">
       {competitors.length > 0 && (
         <div className="space-y-1.5">
-          <span className="text-muted-foreground">{competitors.length} competitor{competitors.length !== 1 ? "s" : ""}</span>
+          <span className="text-muted-foreground"><Plural value={competitorCount} one="# competitor" other="# competitors" /></span>
           <div className="space-y-1.5">
-            {competitors.map((c) => (
-              <div key={c.domain} className="rounded bg-muted/40 px-2 py-1.5 space-y-1">
-                <div className="font-mono text-2xs text-foreground/80">{c.domain}</div>
-                {c.positioning && <p className="text-2xs text-muted-foreground leading-relaxed">{c.positioning}</p>}
-                {c.content_pillars && (
-                  <p className="text-2xs text-muted-foreground">
-                    <span className="text-foreground/50">Pillars:</span> {c.content_pillars}
-                  </p>
-                )}
-                {c.differentiators && (
-                  <p className="text-2xs text-foreground/60">
-                    <span className="text-muted-foreground">Differentiators:</span> {c.differentiators}
-                  </p>
-                )}
-              </div>
-            ))}
+            {competitors.map((c) => {
+              const pillars = c.content_pillars;
+              const differentiators = c.differentiators;
+              return (
+                <div key={c.domain} className="rounded bg-muted/40 px-2 py-1.5 space-y-1">
+                  <div className="font-mono text-2xs text-foreground/80">{c.domain}</div>
+                  {c.positioning && <p className="text-2xs text-muted-foreground leading-relaxed">{c.positioning}</p>}
+                  {c.content_pillars && (
+                    <p className="text-2xs text-muted-foreground">
+                      <Trans><span className="text-foreground/50">Pillars:</span> {pillars}</Trans>
+                    </p>
+                  )}
+                  {c.differentiators && (
+                    <p className="text-2xs text-foreground/60">
+                      <Trans><span className="text-muted-foreground">Differentiators:</span> {differentiators}</Trans>
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {gaps.length > 0 && (
         <div className="space-y-1">
-          <span className="text-muted-foreground">Content gaps</span>
+          <span className="text-muted-foreground"><Trans>Content gaps</Trans></span>
           <ul className="list-disc pl-4 space-y-0.5 text-2xs text-foreground/70">
             {gaps.map((g, i) => <li key={i}>{g}</li>)}
           </ul>
@@ -300,7 +327,7 @@ function EnrichingDetails({ payload }) {
 
       {notes.length > 0 && (
         <div className="space-y-1">
-          <span className="text-muted-foreground">Notes</span>
+          <span className="text-muted-foreground"><Trans>Notes</Trans></span>
           <ul className="space-y-0.5 text-2xs text-muted-foreground italic">
             {notes.map((n, i) => <li key={i}>• {n}</li>)}
           </ul>
@@ -336,12 +363,19 @@ function HeaderRow({ expandable, onToggle, expanded, children }) {
 }
 
 function StepRow({ step, expanded, onToggle }) {
+  const { i18n } = useLingui();
   const { step_id, label, status, payload } = step;
   const isRunning    = status === StepStatus.RUNNING;
   const isDone       = status === StepStatus.SUCCESS || status === StepStatus.ERROR;
   const isSynthesize = step_id === AuditStep.SYNTHESIZE_AUDIT;
   const Details      = DETAIL_COMPONENTS[step_id];
   const canExpand    = isDone && !!Details && !!payload;
+
+  const landingPages = payload?.landing_pages;
+  const blogPosts = payload?.blog_posts;
+  const crawledPages = payload?.pages?.length;
+  const competitors = payload?.competitors?.length;
+  const contentGaps = payload?.content_gaps?.length;
 
   return (
     <div>
@@ -364,41 +398,41 @@ function StepRow({ step, expanded, onToggle }) {
         )}
 
         <span className={isRunning ? "font-medium flex-1" : "text-muted-foreground flex-1"}>
-          {STEP_LABELS[step_id] || label || step_id}
+          {STEP_LABELS[step_id] ? i18n._(STEP_LABELS[step_id]) : label || step_id}
         </span>
 
         {/* Crawl page count */}
         {payload?.landing_pages != null && !isSynthesize && (
           <span className="text-xs text-muted-foreground tabular-nums">
-            {payload.landing_pages} page{payload.landing_pages !== 1 ? "s" : ""}
-            {payload.blog_posts > 0 && `, ${payload.blog_posts} post${payload.blog_posts !== 1 ? "s" : ""}`}
+            <Plural value={landingPages} one="# page" other="# pages" />
+            {blogPosts > 0 && <>, <Plural value={blogPosts} one="# post" other="# posts" /></>}
           </span>
         )}
 
         {/* Crawled page count */}
         {payload?.pages != null && (
           <span className="text-xs text-muted-foreground tabular-nums">
-            {payload.pages.length} page{payload.pages.length !== 1 ? "s" : ""}
+            <Plural value={crawledPages} one="# page" other="# pages" />
           </span>
         )}
 
         {/* Competitor research summary */}
         {payload?.competitors != null && (
           <span className="text-xs text-muted-foreground tabular-nums">
-            {payload.competitors.length} competitor{payload.competitors.length !== 1 ? "s" : ""}
-            {payload.content_gaps?.length > 0 && `, ${payload.content_gaps.length} gap${payload.content_gaps.length !== 1 ? "s" : ""}`}
+            <Plural value={competitors} one="# competitor" other="# competitors" />
+            {contentGaps > 0 && <>, <Plural value={contentGaps} one="# gap" other="# gaps" /></>}
           </span>
         )}
 
         {/* Time estimate on synthesize while running */}
         {isSynthesize && isRunning && (
-          <span className="text-xs text-muted-foreground">~3 min</span>
+          <span className="text-xs text-muted-foreground"><Trans>~3 min</Trans></span>
         )}
 
         {/* Extended thinking indicator */}
         {isSynthesize && isDone && payload?.reasoned && (
           <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-px text-2xs font-medium text-primary">
-            ✦ Reasoned
+            <Trans>✦ Reasoned</Trans>
           </span>
         )}
 
@@ -419,7 +453,7 @@ function StepRow({ step, expanded, onToggle }) {
               style={{ animation: "duct-step-fill 180s cubic-bezier(0.08, 0, 0.2, 1) forwards" }}
             />
           </div>
-          <style>{`@keyframes duct-step-fill { from { width: 0% } to { width: 85% } }`}</style>
+          <style>{STEP_FILL_KEYFRAMES}</style>
         </div>
       )}
 

@@ -5,6 +5,7 @@
 // > proposed (sequential slot = month start + position). Drives Kanban sorting,
 // calendar placement, and the date badge so all three views stay consistent.
 
+import { msg } from "@lingui/core/macro";
 import { dayKey, formatDate, formatTime, toDate as parseDate } from "./format";
 
 // Re-exported under the board's own names.
@@ -28,11 +29,12 @@ function addDays(date, n) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + n);
 }
 
-// Board copy is English, so the date badge is pinned to it too.
-const fmtDate = (d) => formatDate(d, { withYear: false, locale: "en" });
-const fmtTime = (d) => formatTime(d, { locale: "en" });
-
-const KIND_LABEL = { published: "Published", scheduled: "Scheduled", proposed: "Planned" };
+// Message descriptors (module-level table): render with `i18n._(KIND_LABEL[kind])`.
+export const KIND_LABEL = Object.freeze({
+  published: msg`Published`,
+  scheduled: msg`Scheduled`,
+  proposed: msg`Planned`,
+});
 
 /**
  * Resolve an item's effective schedule.
@@ -40,9 +42,14 @@ const KIND_LABEL = { published: "Published", scheduled: "Scheduled", proposed: "
  *   post     — the linked full post (or null)
  *   anchor   — Date the plan's first slot falls on (planStartOf) or null
  *   index    — the item's position in days[] (for the proposed slot)
- * Returns { date, time|null, kind, label, status, hasTime }.
+ *   locale   — the interface language, so the date badge matches the copy
+ *              around it (it used to be pinned to English, as the board was)
+ * Returns { date, time|null, kind, kindLabel, dateLabel, status, hasTime };
+ * `kindLabel` is a message descriptor.
  */
-export function effectiveSchedule(day, post, anchor, index) {
+export function effectiveSchedule(day, post, anchor, index, { locale } = {}) {
+  const fmtDate = (d) => formatDate(d, { withYear: false, locale });
+  const fmtTime = (d) => formatTime(d, { locale });
   const status = post?.status || day?.status || "pending";
   const posted = parseDate(post?.posted_at);
   const scheduled = parseDate(post?.scheduled_at);
@@ -60,8 +67,7 @@ export function effectiveSchedule(day, post, anchor, index) {
   }
 
   const dateLabel = date ? `${fmtDate(date)}${hasTime ? `, ${fmtTime(date)}` : ""}` : "";
-  const label = date ? `${KIND_LABEL[kind]} ${dateLabel}` : KIND_LABEL[kind];
 
-  return { date, time: hasTime ? fmtTime(date) : null, kind, label, dateLabel, status, hasTime };
+  return { date, time: hasTime ? fmtTime(date) : null, kind, kindLabel: KIND_LABEL[kind], dateLabel, status, hasTime };
 }
 

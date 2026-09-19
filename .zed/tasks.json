@@ -1,0 +1,136 @@
+// Project tasks for Zed (`task: spawn`). Zed also merges `.vscode/tasks.json`
+// into this list, so several labels appear twice; both copies work, because
+// the stop tasks in either file call `scripts/dev_stop.sh` rather than
+// re-implementing the kill list. Zed has no `dependsOn`, which is why
+// "stop everything" is one script call here instead of five task references.
+[
+  {
+    "label": "Duct: check everything",
+    "command": "make",
+    "args": ["check"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "always"
+  },
+  {
+    "label": "Duct: backend tests",
+    "command": "make",
+    "args": ["test"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "always"
+  },
+
+  {
+    "label": "Backend: FastAPI (:8002)",
+    "command": "make",
+    "args": ["serve-backend"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "allow_concurrent_runs": false
+  },
+  {
+    "label": "App: dev server (:3003)",
+    "command": "make",
+    "args": ["serve-app"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "allow_concurrent_runs": false
+  },
+  {
+    // Not `make serve-site`: that one is plain http.server, which does not do
+    // the extensionless routing Cloudflare serves. Tests assume 8090.
+    "label": "Site: dev server (:8090)",
+    "command": "python3",
+    "args": ["dev_server.py", "--port", "8090"],
+    "cwd": "$ZED_WORKTREE_ROOT/site",
+    "allow_concurrent_runs": false
+  },
+  {
+    // OTEL_EXPORTER_OTLP_ENDPOINT on the API is what fills this; without it
+    // the UI comes up and receives nothing.
+    "label": "Phoenix: OTEL traces UI (:6006)",
+    "command": "poetry",
+    "args": ["run", "python", "-m", "phoenix.server.main", "serve"],
+    "cwd": "$ZED_WORKTREE_ROOT/backend",
+    "allow_concurrent_runs": false
+  },
+  {
+    "label": "Duct: App + API",
+    "command": "make",
+    "args": ["serve-app-api"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "allow_concurrent_runs": false
+  },
+  {
+    "label": "Duct: Desktop + API",
+    "command": "make",
+    "args": ["serve-desktop-api"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "allow_concurrent_runs": false
+  },
+  {
+    // Run once before the first desktop launch: a missing freeze ships a
+    // broken app. NOT bare `pyinstaller` — that deletes its output directory
+    // out from under a running sidecar. ~3 min.
+    "label": "Desktop: Build sidecar",
+    "command": "npm",
+    "args": ["run", "sidecar"],
+    "cwd": "$ZED_WORKTREE_ROOT/desktop",
+    "reveal": "always"
+  },
+  {
+    "label": "Desktop: Tauri dev (sidecar backend)",
+    "command": "npm",
+    "args": ["run", "dev:local"],
+    "cwd": "$ZED_WORKTREE_ROOT/desktop",
+    "allow_concurrent_runs": false
+  },
+
+  {
+    "label": "Backend: stop uvicorn (8002)",
+    "command": "./scripts/dev_stop.sh",
+    "args": ["backend"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    "label": "App: stop dev server (3003)",
+    "command": "./scripts/dev_stop.sh",
+    "args": ["app"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    "label": "Site: stop dev server (8090)",
+    "command": "./scripts/dev_stop.sh",
+    "args": ["site"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    "label": "Phoenix: stop (6006)",
+    "command": "./scripts/dev_stop.sh",
+    "args": ["phoenix"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    "label": "Desktop: stop Duct Dev app",
+    "command": "./scripts/dev_stop.sh",
+    "args": ["desktop"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    // One command for the end of a session. The desktop bundle is launched
+    // detached, so nothing else can close it.
+    "label": "Duct: stop everything",
+    "command": "./scripts/dev_stop.sh",
+    "args": ["all"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success"
+  }
+]

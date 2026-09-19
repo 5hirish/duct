@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Calculadora de CAC / LTV para SaaS — Ferramenta Gratuita do Duct</title>
+<link rel="canonical" href="https://getduct.ai/pt-br/tools/cac-ltv-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/cac-ltv-calculator"/>
+<!-- hreflang:end -->
+<meta name="description" content="Calculadora gratuita de CAC e LTV para SaaS. Insira seus gastos, clientes e receita para obter instantaneamente CAC, LTV, razão LTV:CAC e período de recuperação — com código de cores versus benchmarks de SaaS."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/pt-br/tools/cac-ltv-calculator"/>
+<meta property="og:title" content="Calculadora de CAC / LTV para SaaS — Ferramenta Gratuita do Duct"/>
+<meta property="og:description" content="Calcule seu CAC, LTV, razão LTV:CAC e período de recuperação de SaaS. Gratuito, instantâneo, sem cadastro."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-cac-ltv-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Calculadora de CAC / LTV para SaaS — Ferramenta Gratuita do Duct"/>
+<meta name="twitter:description" content="Calculadora gratuita de CAC e LTV para SaaS com pontuações de saúde instantâneas versus benchmarks da indústria."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-cac-ltv-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, honestamente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos o Google Analytics para ver quais páginas geram um cadastro. Esse é o único uso — sem segmentação de anúncios, sem perfis, nada vendido. Recuse e o site se comporta exatamente da mesma forma.","Privacy Policy":"Política de Privacidade","Decline":"Recusar","Accept":"Aceitar","{n} stars on GitHub":"{n} estrelas no GitHub","UTM Builder":"Construtor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de Benchmark de Métricas SaaS","Weekly Marketing Brief Generator":"Gerador de Resumo Semanal de Marketing","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de Taxa de Crescimento de MRR","Engagement Rate Calculator":"Calculadora de Taxa de Engajamento","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de Marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Menu":"Menu","Free Tools":"Ferramentas gratuitas","Solutions":"Soluções","Download Duct ↓":"Baixar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de tela ampliada","Close":"Fechar","Fit to screen":"Ajustar à tela","Zoom in":"Ampliar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 e posterior","Runs on any distribution":"Funciona em qualquer distribuição","Debian and Ubuntu":"Debian e Ubuntu","Download ↓":"Baixar ↓","Download for {label} ↓":"Baixar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de exemplo. Altere qualquer campo e calcule novamente para os seus."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"SaaS CAC / LTV Calculator","url":"https://getduct.ai/tools/cac-ltv-calculator","description":"Free calculator that computes Customer Acquisition Cost (CAC), Customer Lifetime Value (LTV), LTV:CAC ratio, and CAC payback period from your SaaS metrics, with colour-coded health scores vs industry benchmarks.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is CAC in SaaS?","acceptedAnswer":{"@type":"Answer","text":"CAC (Customer Acquisition Cost) is the total sales and marketing spend required to acquire one new customer. Formula: CAC = Total Sales & Marketing Spend / Number of New Customers Acquired in the same period."}},{"@type":"Question","name":"How do I calculate customer lifetime value (LTV)?","acceptedAnswer":{"@type":"Answer","text":"LTV = Average Monthly Revenue per Customer multiplied by Average Customer Lifespan in months. Alternatively: LTV = ARPU divided by Monthly Churn Rate. For example, if ARPU is 100 and average lifespan is 36 months, LTV = 3600."}},{"@type":"Question","name":"What is a good LTV:CAC ratio?","acceptedAnswer":{"@type":"Answer","text":"A good LTV:CAC ratio for SaaS is above 3:1. This means for every 1 unit spent acquiring a customer, you recover 3 units in lifetime value. A ratio of 2-3:1 is marginal. Below 2:1 is unsustainable at scale."}},{"@type":"Question","name":"What is CAC payback period?","acceptedAnswer":{"@type":"Answer","text":"CAC payback period is the number of months it takes to recover your customer acquisition cost from a customer's monthly revenue. Formula: Payback Period = CAC / Average Monthly Revenue per Customer. A healthy payback period for SaaS is under 12 months."}},{"@type":"Question","name":"How do I reduce CAC?","acceptedAnswer":{"@type":"Answer","text":"The most effective ways to reduce CAC are: improving organic content (blog, SEO) to reduce paid acquisition dependence; shortening the sales cycle; improving trial-to-paid conversion to get more value from existing top-of-funnel; and building referral or PLG loops that reduce acquisition cost per customer over time."}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero {
+    padding: 80px 24px 48px; text-align: center;
+    max-width: 680px; margin: 0 auto;
+  }
+  .tool-hero h1 {
+    font-family: var(--serif); font-size: clamp(32px, 5vw, 52px);
+    color: var(--navy); margin: 16px 0 16px; line-height: 1.15;
+  }
+  .tool-hero h1 em { color: var(--orange); font-style: italic; }
+  .tool-hero p { font-size: 17px; color: var(--navy-3); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  .tool-wrap { max-width: 820px; margin: 0 auto 80px; padding: 0 24px; }
+  .tool-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,.06);
+  }
+  .tool-inputs {
+    padding: 36px 40px; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 24px 32px;
+  }
+  @media (max-width: 600px) { .tool-inputs { grid-template-columns: 1fr; padding: 24px; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--navy); letter-spacing: .01em; }
+  .field .field-hint { font-size: 11px; color: var(--navy-3); margin-top: -2px; }
+  .field input {
+    padding: 11px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--r); font-size: 15px; font-family: var(--sans);
+    color: var(--navy); background: var(--white);
+    transition: border-color .15s; outline: none; appearance: textfield; -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input:focus { border-color: var(--orange); }
+  .field input::placeholder { color: var(--navy-3); opacity: .6; }
+
+  .tool-action { padding: 0 40px 36px; display: flex; align-items: center; gap: 16px; }
+  @media (max-width: 600px) { .tool-action { padding: 0 24px 24px; flex-direction: column; align-items: stretch; } }
+
+  .tool-results { border-top: 1px solid var(--border); padding: 36px 40px; display: none; }
+  @media (max-width: 600px) { .tool-results { padding: 24px; } }
+  .tool-results.visible { display: block; }
+
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+
+  .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
+  .result-card.green { border-color: #22c55e; background: #f0fdf4; }
+  .result-card.amber { border-color: #f59e0b; background: #fffbeb; }
+  .result-card.red   { border-color: #ef4444; background: #fef2f2; }
+  .result-card.neutral { border-color: var(--border); background: var(--off); }
+
+  .result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-3); margin-bottom: 6px; }
+  .result-value { font-size: 26px; font-family: var(--serif); color: var(--navy); font-weight: 400; margin-bottom: 4px; line-height: 1.1; }
+  .result-badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+    font-weight: 500; padding: 2px 9px; border-radius: 100px; margin-bottom: 8px;
+  }
+  .result-badge.green { background: #dcfce7; color: #15803d; }
+  .result-badge.amber { background: #fef3c7; color: #92400e; }
+  .result-badge.red   { background: #fee2e2; color: #991b1b; }
+  .result-badge.neutral { background: #f1f5f9; color: var(--navy-3); }
+
+  .result-context { font-size: 12px; color: var(--navy-3); line-height: 1.5; margin: 0; }
+
+  .tool-cta {
+    margin-top: 28px; background: var(--navy); border-radius: var(--r);
+    padding: 28px 32px; display: flex; align-items: center;
+    justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+
+  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+
+  .insight-panel {
+    margin-top: 24px;
+    background: #eff6ff;
+    border: 1px solid rgba(37,99,235,.18);
+    border-left: 3px solid #2563EB;
+    border-radius: var(--r);
+    padding: 20px 24px;
+  }
+  .insight-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: #2563EB; margin-bottom: 10px;
+  }
+  .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
+  .insight-panel p:last-of-type { margin-bottom: 0; }
+  .insight-links { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .insight-link {
+    font-size: 13px; font-weight: 500; color: #2563EB;
+    text-decoration: none; border: 1px solid rgba(37,99,235,.25);
+    padding: 6px 12px; border-radius: var(--pill);
+    background: var(--white); transition: background .15s;
+  }
+  .insight-link:hover { background: #dbeafe; }
+</style>
+</head>
+<body>
+
+<!-- EXPERIMENT: CAC/LTV calculator as lead magnet — do growth PMs landing on high-volume "cac ltv ratio" keywords convert to beta signups at a higher rate than blog traffic? -->
+
+<a href="#main-content" class="skip-link">Pular para o conteúdo</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<div data-duct-partial="/pt-br/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Ferramenta gratuita · Não é necessário se cadastrar</div>
+  <h1>Calculadora de CAC e LTV <em>para SaaS</em></h1>
+  <p>Seu modelo de crescimento é tão saudável quanto sua economia de unidade. Calcule CAC, LTV e payback em uma única passagem — comparado, pronto para decisão, sem atraso de planilha.</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="Calculadora de CAC e LTV">
+
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-customers">Novos Clientes Mensais</label>
+        <span class="field-hint">Número de novos clientes adquiridos este mês</span>
+        <input type="number" id="inp-customers" placeholder="e.g. 25" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-spend">Gasto Total Mensal de Vendas + Marketing</label>
+        <span class="field-hint">Todos os custos para adquirir esses clientes (USD/EUR)</span>
+        <input type="number" id="inp-spend" placeholder="e.g. 20000" min="0" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-arpu">Receita Média Mensal por Cliente</label>
+        <span class="field-hint">MRR ÷ total de clientes (USD/EUR)</span>
+        <input type="number" id="inp-arpu" placeholder="e.g. 120" min="0" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-lifespan">Vida Útil Média do Cliente (meses)</label>
+        <span class="field-hint">Quanto tempo um cliente típico permanece — use 1 ÷ taxa de churn se não tiver certeza</span>
+        <input type="number" id="inp-lifespan" placeholder="e.g. 36" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-gross-margin">Margem bruta % <span style="font-weight:400;color:var(--navy-3)">(opcional)</span></label>
+        <span class="field-hint">Deixe em branco para payback de receita (CAC ÷ ARPU). Insira a margem para usar o payback de contribuição: CAC ÷ (ARPU × margem).</span>
+        <input type="number" id="inp-gross-margin" placeholder="e.g. 75" min="0" max="100" step="0.1" inputmode="decimal"/>
+      </div>
+    </div>
+
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">
+        Calcular →
+      </button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">
+        Redefinir
+      </button>
+    </div>
+
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+
+    <div class="tool-results" id="results-section" role="region" aria-label="Resultados de CAC e LTV" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Seus Resultados</p>
+      <div class="results-row" id="results-row"></div>
+
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>CAC e LTV para um período. A questão é qual canal os está movimentando.</p>
+          <p>O Duct lê suas ferramentas de anúncios, análises e receita, responde a essa pergunta e propõe a alteração. Você a aprova.</p>
+        </div>
+        <a href="/pt-br/download" class="btn btn-orange" data-duct-download>Baixar Duct ↓</a>
+      </div>
+
+      <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
+        <p class="insight-label">O que isso significa</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="Sobre o Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">LTV:CAC informa a saúde do modelo agora. Não informa onde a próxima deterioração começa.</p>
+      <p class="duct-bridge-body">O Duct lê Google Ads, GA4 e Stripe juntos, então, quando a razão cai, ele pode dizer quais clientes de qual canal pararam de ficar e propor para onde o orçamento deve ir em vez disso.</p>
+      <a href="/pt-br/" class="duct-bridge-link">Como o Duct funciona →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Uma sessão de insights: perguntou por que os cadastros caíram enquanto o ROAS subiu, o agente lê anúncios, análises e receita juntos, propõe uma alteração aguardando aprovação à esquerda e escreve o resumo à direita"/>
+      <figcaption>Pergunte por que os cadastros caíram enquanto o ROAS subiu. O Duct lê anúncios, análises e receita juntos, nomeia a coorte que está saindo e propõe a alteração. Você aprova.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2>Como o <em>cálculo funciona</em></h2>
+  <p>Esta calculadora usa quatro fórmulas padrão de economia de unidade SaaS:</p>
+  <ul>
+    <li><strong>CAC</strong> = Gasto Total Mensal de Vendas e Marketing ÷ Novos Clientes Mensais</li>
+    <li><strong>LTV</strong> = Receita Média Mensal por Cliente × Vida Útil Média do Cliente</li>
+    <li><strong>Razão LTV:CAC</strong> = LTV ÷ CAC</li>
+    <li><strong>Período de Recuperação do CAC</strong> = CAC ÷ Receita Média Mensal por Cliente (baseado em receita). Margem bruta % opcional muda para recuperação de contribuição: CAC ÷ (ARPU × Margem Bruta %).</li>
+  </ul>
+  <p>Os resultados são comparados com padrões SaaS amplamente citados: um LTV:CAC saudável acima de 3:1 (David Skok / OpenView) e um período de payback abaixo de 12 meses (OpenView SaaS Benchmarks 2024).</p>
+
+  <h2 style="margin-top:40px">Por que essas métricas <em>importam juntas</em></h2>
+  <p>O CAC isolado não diz quase nada. Um CAC de €1.200 é saudável se o LTV for de €6.000 (razão de 5:1) e perigoso se o LTV for de €1.800 (razão de 1.5:1). O padrão que importa é a relação entre esses quatro números — e se está se movendo na direção certa semana após semana.</p>
+  <p>O erro mais comum de PM de crescimento: rastrear CAC e LTV mensalmente em uma planilha, percebendo um problema três meses depois. O Duct executa este cálculo automaticamente a cada semana e exibe um alerta de tendência no momento em que o LTV:CAC começa a comprimir.</p>
+
+  <h2 style="margin-top:40px">Limitações</h2>
+  <ul>
+    <li>O cálculo do CAC usa gastos combinados — não separa novos negócios de expansão.</li>
+    <li>O cálculo do LTV assume churn linear. O LTV real pode diferir se o churn variar por coorte.</li>
+    <li>O LTV aqui é baseado na receita; para LTV ajustado pela margem, multiplique pela % da margem bruta manualmente. O payback pode usar a margem bruta opcional para meses baseados na contribuição para recuperar o CAC.</li>
+    <li>Todos os cálculos são executados no seu navegador. Nenhum dado é enviado ou armazenado.</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">Também gratuito</p>
+    <h2 id="related-tools-heading">Explore <em>ferramentas</em> relacionadas</h2>
+    <p class="related-tools-banner-desc">Benchmarks, matemática de crescimento e um modelo de resumo semanal — cada um é executado no seu navegador com o mesmo modelo de privacidade desta página. Escolha o próximo número que você quer testar.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="cac-ltv-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+  <p class="tag">FAQ</p>
+  <h2>Perguntas <em>frequentes</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+  <details class="faq-item">
+    <summary class="faq-q">O que é CAC em SaaS?</summary>
+    <p class="faq-a">CAC (Custo de Aquisição de Cliente) é o gasto total de vendas e marketing necessário para adquirir um novo cliente. Fórmula: CAC = Gasto Total de Vendas e Marketing ÷ Novos Clientes Adquiridos no mesmo período. Inclua salários, ferramentas, gastos com anúncios e taxas de agência no numerador para um valor preciso.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">Como calculo o valor vitalício do cliente (LTV)?</summary>
+    <p class="faq-a">LTV = Receita Média Mensal por Cliente × Vida Útil Média do Cliente em meses. Alternativamente: LTV = ARPU ÷ Taxa de Churn Mensal. Por exemplo, se o ARPU for €100 e a vida útil média for 36 meses, LTV = €3.600. Se o churn mensal for 2%, LTV = €100 ÷ 0,02 = €5.000.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">Qual é uma boa proporção LTV:CAC?</summary>
+    <p class="faq-a">Uma boa razão LTV:CAC para SaaS é acima de 3:1. Isso significa que para cada €1 gasto na aquisição de um cliente, você recupera €3 em valor de vida útil. Uma razão de 2–3:1 cobre os custos, mas não constrói uma economia sustentável. Abaixo de 2:1 geralmente significa que o modelo não é viável em escala. Acima de 5:1 frequentemente sinaliza subinvestimento em crescimento.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">O que é período de payback do CAC?</summary>
+    <p class="faq-a">O período de recuperação do CAC é quantos meses leva para recuperar seu custo de aquisição da receita mensal de um cliente. Fórmula: Recuperação = CAC ÷ ARPU. Um período de recuperação saudável para SaaS é inferior a 12 meses. Acima de 18 meses é de alto risco — os clientes podem cancelar antes de você atingir o ponto de equilíbrio.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">Como reduzo o CAC?</summary>
+    <p class="faq-a">As alavancas mais eficazes: construir conteúdo orgânico que se acumula (blog, SEO) para reduzir a dependência de aquisição paga; encurtar o ciclo de vendas; melhorar a conversão de teste para pago para extrair mais valor do topo do funil existente; e construir loops de indicação ou PLG que reduzem o custo de aquisição por cliente ao longo do tempo.</p>
+  </details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/pt-br/partials/cta-tools.html"></div>
+
+</main>
+
+<div data-duct-partial="/pt-br/partials/footer-expanded.html"></div>
+
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-customers', 'inp-spend', 'inp-arpu', 'inp-lifespan', 'inp-gross-margin'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  var THRESHOLDS = {
+    ltvcac: [
+      { min: 3,   level: 'green', badge: 'Healthy',     context: 'Above 3:1. Strong unit economics.' },
+      { min: 2,   level: 'amber', badge: 'Marginal',    context: 'Between 2–3:1. Improve CAC or reduce churn.' },
+      { min: 0,   level: 'red',   badge: 'Unsustainable', context: 'Below 2:1. Not viable at scale.' }
+    ],
+    payback: [
+      { max: 12,  level: 'green', badge: 'Healthy',     context: 'Under 12 months to recover CAC.' },
+      { max: 18,  level: 'amber', badge: 'Marginal',    context: '12–18 months. Watch early churn.' },
+      { max: 999, level: 'red',   badge: 'High risk',   context: 'Over 18 months. May not recoup before churn.' }
+    ]
+  };
+
+  function getLevel(key, value) {
+    var ths = THRESHOLDS[key];
+    for (var i = 0; i < ths.length; i++) {
+      var t = ths[i];
+      if (t.max !== undefined && value <= t.max) return t;
+      if (t.min !== undefined && value >= t.min) return t;
+    }
+    return ths[ths.length - 1];
+  }
+
+  function fmtCurrency(v) {
+    return v >= 1000
+      ? (v / 1000).toFixed(1) + 'k'
+      : v.toFixed(0);
+  }
+
+  function makeCard(label, display, level, badge, context) {
+    var card = document.createElement('div');
+    card.className = 'result-card ' + level;
+
+    var lbl = document.createElement('div');
+    lbl.className = 'result-label';
+    lbl.textContent = label;
+
+    var val = document.createElement('div');
+    val.className = 'result-value';
+    val.textContent = display;
+
+    var bdg = document.createElement('span');
+    bdg.className = 'result-badge ' + level;
+    bdg.textContent = badge;
+
+    var ctx = document.createElement('p');
+    ctx.className = 'result-context';
+    ctx.textContent = context;
+
+    card.appendChild(lbl);
+    card.appendChild(val);
+    card.appendChild(bdg);
+    card.appendChild(ctx);
+    return card;
+  }
+
+  function getVal(id) { return parseFloat(document.getElementById(id).value); }
+
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var customers = getVal('inp-customers');
+    var spend     = getVal('inp-spend');
+    var arpu      = getVal('inp-arpu');
+    var lifespan  = getVal('inp-lifespan');
+    var gmRaw     = document.getElementById('inp-gross-margin').value;
+    var gmPct     = gmRaw === '' ? NaN : parseFloat(gmRaw);
+
+    var bad = [];
+    if (isNaN(customers) || customers <= 0) bad.push('inp-customers');
+    if (isNaN(spend) || spend <= 0) bad.push('inp-spend');
+    if (isNaN(arpu) || arpu <= 0) bad.push('inp-arpu');
+    if (isNaN(lifespan) || lifespan <= 0) bad.push('inp-lifespan');
+    if (bad.length) {
+      DuctToolFormError.show(ERR, 'Fill in monthly new customers, spend, ARPU, and lifespan — each must be greater than zero.', bad);
+      document.getElementById(bad[0]).focus();
+      return;
+    }
+    if (!isNaN(gmPct) && gmRaw !== '' && (gmPct <= 0 || gmPct > 100)) {
+      DuctToolFormError.show(ERR, 'Gross margin must be greater than zero and at most 100 when provided.', ['inp-gross-margin']);
+      document.getElementById('inp-gross-margin').focus();
+      return;
+    }
+
+    var cac     = spend / customers;
+    var ltv     = arpu * lifespan;
+    var ltvcac  = ltv / cac;
+    var useContribution = !isNaN(gmPct) && gmRaw !== '' && gmPct > 0 && gmPct <= 100;
+    var monthlyForPayback = useContribution ? arpu * (gmPct / 100) : arpu;
+    var payback = cac / monthlyForPayback;
+
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+
+    // CAC — neutral (computed value, no benchmark)
+    row.appendChild(makeCard('CAC', fmtCurrency(cac), 'neutral', 'Calculated', 'Your blended cost to acquire one new customer.'));
+
+    // LTV — neutral (computed value)
+    row.appendChild(makeCard('Customer LTV', fmtCurrency(ltv), 'neutral', 'Calculated', 'Revenue you expect from a typical customer over their lifetime.'));
+
+    // LTV:CAC — benchmarked
+    var r1 = getLevel('ltvcac', ltvcac);
+    row.appendChild(makeCard('LTV:CAC Ratio', ltvcac.toFixed(2) + ':1', r1.level, r1.badge, r1.context));
+
+    // Payback — benchmarked
+    var r2 = getLevel('payback', payback);
+    var paybackCtx = r2.context;
+    if (useContribution) {
+      paybackCtx += ' Contribution payback uses ARPU × ' + gmPct.toFixed(1) + '% gross margin per month.';
+    } else {
+      paybackCtx += ' Revenue payback uses full ARPU per month (enter gross margin % for contribution payback).';
+    }
+    row.appendChild(makeCard('CAC Payback', payback.toFixed(1) + ' mo', r2.level, r2.badge, paybackCtx));
+
+    buildInsight({ ltvcac: ltvcac, payback: payback, useContribution: useContribution });
+
+    var section = document.getElementById('results-section');
+    section.classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function buildInsight(values) {
+    var panel = document.getElementById('insight-panel');
+    var body  = document.getElementById('insight-body');
+    while (body.firstChild) { body.removeChild(body.firstChild); }
+
+    function addP(text) {
+      var p = document.createElement('p');
+      p.textContent = text;
+      body.appendChild(p);
+    }
+
+    var ltvcac  = values.ltvcac;
+    var payback = values.payback;
+    var useContribution = values.useContribution;
+
+    if (ltvcac >= 3) {
+      addP('Your ' + ltvcac.toFixed(1) + ':1 LTV:CAC is healthy. Watch for compression as CAC rises with scale — ratios typically tighten 20–30% in later growth phases.');
+    } else if (ltvcac >= 2) {
+      addP('Your ' + ltvcac.toFixed(1) + ':1 LTV:CAC leaves limited headroom for rising acquisition costs. Improving retention by 1 percentage point typically moves LTV:CAC more than reducing CAC by the same proportion.');
+    } else {
+      addP('An LTV:CAC of ' + ltvcac.toFixed(1) + ':1 means you may be spending close to what you earn per customer. Sustainable SaaS growth typically requires 3:1 or above. The two levers: reduce CAC or improve retention.');
+    }
+
+    var paybackBasis = useContribution ? 'contribution-based' : 'revenue-based';
+    if (payback <= 12) {
+      addP('Your ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback is strong — you\'re recovering acquisition spend faster than the SaaS median of 15–18 months. This gives flexibility to reinvest in growth without cash flow pressure.');
+    } else if (payback <= 18) {
+      addP('Your ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback is within the acceptable range for growth-stage SaaS. Venture-backed companies often target sub-12 months at scale — reducing CAC or increasing ARPU are the direct levers.');
+    } else {
+      addP('An ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback puts pressure on cash flow and limits how aggressively you can invest in acquisition. A 10% increase in average contract value meaningfully shortens payback at fixed CAC.');
+    }
+
+    addP('CAC payback and LTV:CAC measure unit economics at a point in time. What matters is the trend — whether these ratios are improving or degrading week over week.');
+
+    panel.removeAttribute('hidden');
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-customers','inp-spend','inp-arpu','inp-lifespan','inp-gross-margin'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    var section = document.getElementById('results-section');
+    section.classList.remove('visible');
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+  });
+  DuctToolExample.seed(['inp-customers', 'inp-spend', 'inp-arpu', 'inp-lifespan', 'inp-gross-margin'], 'calc-btn', 'results-section');
+}());
+</script>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

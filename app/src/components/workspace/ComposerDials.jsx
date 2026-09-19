@@ -26,6 +26,8 @@
 
 import { useEffect, useState } from "react";
 import { Anvil, Feather, FileText, LayoutTemplate, Scale, Sparkles, WandSparkles } from "lucide-react";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { AUTONOMY_OPTIONS, setProjectAutonomy } from "@/lib/projectsApi";
 import { loadPreferences, savePreferences } from "@/lib/userPreferences";
@@ -68,29 +70,32 @@ function useStoredPreference(key, fallback) {
 // tokens against layout — because a format name alone reads as a file
 // extension. "auto" is a real stored value here, unlike the other dials: the
 // backend reads it as "the agent chooses per brief and says so".
+//
+// `label` and `blurb` are Lingui descriptors, like TIERS in lib/modelTiers.js:
+// render them with `i18n._(...)`, never as bare strings.
 export const BRIEF_FORMATS = [
   {
     value: "html",
-    label: "HTML",
+    label: msg`HTML`,
     Icon: LayoutTemplate,
-    blurb: "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file",
+    blurb: msg`A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file`,
   },
   {
     value: "markdown",
-    label: "Markdown",
+    label: msg`Markdown`,
     Icon: FileText,
-    blurb: "Fast and cheaper. Headings, text and tables; pastes into a doc",
+    blurb: msg`Fast and cheaper. Headings, text and tables; pastes into a doc`,
   },
   {
     value: "auto",
-    label: "Auto",
+    label: msg`Auto`,
     Icon: WandSparkles,
-    blurb: "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it",
+    blurb: msg`Duct picks per brief: markdown for a short read, a page when layout or a chart earns it`,
   },
 ];
 const DEFAULT_BRIEF_FORMAT = "html";
 
-const NEXT_SESSION = "Applies from your next session";
+const NEXT_SESSION = msg`Applies from your next session`;
 
 function Row({ label, blurb, hint }) {
   return (
@@ -110,7 +115,9 @@ function Applies({ text }) {
 }
 
 export function AutonomyDial({ projectId, value, onChange, deferred = false }) {
-  const label = AUTONOMY_OPTIONS.find((o) => o.value === value)?.label || "Ask";
+  const { t, i18n } = useLingui();
+  const found = AUTONOMY_OPTIONS.find((o) => o.value === value);
+  const label = found ? i18n._(found.label) : t`Ask`;
 
   async function pick(next) {
     onChange?.(next);
@@ -124,22 +131,23 @@ export function AutonomyDial({ projectId, value, onChange, deferred = false }) {
 
   return (
     <Select value={value} onValueChange={pick}>
-      <SelectTrigger size="sm" className={CHIP} aria-label="How freely Duct may act">
+      <SelectTrigger size="sm" className={CHIP} aria-label={t`How freely Duct may act`}>
         <span>{label}</span>
       </SelectTrigger>
       <SelectContent position="popper" align="start" className="max-w-[320px]">
         {AUTONOMY_OPTIONS.map((o) => (
           <SelectItem key={o.value} value={o.value}>
-            <Row label={o.label} blurb={o.blurb} />
+            <Row label={i18n._(o.label)} blurb={i18n._(o.blurb)} />
           </SelectItem>
         ))}
-        {deferred && <Applies text="Applies from your next message" />}
+        {deferred && <Applies text={t`Applies from your next message`} />}
       </SelectContent>
     </Select>
   );
 }
 
 export function ThinkingDial({ engine = DEFAULT_ENGINE, deferred = false }) {
+  const { t, i18n } = useLingui();
   const [thinking, saveThinking] = useStoredPreference("thinking", "");
   // Which rungs exist depends on the model the engine resolves to, so the
   // server answers it. Until it does — or when the model has no dial — the
@@ -157,7 +165,9 @@ export function ThinkingDial({ engine = DEFAULT_ENGINE, deferred = false }) {
   if (!dial.supported) return null;
 
   // The chip says the Duct word; the menu says which provider word it becomes.
-  const label = dial.levels.find((l) => l.level === thinking)?.label.toLowerCase() || "auto";
+  const label = dial.levels.find((l) => l.level === thinking)?.label.toLowerCase() || t`auto`;
+  const dialName = dial.dial;
+  const dialDefault = dial.default_native;
 
   function pick(value) {
     saveThinking(value === AUTO ? "" : value);
@@ -165,22 +175,22 @@ export function ThinkingDial({ engine = DEFAULT_ENGINE, deferred = false }) {
 
   return (
     <Select value={thinking || AUTO} onValueChange={pick}>
-      <SelectTrigger size="sm" className={CHIP} aria-label="How hard the model should think">
+      <SelectTrigger size="sm" className={CHIP} aria-label={t`How hard the model should think`}>
         <Sparkles className="size-3" aria-hidden />
-        <span>Thinking: {label}</span>
+        <span><Trans>Thinking: {label}</Trans></span>
       </SelectTrigger>
       <SelectContent position="popper" align="start" className="max-w-[320px]">
         {/* "Auto" is not a fifth rung — it sends nothing, so the model does
             whatever it would have done. */}
         <SelectItem value={AUTO}>
-          <Row label="Auto" blurb={`${dial.dial} ${dial.default_native} · whatever this model does anyway`} />
+          <Row label={t`Auto`} blurb={t`${dialName} ${dialDefault} · whatever this model does anyway`} />
         </SelectItem>
         {dial.levels.map((level) => (
           <SelectItem key={level.level} value={level.level}>
             <Row label={level.label} blurb={level.blurb} hint={levelHint(level, dial.dial)} />
           </SelectItem>
         ))}
-        {deferred && <Applies text={NEXT_SESSION} />}
+        {deferred && <Applies text={i18n._(NEXT_SESSION)} />}
       </SelectContent>
     </Select>
   );
@@ -192,9 +202,11 @@ export function ThinkingDial({ engine = DEFAULT_ENGINE, deferred = false }) {
  * that rung cannot serve. Which model each tier means is set once in
  * Settings → Models, so the menu names the tier, not a model id. */
 export function TierDial({ deferred = false }) {
+  const { t, i18n } = useLingui();
   const [tier, saveTier] = useStoredPreference("tier", "");
-  const chosen = TIERS.find((t) => t.key === tier);
+  const chosen = TIERS.find((option) => option.key === tier);
   const Icon = chosen ? TIER_ICONS[chosen.key] : Scale;
+  const label = chosen ? i18n._(chosen.label).toLowerCase() : t`auto`;
 
   function pick(value) {
     saveTier(value === AUTO ? "" : value);
@@ -202,20 +214,20 @@ export function TierDial({ deferred = false }) {
 
   return (
     <Select value={tier || AUTO} onValueChange={pick}>
-      <SelectTrigger size="sm" className={CHIP} aria-label="Which model tier runs this">
+      <SelectTrigger size="sm" className={CHIP} aria-label={t`Which model tier runs this`}>
         <Icon className="size-3" aria-hidden />
-        <span>Model: {chosen ? chosen.label.toLowerCase() : "auto"}</span>
+        <span><Trans>Model: {label}</Trans></span>
       </SelectTrigger>
       <SelectContent position="popper" align="start" className="max-w-[320px]">
         <SelectItem value={AUTO}>
-          <Row label="Auto" blurb="Duct's pick for the job — Heavy for a brief, Standard for a follow-up" />
+          <Row label={t`Auto`} blurb={t`Duct's pick for the job — Heavy for a brief, Standard for a follow-up`} />
         </SelectItem>
-        {TIERS.map((t) => (
-          <SelectItem key={t.key} value={t.key}>
-            <Row label={t.label} blurb={t.tagline} />
+        {TIERS.map((option) => (
+          <SelectItem key={option.key} value={option.key}>
+            <Row label={i18n._(option.label)} blurb={i18n._(option.tagline)} />
           </SelectItem>
         ))}
-        <Applies text={deferred ? NEXT_SESSION : "Which model each tier means is set in Settings → Models"} />
+        <Applies text={deferred ? i18n._(NEXT_SESSION) : t`Which model each tier means is set in Settings → Models`} />
       </SelectContent>
     </Select>
   );
@@ -224,22 +236,24 @@ export function TierDial({ deferred = false }) {
 /** What shape the brief takes. Binds when the agent is built, like thinking
  * and tier, so a running thread keeps the format it opened with. */
 export function BriefFormatDial({ deferred = false }) {
+  const { t, i18n } = useLingui();
   const [format, saveFormat] = useStoredPreference("preferred_artifact_format", DEFAULT_BRIEF_FORMAT);
-  const chosen = BRIEF_FORMATS.find((f) => f.value === format) || BRIEF_FORMATS[0];
+  const chosen = BRIEF_FORMATS.find((option) => option.value === format) || BRIEF_FORMATS[0];
+  const label = i18n._(chosen.label).toLowerCase();
 
   return (
     <Select value={format} onValueChange={saveFormat}>
-      <SelectTrigger size="sm" className={CHIP} aria-label="What shape the brief takes">
+      <SelectTrigger size="sm" className={CHIP} aria-label={t`What shape the brief takes`}>
         <chosen.Icon className="size-3" aria-hidden />
-        <span>Brief: {chosen.label.toLowerCase()}</span>
+        <span><Trans>Brief: {label}</Trans></span>
       </SelectTrigger>
       <SelectContent position="popper" align="start" className="max-w-[320px]">
-        {BRIEF_FORMATS.map((f) => (
-          <SelectItem key={f.value} value={f.value}>
-            <Row label={f.label} blurb={f.blurb} />
+        {BRIEF_FORMATS.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            <Row label={i18n._(option.label)} blurb={i18n._(option.blurb)} />
           </SelectItem>
         ))}
-        {deferred && <Applies text={NEXT_SESSION} />}
+        {deferred && <Applies text={i18n._(NEXT_SESSION)} />}
       </SelectContent>
     </Select>
   );

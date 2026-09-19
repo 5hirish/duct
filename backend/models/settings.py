@@ -132,6 +132,19 @@ class UserProfile(SQLModel, table=True):
         default="", sa_column=Column(String, nullable=False, server_default="")
     )
 
+    # The language the *interface* is rendered in: a BCP 47 tag from the
+    # catalogue list in `app/src/i18n/locales.js` ("es", "pt-BR", ...), or ""
+    # for "follow the browser". Server-owned for the same reason as the rest
+    # of the row: a phone should open in the language the laptop chose.
+    #
+    # The third language field, and the only one that names a *translation*
+    # rather than a model instruction. `communication_language` can be any
+    # language a model speaks; this one can only be a language the app has a
+    # catalogue for, which is why the two lists are kept apart.
+    interface_language: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
+
     # IANA zone name ("Europe/Madrid"). Empty means UTC, which is what every
     # date window resolved to before this column existed.
     #

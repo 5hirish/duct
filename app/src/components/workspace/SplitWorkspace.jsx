@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, MessageSquare, PanelRight } from "lucide-react";
+import { useLingui } from "@lingui/react/macro";
 
 /**
  * SplitWorkspace — the shared chat-left / viewport-right shell for every agent
@@ -67,10 +68,18 @@ export default function SplitWorkspace({
   banner = null,
   storageKey = "split_w",
   initialSplit = 50,
-  leftLabel = "Chat",
-  rightLabel = "Preview",
+  // The tab labels default to the shell's own words, resolved below so the
+  // defaults follow the interface language.
+  leftLabel,
+  rightLabel,
   rightStatus = "idle",
 }) {
+  const { t } = useLingui();
+  const leftText = leftLabel ?? t`Chat`;
+  const rightText = rightLabel ?? t`Preview`;
+  // One pair for the fold button's title and its sr-only text, so they cannot drift.
+  const showRight = t`Show ${rightText}`;
+  const hideRight = t`Hide ${rightText}`;
   // Starts at the prop and adopts the stored ratio in an effect rather than in
   // the initializer: reading localStorage during the first render makes the
   // client's markup disagree with the prerendered HTML.
@@ -183,8 +192,8 @@ export default function SplitWorkspace({
 
       {/* Mobile pane toggle — desktop shows both panes so this is hidden there */}
       <div className="flex shrink-0 items-center gap-1 border-b border-border/60 bg-card p-1.5 md:hidden">
-        <PaneTab active={mobilePane === "left"} onClick={() => setMobilePane("left")} icon={MessageSquare} label={leftLabel} />
-        <PaneTab active={mobilePane === "right"} onClick={() => setMobilePane("right")} icon={PanelRight} label={rightLabel} status={rightStatus} />
+        <PaneTab active={mobilePane === "left"} onClick={() => setMobilePane("left")} icon={MessageSquare} label={leftText} />
+        <PaneTab active={mobilePane === "right"} onClick={() => setMobilePane("right")} icon={PanelRight} label={rightText} status={rightStatus} />
       </div>
 
       <div
@@ -207,7 +216,7 @@ export default function SplitWorkspace({
           role="separator"
           tabIndex={0}
           aria-orientation="vertical"
-          aria-label="Resize panes"
+          aria-label={t`Resize panes`}
           aria-controls={`${storageKey}-left`}
           aria-valuenow={Math.round(leftWidth)}
           aria-valuemin={MIN_SPLIT}
@@ -218,7 +227,7 @@ export default function SplitWorkspace({
           onPointerCancel={endDrag}
           onKeyDown={onKeyDown}
           onDoubleClick={() => (rightCollapsed ? undefined : commit(initialSplit))}
-          title={rightCollapsed ? "" : "Drag to resize — double-click to reset, arrow keys to nudge"}
+          title={rightCollapsed ? "" : t`Drag to resize — double-click to reset, arrow keys to nudge`}
           className={`group relative hidden w-3 shrink-0 touch-none select-none items-center justify-center focus-visible:outline-none md:flex ${
             rightCollapsed ? "cursor-default" : "cursor-col-resize"
           }`}
@@ -239,7 +248,7 @@ export default function SplitWorkspace({
             onClick={toggleRight}
             aria-expanded={!rightCollapsed}
             aria-controls={`${storageKey}-right`}
-            title={rightCollapsed ? `Show ${rightLabel}` : `Hide ${rightLabel}`}
+            title={rightCollapsed ? showRight : hideRight}
             // `right-0` once collapsed: the handle is then the container's
             // last 0.75rem, and a button wider than it, centred, loses its
             // right half to the overflow clip — which is the one state where
@@ -254,7 +263,7 @@ export default function SplitWorkspace({
               <ChevronRight className="size-3.5" aria-hidden />
             )}
             <span className="sr-only">
-              {rightCollapsed ? `Show ${rightLabel}` : `Hide ${rightLabel}`}
+              {rightCollapsed ? showRight : hideRight}
             </span>
           </button>
         </div>

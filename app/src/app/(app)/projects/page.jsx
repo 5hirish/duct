@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Brain, FolderPlus, Trash2, Globe, Users } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,6 +22,7 @@ import { faviconUrl, safeHostname } from "@/lib/favicon";
 import EmptyState from "@/components/ui/empty-state";
 
 export default function ProjectsPage() {
+  const { t } = useLingui();
   const router = useRouter();
   const [projects, setProjects] = useState([]);
   const [activeId, setActiveId] = useState("");
@@ -88,39 +90,45 @@ export default function ProjectsPage() {
     window.dispatchEvent(new Event("duct:project-changed"));
   }
 
+  const pendingName =
+    projectPendingDelete?.name || projectPendingDelete?.company?.name || t`Untitled project`;
+
   return (
     <section>
       <div className="page-toolbar">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Manage projects</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Manage projects</Trans></h1>
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        Select a project to edit its configuration, or manage existing projects safely.
+        <Trans>Select a project to edit its configuration, or manage existing projects safely.</Trans>
       </p>
 
       {!hasProjects && (
         <EmptyState
           icon={FolderPlus}
-          title="No projects yet"
+          title={t`No projects yet`}
           actions={
             <Button size="sm" asChild>
-              <Link href="/start">Audit a site</Link>
+              <Link href="/start"><Trans>Audit a site</Trans></Link>
             </Button>
           }
         >
-          A project starts from a site. Duct reads it and drafts the rest — name, industry,
-          competitors — for you to correct.
+          <Trans>
+            A project starts from a site. Duct reads it and drafts the rest — name, industry,
+            competitors — for you to correct.
+          </Trans>
         </EmptyState>
       )}
 
       <div className="grid gap-4 @md:grid-cols-2 @4xl:grid-cols-3">
         {sortedProjects.map((project) => {
-          const name = project.name || project.company?.name || "Untitled project";
-          const industry = project.company?.industry || "Unspecified industry";
+          const name = project.name || project.company?.name || t`Untitled project`;
+          const industry = project.company?.industry || t`Unspecified industry`;
           const url = project.company?.website_url || "";
           const favicon = faviconUrl(url);
           const host = safeHostname(url);
           const isShared = project.role === "collaborator";
+          const owner = project.ownerEmail || t`another user`;
 
           return (
             <div
@@ -152,13 +160,13 @@ export default function ProjectsPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {project.id === activeId && <Badge variant="secondary">Active</Badge>}
+                  {project.id === activeId && <Badge variant="secondary"><Trans>Active</Trans></Badge>}
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     className="size-8 rounded-full text-muted-foreground hover:text-foreground"
-                    aria-label={`Memory of ${name}`}
+                    aria-label={t`Memory of ${name}`}
                     onClick={(event) => openMemory(event, project.id)}
                   >
                     <Brain className="size-4" />
@@ -168,7 +176,7 @@ export default function ProjectsPage() {
                     variant="ghost"
                     size="icon"
                     className="size-8 rounded-full text-muted-foreground hover:text-foreground"
-                    aria-label={`Members of ${name}`}
+                    aria-label={t`Members of ${name}`}
                     onClick={(event) => openMembers(event, project.id)}
                   >
                     <Users className="size-4" />
@@ -181,7 +189,7 @@ export default function ProjectsPage() {
                       variant="ghost"
                       size="icon"
                       className="size-8 rounded-full text-muted-foreground hover:text-destructive"
-                      aria-label={`Delete ${name}`}
+                      aria-label={t`Delete ${name}`}
                       onClick={(event) => requestDeleteProject(event, project)}
                     >
                       <Trash2 className="size-4" />
@@ -194,11 +202,11 @@ export default function ProjectsPage() {
                 {url ? (
                   <span className="truncate">{host || url}</span>
                 ) : (
-                  <span>No website URL</span>
+                  <span><Trans>No website URL</Trans></span>
                 )}
                 {isShared && (
                   <Badge variant="outline" className="ml-auto shrink-0 font-normal">
-                    Shared by {project.ownerEmail || "another user"}
+                    <Trans>Shared by {owner}</Trans>
                   </Badge>
                 )}
               </div>
@@ -217,22 +225,24 @@ export default function ProjectsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {projectPendingDelete
-                ? `Delete “${projectPendingDelete.name || projectPendingDelete.company?.name || "Untitled project"}”?`
-                : "Delete project?"}
+                ? <Trans>Delete “{pendingName}”?</Trans>
+                : <Trans>Delete project?</Trans>}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the project and its configuration from this browser, and cannot be
-              undone. Saved reports stay where they are.
+              <Trans>
+                This removes the project and its configuration from this browser, and cannot be
+                undone. Saved reports stay where they are.
+              </Trans>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+            <AlertDialogCancel type="button"><Trans>Cancel</Trans></AlertDialogCancel>
             <AlertDialogAction
               type="button"
               className={buttonVariants({ variant: "destructive" })}
               onClick={confirmDeleteProject}
             >
-              Delete project
+              <Trans>Delete project</Trans>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

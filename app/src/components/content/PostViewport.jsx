@@ -12,6 +12,8 @@ import {
   Video,
   Wand2,
 } from "lucide-react";
+import { msg } from "@lingui/core/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { patchPost } from "../../lib/contentApi";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
@@ -21,11 +23,12 @@ import SlidesCarousel from "./SlidesCarousel";
 import { titleCase } from "@/lib/format";
 import { Spinner } from "@/components/ui/spinner";
 
+// Message descriptors (module-level): rendered with `i18n._`.
 const STREAMING_HINTS = [
-  "Picking the hook…",
-  "Writing the caption…",
-  "Choosing hashtags…",
-  "Sketching image prompts…",
+  msg`Picking the hook…`,
+  msg`Writing the caption…`,
+  msg`Choosing hashtags…`,
+  msg`Sketching image prompts…`,
 ];
 
 const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
@@ -58,6 +61,7 @@ function stripTransient(slides) {
 }
 
 export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage }) {
+  const { t, i18n } = useLingui();
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -106,7 +110,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
       setDirty(false);
       return updated;
     } catch (err) {
-      setSaveError(err.message || "Your edits are still here, but they didn't save. Try again.");
+      setSaveError(err.message || t`Your edits are still here, but they didn't save. Try again.`);
       throw err;
     } finally {
       setSaving(false);
@@ -141,11 +145,18 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
   const meta = statusMeta(status);
   const TypeIcon = TYPE_ICON[post.post_type] || Images;
   const platforms = Array.isArray(post.platforms) ? post.platforms : [];
+  const slideCount = post.slide_count;
+  const postedOn = post.posted_at
+    ? new Date(post.posted_at).toLocaleDateString(i18n.locale, { month: "short", day: "numeric", year: "numeric" })
+    : "";
+  const scheduledOn = post.scheduled_at
+    ? new Date(post.scheduled_at).toLocaleDateString(i18n.locale, { month: "short", day: "numeric" })
+    : "";
   const dateLabel = post.posted_at
-    ? `Posted ${new Date(post.posted_at).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}`
+    ? t`Posted ${postedOn}`
     : post.scheduled_at
-    ? `Scheduled ${new Date(post.scheduled_at).toLocaleDateString("en", { month: "short", day: "numeric" })}`
-    : "Not scheduled";
+    ? t`Scheduled ${scheduledOn}`
+    : t`Not scheduled`;
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -154,11 +165,11 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="truncate text-base font-semibold leading-tight">
-              {post.topic || post.post_dir_slug || "Untitled post"}
+              {post.topic || post.post_dir_slug || t`Untitled post`}
             </h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${meta.accentClass}`}>
-                <span className={`size-1.5 rounded-full ${meta.dotClass}`} /> {meta.label}
+                <span className={`size-1.5 rounded-full ${meta.dotClass}`} /> {i18n._(meta.label)}
               </span>
               {post.pillar && (
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">{titleCase(post.pillar)}</span>
@@ -167,7 +178,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
                 <span className="rounded-full border border-border/70 px-2 py-0.5">{post.format_name}</span>
               )}
               <span className="inline-flex items-center gap-1"><TypeIcon className="size-3" /> {post.post_type || "slideshow"}</span>
-              {typeof post.slide_count === "number" && post.slide_count > 0 && <span>· {post.slide_count} slides</span>}
+              {typeof slideCount === "number" && slideCount > 0 && <span>· <Plural value={slideCount} one="# slide" other="# slides" /></span>}
               <span>· {dateLabel}</span>
               {platforms.length > 0 && (
                 <span className="flex items-center gap-1">
@@ -187,7 +198,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
           <div className="flex shrink-0 items-center gap-2">
             {dirty && (
               <button type="button" onClick={handleDiscard} className="text-xs text-muted-foreground hover:text-foreground">
-                Discard
+                <Trans>Discard</Trans>
               </button>
             )}
             {post?.status === PostStatus.PENDING ? (
@@ -195,10 +206,10 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                title="Keep this post — adds it to your board"
+                title={t`Keep this post — adds it to your board`}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
               >
-                {saving ? "Saving…" : <><Check className="size-3.5" /> Save</>}
+                {saving ? <Trans>Saving…</Trans> : <><Check className="size-3.5" /> <Trans>Save</Trans></>}
               </button>
             ) : (
               <button
@@ -207,17 +218,17 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
                 disabled={!dirty || saving}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40"
               >
-                {saving ? "Saving…" : dirty ? "Commit edits" : <><Check className="size-3.5" /> Saved</>}
+                {saving ? <Trans>Saving…</Trans> : dirty ? <Trans>Commit edits</Trans> : <><Check className="size-3.5" /> <Trans>Saved</Trans></>}
               </button>
             )}
             {canPublish && onPublish && (
               <button type="button" onClick={onPublish} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted/50">
-                <Send className="size-3.5" /> Publish
+                <Send className="size-3.5" /> <Trans>Publish</Trans>
               </button>
             )}
             {onRevise && (
               <button type="button" onClick={onRevise} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
-                <Wand2 className="size-3.5" /> Revise with Duct
+                <Wand2 className="size-3.5" /> <Trans>Revise with Duct</Trans>
               </button>
             )}
           </div>
@@ -269,6 +280,7 @@ function Textarea({ value, onChange, ...props }) {
 // ---------------------------------------------------------------------------
 
 function HashtagInput({ value, onChange }) {
+  const { t } = useLingui();
   const [draft, setDraft] = useState("");
   function add() {
     const tag = draft.trim().replace(/^#?/, "#");
@@ -291,8 +303,8 @@ function HashtagInput({ value, onChange }) {
       <span className="inline-flex min-w-[120px] flex-1 items-center gap-1 text-muted-foreground">
         <Hash className="size-3" />
         <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} onBlur={add}
-          aria-label="Add a hashtag"
-          placeholder="Add a tag, press Enter…" className="flex-1 rounded-sm bg-transparent text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/30" />
+          aria-label={t`Add a hashtag`}
+          placeholder={t`Add a tag, press Enter…`} className="flex-1 rounded-sm bg-transparent text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/30" />
       </span>
     </div>
   );
@@ -306,12 +318,13 @@ function HashtagInput({ value, onChange }) {
 // that actually get published. Everything else (hook framing, slide layout,
 // image prompts, creative brief) is edited by asking the agent in chat.
 function PostCopy({ post, patch }) {
+  const { t } = useLingui();
   return (
     <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
-      <Labeled label="Caption" hint="first line is the hook — 2–3 sentences">
-        <Textarea rows={4} value={post.caption || ""} onChange={(v) => patch("caption", v)} placeholder="First line is the hook. Keep it 2–3 sentences." />
+      <Labeled label={t`Caption`} hint={t`first line is the hook — 2–3 sentences`}>
+        <Textarea rows={4} value={post.caption || ""} onChange={(v) => patch("caption", v)} placeholder={t`First line is the hook. Keep it 2–3 sentences.`} />
       </Labeled>
-      <Labeled label="Hashtags">
+      <Labeled label={t`Hashtags`}>
         <HashtagInput value={Array.isArray(post.hashtags) ? post.hashtags : []} onChange={(v) => patch("hashtags", v)} />
       </Labeled>
     </section>
@@ -364,7 +377,7 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }
           onClick={() => ask("The draft looks good — start the images, ONE AT A TIME with me in the loop. Generate the next slide (or cell) that still needs an image, critique it, render the composed slide, then STOP and wait for my feedback before the next one. Don't batch them — apply what I tell you to the following slides.")}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
-          <Sparkles className="size-3.5" /> Approve &amp; generate {pending} image{pending > 1 ? "s" : ""} — one by one
+          <Sparkles className="size-3.5" /> <Plural value={pending} one="Approve & generate # image — one by one" other="Approve & generate # images — one by one" />
         </button>
       )}
       {curStale && (
@@ -373,7 +386,7 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }
           onClick={() => ask(`Regenerate just the image for ${cur.slide_id} — the slide I'm viewing — to match its updated prompt. Leave every other slide exactly as it is.`)}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-warning/50 bg-warning/10 px-3 py-2 text-xs font-semibold text-warning transition-colors hover:bg-warning/20"
         >
-          <RefreshCw className="size-3.5" /> This slide is outdated — regenerate
+          <RefreshCw className="size-3.5" /> <Trans>This slide is outdated — regenerate</Trans>
         </button>
       )}
     </div>
@@ -385,6 +398,7 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }
 // ---------------------------------------------------------------------------
 
 function DraftingPulse() {
+  const { i18n } = useLingui();
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % STREAMING_HINTS.length), 1800);
@@ -393,10 +407,10 @@ function DraftingPulse() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
       <Spinner className="size-10 border-primary/30 border-t-primary" />
-      <p className="text-sm font-medium">Drafting the post…</p>
-      <p className="text-xs text-muted-foreground transition-opacity duration-500">{STREAMING_HINTS[idx]}</p>
+      <p className="text-sm font-medium"><Trans>Drafting the post…</Trans></p>
+      <p className="text-xs text-muted-foreground transition-opacity duration-500">{i18n._(STREAMING_HINTS[idx])}</p>
       <p className="max-w-xs text-2xs text-muted-foreground">
-        Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds.
+        <Trans>Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds.</Trans>
       </p>
     </div>
   );

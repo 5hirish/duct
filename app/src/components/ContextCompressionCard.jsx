@@ -13,10 +13,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Layers } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Switch } from "@/components/ui/switch";
 import { loadPreferences, savePreferences, PREFS_DEFAULTS } from "@/lib/userPreferences";
 
 export default function ContextCompressionCard() {
+  const { t } = useLingui();
   const [enabled, setEnabled] = useState(PREFS_DEFAULTS.context_compression);
 
   // Preferences live in localStorage, so the first paint has to be the default
@@ -38,17 +40,17 @@ export default function ContextCompressionCard() {
       </span>
       <div className="conn-tile-body">
         <div className="conn-tile-top">
-          <span className="conn-tile-title">Context compression</span>
+          <span className="conn-tile-title"><Trans>Context compression</Trans></span>
           <Switch
             checked={enabled}
             onCheckedChange={toggle}
-            aria-label="Compress connector data before it reaches the model"
+            aria-label={t`Compress connector data before it reaches the model`}
           />
         </div>
         <p className="conn-tile-desc">
           {enabled
-            ? "Analytics rows reach the model as a compact table, not raw JSON — about half the tokens, every number unchanged."
-            : "Analytics rows reach the model as raw JSON. A large pull gets cut short, so a brief can be written without the rows that were dropped."}
+            ? t`Analytics rows reach the model as a compact table, not raw JSON — about half the tokens, every number unchanged.`
+            : t`Analytics rows reach the model as raw JSON. A large pull gets cut short, so a brief can be written without the rows that were dropped.`}
         </p>
       </div>
     </article>

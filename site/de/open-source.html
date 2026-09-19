@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Duct ist Open Source — MIT, selbst hostbar, nutze deine eigenen Schlüssel</title>
+<link rel="canonical" href="https://getduct.ai/de/open-source"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/open-source"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/open-source"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/open-source"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/open-source"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/open-source"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/open-source"/>
+<!-- hreflang:end -->
+<meta name="description" content="Warum Duct Open Source ist: MIT-lizenziert durchgängig, Modellschlüssel in deinem eigenen Schlüsselbund, selbst hosten in fünf Befehlen und eine einfache Antwort darauf, was Geld kosten wird."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/open-source"/>
+<meta property="og:title" content="Duct ist Open Source — MIT, selbst hostbar, nutze deine eigenen Schlüssel"/>
+<meta property="og:description" content="Ein Agent, der dein gesamtes Geschäft liest, sollte einer sein, den du lesen kannst. Duct ist durchgängig MIT-lizenziert: Lade es herunter oder klone es und betreibe es selbst."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/open-source.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct ist Open Source — MIT, selbst hostbar, nutze deine eigenen Schlüssel"/>
+<meta name="twitter:description" content="MIT durchgängig. Schlüssel bleiben in deinem Schlüsselbund. Lade es herunter und wir betreiben den Dienst, oder klone es und nichts berührt uns. Kostenlos mit deinen eigenen Schlüsseln."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/open-source.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Duct is open source","url":"https://getduct.ai/open-source","description":"Why Duct is open source, what runs where in the desktop app versus a self-hosted install, how to self-host it, and what will and will not cost money.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"SoftwareSourceCode","name":"Duct","codeRepository":"https://github.com/5hirish/duct","license":"https://opensource.org/licenses/MIT","programmingLanguage":["Python","JavaScript","Rust"],"isAccessibleForFree":true,"author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com"}}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Duct really free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct is MIT licensed and free with your own model keys, and that does not change. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles model access for teams that would rather not hold keys; nothing that is open today moves behind it."}},{"@type":"Question","name":"Can I run Duct without an account?","acceptedAnswer":{"@type":"Answer","text":"Yes. Clone the repository, run make setup, add one model provider key and start the backend and the app. Everything stays on your machine or your server, and no account with Duct is involved."}},{"@type":"Question","name":"Can I use Duct commercially or fork it?","acceptedAnswer":{"@type":"Answer","text":"Yes. The MIT licence allows commercial use, modification and redistribution. The only exceptions are third-party documentation under docs/guides and the Duct name and mark."}},{"@type":"Question","name":"How do I contribute?","acceptedAnswer":{"@type":"Answer","text":"Start with CONTRIBUTING.md in the repository. Issues and discussions are on GitHub, the roadmap is a public project board, and agent-written contributions are welcome as long as the pull request says where an agent helped."}}]}
+</script>
+<style>
+/* ── OPEN-SOURCE-ONLY STYLES ── */
+.os-hero { padding: 120px 52px 72px; min-height: 0; }
+.os-hero h1 { font-size: clamp(38px, 5vw, 62px); max-width: 980px; }
+.os-hero .hero-sub { max-width: 600px; }
+
+/* Why: three numbered arguments, left-aligned, one measure */
+.why { padding: 0 52px 96px; }
+.why-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.why-block { background: var(--white); padding: 36px 32px 40px; }
+.why-num { font-family: var(--serif); font-size: 11px; color: var(--orange); letter-spacing: .08em; display: block; margin-bottom: 18px; }
+.why-block h2 { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.2; letter-spacing: -.3px; margin-bottom: 14px; }
+.why-block p { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.75; max-width: 42ch; }
+.why-block a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+
+/* Where things run: the page's heavy element */
+.where { padding: 96px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.where-inner { max-width: 1160px; margin: 0 auto; }
+.where-head { max-width: 640px; margin-bottom: 40px; }
+.where-head h2 { margin-bottom: 14px; }
+.where-head .sub { max-width: 56ch; }
+.where-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.where-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 22px; }
+.where-card.pick { position: relative; border: 1.5px solid var(--orange); box-shadow: 0 16px 48px rgba(255,92,0,.10); }
+.where-badge { position: absolute; top: -14px; left: 24px; display: inline-flex; align-items: center; gap: 6px; background: var(--orange); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--pill); }
+.where-badge .ic { font-size: 13px; }
+.where-card-head { display: flex; align-items: center; gap: 14px; }
+.where-card-head .ic { font-size: 26px; color: var(--orange); }
+.where-card-head h3 { font-family: var(--serif); font-size: 22px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
+.where-card-head p { font-size: 14px; color: var(--navy-3); margin-top: 2px; }
+.zones { display: grid; gap: 10px; }
+.zone { border-radius: var(--r); padding: 14px 16px 16px; border: 1.5px dashed var(--border); }
+.zone-you { background: #fff5ee; border-color: #f7c9ad; }
+.zone-cloud { background: #eef0f7; border-color: #cfd4e6; }
+.zone-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-2); margin-bottom: 10px; }
+.zone-label .ic { font-size: 15px; }
+.zone-label small { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--navy-3); font-size: 12px; white-space: nowrap; }
+.pick .zone-cloud { background: #eef7f0; border-color: #bfe0c7; }
+.pick .zone-cloud .zone-label .ic { color: var(--success, #10883c); }
+.zone-items { display: flex; flex-wrap: wrap; gap: 8px; }
+.zone-item { display: inline-flex; align-items: center; gap: 7px; background: var(--white); border: 1px solid var(--border); border-radius: var(--pill); padding: 6px 12px 6px 9px; font-size: 13px; color: var(--navy); }
+.zone-item .ic { font-size: 15px; color: var(--navy-3); }
+.zone-item small { color: var(--navy-3); font-size: 12px; white-space: nowrap; }
+.zone-label, .zone-item { flex-wrap: wrap; }
+.zone-empty { font-size: 14px; color: var(--navy-3); font-style: italic; font-family: var(--serif); }
+.where-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; border-top: 1px solid var(--border); padding-top: 18px; }
+.where-facts li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--navy); line-height: 1.5; }
+.where-facts .ic { font-size: 18px; flex-shrink: 0; margin-top: 2px; color: var(--success, #10883c); }
+.where-facts li.no .ic { color: var(--navy-3); }
+.where-facts li.no { color: var(--navy-3); }
+.where-cta { margin-top: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.where-fit { font-size: 13px; color: var(--navy-3); line-height: 1.4; max-width: 30ch; }
+.where-note { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 16px; max-width: 72ch; }
+.where-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+
+/* Self-host: the README's block, and a pointer to it */
+.host { padding: 96px 52px; }
+.host-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
+.host-copy h2 { margin-bottom: 16px; }
+.host-copy p { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.75; max-width: 46ch; margin-bottom: 14px; }
+.host-copy a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+.host-code { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--navy); box-shadow: 0 24px 64px rgba(13,15,26,.12); }
+.host-code-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--navy-2); }
+.host-code-dot { width: 10px; height: 10px; border-radius: 50%; }
+.host-code-label { font-size: 12px; color: rgba(255,255,255,.55); margin-left: 8px; }
+.host-code pre { margin: 0; padding: 22px 24px 26px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.8; color: #fff; }
+.host-code .c { color: rgba(255,255,255,.45); }
+.host-code .p { color: var(--orange); }
+
+/* Money: one paragraph, no card, no grid */
+.money { padding: 96px 52px; background: var(--navy); }
+.money-inner { max-width: 760px; margin: 0 auto; }
+.money .tag { color: var(--orange); }
+.money h2 { color: #fff; margin-bottom: 22px; }
+.money h2 em { color: var(--orange); }
+.money p { font-size: 17px; font-weight: 300; color: rgba(255,255,255,.72); line-height: 1.8; max-width: 66ch; }
+.money p + p { margin-top: 16px; }
+.money strong { color: #fff; font-weight: 500; }
+
+@media (max-width: 1100px) {
+  .why-inner { grid-template-columns: 1fr; }
+  .where-grid { grid-template-columns: 1fr; }
+  .host-inner { grid-template-columns: 1fr; gap: 36px; }
+}
+@media (max-width: 860px) {
+  .os-hero { padding: 100px 24px 56px; }
+  .why, .where, .host, .money { padding-left: 24px; padding-right: 24px; }
+  .where, .host, .money { padding-top: 64px; padding-bottom: 64px; }
+  .why { padding-bottom: 64px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EXPERIMENT: the trust page a commercial-later OSS project needs. Hypothesis: a reader who lands
+     here can answer "is it free, what runs where, what will cost money" without opening the README,
+     and downloads or stars at a higher rate than visitors who only saw the home page. -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/de/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="hero os-hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> MIT · Öffentliche Roadmap · Bringe deine eigenen Schlüssel mit</div>
+<h1>Es liest dein gesamtes Geschäft.<br/><em>Damit du es lesen kannst.</em></h1>
+<p class="hero-sub">Duct ist durchgängig Open Source: die Agents, die Connectors, die Prompts, der Freigabemechanismus, die Desktop-App. Lade es herunter und wir betreiben den Dienst für dich. Klone es und nichts berührt uns.</p>
+<div class="hero-form">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Quellcode lesen</a>
+</div>
+<p class="hero-footnote">Immer kostenlos mit deinen eigenen Schlüsseln · Kein Konto nötig, um es selbst zu betreiben</p>
+</section>
+
+<!-- WHY -->
+<section class="why">
+<div class="why-inner reveal">
+<div class="why-block">
+<span class="why-num">01</span>
+<h2>Lesezugriff auf alles ist viel verlangt.</h2>
+<p>Duct liest deine Anzeigen, Analysen, Umsätze und Session-Replays zusammen. Ein Tool mit dieser Ansicht sollte keine Black Box sein. Jeder API-Aufruf und jeder Prompt ist im Repository, lesbar, bevor du etwas verbindest.</p>
+</div>
+<div class="why-block">
+<span class="why-num">02</span>
+<h2>Der Freigabemechanismus lebt im Code, nicht in einem Prompt.</h2>
+<p>Der Agent kann eine Änderung vorschlagen und sie vorschauen. Er hat kein Tool, um eine freizugeben oder anzuwenden; das ist dein Button, und das Modell sieht ihn nie. <a href="/de/doctrine">Die Doktrin</a> verknüpft jede Regel mit der Datei, die sie durchsetzt.</p>
+</div>
+<div class="why-block">
+<span class="why-num">03</span>
+<h2>Eine Person kann nicht um Vertrauen bitten. Sie kann den Code zeigen.</h2>
+<p>Duct wird gebaut von <a href="/de/about">einem Maintainer in Spanien</a>, wobei Agenten den Großteil der Tipparbeit erledigen. Die Roadmap ist ein öffentliches Board, Entscheidungen werden in Issues diskutiert, und ein Pull Request von dir oder deinem Agenten erhält die gleiche Überprüfung.</p>
+</div>
+</div>
+</section>
+
+<!-- WHERE THINGS RUN -->
+<section class="where" id="where">
+<div class="where-inner">
+<div class="where-head reveal">
+<p class="tag">Was wo läuft</p>
+<h2>Gleicher Code. <em>Zwei Wege, ihn auszuführen.</em></h2>
+<p class="sub">Lade die App herunter und wir betreiben den Dienst dahinter: melde dich an, verbinde ein Tool, frage. Klone den Code und jeder Teil davon liegt in deiner Hand. Hier ist, was wo sitzt, in einfachen Worten.</p>
+</div>
+<div class="where-grid reveal" style="transition-delay:.1s">
+<article class="where-card pick">
+<span class="where-badge"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg> Die meisten Leute beginnen hier</span>
+<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#monitor"/></svg><div><h3>Die Desktop-App</h3><p>Lade es herunter. Melde dich an. In zwei Minuten verbunden.</p></div></div>
+<div class="zones">
+<div class="zone zone-you">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Bleibt auf deinem Computer</span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Deine KI-Schlüssel <small>· im Schlüsselbund</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#user-round"/></svg> Deine ChatGPT-Anmeldung</span>
+</div>
+</div>
+<div class="zone zone-cloud">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg> Duct verwaltet für dich <small>· verschlüsselt</small></span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Tool-Anmeldungen <small>· einmal verbinden, jedes Gerät</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projekte, Briefings, Gedächtnis <small>· synchronisiert</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg> Teammitglieder <small>· eine Einladung</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg> Nutzungsstatistiken <small>· in den Einstellungen deaktiviert</small></span>
+</div>
+</div>
+</div>
+<ul class="where-facts">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Kostenlos. Bringe deine Schlüssel mit oder den ChatGPT-Plan, den du bereits bezahlst.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Google Ads, GA4 und der Rest verbinden sich mit einem Klick. Nichts zu registrieren.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Deine Briefings folgen dir auf deinen nächsten Computer. Eine Einladung fügt ein Teammitglied hinzu.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Signierte Builds, die sich selbst aktualisieren. Wir betreiben den Dienst und die Datenbank.</li>
+</ul>
+<div class="where-cta">
+<a class="btn btn-orange" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<span class="where-fit">Mac, Windows, Linux · kostenlos · keine Kreditkarte</span>
+</div>
+</article>
+<article class="where-card">
+<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg><div><h3>Selbst gehostet</h3><p>Klone es. Du betreibst jeden Teil davon.</p></div></div>
+<div class="zones">
+<div class="zone zone-you">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> Auf deinem Computer oder deinem Server <small>· alles davon</small></span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Deine KI-Schlüssel</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Deine Tool-Anmeldungen</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projekte, Briefings, Gedächtnis</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg> Die Datenbank</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#settings-2"/></svg> Anmeldung und OAuth-Apps <small>· du registrierst sie</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#refresh-cw"/></svg> Backups und Upgrades</span>
+</div>
+</div>
+<div class="zone zone-cloud">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> Verwaltet von Duct</span>
+<p class="zone-empty">Nichts. Es spricht nie mit uns.</p>
+</div>
+</div>
+<ul class="where-facts">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Kostenlos. Gleicher Code, gleiche Agenten, keine abgespeckte Version.</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Kein Konto bei uns. Nutzungsstatistiken werden nicht einmal erfasst.</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Benötigt deinen eigenen Google OAuth-Client, bevor sich Ads, GA4 oder Search Console verbinden.</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Die Datenbank, die Backups und jedes Upgrade musst du selbst betreiben und am Laufen halten.</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Nichts folgt dir auf eine andere Maschine, es sei denn, du hostest es selbst als Server.</li>
+</ul>
+<div class="where-cta">
+<a class="btn btn-ghost" href="#self-host">Wie du selbst hostest ↓</a>
+<span class="where-fit">Für eine Regel, wo Daten liegen, oder um den Code zu lesen.</span>
+</div>
+</article>
+</div>
+<p class="where-note reveal">Die vollständigen Details findest du in der <a href="/de/privacy">Datenschutzrichtlinie</a>. Egal wie du es ausführst, wir halten niemals einen deiner AI-Schlüssel: Die Desktop-App speichert ihn in deinem Schlüsselbund und sendet ihn nur, während ein Job läuft.</p>
+</div>
+</section>
+
+<!-- SELF-HOST -->
+<section class="host" id="self-host">
+<div class="host-inner">
+<div class="host-copy reveal">
+<p class="tag">Selbst betreiben</p>
+<h2>Klone es. Füge einen Schlüssel hinzu. <em>Starte beide Hälften.</em></h2>
+<p>Das Backend ist FastAPI, die App ist Next.js, und ein Makefile steuert beides. Füge einen Modell-Provider-Schlüssel zur Env-Datei hinzu und du liest deine eigenen Tools in Minuten von deiner eigenen Maschine.</p>
+<p>Die <a href="https://github.com/5hirish/duct#-self-host-it" rel="noopener">README</a> ist die Quelle der Wahrheit für die Einrichtung und behandelt auch den Desktop-Build mit gebündeltem Backend: SQLite auf der Festplatte, nur Loopback, kein Konto. <a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a> listet die Prüfungen auf, die CI ausführt.</p>
+</div>
+<!-- Mirrors the README's "Self-host it" block. If the two disagree, the README is right; fix this one. -->
+<div class="host-code reveal" style="transition-delay:.1s" aria-label="Befehle zum Selbst-Hosten">
+<div class="host-code-bar" aria-hidden="true">
+<span class="host-code-dot" style="background:#ff5f57"></span>
+<span class="host-code-dot" style="background:#febc2e"></span>
+<span class="host-code-dot" style="background:#28c840"></span>
+<span class="host-code-label">Terminal</span>
+</div>
+<pre><code><span class="p">$</span> git clone https://github.com/5hirish/duct.git &amp;&amp; cd duct
+<span class="p">$</span> make setup
+<span class="p">$</span> cp backend/.env.example backend/.env.local   <span class="c"># add one model provider key</span>
+<span class="p">$</span> make serve-backend                            <span class="c"># then, in a second terminal:</span>
+<span class="p">$</span> make serve-app</code></pre>
+</div>
+</div>
+</section>
+
+<!-- MONEY -->
+<section class="money" id="pricing">
+<div class="money-inner reveal">
+<p class="tag">Was Geld kosten wird</p>
+<h2>Kostenlos mit deinen eigenen Schlüsseln. <em>Immer.</em></h2>
+<p><strong>Die MIT-Lizenz ist keine Testversion.</strong> Die Agenten, die Connectoren und das Freigabe-Gate sind das Produkt, und sie befinden sich im Repository. Betreibe sie mit deinen eigenen Modellschlüsseln oder mit dem ChatGPT-Plan, den du bereits bezahlst, und du schuldest uns nichts.</p>
+<p><strong>Was später kommt, ist ein kostenpflichtiger Plan, der die Modelle bündelt</strong>, damit ein Team Duct nutzen kann, ohne dass jemand einen API-Schlüssel besitzt, zusätzlich zum gehosteten Dienst, mit dem die Desktop-App bereits kommuniziert. Nichts, was heute Open Source ist, wird hinter diesen Plan verschoben. Sollte sich das jemals ändern, wird diese Seite dies mitteilen, bevor es der Code tut.</p>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">Fragen</p>
+<h2>Die, die Leute <em>tatsächlich fragen</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Ist Duct wirklich kostenlos?</summary>
+<p class="faq-a">Ja. Duct ist MIT-lizenziert und kostenlos mit deinen eigenen Modellschlüsseln, und das ändert sich nicht. Du bezahlst deinen Modell-Provider direkt oder meldest dich mit dem ChatGPT-Plan an, den du bereits hast. Ein kostenpflichtiger Plan bündelt später den Modellzugriff für Teams, die lieber keine Schlüssel halten möchten; nichts, was heute offen ist, wird dahinter verschoben.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Kann ich Duct ohne ein Konto betreiben?</summary>
+<p class="faq-a">Ja. Klone das Repository, führe <code>make setup</code> aus, füge einen Modell-Provider-Schlüssel hinzu und starte das Backend und die App. Alles bleibt auf deiner Maschine oder deinem Server, und kein Konto bei Duct ist involviert.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Kann ich Duct kommerziell nutzen oder forken?</summary>
+<p class="faq-a">Ja. Die MIT-Lizenz erlaubt kommerzielle Nutzung, Modifikation und Weiterverbreitung. Die einzigen Ausnahmen sind Dokumentationen Dritter unter <code>docs/guides</code> und der Duct-Name und die Marke.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Wie kann ich beitragen?</summary>
+<p class="faq-a">Beginne mit <a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>. Issues und Diskussionen sind auf GitHub, die Roadmap ist ein öffentliches Projekt-Board, und von Agents verfasste Beiträge sind willkommen, solange der Pull Request angibt, wo ein Agent geholfen hat.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/de/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

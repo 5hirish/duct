@@ -24,6 +24,8 @@
 
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -109,17 +111,18 @@ const TILE_TONE = { ok: "on", info: "info", warn: "off" };
  * have to go and buy. The tile's description names ChatGPT one line below, so
  * the tag does not have to spend its width on it.
  */
-const PLAN_TAG = "No API key needed";
+const PLAN_TAG = msg`No API key needed`;
 
 const REMOVAL_SCOPE = {
-  [STORAGE_KEYCHAIN]: "held in this machine\u2019s keychain",
-  [STORAGE_SESSION]: "held for this browser session",
-  [STORAGE_CLOUD]: "saved to your Duct account",
-  [STORAGE_LOCAL]: "saved on this device",
-  [STORAGE_NONE]: "stored for this provider",
+  [STORAGE_KEYCHAIN]: msg`held in this machine’s keychain`,
+  [STORAGE_SESSION]: msg`held for this browser session`,
+  [STORAGE_CLOUD]: msg`saved to your Duct account`,
+  [STORAGE_LOCAL]: msg`saved on this device`,
+  [STORAGE_NONE]: msg`stored for this provider`,
 };
 
 export default function ProviderCard({ provider, logo, status, planEnabled = true, loading = false }) {
+  const { t, i18n } = useLingui();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [saved, setSaved] = useState(false);
@@ -261,25 +264,29 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
         ? STORAGE_SESSION
         : STORAGE_NONE;
   const storage = keyStorage === STORAGE_NONE && planConnected ? STORAGE_KEYCHAIN : keyStorage;
-  const storageSentence = REMOVAL_SCOPE[keyStorage] || REMOVAL_SCOPE[STORAGE_NONE];
+  const storageSentence = i18n._(REMOVAL_SCOPE[keyStorage] || REMOVAL_SCOPE[STORAGE_NONE]);
   // Any one of the three outstanding, and this card has no verdict to report.
   const settling = loading || !keyLoaded || !planLoaded;
+  const providerName = provider.label;
+  const keyPrefix = provider.prefix;
+  const planAccount = plan.status.email || t`your ChatGPT account`;
+  const planReadError = plan.status.error || "";
   const tile = settling
     ? {
         tone: "loading",
-        label: "Checking\u2026",
-        detail: `Looking up where ${provider.label}'s key comes from.`,
+        label: t`Checking…`,
+        detail: t`Looking up where ${providerName}'s key comes from.`,
       }
     : mismatched
     ? {
         tone: "off",
-        label: "Not a key we can use",
-        detail: `What's stored for ${provider.label} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one.`,
+        label: t`Not a key we can use`,
+        detail: t`What's stored for ${providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one.`,
       }
     : {
         tone: TILE_TONE[SOURCE_TONE[source]] || "on",
-        label: SOURCE_LABELS[source] || SOURCE_LABELS.none,
-        detail: SOURCE_DETAIL[source] || SOURCE_DETAIL.none,
+        label: i18n._(SOURCE_LABELS[source] || SOURCE_LABELS.none),
+        detail: i18n._(SOURCE_DETAIL[source] || SOURCE_DETAIL.none),
       };
 
   // The desktop keychain can genuinely refuse a write — most often on Linux,
@@ -371,7 +378,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
       <ConnectorTile
         logo={logo}
         title={provider.label}
-        tag={planOffered ? PLAN_TAG : undefined}
+        tag={planOffered ? i18n._(PLAN_TAG) : undefined}
         description={provider.description}
         tone={tile.tone}
         status={tile.label}
@@ -410,18 +417,20 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 onClick={() => setConfirmingRemove(true)}
                 disabled={busy}
               >
-                Remove key
+                <Trans>Remove key</Trans>
               </Button>
             )}
             <Button type="button" size="sm" onClick={save} disabled={busy || !trimmed || !looksValid}>
-              Save
+              <Trans>Save</Trans>
             </Button>
           </>
         }
       >
         <div className="conn-dialog-section">
           <div className="conn-field">
-            <Label htmlFor={`provider-${provider.id}`}>API key</Label>
+            <Label htmlFor={`provider-${provider.id}`}>
+              <Trans>API key</Trans>
+            </Label>
             {/* The toggle sits inside the field rather than beside it. As a
                 sibling button it was a second control competing with Save for
                 the row, and it pushed the input narrower than the secret it
@@ -445,7 +454,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 className="conn-reveal"
                 onClick={() => setRevealed((shown) => !shown)}
                 disabled={!value}
-                aria-label={revealed ? "Hide key" : "Show key"}
+                aria-label={revealed ? t`Hide key` : t`Show key`}
                 aria-pressed={revealed}
                 aria-controls={`provider-${provider.id}`}
               >
@@ -458,20 +467,31 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 them — read as another line of small print. */}
             <div className="conn-field-notes">
               {settling ? (
-                <p className="conn-hint">Checking&#8230;</p>
+                <p className="conn-hint">
+                  <Trans>Checking…</Trans>
+                </p>
               ) : trimmed && !looksValid ? (
-                <p className="conn-hint">Keys usually start with &ldquo;{provider.prefix}&rdquo;.</p>
+                <p className="conn-hint">
+                  <Trans>Keys usually start with “{keyPrefix}”.</Trans>
+                </p>
               ) : keyStorage !== STORAGE_NONE ? (
                 <StorageBadge storage={keyStorage} detail />
               ) : (
                 // Nothing saved yet, so this describes where the next save lands
                 // rather than where anything currently is.
                 <p className="conn-hint">
-                  {desktop
-                    ? "Will be stored in your OS keychain on this machine."
-                    : remember
-                      ? "Will be encrypted and stored on Duct, so scheduled runs use your key too."
-                      : "Will be kept in this browser session only — cleared when you close the tab, and unavailable to scheduled runs."}
+                  {desktop ? (
+                    <Trans>Will be stored in your OS keychain on this machine.</Trans>
+                  ) : remember ? (
+                    <Trans>
+                      Will be encrypted and stored on Duct, so scheduled runs use your key too.
+                    </Trans>
+                  ) : (
+                    <Trans>
+                      Will be kept in this browser session only — cleared when you close the tab,
+                      and unavailable to scheduled runs.
+                    </Trans>
+                  )}
                 </p>
               )}
               {mismatched && (
@@ -481,8 +501,10 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
               )}
               {remembered && (
                 <p className="conn-hint">
-                  A saved key is already in use. Paste a new one to replace it, or
-                  choose Remove key to forget it.
+                  <Trans>
+                    A saved key is already in use. Paste a new one to replace it, or
+                    choose Remove key to forget it.
+                  </Trans>
                 </p>
               )}
               {!desktop && (
@@ -492,12 +514,14 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                     onCheckedChange={(next) => setRemember(next === true)}
                     disabled={busy}
                   />
-                  <span>Remember this key on Duct</span>
+                  <span>
+                    <Trans>Remember this key on Duct</Trans>
+                  </span>
                 </label>
               )}
               <p className="conn-hint">
                 <a className="app-link" href={provider.consoleUrl} target="_blank" rel="noreferrer">
-                  Get a key from {provider.label} &rarr;
+                  <Trans>Get a key from {providerName} →</Trans>
                 </a>
               </p>
             </div>
@@ -519,25 +543,31 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
             {/* "Or" offers a choice. Once the choice is made it is just the
                 name of what is connected. */}
             <h3 className="conn-dialog-heading">
-              {planConnected ? "Your ChatGPT plan" : "Or use your ChatGPT plan"}
+              {planConnected ? <Trans>Your ChatGPT plan</Trans> : <Trans>Or use your ChatGPT plan</Trans>}
             </h3>
             {/* Only before signing in. Afterwards this was three lines
                 arguing for something the user had already chosen, directly
                 above the row that says they chose it. */}
             {!settling && !planConnected && !planUnreadable && (
               <p className="conn-hint">
-                Runs GPT models on a plan you already pay for. Signing in opens your
-                browser; Duct never sees your password or your chats.
+                <Trans>
+                  Runs GPT models on a plan you already pay for. Signing in opens your
+                  browser; Duct never sees your password or your chats.
+                </Trans>
               </p>
             )}
 
             {settling ? (
-              <p className="conn-hint">Checking&#8230;</p>
+              <p className="conn-hint">
+                <Trans>Checking…</Trans>
+              </p>
             ) : plan.available ? (
               planConnected ? (
                 <div className="conn-account-row">
                   <span className="conn-account-text">
-                    Signed in as <b>{plan.status.email || "your ChatGPT account"}</b>
+                    <Trans>
+                      Signed in as <b>{planAccount}</b>
+                    </Trans>
                     {plan.status.plan_type ? ` · ${planLabel(plan.status.plan_type)}` : ""}
                   </span>
                   {/* Disconnect + Reconnect, in that order and those variants,
@@ -555,7 +585,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                       onClick={() => setConfirmingDisconnect(true)}
                       disabled={Boolean(planBusy)}
                     >
-                      Disconnect
+                      <Trans>Disconnect</Trans>
                     </Button>
                     <Button
                       type="button"
@@ -564,11 +594,11 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                       onClick={signInPlan}
                       disabled={Boolean(planBusy)}
                     >
-                      {signingIn ? "Waiting for your browser\u2026" : "Reconnect"}
+                      {signingIn ? <Trans>Waiting for your browser…</Trans> : <Trans>Reconnect</Trans>}
                     </Button>
                     {signingIn && (
                       <Button type="button" variant="ghost" size="sm" onClick={cancelPlan}>
-                        Cancel
+                        <Trans>Cancel</Trans>
                       </Button>
                     )}
                   </span>
@@ -576,17 +606,19 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
               ) : (
                 <div className="flex flex-wrap items-center gap-2">
                   <Button type="button" size="sm" onClick={signInPlan} disabled={Boolean(planBusy)}>
-                    {signingIn
-                      ? "Waiting for your browser\u2026"
-                      : planUnreadable
-                        ? "Sign in again"
-                        : "Continue with ChatGPT"}
+                    {signingIn ? (
+                      <Trans>Waiting for your browser…</Trans>
+                    ) : planUnreadable ? (
+                      <Trans>Sign in again</Trans>
+                    ) : (
+                      <Trans>Continue with ChatGPT</Trans>
+                    )}
                   </Button>
                   {/* A closed tab tells the shell nothing, so this is the only
                       way back short of the five-minute timeout. */}
                   {signingIn && (
                     <Button type="button" variant="ghost" size="sm" onClick={cancelPlan}>
-                      Cancel
+                      <Trans>Cancel</Trans>
                     </Button>
                   )}
                 </div>
@@ -596,23 +628,29 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
               // and only a program on the user's machine can be listening.
               <ol className="conn-steps">
                 <li>
-                  {desktop
-                    ? "Update the desktop app \u2014 this version can\u2019t run the sign-in."
-                    : "Install the desktop app. Signing in hands the result back to a program on your computer, which a web page cannot receive."}
+                  {desktop ? (
+                    <Trans>Update the desktop app — this version can’t run the sign-in.</Trans>
+                  ) : (
+                    <Trans>
+                      Install the desktop app. Signing in hands the result back to a program on
+                      your computer, which a web page cannot receive.
+                    </Trans>
+                  )}
                 </li>
                 <li>
                   {/* No "&rarr; Providers" step any more: the page's own name
                       carries the word, and repeating it read as two hops. */}
-                  Open <b>Settings &rarr; Models &amp; providers &rarr; OpenAI</b> and choose{" "}
-                  <b>Continue with ChatGPT</b>.
+                  <Trans>
+                    Open <b>Settings → Models & providers → OpenAI</b> and choose{" "}
+                    <b>Continue with ChatGPT</b>.
+                  </Trans>
                 </li>
               </ol>
             )}
 
             {!settling && planUnreadable && (
               <p className="conn-hint conn-hint--alert" role="alert">
-                Your ChatGPT sign-in is saved, but this build cannot read it:{" "}
-                {plan.status.error}
+                <Trans>Your ChatGPT sign-in is saved, but this build cannot read it: {planReadError}</Trans>
               </p>
             )}
             {planError && (
@@ -621,13 +659,19 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
               </p>
             )}
             <p className="conn-hint">
-              {saved || remembered ? "Your key is used before the plan. " : ""}
-              Scheduled runs happen with no app open, so they always need a key.
+              {saved || remembered ? (
+                <Trans>
+                  Your key is used before the plan. Scheduled runs happen with no app open, so
+                  they always need a key.
+                </Trans>
+              ) : (
+                <Trans>Scheduled runs happen with no app open, so they always need a key.</Trans>
+              )}
             </p>
             {!desktop && (
               <p className="conn-hint">
                 <a className="app-link" href={DESKTOP_DOWNLOAD_URL} target="_blank" rel="noreferrer">
-                  Get the desktop app &rarr;
+                  <Trans>Get the desktop app →</Trans>
                 </a>
               </p>
             )}
@@ -640,18 +684,29 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
       <AlertDialog open={confirmingRemove} onOpenChange={setConfirmingRemove}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove your {provider.label} key?</AlertDialogTitle>
+            <AlertDialogTitle>
+              <Trans>Remove your {providerName} key?</Trans>
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Duct forgets the key {storageSentence}. Runs that need {provider.label}
-              {planConnected
-                ? " fall back to your ChatGPT plan."
-                : " stop working until you paste a new one."}{" "}
-              Duct cannot show you this key again, so make sure you have it
-              somewhere else if you still need it.
+              {planConnected ? (
+                <Trans>
+                  Duct forgets the key {storageSentence}. Runs that need {providerName} fall back
+                  to your ChatGPT plan. Duct cannot show you this key again, so make sure you have
+                  it somewhere else if you still need it.
+                </Trans>
+              ) : (
+                <Trans>
+                  Duct forgets the key {storageSentence}. Runs that need {providerName} stop
+                  working until you paste a new one. Duct cannot show you this key again, so make
+                  sure you have it somewhere else if you still need it.
+                </Trans>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <AlertDialogCancel type="button">
+              <Trans>Keep it</Trans>
+            </AlertDialogCancel>
             <AlertDialogAction
               type="button"
               className={buttonVariants({ variant: "destructive" })}
@@ -660,7 +715,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 remove();
               }}
             >
-              Remove key
+              <Trans>Remove key</Trans>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -669,17 +724,23 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
       <AlertDialog open={confirmingDisconnect} onOpenChange={setConfirmingDisconnect}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disconnect your ChatGPT plan?</AlertDialogTitle>
+            <AlertDialogTitle>
+              <Trans>Disconnect your ChatGPT plan?</Trans>
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Duct forgets the sign-in held in this machine&rsquo;s keychain, and
-              stops running {provider.label} models on your plan. Your ChatGPT
-              account is untouched &mdash; reconnecting takes one sign-in. To
-              revoke Duct&rsquo;s access at OpenAI as well, do that in your ChatGPT
-              settings.
+              <Trans>
+                Duct forgets the sign-in held in this machine’s keychain, and
+                stops running {providerName} models on your plan. Your ChatGPT
+                account is untouched — reconnecting takes one sign-in. To
+                revoke Duct’s access at OpenAI as well, do that in your ChatGPT
+                settings.
+              </Trans>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Stay connected</AlertDialogCancel>
+            <AlertDialogCancel type="button">
+              <Trans>Stay connected</Trans>
+            </AlertDialogCancel>
             <AlertDialogAction
               type="button"
               className={buttonVariants({ variant: "destructive" })}
@@ -688,7 +749,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 signOutPlan();
               }}
             >
-              Disconnect
+              <Trans>Disconnect</Trans>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -23,6 +23,7 @@ import { MarkdownView, svgDataUrl } from "@/components/artifacts/ArtifactRendere
 import { Skeleton } from "@/components/ui/skeleton";
 import { getArtifactContent } from "@/lib/artifactsApi";
 import { relativeTime } from "@/lib/format";
+import { useLingui } from "@lingui/react/macro";
 import { cn } from "@/lib/utils";
 
 // How much of the document a thumbnail draws. The scale is what makes a
@@ -56,6 +57,8 @@ export function hasThumbnail(row) {
  * `html` picks the renderer; `content` is the whole document or a prefix.
  */
 export function DocumentThumbnail({ content, html = false, svg = false, className = "" }) {
+  const { t } = useLingui();
+
   return (
     <div
       className={cn("relative overflow-hidden bg-card", className)}
@@ -67,7 +70,7 @@ export function DocumentThumbnail({ content, html = false, svg = false, classNam
       >
         {html ? (
           <iframe
-            title="Document preview"
+            title={t`Document preview`}
             srcDoc={content}
             sandbox=""
             tabIndex={-1}

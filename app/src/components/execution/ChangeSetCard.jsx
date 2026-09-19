@@ -25,6 +25,8 @@
 
 import { useState, useEffect } from "react";
 import { Ban, Check, RotateCcw, TriangleAlert, X, Zap } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,13 +81,14 @@ export function apiToCard(cs, prevCard) {
 }
 
 // The set's state, in words a person would use, with the one colour it earns.
+// Descriptors, rendered with `i18n._` — a module-level `t` is fixed at load.
 const SET_STATUS = {
-  proposed: { label: "Waiting for you", className: "bg-warning/10 text-warning" },
-  applied: { label: "Applied", className: "bg-success/10 text-success" },
-  partial: { label: "Partly applied", className: "bg-warning/10 text-warning" },
-  failed: { label: "Failed", className: "bg-destructive/10 text-destructive" },
-  rejected: { label: "Rejected", className: "bg-muted text-muted-foreground" },
-  rolled_back: { label: "Rolled back", className: "bg-muted text-muted-foreground" },
+  proposed: { label: msg`Waiting for you`, className: "bg-warning/10 text-warning" },
+  applied: { label: msg`Applied`, className: "bg-success/10 text-success" },
+  partial: { label: msg`Partly applied`, className: "bg-warning/10 text-warning" },
+  failed: { label: msg`Failed`, className: "bg-destructive/10 text-destructive" },
+  rejected: { label: msg`Rejected`, className: "bg-muted text-muted-foreground" },
+  rolled_back: { label: msg`Rolled back`, className: "bg-muted text-muted-foreground" },
 };
 
 /** One line under a change: an icon and the reason, in the muted voice. The
@@ -104,6 +107,7 @@ function Note({ icon: Icon, tone, children }) {
  * or auto autonomy — the allowlist is the same at both); everything else waits
  * here for Approve & apply. Destructive changes are flagged and always wait. */
 export default function ChangeSetCard({ changeSet: initial }) {
+  const { t, i18n } = useLingui();
   const [cs, setCs] = useState(initial);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -117,11 +121,15 @@ export default function ChangeSetCard({ changeSet: initial }) {
   const canReview = cs.status === "proposed";
   const canRollback = ["applied", "partial"].includes(cs.status);
   const blocked = changes.filter((c) => c.status === "blocked" || c.preview_error).length;
-  const ready = changes.length - blocked;
+  const total = changes.length;
+  const ready = total - blocked;
+  // An unknown status falls through as the raw enum: it is not copy we wrote.
   const setStatus =
     autoApplied && cs.status === "applied"
-      ? { label: "Applied automatically", className: SET_STATUS.applied.className }
-      : SET_STATUS[cs.status] || { label: cs.status.replace("_", " "), className: "bg-muted text-muted-foreground" };
+      ? { label: t`Applied automatically`, className: SET_STATUS.applied.className }
+      : SET_STATUS[cs.status]
+        ? { label: i18n._(SET_STATUS[cs.status].label), className: SET_STATUS[cs.status].className }
+        : { label: cs.status.replace("_", " "), className: "bg-muted text-muted-foreground" };
   const where = [cs.connector_type ? titleCase(cs.connector_type) : "", cs.account_name || cs.account_id]
     .filter(Boolean)
     .join(" · ");
@@ -171,6 +179,7 @@ export default function ChangeSetCard({ changeSet: initial }) {
       <ul className="divide-y divide-border/60 border-t border-border/60">
         {changes.map((c) => {
           const held = c.status === "blocked" || c.preview_error;
+          const previewError = c.preview_error;
           return (
             <li key={c.id} className="flex items-start gap-3 px-4 py-3">
               <StatusMark status={c.status} failed={!!c.preview_error} />
@@ -184,13 +193,13 @@ export default function ChangeSetCard({ changeSet: initial }) {
                 {(c.guardrail_violations || []).map((v, j) => (
                   <Note key={j} icon={Ban} tone="text-muted-foreground">{v}</Note>
                 ))}
-                {c.preview_error && (
-                  <Note icon={Ban} tone="text-destructive">Preview failed: {c.preview_error}</Note>
+                {previewError && (
+                  <Note icon={Ban} tone="text-destructive"><Trans>Preview failed: {previewError}</Trans></Note>
                 )}
               </div>
               {c.destructive && (
                 <Badge variant="outline" className="shrink-0 text-muted-foreground">
-                  destructive
+                  <Trans>destructive</Trans>
                 </Badge>
               )}
             </li>
@@ -203,25 +212,30 @@ export default function ChangeSetCard({ changeSet: initial }) {
       {(canReview || canRollback) && (
         <div className="flex items-center gap-2 border-t border-border/60 px-4 py-3">
           <p className="min-w-0 flex-1 text-xs text-muted-foreground">
-            {canReview && blocked > 0
-              ? `${ready} of ${changes.length} will apply · ${blocked} ${blocked === 1 ? "needs" : "need"} a person`
-              : canReview && changes.some((c) => c.destructive)
-                ? "Includes a pause. It can be rolled back from here."
-                : ""}
+            {canReview && blocked > 0 ? (
+              <Trans>
+                {ready} of {total} will apply ·{" "}
+                <Plural value={blocked} one="# needs a person" other="# need a person" />
+              </Trans>
+            ) : canReview && changes.some((c) => c.destructive) ? (
+              <Trans>Includes a pause. It can be rolled back from here.</Trans>
+            ) : (
+              ""
+            )}
           </p>
           {canReview && (
             <>
               <Button size="sm" variant="ghost" onClick={onReject} disabled={!!busy}>
-                {busy === "reject" ? "Rejecting…" : "Reject"}
+                {busy === "reject" ? <Trans>Rejecting…</Trans> : <Trans>Reject</Trans>}
               </Button>
               <Button size="sm" onClick={onApprove} disabled={!!busy}>
-                {busy === "approve" ? "Applying…" : "Approve & apply"}
+                {busy === "approve" ? <Trans>Applying…</Trans> : <Trans>Approve & apply</Trans>}
               </Button>
             </>
           )}
           {canRollback && (
             <Button size="sm" variant="outline" onClick={onRollback} disabled={!!busy}>
-              {busy === "rollback" ? "Rolling back…" : <><RotateCcw aria-hidden="true" /> Roll back</>}
+              {busy === "rollback" ? <Trans>Rolling back…</Trans> : <><RotateCcw aria-hidden="true" /> <Trans>Roll back</Trans></>}
             </Button>
           )}
         </div>

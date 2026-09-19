@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, Plus } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,7 @@ function avatarUrl(platform, username) {
  * pre-selected when scheduling / used for analytics.
  */
 export default function AccountsTab({ projectId }) {
+  const { t } = useLingui();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [accounts, setAccounts] = useState([]);
@@ -82,7 +84,7 @@ export default function AccountsTab({ projectId }) {
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1500);
     } catch (e) {
-      setError(e.message || "That didn't save — your selection has been put back. Try again.");
+      setError(e.message || t`That didn't save — your selection has been put back. Try again.`);
       throw e;
     } finally {
       setSaving(false);
@@ -110,13 +112,13 @@ export default function AccountsTab({ projectId }) {
   const allLinked = allIds.length > 0 && allIds.every((id) => linkedIds.has(id));
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading accounts…</p>;
+    return <p className="text-sm text-muted-foreground"><Trans>Loading accounts…</Trans></p>;
   }
 
   if (loadError) {
     return (
       <LoadError
-        what="your PostBridge accounts"
+        what={t`your PostBridge accounts`}
         detail={loadError}
         onRetry={() => setReloadKey((k) => k + 1)}
       />
@@ -129,13 +131,15 @@ export default function AccountsTab({ projectId }) {
         <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <Plus className="size-5" />
         </div>
-        <h3 className="text-sm font-semibold">No accounts available yet</h3>
+        <h3 className="text-sm font-semibold"><Trans>No accounts available yet</Trans></h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link
-          it to this project.
+          <Trans>
+            Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link
+            it to this project.
+          </Trans>
         </p>
         <Button className="mt-4" asChild>
-          <a href={POSTBRIDGE_URL} target="_blank" rel="noreferrer">Connect in PostBridge →</a>
+          <a href={POSTBRIDGE_URL} target="_blank" rel="noreferrer"><Trans>Connect in PostBridge →</Trans></a>
         </Button>
       </div>
     );
@@ -146,10 +150,12 @@ export default function AccountsTab({ projectId }) {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold">Linked accounts</h2>
+          <h2 className="text-base font-semibold"><Trans>Linked accounts</Trans></h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Choose which accounts this project posts to — they&apos;re pre-selected when
-            scheduling and used for analytics.
+            <Trans>
+              Choose which accounts this project posts to — they&apos;re pre-selected when
+              scheduling and used for analytics.
+            </Trans>
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -160,7 +166,7 @@ export default function AccountsTab({ projectId }) {
             disabled={saving || allIds.length === 0}
             onClick={() => setLinked(new Set(allLinked ? [] : allIds))}
           >
-            {allLinked ? "Unlink all" : "Link all"}
+            {allLinked ? <Trans>Unlink all</Trans> : <Trans>Link all</Trans>}
           </Button>
         </div>
       </div>
@@ -195,8 +201,10 @@ export default function AccountsTab({ projectId }) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Profile pictures are resolved from public handles. PostBridge doesn&apos;t expose
-        bios or follower counts, so those aren&apos;t shown.
+        <Trans>
+          Profile pictures are resolved from public handles. PostBridge doesn&apos;t expose
+          bios or follower counts, so those aren&apos;t shown.
+        </Trans>
       </p>
     </div>
   );
@@ -230,10 +238,10 @@ function AccountCard({ account, linked, busy, onToggle }) {
       >
         {linked ? (
           <>
-            <Check className="size-3.5" /> Linked
+            <Check className="size-3.5" /> <Trans>Linked</Trans>
           </>
         ) : (
-          "Link"
+          <Trans>Link</Trans>
         )}
       </Button>
     </article>
@@ -283,11 +291,11 @@ function SaveState({ saving, saved, count }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
       {saving ? (
-        <><Spinner className="size-3.5" /> Saving…</>
+        <><Spinner className="size-3.5" /> <Trans>Saving…</Trans></>
       ) : saved ? (
-        <><Check className="size-3.5 text-success" /> Saved</>
+        <><Check className="size-3.5 text-success" /> <Trans>Saved</Trans></>
       ) : (
-        <><span className="font-medium text-foreground tabular-nums">{count}</span> linked</>
+        <Trans><span className="font-medium text-foreground tabular-nums">{count}</span> linked</Trans>
       )}
     </span>
   );

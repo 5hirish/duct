@@ -22,23 +22,27 @@
  *               that runs without a browser attached.
  */
 
+import { msg } from "@lingui/core/macro";
+
 export const STORAGE_CLOUD = "cloud";
 export const STORAGE_LOCAL = "local";
 export const STORAGE_KEYCHAIN = "keychain";
 export const STORAGE_SESSION = "session";
 export const STORAGE_NONE = "none";
 
+// Lingui descriptors, rendered with `i18n._(STORAGE_LABELS[storage])`.
+//
 // Named for the consequence, not the mechanism. "Cloud" and "Database" are
 // facts about our infrastructure; what someone deciding whether to connect an
 // account actually needs to know is whether this survives closing the app, and
 // whether it leaves their machine. The mechanism still gets said — in the
 // detail line below, where there is room to say it accurately.
 export const STORAGE_LABELS = {
-  [STORAGE_CLOUD]: "Saved to your account",
-  [STORAGE_LOCAL]: "On this device",
-  [STORAGE_KEYCHAIN]: "In your keychain",
-  [STORAGE_SESSION]: "This session only",
-  [STORAGE_NONE]: "Not stored",
+  [STORAGE_CLOUD]: msg`Saved to your account`,
+  [STORAGE_LOCAL]: msg`On this device`,
+  [STORAGE_KEYCHAIN]: msg`In your keychain`,
+  [STORAGE_SESSION]: msg`This session only`,
+  [STORAGE_NONE]: msg`Not stored`,
 };
 
 /**
@@ -51,15 +55,11 @@ export const STORAGE_LABELS = {
  * clause rather than given a sentence of its own.
  */
 export const STORAGE_DETAIL = {
-  [STORAGE_CLOUD]:
-    "Encrypted on Duct's servers, so any device \u2014 and any report that runs while you are away \u2014 can use it.",
-  [STORAGE_LOCAL]:
-    "Encrypted on this computer only, so nothing running elsewhere can use it, including scheduled reports.",
-  [STORAGE_KEYCHAIN]:
-    "Held by your operating system's keychain on this computer. Duct's servers never see it.",
-  [STORAGE_SESSION]:
-    "Kept only until you close the app, and reports that run without you cannot use it.",
-  [STORAGE_NONE]: "Nothing stored yet.",
+  [STORAGE_CLOUD]: msg`Encrypted on Duct's servers, so any device — and any report that runs while you are away — can use it.`,
+  [STORAGE_LOCAL]: msg`Encrypted on this computer only, so nothing running elsewhere can use it, including scheduled reports.`,
+  [STORAGE_KEYCHAIN]: msg`Held by your operating system's keychain on this computer. Duct's servers never see it.`,
+  [STORAGE_SESSION]: msg`Kept only until you close the app, and reports that run without you cannot use it.`,
+  [STORAGE_NONE]: msg`Nothing stored yet.`,
 };
 
 /**

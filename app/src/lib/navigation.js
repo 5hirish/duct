@@ -1,3 +1,4 @@
+import { msg } from "@lingui/core/macro";
 import {
   TrendingUp,
   BarChart3,
@@ -21,15 +22,19 @@ import {
  *
  * `available: false` items are shown by the sidebar as coming-soon and are
  * skipped by the palette — there is nowhere to send you.
+ *
+ * `label` on a section and on an item is a Lingui descriptor, not a string:
+ * render it with `i18n._(item.label)` from `useLingui()`. A `t` here would be
+ * evaluated once at module load, in whichever language the first request had.
  */
 export const NAV_SECTIONS = [
   {
     key: "growth",
-    label: "Growth",
+    label: msg`Growth`,
     items: [
       {
         key: "organic_growth",
-        label: "Organic Growth",
+        label: msg`Organic Growth`,
         icon: TrendingUp,
         href: "/insights/organic-growth",
         available: true,
@@ -37,7 +42,7 @@ export const NAV_SECTIONS = [
       },
       {
         key: "seo_audit",
-        label: "SEO Audit",
+        label: msg`SEO Audit`,
         icon: Search,
         href: "/audit/seo",
         available: true,
@@ -45,7 +50,7 @@ export const NAV_SECTIONS = [
       },
       {
         key: "tiktok_studio",
-        label: "Content Studio",
+        label: msg`Content Studio`,
         icon: PenLine,
         href: "/content",
         available: true,
@@ -53,7 +58,7 @@ export const NAV_SECTIONS = [
       },
       {
         key: "paid_ads",
-        label: "Paid Ads Intelligence",
+        label: msg`Paid Ads Intelligence`,
         icon: Megaphone,
         href: null,
         available: false,
@@ -62,11 +67,11 @@ export const NAV_SECTIONS = [
   },
   {
     key: "product",
-    label: "Product",
+    label: msg`Product`,
     items: [
       {
         key: "product_intelligence",
-        label: "Product Intelligence",
+        label: msg`Product Intelligence`,
         icon: BarChart3,
         href: null,
         available: false,
@@ -75,11 +80,11 @@ export const NAV_SECTIONS = [
   },
   {
     key: "execute",
-    label: "Execute",
+    label: msg`Execute`,
     items: [
       {
         key: "executions",
-        label: "Executions",
+        label: msg`Executions`,
         icon: ShieldCheck,
         href: "/execute",
         available: true,
@@ -89,11 +94,11 @@ export const NAV_SECTIONS = [
   },
   {
     key: "library",
-    label: "Library",
+    label: msg`Library`,
     items: [
       {
         key: "artifacts",
-        label: "Artifacts",
+        label: msg`Artifacts`,
         icon: FileText,
         href: "/artifacts",
         available: true,
@@ -101,7 +106,7 @@ export const NAV_SECTIONS = [
       },
       {
         key: "activity",
-        label: "Activity",
+        label: msg`Activity`,
         icon: History,
         href: "/activity",
         available: true,
@@ -109,7 +114,7 @@ export const NAV_SECTIONS = [
       },
       {
         key: "usage",
-        label: "Usage",
+        label: msg`Usage`,
         icon: Gauge,
         href: "/usage",
         available: true,

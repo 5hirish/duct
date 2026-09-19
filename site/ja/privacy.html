@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>プライバシーポリシー — Duct</title>
+<meta name="description" content="Ductのプライバシーポリシー：当社がアクセスするGoogleユーザーデータとその理由、すべての接続ツールからのデータの取り扱い方法、共有相手、保持期間、および削除方法。"/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://getduct.ai/ja/privacy"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/privacy"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/privacy"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/privacy"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/privacy"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/privacy"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/privacy"/>
+<!-- hreflang:end -->
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/privacy"/>
+<meta property="og:title" content="プライバシーポリシー — Duct"/>
+<meta property="og:description" content="Ductがお客様のデータを収集、使用、保護する方法について学びましょう。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/privacy.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="プライバシーポリシー — Duct"/>
+<meta name="twitter:description" content="Ductがお客様のデータを収集、使用、保護する方法について学びましょう。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/privacy.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js" defer></script>
+<style>
+.legal-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+.legal-page h1 { font-family: var(--serif); font-size: 36px; font-weight: 700; margin-bottom: 8px; letter-spacing: -.5px; }
+.legal-date { font-size: 13px; color: var(--navy-3); margin-bottom: 48px; }
+.legal-page h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; margin: 40px 0 16px; letter-spacing: -.2px; }
+.legal-page h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+.legal-page p, .legal-page li { font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--navy-2); }
+.legal-page ul { padding-left: 20px; margin: 12px 0; }
+.legal-page li { margin-bottom: 6px; }
+.legal-page a { color: var(--orange); text-decoration: underline; text-underline-offset: 2px; }
+.legal-page a:hover { color: var(--orange-h); }
+.legal-table-wrap { overflow-x: auto; margin: 16px 0 8px; }
+.legal-page table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+.legal-page th, .legal-page td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line, #e6e6ea); }
+.legal-page th { font-weight: 600; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--navy-3); }
+.legal-page td code { font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+.legal-callout { border-left: 3px solid var(--orange); background: rgba(255,92,0,.04); padding: 16px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; }
+.legal-callout p { margin: 0; }
+</style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Privacy Policy",
+  "url": "https://getduct.ai/privacy",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Alleviate Lab",
+    "url": "https://getduct.ai"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/ja/partials/nav-simple.html"></div>
+
+<main>
+<article class="legal-page">
+
+<h1>プライバシーポリシー</h1>
+<p class="legal-date">最終更新日：2026年9月7日</p>
+
+<p>Alleviate Lab（「当社」）は、広告、分析、製品、検索ツールを接続し、それらの変更点を統合し、特定の変更を承認した場合にのみ、その変更を接続されたツールに適用するクロスツールインテリジェンスプラットフォームであるDuct（<a href="https://getduct.ai">getduct.ai</a>）を運営しています。このプライバシーポリシーは、当社が何を収集し、その理由、誰と共有し、どのくらいの期間保持し、どのように削除するかを説明します。</p>
+
+<h2>1. アクセスするGoogleユーザーデータ</h2>
+
+<p>Ductは、公式のGoogle APIを通じてのみGoogleユーザーデータにアクセスし、お客様が明示的に接続したGoogleアカウントとプロパティに対してのみアクセスします。Googleの同意画面を完了するまで何もアクセスされず、以下の各スコープは、その横に記載された目的のために要求されます。</p>
+
+<h3>サインイン</h3>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>範囲</th><th>アクセスするもの</th><th>Ductが必要とする理由</th></tr></thead>
+<tbody>
+<tr><td><code>openid</code></td><td>安定したGoogleアカウント識別子</td><td>セッション間でアカウントを認識するため</td></tr>
+<tr><td><code>userinfo.email</code></td><td>お客様のメールアドレス</td><td>アカウントを識別し、レポート通知を送信し、プロジェクト招待を照合するため</td></tr>
+<tr><td><code>userinfo.profile</code></td><td>お客様の名前とプロフィール画像</td><td>共有プロジェクトで誰がサインインしているか、誰がアクションを実行したかを表示するため</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>接続されたデータソース</h3>
+<p>以下の各コネクタはオプションであり、個別に接続されます。これらを接続しない、一部を接続する、またはすべてを接続することができ、いつでも切断できます。</p>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>範囲</th><th>アクセスするもの</th><th>Ductが必要とする理由</th></tr></thead>
+<tbody>
+<tr><td><code>adwords</code></td><td>Google Adsキャンペーン、広告グループ、検索語句、パフォーマンス指標（クリック数、インプレッション数、費用、コンバージョン数、ROAS）、およびデバイスと地域セグメンテーション</td><td>有料パフォーマンスを報告し、お客様が承認した場合に、除外キーワードを追加したり、キャンペーンを一時停止したりするため</td></tr>
+<tr><td><code>analytics.readonly</code></td><td>Google Analytics 4 レポートデータとプロパティ設定</td><td>他のツールと合わせて、トラフィック、コンバージョン、およびリテンションを報告するため</td></tr>
+<tr><td><code>analytics.edit</code></td><td>Google Analytics 4 管理設定</td><td>承認された設定変更を適用するため（イベントを主要イベントとしてマークするなど）</td></tr>
+<tr><td><code>webmasters.readonly</code></td><td>Google Search Console のクエリ、ページ、インプレッション、クリック、順位</td><td>オーガニック検索パフォーマンスを報告し、ランキングの変更を表面化するため</td></tr>
+<tr><td><code>tagmanager.readonly</code></td><td>Google Tag Manager のアカウント、コンテナ、タグ、トリガー</td><td>測定設定を監査し、破損または欠落しているトラッキングを検出するため</td></tr>
+<tr><td><code>tagmanager.edit.containers</code></td><td>Google Tag Manager のコンテナコンテンツ</td><td>承認されたトラッキング修正をコンテナ変更として準備するため</td></tr>
+<tr><td><code>tagmanager.publish</code></td><td>Google Tag Manager のコンテナバージョン</td><td>お客様が承認した後、コンテナバージョンを公開するため</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>2. Ductがお客様に代わって行う変更</h2>
+
+<p>上記のスコープの一部は書き込みを許可します。これはDuctがお客様のライブアカウントに触れる部分であるため、正確に説明したいと考えています。</p>
+<ul>
+<li><strong>何も自動的に書き込まれることはありません。</strong> Ductは変更セットを提案し、個々の変更について正確な変更前と変更後を表示します。お客様がアプリで明示的に承認するまで、何も適用されません。</li>
+<li><strong>承認は変更セットごとであり、一括ではありません。</strong> 1つの変更を承認しても、将来の変更が承認されるわけではありません。</li>
+<li><strong>変更は記録され、基盤となるAPIが許可する限り元に戻すことができます。</strong> 適用されたすべての変更は、お客様のプロジェクトに対する監査ログに書き込まれます。</li>
+<li><strong>レポートは書き込みアクセスなしで機能します。</strong> 読み取り専用を希望する場合は、読み取り専用スコープを接続し、残りを拒否してください。Ductのレポートは引き続き機能します。</li>
+</ul>
+
+<h2>3. Googleユーザーデータの使用方法</h2>
+<ul>
+<li><strong>認証:</strong> お客様の身元を確認し、セッションを維持するため</li>
+<li><strong>レポートとインサイト:</strong> 接続されたプロパティからデータを取得し、お客様が要求するブリーフ、アラート、監査を生成するため</li>
+<li><strong>承認された変更:</strong> お客様が承認した特定の変更を、選択した接続済みアカウントに適用するため</li>
+<li><strong>サポート:</strong> お客様から報告された問題を診断するため、必要最小限のデータを使用します。</li>
+</ul>
+<p>Googleユーザーデータは、これらのユーザー向け機能を提供および改善するためにのみ使用します。その他の目的で使用することはありません。</p>
+
+<h2>4. Googleユーザーデータの限定的な使用</h2>
+
+<div class="legal-callout">
+<p>DuctによるGoogle APIから受け取った情報の他のアプリへの利用および転送は、限定利用要件を含む<a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google APIサービスユーザーデータポリシー</a>に準拠します。</p>
+</div>
+
+<p>具体的には、当社は<strong>行いません</strong>:</p>
+<ul>
+<li>Googleユーザーデータを使用または転送し、ターゲット広告、パーソナライズ広告、リターゲティング広告、インタレストベース広告を含むあらゆる種類の広告配信のために利用すること</li>
+<li>Googleユーザーデータをデータブローカー、情報再販業者、またはその他の第三者へ独自の目的のために販売、賃貸、または転送すること</li>
+<li>Googleユーザーデータを信用度を判断するため、または貸付目的で使用すること</li>
+<li>Googleユーザーデータを独立したデータベースやプロファイルを構築または強化するために使用すること</li>
+<li>Googleユーザーデータを汎用または非パーソナライズされたAIまたは機械学習モデルの開発、改善、またはトレーニングに使用すること</li>
+<li>特定の事項について明示的な同意を得ている場合、セキュリティ目的または適用される法律を遵守するために必要な場合、またはデータが集計され匿名化されている場合を除き、人間がGoogleユーザーデータを読み取ることを許可する</li>
+</ul>
+
+<h2>5. 接続するその他のデータソース</h2>
+
+<p>Googleは、Ductが接続できるいくつかのソースの1つです。それぞれはオプションであり、お客様が個別に接続し、承認した認証情報を使用してプロバイダーの公式APIを通じてアクセスされます。Ductはレポート作成に必要な指標を読み取り、お客様が明示的に承認した変更のみを書き込みます。</p>
+<ul>
+<li><strong>広告:</strong> Meta Ads、Apple Search Ads、OpenAI Ads</li>
+<li><strong>製品および行動分析:</strong> Mixpanel、Microsoft Clarity</li>
+<li><strong>実験:</strong> GrowthBook</li>
+<li><strong>収益と請求:</strong> Stripe、RevenueCat</li>
+<li><strong>CRM:</strong> HubSpot</li>
+<li><strong>ソーシャル公開と分析:</strong> PostBridge。これは、お客様が承認するソーシャルアカウント (TikTok、Instagram、YouTube、LinkedIn、X、Pinterest、Facebook、Google Business Profile) を接続します。</li>
+</ul>
+<p>このポリシーにおけるコミットメント — お客様データの販売なし、広告利用なし、モデルトレーニングなし、リクエストに応じた削除 — は、Googleユーザーデータに適用されるのとまったく同じように、これらのソースからのデータに適用されます。</p>
+
+<h2>6. コンテンツスタジオ：アップロードと公開</h2>
+
+<p>Ductのコンテンツ機能を使用する場合：</p>
+<ul>
+<li><strong>アップロードするファイル</strong> (画像、動画、ブランドアセット) は、下書きや公開された投稿に添付できるように保存されます。</li>
+<li><strong>生成されたメディア。</strong> Ductで作成された画像と動画は、サードパーティの生成AIサービスによって生成されます。これらのサービスは、プロンプトとお客様が提供する参照画像を受け取ります。</li>
+<li><strong>公開。</strong> 投稿をスケジュールまたは公開すると、そのコンテンツとメディアはPostBridgeに送信され、お客様が選択したソーシャルプラットフォームの独自の利用規約とプライバシーポリシーに基づいて、そのプラットフォームに送信されます。</li>
+<li><strong>公開調査データ。</strong> Ductは、ソーシャルプラットフォームから公開されているコンテンツと指標を取得し、推奨事項に役立てることができます。これは公開データであり、お客様や個々のオーディエンスに関するデータではありません。</li>
+</ul>
+<p>使用権のない素材や、投稿に必要な範囲を超えて他人の個人データを含むファイルをアップロードしないでください。</p>
+
+<h2>7. Duct デスクトップアプリ</h2>
+
+<p>デスクトップアプリは、ブラウザで使用するDuctと同じものをネイティブウィンドウで表示します。その意味について正確に説明する価値があります。なぜなら、「デスクトップアプリ」という言葉は「すべてがここに留まる」という印象を与えますが、当社が提供するものはそうではないからです。</p>
+<ul>
+<li><strong>配布するアプリは当社のサーバーと通信します。</strong> Ductのバックエンドのコピーは含まれていません。お客様のプロジェクト、ブリーフ、エージェントのメモリ、アクティビティログ、アップロード、コネクタの認証は、ブラウザでDuctを使用する場合とまったく同じように当社に保存されます。これにより、2台目のコンピューターでサインインして作業を見つけることもできます。セクション12から14では、データの保存、共有、削除方法について説明します。</li>
+<li><strong>AIプロバイダーキーはお客様のマシンに保存されます。</strong> それらはオペレーティングシステムのキーチェーンに保存され、ジョブの実行が必要な場合にのみリクエストとともに送信されます。当社がそれらを保存することはなく、ブラウザ版が提供するキーを当社に保存するオプションは、デスクトップアプリでは意図的に無効にされています。</li>
+<li><strong>サインインとコネクタの認証は、</strong> 埋め込みウィンドウではなくシステムブラウザを開くため、ブラウザ独自の保護が維持され、アプリに戻るリンクに認証情報が渡されることはありません。</li>
+<li><strong>デスクトップアプリはCookieを設定せず、Cookieについて尋ねることもありません。</strong> 他のDuctと同様のGoogle Tag Managerコンテナを通じて使用状況を報告しますが、ストレージは永続的にオフになっています。Google Analyticsはイベントを受け取りますが、お客様のマシンには何も書き込まないため、セクション11のCookieは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーを表示することは、誰かの邪魔をする価値のある質問ではありません。</li>
+<li><strong>クラッシュレポートと使用状況データは、配布するアプリではデフォルトでオンになっており、設定の1つのスイッチで両方をオフにできます。</strong> 一度設定を変更すると、その設定が保持され、デフォルトは再度適用されません。クラッシュレポートには、エラーとその原因となったスタックトレースが含まれます。使用状況データは、開いた画面と機能に関するものであり、プロバイダーのAPIキー、お客様のデータ、またはお客様が生成したものは一切含まれません。Ductを自分でビルドした場合、これらはデフォルトでオフになります。これは、その場合、当社が実行しているわけではないためです。</li>
+<li><strong>更新チェック</strong>は、新しいバージョンが存在するかどうかを問い合わせるために、当社のリリースホストに連絡します。このリクエストにより、お客様のIPアドレスと実行中のバージョンが明らかになります。</li>
+<li><strong>代わりに、すべてを自分で実行することもできます。</strong> ソースは公開されており、バックエンドをアプリ内に組み込むか、独自のサーバーでホストすることができます。その場合、当社は何も保持せず、このポリシーで説明することもありません。セクション16を参照してください。</li>
+</ul>
+
+<h2>8. 独自のAIプロバイダーキー</h2>
+
+<p>DuctのAPIキーを使用する代わりに、AIプロバイダー用の独自のAPIキーを提供できます:</p>
+<ul>
+<li><strong>デスクトップアプリでは、</strong> キーはオペレーティングシステムのキーチェーンに保存されます。お客様が要求したジョブを実行できるようにリクエストとともに送信されますが、当社が保存することはありません。キーを当社に保存するオプションはオフになっています。</li>
+<li><strong>ウェブアプリでは、</strong> お客様が貼り付けたキーは、そのブラウザセッション中に保持され、各リクエストとともに送信されます。再度貼り付ける必要がないように保存を選択した場合、キーは保存時に暗号化され、お客様に代わってリクエストを行うためだけに復号化され、当社のAPIによって返されることはなく、ログに書き込まれることもありません。いつでも削除できます。</li>
+<li>お客様ご自身のキーを使用する場合、そのプロバイダーによってお客様のアカウントに利用料金が請求され、そのプロバイダーの規約およびプライバシーポリシーが適用されます。</li>
+<li><strong>プロバイダーのデータ設定はお客様が構成できます。</strong> プロバイダーが受け取ったデータを保持するか、それに基づいてトレーニングするかは、当社ではなく、そのプロバイダーとのアカウントのポリシーによって管理されます。セクション12のルーティングに関する注記を参照してください。</li>
+</ul>
+
+<h2>9. ウェブサイト監査とリードレポート</h2>
+
+<p>当社の公開SEO監査ツールは、お客様が提出したメールアドレスとウェブサイトURLを収集し、そのウェブサイトからページを取得して分析し、結果のレポートをメールで送信します。当社は、再送できるように、またDuctについてお客様に連絡できるように、提出物とレポートを保存します。お客様が所有または監査を許可されているウェブサイトのみを提出してください。提出物を削除するには、<a href="mailto:hello@getduct.ai">hello@getduct.ai</a>までお問い合わせください。</p>
+
+<h2>10. チームプロジェクト</h2>
+
+<p>Ductのプロジェクトは共有できます。誰かを招待すると、提供されたメールアドレスに招待状が送信されます。プロジェクトのメンバーは、そのプロジェクトに接続されているソース、レポート、インサイト、アクティビティ履歴、および他のメンバーの名前、メールアドレス、プロフィール写真を見ることができます。適切な役割を持つ人は誰でも、接続されたアカウントに対して提案された変更を確認し、承認することもできます。アクセスを許可する意図のある人だけを招待してください。</p>
+
+<h2>11. その他の収集情報</h2>
+
+<h3>利用データ</h3>
+<p>Ductがどのように使用されているかを理解するため、当社は基本的な製品分析データ（訪問ページ、使用機能、一般的な操作パターンなど）を収集します。これはGoogle Tag Managerを通じて実行され、Google Analytics 4をロードします。キー入力やフォームの内容は記録しません。</p>
+
+<h3>Cookieおよび類似の技術</h3>
+
+<p>分析Cookieは、お客様が同意した場合にのみ設定されます。EEA、英国、またはスイスにお住まいの場合は、設定される前に確認し、お客様が選択するまで、以下の厳密に必要なエントリ以外は存在しません。その他の地域では、分析はデフォルトでオンになっており、いつでもオフにできます。フッターの<strong>Cookie設定</strong>リンクと、アプリ内のアカウントメニューで、すべてのページで選択肢を再度開くことができます。</p>
+
+<p>拒否すると、Google Tag Managerは制限モードで読み込まれるのではなく、まったく読み込まれません。以前に同意した後で拒否した場合、当社は以下のCookieを削除し、ページを再読み込みします。</p>
+
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>Cookie</th><th>設定元</th><th>目的</th><th>有効期限</th></tr></thead>
+<tbody>
+<tr><td><code>_ga</code></td><td>Google Analytics 4</td><td>訪問者を区別し、再訪問が二重にカウントされないようにします</td><td>2年間</td></tr>
+<tr><td><code>_ga_SXH5LYVTJ8</code></td><td>Google Analytics 4</td><td>特定のプロパティの現在のセッションの状態を保持します</td><td>2年間</td></tr>
+<tr><td><code>_gcl_au</code></td><td>Google Tag Manager (コンバージョンリンカー)</td><td>サインアップを、それに繋がった広告またはリンクに紐付ける</td><td>90日間</td></tr>
+<tr><td><code>duct_consent</code></td><td>Duct</td><td>お客様の選択を記憶し、すべてのページで尋ねられることはありません。<code>getduct.ai</code>とそのすべてのサブドメインで設定されるため、ブラウザで一度回答すると、アプリにも適用されます。デスクトップアプリは分析を一切読み込まないため、これを設定することはありません。厳密に必要です — お客様が承諾するか拒否するかにかかわらず存在します</td><td>6か月後、再度確認します</td></tr>
+<tr><td><code>duct_consent_region</code></td><td>Duct（セッションストレージ）</td><td>リクエストが到着した国をキャッシュし、検索を繰り返すことなく適切な質問をします。厳密に必要</td><td>セッション終了</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>下記の<em>ローカルに保存されたデータ</em>で説明されている認証トークンも厳密に必要です。それがなければサインインしたままにすることはできません。</p>
+
+<h3>診断</h3>
+<p>何らかの障害が発生した場合、障害の技術的コンテキスト（スタックトレース、ブラウザ、試行された操作）を含むエラーレポートを収集します。エラー監視はGoogleユーザーデータをキャプチャしないように設定していますが、レポートにプロパティIDなどの識別子が偶発的に含まれる場合があります。</p>
+
+<h3>アクティビティとエージェントのメモリ</h3>
+<p>Ductはプロジェクト内の重要なアクションの活動ログを記録し、エージェントがデータから導き出す永続的なメモ（例：季節的な繰り返しパターン）を保存するため、レポートは時間とともに改善されます。これらは両方ともプロジェクトにスコープされ、あなたに表示され、プロジェクトとともに削除されます。</p>
+
+<h3>ローカルに保存されたデータ</h3>
+<p>お客様がサインインした状態を維持するため、ブラウザのローカルストレージに認証トークンを保存します。これにはお客様の名前、メールアドレス、プロフィール画像が含まれ、7日後に期限切れになります。</p>
+
+<h2>12. データの共有と保存方法</h2>
+
+<p>お客様のデータを販売することはありません。Ductの運用に必要な場合に限り、以下のサービスプロバイダーと共有し、その目的に限定する条件の下でのみ共有します。</p>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>プロバイダー</th><th>目的</th><th>接続されたソースデータを受信しますか？</th></tr></thead>
+<tbody>
+<tr><td>Railway</td><td>アプリケーションホスティングとプライマリデータベース</td><td>はい — 保存データとして、静止時</td></tr>
+<tr><td>Cloudflare</td><td>CDN、ウェブアプリケーション配信、ボット保護（Turnstile）、メール配信</td><td>転送中</td></tr>
+<tr><td>Anthropic、OpenAI、Google、OpenRouter</td><td>レポートのナラティブ、推奨事項、コンテンツの下書きを生成するAIモデル</td><td>はい — お客様が要求した出力に必要なデータ</td></tr>
+<tr><td>生成メディアプロバイダー</td><td>コンテンツスタジオでの画像および動画生成</td><td>プロンプトと参照メディアのみ</td></tr>
+<tr><td>PostBridge</td><td>ソーシャルアカウントへの投稿と、そこからの分析の読み取り</td><td>ソーシャルアカウントデータと投稿コンテンツのみ</td></tr>
+<tr><td>Apify</td><td>調査目的で公開されているソーシャルコンテンツの取得</td><td>いいえ</td></tr>
+<tr><td>Sentry</td><td>エラー監視とクラッシュレポート</td><td>偶発的に、エラーコンテキストのみ</td></tr>
+<tr><td>再送信</td><td>トランザクションメール（レポート配信、プロジェクト招待）</td><td>いいえ — メールアドレスとレポートコンテンツのみ</td></tr>
+</tbody>
+</table>
+</div>
+<p>接続元データがAIモデルプロバイダーに送信される場合、それはお客様が要求した出力を生成するためだけに送信されます。<strong>当社はモデルのトレーニングにそれを使用することはなく、プロバイダーが当社に代わってそうすることを許可することもありません。</strong> Anthropic、OpenAI、Googleは、送信されたデータがデフォルトでトレーニングから除外されるAPI規約の下で使用されます。</p>
+<p><strong>OpenRouterはルーターであり、モデルプロバイダーではありません。</strong> これには特別な注意が必要です。OpenRouterは、ルーティング設定が選択する基盤となるプロバイダーにリクエストを転送します。これらのプロバイダーは、受信したデータをログに記録するか、またはトレーニングに使用するかどうかで異なります。お客様が独自のOpenRouterキーを提供する場合、そのルーティング設定はお客様のものです。リクエストの保持およびトレーニングの動作は、お客様のOpenRouterアカウントで設定されたデータポリシーによって管理されます。お客様は、必要なコミットメントに一致するように設定する必要があります。キーを接続する前に、OpenRouterのゼロログおよび非トレーニングデータポリシーを有効にすることをお勧めします。Ductは、どのルートが選択されたかに関わらず、お客様のデータをトレーニングに使用することはありません。</p>
+<p>法令で義務付けられている場合、データを開示することがあります。また、合併または買収の場合には、後継事業体に開示することがあり、その場合、別途通知されるまで本ポリシーが適用され続けます。</p>
+
+<h2>13. データセキュリティ</h2>
+<ul>
+<li><strong>OAuthトークンと保存されたプロバイダーキーは、</strong> Fernet対称暗号化を使用して保存時に暗号化され、ユーザーごとにサーバー側に保存され、ブラウザに公開されることはありません。</li>
+<li>転送中のすべてのデータはHTTPS/TLSで暗号化されます</li>
+<li>プロジェクトのデータへのアクセスには、認証とそのプロジェクトの確認済みメンバーシップの両方が必要です。非メンバーは他のプロジェクトのデータを読み取ることができません。</li>
+<li>内部データアクセスには最小権限の原則に従います</li>
+</ul>
+
+<h2>14. データ保持と削除</h2>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>データ</th><th>保持期間</th></tr></thead>
+<tbody>
+<tr><td>OAuthリフレッシュトークンと保存されたプロバイダーキー</td><td>ソースを切断するか、キーを削除するか、アカウントを削除するか、またはプロバイダーでアクセスを取り消すまで — いずれか早い方</td></tr>
+<tr><td>接続されたソースから取得されたデータ</td><td>アカウントがアクティブである限り、生成されたレポート、インサイト、エージェントメモリ、および作業アーティファクトの一部として保持されます</td></tr>
+<tr><td>生成されたレポート、コンテンツの下書き、アップロード、および監査ログ</td><td>アカウントが有効な間</td></tr>
+<tr><td>認証トークン（ブラウザ）</td><td>7日間</td></tr>
+<tr><td>エラー診断</td><td>90日間</td></tr>
+<tr><td>監査ツールの提出物</td><td>お客様が削除を依頼するまで</td></tr>
+<tr><td>バックアップ</td><td>削除されたデータは、削除後最大30日間、暗号化されたバックアップに保持される場合があります</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>データの削除</h3>
+<ul>
+<li><strong>1つのソースを切断する:</strong> Ductの接続ページで削除してください。その時点で保存されている認証情報は削除されます。</li>
+<li><strong>GoogleでのDuctのアクセスを取り消す:</strong> <a href="https://myaccount.google.com/permissions" rel="noopener">myaccount.google.com/permissions</a> にアクセスし、Ductを削除してください。これは、Ductアカウントをまだ持っているかどうかにかかわらず機能します。</li>
+<li><strong>デスクトップアプリ:</strong> アプリのデータディレクトリを削除すると、ローカルデータベースとその内容が削除されます。アプリ内でプロバイダーキーを削除すると、キーチェーンから削除されます。</li>
+<li><strong>アカウントと関連するすべてのデータを削除する:</strong> <a href="mailto:hello@getduct.ai">hello@getduct.ai</a> にメールを送信してください。削除リクエストは30日以内に処理し、完了時にメールで確認します。</li>
+</ul>
+
+<h2>15. お客様の権利</h2>
+<p>当社はスペインに拠点を置き、EU GDPRに基づき個人データを処理します。お客様には、ご自身の個人データにアクセスし、修正し、エクスポートし、処理を制限し、または削除する権利、および処理に異議を唱える権利があります。当社の法的根拠は、製品運用のためのお客様との契約履行、およびセキュリティと診断のための正当な利益です。これらの権利を行使するには、<a href="mailto:hello@getduct.ai">hello@getduct.ai</a>までご連絡ください。また、お客様には現地の監督機関（スペインではAEPD）に苦情を申し立てる権利もあります。</p>
+<p>データは、EU標準契約条項を含む転送メカニズムに基づき、セクション12に記載されているプロバイダーによってEEA外で処理される場合があります。</p>
+
+<h2>16. オープンソースとセルフホスティング</h2>
+<p>DuctのソースコードはMITライセンスの下で公開されています。このポリシーは、getduct.aiおよびapp.getduct.aiで<strong>当社が運営するホスト型サービス</strong>と、当社が配布する公式デスクトップアプリを対象としています。</p>
+<p>このポリシーは、他者が実行するソフトウェアのインスタンスには適用されません。第三者が運営するDuctのデプロイメント、またはお客様自身が実行するデプロイメントを使用する場合、そのデプロイメントの運営者がデータ管理者であり、このポリシーは適用されません。コードを公開しても、当社が運営していないデプロイメントに保持されているデータにアクセスできるわけではありません。</p>
+
+<h2>17. ベータ版のステータスと変更</h2>
+<p>Ductは現在ベータ版であり、機能やデータ処理方法は進化する可能性があります。当社は必要に応じてこのポリシーを更新し、上部の日付を改訂し、変更が有効になる前に、アカウントに登録されているメールアドレスでユーザーに重要な変更を通知します。</p>
+
+<h2>18. 子供のプライバシー</h2>
+<p>Ductは18歳未満の方による利用を意図していません。当社は意図的に子供から情報を収集することはありません。</p>
+
+<h2>19. お問い合わせ</h2>
+<p>プライバシーに関する質問、データアクセスまたは削除のリクエストについては、以下までご連絡ください。</p>
+<ul>
+<li>メール: <a href="mailto:hello@getduct.ai">hello@getduct.ai</a></li>
+<li>データ管理者：Alleviate Lab</li>
+<li>場所：スペイン</li>
+<li>ウェブサイト: <a href="https://getduct.ai">getduct.ai</a></li>
+</ul>
+
+</article>
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/ja/partials/footer-expanded.html"><div class="legal-fallback"><a href="/ja/">Duct</a><a href="/ja/about">について</a><a href="/ja/privacy">プライバシーポリシー</a><a href="/ja/terms">利用規約</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

@@ -26,16 +26,19 @@
   var RELEASES = 'https://github.com/5hirish/duct/releases';
   var LATEST = 'https://github.com/5hirish/duct/releases/latest/download/';
 
+// Localised pages carry window.DUCT_I18N (scripts/build_site_i18n.py); the literal must stay inline at the call.
+var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m && m[s]) || s; };
+
   // Fixed names published by the release workflow. Renaming one here without
   // renaming it there produces a 404 that nothing in CI notices.
   var SLOTS = [
-    { key: 'macos',          label: 'macOS',            hint: 'Universal · Apple silicon and Intel',
+    { key: 'macos',          label: 'macOS',            hint: ductT('Universal · Apple silicon and Intel'),
       file: 'Duct-macOS-universal.dmg',   ext: '.dmg' },
-    { key: 'windows',        label: 'Windows',          hint: 'Windows 10 and later',
+    { key: 'windows',        label: 'Windows',          hint: ductT('Windows 10 and later'),
       file: 'Duct-Windows-x64-setup.exe', ext: '.exe installer' },
-    { key: 'linux-appimage', label: 'Linux (AppImage)', hint: 'Runs on any distribution',
+    { key: 'linux-appimage', label: 'Linux (AppImage)', hint: ductT('Runs on any distribution'),
       file: 'Duct-Linux-x86_64.AppImage', ext: '.AppImage' },
-    { key: 'linux-deb',      label: 'Linux (.deb)',     hint: 'Debian and Ubuntu',
+    { key: 'linux-deb',      label: 'Linux (.deb)',     hint: ductT('Debian and Ubuntu'),
       file: 'Duct-Linux-amd64.deb',       ext: '.deb' }
   ];
 
@@ -109,6 +112,10 @@
    * failure mode. The element's existing text and href stay as the fallback
    * for a platform we do not build for. */
   function wire() {
+    // Only on the download page. Everywhere else a Download button is a link
+    // to that page: a visitor who has not seen what the app is should land on
+    // the page that shows it, not on a 90 MB installer from a nav button.
+    if (!/^\/download(\.html)?$/.test(location.pathname)) return;
     var nodes = document.querySelectorAll('[data-duct-download]');
     if (!nodes.length) return;
 
@@ -123,19 +130,18 @@
       el.setAttribute('download', '');
       // `short` is for tight spots (the nav) where the platform name does not fit.
       el.textContent = el.hasAttribute('data-duct-download-short')
-        ? 'Download ↓'
-        : 'Download for ' + label + ' ↓';
+        ? ductT('Download ↓')
+        : ductT('Download for {label} ↓').replace('{label}', label);
     }
   }
 
   /* The download click, which is the top of the desktop funnel and was the one
    * conversion on this site nobody was counting.
    *
-   * Delegated, because `wire()` rewrites these anchors and the /download page
-   * lists every installer directly — one listener covers both, and anchors that
-   * appear later. Matching on the release prefix as well as the attribute means
-   * a per-platform link on /download counts even though it never needed
-   * upgrading.
+   * Delegated, because `wire()` rewrites the download page's anchors and the
+   * page lists every installer directly — one listener covers both, and
+   * anchors that appear later. Matching on the release prefix is what makes a
+   * per-platform link count and a link to /download not.
    *
    * Queued on dataLayer whether or not GTM has loaded; if the visitor declined
    * cookies it never loads and the array is simply never drained. */
@@ -145,7 +151,9 @@
   }
 
   document.addEventListener('click', function (ev) {
-    var el = ev.target && ev.target.closest && ev.target.closest('a[data-duct-download], a[href*="' + LATEST + '"]');
+    // Only anchors that hand out an installer; a Download button that links
+    // to /download is navigation, not a download.
+    var el = ev.target && ev.target.closest && ev.target.closest('a[href*="' + LATEST + '"]');
     if (!el) return;
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event: 'download_started', os: osForHref(el.getAttribute('href') || '') });

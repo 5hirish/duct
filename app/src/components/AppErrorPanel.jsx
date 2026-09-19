@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Trans, useLingui } from "@lingui/react/macro";
 
 import MosaicPanel, { MOSAIC } from "./MosaicPanel";
 
@@ -11,6 +12,7 @@ function buildIncidentId(error) {
 }
 
 export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
+  const { t } = useLingui();
   const [copyState, setCopyState] = useState("idle");
   const occurredAt = useMemo(() => new Date().toISOString(), []);
   const incidentId = useMemo(() => buildIncidentId(error), [error]);
@@ -88,6 +90,7 @@ export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
     }
   };
 
+  const digest = error?.digest ?? t`Unavailable`;
   const panel = (
     <main id="main-content" className="app-main" tabIndex={-1}>
       <section className="connection-card" style={{ maxWidth: 760, margin: "48px auto" }}>
@@ -96,20 +99,23 @@ export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
             the failure before it reads a word of the copy. */}
         <MosaicPanel name={MOSAIC.fractum} className="mb-6" />
         <h1 className="text-2xl font-semibold tracking-tight" style={{ marginBottom: 10 }}>
-          This page stopped working
+          <Trans>This page stopped working</Trans>
         </h1>
         <p className="app-subtle" style={{ fontSize: 14, lineHeight: 1.55 }}>
-          It&rsquo;s logged on our side. Copy the details below if you report it.
+          <Trans>It’s logged on our side. Copy the details below if you report it.</Trans>
         </p>
 
+        {/* The values are the diagnostics; only the labels are translated. The
+            "Copy debug info" payload below keeps its English keys, since that
+            is what lands in a bug report. */}
         <div className="generate-alert-detail" style={{ marginTop: 16 }}>
-          <strong>Incident ID:</strong> {incidentId}
+          <Trans><strong>Incident ID:</strong> {incidentId}</Trans>
           {"\n"}
-          <strong>When:</strong> {occurredAt}
+          <Trans><strong>When:</strong> {occurredAt}</Trans>
           {"\n"}
-          <strong>Route:</strong> {route}
+          <Trans><strong>Route:</strong> {route}</Trans>
           {"\n"}
-          <strong>Digest:</strong> {error?.digest ?? "Unavailable"}
+          <Trans><strong>Digest:</strong> {digest}</Trans>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2.5">
@@ -118,7 +124,7 @@ export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
             className="inline-flex items-center gap-2 rounded-4xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
             onClick={reset}
           >
-            Try again
+            <Trans>Try again</Trans>
           </button>
           <button
             type="button"
@@ -126,16 +132,16 @@ export default function AppErrorPanel({ error, reset, showHtmlShell = false }) {
             onClick={handleCopyDebugInfo}
           >
             {copyState === "copied"
-              ? "Copied debug info"
+              ? t`Copied debug info`
               : copyState === "failed"
-                ? "Copy failed"
-                : "Copy debug info"}
+                ? t`Copy failed`
+                : t`Copy debug info`}
           </button>
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-4xl border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
           >
-            Go to home
+            <Trans>Go to home</Trans>
           </Link>
         </div>
       </section>

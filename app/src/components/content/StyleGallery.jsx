@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, Sparkles, X } from "lucide-react";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { listStyles } from "@/lib/contentApi";
 import LoadError from "@/components/LoadError";
 
@@ -10,10 +12,11 @@ import LoadError from "@/components/LoadError";
 // classes (.cap-stroke, etc.) don't leak or collide across cards.
 // ---------------------------------------------------------------------------
 
+// Message descriptors (module-level): rendered with `i18n._`.
 const CATEGORY_LABELS = {
-  hook: "Hooks",
-  caption: "Captions",
-  body: "Text cards",
+  hook: msg`Hooks`,
+  caption: msg`Captions`,
+  body: msg`Text cards`,
 };
 const CATEGORY_ORDER = ["hook", "caption", "body"];
 
@@ -60,14 +63,16 @@ body{margin:0;padding:0;gap:0;background:#111;display:block}
 }
 
 function StylePreview({ style, baseCss }) {
+  const { t } = useLingui();
   const W = 232;
   const zoom = W / 1080;
   const H = Math.round(1920 * zoom);
   const srcDoc = useMemo(() => buildDoc(style, baseCss, zoom), [style, baseCss, zoom]);
+  const name = style.name;
   return (
     <div className="overflow-hidden rounded-lg border border-border/60 bg-black" style={{ height: H }}>
       <iframe
-        title={`${style.name} preview`}
+        title={t`${name} preview`}
         srcDoc={srcDoc}
         sandbox=""
         scrolling="no"
@@ -83,6 +88,7 @@ function StylePreview({ style, baseCss }) {
 // ---------------------------------------------------------------------------
 
 export default function StyleGallery() {
+  const { t, i18n } = useLingui();
   const [styles, setStyles] = useState([]);
   const [baseCss, setBaseCss] = useState("");
   const [loading, setLoading] = useState(true);
@@ -124,7 +130,7 @@ export default function StyleGallery() {
   if (error) {
     return (
       <LoadError
-        what="the slide styles"
+        what={t`the slide styles`}
         detail={error}
         onRetry={() => { setError(""); setLoading(true); setReloadKey((k) => k + 1); }}
       />
@@ -135,18 +141,20 @@ export default function StyleGallery() {
     <section className="space-y-6">
       <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
         <p className="flex items-center gap-2 text-sm font-medium">
-          <Sparkles className="h-4 w-4 text-primary" /> Base styles
+          <Sparkles className="h-4 w-4 text-primary" /> <Trans>Base styles</Trans>
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          The shared, brand-agnostic slide styles the builder inlines so captions stay consistent.
-          Formats link to these. More styles &amp; categories coming.
+          <Trans>
+            The shared, brand-agnostic slide styles the builder inlines so captions stay consistent.
+            Formats link to these. More styles &amp; categories coming.
+          </Trans>
         </p>
       </div>
 
       {CATEGORY_ORDER.filter((c) => grouped[c]?.length).map((cat) => (
         <div key={cat}>
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {CATEGORY_LABELS[cat] || cat}
+            {CATEGORY_LABELS[cat] ? i18n._(CATEGORY_LABELS[cat]) : cat}
           </h3>
           <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2 @2xl:grid-cols-3">
             {grouped[cat].map((s) => (

@@ -137,6 +137,10 @@ collector through a second `open --env`, since launchd inherits nothing from
 the shell. Phoenix's MCP server (`.mcp.json`) is then up too, so an agent can
 read the traces of a slow run rather than the transcript table.
 
+Zed runs none of the compounds (it implements no `compounds`); its equivalents
+are the **`Desktop: Tauri dev (sidecar backend)`** and **`Duct: Desktop + API`**
+tasks in `.zed/tasks.json`, plus **`Duct: stop everything`** when you are done.
+
 Keychain `invoke` works from the dev server because `http://localhost:3003` is
 already listed under `remote.urls` in `src-tauri/capabilities/default.json`.
 

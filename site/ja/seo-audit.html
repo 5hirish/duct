@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+
+<!-- EXPERIMENT: URL first, email second. The visitor gives a URL before anything is asked of
+     them, watches the scan, then trades an email for the report they can already see. Hypothesis:
+     a lead who has seen their own domain in the scanner converts at a higher rate than one asked
+     for an email cold. Measured by seo_audit_scan → seo_audit_lead in GTM. -->
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>無料SEO監査 — ランキングを妨げている原因を正確に把握 | Duct</title>
+<link rel="canonical" href="https://getduct.ai/ja/seo-audit"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/seo-audit"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/seo-audit"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/seo-audit"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/seo-audit"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/seo-audit"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/seo-audit"/>
+<!-- hreflang:end -->
+<meta name="description" content="URLを貼り付けるだけで、数分で実際のSEO監査レポートが手に入ります。スコア、各ページの問題点、修正の順序が示されます。無料、アカウント不要、オープンソースのDuct監査エージェントによるものです。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/seo-audit"/>
+<meta property="og:title" content="無料SEO監査 — ランキングを妨げている原因を正確に把握"/>
+<meta property="og:description" content="URLを貼り付け、クロールを監視し、レポートを入手：スコア、各ページの問題点、修正の順序。無料、オープンソース、アカウント不要です。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/seo-audit.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="無料SEO監査 — ランキングを妨げている原因を正確に把握"/>
+<meta name="twitter:description" content="数分であなたのサイトの本格的なSEO監査: スコア、ページ上の問題点、修正順序。無料、アカウント不要、オープンソース。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/seo-audit.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Free SEO Audit by Duct","url":"https://getduct.ai/seo-audit","description":"Paste your URL and get a real SEO audit in minutes: a score, every issue on the page it lives on, and the fixes in order. Free, no account, from the open-source Duct audit agent.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is it really free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. It runs on our keys. Your email gets you the report, and that is the whole trade."}}, {"@type": "Question", "name": "How long does it take?", "acceptedAnswer": {"@type": "Answer", "text": "Two to four minutes, depending on how many pages your sitemap lists."}}, {"@type": "Question", "name": "What do you do with my email?", "acceptedAnswer": {"@type": "Answer", "text": "We send the report summary. Unsubscribe any time. Never sold, never shared."}}, {"@type": "Question", "name": "Is it the same audit as in the app?", "acceptedAnswer": {"@type": "Answer", "text": "The same open-source agent. In the app it runs on your own keys and keeps your reports."}}]}
+</script>
+<style>
+/* ── SEO Audit lead magnet — page-specific styles ── */
+/* The accent, and only the accent: terracotta, one shade warmer than the
+   site's orange, so the page reads as Duct's and as its own thing. */
+:root { --orange: #c0543c; --orange-h: #a84430; }
+.skip-link { position: absolute; top: -100px; left: 16px; z-index: 200; padding: 10px 16px; background: var(--navy); color: #fff; border-radius: 8px; }
+.skip-link:focus { top: 16px; }
+
+/* ── State machine: the page is one of four things at a time ── */
+[data-lm-state="idle"] .lm-scanning,
+[data-lm-state="idle"] .lm-gate { display: none; }
+[data-lm-state="scanning"] .lm-hero,
+[data-lm-state="scanning"] .lm-gate { display: none; }
+[data-lm-state="gate"] .lm-hero,
+[data-lm-state="gate"] .lm-scanning,
+[data-lm-state="submitting"] .lm-hero,
+[data-lm-state="submitting"] .lm-scanning { display: none; }
+
+/* ── Hero: the ask on the left, the reward on the right ── */
+.lm-hero { padding: 120px 52px 40px; }
+.lm-hero-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: center; }
+.lm-hero h1 { font-size: clamp(38px, 4.6vw, 58px); line-height: 1.06; letter-spacing: -1.5px; margin: 22px 0 18px; }
+.lm-hero .sub { max-width: 40ch; margin: 0 0 28px; }
+.lm-hero .lm-url-form { margin-left: 0; }
+.lm-hero-shot { position: relative; margin: 0; }
+/* The report is taller than the copy beside it. Show its top, the score and
+   the first findings, fading out: there is more, and a click opens all of it. */
+.lm-hero-shot-crop { aspect-ratio: 5 / 4; overflow: hidden; border-radius: var(--r-lg); -webkit-mask-image: linear-gradient(#000 78%, transparent); mask-image: linear-gradient(#000 78%, transparent); }
+.lm-hero-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.lm-hero-shot figcaption { margin-top: 10px; font-size: 13px; color: var(--navy-3); text-align: center; }
+
+/* URL input */
+.lm-url-form {
+  display: flex;
+  align-items: center;
+  max-width: 580px;
+  margin: 0 auto 12px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  transition: border-color .15s, box-shadow .15s;
+}
+.lm-url-form:focus-within {
+  border-color: var(--orange);
+  box-shadow: 0 2px 16px rgba(192,84,60,.18);
+}
+.lm-url-prefix {
+  flex-shrink: 0;
+  padding: 0 0 0 18px;
+  font-size: 15px;
+  color: var(--navy-3);
+  font-weight: 500;
+  pointer-events: none;
+  user-select: none;
+}
+.lm-url-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 16px 12px;
+  font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom on focus */
+  background: transparent;
+  color: var(--navy);
+  min-width: 0;
+}
+.lm-url-input::placeholder { color: #b0bac5; }
+.lm-url-btn {
+  flex-shrink: 0;
+  margin: 7px;
+  padding: 10px 20px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lm-url-btn:hover { background: var(--orange-h); box-shadow: 0 4px 14px rgba(192,84,60,.3); }
+.lm-url-btn svg { flex-shrink: 0; }
+
+/* Mobile: stack button below input */
+@media (max-width: 540px) {
+  .lm-url-form {
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    gap: 10px;
+  }
+  .lm-url-form:focus-within {
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .lm-url-form .lm-url-prefix {
+    display: none;
+  }
+  .lm-url-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 16px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    transition: border-color .15s;
+    box-sizing: border-box;
+  }
+  .lm-url-input:focus { border-color: var(--orange); outline: none; }
+  .lm-url-btn {
+    width: 100%;
+    margin: 0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    justify-content: center;
+  }
+}
+.lm-btn-checking { display: none; opacity: .75; }
+.lm-url-btn.is-checking .lm-btn-idle { display: none; }
+.lm-url-btn.is-checking .lm-btn-checking { display: inline; }
+.lm-url-error {
+  font-size: 13px;
+  color: #c0392b;
+  min-height: 20px;
+  margin-bottom: 4px;
+}
+.lm-footnote {
+  font-size: 13px;
+  color: var(--navy-3);
+  margin: 0;
+}
+
+.lm-footnote { font-size: 12px; color: var(--navy-3); margin: 10px 0 0; }
+
+/* ── Scanning section ── */
+.lm-scanning {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 60px 24px 72px;
+  text-align: center;
+}
+.lm-scanning-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy-3);
+  margin: 0 0 8px;
+  letter-spacing: .01em;
+}
+.lm-scanning-url {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 32px;
+}
+
+/* Browser mockup */
+.lm-browser {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px rgba(0,0,0,.09);
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto 32px;
+}
+.lm-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f7f8fa;
+  border-bottom: 1px solid var(--border);
+}
+.lm-browser-dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.lm-browser-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.lm-browser-addr {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--navy-3);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lm-browser-body {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  background: #fafbfc;
+}
+
+/* Generic website placeholder content */
+.lm-site-mock {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lm-mock-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.lm-mock-logo  { width: 80px;  height: 12px; background: #dde2e8; border-radius: 4px; }
+.lm-mock-link  { width: 48px;  height: 10px; background: #eaecef; border-radius: 3px; }
+.lm-mock-hero-text { width: 65%; height: 18px; background: #dde2e8; border-radius: 5px; }
+.lm-mock-hero-sub  { width: 50%; height: 12px; background: #eaecef; border-radius: 4px; }
+.lm-mock-btn       { width: 100px; height: 28px; background: #d4d9df; border-radius: 6px; }
+.lm-mock-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.lm-mock-card {
+  height: 60px;
+  background: #eaecef;
+  border-radius: 8px;
+}
+
+/* Scan-line animation */
+.lm-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(192,84,60,.7) 30%, rgba(192,84,60,1) 50%, rgba(192,84,60,.7) 70%, transparent 100%);
+  box-shadow: 0 0 18px 6px rgba(192,84,60,.35);
+  animation: lm-scan 1.6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes lm-scan {
+  0%   { top: -4px; }
+  100% { top: 100%; }
+}
+
+/* Scan overlay gradient (bottom fade) */
+.lm-browser-body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 60%, rgba(250,251,252,.9) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Step indicators */
+.lm-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  margin: 0 auto;
+}
+.lm-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy-3);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .4s ease, transform .4s ease, color .3s, border-color .3s;
+}
+.lm-step.visible { opacity: 1; transform: translateY(0); }
+.lm-step.done {
+  color: var(--navy);
+  border-color: #c8e6d6;
+  background: #f4fbf7;
+}
+.lm-step.done .lm-step-icon { color: #2e9e6b; }
+.lm-step-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--orange);
+  border-top-color: transparent;
+  animation: lm-spin .75s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes lm-spin { to { transform: rotate(360deg); } }
+.lm-step-icon { font-size: 15px; flex-shrink: 0; }
+
+/* ── Gate: the real report, blurred, with the unlock card over it ── */
+.lm-gate { position: relative; overflow: hidden; }
+.lm-gate-wrap { position: relative; }
+/* Capped and faded at the foot: enough report to want, not a second page of blur
+   to scroll past, and the unlock card lands in the first screen. */
+.lm-report-blur { filter: blur(7px) saturate(.95); pointer-events: none; user-select: none; padding: 92px clamp(20px, 7vw, 88px) 0; max-height: 720px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+.lm-report-blur img { display: block; width: 100%; max-width: 1000px; height: auto; margin: 0 auto; border-radius: var(--r-lg); }
+/* Lock overlay — a light scrim that lets the blurred report show through around
+   the unlock card (rather than a near-solid sheet that hides it). The card below
+   carries the contrast for the form, so this stays mostly see-through. */
+.lm-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(120% 80% at 50% 50%, rgba(250,248,245,.32) 0%, rgba(250,248,245,.62) 100%);
+  padding: 28px;
+}
+/* Frosted unlock card — opaque enough for a crisp, readable form, floating over
+   the blurred report. */
+.lm-lock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 460px;
+  padding: 36px 30px 30px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 48px rgba(13,17,23,.20);
+}
+.lm-lock-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(192,84,60,.35);
+}
+.lm-lock-headline {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 6px;
+}
+.lm-lock-sub {
+  font-size: 14px;
+  color: var(--navy-3);
+  margin: 0 0 24px;
+}
+
+.lm-lock-icon .ic { font-size: 22px; color: #fff; }
+/* Email form in gate */
+.lm-email-form {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  transition: border-color .15s;
+}
+.lm-email-form:focus-within { border-color: var(--orange); }
+.lm-email-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 14px 14px;
+  font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom on focus */
+  background: transparent;
+  color: var(--navy);
+  min-width: 0;
+}
+.lm-email-input::placeholder { color: #b0bac5; }
+.lm-email-btn {
+  flex-shrink: 0;
+  margin: 6px;
+  padding: 10px 18px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.lm-email-btn:hover:not(:disabled) { background: var(--orange-h); }
+.lm-email-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Mobile: stack email button below input */
+@media (max-width: 480px) {
+  .lm-email-form {
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+  .lm-email-form:focus-within {
+    border-color: transparent;
+  }
+  .lm-email-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    transition: border-color .15s;
+    box-sizing: border-box;
+  }
+  .lm-email-input:focus { border-color: var(--orange); outline: none; }
+  .lm-email-btn {
+    width: 100%;
+    margin: 0;
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+}
+
+.lm-turnstile-wrap { margin: 14px 0 4px; display: flex; justify-content: center; }
+.lm-gate-error { font-size: 13px; color: #c0392b; margin: 8px 0 0; min-height: 20px; }
+.lm-gate-note { font-size: 12px; color: var(--navy-3); margin: 10px 0 0; }
+
+/* ── What the report says: four cards, one line each ── */
+.lm-what { padding: 88px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.lm-what-inner { max-width: 1160px; margin: 0 auto; }
+.lm-what-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+.lm-feat { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 26px 24px; }
+.lm-feat-icon { font-size: 28px; color: var(--orange); display: block; margin-bottom: 14px; }
+.lm-feat h3 { font-family: var(--serif); font-size: 20px; line-height: 1.25; margin: 0 0 8px; color: var(--navy); }
+.lm-feat p { font-size: 14.5px; color: var(--navy-3); line-height: 1.6; margin: 0; }
+
+/* ── Trust strip ── */
+.lm-trust { display: flex; justify-content: center; gap: 12px 36px; flex-wrap: wrap; padding: 26px 24px; border-bottom: 1px solid var(--border); }
+.lm-trust span { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--navy); }
+.lm-trust .ic { font-size: 17px; color: var(--orange); }
+
+/* ── Closing form on navy ── */
+.lm-cta { padding: 104px 52px; text-align: center; background: var(--navy); }
+.lm-cta h2 { color: #fff; font-size: clamp(34px, 5vw, 54px); margin-bottom: 34px; }
+.lm-cta h2 em { color: var(--orange); }
+.lm-cta .lm-url-form { border-color: transparent; }
+.lm-cta .lm-footnote { color: rgba(255,255,255,.55); }
+.lm-cta .lm-url-error { color: #ffb4a6; }
+
+@media (max-width: 1000px) {
+  .lm-hero-inner { grid-template-columns: 1fr; gap: 36px; }
+  .lm-what-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 860px) {
+  .lm-hero { padding: 100px 24px 32px; }
+  .lm-what, .lm-cta { padding: 64px 24px; }
+}
+@media (max-width: 600px) {
+  .lm-what-grid { grid-template-columns: 1fr; }
+  .lm-hero-shot-crop { aspect-ratio: 4 / 3; }
+}
+</style>
+</head>
+<body data-lm-state="idle">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+
+<!-- NAV (this page only: site/partials/nav-seo-audit.html) -->
+<div data-duct-partial="/ja/partials/nav-seo-audit.html"></div>
+
+<main id="main-content">
+
+<!-- HERO (state: idle) -->
+<section class="lm-hero">
+<div class="lm-hero-inner">
+<div>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 無料 · オープンソース</div>
+<h1>ランキングを妨げている原因を<em>正確に把握。</em></h1>
+<p class="sub">URLを貼り付けてください。Ductがすべてのページをクロールし、スコアを付け、修正の順序をお渡しします。</p>
+<div class="lm-url-form" role="group" aria-label="ウェブサイトURL">
+<span class="lm-url-prefix" aria-hidden="true">https://</span>
+<input type="url" id="lmUrl" class="lm-url-input" placeholder="your-site.com" aria-label="お客様のウェブサイトURL" autocomplete="url" autocapitalize="off" spellcheck="false"/>
+<button class="lm-url-btn" id="lmUrlBtn" onclick="lmStartScan(&#x27;lmUrl&#x27;)" aria-label="サイトを監査する">
+<span class="lm-btn-idle">サイトを監査する <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span>
+<span class="lm-btn-checking" aria-hidden="true">確認中…</span>
+</button>
+</div>
+<p class="lm-url-error" id="lmUrlError" role="alert" aria-live="polite"></p>
+<p class="lm-footnote">無料 · クレジットカード不要 · 2〜4分</p>
+</div>
+<figure class="lm-hero-shot" data-zoom>
+<div class="lm-hero-shot-crop">
+<img src="/assets/media/audit-report.webp" srcset="/assets/media/audit-report-768.webp 768w, /assets/media/audit-report-1536.webp 1536w, /assets/media/audit-report.webp 1712w" sizes="(max-width: 860px) calc(100vw - 48px), 760px" fetchpriority="high" data-zoom-src="assets/media/audit-report-full.webp" width="1712" height="1712" alt="solobudget.app の Duct によるSEO監査レポート：100点中68点のスコアリング、読み取った情報源、3つの主要なシグナル、ページ1からページ3までの順位マップ上の6つのキーワードクラスター" fetchpriority="high"/>
+</div>
+<figcaption>架空のサイトのサンプルレポートです。クリックすると全文が表示されます。お客様のレポートもこのように表示されます。</figcaption>
+</figure>
+</div>
+</section>
+
+<!-- SCANNING (state: scanning) -->
+<section class="lm-scanning" aria-live="polite" aria-label="サイトをスキャン中">
+  <p class="lm-scanning-label">スキャン中</p>
+  <p class="lm-scanning-url" id="lmScanningUrl"></p>
+  <!-- Browser mockup -->
+  <div class="lm-browser" role="img" aria-label="スキャンアニメーション付きブラウザプレビュー">
+    <div class="lm-browser-bar">
+      <div class="lm-browser-dots" aria-hidden="true">
+        <span class="lm-browser-dot" style="background:#ff5f57"></span>
+        <span class="lm-browser-dot" style="background:#febc2e"></span>
+        <span class="lm-browser-dot" style="background:#28c840"></span>
+      </div>
+      <div class="lm-browser-addr" id="lmBrowserAddr" aria-label="URLバー">your-site.com</div>
+    </div>
+    <div class="lm-browser-body">
+      <!-- Scan line -->
+      <div class="lm-scan-line" aria-hidden="true"></div>
+      <!-- Generic placeholder website layout -->
+      <div class="lm-site-mock" aria-hidden="true">
+        <div class="lm-mock-nav">
+          <div class="lm-mock-logo"></div>
+          <div class="lm-mock-link"></div>
+          <div class="lm-mock-link"></div>
+          <div class="lm-mock-link"></div>
+        </div>
+        <div class="lm-mock-hero-text"></div>
+        <div class="lm-mock-hero-sub"></div>
+        <div class="lm-mock-btn" style="margin-top:4px"></div>
+        <div class="lm-mock-row" style="margin-top:18px">
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+        </div>
+        <div class="lm-mock-row">
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="lm-steps" role="list" aria-label="スキャン進行状況">
+    <div class="lm-step" id="lmStep1" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>サイト構造のマッピング</span>
+    </div>
+    <div class="lm-step" id="lmStep2" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>ページとシグナルの読み取り</span>
+    </div>
+    <div class="lm-step" id="lmStep3" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>スコアリングとレポート作成</span>
+    </div>
+  </div>
+</section>
+
+<!-- EMAIL GATE (state: gate | submitting) -->
+<section class="lm-gate" aria-label="SEOレポートのロックを解除">
+  <div class="lm-gate-wrap">
+    <div class="lm-report-blur" aria-hidden="true">
+      <img src="/assets/media/audit-report.webp" srcset="/assets/media/audit-report-768.webp 768w, /assets/media/audit-report-1536.webp 1536w, /assets/media/audit-report.webp 1712w" sizes="(max-width: 860px) calc(100vw - 48px), 760px" decoding="async" width="1712" height="1712" alt="" loading="lazy"/>
+    </div>
+    <div class="lm-lock-overlay" id="lmLockOverlay">
+      <div class="lm-lock-card">
+        <div class="lm-lock-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg></div>
+        <p class="lm-lock-headline" id="lmLockHeadline">レポートの準備ができました</p>
+        <p class="lm-lock-sub">お客様のメールアドレスでここで開き、コピーを入手できます。</p>
+        <div class="lm-email-form" role="group" aria-label="レポートのロックを解除するためのメール">
+          <input type="email" id="lmEmail" class="lm-email-input" placeholder="you@company.com" aria-label="お客様のメールアドレス" autocomplete="email" autocapitalize="off" spellcheck="false"/>
+          <button class="lm-email-btn" id="lmEmailBtn" onclick="lmSubmitLead()">レポートを解除 →</button>
+        </div>
+        <div class="lm-turnstile-wrap"><div id="lmTurnstile" aria-label="セキュリティ検証"></div></div>
+        <p class="lm-gate-error" id="lmGateError" role="alert" aria-live="polite"></p>
+        <p class="lm-gate-note">スパムなし。いつでも購読解除できます。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- WHAT THE REPORT SAYS -->
+<section class="lm-what reveal">
+<div class="lm-what-inner">
+<p class="tag">得られるもの</p>
+<h2>スコアではありません。<em>修正のリストです。</em></h2>
+<div class="lm-what-grid">
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#search"/></svg></span>
+<h3>すべての問題、そのページに</h3>
+<p>各指摘事項には、それが存在するURLが記載されています。</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+<h3>カテゴリ別スコア</h3>
+<p>クロールの健全性、オンページ、コンテンツ、構造化データ、Core Web Vitals。</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg></span>
+<h3>修正の順序</h3>
+<p>まずエラー、次に警告、そして改善の機会。</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#map"/></svg></span>
+<h3>サイト全体</h3>
+<p>入力したページだけでなく、サイトマップ内のすべてのページ。</p>
+</div>
+</div>
+</div>
+</section>
+
+<div class="lm-trust reveal" aria-label="貼り付ける前に知っておくべきこと">
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg> オープンソース、MIT</span>
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> アカウント不要、カード情報不要</span>
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg> アプリと同じエージェント</span>
+</div>
+
+<!-- FAQ (shared .faq styles) -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>4つの<em>質問</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+<details class="faq-item">
+<summary class="faq-q">本当に無料ですか？</summary>
+<p class="faq-a">はい。当社のキーで実行されます。お客様のメールアドレスでレポートをお届けします。それがすべてです。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">どれくらい時間がかかりますか？</summary>
+<p class="faq-a">サイトマップに記載されているページ数に応じて、2〜4分かかります。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">私のメールアドレスをどうしますか？</summary>
+<p class="faq-a">レポートの要約をお送りします。いつでも購読解除できます。販売したり、共有したりすることはありません。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">アプリ内の監査と同じですか？</summary>
+<p class="faq-a">同じオープンソースエージェントです。アプリでは、お客様自身のキーで実行され、レポートが保存されます。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CLOSING FORM -->
+<section class="lm-cta reveal" id="cta">
+<h2>Ductはあなたのサイトで<em>何を見つけるでしょうか？</em></h2>
+<div class="lm-url-form" role="group" aria-label="ウェブサイトURL">
+<span class="lm-url-prefix" aria-hidden="true">https://</span>
+<input type="url" id="lmUrl2" class="lm-url-input" placeholder="your-site.com" aria-label="お客様のウェブサイトURL" autocomplete="url" autocapitalize="off" spellcheck="false"/>
+<button class="lm-url-btn" id="lmUrl2Btn" onclick="lmStartScan(&#x27;lmUrl2&#x27;)" aria-label="サイトを監査する">
+<span class="lm-btn-idle">サイトを監査する <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span>
+<span class="lm-btn-checking" aria-hidden="true">確認中…</span>
+</button>
+</div>
+<p class="lm-url-error" id="lmUrl2Error" role="alert" aria-live="polite"></p>
+<p class="lm-footnote">無料 · クレジットカード不要 · 2〜4分</p>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<div data-duct-partial="/ja/partials/footer-expanded.html"><div class="legal-fallback"><a href="/ja/">Duct</a><a href="/ja/about">について</a><a href="/ja/privacy">プライバシーポリシー</a><a href="/ja/terms">利用規約</a></div></div>
+
+<!-- LEAD MAGNET STATE MACHINE -->
+<script>
+(function () {
+  'use strict';
+
+  var capturedUrl = '';
+  var turnstileWidgetId = null;
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function setState(s) {
+    document.body.setAttribute('data-lm-state', s);
+  }
+
+  function showStepVisible(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.add('visible');
+  }
+
+  function showStepDone(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('visible', 'done');
+    var spinner = el.querySelector('.lm-step-spinner');
+    if (spinner) {
+      var icon = document.createElement('span');
+      icon.className = 'lm-step-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>';
+      spinner.parentNode.replaceChild(icon, spinner);
+    }
+  }
+
+  // GTM reads these; without them the funnel is a page view and nothing else.
+  function track(event) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: event });
+  }
+
+  function normalizeUrl(raw) {
+    raw = raw.trim();
+    if (!raw) return '';
+    if (!/^https?:\/\//i.test(raw)) raw = 'https://' + raw;
+    return raw;
+  }
+
+  function extractDomain(url) {
+    try {
+      return new URL(url).hostname.replace(/^www\./, '');
+    } catch (e) {
+      return url;
+    }
+  }
+
+  // ── Phase 1: URL → scan animation ─────────────────────────────────────────
+
+  // Two forms call this, the hero's and the closing one's: `inputId` names
+  // the input, and its button and error line share the id as a prefix.
+  window.lmStartScan = function (inputId) {
+    inputId = inputId || 'lmUrl';
+    var input = document.getElementById(inputId);
+    var raw = input.value;
+    var errEl = document.getElementById(inputId + 'Error');
+    var btn = document.getElementById(inputId + 'Btn');
+    errEl.textContent = '';
+
+    var url = normalizeUrl(raw);
+    if (!url || !/^https?:\/\/.+\..+/.test(url)) {
+      errEl.textContent = 'Please enter a valid website URL (e.g. your-site.com)';
+      input.focus();
+      return;
+    }
+
+    // Quick reachability pre-flight — swap button to "Checking…" state
+    btn.disabled = true;
+    btn.classList.add('is-checking');
+
+    var apiUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.api_url) || 'http://localhost:8002';
+    fetch(apiUrl + '/api/lead-magnet/check-url?url=' + encodeURIComponent(url))
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        btn.disabled = false;
+        btn.classList.remove('is-checking');
+        if (!data.ok) {
+          errEl.textContent = data.reason || 'We couldn\'t reach that site. Please double-check the URL.';
+          input.focus();
+          return;
+        }
+        lmRunScan(url);
+      })
+      .catch(function () {
+        // If the check itself fails (network error, offline), proceed anyway
+        btn.disabled = false;
+        btn.classList.remove('is-checking');
+        lmRunScan(url);
+      });
+  };
+
+  function lmRunScan(url) {
+    capturedUrl = url;
+    var domain = extractDomain(url);
+
+    // Fill scanning section UI
+    document.getElementById('lmScanningUrl').textContent = domain;
+    document.getElementById('lmBrowserAddr').textContent = domain;
+
+    // Transition to scanning state. The closing form sits at the foot of the
+    // page; the scan plays at the top, so go there.
+    setState('scanning');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    track('seo_audit_scan');
+
+    // Reveal steps with stagger
+    setTimeout(function () { showStepVisible('lmStep1'); }, 400);
+    setTimeout(function () { showStepDone('lmStep1'); showStepVisible('lmStep2'); }, 1600);
+    setTimeout(function () { showStepDone('lmStep2'); showStepVisible('lmStep3'); }, 2800);
+    setTimeout(function () { showStepDone('lmStep3'); }, 4200);
+
+    // Transition to gate after 5 seconds
+    setTimeout(function () { lmShowGate(domain); }, 5000);
+  }
+
+  function lmShowGate(domain) {
+    // Update gate headline with domain
+    var headline = document.getElementById('lmLockHeadline');
+    if (headline) headline.textContent = 'See what we found on ' + domain;
+
+    setState('gate');
+
+    // Initialize Turnstile if not already done
+    lmInitTurnstile();
+  }
+
+  // ── Turnstile ──────────────────────────────────────────────────────────────
+
+  function lmInitTurnstile() {
+    // Skip on localhost — Cloudflare rejects tokens from non-registered hostnames;
+    // backend also bypasses verification locally (app_env == "local")
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+    var siteKey = (window.DUCT_CONFIG && window.DUCT_CONFIG.turnstile_site_key) || '';
+    if (!siteKey || turnstileWidgetId !== null) return;
+
+    if (window.turnstile) {
+      _renderTurnstile(siteKey);
+    } else {
+      // Load Turnstile script
+      var script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=lmOnTurnstileLoad';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+      window.lmOnTurnstileLoad = function () { _renderTurnstile(siteKey); };
+    }
+  }
+
+  function _renderTurnstile(siteKey) {
+    if (turnstileWidgetId !== null) return;
+    turnstileWidgetId = window.turnstile.render('#lmTurnstile', {
+      sitekey: siteKey,
+      theme: 'light',
+      appearance: 'always',
+      callback: function () { /* token available via getResponse */ },
+      'expired-callback': function () { turnstileWidgetId = null; },
+      'error-callback': function () {
+        document.getElementById('lmGateError').textContent = 'Security check failed. Please refresh and try again.';
+      },
+    });
+  }
+
+  // ── Phase 2: Email submit → backend → redirect ─────────────────────────────
+
+  window.lmSubmitLead = function () {
+    var email = document.getElementById('lmEmail').value.trim();
+    var errEl = document.getElementById('lmGateError');
+    errEl.textContent = '';
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      document.getElementById('lmEmail').focus();
+      return;
+    }
+
+    var turnstileToken = '';
+    if (window.turnstile && turnstileWidgetId !== null) {
+      turnstileToken = window.turnstile.getResponse(turnstileWidgetId) || '';
+    }
+
+    // Disable form while submitting
+    var btn = document.getElementById('lmEmailBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    setState('submitting');
+
+    var apiUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.api_url) || 'http://localhost:8002';
+    var appUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.app_url) || 'http://localhost:3003';
+
+    fetch(apiUrl + '/api/lead-magnet/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email,
+        website_url: capturedUrl,
+        turnstile_token: turnstileToken,
+        magnet_type: 'seo_audit',
+      }),
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (data) {
+            throw new Error(data.detail || 'Submission failed. Please try again.');
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        track('seo_audit_lead');
+        window.location.href =
+          appUrl +
+          '/lead/seo-audit?url=' +
+          encodeURIComponent(capturedUrl) +
+          '&token=' +
+          encodeURIComponent(data.token);
+      })
+      .catch(function (err) {
+        setState('gate');
+        btn.disabled = false;
+        btn.textContent = 'Unlock report →';
+        errEl.textContent = err.message || 'Something went wrong. Please try again.';
+        // Reset Turnstile
+        if (window.turnstile && turnstileWidgetId !== null) {
+          window.turnstile.reset(turnstileWidgetId);
+        }
+      });
+  };
+
+  // Allow Enter key in email field
+  document.addEventListener('DOMContentLoaded', function () {
+    var emailInput = document.getElementById('lmEmail');
+    if (emailInput) {
+      emailInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') window.lmSubmitLead();
+      });
+    }
+    ['lmUrl', 'lmUrl2'].forEach(function (id) {
+      var urlInput = document.getElementById(id);
+      if (urlInput) {
+        urlInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') window.lmStartScan(id);
+        });
+      }
+    });
+  });
+})();
+</script>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

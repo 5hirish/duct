@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Calculadora de CTR — Ferramenta Gratuita por Duct</title>
+<link rel="canonical" href="https://getduct.ai/pt-br/tools/ctr-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/ctr-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/ctr-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/ctr-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/ctr-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/ctr-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/ctr-calculator"/>
+<!-- hreflang:end -->
+<meta name="description" content="Calculadora de CTR grátis para profissionais de marketing e equipes de crescimento. Insira impressões e cliques para calcular a taxa de cliques, cliques projetados e cenários de aumento necessários instantaneamente."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/pt-br/tools/ctr-calculator"/>
+<meta property="og:title" content="Calculadora de CTR — Ferramenta Gratuita por Duct"/>
+<meta property="og:description" content="Calcule a taxa de cliques (CTR), cliques projetados e cenários de aumento com interpretação instantânea."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-ctr-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Calculadora de CTR — Ferramenta Gratuita por Duct"/>
+<meta name="twitter:description" content="Calculadora de taxa de cliques grátis com interpretação prática de benchmarks para canais pagos e orgânicos."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-ctr-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, honestamente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos o Google Analytics para ver quais páginas geram um cadastro. Esse é o único uso — sem segmentação de anúncios, sem perfis, nada vendido. Recuse e o site se comporta exatamente da mesma forma.","Privacy Policy":"Política de Privacidade","Decline":"Recusar","Accept":"Aceitar","{n} stars on GitHub":"{n} estrelas no GitHub","UTM Builder":"Construtor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de Benchmark de Métricas SaaS","Weekly Marketing Brief Generator":"Gerador de Resumo Semanal de Marketing","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de Taxa de Crescimento de MRR","Engagement Rate Calculator":"Calculadora de Taxa de Engajamento","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de Marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Menu":"Menu","Free Tools":"Ferramentas gratuitas","Solutions":"Soluções","Download Duct ↓":"Baixar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de tela ampliada","Close":"Fechar","Fit to screen":"Ajustar à tela","Zoom in":"Ampliar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 e posterior","Runs on any distribution":"Funciona em qualquer distribuição","Debian and Ubuntu":"Debian e Ubuntu","Download ↓":"Baixar ↓","Download for {label} ↓":"Baixar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de exemplo. Altere qualquer campo e calcule novamente para os seus."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"CTR Calculator","url":"https://getduct.ai/tools/ctr-calculator","description":"Free calculator that computes click-through rate (CTR), projected clicks at target CTR, and required lift to hit click goals.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you calculate CTR?","acceptedAnswer":{"@type":"Answer","text":"CTR is calculated as Clicks divided by Impressions multiplied by 100. For example, 320 clicks from 16,000 impressions equals a 2.0 percent CTR."}},{"@type":"Question","name":"What is a good CTR?","acceptedAnswer":{"@type":"Answer","text":"Good CTR depends on channel and intent. As a rough guide, below 1 percent is often weak, 1 to 3 percent is average, and above 3 percent can be strong for many campaigns."}},{"@type":"Question","name":"Can I use this for Google Ads CTR?","acceptedAnswer":{"@type":"Answer","text":"Yes. The formula is the same for Google Ads, Meta Ads, LinkedIn, email, and organic search snippets as long as you use clicks and impressions from the same source and period."}},{"@type":"Question","name":"Why does CTR matter?","acceptedAnswer":{"@type":"Answer","text":"CTR indicates how relevant your message is to the audience seeing it. Low CTR can signal weak creative, poor targeting, or low query intent match."}},{"@type":"Question","name":"How can I improve CTR?","acceptedAnswer":{"@type":"Answer","text":"Improve headlines and hooks, tighten targeting, refresh creatives, align landing-page promise with ad copy, and test offers and formats regularly."}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  :root { --orange: #2563EB; --orange-h: #1D4ED8; }
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero { padding: 80px 24px 48px; text-align: center; max-width: 760px; margin: 0 auto; }
+  .tool-hero h1 { font-family: var(--serif); font-size: clamp(32px, 5vw, 52px); color: var(--navy); margin: 16px 0; line-height: 1.15; }
+  .tool-hero h1 em { color: var(--orange); font-style: italic; }
+  .tool-hero p { font-size: 17px; color: var(--navy-3); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  .tool-wrap { max-width: 900px; margin: 0 auto 80px; padding: 0 24px; }
+  .tool-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; box-shadow: 0 4px 32px rgba(0,0,0,.06); }
+  .tool-inputs { padding: 36px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px 32px; }
+  @media (max-width: 640px) { .tool-inputs { grid-template-columns: 1fr; padding: 24px; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--navy); letter-spacing: .01em; }
+  .field .field-hint { font-size: 11px; color: var(--navy-3); margin-top: -2px; }
+  .field input {
+    padding: 11px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--r); font-size: 15px; font-family: var(--sans);
+    color: var(--navy); background: var(--white);
+    transition: border-color .15s; outline: none; -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button, .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input:focus { border-color: var(--orange); }
+  .field input::placeholder { color: var(--navy-3); opacity: .6; }
+
+  .tool-action { padding: 0 40px 36px; display: flex; align-items: center; gap: 16px; }
+  @media (max-width: 640px) { .tool-action { padding: 0 24px 24px; flex-direction: column; align-items: stretch; } }
+  .tool-results { border-top: 1px solid var(--border); padding: 36px 40px; display: none; }
+  @media (max-width: 640px) { .tool-results { padding: 24px; } }
+  .tool-results.visible { display: block; }
+
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+
+  .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
+  .result-card.green { border-color: #22c55e; background: #f0fdf4; }
+  .result-card.amber { border-color: #f59e0b; background: #fffbeb; }
+  .result-card.red { border-color: #ef4444; background: #fef2f2; }
+  .result-card.neutral { border-color: var(--border); background: var(--off); }
+  .result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-3); margin-bottom: 6px; }
+  .result-value { font-size: 26px; font-family: var(--serif); color: var(--navy); font-weight: 400; margin-bottom: 4px; line-height: 1.1; }
+  .result-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 100px; margin-bottom: 8px; }
+  .result-badge.green { background: #dcfce7; color: #15803d; }
+  .result-badge.amber { background: #fef3c7; color: #92400e; }
+  .result-badge.red { background: #fee2e2; color: #991b1b; }
+  .result-badge.neutral { background: #f1f5f9; color: var(--navy-3); }
+  .result-context { font-size: 12px; color: var(--navy-3); line-height: 1.5; margin: 0; }
+
+  .tool-cta { margin-top: 28px; background: var(--navy); border-radius: var(--r); padding: 28px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+
+  .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+
+  .insight-panel { margin-top: 24px; background: #eff6ff; border: 1px solid rgba(37,99,235,.18); border-left: 3px solid #2563EB; border-radius: var(--r); padding: 20px 24px; }
+  .insight-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #2563EB; margin-bottom: 10px; }
+  .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
+  .insight-panel p:last-of-type { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<!-- EXPERIMENT: CTR calculator lead magnet — does search intent around "ctr calculator" convert to desktop app downloads from paid and SEO operators? -->
+
+<a href="#main-content" class="skip-link">Pular para o conteúdo</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<div data-duct-partial="/pt-br/partials/nav-home.html"></div>
+
+<main id="main-content">
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Ferramenta gratuita · Não é necessário se cadastrar</div>
+  <h1>Calculadora de CTR <em>para equipes de crescimento</em></h1>
+  <p>O desempenho da sua mensagem é tão claro quanto o seu sinal de clique. Calcule o CTR com cenários de aumento alvo instantaneamente — pronto para o canal e sem limpeza de planilha.</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="Calculadora de CTR">
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-impressions">Impressões</label>
+        <span class="field-hint">Quantas vezes seu anúncio, post ou resultado foi exibido</span>
+        <input type="number" id="inp-impressions" placeholder="e.g. 45000" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-clicks">Cliques</label>
+        <span class="field-hint">Total de cliques gerados a partir dessas impressões</span>
+        <input type="number" id="inp-clicks" placeholder="e.g. 1170" min="0" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-target-ctr">CTR Alvo % (opcional)</label>
+        <span class="field-hint">Use isso para projetar cliques esperados com desempenho alvo</span>
+        <input type="number" id="inp-target-ctr" placeholder="e.g. 3.2" min="0" step="0.01" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-target-clicks">Cliques Alvo (opcional)</label>
+        <span class="field-hint">Use isso para estimar o CTR necessário para atingir metas de cliques</span>
+        <input type="number" id="inp-target-clicks" placeholder="e.g. 1600" min="0" inputmode="numeric"/>
+      </div>
+    </div>
+
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">Calcular CTR →</button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">Redefinir</button>
+    </div>
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+
+    <div class="tool-results" id="results-section" role="region" aria-label="Resultados de CTR" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Seus Resultados</p>
+      <div class="results-row" id="results-row"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Um CTR, uma vez. A questão é qual criativo está cansando.</p>
+          <p>O Duct lê suas ferramentas de anúncios, análises e receita, responde a essa pergunta e propõe a alteração. Você a aprova.</p>
+        </div>
+        <a href="/pt-br/download" class="btn btn-orange" data-duct-download>Baixar Duct ↓</a>
+      </div>
+      <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
+        <p class="insight-label">O que isso significa</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="Sobre o Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">CTR diz quem clicou. Não diz se esse tráfego gerou impacto nos negócios.</p>
+      <p class="duct-bridge-body">Duct lê o CTR ao lado do CPC, taxa de conversão e o que cada canal gerou, e nomeia o criativo ou o público a ser corrigido primeiro.</p>
+      <a href="/pt-br/" class="duct-bridge-link">Como o Duct funciona →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Uma sessão de insights: perguntou onde o orçamento de anúncios está vazando, o agente compara cada campanha com a meta de CPA, propõe uma pausa, dois negativos e um aumento de orçamento, e escreve o resumo de gastos à direita"/>
+      <figcaption>Pergunte onde o orçamento vaza. O Duct calcula o custo de cada campanha em relação ao seu CPA alvo, propõe a pausa, os negativos e a mudança de orçamento, e espera pelo seu sim.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2>Como a <em>calculadora funciona</em></h2>
+  <p>Esta ferramenta usa fórmulas padrão de taxa de cliques:</p>
+  <ul>
+    <li><strong>CTR</strong> = Cliques ÷ Impressões × 100</li>
+    <li><strong>Cliques projetados com CTR alvo</strong> = Impressões × (CTR Alvo ÷ 100)</li>
+    <li><strong>CTR necessário para cliques alvo</strong> = Cliques Alvo ÷ Impressões × 100</li>
+  </ul>
+  <p>CTR ajuda a normalizar o desempenho pela exposição. É a maneira mais rápida de comparar a relevância de criativos e palavras-chave em campanhas com diferentes volumes de impressões.</p>
+
+  <h2 style="margin-top:40px">Por que o CTR <em>importa</em></h2>
+  <p>CTR baixo geralmente sinaliza uma lacuna de relevância: ganchos fracos, segmentação ruim ou baixa correspondência de intenção. Mesmo que o CPC pareça bom, um CTR baixo pode esconder problemas de qualidade que mais tarde prejudicam as taxas de conversão e a eficiência de custos.</p>
+  <p>Para canais orgânicos, o CTR é um diagnóstico principal. Para canais pagos, é tanto um sinal de qualidade quanto um alerta precoce para fadiga criativa.</p>
+
+  <h2 style="margin-top:40px">Limitações</h2>
+  <ul>
+    <li>CTR por si só não indica qualidade de conversão ou impacto na receita subsequente.</li>
+    <li>Benchmarks variam significativamente por canal, dispositivo e intenção do público.</li>
+    <li>Esta calculadora não inclui efeitos de posição (por exemplo, classificação de anúncio ou posicionamento na SERP).</li>
+    <li>Todos os cálculos são executados no seu navegador. Nenhum dado é enviado ou armazenado.</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">Também gratuito</p>
+    <h2 id="related-tools-heading">Explore <em>ferramentas</em> relacionadas</h2>
+    <p class="related-tools-banner-desc">Use estas calculadoras para conectar a qualidade de clique no topo do funil com engajamento, velocidade de crescimento e cadência de execução semanal.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="ctr-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+  <p class="tag">FAQ</p>
+  <h2>Perguntas <em>frequentes</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+  <details class="faq-item">
+    <summary class="faq-q">Como você calcula o CTR?</summary>
+    <p class="faq-a">CTR é calculado como cliques divididos por impressões, então multiplicado por 100. Exemplo: 500 cliques de 20.000 impressões é igual a um CTR de 2,5%.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">O que é considerado um bom CTR?</summary>
+    <p class="faq-a">Depende do canal e da intenção, mas muitas equipes usam faixas aproximadas: abaixo de 1% fraco, 1-3% médio e acima de 3% forte para muitos contextos de anúncios e conteúdo.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">Posso usar isso para Google Ads e busca orgânica?</summary>
+    <p class="faq-a">Sim. A mesma fórmula funciona em Google Ads, Meta Ads, LinkedIn, e-mail e SEO, desde que cliques e impressões venham do mesmo período e fonte.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">Por que o CTR pode ser alto, mas as conversões baixas?</summary>
+    <p class="faq-a">CTR alto com baixa conversão geralmente significa que sua promessa é atraente, mas a correspondência de intenção da página de destino é fraca. CTR mede a atração de cliques, não a qualidade pós-clique.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">Como posso melhorar o CTR rapidamente?</summary>
+    <p class="faq-a">Teste ganchos mais fortes, aprimore propostas de valor, alinhe o texto com a intenção, atualize criativos e refine segmentos de segmentação. Execute testes controlados semanalmente para um aumento sustentado.</p>
+  </details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/pt-br/partials/cta-tools.html"></div>
+</main>
+
+<div data-duct-partial="/pt-br/partials/footer-expanded.html"></div>
+
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-impressions', 'inp-clicks', 'inp-target-ctr', 'inp-target-clicks'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  function rateState(v) {
+    if (v >= 3) return { level: 'green', badge: 'Strong', context: 'Strong click attraction for many channels and intents.' };
+    if (v >= 1) return { level: 'amber', badge: 'Average', context: 'Decent performance; test hooks and targeting for lift.' };
+    return { level: 'red', badge: 'Low', context: 'Low click interest. Rework message relevance and creative.' };
+  }
+
+  function pct(v) { return v.toFixed(2) + '%'; }
+  function num(v) {
+    if (v >= 1000000) return (v / 1000000).toFixed(2) + 'm';
+    if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
+    return v.toFixed(0);
+  }
+
+  function makeCard(label, display, level, badge, context) {
+    var card = document.createElement('div');
+    card.className = 'result-card ' + level;
+    var l = document.createElement('div'); l.className = 'result-label'; l.textContent = label;
+    var v = document.createElement('div'); v.className = 'result-value'; v.textContent = display;
+    var b = document.createElement('span'); b.className = 'result-badge ' + level; b.textContent = badge;
+    var c = document.createElement('p'); c.className = 'result-context'; c.textContent = context;
+    card.appendChild(l); card.appendChild(v); card.appendChild(b); card.appendChild(c);
+    return card;
+  }
+
+  function val(id) {
+    var raw = document.getElementById(id).value;
+    return raw === '' ? NaN : parseFloat(raw);
+  }
+
+  function addP(node, text) {
+    var p = document.createElement('p');
+    p.textContent = text;
+    node.appendChild(p);
+  }
+
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var impressions = val('inp-impressions');
+    var clicks = val('inp-clicks');
+    var targetCtr = val('inp-target-ctr');
+    var targetClicks = val('inp-target-clicks');
+
+    var impBad = isNaN(impressions) || impressions <= 0;
+    var clicksBad = isNaN(clicks) || clicks < 0;
+    if (impBad || clicksBad) {
+      if (impBad && clicksBad) {
+        DuctToolFormError.show(ERR, 'Enter impressions greater than zero and clicks (zero or greater).', ['inp-impressions', 'inp-clicks']);
+      } else if (impBad) {
+        DuctToolFormError.show(ERR, 'Enter impressions greater than zero.', ['inp-impressions']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter clicks (zero or greater).', ['inp-clicks']);
+      }
+      document.getElementById(impBad ? 'inp-impressions' : 'inp-clicks').focus();
+      return;
+    }
+    if (clicks > impressions) {
+      DuctToolFormError.show(ERR, 'Clicks cannot be greater than impressions.', ['inp-impressions', 'inp-clicks']);
+      document.getElementById('inp-clicks').focus();
+      return;
+    }
+
+    var ctr = (clicks / impressions) * 100;
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+
+    var ctrState = rateState(ctr);
+    row.appendChild(makeCard('CTR', pct(ctr), ctrState.level, ctrState.badge, ctrState.context));
+    row.appendChild(makeCard('Current Clicks', num(clicks), 'neutral', 'Observed', 'Recorded click volume for the selected period.'));
+    row.appendChild(makeCard('Impressions', num(impressions), 'neutral', 'Observed', 'Total exposures used in this calculation.'));
+
+    if (!isNaN(targetCtr) && targetCtr > 0) {
+      var projected = impressions * (targetCtr / 100);
+      var lift = projected - clicks;
+      var lvl = targetCtr <= ctr ? 'green' : (targetCtr <= ctr * 1.35 ? 'amber' : 'red');
+      var badge = lvl === 'green' ? 'Within reach' : (lvl === 'amber' ? 'Stretch' : 'Aggressive');
+      var liftContext = lift >= 0
+        ? 'Additional clicks needed versus current performance to hit your target CTR at this impression volume.'
+        : 'You are above target CTR; this is how many fewer clicks you could have at the target rate with the same impressions.';
+      row.appendChild(makeCard('Projected Clicks', num(projected), lvl, badge, 'Expected clicks at your target CTR with the same impression volume.'));
+      row.appendChild(makeCard('Click gap vs target', num(lift), lvl, badge, liftContext));
+    }
+
+    if (!isNaN(targetClicks) && targetClicks > 0) {
+      var reqCtr = (targetClicks / impressions) * 100;
+      var reqLvl = reqCtr <= ctr ? 'green' : (reqCtr <= ctr * 1.35 ? 'amber' : 'red');
+      var reqBadge = reqLvl === 'green' ? 'On pace' : (reqLvl === 'amber' ? 'Stretch' : 'Gap');
+      row.appendChild(makeCard('Required CTR', pct(reqCtr), reqLvl, reqBadge, 'CTR needed at current impression volume to hit your click goal.'));
+    }
+
+    var body = document.getElementById('insight-body');
+    while (body.firstChild) { body.removeChild(body.firstChild); }
+    if (ctr >= 3) addP(body, 'Your click attraction is strong. Focus next on conversion efficiency so incremental traffic becomes pipeline.');
+    else if (ctr >= 1) addP(body, 'CTR is workable but not breakout. Prioritize headline and creative testing plus tighter audience segmentation.');
+    else addP(body, 'CTR is low. Revisit intent match first: message, offer, and audience relevance before increasing spend.');
+    if (!isNaN(targetCtr) && targetCtr > ctr) addP(body, 'Your target CTR is above current performance, so treat it as a testing roadmap with staged lifts.');
+    if (!isNaN(targetClicks) && targetClicks > clicks) addP(body, 'Your click goal requires either higher CTR, more impressions, or both. Use this to size realistic weekly targets.');
+
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-impressions', 'inp-clicks', 'inp-target-ctr', 'inp-target-clicks'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('results-section').classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+  });
+  DuctToolExample.seed(['inp-impressions', 'inp-clicks', 'inp-target-ctr', 'inp-target-clicks'], 'calc-btn', 'results-section');
+}());
+</script>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

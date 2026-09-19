@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -12,11 +13,18 @@ export default function QuestionsCard({
   questions,
   onSubmit,
   disabled,
-  title = "Duct has a quick question",
-  hint = "Your answers sharpen the result. Skip if you'd rather Duct decide.",
-  submitLabel = "Continue →",
-  skipLabel = "Let Duct decide",
+  // The copy props default to the card's own voice, resolved below so the
+  // defaults follow the interface language.
+  title,
+  hint,
+  submitLabel,
+  skipLabel,
 }) {
+  const { t } = useLingui();
+  const titleText = title ?? t`Duct has a quick question`;
+  const hintText = hint ?? t`Your answers sharpen the result. Skip if you'd rather Duct decide.`;
+  const submitText = submitLabel ?? t`Continue →`;
+  const skipText = skipLabel ?? t`Let Duct decide`;
   const [answers, setAnswers] = useState({});
   const [freeText, setFreeText] = useState({});
 
@@ -51,8 +59,8 @@ export default function QuestionsCard({
   return (
     <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 space-y-4 my-3">
       <div className="space-y-0.5">
-        <p className="text-sm font-semibold">{title}</p>
-        <p className="text-xs text-muted-foreground">{hint}</p>
+        <p className="text-sm font-semibold">{titleText}</p>
+        <p className="text-xs text-muted-foreground">{hintText}</p>
       </div>
 
       {questions.map((q) => (
@@ -89,14 +97,14 @@ export default function QuestionsCard({
                   : "border-border bg-background hover:bg-muted"
               }`}
             >
-              Other
+              <Trans>Other</Trans>
             </button>
           </div>
           {answers[q.question] === "__other__" && (
             <input
               type="text"
-              placeholder="Type your answer…"
-              aria-label="Your answer"
+              placeholder={t`Type your answer…`}
+              aria-label={t`Your answer`}
               value={freeText[q.question] || ""}
               onChange={(e) => handleFreeText(q.question, e.target.value)}
               className="w-full rounded-3xl border border-control bg-input/50 px-3 py-1.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm"
@@ -108,7 +116,7 @@ export default function QuestionsCard({
 
       <div className="flex items-center gap-2 pt-1">
         <Button size="sm" onClick={handleSubmit} disabled={disabled || !allAnswered}>
-          {submitLabel}
+          {submitText}
         </Button>
         <button
           type="button"
@@ -116,7 +124,7 @@ export default function QuestionsCard({
           disabled={disabled}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
         >
-          {skipLabel}
+          {skipText}
         </button>
       </div>
     </div>

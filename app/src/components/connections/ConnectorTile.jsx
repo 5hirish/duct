@@ -17,6 +17,7 @@
 // anything that needs its own interaction just sits above it.
 
 import { ChevronRight } from "lucide-react";
+import { useLingui } from "@lingui/react/macro";
 import ConnectorDot from "./ConnectorDot";
 import StorageBadge from "./StorageBadge";
 
@@ -45,6 +46,7 @@ export default function ConnectorTile({
   onClick,
   disabled = false,
 }) {
+  const { t } = useLingui();
   return (
     <div className={`conn-tile${disabled ? " is-disabled" : ""}`}>
       <span className="conn-tile-logo" aria-hidden="true">
@@ -62,7 +64,7 @@ export default function ConnectorTile({
               type="button"
               className="conn-tile-title conn-tile-open"
               onClick={onClick}
-              aria-label={`Configure ${title}`}
+              aria-label={t`Configure ${title}`}
             >
               {title}
             </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
+import { useLingui } from "@lingui/react/macro";
 
 // "Where does this credential actually live?" — one glyph, used by every card
 // on the Connections page so the answer reads the same everywhere.
@@ -80,10 +81,11 @@ function StorageIcon({ storage }) {
  *                 dialog, where there is room; the tile relies on the tooltip.
  */
 export default function StorageBadge({ storage, detail = false }) {
+  const { i18n } = useLingui();
   if (!storage || storage === STORAGE_NONE) return null;
-  const label = STORAGE_LABELS[storage];
-  if (!label) return null;
-  const sentence = STORAGE_DETAIL[storage];
+  if (!STORAGE_LABELS[storage]) return null;
+  const label = i18n._(STORAGE_LABELS[storage]);
+  const sentence = i18n._(STORAGE_DETAIL[storage]);
 
   // The detail form is glyph + sentence as ONE row. As a bare fragment the two
   // became separate children of whatever grid the caller had — and the

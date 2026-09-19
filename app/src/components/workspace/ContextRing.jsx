@@ -7,6 +7,8 @@
 // — a gauge that is always coloured is a gauge nobody looks at. The figures
 // live in the tooltip, for the person who wants to know what a turn cost.
 
+import { plural } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -32,6 +34,8 @@ export function formatUsd(v) {
 }
 
 function Ring({ pct, label }) {
+  const { t } = useLingui();
+  const percent = Math.round(pct * 100);
   const tone =
     pct >= 0.9 ? "stroke-destructive"
     : pct >= 0.75 ? "stroke-warning"
@@ -55,12 +59,13 @@ function Ring({ pct, label }) {
           />
         )}
       </svg>
-      <span className="text-xs">{label || `${Math.round(pct * 100)}% context`}</span>
+      <span className="text-xs">{label || t`${percent}% context`}</span>
     </span>
   );
 }
 
 function UsageDetails({ last, total }) {
+  const { t } = useLingui();
   const rows = [];
   // Cost rides on the same rows as the tokens it explains; a model the backend
   // has no price for shows tokens alone rather than a guessed figure.
@@ -70,17 +75,27 @@ function UsageDetails({ last, total }) {
   // one after a pause means the cache expired; after a model switch it means
   // the whole prompt was re-billed.
   const share = (cached, input) => (cached && input ? ` (${Math.round((cached / input) * 100)}%)` : "");
+  // One figure per message, joined with the same separator the row always
+  // used, so a translator sees "{n} in" and "{n} out" rather than one string
+  // with four optional tails.
+  const tokenRow = (bucket) => {
+    const input = formatTokens(bucket.input);
+    const output = formatTokens(bucket.output);
+    const cached = formatTokens(bucket.cached);
+    const cachedShare = share(bucket.cached, bucket.input);
+    return [t`${input} in`, t`${output} out`, bucket.cached ? t`${cached} cached${cachedShare}` : ""];
+  };
   if (last?.window) {
-    rows.push([
-      "Context",
-      last.stale ? "recomputed at the next call" : `${formatTokens(last.input + last.output)} of ${formatTokens(last.window)}`,
-    ]);
-    rows.push(["Last call", `${formatTokens(last.input)} in · ${formatTokens(last.output)} out${last.cached ? ` · ${formatTokens(last.cached)} cached${share(last.cached, last.input)}` : ""}${lastCost ? ` · ${lastCost}` : ""}`]);
+    const used = formatTokens(last.input + last.output);
+    const window = formatTokens(last.window);
+    rows.push([t`Context`, last.stale ? t`recomputed at the next call` : t`${used} of ${window}`]);
+    rows.push([t`Last call`, [...tokenRow(last), lastCost].filter(Boolean).join(" · ")]);
   }
   if (total?.calls) {
-    rows.push(["This session", `${formatTokens(total.input)} in · ${formatTokens(total.output)} out${total.cached ? ` · ${formatTokens(total.cached)} cached${share(total.cached, total.input)}` : ""} · ${total.calls} call${total.calls === 1 ? "" : "s"}${totalCost ? ` · ${totalCost}` : ""}`]);
+    const calls = plural(total.calls, { one: "# call", other: "# calls" });
+    rows.push([t`This session`, [...tokenRow(total), calls, totalCost].filter(Boolean).join(" · ")]);
   }
-  if (last?.model) rows.push(["Model", last.model]);
+  if (last?.model) rows.push([t`Model`, last.model]);
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
       {rows.map(([k, v]) => (
@@ -99,11 +114,13 @@ function UsageDetails({ last, total }) {
  * it the ring is decoration, as on a thread that has not started.
  */
 export default function ContextRing({ used = 0, label = "", details = null }) {
+  const { t } = useLingui();
   // Right after a compaction the last reading is of the context that was
   // replaced: show an empty ring that says so rather than a stale figure.
   const stale = Boolean(details?.last?.stale);
   const pct = stale ? 0 : Math.max(0, Math.min(1, used));
-  const text = stale ? "context compacted" : label;
+  const text = stale ? t`context compacted` : label;
+  const percent = Math.round(pct * 100);
   if (!details) return <Ring pct={pct} label={text} />;
   // No local Provider — see ui/tooltip.tsx: a second one here would only
   // override delayDuration for this tooltip and desync it from the rest of
@@ -114,7 +131,7 @@ export default function ContextRing({ used = 0, label = "", details = null }) {
       <TooltipTrigger asChild>
         <button
           type="button"
-          aria-label={`Context used: ${Math.round(pct * 100)} percent. Show token usage.`}
+          aria-label={t`Context used: ${percent} percent. Show token usage.`}
           className="rounded-md px-1 -mx-1 hover:bg-muted transition-colors"
         >
           <Ring pct={pct} label={text} />

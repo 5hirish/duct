@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Trans } from "@lingui/react/macro";
 import AuditWorkspace from "../../../../components/audit/AuditWorkspace";
 import { saveLeadReport, validateLeadToken } from "../../../../lib/api";
 import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "../../../../lib/audit";
@@ -101,7 +102,7 @@ function LeadSeoAuditInner() {
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center">
           <Spinner className="size-5 text-brand" />
-          <p className="text-sm text-muted-foreground">Verifying your access…</p>
+          <p className="text-sm text-muted-foreground"><Trans>Verifying your access…</Trans></p>
         </div>
       </div>
     );
@@ -118,15 +119,17 @@ function LeadSeoAuditInner() {
               <path d="M12 8v4m0 4h.01"/>
             </svg>
           </div>
-          <h1 className="text-lg font-semibold text-foreground mb-2">Invalid or expired link</h1>
+          <h1 className="text-lg font-semibold text-foreground mb-2"><Trans>Invalid or expired link</Trans></h1>
           <p className="text-sm text-muted-foreground mb-6">
-            This audit link is no longer valid. Links expire after 24 hours. Please enter your website again to get a fresh audit.
+            <Trans>
+              This audit link is no longer valid. Links expire after 24 hours. Please enter your website again to get a fresh audit.
+            </Trans>
           </p>
           <a
             href={SITE_URL}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground hover:bg-brand/90 transition-colors"
           >
-            Get a new free audit →
+            <Trans>Get a new free audit →</Trans>
           </a>
         </div>
       </div>

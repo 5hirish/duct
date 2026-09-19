@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { cdnImage, mediaUrl } from "@/lib/contentApi";
 import { SCHEDULED_META, statusMeta } from "@/lib/contentStatus";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
@@ -21,7 +22,7 @@ import { compactNumber, formatDate, titleCase } from "@/lib/format";
 
 // `scheduled` is not a stored post status — it is a plan slot — so it comes
 // from its own entry rather than widening the enum's map.
-const chipFor = (status) => (status === "scheduled" ? SCHEDULED_META : statusMeta(status)).solidClass;
+const chipFor = (status) => (status === "scheduled" ? SCHEDULED_META : statusMeta(status));
 
 function pick(perf, ...keys) {
   for (const k of keys) {
@@ -46,6 +47,7 @@ function metricsOf(perf = {}) {
 // ---------------------------------------------------------------------------
 
 export default function PostCard({ post }) {
+  const { t, i18n } = useLingui();
   // Board view only needs a small image — request a width-capped CDN render
   // when Image Resizing is enabled (full-res stays for the editor).
   const thumb = cdnImage(mediaUrl(post.thumbnail_url), { width: 480 });
@@ -53,8 +55,11 @@ export default function PostCard({ post }) {
   const m = metricsOf(post.perf);
   const hasMetrics = Object.values(m).some((v) => v != null);
   const status = post.status || "pending";
+  const chip = chipFor(status);
   const formatLabel = post.format_name || post.format_slug || "";
   const published = post.posted_at;
+  const publishedOn = published ? formatDate(published, { locale: i18n.locale }) : "";
+  const dayNumber = post.day_index;
 
   return (
     <Link
@@ -66,14 +71,14 @@ export default function PostCard({ post }) {
         {thumb ? (
           <img
             src={thumb}
-            alt={post.topic || "post preview"}
+            alt={post.topic || t`post preview`}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             loading="lazy"
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
             <ImageOff className="h-7 w-7" />
-            <span className="text-2xs">No preview yet</span>
+            <span className="text-2xs"><Trans>No preview yet</Trans></span>
           </div>
         )}
 
@@ -81,14 +86,14 @@ export default function PostCard({ post }) {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent" />
 
         {/* status pill */}
-        <span className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-2xs font-semibold capitalize shadow-sm ${chipFor(status)}`}>
-          {status}
+        <span className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-2xs font-semibold capitalize shadow-sm ${chip.solidClass}`}>
+          {i18n._(chip.label)}
         </span>
 
         {/* day badge */}
         {post.day_index != null && (
           <span className="absolute right-2.5 top-2.5 rounded-full bg-foreground/70 px-2 py-0.5 text-2xs font-medium text-background backdrop-blur-sm">
-            Day {post.day_index}
+            <Trans>Day {dayNumber}</Trans>
           </span>
         )}
 
@@ -108,7 +113,7 @@ export default function PostCard({ post }) {
 
         {post.published_via === "duct" && (
           <span className="absolute bottom-2.5 right-2.5 rounded-full bg-primary/90 px-2 py-0.5 text-2xs font-semibold text-primary-foreground shadow-sm">
-            via Duct
+            <Trans>via Duct</Trans>
           </span>
         )}
       </div>
@@ -116,7 +121,7 @@ export default function PostCard({ post }) {
       {/* Body */}
       <div className="flex flex-1 flex-col gap-2.5 p-3.5">
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary">
-          {post.topic || post.post_dir_slug || "Untitled post"}
+          {post.topic || post.post_dir_slug || t`Untitled post`}
         </h3>
 
         <div className="flex flex-wrap items-center gap-1.5">
@@ -142,13 +147,13 @@ export default function PostCard({ post }) {
             <Metric icon={Bookmark}      value={m.saves} />
           </div>
         ) : (
-          <p className="mt-auto pt-1 text-2xs text-muted-foreground">No metrics yet</p>
+          <p className="mt-auto pt-1 text-2xs text-muted-foreground"><Trans>No metrics yet</Trans></p>
         )}
 
         {/* Footer */}
         <div className="flex items-center gap-1.5 border-t border-border/40 pt-2 text-2xs text-muted-foreground">
           <Calendar className="h-3 w-3" />
-          {published ? <span>Published {formatDate(published)}</span> : <span className="italic">Not published</span>}
+          {published ? <span><Trans>Published {publishedOn}</Trans></span> : <span className="italic"><Trans>Not published</Trans></span>}
         </div>
       </div>
     </Link>

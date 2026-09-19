@@ -10,6 +10,7 @@
  */
 
 import { useMemo } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   Select,
   SelectContent,
@@ -73,6 +74,7 @@ export default function ModelPicker({
   loading,
   autoOption = "",
 }) {
+  const { t } = useLingui();
   const grouped = useMemo(() => {
     const byProvider = new Map();
     for (const model of models) {
@@ -94,8 +96,8 @@ export default function ModelPicker({
   const note = (providerId) => {
     const provider = providersById[providerId];
     const flags = [];
-    if (provider && !provider.reachable) flags.push("no key");
-    if (provider && !(provider.engines || []).includes(engine)) flags.push(`not on ${engine}`);
+    if (provider && !provider.reachable) flags.push(t`no key`);
+    if (provider && !(provider.engines || []).includes(engine)) flags.push(t`not on ${engine}`);
     return flags.length ? ` · ${flags.join(", ")}` : "";
   };
 
@@ -119,14 +121,16 @@ export default function ModelPicker({
         ) : loading ? (
           // Not "Choose a model": until the catalogue lands every tier *does*
           // have a model, and inviting a choice implies none is set.
-          <span className="mt-selected mt-selected--loading">Loading models…</span>
+          <span className="mt-selected mt-selected--loading">
+            <Trans>Loading models…</Trans>
+          </span>
         ) : autoOption ? (
           <span className="mt-selected">
             <Sparkles className="mt-mark" size={14} strokeWidth={1.75} aria-hidden="true" />
             <span className="mt-selected-id">{autoOption}</span>
           </span>
         ) : (
-          <SelectValue placeholder="Choose a model" />
+          <SelectValue placeholder={t`Choose a model`} />
         )}
       </SelectTrigger>
       {/* `position="popper"`, not Radix's default `item-aligned`. Item-aligned

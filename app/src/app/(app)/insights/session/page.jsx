@@ -7,6 +7,7 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useLingui } from "@lingui/react/macro";
 import InsightsWorkspace from "@/components/insights/InsightsWorkspace";
 import { SkeletonDocument } from "@/components/ui/skeleton";
 import { getActiveProjectId } from "@/lib/projects";
@@ -36,8 +37,10 @@ function Session() {
 }
 
 export default function InsightsSessionPage() {
+  const { t } = useLingui();
+
   return (
-    <Suspense fallback={<SkeletonDocument className="p-8" label="Loading the thread" />}>
+    <Suspense fallback={<SkeletonDocument className="p-8" label={t`Loading the thread`} />}>
       <Session />
     </Suspense>
   );

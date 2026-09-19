@@ -13,14 +13,25 @@ describe("threads on the desk", () => {
   });
 
   it("the card says why", () => {
-    expect(conversationCard(conv("paused")).detail).toMatch(/answer/);
-    expect(conversationCard(conv("failed", { run_error: { error: "The model provider rejected the API key." } })).detail).toMatch(/rejected/);
-    expect(conversationCard(conv("running")).detail).toBe("Working");
+    expect(conversationCard(conv("paused"))).toEqual({ code: "waiting", tone: "attention", error: "" });
+    // The backend's own reason travels with the code, so the card can show it
+    // in place of the generic sentence.
+    expect(conversationCard(conv("failed", { run_error: { error: "The model provider rejected the API key." } }))).toEqual({
+      code: "failed", tone: "attention", error: "The model provider rejected the API key.",
+    });
+    expect(conversationCard(conv("failed")).error).toBe("");
+    expect(conversationCard(conv("running")).code).toBe("working");
   });
 
   it("a thread waiting on the user outranks a pinned open one", () => {
     const desk = buildDesk({ conversations: [conv("idle", { pinned: true }), conv("paused")] });
     expect(desk.needsYou.map((c) => c.conversationId)).toEqual(["paused"]);
     expect(desk.inProgress.map((c) => c.conversationId)).toEqual(["idle"]);
+  });
+
+  it("a thread with no title says so by code, not by an English fallback", () => {
+    const desk = buildDesk({ conversations: [conv("idle", { title: "" })] });
+    expect(desk.inProgress[0]).toMatchObject({ title: "", titleCode: "untitled_thread", detailCode: "resume" });
+    expect(buildDesk({ conversations: [conv("idle")] }).inProgress[0].titleCode).toBe("");
   });
 });

@@ -11,6 +11,7 @@ import { Suspense, use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Users } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { SkeletonList } from "@/components/ui/skeleton";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/memoryApi";
 
 function ProjectMemory({ projectId }) {
+  const { t } = useLingui();
   // ?m=<id> — a chip in the chat linking to the entry behind an answer.
   const focusId = useSearchParams().get("m") || "";
   const [projectName, setProjectName] = useState("");
@@ -56,36 +58,38 @@ function ProjectMemory({ projectId }) {
     <section>
       <div className="page-toolbar">
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          {projectName ? `${projectName} · Memory` : "Memory"}
+          {projectName ? t`${projectName} · Memory` : t`Memory`}
         </h1>
         <div className="ml-auto flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
             <Link href={`/project/${projectId}/members`}>
-              <Users className="size-4" /> Members
+              <Users className="size-4" /> <Trans>Members</Trans>
             </Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
             <Link href="/projects">
-              <ArrowLeft className="size-4" /> All projects
+              <ArrowLeft className="size-4" /> <Trans>All projects</Trans>
             </Link>
           </Button>
         </div>
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        What Duct knows about this project. Agents read it before every run — confirm,
-        correct, or pin a fact so it stays in view.
+        <Trans>
+          What Duct knows about this project. Agents read it before every run — confirm,
+          correct, or pin a fact so it stays in view.
+        </Trans>
       </p>
 
       <MemoryTimeline
-        errorSubject="this project's memory"
+        errorSubject={t`this project's memory`}
         api={api}
         signedIn={signedIn}
         focusId={focusId}
         kinds={MEMORY_KINDS.filter((k) => k !== "artifact")}
         defaultKind="decision"
-        resetPrompt="Delete every memory for this project? This cannot be undone."
-        emptyHint="Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
+        resetPrompt={t`Delete every memory for this project? This cannot be undone.`}
+        emptyHint={t`Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence.`}
       />
     </section>
   );
@@ -93,9 +97,10 @@ function ProjectMemory({ projectId }) {
 
 // useSearchParams needs a Suspense boundary in the App Router.
 export default function ProjectMemoryPage({ params }) {
+  const { t } = useLingui();
   const { projectId } = use(params);
   return (
-    <Suspense fallback={<SkeletonList rows={4} label="Loading memories" />}>
+    <Suspense fallback={<SkeletonList rows={4} label={t`Loading memories`} />}>
       <ProjectMemory projectId={projectId} />
     </Suspense>
   );

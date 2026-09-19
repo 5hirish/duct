@@ -109,5 +109,7 @@ teal), mid for growth (green, violet).
 - [ ] One shot, three job cards, no mock of a screen that exists
 - [ ] "Not yet" card names who it is not for
 - [ ] No emoji, no stats band, no testimonials, no demo
-- [ ] Added to `site/sitemap.xml`; `make check-site` green
+- [ ] Added to `site/sitemap.xml`; `make i18n` run so `site/<lang>/` has the
+      page in every language (the generator adds those sitemap entries);
+      `make check-site` green
 - [ ] Reviewed at 1440 and 390 px: two-line hero, nothing horizontal

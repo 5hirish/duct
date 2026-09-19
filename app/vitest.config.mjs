@@ -11,6 +11,13 @@ export default defineConfig({
     environment: "node",
   },
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      // The Lingui macros only exist at compile time (the SWC plugin in
+      // next.config.mjs); vitest has no such pass, so the modules that carry
+      // a msg`…` label get a runtime stand-in that returns the English.
+      "@lingui/core/macro": fileURLToPath(new URL("./src/lib/__tests__/stubs/lingui-macro.js", import.meta.url)),
+      "@lingui/react/macro": fileURLToPath(new URL("./src/lib/__tests__/stubs/lingui-macro.js", import.meta.url)),
+    },
   },
 });

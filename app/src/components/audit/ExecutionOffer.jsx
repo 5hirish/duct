@@ -1,6 +1,8 @@
 "use client";
 import React, { useMemo, useState } from 'react';
 import { Sparkles, PenLine, Languages, ArrowRight, X, Check } from 'lucide-react';
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
@@ -18,29 +20,31 @@ const DUCT_CREAM = '#f4ece2';
 // Service catalogue — what Duct can execute (auditing is free; this is the product)
 // ---------------------------------------------------------------------------
 
+// `label` and `blurb` are message descriptors (module scope); the blocks that
+// render them resolve with `i18n._`.
 const SERVICES = [
   {
     key: 'ai_ready_fixes',
-    label: 'AI-ready fixes',
+    label: msg`AI-ready fixes`,
     Icon: Sparkles,
-    blurb: 'Schema, meta titles & descriptions, llms.txt and FAQ markup — generated and ready to paste.',
+    blurb: msg`Schema, meta titles & descriptions, llms.txt and FAQ markup — generated and ready to paste.`,
     // Findings in these categories are auto-generatable with no CMS access
     cats: ['on_page_seo', 'structured_data', 'geo_aio', 'open_graph', 'technical_foundation'],
     kw: ['schema', 'meta', 'title', 'description', 'canonical', 'llms', 'faq', 'open graph', 'og:', 'structured'],
   },
   {
     key: 'content_rewrites',
-    label: 'On-page content rewrites',
+    label: msg`On-page content rewrites`,
     Icon: PenLine,
-    blurb: 'Thin or weak page and blog copy rewritten for search intent and your keywords.',
+    blurb: msg`Thin or weak page and blog copy rewritten for search intent and your keywords.`,
     cats: ['blog_content_strategy'],
     kw: ['thin', 'word count', 'short', 'content', 'blog', 'copy', 'readability', 'intent', 'h1'],
   },
   {
     key: 'translation',
-    label: 'Translation & localization',
+    label: msg`Translation & localization`,
     Icon: Languages,
-    blurb: 'Translated metadata and a complete hreflang map so you can rank in new markets.',
+    blurb: msg`Translated metadata and a complete hreflang map so you can rank in new markets.`,
     cats: [],
     kw: ['hreflang', 'locale', 'translation', 'language', 'international', 'multilingual'],
   },
@@ -75,6 +79,7 @@ export function computeExecutionServices(data) {
 // ---------------------------------------------------------------------------
 
 export function ExecutionOfferBlock({ services, onOpen }) {
+  const { i18n } = useLingui();
   const totalFixes = services
     .filter((s) => s.key !== 'translation')
     .reduce((n, s) => n + s.count, 0);
@@ -94,7 +99,7 @@ export function ExecutionOfferBlock({ services, onOpen }) {
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-2xs font-semibold tracking-wide"
               style={{ background: 'rgba(255,92,0,0.16)', color: DUCT_ORANGE }}
             >
-              <Sparkles size={12} /> DONE FOR YOU
+              <Sparkles size={12} /> <Trans>DONE FOR YOU</Trans>
             </span>
           </div>
 
@@ -110,13 +115,15 @@ export function ExecutionOfferBlock({ services, onOpen }) {
             }}
           >
             {totalFixes > 0
-              ? <>Don&rsquo;t have time to fix these? Duct can execute <span style={{ color: DUCT_ORANGE }}>{totalFixes}</span> of them for you.</>
-              : <>Want Duct to execute these fixes for you?</>}
+              ? <Trans>Don’t have time to fix these? Duct can execute <span style={{ color: DUCT_ORANGE }}>{totalFixes}</span> of them for you.</Trans>
+              : <Trans>Want Duct to execute these fixes for you?</Trans>}
           </h2>
 
           <p className="mt-2.5 text-sm @xl:text-base" style={{ color: 'rgba(244,236,226,0.72)', lineHeight: 1.6 }}>
-            The audit is on us. Our agents turn these findings into ready-to-ship fixes —
-            so you ship the work, not just the to-do list.
+            <Trans>
+              The audit is on us. Our agents turn these findings into ready-to-ship fixes —
+              so you ship the work, not just the to-do list.
+            </Trans>
           </p>
 
           {/* Service chips */}
@@ -129,19 +136,19 @@ export function ExecutionOfferBlock({ services, onOpen }) {
               >
                 <div className="flex items-center gap-2">
                   <Icon size={15} style={{ color: DUCT_ORANGE }} />
-                  <span className="text-sm font-semibold" style={{ color: DUCT_CREAM }}>{label}</span>
+                  <span className="text-sm font-semibold" style={{ color: DUCT_CREAM }}>{i18n._(label)}</span>
                 </div>
                 {count > 0 ? (
                   <div className="mt-1.5 text-2xs font-medium" style={{ color: DUCT_ORANGE }}>
-                    {count} {count === 1 ? 'fix' : 'fixes'} we can generate
+                    <Plural value={count} one="# fix we can generate" other="# fixes we can generate" />
                   </div>
                 ) : (
                   <div className="mt-1.5 text-2xs font-medium" style={{ color: 'rgba(244,236,226,0.72)' }}>
-                    {key === 'translation' ? 'Expand into new markets' : 'On request'}
+                    {key === 'translation' ? <Trans>Expand into new markets</Trans> : <Trans>On request</Trans>}
                   </div>
                 )}
                 <p className="mt-1.5 text-xs leading-snug" style={{ color: 'rgba(244,236,226,0.76)' }}>
-                  {blurb}
+                  {i18n._(blurb)}
                 </p>
               </div>
             ))}
@@ -154,10 +161,10 @@ export function ExecutionOfferBlock({ services, onOpen }) {
               className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ background: DUCT_ORANGE, color: '#fff' }}
             >
-              See what we&rsquo;d do <ArrowRight size={15} />
+              <Trans>See what we’d do</Trans> <ArrowRight size={15} />
             </button>
             <span className="text-xs" style={{ color: 'rgba(244,236,226,0.72)' }}>
-              No commitment — we&rsquo;ll scope it and follow up.
+              <Trans>No commitment — we’ll scope it and follow up.</Trans>
             </span>
           </div>
         </div>
@@ -180,7 +187,7 @@ export function ExecutionClosingLine({ onOpen }) {
         className="text-sm font-medium underline-offset-4 hover:underline"
         style={{ color: DUCT_ORANGE }}
       >
-        Want these done for you? Request execution →
+        <Trans>Want these done for you? Request execution →</Trans>
       </button>
     </div>
   );
@@ -191,6 +198,7 @@ export function ExecutionClosingLine({ onOpen }) {
 // ---------------------------------------------------------------------------
 
 export function ExecutionRequestModal({ open, onClose, services, leadToken, email }) {
+  const { t, i18n } = useLingui();
   // Pre-check services that have addressable fixes; fall back to AI-ready fixes.
   const defaults = useMemo(() => {
     const checked = services.filter((s) => s.count > 0).map((s) => s.key);
@@ -227,6 +235,8 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
     }
   };
 
+  const contact = email || t`your email`;
+
   // This dialog belongs to the audit report, which declares itself a light
   // document (AuditReportV1). It is portalled out of that subtree, so it has to
   // declare the same thing for itself rather than inherit it — and it does so
@@ -254,13 +264,13 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
         <div className="flex items-start justify-between px-5 pt-5 pb-3">
           <div>
             <DialogTitle className="text-base font-bold" style={{ color: DUCT_NAVY }}>
-              {status === 'done' ? "You're on the list" : 'Have Duct execute your fixes'}
+              {status === 'done' ? <Trans>You're on the list</Trans> : <Trans>Have Duct execute your fixes</Trans>}
             </DialogTitle>
             {status !== 'done' && (
-              <p className="mt-1 text-xs text-muted-foreground">Pick what you&rsquo;d like done. We&rsquo;ll scope it and follow up.</p>
+              <p className="mt-1 text-xs text-muted-foreground"><Trans>Pick what you’d like done. We’ll scope it and follow up.</Trans></p>
             )}
           </div>
-          <button type="button" onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground" aria-label="Close">
+          <button type="button" onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground" aria-label={t`Close`}>
             <X size={18} />
           </button>
         </div>
@@ -268,7 +278,7 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
         {status === 'done' ? (
           <div className="px-5 pb-6">
             <div className="rounded-xl bg-success/5 border border-success/30 px-4 py-4 text-sm text-success">
-              Thanks! We&rsquo;ll be in touch at <span className="font-semibold">{email || 'your email'}</span> to scope this out.
+              <Trans>Thanks! We’ll be in touch at <span className="font-semibold">{contact}</span> to scope this out.</Trans>
             </div>
             <button
               type="button"
@@ -276,7 +286,7 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
               className="mt-4 w-full rounded-lg py-2.5 text-sm font-semibold text-white"
               style={{ background: DUCT_NAVY }}
             >
-              Done
+              <Trans>Done</Trans>
             </button>
           </div>
         ) : (
@@ -302,14 +312,14 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
                       >
                         {isOn ? <Check size={13} /> : <Icon size={13} />}
                       </span>
-                      <span className="text-sm font-semibold" style={{ color: DUCT_NAVY }}>{label}</span>
+                      <span className="text-sm font-semibold" style={{ color: DUCT_NAVY }}>{i18n._(label)}</span>
                       {count > 0 && (
                         <span className="ml-auto text-2xs font-medium" style={{ color: DUCT_ORANGE }}>
-                          {count} {count === 1 ? 'fix' : 'fixes'}
+                          <Plural value={count} one="# fix" other="# fixes" />
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 pl-[30px] text-xs leading-snug text-muted-foreground">{blurb}</p>
+                    <p className="mt-1 pl-[30px] text-xs leading-snug text-muted-foreground">{i18n._(blurb)}</p>
                   </button>
                 );
               })}
@@ -317,15 +327,15 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
 
             <textarea
               value={note}
-              aria-label="Anything specific (optional)"
+              aria-label={t`Anything specific (optional)`}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              placeholder="Anything specific? (optional)"
+              placeholder={t`Anything specific? (optional)`}
               className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus-visible:border-brand"
             />
 
             {status === 'error' && (
-              <p className="mt-2 text-xs text-destructive">That didn&rsquo;t send — your choices are still here. Try again.</p>
+              <p className="mt-2 text-xs text-destructive"><Trans>That didn’t send — your choices are still here. Try again.</Trans></p>
             )}
 
             <button
@@ -335,9 +345,9 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
               className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white disabled:opacity-50"
               style={{ background: DUCT_ORANGE }}
             >
-              {status === 'submitting' ? <><Spinner className="size-4" /> Sending…</> : 'Request execution'}
+              {status === 'submitting' ? <><Spinner className="size-4" /> <Trans>Sending…</Trans></> : <Trans>Request execution</Trans>}
             </button>
-            <p className="mt-2 text-center text-2xs text-muted-foreground">No payment now — we&rsquo;ll scope and quote first.</p>
+            <p className="mt-2 text-center text-2xs text-muted-foreground"><Trans>No payment now — we’ll scope and quote first.</Trans></p>
           </div>
         )}
       </DialogContent>

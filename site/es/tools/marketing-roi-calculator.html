@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Calculadora de ROI de marketing — Herramienta gratuita de Duct</title>
+<link rel="canonical" href="https://getduct.ai/es/tools/marketing-roi-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/marketing-roi-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/marketing-roi-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/marketing-roi-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/marketing-roi-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/marketing-roi-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/marketing-roi-calculator"/>
+<!-- hreflang:end -->
+<meta name="description" content="Calculadora de ROI de marketing gratuita para equipos de crecimiento y operadores. Calcula el ROI, el beneficio y los escenarios de punto de equilibrio a partir del gasto de la campaña y los ingresos."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/es/tools/marketing-roi-calculator"/>
+<meta property="og:title" content="Calculadora de ROI de marketing — Herramienta gratuita de Duct"/>
+<meta property="og:description" content="Calcula el ROI de marketing, el beneficio neto y los objetivos de punto de equilibrio a partir del gasto y los ingresos atribuibles."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-marketing-roi-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Calculadora de ROI de marketing — Herramienta gratuita de Duct"/>
+<meta name="twitter:description" content="Calculadora de ROI gratuita para campañas de marketing con escenarios de rentabilidad y planificación de objetivos."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-marketing-roi-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, sinceramente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Rechaza y el sitio se comportará exactamente igual.","Privacy Policy":"Política de privacidad","Decline":"Rechazar","Accept":"Aceptar","{n} stars on GitHub":"{n} estrellas en GitHub","UTM Builder":"Constructor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de comparativa de métricas SaaS","Weekly Marketing Brief Generator":"Generador de informes de marketing semanales","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de tasa de crecimiento de MRR","Engagement Rate Calculator":"Calculadora de tasa de interacción","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menú de navegación","Close navigation menu":"Cerrar menú de navegación","Menu":"Menú","Free Tools":"Herramientas gratuitas","Solutions":"Soluciones","Download Duct ↓":"Descargar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de pantalla ampliada","Close":"Cerrar","Fit to screen":"Ajustar a la pantalla","Zoom in":"Acercar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 y posteriores","Runs on any distribution":"Funciona en cualquier distribución","Debian and Ubuntu":"Debian y Ubuntu","Download ↓":"Descargar ↓","Download for {label} ↓":"Descargar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de ejemplo. Cambia cualquier campo y calcula de nuevo para los tuyos."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Marketing ROI Calculator","url":"https://getduct.ai/tools/marketing-roi-calculator","description":"Free calculator that computes marketing ROI, net profit, and break-even revenue targets.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+  .tool-hero { padding:80px 24px 48px; text-align:center; max-width:760px; margin:0 auto; }
+  .tool-hero h1 { font-family:var(--serif); font-size:clamp(32px,5vw,52px); color:var(--navy); margin:16px 0; line-height:1.15; }
+  .tool-hero h1 em { color:var(--orange); font-style:italic; }
+  .tool-hero p { font-size:17px; color:var(--navy-3); font-weight:300; line-height:1.6; margin:0; }
+  .tool-wrap { max-width:900px; margin:0 auto 80px; padding:0 24px; }
+  .tool-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.06); }
+  .tool-inputs { padding:36px 40px; display:grid; grid-template-columns:1fr 1fr; gap:24px 32px; }
+  @media (max-width:640px) { .tool-inputs { grid-template-columns:1fr; padding:24px; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:500; color:var(--navy); }
+  .field .field-hint { font-size:11px; color:var(--navy-3); margin-top:-2px; }
+  .field input { padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:15px; font-family:var(--sans); color:var(--navy); outline:none; }
+  .field input:focus { border-color:var(--orange); }
+  .tool-action { padding:0 40px 36px; display:flex; align-items:center; gap:16px; }
+  @media (max-width:640px) { .tool-action { padding:0 24px 24px; flex-direction:column; align-items:stretch; } }
+  .tool-results { border-top:1px solid var(--border); padding:36px 40px; display:none; }
+  @media (max-width:640px) { .tool-results { padding:24px; } }
+  .tool-results.visible { display:block; }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+  .result-card { border:1.5px solid var(--border); border-radius:var(--r); padding:20px; }
+  .result-card.green { border-color:#22c55e; background:#f0fdf4; }
+  .result-card.amber { border-color:#f59e0b; background:#fffbeb; }
+  .result-card.red { border-color:#ef4444; background:#fef2f2; }
+  .result-card.neutral { border-color:var(--border); background:var(--off); }
+  .result-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-3); margin-bottom:6px; }
+  .result-value { font-size:26px; font-family:var(--serif); color:var(--navy); margin-bottom:4px; }
+  .result-badge { display:inline-flex; font-size:11px; font-weight:500; padding:2px 9px; border-radius:100px; margin-bottom:8px; }
+  .result-badge.green { background:#dcfce7; color:#15803d; }
+  .result-badge.amber { background:#fef3c7; color:#92400e; }
+  .result-badge.red { background:#fee2e2; color:#991b1b; }
+  .result-badge.neutral { background:#f1f5f9; color:var(--navy-3); }
+  .result-context { font-size:12px; color:var(--navy-3); line-height:1.5; margin:0; }
+  .tool-cta { margin-top:24px; background:var(--navy); border-radius:var(--r); padding:28px 32px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .tool-cta-text p:first-child { font-size:16px; font-weight:500; color:var(--white); margin:0 0 4px; }
+  .tool-cta-text p:last-child { font-size:13px; color:rgba(255,255,255,.55); margin:0; }
+  .insight-panel { margin-top:24px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:20px 24px; }
+  .insight-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:10px; }
+  .insight-panel p { font-size:14px; color:var(--navy-3); line-height:1.7; margin:0 0 8px; }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<div data-duct-partial="/es/partials/nav-home.html"></div>
+<main id="main-content">
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Herramienta gratuita · No requiere registro</div>
+  <h1>Calculadora de ROI de marketing <em>para equipos de crecimiento amplios</em></h1>
+  <p>Tus apuestas de crecimiento son tan buenas como tu señal de beneficio. Calcula el ROI con claridad de beneficio neto y punto de equilibrio, sin limpieza de hojas de cálculo.</p>
+</div>
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="Calculadora de ROI de marketing">
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-spend">Gasto de marketing</label>
+        <span class="field-hint">Gasto total de campaña o canal</span>
+        <input type="number" id="inp-spend" placeholder="e.g. 12000" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-revenue">Ingresos atribuidos</label>
+        <span class="field-hint">Ingresos atribuidos a la misma ventana de campaña</span>
+        <input type="number" id="inp-revenue" placeholder="e.g. 28000" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-target-roi">ROI objetivo % (opcional)</label>
+        <span class="field-hint">Ingresos necesarios para alcanzar este ROI con el gasto actual</span>
+        <input type="number" id="inp-target-roi" placeholder="e.g. 150" min="-100" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-margin">Margen bruto % (opcional)</label>
+        <span class="field-hint">Usar para verificación de la realidad del ROI ajustado por margen</span>
+        <input type="number" id="inp-margin" placeholder="e.g. 70" min="0" max="100" inputmode="decimal"/>
+      </div>
+    </div>
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">Calcular ROI →</button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">Restablecer</button>
+    </div>
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+    <div class="tool-results" id="results-section" role="region" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Tus resultados</p>
+      <div class="results-row" id="results-row"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>ROI para un período. La pregunta es qué palanca lo cambió.</p>
+          <p>Duct lee tus herramientas de anuncios, analíticas e ingresos, responde a esa pregunta y propone el cambio. Tú lo apruebas.</p>
+        </div>
+        <a href="/es/download" class="btn btn-orange" data-duct-download>Descarga Duct ↓</a>
+      </div>
+      <div id="insight-panel" class="insight-panel" hidden>
+        <p class="insight-label">Qué significa esto</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<section class="duct-bridge reveal" aria-label="Acerca de Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">El ROI te dice si un período fue rentable. No te dice qué palanca cambió el resultado.</p>
+      <p class="duct-bridge-body">Duct lee el ROI junto al coste de tráfico, la calidad de la conversión y la mezcla de canales, dice qué palanca lo movió y propone qué hacer al respecto.</p>
+      <a href="/es/" class="duct-bridge-link">Cómo funciona Duct →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Una sesión de hallazgos: preguntó dónde se está fugando el presupuesto de anuncios, el agente compara cada campaña con el objetivo de CPA, propone una pausa, dos negativos y un aumento de presupuesto, y escribe el informe de gastos a la derecha"/>
+      <figcaption>Pregunta dónde se fuga el presupuesto. Duct calcula el costo de cada campaña según tu objetivo de CPA, propone la pausa, los negativos y el cambio de presupuesto, y espera tu aprobación.</figcaption>
+    </figure>
+  </div>
+</section>
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">También gratis</p>
+    <h2 id="related-tools-heading">Explora <em>herramientas</em> relacionadas</h2>
+    <p class="related-tools-banner-desc">Combina el ROI con el CPA, CPC y CTR para explicar si los movimientos de rentabilidad son impulsados por la calidad de la conversión o la economía del tráfico.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="marketing-roi-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/es/partials/cta-tools.html"></div>
+</main>
+<div data-duct-partial="/es/partials/footer-expanded.html"></div>
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-spend', 'inp-revenue', 'inp-target-roi', 'inp-margin'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  function money(v) { return (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
+  function card(label, display, level, badge, context) {
+    var c = document.createElement('div'); c.className = 'result-card ' + level;
+    var l = document.createElement('div'); l.className = 'result-label'; l.textContent = label;
+    var v = document.createElement('div'); v.className = 'result-value'; v.textContent = display;
+    var b = document.createElement('span'); b.className = 'result-badge ' + level; b.textContent = badge;
+    var x = document.createElement('p'); x.className = 'result-context'; x.textContent = context;
+    c.appendChild(l); c.appendChild(v); c.appendChild(b); c.appendChild(x); return c;
+  }
+  function val(id) { var raw = document.getElementById(id).value; return raw === '' ? NaN : parseFloat(raw); }
+  function addP(node, text) { var p = document.createElement('p'); p.textContent = text; node.appendChild(p); }
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var spend = val('inp-spend');
+    var revenue = val('inp-revenue');
+    var targetRoi = val('inp-target-roi');
+    var margin = val('inp-margin');
+    var spendBad = isNaN(spend) || spend <= 0;
+    var revenueBad = isNaN(revenue) || revenue < 0;
+    if (spendBad || revenueBad) {
+      if (spendBad && revenueBad) {
+        DuctToolFormError.show(ERR, 'Enter marketing spend greater than zero and attributed revenue (zero or positive).', ['inp-spend', 'inp-revenue']);
+      } else if (spendBad) {
+        DuctToolFormError.show(ERR, 'Enter marketing spend greater than zero.', ['inp-spend']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter attributed revenue (must be zero or greater).', ['inp-revenue']);
+      }
+      document.getElementById(spendBad ? 'inp-spend' : 'inp-revenue').focus();
+      return;
+    }
+    var profit = revenue - spend;
+    var roi = (profit / spend) * 100;
+    var row = document.getElementById('results-row');
+    while (row.firstChild) row.removeChild(row.firstChild);
+    var lvl = roi >= 100 ? 'green' : (roi >= 20 ? 'amber' : 'red');
+    row.appendChild(card('ROI', roi.toFixed(2) + '%', lvl, lvl === 'green' ? 'Strong' : (lvl === 'amber' ? 'Moderate' : 'Weak'), 'Return on investment from attributed revenue and spend.'));
+    row.appendChild(card('Net Profit', money(profit), profit >= 0 ? 'green' : 'red', profit >= 0 ? 'Positive' : 'Negative', 'Revenue minus spend for the selected period.'));
+    row.appendChild(card('Revenue', money(revenue), 'neutral', 'Observed', 'Attributed revenue included in this calculation.'));
+    if (!isNaN(targetRoi)) {
+      var reqRevenue = spend * (1 + targetRoi / 100);
+      row.appendChild(card('Revenue for Target ROI', money(reqRevenue), reqRevenue <= revenue ? 'green' : 'amber', reqRevenue <= revenue ? 'Achieved' : 'Gap', 'Revenue needed at current spend to reach target ROI.'));
+    }
+    if (!isNaN(margin) && margin >= 0 && margin <= 100) {
+      var marginRevenue = revenue * (margin / 100);
+      var marginProfit = marginRevenue - spend;
+      var marginRoi = (marginProfit / spend) * 100;
+      row.appendChild(card('Margin-Adjusted ROI', marginRoi.toFixed(2) + '%', marginRoi >= 20 ? 'green' : 'amber', 'Adjusted', 'ROI after applying gross margin to revenue.'));
+    }
+    var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
+    if (roi >= 100) addP(body, 'ROI is strong. Focus on whether this channel can scale without degrading conversion quality.');
+    else if (roi >= 20) addP(body, 'ROI is positive but optimization-sensitive. Prioritize improvements in conversion rate and acquisition efficiency.');
+    else addP(body, 'ROI is weak or negative. Reduce waste quickly by auditing targeting, creative-message fit, and post-click conversion friction.');
+    addP(body, 'Use this as a decision baseline, then compare weekly with CPA and CTR to identify which lever is moving ROI most.');
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+  });
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-spend','inp-revenue','inp-target-roi','inp-margin'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('results-section').classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row'); while (row.firstChild) row.removeChild(row.firstChild);
+  });
+  DuctToolExample.seed(['inp-spend', 'inp-revenue', 'inp-target-roi', 'inp-margin'], 'calc-btn', 'results-section');
+}());
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

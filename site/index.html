@@ -9,6 +9,14 @@
 <meta name="description" content="Duct reads Google Ads, GA4, Stripe and nine more tools together, proposes the fix and applies it when you approve. Open source, MIT, on your own keys or your ChatGPT plan."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <link rel="canonical" href="https://getduct.ai/"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/"/>
+<!-- hreflang:end -->
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/"/>
 <meta property="og:title" content="Duct — Open-source AI agent for your growth stack"/>
@@ -49,6 +57,19 @@
 }
 .film-sound:hover, .film-sound[aria-pressed="true"] { border-color: var(--orange); }
 .film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: #f7f4f0; }
+/* A play button over the poster whenever the film is not running. Autoplay
+   is refused by Safari in Low Power Mode, by "Reduce motion", and by some
+   browser settings; without this the poster looked like a still image. */
+.film { position: relative; }
+.film-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -30%);
+  width: 84px; height: 84px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--orange); color: #fff; box-shadow: 0 14px 40px rgba(13,15,26,.28);
+  display: flex; align-items: center; justify-content: center; transition: transform .2s, background .2s;
+}
+.film-play .ic { width: 34px; height: 34px; margin-left: 4px; }
+.film-play:hover { transform: translate(-50%, -30%) scale(1.06); background: var(--orange-h, #e65300); }
+.film.is-playing .film-play { display: none; }
 
 /* What it does: four tiles on a hairline grid */
 .what { padding: 100px 52px; background: var(--off); border-top: 1px solid var(--border); }
@@ -94,6 +115,9 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
   .what-grid { grid-template-columns: 1fr; }
   .what, .tools-teaser { padding-left: 24px; padding-right: 24px; }
   .film { margin-top: 40px; }
+  .film-label { display: none; }
+  .film-play { width: 64px; height: 64px; }
+  .film-play .ic { width: 26px; height: 26px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-actions, .film { animation: none; }
@@ -148,9 +172,10 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <button class="film-sound" id="film-sound" type="button" aria-pressed="false" aria-controls="hero-film">Sound off</button>
 </div>
 <video id="hero-film" muted loop playsinline preload="none" poster="assets/media/demo-poster.webp" width="1600" height="1000" aria-label="A 30-second film: a teammate asks why signups dropped; Duct reads Ads, GA4 and Stripe together, proposes pausing the campaign that drives churn, applies it on approval, and remembers what it learned.">
-<source src="assets/media/demo.webm" type="video/webm"/>
 <source src="assets/media/demo.mp4" type="video/mp4"/>
+<source src="assets/media/demo.webm" type="video/webm"/>
 </video>
+<button class="film-play" id="film-play" type="button" aria-controls="hero-film" aria-label="Play the film"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#play"/></svg></button>
 </div>
 </section>
 
@@ -319,19 +344,29 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
   // never shows. Under 860px the 720px cut plays instead, at a quarter of the
   // bytes. The sources are swapped before anything is fetched (preload=none).
   if (window.matchMedia && window.matchMedia('(max-width: 860px)').matches) {
-    var cut = film.canPlayType('video/webm') ? 'demo-phone.webm' : 'demo-phone.mp4';
+    // mp4 first, as in the markup: Safari says it can play WebM and then
+    // stalls on it without ever falling back to the next source.
+    var cut = film.canPlayType('video/mp4') ? 'demo-phone.mp4' : 'demo-phone.webm';
     while (film.firstChild) film.removeChild(film.firstChild);
     film.src = 'assets/media/' + cut;
   }
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reduce && 'IntersectionObserver' in window) {
+    var inView = false;
+    var attempt = function () { if (!inView) return; var p = film.play(); if (p && p.catch) p.catch(function () {}); };
     new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { var p = film.play(); if (p && p.catch) p.catch(function () {}); }
-        else film.pause();
-      });
+      entries.forEach(function (e) { inView = e.isIntersecting; if (inView) attempt(); else film.pause(); });
     }, { threshold: 0.05 }).observe(film);
+    // Safari drops a play() issued while the page is still loading and never
+    // comes back to it: the poster sat there as a still. Ask again after load.
+    window.addEventListener('load', function () { setTimeout(attempt, 300); });
   }
+  // The play button is the one path that works everywhere: a click is a user
+  // gesture, which every autoplay policy allows.
+  var wrap = film.parentNode, play = document.getElementById('film-play');
+  film.addEventListener('playing', function () { wrap.classList.add('is-playing'); });
+  film.addEventListener('pause', function () { if (film.ended || film.currentTime === 0) wrap.classList.remove('is-playing'); });
+  if (play) play.addEventListener('click', function () { var p = film.play(); if (p && p.catch) p.catch(function () {}); });
   var btn = document.getElementById('film-sound');
   if (!btn) return;
   btn.addEventListener('click', function () {

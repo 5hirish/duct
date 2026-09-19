@@ -387,6 +387,28 @@ footer:not(.footer-expanded) { padding: 44px 52px; border-top: 1px solid var(--b
 .footer-col a:hover { color: var(--navy); }
 .footer-bottom-row { max-width: 1160px; margin: 28px auto 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .footer-bottom-row span { font-size: 12px; color: var(--navy-3); }
+.footer-lang { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; }
+.footer-lang a { color: var(--navy-3); text-decoration: none; }
+.footer-lang a:hover, .footer-lang a[aria-current="true"] { color: var(--navy); }
+
+/* ── LANGUAGE SWITCH ──
+   A native <select> in the bar: five languages do not earn a dropdown of our
+   own, and a native control is the one every screen reader already knows. The
+   English name of each language is never translated (see build_site_i18n.py),
+   so someone who landed in the wrong language can still find theirs. */
+.nav-lang { display: flex; align-items: center; }
+.nav-lang-select {
+  font: inherit; font-size: 13px; color: var(--navy-3); cursor: pointer;
+  background: transparent; border: 1px solid var(--border); border-radius: var(--pill);
+  padding: 5px 26px 5px 10px; appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 9px center;
+  transition: border-color .2s, color .2s;
+}
+.nav-lang-select:hover, .nav-lang-select:focus-visible { color: var(--navy); border-color: var(--navy); outline: none; }
+.nav-mobile-lang { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.nav-mobile-lang .nav-lang-select { width: 100%; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

@@ -39,6 +39,12 @@ jobs:
       - name: "📝 Check generated blog pages are current"
         run: python3 scripts/build_blog.py --check
 
+      # The translated trees under site/<lang>/ are generated from the English
+      # pages; a stale tree ships yesterday's copy in four languages, and an
+      # untranslated string ships English under a Spanish URL.
+      - name: "🌐 Check translated pages are current and complete"
+        run: python3 scripts/build_site_i18n.py --check
+
       - name: "🔎 Check HTML page requirements"
         run: python3 .github/scripts/check-pages.py
 

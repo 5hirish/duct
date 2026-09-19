@@ -1,3 +1,6 @@
+"use client";
+
+import { useLingui } from "@lingui/react/macro";
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 
 // Next's own Suspense-boundary convention for this segment — fires on any
@@ -9,9 +12,16 @@ import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 // wait now: the layout arrives first, the words follow. A route with a
 // known shape still renders its own skeleton first; this is only what shows
 // before that component has even mounted.
+//
+// A client component so the one string here — the label a screen reader
+// reads, since the shimmer says nothing to one — resolves against the root
+// layout's Lingui context: a Suspense fallback cannot itself await the
+// request's catalogue.
 export default function Loading() {
+  const { t } = useLingui();
+
   return (
-    <div className="flex flex-col gap-8" role="status" aria-label="Loading">
+    <div className="flex flex-col gap-8" role="status" aria-label={t`Loading`}>
       <div className="flex flex-col gap-3">
         <Skeleton className="h-8 w-[420px] max-w-full" />
         <Skeleton className="h-4 w-[300px] max-w-full rounded" />

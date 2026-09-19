@@ -20,6 +20,8 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
+import { msg } from "@lingui/core/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -31,26 +33,28 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { compactNumber, formatDate } from "@/lib/format";
 
+// Labels and hints are message descriptors (module-level tables): render
+// them with `i18n._(...)`.
 const ACTORS = [
   {
     id:    "clockworks/tiktok-scraper",
-    label: "By hashtag",
+    label: msg`By hashtag`,
     icon:  Hash,
-    hint:  "Top + recent posts for hashtags you care about. Best for finding what's actually working in the niche.",
+    hint:  msg`Top + recent posts for hashtags you care about. Best for finding what's actually working in the niche.`,
   },
   {
     id:    "clockworks/free-tiktok-scraper",
-    label: "Trend feed",
+    label: msg`Trend feed`,
     icon:  TrendingUp,
-    hint:  "Trending posts in a region — good for sound + format discovery.",
+    hint:  msg`Trending posts in a region — good for sound + format discovery.`,
   },
 ];
 
 const SORTS = [
-  { id: "plays",      label: "Top plays",       key: (p) => p.play_count || 0 },
-  { id: "saves",      label: "Most saved",      key: (p) => p.collect_count || 0 },
-  { id: "engagement", label: "Best engagement", key: (p) => engagement(p) },
-  { id: "recent",     label: "Most recent",     key: (p) => new Date(p.create_time_iso || 0).getTime() },
+  { id: "plays",      label: msg`Top plays`,       key: (p) => p.play_count || 0 },
+  { id: "saves",      label: msg`Most saved`,      key: (p) => p.collect_count || 0 },
+  { id: "engagement", label: msg`Best engagement`, key: (p) => engagement(p) },
+  { id: "recent",     label: msg`Most recent`,     key: (p) => new Date(p.create_time_iso || 0).getTime() },
 ];
 
 const RUNNING = new Set(["running", "polling", "fetching"]);
@@ -62,6 +66,7 @@ function engagement(p) {
 }
 
 export default function DiscoverPage({ projectId }) {
+  const { t, i18n } = useLingui();
   const [actorId, setActorId]       = useState(ACTORS[0].id);
   const [tags, setTags]             = useState(["faceshape", "colorseason"]);
   const [tagDraft, setTagDraft]     = useState("");
@@ -108,6 +113,7 @@ export default function DiscoverPage({ projectId }) {
     }
   }
 
+  const resultCount = results.length;
   const sorted = useMemo(() => {
     const keyFn = (SORTS.find((s) => s.id === sort) || SORTS[0]).key;
     return [...results].sort((a, b) => keyFn(b) - keyFn(a));
@@ -116,15 +122,24 @@ export default function DiscoverPage({ projectId }) {
   const canRun = !!projectId && !isRunning &&
     (actorId !== "clockworks/tiktok-scraper" || tags.length > 0);
 
+  // Apify identifiers for support, not copy: `run=` / `dataset=` are the field
+  // names someone would paste into a ticket, so they stay as they are.
+  const runIds = [
+    runId && `run=${runId.slice(0, 12)}`,
+    datasetId && `dataset=${datasetId.slice(0, 12)}`,
+  ].filter(Boolean).join(" · ");
+
   return (
     <div className="space-y-5">
       <header>
         <h2 className="flex items-center gap-2 text-base font-semibold">
-          <Sparkles className="h-4 w-4 text-primary" /> Discover what&apos;s working
+          <Sparkles className="h-4 w-4 text-primary" /> <Trans>Discover what&apos;s working</Trans>
         </h2>
         <p className="mt-0.5 max-w-prose text-xs text-muted-foreground">
-          Scrape real posts in your niche. What you save, the research agent cites when it
-          proposes topics.
+          <Trans>
+            Scrape real posts in your niche. What you save, the research agent cites when it
+            proposes topics.
+          </Trans>
         </p>
       </header>
 
@@ -147,7 +162,7 @@ export default function DiscoverPage({ projectId }) {
                       active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    <Icon className="h-3.5 w-3.5" /> {a.label}
+                    <Icon className="h-3.5 w-3.5" /> {i18n._(a.label)}
                   </button>
                 );
               })}
@@ -155,7 +170,7 @@ export default function DiscoverPage({ projectId }) {
 
             {actorId === "clockworks/tiktok-scraper" ? (
               <div>
-                <label className="text-2xs font-medium text-muted-foreground">Hashtags</label>
+                <label className="text-2xs font-medium text-muted-foreground"><Trans>Hashtags</Trans></label>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-md border border-border/70 bg-background p-2">
                   {tags.map((t) => (
                     <span key={t} className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-2xs font-medium">
@@ -167,21 +182,21 @@ export default function DiscoverPage({ projectId }) {
                   ))}
                   <input
                     value={tagDraft}
-                    aria-label="Add a tag"
+                    aria-label={t`Add a tag`}
                     onChange={(e) => setTagDraft(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); }
                       if (e.key === "Backspace" && !tagDraft && tags.length) setTags(tags.slice(0, -1));
                     }}
                     onBlur={addTag}
-                    placeholder={tags.length ? "" : "faceshape, colorseason…"}
+                    placeholder={tags.length ? "" : t`faceshape, colorseason…`}
                     className="min-w-[120px] flex-1 rounded-sm bg-transparent px-1 py-0.5 text-2xs outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
                   />
                 </div>
               </div>
             ) : (
               <div>
-                <label className="text-2xs font-medium text-muted-foreground">Region</label>
+                <label className="text-2xs font-medium text-muted-foreground"><Trans>Region</Trans></label>
                 <Input
                   value={region}
                   onChange={(e) => setRegion(e.target.value.toUpperCase())}
@@ -190,26 +205,24 @@ export default function DiscoverPage({ projectId }) {
                 />
               </div>
             )}
-            <p className="text-2xs text-muted-foreground">{actor?.hint}</p>
+            <p className="text-2xs text-muted-foreground">{actor ? i18n._(actor.hint) : ""}</p>
           </div>
 
           <div className="flex items-center gap-2">
             {phase !== "idle" && (
-              <Button variant="ghost" size="sm" onClick={reset} disabled={isRunning} title="Reset">
+              <Button variant="ghost" size="sm" onClick={reset} disabled={isRunning} title={t`Reset`}>
                 <RotateCcw className="h-3.5 w-3.5" />
               </Button>
             )}
             <Button onClick={handleRun} disabled={!canRun}>
               {isRunning ? <Spinner className="size-4" /> : <Search className="h-4 w-4" />}
-              {isRunning ? `${phase}… ${elapsed}s` : "Start discovery"}
+              {isRunning ? t`${phase}… ${elapsed}s` : <Trans>Start discovery</Trans>}
             </Button>
           </div>
         </div>
 
-        {(runId || datasetId) && (
-          <p className="mt-2 font-mono text-2xs text-muted-foreground">
-            {runId && <>run={runId.slice(0, 12)} </>}{datasetId && <>· dataset={datasetId.slice(0, 12)}</>}
-          </p>
+        {runIds && (
+          <p className="mt-2 font-mono text-2xs text-muted-foreground">{runIds}</p>
         )}
       </section>
 
@@ -224,7 +237,7 @@ export default function DiscoverPage({ projectId }) {
         <div className="space-y-3">
           <div className="flex items-center justify-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
             <Spinner className="size-3.5" />
-            Scraping on Apify ({elapsed}s) — polling every 3s, results appear as soon as the actor finishes.
+            <Trans>Scraping on Apify ({elapsed}s) — polling every 3s, results appear as soon as the actor finishes.</Trans>
           </div>
           <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
             {[0, 1, 2, 3].map((i) => (
@@ -237,7 +250,7 @@ export default function DiscoverPage({ projectId }) {
       {/* Empty after done */}
       {phase === "done" && results.length === 0 && (
         <div className="rounded-xl border border-dashed border-border/60 px-3 py-10 text-center text-sm text-muted-foreground">
-          No results returned. Try different hashtags or a wider niche.
+          <Trans>No results returned. Try different hashtags or a wider niche.</Trans>
         </div>
       )}
 
@@ -246,7 +259,10 @@ export default function DiscoverPage({ projectId }) {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground tabular-nums">{results.length}</span> posts found
+              <Trans>
+                <span className="font-medium text-foreground tabular-nums">{resultCount}</span>{" "}
+                <Plural value={resultCount} one="post found" other="posts found" />
+              </Trans>
             </p>
             <div className="flex items-center gap-1.5">
               {SORTS.map((s) => (
@@ -259,7 +275,7 @@ export default function DiscoverPage({ projectId }) {
                     sort === s.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70",
                   )}
                 >
-                  {s.label}
+                  {i18n._(s.label)}
                 </button>
               ))}
             </div>
@@ -277,12 +293,15 @@ export default function DiscoverPage({ projectId }) {
 }
 
 function ResultCard({ post, busy, onSave }) {
+  const { i18n } = useLingui();
   const author = post.author_meta?.name;
   const verified = post.author_meta?.verified;
   const music  = post.music_meta?.music_name;
   const cover  = (post.slideshow_image_links || [])[0];
   const tags   = (post.hashtags || []).slice(0, 3);
   const eng    = engagement(post);
+  const engRate = (eng * 100).toFixed(1);
+  const fans   = post.author_meta?.fans ? compactNumber(post.author_meta.fans) : "";
   const saved  = busy === "saved";
 
   return (
@@ -313,12 +332,12 @@ function ResultCard({ post, busy, onSave }) {
         <div className="absolute right-2 top-2 flex flex-col items-end gap-1">
           {post.is_slideshow && (
             <span className="inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-2xs font-medium text-white backdrop-blur-sm">
-              <Images className="h-3 w-3" /> Slides
+              <Images className="h-3 w-3" /> <Trans>Slides</Trans>
             </span>
           )}
           {eng > 0 && (
             <span className="rounded-full bg-primary/90 px-2 py-0.5 text-2xs font-semibold text-primary-foreground backdrop-blur-sm">
-              {(eng * 100).toFixed(1)}% eng
+              <Trans>{engRate}% eng</Trans>
             </span>
           )}
         </div>
@@ -329,7 +348,7 @@ function ResultCard({ post, busy, onSave }) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col gap-2 p-3">
-        <p className="line-clamp-2 text-xs leading-snug">{post.text || <span className="text-muted-foreground italic">(no caption)</span>}</p>
+        <p className="line-clamp-2 text-xs leading-snug">{post.text || <span className="text-muted-foreground italic"><Trans>(no caption)</Trans></span>}</p>
 
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -353,7 +372,7 @@ function ResultCard({ post, busy, onSave }) {
             <p className="flex items-center gap-1 truncate text-2xs text-muted-foreground">
               <span className="truncate font-medium text-foreground/80">@{author}</span>
               {verified && <BadgeCheck className="h-3 w-3 shrink-0 text-info" />}
-              {post.author_meta?.fans ? <span className="shrink-0">· {compactNumber(post.author_meta.fans)} fans</span> : null}
+              {fans ? <span className="shrink-0"><Trans>· {fans} fans</Trans></span> : null}
             </p>
           )}
           {music && (
@@ -365,7 +384,7 @@ function ResultCard({ post, busy, onSave }) {
 
         {/* footer */}
         <div className="flex items-center justify-between gap-2 border-t border-border/40 pt-2">
-          <span className="text-2xs text-muted-foreground">{formatDate(post.create_time_iso)}</span>
+          <span className="text-2xs text-muted-foreground">{formatDate(post.create_time_iso, { locale: i18n.locale })}</span>
           <button
             type="button"
             onClick={onSave}
@@ -377,7 +396,7 @@ function ResultCard({ post, busy, onSave }) {
                 : "border border-border hover:bg-muted disabled:opacity-50",
             )}
           >
-            {saved ? <><Check className="h-3 w-3" /> Saved</> : busy === "saving" ? "Saving…" : <><Plus className="h-3 w-3" /> Save</>}
+            {saved ? <><Check className="h-3 w-3" /> <Trans>Saved</Trans></> : busy === "saving" ? <Trans>Saving…</Trans> : <><Plus className="h-3 w-3" /> <Trans>Save</Trans></>}
           </button>
         </div>
       </div>

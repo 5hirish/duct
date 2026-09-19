@@ -9,6 +9,7 @@
 // user is configuring the project, not answering a one-off question.
 
 import { useState } from "react";
+import { Trans } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 
 export default function AccountSelect({ request, onAnswer, disabled }) {
@@ -20,9 +21,11 @@ export default function AccountSelect({ request, onAnswer, disabled }) {
   return (
     <div className="my-3 space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
       <div className="space-y-0.5">
-        <p className="text-sm font-semibold">Which {label} account should Duct use?</p>
+        <p className="text-sm font-semibold">
+          <Trans>Which {label} account should Duct use?</Trans>
+        </p>
         <p className="text-xs text-muted-foreground">
-          Saved to this project, so you won't be asked again.
+          <Trans>Saved to this project, so you won’t be asked again.</Trans>
         </p>
       </div>
 
@@ -57,7 +60,7 @@ export default function AccountSelect({ request, onAnswer, disabled }) {
             onAnswer({ account_id: selected, account_name: chosen?.account_name || "" })
           }
         >
-          Use this account →
+          <Trans>Use this account →</Trans>
         </Button>
         <button
           type="button"
@@ -65,7 +68,7 @@ export default function AccountSelect({ request, onAnswer, disabled }) {
           disabled={disabled}
           className="text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
         >
-          Skip
+          <Trans>Skip</Trans>
         </button>
       </div>
     </div>

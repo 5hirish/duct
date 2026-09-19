@@ -6,14 +6,18 @@
 // has none: this is money, and a stale figure is worse than a spinner. The
 // backend scopes every row to the caller, so there is nothing to filter here.
 
+import { msg } from "@lingui/core/macro";
 import { BASE } from "./api";
 import { authedHeaders as headers } from "./authFetch";
 
-/** Windows the page offers. Kept here so the page and the API agree on one list. */
+/**
+ * Windows the page offers. Kept here so the page and the API agree on one list.
+ * `label` is a Lingui descriptor: render it with `i18n._(window.label)`.
+ */
 export const WINDOWS = [
-  { days: 7, label: "7 days" },
-  { days: 30, label: "30 days" },
-  { days: 90, label: "90 days" },
+  { days: 7, label: msg`7 days` },
+  { days: 30, label: msg`30 days` },
+  { days: 90, label: msg`90 days` },
 ];
 
 export const DEFAULT_WINDOW_DAYS = 30;
@@ -49,14 +53,15 @@ export async function fetchUsage({ windowDays = DEFAULT_WINDOW_DAYS, projectId =
  * should look unpolished here, not anonymous.
  */
 const AGENT_LABELS = {
-  insights: "Organic Growth",
-  audit: "SEO Audit",
-  content: "Content Studio",
-  tiktok_studio: "Content Studio",
+  insights: msg`Organic Growth`,
+  audit: msg`SEO Audit`,
+  content: msg`Content Studio`,
+  tiktok_studio: msg`Content Studio`,
 };
 
+/** Returns a Lingui descriptor for a known key, else the key itself: `i18n._()` renders both. */
 export function agentLabel(key) {
-  return AGENT_LABELS[key] || key || "Other";
+  return AGENT_LABELS[key] || key || msg`Other`;
 }
 
 const PROVIDER_LABELS = {
@@ -68,7 +73,7 @@ const PROVIDER_LABELS = {
 };
 
 export function providerLabel(key) {
-  return PROVIDER_LABELS[key] || key || "Other";
+  return PROVIDER_LABELS[key] || key || msg`Other`;
 }
 
 /**
