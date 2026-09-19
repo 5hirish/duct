@@ -1,5 +1,6 @@
 "use client";
 
+import { Trans, useLingui } from "@lingui/react/macro";
 import { StepStatus } from "../../lib/agentSteps";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -31,7 +32,7 @@ export default function StepProgress({ steps, labels = {} }) {
 
       {dispatchSteps.length > 0 && (
         <div className="space-y-1">
-          <p className="text-2xs uppercase tracking-wide text-muted-foreground font-medium">Sub-agents</p>
+          <p className="text-2xs uppercase tracking-wide text-muted-foreground font-medium"><Trans>Sub-agents</Trans></p>
           <div className="flex flex-wrap gap-1.5">
             {dispatchSteps.map((s) => (
               <DispatchChip key={s.step_id} step={s} />
@@ -63,7 +64,8 @@ function StatusDot({ status }) {
 }
 
 function DispatchChip({ step }) {
-  const name = step.step_id?.split(":", 2)[1] || "agent";
+  const { t } = useLingui();
+  const name = step.step_id?.split(":", 2)[1] || t`agent`;
   const running = step.status === StepStatus.RUNNING;
   return (
     <span

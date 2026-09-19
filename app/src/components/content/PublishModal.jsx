@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +31,7 @@ import { friendlyErrorMessage } from "@/lib/agentSession";
  *   - onPublished : (updatedPost) => void  — fired after successful publish
  */
 export default function PublishModal({ open, onClose, post, onPublished }) {
+  const { t } = useLingui();
   const [accounts, setAccounts]     = useState([]);
   const [selected, setSelected]     = useState(new Set());
   const [scheduledAt, setScheduledAt] = useState("");
@@ -89,7 +91,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   }
 
   async function handlePublish() {
-    if (selected.size === 0) { setError("Pick at least one account."); return; }
+    if (selected.size === 0) { setError(t`Pick at least one account.`); return; }
     setLoading(true); setError(""); setStage("publishing");
     try {
       const ids = [...selected].map(Number);
@@ -131,7 +133,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
         onEscapeKeyDown={blockWhileLoading}
       >
         <DialogHeader className="border-b border-border/60 px-5 py-3">
-          <DialogTitle className="text-base font-semibold">Publish post</DialogTitle>
+          <DialogTitle className="text-base font-semibold"><Trans>Publish post</Trans></DialogTitle>
           <DialogDescription className="truncate text-xs">
             {post?.topic || post?.id}
           </DialogDescription>
@@ -139,12 +141,12 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
 
         <div className="px-5 py-4 space-y-4">
           {stage === "loading" && (
-            <p className="text-sm text-muted-foreground">Loading your connected accounts…</p>
+            <p className="text-sm text-muted-foreground"><Trans>Loading your connected accounts…</Trans></p>
           )}
 
           {stage === "done" && (
             <div className="text-sm text-success font-medium py-2">
-              ✓ {scheduledAt ? "Post scheduled" : tiktokDraft ? "Saved as TikTok draft" : "Post published"}
+              ✓ {scheduledAt ? <Trans>Post scheduled</Trans> : tiktokDraft ? <Trans>Saved as TikTok draft</Trans> : <Trans>Post published</Trans>}
             </div>
           )}
 
@@ -152,15 +154,17 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
             <>
               {!hasAccounts && (
                 <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs">
-                  You don't have any social accounts connected yet. Ask your admin to
-                  connect a TikTok / Instagram / YouTube account.
+                  <Trans>
+                    You don't have any social accounts connected yet. Ask your admin to
+                    connect a TikTok / Instagram / YouTube account.
+                  </Trans>
                 </div>
               )}
 
               {hasAccounts && (
                 <section className="space-y-2">
                   <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Where to post
+                    <Trans>Where to post</Trans>
                   </h3>
                   <div className="space-y-2">
                     {Object.entries(grouped).map(([platform, list]) => (
@@ -195,7 +199,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
 
               <section className="space-y-2">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  When to post
+                  <Trans>When to post</Trans>
                 </h3>
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-2 text-xs">
@@ -206,7 +210,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                       onChange={() => { setScheduledAt(""); setTiktokDraft(false); }}
                       className="accent-primary"
                     />
-                    <span>Post now</span>
+                    <span><Trans>Post now</Trans></span>
                   </label>
                   <label className="flex items-center gap-2 text-xs">
                     <input
@@ -216,7 +220,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                       onChange={() => { setScheduledAt(minDateTime); setTiktokDraft(false); }}
                       className="accent-primary"
                     />
-                    <span>Schedule for:</span>
+                    <span><Trans>Schedule for:</Trans></span>
                     <input
                       type="datetime-local"
                       value={scheduledAt}
@@ -234,7 +238,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                       onChange={() => { setTiktokDraft(true); setScheduledAt(""); }}
                       className="accent-primary"
                     />
-                    <span>Save as TikTok draft (post manually from the app)</span>
+                    <span><Trans>Save as TikTok draft (post manually from the app)</Trans></span>
                   </label>
                 </div>
               </section>
@@ -250,18 +254,18 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
 
         {stage !== "done" && (
           <footer className="px-5 py-3 border-t border-border/60 flex items-center justify-end gap-2">
-            <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+            <Button variant="outline" onClick={onClose} disabled={loading}><Trans>Cancel</Trans></Button>
             <Button
               onClick={handlePublish}
               disabled={loading || selected.size === 0 || stage === "loading"}
             >
               {loading
-                ? "Working…"
+                ? <Trans>Working…</Trans>
                 : scheduledAt
-                ? "Schedule post"
+                ? <Trans>Schedule post</Trans>
                 : tiktokDraft
-                ? "Save as draft"
-                : "Post now"}
+                ? <Trans>Save as draft</Trans>
+                : <Trans>Post now</Trans>}
             </Button>
           </footer>
         )}

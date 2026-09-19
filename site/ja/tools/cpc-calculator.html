@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>CPC計算ツール — Ductの無料ツール</title>
+<link rel="canonical" href="https://getduct.ai/ja/tools/cpc-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/cpc-calculator"/>
+<!-- hreflang:end -->
+<meta name="description" content="有料メディアチーム向けの無料CPC計算ツール。クリック単価、目標CPCでの予測費用、および予算内に収めるための必要なCPCを計算します。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/tools/cpc-calculator"/>
+<meta property="og:title" content="CPC計算ツール — Ductの無料ツール"/>
+<meta property="og:description" content="有料キャンペーンのCPC、費用予測、および効率目標を計算します。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-cpc-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="CPC計算ツール — Ductの無料ツール"/>
+<meta name="twitter:description" content="キャンペーン計画および有料メディア診断のための無料クリック単価計算ツール。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-cpc-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"CPC Calculator","url":"https://getduct.ai/tools/cpc-calculator","description":"Free calculator that computes CPC, projected spend at target CPC, and required CPC to stay inside budget.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+  .tool-hero { padding:80px 24px 48px; text-align:center; max-width:760px; margin:0 auto; }
+  .tool-hero h1 { font-family:var(--serif); font-size:clamp(32px,5vw,52px); color:var(--navy); margin:16px 0; line-height:1.15; }
+  .tool-hero h1 em { color:var(--orange); font-style:italic; }
+  .tool-hero p { font-size:17px; color:var(--navy-3); font-weight:300; line-height:1.6; margin:0; }
+  .tool-wrap { max-width:900px; margin:0 auto 80px; padding:0 24px; }
+  .tool-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.06); }
+  .tool-inputs { padding:36px 40px; display:grid; grid-template-columns:1fr 1fr; gap:24px 32px; }
+  @media (max-width:640px) { .tool-inputs { grid-template-columns:1fr; padding:24px; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:500; color:var(--navy); }
+  .field .field-hint { font-size:11px; color:var(--navy-3); margin-top:-2px; }
+  .field input { padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:15px; font-family:var(--sans); color:var(--navy); outline:none; }
+  .field input:focus { border-color:var(--orange); }
+  .tool-action { padding:0 40px 36px; display:flex; align-items:center; gap:16px; }
+  @media (max-width:640px) { .tool-action { padding:0 24px 24px; flex-direction:column; align-items:stretch; } }
+  .tool-results { border-top:1px solid var(--border); padding:36px 40px; display:none; }
+  @media (max-width:640px) { .tool-results { padding:24px; } }
+  .tool-results.visible { display:block; }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+  .result-card { border:1.5px solid var(--border); border-radius:var(--r); padding:20px; }
+  .result-card.green { border-color:#22c55e; background:#f0fdf4; }
+  .result-card.amber { border-color:#f59e0b; background:#fffbeb; }
+  .result-card.red { border-color:#ef4444; background:#fef2f2; }
+  .result-card.neutral { border-color:var(--border); background:var(--off); }
+  .result-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-3); margin-bottom:6px; }
+  .result-value { font-size:26px; font-family:var(--serif); color:var(--navy); margin-bottom:4px; }
+  .result-badge { display:inline-flex; font-size:11px; font-weight:500; padding:2px 9px; border-radius:100px; margin-bottom:8px; }
+  .result-badge.green { background:#dcfce7; color:#15803d; }
+  .result-badge.amber { background:#fef3c7; color:#92400e; }
+  .result-badge.red { background:#fee2e2; color:#991b1b; }
+  .result-badge.neutral { background:#f1f5f9; color:var(--navy-3); }
+  .result-context { font-size:12px; color:var(--navy-3); line-height:1.5; margin:0; }
+  .tool-cta { margin-top:24px; background:var(--navy); border-radius:var(--r); padding:28px 32px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .tool-cta-text p:first-child { font-size:16px; font-weight:500; color:var(--white); margin:0 0 4px; }
+  .tool-cta-text p:last-child { font-size:13px; color:rgba(255,255,255,.55); margin:0; }
+  .insight-panel { margin-top:24px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:20px 24px; }
+  .insight-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:10px; }
+  .insight-panel p { font-size:14px; color:var(--navy-3); line-height:1.7; margin:0 0 8px; }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<div data-duct-partial="/ja/partials/nav-home.html"></div>
+<main id="main-content">
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 無料ツール · サインアップ不要</div>
+  <h1>CPC計算ツール <em>有料成長向け</em></h1>
+  <p>有料トラフィックの品質は、クリック費用と同じくらい信頼性があります。明確な効率シナリオと予算しきい値でCPCを計算し、スプレッドシートの整理は不要です。</p>
+</div>
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="CPC計算ツール">
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-spend">費用</label>
+        <span class="field-hint">お客様の通貨での合計キャンペーン費用</span>
+        <input type="number" id="inp-spend" placeholder="e.g. 4200" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-clicks">クリック数</label>
+        <span class="field-hint">期間内に生成された合計クリック数</span>
+        <input type="number" id="inp-clicks" placeholder="e.g. 2800" min="1" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-target-cpc">目標CPC (任意)</label>
+        <span class="field-hint">目標CPCでの予測費用</span>
+        <input type="number" id="inp-target-cpc" placeholder="e.g. 1.10" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-budget">予算上限（オプション）</label>
+        <span class="field-hint">予算内に収めるための必要なCPC</span>
+        <input type="number" id="inp-budget" placeholder="e.g. 3000" min="0" inputmode="decimal"/>
+      </div>
+    </div>
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">CPCを計算 →</button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">リセット</button>
+    </div>
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+    <div class="tool-results" id="results-section" role="region" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">結果</p>
+      <div class="results-row" id="results-row"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>CPCは一度だけ。問題は、それらのクリックが収益につながったかどうかです。</p>
+          <p>Ductは広告、分析、収益ツールを読み込み、その質問に答え、変更セットを提案します。あなたはそれを承認します。</p>
+        </div>
+        <a href="/ja/download" class="btn btn-orange" data-duct-download>Ductをダウンロード ↓</a>
+      </div>
+      <div id="insight-panel" class="insight-panel" hidden>
+        <p class="insight-label">これが意味すること</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<section class="duct-bridge reveal" aria-label="Ductについて">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">CPCはトラフィック費用を示します。しかし、それらのクリックが収益につながるかどうかは示しません。</p>
+      <p class="duct-bridge-body">Ductは、広告アカウントからGA4および収益ツールへのクリックを追跡します。そのため、予算を使い果たす前に高価なチャネルを特定します。</p>
+      <a href="/ja/" class="duct-bridge-link">Ductの仕組み →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="インサイトセッション：広告予算がどこで漏れているかを尋ねると、エージェントはすべてのキャンペーンをCPA目標に対して評価し、一時停止、2つの除外キーワード、予算増額を提案し、右側に支出ブリーフを作成します"/>
+      <figcaption>予算の漏洩箇所を特定します。DuctはすべてのキャンペーンをCPA目標に対して評価し、一時停止、ネガティブキーワード、予算の変更を提案し、あなたの承認を待ちます。</figcaption>
+    </figure>
+  </div>
+</section>
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">その他無料</p>
+    <h2 id="related-tools-heading">関連<em>ツール</em>を見る</h2>
+    <p class="related-tools-banner-desc">CPC効率をCTRおよびCPM診断と組み合わせることで、有料パフォーマンスがどこで改善しているか、または漏れているかを理解できます。</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="cpc-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/ja/partials/cta-tools.html"></div>
+</main>
+<div data-duct-partial="/ja/partials/footer-expanded.html"></div>
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-spend', 'inp-clicks', 'inp-target-cpc', 'inp-budget'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  function money(v) { return (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
+  function num(v) { return v >= 1000000 ? (v / 1000000).toFixed(2) + 'm' : (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0)); }
+  function card(label, display, level, badge, context) {
+    var c = document.createElement('div'); c.className = 'result-card ' + level;
+    var l = document.createElement('div'); l.className = 'result-label'; l.textContent = label;
+    var v = document.createElement('div'); v.className = 'result-value'; v.textContent = display;
+    var b = document.createElement('span'); b.className = 'result-badge ' + level; b.textContent = badge;
+    var x = document.createElement('p'); x.className = 'result-context'; x.textContent = context;
+    c.appendChild(l); c.appendChild(v); c.appendChild(b); c.appendChild(x); return c;
+  }
+  function val(id) { var raw = document.getElementById(id).value; return raw === '' ? NaN : parseFloat(raw); }
+  function addP(node, text) { var p = document.createElement('p'); p.textContent = text; node.appendChild(p); }
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var spend = val('inp-spend');
+    var clicks = val('inp-clicks');
+    var targetCpc = val('inp-target-cpc');
+    var budget = val('inp-budget');
+    var spendBad = isNaN(spend) || spend < 0;
+    var clicksBad = isNaN(clicks) || clicks <= 0;
+    if (spendBad || clicksBad) {
+      if (spendBad && clicksBad) {
+        DuctToolFormError.show(ERR, 'Enter spend (zero or greater) and clicks greater than zero.', ['inp-spend', 'inp-clicks']);
+      } else if (spendBad) {
+        DuctToolFormError.show(ERR, 'Enter a valid spend amount (zero or greater).', ['inp-spend']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter clicks greater than zero.', ['inp-clicks']);
+      }
+      document.getElementById(spendBad ? 'inp-spend' : 'inp-clicks').focus();
+      return;
+    }
+    var cpc = spend / clicks;
+    var row = document.getElementById('results-row');
+    while (row.firstChild) row.removeChild(row.firstChild);
+    var lvl = cpc <= 1.5 ? 'green' : (cpc <= 4 ? 'amber' : 'red');
+    row.appendChild(card('CPC', cpc.toFixed(2), lvl, lvl === 'green' ? 'Efficient' : (lvl === 'amber' ? 'Moderate' : 'Expensive'), 'Cost per click from your campaign data.'));
+    row.appendChild(card('Spend', money(spend), 'neutral', 'Observed', 'Total spend included in this calculation.'));
+    row.appendChild(card('Clicks', num(clicks), 'neutral', 'Observed', 'Click volume delivered in the selected period.'));
+    if (!isNaN(targetCpc) && targetCpc > 0) {
+      var projected = targetCpc * clicks;
+      row.appendChild(card('Projected Spend', money(projected), projected <= spend ? 'green' : 'red', projected <= spend ? '↓ Savings' : '↑ Higher cost', 'Spend at target CPC with current click volume.'));
+    }
+    if (!isNaN(budget) && budget > 0) {
+      var reqCpc = budget / clicks;
+      row.appendChild(card('Required CPC', reqCpc.toFixed(2), reqCpc >= cpc ? 'green' : 'amber', reqCpc >= cpc ? 'Within budget' : 'Needs efficiency', 'CPC threshold to stay inside budget at this click volume.'));
+    }
+    var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
+    if (cpc <= 1.5) addP(body, 'Your CPC is efficient. Validate conversion quality so low click costs still drive pipeline.');
+    else if (cpc <= 4) addP(body, 'CPC is manageable. Improve relevance and audience fit to create cheaper incremental clicks.');
+    else addP(body, 'CPC is high. Refresh creatives and tighten targeting to reduce expensive click volume.');
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+  });
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-spend','inp-clicks','inp-target-cpc','inp-budget'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('results-section').classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row'); while (row.firstChild) row.removeChild(row.firstChild);
+  });
+  DuctToolExample.seed(['inp-spend', 'inp-clicks', 'inp-target-cpc', 'inp-budget'], 'calc-btn', 'results-section');
+}());
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

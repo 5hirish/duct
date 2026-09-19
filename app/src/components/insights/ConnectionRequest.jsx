@@ -19,6 +19,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
+import { Trans } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { AnalyticsEvent, AnalyticsParam, trackEvent } from "@/lib/analytics";
 import {
@@ -81,24 +82,28 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
   return (
     <div className="my-3 space-y-3 rounded-xl border border-info/30 bg-info/5 p-4">
       <div className="space-y-0.5">
-        <p className="text-sm font-semibold">Connect {label}?</p>
+        <p className="text-sm font-semibold"><Trans>Connect {label}?</Trans></p>
         {reason && <p className="text-xs text-muted-foreground">{reason}</p>}
       </div>
 
       {isManual ? (
         <p className="text-xs text-muted-foreground">
-          {label} needs an API key rather than a sign-in. Add it on the{" "}
-          <a href="/connections" className="underline underline-offset-2 hover:text-foreground">
-            Connections page
-          </a>
-          , then tell Duct to carry on.
+          <Trans>
+            {label} needs an API key rather than a sign-in. Add it on the{" "}
+            <a href="/connections" className="underline underline-offset-2 hover:text-foreground">
+              Connections page
+            </a>
+            , then tell Duct to carry on.
+          </Trans>
         </p>
       ) : null}
 
       {viaSignIn && (
         <p className="text-xs text-muted-foreground">
-          One Google sign-in does both: it saves this project to an account and lets Duct read
-          Search Console and Analytics. Read-only, and you can untick either at Google.
+          <Trans>
+            One Google sign-in does both: it saves this project to an account and lets Duct read
+            Search Console and Analytics. Read-only, and you can untick either at Google.
+          </Trans>
         </p>
       )}
 
@@ -106,12 +111,12 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
         {viaSignIn ? (
           <Button size="sm" onClick={signInAndConnect} disabled={disabled || phase === "starting"}>
             <LogIn className="size-4" aria-hidden />
-            {phase === "starting" ? "Opening…" : "Sign in with Google to connect"}
+            {phase === "starting" ? <Trans>Opening…</Trans> : <Trans>Sign in with Google to connect</Trans>}
           </Button>
         ) : (
           !isManual && (
             <Button size="sm" onClick={connect} disabled={disabled || phase === "starting"}>
-              {phase === "starting" ? "Opening…" : `Connect ${label}`}
+              {phase === "starting" ? <Trans>Opening…</Trans> : <Trans>Connect {label}</Trans>}
             </Button>
           )
         )}
@@ -121,7 +126,7 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
             the page and comes back through a resume. */}
         {!viaSignIn && (phase === "browser" || phase === "starting") && (
           <Button size="sm" variant="secondary" onClick={() => onAnswer({ connected: true })} disabled={disabled}>
-            I've connected it
+            <Trans>I’ve connected it</Trans>
           </Button>
         )}
         <button
@@ -130,17 +135,17 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
           disabled={disabled}
           className="text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
         >
-          Skip — carry on without it
+          <Trans>Skip — carry on without it</Trans>
         </button>
       </div>
 
       {phase === "browser" && (
         <p className="text-xs text-muted-foreground">
-          Finish signing in in your browser, then come back and press “I've connected it”.
+          <Trans>Finish signing in in your browser, then come back and press “I’ve connected it”.</Trans>
         </p>
       )}
       <p className="text-2xs text-muted-foreground">
-        Skipping is fine — Duct will say what it couldn't check.
+        <Trans>Skipping is fine — Duct will say what it couldn’t check.</Trans>
       </p>
     </div>
   );

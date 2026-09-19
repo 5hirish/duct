@@ -7,6 +7,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FileText, LockKeyhole } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
 import LoadError from "@/components/LoadError";
@@ -18,13 +20,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mirrors models/artifact.py's `kind` — what an artifact *is*, not who made it.
 const KIND_TABS = [
-  { value: "", label: "All" },
-  { value: "report", label: "Reports" },
-  { value: "brief", label: "Briefs" },
-  { value: "document", label: "Documents" },
+  { value: "", label: msg`All` },
+  { value: "report", label: msg`Reports` },
+  { value: "brief", label: msg`Briefs` },
+  { value: "document", label: msg`Documents` },
 ];
 
 export default function ArtifactsPage() {
+  const { t, i18n } = useLingui();
   const [project, setProject] = useState(null);
   const [signedIn, setSignedIn] = useState(true);
   const [kind, setKind] = useState("");
@@ -58,23 +61,27 @@ export default function ArtifactsPage() {
     };
   }, [project, kind, signedIn]);
 
+  const projectName = project?.name || t`this project`;
+
   return (
     <section>
       <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Artifacts</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Artifacts</Trans></h1>
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        Everything your agents have produced for{" "}
-        <strong>{project?.name || "this project"}</strong> — reports, documents, exports.
-        Stored durably; open one to view, download, or continue its chat.
+        <Trans>
+          Everything your agents have produced for{" "}
+          <strong>{projectName}</strong> — reports, documents, exports.
+          Stored durably; open one to view, download, or continue its chat.
+        </Trans>
       </p>
 
       <Tabs value={kind} onValueChange={setKind}>
         <TabsList>
           {KIND_TABS.map((tab) => (
             <TabsTrigger key={tab.value || "all"} value={tab.value}>
-              {tab.label}
+              {i18n._(tab.label)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -84,82 +91,93 @@ export default function ArtifactsPage() {
         <div style={{ marginTop: 18 }}>
           <EmptyState
             icon={LockKeyhole}
-            title="Sign in to see your saved artifacts"
+            title={t`Sign in to see your saved artifacts`}
             actions={
               <Button size="sm" asChild>
-                <Link href="/">Sign in</Link>
+                <Link href="/"><Trans>Sign in</Trans></Link>
               </Button>
             }
           >
-            Reports are stored against your account, so they survive the tab that made them.
+            <Trans>Reports are stored against your account, so they survive the tab that made them.</Trans>
           </EmptyState>
         </div>
       )}
 
       {signedIn && items === null && (
-        <p className="app-subtle" style={{ marginTop: 18 }}>Loading…</p>
+        <p className="app-subtle" style={{ marginTop: 18 }}><Trans>Loading…</Trans></p>
       )}
 
-      {signedIn && error && <LoadError what="your artifacts" detail={error} />}
+      {signedIn && error && <LoadError what={t`your artifacts`} detail={error} />}
 
       {signedIn && !error && items && items.length === 0 && (
         <div style={{ marginTop: 18 }}>
           <EmptyState
             icon={FileText}
-            title="No artifacts yet"
+            title={t`No artifacts yet`}
             actions={
               <>
                 <Button size="sm" asChild>
-                  <Link href="/audit/seo">Run an SEO audit</Link>
+                  <Link href="/audit/seo"><Trans>Run an SEO audit</Trans></Link>
                 </Button>
                 <Button size="sm" variant="ghost" asChild>
-                  <Link href="/insights/organic-growth">Ask a question</Link>
+                  <Link href="/insights/organic-growth"><Trans>Ask a question</Trans></Link>
                 </Button>
               </>
             }
           >
-            Run an audit with your project selected and its report lands here — versioned, so
-            you can read what changed between two runs of the same check.
+            <Trans>
+              Run an audit with your project selected and its report lands here — versioned, so
+              you can read what changed between two runs of the same check.
+            </Trans>
           </EmptyState>
         </div>
       )}
 
       {signedIn && items && items.length > 0 && (
         <div className="connection-grid" style={{ marginTop: 18 }}>
-          {items.map((artifact) => (
-            <Link
-              key={artifact.id}
-              href={`/artifacts/${artifact.id}`}
-              className="connection-card"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <div className="connection-card-head">
-                <div className="connection-logo" aria-hidden="true">
-                  <FileText size={22} />
+          {items.map((artifact) => {
+            const score = artifact.meta?.overall_score;
+            const version = artifact.version;
+            const versionCount = artifact.version_count;
+            return (
+              <Link
+                key={artifact.id}
+                href={`/artifacts/${artifact.id}`}
+                className="connection-card"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <div className="connection-card-head">
+                  <div className="connection-logo" aria-hidden="true">
+                    <FileText size={22} />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <h2 className="connection-title">{artifact.title || artifact.filename || t`Untitled`}</h2>
+                    <p className="connection-description" style={{ marginBottom: 0 }}>
+                      {artifact.summary
+                        ? `${artifact.summary.slice(0, 140)}${artifact.summary.length > 140 ? "…" : ""}`
+                        : artifact.meta?.url || ""}
+                    </p>
+                  </div>
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <h2 className="connection-title">{artifact.title || artifact.filename || "Untitled"}</h2>
-                  <p className="connection-description" style={{ marginBottom: 0 }}>
-                    {artifact.summary
-                      ? `${artifact.summary.slice(0, 140)}${artifact.summary.length > 140 ? "…" : ""}`
-                      : artifact.meta?.url || ""}
-                  </p>
+                <div className="connection-status-row" style={{ flexWrap: "wrap", gap: 6 }}>
+                  <span className="status-pill grey">{artifact.kind}</span>
+                  {Number.isFinite(score) && (
+                    <span className="status-pill green"><Trans>score {score}</Trans></span>
+                  )}
+                  {versionCount > 1 && (
+                    <span className="status-pill grey">
+                      <Trans>
+                        v{version} · <Plural value={versionCount} one="# version" other="# versions" />
+                      </Trans>
+                    </span>
+                  )}
+                  <span className="app-subtle" style={{ marginLeft: "auto", fontSize: 12 }}>
+                    {relativeTime(artifact.created_at)}
+                  </span>
                 </div>
-              </div>
-              <div className="connection-status-row" style={{ flexWrap: "wrap", gap: 6 }}>
-                <span className="status-pill grey">{artifact.kind}</span>
-                {Number.isFinite(artifact.meta?.overall_score) && (
-                  <span className="status-pill green">score {artifact.meta.overall_score}</span>
-                )}
-                {artifact.version_count > 1 && (
-                  <span className="status-pill grey">v{artifact.version} · {artifact.version_count} versions</span>
-                )}
-                <span className="app-subtle" style={{ marginLeft: "auto", fontSize: 12 }}>
-                  {relativeTime(artifact.created_at)}
-                </span>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>

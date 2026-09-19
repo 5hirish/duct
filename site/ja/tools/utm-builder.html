@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>UTMビルダー — Ductによる無料ツール</title>
+<link rel="canonical" href="https://getduct.ai/ja/tools/utm-builder"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/utm-builder"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/utm-builder"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/utm-builder"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/utm-builder"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/utm-builder"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/utm-builder"/>
+<!-- hreflang:end -->
+<meta name="description" content="ライブURLプレビューとGA4準拠の検証機能を備えた無料のUTMビルダー。数秒でUTMキャンペーンリンクを作成してコピーできます。サインアップ不要。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/tools/utm-builder"/>
+<meta property="og:title" content="UTMビルダー — Ductによる無料ツール"/>
+<meta property="og:description" content="ライブプレビューとGA4準拠の検証機能を備えたUTMリンクを作成できます。無料、サインアップ不要。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-utm-builder.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="UTMビルダー — Ductによる無料ツール"/>
+<meta name="twitter:description" content="ライブURLプレビューとGA4準拠の検証機能を備えた無料のUTMビルダー。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-utm-builder.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"UTM Builder","url":"https://getduct.ai/tools/utm-builder","description":"Free UTM builder with live URL preview and GA4 compliance validation. Build and copy UTM campaign links instantly.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero { padding:80px 24px 48px; text-align:center; max-width:760px; margin:0 auto; }
+  .tool-hero h1 { font-family:var(--serif); font-size:clamp(32px,5vw,52px); color:var(--navy); margin:16px 0; line-height:1.15; }
+  .tool-hero h1 em { color:var(--orange); font-style:italic; }
+  .tool-hero p { font-size:17px; color:var(--navy-3); font-weight:300; line-height:1.6; margin:0; }
+
+  .tool-wrap { max-width:960px; margin:0 auto 80px; padding:0 24px; }
+  .tool-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.06); }
+
+  .tool-inputs { padding:32px 40px; display:grid; grid-template-columns:1fr 1fr; gap:20px 32px; }
+  @media (max-width:640px) { .tool-inputs { grid-template-columns:1fr; padding:24px; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:500; color:var(--navy); }
+  .field .field-hint { font-size:11px; color:var(--navy-3); margin-top:-2px; }
+  .field-row { display:flex; align-items:center; gap:8px; }
+  .field input { flex:1; padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:15px; font-family:var(--sans); color:var(--navy); outline:none; transition:border-color .15s; }
+  .field input:focus { border-color:var(--orange); }
+  .field input.inp-valid { border-color:#22c55e; }
+  .field input.inp-warn { border-color:#f59e0b; }
+  .field input.inp-error { border-color:#ef4444; }
+  .field-badge { flex-shrink:0; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; visibility:hidden; }
+  .field-badge.b-show { visibility:visible; }
+  .field-badge.b-valid { background:#dcfce7; color:#15803d; }
+  .field-badge.b-warn { background:#fef3c7; color:#92400e; }
+  .field-badge.b-error { background:#fee2e2; color:#991b1b; }
+  .field-msg { font-size:11px; margin-top:2px; min-height:14px; }
+  .field-msg.m-warn { color:#92400e; }
+  .field-msg.m-error { color:#991b1b; }
+  .field-msg.m-valid { color:#15803d; }
+  .field-full { grid-column:1/-1; }
+
+  .preview-wrap { padding:0 40px 32px; }
+  @media (max-width:640px) { .preview-wrap { padding:0 24px 24px; } }
+  .preview-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .preview-box { background:#f8fafc; border:1.5px solid var(--border); border-radius:var(--r); padding:14px 16px; font-size:13px; font-family:monospace; color:var(--navy); word-break:break-all; line-height:1.6; min-height:48px; }
+  .preview-empty { color:var(--navy-3); font-family:var(--sans); font-style:italic; font-size:13px; }
+  .preview-url-base { color:var(--navy-3); }
+  .preview-url-params { color:var(--orange); }
+
+  .copy-row { padding:0 40px 32px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  @media (max-width:640px) { .copy-row { padding:0 24px 24px; } }
+  .copy-confirm { font-size:12px; color:#15803d; font-weight:500; opacity:0; transition:opacity .3s; }
+  .copy-confirm.show { opacity:1; }
+
+  .recent-wrap { border-top:1px solid var(--border); padding:20px 40px; }
+  @media (max-width:640px) { .recent-wrap { padding:16px 24px; } }
+  .recent-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin-bottom:10px; }
+  .recent-list { display:flex; flex-wrap:wrap; gap:8px; }
+  .recent-chip { font-size:12px; color:var(--navy-3); background:var(--off); border:1px solid var(--border); border-radius:100px; padding:4px 12px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; transition:border-color .15s, color .15s; }
+  .recent-chip:hover { border-color:var(--orange); color:var(--navy); }
+  .recent-empty { font-size:12px; color:var(--navy-3); font-style:italic; }
+
+  .insight-panel { margin:0 40px 32px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:16px 20px; display:none; }
+  @media (max-width:640px) { .insight-panel { margin:0 24px 24px; } }
+  .insight-panel.show { display:block; }
+  .insight-panel-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:8px; }
+  .insight-panel p { font-size:13px; color:var(--navy-3); line-height:1.6; margin:0; }
+
+  .faq-section { border-top:1px solid var(--border); padding:32px 40px; }
+  @media (max-width:640px) { .faq-section { padding:24px; } }
+  .faq-title { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin:0 0 16px; }
+  .faq-item { border-bottom:1px solid var(--border); }
+  .faq-item:last-child { border-bottom:none; }
+  .faq-q { width:100%; background:none; border:none; padding:14px 0; font-size:14px; font-weight:500; color:var(--navy); text-align:left; cursor:pointer; font-family:var(--sans); }
+  .faq-q:hover { color:var(--orange); }
+  .faq-a { display:none; padding:0 0 16px; font-size:14px; color:var(--navy-3); line-height:1.7; }
+  .faq-item.open .faq-a { display:block; }
+  .faq-a-code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px; color:var(--navy); font-family:monospace; }
+
+  .tool-cta {
+    margin: 28px 40px 0;
+    background: var(--navy);
+    border-radius: var(--r);
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  @media (max-width: 640px) {
+    .tool-cta { margin: 24px 24px 0; padding: 22px 20px; }
+  }
+
+
+  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+</style>
+</head>
+<body>
+<!-- EXPERIMENT: UTM Builder — differentiate from DashThis with live preview + GA4 validation -->
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<div data-duct-partial="/ja/partials/nav-home.html"></div>
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 無料ツール · サインアップ不要</div>
+  <h1>UTMビルダー <em>ライブプレビュー付き</em></h1>
+  <p>GA4のキャンペーンデータは、UTMリンクの正確さに依存します。ライブ検証、即時プレビュー、スプレッドシート不要で、最初から正しく作成しましょう。</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="UTMビルダー">
+
+      <div class="tool-inputs">
+
+        <div class="field field-full">
+          <label for="inp-url">ウェブサイトURL <span style="color:var(--navy-3);font-weight:400">（必須）</span></label>
+          <span class="field-hint">トラフィックを送信するページ — https://を含めてください</span>
+          <div class="field-row">
+            <input type="url" id="inp-url" placeholder="https://yoursite.com/landing-page" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-url" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-url"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-source">キャンペーンソース<span style="color:var(--navy-3);font-weight:400">(必須)</span></label>
+          <span class="field-hint">例：google, newsletter, twitter</span>
+          <div class="field-row">
+            <input type="text" id="inp-source" placeholder="例：google" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-source" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-source"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-medium">キャンペーンメディア<span style="color:var(--navy-3);font-weight:400">(必須)</span></label>
+          <span class="field-hint">例：cpc, email, social, organic</span>
+          <div class="field-row">
+            <input type="text" id="inp-medium" placeholder="例：cpc" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-medium" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-medium"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-campaign">キャンペーン名<span style="color:var(--navy-3);font-weight:400">(必須)</span></label>
+          <span class="field-hint">例：spring-launch, brand-q2</span>
+          <div class="field-row">
+            <input type="text" id="inp-campaign" placeholder="例：spring-launch" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-campaign" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-campaign"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-term">キャンペーンターム<span style="color:var(--navy-3);font-weight:400">(オプション)</span></label>
+          <span class="field-hint">有料キーワード — 例：running+shoes</span>
+          <div class="field-row">
+            <input type="text" id="inp-term" placeholder="例：utm+builder" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-term" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-term"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-content">キャンペーンコンテンツ<span style="color:var(--navy-3);font-weight:400">(オプション)</span></label>
+          <span class="field-hint">広告を区別する — 例：banner-v1</span>
+          <div class="field-row">
+            <input type="text" id="inp-content" placeholder="例：hero-banner" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-content" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-content"></span>
+        </div>
+
+      </div>
+
+      <div class="preview-wrap">
+        <div class="preview-label">
+          ライブURLプレビュー <span id="preview-compliance" style="font-size:11px;font-weight:500;opacity:0;transition:opacity .2s"></span>
+        </div>
+        <div class="preview-box" id="preview-box" aria-live="polite" aria-label="生成されたUTM URL">
+          <span class="preview-empty" id="preview-placeholder">ウェブサイトURL、ソース、メディア、キャンペーンを入力してUTMリンクを生成してください。</span>
+        </div>
+      </div>
+
+      <div class="copy-row">
+        <button class="btn btn-orange" id="copy-btn" disabled>URLをコピー</button>
+        <span class="copy-confirm" id="copy-confirm" aria-live="polite">コピーしました！</span>
+        <button class="btn btn-ghost" id="reset-btn" style="display:none">リセット</button>
+      </div>
+
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>リンクはタグ付けされています。問題は、それが何にコンバージョンするかです。</p>
+          <p>Ductは広告、分析、収益ツールを読み込み、その質問に答え、変更セットを提案します。あなたはそれを承認します。</p>
+        </div>
+        <a href="/ja/download" class="btn btn-orange" data-duct-download>Ductをダウンロード ↓</a>
+      </div>
+
+      <div class="insight-panel" id="insight-panel" role="status">
+        <p class="insight-panel-label">GA4準拠に関する注意</p>
+        <p id="insight-body"></p>
+      </div>
+
+      <div class="recent-wrap" id="recent-wrap">
+        <div class="recent-label">最近のURL</div>
+        <div class="recent-list" id="recent-list"></div>
+      </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="faq-title">GA4における各UTMパラメータの意味</div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          utm_sourceとは何か、何を入れるべきですか？
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_source</span>はトラフィックの発生元（プラットフォームまたはパブリッシャー）を識別します。小文字で、スペースなしで入力してください。良い値：<span class="faq-a-code">google</span>、<span class="faq-a-code">newsletter</span>、<span class="faq-a-code">linkedin</span>、<span class="faq-a-code">twitter</span>。GA4では、「セッションソース」ディメンションとして表示され、すべての属性モデルで使用されます。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          utm_mediumとは何か、標準値は何ですか？
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_medium</span>はマーケティングチャネルの種類を記述します。GA4はこれを使用してセッションをデフォルトチャネルグループに割り当てます。標準値：<span class="faq-a-code">cpc</span> (有料検索)、<span class="faq-a-code">email</span> (メール)、<span class="faq-a-code">social</span> (オーガニックソーシャル)、<span class="faq-a-code">paid-social</span> (有料ソーシャル)、<span class="faq-a-code">display</span> (ディスプレイ)。非標準値のセッションは「未割り当て」になります。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          utm_campaignとは何か、キャンペーンにはどのように名前を付けるべきですか？
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_campaign</span>は特定のキャンペーンを識別します。スペースやアンダースコアではなく、ハイフン付きの小文字を使用してください。正確な形式よりも一貫した命名規則が重要です。例：<span class="faq-a-code">saas-pm-trial-q2-2026</span>。URLではスペースが<span class="faq-a-code">%20</span>になり、GA4レポートで読みにくくなります。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          utm_termとutm_contentはいつ使用すべきですか？
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_term</span>は有料キーワード用です — 主にGoogle Ads。検索以外のキャンペーンでは省略してください。<span class="faq-a-code">utm_content</span>は、同じ広告またはメール内の複数のリンクを区別します。例えば、<span class="faq-a-code">hero-cta</span>と<span class="faq-a-code">footer-cta</span>、または<span class="faq-a-code">banner-v1</span>と<span class="faq-a-code">banner-v2</span>などです。クリエイティブのA/Bテストや、長いメールでのクリック位置の追跡に役立ちます。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          UTMパラメータでは大文字と小文字の区別が重要ですか？
+        </button>
+        <div class="faq-a">
+          はい — GA4はUTM値を大文字と小文字を区別して扱います。レポートでは<span class="faq-a-code">Google</span>と<span class="faq-a-code">google</span>が2つの異なるソースとして表示されます。常に小文字を使用してください。これは最も一般的なUTMの間違いであり、後から修正するのが最も困難です。このツールは、大文字が検出された場合に警告します。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          なぜGA4は私のUTMパラメータに対して（未設定）と表示するのですか？
+        </button>
+        <div class="faq-a">
+          「(not set)」は、イベントが発火したときにパラメータが存在しなかったことを意味します。一般的な原因は次のとおりです。(1) GA4が読み込まれる前にリダイレクトによってパラメータが削除された、(2) トラッキングが発火する前にユーザーが2ページ目に移動した、(3) パラメータを削除するQRコード経由でリンクにアクセスされた。GA4が正確なランディングページで発火しており、リダイレクトがクエリ文字列を削除していないことを確認してください。
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="Ductについて">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">UTMパラメータは、トラフィックがどこから来たかをGA4に伝えます。それが価値があったかどうかは教えてくれません。</p>
+      <p class="duct-bridge-body">DuctはGA4を広告費用、コンバージョン、メールと連携させるため、各タグ付きキャンペーンは流入量だけではなく、それが獲得した収益によって評価されます。</p>
+      <a href="/ja/" class="duct-bridge-link">Ductの仕組み →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="インサイトセッション：広告予算がどこで漏れているかを尋ねると、エージェントはすべてのキャンペーンをCPA目標に対して評価し、一時停止、2つの除外キーワード、予算増額を提案し、右側に支出ブリーフを作成します"/>
+      <figcaption>予算の漏洩箇所を特定します。DuctはすべてのキャンペーンをCPA目標に対して評価し、一時停止、ネガティブキーワード、予算の変更を提案し、あなたの承認を待ちます。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2>この<em>ツール</em>について</h2>
+  <p>このビルダーは標準的なUTMクエリパラメータを生成し、ライブURLプレビューを表示するため、広告、メール、ソーシャルにリンクを貼り付ける前に書式設定の問題を発見できます。検証機能は、GA4に適した値（小文字のソースとメディア、予約済みトークンの回避、レポートを分割する可能性のあるスペースや大文字小文字混在の監視）を促します。</p>
+
+  <h2 style="margin-top:40px">UTMが<em>GA4</em>に表示される仕組み</h2>
+  <p>GA4は、セッション開始時にランディングページのURLから<strong>utm_source</strong>、<strong>utm_medium</strong>、<strong>utm_campaign</strong>、およびオプションの<strong>utm_term</strong> / <strong>utm_content</strong>を読み取ります。これらの値はセッションおよびトラフィック獲得ディメンションに流れます。GAタグが読み込まれる前にリダイレクトによってクエリ文字列が削除された場合、またはタグの発火が遅れるページにユーザーがアクセスした場合、<strong>(not set)</strong>が表示されることがあります — リンクビルダーはトラッキングのインストールを修正することはできず、リンク自体のみを修正できます。</p>
+  <p>キャンペーンレポートは、命名規則と同じくらいクリーンです。このツールは一貫性（例えば小文字とハイフン）を奨励し、<span class="faq-a-code">Google</span>と<span class="faq-a-code">google</span>で誤って重複する行を作成しないようにします。</p>
+
+  <h2 style="margin-top:40px">制限事項</h2>
+  <ul>
+    <li>リンクは、パラメータを保持したままタグ付けされたランディングページに到達する必要があります。短縮URL、リダイレクトチェーン、アプリのディープリンクはUTMを削除する可能性があります。</li>
+    <li>GA4のチャネルグループ化ルールはメディア/ソースの組み合わせに依存します。リンクが有効であっても、異常な値は<strong>未割り当て</strong>になる可能性があります。</li>
+    <li>このページは完全にブラウザ内で動作します。お客様のURLやフォームフィールドを当社のサーバーに保存することはありません。</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">その他無料</p>
+    <h2 id="related-tools-heading">関連<em>ツール</em>を見る</h2>
+    <p class="related-tools-banner-desc">UTM作成を予算配分とROIトラッキングと組み合わせることで、キャンペーンパフォーマンスのサイクルを完結させます。</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="utm-builder" data-related-limit="3"></div>
+  </div>
+</section>
+
+<div data-duct-partial="/ja/partials/cta-tools.html"></div>
+
+</main>
+<div data-duct-partial="/ja/partials/footer-expanded.html"></div>
+
+<script>
+(function () {
+
+  var GA4_RESERVED = ['(direct)', '(none)', '(not set)', '(other)', '(organic)', 'direct', 'none'];
+  var FIELDS = ['url', 'source', 'medium', 'campaign', 'term', 'content'];
+
+  // ── Validation ───────────────────────────────────────────────────────────
+  function setFieldState(fieldId, state, message) {
+    var badge = document.getElementById('badge-' + fieldId);
+    var msg = document.getElementById('msg-' + fieldId);
+    var input = document.getElementById('inp-' + fieldId);
+    ['inp-valid','inp-warn','inp-error'].forEach(function(c) { input.classList.remove(c); });
+    badge.className = 'field-badge';
+    badge.textContent = '';
+    msg.textContent = message || '';
+    msg.className = 'field-msg';
+    if (state === 'valid') {
+      input.classList.add('inp-valid');
+      badge.className = 'field-badge b-show b-valid';
+      badge.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>';
+    } else if (state === 'warn') {
+      input.classList.add('inp-warn');
+      badge.className = 'field-badge b-show b-warn';
+      badge.textContent = '!';
+      msg.className = 'field-msg m-warn';
+    } else if (state === 'error') {
+      input.classList.add('inp-error');
+      badge.className = 'field-badge b-show b-error';
+      badge.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#x"/></svg>';
+      msg.className = 'field-msg m-error';
+    }
+  }
+
+  function validateUrl(value) {
+    if (!value) { setFieldState('url', '', ''); return 'empty'; }
+    if (!/^https?:\/\//i.test(value)) {
+      setFieldState('url', 'error', 'URL must start with https://'); return 'error';
+    }
+    if (/^http:\/\//i.test(value)) {
+      setFieldState('url', 'warn', 'Consider https:// — some ad platforms reject http:// landing pages.'); return 'warn';
+    }
+    setFieldState('url', 'valid', ''); return 'valid';
+  }
+
+  function validateParam(value, fieldId) {
+    if (!value) { setFieldState(fieldId, '', ''); return 'empty'; }
+    if (/[A-Z]/.test(value)) {
+      setFieldState(fieldId, 'warn', 'Use lowercase — GA4 treats "Google" and "google" as different sources.'); return 'warn';
+    }
+    if (/\s/.test(value) && fieldId !== 'term') {
+      setFieldState(fieldId, 'warn', 'Spaces become %20 in URLs — use hyphens instead.'); return 'warn';
+    }
+    if (GA4_RESERVED.indexOf(value.toLowerCase()) !== -1) {
+      setFieldState(fieldId, 'error', 'This is a GA4 reserved value — it will appear as internal traffic.'); return 'error';
+    }
+    if (/['"<>{}|\\^`]/.test(value)) {
+      setFieldState(fieldId, 'warn', 'Special characters may break URL parsing — remove them.'); return 'warn';
+    }
+    setFieldState(fieldId, 'valid', ''); return 'valid';
+  }
+
+  // ── URL building ─────────────────────────────────────────────────────────
+  function getVal(id) { return (document.getElementById(id).value || '').trim(); }
+
+  function buildUrl() {
+    var base = getVal('inp-url');
+    var source = getVal('inp-source');
+    var medium = getVal('inp-medium');
+    var campaign = getVal('inp-campaign');
+    var term = getVal('inp-term');
+    var content = getVal('inp-content');
+    if (!base || !source || !medium || !campaign) return '';
+    var params = [
+      'utm_source=' + encodeURIComponent(source),
+      'utm_medium=' + encodeURIComponent(medium),
+      'utm_campaign=' + encodeURIComponent(campaign)
+    ];
+    if (term) params.push('utm_term=' + encodeURIComponent(term));
+    if (content) params.push('utm_content=' + encodeURIComponent(content));
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    return base + sep + params.join('&');
+  }
+
+  // ── Preview (safe DOM — no innerHTML with dynamic content) ───────────────
+  function updatePreview() {
+    var url = buildUrl();
+    var box = document.getElementById('preview-box');
+    var copyBtn = document.getElementById('copy-btn');
+    var compliance = document.getElementById('preview-compliance');
+
+    while (box.firstChild) box.removeChild(box.firstChild);
+
+    if (!url) {
+      var placeholder = document.createElement('span');
+      placeholder.className = 'preview-empty';
+      placeholder.textContent = 'Fill in Website URL, Source, Medium and Campaign to generate your UTM link.';
+      box.appendChild(placeholder);
+      copyBtn.disabled = true;
+      compliance.style.opacity = '0';
+      document.getElementById('insight-panel').className = 'insight-panel';
+      return;
+    }
+
+    var qIdx = url.indexOf('?');
+    var base = qIdx !== -1 ? url.substring(0, qIdx) : url;
+    var qs = qIdx !== -1 ? url.substring(qIdx) : '';
+
+    var baseSpan = document.createElement('span');
+    baseSpan.className = 'preview-url-base';
+    baseSpan.textContent = base;
+    box.appendChild(baseSpan);
+
+    if (qs) {
+      var qsSpan = document.createElement('span');
+      qsSpan.className = 'preview-url-params';
+      qsSpan.textContent = qs;
+      box.appendChild(qsSpan);
+    }
+
+    copyBtn.disabled = false;
+
+    var hasWarning = ['source','medium','campaign','term','content'].some(function(f) {
+      var v = getVal('inp-' + f);
+      return v && /[A-Z\s]/.test(v);
+    });
+    compliance.style.opacity = '1';
+    if (hasWarning) {
+      compliance.style.color = '#92400e';
+      compliance.textContent = 'Check warnings below';
+    } else {
+      compliance.style.color = '#15803d';
+      compliance.textContent = 'GA4 compliant';
+    }
+
+    var warnings = [];
+    ['source','medium','campaign'].forEach(function(f) {
+      var v = getVal('inp-' + f);
+      if (v && /[A-Z]/.test(v)) warnings.push('"' + f + '" has uppercase — GA4 is case-sensitive, this creates split data.');
+      else if (v && /\s/.test(v)) warnings.push('"' + f + '" has spaces — these become %20 in URLs and make reports harder to read.');
+    });
+    var panel = document.getElementById('insight-panel');
+    var body = document.getElementById('insight-body');
+    if (warnings.length) {
+      body.textContent = warnings[0];
+      panel.className = 'insight-panel show';
+    } else {
+      panel.className = 'insight-panel';
+    }
+  }
+
+  // ── Input listeners ──────────────────────────────────────────────────────
+  FIELDS.forEach(function(f) {
+    var el = document.getElementById('inp-' + f);
+    if (!el) return;
+    el.addEventListener('input', function() {
+      if (f === 'url') validateUrl(el.value);
+      else validateParam(el.value, f);
+      updatePreview();
+      var any = FIELDS.some(function(x) { return !!(document.getElementById('inp-' + x) || {}).value; });
+      document.getElementById('reset-btn').style.display = any ? '' : 'none';
+    });
+  });
+
+  // ── Copy ─────────────────────────────────────────────────────────────────
+  document.getElementById('copy-btn').addEventListener('click', function() {
+    var url = buildUrl();
+    if (!url) return;
+    copyText(url);
+    var confirm = document.getElementById('copy-confirm');
+    confirm.classList.add('show');
+    setTimeout(function() { confirm.classList.remove('show'); }, 2000);
+    saveRecent(url);
+    renderRecent();
+  });
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  // ── Reset ────────────────────────────────────────────────────────────────
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    FIELDS.forEach(function(f) {
+      var el = document.getElementById('inp-' + f);
+      if (el) el.value = '';
+      setFieldState(f, '', '');
+    });
+    updatePreview();
+    document.getElementById('reset-btn').style.display = 'none';
+  });
+
+  // ── Recent URLs ──────────────────────────────────────────────────────────
+  var RECENT_KEY = 'duct_utm_recent';
+
+  function saveRecent(url) {
+    var list = getRecent().filter(function(u) { return u !== url; });
+    list.unshift(url);
+    if (list.length > 5) list = list.slice(0, 5);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(e) {}
+  }
+
+  function getRecent() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch(e) { return []; }
+  }
+
+  function renderRecent() {
+    var list = getRecent();
+    var container = document.getElementById('recent-list');
+    while (container.firstChild) container.removeChild(container.firstChild);
+    if (!list.length) {
+      var empty = document.createElement('span');
+      empty.className = 'recent-empty';
+      empty.textContent = 'Your last 5 UTM links will appear here after copying.';
+      container.appendChild(empty);
+      return;
+    }
+    list.forEach(function(url) {
+      var chip = document.createElement('button');
+      chip.className = 'recent-chip';
+      chip.title = url;
+      chip.textContent = url.length > 50 ? url.substring(0, 47) + '…' : url;
+      chip.setAttribute('aria-label', 'Copy recent URL: ' + url);
+      chip.addEventListener('click', function() {
+        copyText(url);
+        chip.textContent = 'Copied!';
+        setTimeout(function() {
+          chip.textContent = url.length > 50 ? url.substring(0, 47) + '…' : url;
+        }, 1500);
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  renderRecent();
+
+  // ── FAQ accordion ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.faq-q').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var item = btn.parentElement;
+      var isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(function(i) { i.classList.remove('open'); });
+      document.querySelectorAll('.faq-q').forEach(function(b) { b.setAttribute('aria-expanded', 'false'); });
+      if (!isOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+}());
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

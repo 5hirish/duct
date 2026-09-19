@@ -11,6 +11,7 @@
 // the background. Every call is a no-op (returns null/[]) when no valid token
 // is present, so signed-out or token-less sessions degrade to local-only.
 
+import { msg } from "@lingui/core/macro";
 import { BASE } from "./api";
 import {
   authedFetch,
@@ -38,18 +39,18 @@ export const AUTONOMY_AUTO = "auto";
 export const AUTONOMY_OPTIONS = [
   {
     value: AUTONOMY_ASK,
-    label: "Ask",
-    blurb: "Agents propose; nothing runs until you approve it here.",
+    label: msg`Ask`,
+    blurb: msg`Agents propose; nothing runs until you approve it here.`,
   },
   {
     value: AUTONOMY_ASSISTED,
-    label: "Assisted",
-    blurb: "Reversible changes on the allowlist apply on their own; the rest waits here.",
+    label: msg`Assisted`,
+    blurb: msg`Reversible changes on the allowlist apply on their own; the rest waits here.`,
   },
   {
     value: AUTONOMY_AUTO,
-    label: "Auto",
-    blurb: "Same allowlist as Assisted, fewer questions; assumptions go in the brief.",
+    label: msg`Auto`,
+    blurb: msg`Same allowlist as Assisted, fewer questions; assumptions go in the brief.`,
   },
 ];
 

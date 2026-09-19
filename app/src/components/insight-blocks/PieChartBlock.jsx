@@ -2,6 +2,7 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { numericField } from "../../lib/insightData";
+import { useLingui } from "@lingui/react/macro";
 
 // The theme's series, not a sixth hand-picked palette. These are checked
 // against both canvases in scripts/check-contrast.mjs, so adjacent slices stay
@@ -12,12 +13,13 @@ const COLORS = [
 ];
 
 export default function PieChartBlock({ title, rows, xField, yField, insightNote = "" }) {
+  const { t } = useLingui();
   if (!rows?.length || !xField || !yField) return null;
   const chartData = rows.map((row) => ({ name: String(row?.[xField] ?? "-"), value: numericField(row, yField) }));
 
   return (
     <section>
-      <p className="rpt-section-label">{title || "Composition"}</p>
+      <p className="rpt-section-label">{title || t`Composition`}</p>
       <div style={{ width: "100%", height: 280 }}>
         <ResponsiveContainer>
           <PieChart>

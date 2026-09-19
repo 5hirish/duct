@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trans } from "@lingui/react/macro";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PlanViewport from "@/components/content/PlanViewport";
 import { listPlans } from "@/lib/contentApi";
@@ -33,7 +34,7 @@ export default function NewPlanSessionPage() {
   if (!projectId) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading session…</p>
+        <p className="text-sm text-muted-foreground"><Trans>Loading session…</Trans></p>
       </div>
     );
   }

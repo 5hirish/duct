@@ -179,6 +179,16 @@ close-on-touch list of the places the tree currently falls short. Read it
 before writing in an area you have not written in before.
 
 - One concern per change. Explain *why* in the commit body; the diff shows what.
+- A PR that finishes an issue says `Closes #N` in its body (the template
+  prompts for it); `Refs #N` is for partial work. GitHub only auto-closes on
+  the first form, and the board's "PR merged → Done" automation only fires
+  when the PR is linked that way — #127 sat open a week after it shipped
+  because its commits said `Refs`.
+- Any change to user-facing copy in `app/` or `site/` ends with `make i18n`,
+  which translates the new and changed strings into the four other languages
+  and commits nothing by itself; `make check` is red until the catalogues and
+  the generated `site/<lang>/` pages are current. The writing rules live in
+  each area's `AGENTS.md` under "Interface language" and "Translated pages".
 - Comments in this codebase carry reasoning, not description. Match that — a
   comment restating the line below it is noise, one naming the failure that
   motivated the line is why the code survives.

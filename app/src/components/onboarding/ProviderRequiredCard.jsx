@@ -9,6 +9,7 @@
 // caller mounts the real workspace and the audit starts.
 
 import { useState } from "react";
+import { Plural, Trans } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import ProviderStep from "./ProviderStep";
 
@@ -25,10 +26,21 @@ export default function ProviderRequiredCard({ siteUrl, pagesRead = 0, onConnect
   return (
     <div className="mx-auto w-full max-w-xl p-6">
       <div className="rounded-xl border bg-card p-6 shadow-sm">
-        <h2 className="text-lg font-semibold tracking-tight">Ready when you are</h2>
+        <h2 className="text-lg font-semibold tracking-tight">
+          <Trans>Ready when you are</Trans>
+        </h2>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          {pagesRead > 0 ? `I've read ${pagesRead} pages of ${host}` : `I've read ${host}`} and drafted your
-          project from what I found. Connect a model and I'll start the audit.
+          {pagesRead > 0 ? (
+            <Trans>
+              I've read <Plural value={pagesRead} one="# page" other="# pages" /> of {host} and drafted
+              your project from what I found. Connect a model and I'll start the audit.
+            </Trans>
+          ) : (
+            <Trans>
+              I've read {host} and drafted your project from what I found. Connect a model and I'll
+              start the audit.
+            </Trans>
+          )}
         </p>
         {open ? (
           <ProviderStep
@@ -41,7 +53,7 @@ export default function ProviderRequiredCard({ siteUrl, pagesRead = 0, onConnect
           />
         ) : (
           <Button type="button" className="mt-5" onClick={() => setOpen(true)}>
-            Connect a model
+            <Trans>Connect a model</Trans>
           </Button>
         )}
       </div>

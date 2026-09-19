@@ -51,6 +51,21 @@ import {
 
 import { CATALOGUE_BY_ID } from "./catalogue";
 import { DEFAULT_DEVICES, DEVICES } from "./devices";
+import { readLocaleCookie, writeLocaleCookie } from "@/i18n/cookie";
+import { LOCALES, PSEUDO_LOCALE } from "@/i18n/locales";
+
+/**
+ * The languages a scene can be looked at in, plus the stretched pseudo-locale.
+ *
+ * The frames read the same cookie the app does, so picking one here is
+ * exactly what a user picking it in their profile gets — same catalogue, same
+ * server render. `pseudo` pads and brackets every string, which is how a
+ * layout that clips German shows itself without a German speaker.
+ */
+const LOCALE_OPTIONS = [
+  ...LOCALES.map((l) => ({ id: l.value, label: l.label })),
+  { id: PSEUDO_LOCALE, label: "Pseudo (stretched)" },
+];
 import { OVERLAYS, TEXT_SCALES, VISION } from "./lenses";
 import { SCENES } from "./scenes";
 import { SURFACES } from "./surfaces";
@@ -72,8 +87,11 @@ const THEME_MODES = [
 // find a near-empty box and crop the overlay away.
 const VIEWPORT_SURFACES = new Set(["dialog", "sheet", "alert", "drawer", "toast"]);
 
-function frameUrl({ scene, surface, theme, inspect, vision, text }) {
+function frameUrl({ scene, surface, theme, inspect, vision, text, lang }) {
   const p = new URLSearchParams({ scene, surface, theme });
+  // Not read by the frame — the language comes from the cookie — but a
+  // changed URL is what makes every mounted iframe fetch again.
+  if (lang) p.set("lang", lang);
   // Only non-default lenses land in the URL, so a copied link says what is
   // unusual about it rather than restating the defaults.
   if (inspect && inspect !== "off") p.set("inspect", inspect);
@@ -264,6 +282,15 @@ export default function PreviewShell({ canon = [] }) {
   const [text, setText] = useState("100");
   const [deviceIds, setDeviceIds] = useState(DEFAULT_DEVICES);
   const [copied, setCopied] = useState("");
+  // Read after mount: the cookie is not visible to the server frame.
+  const [lang, setLangState] = useState("en");
+  useEffect(() => {
+    setLangState(readLocaleCookie() || "en");
+  }, []);
+  const setLang = (next) => {
+    writeLocaleCookie(next);
+    setLangState(next);
+  };
 
   // "all" rather than "" because Radix reserves the empty string: an empty
   // value means "no selection", so an <SelectItem value=""> can never be picked
@@ -341,7 +368,7 @@ export default function PreviewShell({ canon = [] }) {
   const workingSectionCount = workingGroups.length;
   const devices = DEVICES.filter((d) => deviceIds.includes(d.id));
   const themes = themeMode === "both" ? ["light", "dark"] : [themeMode];
-  const lens = { inspect, vision, text };
+  const lens = { inspect, vision, text, lang };
   const isCanon = mode === "system";
   const systemCount = sections.reduce((n, s) => n + s.entries.length, 0);
 
@@ -410,6 +437,7 @@ export default function PreviewShell({ canon = [] }) {
             )}
             <Picker id="pv-surface" label="Surface" value={surface} onChange={setSurface} options={SURFACES} />
             <Picker id="pv-theme" label="Theme" value={themeMode} onChange={setThemeMode} options={THEME_MODES} />
+            <Picker id="pv-lang" label="Language" value={lang} onChange={setLang} options={LOCALE_OPTIONS} />
           </div>
         </div>
 

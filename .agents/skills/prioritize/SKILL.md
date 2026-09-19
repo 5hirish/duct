@@ -182,6 +182,13 @@ duplicate them: a filed issue usually lands on the board by itself, and
 `Done` sets itself when the issue closes or its PR merges. What's left to do
 by hand is `Priority`, and nudging `In progress` when work actually starts.
 
+"PR linked to issue" means a closing keyword — `Closes #N`, `Fixes #N`,
+`Resolves #N` — in the PR body or a commit on it. `Refs #N` links nothing
+GitHub acts on: the issue stays open and the board never moves it (#127
+shipped and sat in `In progress` for a week that way). When you find a
+shipped issue still open, close it with a comment naming the commits, as
+`gh issue close <n> --reason completed --comment "…"`.
+
 ```bash
 # 1. file it
 gh issue create --repo 5hirish/duct --title "…" --body "…" \

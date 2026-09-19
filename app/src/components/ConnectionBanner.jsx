@@ -17,43 +17,48 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, WifiOff } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
 import { STATUS, probe, watchConnection } from "@/lib/connection";
 import { isLocalBackendActive } from "@/lib/localBackend";
 import { isDesktopShell } from "@/lib/shell";
 
+// Descriptors, not strings: this runs outside the component, where a `t`
+// would be fixed in whatever language the module first loaded in.
 function message(status, { desktop, localSidecar }) {
   if (status === STATUS.OFFLINE) {
     return desktop && localSidecar
       ? {
-          title: "You're offline",
+          title: msg`You're offline`,
           detail:
-            "Duct's local backend is still running, so your saved work is fine. Agents need a connection to reach model providers.",
+            msg`Duct's local backend is still running, so your saved work is fine. Agents need a connection to reach model providers.`,
         }
       : {
-          title: "You're offline",
-          detail: "Duct needs a connection. Your work is saved and will still be here.",
+          title: msg`You're offline`,
+          detail: msg`Duct needs a connection. Your work is saved and will still be here.`,
         };
   }
   if (localSidecar) {
     return {
-      title: "Duct's local backend stopped responding",
+      title: msg`Duct's local backend stopped responding`,
       detail:
-        "The backend that runs inside the app is not answering. Quitting and reopening Duct restarts it.",
+        msg`The backend that runs inside the app is not answering. Quitting and reopening Duct restarts it.`,
     };
   }
   return desktop
     ? {
-        title: "Can't reach Duct",
-        detail: "The app is online but Duct's servers are not responding. This is usually brief.",
+        title: msg`Can't reach Duct`,
+        detail: msg`The app is online but Duct's servers are not responding. This is usually brief.`,
       }
     : {
-        title: "Can't reach Duct",
-        detail: "Your connection is fine but Duct's servers are not responding. This is usually brief.",
+        title: msg`Can't reach Duct`,
+        detail: msg`Your connection is fine but Duct's servers are not responding. This is usually brief.`,
       };
 }
 
 export default function ConnectionBanner() {
+  const { i18n } = useLingui();
   const [status, setStatus] = useState(STATUS.OK);
   const [retrying, setRetrying] = useState(false);
 
@@ -87,12 +92,12 @@ export default function ConnectionBanner() {
       <div className="flex items-start gap-3">
         <WifiOff className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground">{title}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{detail}</p>
+          <p className="text-sm font-medium text-foreground">{i18n._(title)}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{i18n._(detail)}</p>
         </div>
         <Button size="sm" variant="outline" onClick={retry} disabled={retrying}>
           <RefreshCw className={retrying ? "size-3.5 animate-spin" : "size-3.5"} aria-hidden />
-          {retrying ? "Checking…" : "Retry"}
+          {retrying ? <Trans>Checking…</Trans> : <Trans>Retry</Trans>}
         </Button>
       </div>
     </div>

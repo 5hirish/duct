@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import AppNav from "../../components/AppNav";
 import AppSidebar from "../../components/AppSidebar";
 import { AuthProvider, AuthGuard } from "../../lib/auth";
 import { hydrateProjectsFromBackend, migrateFromLegacyProfile } from "../../lib/projects";
+import { fetchProfile, mirrorInterfaceLanguage } from "../../lib/userProfile";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AuditNavProvider } from "../../lib/auditNavContext";
 import LocalBackendGate from "../../components/LocalBackendGate.jsx";
@@ -49,6 +50,7 @@ export default function AppLayout({ children }) {
 
 function AppLayoutInner({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isFullBleed = FULL_BLEED_PREFIXES.some((p) => pathname?.startsWith(p));
   const isWide = !isFullBleed && WIDE_PREFIXES.some((p) => pathname?.startsWith(p));
 
@@ -58,6 +60,18 @@ function AppLayoutInner({ children }) {
     // a valid auth token, so it's a no-op when signed out.
     migrateFromLegacyProfile();
     hydrateProjectsFromBackend();
+    // The profile's interface language, on a device that has not seen it
+    // yet: the server frame rendered from the cookie (or the browser), so if
+    // the profile says otherwise, write the cookie and re-render once.
+    let alive = true;
+    fetchProfile().then((profile) => {
+      if (alive && mirrorInterfaceLanguage(profile)) router.refresh();
+    });
+    return () => {
+      alive = false;
+    };
+    // `router` is stable; this runs once per mount on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

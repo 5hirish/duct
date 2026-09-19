@@ -1,3 +1,6 @@
+"use client";
+
+import { Trans } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Reveal } from "@/components/ui/reveal";
 
@@ -8,6 +11,8 @@ import { Reveal } from "@/components/ui/reveal";
 // canon table, not a fake skeleton pretending to know the page. A route
 // with a known shape (the Desk pattern) still renders its own skeleton
 // first — this is only what shows before that component has even mounted.
+// A client component so the one string here reads the root layout's Lingui
+// context: a Suspense fallback cannot itself await the request's catalogue.
 export default function Loading() {
   return (
     <Reveal
@@ -15,7 +20,7 @@ export default function Loading() {
       className="flex min-h-[50svh] items-center justify-center gap-2 text-sm text-muted-foreground"
     >
       <Spinner />
-      <span role="status">Loading…</span>
+      <span role="status"><Trans>Loading…</Trans></span>
     </Reveal>
   );
 }

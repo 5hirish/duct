@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Trans } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
 import { isDesktopShell } from "@/lib/shell";
@@ -30,21 +31,27 @@ export default function NotFound() {
         404
       </p>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-        Page not found
+        <Trans>Page not found</Trans>
       </h1>
       <p className="mt-3 max-w-md text-sm text-muted-foreground sm:text-base">
-        {desktop
-          ? "This screen doesn't exist or has moved. Nothing is wrong with your install."
-          : "The page you are looking for does not exist or has moved."}
+        {desktop ? (
+          <Trans>This screen doesn't exist or has moved. Nothing is wrong with your install.</Trans>
+        ) : (
+          <Trans>The page you are looking for does not exist or has moved.</Trans>
+        )}
       </p>
 
       <div className="mt-7 flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild size="lg">
-          <Link href="/insights/organic-growth">Go to Home</Link>
+          <Link href="/insights/organic-growth">
+            <Trans>Go to Home</Trans>
+          </Link>
         </Button>
         {!desktop && (
           <Button asChild variant="outline" size="lg">
-            <Link href="/">Go to Sign In</Link>
+            <Link href="/">
+              <Trans>Go to Sign In</Trans>
+            </Link>
           </Button>
         )}
       </div>

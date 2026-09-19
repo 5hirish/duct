@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Images, Smartphone } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { buildSlideDoc } from "@/lib/slideDoc";
 
 /**
@@ -17,6 +18,7 @@ import { buildSlideDoc } from "@/lib/slideDoc";
  *   - maxHeight: cap for the rendered phone height (px)
  */
 export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, onIndexChange, maxHeight = 600 }) {
+  const { t } = useLingui();
   const boxRef = useRef(null);
   const [boxW, setBoxW] = useState(340);
   const swipeX = useRef(null);
@@ -34,6 +36,7 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
 
   const total = slides.length;
   const clamped = Math.max(0, Math.min(index, Math.max(0, total - 1)));
+  const slideNo = clamped + 1;
   const current = slides[clamped];
 
   // Debounce the rendered slide so typing a caption doesn't reload the iframe
@@ -78,8 +81,8 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
         <CarouselHeader index={0} total={0} />
         <div className="flex aspect-[9/16] max-h-[520px] w-full flex-col items-center justify-center gap-2 text-center text-muted-foreground">
           <Images className="size-8" />
-          <p className="text-sm font-medium">No slides yet</p>
-          <p className="max-w-[16rem] text-xs">Slides appear here as the agent drafts them.</p>
+          <p className="text-sm font-medium"><Trans>No slides yet</Trans></p>
+          <p className="max-w-[16rem] text-xs"><Trans>Slides appear here as the agent drafts them.</Trans></p>
         </div>
       </div>
     );
@@ -97,7 +100,7 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
       >
         <div className="relative" style={{ width: w, height: h }}>
           <iframe
-            title={`slide ${clamped + 1} preview`}
+            title={t`slide ${slideNo} preview`}
             sandbox="allow-same-origin"
             srcDoc={srcDoc}
             scrolling="no"
@@ -122,17 +125,21 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
 
       {total > 1 && (
         <div className="flex flex-wrap items-center justify-center gap-1.5 px-3 py-2.5">
-          {slides.map((s, i) => (
+          {slides.map((s, i) => {
+            const n = i + 1;
+            const kind = s.kind;
+            return (
             <button
               key={s.slide_id || i}
               type="button"
               onClick={() => onIndexChange?.(i)}
-              title={`Slide ${i + 1}${s.kind && s.kind !== "photo" ? ` · ${s.kind}` : ""}`}
+              title={kind && kind !== "photo" ? t`Slide ${n} · ${kind}` : t`Slide ${n}`}
               className={`h-1.5 rounded-full transition-all ${
                 i === clamped ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60"
               }`}
             />
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -140,25 +147,27 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
 }
 
 function CarouselHeader({ index, total }) {
+  const { t } = useLingui();
   return (
     <div className="flex items-center justify-between border-b border-border/50 px-3 py-1.5">
       <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        <Smartphone className="size-3.5" /> Slides preview
+        <Smartphone className="size-3.5" /> <Trans>Slides preview</Trans>
       </span>
       <span className="text-2xs text-muted-foreground">
-        {total > 0 ? `${index + 1} / ${total}` : "sandboxed"}
+        {total > 0 ? `${index + 1} / ${total}` : t`sandboxed`}
       </span>
     </div>
   );
 }
 
 function NavButton({ side, onClick }) {
+  const { t } = useLingui();
   const Icon = side === "left" ? ChevronLeft : ChevronRight;
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={side === "left" ? "Previous slide" : "Next slide"}
+      aria-label={side === "left" ? t`Previous slide` : t`Next slide`}
       className={`absolute top-1/2 z-20 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur transition-colors hover:bg-black/80 ${
         side === "left" ? "left-2" : "right-2"
       }`}

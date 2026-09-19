@@ -13,7 +13,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { buildDesk, headline } from "@/lib/desk";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { HEADLINE_CLEAR, HEADLINE_NEEDS_YOU, buildDesk, headline } from "@/lib/desk";
 import { loadDesk, pinArtifact, pinConversation } from "@/lib/deskApi";
 import { getActiveProjectId, getProjectById, PROJECTS_CHANGED } from "@/lib/projects";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
@@ -24,6 +25,7 @@ import DeskLists from "./desk/DeskLists";
 import DeskActivity from "./desk/DeskActivity";
 import DeskComposer from "./desk/DeskComposer";
 import DeskDayOne from "./desk/DeskDayOne";
+import { useRelativeTime } from "./desk/useRelativeTime";
 
 // How often the desk re-reads its lists while a thread is working.
 const DESK_POLL_MS = 30_000;
@@ -33,6 +35,8 @@ const EMPTY = {
 };
 
 export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }) {
+  const { t } = useLingui();
+  const relative = useRelativeTime();
   const router = useRouter();
   // `null` until the active project has been read, which is not the same as
   // "" — signed in with no project at all, which the desk still has an answer
@@ -134,6 +138,10 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     lastRunAt,
     sourceCount: data.sourceCount,
   });
+  // Plain identifiers, so the catalogue names them ({needsYou}) rather than
+  // numbering them ({0}) — AGENTS.md, "Values in a string".
+  const { needsYou, found, sourceCount } = head;
+  const lastChecked = relative(head.lastRunAt);
 
   // Day one is "this project has produced nothing yet" — not "the fetch was
   // slow" and not "there is no project".
@@ -184,6 +192,7 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     }
   }
 
+  const topFinding = buckets.found[0]?.title || "";
   const composer = (
     <div className="sticky bottom-0 -mx-4 mt-10 bg-gradient-to-t from-background from-70% px-4 pb-4 pt-6">
       <DeskComposer
@@ -191,9 +200,9 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
         autonomy={autonomy}
         onAutonomyChange={setAutonomy}
         placeholder={
-          buckets.found[0]
-            ? `Ask about “${buckets.found[0].title}” — or anything else`
-            : "Ask me anything about your site"
+          topFinding
+            ? t`Ask about “${topFinding}” — or anything else`
+            : t`Ask me anything about your site`
         }
       />
     </div>
@@ -243,16 +252,39 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
             the ancestor the row-vs-stacked decision above just used. */}
         <div className="@container flex min-w-0 flex-col gap-8">
           <div>
-            <h1 className="text-3xl font-bold leading-tight tracking-tight">{head.title}</h1>
+            <h1 className="text-3xl font-bold leading-tight tracking-tight">
+              {head.state === HEADLINE_NEEDS_YOU ? (
+                <Plural value={needsYou} one="# thing needs you." other="# things need you." />
+              ) : head.state === HEADLINE_CLEAR ? (
+                <Trans>Nothing needs you right now.</Trans>
+              ) : (
+                <Trans>Nothing to report yet.</Trans>
+              )}
+            </h1>
             <p className="measure mt-2.5 text-sm leading-relaxed text-muted-foreground">
-              {head.sub}
+              {head.state === HEADLINE_CLEAR && (
+                <>
+                  <Plural value={found} one="# finding on file." other="# findings on file." />{" "}
+                </>
+              )}
+              {head.hasRun ? (
+                <Trans>
+                  Last checked {lastChecked}.{" "}
+                  <Plural value={sourceCount} one="# source connected." other="# sources connected." />
+                </Trans>
+              ) : (
+                <Trans>
+                  Nothing has run yet.{" "}
+                  <Plural value={sourceCount} one="# source connected." other="# sources connected." />
+                </Trans>
+              )}
             </p>
           </div>
 
           <DeskCards buckets={buckets} />
 
           <p className="-mt-4 text-xs text-muted-foreground">
-            Each item shows up in one card only — sorted by who&apos;s holding it.
+            <Trans>Each item shows up in one card only — sorted by who’s holding it.</Trans>
           </p>
 
           <DeskLists

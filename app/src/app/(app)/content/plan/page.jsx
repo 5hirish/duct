@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Trans } from "@lingui/react/macro";
 import { getActiveProjectId } from "@/lib/projects";
 import PlanBoard from "@/components/content/PlanBoard";
 
@@ -17,7 +18,7 @@ export default function PlanBoardPage() {
   if (!projectId) {
     return (
       <div className="flex h-full items-center justify-center p-8 text-center text-sm text-muted-foreground">
-        Select a project in the sidebar to view its plan.
+        <Trans>Select a project in the sidebar to view its plan.</Trans>
       </div>
     );
   }

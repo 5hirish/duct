@@ -14,6 +14,7 @@
 
 import { useState } from "react";
 import { Brain } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { MEMORY_KIND_ICONS, deleteMemory } from "@/lib/memoryApi";
 import { getActiveProject } from "@/lib/projects";
@@ -55,10 +56,10 @@ export function MemoryNote({ memories }) {
     <div className="my-1.5 flex flex-wrap items-center gap-1.5 px-1 text-xs text-muted-foreground">
       <Brain size={13} aria-hidden="true" />
       {live.length === 0 ? (
-        <span>Forgotten.</span>
+        <span><Trans>Forgotten.</Trans></span>
       ) : (
         <>
-          <span>Remembered:</span>
+          <span><Trans>Remembered:</Trans></span>
           {live.map((m, i) => (
             <span key={m.memory_id || m.id || i} className="inline-flex items-center gap-1">
               {projectId && m.memory_id ? (
@@ -81,7 +82,7 @@ export function MemoryNote({ memories }) {
               onClick={() => live.forEach((m) => m.memory_id && undo(m))}
               className="underline underline-offset-2 hover:text-foreground"
             >
-              Undo
+              <Trans>Undo</Trans>
             </button>
           )}
         </>
@@ -95,16 +96,19 @@ export function MemoryNote({ memories }) {
  * always be traceable to the facts behind it, and forgetting one should not
  * require going looking for it. */
 export function MemoryRecall({ memories }) {
+  const { t } = useLingui();
   const projectId = getActiveProject()?.id;
   const [forgotten, setForgotten] = useState(() => new Set());
   const { confirm, dialog } = useConfirm();
   if (!memories?.length) return null;
+  const recalledCount = memories.length;
 
   async function forget(memory) {
+    const title = memory.title;
     const ok = await confirm({
-      title: `Forget "${memory.title}"?`,
-      description: "The agents stop seeing it from the next turn.",
-      action: "Forget",
+      title: t`Forget "${title}"?`,
+      description: t`The agents stop seeing it from the next turn.`,
+      action: t`Forget`,
       destructive: true,
     });
     if (!ok) return;
@@ -122,7 +126,7 @@ export function MemoryRecall({ memories }) {
       <details className="my-1.5 px-1 text-xs text-muted-foreground">
       <summary className="cursor-pointer select-none hover:text-foreground">
         <Brain size={13} className="mr-1 inline-block align-[-2px]" aria-hidden="true" />
-        Recalled {memories.length} {memories.length === 1 ? "memory" : "memories"}
+        <Plural value={recalledCount} one="Recalled # memory" other="Recalled # memories" />
       </summary>
       <ul className="mt-1 flex flex-col gap-1">
         {memories.map((m) => (
@@ -149,7 +153,7 @@ export function MemoryRecall({ memories }) {
                 onClick={() => forget(m)}
                 className="shrink-0 underline underline-offset-2 hover:text-foreground"
               >
-                Forget
+                <Trans>Forget</Trans>
               </button>
             )}
           </li>
@@ -157,7 +161,7 @@ export function MemoryRecall({ memories }) {
       </ul>
       {projectId && (
         <a href={`/project/${projectId}/memory`} className="mt-1 inline-block underline underline-offset-2 hover:text-foreground">
-          Open the project timeline
+          <Trans>Open the project timeline</Trans>
         </a>
       )}
     </details>

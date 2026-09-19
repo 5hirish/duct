@@ -13,6 +13,7 @@
  * exists, and it keeps working with JavaScript still loading.
  */
 
+import { Trans } from "@lingui/react/macro";
 import AutoFallbackCard from "@/components/AutoFallbackCard";
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 
@@ -20,9 +21,11 @@ export default function AdvancedSettings({ ladder }) {
   return (
     <details className="mt-advanced">
       <summary>
-        <span className="mt-advanced-title">Advanced</span>
+        <span className="mt-advanced-title">
+          <Trans>Advanced</Trans>
+        </span>
         <span className="mt-advanced-hint">
-          Quota fallback and context compression
+          <Trans>Quota fallback and context compression</Trans>
         </span>
       </summary>
 

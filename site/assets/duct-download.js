@@ -26,16 +26,19 @@
   var RELEASES = 'https://github.com/5hirish/duct/releases';
   var LATEST = 'https://github.com/5hirish/duct/releases/latest/download/';
 
+// Localised pages carry window.DUCT_I18N (scripts/build_site_i18n.py); the literal must stay inline at the call.
+var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m && m[s]) || s; };
+
   // Fixed names published by the release workflow. Renaming one here without
   // renaming it there produces a 404 that nothing in CI notices.
   var SLOTS = [
-    { key: 'macos',          label: 'macOS',            hint: 'Universal · Apple silicon and Intel',
+    { key: 'macos',          label: 'macOS',            hint: ductT('Universal · Apple silicon and Intel'),
       file: 'Duct-macOS-universal.dmg',   ext: '.dmg' },
-    { key: 'windows',        label: 'Windows',          hint: 'Windows 10 and later',
+    { key: 'windows',        label: 'Windows',          hint: ductT('Windows 10 and later'),
       file: 'Duct-Windows-x64-setup.exe', ext: '.exe installer' },
-    { key: 'linux-appimage', label: 'Linux (AppImage)', hint: 'Runs on any distribution',
+    { key: 'linux-appimage', label: 'Linux (AppImage)', hint: ductT('Runs on any distribution'),
       file: 'Duct-Linux-x86_64.AppImage', ext: '.AppImage' },
-    { key: 'linux-deb',      label: 'Linux (.deb)',     hint: 'Debian and Ubuntu',
+    { key: 'linux-deb',      label: 'Linux (.deb)',     hint: ductT('Debian and Ubuntu'),
       file: 'Duct-Linux-amd64.deb',       ext: '.deb' }
   ];
 
@@ -127,8 +130,8 @@
       el.setAttribute('download', '');
       // `short` is for tight spots (the nav) where the platform name does not fit.
       el.textContent = el.hasAttribute('data-duct-download-short')
-        ? 'Download ↓'
-        : 'Download for ' + label + ' ↓';
+        ? ductT('Download ↓')
+        : ductT('Download for {label} ↓').replace('{label}', label);
     }
   }
 

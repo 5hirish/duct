@@ -16,6 +16,7 @@
  * for every existing install.
  */
 
+import { msg } from "@lingui/core/macro";
 import { BASE, backendAuthedHeaders } from "./api";
 import { providerKeyHeaders } from "./providerKeys";
 
@@ -26,6 +27,9 @@ export const MODEL_MAP_CHANGED = "duct:model-map-changed";
 
 /**
  * Named Heavy / Standard / Light, not Intelligent / Balanced / Quick.
+ *
+ * `label` and `tagline` are Lingui descriptors, not strings: render them with
+ * `i18n._(tier.label)` from `useLingui()`. Every label table in this file is.
  *
  * The icons run the same metaphor the names do — an anvil, a balance scale and
  * a feather — so the three cards are told apart by shape before anyone reads a
@@ -39,21 +43,21 @@ export const MODEL_MAP_CHANGED = "duct:model-map-changed";
 export const TIERS = [
   {
     key: "heavy",
-    label: "Heavy",
+    label: msg`Heavy`,
     icon: "anvil",
-    tagline: "The work you act on",
+    tagline: msg`The work you act on`,
   },
   {
     key: "standard",
-    label: "Standard",
+    label: msg`Standard`,
     icon: "scale",
-    tagline: "Most of what runs",
+    tagline: msg`Most of what runs`,
   },
   {
     key: "light",
-    label: "Light",
+    label: msg`Light`,
     icon: "feather",
-    tagline: "High volume, low judgement",
+    tagline: msg`High volume, low judgement`,
   },
 ];
 
@@ -96,12 +100,12 @@ export function getTier(key) {
  *    your own keys" reads as done when nothing has been brought.
  */
 export const SOURCE_LABELS = {
-  user: "Your key",
-  stored: "Your saved key",
-  env: "This computer's key",
-  cloud: "Duct's key",
-  subscription: "Your ChatGPT plan",
-  none: "Not set",
+  user: msg`Your key`,
+  stored: msg`Your saved key`,
+  env: msg`This computer's key`,
+  cloud: msg`Duct's key`,
+  subscription: msg`Your ChatGPT plan`,
+  none: msg`Not set`,
 };
 
 /**
@@ -113,22 +117,22 @@ export const SOURCE_LABELS = {
  * a sentence written for somewhere else always sounds like.
  */
 export const SOURCE_SENTENCE = {
-  user: "Running on the key you pasted — this browser session only.",
-  stored: "Running on your saved key, the one that also funds scheduled runs.",
-  env: "Running on a key already on this computer, not one you added here.",
-  cloud: "Running on Duct's own key — we are paying for these runs.",
-  subscription: "Running on the ChatGPT plan you signed in with on this desktop.",
-  none: "No key set for these models yet.",
+  user: msg`Running on the key you pasted — this browser session only.`,
+  stored: msg`Running on your saved key, the one that also funds scheduled runs.`,
+  env: msg`Running on a key already on this computer, not one you added here.`,
+  cloud: msg`Running on Duct's own key — we are paying for these runs.`,
+  subscription: msg`Running on the ChatGPT plan you signed in with on this desktop.`,
+  none: msg`No key set for these models yet.`,
 };
 
 /** Longer form, for the provider tiles where there is room for a clause. */
 export const SOURCE_DETAIL = {
-  user: "Using the key you pasted — this browser session only",
-  stored: "Using your saved key — the one that also funds scheduled runs",
-  env: "Using a key already on the machine running Duct, not one you added here",
-  cloud: "Using Duct's own key — we're paying for this run",
-  subscription: "Using the ChatGPT plan you signed in with on this desktop",
-  none: "No key set",
+  user: msg`Using the key you pasted — this browser session only`,
+  stored: msg`Using your saved key — the one that also funds scheduled runs`,
+  env: msg`Using a key already on the machine running Duct, not one you added here`,
+  cloud: msg`Using Duct's own key — we're paying for this run`,
+  subscription: msg`Using the ChatGPT plan you signed in with on this desktop`,
+  none: msg`No key set`,
 };
 
 /** Green is reserved for a key the reader put there themselves. */

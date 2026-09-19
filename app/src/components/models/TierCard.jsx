@@ -20,6 +20,7 @@
  */
 
 import { Anvil, Feather, Scale } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import ModelPicker from "./ModelPicker";
 import StateChip from "./StateChip";
 import { SOURCE_DETAIL, SOURCE_LABELS, SOURCE_TONE, modelLabel } from "@/lib/modelTiers";
@@ -39,6 +40,7 @@ export default function TierCard({
   showSource,
   onChange,
 }) {
+  const { t, i18n } = useLingui();
   const provider = providersById[preview?.provider] || null;
   const source = provider?.source || "none";
   const blocked = preview && !preview.runnable;
@@ -46,6 +48,9 @@ export default function TierCard({
   const offEngine = preview?.reason === "engine_unsupported";
   const TierIcon = TIER_ICONS[tier.icon] || Scale;
   const selected = models.find((model) => model.id === value);
+  const tierName = i18n._(tier.label);
+  // Mid-sentence after "so", the tier name loses its capital.
+  const tierNameLower = tierName.toLowerCase();
   // The resolver answers with an id; the picker above shows a name, and the
   // promise under it should be in the same words.
   const servesName = serves
@@ -59,15 +64,15 @@ export default function TierCard({
           <TierIcon size={17} strokeWidth={1.75} />
         </span>
         <div className="mt-tier-name">
-          <h3>{tier.label}</h3>
-          <p>{tier.tagline}</p>
+          <h3>{tierName}</h3>
+          <p>{i18n._(tier.tagline)}</p>
         </div>
       </div>
 
       <div className="mt-tier-control">
         <ModelPicker
           id={`tier-${tier.key}`}
-          label={`Model for the ${tier.label} tier`}
+          label={t`Model for the ${tierName} tier`}
           loading={loading}
           value={value}
           models={models}
@@ -81,27 +86,53 @@ export default function TierCard({
         {preview && (blocked || showSource) && (
           <StateChip
             tone={blocked ? "warn" : SOURCE_TONE[source] || "neutral"}
-            title={blocked ? undefined : SOURCE_DETAIL[source]}
+            title={blocked ? undefined : i18n._(SOURCE_DETAIL[source])}
           >
-            {blocked ? (offEngine ? "Not on this engine" : "No key") : SOURCE_LABELS[source] || "Ready"}
+            {blocked ? (
+              offEngine ? (
+                <Trans>Not on this engine</Trans>
+              ) : (
+                <Trans>No key</Trans>
+              )
+            ) : SOURCE_LABELS[source] ? (
+              i18n._(SOURCE_LABELS[source])
+            ) : (
+              <Trans>Ready</Trans>
+            )}
           </StateChip>
         )}
       </div>
 
       {/* The promise. Rendered from the server's own resolution, never from a
-          guess about which keys this browser holds. */}
+          guess about which keys this browser holds. One whole sentence per
+          case rather than fragments joined in order: a translator has to be
+          able to move the model name and the tier name around each other. */}
       {blocked && (
         <p className="mt-tier-fallback">
           {serves ? (
-            <>
-              {offEngine ? (
-                <>This engine runs Anthropic models only, so </>
-              ) : null}
-              {offEngine ? tier.label.toLowerCase() : tier.label} jobs run on <b>{servesName}</b>
-              {serves.engine_default ? " — this engine's default" : " until you add a key"}.
-            </>
+            offEngine ? (
+              serves.engine_default ? (
+                <Trans>
+                  This engine runs Anthropic models only, so {tierNameLower} jobs run on{" "}
+                  <b>{servesName}</b> — this engine's default.
+                </Trans>
+              ) : (
+                <Trans>
+                  This engine runs Anthropic models only, so {tierNameLower} jobs run on{" "}
+                  <b>{servesName}</b> until you add a key.
+                </Trans>
+              )
+            ) : serves.engine_default ? (
+              <Trans>
+                {tierName} jobs run on <b>{servesName}</b> — this engine's default.
+              </Trans>
+            ) : (
+              <Trans>
+                {tierName} jobs run on <b>{servesName}</b> until you add a key.
+              </Trans>
+            )
           ) : (
-            <>Nothing below this tier can run either — add a key to use {tier.label}.</>
+            <Trans>Nothing below this tier can run either — add a key to use {tierName}.</Trans>
           )}
         </p>
       )}

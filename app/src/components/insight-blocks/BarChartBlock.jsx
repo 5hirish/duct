@@ -2,14 +2,16 @@
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { numericField } from "../../lib/insightData";
+import { useLingui } from "@lingui/react/macro";
 
 export default function BarChartBlock({ title, rows, xField, yField, insightNote = "" }) {
+  const { t } = useLingui();
   if (!rows?.length || !xField || !yField) return null;
   const chartData = rows.map((row) => ({ ...row, __value: numericField(row, yField) }));
 
   return (
     <section>
-      <p className="rpt-section-label">{title || "Bar chart"}</p>
+      <p className="rpt-section-label">{title || t`Bar chart`}</p>
       <div style={{ width: "100%", height: 280 }}>
         <ResponsiveContainer>
           <BarChart data={chartData}>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ function loadProjectsState() {
 }
 
 export default function ProjectSwitcher() {
+  const { t } = useLingui();
   const router = useRouter();
   const pathname = usePathname();
   const [projects, setProjects] = useState([]);
@@ -63,7 +65,7 @@ export default function ProjectSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="rounded-full">
-          {activeProject?.name || "Select project"}
+          {activeProject?.name || t`Select project`}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -73,7 +75,7 @@ export default function ProjectSwitcher() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleNewProject}>+ New project</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleNewProject}><Trans>+ New project</Trans></DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

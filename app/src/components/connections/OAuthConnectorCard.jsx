@@ -11,6 +11,7 @@
 // navigating anywhere. See `lib/connectorAuth.js`.
 
 import { useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,7 @@ export default function OAuthConnectorCard({
   onEntityChange,
   mappingBusy,
 }) {
+  const { t } = useLingui();
   // A stored row is durable wherever the server happens to be; without one the
   // token exists only in this tab, which is the case worth naming.
   const storage = syncedToAccount
@@ -88,7 +90,7 @@ export default function OAuthConnectorCard({
     }
   }
 
-  const connectLabel = phase === "browser" ? "Waiting for your browser…" : "Sign in with Google";
+  const connectLabel = phase === "browser" ? t`Waiting for your browser…` : t`Sign in with Google`;
 
   return (
     <>
@@ -139,10 +141,10 @@ export default function OAuthConnectorCard({
                 variant="destructive"
                 onClick={() => setConfirmingDisconnect(true)}
               >
-                Disconnect
+                <Trans>Disconnect</Trans>
               </Button>
               <Button size="sm" variant="secondary" onClick={connect} disabled={phase === "starting"}>
-                {phase === "browser" ? "Waiting for your browser…" : "Reconnect"}
+                {phase === "browser" ? <Trans>Waiting for your browser…</Trans> : <Trans>Reconnect</Trans>}
               </Button>
             </>
           ) : (
@@ -158,15 +160,17 @@ export default function OAuthConnectorCard({
           <div className="conn-dialog-section">
             {phase === "browser" && (
               <p className="conn-hint">
-                Finish in your browser — Google won&rsquo;t sign you in inside an app
-                window. This card updates on its own when you&rsquo;re done.{" "}
-                <button
-                  type="button"
-                  className="app-link underline underline-offset-2"
-                  onClick={connect}
-                >
-                  Open it again
-                </button>
+                <Trans>
+                  Finish in your browser — Google won’t sign you in inside an app
+                  window. This card updates on its own when you’re done.{" "}
+                  <button
+                    type="button"
+                    className="app-link underline underline-offset-2"
+                    onClick={connect}
+                  >
+                    Open it again
+                  </button>
+                </Trans>
               </p>
             )}
             {/* The storage sentence lives in the glyph's tooltip; printing it
@@ -179,9 +183,11 @@ export default function OAuthConnectorCard({
                 box with nothing in it. */}
             {oauthConnected && storage === STORAGE_SESSION && (
               <p className="conn-hint">
-                {signedIn
-                  ? "Reconnect to save it to your account."
-                  : "Sign in to save it to your account."}
+                {signedIn ? (
+                  <Trans>Reconnect to save it to your account.</Trans>
+                ) : (
+                  <Trans>Sign in to save it to your account.</Trans>
+                )}
               </p>
             )}
           </div>
@@ -207,15 +213,21 @@ export default function OAuthConnectorCard({
       <AlertDialog open={confirmingDisconnect} onOpenChange={setConfirmingDisconnect}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disconnect &ldquo;{title}&rdquo;?</AlertDialogTitle>
+            <AlertDialogTitle>
+              <Trans>Disconnect “{title}”?</Trans>
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Duct forgets these credentials. Reports and scheduled runs that
-              read from {title} stop working until you connect it again, and
-              reconnecting means signing in with Google once more.
+              <Trans>
+                Duct forgets these credentials. Reports and scheduled runs that
+                read from {title} stop working until you connect it again, and
+                reconnecting means signing in with Google once more.
+              </Trans>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep it</AlertDialogCancel>
+            <AlertDialogCancel type="button">
+              <Trans>Keep it</Trans>
+            </AlertDialogCancel>
             <AlertDialogAction
               type="button"
               className={buttonVariants({ variant: "destructive" })}
@@ -224,7 +236,7 @@ export default function OAuthConnectorCard({
                 onDisconnect?.();
               }}
             >
-              Disconnect
+              <Trans>Disconnect</Trans>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

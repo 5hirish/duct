@@ -7,3 +7,7 @@ smoke-shots
 
 # screenshots from scripts/smoke-agent-workspaces.mjs
 smoke-shots/
+
+# Compiled message catalogues: `lingui compile` writes them from the .po files
+src/locales/*/messages.mjs
+src/locales/*/messages.js

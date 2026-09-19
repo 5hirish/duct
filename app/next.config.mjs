@@ -1,4 +1,5 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import { linguiMacroSwcPlugin } from "@lingui/swc-plugin/options";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -9,6 +10,10 @@ const nextConfig = {
     // Smaller initial dev-server footprint on low-RAM machines.
     preloadEntriesOnStart: false,
     serverSourceMaps: false,
+    // Expands the Lingui macros (<Trans>, t``, msg``) at compile time, so a
+    // message's id is derived from its English text and no key is ever
+    // invented by hand. Reads lingui.config.mjs for the locale list.
+    swcPlugins: [linguiMacroSwcPlugin()],
   },
   /**
    * Browser profiling is granted per document, not per SDK.

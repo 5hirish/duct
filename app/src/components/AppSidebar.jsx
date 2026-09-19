@@ -24,6 +24,8 @@ import {
   Cookie,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { plural } from "@lingui/core/macro";
 import {
   Sidebar,
   SidebarContent,
@@ -68,6 +70,10 @@ const GITHUB_ISSUES_URL =
   "https://github.com/5hirish/duct/issues/new?template=bug_report.yml";
 const GITHUB_DISCUSSIONS_URL =
   "https://github.com/5hirish/duct/discussions/new?category=ideas";
+
+// The wordmark is the brand, lower-case by design, and not copy: it is the one
+// string on the sidebar a translator must never touch.
+const WORDMARK = "duct";
 import {
   PROJECTS_CHANGED,
   getActiveProjectId,
@@ -78,6 +84,7 @@ import {
 import { faviconUrl } from "@/lib/favicon";
 import { CONNECTORS_CHANGED, countConnectedSources } from "@/lib/connectorsApi";
 import { NAV_SECTIONS } from "@/lib/navigation";
+import { LanguageMenuItem } from "@/components/LanguageMenu";
 
 // ---------------------------------------------------------------------------
 // Project switcher in sidebar header
@@ -107,6 +114,7 @@ function ProjectAvatar({ project, wrapperClass, imgSize = 16 }) {
 
 function SidebarProjectSwitcher() {
   const router = useRouter();
+  const { t } = useLingui();
   const [projects, setProjects] = useState([]);
   const [activeId, setActiveId] = useState("");
 
@@ -145,7 +153,7 @@ function SidebarProjectSwitcher() {
           <Plus className="size-4" />
         </span>
         <span className="flex-1 truncate font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-          New project
+          <Trans>New project</Trans>
         </span>
       </button>
     );
@@ -161,7 +169,7 @@ function SidebarProjectSwitcher() {
             imgSize={16}
           />
           <span className="flex-1 truncate font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            {active?.name || "Select project"}
+            {active?.name || t`Select project`}
           </span>
           <ChevronsUpDown className="size-3.5 shrink-0 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
         </button>
@@ -181,7 +189,7 @@ function SidebarProjectSwitcher() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push("/projects")}>
           <Plus className="size-4" />
-          <span>New project</span>
+          <span><Trans>New project</Trans></span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -248,23 +256,24 @@ function NotificationMenuItem() {
  * "Blocked") cannot be produced in a browser at all, which is exactly why they
  * are the ones that go unreviewed. `/preview` renders all four side by side. */
 export function NotificationRow({ permission, hasSettingsPage = false, onAct }) {
+  const { t } = useLingui();
   // "system" is the only row whose label depends on more than the permission:
   // it is an action when the shell can open the OS page and a statement when it
   // cannot (Linux, or a shell older than `open_notification_settings`).
   const states = {
-    default:     { icon: Bell,     badge: "Off",      label: "Enable notifications", clickable: true  },
-    granted:     { icon: BellRing, badge: "On",       label: "Notifications",        clickable: false },
-    denied:      { icon: BellOff,  badge: "Blocked",  label: "Notifications",        clickable: false },
+    default:     { icon: Bell,     badge: t`Off`,      label: t`Enable notifications`, clickable: true  },
+    granted:     { icon: BellRing, badge: t`On`,       label: t`Notifications`,        clickable: false },
+    denied:      { icon: BellOff,  badge: t`Blocked`,  label: t`Notifications`,        clickable: false },
     system: hasSettingsPage
-      ? { icon: BellRing, badge: "System", label: "Notification settings", clickable: true  }
-      : { icon: BellRing, badge: "System", label: "Notifications",         clickable: false },
+      ? { icon: BellRing, badge: t`System`, label: t`Notification settings`, clickable: true  }
+      : { icon: BellRing, badge: t`System`, label: t`Notifications`,         clickable: false },
   };
   const { icon: Icon, badge, label, clickable } = states[permission] ?? states.default;
 
   const hint =
-    permission === "denied" ? "Blocked in browser — open Site Settings to re-enable" :
-    permission === "system" && hasSettingsPage ? "Duct posts through the OS — open System Settings to turn them on or off" :
-    permission === "system" ? "Handled by the OS — change it in your system notification settings" :
+    permission === "denied" ? t`Blocked in browser — open Site Settings to re-enable` :
+    permission === "system" && hasSettingsPage ? t`Duct posts through the OS — open System Settings to turn them on or off` :
+    permission === "system" ? t`Handled by the OS — change it in your system notification settings` :
     undefined;
 
   return (
@@ -272,14 +281,18 @@ export function NotificationRow({ permission, hasSettingsPage = false, onAct }) 
       // Opening System Settings puts another window in front; closing the menu
       // first means returning to the app does not land back inside a stale one.
       onSelect={clickable ? onAct : undefined}
-      className={`flex items-center justify-between ${!clickable ? "cursor-default opacity-60" : ""}`}
+      className={`flex items-center justify-between gap-2 ${!clickable ? "cursor-default opacity-60" : ""}`}
       title={hint}
     >
-      <span className="flex items-center gap-2">
-        <Icon className="size-4" />
-        {label}
+      {/* The label truncates rather than wraps: "Notification settings" plus
+          the badge is wider than the menu in English and wider still in
+          German, and a two-line row in a list of one-line rows reads as a
+          mistake. The hint carries the full sentence. */}
+      <span className="flex min-w-0 items-center gap-2">
+        <Icon className="size-4 shrink-0" />
+        <span className="truncate">{label}</span>
       </span>
-      <span className={`rounded px-1.5 py-0.5 font-mono text-2xs ${
+      <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-2xs ${
         permission === "granted" ||
         permission === "system"   ? "bg-success/15 text-success" :
         permission === "denied"   ? "bg-destructive/10 text-destructive" :
@@ -320,11 +333,11 @@ function ProfileMenuItem() {
       <Link href="/settings/profile">
         <span className="flex items-center gap-2">
           <SlidersHorizontal className="size-4" />
-          Profile
+          <Trans>Profile</Trans>
         </span>
         {set && (
           <span className="rounded bg-primary/10 px-1.5 py-0.5 text-2xs font-medium text-primary">
-            Set
+            <Trans>Set</Trans>
           </span>
         )}
       </Link>
@@ -334,6 +347,7 @@ function ProfileMenuItem() {
 
 function SidebarUserFooter() {
   const { user, signOut } = useAuth();
+  const { t } = useLingui();
 
   if (!user) return null;
 
@@ -359,18 +373,18 @@ function SidebarUserFooter() {
           </span>
           <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
             <span className="truncate text-xs font-medium text-sidebar-foreground">
-              {user.guest ? "Guest" : user.name || user.email}
+              {user.guest ? t`Guest` : user.name || user.email}
             </span>
             {/* A guest's email is a synthetic install id; the useful second
                 line is what an account would do for them. */}
             <span className="truncate text-2xs text-sidebar-foreground/50">
-              {user.guest ? "Sign in to save your work" : user.email}
+              {user.guest ? t`Sign in to save your work` : user.email}
             </span>
           </div>
           <ChevronsUpDown className="ml-auto size-3.5 shrink-0 text-sidebar-foreground/40 group-data-[collapsible=icon]:hidden" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="start" side="top">
+      <DropdownMenuContent className="w-64" align="start" side="top">
         {user.guest && (
           <>
             {/* The one thing a guest cannot do yet. Sign-in links this guest's
@@ -378,7 +392,7 @@ function SidebarUserFooter() {
             <DropdownMenuItem asChild>
               <Link href="/">
                 <LogIn className="size-4" />
-                <span>Sign in to keep this</span>
+                <span><Trans>Sign in to keep this</Trans></span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -387,7 +401,7 @@ function SidebarUserFooter() {
         <DropdownMenuItem asChild>
           <Link href="/projects">
             <Settings className="size-4" />
-            <span>Manage projects</span>
+            <span><Trans>Manage projects</Trans></span>
           </Link>
         </DropdownMenuItem>
         {/* Beside Preferences on purpose: what you declare and what Duct has
@@ -395,7 +409,7 @@ function SidebarUserFooter() {
         <DropdownMenuItem asChild>
           <Link href="/memory">
             <Brain className="size-4" />
-            <span>Your memory</span>
+            <span><Trans>Your memory</Trans></span>
           </Link>
         </DropdownMenuItem>
         {/* Was an "Engine" dialog that could only change the harness — it
@@ -404,10 +418,13 @@ function SidebarUserFooter() {
         <DropdownMenuItem asChild>
           <Link href="/settings/models">
             <Cpu className="size-4" />
-            <span>Models &amp; providers</span>
+            <span><Trans>Models &amp; providers</Trans></span>
           </Link>
         </DropdownMenuItem>
         <ProfileMenuItem />
+        {/* The profile page has the same control; here it is one click away
+            for someone who landed in a language they cannot read. */}
+        <LanguageMenuItem />
         <NotificationMenuItem />
         <DropdownMenuSeparator />
         {/* Plain new-tab links: installExternalLinkHandler (lib/shell.js)
@@ -416,13 +433,13 @@ function SidebarUserFooter() {
         <DropdownMenuItem asChild>
           <a href={GITHUB_ISSUES_URL} target="_blank" rel="noreferrer noopener">
             <Bug className="size-4" />
-            <span>Report a bug</span>
+            <span><Trans>Report a bug</Trans></span>
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a href={GITHUB_DISCUSSIONS_URL} target="_blank" rel="noreferrer noopener">
             <Lightbulb className="size-4" />
-            <span>Suggest an improvement</span>
+            <span><Trans>Suggest an improvement</Trans></span>
           </a>
         </DropdownMenuItem>
         {/* No cookies to settle in the desktop shell — it loads no tags. */}
@@ -431,13 +448,13 @@ function SidebarUserFooter() {
             onClick={() => window.dispatchEvent(new Event(CONSENT_SETTINGS_EVENT))}
           >
             <Cookie className="size-4" />
-            <span>Cookie settings</span>
+            <span><Trans>Cookie settings</Trans></span>
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" />
-          <span>Log out</span>
+          <span><Trans>Log out</Trans></span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -449,6 +466,7 @@ function SidebarUserFooter() {
 // ---------------------------------------------------------------------------
 
 function ThemeSidebarItem() {
+  const { t } = useLingui();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -459,10 +477,10 @@ function ThemeSidebarItem() {
     <SidebarMenuItem>
       <SidebarMenuButton
         onClick={() => mounted && setTheme(isDark ? "light" : "dark")}
-        tooltip={isDark ? "Light mode" : "Dark mode"}
+        tooltip={isDark ? t`Light mode` : t`Dark mode`}
       >
         {mounted && isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-        <span>{mounted && isDark ? "Light mode" : "Dark mode"}</span>
+        <span>{mounted && isDark ? t`Light mode` : t`Dark mode`}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -535,6 +553,7 @@ function useConnectionCount() {
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const { t, i18n } = useLingui();
   const connectionCount = useConnectionCount();
 
   function isActive(item) {
@@ -552,7 +571,7 @@ export default function AppSidebar() {
             href="/insights/organic-growth"
             className="inline-flex items-center gap-1.5 font-serif text-lg tracking-tight text-sidebar-foreground hover:text-primary transition-colors"
           >
-            duct
+            {WORDMARK}
             <span
               className="size-2 rounded-full bg-[var(--orange)] animate-[pop_2.5s_ease-in-out_infinite]"
               aria-hidden
@@ -566,7 +585,7 @@ export default function AppSidebar() {
           <Link
             href="/insights/organic-growth"
             className="inline-flex items-end gap-0.5 font-serif text-xl font-bold tracking-tight text-sidebar-foreground hover:text-primary transition-colors leading-none"
-            aria-label="duct home"
+            aria-label={t`duct home`}
           >
             d
             <span
@@ -592,25 +611,26 @@ export default function AppSidebar() {
 
             <SidebarGroup className="py-2">
               <SidebarGroupLabel className="px-4 text-2xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                {section.label}
+                {i18n._(section.label)}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item);
+                    const label = i18n._(item.label);
 
                     if (!item.available) {
                       return (
                         <SidebarMenuItem key={item.key}>
                           <SidebarMenuButton
                             className="cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground/45"
-                            tooltip={`${item.label} — coming soon`}
+                            tooltip={t`${label} — coming soon`}
                           >
                             <Icon className="size-4" />
-                            <span>{item.label}</span>
+                            <span>{label}</span>
                             <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-2xs leading-none text-muted-foreground">
-                              Soon
+                              <Trans>Soon</Trans>
                             </span>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -619,10 +639,10 @@ export default function AppSidebar() {
 
                     return (
                       <SidebarMenuItem key={item.key}>
-                        <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                        <SidebarMenuButton asChild isActive={active} tooltip={label}>
                           <Link href={item.href}>
                             <Icon className="size-4" />
-                            <span>{item.label}</span>
+                            <span>{label}</span>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -643,18 +663,22 @@ export default function AppSidebar() {
             <SidebarMenuButton
               asChild
               isActive={pathname.startsWith("/connections")}
-              tooltip={connectionCount ? `Connections · ${connectionCount} active` : "Connections — add a source"}
+              tooltip={
+                connectionCount
+                  ? plural(connectionCount, { one: "Connections · # active", other: "Connections · # active" })
+                  : t`Connections — add a source`
+              }
             >
               <Link href="/connections">
                 <Plug className="size-4" />
-                <span>Connections</span>
+                <span><Trans>Connections</Trans></span>
                 {connectionCount > 0 ? (
                   <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-px text-2xs leading-none font-medium text-primary group-data-[collapsible=icon]:hidden">
                     {connectionCount}
                   </span>
                 ) : (
                   <span className="ml-auto text-2xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-                    New
+                    <Trans>New</Trans>
                   </span>
                 )}
               </Link>

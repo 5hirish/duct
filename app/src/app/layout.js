@@ -5,6 +5,10 @@ import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import { ProductAnalytics } from "../components/ProductAnalytics";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Trans } from "@lingui/react/macro";
+
+import { LinguiClientProvider } from "../i18n/LinguiClientProvider";
+import { activateRequestI18n } from "../i18n/server";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -79,10 +83,14 @@ export const viewport = {
   ],
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  // Reading the cookie makes every route dynamic. That is already true of an
+  // app that renders behind a bearer token, and it is the only way the first
+  // frame arrives in the right language instead of flashing English.
+  const i18n = await activateRequestI18n();
   return (
     <html
-      lang="en"
+      lang={i18n.locale}
       className={`${dmSans.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
@@ -90,14 +98,16 @@ export default function RootLayout({ children }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="duct-theme">
           <TooltipProvider>
             <a href="#main-content" className="skip-link">
-              Skip to main content
+              <Trans>Skip to main content</Trans>
             </a>
             {/* No GTM <noscript> iframe. It was the one thing that loaded a tag
                 without asking, and it bought nothing: GA4 needs JavaScript, so
                 with JS off the frame measures a visitor it cannot report on.
                 The seam in lib/analytics is the only path in now. */}
             <ProductAnalytics />
-            {children}
+            <LinguiClientProvider initialLocale={i18n.locale} initialMessages={i18n.messages}>
+              {children}
+            </LinguiClientProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>

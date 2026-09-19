@@ -2,7 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const port = Number(process.env.PORT || 4317);
+const { PORT: port } = require("./port");
 const root = path.resolve(__dirname, "..", "..");
 
 const routeMap = {

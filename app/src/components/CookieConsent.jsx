@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Trans } from "@lingui/react/macro";
 
 import { Button } from "@/components/ui/button";
 
@@ -34,28 +35,30 @@ export function CookieConsent({ onAccept, onDecline }) {
           tabIndex={-1}
           className="mb-1.5 text-sm font-semibold text-foreground outline-none"
         >
-          Cookies, honestly
+          <Trans>Cookies, honestly</Trans>
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          We use Google Analytics to see which pages earn a signup. That is the whole
-          use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves
-          exactly the same.{" "}
-          <a
-            href="https://getduct.ai/privacy"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="text-foreground underline underline-offset-2"
-          >
-            Privacy Policy
-          </a>
+          <Trans>
+            We use Google Analytics to see which pages earn a signup. That is the whole
+            use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves
+            exactly the same.{" "}
+            <a
+              href="https://getduct.ai/privacy"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-foreground underline underline-offset-2"
+            >
+              Privacy Policy
+            </a>
+          </Trans>
         </p>
       </div>
       <div className="flex w-full shrink-0 gap-2.5 sm:w-auto">
         <Button variant="outline" className="flex-1 sm:flex-none" onClick={onDecline}>
-          Decline
+          <Trans>Decline</Trans>
         </Button>
         <Button className="flex-1 sm:flex-none" onClick={onAccept}>
-          Accept
+          <Trans>Accept</Trans>
         </Button>
       </div>
     </section>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Ductの原則 — このプロジェクトが信じるもの、そしてその理由</title>
+<link rel="canonical" href="https://getduct.ai/ja/doctrine"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/doctrine"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/doctrine"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/doctrine"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/doctrine"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/doctrine"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/doctrine"/>
+<!-- hreflang:end -->
+<meta name="description" content="Ductが基づく7つの意見。それぞれを強制するファイル付き：行動前の承認、エージェントハーネスのレンタル、所有権よりもメンバーシップ、そしてエージェントが書いたコードがここで歓迎される理由。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://getduct.ai/ja/doctrine"/>
+<meta property="og:title" content="Ductの原則 — このプロジェクトが信じるもの、そしてその理由"/>
+<meta property="og:description" content="Ductが基づく7つの意見。それぞれを強制するファイル付き。本番環境への変更を提案できるが承認できないエージェント、およびその他の6つの立場。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/doctrine.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Ductの原則 — このプロジェクトが信じるもの、そしてその理由"/>
+<meta name="twitter:description" content="Ductが基づく7つの意見。それぞれを強制するファイル付き。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/doctrine.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Ductブログ" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Duct Doctrine",
+  "url": "https://getduct.ai/doctrine",
+  "description": "Seven opinions Duct is built on, each with the file that enforces it.",
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": ["https://github.com/5hirish", "https://x.com/5hirish", "https://youtube.com/@5hirish"]
+  },
+  "publisher": { "@type": "Organization", "name": "Duct", "url": "https://getduct.ai" },
+  "mainEntityOfPage": "https://getduct.ai/doctrine"
+}
+</script>
+<style>
+/* ── DOCTRINE-ONLY STYLES ── */
+.doc-hero {
+  padding: 150px 52px 70px; max-width: 780px; margin: 0 auto; text-align: center;
+}
+.doc-hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(40px, 6.5vw, 74px);
+  line-height: 1.05; letter-spacing: -2px; color: var(--navy); margin-bottom: 26px;
+  animation: fadeUp .5s .08s ease both;
+}
+.doc-hero h1 em { font-style: italic; color: var(--orange); }
+.doc-hero-sub {
+  font-size: 18px; font-weight: 300; color: var(--navy-3);
+  line-height: 1.8; max-width: 620px; margin: 0 auto;
+  animation: fadeUp .5s .16s ease both;
+}
+.doc-preamble {
+  max-width: 700px; margin: 0 auto; padding: 0 52px 80px;
+  font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.85;
+}
+.doc-preamble p + p { margin-top: 18px; }
+.doc-preamble strong { color: var(--navy-2); font-weight: 500; }
+
+.tenets { max-width: 760px; margin: 0 auto; padding: 0 52px 40px; }
+.tenet { padding: 48px 0; border-top: 1px solid var(--border); }
+.tenet:last-of-type { border-bottom: 1px solid var(--border); }
+.tenet-num {
+  font-family: var(--serif); font-size: 11px; color: var(--orange);
+  letter-spacing: .08em; margin-bottom: 16px; display: block;
+}
+.tenet-title {
+  font-family: var(--serif); font-size: clamp(24px, 3.4vw, 32px);
+  color: var(--navy); line-height: 1.2; letter-spacing: -.4px; margin-bottom: 16px;
+}
+.tenet-body { font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.82; }
+.tenet-body + .tenet-body { margin-top: 14px; }
+.tenet-quote {
+  margin: 20px 0; padding: 16px 20px; border-left: 2px solid var(--orange);
+  background: var(--off); border-radius: 0 var(--r) var(--r) 0;
+  font-size: 15px; font-weight: 300; color: var(--navy-2); line-height: 1.7; font-style: italic;
+}
+.tenet-src {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 20px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px; color: var(--navy-3); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 2px; transition: color .2s, border-color .2s;
+}
+.tenet-src:hover { color: var(--orange); border-color: var(--orange); }
+.tenet-src::before { content: "↳"; color: var(--orange); }
+
+.doc-cta { padding: 110px 52px; text-align: center; background: var(--off); border-top: 1px solid var(--border); }
+.doc-cta-inner { max-width: 580px; margin: 0 auto; }
+.doc-cta h2 { font-size: clamp(30px, 4.6vw, 46px); margin-bottom: 16px; }
+.doc-cta .sub { max-width: 460px; margin: 0 auto 34px; }
+
+@media (max-width: 860px) {
+  .doc-hero { padding: 110px 24px 50px; }
+  .doc-preamble { padding: 0 24px 56px; }
+  .tenets { padding: 0 24px 24px; }
+  .tenet { padding: 36px 0; }
+  .doc-cta { padding: 72px 24px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/ja/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<section class="doc-hero">
+  <h1>強い意見、<br/><em>コード</em>で保持</h1>
+  <p class="doc-hero-sub">すべてのプロジェクトには信念があります。そのほとんどは誰かの頭の中にあり、一度に1つのコードレビューで漏れ出します。これらはDuctの信念であり、文書化され、それぞれを強制するファイルが記載されています。</p>
+</section>
+
+<section class="doc-preamble">
+  <p>Ductは、製品および成長スタック全体を読み取り、その中のものを変更できるAIエージェントです。これは、ご自身で作成していないツールに求めるには大きな信頼です。そのため、その推論は公開されており、それを支えるコードも公開されています。</p>
+  <p><strong>以下の内容はどれも理想論ではありません。</strong> 各原則は、それを実現するファイルにリンクしています。もしコードがページと矛盾している箇所を見つけたら、それはバグですので、ぜひ問題を報告してください。</p>
+</section>
+
+<div class="tenets">
+
+  <article class="tenet reveal">
+    <span class="tenet-num">01</span>
+    <h2 class="tenet-title">エージェントが提案します。人間が承認します。</h2>
+    <p class="tenet-body">Ductは、ライブシステムへの変更（キャンペーンの一時停止、除外キーワードの追加、GA4の主要イベントのマークなど）を準備できます。プレビューとガードレールチェックを表示し、そこで停止します。</p>
+    <p class="tenet-body">エージェント向けの承認または適用ツールはありません。無効化されたものでも、フラグの背後にあるものでもありません。モデルが見るツールレジストリには存在しないため、モデルはそれを呼び出すことも、呼び出すように説得されることも、プロンプトインジェクションで呼び出されることもありません。破壊的なゲートは絶対的です。いかなる設定も破壊的な操作の自動適用を許可しません。ロールバックはすべての実行者の契約の一部であり、後付けではありません。</p>
+    <p class="tenet-body">より高い自律性は姿勢であり、より広い許可リストではありません。エージェントがあなたを中断する頻度を変えます。クリックなしで適用される可能性のあるものを変更することはありません。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py" rel="noopener">backend/service/execution/policy.py</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">02</span>
+    <h2 class="tenet-title">Ductはエージェントハーネスを借ります。専有しません。</h2>
+    <p class="tenet-body">エージェントフレームワークは、このスタックの中で最も変化が激しく、差別化が最も少ないレイヤーです。それらは0.xであり、毎週リリースされ、そのすべてが誰かに破壊的な移行を強いてきました。その上に製品を構築することは、基盤を借りるようなものです。</p>
+    <p class="tenet-body">そのため、ここでのドメインコードはエージェントフレームワークをインポートしません。プロンプト、ツール、スキーマ、目標、スコアリング、およびアーティファクト契約はプレーンなPythonです。フレームワークのインポートはランナーとバインダーのみに存在し、テストは明示的な許可リストで境界を強制します。その許可リストにファイルを追加することは意図的な行為であり、失敗したテストを修正する方法ではありません。</p>
+    <p class="tenet-quote">意図的に<code>AgentHarness</code>インターフェースはなく、今後も存在すべきではありません。交差部分を取ると、サブエージェント、ファイルシステム、スキル、HITLの粒度と圧縮が失われます。これらはハーネスをレンタルするすべての理由です。和集合を取ると、フレームワークを書いていることになります。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/agents/core/ports/__init__.py" rel="noopener">backend/agents/core/ports/__init__.py</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">03</span>
+    <h2 class="tenet-title">アダプターは最初の実装ではなく、2番目の実装で書きます。</h2>
+    <p class="tenet-body">1つの実装を持つポートは推測です。2つの実装を持つポートは事実です。2番目のケースが存在する前に構築された抽象化は、最初のケースが必要としたものを何でもエンコードし、その後はすべてがその形状と戦うことになります。</p>
+    <p class="tenet-body">エージェント層のすべてのポートには2つのアダプターがありますが、1つだけ例外があります。その例外は、自身のドキュメント文字列でその旨を明記し、それに値する実装を指名しています。ギャップを明示することで、推測でひっそりと埋められるのを防ぎます。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/STYLE.md" rel="noopener">STYLE.md</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">04</span>
+    <h2 class="tenet-title">認可はメンバーシップであり、APIキーは境界ではありません。</h2>
+    <p class="tenet-body">アプリのAPIキーはブラウザに送られます。それは「このリクエストはDuctアプリから来た」ことを証明します。それは「この呼び出し元がその行を所有している」ことを証明したことはなく、そうであるかのように扱うと、マルチテナントのデータ漏洩が発生します。</p>
+    <p class="tenet-body">そのため、プロジェクトスコープの行に触れるすべてのルートは、サインインしたユーザーを解決し<em>、</em>メンバーシップをチェックします。非メンバーは403ではなく404を受け取ります。なぜなら、403は行が存在することを伝えるからです。テストはツリー内のすべてのルートをたどり、書面による理由なしにゲートされていないルートがあればビルドを失敗させます。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/tests/test_route_auth_boundaries.py" rel="noopener">backend/tests/test_route_auth_boundaries.py</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">05</span>
+    <h2 class="tenet-title">あなたのマシン、あなたのキー、あなたのデータ。</h2>
+    <p class="tenet-body">Ductはデスクトップアプリとして動作し、バックエンドをローカルサイドカーとしてバンドルします。ディスク上のSQLite、ループバックのみ、OSキーチェーン内のプロバイダーキーを使用します。アカウントもサーバーもなく、マシンから何も外部に出ることはありません。または、バックエンドをセルフホストすることも可能です。getduct.aiでホストされているバージョンを使用することもできます。これは、公開されているコードと同じコードを実行します。</p>
+    <p class="tenet-body">モデルもご自身で持ち込んでください。Anthropic、OpenAI、Gemini、またはOpenRouter上のあらゆるモデルを、推論に重い作業と安価な要約が同じ価格にならないように、3つの階層にわたってジョブごとに割り当てます。ビジネス全体を読み取るツールが、ベンダーを決定すべきではありません。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/desktop/README.md" rel="noopener">desktop/README.md</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">06</span>
+    <h2 class="tenet-title">コメントは「なぜ」を伝えます。差分はすでに「何を」示しています。</h2>
+    <p class="tenet-body">その下の行を繰り返すコメントは、コメントがないよりも悪いものです。なぜなら、読者にコメントをスキップするように教えてしまうからです。書く価値のあるコメントは、コードでは表現できないもの、つまり制約、契約、その行を動機付けた失敗、却下された代替案とその理由を伝えます。</p>
+    <p class="tenet-body">これは、エージェントによって部分的に書かれたコードベースでは、より重要であり、軽視すべきではありません。個々に正当化できる変更のセットが、全体としてアーキテクチャを溶解させるのが、エージェント加速型コードベースが失敗する具体的な方法です。すべての変更はそれ自体を主張し、全体を主張するものはありません。ファイルに残された推論が、次の人、または次のモデルが違いを判断できるようにします。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/STYLE.md" rel="noopener">STYLE.md</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">07</span>
+    <h2 class="tenet-title">エージェントが作成した貢献も歓迎します。ただし、レビューはより厳しく行われます。</h2>
+    <p class="tenet-body">多くのプロジェクトがAI支援のプルリクエストを静かに禁止しています。Ductは逆を求めます。PRテンプレートはエージェントがどこで支援したかを尋ね、レビュー担当者が最も注意深く見るべき場所を知るようにします。それはペナルティボックスではありません。それは、変更のどの部分について最も確信がなかったかを伝えるのと同じ理由です。</p>
+    <p class="tenet-body">Ductは、エージェントで構築されたエージェント製品です。貢献プロセスにおいてそうでないふりをするのは不誠実であり、レビュアーが得られる最も有用なシグナルを捨てることになります。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>
+  </article>
+
+</div>
+
+<section class="doc-cta">
+  <div class="doc-cta-inner">
+    <p class="tag" style="justify-content:center;display:flex">異議がありますか？</p>
+    <h2>良いでしょう。<em>課題を開く。</em></h2>
+    <p class="sub">これらはすべて理由のあるデフォルトであり、法律ではありません。理由が間違っている場合、変更すべきはその理由です。その議論は公開されるべきです。</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px">
+      <a class="btn btn-orange btn-lg" href="https://github.com/5hirish/duct/discussions" rel="noopener">議論を開始する →</a>
+      <a class="btn btn-lg" href="https://github.com/5hirish/duct" rel="noopener" style="border:1px solid var(--border);color:var(--navy);background:var(--white)">コードを読む →</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/ja/partials/footer-expanded.html"></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

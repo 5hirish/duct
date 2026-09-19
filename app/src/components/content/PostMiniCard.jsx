@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { Images, Video, Image as ImageIcon, Clock } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { mediaUrl } from "@/lib/contentApi";
 import { firstImageSrc, statusMeta } from "@/lib/contentStatus";
+import { KIND_LABEL } from "@/lib/contentSchedule";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import { titleCase } from "@/lib/format";
 
@@ -14,8 +16,6 @@ const KIND_BADGE = {
   scheduled: "bg-info/15 text-info",
   proposed: "bg-muted text-muted-foreground",
 };
-
-const KIND_LABEL = { published: "Published", scheduled: "Scheduled", proposed: "Planned" };
 
 /**
  * One modular post card, shared by every plan view via `variant`:
@@ -35,10 +35,11 @@ const KIND_LABEL = { published: "Published", scheduled: "Scheduled", proposed: "
  *   - variant  : "full" | "compact" | "chip" (default "full")
  */
 export default function PostMiniCard({ day, post, schedule, onRevise, variant = "full" }) {
+  const { t, i18n } = useLingui();
   const postId = post?.id || day?.post_id || null;
   const postType = post?.post_type || day?.post_type || "slideshow";
   const TypeIcon = TYPE_ICON[postType] || Images;
-  const title = post?.hook_text || day?.hook_text || day?.topic || post?.topic || "(untitled)";
+  const title = post?.hook_text || day?.hook_text || day?.topic || post?.topic || t`(untitled)`;
   const pillar = day?.pillar || post?.pillar || "";
   const format = post?.format_name || titleCase(day?.format_slug || "");
   const platforms = (Array.isArray(post?.platforms) && post.platforms.length
@@ -118,7 +119,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
                   className="absolute bottom-2 left-2 rounded-md px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-white shadow-sm backdrop-blur-sm"
                   style={{ backgroundColor: "color-mix(in srgb, var(--orange) 45%, rgba(0,0,0,0.65))" }}
                 >
-                  via Duct
+                  <Trans>via Duct</Trans>
                 </span>
               )}
 
@@ -133,7 +134,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
             {/* meta row — color-coded kind pill carries the state; muted date keeps the title the hero */}
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <span className={`rounded-md px-1.5 py-0.5 text-2xs font-medium ${KIND_BADGE[kind]}`}>
-                {KIND_LABEL[kind] || titleCase(kind)}
+                {KIND_LABEL[kind] ? i18n._(KIND_LABEL[kind]) : titleCase(kind)}
               </span>
               {dateText && (
                 <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
@@ -147,7 +148,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
                   className="rounded-md px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide"
                   style={{ backgroundColor: "color-mix(in oklch, var(--orange) 15%, transparent)", color: "var(--orange)" }}
                 >
-                  via Duct
+                  <Trans>via Duct</Trans>
                 </span>
               )}
               {!showThumb && <TypeIcon className="ml-auto size-3.5 shrink-0 text-muted-foreground" />}

@@ -14,6 +14,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Brain, Check, Globe, Sparkles, Users, X } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -37,9 +39,33 @@ import {
 import { PROVENANCE_CRAWL, PROVENANCE_INFERRED, PROVENANCE_USER, markConfirmed } from "../../../../lib/projectDraft";
 import { fetchProjectConfig, getFallbackProjectConfig } from "../../../../lib/projectConfig";
 
-const PRIMARY_SEGMENTS = ["Consumer", "SMB", "Mid-market", "Enterprise", "Public sector", "Non-profit", "Other"];
-const BRAND_VOICES = ["Professional", "Friendly", "Bold", "Technical", "Playful"];
-const GROWTH_MOTIONS = ["Organic", "Paid", "Product-led", "Sales-led", "Partnerships", "Community", "Lifecycle/CRM"];
+// `value` is what the profile stores and the prompts read, so it stays
+// English; `label` is what the person picking it sees.
+const PRIMARY_SEGMENTS = [
+  { value: "Consumer", label: msg`Consumer` },
+  { value: "SMB", label: msg`SMB` },
+  { value: "Mid-market", label: msg`Mid-market` },
+  { value: "Enterprise", label: msg`Enterprise` },
+  { value: "Public sector", label: msg`Public sector` },
+  { value: "Non-profit", label: msg`Non-profit` },
+  { value: "Other", label: msg`Other` },
+];
+const BRAND_VOICES = [
+  { value: "Professional", label: msg`Professional` },
+  { value: "Friendly", label: msg`Friendly` },
+  { value: "Bold", label: msg`Bold` },
+  { value: "Technical", label: msg`Technical` },
+  { value: "Playful", label: msg`Playful` },
+];
+const GROWTH_MOTIONS = [
+  { value: "Organic", label: msg`Organic` },
+  { value: "Paid", label: msg`Paid` },
+  { value: "Product-led", label: msg`Product-led` },
+  { value: "Sales-led", label: msg`Sales-led` },
+  { value: "Partnerships", label: msg`Partnerships` },
+  { value: "Community", label: msg`Community` },
+  { value: "Lifecycle/CRM", label: msg`Lifecycle/CRM` },
+];
 const TOTAL_STEPS = 5;
 
 // `#brand` from the Content Studio's brand form lands on the step that owns
@@ -63,8 +89,8 @@ function hasText(value) {
 
 const STEP_DEFINITIONS = [
   {
-    label: "About your business",
-    shortLabel: "About",
+    label: msg`About your business`,
+    shortLabel: msg`About`,
     fields: [
       { weight: 3, check: (profile) => hasText(profile.company?.name) },
       { weight: 2, check: (profile) => hasText(profile.company?.pitch) },
@@ -74,8 +100,8 @@ const STEP_DEFINITIONS = [
     ],
   },
   {
-    label: "Targets",
-    shortLabel: "Targets",
+    label: msg`Targets`,
+    shortLabel: msg`Targets`,
     fields: [
       { weight: 2, check: (profile) => hasText(profile.targets?.north_star_metric) },
       { weight: 2, check: (profile) => hasText(profile.targets?.north_star_goal_window) },
@@ -83,8 +109,8 @@ const STEP_DEFINITIONS = [
     ],
   },
   {
-    label: "Audience",
-    shortLabel: "Audience",
+    label: msg`Audience`,
+    shortLabel: msg`Audience`,
     fields: [
       { weight: 2, check: (profile) => hasText(profile.audience?.primary_segment) },
       { weight: 3, check: (profile) => (profile.audience.personas[0]?.name || "").trim().length > 0 },
@@ -92,15 +118,15 @@ const STEP_DEFINITIONS = [
     ],
   },
   {
-    label: "Competition",
-    shortLabel: "Competition",
+    label: msg`Competition`,
+    shortLabel: msg`Competition`,
     fields: [
       { weight: 1, check: (profile) => hasText(profile.competition?.compare_against) },
     ],
   },
   {
-    label: "Business context",
-    shortLabel: "Context",
+    label: msg`Business context`,
+    shortLabel: msg`Context`,
     fields: [
       { weight: 2, check: (profile) => hasText(profile.brand_channels?.brand_voice) },
       { weight: 2, check: (profile) => (profile.brand_channels?.growth_motions || []).length > 0 },
@@ -113,11 +139,12 @@ const STEP_DEFINITIONS = [
 // Where a drafted value came from, beside its label. Confirming marks the
 // field as the user's, so a later draft leaves it alone.
 const PROVENANCE_COPY = {
-  [PROVENANCE_CRAWL]: { label: "From your site", Icon: Globe },
-  [PROVENANCE_INFERRED]: { label: "Duct's guess", Icon: Sparkles },
+  [PROVENANCE_CRAWL]: { label: msg`From your site`, Icon: Globe },
+  [PROVENANCE_INFERRED]: { label: msg`Duct's guess`, Icon: Sparkles },
 };
 
 function ProvenanceChip({ source, onConfirm }) {
+  const { i18n } = useLingui();
   const copy = PROVENANCE_COPY[source];
   if (!copy) return null;
   const { label, Icon } = copy;
@@ -125,7 +152,7 @@ function ProvenanceChip({ source, onConfirm }) {
     <span className="ml-1 inline-flex items-center gap-1 align-middle">
       <Badge variant="outline" className="gap-1 font-normal text-muted-foreground">
         <Icon aria-hidden />
-        {label}
+        {i18n._(label)}
       </Badge>
       <button
         type="button"
@@ -133,13 +160,14 @@ function ProvenanceChip({ source, onConfirm }) {
         className="inline-flex items-center gap-0.5 rounded-3xl px-1.5 text-xs font-medium text-primary hover:bg-primary/10"
       >
         <Check className="size-3" aria-hidden />
-        Looks right
+        <Trans>Looks right</Trans>
       </button>
     </span>
   );
 }
 
 export default function ProjectContextPage() {
+  const { t, i18n } = useLingui();
   const { projectId } = useParams();
   const [ready, setReady] = useState(false);
   const [step, setStep] = useState(1);
@@ -190,7 +218,7 @@ export default function ProjectContextPage() {
       if (cancelled) return;
       if (!project) {
         setProjectMeta(null);
-        setProjectLoadError("Project not found. It may have been deleted, or you may not be a member.");
+        setProjectLoadError(t`Project not found. It may have been deleted, or you may not be a member.`);
         setReady(true);
         return;
       }
@@ -230,6 +258,9 @@ export default function ProjectContextPage() {
     return () => {
       cancelled = true;
     };
+    // `t` only words the not-found message; a locale switch must not reload
+    // the project and discard what is being typed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   useEffect(() => {
@@ -248,7 +279,7 @@ export default function ProjectContextPage() {
       } catch {
         if (cancelled) return;
         setProjectConfig(getFallbackProjectConfig());
-        setProjectConfigError("Using fallback options while config service is unavailable.");
+        setProjectConfigError(t`Using fallback options while config service is unavailable.`);
       } finally {
         if (!cancelled) {
           setProjectConfigLoading(false);
@@ -259,6 +290,8 @@ export default function ProjectContextPage() {
     return () => {
       cancelled = true;
     };
+    // Same reason as above: `t` is not a reason to refetch the config.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, profile.company.industry, profile.company.business_model]);
 
   // Every keystroke lands in the local store; the backend is written at the
@@ -396,8 +429,8 @@ export default function ProjectContextPage() {
   if (!ready) {
     return (
       <section>
-        <h1 className="text-2xl font-semibold tracking-tight mb-2">Project context</h1>
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2"><Trans>Project context</Trans></h1>
+        <p className="text-sm text-muted-foreground"><Trans>Loading…</Trans></p>
       </section>
     );
   }
@@ -405,10 +438,10 @@ export default function ProjectContextPage() {
   if (projectLoadError) {
     return (
       <section>
-        <h1 className="text-2xl font-semibold tracking-tight mb-2">Project context</h1>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2"><Trans>Project context</Trans></h1>
         <p className="text-sm text-muted-foreground mb-4">{projectLoadError}</p>
         <Button asChild>
-          <Link href="/projects">Back to manage projects</Link>
+          <Link href="/projects"><Trans>Back to manage projects</Trans></Link>
         </Button>
       </section>
     );
@@ -419,9 +452,13 @@ export default function ProjectContextPage() {
       {/* Sticky progress shell */}
       <div className="project-progress-shell">
         <div className="page-toolbar" style={{ marginBottom: 8 }}>
-          <h1 className="page-toolbar-title text-lg font-semibold tracking-tight">Project context</h1>
+          <h1 className="page-toolbar-title text-lg font-semibold tracking-tight"><Trans>Project context</Trans></h1>
           <span className="text-sm text-muted-foreground">
-            {drafted > 0 ? `${drafted} drafted field${drafted === 1 ? "" : "s"} to confirm` : `${inputProgressPercent}% complete`}
+            {drafted > 0 ? (
+              <Plural value={drafted} one="# drafted field to confirm" other="# drafted fields to confirm" />
+            ) : (
+              <Trans>{inputProgressPercent}% complete</Trans>
+            )}
           </span>
           {/* Members live with the project they grant access to; the targets
               set here become project memory, so its timeline sits beside the
@@ -430,13 +467,13 @@ export default function ProjectContextPage() {
             <Button asChild variant="ghost" size="sm">
               <Link href={`/project/${projectMeta.id}/memory`}>
                 <Brain className="size-4" />
-                Memory
+                <Trans>Memory</Trans>
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href={`/project/${projectMeta.id}/members`}>
                 <Users className="size-4" />
-                Members
+                <Trans>Members</Trans>
               </Link>
             </Button>
           </div>
@@ -446,14 +483,14 @@ export default function ProjectContextPage() {
           <Progress value={inputProgressPercent} className="h-1.5" />
         </div>
 
-        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin" role="list" aria-label="Project context sections">
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin" role="list" aria-label={t`Project context sections`}>
           {stepProgress.map((stepItem, index) => {
             const stepNumber = index + 1;
             const isActive = step === stepNumber;
             const isDone = stepItem.percent === 100;
             return (
               <div
-                key={stepItem.shortLabel}
+                key={stepNumber}
                 role="listitem"
                 className="inline-flex items-center gap-1.5 whitespace-nowrap"
               >
@@ -467,7 +504,7 @@ export default function ProjectContextPage() {
                       : "border-transparent bg-muted/70 text-muted-foreground hover:border-border hover:bg-muted"
                   )}
                 >
-                  {stepItem.shortLabel}
+                  {i18n._(stepItem.shortLabel)}
                 </button>
                 {isDone && <Check className="size-3.5 text-primary" aria-hidden="true" />}
                 {index < TOTAL_STEPS - 1 && (
@@ -483,10 +520,10 @@ export default function ProjectContextPage() {
       {step === 1 && (
         <div id="about" className="grid gap-4">
           <p className="text-sm text-muted-foreground">
-            Tell us who you are and what you do. This anchors every audit and report we generate.
+            <Trans>Tell us who you are and what you do. This anchors every audit and report we generate.</Trans>
           </p>
           <div className="grid gap-1.5">
-            <Label htmlFor="company-name">Company name <Prov k="company_name" /></Label>
+            <Label htmlFor="company-name"><Trans>Company name</Trans> <Prov k="company_name" /></Label>
             <Input
               id="company-name"
               value={profile.company.name}
@@ -494,11 +531,11 @@ export default function ProjectContextPage() {
                 own("company_name");
                 setProfile((prev) => ({ ...prev, company: { ...prev.company, name: e.target.value } }));
               }}
-              placeholder="Acme Inc."
+              placeholder={t`Acme Inc.`}
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="company-pitch">Your one-line pitch <Prov k="pitch" /></Label>
+            <Label htmlFor="company-pitch"><Trans>Your one-line pitch</Trans> <Prov k="pitch" /></Label>
             <Input
               id="company-pitch"
               value={profile.company.pitch}
@@ -506,17 +543,17 @@ export default function ProjectContextPage() {
                 own("pitch");
                 setProfile((prev) => ({ ...prev, company: { ...prev.company, pitch: e.target.value } }));
               }}
-              placeholder="e.g. A meal-planning app for busy families."
+              placeholder={t`e.g. A meal-planning app for busy families.`}
             />
             <p className="text-xs text-muted-foreground">
-              If a stranger asked what you do, what would you say?
+              <Trans>If a stranger asked what you do, what would you say?</Trans>
             </p>
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="company-industry">Industry <Prov k="industry" /></Label>
+            <Label htmlFor="company-industry"><Trans>Industry</Trans> <Prov k="industry" /></Label>
             <Select value={profile.company.industry} onValueChange={handleIndustryChange}>
               <SelectTrigger id="company-industry">
-                <SelectValue placeholder="Select industry..." />
+                <SelectValue placeholder={t`Select industry...`} />
               </SelectTrigger>
               <SelectContent>
                 {industryOptions.map((industry) => (
@@ -526,10 +563,10 @@ export default function ProjectContextPage() {
             </Select>
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="company-business-model">Business model <Prov k="business_model" /></Label>
+            <Label htmlFor="company-business-model"><Trans>Business model</Trans> <Prov k="business_model" /></Label>
             <Select value={profile.company.business_model} onValueChange={handleBusinessModelChange}>
               <SelectTrigger id="company-business-model">
-                <SelectValue placeholder="Select business model..." />
+                <SelectValue placeholder={t`Select business model...`} />
               </SelectTrigger>
               <SelectContent>
                 {businessModelOptions.map((model) => (
@@ -539,7 +576,7 @@ export default function ProjectContextPage() {
             </Select>
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="company-website">Website <span className="text-muted-foreground">(optional)</span> <Prov k="website_url" /></Label>
+            <Label htmlFor="company-website"><Trans>Website <span className="text-muted-foreground">(optional)</span></Trans> <Prov k="website_url" /></Label>
             <Input
               id="company-website"
               value={profile.company.website_url}
@@ -547,7 +584,7 @@ export default function ProjectContextPage() {
                 own("website_url");
                 setProfile((prev) => ({ ...prev, company: { ...prev.company, website_url: e.target.value } }));
               }}
-              placeholder="https://example.com"
+              placeholder={t`https://example.com`}
             />
           </div>
         </div>
@@ -557,10 +594,10 @@ export default function ProjectContextPage() {
       {step === 2 && (
         <div id="targets" className="grid gap-4">
           <p className="text-sm text-muted-foreground">
-            Define your North Star metric and current growth stage. Channel-specific KPIs stay in report generation.
+            <Trans>Define your North Star metric and current growth stage. Channel-specific KPIs stay in report generation.</Trans>
           </p>
           <div className="grid gap-1.5">
-            <Label htmlFor="north-star-metric">North Star metric</Label>
+            <Label htmlFor="north-star-metric"><Trans>North Star metric</Trans></Label>
             <Select
               value={profile.targets.north_star_metric}
               disabled={!hasCompanyContext || projectConfigLoading}
@@ -569,7 +606,7 @@ export default function ProjectContextPage() {
               }
             >
               <SelectTrigger id="north-star-metric">
-                <SelectValue placeholder="Select North Star metric..." />
+                <SelectValue placeholder={t`Select North Star metric...`} />
               </SelectTrigger>
               <SelectContent>
                 {northStarOptions.map((metric) => (
@@ -579,13 +616,13 @@ export default function ProjectContextPage() {
             </Select>
             {!hasCompanyContext ? (
               <p className="text-xs text-muted-foreground">
-                Select Industry and Business model first to load relevant North Star options.
+                <Trans>Select Industry and Business model first to load relevant North Star options.</Trans>
               </p>
             ) : null}
             {projectConfigError ? <p className="text-xs text-muted-foreground">{projectConfigError}</p> : null}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="north-star-goal-window">What does success look like in the next 90 days?</Label>
+            <Label htmlFor="north-star-goal-window"><Trans>What does success look like in the next 90 days?</Trans></Label>
             <textarea
               id="north-star-goal-window"
               className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
@@ -594,11 +631,11 @@ export default function ProjectContextPage() {
               onChange={(e) =>
                 setProfile((prev) => ({ ...prev, targets: { ...prev.targets, north_star_goal_window: e.target.value } }))
               }
-              placeholder="e.g. Reach 500 weekly active users with at least 40% week-4 retention."
+              placeholder={t`e.g. Reach 500 weekly active users with at least 40% week-4 retention.`}
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="growth-stage-milestone">Current growth stage (milestone-based)</Label>
+            <Label htmlFor="growth-stage-milestone"><Trans>Current growth stage (milestone-based)</Trans></Label>
             <Select
               value={profile.targets.growth_stage_milestone}
               disabled={!hasCompanyContext || projectConfigLoading}
@@ -607,7 +644,7 @@ export default function ProjectContextPage() {
               }
             >
               <SelectTrigger id="growth-stage-milestone">
-                <SelectValue placeholder="Select your current milestone..." />
+                <SelectValue placeholder={t`Select your current milestone...`} />
               </SelectTrigger>
               <SelectContent>
                 {growthStageOptions.map((stage) => (
@@ -617,7 +654,7 @@ export default function ProjectContextPage() {
             </Select>
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="north-star-constraints">What currently limits this metric most? <span className="text-muted-foreground">(optional)</span></Label>
+            <Label htmlFor="north-star-constraints"><Trans>What currently limits this metric most? <span className="text-muted-foreground">(optional)</span></Trans></Label>
             <textarea
               id="north-star-constraints"
               className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
@@ -626,11 +663,11 @@ export default function ProjectContextPage() {
               onChange={(e) =>
                 setProfile((prev) => ({ ...prev, targets: { ...prev.targets, north_star_constraints: e.target.value } }))
               }
-              placeholder="e.g. Limited sales capacity, high onboarding drop-off, or long implementation cycles."
+              placeholder={t`e.g. Limited sales capacity, high onboarding drop-off, or long implementation cycles.`}
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="growth-stage-context">Growth stage context or constraints <span className="text-muted-foreground">(optional)</span></Label>
+            <Label htmlFor="growth-stage-context"><Trans>Growth stage context or constraints <span className="text-muted-foreground">(optional)</span></Trans></Label>
             <textarea
               id="growth-stage-context"
               className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
@@ -639,7 +676,7 @@ export default function ProjectContextPage() {
               onChange={(e) =>
                 setProfile((prev) => ({ ...prev, targets: { ...prev.targets, growth_stage_context: e.target.value } }))
               }
-              placeholder="e.g. Team of 3, founder-led sales, runway for 8 months."
+              placeholder={t`e.g. Team of 3, founder-led sales, runway for 8 months.`}
             />
           </div>
         </div>
@@ -649,7 +686,7 @@ export default function ProjectContextPage() {
       {step === 3 && (
         <div id="audience" className="grid gap-4">
           <div className="grid gap-1.5">
-            <Label htmlFor="primary-segment">Primary segment</Label>
+            <Label htmlFor="primary-segment"><Trans>Primary segment</Trans></Label>
             <Select
               value={profile.audience.primary_segment}
               onValueChange={(val) =>
@@ -657,17 +694,17 @@ export default function ProjectContextPage() {
               }
             >
               <SelectTrigger id="primary-segment">
-                <SelectValue placeholder="Select primary segment..." />
+                <SelectValue placeholder={t`Select primary segment...`} />
               </SelectTrigger>
               <SelectContent>
                 {PRIMARY_SEGMENTS.map((segment) => (
-                  <SelectItem key={segment} value={segment}>{segment}</SelectItem>
+                  <SelectItem key={segment.value} value={segment.value}>{i18n._(segment.label)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="persona-name">Primary persona name <Prov k="personas" /></Label>
+            <Label htmlFor="persona-name"><Trans>Primary persona name</Trans> <Prov k="personas" /></Label>
             <Input
               id="persona-name"
               value={profile.audience.personas[0]?.name || ""}
@@ -685,11 +722,11 @@ export default function ProjectContextPage() {
                   },
                 }))
               }
-              placeholder="Marketing managers at SaaS startups"
+              placeholder={t`Marketing managers at SaaS startups`}
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="persona-desc">Persona description</Label>
+            <Label htmlFor="persona-desc"><Trans>Persona description</Trans></Label>
             <textarea
               id="persona-desc"
               className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
@@ -709,7 +746,7 @@ export default function ProjectContextPage() {
                   },
                 }))
               }
-              placeholder="Pain points, goals, motivations..."
+              placeholder={t`Pain points, goals, motivations...`}
             />
           </div>
         </div>
@@ -719,7 +756,7 @@ export default function ProjectContextPage() {
       {step === 4 && (
         <div id="competition" className="grid gap-4">
           <div className="grid gap-1.5">
-            <Label htmlFor="compare-against">Who do customers compare you against most often? <Prov k="compare_against" /></Label>
+            <Label htmlFor="compare-against"><Trans>Who do customers compare you against most often?</Trans> <Prov k="compare_against" /></Label>
             <Input
               id="compare-against"
               value={comparisonInput}
@@ -731,10 +768,10 @@ export default function ProjectContextPage() {
                 }
               }}
               onBlur={() => addCompetitionItems(comparisonInput)}
-              placeholder="e.g. Notion, HubSpot, in-house spreadsheets"
+              placeholder={t`e.g. Notion, HubSpot, in-house spreadsheets`}
             />
             <p className="text-xs text-muted-foreground">
-              Add one or more names, separated by commas.
+              <Trans>Add one or more names, separated by commas.</Trans>
             </p>
             {comparisonItems.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
@@ -747,7 +784,7 @@ export default function ProjectContextPage() {
                       size="icon"
                       className="size-4 rounded-full"
                       onClick={() => removeCompetitionItem(item)}
-                      aria-label={`Remove ${item}`}
+                      aria-label={t`Remove ${item}`}
                     >
                       <X className="size-3" />
                     </Button>
@@ -763,10 +800,10 @@ export default function ProjectContextPage() {
       {step === 5 && (
         <div id="brand" className="grid gap-4">
           <p className="text-sm text-muted-foreground">
-            Capture durable business context that applies across paid, organic, and product intelligence use cases.
+            <Trans>Capture durable business context that applies across paid, organic, and product intelligence use cases.</Trans>
           </p>
           <div className="grid gap-1.5">
-            <Label htmlFor="brand-voice">Brand voice <Prov k="brand_voice" /></Label>
+            <Label htmlFor="brand-voice"><Trans>Brand voice</Trans> <Prov k="brand_voice" /></Label>
             <Select
               value={profile.brand_channels.brand_voice}
               onValueChange={(val) => {
@@ -775,24 +812,24 @@ export default function ProjectContextPage() {
               }}
             >
               <SelectTrigger id="brand-voice">
-                <SelectValue placeholder="Select voice..." />
+                <SelectValue placeholder={t`Select voice...`} />
               </SelectTrigger>
               <SelectContent>
                 {BRAND_VOICES.map((voice) => (
-                  <SelectItem key={voice} value={voice}>{voice}</SelectItem>
+                  <SelectItem key={voice.value} value={voice.value}>{i18n._(voice.label)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="grid gap-1.5">
-            <Label>Primary growth motions</Label>
+            <Label><Trans>Primary growth motions</Trans></Label>
             <div className="flex flex-wrap gap-2">
               {GROWTH_MOTIONS.map((motion) => {
-                const active = profile.brand_channels.growth_motions.includes(motion);
+                const active = profile.brand_channels.growth_motions.includes(motion.value);
                 return (
                   <Button
-                    key={motion}
+                    key={motion.value}
                     type="button"
                     variant={active ? "default" : "outline"}
                     size="sm"
@@ -802,13 +839,13 @@ export default function ProjectContextPage() {
                         brand_channels: {
                           ...prev.brand_channels,
                           growth_motions: active
-                            ? prev.brand_channels.growth_motions.filter((item) => item !== motion)
-                            : [...prev.brand_channels.growth_motions, motion],
+                            ? prev.brand_channels.growth_motions.filter((item) => item !== motion.value)
+                            : [...prev.brand_channels.growth_motions, motion.value],
                         },
                       }))
                     }
                   >
-                    {motion}
+                    {i18n._(motion.label)}
                   </Button>
                 );
               })}
@@ -816,7 +853,7 @@ export default function ProjectContextPage() {
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="context-notes">Additional business context</Label>
+            <Label htmlFor="context-notes"><Trans>Additional business context</Trans></Label>
             <textarea
               id="context-notes"
               className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
@@ -828,7 +865,7 @@ export default function ProjectContextPage() {
                   brand_channels: { ...prev.brand_channels, context_notes: e.target.value },
                 }))
               }
-              placeholder="e.g. Strong Q4 seasonality, long enterprise sales cycle, or limited engineering bandwidth."
+              placeholder={t`e.g. Strong Q4 seasonality, long enterprise sales cycle, or limited engineering bandwidth.`}
             />
           </div>
 
@@ -838,21 +875,21 @@ export default function ProjectContextPage() {
       <div className="project-actions">
         {step > 1 && (
           <Button type="button" variant="outline" onClick={goBack}>
-            Back
+            <Trans>Back</Trans>
           </Button>
         )}
         {step < TOTAL_STEPS ? (
           <Button type="button" onClick={saveAndNext}>
-            Save & Next
+            <Trans>Save & Next</Trans>
           </Button>
         ) : (
           <Button type="button" onClick={saveProjectFinal}>
-            Save project
+            <Trans>Save project</Trans>
           </Button>
         )}
         {step > 1 && step < TOTAL_STEPS && (
           <Button type="button" variant="ghost" onClick={skipStep}>
-            I&apos;ll do this later
+            <Trans>I&apos;ll do this later</Trans>
           </Button>
         )}
       </div>

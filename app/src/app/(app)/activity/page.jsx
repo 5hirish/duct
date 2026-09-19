@@ -10,6 +10,8 @@ import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FileText, History, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { getActiveProject } from "../../../lib/projects";
 import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
 import LoadError from "@/components/LoadError";
@@ -20,15 +22,15 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CATEGORY_TABS = [
-  { value: "", label: "All" },
-  { value: "execution", label: "Execution" },
-  { value: "artifact", label: "Artifacts" },
+  { value: "", label: msg`All` },
+  { value: "execution", label: msg`Execution` },
+  { value: "artifact", label: msg`Artifacts` },
 ];
 
 const SOURCE_BADGES = {
-  user: { label: "you", className: "status-pill grey" },
-  agent: { label: "agent", className: "status-pill green" },
-  auto: { label: "auto", className: "status-pill yellow" },
+  user: { label: msg`you`, className: "status-pill grey" },
+  agent: { label: msg`agent`, className: "status-pill green" },
+  auto: { label: msg`auto`, className: "status-pill yellow" },
 };
 
 function rowIcon(row) {
@@ -44,6 +46,7 @@ function targetHref(row) {
 }
 
 function ActivityRow({ row }) {
+  const { i18n } = useLingui();
   const Icon = rowIcon(row);
   const badge = SOURCE_BADGES[row.source] || SOURCE_BADGES.user;
   const href = targetHref(row);
@@ -65,12 +68,12 @@ function ActivityRow({ row }) {
           )}
         </p>
         <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-          <span className={badge.className} style={{ fontSize: 11 }}>{badge.label}</span>
+          <span className={badge.className} style={{ fontSize: 11 }}>{i18n._(badge.label)}</span>
           {row.connector_type && <span>{row.connector_type}</span>}
           <span>{relativeTime(row.created_at)}</span>
           {hasData && (
             <details className="inline-block">
-              <summary className="cursor-pointer select-none hover:text-foreground">details</summary>
+              <summary className="cursor-pointer select-none hover:text-foreground"><Trans>details</Trans></summary>
               <pre className="mt-1 max-w-full overflow-x-auto rounded bg-muted/40 p-2 text-2xs">
                 {JSON.stringify(row.data, null, 2)}
               </pre>
@@ -83,6 +86,7 @@ function ActivityRow({ row }) {
 }
 
 function ActivityFeed() {
+  const { t, i18n } = useLingui();
   const searchParams = useSearchParams();
   const conversationId = searchParams.get("conversation_id") || "";
 
@@ -145,24 +149,30 @@ function ActivityFeed() {
       .finally(() => setLoadingMore(false));
   }, [nextBefore, project, conversationId, category]);
 
+  const projectName = project?.name || t`this project`;
+
   return (
     <section>
       <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Activity</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Activity</Trans></h1>
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        Everything that changed on <strong>{project?.name || "this project"}</strong> — who
-        proposed it, who approved it, what was applied or rolled back.
+        <Trans>
+          Everything that changed on <strong>{projectName}</strong> — who
+          proposed it, who approved it, what was applied or rolled back.
+        </Trans>
       </p>
 
       {conversationId && (
         <p style={{ marginBottom: 12 }}>
           <span className="status-pill grey">
-            Filtered to one conversation ·{" "}
-            <Link href="/activity" className="underline underline-offset-2">
-              show all
-            </Link>
+            <Trans>
+              Filtered to one conversation ·{" "}
+              <Link href="/activity" className="underline underline-offset-2">
+                show all
+              </Link>
+            </Trans>
           </span>
         </p>
       )}
@@ -171,7 +181,7 @@ function ActivityFeed() {
         <TabsList>
           {CATEGORY_TABS.map((tab) => (
             <TabsTrigger key={tab.value || "all"} value={tab.value}>
-              {tab.label}
+              {i18n._(tab.label)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -181,32 +191,34 @@ function ActivityFeed() {
         <div style={{ marginTop: 18 }}>
           <EmptyState
             icon={LockKeyhole}
-            title="Sign in to see project activity"
+            title={t`Sign in to see project activity`}
             actions={
               <Button size="sm" asChild>
-                <Link href="/">Sign in</Link>
+                <Link href="/"><Trans>Sign in</Trans></Link>
               </Button>
             }
           >
-            Every entry names who did it, so the trail starts once there is an account to
-            name.
+            <Trans>
+              Every entry names who did it, so the trail starts once there is an account to
+              name.
+            </Trans>
           </EmptyState>
         </div>
       )}
 
       {signedIn && items === null && (
-        <p className="app-subtle" style={{ marginTop: 18 }}>Loading…</p>
+        <p className="app-subtle" style={{ marginTop: 18 }}><Trans>Loading…</Trans></p>
       )}
 
       {signedIn && error && (
-        <LoadError what="this project's activity" detail={error} onRetry={reload} />
+        <LoadError what={t`this project's activity`} detail={error} onRetry={reload} />
       )}
 
       {signedIn && !error && items && items.length === 0 && (
         <div style={{ marginTop: 18 }}>
           <EmptyState
             icon={History}
-            title="No activity yet"
+            title={t`No activity yet`}
             // One action, not two. The obvious second was "see what needs
             // approval", and on a project with no activity there is nothing
             // to approve — a button that lands on another empty page is worse
@@ -214,12 +226,14 @@ function ActivityFeed() {
             // their click.
             actions={
               <Button size="sm" asChild>
-                <Link href="/insights/organic-growth">Ask a question</Link>
+                <Link href="/insights/organic-growth"><Trans>Ask a question</Trans></Link>
               </Button>
             }
           >
-            Proposals, approvals, rollbacks and artifact versions land here, each with who
-            did it.
+            <Trans>
+              Proposals, approvals, rollbacks and artifact versions land here, each with who
+              did it.
+            </Trans>
           </EmptyState>
         </div>
       )}
@@ -237,7 +251,7 @@ function ActivityFeed() {
       {signedIn && nextBefore && (
         <div style={{ marginTop: 12 }}>
           <Button variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? "Loading…" : "Load older activity"}
+            {loadingMore ? <Trans>Loading…</Trans> : <Trans>Load older activity</Trans>}
           </Button>
         </div>
       )}
@@ -254,10 +268,10 @@ export default function ActivityPage() {
           <div className="page-toolbar-back">
             <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
               <History size={20} className="inline-block mr-2 align-[-3px]" aria-hidden="true" />
-              Activity
+              <Trans>Activity</Trans>
             </h1>
           </div>
-          <p className="app-subtle">Loading…</p>
+          <p className="app-subtle"><Trans>Loading…</Trans></p>
         </section>
       }
     >

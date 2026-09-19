@@ -4,6 +4,7 @@
  * lib/agentEvents.js; `ContentEvent` is that object.
  */
 
+import { msg } from "@lingui/core/macro";
 import { AgentEvent } from "./agentEvents";
 
 export const ContentEvent = AgentEvent;
@@ -23,15 +24,17 @@ export const ContentStep = Object.freeze({
   DISPATCH_SUBAGENT: "dispatch_subagent",
 });
 
+// Message descriptors, not strings: this table is module-level, so it is
+// rendered with `i18n._(STEP_LABELS[id])` in the component that shows it.
 export const STEP_LABELS = Object.freeze({
-  [ContentStep.LOAD_PROJECT]:      "Loading project",
-  [ContentStep.LOAD_HISTORY]:      "Loading post history",
-  [ContentStep.LOAD_LIBRARIES]:    "Loading format + avatar libraries",
-  [ContentStep.ENRICHING]:         "Researching trends + history",
-  [ContentStep.SYNTHESIZE_PLAN]:   "Synthesizing 30-day plan",
-  [ContentStep.LOAD_TOPIC]:        "Loading topic + brand context",
-  [ContentStep.WRITE_COPY]:        "Writing slide copy",
-  [ContentStep.BUILD_HTML]:        "Building slide HTML",
-  [ContentStep.WRITE_META]:        "Writing post metadata",
-  [ContentStep.DISPATCH_SUBAGENT]: "Sub-agent",
+  [ContentStep.LOAD_PROJECT]:      msg`Loading project`,
+  [ContentStep.LOAD_HISTORY]:      msg`Loading post history`,
+  [ContentStep.LOAD_LIBRARIES]:    msg`Loading format + avatar libraries`,
+  [ContentStep.ENRICHING]:         msg`Researching trends + history`,
+  [ContentStep.SYNTHESIZE_PLAN]:   msg`Synthesizing 30-day plan`,
+  [ContentStep.LOAD_TOPIC]:        msg`Loading topic + brand context`,
+  [ContentStep.WRITE_COPY]:        msg`Writing slide copy`,
+  [ContentStep.BUILD_HTML]:        msg`Building slide HTML`,
+  [ContentStep.WRITE_META]:        msg`Writing post metadata`,
+  [ContentStep.DISPATCH_SUBAGENT]: msg`Sub-agent`,
 });

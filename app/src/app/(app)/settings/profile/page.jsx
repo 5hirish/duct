@@ -25,6 +25,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -53,6 +54,7 @@ import {
 } from "@/lib/userProfile";
 import { hasAuthToken } from "@/lib/authFetch";
 import VoiceSample from "@/components/profile/VoiceSample";
+import LanguageMenu from "@/components/LanguageMenu";
 
 /** Long enough that a typist is not interrupted, short enough to feel saved. */
 const SAVE_DEBOUNCE_MS = 600;
@@ -90,6 +92,7 @@ function groupedZones(pinned = "") {
 }
 
 export default function ProfilePage() {
+  const { t, i18n } = useLingui();
   const [profile, setProfile] = useState(() => loadProfile());
   const [saved, setSaved] = useState("");
   const [offline, setOffline] = useState(false);
@@ -127,10 +130,10 @@ export default function ProfilePage() {
 
   const flash = useCallback((result) => {
     setOffline(result === null && hasAuthToken());  // null with a token means the write failed
-    setSaved(result === null ? "" : "Saved");
+    setSaved(result === null ? "" : t`Saved`);
     clearTimeout(savedTimer.current);
     savedTimer.current = setTimeout(() => setSaved(""), 1600);
-  }, []);
+  }, [t]);
 
   /** Optimistic: the control moves now, the row catches up. */
   const update = useCallback(
@@ -153,34 +156,37 @@ export default function ProfilePage() {
   const [zoneGroups] = useState(() => groupedZones(deviceZone));
   const chosenZone = profile.timezone || "";
   const offset = zoneOffsetLabel(chosenZone || "UTC");
+  const offsetSuffix = offset ? ` · ${offset}` : "";
 
   return (
     <section>
       <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">Profile</h1>
+        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Profile</Trans></h1>
         <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
           {saved}
         </span>
         <Button asChild variant="ghost" size="sm" className="ml-auto">
           <Link href="/projects">
-            <ArrowLeft className="size-4" /> Projects
+            <ArrowLeft className="size-4" /> <Trans>Projects</Trans>
           </Link>
         </Button>
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 20 }}>
-        Every agent reads this, on every project. Only you can see it.
+        <Trans>Every agent reads this, on every project. Only you can see it.</Trans>
       </p>
 
       {!signedIn && (
         <p className="app-subtle" style={{ marginBottom: 16, fontSize: 13 }}>
-          Saved on this device until you sign in. A signed-in profile follows you, and the
-          scheduled brief can read it.
+          <Trans>
+            Saved on this device until you sign in. A signed-in profile follows you, and the
+            scheduled brief can read it.
+          </Trans>
         </p>
       )}
       {offline && (
         <p role="alert" className="text-destructive" style={{ marginBottom: 16, fontSize: 13 }}>
-          Not saved to your account. It is kept on this device; try again in a moment.
+          <Trans>Not saved to your account. It is kept on this device; try again in a moment.</Trans>
         </p>
       )}
 
@@ -193,21 +199,21 @@ export default function ProfilePage() {
         <div className="pf-rows">
           <div className="pf-row">
             <label className="pf-label" htmlFor="pf-name">
-              What should Duct call you?
+              <Trans>What should Duct call you?</Trans>
             </label>
             <input
               id="pf-name"
               className="pf-input"
               value={profile.display_name}
               maxLength={80}
-              placeholder="Shirish"
+              placeholder={t`Shirish`}
               onChange={(e) => update({ display_name: e.target.value }, { debounce: true })}
             />
           </div>
 
           <div className="pf-row">
             <label className="pf-label" htmlFor="pf-role">
-              What do you do?
+              <Trans>What do you do?</Trans>
             </label>
             {/* Radix treats "" as no selection, so the empty option travels as a
                 sentinel and is mapped back on the way in and out. */}
@@ -221,7 +227,7 @@ export default function ProfilePage() {
               <SelectContent>
                 {ROLE_OPTIONS.map((option) => (
                   <SelectItem key={option.value || NO_ROLE} value={option.value || NO_ROLE}>
-                    {option.label}
+                    {i18n._(option.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -229,8 +235,23 @@ export default function ProfilePage() {
           </div>
 
           <div className="pf-row">
+            <label className="pf-label" htmlFor="pf-interface-language">
+              <Trans>Show Duct in</Trans>
+            </label>
+            {/* Saves itself (cookie + profile + refresh); the page only keeps
+                its local copy current so the next save does not put the old
+                value back. */}
+            <LanguageMenu
+              id="pf-interface-language"
+              className="pf-control"
+              value={profile.interface_language}
+              onChange={(value) => setProfile((prev) => ({ ...prev, interface_language: value }))}
+            />
+          </div>
+
+          <div className="pf-row">
             <label className="pf-label" htmlFor="pf-language">
-              Write to me in
+              <Trans>Write to me in</Trans>
             </label>
             <Select
               value={profile.communication_language || "auto"}
@@ -244,7 +265,7 @@ export default function ProfilePage() {
               <SelectContent>
                 {LANGUAGES.map((option) => (
                   <SelectItem key={option.value || "auto"} value={option.value || "auto"}>
-                    {option.label}
+                    {i18n._(option.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -253,7 +274,7 @@ export default function ProfilePage() {
 
           <div className="pf-row">
             <label className="pf-label" htmlFor="pf-timezone">
-              My timezone
+              <Trans>My timezone</Trans>
             </label>
             <Select
               value={chosenZone || UTC_VALUE}
@@ -273,7 +294,7 @@ export default function ProfilePage() {
                     week" means. */}
                 {deviceZone && (
                   <SelectGroup>
-                    <SelectLabel>This device</SelectLabel>
+                    <SelectLabel><Trans>This device</Trans></SelectLabel>
                     {/* Just the city, like every other item: the trigger
                         renders the selected item's own text, so a pinned entry
                         spelled differently makes the closed control read
@@ -282,7 +303,7 @@ export default function ProfilePage() {
                   </SelectGroup>
                 )}
                 <SelectGroup>
-                  <SelectLabel>Default</SelectLabel>
+                  <SelectLabel><Trans>Default</Trans></SelectLabel>
                   <SelectItem value={UTC_VALUE}>UTC</SelectItem>
                 </SelectGroup>
                 {zoneGroups.map(([region, zones]) => (
@@ -299,14 +320,14 @@ export default function ProfilePage() {
             </Select>
             <p className="pf-hint">
               {chosenZone
-                ? `Duct reads "last week" and "yesterday" in ${chosenZone}${offset ? ` · ${offset}` : ""}.`
-                : `Dates resolve in UTC${offset ? ` · ${offset}` : ""}. Pick your zone so "last week" means your week.`}
+                ? <Trans>Duct reads "last week" and "yesterday" in {chosenZone}{offsetSuffix}.</Trans>
+                : <Trans>Dates resolve in UTC{offsetSuffix}. Pick your zone so "last week" means your week.</Trans>}
             </p>
           </div>
         </div>
 
-        <h2 className="pf-heading">How Duct writes</h2>
-        <div className="pf-presets" role="radiogroup" aria-label="How Duct writes">
+        <h2 className="pf-heading"><Trans>How Duct writes</Trans></h2>
+        <div className="pf-presets" role="radiogroup" aria-label={t`How Duct writes`}>
           {WRITING_PRESETS.map((preset) => {
             const selected = preset.value === profile.writing_preset;
             return (
@@ -318,8 +339,8 @@ export default function ProfilePage() {
                 onClick={() => update({ writing_preset: preset.value })}
                 className={`pf-preset${selected ? " pf-preset--on" : ""}`}
               >
-                <span className="pf-preset-name">{preset.label}</span>
-                <span className="pf-preset-desc">{preset.description}</span>
+                <span className="pf-preset-name">{i18n._(preset.label)}</span>
+                <span className="pf-preset-desc">{i18n._(preset.description)}</span>
               </button>
             );
           })}
@@ -328,21 +349,23 @@ export default function ProfilePage() {
         {/* The reason the presets are legible at all. Same finding, three voices. */}
         <VoiceSample preset={profile.writing_preset} language={profile.communication_language} />
 
-        <h2 className="pf-heading">Anything else Duct should know</h2>
+        <h2 className="pf-heading"><Trans>Anything else Duct should know</Trans></h2>
         <p className="app-subtle" style={{ marginTop: 0, marginBottom: 8, fontSize: 13 }}>
-          House rules, the metric you actually care about, how you want to be argued with. This
-          wins when it disagrees with the setting above.
+          <Trans>
+            House rules, the metric you actually care about, how you want to be argued with. This
+            wins when it disagrees with the setting above.
+          </Trans>
         </p>
         <textarea
           className="pf-notes"
           value={profile.notes}
           maxLength={NOTES_MAX_CHARS}
           rows={4}
-          aria-label="Anything else Duct should know"
-          placeholder="Give me the number first, then the why. Never recommend a change I cannot roll back."
+          aria-label={t`Anything else Duct should know`}
+          placeholder={t`Give me the number first, then the why. Never recommend a change I cannot roll back.`}
           onChange={(e) => update({ notes: e.target.value }, { debounce: true })}
         />
-        <p className="pf-count">{notesLeft} characters left</p>
+        <p className="pf-count"><Plural value={notesLeft} one="# character left" other="# characters left" /></p>
 
         <div className="pf-actions">
           <Button
@@ -354,7 +377,7 @@ export default function ProfilePage() {
               saveProfile({ ...PROFILE_DEFAULTS }).then(flash);
             }}
           >
-            Reset to defaults
+            <Trans>Reset to defaults</Trans>
           </Button>
         </div>
       </div>

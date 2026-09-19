@@ -15,8 +15,10 @@
  * save.
  */
 
+import { msg } from "@lingui/core/macro";
 import { BASE } from "./api";
 import { authedHeaders, hasAuthToken } from "./authFetch";
+import { writeLocaleCookie } from "../i18n/cookie";
 import { PREFS_KEY, loadPreferences, savePreferences } from "./userPreferences";
 
 const ENDPOINT = `${BASE}/api/user/profile`;
@@ -47,6 +49,10 @@ export const PROFILE_DEFAULTS = Object.freeze({
   // is indistinguishable from a preference, and this one changes which seven
   // days "last week" means.
   timezone: "",
+  // A catalogue tag from `i18n/locales.js` ("es", "pt-BR", ...) or "" for
+  // "follow the browser". The interface, not the model: see that file for
+  // why it is not the same list as LANGUAGES below.
+  interface_language: "",
   notes: "",
 });
 
@@ -54,18 +60,18 @@ export const PROFILE_DEFAULTS = Object.freeze({
 export const WRITING_PRESETS = [
   {
     value: "executive",
-    label: "Executive",
-    description: "Impact and money first, few actions, no jargon",
+    label: msg`Executive`,
+    description: msg`Impact and money first, few actions, no jargon`,
   },
   {
     value: "practitioner",
-    label: "Practitioner",
-    description: "The signal, the number behind it, what to do next",
+    label: msg`Practitioner`,
+    description: msg`The signal, the number behind it, what to do next`,
   },
   {
     value: "technical",
-    label: "Technical",
-    description: "Every measurement, the method, notes for whoever builds the fix",
+    label: msg`Technical`,
+    description: msg`Every measurement, the method, notes for whoever builds the fix`,
   },
 ];
 
@@ -77,16 +83,16 @@ export const WRITING_PRESETS = [
  * and it fails silently in a deliverable somebody forwards.
  */
 export const LANGUAGES = [
-  { value: "", label: "Match my messages" },
-  { value: "English", label: "English" },
-  { value: "Spanish", label: "Español" },
-  { value: "French", label: "Français" },
-  { value: "German", label: "Deutsch" },
-  { value: "Portuguese", label: "Português" },
-  { value: "Italian", label: "Italiano" },
-  { value: "Dutch", label: "Nederlands" },
-  { value: "Hindi", label: "हिन्दी" },
-  { value: "Japanese", label: "日本語" },
+  { value: "", label: msg`Match my messages` },
+  { value: "English", label: msg`English` },
+  { value: "Spanish", label: msg`Español` },
+  { value: "French", label: msg`Français` },
+  { value: "German", label: msg`Deutsch` },
+  { value: "Portuguese", label: msg`Português` },
+  { value: "Italian", label: msg`Italiano` },
+  { value: "Dutch", label: msg`Nederlands` },
+  { value: "Hindi", label: msg`हिन्दी` },
+  { value: "Japanese", label: msg`日本語` },
 ];
 
 /**
@@ -164,15 +170,15 @@ export function zoneOffsetLabel(zone, now = new Date()) {
 }
 
 export const ROLE_OPTIONS = [
-  { value: "", label: "Not saying" },
-  { value: "Founder / CEO", label: "Founder / CEO" },
-  { value: "Executive (CMO, VP, Director)", label: "Executive (CMO, VP, Director)" },
-  { value: "Product Manager", label: "Product Manager" },
-  { value: "Growth Manager", label: "Growth Manager" },
-  { value: "SEO / Content Lead", label: "SEO / Content Lead" },
-  { value: "Developer / Engineer", label: "Developer / Engineer" },
-  { value: "Consultant / Agency", label: "Consultant / Agency" },
-  { value: "Other", label: "Other" },
+  { value: "", label: msg`Not saying` },
+  { value: "Founder / CEO", label: msg`Founder / CEO` },
+  { value: "Executive (CMO, VP, Director)", label: msg`Executive (CMO, VP, Director)` },
+  { value: "Product Manager", label: msg`Product Manager` },
+  { value: "Growth Manager", label: msg`Growth Manager` },
+  { value: "SEO / Content Lead", label: msg`SEO / Content Lead` },
+  { value: "Developer / Engineer", label: msg`Developer / Engineer` },
+  { value: "Consultant / Agency", label: msg`Consultant / Agency` },
+  { value: "Other", label: msg`Other` },
 ];
 
 function coerce(body) {
@@ -185,8 +191,24 @@ function coerce(body) {
     writing_preset: preset,
     communication_language: String(body?.communication_language || ""),
     timezone: String(body?.timezone || ""),
+    interface_language: String(body?.interface_language || ""),
     notes: String(body?.notes || "").slice(0, NOTES_MAX_CHARS),
   };
+}
+
+/**
+ * Keep the locale cookie in step with the profile.
+ *
+ * The root layout is a server component and reads the cookie, not the
+ * profile, so every place the profile lands in the browser (first fetch,
+ * every save) writes the cookie. Returns true when the cookie changed, which
+ * is the caller's cue to `router.refresh()` so the frame re-renders in the
+ * new language — only when the value actually moved, because a refresh on
+ * every profile fetch would re-render the whole tree on every page load.
+ */
+export function mirrorInterfaceLanguage(profile) {
+  if (!profile || !profile.interface_language) return false;
+  return writeLocaleCookie(profile.interface_language);
 }
 
 /** The cached copy, for the first paint. Never throws. */

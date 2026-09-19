@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { resolveTheme } from "../lib/themes";
 import { capitalize } from "@/lib/format";
 
@@ -175,8 +176,9 @@ function KpiChip({ label, value, delta, tone, Icon }) {
 // ─── Signal block ─────────────────────────────────────────────────────────────
 
 function SignalBlock({ finding }) {
+  const { t } = useLingui();
   const level = signalLevel(finding);
-  const pillLabel = finding.type === "win" ? "Win" : finding.type === "risk" ? "Risk" : "Watch";
+  const pillLabel = finding.type === "win" ? t`Win` : finding.type === "risk" ? t`Risk` : t`Watch`;
   const evidence = finding.evidence?.slice(0, 3).join(" • ");
 
   return (
@@ -184,15 +186,15 @@ function SignalBlock({ finding }) {
       <span className={`signal-pill ${level}`}>{pillLabel}</span>
       <p className="signal-title">{finding.title}</p>
       <p className="signal-body">{finding.impact}</p>
-      {evidence && <p className="signal-body signal-evidence">Evidence: {evidence}</p>}
+      {evidence && <p className="signal-body signal-evidence"><Trans>Evidence: {evidence}</Trans></p>}
       <div className="signal-action">
         <div className="signal-action-row">
           <div className="signal-action-cell">
-            <span className="signal-action-label">Action</span>
+            <span className="signal-action-label"><Trans>Action</Trans></span>
             <span className="signal-action-value">{finding.recommended_action}</span>
           </div>
           <div className="signal-action-cell">
-            <span className="signal-action-label">Confidence</span>
+            <span className="signal-action-label"><Trans>Confidence</Trans></span>
             <span className="signal-action-value">
               {capitalize(finding.confidence)}
             </span>
@@ -240,7 +242,7 @@ function SignalsSection({ highlights, risks, accent }) {
             aria-expanded={expanded}
             onClick={() => setExpanded((v) => !v)}
           >
-            {expanded ? "Show less signals" : "Show more signals"}
+            {expanded ? <Trans>Show less signals</Trans> : <Trans>Show more signals</Trans>}
           </button>
         </>
       )}
@@ -254,7 +256,7 @@ function RoasBars({ campaigns, accent }) {
   const maxR = Math.max(...campaigns.map((c) => c.roas), 1);
   return (
     <div className="rpt-bar-block">
-      <p className="rpt-bar-label">ROAS by campaign</p>
+      <p className="rpt-bar-label"><Trans>ROAS by campaign</Trans></p>
       {campaigns.map((c) => {
         const pct = Math.round((c.roas / maxR) * 100);
         return (
@@ -298,7 +300,7 @@ function CampaignTable({ campaigns, currency }) {
         onClick={() => setOpen((v) => !v)}
       >
         <span>
-          Campaign breakdown
+          <Trans>Campaign breakdown</Trans>
           <span className="rpt-disclosure-meta"> · {campaigns.length}</span>
         </span>
         <span className={`rpt-disclosure-chevron${open ? " open" : ""}`} aria-hidden="true">
@@ -312,11 +314,11 @@ function CampaignTable({ campaigns, currency }) {
             <table className="camp-table">
               <thead>
                 <tr>
-                  <th>Campaign</th>
-                  <th>Spend</th>
+                  <th><Trans>Campaign</Trans></th>
+                  <th><Trans>Spend</Trans></th>
                   <th>CPA</th>
                   <th>ROAS</th>
-                  <th>Action</th>
+                  <th><Trans>Action</Trans></th>
                 </tr>
               </thead>
               <tbody>
@@ -348,6 +350,7 @@ function CampaignTable({ campaigns, currency }) {
 // ─── Root component ───────────────────────────────────────────────────────────
 
 export default function GoogleAdsReport({ brief, synthesis, payload: legacyPayload }) {
+  const { t } = useLingui();
   // Support both envelope (brief+synthesis) and legacy flat payload
   const data = brief ?? legacyPayload;
   const theme = resolveTheme(data.source_metadata?.theme);
@@ -375,17 +378,22 @@ export default function GoogleAdsReport({ brief, synthesis, payload: legacyPaylo
   const convDelta = period_comparison.conversions.delta;
   const cpaDelta = period_comparison.cost_per_conversion.delta;
 
+  const { source, window_current: windowCurrent, window_previous: windowPrevious, account_name: accountName } = meta;
+  const themeLabel = theme.label;
   const metaText = [
-    `Source: ${meta.source}`,
-    `${meta.window_current} vs ${meta.window_previous}`,
-    `Account: ${meta.account_name}`,
-    theme.label ? `Theme: ${theme.label}` : null,
+    t`Source: ${source}`,
+    t`${windowCurrent} vs ${windowPrevious}`,
+    t`Account: ${accountName}`,
+    themeLabel ? t`Theme: ${themeLabel}` : null,
   ]
     .filter(Boolean)
     .join(" · ");
 
-  const summaryText = `${narrative.summary} Operator takeaway: ${narrative.takeaway}`;
-  const sourcesText = `Generated at ${meta.generated_at} · ${meta.source_file ?? meta.export_type}`;
+  const { summary, takeaway } = narrative;
+  const summaryText = t`${summary} Operator takeaway: ${takeaway}`;
+  const generatedAt = meta.generated_at;
+  const sourceFile = meta.source_file ?? meta.export_type;
+  const sourcesText = t`Generated at ${generatedAt} · ${sourceFile}`;
 
   return (
     <div className="rpt-sheet" style={{ "--rpt-accent": accent }}>
@@ -412,7 +420,7 @@ export default function GoogleAdsReport({ brief, synthesis, payload: legacyPaylo
           </div>
           <div style={{ textAlign: "right" }}>
             <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--muted-foreground)", margin: "0 0 6px" }}>
-              {meta.window_current} vs previous (indexed)
+              <Trans>{windowCurrent} vs previous (indexed)</Trans>
             </p>
             <div className="kpi-sparkline-svg" aria-hidden="true">
               <Sparkline points={sparkPoints} accent={accent} />
@@ -423,14 +431,14 @@ export default function GoogleAdsReport({ brief, synthesis, payload: legacyPaylo
         {/* KPI strip */}
         <div className="kpi-strip">
           <KpiChip
-            label="Spend"
+            label={t`Spend`}
             value={account_summary.spend.formatted}
             delta={spendDelta}
             tone={trendToneForMetric("spend", spendDelta)}
             Icon={SpendIcon}
           />
           <KpiChip
-            label="Conversions"
+            label={t`Conversions`}
             value={account_summary.conversions.formatted}
             delta={convDelta}
             tone={trendToneForMetric("conversions", convDelta)}
@@ -456,7 +464,7 @@ export default function GoogleAdsReport({ brief, synthesis, payload: legacyPaylo
         <RoasBars campaigns={campaigns} accent={accent} />
 
         {/* Signals */}
-        <p className="rpt-section-label">Signals</p>
+        <p className="rpt-section-label"><Trans>Signals</Trans></p>
         <SignalsSection highlights={highlights} risks={risks} accent={accent} />
 
         {/* Campaign table */}

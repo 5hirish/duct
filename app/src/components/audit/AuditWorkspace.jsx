@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { FolderOpen } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import AgentChat from "../workspace/AgentChat";
 import AuditReport from "./AuditReport";
@@ -53,6 +54,7 @@ export default function AuditWorkspace({
   // the one thing here they have to be told about.
   projectMode = "",
 }) {
+  const { t } = useLingui();
   const { setIsAuditRunning } = useAuditNav();
 
   const [reportVersions, setReportVersions] = useState([]);
@@ -68,7 +70,7 @@ export default function AuditWorkspace({
 
   const agent = useAgentSession({
     agentType: AGENT_TYPE,
-    notifyAs: "The SEO audit",
+    notifyAs: t`The SEO audit`,
     body: auditParams,
     // The page's own session key is unique per audit, so a reload of this
     // page reattaches to this audit's run.
@@ -152,7 +154,7 @@ export default function AuditWorkspace({
         if (event.version_id === 1) {
           appendMessage({
             role: Row.ASSISTANT,
-            text: "Your report is on the right. Ask me to explain a finding, suggest a fix, or update the report.",
+            text: t`Your report is on the right. Ask me to explain a finding, suggest a fix, or update the report.`,
           });
         }
         break;
@@ -176,12 +178,12 @@ export default function AuditWorkspace({
           setReportVersions((prev) =>
             prev.some((v) => v.version_id === 1)
               ? prev
-              : [{ version_id: 1, label: "Initial audit", report: event.payload }, ...prev],
+              : [{ version_id: 1, label: t`Initial audit`, report: event.payload }, ...prev],
           );
           setSelectedVersionId(1);
         } else if (!reportReceivedRef.current) {
           // Pipeline completed but no report was ever produced.
-          dispatch({ type: Action.FAILED, error: "AI synthesis finished but no report was generated." });
+          dispatch({ type: Action.FAILED, error: t`AI synthesis finished but no report was generated.` });
         }
         break;
 
@@ -190,11 +192,12 @@ export default function AuditWorkspace({
         // rather than replacing everything with the failure state.
         if (reportReceivedRef.current) {
           dispatch({ type: Action.STOPPED, keepReady: true });
+          const error = event.error;
           appendMessage({
             role: Row.SEND_ERROR,
-            text: event.error
-              ? `Pipeline stopped early: ${event.error} — your partial report is still available above.`
-              : "The pipeline ended unexpectedly. Your partial report is still available.",
+            text: error
+              ? t`Pipeline stopped early: ${error} — your partial report is still available above.`
+              : t`The pipeline ended unexpectedly. Your partial report is still available.`,
             content: null,
           });
         }
@@ -227,19 +230,21 @@ export default function AuditWorkspace({
   const showPublicCta = publicMode && phase === Phase.READY && reportVersions.length > 0;
   const rightStatus = reportVersions.length > 0 ? "ready" : phase === Phase.PIPELINE ? "busy" : "idle";
 
+  const draftedName = drafted?.name;
+
   const banner = showPublicCta ? (
     <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-brand/10 border-b border-brand/25 text-sm">
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="font-semibold text-foreground leading-tight">Want the full picture?</span>
+        <span className="font-semibold text-foreground leading-tight"><Trans>Want the full picture?</Trans></span>
         <span className="text-brand text-xs leading-tight">
-          This is a quick scan. Sign up for a deeper audit with competitor analysis, keyword gaps, and a prioritized action plan.
+          <Trans>This is a quick scan. Sign up for a deeper audit with competitor analysis, keyword gaps, and a prioritized action plan.</Trans>
         </span>
       </div>
       <a
         href="/"
         className="shrink-0 inline-flex items-center gap-1 rounded-md bg-brand px-3 py-1.5 text-xs font-semibold text-brand-foreground hover:bg-brand/90 transition-colors"
       >
-        Get the full audit →
+        <Trans>Get the full audit →</Trans>
       </a>
     </div>
   ) : null;
@@ -248,12 +253,12 @@ export default function AuditWorkspace({
     <>
     <SplitWorkspace
       storageKey="audit_split_w"
-      rightLabel="Report"
+      rightLabel={t`Report`}
       rightStatus={rightStatus}
       banner={banner}
       left={
         <AgentChat
-          title="Agent Chat"
+          title={t`Agent Chat`}
           phase={phase}
           steps={agent.steps}
           todos={agent.todos}
@@ -295,18 +300,22 @@ export default function AuditWorkspace({
           onStop={handleStop}
           renderSteps={(steps) => <AuditStepProgress steps={steps} />}
           stepLabels={STEP_LABELS}
-          questionsCopy={QUESTIONS_COPY}
+          questionsCopy={{
+            title: t`One moment — Duct has a quick question`,
+            hint: t`Your answers sharpen the findings. Skip if you'd rather Duct decide.`,
+            submitLabel: t`Continue audit →`,
+          }}
           signInToConnect={signInToConnect}
-          inputPlaceholder="Ask a follow-up question…"
-          inputAriaLabel="Message the audit agent"
+          inputPlaceholder={t`Ask a follow-up question…`}
+          inputAriaLabel={t`Message the audit agent`}
           inputAccept="image/*,.pdf"
-          startingLabel="Starting audit…"
-          failedTitle="Audit failed"
-          retryLabel="↺ Retry audit"
+          startingLabel={t`Starting audit…`}
+          failedTitle={t`Audit failed`}
+          retryLabel={t`↺ Retry audit`}
           readyHint={
             reportVersions.length > 0 ? (
               <p className="text-sm text-center mt-6 px-2 py-3 rounded-lg bg-success/5 text-success border border-success/30">
-                ✓ Report ready — ask me anything about the findings.
+                <Trans>✓ Report ready — ask me anything about the findings.</Trans>
               </p>
             ) : null
           }
@@ -346,27 +355,23 @@ export default function AuditWorkspace({
     {drafted && (
       <CornerNotice
         icon={FolderOpen}
-        title={`Added to your ${drafted.name} project`}
+        title={t`Added to your ${draftedName} project`}
         onDismiss={() => setDrafted(null)}
-        dismissLabel="Dismiss project update"
+        dismissLabel={t`Dismiss project update`}
         actions={
           <Button asChild size="sm" variant="outline">
-            <Link href={`/project/${encodeURIComponent(drafted.id)}`}>Review what changed</Link>
+            <Link href={`/project/${encodeURIComponent(drafted.id)}`}><Trans>Review what changed</Trans></Link>
           </Button>
         }
       >
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Duct filled in what it learned from your site. Anything you had entered yourself was left
-          alone, and every drafted field is marked.
+          <Trans>
+            Duct filled in what it learned from your site. Anything you had entered yourself was left
+            alone, and every drafted field is marked.
+          </Trans>
         </p>
       </CornerNotice>
     )}
     </>
   );
 }
-
-const QUESTIONS_COPY = {
-  title: "One moment — Duct has a quick question",
-  hint: "Your answers sharpen the findings. Skip if you'd rather Duct decide.",
-  submitLabel: "Continue audit →",
-};

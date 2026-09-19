@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Trans } from "@lingui/react/macro";
 import AuditWorkspace from "../../../../../components/audit/AuditWorkspace";
 import ProviderRequiredCard from "../../../../../components/onboarding/ProviderRequiredCard";
 import { readAuditSession, writeAuditSession } from "../../../../../lib/auditSession";
@@ -32,7 +33,7 @@ export default function AuditSessionPage() {
   if (!params) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading audit session…</p>
+        <p className="text-sm text-muted-foreground"><Trans>Loading audit session…</Trans></p>
       </div>
     );
   }

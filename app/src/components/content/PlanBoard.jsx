@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutGrid, CalendarDays } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ import PlanCalendar from "@/components/content/PlanCalendar";
  * to preselect (e.g. from a query param).
  */
 export default function PlanBoard({ projectId, initialPlanId = "" }) {
+  const { t } = useLingui();
   const router = useRouter();
   const [plans, setPlans] = useState([]);
   const [activeId, setActiveId] = useState(initialPlanId || "");
@@ -79,6 +81,7 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
     () => plans.find((p) => p.id === activeId) || plan || null,
     [plans, activeId, plan]
   );
+  const postCount = Array.isArray(plan?.days) ? plan.days.length : 0;
 
   // Pending card → open the creation split-view, carrying the day's primary channel.
   const reviseDay = useCallback((index) => {
@@ -94,19 +97,19 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   if (error) {
     return (
       <LoadError
-        what="your content plan"
+        what={t`your content plan`}
         detail={error}
         onRetry={() => { setError(""); setReloadKey((k) => k + 1); }}
       />
     );
   }
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading plan…</p>;
+    return <p className="text-sm text-muted-foreground"><Trans>Loading plan…</Trans></p>;
   }
   if (plans.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center">
-        <p className="text-sm text-muted-foreground">No plan yet for this project.</p>
+        <p className="text-sm text-muted-foreground"><Trans>No plan yet for this project.</Trans></p>
       </div>
     );
   }
@@ -119,24 +122,27 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
           {plans.length > 1 ? (
             <Select value={activeId} onValueChange={setActiveId}>
               <SelectTrigger className="h-8 w-[220px]">
-                <SelectValue placeholder="Select a plan" />
+                <SelectValue placeholder={t`Select a plan`} />
               </SelectTrigger>
               <SelectContent>
-                {plans.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name || `Plan ${p.id.slice(0, 8)}`}
-                  </SelectItem>
-                ))}
+                {plans.map((p) => {
+                  const shortId = p.id.slice(0, 8);
+                  return (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name || t`Plan ${shortId}`}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           ) : (
             <span className="truncate text-sm font-medium">
-              {activeMeta?.name || "Monthly plan"}
+              {activeMeta?.name || <Trans>Monthly plan</Trans>}
             </span>
           )}
           {Array.isArray(plan?.days) && (
             <span className="hidden text-xs text-muted-foreground tabular-nums @md:inline">
-              {plan.days.length} posts
+              <Plural value={postCount} one="# post" other="# posts" />
             </span>
           )}
         </div>
@@ -145,7 +151,7 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
             <Segmented
               value={calView}
               onChange={setCalView}
-              options={[{ key: "month", label: "Month" }, { key: "week", label: "Week" }]}
+              options={[{ key: "month", label: t`Month` }, { key: "week", label: t`Week` }]}
             />
           )}
           <ViewToggle view={view} onChange={setView} />
@@ -155,7 +161,7 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
       {/* Board body */}
       {!plan ? (
         <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-          Loading plan…
+          <Trans>Loading plan…</Trans>
         </div>
       ) : view === "kanban" ? (
         <PlanKanban plan={plan} postsById={postsById} onReviseDay={reviseDay} />
@@ -186,9 +192,10 @@ function Segmented({ value, onChange, options }) {
 }
 
 function ViewToggle({ view, onChange }) {
+  const { t } = useLingui();
   const options = [
-    { key: "kanban", label: "Kanban", Icon: LayoutGrid },
-    { key: "calendar", label: "Calendar", Icon: CalendarDays },
+    { key: "kanban", label: t`Kanban`, Icon: LayoutGrid },
+    { key: "calendar", label: t`Calendar`, Icon: CalendarDays },
   ];
   return (
     <div className="flex shrink-0 items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-0.5">

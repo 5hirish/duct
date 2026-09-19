@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Calculadora de tasa de crecimiento de MRR — Herramienta gratuita de Duct</title>
+<link rel="canonical" href="https://getduct.ai/es/tools/mrr-growth-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/mrr-growth-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/mrr-growth-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/mrr-growth-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/mrr-growth-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/mrr-growth-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/mrr-growth-calculator"/>
+<!-- hreflang:end -->
+<meta name="description" content="Calculadora gratuita de tasa de crecimiento de MRR para equipos SaaS. Introduce el MRR inicial, el MRR final y el periodo para calcular el crecimiento neto, el CMGR y el crecimiento requerido para alcanzar tu MRR objetivo."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/es/tools/mrr-growth-calculator"/>
+<meta property="og:title" content="Calculadora de tasa de crecimiento de MRR — Herramienta gratuita de Duct"/>
+<meta property="og:description" content="Calcula la tasa de crecimiento del MRR, el crecimiento mensual compuesto y los requisitos de crecimiento objetivo al instante."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-mrr-growth-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Calculadora de tasa de crecimiento de MRR — Herramienta gratuita de Duct"/>
+<meta name="twitter:description" content="Calculadora gratuita de crecimiento de MRR SaaS con interpretación tipo benchmark y hallazgos de acción."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-mrr-growth-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, sinceramente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Rechaza y el sitio se comportará exactamente igual.","Privacy Policy":"Política de privacidad","Decline":"Rechazar","Accept":"Aceptar","{n} stars on GitHub":"{n} estrellas en GitHub","UTM Builder":"Constructor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de comparativa de métricas SaaS","Weekly Marketing Brief Generator":"Generador de informes de marketing semanales","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de tasa de crecimiento de MRR","Engagement Rate Calculator":"Calculadora de tasa de interacción","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menú de navegación","Close navigation menu":"Cerrar menú de navegación","Menu":"Menú","Free Tools":"Herramientas gratuitas","Solutions":"Soluciones","Download Duct ↓":"Descargar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de pantalla ampliada","Close":"Cerrar","Fit to screen":"Ajustar a la pantalla","Zoom in":"Acercar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 y posteriores","Runs on any distribution":"Funciona en cualquier distribución","Debian and Ubuntu":"Debian y Ubuntu","Download ↓":"Descargar ↓","Download for {label} ↓":"Descargar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de ejemplo. Cambia cualquier campo y calcula de nuevo para los tuyos."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"MRR Growth Rate Calculator","url":"https://getduct.ai/tools/mrr-growth-calculator","description":"Free calculator that computes net MRR growth, compound monthly growth rate (CMGR), and required growth rate to hit a target MRR for SaaS businesses.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you calculate MRR growth rate?","acceptedAnswer":{"@type":"Answer","text":"Net MRR growth rate is calculated as (Ending MRR minus Starting MRR) divided by Starting MRR. Multiply by 100 to express it as a percentage."}},{"@type":"Question","name":"What is CMGR in SaaS?","acceptedAnswer":{"@type":"Answer","text":"CMGR means Compound Monthly Growth Rate. It shows the average monthly growth needed to move from starting MRR to ending MRR over a set number of months. Formula: CMGR = (Ending MRR/Starting MRR)^(1/months) - 1."}},{"@type":"Question","name":"What is a good MRR growth rate for SaaS?","acceptedAnswer":{"@type":"Answer","text":"A healthy target depends on stage, but early-stage SaaS teams often aim for 10 to 20 percent monthly growth. Growth below 5 percent can still be strong for later-stage, efficient businesses with high retention."}},{"@type":"Question","name":"Can this calculator handle MRR decline?","acceptedAnswer":{"@type":"Answer","text":"Yes. If ending MRR is lower than starting MRR, the calculator shows a negative growth rate and flags contraction risk so you can investigate churn, downgrades, and acquisition efficiency."}},{"@type":"Question","name":"How do I project MRR growth to a target?","acceptedAnswer":{"@type":"Answer","text":"Enter your target MRR to calculate the required compound monthly growth rate from your current MRR over the selected period. This helps evaluate if your growth plan is realistic."}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero {
+    padding: 80px 24px 48px; text-align: center;
+    max-width: 700px; margin: 0 auto;
+  }
+  .tool-hero h1 {
+    font-family: var(--serif); font-size: clamp(32px, 5vw, 52px);
+    color: var(--navy); margin: 16px 0 16px; line-height: 1.15;
+  }
+  .tool-hero h1 em { color: var(--orange); font-style: italic; }
+  .tool-hero p { font-size: 17px; color: var(--navy-3); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  .tool-wrap { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; }
+  .tool-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,.06);
+  }
+  .tool-inputs {
+    padding: 36px 40px; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 24px 32px;
+  }
+  @media (max-width: 640px) { .tool-inputs { grid-template-columns: 1fr; padding: 24px; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--navy); letter-spacing: .01em; }
+  .field .field-hint { font-size: 11px; color: var(--navy-3); margin-top: -2px; }
+  .field input {
+    padding: 11px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--r); font-size: 15px; font-family: var(--sans);
+    color: var(--navy); background: var(--white);
+    transition: border-color .15s; outline: none; -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input:focus { border-color: var(--orange); }
+  .field input::placeholder { color: var(--navy-3); opacity: .6; }
+
+  .tool-action { padding: 0 40px 36px; display: flex; align-items: center; gap: 16px; }
+  @media (max-width: 640px) { .tool-action { padding: 0 24px 24px; flex-direction: column; align-items: stretch; } }
+
+  .tool-results { border-top: 1px solid var(--border); padding: 36px 40px; display: none; }
+  @media (max-width: 640px) { .tool-results { padding: 24px; } }
+  .tool-results.visible { display: block; }
+
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+
+  .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
+  .result-card.green { border-color: #22c55e; background: #f0fdf4; }
+  .result-card.amber { border-color: #f59e0b; background: #fffbeb; }
+  .result-card.red   { border-color: #ef4444; background: #fef2f2; }
+  .result-card.neutral { border-color: var(--border); background: var(--off); }
+
+  .result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-3); margin-bottom: 6px; }
+  .result-value { font-size: 26px; font-family: var(--serif); color: var(--navy); font-weight: 400; margin-bottom: 4px; line-height: 1.1; }
+  .result-badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+    font-weight: 500; padding: 2px 9px; border-radius: 100px; margin-bottom: 8px;
+  }
+  .result-badge.green { background: #dcfce7; color: #15803d; }
+  .result-badge.amber { background: #fef3c7; color: #92400e; }
+  .result-badge.red { background: #fee2e2; color: #991b1b; }
+  .result-badge.neutral { background: #f1f5f9; color: var(--navy-3); }
+  .result-context { font-size: 12px; color: var(--navy-3); line-height: 1.5; margin: 0; }
+
+  .tool-cta {
+    margin-top: 28px; background: var(--navy); border-radius: var(--r);
+    padding: 28px 32px; display: flex; align-items: center;
+    justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+
+  .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+
+  .insight-panel {
+    margin-top: 24px;
+    background: #eff6ff;
+    border: 1px solid rgba(37,99,235,.18);
+    border-left: 3px solid #2563EB;
+    border-radius: var(--r);
+    padding: 20px 24px;
+  }
+  .insight-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: #2563EB; margin-bottom: 10px;
+  }
+  .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
+  .insight-panel p:last-of-type { margin-bottom: 0; }
+  .insight-links { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .insight-link {
+    font-size: 13px; font-weight: 500; color: #2563EB;
+    text-decoration: none; border: 1px solid rgba(37,99,235,.25);
+    padding: 6px 12px; border-radius: var(--pill);
+    background: var(--white); transition: background .15s;
+  }
+  .insight-link:hover { background: #dbeafe; }
+</style>
+</head>
+<body>
+
+<!-- EXPERIMENT: MRR growth calculator as lead magnet — do growth leaders landing on "mrr growth rate calculator" convert to beta signups at a higher rate than static content? -->
+
+<a href="#main-content" class="skip-link">Saltar al contenido</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<div data-duct-partial="/es/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Herramienta gratuita · No requiere registro</div>
+  <h1>Calculadora de tasa de crecimiento de MRR <em>para SaaS</em></h1>
+  <p>Tu plan de ingresos es tan sólido como tu pendiente de crecimiento. Calcula el crecimiento de MRR y el CMGR claramente — con benchmarks, listo para la decisión, sin retrasos de hoja de cálculo.</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="Calculadora de tasa de crecimiento de MRR">
+
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-start-mrr">MRR inicial</label>
+        <span class="field-hint">MRR al inicio de tu periodo de análisis</span>
+        <input type="number" id="inp-start-mrr" placeholder="e.g. 20000" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-end-mrr">MRR final</label>
+        <span class="field-hint">MRR al final del periodo</span>
+        <input type="number" id="inp-end-mrr" placeholder="e.g. 28000" min="0" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-months">Duración del periodo (meses)</label>
+        <span class="field-hint">Número de meses entre el MRR inicial y final</span>
+        <input type="number" id="inp-months" placeholder="e.g. 6" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-target">MRR objetivo (opcional)</label>
+        <span class="field-hint">Usa esto para calcular el CMGR requerido</span>
+        <input type="number" id="inp-target" placeholder="e.g. 50000" min="0" inputmode="numeric"/>
+      </div>
+    </div>
+
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">
+        Calcular crecimiento →
+      </button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">
+        Restablecer
+      </button>
+    </div>
+
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+
+    <div class="tool-results" id="results-section" role="region" aria-label="Resultados de crecimiento de MRR" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Tus resultados</p>
+      <div class="results-row" id="results-row"></div>
+
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Crecimiento durante un periodo de meses. La pregunta es qué cambió bajo la pendiente.</p>
+          <p>Duct lee tus herramientas de anuncios, analíticas e ingresos, responde a esa pregunta y propone el cambio. Tú lo apruebas.</p>
+        </div>
+        <a href="/es/download" class="btn btn-orange" data-duct-download>Descarga Duct ↓</a>
+      </div>
+
+      <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
+        <p class="insight-label">Qué significa esto</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="Acerca de Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">El CMGR te indica el impulso. No te dice qué cambió debajo de la pendiente.</p>
+      <p class="duct-bridge-body">Duct lee el MRR junto a nuevos logotipos, expansión y abandono, dice cuál de los tres cambió la pendiente y propone dónde actuar primero.</p>
+      <a href="/es/" class="duct-bridge-link">Cómo funciona Duct →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Una sesión de hallazgos: preguntó por qué los registros bajan cuando el ROAS sube, el agente lee anuncios, analíticas e ingresos juntos, propone un cambio pendiente de aprobación a la izquierda y escribe el informe a la derecha"/>
+      <figcaption>Pregunta por qué los registros bajan cuando el ROAS sube. Duct lee anuncios, analíticas e ingresos juntos, nombra la cohorte que se está yendo y propone el cambio. Tú apruebas.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2>Cómo <em>funciona la calculadora</em></h2>
+  <p>Esta calculadora de tasa de crecimiento de MRR utiliza tres fórmulas clave de crecimiento SaaS:</p>
+  <ul>
+    <li><strong>Tasa de crecimiento neto del MRR</strong> = (MRR final − MRR inicial) ÷ MRR inicial</li>
+    <li><strong>CMGR</strong> = (MRR final ÷ MRR inicial)^(1 ÷ meses) − 1</li>
+    <li><strong>CMGR requerido</strong> = (MRR objetivo ÷ MRR final)^(1 ÷ meses) − 1</li>
+  </ul>
+  <p>Usa el crecimiento neto para medir el movimiento total a lo largo de un periodo, y el CMGR para comparar la calidad del crecimiento mes a mes. Dos equipos pueden registrar el mismo crecimiento total pero tener una consistencia mensual muy diferente.</p>
+
+  <h2 style="margin-top:40px">Por qué la tasa de crecimiento de MRR <em>importa</em></h2>
+  <p>Los planes de ingresos a menudo fallan porque los equipos solo rastrean el MRR absoluto, no la velocidad de crecimiento. Si el CMGR disminuye durante tres meses consecutivos, tu plan anual puede fallar por un amplio margen incluso mientras el MRR sigue aumentando. Cuanto antes detectes el cambio de pendiente, más fácil será ajustar los mecanismos de pipeline, expansión y retención.</p>
+  <p>Duct automatiza esto en toda tu pila para que los líderes de crecimiento vean los cambios de trayectoria semanales en lugar de descubrirlos al cierre del trimestre.</p>
+
+  <h2 style="margin-top:40px">Limitaciones</h2>
+  <ul>
+    <li>Esta calculadora utiliza instantáneas de MRR inicial y final, no la descomposición de retención a nivel de cohorte.</li>
+    <li>No separa los componentes de MRR nuevo, de expansión, de contracción y de churn.</li>
+    <li>El CMGR requerido asume un ritmo de crecimiento constante cada mes, lo cual rara vez ocurre en la práctica.</li>
+    <li>Todos los cálculos se ejecutan en tu navegador. No se envían ni almacenan datos.</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">También gratis</p>
+    <h2 id="related-tools-heading">Explora <em>herramientas</em> relacionadas</h2>
+    <p class="related-tools-banner-desc">Combina la velocidad de crecimiento con benchmarks y economía unitaria: cada herramienta es independiente, en el navegador y está diseñada para el mismo ritmo de decisión semanal.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="mrr-growth-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+  <p class="tag">FAQ</p>
+  <h2>Preguntas <em>frecuentes</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+  <details class="faq-item">
+    <summary class="faq-q">¿Cómo se calcula la tasa de crecimiento de MRR?</summary>
+    <p class="faq-a">Tasa de crecimiento neto de MRR = (MRR final − MRR inicial) ÷ MRR inicial. Multiplica por 100 para obtener un porcentaje. Ejemplo: si el MRR crece de $20,000 a $28,000, el crecimiento neto es ($8,000 ÷ $20,000) = 40%.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">¿Qué es el CMGR en SaaS?</summary>
+    <p class="faq-a">CMGR (Tasa de Crecimiento Mensual Compuesta) es el crecimiento mensual promedio necesario para pasar de tu MRR inicial a tu MRR final durante un número de meses. Normaliza la velocidad de crecimiento, para que los equipos puedan comparar períodos de diferente duración.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">¿Cuál es una buena tasa de crecimiento de MRR?</summary>
+    <p class="faq-a">Depende de la etapa. Las SaaS en etapa inicial suelen apuntar a un crecimiento mensual del 10-20%, mientras que los equipos en etapas posteriores pueden operar eficientemente con tasas más bajas. La clave es si tu tasa de crecimiento sostiene tu modelo operativo y las suposiciones del plan.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">¿Puede esta calculadora mostrar contracción del MRR?</summary>
+    <p class="faq-a">Sí. Si el MRR final es inferior al MRR inicial, tu crecimiento neto y CMGR se vuelven negativos. La calculadora lo marca como contracción para que puedas investigar el churn, las degradaciones y el riesgo de recuperación de la adquisición.</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">¿Cómo calculo el crecimiento necesario para alcanzar un MRR objetivo?</summary>
+    <p class="faq-a">Introduce un valor de MRR objetivo y la duración del periodo. La herramienta calcula el CMGR requerido a partir de tu MRR final. Puedes comparar esta tasa requerida con tu CMGR actual para ver si tu plan es realista.</p>
+  </details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/es/partials/cta-tools.html"></div>
+
+</main>
+
+<div data-duct-partial="/es/partials/footer-expanded.html"></div>
+
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-start-mrr', 'inp-end-mrr', 'inp-months', 'inp-target'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  var THRESHOLDS = {
+    netGrowth: [
+      { min: 40, level: 'green', badge: 'Strong', context: 'High momentum across the full period.' },
+      { min: 15, level: 'amber', badge: 'Moderate', context: 'Positive growth, but execution consistency matters.' },
+      { min: 0, level: 'amber', badge: 'Low', context: 'Growing, but at a pace that may miss aggressive targets.' },
+      { min: -999, level: 'red', badge: 'Contraction', context: 'MRR decreased across the selected period.' }
+    ],
+    cmgr: [
+      { min: 15, level: 'green', badge: 'Hypergrowth', context: 'Excellent monthly compounding for an early-stage SaaS.' },
+      { min: 5, level: 'amber', badge: 'Healthy', context: 'Solid compounding. Focus on maintaining consistency.' },
+      { min: 0, level: 'amber', badge: 'Flat', context: 'Positive but slow monthly growth.' },
+      { min: -999, level: 'red', badge: 'Declining', context: 'Negative monthly compounding; investigate churn and expansion mix.' }
+    ]
+  };
+
+  function getLevel(key, value) {
+    var ths = THRESHOLDS[key];
+    for (var i = 0; i < ths.length; i++) {
+      if (value >= ths[i].min) return ths[i];
+    }
+    return ths[ths.length - 1];
+  }
+
+  function fmtCurrency(value) {
+    var abs = Math.abs(value);
+    var sign = value < 0 ? '-' : '';
+    if (abs >= 1000000) return sign + (abs / 1000000).toFixed(2) + 'm';
+    if (abs >= 1000) return sign + (abs / 1000).toFixed(1) + 'k';
+    return sign + abs.toFixed(0);
+  }
+
+  function fmtPercent(value) {
+    return (value >= 0 ? '+' : '') + value.toFixed(2) + '%';
+  }
+
+  function makeCard(label, display, level, badge, context) {
+    var card = document.createElement('div');
+    card.className = 'result-card ' + level;
+
+    var lbl = document.createElement('div');
+    lbl.className = 'result-label';
+    lbl.textContent = label;
+
+    var val = document.createElement('div');
+    val.className = 'result-value';
+    val.textContent = display;
+
+    var bdg = document.createElement('span');
+    bdg.className = 'result-badge ' + level;
+    bdg.textContent = badge;
+
+    var ctx = document.createElement('p');
+    ctx.className = 'result-context';
+    ctx.textContent = context;
+
+    card.appendChild(lbl);
+    card.appendChild(val);
+    card.appendChild(bdg);
+    card.appendChild(ctx);
+    return card;
+  }
+
+  function getVal(id) {
+    return parseFloat(document.getElementById(id).value);
+  }
+
+  function addP(node, text) {
+    var p = document.createElement('p');
+    p.textContent = text;
+    node.appendChild(p);
+  }
+
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var start = getVal('inp-start-mrr');
+    var end = getVal('inp-end-mrr');
+    var months = getVal('inp-months');
+    var targetRaw = document.getElementById('inp-target').value;
+    var target = targetRaw === '' ? NaN : parseFloat(targetRaw);
+
+    var bad = [];
+    if (isNaN(start) || start <= 0) bad.push('inp-start-mrr');
+    if (isNaN(end) || end < 0) bad.push('inp-end-mrr');
+    if (isNaN(months) || months <= 0) bad.push('inp-months');
+    if (bad.length) {
+      DuctToolFormError.show(ERR, 'Enter starting MRR greater than zero, ending MRR (zero or greater), and period length in months (at least 1).', bad);
+      document.getElementById(bad[0]).focus();
+      return;
+    }
+    if (!isNaN(target) && target <= 0) {
+      DuctToolFormError.show(ERR, 'Target MRR must be greater than zero when provided.', ['inp-target']);
+      document.getElementById('inp-target').focus();
+      return;
+    }
+
+    var netGrowthPct = ((end - start) / start) * 100;
+    var cmgrPct = (Math.pow(end / start, 1 / months) - 1) * 100;
+    var mrrDelta = end - start;
+    var projected12 = end * Math.pow(1 + (cmgrPct / 100), 12);
+
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+
+    var deltaLevel = mrrDelta >= 0 ? 'neutral' : 'red';
+    var deltaBadge = mrrDelta >= 0 ? 'Calculated' : 'Needs attention';
+    var deltaContext = mrrDelta >= 0
+      ? 'Absolute MRR increase across the selected period.'
+      : 'Absolute MRR loss across the selected period.';
+    row.appendChild(makeCard('MRR Delta', fmtCurrency(mrrDelta), deltaLevel, deltaBadge, deltaContext));
+
+    var netState = getLevel('netGrowth', netGrowthPct);
+    row.appendChild(makeCard('Net MRR Growth', fmtPercent(netGrowthPct), netState.level, netState.badge, netState.context));
+
+    var cmgrState = getLevel('cmgr', cmgrPct);
+    row.appendChild(makeCard('CMGR', fmtPercent(cmgrPct), cmgrState.level, cmgrState.badge, cmgrState.context));
+
+    var runRateLevel = projected12 >= end ? 'neutral' : 'red';
+    var runRateContext = projected12 >= end
+      ? 'Projected MRR in 12 months if current CMGR stays constant.'
+      : 'Projected 12-month run-rate assumes current decline continues.';
+    row.appendChild(makeCard('12-Month Run-rate', fmtCurrency(projected12), runRateLevel, 'Scenario', runRateContext));
+
+    var requiredCmgrPct = null;
+    if (!isNaN(target)) {
+      requiredCmgrPct = (Math.pow(target / end, 1 / months) - 1) * 100;
+      var targetBelowCurrent = target < end;
+      var reachOk = targetBelowCurrent
+        ? (cmgrPct <= requiredCmgrPct)
+        : (requiredCmgrPct <= cmgrPct);
+      var reqLevel = 'amber';
+      if (reachOk) {
+        reqLevel = 'green';
+      } else if (!targetBelowCurrent && requiredCmgrPct > cmgrPct * 1.5) {
+        reqLevel = 'red';
+      } else if (targetBelowCurrent && cmgrPct > 0 && requiredCmgrPct < 0) {
+        reqLevel = 'red';
+      }
+      var reqBadge = reqLevel === 'green'
+        ? 'Within reach'
+        : (reqLevel === 'amber' ? 'Stretch' : 'Aggressive');
+      var reqCardContext = targetBelowCurrent
+        ? 'Compound monthly rate from current MRR to reach the lower target in the same number of months. Negative CMGR means contraction each month.'
+        : 'Monthly growth needed from current MRR to hit target in the same number of months.';
+      row.appendChild(makeCard(
+        'Required CMGR',
+        fmtPercent(requiredCmgrPct),
+        reqLevel,
+        reqBadge,
+        reqCardContext
+      ));
+    }
+
+    var body = document.getElementById('insight-body');
+    while (body.firstChild) { body.removeChild(body.firstChild); }
+
+    if (cmgrPct >= 10) {
+      addP(body, 'Your monthly compounding is strong. The key risk now is volatility: protect this rate by monitoring expansion and churn drivers weekly, not monthly.');
+    } else if (cmgrPct >= 3) {
+      addP(body, 'Your trajectory is positive but execution-sensitive. Small changes in retention and activation can shift quarterly outcomes meaningfully at this growth band.');
+    } else if (cmgrPct >= 0) {
+      addP(body, 'Growth is near-flat. To avoid slipping behind plan, identify one acquisition lever and one retention lever that can move CMGR in the next 4-6 weeks.');
+    } else {
+      addP(body, 'You are in MRR contraction. Prioritize churn root-cause analysis and expansion recovery before scaling paid acquisition spend.');
+    }
+
+    if (requiredCmgrPct !== null) {
+      if (target < end) {
+        addP(body, 'Your target MRR is below current MRR, so the required CMGR is negative (compound contraction). Compare it to your actual CMGR: you may need to accelerate downsell/churn discipline or reduce spend to reach the lower figure on schedule.');
+      } else if (requiredCmgrPct <= cmgrPct) {
+        addP(body, 'Your current growth pace is enough to hit the target if maintained. Focus on consistency and reducing variance across months.');
+      } else {
+        addP(body, 'Your target requires faster compounding than your current pace. Close the gap by improving either new logo throughput, expansion MRR, or churn control.');
+      }
+    }
+
+    addP(body, 'MRR growth should be interpreted with unit economics. Pair this with CAC payback and LTV:CAC so growth quality stays healthy as velocity changes.');
+
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-start-mrr', 'inp-end-mrr', 'inp-months', 'inp-target'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    var section = document.getElementById('results-section');
+    section.classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+  });
+  DuctToolExample.seed(['inp-start-mrr', 'inp-end-mrr', 'inp-months', 'inp-target'], 'calc-btn', 'results-section');
+}());
+</script>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>
