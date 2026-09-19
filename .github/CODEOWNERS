@@ -34,6 +34,24 @@
 # Desktop signing and entitlements.
 /desktop/src-tauri/             @5hirish
 
+# What the agents are told. A prompt edit changes every brief for every
+# customer with no test to catch a regression in tone or method, and the
+# session-audit ledger ties findings to these lines by name. The dump under
+# docs/ is regenerated from them and must move with them.
+/backend/agents/core/prompts.py     @5hirish
+/backend/agents/core/voice.py       @5hirish
+/backend/agents/core/context.py     @5hirish
+/backend/agents/core/turn.py        @5hirish
+/backend/agents/**/prompts/         @5hirish
+/backend/agents/**/prompts.py       @5hirish
+/backend/agents/insights/subagents/ @5hirish
+/backend/agents/insights/checks.py  @5hirish
+/backend/agents/insights/goals/     @5hirish
+/backend/agents/knowledge/          @5hirish
+/backend/service/profile.py         @5hirish
+/docs/engineering/agent-prompts.md  @5hirish
+/.agents/skills/                    @5hirish
+
 # The contract files themselves.
 /LICENSE                        @5hirish
 /SECURITY.md                    @5hirish
