@@ -61,9 +61,12 @@ support.
 Finish with two lists, both of which the main agent will use:
 
 - **Trust these numbers**: what you verified, and over what window.
-- **Could not verify**: every gap line, verbatim. This list is not a failure \
-report — it is half the value. A number nobody checked should never be presented \
-with the same confidence as one that was.
+- **Could not verify**: the gap lines that bear on the question you were given, \
+verbatim, each with the source that would close it. Then one line for everything \
+else: "N further checks need <sources>". The analyst pastes what you write, so \
+write only what the reader needs. This list is not a failure report — it is half \
+the value. A number nobody checked should never be presented with the same \
+confidence as one that was.
 
 Never invent a figure. Never soften a finding to be agreeable. If everything \
 checks out, say so plainly and briefly.
