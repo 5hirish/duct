@@ -84,6 +84,7 @@ import {
 import { faviconUrl } from "@/lib/favicon";
 import { CONNECTORS_CHANGED, countConnectedSources } from "@/lib/connectorsApi";
 import { NAV_SECTIONS } from "@/lib/navigation";
+import { LanguageMenuItem } from "@/components/LanguageMenu";
 
 // ---------------------------------------------------------------------------
 // Project switcher in sidebar header
@@ -421,6 +422,9 @@ function SidebarUserFooter() {
           </Link>
         </DropdownMenuItem>
         <ProfileMenuItem />
+        {/* The profile page has the same control; here it is one click away
+            for someone who landed in a language they cannot read. */}
+        <LanguageMenuItem />
         <NotificationMenuItem />
         <DropdownMenuSeparator />
         {/* Plain new-tab links: installExternalLinkHandler (lib/shell.js)
