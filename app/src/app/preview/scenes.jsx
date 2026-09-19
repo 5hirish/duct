@@ -957,11 +957,11 @@ export const SCENES = [
         <DataPane
           fetched={fetchedFromEvents([
             { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t1", input: { entity_id: "gsc_queries" } } },
-            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t1", output: JSON.stringify({ status: "ok", entity_id: "gsc_queries", date_from: "2026-08-20", date_to: "2026-09-17" }) } },
+            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t1", result: JSON.stringify({ status: "ok", entity_id: "gsc_queries", date_from: "2026-08-20", date_to: "2026-09-17" }) } },
             { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t2", input: { entity_id: "ga4_traffic" } } },
-            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t2", output: JSON.stringify({ status: "ok", entity_id: "ga4_traffic", date_from: "2026-08-20", date_to: "2026-09-17" }) } },
+            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t2", result: JSON.stringify({ status: "ok", entity_id: "ga4_traffic", date_from: "2026-08-20", date_to: "2026-09-17" }) } },
             { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t3", input: { entity_id: "google_ads_campaigns" } } },
-            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t3", output: JSON.stringify({ status: "reauth_required", entity_id: "google_ads_campaigns", date_from: "2026-08-20", date_to: "2026-09-17", message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it on the Connections page." }) } },
+            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t3", result: JSON.stringify({ status: "reauth_required", entity_id: "google_ads_campaigns", date_from: "2026-08-20", date_to: "2026-09-17", message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it on the Connections page." }) } },
           ])}
         />
       </div>

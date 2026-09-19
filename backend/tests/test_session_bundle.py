@@ -37,7 +37,7 @@ def _bundle(prompt_sha: str = "") -> dict:
         {"seq": 4, "kind": "thinking", "created_at": "t", "data": {"text": "check ads"}},
         {"seq": 5, "kind": "tool_result", "created_at": "t", "data": {
             "name": "FetchData", "tool_use_id": "t1", "is_error": False,
-            "output": json.dumps({"status": "ok", "data": "sessions,users\n10,8", "note": "token sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz"})}},
+            "result": json.dumps({"status": "ok", "data": "sessions,users\n10,8", "note": "token sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz"})}},
         {"seq": 6, "kind": "assistant", "created_at": "t", "data": {"text": "One campaign."}},
     ]
     return {
@@ -51,7 +51,8 @@ def _bundle(prompt_sha: str = "") -> dict:
         "events": events,
         "artifacts": [{"id": "a1", "group_id": "g1", "version": 2, "slug": "growth-brief", "agent_type": "insights",
                        "kind": "brief", "content_type": "text/markdown", "title": "Growth brief", "filename": "",
-                       "size_bytes": 12, "summary": "", "created_at": "t", "content": "# Brief\n"}],
+                       "size_bytes": 12, "summary": "", "created_at": "t", "content": "# Brief\n",
+                       "storage_key": "projects/p1/artifacts/g1/v2.md", "content_from": "store"}],
         "memories_written": [{"kind": "fact", "title": "CPA target", "body": "$40"}],
         "memories_active": [],
         "change_sets": [],
@@ -65,7 +66,7 @@ def test_tool_calls_are_paired_with_their_results_across_the_gap():
     [call] = session_bundle.pair_tools(_bundle()["events"])
     assert call["seq"] == 3 and call["result_seq"] == 5
     assert call["input"] == {"entity_id": "ga4_traffic"}
-    assert json.loads(call["output"])["status"] == "ok"
+    assert json.loads(call["result"])["status"] == "ok"
 
 
 def test_transcript_reads_context_first_then_the_turns_with_tools_collapsed():
@@ -98,3 +99,17 @@ def test_prompt_check_knows_whether_the_prompt_has_moved():
     old = _bundle()
     old["events"] = old["events"][1:]
     assert "predates" in session_bundle.prompt_check(old)
+
+
+def test_a_desktop_session_artifact_is_found_in_the_app_uploads_dir(tmp_path):
+    """The desktop sidecar keeps uploads under its Application Support dir,
+    so the store on the reviewing machine has nothing for the key."""
+    class Row:
+        storage_key = "projects/p1/artifacts/g1/v1.md"
+        structured_json = {}
+
+    (tmp_path / "projects" / "p1" / "artifacts" / "g1").mkdir(parents=True)
+    (tmp_path / "projects" / "p1" / "artifacts" / "g1" / "v1.md").write_text("# From the desktop\n")
+    text, source = session_bundle.artifact_content(Row(), extra_dirs=(tmp_path,))
+    assert text.startswith("# From the desktop") and source == str(tmp_path)
+    assert session_bundle.artifact_content(Row()) [1] in ("missing", *map(str, session_bundle.DESKTOP_UPLOAD_DIRS))

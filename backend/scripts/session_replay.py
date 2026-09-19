@@ -72,8 +72,10 @@ def replay_seed(events: list[dict[str, Any]]) -> dict[tuple[str, str, str], str]
 
     The key is the call's arguments, not the envelope's resolved window: the
     replayed model will ask with the same arguments if it reasons the same
-    way, and the cache is keyed on arguments. First body wins for a repeat,
-    matching the session cache."""
+    way, and the cache is keyed on arguments. For a repeated key a body whose
+    envelope says ``ok`` wins over one that does not, whatever the order: the
+    first audit's session had pulled the same report three times, failing
+    twice, and "first wins" replayed the failure."""
     inputs: dict[str, dict[str, Any]] = {}
     seed: dict[tuple[str, str, str], str] = {}
     for ev in events:
@@ -87,11 +89,26 @@ def replay_seed(events: list[dict[str, Any]]) -> dict[tuple[str, str, str], str]
                 str(args.get("date_from", "")).strip(),
                 str(args.get("date_to", "")).strip(),
             )
-            output = data.get("output")
-            body = output if isinstance(output, str) else json.dumps(output, default=str)
-            if key[0] and key not in seed:
+            result = data.get("result")
+            # A row with no stored body (older recorder versions, a truncated
+            # preview) must not seed `null`: the model would read that as a
+            # failed pull and write a brief about the outage.
+            if result is None or result == "":
+                continue
+            body = result if isinstance(result, str) else json.dumps(result, default=str)
+            if not key[0]:
+                continue
+            if key not in seed or (_is_ok(body) and not _is_ok(seed[key])):
                 seed[key] = body
     return seed
+
+
+def _is_ok(body: str) -> bool:
+    try:
+        parsed = json.loads(body)
+    except ValueError:
+        return False
+    return isinstance(parsed, dict) and parsed.get("status") == "ok"
 
 
 def context_row(events: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -106,6 +123,24 @@ def first_prompt(events: list[dict[str, Any]]) -> str:
     return ""
 
 
+def strip_session_memories(digest: str, written_ids: list[str]) -> tuple[str, int]:
+    """Drop digest lines that cite a memory this very session wrote.
+
+    A rebuilt digest is the project as the database knows it today, which
+    includes the conclusions the run under replay reached. Priming the
+    replay with its own answer is not a replay. Lines are matched on the
+    short id the digest cites (m_ + first eight hex), and the count of
+    dropped lines goes in replay.json so the reader knows it happened."""
+    shorts = {f"m_{str(i).replace('-', '')[:8]}" for i in written_ids}
+    kept, dropped = [], 0
+    for line in digest.splitlines():
+        if any(s in line for s in shorts):
+            dropped += 1
+            continue
+        kept.append(line)
+    return "\n".join(kept), dropped
+
+
 def reconstruct_blocks(db: Session, bundle: dict[str, Any], *, owner_id: UUID | None, run: Any) -> dict[str, str]:
     """Blocks for a session that never recorded them: the best the database
     can say today, which is not what the model read then."""
@@ -115,7 +150,7 @@ def reconstruct_blocks(db: Session, bundle: dict[str, Any], *, owner_id: UUID | 
             "name", "url", "industry", "business_model", "pitch", "targets", "audience", "competition"
         )} if project else None
     )
-    memory = ""
+    memory, dropped = "", 0
     if project is not None:
         try:
             memory = build_memory_context(
@@ -125,10 +160,14 @@ def reconstruct_blocks(db: Session, bundle: dict[str, Any], *, owner_id: UUID | 
             ).text
         except Exception:  # noqa: BLE001 - a digest is optional priming
             memory = ""
+        memory, dropped = strip_session_memories(
+            memory, [m["id"] for m in bundle.get("memories_written", [])]
+        )
     return {
         "business_context": business,
         "user_context": user_context_block(resolve_profile(owner_id, None)),
         "memory": memory,
+        "memory_lines_dropped": dropped,
         "data_sources": data_sources_block(run, user_id=owner_id),
         "artifact_format": DEFAULT_FORMAT,
         "autonomy": run.autonomy,
@@ -258,6 +297,7 @@ def main(argv: list[str] | None = None) -> int:
         "tier": args.tier or run.tier,
         "prompt": prompt,
         "reconstructed": reconstructed,
+        "memory_lines_dropped": blocks.get("memory_lines_dropped", 0),
         "original_system_prompt_sha256": (ctx or {}).get("system_prompt_sha256", ""),
         "seed_keys": [list(k) for k in seed],
         "seed_misses": misses,

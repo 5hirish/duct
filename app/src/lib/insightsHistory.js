@@ -60,7 +60,11 @@ export function fetchedFromEvents(events) {
   for (const ev of events || []) {
     if (ev?.kind !== TOOL_RESULT || ev.data?.name !== FETCH_TOOL) continue;
     const args = calls.get(ev.data.tool_use_id) || {};
-    const env = parseEnvelope(ev.data.output);
+    // The recorder stores the tool's return under `result` (persistence.py's
+    // record_tool_result); the first cut of this file read `output`, which
+    // never existed, and every reopened pane fell back to the call's
+    // arguments with a guessed verdict. The session-audit spin caught it.
+    const env = parseEnvelope(ev.data.result);
     const entityId = env?.entity_id || args.entity_id || "";
     const dateFrom = env?.date_from || args.date_from || "";
     const dateTo = env?.date_to || args.date_to || "";

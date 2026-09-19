@@ -182,9 +182,30 @@ def build_data_tools_lc(
         key = (entity_id.strip(), date_from.strip(), date_to.strip())
         with tool_span(tool_name="FetchData", agent_name=log_prefix) as span:
             cached = cache.get(key)
+            if replaying and cached is not None and on_fetch is not None:
+                # A live session's cache hit is silent (the ladder listed the
+                # pull when it was made). In a replay the seed IS the session's
+                # pulls, so the first use of one is the moment it enters this
+                # run; without a step the replay's reader cannot tell which
+                # seeded pulls the model read.
+                try:
+                    served = json.loads(cached)
+                    if isinstance(served, dict):
+                        await _maybe_await(on_fetch(key[0], served))
+                except (ValueError, TypeError):
+                    pass
+                except Exception:  # noqa: BLE001 — UI sugar, never fatal
+                    logger.debug("insights: on_fetch hook failed", exc_info=True)
             if cached is None and replaying:
                 span.set_attribute("duct.replay_miss", True)
                 logger.info("%s: FetchData(%s) not in the replay seed", log_prefix, key)
+                # The model read the first wording of this as an outage and
+                # wrote about GA4 being down. It is not down; it is a replay,
+                # and these are the pulls it can have.
+                available = [
+                    f"{e}" + (f" for {f} to {t}" if f else " with the default window")
+                    for (e, f, t) in cache
+                ]
                 miss = {
                     "status": "not_in_replay",
                     "entity_id": key[0],
@@ -193,10 +214,12 @@ def build_data_tools_lc(
                     "connector_id": REPLAY_CONNECTOR,
                     "date_from": key[1],
                     "date_to": key[2],
+                    "available": available,
                     "message": (
-                        "This is a replay of a stored session on its own data; this pull "
-                        "was not made in the original run, so there is nothing to serve. "
-                        "Work from the pulls that exist and say what is missing."
+                        "Not an outage: this is a replay of a stored session on the data "
+                        "it fetched, and this pull was not among them. The pulls available "
+                        f"in this replay are: {'; '.join(available) or 'none'}. Use those, "
+                        "and say what this one would have added."
                     ),
                 }
                 # A miss is a step like a failed pull: the replay's reader must

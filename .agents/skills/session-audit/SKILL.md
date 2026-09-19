@@ -291,6 +291,15 @@ would score what nobody has time to read.
 - A replay is a fresh checkpoint thread: it cannot replay a paused session
   past its pause, and a session that asked the user a question gets the
   unattended shape (no question, stated assumption) instead.
+- A replay of a session without a CONTEXT row primes from the database as
+  it is today. The digest lines citing memories the session itself wrote
+  are dropped (`memory_lines_dropped` in `replay.json`), but anything the
+  project learned since, from other sessions, is in the priming and was not
+  in the original's. Read `reconstructed: true` as "same data, different
+  priming".
+- The first audit (2026-09-19, insights 696dd088) found four defects in
+  this tooling on its first run; the record lists them. Expect the second
+  run to find fewer, not none.
 - Artifact content is read from storage; if the storage backend is not
   reachable from this machine the file is empty and the record says so.
 - `MEMORY_RECALLED` is not persisted, only the digest text inside the

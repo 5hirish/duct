@@ -4,7 +4,7 @@ import { fetchedFromEvents, fetchLabel } from "../insightsHistory";
 const use = (id, input) => ({ kind: "tool_use", data: { name: "FetchData", tool_use_id: id, input } });
 const result = (id, body, is_error = false) => ({
   kind: "tool_result",
-  data: { name: "FetchData", tool_use_id: id, output: typeof body === "string" ? body : JSON.stringify(body), is_error },
+  data: { name: "FetchData", tool_use_id: id, result: typeof body === "string" ? body : JSON.stringify(body), is_error },
 });
 
 describe("fetchedFromEvents", () => {
@@ -40,7 +40,7 @@ describe("fetchedFromEvents", () => {
       use("t2", { entity_id: "gsc_queries", date_from: "2026-09-01", date_to: "2026-09-14" }),
       result("t2", { status: "ok", entity_id: "gsc_queries", date_from: "2026-09-01", date_to: "2026-09-14" }),
       { kind: "tool_use", data: { name: "ReadConnectorNotes", tool_use_id: "n1", input: {} } },
-      { kind: "tool_result", data: { name: "ReadConnectorNotes", tool_use_id: "n1", output: "{}" } },
+      { kind: "tool_result", data: { name: "ReadConnectorNotes", tool_use_id: "n1", result: "{}" } },
     ]);
     expect(rows).toEqual([{ label: "gsc queries · 2026-09-01 → 2026-09-14", ok: true, error: "" }]);
   });

@@ -55,6 +55,15 @@ from models.usage import ModelUsage  # noqa: E402
 from service.artifact_store import artifact_text_content, extension_for  # noqa: E402
 from service.memory import redact_secrets  # noqa: E402
 
+# Where the desktop app's sidecar keeps local uploads. A session run on the
+# desktop wrote its artifact there, not under this checkout's uploads_dir,
+# so the store's read comes back empty on the machine that ran it. Probed
+# by relative key when the store has nothing; --uploads-dir names another.
+DESKTOP_UPLOAD_DIRS = tuple(
+    Path.home() / "Library" / "Application Support" / app / "uploads"
+    for app in ("ai.getduct.desktop", "ai.getduct.desktop.dev")
+)
+
 # Project columns that are context, not bookkeeping: what the agent could
 # have been told about the business. Listed rather than dumped so a new
 # operational column never rides into a bundle by accident.
@@ -112,6 +121,21 @@ def _tool_output_text(output: Any) -> str:
     return output if isinstance(output, str) else json.dumps(output, indent=2, default=str)
 
 
+def artifact_content(row: Any, extra_dirs: tuple[Path, ...] = ()) -> tuple[str, str]:
+    """The artifact's text and where it came from: the store, a desktop
+    uploads directory, or nowhere ('' with 'missing')."""
+    text = artifact_text_content(row)
+    if text:
+        return text, "store"
+    key = (row.storage_key or "").lstrip("/")
+    if key:
+        for base in (*extra_dirs, *DESKTOP_UPLOAD_DIRS):
+            path = base / key
+            if path.is_file():
+                return path.read_text(encoding="utf-8", errors="replace"), str(base)
+    return "", "missing"
+
+
 # ---------------------------------------------------------------------------
 # Pull
 # ---------------------------------------------------------------------------
@@ -139,7 +163,7 @@ def list_conversations(db: Session, *, agent_type: str, limit: int) -> list[dict
     return rows
 
 
-def pull(db: Session, conversation_id: UUID) -> dict[str, Any]:
+def pull(db: Session, conversation_id: UUID, *, uploads_dirs: tuple[Path, ...] = ()) -> dict[str, Any]:
     conv = db.get(AgentConversation, conversation_id)
     if conv is None:
         raise SystemExit(f"no conversation {conversation_id}")
@@ -192,7 +216,9 @@ def pull(db: Session, conversation_id: UUID) -> dict[str, Any]:
             for e in events
         ],
         "artifacts": [
-            {**_row(a, ARTIFACT_FIELDS), "content": artifact_text_content(a)} for a in artifacts
+            {**_row(a, ARTIFACT_FIELDS), "storage_key": a.storage_key, "content": text, "content_from": source}
+            for a in artifacts
+            for text, source in [artifact_content(a, uploads_dirs)]
         ],
         "memories_written": [_row(m, MEMORY_FIELDS) for m in written],
         "memories_active": [_row(m, MEMORY_FIELDS) for m in active],
@@ -214,7 +240,7 @@ def pair_tools(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if ev.get("kind") == EventKind.TOOL_USE:
             entry = {
                 "seq": ev["seq"], "name": data.get("name", ""), "tool_use_id": data.get("tool_use_id", ""),
-                "input": data.get("input"), "output": None, "is_error": False, "result_seq": None,
+                "input": data.get("input"), "result": None, "is_error": False, "result_seq": None,
             }
             calls[entry["tool_use_id"]] = entry
             ordered.append(entry)
@@ -223,10 +249,12 @@ def pair_tools(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
             if entry is None:
                 entry = {
                     "seq": ev["seq"], "name": data.get("name", ""), "tool_use_id": data.get("tool_use_id", ""),
-                    "input": None, "output": None, "is_error": False, "result_seq": None,
+                    "input": None, "result": None, "is_error": False, "result_seq": None,
                 }
                 ordered.append(entry)
-            entry["output"] = data.get("output")
+            # The recorder's field is `result`; the paired entry keeps that name
+            # so a tools/ file reads like the row it came from.
+            entry["result"] = data.get("result")
             entry["is_error"] = bool(data.get("is_error"))
             entry["result_seq"] = ev["seq"]
     return ordered
@@ -305,7 +333,7 @@ def render_transcript(bundle: dict[str, Any]) -> str:
         elif kind == EventKind.TOOL_USE:
             t = by_seq.get(seq) or {}
             arg = json.dumps(t.get("input"), default=str)
-            outp = _tool_output_text(t.get("output"))
+            outp = _tool_output_text(t.get("result"))
             verdict = "error" if t.get("is_error") else "ok"
             out.append(
                 f"- [{seq}] **{t.get('name', '')}** {arg[:TRANSCRIPT_PAYLOAD_CHARS]} → {verdict}, "
@@ -326,6 +354,7 @@ def render_transcript(bundle: dict[str, Any]) -> str:
             out.append(
                 f"- v{a['version']} **{a['title'] or a['slug']}** ({a['content_type']}, {a['size_bytes']:,} bytes, "
                 f"{a['created_at']}) → artifacts/{a['slug'] or 'artifact'}-v{a['version']}.{extension_for(a['content_type'])}"
+                + (" · **bytes missing**" if a.get("content_from") == "missing" else "")
             )
     written = bundle.get("memories_written", [])
     if written:
@@ -357,7 +386,7 @@ def write_bundle(bundle: dict[str, Any], out_dir: Path) -> list[Path]:
         put(
             f"tools/{t['seq']:04d}-{t['name'] or 'tool'}.json",
             json.dumps(
-                {"name": t["name"], "input": t["input"], "is_error": t["is_error"], "output": t["output"]},
+                {"name": t["name"], "input": t["input"], "is_error": t["is_error"], "result": t["result"]},
                 indent=2,
                 default=str,
             ),
@@ -416,6 +445,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=20, help="with list: how many")
     parser.add_argument("--out", default="", help="bundle directory (default .audits/bundles/<short id>)")
     parser.add_argument("--prompt-check", action="store_true", help="compare the session's system prompt with this checkout")
+    parser.add_argument("--uploads-dir", action="append", default=[], help="another local uploads directory to probe for artifact bytes")
     args = parser.parse_args(argv)
 
     engine = get_engine()
@@ -432,13 +462,16 @@ def main(argv: list[str] | None = None) -> int:
                     f"ev {r['events']:<4} {r['last_active_at'][:16]}  {r['project'][:24]:<24} {r['title'][:60]}"
                 )
             return 0
-        bundle = pull(db, UUID(args.target))
+        bundle = pull(db, UUID(args.target), uploads_dirs=tuple(Path(d) for d in args.uploads_dir))
 
     out_dir = Path(args.out) if args.out else Path(".audits") / "bundles" / _short(bundle["conversation"]["id"])
     files = write_bundle(bundle, out_dir)
     print(f"bundled {bundle['conversation']['id']} → {out_dir}  ({len(files)} files)")
     print(f"  events {len(bundle['events'])} · tools {len(pair_tools(bundle['events']))} · "
           f"artifacts {len(bundle['artifacts'])} · memories written {len(bundle['memories_written'])}")
+    for a in bundle["artifacts"]:
+        if a["content_from"] == "missing":
+            print(f"  artifact v{a['version']} '{a['title']}': bytes not found (store, desktop uploads); pass --uploads-dir")
     if args.prompt_check:
         print("  " + prompt_check(bundle))
     return 0
