@@ -17,21 +17,26 @@ from __future__ import annotations
 from agents.core.context import UserContext, format_user_context
 from service.profile import Profile
 
-#: What each preset asks for, in one line. The audit prompt has richer,
-#: SEO-specific guidance of its own (``agents/audit/prompts.py``) and keeps it;
-#: this is the version every other agent gets.
+#: What each preset asks for, in one line, and the one definition of what a
+#: preset means. Each line says what changes in length and content when the
+#: preset changes, not what tone to strike: the first three read "money,
+#: action, no padding" for all three presets, so a model saw no difference
+#: between them (session audit, 2026-09-19). The audit prompt adds an
+#: SEO-specific sentence on top (``agents/audit/prompts.py``); it does not
+#: restate these.
 VOICE_GUIDANCE: dict[str, str] = {
     "executive": (
-        "strategic summaries — business impact and money first, the top few "
-        "actions only, no jargon"
+        "one screen: the decision, the money at stake, at most three actions; "
+        "no metric names, no method; the evidence goes below the fold"
     ),
     "practitioner": (
-        "actionable specifics — the signal, the number behind it, and what to "
-        "do next, without padding"
+        "the signal, the number behind it, what to do next; name the pages, "
+        "campaigns and terms; the method in one line"
     ),
     "technical": (
-        "full detail — every measurement, the method behind it, and "
-        "implementation notes for someone who will build the fix"
+        "every measurement with its window and definition, the method, and "
+        "notes for whoever builds the fix; event and field names as the "
+        "platform shows them"
     ),
 }
 

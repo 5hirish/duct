@@ -20,21 +20,21 @@ from agents.core.turn import TurnContext, build_turn, spec_for
 from agents.preferences import UserPreferences
 from agents.registry import AgentType
 
+# What the preset means for an SEO report specifically. The preset's general
+# meaning (length, what to cut) is the shared ``VOICE_GUIDANCE`` line in the
+# ``<user_context>`` block; this only adds what is true of this artifact, so
+# the two never restate or contradict each other.
 _STYLE_GUIDANCE: dict[str, str] = {
     "executive": (
-        "Lead every finding with business impact (lost traffic, revenue risk, "
-        "competitive gap). Keep findings to 2 sentences max. Prioritise the top 3 "
-        "actions only. Avoid technical jargon — translate signals into outcomes."
+        "Translate every signal into lost traffic, revenue risk or competitive "
+        "gap; the top three fixes only."
     ),
     "practitioner": (
-        "Be signal-driven and actionable. Include specific URLs, measured values, "
-        "and step-by-step remediation. Moderate detail — enough to act without "
-        "unnecessary padding."
+        "Specific URLs, measured values, and step-by-step remediation."
     ),
     "technical": (
-        "Include HTTP status codes, response headers, crawl-budget signals, "
-        "and developer-specific implementation notes. Reference RFC or spec "
-        "where relevant. Target a technically literate audience."
+        "HTTP status codes, response headers, crawl-budget signals, and the RFC "
+        "or spec where one applies."
     ),
 }
 
