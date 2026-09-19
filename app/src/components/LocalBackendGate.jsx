@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { Trans } from "@lingui/react/macro";
 
 import { reconcileStoredSession } from "../lib/authFetch.js";
 import { initLocalBackend } from "../lib/localBackend.js";
@@ -52,12 +53,14 @@ export default function LocalBackendGate({ children }) {
       <div className="flex min-h-svh items-center justify-center p-8">
         <div className="max-w-md space-y-2 text-center">
           <h1 className="text-lg font-semibold text-foreground">
-            Duct&rsquo;s local backend didn&rsquo;t start
+            <Trans>Duct’s local backend didn’t start</Trans>
           </h1>
           <p className="text-sm text-muted-foreground">{error}</p>
           <p className="text-sm text-muted-foreground">
-            Quit and reopen Duct. If it keeps happening, the app bundle may be
-            incomplete — reinstall it.
+            <Trans>
+              Quit and reopen Duct. If it keeps happening, the app bundle may be
+              incomplete — reinstall it.
+            </Trans>
           </p>
         </div>
       </div>
@@ -67,7 +70,7 @@ export default function LocalBackendGate({ children }) {
   if (!ready) {
     return (
       <div className="flex min-h-svh items-center justify-center p-8">
-        <p className="text-sm text-muted-foreground">Starting Duct…</p>
+        <p className="text-sm text-muted-foreground"><Trans>Starting Duct…</Trans></p>
       </div>
     );
   }

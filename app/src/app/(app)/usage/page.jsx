@@ -13,6 +13,7 @@
 // implementation, and the tab reads the same six-field shape this does.
 
 import { Gauge } from "lucide-react";
+import { Trans } from "@lingui/react/macro";
 import UsagePanel from "@/components/models/UsagePanel";
 
 export default function UsagePage() {
@@ -20,7 +21,7 @@ export default function UsagePage() {
     <>
       <h1 className="app-title">
         <Gauge size={20} strokeWidth={1.75} aria-hidden="true" />
-        Usage
+        <Trans>Usage</Trans>
       </h1>
       <UsagePanel standalone />
     </>

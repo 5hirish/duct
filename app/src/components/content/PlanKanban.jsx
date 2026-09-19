@@ -1,5 +1,6 @@
 "use client";
 
+import { Trans, useLingui } from "@lingui/react/macro";
 import { PostStatus } from "../../lib/contentEnums";
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
 import { effectiveSchedule, planStartOf } from "../../lib/contentSchedule";
@@ -21,13 +22,14 @@ const COLUMNS = STATUS_ORDER.map((key) => {
  *   - onReviseDay?(index)
  */
 export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
+  const { i18n } = useLingui();
   const days = Array.isArray(plan?.days) ? plan.days : [];
   const anchor = planStartOf(plan);
 
   const grouped = Object.fromEntries(COLUMNS.map((c) => [c.key, []]));
   days.forEach((d, idx) => {
     const post = d.post_id ? postsById[d.post_id] || null : null;
-    const schedule = effectiveSchedule(d, post, anchor, idx);
+    const schedule = effectiveSchedule(d, post, anchor, idx, { locale: i18n.locale });
     const status = schedule.status || "pending";
     (grouped[status] = grouped[status] || []).push({ day: d, post, schedule, index: idx });
   });
@@ -61,13 +63,13 @@ export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
             <div key={col.key} className={`flex min-w-0 flex-col rounded-lg border ${col.accent}`}>
               <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {col.label}
+                  {i18n._(col.label)}
                 </span>
                 <span className="text-xs tabular-nums text-muted-foreground">{cards.length}</span>
               </div>
               <div className="min-h-20 flex-1 space-y-2 p-2">
                 {cards.length === 0 && (
-                  <p className="px-1 py-2 text-xs italic text-muted-foreground">Nothing here yet.</p>
+                  <p className="px-1 py-2 text-xs italic text-muted-foreground"><Trans>Nothing here yet.</Trans></p>
                 )}
                 {cards.map((card) => (
                   <PostMiniCard

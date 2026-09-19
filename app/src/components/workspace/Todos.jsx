@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Trans } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 
 const STATUS = {
@@ -34,9 +35,9 @@ export default function Todos({ todos }) {
         className="w-full flex items-center justify-between px-4 py-2 hover:bg-muted/40 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Progress</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide"><Trans>Progress</Trans></span>
           <span className="text-xs numeric text-muted-foreground">{completed}/{total}</span>
-          {inProgress > 0 && <span className="text-xs text-info animate-pulse">working…</span>}
+          {inProgress > 0 && <span className="text-xs text-info animate-pulse"><Trans>working…</Trans></span>}
         </div>
         <div className="flex items-center gap-2">
           <div className="w-16 h-1 rounded-full bg-muted overflow-hidden">

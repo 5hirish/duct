@@ -1,3 +1,6 @@
+import { Trans } from "@lingui/react/macro";
+
+import { activateRequestI18n } from "@/i18n/server";
 import LocalBackendGate from "../../components/LocalBackendGate.jsx";
 
 // The lead magnet's own chrome. Gated like every other subtree that talks to
@@ -8,7 +11,8 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function PublicLayout({ children }) {
+export default async function PublicLayout({ children }) {
+  await activateRequestI18n();
   return (
     <div className="h-dvh flex flex-col bg-background overflow-hidden">
       <header className="shrink-0 border-b border-border/70 bg-background/90 backdrop-blur-xl px-4 h-14 flex items-center gap-3">
@@ -20,13 +24,13 @@ export default function PublicLayout({ children }) {
           Duct
         </a>
         <span className="text-border/70" aria-hidden="true">·</span>
-        <span className="text-sm text-muted-foreground">Free SEO Audit</span>
+        <span className="text-sm text-muted-foreground"><Trans>Free SEO Audit</Trans></span>
         <div className="flex-1" />
         <a
           href="https://getduct.ai"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          Back to site
+          <Trans>Back to site</Trans>
         </a>
       </header>
       <main id="main-content" className="flex-1 min-h-0 flex flex-col" tabIndex={-1}>

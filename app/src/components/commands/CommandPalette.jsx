@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CornerDownLeft, Search } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { formatShortcut, useShortcut } from "@/lib/shortcuts";
 import { useCommands } from "./CommandRegistry";
@@ -42,6 +43,7 @@ function score(query, command) {
 }
 
 export default function CommandPalette() {
+  const { t } = useLingui();
   const { commands, open, setOpen } = useCommands();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -62,12 +64,12 @@ export default function CommandPalette() {
   const groups = useMemo(() => {
     const byGroup = new Map();
     results.forEach((command, index) => {
-      const key = command.group || "Actions";
+      const key = command.group || t`Actions`;
       if (!byGroup.has(key)) byGroup.set(key, []);
       byGroup.get(key).push({ command, index });
     });
     return [...byGroup.entries()];
-  }, [results]);
+  }, [results, t]);
 
   useEffect(() => {
     if (open) {
@@ -85,6 +87,8 @@ export default function CommandPalette() {
     const el = listRef.current?.querySelector(`[data-index="${active}"]`);
     el?.scrollIntoView({ block: "nearest" });
   }, [active]);
+
+  const resultCount = results.length;
 
   function runCommand(command) {
     setOpen(false);
@@ -112,9 +116,9 @@ export default function CommandPalette() {
       <DialogContent
         showCloseButton={false}
         className="top-[15%] max-w-xl translate-y-0 gap-0 overflow-hidden p-0"
-        aria-label="Command palette"
+        aria-label={t`Command palette`}
       >
-        <DialogTitle className="sr-only">Command palette</DialogTitle>
+        <DialogTitle className="sr-only"><Trans>Command palette</Trans></DialogTitle>
 
         <div className="flex items-center gap-2 border-b border-border/60 px-4">
           <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -123,17 +127,17 @@ export default function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search commands…"
-            aria-label="Search commands"
+            placeholder={t`Search commands…`}
+            aria-label={t`Search commands`}
             aria-activedescendant={results[active] ? `command-${results[active].id}` : undefined}
             className="w-full rounded-sm bg-transparent py-3.5 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
           />
         </div>
 
-        <div ref={listRef} role="listbox" aria-label="Commands" className="max-h-80 overflow-y-auto py-1.5">
+        <div ref={listRef} role="listbox" aria-label={t`Commands`} className="max-h-80 overflow-y-auto py-1.5">
           {results.length === 0 && (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-              No commands match “{query}”.
+              <Trans>No commands match “{query}”.</Trans>
             </p>
           )}
 
@@ -177,8 +181,8 @@ export default function CommandPalette() {
         </div>
 
         <div className="flex items-center justify-between border-t border-border/60 px-4 py-2 text-2xs text-muted-foreground">
-          <span>↑↓ to move · ↵ to run · esc to close</span>
-          <span>{results.length} command{results.length === 1 ? "" : "s"}</span>
+          <span><Trans>↑↓ to move · ↵ to run · esc to close</Trans></span>
+          <span><Plural value={resultCount} one="# command" other="# commands" /></span>
         </div>
       </DialogContent>
     </Dialog>

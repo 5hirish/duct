@@ -70,6 +70,13 @@ jobs:
       - name: Typecheck (tsc --noEmit)
         run: npm run typecheck
 
+      # `npm run build` already runs `lingui compile --strict`, which catches a
+      # translation that is missing from a catalogue. It cannot catch a string
+      # that was never extracted (it renders English in every language) or a
+      # literal written outside Lingui, so the full gate runs by name here.
+      - name: Interface language (catalogues current, complete, nothing outside Lingui)
+        run: npm run check:i18n
+
       # The session reducer replayed against recorded agent streams — the
       # lifecycle every workspace runs on, checked without a browser.
       - name: Unit tests (vitest)

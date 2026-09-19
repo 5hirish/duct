@@ -48,6 +48,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Anvil, ArrowRight, Feather, Scale } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProviderCard from "@/components/connections/ProviderCard";
@@ -87,6 +88,7 @@ const TABS = ["tiers", "providers", "usage"];
 const TIER_ICONS = { anvil: Anvil, scale: Scale, feather: Feather };
 
 function ModelSettings() {
+  const { t, i18n } = useLingui();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -236,7 +238,7 @@ function ModelSettings() {
       (catalogue?.tiers ?? []).map((row) => [row.id, row.default_model])
     );
     const nextTiers = { ...defaults, ...(map.tiers || {}), [tierKey]: model };
-    commit({ ...map, tiers: nextTiers }, "Saved");
+    commit({ ...map, tiers: nextTiers }, t`Saved`);
   }
 
   function setImageModel(model) {
@@ -250,18 +252,19 @@ function ModelSettings() {
     setMap(next);
     saveModelMap(next);
     saveModelSettings({ image_model: model || "" });
-    flash("Saved");
+    flash(t`Saved`);
   }
 
   function fillFromProvider(providerId) {
     const triple = catalogue?.provider_triples?.[providerId];
     if (!triple) return;
-    commit({ ...map, tiers: { ...triple } }, `Switched to ${providersById[providerId]?.label || providerId}`);
+    const providerLabel = providersById[providerId]?.label || providerId;
+    commit({ ...map, tiers: { ...triple } }, t`Switched to ${providerLabel}`);
   }
 
   function resetToDefaults() {
     const { tiers, ...rest } = map;
-    commit(rest, "Reset to defaults");
+    commit(rest, t`Reset to defaults`);
   }
 
   // Re-read if another tab (or the composer) writes the map.
@@ -284,7 +287,7 @@ function ModelSettings() {
     <section>
       <div className="page-toolbar-back">
         <Button variant="ghost" size="icon" className="connection-back-btn shrink-0 rounded-full" asChild>
-          <Link href="/insights/organic-growth" aria-label="Back to Insights" title="Back to Insights">
+          <Link href="/insights/organic-growth" aria-label={t`Back to Insights`} title={t`Back to Insights`}>
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M15 18 9 12l6-6"
@@ -301,7 +304,7 @@ function ModelSettings() {
             "Models & providers" that lands on a page headed "Models" reads as
             the wrong page for half a second, every time. */}
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          Models &amp; providers
+          <Trans>Models &amp; providers</Trans>
         </h1>
         <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
           {saved}
@@ -310,11 +313,11 @@ function ModelSettings() {
 
       <Tabs value={tab} onValueChange={selectTab}>
         <TabsList>
-          <TabsTrigger value="tiers">Tiers</TabsTrigger>
-          <TabsTrigger value="providers">Providers</TabsTrigger>
+          <TabsTrigger value="tiers"><Trans>Tiers</Trans></TabsTrigger>
+          <TabsTrigger value="providers"><Trans>Providers</Trans></TabsTrigger>
           {/* Third because it is the evidence for the first two, and reading
               it is what makes them worth changing. */}
-          <TabsTrigger value="usage">Usage</TabsTrigger>
+          <TabsTrigger value="usage"><Trans>Usage</Trans></TabsTrigger>
         </TabsList>
 
         {/* ---------------------------------------------------------------- */}
@@ -340,7 +343,7 @@ function ModelSettings() {
           {customising && (
             <div className="mt-custom">
               <p className="app-subtle mt-lede">
-                Duct sends each job to the rung it deserves. Pick what sits on each one.
+                <Trans>Duct sends each job to the rung it deserves. Pick what sits on each one.</Trans>
               </p>
 
               <div className="mt-tiers">
@@ -375,23 +378,23 @@ function ModelSettings() {
                       {index > 0 && <ArrowRight className="mt-chain-arrow" size={13} />}
                       <span className={`mt-chain-node${dead ? " mt-chain-node--dead" : ""}`}>
                         <Icon size={13} strokeWidth={1.75} />
-                        {tier.label}
+                        {i18n._(tier.label)}
                       </span>
                     </span>
                   );
                 })}
                 <span className="mt-chain-step">
                   <ArrowRight className="mt-chain-arrow" size={13} />
-                  <span className="mt-chain-node mt-chain-node--floor">this engine&rsquo;s default</span>
+                  <span className="mt-chain-node mt-chain-node--floor"><Trans>this engine&rsquo;s default</Trans></span>
                 </span>
               </div>
               <p className="mt-chain-note">
-                A tier whose model has no key falls through to the next one along.
+                <Trans>A tier whose model has no key falls through to the next one along.</Trans>
               </p>
             </div>
           )}
 
-          <AdvancedSettings ladder={TIERS.map((tier) => tier.label)} />
+          <AdvancedSettings ladder={TIERS.map((tier) => i18n._(tier.label))} />
         </TabsContent>
 
         {/* ---------------------------------------------------------------- */}
@@ -403,9 +406,11 @@ function ModelSettings() {
               stale. This says what the page is for; the card says where your
               key went. */}
           <p className="app-subtle mt-lede">
-            Duct runs on your own provider keys &mdash; paste one below, and its card says
-            where that key is kept. Use a restricted or budget-capped key if your provider
-            offers one.
+            <Trans>
+              Duct runs on your own provider keys &mdash; paste one below, and its card says
+              where that key is kept. Use a restricted or budget-capped key if your provider
+              offers one.
+            </Trans>
           </p>
 
           <div className="conn-grid">
@@ -451,10 +456,10 @@ export default function ModelSettingsPage() {
         <section>
           <div className="page-toolbar-back">
             <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-              Models &amp; providers
+              <Trans>Models &amp; providers</Trans>
             </h1>
           </div>
-          <p className="app-subtle">Loading&hellip;</p>
+          <p className="app-subtle"><Trans>Loading&hellip;</Trans></p>
         </section>
       }
     >

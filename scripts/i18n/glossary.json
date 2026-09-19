@@ -1,0 +1,39 @@
+{
+  "_comment": "Read by fill.py on every run. `keep` terms are never translated; `terms` pin one rendering per language so the same concept never gets two words; `register` is how each language addresses the reader.",
+  "keep": [
+    "Duct", "GA4", "GSC", "GTM", "Search Console", "Google Ads", "Stripe", "Mixpanel",
+    "Clarity", "GrowthBook", "PostHog", "TikTok", "YouTube", "ChatGPT", "Claude", "Codex",
+    "OpenAI", "Anthropic", "Gemini", "Ollama", "GitHub", "MIT", "ROAS", "CPA", "CPC", "CPM",
+    "CTR", "LTV", "CAC", "MRR", "SEO", "URL", "API", "JSON", "CSV", "macOS", "Windows", "Linux"
+  ],
+  "terms": {
+    "brief": { "es": "informe", "pt-BR": "resumo", "de": "Briefing", "ja": "ブリーフ", "note": "The weekly synthesis Duct writes. A noun." },
+    "desk": { "es": "escritorio", "pt-BR": "mesa", "de": "Schreibtisch", "ja": "デスク", "note": "The screen a brief opens on." },
+    "change set": { "es": "conjunto de cambios", "pt-BR": "conjunto de alterações", "de": "Änderungssatz", "ja": "変更セット", "note": "A proposed, previewable batch of edits to an ad account or property." },
+    "connector": { "es": "conector", "pt-BR": "conector", "de": "Connector", "ja": "コネクタ", "note": "An integration with one tool." },
+    "connection": { "es": "conexión", "pt-BR": "conexão", "de": "Verbindung", "ja": "接続" },
+    "project": { "es": "proyecto", "pt-BR": "projeto", "de": "Projekt", "ja": "プロジェクト", "note": "One client or product; the unit everything is scoped to." },
+    "insight": { "es": "hallazgo", "pt-BR": "insight", "de": "Erkenntnis", "ja": "インサイト" },
+    "audit": { "es": "auditoría", "pt-BR": "auditoria", "de": "Audit", "ja": "監査" },
+    "finding": { "es": "hallazgo", "pt-BR": "constatação", "de": "Befund", "ja": "指摘事項" },
+    "post": { "es": "publicación", "pt-BR": "post", "de": "Beitrag", "ja": "投稿", "note": "A social post draft. Never the verb." },
+    "draft": { "es": "borrador", "pt-BR": "rascunho", "de": "Entwurf", "ja": "下書き" },
+    "memory": { "es": "memoria", "pt-BR": "memória", "de": "Gedächtnis", "ja": "メモリ", "note": "What Duct remembers about a project across runs." },
+    "artifact": { "es": "artefacto", "pt-BR": "artefato", "de": "Artefakt", "ja": "アーティファクト", "note": "A versioned document an agent produced." },
+    "run": { "es": "ejecución", "pt-BR": "execução", "de": "Lauf", "ja": "実行", "note": "One agent session. Noun." },
+    "approve": { "es": "aprobar", "pt-BR": "aprovar", "de": "freigeben", "ja": "承認する" },
+    "apply": { "es": "aplicar", "pt-BR": "aplicar", "de": "anwenden", "ja": "適用する", "note": "Push an approved change set to the live account." },
+    "rollback": { "es": "revertir", "pt-BR": "reverter", "de": "zurücknehmen", "ja": "ロールバック" },
+    "sign in": { "es": "iniciar sesión", "pt-BR": "entrar", "de": "anmelden", "ja": "サインイン" },
+    "sign out": { "es": "cerrar sesión", "pt-BR": "sair", "de": "abmelden", "ja": "サインアウト" },
+    "desktop app": { "es": "app de escritorio", "pt-BR": "app para desktop", "de": "Desktop-App", "ja": "デスクトップアプリ" },
+    "free tools": { "es": "herramientas gratuitas", "pt-BR": "ferramentas gratuitas", "de": "kostenlose Tools", "ja": "無料ツール" },
+    "open source": { "es": "código abierto", "pt-BR": "código aberto", "de": "Open Source", "ja": "オープンソース" }
+  },
+  "register": {
+    "es": "Informal (tú), never usted. Neutral Spanish readable in Spain and Latin America: avoid regional slang. Sentence case; no exclamation marks the English does not have.",
+    "pt-BR": "Brazilian Portuguese, informal (você). Sentence case. Prefer the plain verb to a nominalisation.",
+    "de": "Informal (du), the register of Slack, Notion and Linear in German. Sentence case; nouns capitalised as German requires. Prefer short compound-free phrasing where the English is short: a button label must stay a button label.",
+    "ja": "Polite form (です・ます) throughout, as a professional SaaS product speaks. No honorific inflation (no ございます). Use カタカナ for established SaaS loanwords rather than inventing kanji terms. Keep button labels to a verb or a noun, never a full sentence."
+  }
+}

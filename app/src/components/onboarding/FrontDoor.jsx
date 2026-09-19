@@ -1,10 +1,15 @@
 "use client";
 
 import { ArrowRight, Globe } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+// The wordmark is a name, not copy: the literal-string check lets "Duct"
+// through by name and this is the same word set in the logo's lowercase.
+const WORDMARK = "duct";
 
 /**
  * The signed-out page's wide half: the offer, the one field, and nothing else.
@@ -32,27 +37,32 @@ import { Label } from "@/components/ui/label";
  * through the door.
  */
 export default function FrontDoor({ url, onUrlChange, error, onSubmit }) {
+  const { t } = useLingui();
   return (
     <div className="landing-start-inner">
       <div className="landing-start-copy">
         <div className="signin-logo">
-          <span className="signin-logo-text">duct</span>
+          <span className="signin-logo-text">{WORDMARK}</span>
           <span className="logo-mark" aria-hidden="true" />
         </div>
 
         <h1 className="landing-start-headline">
-          Your site has a problem list.
-          <em>Duct finds it in about three minutes.</em>
+          <Trans>
+            Your site has a problem list.
+            <em>Duct finds it in about three minutes.</em>
+          </Trans>
         </h1>
 
         <p className="landing-start-sub">
-          Type your address &mdash; that&rsquo;s the whole setup. Duct reads your
-          site the way a search engine does, then tells you what to fix first.
+          <Trans>
+            Type your address &mdash; that&rsquo;s the whole setup. Duct reads your
+            site the way a search engine does, then tells you what to fix first.
+          </Trans>
         </p>
 
         <form onSubmit={onSubmit} className="landing-start-form">
           <Label htmlFor="landing-site-url" className="sr-only">
-            Your website
+            <Trans>Your website</Trans>
           </Label>
           <div className="start-url">
             <Globe className="start-url-icon size-4" aria-hidden />
@@ -60,7 +70,7 @@ export default function FrontDoor({ url, onUrlChange, error, onSubmit }) {
               id="landing-site-url"
               inputMode="url"
               autoComplete="url"
-              placeholder="acme.com"
+              placeholder={t`acme.com`}
               value={url}
               onChange={(e) => onUrlChange(e.target.value)}
               aria-invalid={error ? true : undefined}
@@ -69,7 +79,7 @@ export default function FrontDoor({ url, onUrlChange, error, onSubmit }) {
             />
           </div>
           <Button type="submit" size="lg">
-            Audit my site <ArrowRight className="size-4" aria-hidden />
+            <Trans>Audit my site</Trans> <ArrowRight className="size-4" aria-hidden />
           </Button>
         </form>
 
@@ -78,12 +88,14 @@ export default function FrontDoor({ url, onUrlChange, error, onSubmit }) {
           className={`landing-start-hint${error ? " landing-start-hint-error" : ""}`}
           role={error ? "alert" : undefined}
         >
-          {error || "Free, no account, and nothing else connected."}
+          {error || t`Free, no account, and nothing else connected.`}
         </p>
 
         <p className="landing-connect">
-          When you&rsquo;re ready, Duct connects Google Ads, GA4, Search Console
-          and Meta Ads &mdash; read-only, and only the ones you pick.
+          <Trans>
+            When you&rsquo;re ready, Duct connects Google Ads, GA4, Search Console
+            and Meta Ads &mdash; read-only, and only the ones you pick.
+          </Trans>
         </p>
       </div>
 

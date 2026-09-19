@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Trans } from "@lingui/react/macro";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PostViewport from "@/components/content/PostViewport";
 import { getActiveProjectId } from "@/lib/projects";
@@ -36,7 +37,7 @@ export default function NewPostDraftPage() {
   if (!projectId) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading session…</p>
+        <p className="text-sm text-muted-foreground"><Trans>Loading session…</Trans></p>
       </div>
     );
   }

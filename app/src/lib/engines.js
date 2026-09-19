@@ -4,6 +4,8 @@
  * Mirrors backend/agents/engines.py — keep in sync when adding new engines.
  */
 
+import { msg } from "@lingui/core/macro";
+
 // One engine since the Claude Agent SDK (v3) was removed, and every agent runs
 // on it — the per-agent support map listed "v1" five times, so it could no
 // longer hide anything, and the Runtime tab was a radio group with one button
@@ -22,29 +24,32 @@ export const DEFAULT_ENGINE = "v1";
 // Agent types
 // ---------------------------------------------------------------------------
 
+// `label`, `description` and `hint` are Lingui descriptors: render them with
+// `i18n._(agent.label)` from `useLingui()`.
+
 export const AGENT_TYPES = [
   {
     key: "insights",
-    label: "Insights",
+    label: msg`Insights`,
     icon: "✦",
     available: true,
-    description: "Paid media & organic growth intelligence.",
+    description: msg`Paid media & organic growth intelligence.`,
   },
   {
     key: "audit",
-    label: "Audit",
+    label: msg`Audit`,
     icon: "🔍",
     available: false,
-    description: "SEO audit and content gap analysis.",
-    hint: "Coming soon",
+    description: msg`SEO audit and content gap analysis.`,
+    hint: msg`Coming soon`,
   },
   {
     key: "blog",
-    label: "Blog",
+    label: msg`Blog`,
     icon: "✍︎",
     available: false,
-    description: "AI-drafted blog posts from audit findings.",
-    hint: "Coming soon",
+    description: msg`AI-drafted blog posts from audit findings.`,
+    hint: msg`Coming soon`,
   },
 ];
 

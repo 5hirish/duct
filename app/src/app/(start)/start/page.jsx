@@ -17,6 +17,8 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, ArrowRight, Check, ClipboardCheck, FolderOpen, Globe, Sparkles } from "lucide-react";
+import { plural } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +62,7 @@ export default function StartPage() {
 }
 
 function StartPageContent() {
+  const { t } = useLingui();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(STEP.URL);
@@ -131,7 +134,7 @@ function StartPageContent() {
       event?.preventDefault();
       const site = normaliseUrl(rawSite ?? url);
       if (!site) {
-        setError("Enter your website address.");
+        setError(t`Enter your website address.`);
         return;
       }
       setBusy(true);
@@ -160,12 +163,12 @@ function StartPageContent() {
         });
       } catch (err) {
         trackEvent(AnalyticsEvent.OnboardingSiteFailed, { [AnalyticsParam.Reason]: err?.reason || String(err?.status || "error") });
-        setError(err?.message || "Couldn't read that site.");
+        setError(err?.message || t`Couldn't read that site.`);
       } finally {
         setBusy(false);
       }
     },
-    [url],
+    [t, url],
   );
 
   function tryAnother() {
@@ -268,6 +271,10 @@ function StartPageContent() {
   // ── The aqueduct's reading of all that ─────────────────────────────────
   const site = crawl?.site;
   const siteFound = Boolean(site);
+  // Plain identifiers for the catalogue: a member expression inside <Trans>
+  // becomes an anonymous {0} the translator cannot place.
+  const httpStatus = site?.http_status;
+  const targetProjectName = target.project?.name;
   const crawlDone = crawl?.state === "done";
   const water = verified?.skipped
     ? 1.9
@@ -281,26 +288,27 @@ function StartPageContent() {
           ? 0.35
           : 0;
   const steps = [
-    { key: "site", label: "Your site", state: siteFound ? STEP_DONE : STEP_ACTIVE },
+    { key: "site", label: t`Your site`, state: siteFound ? STEP_DONE : STEP_ACTIVE },
     {
       key: "model",
-      label: "Your model",
+      label: t`Your model`,
       state: verified?.skipped ? STEP_DRY : verified ? STEP_DONE : step === STEP.PROVIDER ? STEP_ACTIVE : STEP_TODO,
     },
-    { key: "audit", label: "The audit", state: verified && !verified.skipped ? STEP_ACTIVE : STEP_TODO },
+    { key: "audit", label: t`The audit`, state: verified && !verified.skipped ? STEP_ACTIVE : STEP_TODO },
   ];
 
   // Before the commit there is no project to read a name from, so the draft
   // itself supplies it — the same value the merge would have written.
   const siteName =
     project?.company?.name || draft?.fields?.name?.value || site?.title || site?.url || "";
+  const pages = crawl?.pages ?? 0;
   const pagesLine =
     crawl?.state === "running"
-      ? "Reading the rest of the site…"
+      ? t`Reading the rest of the site…`
       : crawl?.state === "done"
-        ? `Read ${crawl.pages} page${crawl.pages === 1 ? "" : "s"}`
+        ? plural(pages, { one: "Read # page", other: "Read # pages" })
         : crawl?.state === "failed"
-          ? "Could only read the front page — the audit will use that"
+          ? t`Could only read the front page — the audit will use that`
           : "";
 
   return (
@@ -309,23 +317,27 @@ function StartPageContent() {
       <aside className="start-threshold">
         <div className="start-threshold-inner">
           <MosaicPanel name={MOSAIC.salve} size={280} className="start-mosaic" />
-          <h2 className="start-headline">Duct checks a number before it trusts it.</h2>
+          <h2 className="start-headline">
+            <Trans>Duct checks a number before it trusts it.</Trans>
+          </h2>
           <p className="start-lede">
-            Start with your website. Duct reads it, audits it, and builds your project from what it
-            finds. An account can wait until there is something worth keeping.
+            <Trans>
+              Start with your website. Duct reads it, audits it, and builds your project from what it
+              finds. An account can wait until there is something worth keeping.
+            </Trans>
           </p>
-          <ul className="start-promises" aria-label="What happens next">
+          <ul className="start-promises" aria-label={t`What happens next`}>
             <li>
               <Globe className="size-4" aria-hidden />
-              <span>Reads what a search engine sees</span>
+              <span><Trans>Reads what a search engine sees</Trans></span>
             </li>
             <li>
               <Sparkles className="size-4" aria-hidden />
-              <span>Drafts your project from what it finds</span>
+              <span><Trans>Drafts your project from what it finds</Trans></span>
             </li>
             <li>
               <ClipboardCheck className="size-4" aria-hidden />
-              <span>Audits it in about three minutes</span>
+              <span><Trans>Audits it in about three minutes</Trans></span>
             </li>
           </ul>
         </div>
@@ -338,14 +350,16 @@ function StartPageContent() {
           {step === STEP.URL && !siteFound && (
             <form onSubmit={readSite} className="grid gap-5">
               <div>
-                <Eyebrow>Step I of III · Your site</Eyebrow>
-                <h1 className="start-title">Where does the data come from?</h1>
+                <Eyebrow><Trans>Step I of III · Your site</Trans></Eyebrow>
+                <h1 className="start-title"><Trans>Where does the data come from?</Trans></h1>
                 <p className="start-sub">
-                  Your website is enough to start. Duct reads it now and keeps reading while you set up the rest.
+                  <Trans>
+                    Your website is enough to start. Duct reads it now and keeps reading while you set up the rest.
+                  </Trans>
                 </p>
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="site-url">Your website</Label>
+                <Label htmlFor="site-url"><Trans>Your website</Trans></Label>
                 <div className="start-url">
                   <Globe className="start-url-icon size-4" aria-hidden />
                   <Input
@@ -353,7 +367,7 @@ function StartPageContent() {
                     inputMode="url"
                     autoComplete="url"
                     autoFocus
-                    placeholder="acme.com"
+                    placeholder={t`acme.com`}
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     aria-invalid={error ? true : undefined}
@@ -367,22 +381,24 @@ function StartPageContent() {
                   </p>
                 ) : (
                   <p id="site-url-hint" className="text-xs text-muted-foreground">
-                    No account needed. Nothing is sent anywhere but your own model provider.
+                    <Trans>No account needed. Nothing is sent anywhere but your own model provider.</Trans>
                   </p>
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <Button type="submit" size="lg" disabled={busy}>
                   {busy ? <Spinner className="size-4" /> : <ArrowRight className="size-4" aria-hidden />}
-                  {busy ? "Reading…" : "Read my site"}
+                  {busy ? <Trans>Reading…</Trans> : <Trans>Read my site</Trans>}
                 </Button>
                 {signedIn ? (
                   <Button asChild variant="ghost" size="lg">
-                    <Link href="/insights/organic-growth">Open Duct</Link>
+                    <Link href="/insights/organic-growth">
+                      <Trans>Open Duct</Trans>
+                    </Link>
                   </Button>
                 ) : (
                   <Link href="/" className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-                    I have an account
+                    <Trans>I have an account</Trans>
                   </Link>
                 )}
               </div>
@@ -392,8 +408,8 @@ function StartPageContent() {
           {step === STEP.URL && siteFound && (
             <div className="grid gap-5">
               <div>
-                <Eyebrow>Step I of III · Your site</Eyebrow>
-                <h1 className="start-title">Found it.</h1>
+                <Eyebrow><Trans>Step I of III · Your site</Trans></Eyebrow>
+                <h1 className="start-title"><Trans>Found it.</Trans></h1>
               </div>
 
               <div className="start-site">
@@ -425,8 +441,10 @@ function StartPageContent() {
                 <p className="start-warn">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
                   <span>
-                    The site answered <code>{site.http_status}</code> to our crawler, so this audit will be
-                    thin — it may sit behind a bot wall.
+                    <Trans>
+                      The site answered <code>{httpStatus}</code> to our crawler, so this audit will be
+                      thin — it may sit behind a bot wall.
+                    </Trans>
                   </span>
                 </p>
               )}
@@ -434,8 +452,10 @@ function StartPageContent() {
                 <p className="start-warn">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
                   <span>
-                    This looks like a client-rendered app, so the crawler may see very little — the same
-                    as a search engine.
+                    <Trans>
+                      This looks like a client-rendered app, so the crawler may see very little — the same
+                      as a search engine.
+                    </Trans>
                   </span>
                 </p>
               )}
@@ -445,11 +465,13 @@ function StartPageContent() {
                   <FolderOpen className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
                   <div className="min-w-0">
                     <p>
-                      This will update <strong>{target.project.name}</strong>, the project you already
-                      have for this site. Anything you filled in yourself stays as it is.
+                      <Trans>
+                        This will update <strong>{targetProjectName}</strong>, the project you already
+                        have for this site. Anything you filled in yourself stays as it is.
+                      </Trans>
                     </p>
                     <button type="button" className="start-project-alt" onClick={() => commitProject({ createNew: true })}>
-                      Keep it separate — start a new project instead
+                      <Trans>Keep it separate — start a new project instead</Trans>
                     </button>
                   </div>
                 </div>
@@ -459,7 +481,9 @@ function StartPageContent() {
                 <div className="start-project" role="status">
                   <FolderOpen className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
                   <div className="min-w-0">
-                    <p>You have more than one project for this site. Which should this audit update?</p>
+                    <p>
+                      <Trans>You have more than one project for this site. Which should this audit update?</Trans>
+                    </p>
                     <div className="start-project-picks">
                       {target.options.map((option) => (
                         <Button
@@ -473,7 +497,7 @@ function StartPageContent() {
                         </Button>
                       ))}
                       <button type="button" className="start-project-alt" onClick={() => commitProject({ createNew: true })}>
-                        None of these — start a new one
+                        <Trans>None of these — start a new one</Trans>
                       </button>
                     </div>
                   </div>
@@ -491,11 +515,11 @@ function StartPageContent() {
                       commitProject({ projectId: target.mode === PROJECT_EXISTING ? target.project.id : null })
                     }
                   >
-                    That&apos;s us — continue <ArrowRight className="size-4" aria-hidden />
+                    <Trans>That&apos;s us — continue</Trans> <ArrowRight className="size-4" aria-hidden />
                   </Button>
                 )}
                 <Button type="button" variant="ghost" size="lg" onClick={tryAnother}>
-                  Not it — try another
+                  <Trans>Not it — try another</Trans>
                 </Button>
               </div>
             </div>
@@ -505,10 +529,12 @@ function StartPageContent() {
             <div className="relative grid gap-5">
               {verified && !verified.skipped && <TesseraBurst />}
               <div>
-                <Eyebrow>Step II of III · Your model</Eyebrow>
-                <h1 className="start-title">Connect a model</h1>
+                <Eyebrow><Trans>Step II of III · Your model</Trans></Eyebrow>
+                <h1 className="start-title"><Trans>Connect a model</Trans></h1>
                 <p className="start-sub">
-                  Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice.
+                  <Trans>
+                    Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice.
+                  </Trans>
                 </p>
                 {pagesLine && (
                   <p className="start-site-pages" role="status">

@@ -16,10 +16,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { LifeBuoy } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Switch } from "@/components/ui/switch";
 import { fetchModelSettings, saveModelSettings } from "@/lib/modelSettings";
 
 export default function AutoFallbackCard({ ladder = [] }) {
+  const { t } = useLingui();
   const [enabled, setEnabled] = useState(true);
   const [signedOut, setSignedOut] = useState(false);
 
@@ -44,6 +46,11 @@ export default function AutoFallbackCard({ ladder = [] }) {
   // Named tiers, not model ids: the sentence is about which of *their* choices
   // steps in, and a model id makes it read like a system message.
   const chain = ladder.join(" → ");
+  // Two whole sentences rather than one with an optional clause spliced in:
+  // a translator cannot reorder a fragment they never see in context.
+  const onCopy = chain
+    ? t`Out of quota, the job runs on the next model down — ${chain} — and Duct says which. Your scheduled brief still arrives.`
+    : t`Out of quota, the job runs on the next model down — and Duct says which. Your scheduled brief still arrives.`;
 
   return (
     <article className="conn-panel">
@@ -52,21 +59,21 @@ export default function AutoFallbackCard({ ladder = [] }) {
       </span>
       <div className="conn-tile-body">
         <div className="conn-tile-top">
-          <span className="conn-tile-title">Keep working when you hit a limit</span>
+          <span className="conn-tile-title"><Trans>Keep working when you hit a limit</Trans></span>
           <Switch
             checked={enabled}
             onCheckedChange={toggle}
-            aria-label="Use the next model down when a provider is out of quota"
+            aria-label={t`Use the next model down when a provider is out of quota`}
           />
         </div>
         <p className="conn-tile-desc">
           {enabled
-            ? `Out of quota, the job runs on the next model down${chain ? ` — ${chain}` : ""} — and Duct says which. Your scheduled brief still arrives.`
-            : "Out of quota, the run stops and shows you the limit. Nothing switches models for you, so that morning's brief does not arrive."}
+            ? onCopy
+            : t`Out of quota, the run stops and shows you the limit. Nothing switches models for you, so that morning's brief does not arrive.`}
         </p>
         {signedOut && (
           <p className="conn-tile-desc mt-warn">
-            Not saved — sign in to keep this setting across your devices.
+            <Trans>Not saved — sign in to keep this setting across your devices.</Trans>
           </p>
         )}
       </div>

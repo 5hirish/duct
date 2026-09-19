@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { BASE } from "../../lib/api";
 import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
@@ -76,7 +77,9 @@ function SignInSuspenseFallback() {
       aria-live="polite"
       aria-busy="true"
     >
-      <p className="text-sm text-muted-foreground">Loading…</p>
+      <p className="text-sm text-muted-foreground">
+        <Trans>Loading…</Trans>
+      </p>
     </div>
   );
 }
@@ -90,6 +93,7 @@ export default function SignInPage() {
 }
 
 function SignInContent() {
+  const { t } = useLingui();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { resolvedTheme } = useTheme();
@@ -100,7 +104,10 @@ function SignInContent() {
   // "" when fine; "outdated" or "browser" when the shell cannot carry a
   // sign-in and the user needs to be told rather than quietly stranded.
   const [shellBlocked, setShellBlocked] = useState("");
-  const [turnstileError, setTurnstileError] = useState("");
+  // A flag rather than the sentence: the sentence is rendered through the
+  // catalogue below, and keeping `t` out of the widget effect means a language
+  // switch does not re-render Turnstile and discard a token already solved.
+  const [turnstileFailed, setTurnstileFailed] = useState(false);
   // The onboarding connector prompt armed the sign-in to also ask for Search
   // Console + Analytics (lib/signInSources.js). Shown so the extra consent
   // boxes at Google are expected, not a surprise.
@@ -122,13 +129,13 @@ function SignInContent() {
       event.preventDefault();
       const site = startUrl.trim();
       if (!site) {
-        setStartError("Enter your website address.");
+        setStartError(t`Enter your website address.`);
         return;
       }
       trackEvent(AnalyticsEvent.OnboardingStarted, { [AnalyticsParam.Method]: "landing" });
       router.push(`/start?url=${encodeURIComponent(site)}`);
     },
-    [router, startUrl]
+    [router, startUrl, t]
   );
   // Turnstile site keys are locked to their registered hostnames, so the widget
   // can never render on the desktop shell's origin (`tauri://localhost`, or a
@@ -206,7 +213,7 @@ function SignInContent() {
           window.turnstile.remove(turnstileWidgetIdRef.current);
           turnstileWidgetIdRef.current = null;
         }
-        setTurnstileError("");
+        setTurnstileFailed(false);
         setTurnstileToken("");
         turnstileWidgetIdRef.current = window.turnstile.render(
           turnstileContainerRef.current,
@@ -214,19 +221,19 @@ function SignInContent() {
             sitekey: TURNSTILE_SITE_KEY,
             callback: (token) => {
               setTurnstileToken(token);
-              setTurnstileError("");
+              setTurnstileFailed(false);
             },
             "expired-callback": () => setTurnstileToken(""),
             "error-callback": () => {
               setTurnstileToken("");
-              setTurnstileError("Security check failed to load. Please refresh and try again.");
+              setTurnstileFailed(true);
             },
             theme: resolvedTheme === "dark" ? "dark" : "light",
             appearance: "always",
           }
         );
       } catch {
-        setTurnstileError("Security check failed to load. Please refresh and try again.");
+        setTurnstileFailed(true);
       }
     };
 
@@ -242,7 +249,7 @@ function SignInContent() {
       script.async = true;
       script.defer = true;
       script.onerror = () => {
-        setTurnstileError("Security check failed to load. Please refresh and try again.");
+        setTurnstileFailed(true);
       };
       document.head.appendChild(script);
     }
@@ -359,7 +366,9 @@ function SignInContent() {
         aria-live="polite"
         aria-busy="true"
       >
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-sm text-muted-foreground">
+          <Trans>Loading…</Trans>
+        </p>
       </div>
     );
   }
@@ -373,15 +382,21 @@ function SignInContent() {
       {/* ── Sign in: the returning-user path, narrow and secondary ── */}
       <div className="landing-auth">
         <div className="landing-auth-inner">
-          <p className="landing-auth-kicker">Already using Duct?</p>
-          <h2 id="signin-heading">Sign in</h2>
+          <p className="landing-auth-kicker">
+            <Trans>Already using Duct?</Trans>
+          </p>
+          <h2 id="signin-heading">
+            <Trans>Sign in</Trans>
+          </h2>
           <p className="signin-form-sub">
-            {sessionExpired
-              ? "Your session ended. Sign in again and we'll take you back to where you were."
-              : "Continue with your Google account"}
+            {sessionExpired ? (
+              <Trans>Your session ended. Sign in again and we'll take you back to where you were.</Trans>
+            ) : (
+              <Trans>Continue with your Google account</Trans>
+            )}
           </p>
 
-          {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label="Security verification" />}
+          {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label={t`Security verification`} />}
 
           <label htmlFor="signin-remember-me" className="landing-remember">
             <Checkbox
@@ -390,78 +405,94 @@ function SignInContent() {
               onCheckedChange={setRememberMe}
               disabled={isSigningIn}
             />
-            Keep me signed in for 30 days
+            <Trans>Keep me signed in for 30 days</Trans>
           </label>
 
           <GoogleSignInButton
             onClick={handleSignIn}
             disabled={isSigningIn || (requiresTurnstile && !hasTurnstileToken)}
             isLoading={isSigningIn}
-            loadingLabel={awaitingBrowser ? "Continue in your browser…" : "Signing in..."}
+            loadingLabel={awaitingBrowser ? t`Continue in your browser…` : t`Signing in...`}
           />
           {sourcesArmed && !awaitingBrowser && (
             <p className="landing-auth-note">
-              Google will also ask to share Search Console and Analytics with
-              Duct &mdash; read-only, and either box can be left unticked.
+              <Trans>
+                Google will also ask to share Search Console and Analytics with
+                Duct &mdash; read-only, and either box can be left unticked.
+              </Trans>
             </p>
           )}
           {awaitingBrowser && (
             <p className="landing-auth-note">
-              Finish signing in with Google in your browser — this window will
-              continue automatically.{" "}
+              <Trans>
+                Finish signing in with Google in your browser — this window will
+                continue automatically.
+              </Trans>{" "}
               <button
                 type="button"
                 className="underline underline-offset-2"
                 onClick={() => window.location.reload()}
               >
-                Start over
+                <Trans>Start over</Trans>
               </button>
             </p>
           )}
           {requiresTurnstile && !hasTurnstileToken && (
-            <p className="landing-auth-note">Complete security check to continue.</p>
+            <p className="landing-auth-note">
+              <Trans>Complete security check to continue.</Trans>
+            </p>
           )}
-          {turnstileError && (
-            <p className="landing-auth-note landing-auth-note-error">{turnstileError}</p>
+          {turnstileFailed && (
+            <p className="landing-auth-note landing-auth-note-error">
+              <Trans>Security check failed to load. Please refresh and try again.</Trans>
+            </p>
           )}
           {shellBlocked === "outdated" && (
             <p className="landing-auth-note landing-auth-note-error">
-              This version of Duct can&rsquo;t complete sign-in. Update the app
-              from{" "}
-              <a
-                className="underline underline-offset-2"
-                href="https://getduct.ai/download"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                getduct.ai/download
-              </a>{" "}
-              and try again.
+              <Trans>
+                This version of Duct can&rsquo;t complete sign-in. Update the app
+                from{" "}
+                <a
+                  className="underline underline-offset-2"
+                  href="https://getduct.ai/download"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  getduct.ai/download
+                </a>{" "}
+                and try again.
+              </Trans>
             </p>
           )}
           {shellBlocked === "unconfigured" && (
             <p className="landing-auth-note landing-auth-note-error">
-              Sign-in is unavailable on this deployment: no API endpoint is
-              configured. If this is your install, set{" "}
-              <code>NEXT_PUBLIC_API_BASE</code> and redeploy.
+              <Trans>
+                Sign-in is unavailable on this deployment: no API endpoint is
+                configured. If this is your install, set{" "}
+                <code>NEXT_PUBLIC_API_BASE</code> and redeploy.
+              </Trans>
             </p>
           )}
           {shellBlocked === "browser" && (
             <p className="landing-auth-note landing-auth-note-error">
-              Duct couldn&rsquo;t open your browser to finish signing in. Check
-              that you have a default browser set, then try again.
+              <Trans>
+                Duct couldn&rsquo;t open your browser to finish signing in. Check
+                that you have a default browser set, then try again.
+              </Trans>
             </p>
           )}
 
           <p className="signin-legal">
-            By signing in, you agree to our{" "}
-            <a href="https://getduct.ai/terms" target="_blank" rel="noopener noreferrer">
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a href="https://getduct.ai/privacy" target="_blank" rel="noopener noreferrer">
-              Privacy Policy
-            </a>
+            <Trans>
+              By signing in, you agree to our{" "}
+              <a href="https://getduct.ai/terms" target="_blank" rel="noopener noreferrer">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="https://getduct.ai/privacy" target="_blank" rel="noopener noreferrer">
+                Privacy Policy
+              </a>
+            </Trans>
           </p>
         </div>
       </div>

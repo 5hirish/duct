@@ -19,6 +19,8 @@
 // — any connector that reports scope rows renders the same block.
 
 import { Eye, PencilLine } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { Badge } from "@/components/ui/badge";
 
 // Mirrors `service/connector_scopes.py`. Only the values are needed here; the
@@ -31,7 +33,7 @@ export const SCOPE_UNKNOWN = "unknown";
 const GROUPS = [
   {
     key: "read",
-    label: "Can read",
+    label: msg`Can read`,
     icon: Eye,
     match: (row) => row.access !== ACCESS_WRITE,
   },
@@ -39,20 +41,28 @@ const GROUPS = [
     key: "write",
     // Named for the consequence. "Write access" is the mechanism; what someone
     // deciding wants to know is whether Duct can alter their account.
-    label: "Can change",
+    label: msg`Can change`,
     icon: PencilLine,
     match: (row) => row.access === ACCESS_WRITE,
   },
 ];
 
 /** "Granted" · "All 4 granted" · "3 of 4 granted" — a count needs a total. */
-function summarize(scopes) {
+function Summary({ scopes }) {
   const granted = scopes.filter((row) => row.granted).length;
-  if (granted < scopes.length) return `${granted} of ${scopes.length} granted`;
-  return scopes.length === 1 ? "Granted" : `All ${scopes.length} granted`;
+  const total = scopes.length;
+  if (granted < total) {
+    return (
+      <Trans>
+        {granted} of {total} granted
+      </Trans>
+    );
+  }
+  return <Plural value={total} one="Granted" other="All # granted" />;
 }
 
 export default function ConnectorPermissions({ scopes = [], scopeStatus = "" }) {
+  const { i18n } = useLingui();
   if (scopes.length === 0) return null;
 
   const unknown = scopeStatus === SCOPE_UNKNOWN;
@@ -61,18 +71,26 @@ export default function ConnectorPermissions({ scopes = [], scopeStatus = "" }) 
   return (
     <section className="conn-dialog-section">
       <div className="conn-perm-head">
-        <h4 className="conn-dialog-heading">Permissions</h4>
+        <h4 className="conn-dialog-heading">
+          <Trans>Permissions</Trans>
+        </h4>
         {unknown ? (
-          <Badge variant="outline">Not recorded</Badge>
+          <Badge variant="outline">
+            <Trans>Not recorded</Trans>
+          </Badge>
         ) : (
-          <span className="conn-perm-summary">{summarize(scopes)}</span>
+          <span className="conn-perm-summary">
+            <Summary scopes={scopes} />
+          </span>
         )}
       </div>
 
       {unknown ? (
         <p className="conn-hint">
-          This connection was made before Duct recorded which permissions Google
-          granted. Reconnect to find out — nothing is assumed either way.
+          <Trans>
+            This connection was made before Duct recorded which permissions Google
+            granted. Reconnect to find out — nothing is assumed either way.
+          </Trans>
         </p>
       ) : (
         GROUPS.map((group) => {
@@ -81,7 +99,7 @@ export default function ConnectorPermissions({ scopes = [], scopeStatus = "" }) 
           const Icon = group.icon;
           return (
             <div key={group.key} className="conn-perm-group">
-              <p className="conn-perm-group-label">{group.label}</p>
+              <p className="conn-perm-group-label">{i18n._(group.label)}</p>
               <ul className="conn-perm-list">
                 {rows.map((row) => (
                   <li
@@ -101,7 +119,7 @@ export default function ConnectorPermissions({ scopes = [], scopeStatus = "" }) 
                         <span
                           className={`conn-perm-state${row.required ? " is-required" : ""}`}
                         >
-                          {row.required ? "Not granted" : "Declined"}
+                          {row.required ? <Trans>Not granted</Trans> : <Trans>Declined</Trans>}
                         </span>
                       )}
                       {row.why && <p className="conn-hint">{row.why}</p>}
@@ -116,8 +134,10 @@ export default function ConnectorPermissions({ scopes = [], scopeStatus = "" }) 
 
       {partial && (
         <p className="conn-hint">
-          Everything above still works. To grant the rest, choose Reconnect and
-          tick them on Google&rsquo;s consent screen.
+          <Trans>
+            Everything above still works. To grant the rest, choose Reconnect and
+            tick them on Google’s consent screen.
+          </Trans>
         </p>
       )}
     </section>

@@ -612,6 +612,89 @@ and it answers a question isolation cannot: whether the piece fits its
 surroundings. In-place work does not need that question answered, and paying
 for it every time is why "look at it" gets skipped.
 
+## Interface language
+
+The interface is translated (English, Spanish, Brazilian Portuguese, German,
+Japanese) and stays translated mechanically, not by anyone remembering. Copy
+is written in English inline, as before; Lingui derives each message's id
+from that English, `npm run i18n:extract` writes the catalogues, and
+`scripts/i18n/fill.py` fills what is missing with a model, glossary in hand.
+A changed English string invalidates its own translations and gets refilled.
+`check:i18n` fails on an untranslated string, a stale catalogue, or a literal
+the catalogue cannot see — so a half-translated page cannot merge.
+
+**The loop, for any change that touches copy** (`make i18n` at the repo root
+runs it for the app and the site together):
+
+```bash
+npm run i18n:extract                 # catalogues pick up the new/changed strings
+python3 ../scripts/i18n/fill.py      # translates only what is missing (needs a key,
+                                     # or --provider manual to hand the entries to an agent)
+npm run check:i18n                   # stale? missing? literal outside Lingui? → red
+```
+
+**How to write copy so the catalogue sees it.** One import per file:
+`import { Trans, useLingui } from "@lingui/react/macro";`
+
+| Copy | Write |
+|---|---|
+| JSX text | `<Trans>Restart to update</Trans>` |
+| Text with markup or values | `<Trans>You’re on {version}. <b>Restart</b> to update.</Trans>` — keep the element and the value inside one `<Trans>`; a sentence split across three Trans cannot be reordered by a translator |
+| Attribute, prop, or any string in code | `const { t } = useLingui();` then `` t`Dismiss update notification` `` |
+| Values in a string | `` t`Duct ${version} is available` `` — a plain identifier. Assign `update.version` to `const version` first; a member expression becomes `{0}` in the catalogue and the translator cannot tell what it is |
+| Plurals in JSX | `<Plural value={count} one="# message" other="# messages" />` from `@lingui/react/macro` |
+| Plurals in a string | `plural(count, { one: "# message", other: "# messages" })` from `@lingui/core/macro`, client components only |
+| A label in a module-level list (`lib/*.js` option tables) | `` label: msg`Executive` `` from `@lingui/core/macro`, rendered with `const { i18n } = useLingui(); i18n._(option.label)` — `t` at module level returns one fixed string forever |
+| A message the same word means two things | `` t({ message: "Post", context: "verb" }) `` |
+| Dates and numbers | `formatDate(d, { locale: i18n.locale })` from `lib/format.js`; never pin `"en"` next to translated copy |
+
+Do not translate: enum values, keys, kinds, API fields, class names, routes,
+log lines, anything a test asserts on by string, and the `/preview` scenes and
+`__fixtures__` (fictional data, English by design). The check exempts those
+paths; everything else it flags is copy.
+
+Two modules deliberately carry no words: `lib/desk.js` returns codes and
+facts (`{ code: "waiting" }`, `{ state, needsYou, found }`) that the desk
+components map to `msg` tables, because `scripts/check-desk.mjs` runs it
+under plain Node where no macro exists; `desk/useRelativeTime.js` renders its
+times. Passing `t` into a plain helper is silently NOT transformed — nothing
+is extracted and the helper receives a raw template — so a helper that needs
+words takes `i18n` and a `msg` descriptor, or returns a code.
+
+Tests: vitest has no macro pass, so `vitest.config.mjs` aliases the macro
+entry points to `src/lib/__tests__/stubs/lingui-macro.js`, which returns the
+English. A `lib/*.js` module with a `msg` label therefore imports cleanly in
+a test; assert on the English string as before.
+
+Server components: the root layout calls `activateRequestI18n()` from
+`src/i18n/server.js`, and so must any server page or layout that renders
+translatable text, because a client-side navigation renders the page without
+its parents. `<Trans>` and `useLingui` then work in both worlds.
+
+Where the language comes from: the `duct_lang` cookie, else the browser's
+`Accept-Language`, else English — resolved once per request in the root layout.
+The cookie shadows `interface_language` on the profile (`lib/userProfile.js`
+writes it on every load and save) so a second device follows the first; the
+signed-out selector on `/start` and sign-in writes only the cookie.
+`components/LanguageMenu.jsx` is the one switcher, and `router.refresh()` is
+how a switch takes effect without a reload.
+
+Three language fields, kept apart (#125, #126, #127): `interface_language`
+is this one, a catalogue tag; `communication_language` is what Duct writes
+*to you* in, any language a model speaks; a project's output language is the
+deliverable's. Adding an interface language is one entry in
+`lingui.config.mjs`, one in `src/i18n/locales.js`, one in
+`service/profile.py`'s `INTERFACE_LANGUAGES`, and a fill run.
+
+The SWC macro plugin is a locked pair with Next: `@lingui/swc-plugin` is
+pinned exact because its `swc_core` must fall in the range Next's runtime
+accepts, and a semver bump broke the build with "failed to run Wasm plugin"
+(6.7.0 against Next 16.3.5). Bumping Next means re-testing the plugin.
+
+To see a screen in another language: `/preview` has a locale switch, and the
+`pseudo` locale (dev only) stretches every string so clipping shows without a
+German speaker.
+
 ## What's not here
 
 - No dedicated auth library (next-auth, Clerk, Supabase)

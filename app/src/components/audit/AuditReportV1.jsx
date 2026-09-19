@@ -8,6 +8,8 @@ import {
   ExecutionClosingLine,
   ExecutionRequestModal,
 } from './ExecutionOffer';
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg, plural } from "@lingui/core/macro";
 import { capitalize } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
@@ -87,14 +89,17 @@ function gaugeColor(score) {
   return '#ef4444';
 }
 
+// Module-level tables hold message descriptors; the component that renders
+// one resolves it with `i18n._`.
 const BAND_LABEL = {
-  healthy:    'Healthy',
-  good:       'Good',
-  needs_work: 'Needs Work',
-  critical:   'Critical',
+  healthy:    msg`Healthy`,
+  good:       msg`Good`,
+  needs_work: msg`Needs Work`,
+  critical:   msg`Critical`,
 };
 
 function ScoreGauge({ score, band, dark }) {
+  const { t, i18n } = useLingui();
   const [on, setOn] = React.useState(false);
   React.useEffect(() => {
     const t = setTimeout(() => setOn(true), 120);
@@ -103,21 +108,21 @@ function ScoreGauge({ score, band, dark }) {
 
   const filled      = on ? (score / 100) * CIRCLE_CIRC : 0;
   const color       = gaugeColor(score);
-  const label       = BAND_LABEL[band] ?? band;
+  const label       = BAND_LABEL[band] ? i18n._(BAND_LABEL[band]) : band;
   const textFill    = dark ? DUCT_CREAM : 'currentColor';
   const trackStroke = dark ? 'rgba(255,255,255,0.08)' : 'currentColor';
 
   return (
     <div
       className="flex flex-col items-center shrink-0"
-      data-tooltip={`${score}/100 — ${label}. Weighted average across all 9 SEO categories.`}
+      data-tooltip={t`${score}/100 — ${label}. Weighted average across all 9 SEO categories.`}
     >
       {/* `width`/`height` were fixed at 180, so on a phone the gauge kept its
           size and the hero pushed past the screen — invisible until the body's
           `overflow-x: hidden` guard came off. The viewBox does the scaling. */}
       <svg viewBox="0 0 180 180" width="180" height="180" role="img"
         className="h-auto max-w-full"
-        aria-label={`Score ${score} out of 100, ${label}`}>
+        aria-label={t`Score ${score} out of 100, ${label}`}>
         <circle cx="90" cy="90" r={CIRCLE_R} fill="none"
           stroke={trackStroke} strokeOpacity={dark ? 1 : 0.08} strokeWidth="12" />
         <circle cx="90" cy="90" r={CIRCLE_R} fill="none"
@@ -138,26 +143,27 @@ function ScoreGauge({ score, band, dark }) {
 // ---------------------------------------------------------------------------
 
 function IssuePill({ issues, warnings, opportunities, categories }) {
+  const { t } = useLingui();
   const passCount = (categories ?? []).reduce((s, c) => s + (c.pass_count ?? 0), 0);
   const total = issues + warnings + opportunities + passCount;
   if (total === 0) return null;
 
   const segs = [
-    { count: issues,        color: '#ef4444', label: 'errors' },
-    { count: warnings,      color: '#f59e0b', label: 'warnings' },
-    { count: opportunities, color: '#f97316', label: 'opportunities' },
-    { count: passCount,     color: '#10b981', label: 'passing' },
+    { key: 'errors',        count: issues,        color: '#ef4444', text: plural(issues, { one: '# error', other: '# errors' }) },
+    { key: 'warnings',      count: warnings,      color: '#f59e0b', text: plural(warnings, { one: '# warning', other: '# warnings' }) },
+    { key: 'opportunities', count: opportunities, color: '#f97316', text: plural(opportunities, { one: '# opportunity', other: '# opportunities' }) },
+    { key: 'passing',       count: passCount,     color: '#10b981', text: t`${passCount} passing` },
   ].filter(s => s.count > 0);
 
   return (
-    <div className="flex items-center gap-2 mt-2" data-tooltip="Issue distribution across all findings">
+    <div className="flex items-center gap-2 mt-2" data-tooltip={t`Issue distribution across all findings`}>
       <div className="flex h-1.5 rounded-full overflow-hidden" style={{ width: 120 }}>
-        {segs.map(({ count, color, label }) => (
-          <div key={label} style={{ width: `${(count / total) * 100}%`, background: color }} />
+        {segs.map(({ key, count, color }) => (
+          <div key={key} style={{ width: `${(count / total) * 100}%`, background: color }} />
         ))}
       </div>
       <span className="text-2xs tabular-nums" style={{ color: 'rgba(244,236,226,0.4)' }}>
-        {segs.map(s => `${s.count} ${s.label}`).join(' · ')}
+        {segs.map(s => s.text).join(' · ')}
       </span>
     </div>
   );
@@ -168,16 +174,17 @@ function IssuePill({ issues, warnings, opportunities, categories }) {
 // ---------------------------------------------------------------------------
 
 function StatsStrip({ data, dateStr, dark }) {
+  const { t } = useLingui();
   const valStyle  = dark ? { color: 'rgba(244,236,226,0.9)' }  : {};
   const lblStyle  = dark ? { color: 'rgba(244,236,226,0.38)' } : {};
   const borderClr = dark ? 'rgba(255,255,255,0.1)'             : 'rgba(0,0,0,0.08)';
 
   const stats = [
-    { value: data.pages_crawled,       label: 'pages crawled' },
-    { value: data.total_issues,        label: 'errors',        color: dark ? (data.total_issues > 0 ? '#f87171' : '#34d399') : (data.total_issues > 0 ? '#ef4444' : '#10b981') },
-    { value: data.total_warnings,      label: 'warnings',      color: dark ? (data.total_warnings > 0 ? '#fbbf24' : 'rgba(244,236,226,0.4)') : (data.total_warnings > 0 ? '#f59e0b' : undefined) },
-    { value: data.total_opportunities, label: 'opportunities', color: dark ? (data.total_opportunities > 0 ? '#fb923c' : 'rgba(244,236,226,0.4)') : (data.total_opportunities > 0 ? DUCT_ORANGE : undefined) },
-    { value: dateStr,                  label: 'audit date' },
+    { value: data.pages_crawled,       label: t`pages crawled` },
+    { value: data.total_issues,        label: t`errors`,        color: dark ? (data.total_issues > 0 ? '#f87171' : '#34d399') : (data.total_issues > 0 ? '#ef4444' : '#10b981') },
+    { value: data.total_warnings,      label: t`warnings`,      color: dark ? (data.total_warnings > 0 ? '#fbbf24' : 'rgba(244,236,226,0.4)') : (data.total_warnings > 0 ? '#f59e0b' : undefined) },
+    { value: data.total_opportunities, label: t`opportunities`, color: dark ? (data.total_opportunities > 0 ? '#fb923c' : 'rgba(244,236,226,0.4)') : (data.total_opportunities > 0 ? DUCT_ORANGE : undefined) },
+    { value: dateStr,                  label: t`audit date` },
   ];
 
   return (
@@ -250,10 +257,10 @@ function SectionHeader({ icon: Icon, children }) {
 // ---------------------------------------------------------------------------
 
 const SEVERITY_CFG = {
-  fail:        { label: 'FAIL', accent: '#ef4444', pill: 'bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30',             headerCls: 'bg-red-500/10'     },
-  warn:        { label: 'WARN', accent: '#f59e0b', pill: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30',       headerCls: 'bg-amber-500/10'   },
-  pass:        { label: 'PASS', accent: '#10b981', pill: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30', headerCls: 'bg-emerald-500/10' },
-  opportunity: { label: 'OPP',  accent: '#f97316', pill: 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30',    headerCls: 'bg-orange-500/10'  },
+  fail:        { label: msg`FAIL`, accent: '#ef4444', pill: 'bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30',             headerCls: 'bg-red-500/10'     },
+  warn:        { label: msg`WARN`, accent: '#f59e0b', pill: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30',       headerCls: 'bg-amber-500/10'   },
+  pass:        { label: msg`PASS`, accent: '#10b981', pill: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30', headerCls: 'bg-emerald-500/10' },
+  opportunity: { label: msg`OPP`,  accent: '#f97316', pill: 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30',    headerCls: 'bg-orange-500/10'  },
 };
 
 // ---------------------------------------------------------------------------
@@ -264,29 +271,46 @@ const IMPACT_COLOR = { critical: '#ef4444', high: '#f97316', medium: '#f59e0b', 
 const EFFORT_COLOR = { low: '#10b981', medium: '#f59e0b', high: '#ef4444' };
 
 const EFFORT_ESTIMATE_LABEL = {
-  under_1hr:     '< 1 hr',
-  '2_to_4hrs':   '2–4 hrs',
-  '1_to_3_days': '1–3 days',
-  '1_to_2_wks':  '1–2 wks',
-  ongoing:       'Ongoing',
+  under_1hr:     msg`< 1 hr`,
+  '2_to_4hrs':   msg`2–4 hrs`,
+  '1_to_3_days': msg`1–3 days`,
+  '1_to_2_wks':  msg`1–2 wks`,
+  ongoing:       msg`Ongoing`,
+};
+
+// Whole phrases per enum value, so a translator sees "High impact" and not a
+// capitalised token glued to a noun; an unknown value falls back to the token.
+const IMPACT_LABEL = {
+  critical: msg`Critical impact`,
+  high:     msg`High impact`,
+  medium:   msg`Medium impact`,
+  low:      msg`Low impact`,
+};
+const EFFORT_LABEL = {
+  low:    msg`Low effort`,
+  medium: msg`Medium effort`,
+  high:   msg`High effort`,
 };
 
 function ImpactEffortChips({ impact, effort }) {
+  const { t, i18n } = useLingui();
   if (!impact && !effort) return null;
+  const impactWord = capitalize(impact);
+  const effortWord = capitalize(effort);
   return (
     <div className="flex gap-2 flex-wrap mt-2">
       {impact && (
         <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-md"
           style={{ background: IMPACT_COLOR[impact] + '18', color: IMPACT_COLOR[impact] }}>
           <Zap size={10} strokeWidth={2.5} />
-          {capitalize(impact)} impact
+          {IMPACT_LABEL[impact] ? i18n._(IMPACT_LABEL[impact]) : t`${impactWord} impact`}
         </span>
       )}
       {effort && (
         <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-md"
           style={{ background: EFFORT_COLOR[effort] + '18', color: EFFORT_COLOR[effort] }}>
           <Clock size={10} strokeWidth={2.5} />
-          {capitalize(effort)} effort
+          {EFFORT_LABEL[effort] ? i18n._(EFFORT_LABEL[effort]) : t`${effortWord} effort`}
         </span>
       )}
     </div>
@@ -371,7 +395,7 @@ function StrategicNarrative({ narrative }) {
   const paragraphs = narrative.split(/\n\n+/).filter(Boolean);
   return (
     <section className="space-y-3">
-      <SectionHeader icon={Target}>Competitive Landscape</SectionHeader>
+      <SectionHeader icon={Target}><Trans>Competitive Landscape</Trans></SectionHeader>
       <div className="rounded-xl border border-slate-700 bg-slate-950 px-6 py-5 space-y-4">
         {paragraphs.map((p, i) => (
           <p key={i} className="text-sm leading-relaxed text-slate-300"
@@ -390,16 +414,17 @@ const IMPACT_RANK = { critical: 3, high: 2, medium: 1, low: 0 };
 const EFFORT_RANK = { low: 0, medium: 1, high: 2 };
 
 function ImpactEffortMatrix({ categories }) {
+  const { t } = useLingui();
   const findings = (categories ?? []).flatMap(c =>
     (c.findings ?? []).filter(f => f.severity !== 'pass' && f.impact && f.effort)
   );
   if (findings.length === 0) return null;
 
   const quadrants = [
-    { key: 'qwin',  label: 'Quick Wins',  sub: 'High impact · Low effort',   bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.2)',   textColor: '#065f46' },
-    { key: 'qbet',  label: 'Big Bets',    sub: 'High impact · More effort',  bg: 'rgba(99,102,241,0.05)', border: 'rgba(99,102,241,0.18)',  textColor: '#3730a3' },
-    { key: 'qfil',  label: 'Fill-In',     sub: 'Lower impact · Low effort',  bg: 'rgba(245,158,11,0.05)', border: 'rgba(245,158,11,0.18)', textColor: '#92400e' },
-    { key: 'qskip', label: 'Later',       sub: 'Lower impact · More effort', bg: 'rgba(148,163,184,0.05)', border: 'rgba(148,163,184,0.15)', textColor: '#475569' },
+    { key: 'qwin',  label: t`Quick Wins`,  sub: t`High impact · Low effort`,   bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.2)',   textColor: '#065f46' },
+    { key: 'qbet',  label: t`Big Bets`,    sub: t`High impact · More effort`,  bg: 'rgba(99,102,241,0.05)', border: 'rgba(99,102,241,0.18)',  textColor: '#3730a3' },
+    { key: 'qfil',  label: t`Fill-In`,     sub: t`Lower impact · Low effort`,  bg: 'rgba(245,158,11,0.05)', border: 'rgba(245,158,11,0.18)', textColor: '#92400e' },
+    { key: 'qskip', label: t`Later`,       sub: t`Lower impact · More effort`, bg: 'rgba(148,163,184,0.05)', border: 'rgba(148,163,184,0.15)', textColor: '#475569' },
   ];
 
   function assignQuadrant(f) {
@@ -419,7 +444,7 @@ function ImpactEffortMatrix({ categories }) {
 
   return (
     <section className="rise-5 space-y-3">
-      <SectionHeader icon={Target}>Impact × Effort</SectionHeader>
+      <SectionHeader icon={Target}><Trans>Impact × Effort</Trans></SectionHeader>
       <div className="grid grid-cols-1 @xl:grid-cols-2 gap-3">
         {quadrants.map(q => (
           <div key={q.key} className="rounded-xl p-3 @xl:p-4 space-y-2"
@@ -429,7 +454,7 @@ function ImpactEffortMatrix({ categories }) {
               <p className="text-2xs text-muted-foreground">{q.sub}</p>
             </div>
             {groups[q.key].length === 0
-              ? <p className="text-2xs text-muted-foreground italic">Nothing here</p>
+              ? <p className="text-2xs text-muted-foreground italic"><Trans>Nothing here</Trans></p>
               : (
                 <ul className="space-y-1.5">
                   {groups[q.key].map(f => (
@@ -468,7 +493,9 @@ function PassRow({ finding }) {
 // ---------------------------------------------------------------------------
 
 function FindingCard({ finding }) {
+  const { i18n } = useLingui();
   const cfg = SEVERITY_CFG[finding.severity] ?? SEVERITY_CFG.pass;
+  const recommendation = finding.recommendation;
 
   if (finding.severity === 'pass') return <PassRow finding={finding} />;
 
@@ -484,7 +511,7 @@ function FindingCard({ finding }) {
       {/* Colored header row: badge + title */}
       <div className={`flex items-start gap-3 px-3 @xl:px-5 pt-3 pb-3 ${cfg.headerCls}`}>
         <span className={`text-2xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 mt-0.5 ${cfg.pill}`}>
-          {cfg.label}
+          {i18n._(cfg.label)}
         </span>
         <p className="text-base font-semibold leading-snug text-foreground flex-1 min-w-0">
           {finding.title}
@@ -504,7 +531,7 @@ function FindingCard({ finding }) {
           <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             <div className="flex px-4 py-2 bg-muted/40 border-b border-border/60">
               <span className="flex-1 text-2xs font-bold uppercase tracking-widest text-muted-foreground">URL</span>
-              <span className="w-48 shrink-0 text-2xs font-bold uppercase tracking-widest text-muted-foreground">Measured</span>
+              <span className="w-48 shrink-0 text-2xs font-bold uppercase tracking-widest text-muted-foreground"><Trans>Measured</Trans></span>
             </div>
             {finding.affected_urls.map((u, i) => (
               <div key={i} className={`flex items-start px-4 py-2.5 bg-card${i > 0 ? ' border-t border-border/40' : ''}`}>
@@ -518,8 +545,7 @@ function FindingCard({ finding }) {
         {finding.recommendation && (
           <div className="rounded-lg px-4 py-3 bg-blue-500/10">
             <p className="text-sm leading-relaxed text-foreground/80">
-              <span className="font-semibold text-blue-600 dark:text-blue-400">Fix: </span>
-              {finding.recommendation}
+              <Trans><span className="font-semibold text-blue-600 dark:text-blue-400">Fix: </span>{recommendation}</Trans>
             </p>
           </div>
         )}
@@ -538,6 +564,9 @@ function FindingCard({ finding }) {
 const SEVERITY_ORDER = { fail: 0, warn: 1, opportunity: 2, pass: 3 };
 
 function CategoryAccordion({ category, isLast }) {
+  const failCount = category.fail_count;
+  const warnCount = category.warn_count;
+  const oppCount = category.opp_count;
   const ordered = [...(category.findings ?? [])].sort(
     (a, b) => (SEVERITY_ORDER[a.severity] ?? 4) - (SEVERITY_ORDER[b.severity] ?? 4),
   );
@@ -545,6 +574,7 @@ function CategoryAccordion({ category, isLast }) {
   const color          = scoreBarColor(category.score);
   const passFindings   = ordered.filter(f => f.severity === 'pass');
   const nonPassFindings = ordered.filter(f => f.severity !== 'pass');
+  const passCount      = passFindings.length;
 
   return (
     <details className={`group${!isLast ? ' border-b border-border/60' : ''}`} open={hasBad || undefined}>
@@ -556,22 +586,22 @@ function CategoryAccordion({ category, isLast }) {
           <div className="flex items-center gap-1.5 flex-wrap">
             {category.fail_count > 0 && (
               <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400">
-                {category.fail_count} Error{category.fail_count !== 1 ? 's' : ''}
+                <Plural value={failCount} one="# Error" other="# Errors" />
               </span>
             )}
             {category.warn_count > 0 && (
               <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400">
-                {category.warn_count} Warning{category.warn_count !== 1 ? 's' : ''}
+                <Plural value={warnCount} one="# Warning" other="# Warnings" />
               </span>
             )}
             {!hasBad && category.opp_count > 0 && (
               <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-400">
-                {category.opp_count} Opp
+                <Trans>{oppCount} Opp</Trans>
               </span>
             )}
             {!hasBad && !category.opp_count && (
               <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-400 hidden @xl:inline">
-                All clear
+                <Trans>All clear</Trans>
               </span>
             )}
           </div>
@@ -580,7 +610,7 @@ function CategoryAccordion({ category, isLast }) {
       </summary>
       <div className="px-3 @xl:px-5 pb-4 pt-3 space-y-3" style={{ background: 'rgba(0,0,0,0.02)' }}>
         {ordered.length === 0 && (
-          <p className="text-sm text-muted-foreground py-2">No findings for this category.</p>
+          <p className="text-sm text-muted-foreground py-2"><Trans>No findings for this category.</Trans></p>
         )}
 
         {/* Non-pass findings rendered as full cards */}
@@ -592,7 +622,7 @@ function CategoryAccordion({ category, isLast }) {
             <summary className="flex items-center gap-2 cursor-pointer select-none py-1.5">
               <CheckCircle2 size={13} color="#10b981" strokeWidth={2} className="shrink-0" />
               <span className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-                {passFindings.length} check{passFindings.length !== 1 ? 's' : ''} passing
+                <Plural value={passCount} one="# check passing" other="# checks passing" />
               </span>
               <ChevronDown size={12} className="text-muted-foreground ml-0.5 transition-transform group-open/pass:rotate-180" />
             </summary>
@@ -611,15 +641,16 @@ function CategoryAccordion({ category, isLast }) {
 // ---------------------------------------------------------------------------
 
 const PRIORITY_STYLE = {
-  fail:        { accent: '#ef4444', rankBg: 'rgba(239,68,68,0.1)',   rankColor: '#ef4444', badgeCls: 'bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30',         label: 'Error'       },
-  warn:        { accent: '#f59e0b', rankBg: 'rgba(245,158,11,0.1)',  rankColor: '#b45309', badgeCls: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30',   label: 'Warning'     },
-  opportunity: { accent: '#f97316', rankBg: 'rgba(249,115,22,0.1)',  rankColor: '#c2410c', badgeCls: 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30', label: 'Opportunity' },
+  fail:        { accent: '#ef4444', rankBg: 'rgba(239,68,68,0.1)',   rankColor: '#ef4444', badgeCls: 'bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30',         label: msg`Error`       },
+  warn:        { accent: '#f59e0b', rankBg: 'rgba(245,158,11,0.1)',  rankColor: '#b45309', badgeCls: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30',   label: msg`Warning`     },
+  opportunity: { accent: '#f97316', rankBg: 'rgba(249,115,22,0.1)',  rankColor: '#c2410c', badgeCls: 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30', label: msg`Opportunity` },
 };
 
 function PriorityCard({ priority }) {
-  const s = PRIORITY_STYLE[priority.severity] ?? { accent: '#94a3b8', rankBg: 'rgba(148,163,184,0.1)', rankColor: '#64748b', badgeCls: 'bg-slate-100 text-slate-600 border border-slate-200', label: 'Note' };
+  const { i18n } = useLingui();
+  const s = PRIORITY_STYLE[priority.severity] ?? { accent: '#94a3b8', rankBg: 'rgba(148,163,184,0.1)', rankColor: '#64748b', badgeCls: 'bg-slate-100 text-slate-600 border border-slate-200', label: msg`Note` };
   const effortLabel = priority.effort_estimate
-    ? (EFFORT_ESTIMATE_LABEL[priority.effort_estimate] ?? priority.effort_estimate)
+    ? (EFFORT_ESTIMATE_LABEL[priority.effort_estimate] ? i18n._(EFFORT_ESTIMATE_LABEL[priority.effort_estimate]) : priority.effort_estimate)
     : null;
 
   return (
@@ -638,7 +669,7 @@ function PriorityCard({ priority }) {
         </p>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`text-2xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-md ${s.badgeCls}`}>
-            {s.label}
+            {i18n._(s.label)}
           </span>
           {effortLabel && (
             <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2.5 py-1 rounded-md border border-border bg-muted/40 text-muted-foreground">
@@ -665,15 +696,16 @@ function statColor(value, thresholds) {
 const NEUTRAL_COLOR = { text: 'text-muted-foreground' };
 
 const CRAWL_STATS = [
-  { key: 'avg_ttfb_ms',          label: 'Avg TTFB',  format: v => `${Math.round(v)}ms`, thresholds: { warn: 800, fail: 2000 }, tooltip: 'Time to first byte. Google de-prioritises slow sites for recrawl.' },
-  { key: 'pages_with_redirects', label: 'Redirects', format: v => String(v),            thresholds: { warn: 1, fail: null },   tooltip: 'Each redirect hop bleeds crawl budget and PageRank.' },
-  { key: 'spa_pages_count',      label: 'SPA pages', format: v => String(v),            thresholds: { warn: 1, fail: null },   tooltip: 'Client-rendered pages — Google Wave 1 may see empty content.' },
-  { key: 'pages_noindex',        label: 'Noindex',   format: v => String(v),            thresholds: null,                      tooltip: 'Pages excluded from the index. Verify these are intentional.' },
-  { key: 'pages_missing_title',  label: 'No title',  format: v => String(v),            thresholds: { warn: 1, fail: 1 },      tooltip: 'Missing title tags are a direct ranking signal failure.' },
-  { key: 'pages_missing_h1',     label: 'No H1',     format: v => String(v),            thresholds: { warn: 1, fail: null },   tooltip: 'Pages without an H1 miss the primary on-page relevance signal.' },
+  { key: 'avg_ttfb_ms',          label: msg`Avg TTFB`,  format: v => `${Math.round(v)}ms`, thresholds: { warn: 800, fail: 2000 }, tooltip: msg`Time to first byte. Google de-prioritises slow sites for recrawl.` },
+  { key: 'pages_with_redirects', label: msg`Redirects`, format: v => String(v),            thresholds: { warn: 1, fail: null },   tooltip: msg`Each redirect hop bleeds crawl budget and PageRank.` },
+  { key: 'spa_pages_count',      label: msg`SPA pages`, format: v => String(v),            thresholds: { warn: 1, fail: null },   tooltip: msg`Client-rendered pages — Google Wave 1 may see empty content.` },
+  { key: 'pages_noindex',        label: msg`Noindex`,   format: v => String(v),            thresholds: null,                      tooltip: msg`Pages excluded from the index. Verify these are intentional.` },
+  { key: 'pages_missing_title',  label: msg`No title`,  format: v => String(v),            thresholds: { warn: 1, fail: 1 },      tooltip: msg`Missing title tags are a direct ranking signal failure.` },
+  { key: 'pages_missing_h1',     label: msg`No H1`,     format: v => String(v),            thresholds: { warn: 1, fail: null },   tooltip: msg`Pages without an H1 miss the primary on-page relevance signal.` },
 ];
 
 function CrawlSummaryStrip({ summary }) {
+  const { i18n } = useLingui();
   return (
     <div className="grid grid-cols-3 @2xl:grid-cols-6 gap-2">
       {CRAWL_STATS.map(({ key, label, format, thresholds, tooltip }) => {
@@ -688,8 +720,8 @@ function CrawlSummaryStrip({ summary }) {
           <div key={key}
             className="rounded-xl px-4 py-4 flex flex-col gap-1"
             style={{ background: cellBg, border: `1px solid ${cellBdr ?? '#e5e7eb'}`, boxShadow: '0 1px 2px rgba(13,15,26,0.04)' }}
-            data-tooltip={tooltip}>
-            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide leading-none">{label}</span>
+            data-tooltip={i18n._(tooltip)}>
+            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide leading-none">{i18n._(label)}</span>
             <span className={`text-xl font-bold tabular-nums leading-tight ${color.text}`}>{format(value)}</span>
           </div>
         );
@@ -710,7 +742,7 @@ function WinsStrip({ wins }) {
         <div className="flex items-center gap-3 mb-3">
           <div className="w-1 h-6 rounded-full shrink-0" style={{ background: '#16a34a' }} />
           <CheckCircle2 size={16} color="#16a34a" strokeWidth={2} />
-          <h2 className="text-xl font-semibold tracking-tight">What&apos;s Going Right</h2>
+          <h2 className="text-xl font-semibold tracking-tight"><Trans>What’s Going Right</Trans></h2>
         </div>
         <div className="grid grid-cols-1 @xl:grid-cols-2 gap-2">
           {wins.map((w, i) => (
@@ -739,9 +771,10 @@ const PHASE_THEME_COLOR = {
 };
 
 function RoadmapSection({ roadmap }) {
+  const { i18n } = useLingui();
   return (
     <section className="rise-8 space-y-3">
-      <SectionHeader icon={Calendar}>Action Plan</SectionHeader>
+      <SectionHeader icon={Calendar}><Trans>Action Plan</Trans></SectionHeader>
       <div className="space-y-3">
         {roadmap.map((phase, i) => {
           const cfg = PHASE_THEME_COLOR[phase.theme] ?? { text: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.2)' };
@@ -758,7 +791,7 @@ function RoadmapSection({ roadmap }) {
               <ul className="space-y-0 divide-y divide-[#e5e7eb]/20">
                 {phase.tasks.map((t, j) => {
                   const effortLabel = t.effort_estimate
-                    ? (EFFORT_ESTIMATE_LABEL[t.effort_estimate] ?? t.effort_estimate)
+                    ? (EFFORT_ESTIMATE_LABEL[t.effort_estimate] ? i18n._(EFFORT_ESTIMATE_LABEL[t.effort_estimate]) : t.effort_estimate)
                     : t.note || null;
                   return (
                     <li key={j} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
@@ -790,6 +823,7 @@ function RoadmapSection({ roadmap }) {
 // ---------------------------------------------------------------------------
 
 export default function AuditReportV1({ data, leadToken = null, email = null }) {
+  const { t, i18n } = useLingui();
   const showExecutionOffer = Boolean(leadToken) && Boolean(data);
   const execServices = React.useMemo(
     () => (showExecutionOffer ? computeExecutionServices(data) : []),
@@ -807,10 +841,13 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
     data.pages_crawled / data.total_sitemap_urls < 0.3;
 
   const dateStr = data.generated_at
-    ? new Date(data.generated_at).toLocaleDateString('en-US', {
+    ? new Date(data.generated_at).toLocaleDateString(i18n.locale, {
         day: 'numeric', month: 'short', year: 'numeric',
       })
     : '';
+
+  const pagesCrawled = data.pages_crawled;
+  const sitemapUrls = data.total_sitemap_urls;
 
   // Support both new key_signals (array) and old executive_summary (string fallback)
   const keySignals = Array.isArray(data.key_signals) && data.key_signals.length
@@ -875,7 +912,7 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
                 letterSpacing: '-0.02em',
                 margin: 0,
               }}>
-                {data.headline || 'SEO Audit Report'}
+                {data.headline || t`SEO Audit Report`}
               </h1>
               <StatsStrip data={data} dateStr={dateStr} dark />
             </div>
@@ -892,16 +929,15 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
         {/* ── Coverage banner ──────────────────────────────────────────── */}
         {showCoverageBanner && (
           <div className="rise-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300"
-            data-tooltip="Only a sample of your sitemap was scanned.">
-            <span className="font-semibold">Limited scan: </span>
-            Based on {data.pages_crawled} of {data.total_sitemap_urls} sitemap pages.
+            data-tooltip={t`Only a sample of your sitemap was scanned.`}>
+            <Trans><span className="font-semibold">Limited scan: </span>Based on {pagesCrawled} of {sitemapUrls} sitemap pages.</Trans>
           </div>
         )}
 
         {/* ── Crawl health ─────────────────────────────────────────────── */}
         {data.crawl_summary && (
           <section className="rise-3 space-y-3">
-            <SectionHeader icon={Activity}>Crawl Health</SectionHeader>
+            <SectionHeader icon={Activity}><Trans>Crawl Health</Trans></SectionHeader>
             <CrawlSummaryStrip summary={data.crawl_summary} />
           </section>
         )}
@@ -915,7 +951,7 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
         {/* ── Fix these first ──────────────────────────────────────────── */}
         {data.top_priorities?.length > 0 && (
           <section className="rise-5 space-y-3">
-            <SectionHeader icon={AlertTriangle}>Fix These First</SectionHeader>
+            <SectionHeader icon={AlertTriangle}><Trans>Fix These First</Trans></SectionHeader>
             <div className="space-y-2">
               {data.top_priorities.map(p => <PriorityCard key={p.rank} priority={p} />)}
             </div>
@@ -935,7 +971,7 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
         {/* ── Category scores ──────────────────────────────────────────── */}
         {data.categories?.length > 0 && (
           <section className="rise-6 space-y-3">
-            <SectionHeader icon={BarChart2}>Category Scores</SectionHeader>
+            <SectionHeader icon={BarChart2}><Trans>Category Scores</Trans></SectionHeader>
             <div className="rounded-xl bg-card px-5 py-5"
               style={{ border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               <CategoryBarChart categories={data.categories} />
@@ -946,7 +982,7 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
         {/* ── Findings accordion ───────────────────────────────────────── */}
         {data.categories?.length > 0 && (
           <section className="rise-7 space-y-3">
-            <SectionHeader icon={Target}>Findings by Category</SectionHeader>
+            <SectionHeader icon={Target}><Trans>Findings by Category</Trans></SectionHeader>
             <div className="rounded-xl overflow-hidden bg-card"
               style={{ border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               {data.categories.map((cat, i) => (
@@ -969,9 +1005,7 @@ export default function AuditReportV1({ data, leadToken = null, email = null }) 
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <footer className="text-center text-xs pt-4 border-t border-[#e5e7eb]/40"
           style={{ color: 'rgba(13,15,26,0.62)' }}>
-          Generated by{' '}
-          <span style={{ color: DUCT_ORANGE, fontWeight: 600 }}>Duct</span>
-          {' '}· getduct.ai
+          <Trans>Generated by <span style={{ color: DUCT_ORANGE, fontWeight: 600 }}>Duct</span> · getduct.ai</Trans>
         </footer>
 
       </div>

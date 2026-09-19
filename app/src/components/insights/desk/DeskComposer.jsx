@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CornerDownLeft, KeyRound } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { faviconUrl } from "@/lib/favicon";
@@ -68,6 +69,7 @@ function claimDraft(projectId) {
 }
 
 export default function DeskComposer({ project, autonomy, onAutonomyChange, placeholder }) {
+  const { t } = useLingui();
   const router = useRouter();
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -105,7 +107,7 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
 
   const website = project?.company?.website_url || "";
   const icon = faviconUrl(website);
-  const name = project?.company?.name || project?.name || "This project";
+  const name = project?.company?.name || project?.name || t`This project`;
 
   function send() {
     const q = draft.trim();
@@ -155,7 +157,7 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
             }
           }}
           placeholder={placeholder}
-          aria-label="Ask Duct"
+          aria-label={t`Ask Duct`}
           className="w-full resize-none bg-transparent px-4 py-3.5 text-base leading-relaxed outline-none placeholder:text-muted-foreground"
         />
         <div className="flex items-center justify-between gap-3 px-3 pb-2.5">
@@ -164,13 +166,13 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
           <div className="flex items-center gap-3">
             {/* A new thread starts empty — the ring fills once there is a
                 conversation to spend the window on. */}
-            <ContextRing used={0} label="New thread" />
+            <ContextRing used={0} label={t`New thread`} />
             <Button
               type="button"
               size="icon-xs"
               onClick={send}
               disabled={!draft.trim() || sending}
-              aria-label={sending ? "Opening session…" : "Send"}
+              aria-label={sending ? t`Opening session…` : t`Send`}
             >
               {sending ? <Spinner className="size-3.5" /> : <CornerDownLeft className="size-3.5" />}
             </Button>
@@ -180,18 +182,20 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
         {needsProvider && (
           <div className="flex items-start gap-2.5 border-t border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning">
             <KeyRound className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+            {/* Straight to the tab with the key fields. The banner's whole
+                complaint is that no key is set, and landing on Tiers made
+                the reader find the one control this sentence is about. */}
             <p className="leading-relaxed">
-              No model provider is connected, so this can&apos;t run yet.{" "}
-              {/* Straight to the tab with the key fields. The banner's whole
-                  complaint is that no key is set, and landing on Tiers made
-                  the reader find the one control this sentence is about. */}
-              <Link
-                href="/settings/models?tab=providers"
-                className="font-medium underline underline-offset-2"
-              >
-                Connect one in Settings → Models &amp; providers →
-              </Link>{" "}
-              — what you typed is still here when you come back.
+              <Trans>
+                No model provider is connected, so this can’t run yet.{" "}
+                <Link
+                  href="/settings/models?tab=providers"
+                  className="font-medium underline underline-offset-2"
+                >
+                  Connect one in Settings → Models & providers →
+                </Link>{" "}
+                — what you typed is still here when you come back.
+              </Trans>
             </p>
           </div>
         )}

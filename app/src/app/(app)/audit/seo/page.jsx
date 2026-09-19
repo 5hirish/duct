@@ -3,6 +3,8 @@
 import { useCallback, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -14,17 +16,17 @@ import { hasAuthToken } from "@/lib/authFetch";
 import { startAuditResume } from "@/lib/auditResume";
 
 const CONTENT_TYPES = [
-  { value: "", label: "Select type…" },
-  { value: "blog", label: "Blog / Articles" },
-  { value: "landing_pages", label: "Landing Pages" },
-  { value: "product_pages", label: "Product Pages" },
-  { value: "docs", label: "Docs / Help" },
+  { value: "", label: msg`Select type…` },
+  { value: "blog", label: msg`Blog / Articles` },
+  { value: "landing_pages", label: msg`Landing Pages` },
+  { value: "product_pages", label: msg`Product Pages` },
+  { value: "docs", label: msg`Docs / Help` },
 ];
 
 const EFFORT_OPTIONS = [
-  { value: "low",    label: "Low",    hint: "Faster, lighter" },
-  { value: "medium", label: "Medium", hint: "Balanced" },
-  { value: "high",   label: "High",   hint: "Deeper analysis" },
+  { value: "low",    label: msg`Low`,    hint: msg`Faster, lighter` },
+  { value: "medium", label: msg`Medium`, hint: msg`Balanced` },
+  { value: "high",   label: msg`High`,   hint: msg`Deeper analysis` },
 ];
 
 // Kept for the one control the primitive does not cover (`<textarea>`), and
@@ -37,15 +39,16 @@ const FIELD = "w-full rounded-3xl border border-control bg-input/50 px-3 py-2 te
  *  question or a failure says so before it is opened. Idle says nothing. */
 function auditBadge(conv) {
   switch (conv.run_status) {
-    case "running": return { label: "Working…", className: "text-primary" };
-    case "paused": return { label: "Needs you", className: "text-warning" };
-    case "failed": return { label: "Failed", className: "text-destructive" };
-    case "cancelled": return { label: "Stopped", className: "text-muted-foreground" };
+    case "running": return { label: msg`Working…`, className: "text-primary" };
+    case "paused": return { label: msg`Needs you`, className: "text-warning" };
+    case "failed": return { label: msg`Failed`, className: "text-destructive" };
+    case "cancelled": return { label: msg`Stopped`, className: "text-muted-foreground" };
     default: return null;
   }
 }
 
 export default function SeoAuditSetupPage() {
+  const { t, i18n } = useLingui();
   const router = useRouter();
   const [url, setUrl]                   = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -144,7 +147,7 @@ export default function SeoAuditSetupPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    if (!url.trim()) { setError("Website URL is required."); return; }
+    if (!url.trim()) { setError(t`Website URL is required.`); return; }
     setLoading(true);
     try {
       const params = {
@@ -186,17 +189,19 @@ export default function SeoAuditSetupPage() {
       sessionStorage.setItem(`audit_session_${sessionId}`, JSON.stringify(params));
       router.push(`/audit/seo/${sessionId}`);
     } catch (err) {
-      setError(err.message || "The audit didn't start. Check the address and try again.");
+      setError(err.message || t`The audit didn't start. Check the address and try again.`);
       setLoading(false);
     }
   }
 
+  const projectName = activeProject?.name || t`this project`;
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">SEO Audit</h1>
+        <h1 className="text-2xl font-semibold tracking-tight"><Trans>SEO Audit</Trans></h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Crawl your site, surface issues, and get an AI-generated report with actionable recommendations.
+          <Trans>Crawl your site, surface issues, and get an AI-generated report with actionable recommendations.</Trans>
         </p>
       </div>
 
@@ -204,10 +209,10 @@ export default function SeoAuditSetupPage() {
         {/* URL */}
         <div>
           <label className="block text-sm font-medium mb-1.5" htmlFor="url">
-            Website URL <span className="text-destructive">*</span>
+            <Trans>Website URL <span className="text-destructive">*</span></Trans>
           </label>
           <Input
-            id="url" type="url" placeholder="https://yoursite.com"
+            id="url" type="url" placeholder={t`https://yoursite.com`}
             value={url} onChange={e => setUrl(e.target.value)} required
             className="border-control"
           />
@@ -216,17 +221,17 @@ export default function SeoAuditSetupPage() {
         {/* Business context */}
         <div className="rounded-lg border border-border/60 p-4 space-y-4">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Optional — improves report quality
+            <Trans>Optional — improves report quality</Trans>
           </p>
 
           {activeProject && (
             <div className="flex items-start justify-between gap-4 rounded-md bg-muted/30 px-3 py-2.5">
               <div>
                 <p className="text-sm font-medium">
-                  Use {activeProject.name || "this project"}&apos;s business context
+                  <Trans>Use {projectName}&apos;s business context</Trans>
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Turn off to audit a different business or competitor — only the fields below are used.
+                  <Trans>Turn off to audit a different business or competitor — only the fields below are used.</Trans>
                 </p>
               </div>
               <Switch
@@ -240,17 +245,17 @@ export default function SeoAuditSetupPage() {
           {activeProject && useProjectContext && (
             <div className="flex items-start justify-between gap-4 rounded-md bg-muted/30 px-3 py-2.5">
               <div>
-                <p className="text-sm font-medium">Remember this session</p>
+                <p className="text-sm font-medium"><Trans>Remember this session</Trans></p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {remember
-                    ? "This run reads project memory, and what it concludes is written back."
-                    : "A one-off: project memory is neither read nor written. The report is still saved."}
+                    ? <Trans>This run reads project memory, and what it concludes is written back.</Trans>
+                    : <Trans>A one-off: project memory is neither read nor written. The report is still saved.</Trans>}
                 </p>
               </div>
               <Switch
                 className="mt-0.5 shrink-0"
                 checked={remember}
-                aria-label="Remember this session"
+                aria-label={t`Remember this session`}
                 onCheckedChange={(next) => setRemember(next)}
               />
             </div>
@@ -258,42 +263,42 @@ export default function SeoAuditSetupPage() {
 
           <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium mb-1.5" htmlFor="biz-name">Business name</label>
+              <label className="block text-sm font-medium mb-1.5" htmlFor="biz-name"><Trans>Business name</Trans></label>
               <Input id="biz-name" type="text" placeholder="Duct" value={businessName}
                 onChange={e => setBusinessName(e.target.value)} className="border-control" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5" htmlFor="content-type">Primary content type</label>
+              <label className="block text-sm font-medium mb-1.5" htmlFor="content-type"><Trans>Primary content type</Trans></label>
               <select id="content-type" value={contentType} onChange={e => setContentType(e.target.value)}
                 className={FIELD}>
-                {CONTENT_TYPES.map(ct => <option key={ct.value} value={ct.value}>{ct.label}</option>)}
+                {CONTENT_TYPES.map(ct => <option key={ct.value} value={ct.value}>{i18n._(ct.label)}</option>)}
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" htmlFor="description">Business description</label>
-            <Input id="description" type="text" placeholder="One-sentence description of what you do"
+            <label className="block text-sm font-medium mb-1.5" htmlFor="description"><Trans>Business description</Trans></label>
+            <Input id="description" type="text" placeholder={t`One-sentence description of what you do`}
               value={description} onChange={e => setDescription(e.target.value)} className="border-control" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" htmlFor="keywords">Target keywords</label>
+            <label className="block text-sm font-medium mb-1.5" htmlFor="keywords"><Trans>Target keywords</Trans></label>
             <Input id="keywords" type="text"
-              placeholder="analytics reporting, growth intelligence, SEO audit (comma-separated)"
+              placeholder={t`analytics reporting, growth intelligence, SEO audit (comma-separated)`}
               value={keywords} onChange={e => setKeywords(e.target.value)} className="border-control" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" htmlFor="competitors">Competitors</label>
+            <label className="block text-sm font-medium mb-1.5" htmlFor="competitors"><Trans>Competitors</Trans></label>
             <Input id="competitors" type="text"
-              placeholder="competitor1.com, competitor2.com (comma-separated)"
+              placeholder={t`competitor1.com, competitor2.com (comma-separated)`}
               value={competitors} onChange={e => setCompetitors(e.target.value)} className="border-control" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" htmlFor="goals">Primary SEO goal</label>
-            <textarea id="goals" rows={2} placeholder="e.g. Increase trial signups from organic search"
+            <label className="block text-sm font-medium mb-1.5" htmlFor="goals"><Trans>Primary SEO goal</Trans></label>
+            <textarea id="goals" rows={2} placeholder={t`e.g. Increase trial signups from organic search`}
               value={goals} onChange={e => setGoals(e.target.value)}
               className={`${FIELD} resize-none`} />
           </div>
@@ -306,7 +311,7 @@ export default function SeoAuditSetupPage() {
             onClick={() => setAdvancedOpen(o => !o)}
             className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
           >
-            <span className="font-medium">Advanced</span>
+            <span className="font-medium"><Trans>Advanced</Trans></span>
             <span className={`text-muted-foreground transition-transform duration-150 ${advancedOpen ? "rotate-90" : ""}`}>›</span>
           </button>
 
@@ -318,9 +323,9 @@ export default function SeoAuditSetupPage() {
 
               {/* Effort */}
               <div className="pt-4">
-                <p className="text-sm font-medium mb-1">Analysis effort</p>
+                <p className="text-sm font-medium mb-1"><Trans>Analysis effort</Trans></p>
                 <p className="text-xs text-muted-foreground mb-2.5">
-                  Controls how deeply the AI reasons about your site before writing findings.
+                  <Trans>Controls how deeply the AI reasons about your site before writing findings.</Trans>
                 </p>
                 <div className="flex gap-2">
                   {EFFORT_OPTIONS.map(opt => (
@@ -334,8 +339,8 @@ export default function SeoAuditSetupPage() {
                           : "border-border hover:border-border/80 text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <span className="block text-sm font-medium">{opt.label}</span>
-                      <span className="block text-2xs text-muted-foreground mt-0.5">{opt.hint}</span>
+                      <span className="block text-sm font-medium">{i18n._(opt.label)}</span>
+                      <span className="block text-2xs text-muted-foreground mt-0.5">{i18n._(opt.hint)}</span>
                     </button>
                   ))}
                 </div>
@@ -344,15 +349,15 @@ export default function SeoAuditSetupPage() {
               {/* Adaptive thinking */}
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium">Adaptive thinking</p>
+                  <p className="text-sm font-medium"><Trans>Adaptive thinking</Trans></p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Lets the AI reason internally before responding. Improves accuracy on complex sites.
+                    <Trans>Lets the AI reason internally before responding. Improves accuracy on complex sites.</Trans>
                   </p>
                 </div>
                 <Switch
                   className="mt-0.5 shrink-0"
                   checked={adaptiveThinking}
-                  aria-label="Adaptive thinking"
+                  aria-label={t`Adaptive thinking`}
                   onCheckedChange={setAdaptiveThinking}
                 />
               </div>
@@ -364,48 +369,51 @@ export default function SeoAuditSetupPage() {
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Starting audit…" : "Run SEO Audit →"}
+          {loading ? <Trans>Starting audit…</Trans> : <Trans>Run SEO Audit →</Trans>}
         </Button>
       </form>
 
       {prevAudits.length > 0 && (
         <div className="mt-8">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Previous audits
+            <Trans>Previous audits</Trans>
           </h2>
           <div className="grid gap-2">
-            {prevAudits.slice(0, 5).map((conv) => (
+            {prevAudits.slice(0, 5).map((conv) => {
+              const badge = auditBadge(conv);
+              const eventCount = conv.last_seq;
+              return (
               <div
                 key={conv.id}
                 className="flex items-center justify-between gap-3 rounded-md border border-input px-3 py-2"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {conv.title || "SEO audit"}
-                    {auditBadge(conv) && (
-                      <span className={`ml-2 text-2xs font-medium ${auditBadge(conv).className}`}>{auditBadge(conv).label}</span>
+                    {conv.title || t`SEO audit`}
+                    {badge && (
+                      <span className={`ml-2 text-2xs font-medium ${badge.className}`}>{i18n._(badge.label)}</span>
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {conv.last_active_at ? new Date(conv.last_active_at).toLocaleString() : ""}
-                    {conv.last_seq ? ` · ${conv.last_seq} events` : ""}
+                    {eventCount ? <> · <Plural value={eventCount} one="# event" other="# events" /></> : ""}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <Button asChild type="button" size="sm" variant="ghost">
                     {/* Everything this chat did — proposals, auto-applies,
                         rollbacks, artifact versions — as one timeline. */}
-                    <Link href={`/activity?conversation_id=${conv.id}`}>Activity</Link>
+                    <Link href={`/activity?conversation_id=${conv.id}`}><Trans>Activity</Trans></Link>
                   </Button>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
                     className="text-muted-foreground"
-                    title="Archive this conversation (its report artifacts stay in the library)"
+                    title={t`Archive this conversation (its report artifacts stay in the library)`}
                     onClick={() => archivePrevAudit(conv.id)}
                   >
-                    Archive
+                    <Trans>Archive</Trans>
                   </Button>
                   <Button
                     type="button"
@@ -420,11 +428,12 @@ export default function SeoAuditSetupPage() {
                       })
                     }
                   >
-                    Continue chat
+                    <Trans>Continue chat</Trans>
                   </Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

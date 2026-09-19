@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import ArtifactRenderer, { CONTENT_TYPES, UnifiedDiffView } from "@/components/artifacts/ArtifactRenderer";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -38,6 +39,7 @@ function exportFormatsFor(artifact) {
  * highlighted inside a section, that section. The agent extracts findings on
  * its own; this is where a human says "that one, specifically". */
 function RememberFromArtifact({ artifact }) {
+  const { t } = useLingui();
   const [state, setState] = useState("idle"); // idle | saving | saved | error
 
   async function save() {
@@ -68,11 +70,11 @@ function RememberFromArtifact({ artifact }) {
   }
 
   const label = {
-    idle: "Remember selection",
-    empty: "Select some text first",
-    saving: "Remembering…",
-    saved: "Remembered ✓",
-    error: "Could not remember",
+    idle: t`Remember selection`,
+    empty: t`Select some text first`,
+    saving: t`Remembering…`,
+    saved: t`Remembered ✓`,
+    error: t`Could not remember`,
   }[state];
 
   return (
@@ -83,6 +85,7 @@ function RememberFromArtifact({ artifact }) {
 }
 
 export default function ArtifactViewerPage() {
+  const { t } = useLingui();
   const { artifactId } = useParams();
   const router = useRouter();
   const [artifact, setArtifact] = useState(null);
@@ -117,7 +120,7 @@ export default function ArtifactViewerPage() {
           }
         }
       })
-      .catch((err) => alive && setError(err.message || "Artifact not found."));
+      .catch((err) => alive && setError(err.message || t`Artifact not found.`));
     return () => {
       alive = false;
     };
@@ -134,7 +137,7 @@ export default function ArtifactViewerPage() {
       setDiff(await diffArtifact(artifact.id, "prev"));
       setShowChanges(true);
     } catch (err) {
-      setError(err.message || "No earlier version to compare.");
+      setError(err.message || t`No earlier version to compare.`);
     }
   }
 
@@ -151,9 +154,9 @@ export default function ArtifactViewerPage() {
 
   async function handleDelete() {
     const ok = await confirm({
-      title: "Delete this artifact?",
-      description: "Every version of it goes with it. This cannot be undone.",
-      action: "Delete",
+      title: t`Delete this artifact?`,
+      description: t`Every version of it goes with it. This cannot be undone.`,
+      action: t`Delete`,
       destructive: true,
     });
     if (!ok) return;
@@ -169,16 +172,27 @@ export default function ArtifactViewerPage() {
 
   const exportFormats = exportFormatsFor(artifact);
 
+  // Plain identifiers for the diff header: a member expression inside a
+  // message becomes `{0}` in the catalogue, which a translator cannot read.
+  const baseVersion = diff?.base_version;
+  const targetVersion = diff?.target_version;
+  const scoreBefore = diff?.summary?.score_before ?? "?";
+  const scoreAfter = diff?.summary?.score_after ?? "?";
+  const newCount = diff?.summary?.new_findings?.length || 0;
+  const resolvedCount = diff?.summary?.resolved_findings?.length || 0;
+  const newFindings = newCount > 0 ? diff.summary.new_findings.slice(0, 6).join(" · ") : "";
+  const resolvedFindings = resolvedCount > 0 ? diff.summary.resolved_findings.slice(0, 6).join(" · ") : "";
+
   return (
     <section>
       {dialog}
       <div className="page-toolbar-back" style={{ gap: 10, flexWrap: "wrap" }}>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/artifacts">← Artifacts</Link>
+          <Link href="/artifacts"><Trans>← Artifacts</Trans></Link>
         </Button>
         <div style={{ minWidth: 0 }}>
           <h1 className="page-toolbar-title text-xl font-semibold tracking-tight truncate">
-            {artifact?.title || "Artifact"}
+            {artifact?.title || t`Artifact`}
           </h1>
           {artifact?.slug && (
             <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>
@@ -194,7 +208,7 @@ export default function ArtifactViewerPage() {
               style={{ fontSize: 13, padding: "4px 6px", borderRadius: 6 }}
               value={artifact?.id || ""}
               onChange={(e) => router.push(`/artifacts/${e.target.value}`)}
-              aria-label="Version"
+              aria-label={t`Version`}
             >
               {versions.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -205,12 +219,12 @@ export default function ArtifactViewerPage() {
           )}
           {versions.length > 1 && (
             <Button size="sm" variant={showChanges ? "default" : "ghost"} onClick={toggleChanges}>
-              {showChanges ? "Hide changes" : "Show changes"}
+              {showChanges ? <Trans>Hide changes</Trans> : <Trans>Show changes</Trans>}
             </Button>
           )}
           {!isHead && artifact && (
             <Button size="sm" variant="secondary" onClick={handleRestore} disabled={busy}>
-              Restore this version
+              <Trans>Restore this version</Trans>
             </Button>
           )}
           {artifact && <RememberFromArtifact artifact={artifact} />}
@@ -227,26 +241,29 @@ export default function ArtifactViewerPage() {
                 })
               }
             >
-              Open chat
+              <Trans>Open chat</Trans>
             </Button>
           )}
-          {exportFormats.map((fmt) => (
-            <Button
-              key={fmt}
-              size="sm"
-              variant="secondary"
-              onClick={() => exportArtifact(artifact, fmt).catch((e) => setError(e.message))}
-            >
-              Export {fmt.toUpperCase()}
-            </Button>
-          ))}
+          {exportFormats.map((fmt) => {
+            const format = fmt.toUpperCase();
+            return (
+              <Button
+                key={fmt}
+                size="sm"
+                variant="secondary"
+                onClick={() => exportArtifact(artifact, fmt).catch((e) => setError(e.message))}
+              >
+                <Trans>Export {format}</Trans>
+              </Button>
+            );
+          })}
           {artifact?.has_content && (
             <Button size="sm" variant="secondary" onClick={() => downloadArtifact(artifact).catch((e) => setError(e.message))}>
-              Download
+              <Trans>Download</Trans>
             </Button>
           )}
           <Button size="sm" variant="outline" onClick={handleDelete} disabled={busy || !artifact}>
-            Delete
+            <Trans>Delete</Trans>
           </Button>
         </div>
       </div>
@@ -254,27 +271,27 @@ export default function ArtifactViewerPage() {
       {error && (
         <p className="app-subtle" style={{ color: "var(--destructive, var(--destructive))" }}>{error}</p>
       )}
-      {!artifact && !error && <p className="app-subtle">Loading…</p>}
+      {!artifact && !error && <p className="app-subtle"><Trans>Loading…</Trans></p>}
 
       {showChanges && diff && (
         <div style={{ marginBottom: 14 }}>
           <p className="app-subtle" style={{ fontSize: 13, marginBottom: 6 }}>
-            Changes v{diff.base_version} → v{diff.target_version}
+            <Trans>Changes v{baseVersion} → v{targetVersion}</Trans>
             {diff.summary && (
               <>
-                {" · "}score {diff.summary.score_before ?? "?"} → {diff.summary.score_after ?? "?"}
-                {" · "}{diff.summary.new_findings?.length || 0} new, {diff.summary.resolved_findings?.length || 0} resolved
+                {" · "}<Trans>score {scoreBefore} → {scoreAfter}</Trans>
+                {" · "}<Trans>{newCount} new, {resolvedCount} resolved</Trans>
               </>
             )}
           </p>
-          {diff.summary?.new_findings?.length > 0 && (
+          {newFindings && (
             <p className="app-subtle" style={{ fontSize: 12 }}>
-              New: {diff.summary.new_findings.slice(0, 6).join(" · ")}
+              <Trans>New: {newFindings}</Trans>
             </p>
           )}
-          {diff.summary?.resolved_findings?.length > 0 && (
+          {resolvedFindings && (
             <p className="app-subtle" style={{ fontSize: 12 }}>
-              Resolved: {diff.summary.resolved_findings.slice(0, 6).join(" · ")}
+              <Trans>Resolved: {resolvedFindings}</Trans>
             </p>
           )}
           <UnifiedDiffView diff={diff.diff} />

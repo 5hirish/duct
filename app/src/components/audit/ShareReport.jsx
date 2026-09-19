@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Copy, LogIn, Share2, UserPlus } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,6 +41,7 @@ export function shareUrl({ conversationId, projectId, siteUrl }) {
 }
 
 export default function ShareReport({ conversationId, projectId, siteUrl }) {
+  const { t } = useLingui();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -76,48 +78,50 @@ export default function ShareReport({ conversationId, projectId, siteUrl }) {
     <>
       <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)}>
         <Share2 className="size-4" aria-hidden />
-        Share
+        <Trans>Share</Trans>
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           {guest ? (
             <>
               <DialogHeader>
-                <DialogTitle>Sign in to share this</DialogTitle>
+                <DialogTitle><Trans>Sign in to share this</Trans></DialogTitle>
                 <DialogDescription>
-                  Sharing is by membership, and a member needs a name. Sign in with Google and this
-                  project, the report and the conversation come with you — nothing is lost.
+                  <Trans>
+                    Sharing is by membership, and a member needs a name. Sign in with Google and this
+                    project, the report and the conversation come with you — nothing is lost.
+                  </Trans>
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
                 <Button type="button" onClick={signIn}>
                   <LogIn className="size-4" aria-hidden />
-                  Sign in and share
+                  <Trans>Sign in and share</Trans>
                 </Button>
               </DialogFooter>
             </>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>Share this report</DialogTitle>
+                <DialogTitle><Trans>Share this report</Trans></DialogTitle>
                 <DialogDescription>
-                  Only members of this project can open the link. Nothing here is public.
+                  <Trans>Only members of this project can open the link. Nothing here is public.</Trans>
                 </DialogDescription>
               </DialogHeader>
               <div className="flex gap-2">
-                <Input readOnly value={url} onFocus={(e) => e.target.select()} aria-label="Report link" />
+                <Input readOnly value={url} onFocus={(e) => e.target.select()} aria-label={t`Report link`} />
                 <Button type="button" variant="outline" onClick={copy} className="shrink-0">
                   {copied ? <Check className="size-4 text-success" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-                  {copied ? "Copied" : "Copy"}
+                  {copied ? <Trans>Copied</Trans> : <Trans>Copy</Trans>}
                 </Button>
               </div>
               <DialogFooter className="sm:justify-between">
-                <p className="text-xs text-muted-foreground">Someone new? Invite them and send the link.</p>
+                <p className="text-xs text-muted-foreground"><Trans>Someone new? Invite them and send the link.</Trans></p>
                 {projectId && (
                   <Button asChild variant="secondary" onClick={() => trackEvent(AnalyticsEvent.AuditShared, { [AnalyticsParam.Method]: "invite" })}>
                     <Link href={`/project/${encodeURIComponent(projectId)}/members`}>
                       <UserPlus className="size-4" aria-hidden />
-                      Invite a teammate
+                      <Trans>Invite a teammate</Trans>
                     </Link>
                   </Button>
                 )}

@@ -61,21 +61,33 @@ export function relativeTime(value, { fallbackAfterDays = 0, locale } = {}) {
   if (fallbackAfterDays > 0 && days >= fallbackAfterDays) {
     return formatDate(d, { locale });
   }
-  if (seconds < 60) return "just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(days)}d ago`;
+  // `Intl.RelativeTimeFormat` rather than a hand-built "5m ago": the word
+  // order and the abbreviation are the locale's ("hace 5 min", "vor 5 Min."),
+  // and `numeric: "auto"` gives "now" for zero instead of "0 seconds ago".
+  const rtf = relativeFormatter(locale);
+  if (seconds < 60) return rtf.format(0, "second");
+  if (seconds < 3600) return rtf.format(-Math.floor(seconds / 60), "minute");
+  if (seconds < 86400) return rtf.format(-Math.floor(seconds / 3600), "hour");
+  return rtf.format(-Math.floor(days), "day");
 }
 
 /** "today" / "in 6 days" / "3 days ago" — day granularity, and it handles the future. */
-export function relativeDays(value) {
+export function relativeDays(value, { locale } = {}) {
   const d = toDate(value);
   if (!d) return "";
   const days = Math.round((d.getTime() - Date.now()) / 86_400_000);
-  if (days === 0) return "today";
-  const n = Math.abs(days);
-  const unit = `${n} day${n === 1 ? "" : "s"}`;
-  return days > 0 ? `in ${unit}` : `${unit} ago`;
+  // `numeric: "always"` keeps "in 1 day" rather than "tomorrow": the callers
+  // put this after "expires", where "expires tomorrow" reads as a warning the
+  // copy never meant.
+  return new Intl.RelativeTimeFormat(locale || undefined, { numeric: days === 0 ? "auto" : "always" }).format(days, "day");
+}
+
+function relativeFormatter(locale) {
+  try {
+    return new Intl.RelativeTimeFormat(locale || undefined, { numeric: "auto", style: "narrow" });
+  } catch {
+    return new Intl.RelativeTimeFormat(undefined, { numeric: "auto", style: "narrow" });
+  }
 }
 
 // ---------------------------------------------------------------------------

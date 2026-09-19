@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import ChatSidebar from "./ChatSidebar";
 import InsightDashboard from "./InsightDashboard";
 import { refreshInsightBriefs } from "../lib/api";
@@ -14,6 +15,7 @@ import { InsightContextProvider } from "./InsightContext";
 import { formatTitle } from "@/lib/format";
 
 export default function LocalInsightDetail({ slug }) {
+  const { t } = useLingui();
   const [entry, setEntry] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [liveBriefs, setLiveBriefs] = useState(null);
@@ -92,13 +94,13 @@ export default function LocalInsightDetail({ slug }) {
       <section>
         <p style={{ marginTop: 0, marginBottom: 10 }}>
           <Link href="/insights/organic-growth" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
-            &larr; Back to insights
+            <Trans>&larr; Back to insights</Trans>
           </Link>
         </p>
         <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
-          Insight not found
+          <Trans>Insight not found</Trans>
         </h1>
-        <p>This locally-stored insight may have been cleared from your browser.</p>
+        <p><Trans>This locally-stored insight may have been cleared from your browser.</Trans></p>
       </section>
     );
   }
@@ -107,7 +109,7 @@ export default function LocalInsightDetail({ slug }) {
     return (
       <section>
         <p className="app-subtle" role="status" aria-live="polite">
-          Loading insight…
+          <Trans>Loading insight…</Trans>
         </p>
       </section>
     );
@@ -121,7 +123,7 @@ export default function LocalInsightDetail({ slug }) {
   const supplementary = isEnvelope ? payload.supplementary : null;
 
   const title = formatTitle(slug);
-  const theme = brief?.source_metadata?.theme === "paid_ads" ? "Paid Ads" : "Report";
+  const theme = brief?.source_metadata?.theme === "paid_ads" ? t`Paid Ads` : t`Report`;
   const generatedAt = isEnvelope
     ? payload.metadata?.generated_at || brief?.source_metadata?.generated_at || ""
     : payload.source_metadata?.generated_at || "";
@@ -159,26 +161,25 @@ export default function LocalInsightDetail({ slug }) {
     <section>
       <p style={{ marginTop: 0, marginBottom: 10 }}>
         <Link href="/insights/organic-growth" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
-          &larr; Back to insights
+          <Trans>&larr; Back to insights</Trans>
         </Link>
       </p>
       <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
-        {title} <span className="report-badge-local">Local</span>
+        {title} <span className="report-badge-local"><Trans>Local</Trans></span>
       </h1>
       <p className="report-meta" style={{ marginTop: 0, marginBottom: 14 }}>
-        {theme}
-        {generatedAt ? ` \u00B7 Generated: ${generatedAt}` : ""}
+        {generatedAt ? <Trans>{theme} · Generated: {generatedAt}</Trans> : theme}
       </p>
       {canRefresh && (
         <div className="generate-alert" style={{ marginBottom: 14 }}>
           <p className="app-subtle" style={{ marginTop: 0, marginBottom: 8 }}>
             {refreshStatus === "loading"
-              ? "Refreshing live data..."
+              ? t`Refreshing live data...`
               : refreshState.refresh_error
-                ? "Could not refresh - showing saved data."
+                ? t`Could not refresh - showing saved data.`
                 : refreshedAt
-                  ? `Live data as of ${refreshedAt}`
-                  : "Live refresh ready"}
+                  ? t`Live data as of ${refreshedAt}`
+                  : t`Live refresh ready`}
           </p>
           <button
             type="button"
@@ -186,7 +187,7 @@ export default function LocalInsightDetail({ slug }) {
             onClick={handleRefreshClick}
             disabled={refreshStatus === "loading"}
           >
-            {refreshStatus === "loading" ? "Refreshing..." : "Refresh now"}
+            {refreshStatus === "loading" ? t`Refreshing...` : t`Refresh now`}
           </button>
         </div>
       )}

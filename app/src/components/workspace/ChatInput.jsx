@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Paperclip, Square, X } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 
 import { Button } from "@/components/ui/button";
 
@@ -29,8 +30,10 @@ export default function ChatInput({
   disabled,
   isStreaming,
   onStop,
-  placeholder = "Ask a follow-up question…",
-  ariaLabel = "Message the agent",
+  // Both default to the shell's own words, resolved below so they follow the
+  // interface language.
+  placeholder,
+  ariaLabel,
   accept = "image/*",
   // { text, key }: text handed back by the session (a queued message the
   // user stopped before it was read). Applied once per `key`.
@@ -38,6 +41,9 @@ export default function ChatInput({
   tools = null,
   status = null,
 }) {
+  const { t } = useLingui();
+  const placeholderText = placeholder ?? t`Ask a follow-up question…`;
+  const ariaLabelText = ariaLabel ?? t`Message the agent`;
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState([]);
   const fileRef = useRef(null);
@@ -109,21 +115,24 @@ export default function ChatInput({
       <div className="rounded-xl border bg-card focus-within:border-ring">
         {attachments.length > 0 && (
           <div className="flex flex-wrap gap-2 px-3 pt-3">
-            {attachments.map((att, i) => (
+            {attachments.map((att, i) => {
+              const name = att.name;
+              return (
               <div key={i} className="flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs">
-                <span className="max-w-[120px] truncate">{att.name}</span>
+                <span className="max-w-[120px] truncate">{name}</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
-                  aria-label={`Remove ${att.name}`}
+                  aria-label={t`Remove ${name}`}
                   className="-mr-1 ml-0.5 text-muted-foreground hover:text-foreground"
                 >
                   <X aria-hidden />
                 </Button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -133,9 +142,9 @@ export default function ChatInput({
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          aria-label={ariaLabel}
+          aria-label={ariaLabelText}
           disabled={disabled}
-          placeholder={disabled ? "Waiting for agent…" : placeholder}
+          placeholder={disabled ? t`Waiting for agent…` : placeholderText}
           className="max-h-[160px] min-h-[44px] w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 pb-1 text-base leading-relaxed outline-none placeholder:text-muted-foreground disabled:opacity-50 md:text-sm"
           style={{ height: "44px" }}
           onInput={(e) => {
@@ -152,7 +161,7 @@ export default function ChatInput({
               size="icon-sm"
               onClick={() => fileRef.current?.click()}
               disabled={disabled}
-              aria-label="Attach image"
+              aria-label={t`Attach image`}
               className="text-muted-foreground"
             >
               <Paperclip aria-hidden />
@@ -161,7 +170,7 @@ export default function ChatInput({
               ref={fileRef}
               type="file"
               accept={accept}
-              aria-label="Attach files"
+              aria-label={t`Attach files`}
               multiple
               className="hidden"
               onChange={handleFileChange}
@@ -174,7 +183,7 @@ export default function ChatInput({
             {isStreaming && (
               <Button type="button" variant="destructive" size="xs" onClick={onStop}>
                 <Square className="fill-current" aria-hidden />
-                Stop
+                <Trans>Stop</Trans>
               </Button>
             )}
             <Button
@@ -182,7 +191,7 @@ export default function ChatInput({
               size="icon-xs"
               onClick={handleSend}
               disabled={!canSend}
-              aria-label="Send"
+              aria-label={t`Send`}
             >
               <ArrowUp className="size-3.5" aria-hidden />
             </Button>

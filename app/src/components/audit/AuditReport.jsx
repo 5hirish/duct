@@ -1,6 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { msg } from "@lingui/core/macro";
 import { Phase } from "../workspace/agentPhase";
 import { AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
@@ -19,21 +21,25 @@ function VersionPills({ versions, selectedId, onSelect }) {
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      {[...versions].reverse().map((v) => (
-        <button
-          key={v.version_id}
-          onClick={() => onSelect(v.version_id)}
-          className={`rounded-full px-2.5 py-0.5 text-xs transition-colors border whitespace-nowrap ${
-            active === v.version_id
-              ? "bg-primary text-primary-foreground border-primary"
-              : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground"
-          }`}
-        >
-          v{v.version_id} — {v.label}
-        </button>
-      ))}
+      {[...versions].reverse().map((v) => {
+        const id = v.version_id;
+        const label = v.label;
+        return (
+          <button
+            key={v.version_id}
+            onClick={() => onSelect(v.version_id)}
+            className={`rounded-full px-2.5 py-0.5 text-xs transition-colors border whitespace-nowrap ${
+              active === v.version_id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground"
+            }`}
+          >
+            <Trans>v{id} — {label}</Trans>
+          </button>
+        );
+      })}
       {isOld && (
-        <span className="text-xs text-warning font-medium">older version</span>
+        <span className="text-xs text-warning font-medium"><Trans>older version</Trans></span>
       )}
     </div>
   );
@@ -46,69 +52,85 @@ function VersionPills({ versions, selectedId, onSelect }) {
 // Virtual step ID — not emitted by the backend, driven by isStreamingReport prop
 const STEP_WRITE_REPORT = "write_report";
 
+// Module-level tables hold message descriptors; SynthesisProgress resolves
+// them for the current locale before PipelineProgress sees them.
 const STAGE_META = [
-  { id: AuditStep.FETCH_SITEMAP,    label: "Mapping your site structure",          virtual: false },
-  { id: AuditStep.CRAWL_PAGES,      label: "Reading and parsing your pages",       virtual: false },
+  { id: AuditStep.FETCH_SITEMAP,    label: msg`Mapping your site structure`,          virtual: false },
+  { id: AuditStep.CRAWL_PAGES,      label: msg`Reading and parsing your pages`,       virtual: false },
   // conditional: enrichment is skipped for the lead-magnet flow (no business
   // context), so only render this stage once the backend actually emits it.
-  { id: AuditStep.ENRICHING,        label: "Researching competitors",              virtual: false, conditional: true },
-  { id: AuditStep.SYNTHESIZE_AUDIT, label: "Scoring signals & building findings",  virtual: false },
-  { id: STEP_WRITE_REPORT,          label: "Generating report",                    virtual: true  },
+  { id: AuditStep.ENRICHING,        label: msg`Researching competitors`,              virtual: false, conditional: true },
+  { id: AuditStep.SYNTHESIZE_AUDIT, label: msg`Scoring signals & building findings`,  virtual: false },
+  { id: STEP_WRITE_REPORT,          label: msg`Generating report`,                    virtual: true  },
 ];
 
 const SYNTHESIS_LINES = [
-  "Evaluating title tags and meta descriptions…",
-  "Checking structured data coverage…",
-  "Reviewing Open Graph completeness…",
-  "Analysing internal linking patterns…",
-  "Measuring E-E-A-T signals…",
-  "Scoring each SEO category…",
-  "Composing findings and priorities…",
+  msg`Evaluating title tags and meta descriptions…`,
+  msg`Checking structured data coverage…`,
+  msg`Reviewing Open Graph completeness…`,
+  msg`Analysing internal linking patterns…`,
+  msg`Measuring E-E-A-T signals…`,
+  msg`Scoring each SEO category…`,
+  msg`Composing findings and priorities…`,
 ];
 
 // Right-aligned payload chips, audit-specific (sitemap page counts, competitor
 // counts). Everything else (icons, time estimate, progress bar, rotating lines)
 // is the shared PipelineProgress.
-function auditStageChip(stage, step, status) {
+function AuditStageChip({ step, status }) {
   if (step?.payload?.landing_pages != null) {
+    const pages = step.payload.landing_pages;
+    const posts = step.payload.blog_posts;
     return (
       <span className="text-xs text-muted-foreground shrink-0">
-        {step.payload.landing_pages} page{step.payload.landing_pages !== 1 ? "s" : ""}
-        {step.payload.blog_posts > 0 && `, ${step.payload.blog_posts} post${step.payload.blog_posts !== 1 ? "s" : ""}`}
+        <Plural value={pages} one="# page" other="# pages" />
+        {posts > 0 && <>, <Plural value={posts} one="# post" other="# posts" /></>}
       </span>
     );
   }
   if (status === StepStatus.SUCCESS && step?.payload?.competitors != null) {
+    const competitors = step.payload.competitors.length;
     return (
       <span className="text-xs text-muted-foreground shrink-0">
-        {step.payload.competitors.length} competitor{step.payload.competitors.length !== 1 ? "s" : ""}
+        <Plural value={competitors} one="# competitor" other="# competitors" />
       </span>
     );
   }
   return null;
 }
 
+function auditStageChip(stage, step, status) {
+  return <AuditStageChip step={step} status={status} />;
+}
+
 function SynthesisProgress({ steps, isStreamingReport = false }) {
+  const { t, i18n } = useLingui();
+  const stages = useMemo(
+    () => STAGE_META.map((stage) => ({ ...stage, label: i18n._(stage.label) })),
+    [i18n],
+  );
+  const lines = useMemo(() => SYNTHESIS_LINES.map((line) => i18n._(line)), [i18n]);
   // Once the model starts adding categories, swap the static time estimate for live
   // "N/9 categories" progress (emitted per AddAuditCategory call by the backend).
   const synthStep = steps?.find((s) => s.step_id === AuditStep.SYNTHESIZE_AUDIT);
   const done = synthStep?.payload?.categories_done;
+  const total = synthStep?.payload?.categories_total ?? 9;
   const estimate = done != null
-    ? `${done}/${synthStep.payload.categories_total ?? 9} categories`
-    : "~3 min";
+    ? t`${done}/${total} categories`
+    : t`~3 min`;
   return (
     <PipelineProgress
-      stages={STAGE_META}
+      stages={stages}
       steps={steps}
       activeId={AuditStep.SYNTHESIZE_AUDIT}
       writingId={STEP_WRITE_REPORT}
       writing={isStreamingReport}
-      lines={SYNTHESIS_LINES}
+      lines={lines}
       estimate={estimate}
-      buildingLabel="Building report"
-      streamingLabel="Generating report"
-      streamingSubtitle="Writing your report…"
-      idleSubtitle="Working on your report…"
+      buildingLabel={t`Building report`}
+      streamingLabel={t`Generating report`}
+      streamingSubtitle={t`Writing your report…`}
+      idleSubtitle={t`Working on your report…`}
       stageChip={auditStageChip}
     />
   );
@@ -142,7 +164,7 @@ function InterruptedReport() {
             return (
               <div key={i} className="flex items-center gap-1 py-[1px]">
                 <div className="flex-1 h-px bg-destructive/40" style={{ borderTop: "1px dashed rgba(239,68,68,0.4)" }} />
-                <span className="text-2xs text-destructive/60 font-medium shrink-0">stopped</span>
+                <span className="text-2xs text-destructive/60 font-medium shrink-0"><Trans>stopped</Trans></span>
               </div>
             );
           }
@@ -180,14 +202,14 @@ function FailedOverlay({ errorMsg, onRetry, hasReport }) {
           <InterruptedReport />
           <div className="space-y-1">
             <p className="font-semibold text-base tracking-tight">
-              {hasReport ? "Scan cut short" : "Scan couldn't finish"}
+              {hasReport ? <Trans>Scan cut short</Trans> : <Trans>Scan couldn't finish</Trans>}
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px] mx-auto">
               {hasReport
-                ? "The pipeline stopped early — your partial results are still visible above."
+                ? <Trans>The pipeline stopped early — your partial results are still visible above.</Trans>
                 : errorMsg
                 ? errorMsg
-                : "Something interrupted the audit. Your site is fine — this was on our end."}
+                : <Trans>Something interrupted the audit. Your site is fine — this was on our end.</Trans>}
             </p>
           </div>
         </div>
@@ -198,10 +220,10 @@ function FailedOverlay({ errorMsg, onRetry, hasReport }) {
             onClick={onRetry}
             className="w-full rounded-xl bg-destructive/10 hover:bg-destructive/20 border border-destructive/25 px-4 py-2.5 text-sm font-medium text-destructive transition-colors"
           >
-            ↺ Try again
+            <Trans>↺ Try again</Trans>
           </button>
           <p className="text-2xs text-muted-foreground">
-            Usually resolves on the first retry
+            <Trans>Usually resolves on the first retry</Trans>
           </p>
         </div>
       </div>
@@ -228,6 +250,7 @@ export default function AuditReport({
   // the workspace owns because it knows the conversation and the project.
   actions = null,
 }) {
+  const { t } = useLingui();
   const iframeRef = useRef(null);
 
   const selectedVersion =
@@ -282,7 +305,7 @@ export default function AuditReport({
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-2 shrink-0">
         <div className="flex items-center gap-2 min-w-0 overflow-x-auto">
-          <span className="text-sm font-medium shrink-0">SEO Report</span>
+          <span className="text-sm font-medium shrink-0"><Trans>SEO Report</Trans></span>
           <VersionPills
             versions={versions}
             selectedId={selectedVersionId}
@@ -294,14 +317,14 @@ export default function AuditReport({
             {actions}
             <button
               onClick={handleDownload}
-              title="Download HTML report"
+              title={t`Download HTML report`}
               className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted text-sm transition-colors"
             >
               ↓
             </button>
             <button
               onClick={handlePrint}
-              title="Print report"
+              title={t`Print report`}
               className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               🖨
@@ -323,7 +346,7 @@ export default function AuditReport({
                 ref={iframeRef}
                 srcDoc={finalHtml}
                 sandbox="allow-modals allow-same-origin"
-                title="SEO Audit Report"
+                title={t`SEO Audit Report`}
                 className="w-full h-full border-0"
               />
             )}

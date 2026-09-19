@@ -11,6 +11,7 @@ import {
   NEEDS_YOU, FOUND, IN_PROGRESS,
   buildDesk, routeMemory, routeChangeSet, routeConversation,
   certainty, artifactLook, pinnedFirst, relativeTime, headline,
+  HEADLINE_NEEDS_YOU, HEADLINE_CLEAR, HEADLINE_NOTHING,
 } from "../src/lib/desk.js";
 
 const NOW = Date.parse("2026-09-01T12:00:00Z");
@@ -65,13 +66,19 @@ check("an open incident blocks on a person", routeMemory(mem({ kind: "incident" 
 check("a resolved incident is not on the desk", routeMemory(mem({ kind: "incident", valid_to: ago(0) })), null);
 check("a watch is something I'm holding, not you", routeMemory(mem({ kind: "watch" })), FOUND);
 check("an unconfirmed memory is a finding, not a chore", routeMemory(mem({ status: "proposed" })), FOUND);
-check("...and it says so rather than showing a tick", certainty({ status: "proposed" }).label, "Not confirmed");
-check("high confidence reads as checked", certainty({ status: "confirmed", confidence: "high" }).label, "Checked");
+check("...and it says so rather than showing a tick", certainty({ status: "proposed" }).code, "unconfirmed");
+check("high confidence reads as checked", certainty({ status: "confirmed", confidence: "high" }).code, "checked");
+check("a proposed change set counts its changes for the card",
+  buildDesk({ changeSets: [{ id: "x", status: "proposed", changes: [{}, {}, {}] }] }).needsYou[0],
+  { id: "change_set:x", type: "change_set", title: "", titleCode: "untitled_change_set",
+    detailCode: "changes_to_approve", count: 3, tone: "alert", at: "", weight: 10, changeSetId: "x" });
 
 // --- documents -------------------------------------------------------------
 check("a brief is a brief", artifactLook({ kind: "brief" }).tone, "brief");
 check("an audit report is a report", artifactLook({ kind: "report" }).tone, "report");
 check("json is data", artifactLook({ kind: "other", content_type: "application/json" }).tone, "data");
+check("an unknown kind is named by its kind", artifactLook({ kind: "slides" }), { code: "kind", kind: "slides", tone: "data" });
+check("no kind at all is a document", artifactLook({}).code, "document");
 {
   const rows = [
     { id: "a", pinned: false, created_at: ago(1e3) },
@@ -81,23 +88,30 @@ check("json is data", artifactLook({ kind: "other", content_type: "application/j
   check("pinned floats above newer unpinned", pinnedFirst(rows).map((r) => r.id).join(""), "bac");
 }
 
-// --- words -----------------------------------------------------------------
-check("minutes", relativeTime(ago(18 * 60e3), NOW), "18 minutes ago");
-check("one hour is singular", relativeTime(ago(61 * 60e3), NOW), "1 hour ago");
-check("yesterday is a word, not a date", relativeTime(ago(30 * 3600e3), NOW), "Yesterday");
-check("days", relativeTime(ago(3 * 864e5), NOW), "3 days ago");
-check("a clock skew never reads as the future", relativeTime(new Date(NOW + 5e3).toISOString(), NOW), "just now");
-check("no timestamp, no guess", relativeTime("", NOW), "");
+// --- times -----------------------------------------------------------------
+// Pinned to English here so the check does not depend on the machine's locale;
+// the desk passes the interface language.
+const at = (ms) => relativeTime(ago(ms), { now: NOW, locale: "en" });
+check("minutes", at(18 * 60e3), "18 minutes ago");
+check("one hour is singular", at(61 * 60e3), "1 hour ago");
+check("yesterday is a word, not a date", at(30 * 3600e3), "yesterday");
+check("days", at(3 * 864e5), "3 days ago");
+check("a week on, a date", at(9 * 864e5), "Aug 23");
+check("another language, no code change", relativeTime(ago(3 * 864e5), { now: NOW, locale: "es" }), "hace 3 días");
+check("under a minute is the caller's word, not a number", at(20e3), "");
+check("a clock skew never reads as the future", relativeTime(new Date(NOW + 5e3).toISOString(), { now: NOW, locale: "en" }), "");
+check("no timestamp, no guess", relativeTime("", { now: NOW }), "");
 
-check("one thing needing you is singular",
-  headline({ needsYou: 1, lastRunAt: ago(60e3), sourceCount: 3, now: NOW }).title,
-  "1 thing needs you.");
+// --- the headline's facts ---------------------------------------------------
+check("something needing you is the sentence, with its count",
+  headline({ needsYou: 1, lastRunAt: ago(60e3), sourceCount: 3 }),
+  { state: HEADLINE_NEEDS_YOU, needsYou: 1, found: 0, hasRun: true, lastRunAt: ago(60e3), sourceCount: 3 });
 check("a clear desk says so",
-  headline({ needsYou: 0, found: 4, lastRunAt: ago(60e3), sourceCount: 3, now: NOW }).title,
-  "Nothing needs you right now.");
+  headline({ needsYou: 0, found: 4, lastRunAt: ago(60e3), sourceCount: 3 }).state,
+  HEADLINE_CLEAR);
 check("a zero is never reported as a result",
-  headline({ needsYou: 0, found: 0, sourceCount: 0, now: NOW }).sub,
-  "Nothing has run yet. 0 sources connected.");
+  headline({ needsYou: 0, found: 0, sourceCount: 0 }),
+  { state: HEADLINE_NOTHING, needsYou: 0, found: 0, hasRun: false, lastRunAt: "", sourceCount: 0 });
 
 let failed = 0;
 for (const { name, got, want } of cases) {

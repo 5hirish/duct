@@ -14,6 +14,7 @@
 
 import { use, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Trans } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { startAuditResume } from "@/lib/auditResume";
 import { authToken, isTokenValid } from "@/lib/authFetch";
@@ -50,7 +51,7 @@ export default function OpenAuditPage({ params }) {
     <main className="flex min-h-dvh items-center justify-center bg-background" id="main-content" tabIndex={-1}>
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
         <Spinner className="size-4" />
-        Opening the report…
+        <Trans>Opening the report…</Trans>
       </p>
     </main>
   );

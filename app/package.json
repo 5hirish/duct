@@ -20,11 +20,18 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "check:connectors": "node scripts/check-connector-count.mjs",
     "check:desk": "node scripts/check-desk.mjs",
-    "check:sources": "node scripts/check-data-sources.mjs"
+    "check:sources": "node scripts/check-data-sources.mjs",
+    "i18n:extract": "lingui extract",
+    "i18n:compile": "lingui compile",
+    "prebuild": "lingui compile --strict",
+    "predev": "lingui compile",
+    "check:i18n": "lingui extract && [ -z \"$(git status --porcelain -- src/locales)\" ] || (echo \"catalogues are stale or uncommitted: run npm run i18n:extract and commit src/locales\" && exit 1); lingui compile --strict && node scripts/check-literal-strings.mjs"
   },
   "keywords": [],
   "license": "MIT",
   "dependencies": {
+    "@lingui/core": "^6.7.0",
+    "@lingui/react": "^6.7.0",
     "@nivo/core": "^0.99.0",
     "@nivo/heatmap": "^0.99.0",
     "@sentry/nextjs": "^10.74.0",
@@ -52,6 +59,9 @@
     "node": ">=20.9.0"
   },
   "devDependencies": {
+    "@lingui/cli": "^6.7.0",
+    "@lingui/format-po": "^6.7.0",
+    "@lingui/swc-plugin": "6.6.0",
     "@opennextjs/cloudflare": "^1.20.5",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",

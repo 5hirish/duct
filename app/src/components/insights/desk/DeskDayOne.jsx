@@ -13,30 +13,32 @@
 
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const SAMPLE_FINDINGS = [
-  { title: "Real upgrades: 13, not 36.", detail: "23 came from your own team" },
-  { title: "Ads says 4,212. Stripe settled 1,890.", detail: "Nobody had compared them" },
-  { title: "An A/B test live 74 days with nobody in it.", detail: "Every dashboard called it healthy" },
+  { title: msg`Real upgrades: 13, not 36.`, detail: msg`23 came from your own team` },
+  { title: msg`Ads says 4,212. Stripe settled 1,890.`, detail: msg`Nobody had compared them` },
+  { title: msg`An A/B test live 74 days with nobody in it.`, detail: msg`Every dashboard called it healthy` },
 ];
 
 const SAMPLE_RUNNING = [
-  { title: "Where the funnel actually breaks", detail: "You'd pick this back up here" },
-  { title: "Nightly check", detail: "Runs whether you are here or not" },
+  { title: msg`Where the funnel actually breaks`, detail: msg`You'd pick this back up here` },
+  { title: msg`Nightly check`, detail: msg`Runs whether you are here or not` },
 ];
 
 const SITE_QUESTIONS = [
-  "Which pages should rank and don't?",
-  "What is my site actually about?",
-  "Where do competitors beat me?",
+  msg`Which pages should rank and don't?`,
+  msg`What is my site actually about?`,
+  msg`Where do competitors beat me?`,
 ];
 
 const DATA_QUESTIONS = [
-  "Are my conversions real people?",
-  "Did anything stop working?",
-  "Did the revenue actually arrive?",
+  msg`Are my conversions real people?`,
+  msg`Did anything stop working?`,
+  msg`Did the revenue actually arrive?`,
 ];
 
 function Step({ done, title, children }) {
@@ -62,21 +64,22 @@ function Step({ done, title, children }) {
 }
 
 function SampleCard({ label, blurb, rows }) {
+  const { i18n } = useLingui();
   return (
     <section className="flex flex-col rounded-xl border border-dashed p-5">
       <header className="mb-3 flex items-center gap-2.5">
         <span className="size-[7px] rounded-full bg-muted-foreground/40" aria-hidden />
         <h2 className="text-sm font-bold tracking-tight text-muted-foreground">{label}</h2>
         <span className="ml-auto rounded-full border px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-          Example
+          <Trans>Example</Trans>
         </span>
       </header>
       <p className="mb-4 text-xs leading-relaxed text-muted-foreground">{blurb}</p>
       <div className="flex flex-col gap-4 opacity-60">
         {rows.map((row) => (
-          <div key={row.title}>
-            <p className="text-sm font-medium leading-snug">{row.title}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{row.detail}</p>
+          <div key={row.title.id}>
+            <p className="text-sm font-medium leading-snug">{i18n._(row.title)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{i18n._(row.detail)}</p>
           </div>
         ))}
       </div>
@@ -85,17 +88,20 @@ function SampleCard({ label, blurb, rows }) {
 }
 
 export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }) {
+  const { t, i18n } = useLingui();
   const done = [hasProject, sourceCount > 0, hasThread].filter(Boolean).length;
 
   return (
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-3xl font-bold leading-tight tracking-tight">
-          Duct checks a number before it trusts it.
+          <Trans>Duct checks a number before it trusts it.</Trans>
         </h1>
         <p className="measure mt-2.5 text-sm leading-relaxed text-muted-foreground">
-          Most reporting problems aren&apos;t bad decisions — they&apos;re good decisions made on
-          numbers nobody checked. Three steps and this page starts filling itself in.
+          <Trans>
+            Most reporting problems aren’t bad decisions — they’re good decisions made on
+            numbers nobody checked. Three steps and this page starts filling itself in.
+          </Trans>
         </p>
       </div>
 
@@ -103,8 +109,8 @@ export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }
         <section className="flex flex-col rounded-xl border border-destructive/40 bg-card p-5">
           <header className="mb-4 flex items-center gap-2.5">
             <span className="size-[7px] rounded-full bg-destructive" aria-hidden />
-            <h2 className="text-sm font-bold tracking-tight">Needs you</h2>
-            <span className="ml-auto text-xs text-muted-foreground">{done} of 3 done</span>
+            <h2 className="text-sm font-bold tracking-tight"><Trans>Needs you</Trans></h2>
+            <span className="ml-auto text-xs text-muted-foreground"><Trans>{done} of 3 done</Trans></span>
           </header>
 
           <ol className="flex flex-col gap-4">
@@ -112,58 +118,60 @@ export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }
                 rest, so "add a project" and "audit a site" are the same
                 click. The project is the thing everything else hangs off —
                 sources, threads and claims are all scoped to one. */}
-            <Step done={hasProject} title="Add a project">
+            <Step done={hasProject} title={t`Add a project`}>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                One site or account. Everything I check hangs off it.
+                <Trans>One site or account. Everything I check hangs off it.</Trans>
               </p>
               <Button asChild size="sm" className="mt-2.5 h-7 rounded-full text-xs">
-                <Link href="/start">Audit a site</Link>
+                <Link href="/start"><Trans>Audit a site</Trans></Link>
               </Button>
             </Step>
 
-            <Step done={sourceCount > 0} title="Connect one data source">
+            <Step done={sourceCount > 0} title={t`Connect one data source`}>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Google Ads, GA4 or Mixpanel. This is the step that changes everything — I
-                can&apos;t check a number I can&apos;t see.
+                <Trans>
+                  Google Ads, GA4 or Mixpanel. This is the step that changes everything — I
+                  can’t check a number I can’t see.
+                </Trans>
               </p>
               <Button asChild size="sm" className="mt-2.5 h-7 rounded-full text-xs">
-                <Link href="/connections">Connect a source</Link>
+                <Link href="/connections"><Trans>Connect a source</Trans></Link>
               </Button>
             </Step>
 
-            <Step done={hasThread} title="Ask me something">
+            <Step done={hasThread} title={t`Ask me something`}>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Pick one of the questions below, or type your own.
+                <Trans>Pick one of the questions below, or type your own.</Trans>
               </p>
             </Step>
           </ol>
         </section>
 
         <SampleCard
-          label="What I found"
-          blurb="Real problems from a real account. Nothing lands here unchecked."
+          label={t`What I found`}
+          blurb={t`Real problems from a real account. Nothing lands here unchecked.`}
           rows={SAMPLE_FINDINGS}
         />
         <SampleCard
-          label="In progress"
-          blurb="Work still moving — mine or yours. Nothing here waits on you."
+          label={t`In progress`}
+          blurb={t`Work still moving — mine or yours. Nothing here waits on you.`}
           rows={SAMPLE_RUNNING}
         />
       </div>
 
       <div>
         <h2 className="mb-3.5 text-sm font-bold uppercase tracking-[0.02em] text-muted-foreground">
-          Start with a question
+          <Trans>Start with a question</Trans>
         </h2>
         <div className="flex flex-wrap gap-2">
           {SITE_QUESTIONS.map((q) => (
             <button
-              key={q}
+              key={q.id}
               type="button"
-              onClick={() => onAsk(q)}
+              onClick={() => onAsk(i18n._(q))}
               className="rounded-full border bg-card px-4 py-2 text-sm transition-colors hover:bg-accent"
             >
-              {q}
+              {i18n._(q)}
             </button>
           ))}
         </div>
@@ -171,14 +179,14 @@ export default function DeskDayOne({ hasProject, sourceCount, hasThread, onAsk }
         {sourceCount === 0 && (
           <div className="mt-3.5 flex flex-wrap items-center gap-2">
             <span className="mr-0.5 text-xs text-muted-foreground">
-              Once you connect a source:
+              <Trans>Once you connect a source:</Trans>
             </span>
             {DATA_QUESTIONS.map((q) => (
               <span
-                key={q}
+                key={q.id}
                 className="rounded-full border border-dashed px-3.5 py-1.5 text-xs text-muted-foreground"
               >
-                {q}
+                {i18n._(q)}
               </span>
             ))}
           </div>

@@ -25,6 +25,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Database, FileText } from "lucide-react";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import AgentChat from "@/components/workspace/AgentChat";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -47,6 +49,7 @@ export default function InsightsWorkspace({
   conversationId = "",
   artifactId = "",
 }) {
+  const { t } = useLingui();
   // What the agent pulled, in order.
   const [fetched, setFetched] = useState([]);
   // The brief: every version this session produced, plus the one being written.
@@ -92,12 +95,14 @@ export default function InsightsWorkspace({
         briefRef.current = "";
         setWriting("");
         const payload = event.payload || {};
+        const versionId = event.version_id;
         setVersions((prev) => [
-          ...prev.filter((v) => v.version !== event.version_id),
+          ...prev.filter((v) => v.version !== versionId),
           {
-            version: event.version_id,
-            label: event.label || `Version ${event.version_id}`,
-            title: payload.title || "Growth brief",
+            version: versionId,
+            // Fallback words are put on at render, where the locale is known.
+            label: event.label || "",
+            title: payload.title || "",
             format: payload.format || "markdown",
             content: payload.content || "",
           },
@@ -123,7 +128,7 @@ export default function InsightsWorkspace({
 
   const agent = useAgentSession({
     agentType: AGENT_TYPE,
-    notifyAs: "Insights",
+    notifyAs: t`Insights`,
     body,
     // A thread by its id, a fresh question by its text: a different question
     // in the same tab is a different run, and a reload of this one is this one.
@@ -156,8 +161,8 @@ export default function InsightsWorkspace({
             }
             return {
               version: row.version,
-              label: `Version ${row.version}`,
-              title: row.title || "Growth brief",
+              label: "",
+              title: row.title || "",
               // The stored MIME type is authoritative; sniffing is the fallback
               // for rows written before content_type was recorded.
               format: (row.content_type || "").includes("html") ? "html" : sniffFormat(content),
@@ -200,9 +205,14 @@ export default function InsightsWorkspace({
     return `/insights/session?${qs}`;
   }, [agent.conversationId, conversationId, projectId]);
 
+  const questionsCopy = useMemo(
+    () => ({ hint: t`Your answer decides what Duct looks at. Skip if you'd rather it choose.` }),
+    [t],
+  );
+
   const chat = (
     <AgentChat
-      title="Insights"
+      title={t`Insights`}
       phase={agent.phase}
       steps={agent.steps}
       todos={agent.todos}
@@ -226,14 +236,14 @@ export default function InsightsWorkspace({
       onRetrySend={agent.send}
       onRetry={handleRetry}
       onStop={() => agent.stop({ keepReady: agent.opened })}
-      questionsCopy={QUESTIONS_COPY}
+      questionsCopy={questionsCopy}
       connectReturnTo={connectReturnTo}
       composerTools={
         <ComposerDials projectId={projectId} autonomy={autonomy} onAutonomyChange={setAutonomy} deferred />
       }
-      inputPlaceholder="Ask about your growth data…"
-      inputAriaLabel="Message the insights agent"
-      startingLabel="Opening the session…"
+      inputPlaceholder={t`Ask about your growth data…`}
+      inputAriaLabel={t`Message the insights agent`}
+      startingLabel={t`Opening the session…`}
       headerExtra={<AutonomyBadge autonomy={agent.started} level={autonomy} />}
     />
   );
@@ -242,23 +252,27 @@ export default function InsightsWorkspace({
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center gap-1 border-b border-border/60 px-2 py-1.5">
         <PaneTab active={pane === "brief"} onClick={() => setPane("brief")}>
-          Artifact
+          <Trans>Artifact</Trans>
         </PaneTab>
         <PaneTab active={pane === "data"} onClick={() => setPane("data")}>
-          Data{fetched.length ? ` · ${fetched.length}` : ""}
+          <Trans>Data</Trans>{fetched.length ? ` · ${fetched.length}` : ""}
         </PaneTab>
         {pane === "brief" && versions.length > 1 && (
           <select
             value={selected < 0 ? versions.length - 1 : selected}
-            aria-label="Artifact version"
+            aria-label={t`Artifact version`}
             onChange={(e) => setSelected(Number(e.target.value))}
             className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-2xs"
           >
-            {versions.map((v, i) => (
-              <option key={v.version} value={i}>
-                v{v.version} — {v.label}
-              </option>
-            ))}
+            {versions.map((v, i) => {
+              const version = v.version;
+              const label = v.label || t`Version ${version}`;
+              return (
+                <option key={version} value={i}>
+                  {t`v${version} — ${label}`}
+                </option>
+              );
+            })}
           </select>
         )}
       </div>
@@ -277,21 +291,17 @@ export default function InsightsWorkspace({
       left={chat}
       right={viewport}
       storageKey="insights_split_w"
-      leftLabel="Chat"
-      rightLabel="Artifact"
+      leftLabel={t`Chat`}
+      rightLabel={t`Artifact`}
       rightStatus={writing || agent.isRunning ? "busy" : hasBrief ? "ready" : "idle"}
     />
   );
 }
 
-const QUESTIONS_COPY = {
-  hint: "Your answer decides what Duct looks at. Skip if you'd rather it choose.",
-};
-
 const AUTONOMY_LABELS = {
-  ask: "Asks freely · nothing applies without you",
-  assisted: "Asks when it matters · allowlisted changes apply on their own",
-  auto: "Interrupts rarely · same allowlist as Assisted",
+  ask: msg`Asks freely · nothing applies without you`,
+  assisted: msg`Asks when it matters · allowlisted changes apply on their own`,
+  auto: msg`Interrupts rarely · same allowlist as Assisted`,
 };
 
 /** Which mode this run is in, said before the first token.
@@ -302,6 +312,7 @@ const AUTONOMY_LABELS = {
  * difference between a considered step-down and an agent that mysteriously
  * keeps asking questions. */
 function AutonomyBadge({ autonomy, level: current = "" }) {
+  const { i18n } = useLingui();
   // The composer chip is the live value once the person touches it; the
   // event is what the run opened with.
   const level = current || autonomy?.autonomy || "";
@@ -311,10 +322,12 @@ function AutonomyBadge({ autonomy, level: current = "" }) {
   return (
     <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs">
       <span className="rounded-full bg-muted px-2 py-0.5 font-medium uppercase tracking-wide">{level}</span>
-      <span className="hidden text-muted-foreground @md:inline">{AUTONOMY_LABELS[level] || ""}</span>
+      <span className="hidden text-muted-foreground @md:inline">
+        {AUTONOMY_LABELS[level] ? i18n._(AUTONOMY_LABELS[level]) : ""}
+      </span>
       {steppedDown && (
         <span className="text-muted-foreground">
-          · set to <strong>{configured}</strong>, stepped down for this model
+          <Trans>· set to <strong>{configured}</strong>, stepped down for this model</Trans>
         </span>
       )}
     </span>
@@ -342,6 +355,7 @@ function PaneTab({ active, onClick, children }) {
 // panes' empty states are the states a reviewer most needs to open and the
 // ones no fixture-free gallery could otherwise reach.
 export function BriefPane({ brief, writing, empty }) {
+  const { t } = useLingui();
   // While it streams there is no parsed version yet, so the front matter has
   // to come off here and the format has to be read from the bytes.
   const live = useMemo(() => stripFrontMatter(writing), [writing]);
@@ -350,7 +364,7 @@ export function BriefPane({ brief, writing, empty }) {
   if (writing) {
     return (
       <div>
-        <BriefHeader title={liveTitle || "Writing…"} sub="being written" />
+        <BriefHeader title={liveTitle || t`Writing…`} sub={t`being written`} />
         <div className="m-4 rounded-xl border border-border bg-card px-3 shadow-sm">
           {sniffFormat(live) === "markdown" ? (
             <MarkdownView source={live} />
@@ -369,21 +383,26 @@ export function BriefPane({ brief, writing, empty }) {
       // the control for that is the composer already on screen beside it — a
       // button here could only say "go and type over there".
       <div className="p-4">
-        <EmptyState icon={FileText} title="Nothing written yet">
-          An answer worth keeping becomes an artifact here, and versions pile up as it is
-          rewritten.
+        <EmptyState icon={FileText} title={t`Nothing written yet`}>
+          <Trans>
+            An answer worth keeping becomes an artifact here, and versions pile up as it is
+            rewritten.
+          </Trans>
         </EmptyState>
       </div>
     );
   }
 
+  const version = brief.version;
+  const label = brief.label || t`Version ${version}`;
+  const title = brief.title || t`Growth brief`;
   return (
     <div>
-      <BriefHeader title={brief.title} sub={`v${brief.version} · ${brief.label}`} />
+      <BriefHeader title={title} sub={t`v${version} · ${label}`} />
       <div className="m-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         {brief.format === "html" ? (
           <iframe
-            title={brief.title}
+            title={title}
             srcDoc={brief.content}
             sandbox="allow-modals allow-same-origin"
             className="block h-[74vh] w-full border-0 bg-white"
@@ -409,6 +428,7 @@ function BriefHeader({ title, sub }) {
 
 /** What the agent pulled, and the window each pull covers. */
 export function DataPane({ fetched }) {
+  const { t } = useLingui();
   if (!fetched.length) {
     return (
       // This one does get a CTA, because its most common cause is actionable:
@@ -417,15 +437,17 @@ export function DataPane({ fetched }) {
       <div className="p-4">
         <EmptyState
           icon={Database}
-          title="No sources pulled yet"
+          title={t`No sources pulled yet`}
           actions={
             <Button size="sm" variant="outline" asChild>
-              <Link href="/connections">Check connections</Link>
+              <Link href="/connections"><Trans>Check connections</Trans></Link>
             </Button>
           }
         >
-          Each source Duct reads shows up here with the period it covers, and the provider&rsquo;s
-          own words when a pull fails.
+          <Trans>
+            Each source Duct reads shows up here with the period it covers, and the provider’s
+            own words when a pull fails.
+          </Trans>
         </EmptyState>
       </div>
     );

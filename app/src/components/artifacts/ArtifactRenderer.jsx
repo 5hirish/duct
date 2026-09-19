@@ -20,6 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Trans, useLingui } from "@lingui/react/macro";
 import AuditReportV1 from "@/components/audit/AuditReportV1";
 
 export const CONTENT_TYPES = {
@@ -61,6 +62,7 @@ export function MarkdownView({ source }) {
 }
 
 export function MermaidView({ source }) {
+  const { t } = useLingui();
   const [svg, setSvg] = useState("");
   const [error, setError] = useState("");
 
@@ -84,23 +86,23 @@ export function MermaidView({ source }) {
         });
         if (alive) setSvg(clean);
       } catch (err) {
-        if (alive) setError(err.message || "Mermaid render failed.");
+        if (alive) setError(err.message || t`Mermaid render failed.`);
       }
     })();
     return () => {
       alive = false;
     };
-  }, [source]);
+  }, [source, t]);
 
   if (error) {
     return (
       <div>
-        <p className="app-subtle text-sm">Diagram failed to render ({error}) — source below.</p>
+        <p className="app-subtle text-sm"><Trans>Diagram failed to render ({error}) — source below.</Trans></p>
         <pre className="text-xs p-3 overflow-x-auto">{source}</pre>
       </div>
     );
   }
-  if (!svg) return <p className="app-subtle text-sm p-2">Rendering diagram…</p>;
+  if (!svg) return <p className="app-subtle text-sm p-2"><Trans>Rendering diagram…</Trans></p>;
   // Mermaid output with securityLevel "strict" sanitizes labels/links.
   return <div className="overflow-x-auto p-2" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
@@ -161,7 +163,7 @@ export function CsvView({ source }) {
     if (!lines.length) return { columns: [], rows: [] };
     return { columns: parseCsvLine(lines[0]), rows: lines.slice(1, 501).map(parseCsvLine) };
   }, [source]);
-  if (!columns.length) return <p className="app-subtle text-sm p-2">Empty dataset.</p>;
+  if (!columns.length) return <p className="app-subtle text-sm p-2"><Trans>Empty dataset.</Trans></p>;
   return <DataTable columns={columns} rows={rows} />;
 }
 
@@ -196,37 +198,41 @@ export function ChartJsonView({ source }) {
 }
 
 export function DiffJsonView({ source }) {
+  const { t } = useLingui();
   // Spec: {title?, changes: [{summary, before?, after?, status?}]}
   const spec = safeJson(source);
   if (!spec?.changes) return <pre className="text-xs p-3 overflow-x-auto">{source}</pre>;
   return (
     <div className="grid gap-3">
       {spec.title && <p className="text-sm font-medium">{spec.title}</p>}
-      {spec.changes.map((c, i) => (
-        <div key={i} className="border border-input rounded-md p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-medium">{c.summary || `Change ${i + 1}`}</span>
-            {c.status && <span className="status-pill grey">{c.status}</span>}
-          </div>
-          {(c.before != null || c.after != null) && (
-            <div className="grid @xl:grid-cols-2 gap-2 text-xs">
-              {c.before != null && (
-                <pre className="p-2 rounded bg-destructive/5 border border-destructive/20 overflow-x-auto whitespace-pre-wrap">{typeof c.before === "string" ? c.before : JSON.stringify(c.before, null, 2)}</pre>
-              )}
-              {c.after != null && (
-                <pre className="p-2 rounded bg-success/5 border border-success/20 overflow-x-auto whitespace-pre-wrap">{typeof c.after === "string" ? c.after : JSON.stringify(c.after, null, 2)}</pre>
-              )}
+      {spec.changes.map((c, i) => {
+        const n = i + 1;
+        return (
+          <div key={i} className="border border-input rounded-md p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-medium">{c.summary || t`Change ${n}`}</span>
+              {c.status && <span className="status-pill grey">{c.status}</span>}
             </div>
-          )}
-        </div>
-      ))}
+            {(c.before != null || c.after != null) && (
+              <div className="grid @xl:grid-cols-2 gap-2 text-xs">
+                {c.before != null && (
+                  <pre className="p-2 rounded bg-destructive/5 border border-destructive/20 overflow-x-auto whitespace-pre-wrap">{typeof c.before === "string" ? c.before : JSON.stringify(c.before, null, 2)}</pre>
+                )}
+                {c.after != null && (
+                  <pre className="p-2 rounded bg-success/5 border border-success/20 overflow-x-auto whitespace-pre-wrap">{typeof c.after === "string" ? c.after : JSON.stringify(c.after, null, 2)}</pre>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 /** Unified-diff text ("Show changes") with per-line coloring. */
 export function UnifiedDiffView({ diff }) {
-  if (!diff?.trim()) return <p className="app-subtle text-sm p-2">No textual changes between these versions.</p>;
+  if (!diff?.trim()) return <p className="app-subtle text-sm p-2"><Trans>No textual changes between these versions.</Trans></p>;
   return (
     <pre className="text-xs p-3 overflow-x-auto leading-5 border border-input rounded-md">
       {diff.split("\n").map((line, i) => {
@@ -247,6 +253,7 @@ export function UnifiedDiffView({ diff }) {
  * text (null while loading / when none exists).
  */
 export default function ArtifactRenderer({ artifact, content }) {
+  const { t } = useLingui();
   const ct = artifact?.content_type || "";
   const structured = artifact?.structured_json?.structured_data || null;
 
@@ -255,10 +262,10 @@ export default function ArtifactRenderer({ artifact, content }) {
     return <AuditReportV1 data={structured} />;
   }
   if (ct === CONTENT_TYPES.HTML) {
-    if (content == null) return <p className="app-subtle text-sm p-2">Loading…</p>;
+    if (content == null) return <p className="app-subtle text-sm p-2"><Trans>Loading…</Trans></p>;
     return (
       <iframe
-        title={artifact.title || "Artifact"}
+        title={artifact.title || t`Artifact`}
         srcDoc={content}
         sandbox="allow-modals allow-same-origin"
         className="block h-[74vh] w-full rounded-lg border border-border bg-card"
@@ -268,7 +275,7 @@ export default function ArtifactRenderer({ artifact, content }) {
   if (content == null) {
     return (
       <p className="app-subtle text-sm p-2">
-        {artifact?.has_content ? "Loading…" : "This artifact has no stored content to render."}
+        {artifact?.has_content ? <Trans>Loading…</Trans> : <Trans>This artifact has no stored content to render.</Trans>}
       </p>
     );
   }

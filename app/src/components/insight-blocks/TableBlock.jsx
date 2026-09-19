@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { useLingui } from "@lingui/react/macro";
 
 function shouldHighlight(row, threshold) {
   if (!threshold?.field) return false;
@@ -19,13 +20,14 @@ function shouldHighlight(row, threshold) {
 }
 
 export default function TableBlock({ title, rows, xField, yField, groupBy, highlightThreshold, insightNote = "" }) {
+  const { t } = useLingui();
   if (!rows?.length) return null;
   const fields = [xField, groupBy, yField].filter(Boolean);
   const columnSet = fields.length ? fields : Object.keys(rows[0] || {}).slice(0, 6);
 
   return (
     <section>
-      <p className="rpt-section-label">{title || "Table"}</p>
+      <p className="rpt-section-label">{title || t`Table`}</p>
       <div className="rounded-xl border border-border bg-card">
         <Table className="camp-table">
           <TableHeader>

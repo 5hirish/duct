@@ -1,6 +1,7 @@
 // Shared visual styling for content post / plan-day statuses, used by the
 // Kanban columns, the Calendar dots, and the legend so colors stay consistent.
 
+import { msg } from "@lingui/core/macro";
 import { PostStatus, POST_STATUS_LABELS } from "./contentEnums";
 
 /**
@@ -22,6 +23,9 @@ import { PostStatus, POST_STATUS_LABELS } from "./contentEnums";
  * colour with its `-foreground` partner. Those partners are exactly the three
  * utilities the theme never generated, which is why this was white-on-green
  * before and not simply the wrong token.
+ *
+ * `label` is a message descriptor (the table is module-level), so render it
+ * with `i18n._(meta.label)`.
  */
 export const STATUS_META = Object.freeze({
   [PostStatus.PENDING]: {
@@ -64,7 +68,7 @@ export const STATUS_META = Object.freeze({
 
 /** The scheduled state is a plan slot, not a stored status — same vocabulary. */
 export const SCHEDULED_META = Object.freeze({
-  label: "Scheduled",
+  label: msg`Scheduled`,
   badgeVariant: "info",
   solidClass: "bg-info text-info-foreground",
   dotClass: "bg-info",

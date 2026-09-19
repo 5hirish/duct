@@ -16,6 +16,7 @@
 // Composed rather than inherited: both cards render <ProjectBinding> with the
 // props they already hold, and a new connector gets the block for free.
 
+import { Trans } from "@lingui/react/macro";
 import ProjectAccountSelect from "./ProjectAccountSelect";
 import ProjectEntitySelect from "./ProjectEntitySelect";
 
@@ -37,7 +38,9 @@ export default function ProjectBinding({
 
   return (
     <div className="conn-dialog-section">
-      <h4 className="conn-dialog-heading">Use for {projectName}</h4>
+      <h4 className="conn-dialog-heading">
+        <Trans>Use for {projectName}</Trans>
+      </h4>
 
       {/* Only when there is genuinely a choice. One account made this a select
           with a single option and a sentinel above it, which reads as a

@@ -12,6 +12,7 @@ import {
   Trash2,
   Type,
 } from "lucide-react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button, buttonVariants } from "@/components/ui/button";
 import EmptyState from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
@@ -86,7 +87,7 @@ function excerptOf(f) {
   return "";
 }
 
-const relTime = (iso) => relativeTime(iso, { fallbackAfterDays: 7 });
+const relTime = (iso, locale) => relativeTime(iso, { fallbackAfterDays: 7, locale });
 
 const ACCENTS = [
   "from-destructive/25 to-warning/15 text-destructive",
@@ -111,6 +112,7 @@ function glyphFor(f) {
 // ---------------------------------------------------------------------------
 
 export default function FormatLibrary({ projectId }) {
+  const { t } = useLingui();
   const [formats, setFormats] = useState([]);
   const [loading, setLoading] = useState(true);
   // Two failures, kept apart: `loadError` means the list never arrived and the
@@ -153,11 +155,13 @@ export default function FormatLibrary({ projectId }) {
       setViewing(null);
       await refresh();
     } catch (e) {
-      setError(e.message || "That format could not be deleted — it is still in the library.");
+      setError(e.message || t`That format could not be deleted — it is still in the library.`);
     } finally {
       setBusy(false);
     }
   }
+
+  const deletingName = deleting?.name || deleting?.slug;
 
   return (
     <section>
@@ -165,17 +169,17 @@ export default function FormatLibrary({ projectId }) {
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold">
             <Layers className="h-4 w-4 text-primary" />
-            Formats
+            <Trans>Formats</Trans>
             <span className="text-xs font-normal tabular-nums text-muted-foreground">
               {formats.length}
             </span>
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Reusable post recipes the drafting agent pulls at generation time.
+            <Trans>Reusable post recipes the drafting agent pulls at generation time.</Trans>
           </p>
         </div>
         <Button size="sm" onClick={() => setEditing({})}>
-          <Plus className="h-4 w-4" /> New format
+          <Plus className="h-4 w-4" /> <Trans>New format</Trans>
         </Button>
       </div>
 
@@ -183,7 +187,7 @@ export default function FormatLibrary({ projectId }) {
 
       {loadError && (
         <LoadError
-          what="your formats"
+          what={t`your formats`}
           detail={loadError}
           onRetry={() => { setLoading(true); refresh(); }}
         />
@@ -198,15 +202,17 @@ export default function FormatLibrary({ projectId }) {
       ) : formats.length === 0 ? (
         <EmptyState
           icon={Layers}
-          title="No formats yet"
+          title={t`No formats yet`}
           actions={
             <Button size="sm" onClick={() => setEditing({})}>
-              <Plus className="size-4" aria-hidden="true" /> Create your first format
+              <Plus className="size-4" aria-hidden="true" /> <Trans>Create your first format</Trans>
             </Button>
           }
         >
-          A reusable recipe — slide structure, caption styles, image prompt rules — that the
-          drafting agent follows.
+          <Trans>
+            A reusable recipe — slide structure, caption styles, image prompt rules — that the
+            drafting agent follows.
+          </Trans>
         </EmptyState>
       ) : (
         <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
@@ -242,15 +248,17 @@ export default function FormatLibrary({ projectId }) {
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this format?</AlertDialogTitle>
+            <AlertDialogTitle><Trans>Delete this format?</Trans></AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-medium text-foreground">{deleting?.name || deleting?.slug}</span> will
-              be removed. Posts already drafted with it are unaffected, but the agent can no longer pull it.
-              This can’t be undone.
+              <Trans>
+                <span className="font-medium text-foreground">{deletingName}</span> will
+                be removed. Posts already drafted with it are unaffected, but the agent can no longer pull it.
+                This can’t be undone.
+              </Trans>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={busy}><Trans>Cancel</Trans></AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => { e.preventDefault(); confirmDelete(); }}
               disabled={busy}
@@ -260,7 +268,7 @@ export default function FormatLibrary({ projectId }) {
               // where it measured 2.89:1 on the lifted coral.
               className={buttonVariants({ variant: "destructive" })}
             >
-              {busy ? "Deleting…" : "Delete format"}
+              {busy ? <Trans>Deleting…</Trans> : <Trans>Delete format</Trans>}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -274,9 +282,12 @@ export default function FormatLibrary({ projectId }) {
 // ---------------------------------------------------------------------------
 
 function FormatCard({ format, onView, onEdit, onDelete }) {
+  const { t, i18n } = useLingui();
   const slides = slidesOf(format);
   const linked = linkedOf(format);
   const excerpt = excerptOf(format);
+  const updated = relTime(format.updated_at, i18n.locale);
+  const linkedCount = linked.length;
 
   return (
     <article className="group relative flex flex-col rounded-xl border border-border/70 bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-ring/50">
@@ -301,7 +312,7 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
         <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           <button
             type="button"
-            title="Edit"
+            title={t`Edit`}
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
             className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
@@ -309,7 +320,7 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
           </button>
           <button
             type="button"
-            title="Delete"
+            title={t`Delete`}
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
           >
@@ -328,19 +339,19 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
         </Badge>
         {slides != null && (
           <Badge variant="secondary" className="gap-1 text-2xs">
-            <Clapperboard className="h-3 w-3" />{slides} slides
+            <Clapperboard className="h-3 w-3" /><Plural value={slides} one="# slide" other="# slides" />
           </Badge>
         )}
         {linked.length > 0 && (
           <Badge variant="secondary" className="gap-1 text-2xs">
-            <Type className="h-3 w-3" />{linked.length} linked {linked.length === 1 ? "style" : "styles"}
+            <Type className="h-3 w-3" /><Plural value={linkedCount} one="# linked style" other="# linked styles" />
           </Badge>
         )}
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5 text-2xs text-muted-foreground">
-        <span>Updated {relTime(format.updated_at)}</span>
-        <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100">View →</span>
+        <span><Trans>Updated {updated}</Trans></span>
+        <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100"><Trans>View →</Trans></span>
       </div>
     </article>
   );
@@ -351,8 +362,10 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
 // ---------------------------------------------------------------------------
 
 function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
+  const { i18n } = useLingui();
   const slides = slidesOf(format);
   const linked = linkedOf(format);
+  const updated = format ? relTime(format.updated_at, i18n.locale) : "";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -372,25 +385,25 @@ function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
 
               <div className="mt-4 flex flex-wrap items-center gap-1.5">
                 <Badge variant="outline" className="gap-1 font-mono text-2xs"><Hash className="h-3 w-3" />{format.slug}</Badge>
-                {slides != null && <Badge variant="secondary" className="text-2xs">{slides} slides</Badge>}
+                {slides != null && <Badge variant="secondary" className="text-2xs"><Plural value={slides} one="# slide" other="# slides" /></Badge>}
                 {linked.map((c) => (
                   <Badge key={c} variant="ghost" className="border border-border/60 font-mono text-2xs">{c}</Badge>
                 ))}
               </div>
 
               <div className="mt-3 flex items-center gap-2">
-                <Button size="sm" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
+                <Button size="sm" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> <Trans>Edit</Trans></Button>
                 <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onDelete}>
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                  <Trash2 className="h-3.5 w-3.5" /> <Trans>Delete</Trans>
                 </Button>
-                <span className="ml-auto text-2xs text-muted-foreground">Updated {relTime(format.updated_at)}</span>
+                <span className="ml-auto text-2xs text-muted-foreground"><Trans>Updated {updated}</Trans></span>
               </div>
             </SheetHeader>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
               {specOf(format)
                 ? <MarkdownSpec>{specOf(format)}</MarkdownSpec>
-                : <p className="text-sm text-muted-foreground">This format has no spec document yet. Click <strong className="text-foreground">Edit</strong> to add one.</p>}
+                : <p className="text-sm text-muted-foreground"><Trans>This format has no spec document yet. Click <strong className="text-foreground">Edit</strong> to add one.</Trans></p>}
             </div>
           </>
         )}
@@ -404,6 +417,7 @@ function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
 // ---------------------------------------------------------------------------
 
 function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) {
+  const { t, i18n } = useLingui();
   const isNew = !initial?.id;
 
   const [name, setName]               = useState("");
@@ -436,14 +450,15 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
   }, [open, initial]);
 
   const slugValid = useMemo(() => /^[a-z0-9-]+$/.test(slug), [slug]);
+  const charCount = spec.length;
 
   function toggleLinked(key) {
     setLinked((cur) => (cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]));
   }
 
   async function save() {
-    if (!slug.trim()) { setErr("Slug is required."); return; }
-    if (!slugValid)   { setErr("Slug must be lowercase letters, numbers, and hyphens only."); return; }
+    if (!slug.trim()) { setErr(t`Slug is required.`); return; }
+    if (!slugValid)   { setErr(t`Slug must be lowercase letters, numbers, and hyphens only.`); return; }
     setSaving(true);
     setErr("");
 
@@ -464,7 +479,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
       }
       onSaved();
     } catch (e) {
-      setErr(e.message || "Save failed.");
+      setErr(e.message || t`Save failed.`);
       setSaving(false);
     }
   }
@@ -473,28 +488,28 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full gap-0 p-0 !max-w-[min(760px,100vw)]">
         <SheetHeader className="border-b border-border/60 p-5">
-          <SheetTitle className="text-base">{isNew ? "New format" : "Edit format"}</SheetTitle>
+          <SheetTitle className="text-base">{isNew ? <Trans>New format</Trans> : <Trans>Edit format</Trans>}</SheetTitle>
           <p className="text-xs text-muted-foreground">
             {isNew
-              ? "Define a reusable post recipe. The spec doc is what the drafting agent reads."
-              : "Changes apply to future drafts that pull this format."}
+              ? <Trans>Define a reusable post recipe. The spec doc is what the drafting agent reads.</Trans>
+              : <Trans>Changes apply to future drafts that pull this format.</Trans>}
           </p>
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
           <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
-            <Field label="Name" hint="Human-friendly title">
-              <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={() => syncFromName(name)} placeholder="Format D — UGC / Raw Authentic" />
+            <Field label={t`Name`} hint={t`Human-friendly title`}>
+              <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={() => syncFromName(name)} placeholder={t`Format D — UGC / Raw Authentic`} />
             </Field>
-            <Field label="Slug" hint="Stable key — lowercase, hyphens" error={slug && !slugValid ? "Lowercase, numbers, hyphens only" : ""}>
-              <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="format-d" className="font-mono" />
+            <Field label={t`Slug`} hint={t`Stable key — lowercase, hyphens`} error={slug && !slugValid ? t`Lowercase, numbers, hyphens only` : ""}>
+              <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={t`format-d`} className="font-mono" />
             </Field>
           </div>
 
           {/* Slide count — slider 1..12 */}
           <div className="mt-4">
             <div className="mb-1.5 flex items-center justify-between">
-              <Label className="text-xs">Default slides</Label>
+              <Label className="text-xs"><Trans>Default slides</Trans></Label>
               <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">{slideCount}</span>
             </div>
             <input
@@ -503,7 +518,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
               max={SLIDE_MAX}
               step={1}
               value={slideCount}
-              aria-label="Default slides"
+              aria-label={t`Default slides`}
               onChange={(e) => setSlideCount(Number(e.target.value))}
               className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
             />
@@ -514,13 +529,13 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
 
           {/* Linked styles — pick from the shared base styles */}
           <div className="mt-5">
-            <Label className="text-xs">Linked styles</Label>
+            <Label className="text-xs"><Trans>Linked styles</Trans></Label>
             <p className="mb-2 text-2xs text-muted-foreground">
-              Base styles the slide builder inlines for this format. Browse them in Library → Styles.
+              <Trans>Base styles the slide builder inlines for this format. Browse them in Library → Styles.</Trans>
             </p>
             {available.length === 0 ? (
               <p className="rounded-md border border-dashed border-border/60 px-3 py-3 text-center text-2xs text-muted-foreground">
-                No base styles available.
+                <Trans>No base styles available.</Trans>
               </p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
@@ -549,31 +564,31 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
           </div>
 
           <div className="mt-5">
-            <Label className="text-xs">Spec document (Markdown)</Label>
+            <Label className="text-xs"><Trans>Spec document (Markdown)</Trans></Label>
             <p className="mb-1.5 text-2xs text-muted-foreground">
-              The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported.
+              <Trans>The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported.</Trans>
             </p>
             <Tabs defaultValue="edit" className="w-full">
               <TabsList>
-                <TabsTrigger value="edit">Edit</TabsTrigger>
-                <TabsTrigger value="preview">Preview</TabsTrigger>
+                <TabsTrigger value="edit"><Trans>Edit</Trans></TabsTrigger>
+                <TabsTrigger value="preview"><Trans>Preview</Trans></TabsTrigger>
               </TabsList>
               <TabsContent value="edit">
                 <textarea
                   value={spec}
-                  aria-label="Format spec"
+                  aria-label={t`Format spec`}
                   onChange={(e) => setSpec(e.target.value)}
                   spellCheck={false}
-                  placeholder={"# My Format\n\n## Slide Structure\n\n| Slide | Type |\n|-------|------|\n| 1 | Hook |"}
+                  placeholder={t`# My Format\n\n## Slide Structure\n\n| Slide | Type |\n|-------|------|\n| 1 | Hook |`}
                   className="h-[48vh] w-full resize-y rounded-md border border-border/70 bg-background p-3 font-mono text-xs leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 />
-                <p className="mt-1 text-right text-2xs tabular-nums text-muted-foreground">{spec.length.toLocaleString()} chars</p>
+                <p className="mt-1 text-right text-2xs tabular-nums text-muted-foreground"><Plural value={charCount} one="# char" other="# chars" /></p>
               </TabsContent>
               <TabsContent value="preview">
                 <div className="h-[48vh] overflow-y-auto rounded-md border border-border/70 bg-background px-4 py-3">
                   {spec.trim()
                     ? <MarkdownSpec>{spec}</MarkdownSpec>
-                    : <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>}
+                    : <p className="text-sm text-muted-foreground"><Trans>Nothing to preview yet.</Trans></p>}
                 </div>
               </TabsContent>
             </Tabs>
@@ -583,10 +598,10 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
         <div className="flex items-center gap-2 border-t border-border/60 p-4">
           {err && <p className="mr-auto text-xs text-destructive">{err}</p>}
           {!err && <span className="mr-auto" />}
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}><Trans>Cancel</Trans></Button>
           <Button onClick={save} disabled={saving || !slug.trim() || !slugValid}>
             <Save className="h-4 w-4" />
-            {saving ? "Saving…" : isNew ? "Create format" : "Save changes"}
+            {saving ? <Trans>Saving…</Trans> : isNew ? <Trans>Create format</Trans> : <Trans>Save changes</Trans>}
           </Button>
         </div>
       </SheetContent>

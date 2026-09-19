@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import AgentChat from "../workspace/AgentChat";
 import SplitWorkspace from "../workspace/SplitWorkspace";
 import { useAgentSession } from "../../hooks/useAgentSession";
@@ -34,6 +36,7 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  *     viewport for "approve & generate images" / per-slide regenerate).
  */
 export default function ContentWorkspace({ mode, context, renderViewport }) {
+  const { t, i18n } = useLingui();
   const [payload, setPayload] = useState(null);
   const [channelNote, setChannelNote] = useState(null);
 
@@ -45,7 +48,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 
   const agent = useAgentSession({
     agentType: CONTENT_AGENT_TYPE,
-    notifyAs: "Content Studio",
+    notifyAs: t`Content Studio`,
     body,
     // Scoped to the artifact so a reload of this post's workspace resumes
     // this post's run and never a different one's.
@@ -58,9 +61,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       // PIPELINE_STARTED carries the resolved channel; note when we fell back.
       case ContentEvent.PIPELINE_STARTED:
         if (event.channel) {
+          const channelLabel = event.channel_label || event.channel;
           setChannelNote(
             event.channel_supported === false
-              ? `Using the TikTok playbook — no dedicated ${event.channel_label || event.channel} agent yet.`
+              ? t`Using the TikTok playbook — no dedicated ${channelLabel} agent yet.`
               : null,
           );
         }
@@ -93,9 +97,13 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         // the backend attaches solely when generate_image produced + attached
         // an image — never on copy edits.
         const slideIdx = (base.slides || []).findIndex((s) => String(s.slide_id) === String(ip.slide_id));
-        const caption =
-          (slideIdx >= 0 ? `Slide ${slideIdx + 1}` : "Generated image") +
-          (ip.item_index != null ? ` · image ${ip.item_index + 1}` : "");
+        const slideNo = slideIdx + 1;
+        const imageNo = ip.item_index + 1;
+        // Four whole sentences rather than two fragments glued together: a
+        // translator can reorder "image" and "slide" only if both are in view.
+        const caption = slideIdx >= 0
+          ? (ip.item_index != null ? t`Slide ${slideNo} · image ${imageNo}` : t`Slide ${slideNo}`)
+          : (ip.item_index != null ? t`Generated image · image ${imageNo}` : t`Generated image`);
         appendMessage({
           role: Row.IMAGE,
           image: ip.data_uri,
@@ -157,7 +165,12 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // The right viewport is mid-build whenever there's no payload yet and the run
   // hasn't failed — including while a question is pending.
   const viewportBuilding = !hasPayload && agent.phase !== Phase.FAILED;
-  const paneLabel = mode === "plan_month" ? "30-day plan" : "Post draft";
+  const paneLabel = mode === "plan_month" ? t`30-day plan` : t`Post draft`;
+  // STEP_LABELS is a module-level table of descriptors; resolve here so the
+  // shared StepProgress receives plain strings whatever it does with them.
+  const stepLabels = Object.fromEntries(
+    Object.entries(STEP_LABELS).map(([id, label]) => [id, i18n._(label)]),
+  );
   const rightStatus = hasPayload ? "ready" : agent.isRunning ? "busy" : "idle";
 
   const viewportEl = (
@@ -180,7 +193,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           })
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            No viewport configured.
+            <Trans>No viewport configured.</Trans>
           </div>
         )}
       </div>
@@ -195,7 +208,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       right={viewportEl}
       left={
         <AgentChat
-          title={MODE_LABELS[mode] || "Content agent"}
+          title={MODE_LABELS[mode] ? i18n._(MODE_LABELS[mode]) : t`Content agent`}
           phase={agent.phase}
           steps={agent.steps}
           todos={agent.todos}
@@ -221,10 +234,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           onStop={handleStop}
           onStartFresh={handleStartFresh}
           canStartFresh={Boolean(agent.conversationId) && (agent.phase === Phase.READY || agent.phase === Phase.CHATTING)}
-          stepLabels={STEP_LABELS}
-          questionsCopy={QUESTIONS_COPY}
-          inputPlaceholder="Ask Duct to refine the plan or post…"
-          inputAriaLabel="Message the content agent"
+          stepLabels={stepLabels}
+          questionsCopy={{ hint: t`A clearer brief produces sharper content. Skip if you'd rather Duct decide.` }}
+          inputPlaceholder={t`Ask Duct to refine the plan or post…`}
+          inputAriaLabel={t`Message the content agent`}
         />
       }
     />
@@ -232,12 +245,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 }
 
 const MODE_LABELS = {
-  plan_month: "Generating 30-day plan",
-  draft_post: "Drafting post",
-};
-
-const QUESTIONS_COPY = {
-  hint: "A clearer brief produces sharper content. Skip if you'd rather Duct decide.",
+  plan_month: msg`Generating 30-day plan`,
+  draft_post: msg`Drafting post`,
 };
 
 /** The real (CDN) image_url for a slide or one of its cells, from a post payload. */

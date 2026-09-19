@@ -16,6 +16,7 @@
 // because it was written for us and not for the reader.
 
 import { RefreshCw } from "lucide-react";
+import { Trans } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -31,9 +32,9 @@ export default function LoadError({ what, detail, onRetry }) {
       role="alert"
       className="mt-4 mb-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3.5"
     >
-      <p className="text-sm font-medium text-foreground">We couldn&rsquo;t load {what}.</p>
+      <p className="text-sm font-medium text-foreground"><Trans>We couldn’t load {what}.</Trans></p>
       <p className="mt-1 text-sm text-muted-foreground">
-        This is usually temporary — try again in a moment.
+        <Trans>This is usually temporary — try again in a moment.</Trans>
       </p>
       {/* On its own line, not spliced into the sentence above: the backend's
           detail is a fragment ("User not found"), and reading it as the tail of
@@ -43,7 +44,7 @@ export default function LoadError({ what, detail, onRetry }) {
       )}
       {onRetry && (
         <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>
-          <RefreshCw className="size-4" aria-hidden="true" /> Try again
+          <RefreshCw className="size-4" aria-hidden="true" /> <Trans>Try again</Trans>
         </Button>
       )}
     </div>

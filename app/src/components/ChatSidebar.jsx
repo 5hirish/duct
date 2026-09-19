@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { streamInsightChat } from "../lib/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useInsightContext } from "./InsightContext";
 
 export default function ChatSidebar() {
+  const { t } = useLingui();
   const { chatPayload } = useInsightContext();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -65,12 +67,13 @@ export default function ChatSidebar() {
 
   if (!chatPayload) return null;
 
+  const accountName = chatPayload.account?.name || t`your account`;
   return (
     <div className="chat-sidebar">
       <div className="chat-sidebar-header">
-        <p className="chat-sidebar-title">Ask about this insight</p>
+        <p className="chat-sidebar-title"><Trans>Ask about this insight</Trans></p>
         <p className="app-subtle chat-sidebar-hint">
-          Grounded in the data from {chatPayload.account?.name || "your account"}
+          <Trans>Grounded in the data from {accountName}</Trans>
         </p>
       </div>
 
@@ -78,8 +81,10 @@ export default function ChatSidebar() {
         {messages.length === 0 ? (
           <div className="chat-empty">
             <p className="app-subtle">
-              Ask a question about the data, like &quot;Which campaign wastes the most spend?&quot; or
-              &quot;Why is CPA high on mobile?&quot;
+              <Trans>
+                Ask a question about the data, like &quot;Which campaign wastes the most spend?&quot; or
+                &quot;Why is CPA high on mobile?&quot;
+              </Trans>
             </p>
           </div>
         ) : null}
@@ -88,7 +93,7 @@ export default function ChatSidebar() {
             <p className="chat-message-content">{msg.content}</p>
           </div>
         ))}
-        {error ? <p className="chat-error app-subtle">Error: {error}</p> : null}
+        {error ? <p className="chat-error app-subtle"><Trans>Error: {error}</Trans></p> : null}
         <div ref={bottomRef} />
       </div>
 
@@ -98,7 +103,7 @@ export default function ChatSidebar() {
           type="text"
           value={input}
           onChange={(event) => setInput(event.target.value)}
-          placeholder="Ask a question..."
+          placeholder={t`Ask a question...`}
           disabled={streaming}
           autoComplete="off"
         />
@@ -108,7 +113,7 @@ export default function ChatSidebar() {
           className="rounded-3xl px-4"
           disabled={streaming || !input.trim()}
         >
-          {streaming ? "..." : "Send"}
+          {streaming ? "..." : t`Send`}
         </Button>
       </form>
     </div>

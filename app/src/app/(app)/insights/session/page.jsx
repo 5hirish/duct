@@ -7,6 +7,7 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Trans } from "@lingui/react/macro";
 import InsightsWorkspace from "@/components/insights/InsightsWorkspace";
 import { getActiveProjectId } from "@/lib/projects";
 
@@ -36,7 +37,7 @@ function Session() {
 
 export default function InsightsSessionPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading…</div>}>
+    <Suspense fallback={<div className="p-8 text-sm text-muted-foreground"><Trans>Loading…</Trans></div>}>
       <Session />
     </Suspense>
   );

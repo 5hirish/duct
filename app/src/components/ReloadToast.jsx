@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { CornerNotice } from "@/components/ui/corner-notice";
 import {
@@ -28,6 +29,7 @@ import {
 import { isDesktopShell } from "@/lib/shell";
 
 export default function ReloadToast() {
+  const { t } = useLingui();
   const [build, setBuild] = useState("");
   // The check runs on a timer and on focus; both can be in flight at once after
   // a laptop wakes. One at a time, and the loser is dropped rather than queued.
@@ -84,16 +86,16 @@ export default function ReloadToast() {
   return (
     <CornerNotice
       icon={RefreshCw}
-      title="A new version of Duct is ready"
+      title={t`A new version of Duct is ready`}
       onDismiss={onDismiss}
-      dismissLabel="Dismiss update notification"
+      dismissLabel={t`Dismiss update notification`}
       actions={
         <>
           <Button size="sm" onClick={reload}>
-            Reload
+            <Trans>Reload</Trans>
           </Button>
           <Button size="sm" variant="ghost" onClick={onDismiss}>
-            Later
+            <Trans>Later</Trans>
           </Button>
         </>
       }
@@ -102,8 +104,10 @@ export default function ReloadToast() {
           "Refresh for the latest" would be true and would still get someone's
           half-written prompt thrown away. */}
       <p className="mt-0.5 text-xs text-muted-foreground">
-        This tab is running an older build. Reloading picks up the new one — finish anything
-        you have in progress first, it will not wait for you.
+        <Trans>
+          This tab is running an older build. Reloading picks up the new one — finish anything
+          you have in progress first, it will not wait for you.
+        </Trans>
       </p>
     </CornerNotice>
   );

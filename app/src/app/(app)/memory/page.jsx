@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import { hasAuthToken } from "@/lib/authFetch";
@@ -24,6 +25,7 @@ import {
 } from "@/lib/memoryApi";
 
 export default function UserMemoryPage() {
+  const { t } = useLingui();
   const [signedIn, setSignedIn] = useState(true);
 
   useEffect(() => {
@@ -46,18 +48,20 @@ export default function UserMemoryPage() {
     <section>
       <div className="page-toolbar">
         <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          Your memory
+          <Trans>Your memory</Trans>
         </h1>
         <Button asChild variant="ghost" size="sm" className="ml-auto">
           <Link href="/projects">
-            <ArrowLeft className="size-4" /> Projects
+            <ArrowLeft className="size-4" /> <Trans>Projects</Trans>
           </Link>
         </Button>
       </div>
 
       <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        How you like to be worked with. Every agent reads this, on every project, and
-        only you can see it.
+        <Trans>
+          How you like to be worked with. Every agent reads this, on every project, and
+          only you can see it.
+        </Trans>
       </p>
 
       <MemoryTimeline
@@ -65,10 +69,10 @@ export default function UserMemoryPage() {
         signedIn={signedIn}
         kinds={USER_MEMORY_KINDS}
         defaultKind="method"
-        addLabel="Add something about how you work"
-        titlePlaceholder="e.g. Always compare to the same period last year"
-        resetPrompt="Delete everything Duct has learned about how you work? This cannot be undone."
-        emptyHint="Nothing yet. Set your preferences from the sidebar, or add a rule here — 'give me the number first, then the why' is a good start."
+        addLabel={t`Add something about how you work`}
+        titlePlaceholder={t`e.g. Always compare to the same period last year`}
+        resetPrompt={t`Delete everything Duct has learned about how you work? This cannot be undone.`}
+        emptyHint={t`Nothing yet. Set your preferences from the sidebar, or add a rule here — 'give me the number first, then the why' is a good start.`}
       />
     </section>
   );

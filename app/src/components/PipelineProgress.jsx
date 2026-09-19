@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import { StepStatus } from "../lib/agentSteps";
 import { Spinner } from "@/components/ui/spinner";
+import { Trans, useLingui } from "@lingui/react/macro";
+
+// CSS, not copy: kept out of the JSX so the literal-string check reads it as
+// what it is.
+const PROGRESS_KEYFRAMES = `
+  @keyframes duct-progress {
+    from { width: 0% }
+    to   { width: 82% }
+  }
+`;
 
 /**
  * Shared "Duct is working" progress panel for the right viewport of every
@@ -47,14 +57,21 @@ export default function PipelineProgress({
   synthesising,
   writing = false,
   lines = [],
-  estimate = "~3 min",
-  buildingLabel = "Building report",
-  streamingLabel = "Generating report",
-  streamingSubtitle = "Writing your report…",
-  idleSubtitle = "Working on your report…",
+  estimate,
+  buildingLabel,
+  streamingLabel,
+  streamingSubtitle,
+  idleSubtitle,
   virtualWaitsForPrior = false,
   stageChip,
 }) {
+  const { t } = useLingui();
+  // Defaults resolved here, not in the parameter list: `t` needs the hook.
+  estimate ??= t`~3 min`;
+  buildingLabel ??= t`Building report`;
+  streamingLabel ??= t`Generating report`;
+  streamingSubtitle ??= t`Writing your report…`;
+  idleSubtitle ??= t`Working on your report…`;
   // Self-driven ticker so the subtitle keeps rotating even through the long,
   // quiet stretches of synthesis when no new events arrive to re-render us.
   const [tick, setTick] = useState(0);
@@ -154,10 +171,10 @@ export default function PipelineProgress({
                 <span className="text-xs text-muted-foreground shrink-0">{estimate}</span>
               )}
               {running && !isActive && stage.virtual && (
-                <span className="text-xs text-muted-foreground shrink-0 animate-pulse">writing…</span>
+                <span className="text-xs text-muted-foreground shrink-0 animate-pulse"><Trans>writing…</Trans></span>
               )}
               {running && !isActive && !stage.virtual && (
-                <span className="text-xs text-muted-foreground shrink-0 animate-pulse">now</span>
+                <span className="text-xs text-muted-foreground shrink-0 animate-pulse"><Trans>now</Trans></span>
               )}
               {stageChip ? stageChip(stage, step, status) : null}
             </div>
@@ -182,12 +199,7 @@ export default function PipelineProgress({
               />
             )}
           </div>
-          <style>{`
-            @keyframes duct-progress {
-              from { width: 0% }
-              to   { width: 82% }
-            }
-          `}</style>
+          <style>{PROGRESS_KEYFRAMES}</style>
         </div>
       )}
     </div>

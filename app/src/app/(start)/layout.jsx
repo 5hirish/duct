@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { Trans } from "@lingui/react/macro";
 
+import { activateRequestI18n } from "@/i18n/server";
 import LocalBackendGate from "../../components/LocalBackendGate.jsx";
+import LanguageMenu from "../../components/LanguageMenu.jsx";
 
 // The threshold. No AuthGuard — `/start` is where someone arrives before they
 // have an account — and none of the app shell, which needs a project to mean
@@ -18,7 +21,11 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function StartLayout({ children }) {
+export default async function StartLayout({ children }) {
+  // A client-side navigation renders this layout without the root one, so
+  // the request's catalogue has to be activated here too or "Sign in" is
+  // English on a Spanish page.
+  await activateRequestI18n();
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl">
@@ -33,8 +40,9 @@ export default function StartLayout({ children }) {
           Duct
         </Link>
         <div className="flex-1" />
+        <LanguageMenu compact />
         <Link href="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-          Sign in
+          <Trans>Sign in</Trans>
         </Link>
       </header>
       <main id="main-content" className="flex flex-1 flex-col" tabIndex={-1}>

@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 
 // Relay page for the desktop app's two browser-based OAuth flows: signing in to
@@ -38,28 +40,28 @@ const SHELL_SCHEME =
 // one by hand.
 const ERRORS = {
   expired: {
-    title: "Sign-in link expired",
-    body: "Go back to the Duct desktop app and start again — it usually works second time.",
+    title: msg`Sign-in link expired`,
+    body: msg`Go back to the Duct desktop app and start again — it usually works second time.`,
     retryable: true,
   },
   exchange: {
-    title: "Google didn't complete the sign-in",
-    body: "Google declined the exchange, which is almost always temporary. Try again from the app.",
+    title: msg`Google didn't complete the sign-in`,
+    body: msg`Google declined the exchange, which is almost always temporary. Try again from the app.`,
     retryable: true,
   },
   identity: {
-    title: "Couldn't read your Google account",
-    body: "Google signed you in but sent no account details. Try again, or use a different Google account.",
+    title: msg`Couldn't read your Google account`,
+    body: msg`Google signed you in but sent no account details. Try again, or use a different Google account.`,
     retryable: true,
   },
   config: {
-    title: "Sign-in isn't configured",
-    body: "Trying again won't help — this build shipped without its Google sign-in credentials.",
+    title: msg`Sign-in isn't configured`,
+    body: msg`Trying again won't help — this build shipped without its Google sign-in credentials.`,
     retryable: false,
   },
   server: {
-    title: "Something broke on our side",
-    body: "It's logged on our side. Try again, and send us the details below if it keeps happening.",
+    title: msg`Something broke on our side`,
+    body: msg`It's logged on our side. Try again, and send us the details below if it keeps happening.`,
     retryable: true,
   },
 };
@@ -72,33 +74,33 @@ const FALLBACK = ERRORS.server;
 // and `consent` has no sign-in equivalent at all.
 const CONNECTOR_ERRORS = {
   expired: {
-    title: "Connection link expired",
-    body: "Go back to the Duct desktop app and start the connection again.",
+    title: msg`Connection link expired`,
+    body: msg`Go back to the Duct desktop app and start the connection again.`,
     retryable: true,
   },
   exchange: {
-    title: "Google didn't complete the connection",
-    body: "Google declined the exchange, which is almost always temporary. Try again from the app.",
+    title: msg`Google didn't complete the connection`,
+    body: msg`Google declined the exchange, which is almost always temporary. Try again from the app.`,
     retryable: true,
   },
   consent: {
-    title: "Google didn't grant lasting access",
-    body: "Google sent no refresh token, which happens when you've approved Duct before. Try again and approve the access screen.",
+    title: msg`Google didn't grant lasting access`,
+    body: msg`Google sent no refresh token, which happens when you've approved Duct before. Try again and approve the access screen.`,
     retryable: true,
   },
   config: {
-    title: "This connector isn't configured",
-    body: "Trying again won't help — this build shipped without that connector's credentials.",
+    title: msg`This connector isn't configured`,
+    body: msg`Trying again won't help — this build shipped without that connector's credentials.`,
     retryable: false,
   },
   unknown: {
-    title: "Unknown connector",
-    body: "Trying again won't help — Duct doesn't recognise the connector this link names.",
+    title: msg`Unknown connector`,
+    body: msg`Trying again won't help — Duct doesn't recognise the connector this link names.`,
     retryable: false,
   },
   server: {
-    title: "Something broke on our side",
-    body: "It's logged on our side. Try again, and send us the details below if it keeps happening.",
+    title: msg`Something broke on our side`,
+    body: msg`It's logged on our side. Try again, and send us the details below if it keeps happening.`,
     retryable: true,
   },
 };
@@ -114,6 +116,7 @@ const CONNECTOR_NAMES = {
 
 function DesktopAuthContent() {
   const searchParams = useSearchParams();
+  const { t, i18n } = useLingui();
   const [deepLink, setDeepLink] = useState("");
   const [error, setError] = useState(null);
   const [connectorName, setConnectorName] = useState("");
@@ -183,10 +186,10 @@ function DesktopAuthContent() {
     .join(" · ");
 
   const successTitle = connectorName
-    ? `${connectorName} connected`
+    ? t`${connectorName} connected`
     : isConnector
-      ? "Connected"
-      : "You’re signed in";
+      ? t`Connected`
+      : t`You’re signed in`;
 
   return (
     <main
@@ -199,9 +202,9 @@ function DesktopAuthContent() {
         {error ? (
           <>
             <h1 id="desktop-auth-heading" className="text-xl font-semibold">
-              {error.title}
+              {i18n._(error.title)}
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">{error.body}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{i18n._(error.body)}</p>
             {/* What a bug report actually needs, as one click. The reason code
                 is the field that makes a report diagnosable, and no reader was
                 ever going to type it out of a paragraph. */}
@@ -219,13 +222,13 @@ function DesktopAuthContent() {
                 }
               }}
             >
-              {copied ? "Copied" : "Copy details"}
+              {copied ? <Trans>Copied</Trans> : <Trans>Copy details</Trans>}
             </Button>
             <p className="mt-3 font-mono text-2xs leading-relaxed text-muted-foreground">
               {diagnostics}
             </p>
             <p className="mt-4 text-xs text-muted-foreground">
-              You can close this tab.
+              <Trans>You can close this tab.</Trans>
             </p>
           </>
         ) : (
@@ -234,15 +237,17 @@ function DesktopAuthContent() {
               {successTitle}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Duct should open automatically. If it doesn&rsquo;t, use the button below.
+              <Trans>Duct should open automatically. If it doesn&rsquo;t, use the button below.</Trans>
             </p>
             {deepLink && (
               <Button asChild size="lg" className="mt-6">
-                <a href={deepLink}>Open Duct</a>
+                <a href={deepLink}>
+                  <Trans>Open Duct</Trans>
+                </a>
               </Button>
             )}
             <p className="mt-4 text-xs text-muted-foreground">
-              You can close this tab.
+              <Trans>You can close this tab.</Trans>
             </p>
           </>
         )}

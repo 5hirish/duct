@@ -20,6 +20,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, ExternalLink, Eye, EyeOff, Sparkles } from "lucide-react";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,11 +47,11 @@ const CHOICES = [...PROVIDERS].sort((a, b) => (a.id === RECOMMENDED_ID ? -1 : b.
 // them. `PROVIDERS[].description` talks about engines, which is the settings
 // page's concern, not a first-run one.
 const BLURBS = {
-  openai: "GPT-5.6 · about a cent per audit",
-  anthropic: "Claude · a few cents per audit",
-  gemini: "Gemini · a free tier covers a first audit",
-  openrouter: "One key, hundreds of models",
-  xai: "Grok · a few cents per audit",
+  openai: msg`GPT-5.6 · about a cent per audit`,
+  anthropic: msg`Claude · a few cents per audit`,
+  gemini: msg`Gemini · a free tier covers a first audit`,
+  openrouter: msg`One key, hundreds of models`,
+  xai: msg`Grok · a few cents per audit`,
 };
 
 // Billing pages, because `no_billing` is the failure that needs one.
@@ -64,48 +66,48 @@ const BILLING_URLS = {
 // One sentence of what happened and one of what to do, per verify code.
 const FIXES = {
   invalid_key: {
-    title: "That key was rejected",
-    body: "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once.",
+    title: msg`That key was rejected`,
+    body: msg`Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once.`,
     link: "console",
   },
   no_billing: {
-    title: "The key works, but the account has no credit",
-    body: "New accounts start at $0. Add a small amount on the billing page — an audit costs cents — then verify again.",
+    title: msg`The key works, but the account has no credit`,
+    body: msg`New accounts start at $0. Add a small amount on the billing page — an audit costs cents — then verify again.`,
     link: "billing",
   },
   model_access: {
-    title: "This account can't use that model yet",
-    body: "Some accounts need verification or a higher usage tier first. Try another provider, or come back once the account is verified.",
+    title: msg`This account can't use that model yet`,
+    body: msg`Some accounts need verification or a higher usage tier first. Try another provider, or come back once the account is verified.`,
     link: "console",
   },
   rate_limited: {
-    title: "The provider is rate-limiting right now",
-    body: "Nothing is wrong with the key. Give it a moment and verify again.",
+    title: msg`The provider is rate-limiting right now`,
+    body: msg`Nothing is wrong with the key. Give it a moment and verify again.`,
   },
   unreachable: {
-    title: "Can't reach the provider",
-    body: "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY.",
+    title: msg`Can't reach the provider`,
+    body: msg`Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY.`,
   },
   missing_key: {
-    title: "Paste a key first",
-    body: "",
+    title: msg`Paste a key first`,
+    body: null,
   },
   subscription_quota: {
-    title: "Your ChatGPT plan's window is used up",
-    body: "Plus and Pro meter GPT usage in five-hour windows. Wait for it to reset, or use an API key to keep going.",
+    title: msg`Your ChatGPT plan's window is used up`,
+    body: msg`Plus and Pro meter GPT usage in five-hour windows. Wait for it to reset, or use an API key to keep going.`,
   },
   subscription_revoked: {
-    title: "The ChatGPT sign-in has lapsed",
-    body: "You signed out of ChatGPT or removed Duct from it. Sign in again and Duct picks up where it left off.",
+    title: msg`The ChatGPT sign-in has lapsed`,
+    body: msg`You signed out of ChatGPT or removed Duct from it. Sign in again and Duct picks up where it left off.`,
     relogin: true,
   },
   subscription_blocked: {
-    title: "ChatGPT sign-in isn't available for this account right now",
-    body: "OpenAI has changed what third-party apps may do with this plan. An API key works regardless.",
+    title: msg`ChatGPT sign-in isn't available for this account right now`,
+    body: msg`OpenAI has changed what third-party apps may do with this plan. An API key works regardless.`,
   },
   unknown: {
-    title: "The provider returned something Duct didn't expect",
-    body: "The exact message is below. Try again, or use a different provider.",
+    title: msg`The provider returned something Duct didn't expect`,
+    body: msg`The exact message is below. Try again, or use a different provider.`,
   },
 };
 
@@ -118,6 +120,7 @@ function ProviderMark({ id }) {
 }
 
 export default function ProviderStep({ onVerified, onSkip, className }) {
+  const { t, i18n } = useLingui();
   const [providerId, setProviderId] = useState(RECOMMENDED_ID);
   const [value, setValue] = useState("");
   const [revealed, setRevealed] = useState(false);
@@ -230,8 +233,12 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
   }
 
   const fix = result && !result.ok ? FIXES[result.code] || FIXES.unknown : null;
+  const verifiedModel = result?.model;
+  const verifiedLatencyMs = result?.latency_ms;
   const fixHref = fix?.link === "billing" ? BILLING_URLS[provider.id] : fix?.link === "console" ? provider.consoleUrl : "";
   const connectedPlan = chatgpt?.status?.connected ? chatgpt.status : null;
+  const planName = connectedPlan ? planLabel(connectedPlan.plan_type) : "";
+  const planAccount = connectedPlan?.email || t`Your ChatGPT account`;
   const anyBusy = busy || chatgptBusy;
 
   return (
@@ -241,30 +248,40 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
           <div className="start-plan-text">
             <p className="text-sm font-semibold">
               <Sparkles className="mr-1.5 inline size-4 text-primary" aria-hidden />
-              {connectedPlan ? `Signed in to ${planLabel(connectedPlan.plan_type)}` : "Use the plan you already pay for"}
+              {connectedPlan ? (
+                <Trans>Signed in to {planName}</Trans>
+              ) : (
+                <Trans>Use the plan you already pay for</Trans>
+              )}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {connectedPlan
-                ? `${connectedPlan.email || "Your ChatGPT account"} — no API key, no extra bill.`
-                : "Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history."}
+              {connectedPlan ? (
+                <Trans>{planAccount} — no API key, no extra bill.</Trans>
+              ) : (
+                <Trans>Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history.</Trans>
+              )}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button type="button" size="lg" onClick={continueWithChatgpt} disabled={anyBusy}>
               {chatgptBusy && <Spinner className="size-4" />}
-              {chatgptBusy
-                ? connectedPlan
-                  ? "Checking…"
-                  : "Finish in your browser…"
-                : connectedPlan
-                  ? "Use this plan"
-                  : "Continue with ChatGPT"}
+              {chatgptBusy ? (
+                connectedPlan ? (
+                  <Trans>Checking…</Trans>
+                ) : (
+                  <Trans>Finish in your browser…</Trans>
+                )
+              ) : connectedPlan ? (
+                <Trans>Use this plan</Trans>
+              ) : (
+                <Trans>Continue with ChatGPT</Trans>
+              )}
             </Button>
             {/* A closed browser tab tells the shell nothing; this is the way
                 back short of the sign-in's own five-minute timeout. */}
             {chatgptBusy && !connectedPlan && (
               <Button type="button" variant="ghost" size="lg" onClick={() => chatgptLoginCancel()}>
-                Cancel
+                <Trans>Cancel</Trans>
               </Button>
             )}
           </div>
@@ -273,13 +290,14 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
 
       {chatgpt && (
         <div className="start-or" aria-hidden="true">
-          <span>or paste an API key</span>
+          <span><Trans>or paste an API key</Trans></span>
         </div>
       )}
 
-      <div className="start-choices" role="radiogroup" aria-label="Model provider">
+      <div className="start-choices" role="radiogroup" aria-label={t`Model provider`}>
         {CHOICES.map((p) => {
           const active = p.id === provider.id;
+          const label = p.label;
           return (
             <div key={p.id} className={cn("start-choice", active && "is-active")}>
               <button
@@ -293,9 +311,13 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
                 <span className="start-choice-text">
                   <span className="start-choice-title">
                     {p.label}
-                    {p.id === RECOMMENDED_ID && <span className="start-choice-tag">Recommended</span>}
+                    {p.id === RECOMMENDED_ID && (
+                      <span className="start-choice-tag">
+                        <Trans>Recommended</Trans>
+                      </span>
+                    )}
                   </span>
-                  <span className="start-choice-desc">{BLURBS[p.id] || p.description}</span>
+                  <span className="start-choice-desc">{BLURBS[p.id] ? i18n._(BLURBS[p.id]) : p.description}</span>
                 </span>
                 <span className="start-choice-radio" aria-hidden="true" />
               </button>
@@ -303,7 +325,7 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
               {active && (
                 <div className="start-choice-body">
                   <Label htmlFor="provider-key" className="sr-only">
-                    {p.label} API key
+                    <Trans>{label} API key</Trans>
                   </Label>
                   <div className="flex gap-2">
                     <Input
@@ -312,7 +334,7 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
                       autoComplete="off"
                       spellCheck={false}
                       autoFocus
-                      placeholder={p.placeholder || "Paste your key"}
+                      placeholder={p.placeholder || t`Paste your key`}
                       value={value}
                       onChange={(e) => setValue(e.target.value)}
                       onKeyDown={(e) => {
@@ -325,21 +347,21 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
                       type="button"
                       variant="outline"
                       size="icon"
-                      aria-label={revealed ? "Hide key" : "Show key"}
+                      aria-label={revealed ? t`Hide key` : t`Show key`}
                       onClick={() => setRevealed((v) => !v)}
                     >
                       {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </Button>
                   </div>
                   <p id="provider-key-hint" className="mt-2 text-xs text-muted-foreground">
-                    Sent with each request, never stored by Duct unless you ask.{" "}
+                    <Trans>Sent with each request, never stored by Duct unless you ask.</Trans>{" "}
                     <a
                       href={p.consoleUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-0.5 font-medium text-foreground underline underline-offset-2"
                     >
-                      Get a key <ExternalLink className="size-3" aria-hidden />
+                      <Trans>Get a key</Trans> <ExternalLink className="size-3" aria-hidden />
                     </a>
                   </p>
                   {!desktop && (
@@ -350,7 +372,9 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
                         checked={remember}
                         onChange={(e) => setRemember(e.target.checked)}
                       />
-                      <span>Remember it on Duct, encrypted, so it survives a refresh and can fund scheduled checks.</span>
+                      <span>
+                        <Trans>Remember it on Duct, encrypted, so it survives a refresh and can fund scheduled checks.</Trans>
+                      </span>
                     </label>
                   )}
                 </div>
@@ -362,8 +386,8 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
 
       {fix && (
         <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
-          <p className="font-semibold">{fix.title}</p>
-          {fix.body && <p className="mt-1 text-muted-foreground">{fix.body}</p>}
+          <p className="font-semibold">{i18n._(fix.title)}</p>
+          {fix.body && <p className="mt-1 text-muted-foreground">{i18n._(fix.body)}</p>}
           {fixHref && (
             <a
               href={fixHref}
@@ -371,13 +395,13 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
               rel="noopener noreferrer"
               className="mt-2 inline-flex items-center gap-1 font-medium underline underline-offset-2"
             >
-              {fix.link === "billing" ? "Open billing" : "Open the console"}{" "}
+              {fix.link === "billing" ? <Trans>Open billing</Trans> : <Trans>Open the console</Trans>}{" "}
               <ExternalLink className="size-3" aria-hidden />
             </a>
           )}
           {fix.relogin && chatgpt && (
             <Button type="button" size="sm" variant="outline" className="mt-2" onClick={continueWithChatgpt} disabled={anyBusy}>
-              Sign in with ChatGPT again
+              <Trans>Sign in with ChatGPT again</Trans>
             </Button>
           )}
           {result?.detail && (
@@ -389,17 +413,19 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
       {result?.ok && (
         <p className="flex items-center gap-2 text-sm text-foreground" role="status">
           <Check className="size-4 text-success" aria-hidden />
-          Connected · {result.model} · {result.latency_ms} ms
+          <Trans>
+            Connected · {verifiedModel} · {verifiedLatencyMs} ms
+          </Trans>
         </p>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" onClick={verify} disabled={anyBusy}>
           {busy && <Spinner className="size-4" />}
-          {busy ? "Checking…" : "Verify & continue"}
+          {busy ? <Trans>Checking…</Trans> : <Trans>Verify & continue</Trans>}
         </Button>
         <Button type="button" variant="ghost" onClick={onSkip} disabled={anyBusy}>
-          Skip for now
+          <Trans>Skip for now</Trans>
         </Button>
       </div>
     </div>

@@ -17,6 +17,7 @@
 // `entity_meta`, and this renders whatever arrived.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Popover } from "radix-ui";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,6 +86,7 @@ export default function ProjectEntitySelect({
   noun = "account",
   nounPlural = "accounts",
 }) {
+  const { t } = useLingui();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [state, setState] = useState({ status: "idle", entities: [] });
@@ -143,6 +145,15 @@ export default function ProjectEntitySelect({
     onChange?.({ entityId: entity?.account_id || "", entityName: entity?.account_name || "" });
   }
 
+  // The nouns are connector-supplied and arrive in English; the sentences
+  // around them are what gets translated. Bound to plain names so each lands
+  // in the catalogue as a named placeholder rather than `{0}`.
+  const one = nouns.one;
+  const many = nouns.many;
+  const entity = withArticle(one);
+  const searchLabel = t`Search ${many}`;
+  const listError = state.error || "";
+
   return (
     <div className="conn-field">
       {/* Just the noun. The section heading above already says which project
@@ -157,14 +168,14 @@ export default function ProjectEntitySelect({
             type="button"
             className="conn-entity-trigger"
             disabled={busy}
-            aria-label={`Choose ${withArticle(nouns.one)} for ${projectName}`}
+            aria-label={t`Choose ${entity} for ${projectName}`}
           >
             <span className="conn-entity-trigger-main">
               {selectedName && (
                 <EntityAvatar url={selected?.entity_url} name={selectedName} />
               )}
               <span className={selectedName ? "conn-entity-value" : "conn-entity-placeholder"}>
-                {selectedName || `Choose ${withArticle(nouns.one)}`}
+                {selectedName || t`Choose ${entity}`}
               </span>
             </span>
             <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
@@ -187,30 +198,36 @@ export default function ProjectEntitySelect({
                 ref={searchRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={`Search ${nouns.many}`}
-                aria-label={`Search ${nouns.many}`}
+                placeholder={searchLabel}
+                aria-label={searchLabel}
               />
             </div>
 
             <div className="conn-entity-list" role="listbox">
               {state.status === "loading" && (
-                <p className="conn-entity-note">Loading {nouns.many}…</p>
+                <p className="conn-entity-note">
+                  <Trans>Loading {many}…</Trans>
+                </p>
               )}
               {state.status === "error" && (
                 <p className="conn-entity-note conn-entity-note-error">
-                  Could not list {nouns.many}. {state.error}
+                  <Trans>
+                    Could not list {many}. {listError}
+                  </Trans>
                 </p>
               )}
               {state.status === "unsupported" && (
                 <p className="conn-entity-note">
-                  This connector has no {nouns.many} to choose from.
+                  <Trans>This connector has no {many} to choose from.</Trans>
                 </p>
               )}
               {state.status === "ready" && matches.length === 0 && (
                 <p className="conn-entity-note">
-                  {state.entities.length === 0
-                    ? `No ${nouns.many} reachable with this connection.`
-                    : `No ${nouns.many} match “${query}”.`}
+                  {state.entities.length === 0 ? (
+                    <Trans>No {many} reachable with this connection.</Trans>
+                  ) : (
+                    <Trans>No {many} match “{query}”.</Trans>
+                  )}
                 </p>
               )}
 
@@ -272,7 +289,7 @@ export default function ProjectEntitySelect({
             <div className="conn-entity-foot">
               {selectedId && (
                 <button type="button" className="conn-entity-link" onClick={() => choose(null)}>
-                  Clear
+                  <Trans>Clear</Trans>
                 </button>
               )}
               <button
@@ -282,7 +299,7 @@ export default function ProjectEntitySelect({
                   setState({ status: "idle", entities: [] });
                 }}
               >
-                Refresh
+                <Trans>Refresh</Trans>
               </button>
             </div>
           </Popover.Content>
@@ -290,9 +307,11 @@ export default function ProjectEntitySelect({
       </Popover.Root>
 
       <p className="conn-hint">
-        {selectedName
-          ? `Reports and agent runs use this ${nouns.one}.`
-          : `Optional — the agent will ask if you leave this unset.`}
+        {selectedName ? (
+          <Trans>Reports and agent runs use this {one}.</Trans>
+        ) : (
+          <Trans>Optional — the agent will ask if you leave this unset.</Trans>
+        )}
       </p>
     </div>
   );

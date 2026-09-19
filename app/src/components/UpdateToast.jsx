@@ -15,6 +15,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ArrowUpCircle } from "lucide-react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { CornerNotice } from "@/components/ui/corner-notice";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/updater";
 
 export default function UpdateToast() {
+  const { t } = useLingui();
   const [update, setUpdate] = useState(null);
   const [installing, setInstalling] = useState(false);
   const [error, setError] = useState("");
@@ -75,38 +77,43 @@ export default function UpdateToast() {
 
   if (!update) return null;
 
+  const version = update.version;
   return (
     <CornerNotice
       icon={ArrowUpCircle}
-      title={`Duct ${update.version} is available`}
+      title={t`Duct ${version} is available`}
       onDismiss={onDismiss}
       dismissDisabled={installing}
-      dismissLabel="Dismiss update notification"
+      dismissLabel={t`Dismiss update notification`}
       actions={
         <>
           <Button size="sm" onClick={onInstall} disabled={installing}>
             {installing ? (
               <>
                 <Spinner className="size-3.5" />
-                Installing…
+                <Trans>Installing…</Trans>
               </>
             ) : (
-              "Restart to update"
+              <Trans>Restart to update</Trans>
             )}
           </Button>
           <Button size="sm" variant="ghost" onClick={onDismiss} disabled={installing}>
-            Later
+            <Trans>Later</Trans>
           </Button>
         </>
       }
     >
       <p className="mt-0.5 text-xs text-muted-foreground">
-        You&rsquo;re on {update.currentVersion}. Updating restarts the app.
+        <Trans>You’re on {update.currentVersion}. Updating restarts the app.</Trans>
       </p>
       {update.notes ? (
         <p className="mt-2 line-clamp-3 text-xs text-muted-foreground">{update.notes}</p>
       ) : null}
-      {error ? <p className="mt-2 text-xs text-destructive">Update failed: {error}</p> : null}
+      {error ? (
+        <p className="mt-2 text-xs text-destructive">
+          <Trans>Update failed: {error}</Trans>
+        </p>
+      ) : null}
     </CornerNotice>
   );
 }

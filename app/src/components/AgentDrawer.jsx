@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { cn } from "@/lib/utils";
 import {
   AGENT_TYPES,
@@ -52,6 +53,7 @@ function DrawerContent({ className, children, ...props }) {
 // ---------------------------------------------------------------------------
 
 function AgentTypeRow({ agent, active }) {
+  const { i18n } = useLingui();
   return (
     <div
       className={cn(
@@ -66,14 +68,14 @@ function AgentTypeRow({ agent, active }) {
       <span className="mt-0.5 text-base leading-none">{agent.icon}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={cn("text-sm font-medium", active && "text-primary")}>{agent.label}</span>
+          <span className={cn("text-sm font-medium", active && "text-primary")}>{i18n._(agent.label)}</span>
           {!agent.available && (
             <span className="rounded-full bg-muted px-1.5 py-px text-2xs text-muted-foreground">
-              Soon
+              <Trans>Soon</Trans>
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground leading-snug">{agent.description}</p>
+        <p className="text-xs text-muted-foreground leading-snug">{i18n._(agent.description)}</p>
       </div>
     </div>
   );
@@ -84,6 +86,7 @@ function AgentTypeRow({ agent, active }) {
 // ---------------------------------------------------------------------------
 
 export default function AgentDrawer({ children }) {
+  const { t } = useLingui();
   const [open, setOpen] = useState(false);
   const [activeAgent, setActiveAgent] = useState(DEFAULT_AGENT_TYPE);
 
@@ -103,15 +106,15 @@ export default function AgentDrawer({ children }) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger asChild>{children}</DialogPrimitive.Trigger>
-      <DrawerContent aria-label="Agent selector">
+      <DrawerContent aria-label={t`Agent selector`}>
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <span className="text-sm font-semibold tracking-tight">Agents</span>
+            <span className="text-sm font-semibold tracking-tight"><Trans>Agents</Trans></span>
             <DialogPrimitive.Close asChild>
               <button
                 className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Close"
+                aria-label={t`Close`}
               >
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M1 1l12 12M13 1L1 13" />
@@ -137,27 +140,27 @@ export default function AgentDrawer({ children }) {
           {/* Handoff mode — reserved, coming soon */}
           <div className="border-t border-border px-4 py-3">
             <p className="mb-1.5 text-2xs font-medium uppercase tracking-widest text-muted-foreground">
-              Handoff Mode
+              <Trans>Handoff Mode</Trans>
             </p>
             <div
               className="flex items-center gap-2 opacity-40"
-              title="Human-in-the-loop agent handoffs — coming soon"
+              title={t`Human-in-the-loop agent handoffs — coming soon`}
             >
               <button
                 disabled
                 className="rounded-full border border-border bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
               >
-                Manual
+                <Trans>Manual</Trans>
               </button>
               <button
                 disabled
                 className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground"
               >
-                Auto
+                <Trans>Auto</Trans>
               </button>
             </div>
             <p className="mt-1 text-2xs text-muted-foreground">
-              Cross-agent invocations — coming soon
+              <Trans>Cross-agent invocations — coming soon</Trans>
             </p>
           </div>
         </div>

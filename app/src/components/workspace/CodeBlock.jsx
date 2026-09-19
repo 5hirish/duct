@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Trans } from "@lingui/react/macro";
 import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import js from "react-syntax-highlighter/dist/cjs/languages/prism/javascript";
@@ -53,7 +54,7 @@ export function CodeBlock({ language, children, compact = false }) {
           onClick={handleCopy}
           className="text-2xs font-medium text-white/40 hover:text-white/80 transition-colors select-none"
         >
-          {copied ? "✓ copied" : "copy"}
+          {copied ? <Trans>✓ copied</Trans> : <Trans>copy</Trans>}
         </button>
       </div>
       <SyntaxHighlighter
