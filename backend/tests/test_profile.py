@@ -237,3 +237,30 @@ class TestRoundTrip:
     def test_the_endpoint_is_the_user(self, db):
         """No path here takes a user id from the request."""
         assert client(db).get("/api/user/profile").status_code in (401, 403)
+
+
+class TestInterfaceLanguage:
+    """The third language field names a translation, not a model instruction."""
+
+    def test_only_a_catalogue_tag_is_kept(self):
+        """A language the app cannot render must never pin an account."""
+        clean = profile_service._clean_interface_language
+        assert clean("es") == "es"
+        assert clean("PT-br") == "pt-BR"
+        assert clean("fr") == ""
+        assert clean("") == ""
+        assert clean(None) == ""
+
+    def test_the_catalogue_list_matches_the_app(self):
+        """lingui.config.mjs is the source of truth; this set must mirror it."""
+        import re
+        from pathlib import Path
+
+        config = Path(__file__).resolve().parents[2] / "app" / "lingui.config.mjs"
+        if not config.exists():
+            pytest.skip("app tree not checked out beside the backend")
+        match = re.search(r"locales:\s*\[([^\]]*)\]", config.read_text())
+        assert match, "locales list not found in lingui.config.mjs"
+        shipped = {tag.strip().strip('"\'') for tag in match.group(1).split(",") if tag.strip()}
+        shipped.discard("pseudo")
+        assert shipped == set(profile_service.INTERFACE_LANGUAGES)

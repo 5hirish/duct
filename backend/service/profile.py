@@ -52,6 +52,12 @@ DEFAULT_PRESET = "practitioner"
 #: existed, so the default is the old behaviour rather than a guess at theirs.
 DEFAULT_TIMEZONE = "UTC"
 
+#: The interface languages the app has a catalogue for. Mirrors
+#: ``app/src/i18n/locales.js`` and ``app/lingui.config.mjs``; a tag outside
+#: this set is stored as "" so a stale client can never pin an account to a
+#: language the app cannot render.
+INTERFACE_LANGUAGES: frozenset[str] = frozenset({"en", "es", "pt-BR", "de", "ja"})
+
 
 @dataclass(frozen=True)
 class Profile:
@@ -64,6 +70,8 @@ class Profile:
     communication_language: str = ""
     #: IANA zone name. Empty means UTC — see :data:`DEFAULT_TIMEZONE`.
     timezone: str = ""
+    #: A tag from :data:`INTERFACE_LANGUAGES`, or "" for "follow the browser".
+    interface_language: str = ""
     notes: str = ""
 
     @property
@@ -116,6 +124,35 @@ def _clean_timezone(value: object) -> str:
     return text
 
 
+def _clean_interface_language(value: object) -> str:
+    """A catalogue tag, or '' — the browser decides when nothing is set.
+
+    Case-normalised so "PT-br" from a hand-edited request still lands on the
+    catalogue's tag. Anything else degrades to '', never raises: the interface
+    language is a preference, and a bad one is worth ignoring.
+    """
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    for tag in INTERFACE_LANGUAGES:
+        if tag.lower() == text.lower():
+            return tag
+    logger.warning("ignoring unknown interface language %r", text[:16])
+    return ""
+
+
+def _from_row(row: UserProfile) -> Profile:
+    return Profile(
+        display_name=str(row.display_name or ""),
+        role=str(row.role or ""),
+        writing_preset=_clean_preset(row.writing_preset),
+        communication_language=str(row.communication_language or ""),
+        timezone=str(row.timezone or ""),
+        interface_language=_clean_interface_language(row.interface_language),
+        notes=str(row.notes or ""),
+    )
+
+
 def get_profile(user_id: UUID | None) -> Profile:
     """The saved profile, or the defaults for an anonymous caller or a failure."""
     if user_id is None:
@@ -125,14 +162,7 @@ def get_profile(user_id: UUID | None) -> Profile:
             row = db.get(UserProfile, user_id)
             if row is None:
                 return DEFAULTS
-            return Profile(
-                display_name=str(row.display_name or ""),
-                role=str(row.role or ""),
-                writing_preset=_clean_preset(row.writing_preset),
-                communication_language=str(row.communication_language or ""),
-                timezone=str(row.timezone or ""),
-                notes=str(row.notes or ""),
-            )
+            return _from_row(row)
     except Exception:
         logger.warning("profile unavailable — using defaults", exc_info=True)
         return DEFAULTS
@@ -146,6 +176,7 @@ def save_profile(
     writing_preset: str | None = None,
     communication_language: str | None = None,
     timezone: str | None = None,
+    interface_language: str | None = None,
     notes: str | None = None,
 ) -> Profile:
     """Upsert the fields the caller sent, leaving the rest alone.
@@ -169,18 +200,13 @@ def save_profile(
             row.communication_language = _clean_text(communication_language, limit=40)
         if timezone is not None:
             row.timezone = _clean_timezone(timezone)
+        if interface_language is not None:
+            row.interface_language = _clean_interface_language(interface_language)
         if notes is not None:
             row.notes = _clean_text(notes, limit=NOTES_MAX_CHARS)
         row.updated_at = utcnow()
         db.commit()
-        return Profile(
-            display_name=str(row.display_name or ""),
-            role=str(row.role or ""),
-            writing_preset=_clean_preset(row.writing_preset),
-            communication_language=str(row.communication_language or ""),
-            timezone=str(row.timezone or ""),
-            notes=str(row.notes or ""),
-        )
+        return _from_row(row)
 
 
 def resolve(user_id: UUID | None, request_preferences: object = None) -> Profile:
