@@ -7,10 +7,11 @@ export const PREFS_KEY = "duct_user_preferences";
 //
 // `role`, `communication_style` and `report_depth` are still sent on each
 // agent request for older clients and signed-out runs, seeded from the profile
-// rather than edited here. `primary_outcome` and `preferred_artifact_format`
-// are gone: the first folds into the profile's notes on upgrade
-// (`migrateLegacyPreferences`), the second was a per-artifact choice that both
-// server call sites already default.
+// rather than edited here. `primary_outcome` is gone: it folds into the
+// profile's notes on upgrade (`migrateLegacyPreferences`).
+// `preferred_artifact_format` left once and came back as a composer dial: it
+// is a cost-and-shape choice like thinking and tier, not an identity, so it
+// lives beside them rather than on the profile row.
 export const PREFS_DEFAULTS = {
   role: "",
   communication_style: "practitioner",
@@ -30,6 +31,11 @@ export const PREFS_DEFAULTS = {
   // payload, so this changes how rows are written, never which numbers they
   // carry.
   context_compression: true,
+  // The shape of a brief: "html" (default; a styled page with its own charts,
+  // more output tokens), "markdown" (faster and cheaper, plain text and
+  // tables) or "auto" (the agent picks per brief). The backend reads it as
+  // `preferred_artifact_format` (backend/agents/preferences.py).
+  preferred_artifact_format: "html",
 };
 
 export function loadPreferences() {

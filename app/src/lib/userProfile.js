@@ -293,10 +293,9 @@ const OUTCOME_SENTENCES = {
 /**
  * Fold whatever the old dialog stored into the new profile, once.
  *
- * The two enums that were cut are not dropped silently: `primary_outcome`
- * becomes a sentence in the notes, which is where that intent belongs anyway.
- * `preferred_artifact_format` does go, because both server call sites already
- * default and a per-artifact choice was never an identity.
+ * The enum that was cut is not dropped silently: `primary_outcome` becomes a
+ * sentence in the notes, which is where that intent belongs anyway.
+ * `preferred_artifact_format` stays in the blob: it is a composer dial again.
  *
  * Returns the patch it applied, or null when there was nothing to carry.
  */
@@ -325,13 +324,13 @@ export function migrateLegacyPreferences() {
   }
   if (!Object.keys(patch).length) return null;
 
-  // The two retired controls leave the old blob entirely rather than being
+  // The retired control leaves the old blob entirely rather than being
   // blanked: a key that is gone from the model should not linger as "". What
-  // stays is what the composer still writes here — thinking, tier,
+  // stays is what the composer writes here — thinking, tier, format,
   // context_compression — plus the three fields a signed-out request carries,
   // which `mirrorToRequestPayload` keeps in step from now on.
   try {
-    const { primary_outcome, preferred_artifact_format, ...keep } = prefs;
+    const { primary_outcome, ...keep } = prefs;
     savePreferences(keep);
   } catch {
     /* the profile write below is what matters */

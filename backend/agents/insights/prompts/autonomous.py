@@ -408,7 +408,18 @@ _FORMAT_GUIDANCE: dict[str, str] = {
     "html": (
         "Write briefs as a complete, self-contained HTML document — <!doctype html> "
         "through </html>, with its styles inline in a <style> block and no external "
-        "assets. This one gets forwarded and has to stand on its own."
+        "assets. This one gets forwarded and has to stand on its own. Inline "
+        "<script> runs, sandboxed: use it for a chart drawn from numbers embedded "
+        "in the page or a table the reader can sort, never to load anything."
+    ),
+    "auto": (
+        "Choose the format per brief and say in chat which you chose. Markdown "
+        "when the value is the words: a short read, a decision, a follow-up that "
+        "pastes into a doc. A self-contained HTML document (styles inline, no "
+        "external assets, inline <script> allowed for charts and sorting) when "
+        "layout, a chart or a comparison the reader will explore earns the extra "
+        "length. Anything richer than prose lives inside that HTML page, because "
+        "that is what renders."
     ),
 }
 

@@ -261,7 +261,11 @@ export default function ArtifactRenderer({ artifact, content }) {
       <iframe
         title={artifact.title || "Artifact"}
         srcDoc={content}
-        sandbox="allow-modals allow-same-origin"
+        // Scripts run so a brief's chart or sortable table works; same-origin
+        // is withheld so the page runs in an opaque origin with no reach into
+        // the app, its cookies or its storage. The old pair (same-origin, no
+        // scripts) was the inert version of the unsafe combination.
+        sandbox="allow-scripts allow-modals"
         className="block h-[74vh] w-full rounded-lg border border-border bg-card"
       />
     );

@@ -495,7 +495,8 @@ export function BriefPane({ brief, writing, empty, loading }) {
           <iframe
             title={brief.title}
             srcDoc={brief.content}
-            sandbox="allow-modals allow-same-origin"
+            // See ArtifactRenderer: scripts on, same-origin off.
+            sandbox="allow-scripts allow-modals"
             className="block h-[74vh] w-full border-0 bg-white"
           />
         ) : (

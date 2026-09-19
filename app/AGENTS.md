@@ -210,7 +210,7 @@ it is a claim about the code, not a way to quiet the check.
   follows the project's output language when it has one.
 - `lib/userPreferences.js` — what is left after the profile moved to the
   server: the per-run dials the composer writes (`thinking`, `tier`,
-  `context_compression`), plus the three fields an agent request still carries
+  `preferred_artifact_format`, `context_compression`), plus the three fields an agent request still carries
   for signed-out runs, mirrored from the profile rather than edited here
 - `lib/analytics-client.js` — how to load GTM and push events (never whether)
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
@@ -449,7 +449,7 @@ Rules that follow:
   the insights desk shows. The composer (`workspace/ChatInput`) is the desk
   composer's card: text on top, a footer with the shell's `composerTools`
   chips (`workspace/ComposerDials` for insights: autonomy, thinking, model
-  tier) on the left and the ring and Send on the right. A retry counts down (`retrying.until`, anchored on this
+  tier, brief format) on the left and the ring and Send on the right. A retry counts down (`retrying.until`, anchored on this
   client's clock at receipt), and the tooltip carries cost and the cached
   share beside the tokens. After a compaction the ring is empty and says so
   (`usage.last.stale`) until the next call on the thread reports its size.
