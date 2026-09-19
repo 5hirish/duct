@@ -121,7 +121,9 @@
         left: 0;
         right: 0;
         margin: 0;
+        padding: 0 20px;
         height: 16px;
+        text-align: center;
         font-size: 12px;
         color: var(--navy-3);
         opacity: 0;
@@ -168,13 +170,13 @@
       // sooner than promised rather than as a wait that ended.
       const CEILING = 92;
       const TICK_MS = 100;
-      const EASE = 0.045;
+      const EASE = 0.01;
 
       // Long enough that a normal start never shows it, short enough that a
       // stalled one does not feel ignored. Measured normal case is ~5.5s on a
       // loaded machine, so 8s means "this is no longer normal".
       const SLOW_AFTER_MS = 8000;
-      const SLOW_MESSAGE = "Still connecting. This can happen on a slow network.";
+      const SLOW_MESSAGE = "Still connecting. Check your network.";
 
       const fill = document.getElementById("fill");
       const status = document.getElementById("status");
