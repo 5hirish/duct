@@ -7,6 +7,9 @@
     return document.getElementById(id);
   }
 
+// Localised pages carry window.DUCT_I18N (scripts/build_site_i18n.py); the literal must stay inline at the call.
+var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m && m[s]) || s; };
+
   global.DuctToolFormError = {
     clear: function (errorElId, inputIds) {
       var err = $(errorElId);
@@ -72,7 +75,7 @@
       if (!results.classList.contains('visible')) return;
       var note = document.createElement('p');
       note.className = 'tool-example-note';
-      note.textContent = 'Example numbers. Change any field and calculate again for yours.';
+      note.textContent = ductT('Example numbers. Change any field and calculate again for yours.');
       results.insertBefore(note, results.firstChild);
       var undo = function () {
         if (note.parentNode) note.parentNode.removeChild(note);

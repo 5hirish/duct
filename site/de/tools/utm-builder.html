@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>UTM-Builder — Kostenloses Tool von Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/tools/utm-builder"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/utm-builder"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/utm-builder"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/utm-builder"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/utm-builder"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/utm-builder"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/utm-builder"/>
+<!-- hreflang:end -->
+<meta name="description" content="Kostenloser UTM-Builder mit Live-URL-Vorschau und GA4-Konformitätsprüfung. Erstelle und kopiere UTM-Kampagnenlinks in Sekunden. Keine Anmeldung erforderlich."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/tools/utm-builder"/>
+<meta property="og:title" content="UTM-Builder — Kostenloses Tool von Duct"/>
+<meta property="og:description" content="Erstelle UTM-Links mit Live-Vorschau und GA4-Konformitätsprüfung. Kostenlos, keine Anmeldung erforderlich."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-utm-builder.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="UTM-Builder — Kostenloses Tool von Duct"/>
+<meta name="twitter:description" content="Kostenloser UTM-Builder mit Live-URL-Vorschau und GA4-Konformitätsprüfung."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-utm-builder.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"UTM Builder","url":"https://getduct.ai/tools/utm-builder","description":"Free UTM builder with live URL preview and GA4 compliance validation. Build and copy UTM campaign links instantly.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero { padding:80px 24px 48px; text-align:center; max-width:760px; margin:0 auto; }
+  .tool-hero h1 { font-family:var(--serif); font-size:clamp(32px,5vw,52px); color:var(--navy); margin:16px 0; line-height:1.15; }
+  .tool-hero h1 em { color:var(--orange); font-style:italic; }
+  .tool-hero p { font-size:17px; color:var(--navy-3); font-weight:300; line-height:1.6; margin:0; }
+
+  .tool-wrap { max-width:960px; margin:0 auto 80px; padding:0 24px; }
+  .tool-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.06); }
+
+  .tool-inputs { padding:32px 40px; display:grid; grid-template-columns:1fr 1fr; gap:20px 32px; }
+  @media (max-width:640px) { .tool-inputs { grid-template-columns:1fr; padding:24px; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:500; color:var(--navy); }
+  .field .field-hint { font-size:11px; color:var(--navy-3); margin-top:-2px; }
+  .field-row { display:flex; align-items:center; gap:8px; }
+  .field input { flex:1; padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:15px; font-family:var(--sans); color:var(--navy); outline:none; transition:border-color .15s; }
+  .field input:focus { border-color:var(--orange); }
+  .field input.inp-valid { border-color:#22c55e; }
+  .field input.inp-warn { border-color:#f59e0b; }
+  .field input.inp-error { border-color:#ef4444; }
+  .field-badge { flex-shrink:0; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; visibility:hidden; }
+  .field-badge.b-show { visibility:visible; }
+  .field-badge.b-valid { background:#dcfce7; color:#15803d; }
+  .field-badge.b-warn { background:#fef3c7; color:#92400e; }
+  .field-badge.b-error { background:#fee2e2; color:#991b1b; }
+  .field-msg { font-size:11px; margin-top:2px; min-height:14px; }
+  .field-msg.m-warn { color:#92400e; }
+  .field-msg.m-error { color:#991b1b; }
+  .field-msg.m-valid { color:#15803d; }
+  .field-full { grid-column:1/-1; }
+
+  .preview-wrap { padding:0 40px 32px; }
+  @media (max-width:640px) { .preview-wrap { padding:0 24px 24px; } }
+  .preview-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .preview-box { background:#f8fafc; border:1.5px solid var(--border); border-radius:var(--r); padding:14px 16px; font-size:13px; font-family:monospace; color:var(--navy); word-break:break-all; line-height:1.6; min-height:48px; }
+  .preview-empty { color:var(--navy-3); font-family:var(--sans); font-style:italic; font-size:13px; }
+  .preview-url-base { color:var(--navy-3); }
+  .preview-url-params { color:var(--orange); }
+
+  .copy-row { padding:0 40px 32px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  @media (max-width:640px) { .copy-row { padding:0 24px 24px; } }
+  .copy-confirm { font-size:12px; color:#15803d; font-weight:500; opacity:0; transition:opacity .3s; }
+  .copy-confirm.show { opacity:1; }
+
+  .recent-wrap { border-top:1px solid var(--border); padding:20px 40px; }
+  @media (max-width:640px) { .recent-wrap { padding:16px 24px; } }
+  .recent-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin-bottom:10px; }
+  .recent-list { display:flex; flex-wrap:wrap; gap:8px; }
+  .recent-chip { font-size:12px; color:var(--navy-3); background:var(--off); border:1px solid var(--border); border-radius:100px; padding:4px 12px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; transition:border-color .15s, color .15s; }
+  .recent-chip:hover { border-color:var(--orange); color:var(--navy); }
+  .recent-empty { font-size:12px; color:var(--navy-3); font-style:italic; }
+
+  .insight-panel { margin:0 40px 32px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:16px 20px; display:none; }
+  @media (max-width:640px) { .insight-panel { margin:0 24px 24px; } }
+  .insight-panel.show { display:block; }
+  .insight-panel-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:8px; }
+  .insight-panel p { font-size:13px; color:var(--navy-3); line-height:1.6; margin:0; }
+
+  .faq-section { border-top:1px solid var(--border); padding:32px 40px; }
+  @media (max-width:640px) { .faq-section { padding:24px; } }
+  .faq-title { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin:0 0 16px; }
+  .faq-item { border-bottom:1px solid var(--border); }
+  .faq-item:last-child { border-bottom:none; }
+  .faq-q { width:100%; background:none; border:none; padding:14px 0; font-size:14px; font-weight:500; color:var(--navy); text-align:left; cursor:pointer; font-family:var(--sans); }
+  .faq-q:hover { color:var(--orange); }
+  .faq-a { display:none; padding:0 0 16px; font-size:14px; color:var(--navy-3); line-height:1.7; }
+  .faq-item.open .faq-a { display:block; }
+  .faq-a-code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px; color:var(--navy); font-family:monospace; }
+
+  .tool-cta {
+    margin: 28px 40px 0;
+    background: var(--navy);
+    border-radius: var(--r);
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  @media (max-width: 640px) {
+    .tool-cta { margin: 24px 24px 0; padding: 22px 20px; }
+  }
+
+
+  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+</style>
+</head>
+<body>
+<!-- EXPERIMENT: UTM Builder — differentiate from DashThis with live preview + GA4 validation -->
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Kostenloses Tool · Keine Anmeldung erforderlich</div>
+  <h1>UTM-Builder <em>mit Live-Vorschau</em></h1>
+  <p>Deine GA4-Kampagnendaten sind nur so sauber wie deine UTM-Links. Erstelle sie gleich beim ersten Mal richtig – Live-Validierung, sofortige Vorschau, keine Tabelle.</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="UTM-Builder">
+
+      <div class="tool-inputs">
+
+        <div class="field field-full">
+          <label for="inp-url">Website-URL <span style="color:var(--navy-3);font-weight:400">(erforderlich)</span></label>
+          <span class="field-hint">Die Seite, auf die du Traffic sendest — https:// einschließen</span>
+          <div class="field-row">
+            <input type="url" id="inp-url" placeholder="https://yoursite.com/landing-page" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-url" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-url"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-source">Kampagnenquelle <span style="color:var(--navy-3);font-weight:400">(erforderlich)</span></label>
+          <span class="field-hint">z. B. google, newsletter, twitter</span>
+          <div class="field-row">
+            <input type="text" id="inp-source" placeholder="z. B. google" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-source" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-source"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-medium">Kampagnenmedium <span style="color:var(--navy-3);font-weight:400">(erforderlich)</span></label>
+          <span class="field-hint">z. B. cpc, email, social, organic</span>
+          <div class="field-row">
+            <input type="text" id="inp-medium" placeholder="z. B. cpc" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-medium" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-medium"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-campaign">Kampagnenname <span style="color:var(--navy-3);font-weight:400">(erforderlich)</span></label>
+          <span class="field-hint">z. B. spring-launch, brand-q2</span>
+          <div class="field-row">
+            <input type="text" id="inp-campaign" placeholder="z. B. spring-launch" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-campaign" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-campaign"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-term">Kampagnenbegriff <span style="color:var(--navy-3);font-weight:400">(optional)</span></label>
+          <span class="field-hint">Bezahltes Keyword — z. B. running+shoes</span>
+          <div class="field-row">
+            <input type="text" id="inp-term" placeholder="z. B. utm+builder" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-term" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-term"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-content">Kampagneninhalt <span style="color:var(--navy-3);font-weight:400">(optional)</span></label>
+          <span class="field-hint">Anzeigen unterscheiden – z.B. banner-v1</span>
+          <div class="field-row">
+            <input type="text" id="inp-content" placeholder="z. B. hero-banner" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-content" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-content"></span>
+        </div>
+
+      </div>
+
+      <div class="preview-wrap">
+        <div class="preview-label">
+          Live-URL-Vorschau <span id="preview-compliance" style="font-size:11px;font-weight:500;opacity:0;transition:opacity .2s"></span>
+        </div>
+        <div class="preview-box" id="preview-box" aria-live="polite" aria-label="Generierte UTM-URL">
+          <span class="preview-empty" id="preview-placeholder">Fülle Website-URL, Quelle, Medium und Kampagne aus, um deinen UTM-Link zu generieren.</span>
+        </div>
+      </div>
+
+      <div class="copy-row">
+        <button class="btn btn-orange" id="copy-btn" disabled>URL kopieren</button>
+        <span class="copy-confirm" id="copy-confirm" aria-live="polite">Kopiert!</span>
+        <button class="btn btn-ghost" id="reset-btn" style="display:none">Zurücksetzen</button>
+      </div>
+
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Der Link ist getaggt. Die Frage ist, was er konvertiert.</p>
+          <p>Duct liest deine Anzeigen-, Analyse- und Umsatz-Tools, beantwortet diese Frage und schlägt die Änderung vor. Du gibst sie frei.</p>
+        </div>
+        <a href="/de/download" class="btn btn-orange" data-duct-download>Duct herunterladen ↓</a>
+      </div>
+
+      <div class="insight-panel" id="insight-panel" role="status">
+        <p class="insight-panel-label">GA4-Konformitätshinweis</p>
+        <p id="insight-body"></p>
+      </div>
+
+      <div class="recent-wrap" id="recent-wrap">
+        <div class="recent-label">Zuletzt verwendete URLs</div>
+        <div class="recent-list" id="recent-list"></div>
+      </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="faq-title">Was jeder UTM-Parameter in GA4 bedeutet</div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Was ist utm_source und was sollte ich darin eintragen?
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_source</span> identifiziert, woher dein Traffic kommt – die Plattform oder der Publisher. Verwende Kleinbuchstaben, keine Leerzeichen. Gute Werte: <span class="faq-a-code">google</span>, <span class="faq-a-code">newsletter</span>, <span class="faq-a-code">linkedin</span>, <span class="faq-a-code">twitter</span>. In GA4 erscheint dies als Dimension „Sitzungsquelle“ und wird in allen Attributionsmodellen verwendet.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Was ist utm_medium und was sind die Standardwerte?
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_medium</span> beschreibt den Marketingkanal-Typ. GA4 verwendet dies, um Sitzungen Standard-Kanalgruppen zuzuweisen. Standardwerte: <span class="faq-a-code">cpc</span> (Bezahlte Suche), <span class="faq-a-code">email</span> (E-Mail), <span class="faq-a-code">social</span> (Organische Soziale Medien), <span class="faq-a-code">paid-social</span> (Bezahlte Soziale Medien), <span class="faq-a-code">display</span> (Display). Nicht-Standardwerte landen Sitzungen in „Nicht zugewiesen“.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Was ist utm_campaign und wie sollte ich Kampagnen benennen?
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_campaign</span> identifiziert die spezifische Kampagne. Verwende Kleinbuchstaben mit Bindestrichen – keine Leerzeichen oder Unterstriche. Eine konsistente Namenskonvention ist wichtiger als das genaue Format. Beispiel: <span class="faq-a-code">saas-pm-trial-q2-2026</span>. Leerzeichen werden zu <span class="faq-a-code">%20</span> in der URL, was in GA4-Berichten schwerer zu lesen ist.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Wann sollte ich utm_term und utm_content verwenden?
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_term</span> ist für bezahlte Keywords – hauptsächlich Google Ads. Lass es bei Nicht-Suchkampagnen weg. <span class="faq-a-code">utm_content</span> unterscheidet zwischen mehreren Links in derselben Anzeige oder E-Mail, zum Beispiel <span class="faq-a-code">hero-cta</span> vs <span class="faq-a-code">footer-cta</span>, oder <span class="faq-a-code">banner-v1</span> vs <span class="faq-a-code">banner-v2</span>. Nützlich für A/B-Tests von Kreativen oder zur Verfolgung der Klickposition in langen E-Mails.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Spielt die Groß-/Kleinschreibung bei UTM-Parametern eine Rolle?
+        </button>
+        <div class="faq-a">
+          Ja – GA4 behandelt UTM-Werte als Groß-/Kleinschreibung-sensitiv. <span class="faq-a-code">Google</span> und <span class="faq-a-code">google</span> erscheinen als zwei separate Quellen in deinen Berichten. Verwende immer Kleinbuchstaben. Dies ist der häufigste UTM-Fehler und am schwierigsten rückwirkend zu beheben. Dieses Tool warnt dich, wenn Großbuchstaben erkannt werden.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Warum zeigt GA4 (not set) für meine UTM-Parameter an?
+        </button>
+        <div class="faq-a">
+          „(not set)“ bedeutet, dass der Parameter beim Auslösen des Ereignisses nicht vorhanden war. Häufige Ursachen: (1) eine Weiterleitung entfernte die Parameter, bevor GA4 geladen wurde, (2) der Nutzer navigierte zu einer zweiten Seite, bevor das Tracking ausgelöst wurde, (3) der Link wurde über einen QR-Code aufgerufen, der die Parameter fallen ließ. Überprüfe, ob GA4 auf der exakten Landingpage ausgelöst wird und dass keine Weiterleitung Abfragezeichenfolgen entfernt.
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="Über Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">UTM-Parameter sagen GA4, woher der Traffic kam. Sie sagen dir nicht, ob es sich gelohnt hat.</p>
+      <p class="duct-bridge-body">Duct verknüpft GA4 mit deinen Werbeausgaben, Konversionen und E-Mails, sodass jede getaggte Kampagne danach beurteilt wird, was sie eingebracht hat, nicht danach, was sie generiert hat.</p>
+      <a href="/de/" class="duct-bridge-link">So funktioniert Duct →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Eine Erkenntnis-Session: gefragt, wo das Werbebudget versickert, der Agent bewertet jede Kampagne anhand des CPA-Ziels, schlägt eine Pause, zwei Negativ-Keywords und eine Budgeterhöhung vor und schreibt das Ausgaben-Briefing auf der rechten Seite"/>
+      <figcaption>Frage, wo das Budget leckt. Duct bewertet jede Kampagne anhand deines CPA-Ziels, schlägt die Pause, die Negativ-Keywords und die Budgetverschiebung vor und wartet auf dein Ja.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2>Über dieses <em>Tool</em></h2>
+  <p>Dieser Builder erstellt Standard-UTM-Abfrageparameter und zeigt eine Live-URL-Vorschau, damit du Formatierungsfehler erkennen kannst, bevor du Links in Anzeigen, E-Mails oder soziale Medien einfügst. Die Validierung führt dich zu GA4-freundlichen Werten – Kleinbuchstaben für Quellen und Medien, Vermeidung reservierter Tokens und Beachtung von Leerzeichen oder gemischter Groß-/Kleinschreibung, die deine Berichte aufteilen.</p>
+
+  <h2 style="margin-top:40px">Wie UTMs in <em>GA4</em> erscheinen</h2>
+  <p>GA4 liest <strong>utm_source</strong>, <strong>utm_medium</strong>, <strong>utm_campaign</strong> und optional <strong>utm_term</strong> / <strong>utm_content</strong> aus der Landingpage-URL, wenn die Sitzung beginnt. Diese Werte fließen in die Sitzungs- und Traffic-Akquisitionsdimensionen ein. Wenn eine Weiterleitung die Abfragezeichenfolge entfernt, bevor das GA-Tag geladen wird, oder wenn Nutzer auf einer Seite landen, auf der Tags spät ausgelöst werden, siehst du möglicherweise <strong>(not set)</strong> – der Link-Builder kann die Tracking-Installation nicht beheben, nur den Link selbst.</p>
+  <p>Kampagnenberichte sind nur so sauber wie deine Namenskonvention. Dieses Tool fördert Konsistenz (zum Beispiel Kleinbuchstaben und Bindestriche), damit du nicht versehentlich doppelte Zeilen für <span class="faq-a-code">Google</span> vs <span class="faq-a-code">google</span> erstellst.</p>
+
+  <h2 style="margin-top:40px">Einschränkungen</h2>
+  <ul>
+    <li>Links müssen die getaggte Landingpage mit intakten Parametern erreichen – URL-Kürzer, Weiterleitungsketten oder App-Deep-Links können UTMs verlieren.</li>
+    <li>GA4-Kanalgruppierungsregeln hängen von Medium-/Quellkombinationen ab; ungewöhnliche Werte können in <strong>Nicht zugewiesen</strong> landen, selbst wenn der Link gültig ist.</li>
+    <li>Diese Seite läuft vollständig in deinem Browser – wir speichern deine URLs oder Formularfelder nicht auf unseren Servern.</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">Auch kostenlos</p>
+    <h2 id="related-tools-heading">Verwandte <em>Tools</em> entdecken</h2>
+    <p class="related-tools-banner-desc">Kombiniere den UTM-Aufbau mit Budgetzuweisung und ROI-Tracking, um den Kreislauf der Kampagnen-Performance zu schließen.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="utm-builder" data-related-limit="3"></div>
+  </div>
+</section>
+
+<div data-duct-partial="/de/partials/cta-tools.html"></div>
+
+</main>
+<div data-duct-partial="/de/partials/footer-expanded.html"></div>
+
+<script>
+(function () {
+
+  var GA4_RESERVED = ['(direct)', '(none)', '(not set)', '(other)', '(organic)', 'direct', 'none'];
+  var FIELDS = ['url', 'source', 'medium', 'campaign', 'term', 'content'];
+
+  // ── Validation ───────────────────────────────────────────────────────────
+  function setFieldState(fieldId, state, message) {
+    var badge = document.getElementById('badge-' + fieldId);
+    var msg = document.getElementById('msg-' + fieldId);
+    var input = document.getElementById('inp-' + fieldId);
+    ['inp-valid','inp-warn','inp-error'].forEach(function(c) { input.classList.remove(c); });
+    badge.className = 'field-badge';
+    badge.textContent = '';
+    msg.textContent = message || '';
+    msg.className = 'field-msg';
+    if (state === 'valid') {
+      input.classList.add('inp-valid');
+      badge.className = 'field-badge b-show b-valid';
+      badge.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>';
+    } else if (state === 'warn') {
+      input.classList.add('inp-warn');
+      badge.className = 'field-badge b-show b-warn';
+      badge.textContent = '!';
+      msg.className = 'field-msg m-warn';
+    } else if (state === 'error') {
+      input.classList.add('inp-error');
+      badge.className = 'field-badge b-show b-error';
+      badge.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#x"/></svg>';
+      msg.className = 'field-msg m-error';
+    }
+  }
+
+  function validateUrl(value) {
+    if (!value) { setFieldState('url', '', ''); return 'empty'; }
+    if (!/^https?:\/\//i.test(value)) {
+      setFieldState('url', 'error', 'URL must start with https://'); return 'error';
+    }
+    if (/^http:\/\//i.test(value)) {
+      setFieldState('url', 'warn', 'Consider https:// — some ad platforms reject http:// landing pages.'); return 'warn';
+    }
+    setFieldState('url', 'valid', ''); return 'valid';
+  }
+
+  function validateParam(value, fieldId) {
+    if (!value) { setFieldState(fieldId, '', ''); return 'empty'; }
+    if (/[A-Z]/.test(value)) {
+      setFieldState(fieldId, 'warn', 'Use lowercase — GA4 treats "Google" and "google" as different sources.'); return 'warn';
+    }
+    if (/\s/.test(value) && fieldId !== 'term') {
+      setFieldState(fieldId, 'warn', 'Spaces become %20 in URLs — use hyphens instead.'); return 'warn';
+    }
+    if (GA4_RESERVED.indexOf(value.toLowerCase()) !== -1) {
+      setFieldState(fieldId, 'error', 'This is a GA4 reserved value — it will appear as internal traffic.'); return 'error';
+    }
+    if (/['"<>{}|\\^`]/.test(value)) {
+      setFieldState(fieldId, 'warn', 'Special characters may break URL parsing — remove them.'); return 'warn';
+    }
+    setFieldState(fieldId, 'valid', ''); return 'valid';
+  }
+
+  // ── URL building ─────────────────────────────────────────────────────────
+  function getVal(id) { return (document.getElementById(id).value || '').trim(); }
+
+  function buildUrl() {
+    var base = getVal('inp-url');
+    var source = getVal('inp-source');
+    var medium = getVal('inp-medium');
+    var campaign = getVal('inp-campaign');
+    var term = getVal('inp-term');
+    var content = getVal('inp-content');
+    if (!base || !source || !medium || !campaign) return '';
+    var params = [
+      'utm_source=' + encodeURIComponent(source),
+      'utm_medium=' + encodeURIComponent(medium),
+      'utm_campaign=' + encodeURIComponent(campaign)
+    ];
+    if (term) params.push('utm_term=' + encodeURIComponent(term));
+    if (content) params.push('utm_content=' + encodeURIComponent(content));
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    return base + sep + params.join('&');
+  }
+
+  // ── Preview (safe DOM — no innerHTML with dynamic content) ───────────────
+  function updatePreview() {
+    var url = buildUrl();
+    var box = document.getElementById('preview-box');
+    var copyBtn = document.getElementById('copy-btn');
+    var compliance = document.getElementById('preview-compliance');
+
+    while (box.firstChild) box.removeChild(box.firstChild);
+
+    if (!url) {
+      var placeholder = document.createElement('span');
+      placeholder.className = 'preview-empty';
+      placeholder.textContent = 'Fill in Website URL, Source, Medium and Campaign to generate your UTM link.';
+      box.appendChild(placeholder);
+      copyBtn.disabled = true;
+      compliance.style.opacity = '0';
+      document.getElementById('insight-panel').className = 'insight-panel';
+      return;
+    }
+
+    var qIdx = url.indexOf('?');
+    var base = qIdx !== -1 ? url.substring(0, qIdx) : url;
+    var qs = qIdx !== -1 ? url.substring(qIdx) : '';
+
+    var baseSpan = document.createElement('span');
+    baseSpan.className = 'preview-url-base';
+    baseSpan.textContent = base;
+    box.appendChild(baseSpan);
+
+    if (qs) {
+      var qsSpan = document.createElement('span');
+      qsSpan.className = 'preview-url-params';
+      qsSpan.textContent = qs;
+      box.appendChild(qsSpan);
+    }
+
+    copyBtn.disabled = false;
+
+    var hasWarning = ['source','medium','campaign','term','content'].some(function(f) {
+      var v = getVal('inp-' + f);
+      return v && /[A-Z\s]/.test(v);
+    });
+    compliance.style.opacity = '1';
+    if (hasWarning) {
+      compliance.style.color = '#92400e';
+      compliance.textContent = 'Check warnings below';
+    } else {
+      compliance.style.color = '#15803d';
+      compliance.textContent = 'GA4 compliant';
+    }
+
+    var warnings = [];
+    ['source','medium','campaign'].forEach(function(f) {
+      var v = getVal('inp-' + f);
+      if (v && /[A-Z]/.test(v)) warnings.push('"' + f + '" has uppercase — GA4 is case-sensitive, this creates split data.');
+      else if (v && /\s/.test(v)) warnings.push('"' + f + '" has spaces — these become %20 in URLs and make reports harder to read.');
+    });
+    var panel = document.getElementById('insight-panel');
+    var body = document.getElementById('insight-body');
+    if (warnings.length) {
+      body.textContent = warnings[0];
+      panel.className = 'insight-panel show';
+    } else {
+      panel.className = 'insight-panel';
+    }
+  }
+
+  // ── Input listeners ──────────────────────────────────────────────────────
+  FIELDS.forEach(function(f) {
+    var el = document.getElementById('inp-' + f);
+    if (!el) return;
+    el.addEventListener('input', function() {
+      if (f === 'url') validateUrl(el.value);
+      else validateParam(el.value, f);
+      updatePreview();
+      var any = FIELDS.some(function(x) { return !!(document.getElementById('inp-' + x) || {}).value; });
+      document.getElementById('reset-btn').style.display = any ? '' : 'none';
+    });
+  });
+
+  // ── Copy ─────────────────────────────────────────────────────────────────
+  document.getElementById('copy-btn').addEventListener('click', function() {
+    var url = buildUrl();
+    if (!url) return;
+    copyText(url);
+    var confirm = document.getElementById('copy-confirm');
+    confirm.classList.add('show');
+    setTimeout(function() { confirm.classList.remove('show'); }, 2000);
+    saveRecent(url);
+    renderRecent();
+  });
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  // ── Reset ────────────────────────────────────────────────────────────────
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    FIELDS.forEach(function(f) {
+      var el = document.getElementById('inp-' + f);
+      if (el) el.value = '';
+      setFieldState(f, '', '');
+    });
+    updatePreview();
+    document.getElementById('reset-btn').style.display = 'none';
+  });
+
+  // ── Recent URLs ──────────────────────────────────────────────────────────
+  var RECENT_KEY = 'duct_utm_recent';
+
+  function saveRecent(url) {
+    var list = getRecent().filter(function(u) { return u !== url; });
+    list.unshift(url);
+    if (list.length > 5) list = list.slice(0, 5);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(e) {}
+  }
+
+  function getRecent() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch(e) { return []; }
+  }
+
+  function renderRecent() {
+    var list = getRecent();
+    var container = document.getElementById('recent-list');
+    while (container.firstChild) container.removeChild(container.firstChild);
+    if (!list.length) {
+      var empty = document.createElement('span');
+      empty.className = 'recent-empty';
+      empty.textContent = 'Your last 5 UTM links will appear here after copying.';
+      container.appendChild(empty);
+      return;
+    }
+    list.forEach(function(url) {
+      var chip = document.createElement('button');
+      chip.className = 'recent-chip';
+      chip.title = url;
+      chip.textContent = url.length > 50 ? url.substring(0, 47) + '…' : url;
+      chip.setAttribute('aria-label', 'Copy recent URL: ' + url);
+      chip.addEventListener('click', function() {
+        copyText(url);
+        chip.textContent = 'Copied!';
+        setTimeout(function() {
+          chip.textContent = url.length > 50 ? url.substring(0, 47) + '…' : url;
+        }, 1500);
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  renderRecent();
+
+  // ── FAQ accordion ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.faq-q').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var item = btn.parentElement;
+      var isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(function(i) { i.classList.remove('open'); });
+      document.querySelectorAll('.faq-q').forEach(function(b) { b.setAttribute('aria-expanded', 'false'); });
+      if (!isOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+}());
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

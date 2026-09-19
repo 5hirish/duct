@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Duct für Performance-Marketer — Open-Source-KI-Agent, der Google Ads, Meta, GA4 und Stripe zusammenliest</title>
+<link rel="canonical" href="https://getduct.ai/de/for-paid-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/for-paid-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/for-paid-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/for-paid-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/for-paid-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/for-paid-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/for-paid-ads"/>
+<!-- hreflang:end -->
+<meta name="description" content="Frag, warum sich der CPA geändert hat. Duct, ein Open-Source-KI-Agent für Wachstumsteams, liest Google Ads, Meta, Apple Search Ads, GA4 und Stripe zusammen, schlägt die Pause oder die Verschiebung vor und wendet sie an, wenn du sie freigibst."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/for-paid-ads"/>
+<meta property="og:title" content="Duct für Performance-Marketer — Open-Source-KI-Agent, der Google Ads, Meta, GA4 und Stripe zusammenliest"/>
+<meta property="og:description" content="Frag, warum sich der CPA geändert hat. Duct liest Google Ads, Meta, Apple Search Ads, GA4 und Stripe zusammen, schlägt die Pause oder die Verschiebung vor und wendet sie an, wenn du sie freigibst."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/for-paid-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct für Performance-Marketer — Open-Source-KI-Agent, der Google Ads, Meta, GA4 und Stripe zusammenliest"/>
+<meta name="twitter:description" content="Open-Source-KI-Agent für Performance-Marketer: Anzeigen, Analysen und Umsatz zusammen gelesen, die Verschiebung vorgeschlagen, angewendet, wenn du freigibst."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/for-paid-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Duct for Paid Ads","url":"https://getduct.ai/for-paid-ads","description":"Ask why CPA moved. Duct reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve. Open source, MIT.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for paid ads?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that reads Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 and Stripe together. Ask why CPA moved and it answers across platforms with its sources; when the answer is a pause, a negative or a budget change, it proposes the change set and applies it only when you approve."}},{"@type":"Question","name":"How long does it take to connect my ad platforms to Duct?","acceptedAnswer":{"@type":"Answer","text":"Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe and RevenueCat. No API keys to configure and no developer time required. You select your platforms, authorize access, and your first daily ad intelligence brief arrives the next morning."}},{"@type":"Question","name":"Does Duct modify anything in my ad accounts?","acceptedAnswer":{"@type":"Answer","text":"Not unless you approve it. Duct reads your performance data to build the brief, and reporting works with read-only access alone. When it finds something worth acting on — a wasted-spend search term to add as a negative keyword, a campaign to pause — it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."}},{"@type":"Question","name":"How is Duct different from building cross-platform ad reports in spreadsheets or dashboards?","acceptedAnswer":{"@type":"Answer","text":"Spreadsheets and dashboards show you what happened — Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."}},{"@type":"Question","name":"How much does Duct for paid ads cost?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."}},{"@type":"Question","name":"What kind of changes can it make?","acceptedAnswer":{"@type":"Answer","text":"Pausing a campaign, adding negative keywords, and moving a budget within the guardrail you set for the account. Each arrives as a change set with a preview; destructive changes are flagged, anything over a guardrail is blocked until a person looks, and every applied change can be rolled back."}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  /* Blue accent for paid ads variant */
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+
+  /* Fix hover shadow to match blue accent (overrides global orange shadow) */
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+</style>
+</head>
+<body>
+
+
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EXPERIMENT: the change-set card and two product shots instead of an interactive walkthrough demo. Hypothesis: performance marketers convert on seeing a campaign paused for the right reason, not on a mock morning brief. Measured by download clicks per visit (GTM). -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+
+<section class="hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Paid Ads Beta · Kostenlos &amp; Open Source</div>
+<h1>Hör auf, Anzeigenberichte zusammenzuflicken.<br/><em>Fange an, Budget zu verschieben.</em></h1>
+<p class="hero-sub">Frag, warum sich der CPA geändert hat. Duct liest Google Ads, Meta, Apple Search Ads, GA4 und Stripe zusammen, schlägt die Pause oder die Verschiebung vor und wendet sie an, wenn du sie freigibst.</p>
+<div class="hero-form">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Auf GitHub starren</a>
+</div>
+<p class="hero-footnote">Kostenlos während der Beta · Keine Kreditkarte · Für Performance-Marketer in Unternehmen mit 20–200 Mitarbeitern</p>
+</section>
+
+<!-- PRODUCT SHOT (from docs/assets/readme, shot by scripts/shots/shoot.mjs) -->
+<section class="shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" fetchpriority="high" width="3072" height="2052" alt="Eine Erkenntnis-Session: gefragt, wo das Werbebudget versickert, der Agent bewertet jede Kampagne anhand des CPA-Ziels, schlägt eine Pause, zwei Negativ-Keywords und eine Budgeterhöhung vor und schreibt das Ausgaben-Briefing auf der rechten Seite"/>
+<figcaption>Frag, wo das Budget versickert. Duct bewertet jede Kampagne anhand deines CPA-Ziels, schlägt die Pause, die Negativ-Keywords und die Budgetverschiebung vor und wendet sie an, wenn du sie freigibst. Diejenige über der Leitplanke wartet auf dich.</figcaption>
+</figure>
+</section>
+
+<!-- TOOL STRIP -->
+
+<div class="strip">
+<p class="strip-label">Verbindet sich mit den Plattformen, die du bereits nutzt</p>
+<div class="marquee" aria-hidden="true">
+<span>Google Ads</span><span>Meta Ads</span><span>Apple Search Ads</span><span>GA4</span>
+<span>HubSpot</span><span>OpenAI Ads</span><span>Stripe</span><span>RevenueCat</span>
+<span>Google Ads</span><span>Meta Ads</span><span>Apple Search Ads</span><span>GA4</span>
+<span>HubSpot</span><span>OpenAI Ads</span><span>Stripe</span><span>RevenueCat</span>
+</div>
+</div>
+
+
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">Das Problem</p>
+<h2>Das Signal ist in deinen Plattformen.<br/>Aber keine von ihnen <em>spricht miteinander.</em></h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-help"/></svg></span> Google sagt, ROAS ist gestiegen. Meta sagt, CPA ist explodiert. Deine Tabelle sagt etwas ganz anderes. Du weißt nicht, wem du vertrauen sollst.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg></span> Eine Kampagne, die letzten Monat super lief, bricht jetzt ein. Du weißt nicht, ob es am Creative, der Zielgruppe oder dem Algorithmus liegt.</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#timer"/></svg></span> Du verbringst jede Woche vier Stunden damit, CSVs von drei Plattformen zu ziehen, um einen Bericht zu erstellen, der am Montag schon veraltet ist.</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header" aria-hidden="true">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#e8f0fe"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt="Google Ads"/></span>
+<div class="diag-info"><b>Google Ads</b><s aria-hidden="true">ROAS diese Woche um 22 % gestiegen</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">keine Verbindung</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e7f3ff"><img src="/assets/icons/meta.svg" width="18" height="18" alt="Meta Ads"/></span>
+<div class="diag-info"><b>Meta Ads</b><s aria-hidden="true">CPA stieg in derselben Woche um 18 %</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">keine Verbindung</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#f0f0f0"><img src="/assets/icons/apple-search-ads.svg" width="18" height="18" alt="Apple Search Ads"/></span>
+<div class="diag-info"><b>Apple Search Ads</b><s aria-hidden="true">Top-Creative CTR ist um 1,4 % gesunken</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">keine Verbindung</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#fff1eb"><img src="/assets/icons/hubspot.svg" width="18" height="18" alt="HubSpot"/></span>
+<div class="diag-info"><b>HubSpot</b><s aria-hidden="true">3 Deals diese Woche durch Paid Ads abgeschlossen</s></div>
+</div>
+<div class="diag-result">
+<strong><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg> Nach Duct</strong> Der Meta CPA-Anstieg war auf Zielgruppenüberschneidungen mit Google zurückzuführen – der Ausschluss bestehender Google-Konverter senkte den Meta CPA um 24 %.
+</div>
+</div>
+</div>
+</section>
+
+
+<!-- HOW IT WORKS -->
+
+<section class="how" id="how">
+<div class="how-inner">
+<p class="tag">So funktioniert's</p>
+<h2>Verbinden. Fragen. <em>Freigeben.</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
+<p class="step-title">Verbinde deinen Stack</p>
+<p class="step-body">Ein-Klick-OAuth zu Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 und Stripe. Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert.</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
+<p class="step-title">Frage stellen</p>
+<p class="step-body">Gib es so ein, wie du einen Kollegen fragen würdest. Duct liest jedes verbundene Tool dafür, zeigt die Quellen, und ein zweiter Agent überprüft die Zahlen erneut, bevor du sie siehst.</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg></span>
+<p class="step-title">Änderung freigeben</p>
+<p class="step-body">Wenn die Antwort eine Änderung ist, kommt sie als Änderungssatz mit einer Vorschau und einer Schutzprüfung an. Wende sie an, oder nicht. Es merkt es sich so oder so.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHAT IT DOES -->
+
+<section class="jobs" id="features">
+<div class="jobs-inner">
+<div class="reveal">
+<p class="tag">Was es tut</p>
+<h2>Was es für <em>Paid</em> tut.</h2>
+</div>
+<div class="job-grid">
+<article class="job reveal" style="transition-delay:0.05s">
+<div class="job-shot"><img src="/assets/media/review-card.webp" srcset="/assets/media/review-card-768.webp 768w, /assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="Eine Änderungssatz-Karte: eine Kampagne pausieren, eine Änderung durch eine Leitplanke blockiert, Ablehnen- und Anwenden-Buttons"/></div>
+<div class="job-body">
+<h3>Pausiere die Kampagne, die Abwanderer einkauft</h3>
+<dl>
+<dt>Wann</dt><dd>ROAS ist gestiegen und die Retention ist gesunken, in derselben Woche.</dd>
+<dt>Heute</dt><dd>Du findest es am Ende des Quartals von der Finanzabteilung heraus.</dd>
+<dt>Mit Duct</dt><dd class="with">Es liest Ads, GA4 und Stripe zusammen, schlägt die Pause mit den Zahlen vor und wendet sie an, wenn du sie freigibst. Eine Budgetänderung über der Leitplanke bleibt blockiert, bis du sie überprüfst.</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:0.1s">
+<div class="job-shot"><img src="/assets/media/answer-paid.webp" srcset="/assets/media/answer-paid-768.webp 768w, /assets/media/answer-paid.webp 1392w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1392" height="964" loading="lazy" alt="Eine Frage und ihre Antwort: wo das Werbebudget versickert, gelesen aus Google Ads, GA4 und Stripe, mit benannter Kampagne und Suchbegriffen"/></div>
+<div class="job-body">
+<h3>Frag, warum sich der CPA geändert hat</h3>
+<dl>
+<dt>Wann</dt><dd>Der CPA ist gesprungen und vier Plattformen haben jeweils eine Theorie.</dd>
+<dt>Heute</dt><dd>CSVs von Google, Meta und Apple, am Freitag manuell zusammengeführt.</dd>
+<dt>Mit Duct</dt><dd class="with">Eine Frage, jede Plattform zusammen gelesen, und eine Antwort, die angibt, welche Kampagne, welche Kohorte und was zu tun ist.</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:0.15s">
+<div class="job-shot"><img src="/assets/media/memory-timeline.webp" srcset="/assets/media/memory-timeline-768.webp 768w, /assets/media/memory-timeline-1536.webp 1536w, /assets/media/memory-timeline.webp 2008w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2008" height="1990" loading="lazy" alt="Die Gedächtnis-Zeitachse: ein CPA-Ziel, eine Entscheidung, ein Ereignis und was der Agent diese Woche gelernt hat"/></div>
+<div class="job-body">
+<h3>Erinnert sich an das Ziel und den August-Anruf</h3>
+<dl>
+<dt>Wann</dt><dd>Das CPA-Ziel hat sich geändert und die Brand-Kampagne sollte unberührt bleiben.</dd>
+<dt>Heute</dt><dd>Es existiert im Kopf von jemandem, bis diese Person im Urlaub ist.</dd>
+<dt>Mit Duct</dt><dd class="with">Ziele, Entscheidungen und was es gelernt hat, auf einer Zeitleiste. Der nächste Vorschlag respektiert sie, ohne dass es erneut gesagt werden muss.</dd>
+</dl>
+</div>
+</article>
+</div>
+</div>
+</section>
+
+<!-- AUDIENCE -->
+
+<section class="audience" id="who">
+<div class="aud-inner">
+<div class="reveal">
+<p class="tag">Für wen es ist</p>
+<h2>Der Marketer, der <em>Paid</em> ohne ein Datenteam verantwortet</h2>
+<p class="sub" style="margin-top:16px">Du betreibst drei Plattformen, berichtest einem Gründer und triffst Budgetentscheidungen ohne ein richtiges Attributionsmodell. Du brauchst kanalübergreifende Klarheit, kein weiteres Dashboard.</p>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">Das bin ich — Duct herunterladen ↓</a>
+</div>
+<div class="aud-cards reveal">
+<div class="aud-card hi">
+<span class="aud-av" style="background:#e8f0fe" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+<div><span class="aud-name">Performance-Marketer</span><span class="aud-role">SaaS für 20–200 Personen</span></div>
+<span class="aud-badge">Perfekte Passung</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg></span>
+<div><span class="aud-name">Growth Lead</span><span class="aud-role">Verantwortlich für Paid + Organic</span></div>
+<span class="aud-badge">Passt hervorragend</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#efffef" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+<div><span class="aud-name">Gründungs-Marketer</span><span class="aud-role">Viele Hüte tragen</span></div>
+<span class="aud-badge">Passt hervorragend</span>
+</div>
+<div class="aud-card" style="opacity:.45">
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#building-2"/></svg></span>
+<div><span class="aud-name">Enterprise Media Buyer</span><span class="aud-role">500+ mit spezialisierter Agentur</span></div>
+<span class="aud-badge off">Noch nicht</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Häufig gestellte <em>Fragen</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+<details class="faq-item">
+<summary class="faq-q">Was ist Duct für Paid Ads?</summary>
+<p class="faq-a">Ein Open-Source-KI-Agent, der Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 und Stripe zusammenliest. Frag, warum sich der CPA geändert hat, und er antwortet plattformübergreifend mit seinen Quellen; wenn die Antwort eine Pause, ein Negativ-Keyword oder eine Budgetänderung ist, schlägt er den Änderungssatz vor und wendet ihn nur an, wenn du ihn freigibst.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Wie lange dauert es, meine Anzeigenplattformen mit Duct zu verbinden?</summary>
+<p class="faq-a">Unter fünf Minuten. Duct verwendet Ein-Klick-OAuth, um Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe und RevenueCat zu verbinden. Keine API-Schlüssel zu konfigurieren und keine Entwicklerzeit erforderlich. Du wählst deine Plattformen aus, autorisierst den Zugriff, und dein erstes tägliches Ad-Intelligence-Briefing kommt am nächsten Morgen an.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ändert Duct etwas in meinen Werbekonten?</summary>
+<p class="faq-a">Nicht, es sei denn, du gibst es frei. Duct liest deine Performance-Daten, um das Briefing zu erstellen, und das Reporting funktioniert allein mit Lesezugriff. Wenn es etwas findet, das Handlungsbedarf erfordert – ein Suchbegriff mit verschwendeten Ausgaben, der als negatives Keyword hinzugefügt werden soll, eine Kampagne, die pausiert werden soll –, schlägt es die Änderung vor, zeigt dir jeden betroffenen Posten vorher und nachher und wendet sie erst an, wenn du sie freigibst. Jede angewendete Änderung wird protokolliert und ist rückgängig machbar, wo die Plattform dies zulässt. OAuth-Tokens werden verschlüsselt und serverseitig gespeichert, und alle Daten während der Übertragung werden über TLS verschlüsselt.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Wie unterscheidet sich Duct vom Erstellen plattformübergreifender Anzeigenberichte in Tabellen oder Dashboards?</summary>
+<p class="faq-a">Tabellen und Dashboards zeigen dir, was passiert ist – Duct sagt dir, was du dagegen tun sollst. Anstatt wöchentlich manuell CSVs von drei Plattformen zu ziehen und zusammenzuführen, korreliert Duct Daten automatisch über Google Ads, Meta und LinkedIn hinweg, um kreative Ermüdung, Möglichkeiten zur Budgetumverteilung und kanalübergreifende Attributionslücken aufzudecken, die statische Berichte völlig übersehen.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Was kostet Duct für Paid Ads?</summary>
+<p class="faq-a">Immer kostenlos mit deinen eigenen Schlüsseln. Duct ist MIT-lizenziert: Du bezahlst deinen Modell-Anbieter direkt oder meldest dich mit dem ChatGPT-Plan an, den du bereits hast. Ein kostenpflichtiger Plan bündelt später die Modelle für Teams, die lieber keine Schlüssel halten möchten; nichts, was heute offen ist, wird dahinter verschoben. <a href="/de/open-source#pricing">Was Geld kosten wird</a> ist auf der Open-Source-Seite aufgeführt.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Welche Art von Änderungen kann es vornehmen?</summary>
+<p class="faq-a">Eine Kampagne pausieren, negative Keywords hinzufügen und ein Budget innerhalb der von dir für das Konto festgelegten Leitplanke verschieben. Jeder kommt als Änderungssatz mit einer Vorschau an; destruktive Änderungen werden markiert, alles, was über eine Leitplanke hinausgeht, wird blockiert, bis eine Person es überprüft, und jede angewendete Änderung kann zurückgenommen werden.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-for-pages.html) -->
+<div data-duct-partial="/de/partials/cta-for-pages.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

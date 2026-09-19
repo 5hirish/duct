@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Acerca de Duct — Por qué un agente para tu pila de crecimiento es código abierto</title>
+<link rel="canonical" href="https://getduct.ai/es/about"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/about"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/about"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/about"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/about"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/about"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/about"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct comenzó como la solución de una persona para herramientas que no se comunicaban entre sí. Se hizo código abierto porque un agente que lee tu negocio debería ser legible."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/es/about"/>
+<meta property="og:title" content="Acerca de Duct — Por qué un agente para tu pila de crecimiento es código abierto"/>
+<meta property="og:description" content="Construido por una persona en España porque sus herramientas no se comunicaban. MIT, porque algo que lee todo tu negocio debería ser legible."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/about.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Acerca de Duct — Por qué un agente para tu pila de crecimiento es código abierto"/>
+<meta name="twitter:description" content="Una persona en España, herramientas que no se comunicaban y un agente que las lee todas. Código abierto, MIT, para que puedas revisarlo."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/about.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Blog de Duct" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, sinceramente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Rechaza y el sitio se comportará exactamente igual.","Privacy Policy":"Política de privacidad","Decline":"Rechazar","Accept":"Aceptar","{n} stars on GitHub":"{n} estrellas en GitHub","UTM Builder":"Constructor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de comparativa de métricas SaaS","Weekly Marketing Brief Generator":"Generador de informes de marketing semanales","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de tasa de crecimiento de MRR","Engagement Rate Calculator":"Calculadora de tasa de interacción","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menú de navegación","Close navigation menu":"Cerrar menú de navegación","Menu":"Menú","Free Tools":"Herramientas gratuitas","Solutions":"Soluciones","Download Duct ↓":"Descargar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de pantalla ampliada","Close":"Cerrar","Fit to screen":"Ajustar a la pantalla","Zoom in":"Acercar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 y posteriores","Runs on any distribution":"Funciona en cualquier distribución","Debian and Ubuntu":"Debian y Ubuntu","Download ↓":"Descargar ↓","Download for {label} ↓":"Descargar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de ejemplo. Cambia cualquier campo y calcula de nuevo para los tuyos."};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "About Duct",
+  "url": "https://getduct.ai/about",
+  "mainEntity": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "jobTitle": "Maintainer, Duct",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "ES"
+    },
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish",
+      "https://shirishkadam.com"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Alleviate Lab",
+    "url": "https://getduct.ai",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "ES"
+    }
+  }
+}
+</script>
+<style>
+/* ── ABOUT-ONLY STYLES ── */
+.about-hero { padding: 140px 52px 72px; }
+.about-hero-inner {
+  max-width: 1160px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; align-items: center;
+}
+.about-hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(40px, 5.4vw, 66px);
+  line-height: 1.06; letter-spacing: -1.5px; color: var(--navy);
+  margin-bottom: 26px;
+  animation: fadeUp .5s .08s ease both;
+}
+.about-hero h1 em { font-style: italic; color: var(--orange); }
+.about-hero-sub {
+  font-size: 18px; font-weight: 300; color: var(--navy-3);
+  max-width: 54ch; line-height: 1.75;
+  animation: fadeUp .5s .16s ease both;
+}
+.about-hero-art { justify-self: end; animation: fadeUp .6s .24s ease both; }
+.about-hero-art .mosaic { width: 320px; height: 320px; }
+.about-hero-cap { font-size: 12px; color: var(--navy-3); margin-top: 12px; text-align: center; font-family: var(--serif); font-style: italic; }
+
+/* Manifesto */
+.manifesto { padding: 0 52px 100px; max-width: 720px; margin: 0 auto; }
+.manifesto-block {
+  position: relative;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+}
+.manifesto-block:last-child { border-bottom: 1px solid var(--border); }
+.manifesto-num {
+  font-family: var(--serif); font-size: 11px; font-weight: 400;
+  color: var(--orange); letter-spacing: .08em; margin-bottom: 16px; display: block;
+}
+.manifesto-title {
+  font-family: var(--serif); font-size: clamp(22px, 3vw, 30px);
+  color: var(--navy); line-height: 1.2; margin-bottom: 14px; letter-spacing: -.3px;
+}
+.manifesto-body {
+  font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.8;
+}
+
+/* What we build */
+.what-we-build {
+  padding: 96px 52px; background: var(--navy);
+}
+.what-inner { max-width: 1160px; margin: 0 auto; }
+.what-we-build .tag { color: var(--orange); }
+.what-we-build .tag::before { background: var(--orange); }
+.what-we-build h2 { color: #fff; margin-bottom: 20px; }
+.what-we-build h2 em { color: var(--orange); }
+.what-sub { font-size: 16px; font-weight: 300; color: rgba(255,255,255,.5); line-height: 1.75; max-width: 560px; margin-bottom: 56px; }
+.what-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+}
+.what-card {
+  padding: 36px 32px;
+  border-right: 1px solid rgba(255,255,255,.08);
+  transition: background .25s;
+}
+.what-card:last-child { border-right: none; }
+.what-card:hover { background: rgba(255,255,255,.03); }
+.what-card-icon { font-size: 30px; margin-bottom: 18px; display: block; color: var(--orange); }
+.what-card-title {
+  font-family: var(--serif); font-size: 20px; color: #fff;
+  margin-bottom: 10px; letter-spacing: -.2px;
+}
+.what-card-body {
+  font-size: 14px; font-weight: 300; color: rgba(255,255,255,.5); line-height: 1.72;
+}
+
+/* Values */
+.values { padding: 100px 52px; max-width: 1160px; margin: 0 auto; }
+.values h2 { margin-bottom: 52px; }
+.val-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1px; border: 1px solid var(--border); border-radius: var(--r-lg);
+  overflow: hidden; background: var(--border);
+}
+.val-card {
+  padding: 36px; background: var(--white); transition: background .2s; cursor: default;
+}
+.val-card:hover { background: var(--off); }
+.val-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--orange); margin-bottom: 14px; display: block;
+}
+.val-title {
+  font-family: var(--serif); font-size: 22px; color: var(--navy);
+  margin-bottom: 10px; letter-spacing: -.2px;
+}
+.val-body {
+  font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.72;
+}
+
+/* Company info strip */
+.company-strip {
+  padding: 64px 52px; background: var(--off); border-top: 1px solid var(--border);
+}
+.company-inner {
+  max-width: 1160px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; text-align: center;
+}
+.company-item-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--navy-3); margin-bottom: 10px;
+}
+.company-item-value {
+  font-family: var(--serif); font-size: 20px; color: var(--navy); letter-spacing: -.2px;
+}
+.flag { display: inline-block; vertical-align: -1px; margin-right: 8px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(13,15,26,.08); }
+/* A postcard from where the maintainer works: photo on a white card, a
+   little off square, a stamp in the corner. Straightens when hovered. */
+.postcard { margin: 48px auto 0; max-width: 520px; text-align: center; }
+.postcard-card {
+  position: relative; background: var(--white); padding: 12px 12px 36px;
+  border: 1px solid var(--border); box-shadow: 0 18px 44px rgba(13,15,26,.16);
+  transform: rotate(-2deg); transition: transform .35s ease;
+}
+.postcard-card:hover { transform: rotate(0); }
+.postcard-card img { display: block; width: 100%; height: auto; }
+.postcard-stamp {
+  position: absolute; top: 24px; right: 24px; display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 9px; background: rgba(255,255,255,.94); border: 1px dashed var(--navy-3);
+  font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--navy);
+  transform: rotate(4deg);
+}
+.postcard-stamp .flag { margin-right: 0; }
+.postcard figcaption { margin-top: 24px; font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--navy-3); }
+@media (max-width: 860px) { .postcard { margin-top: 36px; } .postcard-card { transform: rotate(-1deg); padding-bottom: 28px; } }
+.company-item-value a { color: var(--orange); text-decoration: none; }
+.company-item-value a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Origin — where the name comes from */
+.origin { padding: 100px 52px; background: var(--off); border-top: 1px solid var(--border); }
+.origin-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+.origin-inner h2 { margin-bottom: 32px; }
+.origin-arches { width: 100%; max-width: 460px; height: auto; display: block; margin: 0 auto 44px; color: var(--navy); opacity: .32; }
+.origin-body p { font-size: 16px; font-weight: 300; line-height: 1.85; color: var(--navy-3); margin-bottom: 20px; text-align: left; }
+.origin-body p:last-child { margin-bottom: 0; }
+.origin-body em { font-style: italic; color: var(--navy); }
+.origin-panel { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: center; margin-top: 44px; padding-top: 40px; border-top: 1px solid var(--border); text-align: left; }
+.origin-panel .mosaic { width: 240px; height: 240px; }
+.origin-panel figcaption { font-size: 15px; font-weight: 300; line-height: 1.8; color: var(--navy-3); }
+.origin-panel em { font-style: italic; color: var(--navy); }
+@media (max-width: 860px) {
+  .origin { padding: 64px 24px; }
+  .origin-arches { margin-bottom: 28px; }
+  .origin-panel { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+}
+
+/* Maker card — the person behind the repo */
+.maker { padding: 100px 52px; max-width: 860px; margin: 0 auto; }
+.maker-inner {
+  display: grid; grid-template-columns: 132px 1fr; gap: 36px; align-items: start;
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 40px; background: var(--white);
+}
+.maker-avatar {
+  width: 132px; height: 132px; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--border); background: var(--off);
+}
+.maker-name {
+  font-family: var(--serif); font-size: 26px; color: var(--navy);
+  letter-spacing: -.3px; margin-bottom: 4px;
+}
+.maker-role {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--orange); margin-bottom: 18px;
+}
+.maker-bio { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.78; }
+.maker-bio + .maker-bio { margin-top: 14px; }
+.maker-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.maker-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 15px; border: 1px solid var(--border); border-radius: var(--pill);
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.maker-link:hover { border-color: var(--navy); color: var(--navy); background: var(--off); }
+.maker-link svg { flex-shrink: 0; }
+
+/* CTA */
+.about-cta { padding: 120px 52px; text-align: center; border-top: 1px solid var(--border); }
+.about-cta-inner { max-width: 560px; margin: 0 auto; }
+.about-cta h2 { font-size: clamp(32px, 5vw, 52px); margin-bottom: 18px; }
+.about-cta .sub { max-width: 420px; margin: 0 auto 36px; }
+
+@media (max-width: 960px) {
+  .about-hero-inner { grid-template-columns: 1fr; gap: 36px; }
+  .about-hero-art { justify-self: start; }
+  .about-hero-art .mosaic { width: 260px; height: 260px; }
+}
+@media (max-width: 860px) {
+  .about-hero { padding: 110px 24px 56px; }
+  .manifesto { padding: 0 24px 64px; }
+  .what-we-build { padding: 64px 24px; }
+  .what-grid { grid-template-columns: 1fr; }
+  .what-card { border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .what-card:last-child { border-bottom: none; }
+  .values { padding: 64px 24px; }
+  .val-grid { grid-template-columns: 1fr; background: none; border: none; gap: 16px; }
+  .val-card { border: 1px solid var(--border); border-radius: var(--r-lg); }
+  .maker { padding: 64px 24px; }
+  .maker-inner { grid-template-columns: 1fr; gap: 24px; padding: 28px; text-align: center; }
+  .maker-avatar { margin: 0 auto; }
+  .maker-links { justify-content: center; }
+  .company-strip { padding: 48px 24px; }
+  .company-inner { grid-template-columns: 1fr; gap: 24px; }
+  .about-cta { padding: 80px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/es/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="about-hero">
+  <div class="about-hero-inner">
+    <div>
+      <h1>Construido porque mis herramientas no se comunicaban.<br/>Abierto porque <em>las lee todas.</em></h1>
+      <p class="about-hero-sub">Cada equipo de producto usa 8-12 herramientas. Cada una ve una parte. Me cansé de ser la capa de integración entre ellas, así que escribí una. Luego la puse en GitHub bajo MIT, porque algo que lee todo tu negocio tiene que ser legible.</p>
+    </div>
+    <div class="about-hero-art">
+      <img class="mosaic" src="/assets/art/fons.webp" width="640" height="640" alt="" aria-hidden="true"/>
+      <p class="about-hero-cap">FONS. El manantial, antes de cualquier ejecución. La puerta principal de la app.</p>
+    </div>
+  </div>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- MANIFESTO -->
+<section class="manifesto">
+  <div class="manifesto-block reveal">
+    <span class="manifesto-num">01</span>
+    <h2 class="manifesto-title">El problema del que nadie habla</h2>
+    <p class="manifesto-body">Tu herramienta de análisis sabe lo que pasó. Tu herramienta de soporte sabe quién está molesto. Tu rastreador de proyectos sabe lo que se envió. Tu plataforma de anuncios sabe lo que gastaste. Pero ninguna de ellas se comunica entre sí, así que pasas horas cada semana haciendo de traductor entre pestañas, intentando armar una historia que ya existe si tan solo alguien conectara los puntos.</p>
+  </div>
+  <div class="manifesto-block reveal">
+    <span class="manifesto-num">02</span>
+    <h2 class="manifesto-title">Así que los conecté</h2>
+    <p class="manifesto-body">Duct lee a través de tus herramientas existentes y sintetiza la historia inter-herramientas que ha estado oculta a plena vista. No es otro panel de control. No es otro proyecto de almacén de datos que abandonarás en el tercer trimestre. Y cuando la respuesta es “pausa esa campaña” o “marca ese evento de GA4”, Duct puede preparar el cambio y mostrarte una vista previa. No puede aplicarlo. Solo tú puedes. Ese límite reside en el código, no en un prompt.</p>
+  </div>
+  <div class="manifesto-block reveal">
+    <span class="manifesto-num">03</span>
+    <h2 class="manifesto-title">Luego lo hice de código abierto, y esta es la razón</h2>
+    <p class="manifesto-body">El acceso de lectura a tus anuncios, análisis e ingresos es mucho para entregar a una herramienta, y mucho más a una herramienta construida por una sola persona. No puedo pedir esa confianza; puedo mostrar el código. Cada prompt, cada llamada a la API y la propia puerta de aprobación están en el repositorio bajo licencia MIT. Descarga la app y yo ejecuto el servicio por ti; clónala y nada me toca. Es gratis con tus propias claves, y así se mantiene. Un plan de pago agrupará los modelos más adelante, para equipos que prefieran no tener claves en absoluto. <a href="/es/open-source" style="color:var(--orange);text-decoration:none">Qué se ejecuta dónde y qué costará dinero</a> tiene su propia página.</p>
+  </div>
+</section>
+
+
+<!-- ORIGIN (where the name comes from) -->
+<section class="origin" id="origin">
+  <div class="origin-inner">
+    <span class="tag reveal">De dónde viene el nombre</span>
+    <h2 class="reveal">Un conducto no es una fuente.<br/>Es lo que <em>transporta.</em></h2>
+    <svg class="origin-arches reveal" viewBox="0 0 480 104" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+<path d="M0 8 H480"/>
+<path d="M0 20 H480"/>
+<path d="M8 100 L8 52 A32 32 0 0 1 72 52 L72 100"/>
+<path d="M88 100 L88 52 A32 32 0 0 1 152 52 L152 100"/>
+<path d="M168 100 L168 52 A32 32 0 0 1 232 52 L232 100"/>
+<path d="M248 100 L248 52 A32 32 0 0 1 312 52 L312 100"/>
+<path d="M328 100 L328 52 A32 32 0 0 1 392 52 L392 100"/>
+<path d="M408 100 L408 52 A32 32 0 0 1 472 52 L472 100"/>
+<path d="M0 100 H480" opacity=".45"/>
+</svg>
+    <div class="origin-body">
+      <p class="reveal"><em>Duct</em> es latín — <em>ductus</em>, un conducto. Es la misma palabra que se encuentra dentro de <em>aquaeductus</em>: agua, conducida. Los acueductos de Roma nunca produjeron una gota de agua. Los manantiales ya la tenían. Lo que Roma construyó fue el canal que la transportaba, solo por gravedad, desde donde el agua se encontraba hasta donde la gente realmente vivía.</p>
+      <p class="reveal">La mayor parte de esa ingeniería era invisible. Los acueductos corrían bajo tierra y pasaban desapercibidos durante kilómetros, y los arcos que todos fotografían existen solo porque un valle se interpuso. El acueducto de Nîmes descendía unos doce metros a lo largo de cincuenta kilómetros — una pendiente que no podías ver de pie junto a él, mantenida constante sobre todo tipo de terreno intermedio.</p>
+      <p class="reveal">Tu negocio ya tiene los datos. Anuncios, análisis, búsqueda, soporte, ingresos: las fuentes están bien. Lo que falta es el canal: algo que cruce una docena de APIs y tres sistemas operativos y llegue a donde realmente se toma la decisión. Cuando un acueducto funciona, nadie piensa en el acueducto. Simplemente tienen agua.</p>
+    </div>
+    <figure class="origin-panel reveal">
+      <img class="mosaic" src="/assets/art/otium.webp" width="640" height="640" loading="lazy" alt="Un mosaico romano: agua corriendo llena por un canal, una paloma dormida en el borde, la inscripción OTIVM"/>
+      <figcaption>También es por eso que la app te recibe con mosaicos romanos de umbral en lugar de robots. Este es <em>OTIVM</em>, ocio: todo al día, el agua corriendo llena, la paloma dormida.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- WHAT DUCT DOES -->
+<section class="what-we-build">
+  <div class="what-inner">
+    <span class="tag reveal">Lo que hace Duct</span>
+    <h2 class="reveal">Tres agentes hoy.<br/><em>Más</em> en camino.</h2>
+    <p class="what-sub reveal">Cada uno lee a través de las doce fuentes conectadas en lugar de una a la vez, y cuando la respuesta es un cambio, prepara el cambio y te espera. Cada conector y cada prompt está en el repositorio, así que esta lista es la lista, no una hoja de ruta.</p>
+    <div class="what-grid">
+      <div class="what-card reveal">
+        <span class="what-card-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+        <h3 class="what-card-title">Hallazgos</h3>
+        <p class="what-card-body">Pregunta “por qué cayeron los registros la semana pasada” y obtén una respuesta que lee Google Ads, GA4 y Stripe juntos. Un segundo agente vuelve a verificar cada número antes de que te llegue, y el informe que escribe cita sus fuentes.</p>
+      </div>
+      <div class="what-card reveal">
+        <span class="what-card-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+        <h3 class="what-card-title">Auditoría SEO</h3>
+        <p class="what-card-body">Pega una URL. Duct rastrea el sitio, lee las señales técnicas y de contenido, y te entrega un informe priorizado. Es la <a href="/es/seo-audit" style="color:var(--orange);text-decoration:none">puerta de entrada gratuita</a>: no necesitas cuenta para ejecutar uno.</p>
+      </div>
+      <div class="what-card reveal">
+        <span class="what-card-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#clapperboard"/></svg></span>
+        <h3 class="what-card-title">Estudio de Contenido</h3>
+        <p class="what-card-body">Un plan en un tablero, una publicación por tarjeta, diapositivas e imágenes generadas para cada una, un clic para publicar en nueve redes. Los resultados vuelven a la tarjeta, para que el siguiente plan aprenda del anterior.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALUES -->
+<section class="values">
+  <span class="tag reveal">Cómo trabajo</span>
+  <h2 class="reveal">Principios, no <em>lugares comunes</em></h2>
+  <div class="val-grid">
+    <div class="val-card reveal">
+      <span class="val-label">Aprobación antes de la acción</span>
+      <h3 class="val-title">El agente propone. Tú decides.</h3>
+      <p class="val-body">Duct lee por defecto. Cuando puede arreglar algo, prepara un conjunto de cambios, te muestra una vista previa y una verificación de seguridad, y espera. El agente puede proponer e inspeccionar; no puede aprobar ni aplicar. Esa decisión reside en el código que el modelo nunca ve, y revertir es parte del contrato.</p>
+    </div>
+    <div class="val-card reveal">
+      <span class="val-label">Sustancia sobre ceremonia</span>
+      <h3 class="val-title">Envía el hallazgo, omite el ruido</h3>
+      <p class="val-body">No construyo características para rellenar un registro de cambios. Cada agente, cada conector y cada medida de seguridad existe porque primero me ahorró tiempo real en una decisión real.</p>
+    </div>
+    <div class="val-card reveal">
+      <span class="val-label">Una persona, en España</span>
+      <h3 class="val-title">Lo suficientemente pequeño para responderte directamente</h3>
+      <p class="val-body">No hay una megacorporación detrás ni una cola de soporte delante. Abre una incidencia y hablarás con la persona que escribió la línea. Esa es toda la ventaja, y por eso la hoja de ruta es pública.</p>
+    </div>
+    <div class="val-card reveal">
+      <span class="val-label">Con licencia MIT</span>
+      <h3 class="val-title">Puedes leer cada línea</h3>
+      <p class="val-body">Cada fuente de datos, cada llamada API, cada prompt, cada pieza de lógica que genera una señal está <a href="https://github.com/5hirish/duct" rel="noopener" style="color:var(--orange);text-decoration:none">en GitHub</a>. No documentado e inspeccionable en principio. Realmente allí, realmente legible, realmente bifurcable.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MAKER -->
+<section class="maker">
+  <div class="maker-inner reveal">
+    <img class="maker-avatar" src="https://github.com/5hirish.png" width="132" height="132" loading="lazy" alt="Shirish Kadam, mantenedor de Duct"/>
+    <div>
+      <p class="maker-name">Shirish Kadam</p>
+      <p class="maker-role">Mantenedor</p>
+      <p class="maker-bio">Product manager e ingeniero. La mayor parte de mi carrera se ha dedicado a construir productos desde cero y escalarlos en empresas de fin-tech y ed-tech, muchos de ellos sistemas de IA y ML que sirven a millones de usuarios. Contribuidor de código abierto en todo momento.</p>
+      <p class="maker-bio">Cada uno de esos trabajos tenía la misma brecha: la respuesta a “por qué se movió ese número” nunca estaba dentro de una sola herramienta, y alguien de alto nivel quemaba una mañana cada semana uniéndolo todo a mano. Duct es lo que quería para ese trabajo, así que lo construí y lo hice MIT.</p>
+      <p class="maker-bio">Las decisiones de diseño se debaten abiertamente. GitHub es el mejor lugar para encontrarme.</p>
+      <div class="maker-links">
+        <a class="maker-link" href="https://github.com/5hirish" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+        <a class="maker-link" href="https://x.com/5hirish" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.6 0h2.454l-5.36 6.778L16 16h-4.937l-3.867-5.594L2.771 16H.316l5.733-7.25L0 0h5.063l3.495 5.114L12.6 0Zm-.86 14.376h1.36L4.323 1.539H2.865l8.875 12.837Z"/></svg> @5hirish
+        </a>
+        <a class="maker-link" href="https://youtube.com/@5hirish" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M15.67 4.16a2 2 0 0 0-1.4-1.42C13.03 2.4 8 2.4 8 2.4s-5.03 0-6.27.34a2 2 0 0 0-1.4 1.42A20.9 20.9 0 0 0 0 8a20.9 20.9 0 0 0 .33 3.84 2 2 0 0 0 1.4 1.42c1.24.34 6.27.34 6.27.34s5.03 0 6.27-.34a2 2 0 0 0 1.4-1.42A20.9 20.9 0 0 0 16 8a20.9 20.9 0 0 0-.33-3.84ZM6.4 10.4V5.6L10.53 8 6.4 10.4Z"/></svg> Envía con IA
+        </a>
+        <a class="maker-link" href="https://shirishkadam.com" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M1.5 8h13M8 1.5c1.7 1.9 2.6 4.1 2.6 6.5S9.7 12.6 8 14.5C6.3 12.6 5.4 10.4 5.4 8S6.3 3.4 8 1.5Z"/></svg> shirishkadam.com
+        </a>
+      </div>
+    </div>
+  </div>
+  <figure class="postcard reveal" style="transition-delay:.1s">
+    <div class="postcard-card">
+      <img src="/assets/art/espana.webp" srcset="/assets/art/espana-640.webp 640w, /assets/art/espana.webp 1280w" sizes="(max-width: 860px) calc(100vw - 48px), 496px" width="1280" height="960" loading="lazy" decoding="async" alt="Una larga playa de arena y promontorios verdes en la costa de Asturias, en el norte de España, bajo un cielo despejado"/>
+      <span class="postcard-stamp" aria-hidden="true"><svg class="flag" viewBox="0 0 3 2" width="18" height="12"><rect width="3" height="2" fill="#AD1519"/><rect y=".5" width="3" height="1" fill="#FABD00"/></svg>España</span>
+    </div>
+    <figcaption>Asturias, norte de España.</figcaption>
+  </figure>
+</section>
+
+<!-- COMPANY STRIP -->
+<section class="company-strip">
+  <div class="company-inner">
+    <div class="reveal">
+      <p class="company-item-label">Licencia</p>
+      <p class="company-item-value">MIT</p>
+    </div>
+    <div class="reveal">
+      <p class="company-item-label">Mantenedor</p>
+      <p class="company-item-value"><a href="https://github.com/5hirish" rel="noopener">Shirish Kadam</a></p>
+    </div>
+    <div class="reveal">
+      <p class="company-item-label">Hecho en</p>
+      <p class="company-item-value"><svg class="flag" viewBox="0 0 3 2" width="21" height="14" aria-hidden="true"><rect width="3" height="2" fill="#AD1519"/><rect y=".5" width="3" height="1" fill="#FABD00"/></svg>España</p>
+    </div>
+    <div class="reveal">
+      <p class="company-item-label">Contacto</p>
+      <p class="company-item-value"><a href="mailto:hello@getduct.ai">hello@getduct.ai</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="about-cta">
+  <div class="about-cta-inner">
+    <span class="tag reveal">Código abierto</span>
+    <h2 class="reveal">Léelo, ejecútalo, <em>rómpelo.</em></h2>
+    <p class="sub reveal">Duct tiene licencia MIT, con tus propias claves o tu plan de ChatGPT. Marca el repositorio con una estrella si te es útil, abre una incidencia si no lo es.</p>
+    <div class="reveal" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px">
+      <a class="btn btn-orange btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Destacar en GitHub →</a>
+      <a class="btn btn-ghost btn-lg" href="/es/open-source">Qué se ejecuta dónde →</a>
+    </div>
+    <p class="hero-footnote">Con licencia MIT · Trae tus propias claves · No se necesita cuenta para ejecutarlo tú mismo</p>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/es/partials/footer-expanded.html"><div class="legal-fallback"><a href="/es/">Duct</a><a href="/es/about">Acerca de</a><a href="/es/privacy">Política de privacidad</a><a href="/es/terms">Términos de servicio</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

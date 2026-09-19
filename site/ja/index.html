@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Duct — グローススタック向けオープンソースAIエージェント</title>
+<meta name="description" content="DuctはGoogle Ads、GA4、Stripeなど10以上のツールを連携して読み取り、修正案を提案し、承認すると適用します。オープンソースでMITライセンス、ご自身のキーまたはChatGPTプランで利用可能です。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<link rel="canonical" href="https://getduct.ai/ja/"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/"/>
+<!-- hreflang:end -->
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/"/>
+<meta property="og:title" content="Duct — グローススタック向けオープンソースAIエージェント"/>
+<meta property="og:description" content="5つのタブを繋ぎ合わせるのをやめましょう。1つの質問をしてください。Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct — グローススタック向けオープンソースAIエージェント"/>
+<meta name="twitter:description" content="5つのタブを繋ぎ合わせるのをやめましょう。1つの質問をしてください。Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/index.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/index.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Ductブログ" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js" defer></script>
+<style>
+/* ── INDEX-ONLY STYLES ── */
+
+/* Hero: copy, then the film in a window frame */
+.hero { padding: 96px 52px 96px; min-height: 0; }
+.hero h1 { font-size: clamp(44px, 6.4vw, 76px); max-width: 980px; margin-bottom: 22px; }
+.hero .hero-sub { max-width: 560px; }
+.hero .hero-pill { margin-bottom: 28px; }
+.hero-actions { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; animation: fadeUp .5s .24s ease both; }
+.film {
+  width: 100%; max-width: 1160px; margin: 56px auto 0;
+  border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden;
+  background: var(--white); box-shadow: 0 24px 64px rgba(13,15,26,.10);
+  animation: fadeUp .6s .36s ease both;
+}
+.film-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--off); border-bottom: 1px solid var(--border); }
+.film-dot { width: 10px; height: 10px; border-radius: 50%; }
+.film-label { font-size: 12px; color: var(--navy-3); margin-left: 8px; }
+.film-sound {
+  margin-left: auto; font: inherit; font-size: 12px; font-weight: 500; color: var(--navy);
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--pill);
+  padding: 4px 12px; cursor: pointer; transition: border-color .2s;
+}
+.film-sound:hover, .film-sound[aria-pressed="true"] { border-color: var(--orange); }
+.film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: #f7f4f0; }
+/* A play button over the poster whenever the film is not running. Autoplay
+   is refused by Safari in Low Power Mode, by "Reduce motion", and by some
+   browser settings; without this the poster looked like a still image. */
+.film { position: relative; }
+.film-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -30%);
+  width: 84px; height: 84px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--orange); color: #fff; box-shadow: 0 14px 40px rgba(13,15,26,.28);
+  display: flex; align-items: center; justify-content: center; transition: transform .2s, background .2s;
+}
+.film-play .ic { width: 34px; height: 34px; margin-left: 4px; }
+.film-play:hover { transform: translate(-50%, -30%) scale(1.06); background: var(--orange-h, #e65300); }
+.film.is-playing .film-play { display: none; }
+
+/* What it does: four tiles on a hairline grid */
+.what { padding: 100px 52px; background: var(--off); border-top: 1px solid var(--border); }
+.what-inner { max-width: 1160px; margin: 0 auto; }
+.what-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg);
+  overflow: hidden; margin-top: 52px;
+}
+.what-tile { background: var(--white); padding: 24px 24px 28px; display: flex; flex-direction: column; gap: 14px; }
+.what-shot { aspect-ratio: 4 / 3; border-radius: var(--r); overflow: hidden; background: var(--off); border: 1px solid var(--border); }
+.what-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+.what-tile h3 { font-family: var(--serif); font-size: 20px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
+.what-tile p { font-size: 14px; color: var(--navy-3); line-height: 1.7; }
+
+/* Three agents, three jobs: the SEO audit has no shot yet, so its card is a CSS mock */
+.job-mock { height: 100%; padding: 22px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.job-mock-url { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--white); border-radius: var(--r); padding: 10px 12px; font-size: 13px; color: var(--navy-3); }
+.job-mock-url b { margin-left: auto; font-weight: 600; color: var(--white); background: var(--orange); border-radius: var(--pill); padding: 3px 10px; font-size: 11px; }
+.job-mock-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--navy); }
+.job-mock-sev { font-size: 11px; font-weight: 600; border-radius: 4px; padding: 2px 6px; background: #ffeaea; color: #b53838; }
+.job-mock-sev.med { background: #fff4dd; color: #8a5a00; }
+.chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 28px; }
+.chips-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-right: 4px; }
+.chip { font-size: 12px; color: var(--navy-3); border: 1px solid var(--border); background: var(--off); border-radius: var(--pill); padding: 5px 12px; text-decoration: none; transition: color .2s, border-color .2s; }
+a.chip:hover { color: var(--navy); border-color: var(--navy); }
+.chip.soon { background: var(--white); }
+
+/* Free tools teaser → /tools/ */
+.tools-teaser { padding: 100px 52px; border-top: 1px solid var(--border); background: var(--white); }
+.tools-teaser-inner { max-width: 1160px; margin: 0 auto; }
+.tools-teaser-card { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 36px 40px; background: var(--off); }
+.tools-teaser-card .tag { margin-bottom: 12px; }
+.tools-teaser-card h2 { font-size: clamp(26px, 3.5vw, 36px); margin: 0 0 14px; }
+.tools-teaser-card .sub { margin: 0 0 20px; max-width: 62ch; font-size: 15px; }
+.tools-teaser-link { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--navy); text-decoration: none; border-bottom: 2px solid var(--orange); padding-bottom: 2px; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .what-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 860px) {
+  .what-grid { grid-template-columns: 1fr; }
+  .what, .tools-teaser { padding-left: 24px; padding-right: 24px; }
+  .film { margin-top: 40px; }
+  .film-label { display: none; }
+  .film-play { width: 64px; height: 64px; }
+  .film-play .ic { width: 26px; height: 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-actions, .film { animation: none; }
+}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Duct","url":"https://getduct.ai","description":"Open-source AI agent for cross-tool product and growth analytics.","publisher":{"@type":"Organization","name":"Duct","url":"https://getduct.ai","logo":"https://getduct.ai/assets/icon.svg","sameAs":["https://github.com/5hirish/duct","https://youtube.com/@5hirish","https://x.com/5hirish"],"founder":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"contactPoint":{"@type":"ContactPoint","email":"hello@getduct.ai"}}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The core is MIT licensed and stays that way. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A hosted team plan comes later; the core stays open."}},{"@type":"Question","name":"Does it change my accounts without asking?","acceptedAnswer":{"@type":"Answer","text":"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."}},{"@type":"Question","name":"Which tools does it connect to?","acceptedAnswer":{"@type":"Answer","text":"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."}},{"@type":"Question","name":"Where do my keys and data live?","acceptedAnswer":{"@type":"Answer","text":"Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine."}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Duct","alternateName":"Duct — Cross-Tool Intelligence","applicationCategory":"BusinessApplication","applicationSubCategory":"Analytics","operatingSystem":"macOS, Windows, Linux, Web","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"codeRepository":"https://github.com/5hirish/duct","author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"MIT licensed. Self-host or run locally at no cost."},"description":"Open-source AI agent that reads across Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat, and answers questions a single dashboard cannot."}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Duct","codeRepository":"https://github.com/5hirish/duct","url":"https://getduct.ai","license":"https://opensource.org/licenses/MIT","programmingLanguage":["Python","JavaScript","Rust"],"runtimePlatform":["Python 3.12","Node 20","Tauri v2"],"author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"description":"MIT-licensed AI agent for cross-tool product and growth analytics. Runs as a Tauri desktop app with bring-your-own model keys, or self-hosted as a FastAPI backend."}
+</script>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EXPERIMENT: product-led home. Hypothesis: a 30 s film of one real job plus ≤600 words converts
+     better than 7,700 px of feature copy. Measured by download clicks per visit (GTM). -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/ja/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="hero" id="hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> オープンソース · MIT · 独自のキーを使用</div>
+<h1>5つのタブを繋ぎ合わせるのをやめましょう。<br/><em>1つの質問を始めましょう。</em></h1>
+<p class="hero-sub">Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。お使いのMacで、ご自身のモデルキー、または既にお支払い済みのChatGPTプランで利用できます。</p>
+<div class="hero-actions">
+<a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>macOS版をダウンロード ↓</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">GitHubでスターを付ける</a>
+</div>
+<p class="hero-footnote">無料 · アカウント不要、クレジットカード不要 · WindowsやLinuxでも利用可能</p>
+
+<div class="film" id="film">
+<div class="film-bar">
+<span class="film-dot" style="background:#ff5f57" aria-hidden="true"></span>
+<span class="film-dot" style="background:#febc2e" aria-hidden="true"></span>
+<span class="film-dot" style="background:#28c840" aria-hidden="true"></span>
+<span class="film-label">ある月曜日の30秒</span>
+<button class="film-sound" id="film-sound" type="button" aria-pressed="false" aria-controls="hero-film">音を消す</button>
+</div>
+<video id="hero-film" muted loop playsinline preload="none" poster="/assets/media/demo-poster.webp" width="1600" height="1000" aria-label="30秒の動画：チームメイトがサインアップが減少した理由を尋ねると、DuctがGoogle Ads、GA4、Stripeをまとめて読み込み、解約を促進するキャンペーンの一時停止を提案し、承認されると適用し、学習した内容を記憶します。">
+<source src="/assets/media/demo.mp4" type="video/mp4"/>
+<source src="/assets/media/demo.webm" type="video/webm"/>
+</video>
+<button class="film-play" id="film-play" type="button" aria-controls="hero-film" aria-label="動画を再生"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#play"/></svg></button>
+</div>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- WHAT IT DOES -->
+<section class="what" id="what">
+<div class="what-inner">
+<div class="reveal">
+<p class="tag">機能</p>
+<h2>読み込み、承認を得て実行します。<br/><em>記憶します。</em></h2>
+</div>
+<div class="what-grid reveal" style="transition-delay:.1s">
+<div class="what-tile">
+<div class="what-shot"><img src="/assets/media/connectors.webp" srcset="/assets/media/connectors-768.webp 768w, /assets/media/connectors-1536.webp 1536w, /assets/media/connectors.webp 2208w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2208" height="1134" loading="lazy" alt="12個のツールがあり、そのうち5個が接続済みの接続ページ"/></div>
+<h3>ツールを横断して読み込みます</h3>
+<p>12個のコネクタ。広告、アナリティクス、収益、セッションリプレイをまとめて一つの問いに答えます。</p>
+</div>
+<div class="what-tile">
+<div class="what-shot"><img src="/assets/media/review-card.webp" srcset="/assets/media/review-card-768.webp 768w, /assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="変更セットカード：1つのキャンペーンを一時停止、ガードレールによってブロックされた1つの変更、拒否ボタンと適用ボタン"/></div>
+<h3>あなたの承認を得て実行します</h3>
+<p>変更を提案し、影響範囲を示し、適用ボタンを押したときにのみ適用します。</p>
+</div>
+<div class="what-tile">
+<div class="what-shot"><img src="/assets/media/memory-timeline.webp" srcset="/assets/media/memory-timeline-768.webp 768w, /assets/media/memory-timeline-1536.webp 1536w, /assets/media/memory-timeline.webp 2008w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2008" height="1990" loading="lazy" alt="メモリタイムライン：CPA目標、決定、イベント、および今週エージェントが学習した内容"/></div>
+<h3>記憶します</h3>
+<p>目標、決定、学習内容が、修正可能なタイムラインで表示されます。</p>
+</div>
+<div class="what-tile">
+<div class="what-shot"><img src="/assets/media/chatgpt-card.webp" srcset="/assets/media/chatgpt-card-768.webp 768w, /assets/media/chatgpt-card.webp 1216w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1216" height="1100" loading="lazy" alt="ChatGPT Plusプランでサインインした、デスクトップアプリ内のOpenAIプロバイダーカード"/></div>
+<h3>お客様のキー、またはお客様のChatGPTプラン</h3>
+<p>モデルキーはキーチェーンに保存されます。または、ChatGPTでサインインしてキーを完全にスキップすることも可能です。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- THREE AGENTS, THREE JOBS -->
+<section class="jobs" id="use-cases">
+<div class="jobs-inner">
+<div class="reveal">
+<p class="tag">用途</p>
+<h2>3つのエージェント、<em>3つのジョブ。</em></h2>
+</div>
+<div class="job-grid">
+<article class="job reveal" style="transition-delay:.05s">
+<div class="job-shot"><img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="3072" height="2052" loading="lazy" alt="インサイトセッション：質問、読み込んだ情報源、2つの指摘事項、そしてその隣にあるブリーフ"/></div>
+<div class="job-body">
+<h3>インサイト</h3>
+<dl>
+<dt>時期</dt><dd>今週、なぜサインアップが減少したのか尋ねられます。</dd>
+<dt>現状</dt><dd>5つのタブ、3時間、それでも推測。</dd>
+<dt>Ductを使用すると</dt><dd class="with">広告、GA4、Stripeを連携して読み取り、提案する変更を回答します。</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:.1s">
+<div class="job-shot">
+<div class="job-mock" aria-hidden="true">
+<div class="job-mock-url"><span>yoursite.com</span><b>12個の修正</b></div>
+<div class="job-mock-row"><span class="job-mock-sev">高</span>14ページでタイトルが重複</div>
+<div class="job-mock-row"><span class="job-mock-sev">高</span>altテキストのない画像が63枚</div>
+<div class="job-mock-row"><span class="job-mock-sev med">中</span>タグ付きURLにcanonicalなし</div>
+</div>
+</div>
+<div class="job-body">
+<h3>SEO監査</h3>
+<dl>
+<dt>時期</dt><dd>サイトの確認が必要です。</dd>
+<dt>現状</dt><dd>有料ツール、またはコンサルタント。</dd>
+<dt>Ductを使用すると</dt><dd class="with">URLを貼り付けます。アカウント不要。修正案は優先順位順に返されます。</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:.15s">
+<div class="job-shot"><img src="/assets/media/content-plan.webp" srcset="/assets/media/content-plan-768.webp 768w, /assets/media/content-plan-1536.webp 1536w, /assets/media/content-plan.webp 2208w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2208" height="1532" loading="lazy" alt="ボード上の1週間の投稿：2件公開済み、1件下書き、2件計画済み"/></div>
+<div class="job-body">
+<h3>コンテンツスタジオ</h3>
+<dl>
+<dt>時期</dt><dd>今週の投稿の締め切りです。</dd>
+<dt>現状</dt><dd>Notionでの計画と5つのアップロードボックス。</dd>
+<dt>Ductを使用すると</dt><dd class="with">ボードで計画し、生成し、9つのネットワークに公開します。数値はカードに戻されます。</dd>
+</dl>
+</div>
+</article>
+</div>
+<div class="chips reveal" style="transition-delay:.2s">
+<span class="chips-label">今後登場</span>
+<span class="chip soon">広告監査</span>
+<span class="chip soon">セールス &amp; RevOps</span>
+<span class="chip soon">Eコマース &amp; DTC</span>
+<span class="chip soon">カスタマーサクセス</span>
+</div>
+<div class="chips reveal" style="transition-delay:.25s">
+<span class="chips-label">向け</span>
+<a class="chip" href="/ja/for-product-intelligence">プロダクトマネージャー &amp; グロースチーム</a>
+<a class="chip" href="/ja/for-organic-growth">SEO &amp; コンテンツチーム</a>
+<a class="chip" href="/ja/for-paid-ads">パフォーマンスマーケター</a>
+</div>
+</div>
+</section>
+
+<!-- FREE TOOLS (teaser → /tools/) -->
+<section class="tools-teaser" id="free-tools">
+<div class="tools-teaser-inner">
+<div class="tools-teaser-card reveal">
+<p class="tag">無料ツール</p>
+<h2><em>グロースチーム</em>向けの計算ツールと生成ツール</h2>
+<p class="sub">SaaSベンチマーク、有料広告費モデル、UTMリンク。サインアップ不要。</p>
+<a href="/ja/tools/" class="tools-teaser-link">無料ツールを見る →</a>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>5つの正直な<em>回答</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Ductとは？</summary>
+<p class="faq-a">プロダクト、マーケティング、収益ツールを接続し、それらを横断して質問に答え、変更を提案し、承認されると適用するオープンソースAIエージェントです。macOS、Windows、Linuxのデスクトップアプリとして動作します。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">無料ですか？</summary>
+<p class="faq-a">はい。コアはMITライセンスであり、その状態を維持します。モデルプロバイダーに直接支払うか、既にお持ちのChatGPTプランでサインインしてください。ホスト型チームプランは後日提供されますが、コアはオープンなままです。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">許可なくアカウントを変更しますか？</summary>
+<p class="faq-a">いいえ。レポートは読み取り専用アクセスで機能します。変更は影響範囲とともに提案され、「適用する」を押した場合にのみ適用されます。破壊的な変更にはフラグが付けられ、ガードレールを超えるものは、確認するまでブロックされます。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">どのツールに接続しますか？</summary>
+<p class="faq-a">Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、Stripe、RevenueCatに対応。すべての接続はOAuthを使用し、手動でのエクスポートは不要です。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">キーとデータはどこに保存されますか？</summary>
+<p class="faq-a">モデルキーはオペレーティングシステムのキーチェーンに保存され、ジョブの実行中のみリクエストとともに送信されます。コネクタの認証情報はホストされたAPIによって暗号化されて保存されます。デスクトップアプリはそのAPIの薄いシェルであり、セルフホストビルドではすべてがご自身のマシンで実行されます。<a href="/ja/about">Ductという名前の由来</a>は「概要」ページにあります。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- FINAL CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/ja/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/ja/partials/footer-expanded.html"><div class="legal-fallback"><a href="/ja/">Duct</a><a href="/ja/about">について</a><a href="/ja/privacy">プライバシーポリシー</a><a href="/ja/terms">利用規約</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script>
+// The film starts when it scrolls into view and pauses when it leaves, so a
+// visitor who bounces never downloads it (no autoplay attribute: a fetching
+// media element also delays the page's load event). Muted is the only
+// autoplay browsers allow; the button unmutes on a click. Reduced-motion
+// visitors get the poster and the native controls stay one tap away.
+(function () {
+  var film = document.getElementById('hero-film');
+  if (!film) return;
+  // A phone draws the film 340px wide; the 1600px encode is 2 MB of pixels it
+  // never shows. Under 860px the 720px cut plays instead, at a quarter of the
+  // bytes. The sources are swapped before anything is fetched (preload=none).
+  if (window.matchMedia && window.matchMedia('(max-width: 860px)').matches) {
+    // mp4 first, as in the markup: Safari says it can play WebM and then
+    // stalls on it without ever falling back to the next source.
+    var cut = film.canPlayType('video/mp4') ? 'demo-phone.mp4' : 'demo-phone.webm';
+    while (film.firstChild) film.removeChild(film.firstChild);
+    film.src = 'assets/media/' + cut;
+  }
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce && 'IntersectionObserver' in window) {
+    var inView = false;
+    var attempt = function () { if (!inView) return; var p = film.play(); if (p && p.catch) p.catch(function () {}); };
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { inView = e.isIntersecting; if (inView) attempt(); else film.pause(); });
+    }, { threshold: 0.05 }).observe(film);
+    // Safari drops a play() issued while the page is still loading and never
+    // comes back to it: the poster sat there as a still. Ask again after load.
+    window.addEventListener('load', function () { setTimeout(attempt, 300); });
+  }
+  // The play button is the one path that works everywhere: a click is a user
+  // gesture, which every autoplay policy allows.
+  var wrap = film.parentNode, play = document.getElementById('film-play');
+  film.addEventListener('playing', function () { wrap.classList.add('is-playing'); });
+  film.addEventListener('pause', function () { if (film.ended || film.currentTime === 0) wrap.classList.remove('is-playing'); });
+  if (play) play.addEventListener('click', function () { var p = film.play(); if (p && p.catch) p.catch(function () {}); });
+  var btn = document.getElementById('film-sound');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    film.muted = !film.muted;
+    btn.setAttribute('aria-pressed', film.muted ? 'false' : 'true');
+    btn.textContent = film.muted ? 'Sound off' : 'Sound on';
+    if (!film.muted) { var p = film.play(); if (p && p.catch) p.catch(function () {}); }
+  });
+})();
+</script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

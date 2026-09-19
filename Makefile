@@ -13,7 +13,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-backend setup-app setup-site setup-desktop \
         check check-backend check-app check-site check-desktop check-security check-docs \
-        fmt test dump-prompts serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
+        i18n fmt test dump-prompts serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean
 
 # ---------------------------------------------------------------------------
 
@@ -71,11 +71,13 @@ check-migrations: ## Apply every migration to an empty Postgres and check the mo
 check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 	cd app && npm run lint --if-present
 	cd app && npm run typecheck
+	cd app && npm run check:i18n
 	cd app && npm test
 	cd app && npm run check:parity
 	cd app && npm run build
 
 check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
+	python3 scripts/build_site_i18n.py --check
 	python3 .github/scripts/check-pages.py
 	python3 scripts/check_changelog_sync.py
 	# Local only: a variant older than its shot means a reshoot was copied in
@@ -109,6 +111,18 @@ test: ## Backend tests only — the fastest useful signal
 # rather than shipping a document describing last week's prompt.
 dump-prompts: ## Re-render docs/engineering/agent-prompts.md from the code
 	cd backend && poetry run python scripts/dump_prompts.py
+
+# Run after ANY change to user-facing copy in app/ or site/, before `make check`.
+# Extracts the new and changed strings, translates only what is missing (needs
+# GEMINI_API_KEY or ANTHROPIC_API_KEY in the shell; see scripts/i18n/fill.py
+# for the keyless `--provider manual` path), then compiles and re-renders.
+# check-app and check-site fail on whatever this would have produced.
+i18n: ## Extract, translate what is missing, compile and render (app + site)
+	cd app && npm run i18n:extract
+	python3 scripts/build_site_i18n.py
+	python3 scripts/i18n/fill.py
+	cd app && npm run i18n:compile
+	python3 scripts/build_site_i18n.py
 
 fmt: ## Auto-fix what ruff can fix
 	cd backend && poetry run ruff check --fix server.py agents routes service tests utils

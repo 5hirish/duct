@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Política de privacidad — Duct</title>
+<meta name="description" content="Política de privacidad de Duct: los datos de usuario de Google a los que accedemos y por qué, cómo manejamos los datos de cada herramienta conectada, con quién los compartimos, cuánto tiempo los conservamos y cómo eliminarlos."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://getduct.ai/es/privacy"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/privacy"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/privacy"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/privacy"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/privacy"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/privacy"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/privacy"/>
+<!-- hreflang:end -->
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/es/privacy"/>
+<meta property="og:title" content="Política de privacidad — Duct"/>
+<meta property="og:description" content="Aprende cómo Duct recopila, utiliza y protege tus datos."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/privacy.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Política de privacidad — Duct"/>
+<meta name="twitter:description" content="Aprende cómo Duct recopila, utiliza y protege tus datos."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/privacy.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, sinceramente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Rechaza y el sitio se comportará exactamente igual.","Privacy Policy":"Política de privacidad","Decline":"Rechazar","Accept":"Aceptar","{n} stars on GitHub":"{n} estrellas en GitHub","UTM Builder":"Constructor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de comparativa de métricas SaaS","Weekly Marketing Brief Generator":"Generador de informes de marketing semanales","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de tasa de crecimiento de MRR","Engagement Rate Calculator":"Calculadora de tasa de interacción","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menú de navegación","Close navigation menu":"Cerrar menú de navegación","Menu":"Menú","Free Tools":"Herramientas gratuitas","Solutions":"Soluciones","Download Duct ↓":"Descargar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de pantalla ampliada","Close":"Cerrar","Fit to screen":"Ajustar a la pantalla","Zoom in":"Acercar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 y posteriores","Runs on any distribution":"Funciona en cualquier distribución","Debian and Ubuntu":"Debian y Ubuntu","Download ↓":"Descargar ↓","Download for {label} ↓":"Descargar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de ejemplo. Cambia cualquier campo y calcula de nuevo para los tuyos."};</script>
+<script src="/assets/config.js" defer></script>
+<style>
+.legal-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+.legal-page h1 { font-family: var(--serif); font-size: 36px; font-weight: 700; margin-bottom: 8px; letter-spacing: -.5px; }
+.legal-date { font-size: 13px; color: var(--navy-3); margin-bottom: 48px; }
+.legal-page h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; margin: 40px 0 16px; letter-spacing: -.2px; }
+.legal-page h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+.legal-page p, .legal-page li { font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--navy-2); }
+.legal-page ul { padding-left: 20px; margin: 12px 0; }
+.legal-page li { margin-bottom: 6px; }
+.legal-page a { color: var(--orange); text-decoration: underline; text-underline-offset: 2px; }
+.legal-page a:hover { color: var(--orange-h); }
+.legal-table-wrap { overflow-x: auto; margin: 16px 0 8px; }
+.legal-page table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+.legal-page th, .legal-page td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line, #e6e6ea); }
+.legal-page th { font-weight: 600; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--navy-3); }
+.legal-page td code { font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+.legal-callout { border-left: 3px solid var(--orange); background: rgba(255,92,0,.04); padding: 16px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; }
+.legal-callout p { margin: 0; }
+</style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Privacy Policy",
+  "url": "https://getduct.ai/privacy",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Alleviate Lab",
+    "url": "https://getduct.ai"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/es/partials/nav-simple.html"></div>
+
+<main>
+<article class="legal-page">
+
+<h1>Política de privacidad</h1>
+<p class="legal-date">Última actualización: 7 de septiembre de 2026</p>
+
+<p>Alleviate Lab ("nosotros") opera Duct (<a href="https://getduct.ai">getduct.ai</a>), una plataforma de inteligencia multiherramienta que conecta tus herramientas de publicidad, análisis, producto y búsqueda, sintetiza lo que cambió entre ellas y — solo cuando apruebas un cambio específico — aplica ese cambio de vuelta a la herramienta conectada. Esta Política de Privacidad explica qué recopilamos, por qué, con quién lo compartimos, cuánto tiempo lo conservamos y cómo eliminarlo.</p>
+
+<h2>1. Datos de usuario de Google a los que accedemos</h2>
+
+<p>Duct accede a los datos de usuario de Google solo a través de las APIs oficiales de Google, y solo para las cuentas y propiedades de Google que conectes explícitamente. No se accede a nada hasta que completes la pantalla de consentimiento de Google, y cada ámbito a continuación se solicita para el propósito indicado junto a él.</p>
+
+<h3>Iniciar sesión</h3>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>Alcance</th><th>A qué accede</th><th>Por qué Duct lo necesita</th></tr></thead>
+<tbody>
+<tr><td><code>openid</code></td><td>Un identificador de cuenta de Google estable</td><td>Para reconocer tu cuenta a través de las sesiones</td></tr>
+<tr><td><code>userinfo.email</code></td><td>Tu dirección de correo electrónico</td><td>Para identificar tu cuenta, enviar notificaciones de informes y emparejar invitaciones de proyectos</td></tr>
+<tr><td><code>userinfo.profile</code></td><td>Tu nombre y foto de perfil</td><td>Para mostrar quién ha iniciado sesión y quién realizó una acción en un proyecto compartido</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Fuentes de datos conectadas</h3>
+<p>Cada conector a continuación es opcional y se conecta por separado. Puedes conectar ninguno, algunos o todos ellos, y desconectar cualquiera de ellos en cualquier momento.</p>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>Alcance</th><th>A qué accede</th><th>Por qué Duct lo necesita</th></tr></thead>
+<tbody>
+<tr><td><code>adwords</code></td><td>Campañas de Google Ads, grupos de anuncios, términos de búsqueda y métricas de rendimiento (clics, impresiones, coste, conversiones, ROAS), además de segmentación por dispositivo y geográfica</td><td>Para informar sobre el rendimiento de pago y, donde lo apruebes, añadir palabras clave negativas o pausar una campaña</td></tr>
+<tr><td><code>analytics.readonly</code></td><td>Datos de informes y configuración de propiedades de Google Analytics 4</td><td>Para informar sobre tráfico, conversión y retención junto con tus otras herramientas</td></tr>
+<tr><td><code>analytics.edit</code></td><td>Configuración de administrador de Google Analytics 4</td><td>Para aplicar cambios de configuración aprobados, como marcar un evento como evento clave</td></tr>
+<tr><td><code>webmasters.readonly</code></td><td>Consultas, páginas, impresiones, clics y posiciones de Google Search Console</td><td>Para informar sobre el rendimiento de búsqueda orgánica y mostrar cambios de clasificación</td></tr>
+<tr><td><code>tagmanager.readonly</code></td><td>Cuentas, contenedores, etiquetas y activadores de Google Tag Manager</td><td>Para auditar tu configuración de medición y detectar seguimiento roto o faltante</td></tr>
+<tr><td><code>tagmanager.edit.containers</code></td><td>Contenido del contenedor de Google Tag Manager</td><td>Para preparar correcciones de seguimiento aprobadas como un cambio de contenedor</td></tr>
+<tr><td><code>tagmanager.publish</code></td><td>Versiones del contenedor de Google Tag Manager</td><td>Para publicar una versión de contenedor después de que la apruebes</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>2. Cambios que Duct realiza en tu nombre</h2>
+
+<p>Algunos de los alcances anteriores permiten escrituras. Queremos ser precisos al respecto, porque es la parte de Duct que interactúa con tus cuentas activas:</p>
+<ul>
+<li><strong>Nada se escribe automáticamente.</strong> Duct propone un conjunto de cambios, te muestra el antes y el después exacto de cada cambio individual, y no aplica nada hasta que lo apruebes explícitamente en la app.</li>
+<li><strong>La aprobación es por conjunto de cambios, no general.</strong> Aprobar un cambio no autoriza cambios futuros.</li>
+<li><strong>Los cambios se registran y son reversibles donde la API subyacente lo permite.</strong> Cada cambio aplicado se escribe en un registro de auditoría de tu proyecto.</li>
+<li><strong>Los informes funcionan sin acceso de escritura.</strong> Si prefieres solo lectura, conecta los ámbitos de solo lectura y rechaza el resto; los informes de Duct seguirán funcionando.</li>
+</ul>
+
+<h2>3. Cómo usamos los datos de usuario de Google</h2>
+<ul>
+<li><strong>Autenticación:</strong> Para verificar tu identidad y mantener tu sesión</li>
+<li><strong>Informes y hallazgos:</strong> Para obtener datos de tus propiedades conectadas y generar los informes, alertas y auditorías que solicites</li>
+<li><strong>Cambios aprobados:</strong> Para aplicar los cambios específicos que apruebes a la cuenta conectada que seleccionaste</li>
+<li><strong>Soporte:</strong> Para diagnosticar un problema que nos reportes, usando los datos mínimos necesarios</li>
+</ul>
+<p>Usamos los datos de usuario de Google solo para proporcionar y mejorar estas funciones orientadas al usuario. No los usamos para ningún otro propósito.</p>
+
+<h2>4. Uso limitado de los datos de usuario de Google</h2>
+
+<div class="legal-callout">
+<p>El uso y la transferencia de información recibida de las API de Google por parte de Duct a cualquier otra app se adherirán a la <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Política de datos de usuario de los servicios de API de Google</a>, incluidos los requisitos de uso limitado.</p>
+</div>
+
+<p>Específicamente, nosotros <strong>no</strong>:</p>
+<ul>
+<li>Usar o transferir datos de usuario de Google para servir publicidad de cualquier tipo, incluyendo publicidad dirigida, personalizada, de retargeting o basada en intereses</li>
+<li>Vender, alquilar o transferir datos de usuario de Google a intermediarios de datos, revendedores de información o a cualquier tercero para sus propios fines</li>
+<li>Usar datos de usuario de Google para determinar la solvencia crediticia o para fines de préstamo</li>
+<li>Usar datos de usuario de Google para construir o enriquecer bases de datos o perfiles independientes</li>
+<li>Usar datos de usuario de Google para desarrollar, mejorar o entrenar modelos de IA o aprendizaje automático generalizados o no personalizados</li>
+<li>Permitir a los humanos leer los datos de usuario de Google, excepto cuando hayas dado consentimiento explícito para un problema específico, cuando sea necesario por motivos de seguridad o para cumplir con la ley aplicable, o cuando los datos hayan sido agregados y anonimizados</li>
+</ul>
+
+<h2>5. Otras fuentes de datos que conectas</h2>
+
+<p>Google es una de varias fuentes que Duct puede conectar. Cada una es opcional, conectada individualmente por ti, y se accede a ella a través de la API oficial del proveedor utilizando las credenciales que autorices. Duct lee las métricas necesarias para construir tus informes, y escribe solo los cambios que hayas aprobado explícitamente.</p>
+<ul>
+<li><strong>Publicidad:</strong> Meta Ads, Apple Search Ads, OpenAI Ads</li>
+<li><strong>Análisis de producto y comportamiento:</strong> Mixpanel, Microsoft Clarity</li>
+<li><strong>Experimentación:</strong> GrowthBook</li>
+<li><strong>Ingresos y facturación:</strong> Stripe, RevenueCat</li>
+<li><strong>CRM:</strong> HubSpot</li>
+<li><strong>Publicación y análisis social:</strong> PostBridge, que a su vez conecta las cuentas sociales que autorizas (TikTok, Instagram, YouTube, LinkedIn, X, Pinterest, Facebook, Google Business Profile)</li>
+</ul>
+<p>Los compromisos de esta política — no venta de tus datos, no uso publicitario, no entrenamiento de modelos, eliminación bajo solicitud — se aplican a los datos de estas fuentes exactamente como se aplican a los datos de usuario de Google.</p>
+
+<h2>6. Estudio de contenido: Cargas y publicación</h2>
+
+<p>Si utilizas las funciones de contenido de Duct:</p>
+<ul>
+<li><strong>Los archivos que subes</strong> (imágenes, video, activos de marca) se almacenan para que puedan adjuntarse a borradores y publicaciones publicadas.</li>
+<li><strong>Medios generados.</strong> Las imágenes y videos creados en Duct son producidos por servicios de IA generativa de terceros, que reciben el prompt y cualquier imagen de referencia que proporciones.</li>
+<li><strong>Publicación.</strong> Cuando programas o publicas una publicación, su contenido y medios se transmiten a PostBridge y a la plataforma social que seleccionaste, bajo los propios términos y política de privacidad de esa plataforma.</li>
+<li><strong>Datos de investigación públicos.</strong> Duct puede recuperar contenido y métricas disponibles públicamente de plataformas sociales para informar recomendaciones. Estos son datos públicos, no datos sobre ti o tu audiencia individualmente.</li>
+</ul>
+<p>No subas material para el que no tengas derechos de uso, ni archivos que contengan datos personales de otras personas más allá de lo que tu publicación requiera.</p>
+
+<h2>7. La app de escritorio de Duct</h2>
+
+<p>La app de escritorio es una ventana nativa alrededor del mismo Duct que usarías en un navegador. Vale la pena ser preciso sobre lo que eso significa, porque "app de escritorio" suena como "todo se queda aquí" y eso no es lo que ofrecemos:</p>
+<ul>
+<li><strong>La app que distribuimos se comunica con nuestros servidores.</strong> No lleva su propia copia del backend de Duct. Tus proyectos, informes, memorias de agente, registro de actividad, cargas y autorizaciones de conectores son almacenados por nosotros, exactamente como cuando usas Duct en un navegador — que es también lo que te permite iniciar sesión en un segundo ordenador y encontrar tu trabajo allí. Las secciones 12 a 14 cubren cómo lo almacenamos, compartimos y eliminamos.</li>
+<li><strong>Tus claves de proveedor de IA permanecen en tu máquina.</strong> Viven en el llavero de tu sistema operativo y se envían con una solicitud solo cuando un trabajo necesita ejecutarse. Nunca las almacenamos, y la opción de guardar una clave con nosotros que ofrece la versión del navegador está deliberadamente desactivada en la app de escritorio.</li>
+<li><strong>El inicio de sesión y la autorización del conector abren el navegador de tu sistema</strong> en lugar de una ventana incrustada, para que mantengas las protecciones de tu navegador, y ninguna credencial se lleva en el enlace que te devuelve a la app.</li>
+<li><strong>La app de escritorio no establece cookies y nunca te preguntará sobre ellas.</strong> Informa el uso a través del mismo contenedor de Google Tag Manager que el resto de Duct, pero con el almacenamiento permanentemente desactivado: Google Analytics recibe el evento y no escribe nada en tu máquina, por lo que ninguna de las cookies de la sección 11 existe allí y no hay nada que consentir. Una barra de consentimiento frente a una aplicación que acabas de abrir no es una pregunta por la que valga la pena interrumpir a nadie.</li>
+<li><strong>Los informes de fallos y los datos de uso están activados por defecto en la app que distribuimos, y un interruptor en Preferencias los desactiva ambos.</strong> Una vez que lo tocas, tu respuesta se guarda y no se aplica ningún valor predeterminado de nuevo. Un informe de fallos contiene el error y el seguimiento de la pila que lo causó; los datos de uso son las pantallas y funciones que abres, nunca tus claves de API de proveedor, tus datos o cualquier cosa que generes. Si construyes Duct tú mismo, ambos están desactivados por defecto, porque entonces no somos nosotros quienes lo ejecutamos.</li>
+<li><strong>Las comprobaciones de actualización</strong> contactan a nuestro host de lanzamiento para preguntar si existe una versión más reciente. Esta solicitud revela tu dirección IP y la versión que estás ejecutando.</li>
+<li><strong>Puedes ejecutar todo tú mismo en su lugar.</strong> El código fuente es público y se puede construir con el backend dentro de la app o alojado en tu propio servidor. Entonces no guardamos nada y esta política no tiene nada que describir — consulta la sección 16.</li>
+</ul>
+
+<h2>8. Trae tus propias claves de proveedor de IA</h2>
+
+<p>Puedes proporcionar tus propias claves API para proveedores de IA en lugar de usar las de Duct:</p>
+<ul>
+<li><strong>En la app de escritorio,</strong> las claves se almacenan en el llavero de tu sistema operativo. Se envían con una solicitud para que el trabajo que pediste pueda ejecutarse, y nunca las almacenamos; la opción de guardar una clave con nosotros está desactivada allí.</li>
+<li><strong>En la app web,</strong> una clave que pegas se mantiene para esa sesión del navegador y se envía con cada solicitud. Si eliges guardarla para no tener que pegarla de nuevo, se cifra en reposo, se descifra solo para hacer una solicitud en tu nombre, nunca es devuelta por nuestra API y nunca se escribe en los registros. Puedes eliminarla en cualquier momento.</li>
+<li>Cuando usas tu propia clave, tu uso es facturado por ese proveedor bajo tu cuenta y está sujeto a los términos y la política de privacidad de ese proveedor.</li>
+<li><strong>La configuración de datos del proveedor es tuya para configurar.</strong> Si un proveedor retiene o entrena con lo que recibe se rige por la política de tu cuenta con ese proveedor, no por nosotros — consulta la nota sobre el enrutamiento en la sección 12.</li>
+</ul>
+
+<h2>9. Auditorías de sitios web e informes de leads</h2>
+
+<p>Nuestra herramienta pública de auditoría SEO recopila la dirección de correo electrónico y la URL del sitio web que envías, recupera páginas de ese sitio web para analizarlas, y te envía por correo electrónico el informe resultante. Almacenamos el envío y el informe para poder reenviarlo y para poder contactarte sobre Duct. Solo envía un sitio web que poseas o para el que estés autorizado a realizar una auditoría. Pregúntanos en <a href="mailto:hello@getduct.ai">hello@getduct.ai</a> para eliminar un envío.</p>
+
+<h2>10. Proyectos de equipo</h2>
+
+<p>Los proyectos de Duct se pueden compartir. Si invitas a alguien, enviamos una invitación a la dirección de correo electrónico que proporciones. Los miembros de un proyecto pueden ver las fuentes conectadas, los informes, los hallazgos y el historial de actividad de ese proyecto, junto con el nombre, el correo electrónico y la foto de perfil de otros miembros. Cualquier persona con el rol adecuado también puede ver y aprobar cambios propuestos en las cuentas conectadas. Invita solo a las personas a las que tengas intención de dar ese acceso.</p>
+
+<h2>11. Otra información que recopilamos</h2>
+
+<h3>Datos de uso</h3>
+<p>Recopilamos analíticas básicas del producto —páginas visitadas, funciones utilizadas, patrones generales de interacción— para entender cómo se usa Duct. Esto se ejecuta a través de Google Tag Manager, que carga Google Analytics 4. No registramos pulsaciones de teclas ni contenido de formularios.</p>
+
+<h3>Cookies y tecnologías similares</h3>
+
+<p>Las cookies de análisis se establecen solo después de que las aceptas. Si estás en el EEE, el Reino Unido o Suiza, preguntamos antes de que se establezca cualquier cosa, y nada más que las entradas estrictamente necesarias a continuación existe hasta que elijas. En otros lugares, el análisis está activado por defecto y puedes desactivarlo en cualquier momento — el enlace <strong>Configuración de cookies</strong> en nuestro pie de página, y en el menú de la cuenta dentro de la app, reabre la elección en cada página.</p>
+
+<p>Rechazar significa que Google Tag Manager nunca se carga, en lugar de cargarse en un modo restringido. Si rechazas después de haber aceptado previamente, eliminamos las cookies a continuación y recargamos la página.</p>
+
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>Cookie</th><th>Establecido por</th><th>Propósito</th><th>Caduca</th></tr></thead>
+<tbody>
+<tr><td><code>_ga</code></td><td>Google Analytics 4</td><td>Distingue un visitante de otro para que una visita recurrente no se cuente dos veces</td><td>2 años</td></tr>
+<tr><td><code>_ga_SXH5LYVTJ8</code></td><td>Google Analytics 4</td><td>Mantiene el estado de la sesión actual para nuestra propiedad específica</td><td>2 años</td></tr>
+<tr><td><code>_gcl_au</code></td><td>Google Tag Manager (Conversion Linker)</td><td>Atribuye un registro al anuncio o enlace que lo originó</td><td>90 días</td></tr>
+<tr><td><code>duct_consent</code></td><td>Duct</td><td>Recuerda tu elección, para que no se te pregunte en cada página. Establecido en <code>getduct.ai</code> y todos sus subdominios, así que responder una vez en tu navegador también responde para la app. La app de escritorio nunca lo establece, porque no carga analíticas en absoluto. Estrictamente necesario — existe tanto si aceptas como si rechazas</td><td>6 meses, luego volvemos a preguntar</td></tr>
+<tr><td><code>duct_consent_region</code></td><td>Duct (almacenamiento de sesión)</td><td>Almacena en caché el país de origen de tu solicitud, para que hagamos la pregunta correcta sin repetir la búsqueda. Estrictamente necesario</td><td>Fin de la sesión</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El token de autenticación descrito en <em>Datos almacenados localmente</em> a continuación también es estrictamente necesario: sin él no puedes mantener la sesión iniciada.</p>
+
+<h3>Diagnósticos</h3>
+<p>Cuando algo falla, recopilamos informes de error que contienen el contexto técnico del fallo (seguimiento de pila, navegador, la operación intentada). Configuramos nuestra monitorización de errores para evitar capturar datos de usuario de Google, pero un informe puede contener incidentalmente un identificador como un ID de propiedad.</p>
+
+<h3>Actividad y memoria del agente</h3>
+<p>Duct registra un registro de actividad de las acciones significativas en un proyecto, y almacena notas duraderas que sus agentes derivan de tus datos (por ejemplo, un patrón estacional recurrente) para que los informes mejoren con el tiempo. Ambos están limitados a tu proyecto, son visibles para ti y se eliminan con él.</p>
+
+<h3>Datos almacenados localmente</h3>
+<p>Almacenamos un token de autenticación en el almacenamiento local de tu navegador para mantener tu sesión iniciada. Contiene tu nombre, correo electrónico y foto de perfil, y expira después de 7 días.</p>
+
+<h2>12. Cómo compartimos y almacenamos datos</h2>
+
+<p>No vendemos tus datos. Los compartimos solo con los proveedores de servicios a continuación, solo según sea necesario para operar Duct, y solo bajo términos que los restringen a ese propósito:</p>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>Proveedor</th><th>Propósito</th><th>¿Recibe datos de fuentes conectadas?</th></tr></thead>
+<tbody>
+<tr><td>Railway</td><td>Alojamiento de aplicaciones y la base de datos principal</td><td>Sí — en reposo, como datos almacenados</td></tr>
+<tr><td>Cloudflare</td><td>CDN, entrega de aplicaciones web, protección contra bots (Turnstile), entrega de correo electrónico</td><td>En tránsito</td></tr>
+<tr><td>Anthropic, OpenAI, Google, OpenRouter</td><td>Modelos de IA que generan narrativas de informes, recomendaciones y borradores de contenido</td><td>Sí — los datos necesarios para el resultado que solicitaste</td></tr>
+<tr><td>Proveedores de medios generativos</td><td>Generación de imágenes y videos en Content Studio</td><td>Instrucciones y medios de referencia solamente</td></tr>
+<tr><td>PostBridge</td><td>Publicar en, y leer analíticas de, tus cuentas sociales</td><td>Datos de cuentas sociales y contenido de publicaciones solamente</td></tr>
+<tr><td>Apify</td><td>Recuperar contenido social disponible públicamente para investigación</td><td>No</td></tr>
+<tr><td>Sentry</td><td>Monitoreo de errores e informes de fallos</td><td>Incidentalmente, solo en contexto de error</td></tr>
+<tr><td>Reenviar</td><td>Correo electrónico transaccional (entrega de informes, invitaciones a proyectos)</td><td>No — solo dirección de correo electrónico y contenido del informe</td></tr>
+</tbody>
+</table>
+</div>
+<p>Cuando los datos de una fuente conectada se envían a un proveedor de modelos de IA, se envían únicamente para producir el resultado que solicitaste. <strong>Nunca los usamos para entrenar modelos, y nunca permitimos que un proveedor lo haga en nuestro nombre.</strong> Anthropic, OpenAI y Google se utilizan bajo términos de API que excluyen los datos enviados del entrenamiento por defecto.</p>
+<p><strong>OpenRouter es un enrutador, no un proveedor de modelos,</strong> y merece una nota específica. Reenvía una solicitud al proveedor subyacente que seleccione la configuración de enrutamiento, y esos proveedores difieren en si registran o entrenan con lo que reciben. Cuando proporcionas tu propia clave de OpenRouter, esa configuración de enrutamiento es tuya: el comportamiento de retención y entrenamiento de una solicitud se rige por la política de datos establecida en tu cuenta de OpenRouter, y debes configurarla para que coincida con los compromisos que necesitas. Recomendamos habilitar la política de datos de registro cero y no entrenamiento de OpenRouter antes de conectar una clave. Duct no utiliza tus datos para entrenamiento, independientemente de la ruta que se tome.</p>
+<p>También podemos divulgar datos cuando lo exija la ley, y a una entidad sucesora en caso de fusión o adquisición, en cuyo caso esta política seguirá aplicándose hasta que se te notifique lo contrario.</p>
+
+<h2>13. Seguridad de los datos</h2>
+<ul>
+<li><strong>Los tokens de OAuth y las claves de proveedor guardadas se cifran en reposo</strong> usando cifrado simétrico Fernet, se almacenan en el servidor por usuario y nunca se exponen al navegador</li>
+<li>Todos los datos en tránsito están cifrados vía HTTPS/TLS</li>
+<li>El acceso a los datos de un proyecto requiere tanto autenticación como una membresía verificada de ese proyecto; un no miembro no puede leer los datos de otro proyecto</li>
+<li>Seguimos el principio de mínimo privilegio para el acceso interno a los datos</li>
+</ul>
+
+<h2>14. Retención y eliminación de datos</h2>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>Datos</th><th>Retención</th></tr></thead>
+<tbody>
+<tr><td>Tokens de actualización de OAuth y claves de proveedor guardadas</td><td>Hasta que desconectes la fuente, elimines la clave, elimines tu cuenta o revoques el acceso en el proveedor — lo que ocurra primero</td></tr>
+<tr><td>Datos obtenidos de fuentes conectadas</td><td>Retenido como parte de los informes, hallazgos, memoria del agente y artefactos de trabajo que produjo, mientras tu cuenta esté activa</td></tr>
+<tr><td>Informes generados, borradores de contenido, cargas y registros de auditoría</td><td>Mientras tu cuenta esté activa</td></tr>
+<tr><td>Tokens de autenticación (navegador)</td><td>7 días</td></tr>
+<tr><td>Diagnóstico de errores</td><td>90 días</td></tr>
+<tr><td>Envíos de herramientas de auditoría</td><td>Hasta que nos pidas que los eliminemos</td></tr>
+<tr><td>Copias de seguridad</td><td>Los datos eliminados pueden persistir en copias de seguridad cifradas hasta por 30 días después de la eliminación</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Eliminar tus datos</h3>
+<ul>
+<li><strong>Desconectar una fuente:</strong> elimínala en la página Conexiones en Duct. Sus credenciales almacenadas se eliminan en ese momento.</li>
+<li><strong>Revocar el acceso de Duct en Google:</strong> visita <a href="https://myaccount.google.com/permissions" rel="noopener">myaccount.google.com/permissions</a> y elimina Duct. Esto funciona tengas o no una cuenta de Duct.</li>
+<li><strong>App de escritorio:</strong> eliminar el directorio de datos de la app elimina la base de datos local y su contenido; las claves de proveedor se eliminan de tu llavero cuando las eliminas en la app.</li>
+<li><strong>Eliminar tu cuenta y todos los datos asociados:</strong> envía un correo electrónico a <a href="mailto:hello@getduct.ai">hello@getduct.ai</a>. Procesamos las solicitudes de eliminación en un plazo de 30 días y confirmamos por correo electrónico cuando se completan.</li>
+</ul>
+
+<h2>15. Tus derechos</h2>
+<p>Estamos basados en España y procesamos datos personales bajo el RGPD de la UE. Tienes derecho a acceder, corregir, exportar, restringir el procesamiento o eliminar tus datos personales, y a oponerte al procesamiento. Nuestra base legal es la ejecución de nuestro contrato contigo para operar el producto, y el interés legítimo para seguridad y diagnósticos. Ejerce cualquiera de estos derechos en <a href="mailto:hello@getduct.ai">hello@getduct.ai</a>; también tienes derecho a presentar una queja ante tu autoridad de supervisión local (en España, la AEPD).</p>
+<p>Los datos pueden ser procesados fuera del EEE por los proveedores listados en la sección 12, bajo mecanismos de transferencia que incluyen las Cláusulas Contractuales Estándar de la UE.</p>
+
+<h2>16. Código abierto y autoalojamiento</h2>
+<p>El código fuente de Duct se publica bajo la licencia MIT. Esta política cubre <strong>el servicio alojado que operamos</strong> en getduct.ai y app.getduct.ai, y la app de escritorio oficial que distribuimos.</p>
+<p>No cubre una instancia del software que otra persona ejecute. Si utilizas una implementación de Duct operada por un tercero, o una que ejecutes tú mismo, el operador de esa implementación es el controlador de datos y esta política no se aplica a ella. Publicar el código no nos da acceso a ningún dato contenido en una implementación que no operamos.</p>
+
+<h2>17. Estado beta y cambios</h2>
+<p>Duct se encuentra actualmente en beta, y las características y prácticas de manejo de datos pueden evolucionar. Actualizaremos esta política según sea necesario, revisaremos la fecha en la parte superior y notificaremos a los usuarios sobre cambios importantes por correo electrónico a la dirección de su cuenta antes de que el cambio entre en vigor.</p>
+
+<h2>18. Privacidad de los niños</h2>
+<p>Duct no está destinado a ser utilizado por personas menores de 18 años. No recopilamos intencionadamente información de niños.</p>
+
+<h2>19. Contacto</h2>
+<p>Para preguntas de privacidad, solicitudes de acceso o eliminación de datos:</p>
+<ul>
+<li>Correo electrónico: <a href="mailto:hello@getduct.ai">hello@getduct.ai</a></li>
+<li>Responsable del tratamiento de datos: Alleviate Lab</li>
+<li>Ubicación: Spain</li>
+<li>Sitio web: <a href="https://getduct.ai">getduct.ai</a></li>
+</ul>
+
+</article>
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/es/partials/footer-expanded.html"><div class="legal-fallback"><a href="/es/">Duct</a><a href="/es/about">Acerca de</a><a href="/es/privacy">Política de privacidad</a><a href="/es/terms">Términos de servicio</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

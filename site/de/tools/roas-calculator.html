@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>ROAS-Rechner — kostenloses Tool von Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/tools/roas-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/roas-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/roas-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/roas-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/roas-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/roas-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/roas-calculator"/>
+<!-- hreflang:end -->
+<meta name="description" content="Kostenloser ROAS-Rechner für Paid-Media-Teams. Berechne den Return on Ad Spend aus Umsatz und Werbeausgaben sowie Ziel-ROAS-Szenarien für Google Ads, Meta und E-Commerce."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/tools/roas-calculator"/>
+<meta property="og:title" content="ROAS-Rechner — kostenloses Tool von Duct"/>
+<meta property="og:description" content="Berechne ROAS (Return on Ad Spend), Umsatzlücken vs. Ziel-ROAS und maximal effiziente Ausgaben – keine Anmeldung."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-roas-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="ROAS-Rechner — kostenloses Tool von Duct"/>
+<meta name="twitter:description" content="Kostenloser ROAS-Rechner für Performance-Marketer: Multiplikatoren, Ziele und Pacing-Checks."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-roas-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"ROAS Calculator","url":"https://getduct.ai/tools/roas-calculator","description":"Free calculator that computes return on ad spend (ROAS), target revenue for a goal ROAS, and maximum efficient spend at observed revenue.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+  .tool-hero { padding:80px 24px 48px; text-align:center; max-width:760px; margin:0 auto; }
+  .tool-hero h1 { font-family:var(--serif); font-size:clamp(32px,5vw,52px); color:var(--navy); margin:16px 0; line-height:1.15; }
+  .tool-hero h1 em { color:var(--orange); font-style:italic; }
+  .tool-hero p { font-size:17px; color:var(--navy-3); font-weight:300; line-height:1.6; margin:0; }
+  .tool-wrap { max-width:900px; margin:0 auto 80px; padding:0 24px; }
+  .tool-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.06); }
+  .tool-inputs { padding:36px 40px; display:grid; grid-template-columns:1fr 1fr; gap:24px 32px; }
+  @media (max-width:640px) { .tool-inputs { grid-template-columns:1fr; padding:24px; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:500; color:var(--navy); }
+  .field .field-hint { font-size:11px; color:var(--navy-3); margin-top:-2px; }
+  .field input { padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:15px; font-family:var(--sans); color:var(--navy); outline:none; }
+  .field input:focus { border-color:var(--orange); }
+  .tool-action { padding:0 40px 36px; display:flex; align-items:center; gap:16px; }
+  @media (max-width:640px) { .tool-action { padding:0 24px 24px; flex-direction:column; align-items:stretch; } }
+  .tool-results { border-top:1px solid var(--border); padding:36px 40px; display:none; }
+  @media (max-width:640px) { .tool-results { padding:24px; } }
+  .tool-results.visible { display:block; }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+  .result-card { border:1.5px solid var(--border); border-radius:var(--r); padding:20px; }
+  .result-card.green { border-color:#22c55e; background:#f0fdf4; }
+  .result-card.amber { border-color:#f59e0b; background:#fffbeb; }
+  .result-card.red { border-color:#ef4444; background:#fef2f2; }
+  .result-card.neutral { border-color:var(--border); background:var(--off); }
+  .result-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-3); margin-bottom:6px; }
+  .result-value { font-size:26px; font-family:var(--serif); color:var(--navy); margin-bottom:4px; }
+  .result-badge { display:inline-flex; font-size:11px; font-weight:500; padding:2px 9px; border-radius:100px; margin-bottom:8px; }
+  .result-badge.green { background:#dcfce7; color:#15803d; }
+  .result-badge.amber { background:#fef3c7; color:#92400e; }
+  .result-badge.red { background:#fee2e2; color:#991b1b; }
+  .result-badge.neutral { background:#f1f5f9; color:var(--navy-3); }
+  .result-context { font-size:12px; color:var(--navy-3); line-height:1.5; margin:0; }
+  .tool-cta { margin-top:24px; background:var(--navy); border-radius:var(--r); padding:28px 32px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .tool-cta-text p:first-child { font-size:16px; font-weight:500; color:var(--white); margin:0 0 4px; }
+  .tool-cta-text p:last-child { font-size:13px; color:rgba(255,255,255,.55); margin:0; }
+  .insight-panel { margin-top:24px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:20px 24px; }
+  .insight-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:10px; }
+  .insight-panel p { font-size:14px; color:var(--navy-3); line-height:1.7; margin:0 0 8px; }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+<main id="main-content">
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Kostenloses Tool · Keine Anmeldung erforderlich</div>
+  <h1>ROAS-Rechner <em>für Paid-Performance-Teams</em></h1>
+  <p>Deine Budgetentscheidungen sind nur so gut wie dein Effizienzsignal. Berechne ROAS mit klaren Ziel-Lücken und Ausgaben-Leitplanken, ohne Tabellenbereinigung.</p>
+</div>
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="ROAS-Rechner">
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-spend">Werbeausgaben</label>
+        <span class="field-hint">Medienkosten für den gleichen Umfang wie der zugeordnete Umsatz</span>
+        <input type="number" id="inp-spend" placeholder="e.g. 8000" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-revenue">Zugeschriebener Umsatz</label>
+        <span class="field-hint">Diesen Anzeigen zugeordneter Conversion-Wert (gleiches Fenster)</span>
+        <input type="number" id="inp-revenue" placeholder="e.g. 32000" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-target-roas">Ziel-ROAS (optional)</label>
+        <span class="field-hint">Als Multiplikator (z. B. 4 für 4×), nicht als Prozentsatz</span>
+        <input type="number" id="inp-target-roas" placeholder="e.g. 4" min="0" step="0.01" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-margin">Bruttomarge % (optional)</label>
+        <span class="field-hint">Grobe Beitragsprüfung des Umsatzes nach Wareneinsatz</span>
+        <input type="number" id="inp-margin" placeholder="e.g. 55" min="0" max="100" inputmode="decimal"/>
+      </div>
+    </div>
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">ROAS berechnen →</button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">Zurücksetzen</button>
+    </div>
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+    <div class="tool-results" id="results-section" role="region" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">Deine Ergebnisse</p>
+      <div class="results-row" id="results-row"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>Einmal ROAS, einmal. Die Frage ist, welche Kampagne das Budget verdient.</p>
+          <p>Duct liest deine Anzeigen-, Analyse- und Umsatz-Tools, beantwortet diese Frage und schlägt die Änderung vor. Du gibst sie frei.</p>
+        </div>
+        <a href="/de/download" class="btn btn-orange" data-duct-download>Duct herunterladen ↓</a>
+      </div>
+      <div id="insight-panel" class="insight-panel" hidden>
+        <p class="insight-label">Was das bedeutet</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<section class="duct-bridge reveal" aria-label="Über Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">ROAS zeigt dir die Effizienz auf einen Blick. Es sagt dir nicht, welche Hebel du nächste Woche ziehen musst.</p>
+      <p class="duct-bridge-body">Duct liest ROAS neben CPC, CPA, Conversion und Retention über alle Kanäle hinweg und schlägt die Budgetverschiebung vor, die sich am ehesten auszahlt.</p>
+      <a href="/de/" class="duct-bridge-link">So funktioniert Duct →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Eine Erkenntnis-Session: gefragt, wo das Werbebudget versickert, der Agent bewertet jede Kampagne anhand des CPA-Ziels, schlägt eine Pause, zwei Negativ-Keywords und eine Budgeterhöhung vor und schreibt das Ausgaben-Briefing auf der rechten Seite"/>
+      <figcaption>Frage, wo das Budget leckt. Duct bewertet jede Kampagne anhand deines CPA-Ziels, schlägt die Pause, die Negativ-Keywords und die Budgetverschiebung vor und wartet auf dein Ja.</figcaption>
+    </figure>
+  </div>
+</section>
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">Auch kostenlos</p>
+    <h2 id="related-tools-heading">Verwandte <em>Tools</em> entdecken</h2>
+    <p class="related-tools-banner-desc">Kombiniere ROAS mit CPA, CPC und CTR, um zu sehen, ob Effizienzprobleme bei den Traffic-Kosten, dem Volumen oder der nachgelagerten Conversion beginnen.</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="roas-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/de/partials/cta-tools.html"></div>
+</main>
+<div data-duct-partial="/de/partials/footer-expanded.html"></div>
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-spend', 'inp-revenue', 'inp-target-roas', 'inp-margin'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  function money(v) { return (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
+  function card(label, display, level, badge, context) {
+    var c = document.createElement('div'); c.className = 'result-card ' + level;
+    var l = document.createElement('div'); l.className = 'result-label'; l.textContent = label;
+    var v = document.createElement('div'); v.className = 'result-value'; v.textContent = display;
+    var b = document.createElement('span'); b.className = 'result-badge ' + level; b.textContent = badge;
+    var x = document.createElement('p'); x.className = 'result-context'; x.textContent = context;
+    c.appendChild(l); c.appendChild(v); c.appendChild(b); c.appendChild(x); return c;
+  }
+  function val(id) { var raw = document.getElementById(id).value; return raw === '' ? NaN : parseFloat(raw); }
+  function addP(node, text) { var p = document.createElement('p'); p.textContent = text; node.appendChild(p); }
+
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var spend = val('inp-spend');
+    var revenue = val('inp-revenue');
+    var targetRoas = val('inp-target-roas');
+    var marginRaw = document.getElementById('inp-margin').value;
+    var margin = marginRaw === '' ? NaN : parseFloat(marginRaw);
+    var spendBad = isNaN(spend) || spend <= 0;
+    var revenueBad = isNaN(revenue) || revenue < 0;
+    if (spendBad || revenueBad) {
+      if (spendBad && revenueBad) {
+        DuctToolFormError.show(ERR, 'Enter ad spend greater than zero and attributed revenue (zero or greater).', ['inp-spend', 'inp-revenue']);
+      } else if (spendBad) {
+        DuctToolFormError.show(ERR, 'Enter ad spend greater than zero.', ['inp-spend']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter attributed revenue (must be zero or greater).', ['inp-revenue']);
+      }
+      document.getElementById(spendBad ? 'inp-spend' : 'inp-revenue').focus();
+      return;
+    }
+    if (marginRaw !== '' && !isNaN(margin) && (margin < 0 || margin > 100)) {
+      DuctToolFormError.show(ERR, 'Gross margin must be between 0 and 100 when provided.', ['inp-margin']);
+      document.getElementById('inp-margin').focus();
+      return;
+    }
+
+    var roas = revenue / spend;
+    var row = document.getElementById('results-row');
+    while (row.firstChild) row.removeChild(row.firstChild);
+
+    var lvl = roas >= 4 ? 'green' : (roas >= 2 ? 'amber' : 'red');
+    row.appendChild(card('ROAS', roas.toFixed(2) + '×', lvl, lvl === 'green' ? 'Strong' : (lvl === 'amber' ? 'Mixed' : 'Weak'), 'Revenue divided by ad spend (standard ROAS definition).'));
+
+    row.appendChild(card('Ad Spend', money(spend), 'neutral', 'Baseline', 'Spend included in this ROAS calculation.'));
+    row.appendChild(card('Attributed Revenue', money(revenue), 'neutral', 'Observed', 'Conversion value attributed to this spend.'));
+
+    if (!isNaN(targetRoas) && targetRoas > 0) {
+      var reqRev = spend * targetRoas;
+      var maxSpend = revenue / targetRoas;
+      row.appendChild(card('Revenue @ Target ROAS', money(reqRev), reqRev <= revenue ? 'green' : 'amber', reqRev <= revenue ? 'Hit or beat' : 'Gap', 'Revenue needed at current spend to reach target ROAS.'));
+      row.appendChild(card('Max Spend @ Target', money(maxSpend), maxSpend >= spend ? 'green' : 'amber', maxSpend >= spend ? 'Within cap' : 'Over target', 'Highest spend that keeps ROAS at or above target at observed revenue.'));
+    }
+
+    if (!isNaN(margin) && margin > 0 && margin <= 100) {
+      var contrib = revenue * (margin / 100);
+      var contribRoas = contrib / spend;
+      var mLvl = contribRoas >= 2 ? 'green' : 'amber';
+      row.appendChild(card('Contribution ROAS', contribRoas.toFixed(2) + '×', mLvl, 'Margin-adjusted', 'Gross profit (revenue × gross margin %) divided by ad spend.'));
+    }
+
+    var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
+    if (roas >= 4) addP(body, 'ROAS is healthy on a blended ecommerce-style benchmark. Validate incrementality before scaling — strong platform ROAS can still include organic or branded demand.');
+    else if (roas >= 2) addP(body, 'ROAS is workable but sensitive to CPC changes and conversion rate. Stress-test with your CPA and CPC calculators before raising budgets.');
+    else addP(body, 'ROAS is stressed at this spend level. Audit audience–creative fit, landing conversion, and wasted spend before adding more budget.');
+    addP(body, 'ROAS differs from ROI: ROI typically subtracts spend from returns first. Use the Marketing ROI Calculator when you need profit-based ROI.');
+
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-spend','inp-revenue','inp-target-roas','inp-margin'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('results-section').classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row'); while (row.firstChild) row.removeChild(row.firstChild);
+  });
+  DuctToolExample.seed(['inp-spend', 'inp-revenue', 'inp-target-roas', 'inp-margin'], 'calc-btn', 'results-section');
+}());
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>
