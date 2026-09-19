@@ -3365,6 +3365,10 @@ msgstr "Label only — the token already selects the project."
 msgid "Landing Pages"
 msgstr "Landing Pages"
 
+#: src/components/LanguageMenu.jsx
+msgid "Language"
+msgstr "Language"
+
 #: src/components/workspace/ContextRing.jsx
 msgid "Last call"
 msgstr "Last call"

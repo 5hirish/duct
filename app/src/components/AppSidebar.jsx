@@ -280,14 +280,18 @@ export function NotificationRow({ permission, hasSettingsPage = false, onAct }) 
       // Opening System Settings puts another window in front; closing the menu
       // first means returning to the app does not land back inside a stale one.
       onSelect={clickable ? onAct : undefined}
-      className={`flex items-center justify-between ${!clickable ? "cursor-default opacity-60" : ""}`}
+      className={`flex items-center justify-between gap-2 ${!clickable ? "cursor-default opacity-60" : ""}`}
       title={hint}
     >
-      <span className="flex items-center gap-2">
-        <Icon className="size-4" />
-        {label}
+      {/* The label truncates rather than wraps: "Notification settings" plus
+          the badge is wider than the menu in English and wider still in
+          German, and a two-line row in a list of one-line rows reads as a
+          mistake. The hint carries the full sentence. */}
+      <span className="flex min-w-0 items-center gap-2">
+        <Icon className="size-4 shrink-0" />
+        <span className="truncate">{label}</span>
       </span>
-      <span className={`rounded px-1.5 py-0.5 font-mono text-2xs ${
+      <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-2xs ${
         permission === "granted" ||
         permission === "system"   ? "bg-success/15 text-success" :
         permission === "denied"   ? "bg-destructive/10 text-destructive" :
@@ -379,7 +383,7 @@ function SidebarUserFooter() {
           <ChevronsUpDown className="ml-auto size-3.5 shrink-0 text-sidebar-foreground/40 group-data-[collapsible=icon]:hidden" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="start" side="top">
+      <DropdownMenuContent className="w-64" align="start" side="top">
         {user.guest && (
           <>
             {/* The one thing a guest cannot do yet. Sign-in links this guest's

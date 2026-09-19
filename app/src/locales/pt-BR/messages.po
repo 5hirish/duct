@@ -3365,6 +3365,10 @@ msgstr "Apenas rótulo — o token já seleciona o projeto."
 msgid "Landing Pages"
 msgstr "Páginas de destino"
 
+#: src/components/LanguageMenu.jsx
+msgid "Language"
+msgstr "Idioma"
+
 #: src/components/workspace/ContextRing.jsx
 msgid "Last call"
 msgstr "Última chamada"

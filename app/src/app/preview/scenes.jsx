@@ -64,6 +64,7 @@ import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
 import { NotificationRow } from "@/components/AppSidebar";
+import { LanguageMenuItem } from "@/components/LanguageMenu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1012,6 +1013,23 @@ export const SCENES = [
           <NotificationRow permission="denied" />
           <NotificationRow permission="system" hasSettingsPage onAct={() => {}} />
           <NotificationRow permission="system" />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "language-menu-item",
+    state: "sub-menu open on the current language",
+    group: "AppSidebar",
+    title: "The language row in the account menu",
+    note: "Sits under Profile in the user footer menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <LanguageMenuItem />
         </DropdownMenuContent>
       </DropdownMenu>
     ),

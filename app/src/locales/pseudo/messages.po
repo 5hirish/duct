@@ -3359,6 +3359,10 @@ msgstr ""
 msgid "Landing Pages"
 msgstr ""
 
+#: src/components/LanguageMenu.jsx
+msgid "Language"
+msgstr ""
+
 #: src/components/workspace/ContextRing.jsx
 msgid "Last call"
 msgstr ""
