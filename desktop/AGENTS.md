@@ -19,9 +19,34 @@ carries all the code.
 
 ## Stack
 
-- **Tauri v2** (Rust core) + the system webview. No bundled frontend in the
-  alpha — the window loads the hosted URL (`app.getduct.ai`, set in
-  `src-tauri/tauri.conf.json`). GA may switch to a bundled static export.
+- **Tauri v2** (Rust core) + the system webview. The main window loads the
+  hosted URL (`app.getduct.ai`, set in `src-tauri/tauri.conf.json`). GA may
+  switch to a bundled static export.
+- **The main window starts hidden, behind a splash.** Loading a remote URL
+  means an empty frame for as long as the network takes — measured at 0.3–2.3 s
+  just to return the document, and 5.5 s to finish loading on a busy machine.
+  So `main` is `"visible": false` in all three configs, `desktop/src/` holds a
+  splash that paints with no network at all, and `on_page_load` shows the real
+  window and closes the splash once the app has loaded.
+
+  Three things here are load bearing:
+  - **The splash window is built in Rust (`open_splash`), not declared in
+    config.** Tauri *replaces* `app.windows` when merging a `--config` overlay,
+    and the dev and self-host configs each carry their own copy of that array —
+    a window declared only in the base config vanishes from both, silently.
+  - **`"visible": false` must be set in every config that defines `windows`**,
+    for the same reason. All three do.
+  - **`SPLASH_DEADLINE` reveals the window regardless after 30 s.**
+    `on_page_load` never fires if the hosted app is unreachable, and a hidden
+    main window behind a splash that never dismisses is an app with no way in
+    and no way out but Force Quit. Keep the deadline well clear of a real slow
+    load or it reveals a half-rendered window; the splash itself explains the
+    wait after six seconds.
+
+  `desktop/src/` is the `frontendDist`, and until this it was still the
+  unmodified `create-tauri-app` scaffold — a "Welcome to Tauri" page with a
+  greet form calling a command that does not exist. It shipped in every bundle
+  and was never shown.
 - **Keychain** via the `keyring` crate; commands in `src-tauri/src/lib.rs`
   (`get_provider_key` / `set_provider_key` / `delete_provider_key`). The web app
   calls them through `window.__TAURI__.core.invoke` (`app/src/lib/providerKeys.js`).

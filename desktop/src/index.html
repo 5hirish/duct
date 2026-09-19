@@ -2,38 +2,197 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
-    <script type="module" src="/main.js" defer></script>
+    <title>Duct</title>
+    <!--
+      Everything is inline, and that is the whole design constraint.
+
+      This window exists to put pixels on screen before the network resolves,
+      so it must paint from a single document with zero subresources: no
+      stylesheet request, no script request, no font file, no image. A remote
+      font alone would reintroduce the wait this window was built to hide.
+      The four brand tokens are copied from site/assets/duct.css rather than
+      imported, for the same reason. Keep them in step by hand; there are four.
+    -->
+    <style>
+      :root {
+        --orange: #ff5c00;
+        --navy: #0d0f1a;
+        --navy-3: #6b6f82;
+        --off: #f7f7f6;
+        --track: #e6e6e4;
+        --serif: Georgia, "Times New Roman", Times, serif;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --navy: #f4f4f3;
+          --navy-3: #8b8fa0;
+          --off: #14161f;
+          --track: #272a36;
+        }
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--off);
+        color: var(--navy);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: default;
+      }
+
+      .splash {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        /* No title bar to grab, so the whole panel is the drag handle. */
+        -webkit-app-region: drag;
+      }
+
+      /* The logo is the site's, unchanged: serif wordmark, orange dot, and the
+         2.5s pop that is the brand's signature motion. */
+      .logo {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--serif);
+        font-size: 30px;
+        letter-spacing: -0.3px;
+        line-height: 1;
+      }
+
+      .logo-mark {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--orange);
+        animation: pop 2.5s ease-in-out infinite;
+      }
+
+      @keyframes pop {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.35);
+        }
+      }
+
+      /* The duct the dot runs through. A hairline, because this is a two-second
+         moment and a chunky bar would be the loudest thing on screen. */
+      .track {
+        margin-top: 18px;
+        width: 160px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--track);
+        overflow: hidden;
+      }
+
+      .fill {
+        height: 100%;
+        width: 0;
+        border-radius: 2px;
+        background: var(--orange);
+        /* Matches the 100ms trickle tick, so motion is continuous rather than
+           a visible staircase. */
+        transition: width 0.1s linear;
+      }
+
+      /* Reserved, not conditionally inserted: the message appears mid-wait, and
+         a layout shift at that moment is exactly when it would be noticed. */
+      .status {
+        position: absolute;
+        bottom: 16px;
+        left: 0;
+        right: 0;
+        margin: 0;
+        height: 16px;
+        font-size: 12px;
+        color: var(--navy-3);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+      }
+
+      .status.is-shown {
+        opacity: 1;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .logo-mark {
+          animation: none;
+        }
+        /* An indicator whose only content is motion says nothing once the
+           motion is gone, so drop it and let the words do the work. */
+        .track {
+          display: none;
+        }
+        .status {
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
 
   <body>
-    <main class="container">
-      <h1>Welcome to Tauri</h1>
-
-      <div class="row">
-        <a href="https://tauri.app" target="_blank">
-          <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a
-          href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
-          target="_blank"
-        >
-          <img
-            src="/assets/javascript.svg"
-            class="logo vanilla"
-            alt="JavaScript logo"
-          />
-        </a>
-      </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
-
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
+    <main class="splash">
+      <p class="logo"><span>Duct</span><span class="logo-mark"></span></p>
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <p class="status" id="status">Starting up</p>
     </main>
+
+    <script>
+      // A trickle, not a progress bar: this window has no way to know how the
+      // hosted app's load is going, and inventing a percentage would be a lie
+      // told to the one person who can tell it is a lie.
+      //
+      // What it does honestly is decay toward a ceiling it never reaches, so
+      // the bar always moves, never stalls at zero, and never sits full while
+      // the user waits. The shell closes this window the moment the app is
+      // ready, which is almost always before the bar gets far — so the usual
+      // experience is an indicator cut off early, which reads as arriving
+      // sooner than promised rather than as a wait that ended.
+      const CEILING = 92;
+      const TICK_MS = 100;
+      const EASE = 0.045;
+
+      // Long enough that a normal start never shows it, short enough that a
+      // stalled one does not feel ignored. Measured normal case is ~5.5s on a
+      // loaded machine, so 8s means "this is no longer normal".
+      const SLOW_AFTER_MS = 8000;
+      const SLOW_MESSAGE = "Still connecting. This can happen on a slow network.";
+
+      const fill = document.getElementById("fill");
+      const status = document.getElementById("status");
+
+      // Start ahead of zero. An indicator that sits at nothing for its first
+      // frame reads as a hang, and this is the frame the user actually sees.
+      let progress = 6;
+      fill.style.width = progress + "%";
+
+      setInterval(() => {
+        progress += (CEILING - progress) * EASE;
+        fill.style.width = progress + "%";
+      }, TICK_MS);
+
+      setTimeout(() => {
+        status.textContent = SLOW_MESSAGE;
+        status.classList.add("is-shown");
+      }, SLOW_AFTER_MS);
+    </script>
   </body>
 </html>
