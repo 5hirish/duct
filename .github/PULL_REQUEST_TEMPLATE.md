@@ -8,6 +8,9 @@ reviewer reads first. Delete any section that does not apply.
 <!-- What changes, and the reason it is worth changing. The "why" matters more
      than the "what" — a diff already shows the what. -->
 
+<!-- Keep the keyword: GitHub only closes an issue on merge for `Closes`,
+     `Fixes` or `Resolves`. `Refs #N` leaves it open on the board — #127 sat
+     open a week after it shipped that way. Delete the line if no issue ends. -->
 Closes #
 
 ## Area
