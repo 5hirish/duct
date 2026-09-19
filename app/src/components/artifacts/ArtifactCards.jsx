@@ -19,7 +19,7 @@
 
 import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
-import { MarkdownView } from "@/components/artifacts/ArtifactRenderer";
+import { MarkdownView, svgDataUrl } from "@/components/artifacts/ArtifactRenderer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getArtifactContent } from "@/lib/artifactsApi";
 import { relativeTime } from "@/lib/format";
@@ -36,11 +36,16 @@ export function isHtmlArtifact(row) {
   return (row?.content_type || "").toLowerCase().includes("html");
 }
 
+/** Whether a stored row is a vector figure, shown as a picture rather than as source. */
+export function isSvgArtifact(row) {
+  return (row?.content_type || "").toLowerCase() === "image/svg+xml";
+}
+
 /**
  * The top of a document, drawn at thumbnail scale inside a clipped box.
  * `html` picks the renderer; `content` is the whole document or a prefix.
  */
-export function DocumentThumbnail({ content, html = false, className = "" }) {
+export function DocumentThumbnail({ content, html = false, svg = false, className = "" }) {
   return (
     <div
       className={cn("relative overflow-hidden bg-card", className)}
@@ -58,6 +63,8 @@ export function DocumentThumbnail({ content, html = false, className = "" }) {
             tabIndex={-1}
             className="block h-[60rem] w-full border-0 bg-white"
           />
+        ) : svg ? (
+          <img src={svgDataUrl(content)} alt="" className="block w-full bg-white p-6" />
         ) : (
           <div className="px-4 pt-3">
             <MarkdownView source={content.slice(0, PREVIEW_CHARS)} />
@@ -110,7 +117,7 @@ export function ArtifactCard({ doc, onOpen, loadContent = getArtifactContent }) 
     <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-ring">
       <div className="aspect-[3/4] w-full border-b border-border/60">
         {content !== null ? (
-          <DocumentThumbnail content={content} html={isHtmlArtifact(doc)} className="h-full w-full" />
+          <DocumentThumbnail content={content} html={isHtmlArtifact(doc)} svg={isSvgArtifact(doc)} className="h-full w-full" />
         ) : failed ? (
           <div className="flex h-full w-full items-center justify-center text-muted-foreground">
             <FileText className="size-6" aria-hidden="true" />

@@ -32,7 +32,27 @@ export const CONTENT_TYPES = {
   MARKDOWN: "text/markdown",
   HTML: "text/html",
   CSV: "text/csv",
+  SVG: "image/svg+xml",
 };
+
+/** Turn SVG source into a URL an <img> can show. */
+export function svgDataUrl(source) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source || "")}`;
+}
+
+/**
+ * An SVG artifact as a picture. An <img> is the one way to show
+ * agent-authored SVG that runs no script, fires no event handler and loads
+ * no external resource, whatever the source contains; inlining it would need
+ * the sanitiser MermaidView uses and still allow external image hrefs.
+ */
+export function SvgView({ source, title = "" }) {
+  return (
+    <div className="flex justify-center p-3">
+      <img src={svgDataUrl(source)} alt={title || "Figure"} className="max-h-[74vh] max-w-full" />
+    </div>
+  );
+}
 
 // The five chart series the theme defines, which are contrast-checked against
 // both canvases (scripts/check-contrast.mjs) and move when the theme does; the
@@ -280,6 +300,8 @@ export default function ArtifactRenderer({ artifact, content }) {
   switch (ct) {
     case CONTENT_TYPES.MARKDOWN:
       return <MarkdownView source={content} />;
+    case CONTENT_TYPES.SVG:
+      return <SvgView source={content} title={artifact?.title} />;
     case CONTENT_TYPES.MERMAID:
       return <MermaidView source={content} />;
     case CONTENT_TYPES.TABLE_JSON:

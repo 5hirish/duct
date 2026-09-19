@@ -287,8 +287,23 @@ const GALLERY_DOCS = [
   { id: "g1", group_id: "g1", title: "Organic growth, week of 8 Sept", version: 3, version_count: 3, content_type: "text/markdown", has_content: true, created_at: new Date(Date.now() - 2 * 3600_000).toISOString() },
   { id: "g2", group_id: "g2", title: "Paid ads, week of 1 Sept", version: 1, version_count: 1, content_type: "text/html", has_content: true, created_at: new Date(Date.now() - 6 * 86400_000).toISOString() },
   { id: "never", group_id: "g3", title: "Landing-page audit, 24 Aug", version: 2, version_count: 2, content_type: "text/markdown", has_content: true, created_at: new Date(Date.now() - 20 * 86400_000).toISOString() },
+  { id: "g4", group_id: "g4", title: "Signup funnel, paid search", version: 1, version_count: 1, content_type: "image/svg+xml", has_content: true, created_at: new Date(Date.now() - 3 * 86400_000).toISOString() },
 ];
-const GALLERY_CONTENT = { g1: BRIEF_MARKDOWN, g2: GALLERY_HTML };
+// A figure the agent drew itself, the way every frontier model can: a funnel
+// with the numbers on it. The card shows it as a picture, never as source.
+// Named colours because the figure is content with its own palette, like a
+// slide; the hex ratchet guards chrome, not what an agent drew.
+const GALLERY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 260" font-family="system-ui, sans-serif" font-size="14">
+  <rect x="40" y="20" width="400" height="44" rx="6" fill="darkorange"/>
+  <text x="240" y="48" text-anchor="middle" fill="white">Paid sessions · 2,681</text>
+  <rect x="90" y="84" width="300" height="44" rx="6" fill="sandybrown"/>
+  <text x="240" y="112" text-anchor="middle" fill="black">Signups · 418</text>
+  <rect x="140" y="148" width="200" height="44" rx="6" fill="peachpuff"/>
+  <text x="240" y="176" text-anchor="middle" fill="black">First render · 210</text>
+  <rect x="190" y="212" width="100" height="36" rx="6" fill="seashell"/>
+  <text x="240" y="236" text-anchor="middle" fill="black">Paid · 0</text>
+</svg>`;
+const GALLERY_CONTENT = { g1: BRIEF_MARKDOWN, g2: GALLERY_HTML, g4: GALLERY_SVG };
 
 const DESK_ACTIVITY = [
   { id: "a1", category: "check", action: "checked_search_console", summary: LONG_TITLE, source: "auto", created_at: "2026-09-09T05:57:00Z" },

@@ -70,12 +70,16 @@ MERMAID          = "text/vnd.mermaid"
 MARKDOWN         = "text/markdown"
 HTML             = "text/html"
 CSV              = "text/csv"
+SVG              = "image/svg+xml"                       # one figure, drawn as vector text
 
 # Types agents may author through the generic artifact tools. Reports are
 # excluded on purpose — they have their own validated revision flow
-# (SubmitAuditReport → ArtifactPersister).
+# (SubmitAuditReport → ArtifactPersister). SVG is here because every frontier
+# model draws it reliably from text and the browser renders it natively; the
+# app shows it as an <img>, which runs no script and loads nothing external.
+
 AGENT_WRITABLE_TYPES = {
-    MARKDOWN, HTML, CSV, MERMAID, DUCT_TABLE_JSON, DUCT_CHART_JSON, DUCT_DIFF_JSON,
+    MARKDOWN, HTML, CSV, MERMAID, SVG, DUCT_TABLE_JSON, DUCT_CHART_JSON, DUCT_DIFF_JSON,
 }
 # Types whose content must parse as JSON after any edit.
 JSON_TYPES = {DUCT_REPORT_JSON, DUCT_TABLE_JSON, DUCT_CHART_JSON, DUCT_DIFF_JSON, "application/json"}
@@ -85,6 +89,7 @@ _EXTENSIONS = {
     MARKDOWN: "md",
     CSV: "csv",
     MERMAID: "mmd",
+    SVG: "svg",
     "application/json": "json",
     "application/pdf": "pdf",
     DUCT_REPORT_JSON: "json",
