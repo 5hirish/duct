@@ -2,7 +2,9 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const port = Number(process.env.PORT || 4317);
+// 8091, beside the dev server's 8090: the old 4317 is the OTLP gRPC port, so the
+// suite could not start on a machine running a local trace collector.
+const port = Number(process.env.PORT || 8091);
 const root = path.resolve(__dirname, "..", "..");
 
 const routeMap = {
