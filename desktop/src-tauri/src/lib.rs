@@ -20,8 +20,10 @@ mod chatgpt;
 mod sidecar;
 mod telemetry;
 
+use std::time::Duration;
+
 use keyring::{Entry, Error as KeyringError};
-use tauri::{AppHandle, Manager, Url};
+use tauri::{webview::PageLoadEvent, AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_opener::OpenerExt;
 
@@ -809,6 +811,60 @@ fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
     }
 }
 
+/// The splash window, shown while the hosted app loads.
+const SPLASH_LABEL: &str = "splash";
+
+/// How long the splash waits before revealing the main window anyway.
+///
+/// `on_page_load` is the happy path, but it never fires if the hosted app is
+/// unreachable — offline, DNS down, the host erroring. A hidden main window
+/// behind a splash that never dismisses is an app with no way in and no way to
+/// quit but Force Quit, which is strictly worse than the blank window this
+/// replaces. The deadline buys that guarantee for a few seconds of ugliness in
+/// the case where something is already broken.
+///
+/// Thirty seconds because this is an escape hatch, not a loading timer: a debug
+/// build on a busy machine was measured taking 5.5 s to finish loading the
+/// hosted app, and a deadline close to that reveals a half-loaded window on any
+/// slow network. The splash says so itself after six seconds, so the user is
+/// not left guessing while it waits.
+const SPLASH_DEADLINE: Duration = Duration::from_secs(30);
+
+/// Reveal the real window and dismiss the splash.
+///
+/// Idempotent on purpose: the page-load hook and the deadline race each other
+/// by design, and whichever arrives second finds the work already done. Every
+/// error is ignored for the same reason — a window that is already visible or
+/// already closed is the outcome we wanted.
+fn reveal_main_window(app: &AppHandle) {
+    if let Some(main) = app.get_webview_window("main") {
+        let _ = main.show();
+        let _ = main.set_focus();
+    }
+    if let Some(splash) = app.get_webview_window(SPLASH_LABEL) {
+        let _ = splash.close();
+    }
+}
+
+/// Open the splash window.
+///
+/// Built here rather than declared in `tauri.conf.json` because Tauri
+/// *replaces* `app.windows` when it merges a config: the dev and self-host
+/// configs each carry their own copy of that array, so a window declared in the
+/// base config would silently vanish from both. The Rust runs identically for
+/// all three build shapes, which is the same reason `sidecar::is_available`
+/// probes at runtime instead of being compiled two ways.
+fn open_splash(app: &AppHandle) -> tauri::Result<()> {
+    WebviewWindowBuilder::new(app, SPLASH_LABEL, WebviewUrl::App("index.html".into()))
+        .title("Duct")
+        .inner_size(380.0, 150.0)
+        .resizable(false)
+        .decorations(false)
+        .center()
+        .build()?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Before the builder: a panic during setup is exactly the kind of failure
@@ -835,8 +891,14 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
         // The deep link itself is forwarded for us; all that is left is to put
-        // the existing window in front of the user.
-        if let Some(window) = app.get_webview_window("main") {
+        // the existing window in front of the user. Which window that is
+        // depends on timing: until the hosted app finishes loading, `main` is
+        // still hidden, and focusing a hidden window activates the app with
+        // nothing on screen. Prefer whatever is actually visible.
+        let visible_main = app
+            .get_webview_window("main")
+            .filter(|w| w.is_visible().unwrap_or(false));
+        if let Some(window) = visible_main.or_else(|| app.get_webview_window(SPLASH_LABEL)) {
             let _ = window.unminimize();
             let _ = window.set_focus();
         }
@@ -851,7 +913,34 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .manage(SidecarState::default())
         .on_menu_event(handle_menu_event)
+        // The main window is configured hidden, so something has to reveal it.
+        // This fires for every navigation the app makes, not just the first;
+        // `reveal_main_window` is idempotent, so the later ones cost nothing.
+        .on_page_load(|webview, payload| {
+            if webview.label() == "main" && payload.event() == PageLoadEvent::Finished {
+                reveal_main_window(webview.app_handle());
+            }
+        })
         .setup(|app| {
+            // First, before anything else in setup: the whole point is to put
+            // pixels on screen while the network is still resolving. The main
+            // window points at the hosted app, which measured between 0.3 s and
+            // 2.3 s just to return the document, before a byte of script runs.
+            if let Err(err) = open_splash(app.handle()) {
+                // A missing splash is cosmetic. A main window that stays hidden
+                // is not, so stop waiting for a page load and show it now.
+                eprintln!("duct: could not open the splash window: {err}");
+                reveal_main_window(app.handle());
+            }
+
+            // The deadline behind `SPLASH_DEADLINE`: a load that never finishes
+            // must not mean a window that never appears.
+            let deadline_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(SPLASH_DEADLINE);
+                reveal_main_window(&deadline_handle);
+            });
+
             // macOS registers the scheme from the bundle's Info.plist. Linux and
             // Windows register it from the *installer*, so a build that was run
             // rather than installed — `tauri dev`, a CI smoke test, an

@@ -31,6 +31,7 @@
         "label": "main",
         "title": "Duct",
         "url": "https://app.getduct.example",
+        "visible": false,
         "width": 1200,
         "height": 800,
         "minWidth": 900,
