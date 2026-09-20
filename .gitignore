@@ -86,3 +86,6 @@ backend/tests/outputs/
 .file-refs/
 # scripts/shots leaves a raw capture beside a scenario that failed
 docs/assets/readme/*.failed.png
+
+# Worktrees live inside the repo, never beside it (root AGENTS.md, "git hygiene")
+.worktrees/

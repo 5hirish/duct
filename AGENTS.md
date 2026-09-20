@@ -94,6 +94,98 @@ the first one.
   through `prioritize` before code, not after. A well-argued feature nobody
   asked for is still scope creep, however clean the diff.
 
+## Before you start: git hygiene
+
+**Check where this branch stands before writing a line.** Not after, not when
+something looks wrong:
+
+```bash
+scripts/sync_main.sh                             # fast-forwards local main, reports this branch
+git rev-list --left-right --count origin/main...HEAD   # left = missing here, right = only here
+```
+
+The SessionStart hook already runs the first one and puts its answer in the
+session context. **That warning is a stop-and-fix, not a note.** On 2026-09-20
+a session read "47 commit(s) behind origin/main", started work anyway, and the
+branch turned out to be fully merged already: two days of shipped UI work
+(the shimmer, artifact thumbnails, the folding activity rail) was simply not in
+the working tree, and the session's first theory was a botched PR merge.
+
+What the two numbers mean:
+
+- **right is 0** — every commit here is already on `origin/main`. The branch is
+  finished. Do not merge main into it; branch off `origin/main` instead.
+- **left is large** — the tree is stale. Anything you conclude about a file,
+  a feature or a bug is an answer about the past. Rebase or re-branch first.
+- Compare against `origin/main`, **never local `main`**, and never before a
+  successful `git fetch`. A stale ref answers wrong without saying so.
+
+**Never create a directory beside the repo.** No `../duct-<something>` clone,
+no sibling worktree, nothing outside this tree. Work on a branch in this
+checkout. A worktree is justified only when the user's dev servers must keep
+running on another branch, and then it goes *inside*, gitignored, and is
+removed the moment its branch merges:
+
+```bash
+git worktree add .worktrees/<name> <branch>   # inside, never ../duct-<name>
+git worktree remove .worktrees/<name>         # the same day the PR merges
+git worktree list                             # "prunable" means someone forgot
+```
+
+Why: on 2026-09-20 `duct-splash` and `duct-zed` sat beside the repo holding
+**1.7G** of duplicated code whose branches had merged the day before, on a
+laptop with 8G of RAM and an already-full swap. Worse than the disk, a stale
+sibling tree is a stale tree: grep it and you get last week's answer with no
+sign that it is old, which is the same failure as a stale branch, one
+directory over.
+
+One more trap specific to this repo: the agent sandbox cannot write `.mcp.json`,
+`.vscode/` or `.claude/skills/`, so a branch switch that touches them **fails
+half-done** — the index and working tree move, `HEAD` does not. If `git status`
+suddenly shows the whole diff of another branch as staged, that is this, not a
+broken repository. `git symbolic-ref HEAD refs/heads/<branch>` finishes the
+switch, and those few paths need restoring from outside the sandbox.
+
+## Git practice in a shared repository
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md) holds the conventions themselves: branch
+from `main`, one concern per PR, lowercase scoped commit subjects, *why* in the
+body, the `betterleaks` pre-commit hook. Read it once; it applies to agents
+exactly as written. What follows is what an agent gets wrong that a human
+contributor does not.
+
+This repository is public, several people and several agents commit to it, and
+`main` deploys. History is a thing other people read and depend on, not a
+scratchpad.
+
+- **Ask before `git commit`, `git push` or `gh pr create`. Every time.** Make
+  the change, summarise it, stop. Approval for one commit is not approval for
+  the next. This is the standing rule and it outranks any inference that
+  committing would be convenient.
+- **Never rewrite published history.** No force-push, no `--amend`, no rebase
+  of anything already on `origin`. Someone may have pulled it. Unpushed local
+  commits are yours to tidy. A branch already pushed takes a merge of
+  `origin/main`, not a rebase onto it.
+- **Stage deliberately. Never `git add -A` or `git commit -a`.** Name the paths
+  you changed. The working tree routinely carries things that must not ride
+  along: generated files (`app/next-env.d.ts` regenerates on every dev run),
+  another session's edits, and the failure mode the hook exists for, a
+  credential. A blind `add -A` is how all three get committed.
+- **Changes you did not make are a stop sign.** If `git status` shows files you
+  did not touch, do not stage them and do not "clean them up". Say what is
+  there and ask. They are someone else's unfinished work, or a symptom, and on
+  2026-09-20 they were a half-completed branch switch that looked exactly like
+  a broken repository.
+- **`main` requires signed commits.** One unsigned commit fails an otherwise
+  green PR. Re-sign with `git commit-tree`; do not reach for `rebase -f` to fix
+  it.
+- **Green before merge, even with the bypass.** Admin bypass on the `main`
+  ruleset exists for emergencies, not for impatience. Let the checks finish.
+- **Branches are short-lived and named for their type** (`feat/`, `fix/`,
+  `chore/`, `docs/`, `ci/`, `test/`). When it merges, delete the branch and
+  remove its worktree the same day. A merged branch left lying around is what
+  cost a session and 1.7G above.
+
 ## Setup and verification
 
 ```bash
