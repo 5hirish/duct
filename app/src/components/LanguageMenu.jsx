@@ -74,7 +74,15 @@ export default function LanguageMenu({ value, compact = false, id, className, on
         <Languages className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         {compact ? null : <SelectValue />}
       </SelectTrigger>
-      <SelectContent align="end">
+      {/* `popper` for the icon-only trigger, and it is not a preference.
+          Radix's default `item-aligned` positions the menu by aligning the
+          selected item over the trigger's <SelectValue>, so with no value
+          node to measure its position() returns early and the menu is left
+          at the wrapper's static offset — off the bottom-left of the
+          viewport, open and unreachable. Clicking the globe appeared to do
+          nothing. An icon-only trigger has nothing to item-align against, so
+          popper is the only mode that can work here. */}
+      <SelectContent align="end" position={compact ? "popper" : "item-aligned"} sideOffset={compact ? 6 : undefined}>
         {LOCALES.map((locale) => (
           <SelectItem key={locale.value} value={locale.value}>
             {locale.label}
