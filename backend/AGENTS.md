@@ -199,7 +199,11 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   "Duct: Desktop + API + Phoenix" launch compounds start it and point the
   API (and, for the desktop one, the sidecar via a second `open --env`) at
   `http://localhost:6006`, and every FetchData and verifier dispatch is a span
-  with its own latency. Phoenix's own MCP server is registered in `.mcp.json`
+  with its own latency. The spans carry `openinference.project.name: duct`, so
+  they land in Phoenix's **duct** project instead of in `default` beside every
+  other local project's traces; Phoenix creates it on the first span, and any
+  other OTLP backend ignores the attribute. Phoenix's own MCP server is
+  registered in `.mcp.json`
   at `/mcp` on the same port, so an agent can read the traces of a slow run
   instead of querying the transcript table. Every log line carries a request
   id (`[a1b2c3d4]`, from `X-Request-Id` when the caller sends one, minted
