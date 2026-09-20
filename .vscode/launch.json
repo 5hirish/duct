@@ -79,11 +79,17 @@
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
+      "//": "Opens the traces UI in a Simple Browser tab once the server is actually listening, which is the whole reason you picked a Phoenix launch. Not the Live Preview extension: every livePreview command is `.atFile` and serves static workspace files from its own server, so it cannot front a running Python app. `openIntegratedBrowser` is the built-in equivalent — debug-server-ready matches this terminal by shell pid and opens the captured URL. The pattern reads the URL out of the banner's last line instead of capturing a port, because the banner prints 127.0.0.1 when the host is 0.0.0.0 and a hardcoded localhost would be a second place to fix. Zed ignores all of this: it reads .zed/debug.json, and serverReadyAction is VS Code only.",
       "name": "Phoenix: OTEL traces UI (:6006)",
       "type": "node-terminal",
       "request": "launch",
       "command": "poetry run python -m phoenix.server.main serve",
       "cwd": "${workspaceFolder}/backend",
+      "serverReadyAction": {
+        "action": "openIntegratedBrowser",
+        "pattern": "open (https?://\\S+) to get started",
+        "uriFormat": "%s"
+      },
       "postDebugTask": "Phoenix: stop (6006)"
     },
     {
