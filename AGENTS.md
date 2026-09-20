@@ -222,6 +222,67 @@ other local stacks: Next.js **3003**, FastAPI **8002**, static site **8090**.
 Only one process can bind a port — `Address already in use` on 8090 usually
 means a leftover `dev_server.py`.
 
+## Debugging against the running stack
+
+Those servers are usually already up, started from the editor by whoever asked
+the question. **Probe them before theorising, and never restart or kill one**
+— a `dev_stop.sh` for a clean slate takes down the session the person is
+looking at. Three commands answer most of it:
+
+```bash
+lsof -nP -iTCP -sTCP:LISTEN | grep -E ':(3003|8002|8090|6006)\b'  # app, API, site, Phoenix
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8002/health
+curl -s -D - -o /dev/null http://localhost:8002/health             # headers say where it broke
+```
+
+`ps` and `pgrep` do not work from the agent sandbox and are not worth
+retrying: `/bin/ps` is setgid `procmod` and Seatbelt denies the exec outright
+(`operation not permitted`, or `sysmond service not found` from `pgrep`).
+`lsof` replaces them and answers the better question anyway — it names the
+process *and* the port it holds.
+
+Read the headers, not just the status. Every response carries `X-Request-Id`
+from `AccessLogMiddleware` (see [`backend/AGENTS.md`](backend/AGENTS.md)), so a
+500 **without** that header failed in or before middleware rather than in a
+route, which is worth knowing before opening a single handler. `/health`
+returns a static response and cannot fail on its own, so a 500 there is never
+about `/health`.
+
+Two traps. `:8002` is the uvicorn dev server and **not** the desktop app,
+which runs a frozen PyInstaller sidecar on a port of its own
+([`backend/AGENTS.md`](backend/AGENTS.md), "Desktop (local sidecar) mode") —
+a desktop symptom reproduced against `:8002` proves nothing about the desktop
+build. And Phoenix on **6006** already holds the traces of every agent turn,
+model call and tool call, with its own MCP server at `/mcp` on the same port:
+read a slow or failed run there rather than reconstructing it from the
+transcript.
+
+The server's log lines are readable too, because the editor launch configs set
+`DUCT_LOG_FILE` and `server.py` appends the same formatted lines — app
+namespaces, the access log, and uvicorn's own tracebacks — to
+`backend/dev.log` (gitignored by `*.log`, rotates at 8 MB). **Read it before
+asking for a paste.** Terminal scrollback is invisible to an agent, which used
+to make every 500 cost a round trip:
+
+```bash
+tail -40 backend/dev.log                       # what just happened
+grep -n "Traceback" -A 30 backend/dev.log | tail -60
+grep -n "\[a4137360\]" backend/dev.log         # one request, start to finish
+```
+
+A server started some other way has no `DUCT_LOG_FILE` and no file; the env var
+is the whole mechanism, so export it and restart rather than hunting for a log
+that was never written.
+
+**Never install or update packages while a dev server is running from that
+virtualenv.** On 2026-09-20 a `poetry update` swapped `anyio` 4.13 for 4.15
+under a live uvicorn, and every sync route began failing with `ImportError:
+cannot import name 'TaskHandle'`. Python had the old `anyio._core._tasks` in
+`sys.modules` and imported the new `_backends/_asyncio.py` lazily, on the first
+`run_in_threadpool` call, hours after the install. Nothing on disk was wrong
+and the whole suite passed, which is what makes it expensive: the failure looks
+like a code bug and is not one. Stop the server first, or restart it after.
+
 ## Non-negotiables
 
 These are the ones that cost the most to get wrong. Each is enforced by a test,
