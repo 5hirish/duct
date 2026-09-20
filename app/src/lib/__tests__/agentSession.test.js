@@ -397,6 +397,41 @@ describe("context and cost", () => {
     expect(fresh.usage.last.stale).toBeUndefined();
   });
 
+  it("a message that never reached the agent comes back to the composer", () => {
+    const sent = reduceAgentSession(initialAgentState, {
+      type: Action.USER_SENT, text: "why did signups drop?", clientId: "c1",
+    });
+    const failed = reduceAgentSession(sent, {
+      type: Action.SEND_FAILED, error: "Failed to fetch", content: "why did signups drop?", clientId: "c1",
+    });
+    // Not left in the transcript looking sent.
+    expect(failed.messages.some((m) => m.role === Row.USER)).toBe(false);
+    // Back in the composer instead, on a fresh key so the box actually takes it.
+    expect(failed.draft.text).toBe("why did signups drop?");
+    expect(failed.draft.key).toBeGreaterThan(0);
+    // And the error says the server was unreachable, not "Failed to fetch".
+    const err = failed.messages[failed.messages.length - 1];
+    expect(err.role).toBe(Row.SEND_ERROR);
+    expect(err.text).toMatch(/Couldn't reach the server/);
+    expect(failed.isAgentTyping).toBe(false);
+  });
+
+  it("a failed image keeps its row, because a text box cannot hold it", () => {
+    const sent = reduceAgentSession(initialAgentState, {
+      type: Action.USER_SENT, text: "[image attached]", clientId: "c2",
+    });
+    const failed = reduceAgentSession(sent, {
+      type: Action.SEND_FAILED, error: "Message failed: 500", content: { image_id: "img-1" }, clientId: "c2",
+    });
+    expect(failed.messages.some((m) => m.role === Row.USER)).toBe(true);
+    expect(failed.draft).toBeNull();
+    // The bubble keeps the payload so Retry has something to resend.
+    const err = failed.messages[failed.messages.length - 1];
+    expect(err.content).toEqual({ image_id: "img-1" });
+    // A raw status code never reaches the user.
+    expect(err.text).not.toMatch(/500/);
+  });
+
   it("a resumed thread reads its usage from the state route", () => {
     const s = reduceAgentSession(initialAgentState, {
       type: Action.PAUSES,
@@ -462,10 +497,11 @@ describe("input while the agent is busy", () => {
     expect(s.messages.at(-1).queued).toBe(false);
   });
 
-  it("a failed send drops the mark and adds the error row", () => {
+  it("a failed send hands the text back rather than leaving it looking sent", () => {
     const sent = reduceAgentSession(working, { type: Action.USER_SENT, text: "x", clientId: "m4" });
     const failed = reduceAgentSession(sent, { type: Action.SEND_FAILED, error: "boom", content: "x", clientId: "m4" });
-    expect(failed.messages.at(-2).queued).toBe(false);
+    expect(failed.messages.some((m) => m.role === Row.USER && m.clientId === "m4")).toBe(false);
+    expect(failed.draft.text).toBe("x");
     expect(failed.messages.at(-1).role).toBe(Row.SEND_ERROR);
   });
 });

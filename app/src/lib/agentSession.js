@@ -551,16 +551,44 @@ export function reduceAgentSession(state, action) {
       };
     }
 
-    case Action.SEND_FAILED:
+    case Action.SEND_FAILED: {
+      // A message that never reached the agent must not sit in the transcript
+      // looking exactly like one that did. Pull the row and hand the text back
+      // to the composer, the same move STOPPED makes with a queued message:
+      // losing what someone typed is worse than any error copy, and a row that
+      // reads as sent is worse than both.
+      //
+      // Only text comes back. `content` is an image for an attachment, which
+      // no text box can hold, so that case keeps its row and the Retry button
+      // on the error bubble instead — the one affordance that can resend it.
+      const returnable = typeof action.content === "string" && Boolean(action.content.trim());
+      const released = releaseQueued(state.messages, action.clientId);
+      const kept =
+        returnable && action.clientId
+          ? released.filter((m) => !(m.role === Row.USER && m.clientId === action.clientId))
+          : released;
       return {
         ...state,
         isAgentTyping: false,
         phase: state.phase === Phase.CHATTING ? Phase.READY : state.phase,
+        draft: returnable
+          ? { text: action.content, key: (state.draft?.key || 0) + 1 }
+          : state.draft,
         messages: [
-          ...releaseQueued(state.messages, action.clientId),
-          { role: Row.SEND_ERROR, text: action.error || "Your message didn't reach the agent.", content: action.content ?? null },
+          ...kept,
+          {
+            role: Row.SEND_ERROR,
+            // Through the same translator every other failure uses. Raw
+            // `err.message` here was "Message failed: 500" and "Failed to
+            // fetch" — a status code in the user's face, and the one string
+            // that most often means "the server is not running".
+            text: friendlyErrorMessage(action.error || "", action.code),
+            content: returnable ? null : action.content ?? null,
+            code: action.code || "",
+          },
         ],
       };
+    }
 
     case Action.ANSWER_SENT: {
       const pauses = state.pauses.filter((p) => !samePause(p, action.pause));
@@ -705,13 +733,15 @@ export function friendlyErrorMessage(raw, code = "") {
   // Common transient classes
   if (/rate limit|429/i.test(msg)) return "We're hitting a rate limit — wait a minute and try again.";
   if (/timeout|timed.?out/i.test(msg)) return "That took longer than expected. Try again.";
-  if (/network|connection|fetch failed|ECONNREFUSED/i.test(msg)) return "Couldn't reach the server. Check your internet and try again.";
+  if (/network|connection|fetch failed|failed to fetch|ECONNREFUSED/i.test(msg)) return "Couldn't reach the server. Check your internet and try again.";
 
   // Validation
   if (/validation|invalid|missing/i.test(msg) && msg.length < 200) return "Some input wasn't valid — please review and try again.";
 
-  // Don't leak status codes / file paths / stack traces.
-  if (/^\d{3}\b/.test(msg) || /Traceback|line \d+/i.test(msg)) return SERVER_FAULT;
+  // Don't leak status codes / file paths / stack traces. The trailing form is
+  // what lib/api.js itself throws ("Message failed: 500"), which the leading
+  // test missed — a failed send put the bare status on screen.
+  if (/^\d{3}\b/.test(msg) || /failed:\s*\d{3}\b/i.test(msg) || /Traceback|line \d+/i.test(msg)) return SERVER_FAULT;
 
   // Reasonably short, doesn't look technical → pass through.
   if (msg.length < 200 && !/^\w+Error:/.test(msg)) return msg;

@@ -15,6 +15,21 @@ const isProduction = process.env.NODE_ENV === "production";
  */
 const hostedBase = normalizedConfiguredBase || (isProduction ? "" : "http://localhost:8002");
 
+// The control-plane calls that open a session and push a message into it both
+// return as soon as the backend has queued the work — the answer arrives on
+// the SSE stream, never in their response. So they are fast or they are
+// broken, and an un-timed `fetch` against a server that accepted the socket
+// and then stopped answering simply never settles: the composer stays
+// disabled and the thread spins with nothing on screen to say why. Never put
+// this on the stream itself, which is meant to stay open for the whole run.
+const CONTROL_CALL_TIMEOUT_MS = 30_000;
+
+/** `AbortSignal.timeout`, or nothing where the runtime lacks it (jsdom, older
+ *  Safari) — a missing timeout is the old behaviour, not a crash. */
+function controlCallSignal() {
+  return typeof AbortSignal?.timeout === "function" ? AbortSignal.timeout(CONTROL_CALL_TIMEOUT_MS) : undefined;
+}
+
 /**
  * Origin every request is sent to.
  *
@@ -302,6 +317,7 @@ export async function createAgentSession(agentType, params) {
       ...(await providerKeyHeaders()),
     },
     body: JSON.stringify(params),
+    signal: controlCallSignal(),
   });
   if (!res.ok) {
     throw await sessionCreateError(res);
@@ -363,6 +379,7 @@ export async function sendAgentMessage(agentType, sessionId, message) {
       method: "POST",
       headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(message),
+      signal: controlCallSignal(),
     }
   );
   if (!res.ok) throw new Error(`Message failed: ${res.status}`);
