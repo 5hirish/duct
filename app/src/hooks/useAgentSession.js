@@ -224,11 +224,20 @@ export function useAgentSession({
         /* see above */
       }
       if (!hydrateThreadState) return;
-      // The parked card, before any session exists to replay it.
+      // The parked card, before any session exists to replay it — and the
+      // context the thread has already spent, which is what the composer's
+      // ring reads.
       try {
         const thread = await getAgentThreadState(agentType, cid);
         if (dead()) return;
-        if (thread?.pauses?.length || thread?.todos?.length) {
+        // `usage.last` is null until a model call has been billed, so this
+        // restores the ring on a thread that spent context without parking a
+        // question, and still leaves a genuinely empty one reading "New
+        // thread". Gating on pauses/todos alone meant every finished thread
+        // reopened at 0%: the reducer handled it (agentSession.test.js, "a
+        // resumed thread reads its usage from the state route"), but nothing
+        // ever dispatched.
+        if (thread?.pauses?.length || thread?.todos?.length || thread?.usage?.last) {
           dispatch({ type: Action.PAUSES, pauses: thread.pauses || [], todos: thread.todos || [], usage: thread.usage });
         }
       } catch {
