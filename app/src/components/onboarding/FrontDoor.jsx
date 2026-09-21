@@ -53,10 +53,14 @@ export default function FrontDoor({ url, onUrlChange, error, onSubmit }) {
           </Trans>
         </h1>
 
+        {/* One sentence, the mechanism and the payoff. It opened with "Type
+            your address — that's the whole setup", which narrated the field
+            directly below it: copy describing a visible control is believed
+            less than the control and costs a line of the thing it points at. */}
         <p className="landing-start-sub">
           <Trans>
-            Type your address &mdash; that&rsquo;s the whole setup. Duct reads your
-            site the way a search engine does, then tells you what to fix first.
+            Duct reads your site the way a search engine does, then tells you
+            what to fix first.
           </Trans>
         </p>
 

@@ -9,7 +9,6 @@ import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import FrontDoor from "@/components/onboarding/FrontDoor";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   POST_SIGNIN_REDIRECT_KEY,
   SIGNIN_REASON_EXPIRED,
@@ -108,6 +107,10 @@ function SignInContent() {
   // catalogue below, and keeping `t` out of the widget effect means a language
   // switch does not re-render Turnstile and discard a token already solved.
   const [turnstileFailed, setTurnstileFailed] = useState(false);
+  // A challenge the visitor has been given and has not solved yet. Distinct
+  // from "failed": one says finish the box above, the other says there is no
+  // box, and a content blocker produces the second without an error-callback.
+  const [turnstilePending, setTurnstilePending] = useState(false);
   // The onboarding connector prompt armed the sign-in to also ask for Search
   // Console + Analytics (lib/signInSources.js). Shown so the extra consent
   // boxes at Google are expected, not a surprise.
@@ -116,9 +119,6 @@ function SignInContent() {
   // it during render would make the notice vanish on the next paint.
   const [sessionExpired, setSessionExpired] = useState(false);
   useEffect(() => setSessionExpired(consumeExpiredSessionFlag()), []);
-  // Checked by default: the whole point of the box is fewer forced re-logins,
-  // so someone who wants the shorter session has to opt out, not in.
-  const [rememberMe, setRememberMe] = useState(true);
   // The audit entry, front and centre on this page: a website, nothing more.
   // Submitting hands off to /start, which does the actual work (mints a
   // guest, reads the site) — this page only decides where a visitor lands.
@@ -222,6 +222,7 @@ function SignInContent() {
             callback: (token) => {
               setTurnstileToken(token);
               setTurnstileFailed(false);
+              setTurnstilePending(false);
             },
             "expired-callback": () => setTurnstileToken(""),
             "error-callback": () => {
@@ -229,7 +230,12 @@ function SignInContent() {
               setTurnstileFailed(true);
             },
             theme: resolvedTheme === "dark" ? "dark" : "light",
-            appearance: "always",
+            // Not "always". The overwhelming majority of visitors pass
+            // silently, and rendering a checkbox for all of them puts a
+            // security ritual above the one button on the page — plus the
+            // space it reserves shifts that button under a cursor already
+            // moving towards it.
+            appearance: "interaction-only",
           }
         );
       } catch {
@@ -267,6 +273,26 @@ function SignInContent() {
     };
   }, [ready, requiresTurnstile, resolvedTheme]);
 
+  /**
+   * Hold the click until the bot check has an answer, rather than greying out
+   * the button until it does. A disabled sign-in button on first paint is
+   * indistinguishable from a broken one, and the check usually resolves inside
+   * a second — so the wait belongs behind the press, where it reads as the
+   * sign-in starting, not as the page refusing.
+   */
+  const awaitTurnstileToken = useCallback(
+    async (timeoutMs = 8000) => {
+      const deadline = Date.now() + timeoutMs;
+      for (;;) {
+        const token = getTurnstileResponseToken();
+        if (token) return token;
+        if (Date.now() >= deadline) return "";
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      }
+    },
+    [getTurnstileResponseToken]
+  );
+
   const handleSignIn = useCallback(async () => {
     if (isSigningIn) return;
     if (!BASE) {
@@ -277,15 +303,28 @@ function SignInContent() {
       setShellBlocked("unconfigured");
       return;
     }
-    const resolvedTurnstileToken = turnstileToken || getTurnstileResponseToken();
+    setIsSigningIn(true);
+    setShellBlocked("");
+    setTurnstilePending(false);
+
+    let resolvedTurnstileToken = turnstileToken || getTurnstileResponseToken();
     if (requiresTurnstile && !resolvedTurnstileToken) {
-      return;
+      resolvedTurnstileToken = await awaitTurnstileToken();
+      if (!resolvedTurnstileToken) {
+        // These are not the same failure and must not share a sentence. A
+        // widget that rendered and has no token is a challenge still to solve;
+        // one that never rendered was blocked or never loaded, and "finish the
+        // check above" points at nothing — which is exactly what a content
+        // blocker produces, silently and without an `error-callback`.
+        if (turnstileWidgetIdRef.current === null) setTurnstileFailed(true);
+        else setTurnstilePending(true);
+        setIsSigningIn(false);
+        return;
+      }
     }
     if (resolvedTurnstileToken && resolvedTurnstileToken !== turnstileToken) {
       setTurnstileToken(resolvedTurnstileToken);
     }
-    setIsSigningIn(true);
-    setShellBlocked("");
     const params = new URLSearchParams();
     // A guest signing in keeps their work: the callback links the account it
     // creates to this guest, or merges the guest into an existing one. The
@@ -305,7 +344,11 @@ function SignInContent() {
     // armed for a prompt that was abandoned never rides a later sign-in.
     const sources = consumeSignInSources();
     if (sources) params.set("sources", sources);
-    if (rememberMe) params.set("remember", "1");
+    // Always. This was a pre-ticked "Keep me signed in for 30 days" checkbox
+    // sitting above the button: a decision demanded before the action it
+    // modifies, whose only reachable outcome was a user shortening their own
+    // session by mistake. Signing out is the answer to a shared computer.
+    params.set("remember", "1");
     // Desktop shell: Google disallows OAuth inside embedded webviews, so
     // capable shells run the flow in the system browser. The backend routes
     // the auth code back through the shell's deep link, which reloads this
@@ -349,14 +392,12 @@ function SignInContent() {
     const query = params.toString();
     window.location.href = `${BASE}/auth/signin/google/authorize${query ? `?${query}` : ""}`;
   }, [
+    awaitTurnstileToken,
     getTurnstileResponseToken,
     isSigningIn,
-    rememberMe,
     requiresTurnstile,
     turnstileToken,
   ]);
-
-  const hasTurnstileToken = Boolean(turnstileToken || getTurnstileResponseToken());
 
   if (!ready) {
     return (
@@ -382,116 +423,48 @@ function SignInContent() {
       {/* ── Sign in: the returning-user path, narrow and secondary ── */}
       <div className="landing-auth">
         <div className="landing-auth-inner">
-          <p className="landing-auth-kicker">
-            <Trans>Already using Duct?</Trans>
-          </p>
+          {/* One line, not three. This was "Already using Duct?" over "Sign in"
+              over "Continue with your Google account": a kicker, a heading and
+              a sub-line all introducing a single button that says what it does
+              on its face. The sub-line earns its place only when it carries
+              something the button cannot — why you are back here. */}
           <h2 id="signin-heading">
             <Trans>Sign in</Trans>
           </h2>
-          <p className="signin-form-sub">
-            {sessionExpired ? (
-              <Trans>Your session ended. Sign in again and we'll take you back to where you were.</Trans>
-            ) : (
-              <Trans>Continue with your Google account</Trans>
-            )}
-          </p>
+          {sessionExpired && (
+            <p className="signin-form-sub">
+              <Trans>Your session ended. Sign in again and we&rsquo;ll take you back to where you were.</Trans>
+            </p>
+          )}
 
           {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label={t`Security verification`} />}
 
-          <label htmlFor="signin-remember-me" className="landing-remember">
-            <Checkbox
-              id="signin-remember-me"
-              checked={rememberMe}
-              onCheckedChange={setRememberMe}
-              disabled={isSigningIn}
-            />
-            <Trans>Keep me signed in for 30 days</Trans>
-          </label>
-
           <GoogleSignInButton
             onClick={handleSignIn}
-            disabled={isSigningIn || (requiresTurnstile && !hasTurnstileToken)}
+            disabled={isSigningIn}
             isLoading={isSigningIn}
             loadingLabel={awaitingBrowser ? t`Continue in your browser…` : t`Signing in...`}
           />
-          {sourcesArmed && !awaitingBrowser && (
-            <p className="landing-auth-note">
-              <Trans>
-                Google will also ask to share Search Console and Analytics with
-                Duct &mdash; read-only, and either box can be left unticked.
-              </Trans>
-            </p>
-          )}
-          {awaitingBrowser && (
-            <p className="landing-auth-note">
-              <Trans>
-                Finish signing in with Google in your browser — this window will
-                continue automatically.
-              </Trans>{" "}
-              <button
-                type="button"
-                className="underline underline-offset-2"
-                onClick={() => window.location.reload()}
-              >
-                <Trans>Start over</Trans>
-              </button>
-            </p>
-          )}
-          {requiresTurnstile && !hasTurnstileToken && (
-            <p className="landing-auth-note">
-              <Trans>Complete security check to continue.</Trans>
-            </p>
-          )}
-          {turnstileFailed && (
-            <p className="landing-auth-note landing-auth-note-error">
-              <Trans>Security check failed to load. Please refresh and try again.</Trans>
-            </p>
-          )}
-          {shellBlocked === "outdated" && (
-            <p className="landing-auth-note landing-auth-note-error">
-              <Trans>
-                This version of Duct can&rsquo;t complete sign-in. Update the app
-                from{" "}
-                <a
-                  className="underline underline-offset-2"
-                  href="https://getduct.ai/download"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  getduct.ai/download
-                </a>{" "}
-                and try again.
-              </Trans>
-            </p>
-          )}
-          {shellBlocked === "unconfigured" && (
-            <p className="landing-auth-note landing-auth-note-error">
-              <Trans>
-                Sign-in is unavailable on this deployment: no API endpoint is
-                configured. If this is your install, set{" "}
-                <code>NEXT_PUBLIC_API_BASE</code> and redeploy.
-              </Trans>
-            </p>
-          )}
-          {shellBlocked === "browser" && (
-            <p className="landing-auth-note landing-auth-note-error">
-              <Trans>
-                Duct couldn&rsquo;t open your browser to finish signing in. Check
-                that you have a default browser set, then try again.
-              </Trans>
-            </p>
-          )}
+
+          {signInNotice({
+            shellBlocked,
+            turnstileFailed,
+            turnstilePending,
+            awaitingBrowser,
+            sourcesArmed,
+          })}
 
           <p className="signin-legal">
             <Trans>
-              By signing in, you agree to our{" "}
+              By continuing you agree to the{" "}
               <a href="https://getduct.ai/terms" target="_blank" rel="noopener noreferrer">
-                Terms of Service
+                Terms
               </a>{" "}
               and{" "}
               <a href="https://getduct.ai/privacy" target="_blank" rel="noopener noreferrer">
                 Privacy Policy
               </a>
+              .
             </Trans>
           </p>
         </div>
@@ -511,4 +484,90 @@ function SignInContent() {
       </div>
     </main>
   );
+}
+
+/**
+ * The one thing worth saying under the button, in the order it matters: a
+ * shell that cannot sign in at all, then a bot check in the way, then a flow
+ * already running elsewhere, then the extra consent boxes to expect.
+ *
+ * One slot, never a stack. These were five sibling conditionals, and a panel
+ * that can sprout five paragraphs under its only button is how a login screen
+ * grows back into a wall of text.
+ */
+function signInNotice({
+  shellBlocked,
+  turnstileFailed,
+  turnstilePending,
+  awaitingBrowser,
+  sourcesArmed,
+}) {
+  const error = (node) => <p className="landing-auth-note landing-auth-note-error">{node}</p>;
+
+  if (shellBlocked === "outdated") {
+    return error(
+      <Trans>
+        This version of Duct can&rsquo;t complete sign-in. Update the app from{" "}
+        <a
+          className="underline underline-offset-2"
+          href="https://getduct.ai/download"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          getduct.ai/download
+        </a>{" "}
+        and try again.
+      </Trans>
+    );
+  }
+  if (shellBlocked === "unconfigured") {
+    return error(
+      <Trans>
+        Sign-in is unavailable on this deployment: no API endpoint is configured.
+        If this is your install, set <code>NEXT_PUBLIC_API_BASE</code> and redeploy.
+      </Trans>
+    );
+  }
+  if (shellBlocked === "browser") {
+    return error(
+      <Trans>
+        Duct couldn&rsquo;t open your browser to finish signing in. Check that you
+        have a default browser set, then try again.
+      </Trans>
+    );
+  }
+  if (turnstileFailed) {
+    return error(<Trans>Security check failed to load. Refresh and try again.</Trans>);
+  }
+  if (turnstilePending) {
+    return error(<Trans>Finish the security check above, then try again.</Trans>);
+  }
+  if (awaitingBrowser) {
+    return (
+      <p className="landing-auth-note">
+        <Trans>
+          Finish signing in with Google in your browser — this window will continue
+          automatically.
+        </Trans>{" "}
+        <button
+          type="button"
+          className="underline underline-offset-2"
+          onClick={() => window.location.reload()}
+        >
+          <Trans>Start over</Trans>
+        </button>
+      </p>
+    );
+  }
+  if (sourcesArmed) {
+    return (
+      <p className="landing-auth-note">
+        <Trans>
+          Google will also ask to share Search Console and Analytics with Duct
+          &mdash; read-only, and either box can be left unticked.
+        </Trans>
+      </p>
+    );
+  }
+  return null;
 }

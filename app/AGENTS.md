@@ -59,7 +59,21 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   as a demand rather than an offer to someone who has not decided yet: the
   connector list as pills under the field (it survives as one sentence below
   the fold, with a "when you're ready" clause), and `/start`'s aqueduct strip
-  rendered dry, which is three chores shown before the first click. Its ink is
+  rendered dry, which is three chores shown before the first click.
+  **The sign-in half is one heading, one button and one line of legal, and
+  each thing missing from it was removed on purpose:** the "Already using
+  Duct?" kicker and the "Continue with your Google account" sub-line (three
+  lines introducing a button that says what it does on its face — the sub-line
+  is back only for an expired session, which carries something the button
+  cannot); the pre-ticked "Keep me signed in for 30 days" checkbox above the
+  button, a decision demanded before the action it modifies whose only
+  reachable outcome was a user shortening their own session by mistake
+  (`remember=1` is sent always now); and four of the five notices that could
+  stack under the button, now one slot filled by `signInNotice()`. Turnstile
+  renders `appearance: "interaction-only"`, so the box exists only for a
+  visitor actually challenged, and the button is never disabled waiting for a
+  token — `awaitTurnstileToken` holds the click, because a disabled sign-in
+  button on first paint is indistinguishable from a broken one. Its ink is
   semantic tokens only — the ground is `--start-ground`, which flips with the
   theme, and the fixed `--navy` brand hexes it used to paint with measured
   1.05:1 on it in dark.

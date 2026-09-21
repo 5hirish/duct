@@ -921,8 +921,8 @@ msgid "All statuses"
 msgstr ""
 
 #: src/app/(auth)/page.js
-msgid "Already using Duct?"
-msgstr ""
+#~ msgid "Already using Duct?"
+#~ msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "alt ×{missingAlt}"
@@ -1420,6 +1420,10 @@ msgstr ""
 msgid "By agent"
 msgstr ""
 
+#: src/app/(auth)/page.js
+msgid "By continuing you agree to the <0>Terms</0> and <1>Privacy Policy</1>."
+msgstr ""
+
 #: src/components/content/DiscoverPage.jsx
 msgid "By hashtag"
 msgstr ""
@@ -1433,8 +1437,8 @@ msgid "By provider"
 msgstr ""
 
 #: src/app/(auth)/page.js
-msgid "By signing in, you agree to our <0>Terms of Service</0> and <1>Privacy Policy</1>"
-msgstr ""
+#~ msgid "By signing in, you agree to our <0>Terms of Service</0> and <1>Privacy Policy</1>"
+#~ msgstr ""
 
 #: src/components/models/UsagePanel.jsx
 msgid "Cached input"
@@ -1683,8 +1687,8 @@ msgid "Competitors"
 msgstr ""
 
 #: src/app/(auth)/page.js
-msgid "Complete security check to continue."
-msgstr ""
+#~ msgid "Complete security check to continue."
+#~ msgstr ""
 
 #: src/components/audit/AuditReport.jsx
 msgid "Composing findings and priorities…"
@@ -1862,8 +1866,8 @@ msgid "Continue with ChatGPT"
 msgstr ""
 
 #: src/app/(auth)/page.js
-msgid "Continue with your Google account"
-msgstr ""
+#~ msgid "Continue with your Google account"
+#~ msgstr ""
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Controls how deeply the AI reasons about your site before writing findings."
@@ -2366,6 +2370,10 @@ msgstr ""
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
 msgstr ""
 
+#: src/components/onboarding/FrontDoor.jsx
+msgid "Duct reads your site the way a search engine does, then tells you what to fix first."
+msgstr ""
+
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
 msgstr ""
@@ -2715,6 +2723,10 @@ msgstr ""
 
 #: src/app/(auth)/page.js
 msgid "Finish signing in with Google in your browser — this window will continue automatically."
+msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Finish the security check above, then try again."
 msgstr ""
 
 #: src/components/content/PostViewport.jsx
@@ -3349,8 +3361,8 @@ msgid "Keep it separate — start a new project instead"
 msgstr ""
 
 #: src/app/(auth)/page.js
-msgid "Keep me signed in for 30 days"
-msgstr ""
+#~ msgid "Keep me signed in for 30 days"
+#~ msgstr ""
 
 #: src/components/content/PostViewport.jsx
 msgid "Keep this post — adds it to your board"
@@ -5748,7 +5760,11 @@ msgid "Secret API key (V2)"
 msgstr ""
 
 #: src/app/(auth)/page.js
-msgid "Security check failed to load. Please refresh and try again."
+#~ msgid "Security check failed to load. Please refresh and try again."
+#~ msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Security check failed to load. Refresh and try again."
 msgstr ""
 
 #: src/app/(auth)/page.js
@@ -6908,8 +6924,8 @@ msgid "Turn off to audit a different business or competitor — only the fields 
 msgstr ""
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
-msgstr ""
+#~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
+#~ msgstr ""
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Type your answer…"
@@ -7638,7 +7654,11 @@ msgid "Your saved key"
 msgstr ""
 
 #: src/app/(auth)/page.js
-msgid "Your session ended. Sign in again and we'll take you back to where you were."
+#~ msgid "Your session ended. Sign in again and we'll take you back to where you were."
+#~ msgstr ""
+
+#: src/app/(auth)/page.js
+msgid "Your session ended. Sign in again and we’ll take you back to where you were."
 msgstr ""
 
 #: src/app/(start)/start/page.jsx
