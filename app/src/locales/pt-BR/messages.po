@@ -2415,10 +2415,14 @@ msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}.
 msgstr "Duct lê \"semana passada\" e \"ontem\" em {chosenZone}{offsetSuffix}."
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid ""
-"Duct reads your site the way a search engine does, then tells you what to fix first."
-msgstr ""
-"Duct lê seu site como um mecanismo de busca e, em seguida, diz o que você deve corrigir primeiro."
+msgid "Duct reads it the way a search engine does."
+msgstr "Duct lê da mesma forma que um mecanismo de busca."
+
+#: src/components/onboarding/FrontDoor.jsx
+#~ msgid ""
+#~ "Duct reads your site the way a search engine does, then tells you what to fix first."
+#~ msgstr ""
+#~ "Duct lê seu site como um mecanismo de busca e, em seguida, diz o que você deve corrigir primeiro."
 
 #: src/app/(start)/start/page.jsx
 msgid ""
@@ -2868,8 +2872,12 @@ msgid "Free SEO Audit"
 msgstr "Auditoria SEO Gratuita"
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid "Free, no account, and nothing else connected."
-msgstr "Gratuito, sem conta e nada mais conectado."
+msgid "Free, and no account needed."
+msgstr "Grátis, e não precisa de conta."
+
+#: src/components/onboarding/FrontDoor.jsx
+#~ msgid "Free, no account, and nothing else connected."
+#~ msgstr "Gratuito, sem conta e nada mais conectado."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Friendly"
@@ -3018,6 +3026,12 @@ msgid ""
 "Google Ads, GA4 or Mixpanel. This is the step that changes everything — I can’t check a number I can’t see."
 msgstr ""
 "Google Ads, GA4 ou Mixpanel. Este é o passo que muda tudo — não consigo verificar um número que não vejo."
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid ""
+"Google Ads, GA4, Search Console and Meta Ads connect later — read-only, only the ones you pick."
+msgstr ""
+"Google Ads, GA4, Search Console e Meta Ads se conectam depois — somente leitura, apenas os que você escolher."
 
 #: src/app/(app)/connections/page.jsx src/components/connections/logos.jsx
 msgid "Google Analytics"
@@ -3456,8 +3470,8 @@ msgid "Keep it separate — start a new project instead"
 msgstr "Mantenha-o separado — comece um novo projeto em vez disso"
 
 #: src/app/(auth)/page.js
-#~ msgid "Keep me signed in for 30 days"
-#~ msgstr "Mantenha-me conectado por 30 dias"
+msgid "Keep me signed in for 30 days"
+msgstr "Mantenha-me conectado por 30 dias"
 
 #: src/components/content/PostViewport.jsx
 msgid "Keep this post — adds it to your board"
@@ -7526,10 +7540,10 @@ msgid "When to post"
 msgstr "Quando postar"
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid ""
-"When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
-msgstr ""
-"Quando você estiver pronto, o Duct conecta Google Ads, GA4, Search Console e Meta Ads — somente leitura, e apenas os que você escolher."
+#~ msgid ""
+#~ "When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
+#~ msgstr ""
+#~ "Quando você estiver pronto, o Duct conecta Google Ads, GA4, Search Console e Meta Ads — somente leitura, e apenas os que você escolher."
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where do competitors beat me?"

@@ -2355,9 +2355,13 @@ msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}.
 msgstr "Ductは{chosenZone}{offsetSuffix}で「先週」と「昨日」を読み取ります。"
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid ""
-"Duct reads your site the way a search engine does, then tells you what to fix first."
-msgstr "Ductは検索エンジンと同じようにあなたのサイトを読み込み、最初に修正すべきことを伝えます。"
+msgid "Duct reads it the way a search engine does."
+msgstr "Ductは検索エンジンと同じように読み込みます。"
+
+#: src/components/onboarding/FrontDoor.jsx
+#~ msgid ""
+#~ "Duct reads your site the way a search engine does, then tells you what to fix first."
+#~ msgstr "Ductは検索エンジンと同じようにあなたのサイトを読み込み、最初に修正すべきことを伝えます。"
 
 #: src/app/(start)/start/page.jsx
 msgid ""
@@ -2790,8 +2794,12 @@ msgid "Free SEO Audit"
 msgstr "無料SEO監査"
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid "Free, no account, and nothing else connected."
-msgstr "無料、アカウント不要、他の接続もなし。"
+msgid "Free, and no account needed."
+msgstr "無料で、アカウントは不要です。"
+
+#: src/components/onboarding/FrontDoor.jsx
+#~ msgid "Free, no account, and nothing else connected."
+#~ msgstr "無料、アカウント不要、他の接続もなし。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Friendly"
@@ -2937,6 +2945,11 @@ msgstr "Google Ads"
 msgid ""
 "Google Ads, GA4 or Mixpanel. This is the step that changes everything — I can’t check a number I can’t see."
 msgstr "Google Ads、GA4、またはMixpanel。これはすべてを変えるステップです。見えない数値は確認できません。"
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid ""
+"Google Ads, GA4, Search Console and Meta Ads connect later — read-only, only the ones you pick."
+msgstr "Google Ads、GA4、Search Console、Meta Adsは後で接続します — 読み取り専用で、選択したもののみです。"
 
 #: src/app/(app)/connections/page.jsx src/components/connections/logos.jsx
 msgid "Google Analytics"
@@ -3367,8 +3380,8 @@ msgid "Keep it separate — start a new project instead"
 msgstr "分離したままにする — 代わりに新しいプロジェクトを開始する"
 
 #: src/app/(auth)/page.js
-#~ msgid "Keep me signed in for 30 days"
-#~ msgstr "30日間サインインしたままにする"
+msgid "Keep me signed in for 30 days"
+msgstr "30日間サインインしたままにする"
 
 #: src/components/content/PostViewport.jsx
 msgid "Keep this post — adds it to your board"
@@ -7339,10 +7352,10 @@ msgid "When to post"
 msgstr "投稿日時"
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid ""
-"When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
-msgstr ""
-"準備ができたら、DuctはGoogle Ads、GA4、Search Console、Meta Adsに接続します。読み取り専用で、選択したもののみです。"
+#~ msgid ""
+#~ "When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
+#~ msgstr ""
+#~ "準備ができたら、DuctはGoogle Ads、GA4、Search Console、Meta Adsに接続します。読み取り専用で、選択したもののみです。"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where do competitors beat me?"

@@ -9,6 +9,8 @@ import { isDesktopShell, getShellInfo, openExternal } from "../../lib/shell";
 import { isLocalBackendActive } from "../../lib/localBackend.js";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import FrontDoor from "@/components/onboarding/FrontDoor";
+import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   POST_SIGNIN_REDIRECT_KEY,
   SIGNIN_REASON_EXPIRED,
@@ -119,6 +121,9 @@ function SignInContent() {
   // it during render would make the notice vanish on the next paint.
   const [sessionExpired, setSessionExpired] = useState(false);
   useEffect(() => setSessionExpired(consumeExpiredSessionFlag()), []);
+  // Checked by default: the whole point of the box is fewer forced re-logins,
+  // so someone who wants the shorter session has to opt out, not in.
+  const [rememberMe, setRememberMe] = useState(true);
   // The audit entry, front and centre on this page: a website, nothing more.
   // Submitting hands off to /start, which does the actual work (mints a
   // guest, reads the site) — this page only decides where a visitor lands.
@@ -344,11 +349,7 @@ function SignInContent() {
     // armed for a prompt that was abandoned never rides a later sign-in.
     const sources = consumeSignInSources();
     if (sources) params.set("sources", sources);
-    // Always. This was a pre-ticked "Keep me signed in for 30 days" checkbox
-    // sitting above the button: a decision demanded before the action it
-    // modifies, whose only reachable outcome was a user shortening their own
-    // session by mistake. Signing out is the answer to a shared computer.
-    params.set("remember", "1");
+    if (rememberMe) params.set("remember", "1");
     // Desktop shell: Google disallows OAuth inside embedded webviews, so
     // capable shells run the flow in the system browser. The backend routes
     // the auth code back through the shell's deep link, which reloads this
@@ -395,6 +396,7 @@ function SignInContent() {
     awaitTurnstileToken,
     getTurnstileResponseToken,
     isSigningIn,
+    rememberMe,
     requiresTurnstile,
     turnstileToken,
   ]);
@@ -439,6 +441,16 @@ function SignInContent() {
 
           {requiresTurnstile && <div ref={turnstileContainerRef} className="cf-turnstile" aria-label={t`Security verification`} />}
 
+          <label htmlFor="signin-remember-me" className="landing-remember">
+            <Checkbox
+              id="signin-remember-me"
+              checked={rememberMe}
+              onCheckedChange={setRememberMe}
+              disabled={isSigningIn}
+            />
+            <Trans>Keep me signed in for 30 days</Trans>
+          </label>
+
           <GoogleSignInButton
             onClick={handleSignIn}
             disabled={isSigningIn}
@@ -467,6 +479,18 @@ function SignInContent() {
               .
             </Trans>
           </p>
+
+          {/* The art lives here now, not in the offer half. A 280px panel
+              beside that copy only fits above 1280px, and the rule that hid it
+              below that blanked it across the whole band the desktop window
+              occupies — 1200px by default, 900px minimum — so the desktop app
+              never showed it once. This column has room at every width, and it
+              had space going spare after the kicker and the sub-line were cut.
+              Last, not between the button and the legal: that line is what the
+              press agrees to and it has to stay next to the thing pressed.
+              Decorative and aria-hidden — it carries nothing the markup above
+              does not already say. */}
+          <MosaicPanel name={MOSAIC.fons} size={240} className="landing-auth-mosaic" />
         </div>
       </div>
 

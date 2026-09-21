@@ -59,17 +59,24 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   as a demand rather than an offer to someone who has not decided yet: the
   connector list as pills under the field (it survives as one sentence below
   the fold, with a "when you're ready" clause), and `/start`'s aqueduct strip
-  rendered dry, which is three chores shown before the first click.
+  rendered dry, which is three chores shown before the first click. **The
+  `FONS` mosaic is in the sign-in half, not this one**, and putting it back
+  beside the copy is a regression however well it reads at 1440: a 280px panel
+  only fits there above 1280px, and the rule that hid it below that blanked it
+  across the whole band the desktop window occupies (1200px default, 900px
+  minimum), so the desktop app never once showed it. The field and its button
+  are **one row**, not a stack — a single-field form over a full-width button
+  reads as two steps — and they stack again below 30rem.
   **The sign-in half is one heading, one button and one line of legal, and
   each thing missing from it was removed on purpose:** the "Already using
   Duct?" kicker and the "Continue with your Google account" sub-line (three
   lines introducing a button that says what it does on its face — the sub-line
   is back only for an expired session, which carries something the button
-  cannot); the pre-ticked "Keep me signed in for 30 days" checkbox above the
-  button, a decision demanded before the action it modifies whose only
-  reachable outcome was a user shortening their own session by mistake
-  (`remember=1` is sent always now); and four of the five notices that could
-  stack under the button, now one slot filled by `signInNotice()`. Turnstile
+  cannot); and four of the five notices that could
+  stack under the button, now one slot filled by `signInNotice()`. The
+  "Keep me signed in for 30 days" checkbox was removed on the same argument
+  and **put back on request** — it is a deliberate keep, not an oversight, so
+  leave it. Turnstile
   renders `appearance: "interaction-only"`, so the box exists only for a
   visitor actually challenged, and the button is never disabled waiting for a
   token — `awaitTurnstileToken` holds the click, because a disabled sign-in
