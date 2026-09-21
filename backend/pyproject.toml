@@ -20,7 +20,7 @@ packages = [
 
 [tool.poetry.dependencies]
 fastapi = "^0.141"
-uvicorn = {version = "^0.52", extras = ["standard"]}
+uvicorn = {version = "^0.53", extras = ["standard"]}
 # Starlette's form parser. FastAPI needs it at *import* time for any route
 # declaring Form()/File() — routes/content.py:/content/uploads does — so an
 # app missing it does not degrade, it fails to boot. It was only ever present
@@ -36,7 +36,7 @@ python-multipart = ">=0.0.32"
 google-ads = "^32.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.200.0"
-google-genai = "^2.23"
+google-genai = "^2.24"
 python-dotenv = "^1.2"
 pydantic = "^2.13"
 pydantic-settings = "^2.15"
@@ -53,7 +53,7 @@ boto3 = "^1.43"
 sqlmodel = "^0.0.42"
 alembic = "^1.20"
 psycopg = {version = "^3.3", extras = ["binary"]}
-sentry-sdk = "^2.69.1"
+sentry-sdk = "^2.69.2"
 dlt = "^1.30.0"
 selectolax = ">=0.4.11"
 extruct = ">=0.16"
