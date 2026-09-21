@@ -227,7 +227,12 @@ means a leftover `dev_server.py`.
 Those servers are usually already up, started from the editor by whoever asked
 the question. **Probe them before theorising, and never restart or kill one**
 — a `dev_stop.sh` for a clean slate takes down the session the person is
-looking at. Three commands answer most of it:
+looking at. That includes the desktop app: the dev window has no bundled
+frontend and loads `http://localhost:3003` directly
+(`desktop/src-tauri/tauri.dev.conf.json`, `tauri.local.conf.json`), so
+`dev_stop.sh app` blanks it white and WKWebView never retries. On 2026-09-21
+that happened twice in one session, for two `next build`s that bind no port
+and needed nothing stopped. Three commands answer most of it:
 
 ```bash
 lsof -nP -iTCP -sTCP:LISTEN | grep -E ':(3003|8002|8090|6006)\b'  # app, API, site, Phoenix

@@ -526,6 +526,17 @@ layout nobody would have drawn on purpose. If a change touches layout, spacing,
 alignment or colour, render it and check — do not use the person reviewing the
 PR as your renderer.
 
+Two things about *where* to look, both learned on the front door. The desktop
+shell is WKWebView, so a screen judged in the desktop app is verified in
+Playwright's `webkit`, not only `chromium` — `site/node_modules` has both. And
+a long-lived Duct Dev window is not a fresh page load: it takes Turbopack's
+hot updates, and on 2026-09-21 it took the JSX updates for a change but not
+the stylesheet, and sat showing new copy on an old layout while every fresh
+load was correct. Its cache (`~/Library/Caches/ai.getduct.desktop.dev/WebKit/
+NetworkCache`) held a stylesheet from before the edits. After a CSS change,
+reload the dev window before trusting what it shows, and before telling
+anyone the layout is broken — or fixed.
+
 **Use `/preview`.** `src/app/preview/` is a dev-only route (404s in production,
 no auth, no backend) that mounts one component at a time in the real app's CSS.
 Add scenes to `preview/scenes.jsx`; pick a **surface** (in place, dialog, sheet,
