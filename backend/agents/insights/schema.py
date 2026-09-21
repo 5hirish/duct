@@ -230,6 +230,15 @@ class InsightsSession(BaseAgentSession):
     autonomy: str = ""
     autonomy_model: str = ""
 
+    # The brief format the person prefers, and the one this thread has most
+    # recently been told. They differ on a resumed thread — its opening turn
+    # may be days old and carry a preference since changed — and after a
+    # composer change mid-conversation. ``routes/agents.py`` restates the
+    # preference at the next message whenever they differ; "" for `stated`
+    # means the thread has been told nothing this session.
+    artifact_format: str = ""
+    artifact_format_stated: str = ""
+
 
 def create_insights_session(session_id: str, agent_type: str = "insights") -> InsightsSession:
     """Create and register an insights session with both queues.

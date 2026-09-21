@@ -31,7 +31,7 @@ import AgentChat from "@/components/workspace/AgentChat";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton, SkeletonDocument } from "@/components/ui/skeleton";
-import ComposerDials from "@/components/workspace/ComposerDials";
+import ComposerDials, { TierDial } from "@/components/workspace/ComposerDials";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { getProjectById } from "@/lib/projects";
@@ -308,7 +308,12 @@ export default function InsightsWorkspace({
       inputDisabled={agent.inputDisabled}
       answerDisabled={!agent.attached}
       onAnswer={agent.answer}
-      onSendMessage={agent.send}
+      // The brief format rides on every message, so a dial change reaches
+      // the agent now rather than at the next session; the backend restates
+      // it to the thread only when it differs from what the thread has read.
+      onSendMessage={(content) =>
+        agent.send(content, { artifact_format: loadPreferences().preferred_artifact_format })
+      }
       onRetrySend={agent.send}
       onRetry={handleRetry}
       onStop={() => agent.stop({ keepReady: agent.opened })}
@@ -317,6 +322,7 @@ export default function InsightsWorkspace({
       composerTools={
         <ComposerDials projectId={projectId} autonomy={autonomy} onAutonomyChange={setAutonomy} deferred />
       }
+      composerAside={<TierDial deferred />}
       inputPlaceholder={t`Ask about your growth data…`}
       inputAriaLabel={t`Message the insights agent`}
       startingLabel={t`Opening the session…`}

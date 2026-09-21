@@ -246,10 +246,15 @@ front-matter fence carrying the title:
 {DUCT_ARTIFACT_OPEN}
 ---
 title: A specific title — what this brief concluded, not "Growth Brief"
-format: markdown
+format: markdown or html — the one this brief is written in
 ---
 # ...
 {DUCT_ARTIFACT_CLOSE}
+
+The `<deliverable_format>` block in the conversation says which format the \
+person prefers; it is a preference, and a request in chat for the other one \
+overrides it. This example names neither, because a thread once read the \
+example's value as the rule and refused an explicit request for HTML twice.
 
 - At most one artifact per turn, at the end of it, after you have said in chat \
 what you found. The chat message is the answer in miniature: the headline \
@@ -400,6 +405,11 @@ AUTONOMY_POSTURE: dict[str, str] = {
 
 # What each format is *for*, so the preference reads as a choice about the
 # reader rather than a file extension. Per-user, so it lives in the user turn.
+# Each entry describes the default; `_FORMAT_IS_A_PREFERENCE` follows it and
+# says it can be overruled from chat. A thread that read "write briefs in
+# markdown" as a rule told its owner twice that it "had to stick to plain
+# markdown" when he asked for HTML — instructions the model cannot tell from
+# constraints are read as constraints.
 _FORMAT_GUIDANCE: dict[str, str] = {
     "markdown": (
         "Write briefs in markdown. Headings, short paragraphs and tables; no HTML "
@@ -422,6 +432,25 @@ _FORMAT_GUIDANCE: dict[str, str] = {
         "that is what renders."
     ),
 }
+
+_FORMAT_IS_A_PREFERENCE = (
+    "That is the person's standing preference, set from the composer, not a "
+    "rule: when they ask in chat for the other format, write the next brief "
+    "in the one they asked for and say so."
+)
+
+
+def deliverable_format_block(artifact_format: str) -> str:
+    """The ``<deliverable_format>`` block for a preference, or '' for none.
+
+    One place for the opening turn, a resumed thread's first message and the
+    mid-conversation refresh in ``routes/agents.py`` to build it from, so the
+    model reads the same words wherever the preference reaches it.
+    """
+    guidance = _FORMAT_GUIDANCE.get(artifact_format, "")
+    if not guidance:
+        return ""
+    return xml_block("deliverable_format", f"{guidance} {_FORMAT_IS_A_PREFERENCE}")
 
 
 def build_insights_user_prompt(
@@ -452,7 +481,7 @@ def build_insights_user_prompt(
     ctx.set("user_context", user_context)
     ctx.set("project_memory", memory)
     ctx.set("data_sources", data_sources)
-    ctx.set("deliverable_format", xml_block("deliverable_format", _FORMAT_GUIDANCE.get(artifact_format, "")))
+    ctx.set("deliverable_format", deliverable_format_block(artifact_format))
     ctx.set("autonomy", xml_block("autonomy", AUTONOMY_POSTURE.get(autonomy, "")))
     return build_turn(
         spec=spec_for(AgentType.INSIGHTS),

@@ -87,6 +87,7 @@ from agents.insights.prompts.autonomous import (
     CAPABILITIES_UNATTENDED,
     build_insights_system_prompt,
     build_insights_user_prompt,
+    deliverable_format_block,
 )
 from agents.tools.execution_tools import build_execution_tools_lc
 from agents.models import ModelName, Provider
@@ -524,7 +525,12 @@ class AutonomousInsightsRunner:
         # is what opening a thread from the desk asks for); a fresh one takes the
         # assembled opening turn with the per-project blocks.
         is_resume = resume and conversation_id is not None
-        opening = prompt if is_resume else build_insights_user_prompt(
+        # A resumed thread's history holds the preference it opened with,
+        # which may be days old and since changed — one opened under markdown
+        # refused HTML twice after the default moved. The current preference
+        # rides ahead of the follow-up; with no prompt the route restates it
+        # at the first message instead (``_refresh_format``).
+        opening = _resumed_opening(prompt, artifact_format) if is_resume else build_insights_user_prompt(
             prompt=prompt,
             business_context=business_context,
             user_context=user_context,
@@ -684,6 +690,14 @@ class AutonomousInsightsRunner:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _resumed_opening(prompt: str, artifact_format: str) -> str:
+    """The follow-up a resumed thread opens with, format preference first."""
+    if not prompt:
+        return ""
+    block = deliverable_format_block(artifact_format)
+    return f"{block}\n\n{prompt}" if block else prompt
+
 
 async def _publish_brief(raw: str, emit: Callable, version: dict) -> dict | None:
     """A closing </duct_artifact>: publish it as the next brief version.

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -574,6 +575,13 @@ class DeepSession:
             try:
                 chat_msg = await asyncio.wait_for(session.chat_queue.get(), timeout=chat_idle_timeout)
             except asyncio.TimeoutError:
+                # Idle means nobody is there, not just nobody has typed. A
+                # consumer attached to the stream touches `last_activity` on
+                # every keep-alive frame, and someone reading a brief for 31
+                # minutes before asking their next question is not idle — the
+                # loop used to leave then, and their question went nowhere.
+                if time.monotonic() - session.last_activity < chat_idle_timeout:
+                    continue
                 logger.info("%s: session %s chat idle timeout", self.log_prefix, session.session_id)
                 return
             if chat_msg is None:  # sentinel from close_session
