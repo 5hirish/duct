@@ -698,6 +698,10 @@ The SWC macro plugin is a locked pair with Next: `@lingui/swc-plugin` is
 pinned exact because its `swc_core` must fall in the range Next's runtime
 accepts, and a semver bump broke the build with "failed to run Wasm plugin"
 (6.7.0 against Next 16.3.5). Bumping Next means re-testing the plugin.
+`.github/dependabot.yml` ignores version updates for it so the bump is not
+re-proposed weekly — a security advisory still opens its own PR. Lifting the
+pin is a deliberate act that travels with a Next bump, and the gate is
+`npm --prefix app run build` completing, not CI going green on the install.
 
 To see a screen in another language: `/preview` has a locale switch, and the
 `pseudo` locale (dev only) stretches every string so clipping shows without a
