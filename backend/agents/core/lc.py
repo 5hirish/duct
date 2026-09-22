@@ -319,6 +319,30 @@ def is_summarization_node(node: Any) -> bool:
     return SUMMARIZATION_NODE_MARK in str(node).lower()
 
 
+# LangChain's summariser writes its summary back as a HumanMessage that opens
+# with this sentence; the transcript shows the summary, not the framing.
+_SUMMARY_PREFIX = "Here is a summary of the conversation to date:"
+
+
+def compaction_summary(messages: Any) -> str:
+    """The summary a summariser just wrote, or "" when none is in the update.
+
+    The summariser tags its message (``additional_kwargs.lc_source ==
+    "summarization"``), which is the only stable handle on it: the message is
+    a HumanMessage like the user's own, so matching on type would be wrong the
+    moment a kept user turn sits beside it.
+    """
+    for message in messages or []:
+        kwargs = getattr(message, "additional_kwargs", None) or {}
+        if kwargs.get("lc_source") != "summarization":
+            continue
+        text = getattr(message, "content", "")
+        if not isinstance(text, str):
+            continue
+        return text.removeprefix(_SUMMARY_PREFIX).strip()
+    return ""
+
+
 def _states(delta: Any) -> list[dict]:
     return [d for d in (delta if isinstance(delta, list) else [delta]) if isinstance(d, dict)]
 
@@ -447,7 +471,7 @@ async def _dispatch_updates(
     on_todo: Callable[[list], Awaitable[None]] | None,
     on_tool_use: Callable[[str, Any, str], Awaitable[None]] | None,
     on_tool_result: Callable[[str, Any, str, bool], Awaitable[None]] | None,
-    on_compacted: Callable[[], Awaitable[None]] | None = None,
+    on_compacted: Callable[[str], Awaitable[None]] | None = None,
 ) -> None:
     """Read one ``updates`` chunk for todos, tool traffic and compaction.
 
@@ -462,13 +486,16 @@ async def _dispatch_updates(
         if str(node).startswith("__"):
             continue
         if is_middleware_node(node):
-            # A summariser that returned messages replaced the history.
+            # A summariser that returned messages replaced the history; the
+            # summary rides along so the transcript can show what it kept.
             if (
                 on_compacted is not None
                 and is_summarization_node(node)
                 and any(state.get("messages") for state in _states(delta))
             ):
-                await on_compacted()
+                await on_compacted(
+                    next((compaction_summary(s.get("messages")) for s in _states(delta) if s.get("messages")), "")
+                )
             continue
         for state in delta if isinstance(delta, list) else [delta]:
             if not isinstance(state, dict):
@@ -670,7 +697,7 @@ COMPACT_KEEP_TOKENS = 20_000
 _RESUME_AS_NODE = "tools"
 
 
-async def compact_thread(agent: Any, config: dict, model: Any, *, keep_tokens: int | None = None) -> bool:
+async def compact_thread(agent: Any, config: dict, model: Any, *, keep_tokens: int | None = None) -> str | None:
     """Summarise a thread's history in place so the next model call fits.
 
     The automatic summariser works from an estimate, and the provider counts
@@ -687,14 +714,15 @@ async def compact_thread(agent: Any, config: dict, model: Any, *, keep_tokens: i
     leave pointing past the end — and its fallback for that is to send the
     model the summary alone — so the event is cleared in the same write.
 
-    Returns False when there is nothing to cut, which the caller treats as the
-    ordinary failure.
+    Returns the summary it wrote (the transcript shows it under the
+    compaction divider), or None when there is nothing to cut, which the
+    caller treats as the ordinary failure.
     """
     snapshot = await agent.aget_state(config)
     values = getattr(snapshot, "values", None) or {}
     messages = list(values.get("messages") or [])
     if not messages:
-        return False
+        return None
     summariser = SummarizationMiddleware(
         model=model,
         trigger=("messages", 1),
@@ -702,11 +730,11 @@ async def compact_thread(agent: Any, config: dict, model: Any, *, keep_tokens: i
     )
     update = await summariser.abefore_model({"messages": messages}, None)  # type: ignore[arg-type]
     if not update:
-        return False
+        return None
     await agent.aupdate_state(
         config, {**update, "_summarization_event": None}, as_node=_RESUME_AS_NODE
     )
-    return True
+    return compaction_summary(update.get("messages"))
 
 
 class SeenImagePruneMiddleware(AgentMiddleware):
@@ -995,10 +1023,10 @@ async def stream_agent(
     compacting = False
     clock = TurnClock()
 
-    async def _on_compacted() -> None:
+    async def _on_compacted(summary: str) -> None:
         nonlocal compacting
         compacting = False
-        await emit({"event": AgentEvent.CONTEXT_COMPACTED})
+        await emit({"event": AgentEvent.CONTEXT_COMPACTED, "summary": summary})
 
     async def _timed_tool_use(name: str, tool_input: Any, tool_use_id: str) -> None:
         clock.tool_started(name, tool_use_id)

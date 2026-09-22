@@ -48,26 +48,19 @@
   text-align: center;
 }
 
-.landing-auth-kicker {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 0.5rem;
-}
-
 .landing-auth-inner h2 {
   font-family: var(--serif);
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--white);
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.75rem;
   letter-spacing: -0.3px;
 }
 
-.signin-form-sub {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.68);
-  margin-bottom: 1.75rem;
-  line-height: 1.6;
+/* The sub-line is conditional now (only an expired session has anything to
+   add), so the gap under the heading moves to whichever element is last. */
+.landing-auth-inner h2:has(+ .signin-form-sub) {
+  margin-bottom: 0.5rem;
 }
 
 .landing-remember {
@@ -81,37 +74,30 @@
   cursor: pointer;
 }
 
-.google-signin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  font-family: var(--sans);
-  color: var(--navy);
-  background: var(--white);
-  border: 1.5px solid transparent;
-  border-radius: var(--r);
-  cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.15s;
+.signin-form-sub {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.68);
+  margin-bottom: 1.75rem;
+  line-height: 1.6;
 }
 
-.google-signin-btn:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-}
-
-.google-signin-btn:active {
-  transform: scale(0.99);
+/* The mosaic closes the panel rather than leading it: the Google button is
+   the only thing on this side anyone came to press, and a 240px picture above
+   it would take the eye first. `MosaicPanel` refuses to render below 240px —
+   under that the tesserae stop resolving and it is a smudge — so this centres
+   it and lets the panel's own padding do the rest. */
+.landing-auth-mosaic {
+  margin: 2rem auto 0;
+  display: block;
 }
 
 .signin-legal {
   margin-top: 1.5rem;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.58);
   line-height: 1.6;
+  /* Two even lines rather than one full line and an orphaned "Policy." */
+  text-wrap: balance;
 }
 
 .signin-legal a {
@@ -125,8 +111,11 @@
 }
 
 /* Turnstile renders its own light widget; a light card reads as an
-   intentional inset on the dark panel, not a mismatch. */
-.landing-auth .cf-turnstile {
+   intentional inset on the dark panel, not a mismatch. `:not(:empty)` because
+   it renders `interaction-only` — for almost everyone the container stays
+   empty, and an empty box reserving 1.25rem above the one button on the panel
+   shifts it under a cursor already moving towards it. */
+.landing-auth .cf-turnstile:not(:empty) {
   margin-bottom: 1.25rem;
   display: flex;
   justify-content: center;
@@ -172,30 +161,8 @@
   width: 100%;
 }
 
-/* 80rem, not the 64rem the split itself uses: this panel is 68% of the
-   viewport, so at 1024px a second column leaves the copy about 295px and the
-   hero breaks to five lines. The breakpoint has to be read off the panel, not
-   the window. */
-@media (width >= 80rem) {
-  .landing-start-inner {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 3rem;
-  }
-}
-
 .landing-start-copy {
   max-width: 32rem;
-}
-
-/* The band between the split's breakpoint and the mosaic's: one column, but a
-   page that still fits one screen. Stacking a 280px panel under the copy there
-   buys a scrollbar with a decoration, so it sits out. Below 64rem the split has
-   already stacked and the page scrolls regardless, so the panel is free. */
-@media (64rem <= width < 80rem) {
-  .landing-mosaic {
-    display: none;
-  }
 }
 
 .landing-start-inner .signin-logo {
@@ -258,10 +225,21 @@
   max-width: 44ch;
 }
 
+/* Field and button on one row. A single-field form stacked over a full-width
+   button reads as two steps, and the copy column is 32rem, so there is room
+   for both. It stacks below 30rem, where a button beside a URL field leaves
+   neither usable. */
 .landing-start-form {
   display: grid;
-  gap: 0.75rem;
-  max-width: 28rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.625rem;
+  max-width: 32rem;
+}
+
+@media (width < 30rem) {
+  .landing-start-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 .landing-start-form .start-url-input {
@@ -269,7 +247,7 @@
 }
 
 .landing-start-hint {
-  max-width: 28rem;
+  max-width: 32rem;
   font-size: 0.875rem;
   color: var(--muted-foreground);
 }
@@ -288,7 +266,7 @@
   margin-top: 2rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
-  max-width: 28rem;
+  max-width: 32rem;
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--muted-foreground);

@@ -185,7 +185,7 @@ under 860px (`index.html` swaps the source before anything is fetched);
 | `site/sitemap.xml` | Every indexable page. A new page is not done until it is here. Bump `lastmod` only on pages the change actually touched. |
 | `site/blog/feed.xml` | RSS. Hand-maintained: add an `<item>` with every new post. CI fails if it is missing, empty, or carries an off-domain `<link>`. |
 | `site/changelog/feed.xml` | RSS for releases. Same hand-maintained rule: an `<item>` per release, `pubDate` in RFC 822. |
-| `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. |
+| `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. Names the five languages and the prefix each lives under, and repeats the home page's FAQ word for word: a model answering "what is Duct" lifts a direct answer over prose, and one asked in German has no other signal that `/de/` exists. Edit its FAQ and the page's `<details>` together. |
 | `site/_headers` | `Link:` discovery headers, the RSS content type Cloudflare would otherwise get wrong, and a one-week `Cache-Control` for shots, art, cards and icons (Pages revalidates everything on every view by default; `duct.css`/`duct.js` are deliberately left on that default because nothing versions their URLs). |
 
 JSON-LD is validated by `check-pages.py`: every `application/ld+json` block must
@@ -219,12 +219,24 @@ Every page hardcodes its canonical in `<head>`, generated posts included.
 
 Every HTML page must have:
 - canonical
-- description
+- description, 140–160 characters; `<title>` at most 60. Google cuts both, and
+  the German rendering runs a third longer than the English, so an English
+  description at the limit ships truncated in four languages.
 - robots
 - OG tags and Twitter tags, pointing at the page's own card in `assets/og/`
   (`node scripts/build_og_images.mjs` draws them all from its table; a new
   page adds a row there and runs it. Blog posts need no row: the builder
   reads their front matter, and the card is also the post's cover.)
+- `og:locale`. On a translated page (and its English source) the generator
+  writes it inside the marked hreflang block, with `og:locale:alternate` for
+  the other four; a page outside the generator's reach (blog, changelog)
+  writes `en_US` by hand.
+- JSON-LD with `inLanguage` on every top-level object, and a `BreadcrumbList`
+  on every page below the root (`Home → page`, or `Home → Free tools → tool`).
+  Keep a block's strings identical to the page's visible text: the FAQPage
+  is rebuilt from the page's own `<details>`, and the generator translates
+  the block through the same catalogue entries, so a paraphrase in the JSON
+  is a second string to translate and a claim the page does not make.
 - shared stylesheet
 - `config.js` then `duct.js`
 - GTM noscript iframe immediately after `<body>`
@@ -396,9 +408,15 @@ attributes people read (`alt`, `title`, `placeholder`, the meta descriptions,
 `<title>`), keeping a sentence's inline markup together as `<0>…</0>`
 placeholders so a translator can move a link; sets `<html lang>`; points the
 canonical and `og:url` at the localised address; writes an hreflang block for
-every language; makes relative asset paths root-absolute (a page under `/es/`
-cannot use `assets/duct.css`); points internal links at their localised twin
-(`/about` → `/es/about`, `/partials/nav-home.html` → `/es/partials/…`); and
+every language with the matching `og:locale` and `og:locale:alternate` pair;
+makes relative asset paths root-absolute (a page under `/es/` cannot use
+`assets/duct.css`); points internal links at their localised twin (`/about` →
+`/es/about`, `/partials/nav-home.html` → `/es/partials/…`); translates the
+JSON-LD (`name`, `headline`, `description`, `text` and the like, never a
+person's or organisation's name), localises the addresses in it (`url`,
+`mainEntityOfPage`, `item`) and sets `inLanguage` to the page's language,
+because a German page whose FAQPage is in English and whose `WebApplication`
+points at the English URL contradicts itself in front of the crawler; and
 injects `window.DUCT_I18N` with the strings `assets/*.js` inject at runtime.
 The English pages get the same hreflang block between
 `<!-- hreflang:start -->` / `<!-- hreflang:end -->` markers, which the

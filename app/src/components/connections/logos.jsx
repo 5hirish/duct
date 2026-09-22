@@ -15,6 +15,32 @@
 import { useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 
+/**
+ * What each mark is called. One map, because the name is needed twice — as the
+ * logo's alt text and as the word beside it wherever a connector is named in
+ * prose (the transcript's activity rows do both).
+ */
+export const CONNECTOR_NAMES = {
+  google_ads: msg`Google Ads`,
+  gsc: msg`Google Search Console`,
+  ga4: msg`Google Analytics`,
+  gtm: msg`Google Tag Manager`,
+  meta_ads: msg`Meta Ads`,
+  stripe: msg`Stripe`,
+  apple_ads: msg`Apple Search Ads`,
+  revenuecat: msg`RevenueCat`,
+  openai_ads: msg`OpenAI Ads`,
+  hubspot: msg`HubSpot`,
+  mixpanel: msg`Mixpanel`,
+  clarity: msg`Microsoft Clarity`,
+  growthbook: msg`GrowthBook`,
+  anthropic: msg`Anthropic`,
+  openai: msg`OpenAI`,
+  gemini: msg`Google Gemini`,
+  openrouter: msg`OpenRouter`,
+  xai: msg`xAI`,
+};
+
 function Img({ src, alt }) {
   const { i18n } = useLingui();
   return <img src={src} alt={i18n._(alt)} width="24" height="24" loading="lazy" decoding="async" />;
@@ -64,24 +90,24 @@ export function XaiMark() {
 }
 
 export const LOGOS = {
-  google_ads: <Img src="/icons/google-ads.svg" alt={msg`Google Ads`} />,
-  gsc: <Img src="/icons/google-search-console.png" alt={msg`Google Search Console`} />,
-  ga4: <Img src="/icons/google-analytics.svg" alt={msg`Google Analytics`} />,
-  gtm: <Img src="/icons/google-tag-manager.svg" alt={msg`Google Tag Manager`} />,
-  meta_ads: <Img src="/icons/meta-ads.svg" alt={msg`Meta Ads`} />,
-  stripe: <Img src="/icons/stripe.svg" alt={msg`Stripe`} />,
-  apple_ads: <Img src="/icons/apple-search-ads.svg" alt={msg`Apple Search Ads`} />,
-  revenuecat: <Img src="/icons/revenuecat.svg" alt={msg`RevenueCat`} />,
+  google_ads: <Img src="/icons/google-ads.svg" alt={CONNECTOR_NAMES.google_ads} />,
+  gsc: <Img src="/icons/google-search-console.png" alt={CONNECTOR_NAMES.gsc} />,
+  ga4: <Img src="/icons/google-analytics.svg" alt={CONNECTOR_NAMES.ga4} />,
+  gtm: <Img src="/icons/google-tag-manager.svg" alt={CONNECTOR_NAMES.gtm} />,
+  meta_ads: <Img src="/icons/meta-ads.svg" alt={CONNECTOR_NAMES.meta_ads} />,
+  stripe: <Img src="/icons/stripe.svg" alt={CONNECTOR_NAMES.stripe} />,
+  apple_ads: <Img src="/icons/apple-search-ads.svg" alt={CONNECTOR_NAMES.apple_ads} />,
+  revenuecat: <Img src="/icons/revenuecat.svg" alt={CONNECTOR_NAMES.revenuecat} />,
   openai_ads: <OpenAiMark />,
-  hubspot: <Img src="/icons/hubspot.svg" alt={msg`HubSpot`} />,
-  mixpanel: <Img src="/icons/mixpanel.svg" alt={msg`Mixpanel`} />,
-  clarity: <Img src="/icons/clarity.svg" alt={msg`Microsoft Clarity`} />,
-  growthbook: <Img src="/icons/growthbook.svg" alt={msg`GrowthBook`} />,
+  hubspot: <Img src="/icons/hubspot.svg" alt={CONNECTOR_NAMES.hubspot} />,
+  mixpanel: <Img src="/icons/mixpanel.svg" alt={CONNECTOR_NAMES.mixpanel} />,
+  clarity: <Img src="/icons/clarity.svg" alt={CONNECTOR_NAMES.clarity} />,
+  growthbook: <Img src="/icons/growthbook.svg" alt={CONNECTOR_NAMES.growthbook} />,
 
   // Model providers
-  anthropic: <Img src="/icons/anthropic.svg" alt={msg`Anthropic`} />,
+  anthropic: <Img src="/icons/anthropic.svg" alt={CONNECTOR_NAMES.anthropic} />,
   openai: <OpenAiMark />,
-  gemini: <Img src="/icons/gemini.svg" alt={msg`Google Gemini`} />,
+  gemini: <Img src="/icons/gemini.svg" alt={CONNECTOR_NAMES.gemini} />,
   openrouter: <OpenRouterMark />,
   xai: <XaiMark />,
 };

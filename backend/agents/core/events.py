@@ -89,6 +89,13 @@ class AgentEvent(StrEnum):
     # back) — the UI upserts by change_set_id.
     EXECUTION_PROPOSED = "execution_proposed"
 
+    # One tool call the person is allowed to watch — a connector pull, a web
+    # search, an image the agent drew. Emitted twice per call (running, then
+    # success/error) and upserted by ``activity_id`` in the UI. The allowlist
+    # and the per-tool card fields are in ``agents/core/activity.py``; a tool
+    # that is not on it never reaches the client at all.
+    TOOL_ACTIVITY = "tool_activity"
+
     # Memory (project_memories). MEMORY_WRITTEN carries the entries a turn
     # stored — the quiet "Remembered: …" line, with undo. MEMORY_RECALLED
     # carries the ids a turn was primed with, which the UI renders as chips
@@ -154,6 +161,16 @@ class EventKind(StrEnum):
     # because the half of the input that shaped the answer was never written
     # down. One per run_session; a resumed thread records its own.
     CONTEXT = "context"
+    # The thread's history was summarised in place: {summary}. Stored so a
+    # reopened transcript draws the same divider the live one did, with the
+    # summary behind it, where a gap in the conversation would otherwise be.
+    COMPACTED = "compacted"
+    # What memory gave the run and what the run gave memory: {memories} the
+    # digest recalled for the turn, {memory} one entry a tool wrote. Stored so
+    # a reopened thread shows the same "Recalled" and "Remembered" rows the
+    # live one drew; before this they vanished on reload for every agent.
+    MEMORY_RECALLED = "memory_recalled"
+    MEMORY_WRITTEN = "memory_written"
 
 
 class RunStatus(StrEnum):
@@ -304,6 +321,11 @@ AG_UI_EVENT: dict[AgentEvent, str] = {
     AgentEvent.PLAN_GENERATED:        "Custom",
     AgentEvent.POST_DRAFT_UPDATED:    "Custom",
     AgentEvent.EXECUTION_PROPOSED:    "Custom",
+    # A tool call the person may watch. AG-UI's ToolCall* events are the
+    # model's raw traffic — every call, with its whole input and output; this
+    # is the curated half (an allowlist, structured card fields, no payload),
+    # so it is a Custom event beside them rather than a second spelling of one.
+    AgentEvent.TOOL_ACTIVITY:         "Custom",
     AgentEvent.MEMORY_WRITTEN:        "Custom",
     AgentEvent.MEMORY_RECALLED:       "Custom",
     AgentEvent.MODEL_RETRYING:        "Custom",
@@ -328,6 +350,9 @@ AG_UI_EVENT_KIND: dict[EventKind, str] = {
     # The run's inputs: AG-UI has RunStarted for "a run began" but no event
     # for what it was given, so this is a custom event like the pause pair.
     EventKind.CONTEXT:     "Custom",
+    EventKind.COMPACTED:   "Custom",
+    EventKind.MEMORY_RECALLED: "Custom",
+    EventKind.MEMORY_WRITTEN:  "Custom",
 }
 
 

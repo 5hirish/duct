@@ -23,8 +23,9 @@ import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import FrontDoor from "@/components/onboarding/FrontDoor";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
-import ComposerDials from "@/components/workspace/ComposerDials";
+import ComposerDials, { TierDial } from "@/components/workspace/ComposerDials";
 import ChatInput from "@/components/workspace/ChatInput";
+import { DropHint } from "@/components/workspace/Attachments";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
 import { FolderOpen, RefreshCw } from "lucide-react";
@@ -33,8 +34,11 @@ import LoadError from "@/components/LoadError";
 import DeskCards from "@/components/insights/desk/DeskCards";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
-import { BriefPane, DataPane } from "@/components/insights/InsightsWorkspace";
-import { fetchedFromEvents } from "@/lib/insightsHistory";
+import { ArtifactPaneHeader, BriefPane, DataPane, DocumentFocus } from "@/components/insights/InsightsWorkspace";
+import { ActivityGroup, ActivityRow } from "@/components/workspace/ActivityRow";
+import { activitiesFromEvents, contextActivity, dataSourceRollup } from "@/lib/toolActivity";
+import { briefFile } from "@/lib/brief";
+import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
@@ -57,7 +61,7 @@ import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
-import { TranscriptRow } from "@/components/workspace/AgentChat";
+import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
 import StepProgress from "@/components/workspace/StepProgress";
 import { Row as ChatRow } from "@/lib/agentSession";
 import { StepStatus } from "@/lib/agentSteps";
@@ -216,6 +220,106 @@ function DeskActivityCollapseScene() {
   );
 }
 
+// The whole right pane, wired: the tabs switch, the shelf button opens the
+// gallery and a card there comes back to the document. Height is fixed
+// because the real pane gets its height from the split, and every question
+// worth asking here — does the document fill it, does it scroll itself, does
+// the header stay put — is a question about that height.
+function ArtifactPaneScene({ format = "html", docCount = GALLERY_DOCS.length }) {
+  const [pane, setPane] = useState("brief");
+  const [shelf, setShelf] = useState(false);
+  const [selected, setSelected] = useState(-1);
+  const [focused, setFocused] = useState(false);
+  const brief =
+    format === "html"
+      ? { title: "Paid ads, week of 1 Sept", version: 2, format: "html", content: GALLERY_HTML }
+      : { title: "Organic growth, week of 8 Sept", version: 2, format: "markdown", content: BRIEF_MARKDOWN };
+  const versions = [
+    { version: 1, label: "First pass" },
+    { version: 2, label: "Update 2" },
+  ];
+  return (
+    <div className="@container flex h-[34rem] flex-col overflow-hidden rounded-xl border border-border">
+      <ArtifactPaneHeader
+        pane={pane}
+        onPane={setPane}
+        dataCount={2}
+        title={shelf ? "All documents" : brief.title}
+        status={shelf ? "in this thread" : ""}
+        docCount={shelf ? 0 : docCount}
+        onShowGallery={() => setShelf(true)}
+        onDownload={shelf ? null : () => saveBrief(brief)}
+        onFocus={shelf ? null : () => setFocused(true)}
+        versions={shelf ? [] : versions}
+        selected={selected}
+        onSelect={setSelected}
+      />
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {pane === "data" ? (
+          <DataPane
+            fetched={[
+              { label: "GA4 · landing pages · 30 d", ok: true },
+              { label: "Google Ads · campaigns · 30 d", ok: true },
+            ]}
+          />
+        ) : shelf ? (
+          <div className="h-full overflow-y-auto bg-muted/30">
+            <ArtifactGallery
+              docs={GALLERY_DOCS}
+              onOpen={() => setShelf(false)}
+              loadContent={(id) =>
+                id === "never" ? new Promise(() => {}) : Promise.resolve(GALLERY_CONTENT[id])
+              }
+            />
+          </div>
+        ) : (
+          <BriefPane brief={brief} />
+        )}
+      </div>
+      <DocumentFocus
+        open={focused}
+        onOpenChange={setFocused}
+        brief={brief}
+        title={brief.title}
+        sub="v2"
+        onDownload={() => saveBrief(brief)}
+      />
+    </div>
+  );
+}
+
+// The real save, not a stub: a download control whose scene does nothing is a
+// scene that cannot answer whether the file comes out named correctly.
+function saveBrief(brief) {
+  const file = briefFile(brief);
+  saveText(brief.content, file.name, file.type);
+}
+
+// Opens on mount: the scene *is* the overlay, so there is nothing to click
+// first. Reopening after Escape is what the button in `artifact-pane` covers.
+function DocumentFocusScene() {
+  const [open, setOpen] = useState(true);
+  // Built here rather than beside the other fixtures: the module's brief
+  // fixtures are declared further down, and a const read above its own
+  // declaration is a blank screen with a TDZ error behind it.
+  const brief = { title: "Paid ads, week of 1 Sept", version: 2, format: "html", content: GALLERY_HTML };
+  return (
+    <div className="p-4 text-sm text-muted-foreground">
+      <button type="button" className="underline" onClick={() => setOpen(true)}>
+        Reopen the focus view
+      </button>
+      <DocumentFocus
+        open={open}
+        onOpenChange={setOpen}
+        brief={brief}
+        title={brief.title}
+        sub="v2"
+        onDownload={() => saveBrief(brief)}
+      />
+    </div>
+  );
+}
+
 function DeskComposerScene(props) {
   const [autonomy, setAutonomy] = useState(AUTONOMY_ASK);
   return <DeskComposer {...props} autonomy={autonomy} onAutonomyChange={setAutonomy} />;
@@ -283,6 +387,65 @@ p{line-height:1.5;max-width:60ch}.bar{height:10px;background:darkorange;border-r
 </style></head><body><h1>Paid ads, week of 1 Sept</h1><p>Spend is up 12% on flat conversions; the new broad-match campaign is where the money went.</p>
 <div class="k"><div>Spend<b>€4,120</b></div><div>Conversions<b>61</b></div><div>CPA<b>€67.5</b></div></div>
 <div class="bar"></div><p>Three of the four new ad groups have no negative keywords yet, and the search-terms report shows them matching on competitor names.</p></body></html>`;
+
+// A run's tool traffic as the recorder stores it: the call, then the body the
+// tool handed the model. Both the transcript's cards and the Data roll-up are
+// built from this one fixture, because in the app they are built from one
+// stream of events — a scene that faked either separately could show them
+// agreeing when the code does not.
+const use = (name, id, input) => ({ kind: "tool_use", data: { name, tool_use_id: id, input } });
+const returned = (name, id, payload, isError = false) => ({
+  kind: "tool_result",
+  data: { name, tool_use_id: id, result: JSON.stringify(payload), is_error: isError },
+});
+
+const TOOL_TRAFFIC = [
+  use("FetchData", "t1", { entity_id: "gsc_queries" }),
+  returned("FetchData", "t1", {
+    status: "ok", entity_id: "gsc_queries", connector_id: "gsc",
+    date_from: "2026-08-20", date_to: "2026-09-17", data: { rows: new Array(500).fill(0) },
+  }),
+  use("FetchData", "t2", { entity_id: "ga4_landing_pages" }),
+  returned("FetchData", "t2", {
+    status: "ok", entity_id: "ga4_landing_pages", connector_id: "ga4",
+    date_from: "2026-08-20", date_to: "2026-09-17", data: { rows: new Array(842).fill(0) },
+  }),
+  use("FetchData", "t3", { entity_id: "google_ads_campaigns" }),
+  returned("FetchData", "t3", {
+    status: "reauth_required", entity_id: "google_ads_campaigns", connector_id: "google_ads",
+    message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it on the Connections page.",
+  }),
+  use("WebSearch", "t4", { query: "self-hosted AI gateway 2026 alternatives" }),
+  returned("WebSearch", "t4", {
+    status: "ok", query: "self-hosted AI gateway 2026 alternatives", grounded: true,
+    sources: [
+      { title: "docs.litellm.ai", url: "https://docs.litellm.ai/docs/proxy" },
+      { title: "portkey.ai", url: "https://portkey.ai/docs" },
+      { title: "github.com", url: "https://github.com/BerriAI/litellm" },
+    ],
+  }),
+  use("WebFetch", "t5", { url: "https://docs.litellm.ai/docs/proxy/deploy" }),
+  returned("WebFetch", "t5", { status: "ok", url: "https://docs.litellm.ai/docs/proxy/deploy", truncated: true }),
+  use("task", "t6", { subagent_type: "verifier", description: "Check every number in the brief against the pulls it cites." }),
+  { kind: "tool_result", data: { name: "task", tool_use_id: "t6", result: "Checked 9 figures. Two were stated without their window; both corrected.", is_error: false } },
+  use("SearchMemory", "t7", { query: "pricing change" }),
+  returned("SearchMemory", "t7", { count: 2, memories: [{ title: "Pricing changed on 4 Sept" }, { title: "Mobile is the growth channel" }] }),
+  use("ListDataSources", "t8", {}),
+  returned("ListDataSources", "t8", { status: "ok", sources: [{ id: "ga4" }, { id: "gsc" }, { id: "google_ads" }, { id: "mixpanel" }] }),
+  use("GetArtifact", "t9", { artifact_id: "a1" }),
+  returned("GetArtifact", "t9", { artifact_id: "a1", title: "Organic growth, week of 8 Sept", kind: "brief", version: 3 }),
+  use("FetchPages", "t10", { urls: ["https://acme.io/", "https://acme.io/pricing", "https://acme.io/blog/launch"] }),
+  returned("FetchPages", "t10", { pages: [{ url: "https://acme.io/" }, { url: "https://acme.io/pricing" }], errors: ["https://acme.io/blog/launch: 404"] }),
+  use("publish_post", "t11", { post_id: "p1" }),
+  returned("publish_post", "t11", { status: "ok", post_id: "p1", post_bridge_post_id: "pb1", status_label: "scheduled", scheduled_at: "2026-09-23T09:00:00Z" }),
+];
+
+// The run's own notice comes first: it is what the opening turn was built
+// from, before any tool ran.
+const ACTIVITIES = [
+  contextActivity({ resume: false, blocks: { business_context: "…", user_context: "…", memory: "…", data_sources: "ga4, gsc", artifact_format: "html" } }, "context-1"),
+  ...activitiesFromEvents(TOOL_TRAFFIC),
+];
 
 const GALLERY_DOCS = [
   { id: "g1", group_id: "g1", title: "Organic growth, week of 8 Sept", version: 3, version_count: 3, content_type: "text/markdown", has_content: true, created_at: new Date(Date.now() - 2 * 3600_000).toISOString() },
@@ -539,7 +702,7 @@ export const SCENES = [
     state: "default — a project with a favicon, no thread yet",
     group: "DeskComposer",
     title: "The insights composer",
-    note: "Both Selects here use a custom chip as the trigger's content instead of SelectValue, which is why they're pinned to position=\"popper\" rather than the shadcn default (\"item-aligned\"): item-aligned aligns the selected SelectItem over the trigger by locating it through SelectValue, and silently renders off-screen with nothing to find. Check that both open in place and that picking an option updates the chip's label. Also check the send button's loading spinner and the amber \"no provider connected\" notice (type something, then use the browser's devtools to force a 401 on /api/providers/status) — the notice must not clear the draft.",
+    note: "Left: the posture, folded to the current choice; the other two unfold on hover, keyboard focus, or a tap of the visible one (touch has no hover), and the unfold is a width transition, not a pop. Right: the model tier as quiet text — its popover holds the tier list and, under it, thinking as a stepped slider with the stop's name beside the title, a dot per step on the track and one line saying what the stop buys — then the context ring with no label (percent, tokens and cost are on hover), then Send. Check that the folded pill's text sits centred, that the tier trigger adds the thinking rung only when one is set, that Tab walks tier choices then the slider thumb, and that the send button's loading spinner and the amber \"no provider connected\" notice (type something, then use the browser's devtools to force a 401 on /api/providers/status) do not clear the draft.",
     render: () => (
       <DeskComposerScene
         project={{ id: "p1", name: "Sictec Infotech, Inc.", company: { name: "Sictec Infotech, Inc.", website_url: "https://sictec.example" } }}
@@ -552,7 +715,7 @@ export const SCENES = [
     state: "inside a running session — dials deferred, ring beside Send",
     group: "DeskComposer",
     title: "The session composer",
-    note: "The same card as the desk composer, in the chat shell: attach, the three dials (autonomy, thinking, model tier) on the left, the context ring and Send on the right. `deferred` makes each menu say when the choice lands — autonomy at the next message, thinking and tier at the next session — check the footer line is there in all three menus and that the chips wrap under the text at phone width rather than pushing Send off the card.",
+    note: "The same card as the desk composer, in the chat shell: attach and the folded posture on the left; the tier, the context ring and Send on the right. `deferred` makes the tier panel say the choice lands at the next session and the posture tooltips say next message — check that line is there, that hovering the ring shows the token figures, and that the controls wrap under the text at phone width rather than pushing Send off the card.",
     render: () => (
       <div className="max-w-[720px]">
         <ChatInput
@@ -561,8 +724,44 @@ export const SCENES = [
           onStop={() => {}}
           placeholder="Ask about your growth data…"
           tools={<DialsScene />}
-          status={<ContextRing used={0.08} label="8% context" />}
+          status={
+            <>
+              <TierDial deferred />
+              <ContextRing
+                used={0.34}
+                details={{
+                  last: { input: 61_000, output: 7_200, cached: 48_000, window: 200_000, cost: 0.21, model: "claude-sonnet-5" },
+                  total: { input: 210_000, output: 19_000, cached: 150_000, calls: 4, cost: 0.74 },
+                }}
+              />
+            </>
+          }
         />
+      </div>
+    ),
+  },
+  {
+    id: "composer-attachments",
+    state: "three tiles on the card · the drop hint",
+    group: "DeskComposer",
+    title: "Files on the composer",
+    note: "What the card looks like with things attached: an image is its own thumbnail, a PDF and a pasted block of CSV are small cards with the name and a badge. The strip scrolls sideways rather than wrapping so four screenshots never push the text box off the card; each tile's remove button sits on its corner. A large paste (over 25 lines or 3,000 characters) becomes one of these tiles rather than a wall of text in the box, named for what it looks like — pasted-1.csv here. Below it, the hint the whole card shows while a file is held over it: the card is the drop target, not the paperclip.",
+    render: () => (
+      <div className="max-w-[720px] space-y-6">
+        <ChatInput
+          onSend={() => {}}
+          placeholder="Ask about your growth data…"
+          initialAttachments={[
+            { name: "landing-page.webp", mediaType: "image/webp", kind: "image", preview: "/art/mosaic/fons.webp" },
+            { name: "Q3-board-deck-final-v2.pdf", mediaType: "application/pdf", kind: "pdf" },
+            { name: "pasted-1.csv", mediaType: "text/csv", kind: "text", text: "date,sessions\n2026-09-01,120" },
+            { name: "web-performance-analysis-v2.html", mediaType: "text/html", kind: "text", text: "<html/>" },
+          ]}
+          status={<ContextRing used={0} label="New thread" />}
+        />
+        <div className="relative h-24 rounded-xl border bg-card">
+          <DropHint />
+        </div>
       </div>
     ),
   },
@@ -957,28 +1156,164 @@ export const SCENES = [
     note: "Both right-pane tabs of an insights thread before anything lands. They were bare muted sentences until now, which is the shape ui/empty-state exists to replace. Only Data gets a button: its usual cause is that nothing is connected, which is fixable from here, while no artifact yet is just a young thread.",
     render: () => (
       <div className="grid gap-6 @3xl:grid-cols-2">
-        <BriefPane empty />
-        <DataPane fetched={[]} />
+        <div className="h-[20rem] overflow-hidden rounded-xl border border-border">
+          <BriefPane empty />
+        </div>
+        <div className="h-[20rem] overflow-hidden rounded-xl border border-border">
+          <DataPane fetched={[]} />
+        </div>
       </div>
     ),
   },
   {
     id: "data-pane-reopened",
-    state: "three pulls, one failed, rebuilt from history",
+    state: "two connectors, one expired grant",
     group: "InsightsWorkspace",
-    title: "The Data pane on a reopened thread",
-    note: "What the pane lists after a thread is reopened. It came back empty on any reopened thread until now, because it filled only from live step events; these rows are read back from the stored tool traffic (lib/insightsHistory) through the same fixture shape the backend records, so what you see here is what the transcript has.",
+    title: "The Data tab, rolled up",
+    note: "Every source the thread read, grouped by connector, built from the same activity rows the transcript shows — so the tab and the chat cannot disagree about what the agent read, which they did while one filled from step events and the other from stored tool traffic. The rows are the transcript's own control, not a second list: click the failed pull.",
+    render: () => (
+      <div className="h-[24rem] max-w-xl overflow-hidden rounded-xl border border-border">
+        <DataPane sources={dataSourceRollup(ACTIVITIES)} />
+      </div>
+    ),
+  },
+  {
+    id: "reasoning-rows",
+    state: "thinking · thought for 6s · from history",
+    group: "AgentChat",
+    title: "The reasoning fold, with its clock",
+    note: "Three states of one row. Thinking, with the seconds ticking on this client's clock from the first reasoning token; done, saying how long it took before the first word of prose (measured, not a token estimate the client would have to make up); and rebuilt from history, where there is no clock and the row just says Reasoning. The text stays behind the chevron in every state — reasoning is there to be checked, not read by default.",
+    render: () => (
+      <div className="max-w-xl space-y-4">
+        <TranscriptRow msg={{ role: "assistant", text: "", thinking: "The window is 30 days; compare like with like before saying anything about the drop.", streaming: true, thinkingStartedAt: Date.now() - 4000 }} />
+        <TranscriptRow msg={{ role: "assistant", text: "Sessions are flat; the mix moved.", thinking: "The window is 30 days; compare like with like before saying anything about the drop.", thinkingStartedAt: 1000, thinkingEndedAt: 7000 }} />
+        <TranscriptRow msg={{ role: "assistant", text: "Sessions are flat; the mix moved.", thinking: "The window is 30 days; compare like with like before saying anything about the drop." }} />
+      </div>
+    ),
+  },
+  {
+    id: "working-indicator",
+    state: "generic · on a step · compacting",
+    group: "AgentChat",
+    title: "The wait, in words",
+    note: "What sits at the bottom of the transcript while the agent works, in place of three bouncing dots that only ever said \"something, eventually\". With no better information the phrase rotates through a few generic verbs every couple of seconds (held still under reduced motion); when a step is running its own label takes the slot, and a compaction or a retry says so. The words are deliberately generic where the run's state is unknown — a verb naming a step the run is not on is a lie the reader can catch.",
+    render: () => (
+      <div className="max-w-xl space-y-3">
+        <WorkingIndicator />
+        <WorkingIndicator label="Collecting source data" />
+        <WorkingIndicator label="Compacting context" />
+      </div>
+    ),
+  },
+  {
+    id: "transcript-dividers",
+    state: "compacted (unknown) · compacted (freed) · switched model · plain notice",
+    group: "AgentChat",
+    title: "Lines across the transcript",
+    note: "A compaction and a model switch are facts about everything after them, so they are drawn as a rule across the transcript rather than a message in it. The compaction says what it freed once the next call on the thread has reported its size — before that it only says it happened. When the backend sends the summary the thread now opens with, the rule folds it behind a chevron (click the second one), set in italic so it never reads as something the agent said to the person. The model divider carries the name a person knows the model by, sent by the backend on every run start; a resumed thread that comes back on a different model gets one from its stored context rows too.",
     render: () => (
       <div className="max-w-xl">
-        <DataPane
-          fetched={fetchedFromEvents([
-            { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t1", input: { entity_id: "gsc_queries" } } },
-            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t1", result: JSON.stringify({ status: "ok", entity_id: "gsc_queries", date_from: "2026-08-20", date_to: "2026-09-17" }) } },
-            { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t2", input: { entity_id: "ga4_traffic" } } },
-            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t2", result: JSON.stringify({ status: "ok", entity_id: "ga4_traffic", date_from: "2026-08-20", date_to: "2026-09-17" }) } },
-            { kind: "tool_use", data: { name: "FetchData", tool_use_id: "t3", input: { entity_id: "google_ads_campaigns" } } },
-            { kind: "tool_result", data: { name: "FetchData", tool_use_id: "t3", result: JSON.stringify({ status: "reauth_required", entity_id: "google_ads_campaigns", date_from: "2026-08-20", date_to: "2026-09-17", message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it on the Connections page." }) } },
-          ])}
+        <TranscriptRow msg={{ role: "assistant", text: "Let me look at the last thirty days." }} />
+        <TranscriptRow msg={{ role: "notice", kind: "compacted", before: 180000, after: null }} />
+        <TranscriptRow msg={{ role: "notice", kind: "compacted", before: 180000, after: 42000, summary: "**Where this started.** Sessions fell 12% after the September pricing change; the drop is entirely mobile organic.\n\n**What was checked.** GA4 landing pages for the last thirty days, Search Console queries for the pricing page, and the Ads campaign that was paused on the 4th.\n\n**Open.** Whether the mobile drop is a tracking change rather than a demand change — the tag was redeployed the same week." }} />
+        <TranscriptRow msg={{ role: "notice", kind: "model", label: "GPT-5.6 Terra", model: "gpt-5.6-terra" }} />
+        <TranscriptRow msg={{ role: "notice", text: "Stopped here — the turn was interrupted." }} />
+      </div>
+    ),
+  },
+  {
+    id: "message-rows",
+    state: "a user message with files · a long one folded · a reply on the page",
+    group: "AgentChat",
+    title: "The two registers",
+    note: "The person's message is the one bubble in the transcript: it came from outside the run and the shape says so. Files it carried sit above it as the same tiles the composer showed. A message past a screen's worth (twelve lines or 1,200 characters) folds behind Show more so a pasted page of context never buries the reply under it. The reply is prose on the page, no box — hover either row for when it was sent (the full date and time is behind it), and hover the reply for the copy button. Both are always visible where there is no hover.",
+    render: () => (
+      <div className="max-w-xl">
+        <TranscriptRow
+          msg={{
+            role: "user",
+            text: "These are the pages that lost traffic — does the deck explain it?",
+            at: Date.now() - 5 * 60_000,
+            attachments: [
+              { name: "landing-page.webp", mediaType: "image/webp", kind: "image", preview: "/art/mosaic/fons.webp" },
+              { name: "Q3-board-deck-final-v2.pdf", mediaType: "application/pdf", kind: "pdf" },
+            ],
+          }}
+        />
+        <TranscriptRow
+          msg={{
+            role: "user",
+            at: Date.now() - 4 * 60_000,
+            text: Array.from({ length: 22 }, (_, i) => `Line ${i + 1}: the pricing page lost ${120 - i * 3} sessions against the same week last month, all mobile.`).join("\n"),
+          }}
+        />
+        <TranscriptRow
+          msg={{
+            role: "assistant",
+            at: Date.now() - 3 * 60_000,
+            text: "Sessions are flat; the mix moved.\n\nMobile organic to the pricing page is down **12%** since the 4th, and that is the whole of the drop. Desktop is up slightly. The tag was redeployed the same week, so before calling it demand I would check the mobile hit count in the raw events.",
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "activity-rows",
+    state: "the context notice · pulls · a search · a page · a sub-agent · memory · sources · a document · a site read · a publish",
+    group: "AgentChat",
+    title: "What the agent did, in the transcript",
+    note: "One row per tool call, where it happened. A run used to show none of this — a pull became a line in another tab, a search and an image became nothing — so the reader got ninety seconds of \"Working…\" and then a brief citing a source they never saw it open. One line each until you click: twelve sources would otherwise push the prose off the screen. Every row here is built by lib/toolActivity from recorded tool traffic, the same path a reopened thread takes.",
+    render: () => (
+      <div className="max-w-xl">
+        <ActivityGroup activities={ACTIVITIES} />
+      </div>
+    ),
+  },
+  {
+    id: "activity-rows-open",
+    state: "expanded, including a failure with its way out",
+    group: "AgentChat",
+    title: "An activity row, opened",
+    note: "What each kind has behind the chevron: the window and the row count for a pull, the sources as favicon chips for a search, the URL for a page, the brief and the answer for a sub-agent. A failed pull carries the provider's own sentence — not the model's paraphrase — and, when reconnecting is what fixes it, the link there.",
+    render: () => (
+      <div className="max-w-xl space-y-1">
+        {ACTIVITIES.map((a) => (
+          <ActivityRow key={a.id} activity={a} defaultOpen />
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: "activity-running",
+    state: "mid-call",
+    group: "AgentChat",
+    title: "A tool call in flight",
+    note: "The running half of a card. The backend emits one event when a tool starts and another when it returns, both under the same id, and the row updates in place — so a slow pull says which source it is waiting on rather than leaving the status row to say \"Working\".",
+    render: () => (
+      <div className="max-w-xl">
+        <ActivityGroup
+          activities={[
+            { id: "r1", kind: "data", status: "running", title: "ga4_landing_pages", source: "ga4", meta: { date_from: "2026-08-20", date_to: "2026-09-17" } },
+            { id: "r2", kind: "web_search", status: "running", title: "duct competitors pricing 2026", meta: {} },
+          ]}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "activity-images",
+    state: "two images the agent drew",
+    group: "AgentChat",
+    title: "An image the agent made",
+    note: "The content agent draws images and renders slides; both come back through the same allowlist as a picture rather than a sentence about a picture, and clicking one opens the app's lightbox. The pictures here are the app's own mosaics, so the scene needs no backend and no generated asset in the repository.",
+    render: () => (
+      <div className="max-w-xl">
+        <ActivityGroup
+          defaultOpen
+          activities={[
+            { id: "i1", kind: "image", status: "success", title: "A kestrel over a harvested field, low sun", meta: { images: ["/art/mosaic/fons.webp", "/art/mosaic/otium.webp"], model: "gemini-image" } },
+            { id: "i2", kind: "slide", status: "success", title: "slide-3", meta: { images: ["/art/mosaic/salve.webp"], note: "Hook slide, 1080×1920" } },
+          ]}
         />
       </div>
     ),
@@ -990,7 +1325,7 @@ export const SCENES = [
     title: "The brief, loading",
     note: "A reopened thread while its document list or the brief's versions are still in flight. Used to flash \"Nothing written yet\" for the half-second before the brief arrived; now it holds the pane's own shape in the shimmer every wait shares (ui/skeleton, styles/skeleton.css). Reduced motion keeps the blocks and drops the sweep.",
     render: () => (
-      <div className="max-w-3xl">
+      <div className="h-[26rem] max-w-3xl overflow-hidden rounded-xl border border-border">
         <BriefPane loading />
       </div>
     ),
@@ -1002,7 +1337,7 @@ export const SCENES = [
     title: "A markdown brief, typeset",
     note: "The Artifact pane with a brief the agent wrote in markdown. Twelve components asked for `prose` for months while the typography plugin was never installed, so every one of these rendered as unstyled text and looked broken. This scene is the proof the plugin is loaded: headings step down, lists get bullets, tables get rules, and dark mode inverts.",
     render: () => (
-      <div className="max-w-3xl">
+      <div className="h-[30rem] max-w-3xl overflow-hidden rounded-xl border border-border">
         <BriefPane
           brief={{
             title: "Organic growth, week of 8 Sept",
@@ -1014,6 +1349,30 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "artifact-pane",
+    state: "an HTML brief · tabs and shelf live",
+    group: "InsightsWorkspace",
+    title: "The artifact pane, whole",
+    note: "The right pane as the thread shows it: one chrome strip, then the document, floor to ceiling. It used to be a strip of tabs, a second strip restating the version the picker already named, and the document in a card inside a 1rem margin, capped at 74vh so it scrolled inside a pane that scrolled too. Click the tabs and the shelf button — both work here.",
+    render: () => <ArtifactPaneScene />,
+  },
+  {
+    id: "artifact-pane-markdown",
+    state: "a markdown brief, one document in the thread",
+    group: "InsightsWorkspace",
+    title: "The artifact pane, markdown",
+    note: "The same pane with a markdown brief. The text sits on a page centred in the pane rather than hugging its left edge, because `card` and `background` are the same white in the light theme and the page is what tells a document from the chat beside it. Drag the frame wide to see the desk appear either side; drag it narrow and the page takes the whole width.",
+    render: () => <ArtifactPaneScene format="markdown" docCount={1} />,
+  },
+  {
+    id: "artifact-focus",
+    state: "the document over the whole window",
+    group: "InsightsWorkspace",
+    title: "Reading a brief full screen",
+    note: "What the expand control in the pane header opens: the same BriefPane on the app's dialog, so Escape closes it and focus is trapped while it is open. The strip keeps what a reader needs — what this is, a way to keep it, a way out — and drops the tabs and the version picker, which are for working with documents rather than reading one.",
+    render: () => <DocumentFocusScene />,
   },
   {
     id: "artifact-gallery",

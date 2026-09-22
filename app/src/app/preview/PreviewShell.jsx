@@ -51,7 +51,6 @@ import {
 
 import { CATALOGUE_BY_ID } from "./catalogue";
 import { DEFAULT_DEVICES, DEVICES } from "./devices";
-import { readLocaleCookie, writeLocaleCookie } from "@/i18n/cookie";
 import { LOCALES, PSEUDO_LOCALE } from "@/i18n/locales";
 
 /**
@@ -89,9 +88,11 @@ const VIEWPORT_SURFACES = new Set(["dialog", "sheet", "alert", "drawer", "toast"
 
 function frameUrl({ scene, surface, theme, inspect, vision, text, lang }) {
   const p = new URLSearchParams({ scene, surface, theme });
-  // Not read by the frame — the language comes from the cookie — but a
-  // changed URL is what makes every mounted iframe fetch again.
-  if (lang) p.set("lang", lang);
+  // The frame's language, English when absent. The URL is the only channel:
+  // the picker used to write the app's `duct_lang` cookie, which switched
+  // the app itself, and a frame with no `lang` followed the browser's
+  // Accept-Language, which put a developer in Spain in Spanish by default.
+  if (lang && lang !== "en") p.set("lang", lang);
   // Only non-default lenses land in the URL, so a copied link says what is
   // unusual about it rather than restating the defaults.
   if (inspect && inspect !== "off") p.set("inspect", inspect);
@@ -282,15 +283,9 @@ export default function PreviewShell({ canon = [] }) {
   const [text, setText] = useState("100");
   const [deviceIds, setDeviceIds] = useState(DEFAULT_DEVICES);
   const [copied, setCopied] = useState("");
-  // Read after mount: the cookie is not visible to the server frame.
-  const [lang, setLangState] = useState("en");
-  useEffect(() => {
-    setLangState(readLocaleCookie() || "en");
-  }, []);
-  const setLang = (next) => {
-    writeLocaleCookie(next);
-    setLangState(next);
-  };
+  // English unless the picker says otherwise; it travels to each frame as
+  // `?lang=` and touches no cookie.
+  const [lang, setLang] = useState("en");
 
   // "all" rather than "" because Radix reserves the empty string: an empty
   // value means "no selection", so an <SelectItem value=""> can never be picked

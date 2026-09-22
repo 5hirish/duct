@@ -65,6 +65,7 @@ from agents.insights.setup import (
 )
 from agents.core import session as _core_session
 from agents.core.context import format_business_context
+from agents.models import run_model_fields
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.errors import error_payload
 from agents.core.session import CLIENT_MESSAGE_ID
@@ -509,6 +510,10 @@ class AgentMessage(BaseModel):
     # Stamped by the client on a chat message so the USER_INPUT_CONSUMED event
     # can name the row it releases. Optional: older clients send none.
     client_message_id: str | None = None
+    # The brief format the composer shows at send time, so a dial change
+    # mid-conversation reaches the agent at this message rather than the next
+    # session. Optional: the session's own preference stands when absent.
+    artifact_format: str | None = None
 
 
 @router.post("/{agent_type}/sessions/{session_id}/messages")
@@ -584,8 +589,10 @@ async def send_message(
         session.needs_reprime = False
 
     # The posture is in the opening turn, not the system prompt, so a change
-    # made from the composer would otherwise wait for the next session.
+    # made from the composer would otherwise wait for the next session. The
+    # brief format lives in the same place and gets the same treatment.
     content = _refresh_autonomy(session, content)
+    content = _refresh_format(session, content, msg.artifact_format)
 
     item: dict = {"role": "user", "content": content}
     if msg.client_message_id:
@@ -649,6 +656,32 @@ def _refresh_autonomy(session: Any, content: str | list) -> str | list:
     logger.info("agents: session %s autonomy %s → %s", session.session_id, current, level)
     posture = AUTONOMY_POSTURE.get(level, "")
     return _prepend_context(content, xml_block("autonomy", posture)) if posture else content
+
+
+def _refresh_format(session: Any, content: str | list, requested: str | None) -> str | list:
+    """Carry the brief format preference into the next turn when the thread
+    has not been told it.
+
+    ``artifact_format_stated`` is what this session's thread has read; it is
+    "" on a thread resumed without a prompt, whose history carries whatever
+    preference it opened with, days ago. One opened under markdown told its
+    owner twice that it "had to stick to plain markdown" after the default
+    had moved to HTML. Restated once per change, like the posture above.
+    """
+    if not hasattr(session, "artifact_format_stated"):
+        return content
+    wanted = (requested or getattr(session, "artifact_format", "") or "").strip().lower()
+    if not wanted or wanted == session.artifact_format_stated:
+        return content
+    from agents.insights.prompts.autonomous import deliverable_format_block
+
+    block = deliverable_format_block(wanted)
+    if not block:
+        return content
+    session.artifact_format = wanted
+    session.artifact_format_stated = wanted
+    logger.info("agents: session %s brief format → %s", session.session_id, wanted)
+    return _prepend_context(content, block)
 
 
 def _inject_working_context(session: Any, content: str | list, version_id: int | None) -> str | list:
@@ -1427,7 +1460,12 @@ async def _start_seo_audit(
 
         async def resume_pipeline() -> None:
             try:
-                await emit_fn({"event": AuditEvent.PIPELINE_STARTED, "status": "running", "url": url})
+                await emit_fn({
+                    "event": AuditEvent.PIPELINE_STARTED,
+                    "status": "running",
+                    "url": url,
+                    **run_model_fields(provider, model),
+                })
                 await runner.run_resume(
                     session_id=session_id,
                     url=url,
@@ -1481,7 +1519,12 @@ async def _start_seo_audit(
 
     async def pipeline() -> None:
         try:
-            await emit_fn({"event": AuditEvent.PIPELINE_STARTED, "status": "running", "url": url})
+            await emit_fn({
+                "event": AuditEvent.PIPELINE_STARTED,
+                "status": "running",
+                "url": url,
+                **run_model_fields(provider, model),
+            })
             await runner.run_pipeline(
                 session_id=session_id,
                 url=url,
@@ -1563,6 +1606,16 @@ async def _start_insights(
         # mid-conversation can be noticed and applied at the next turn.
         session.autonomy = run.autonomy
         session.autonomy_model = getattr(model, "value", str(model))
+        # The brief format, likewise. A fresh thread and a resume with a
+        # follow-up read it in their opening turn; a resume without one has
+        # been told nothing yet, and `_refresh_format` says it at the first
+        # message.
+        session.artifact_format = (
+            req.user_preferences.preferred_artifact_format or DEFAULT_FORMAT
+        )
+        session.artifact_format_stated = (
+            session.artifact_format if (req.prompt or not req.resume) else ""
+        )
 
     # ------------------------------------------------------------------
     # Artifact persistence. Every brief the agent writes becomes a version of
@@ -1647,6 +1700,7 @@ async def _start_insights(
                 "status": StepStatus.RUNNING,
                 "autonomy": run.autonomy,
                 "autonomy_configured": run.configured_autonomy,
+                **run_model_fields(provider, model),
                 # A tier step-down is the same shape of fact and gets the same
                 # treatment. It is true for the whole run and for the artifact
                 # the run produced, so it cannot be a transient toast — and the
@@ -1715,6 +1769,18 @@ async def _start_insights(
                 "status": StepStatus.ERROR,
                 **error_payload(exc),
             })
+        finally:
+            # run_session returns when the chat loop has ended — idle timeout
+            # or the close sentinel — and nothing reads chat_queue after that.
+            # Left registered, the session was a trap: a message posted 31
+            # minutes after a resume was recorded into the transcript, queued
+            # to nobody and never answered. Closing ends the stream, and the
+            # client resumes the conversation on its next connection. The
+            # task is this coroutine; unhooked first so close does not cancel
+            # the frame it is running in.
+            if session is not None:
+                session.pipeline_task = None
+            _close_and_consolidate(session_id)
 
     task = asyncio.create_task(pipeline())
     if session:

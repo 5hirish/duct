@@ -163,3 +163,17 @@ def test_the_list_summary_carries_the_run_fields():
     summary = _conversation_summary(conv)
     assert summary["run_status"] == "failed"
     assert summary["run_error"]["code"] == "auth"
+
+
+async def test_what_memory_gave_and_got_is_stored_where_it_happened(engine, conversation):
+    """The "Recalled" and "Remembered" rows used to exist only while the
+    stream was open; a reload lost them for every agent."""
+    recorder = ConversationRecorder(conversation)
+    await _drive(
+        recorder,
+        {"event": AgentEvent.MEMORY_RECALLED, "memories": [{"id": "m1", "title": "Pricing changed"}]},
+        {"event": AgentEvent.MEMORY_WRITTEN, "memory": {"id": "m2", "title": "Mobile is the channel"}},
+        # An empty recall is not a row: nothing was recalled.
+        {"event": AgentEvent.MEMORY_RECALLED, "memories": []},
+    )
+    assert _kinds(engine, conversation) == [EventKind.MEMORY_RECALLED, EventKind.MEMORY_WRITTEN]

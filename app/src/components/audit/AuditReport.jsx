@@ -6,6 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { Phase } from "../workspace/agentPhase";
 import { AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
+import { saveText } from "../../lib/download";
 import PipelineProgress from "../PipelineProgress";
 import AuditReportV1 from "./AuditReportV1";
 
@@ -270,24 +271,13 @@ export default function AuditReport({
   const isPipeline = phase === Phase.PIPELINE || phase === Phase.STARTING;
 
   function handleDownload() {
+    const stem = `duct-seo-v${selectedVersion?.version_id ?? "draft"}`;
     if (reportMode === "template" && structuredData) {
-      const blob = new Blob([JSON.stringify(structuredData, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `duct-seo-v${selectedVersion?.version_id ?? "draft"}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      saveText(JSON.stringify(structuredData, null, 2), `${stem}.json`, "application/json");
       return;
     }
     if (!html) return;
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `duct-seo-v${selectedVersion?.version_id ?? "draft"}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+    saveText(html, `${stem}.html`, "text/html");
   }
 
   function handlePrint() {

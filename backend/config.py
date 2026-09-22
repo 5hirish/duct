@@ -113,6 +113,16 @@ class Configs(BaseSettings):
     # means "derive the OS-conventional path" — see utils/appdirs.py.
     duct_data_dir: str = Field(default="", validation_alias=AliasChoices("DUCT_DATA_DIR"))
 
+    # A second sink for the log lines that otherwise exist only in the terminal
+    # that launched the server. Empty means stderr alone. Set it and the same
+    # formatted lines — app namespaces, the access log, and uvicorn's own
+    # tracebacks — are appended to the file as well, which is the only way an
+    # agent debugging a dev server can read them: it cannot see the editor
+    # terminal, and a 500 whose traceback nobody can quote costs a round trip
+    # every time. Not on by default because an always-on log is one nobody
+    # rotates; the launch configs set it for dev.
+    duct_log_file: str = Field(default="", validation_alias=AliasChoices("DUCT_LOG_FILE"))
+
     # Primary relational store for auth-first persistence.
     database_url: str = ""
     # Safety default for deployed environments: rely on Alembic migrations, not SQLModel create_all.

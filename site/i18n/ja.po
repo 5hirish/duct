@@ -58,6 +58,11 @@ msgstr ""
 msgid "About"
 msgstr "について"
 
+#. section aria-label
+#: about.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+msgid "About Duct"
+msgstr "Ductについて"
+
 #. meta og:title
 #. meta twitter:title
 #: about.html
@@ -161,6 +166,10 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr "FONS。何も実行される前の泉。アプリの玄関。"
 
+#: about.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+msgid "Home"
+msgstr "ホーム"
+
 #: about.html
 msgid "How I work"
 msgstr "私の働き方"
@@ -224,7 +233,7 @@ msgstr ""
 msgid "One person, in Spain"
 msgstr "スペインにいる一人の人間"
 
-#: about.html partials/footer-expanded.html partials/nav-home.html partials/nav-simple.html
+#: about.html open-source.html partials/footer-expanded.html partials/nav-home.html partials/nav-simple.html
 msgid "Open source"
 msgstr "オープンソース"
 
@@ -580,6 +589,10 @@ msgstr "コメントは「なぜ」を伝えます。差分はすでに「何を
 msgid "Disagree?"
 msgstr "異議がありますか？"
 
+#: doctrine.html partials/footer-expanded.html partials/nav-simple.html
+msgid "Doctrine"
+msgstr "ドクトリン"
+
 #: doctrine.html
 msgid ""
 "Duct can prepare a change to your live systems: pause a campaign, add negative keywords, mark a GA4 key event. It shows you a preview and a guardrail check. Then it stops."
@@ -663,9 +676,9 @@ msgstr "Ductが基づく7つの意見。それぞれを強制するファイル�
 #. meta description
 #: doctrine.html
 msgid ""
-"Seven opinions Duct is built on, each with the file that enforces it: approval before action, renting an agent harness, membership over ownership, and why agent-written code is welcome here."
+"Seven opinions Duct is built on, each with the file that enforces it: approval before action, a rented agent harness, and why agent-written code is welcome."
 msgstr ""
-"Ductが基づく7つの意見。それぞれを強制するファイル付き：行動前の承認、エージェントハーネスのレンタル、所有権よりもメンバーシップ、そしてエージェントが書いたコードがここで歓迎される理由。"
+"Ductが基づく7つの原則。それぞれを強制するファイル、アクション前の承認、レンタルエージェントハーネス、そしてエージェントが書いたコードが歓迎される理由。"
 
 #: doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
@@ -690,6 +703,10 @@ msgstr "議論を開始する →"
 #: doctrine.html
 msgid "Strong opinions,<0/>held in <1>code</1>"
 msgstr "強い意見、<0/><1>コード</1>で保持"
+
+#: doctrine.html
+msgid "The Duct Doctrine"
+msgstr "Ductの原則"
 
 #. meta og:title
 #. meta twitter:title
@@ -862,6 +879,10 @@ msgstr "コネクタ認証 (Google Ads, GA4, Mixpanel…)"
 msgid "Debian / Ubuntu"
 msgstr "Debian / Ubuntu"
 
+#: download.html
+msgid "Download"
+msgstr "ダウンロード"
+
 #. meta og:title
 #. meta twitter:title
 #: download.html
@@ -879,6 +900,10 @@ msgstr "Ductをダウンロード ↓"
 #: download.html
 msgid "Download it, or <0>build it.</0>"
 msgstr "ダウンロードするか、<0>ビルドしてください。</0>"
+
+#: download.html
+msgid "Download the Duct desktop app for macOS, Windows and Linux."
+msgstr "macOS、Windows、Linux 用のDuctデスクトップアプリをダウンロードします。"
 
 #: download.html
 msgid "Download ↓"
@@ -905,9 +930,9 @@ msgstr ""
 #. meta description
 #: download.html
 msgid ""
-"Duct on your desktop for Mac, Windows and Linux. Ask across your ads, analytics and revenue tools, approve the fix, and keep your model keys in your own keychain."
+"Duct on your desktop for Mac, Windows and Linux. Ask across your ads, analytics and revenue tools, approve the fix, and keep your model keys in your keychain."
 msgstr ""
-"Mac、Windows、Linux用のDuctデスクトップアプリ。広告、分析、収益ツール全体に質問し、修正を承認し、モデルキーを独自のキーチェーンに保存します。"
+"Mac、Windows、Linux 用のDuctデスクトップアプリ。広告、アナリティクス、収益ツール全体に質問し、修正を承認し、モデルキーをキーチェーンに保管します。"
 
 #: download.html
 msgid "Encrypted at rest, decrypted only to make a call you asked for"
@@ -1215,6 +1240,7 @@ msgstr "変更を承認する"
 msgid "Ask the question"
 msgstr "質問する"
 
+#. meta description
 #. meta og:description
 #: for-organic-growth.html
 msgid ""
@@ -1224,16 +1250,15 @@ msgstr ""
 
 #: for-organic-growth.html
 msgid ""
+"Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week's posts on a board. Open source, MIT."
+msgstr ""
+"どのコンテンツがコンバージョンにつながるか尋ねます。DuctはSearch Console、GA4、Clarityをまとめて読み込み、任意のURLを無料で監査し、週の投稿をボードで計画します。オープンソース、MIT。"
+
+#: for-organic-growth.html
+msgid ""
 "Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week’s posts on a board."
 msgstr ""
 "どのコンテンツがコンバージョンしているか尋ねてください。DuctはSearch Console、GA4、Clarityをまとめて読み込み、任意のURLを無料で監査し、週の投稿をボード上で計画します。"
-
-#. meta description
-#: for-organic-growth.html
-msgid ""
-"Ask which content converts. Duct, an open-source AI agent for growth teams, reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week's posts on a board."
-msgstr ""
-"どのコンテンツがコンバージョンしているか尋ねてください。成長チーム向けのオープンソースAIエージェントであるDuctは、Search Console、GA4、Clarityをまとめて読み込み、任意のURLを無料で監査し、週の投稿をボード上で計画します。"
 
 #: for-organic-growth.html
 msgid "Blog → trial CVR dropped to 1.4% this month"
@@ -1285,12 +1310,15 @@ msgid ""
 msgstr ""
 "Ductは、ワンクリックOAuthを介してGoogle Search Console、GA4、Google Tag Manager、Microsoft Clarity、Mixpanel、HubSpot、Google Ads、Stripeに接続します。セットアップは5分未満で完了し、接続後、最初の週次ブリーフが受信トレイに届きます。"
 
+#: for-organic-growth.html
+msgid "Duct for Organic Growth"
+msgstr "オーガニックグロース向けDuct"
+
 #. meta og:title
 #. meta twitter:title
 #: for-organic-growth.html
-msgid ""
-"Duct for SEO and content teams — Open-source AI agent that reads Search Console, GA4 and Clarity together"
-msgstr "SEOおよびコンテンツチーム向けDuct — Search Console、GA4、Clarityをまとめて読み込むオープンソースAIエージェント"
+msgid "Duct for SEO and content teams — AI agent for organic growth"
+msgstr "SEOおよびコンテンツチーム向けDuct — オーガニックグロースのためのAIエージェント"
 
 #: for-organic-growth.html
 msgid ""
@@ -1306,6 +1334,10 @@ msgstr "エンタープライズSEOチーム"
 msgid "FAQ"
 msgstr "FAQ"
 
+#: for-organic-growth.html
+msgid "For SEO and content teams"
+msgstr "SEOおよびコンテンツチーム向け"
+
 #: for-organic-growth.html for-paid-ads.html
 msgid "Founding Marketer"
 msgstr "創業マーケター"
@@ -1320,6 +1352,12 @@ msgid ""
 "Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. <0>What will cost money</0> is spelled out on the open-source page."
 msgstr ""
 "ご自身のキーがあれば、常に無料です。DuctはMITライセンスです。モデルプロバイダーに直接支払うか、既にお持ちのChatGPTプランでサインインしてください。後日提供される有料プランでは、キーを保持したくないチーム向けにモデルがバンドルされます。現在オープンなものは何も有料化されません。<0>費用がかかるもの</0>はオープンソースページに明記されています。"
+
+#: for-organic-growth.html for-paid-ads.html for-product-intelligence.html
+msgid ""
+"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."
+msgstr ""
+"常に独自のキーで無料です。DuctはMITライセンスです。モデルプロバイダーに直接支払うか、既存のChatGPTプランでサインインします。後日、キーを保持したくないチーム向けにモデルをバンドルした有料プランが提供されますが、現在オープンなものはその背後に移動しません。費用がかかるものはオープンソースページに明記されています。"
 
 #: for-organic-growth.html for-paid-ads.html for-product-intelligence.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
 msgid "Frequently asked <0>questions</0>"
@@ -1608,6 +1646,7 @@ msgstr ""
 msgid "Ask why CPA moved"
 msgstr "CPAが変動した理由を尋ねる"
 
+#. meta description
 #. meta og:description
 #: for-paid-ads.html
 msgid ""
@@ -1615,12 +1654,11 @@ msgid ""
 msgstr ""
 "CPAが変動した理由を尋ねてください。DuctはGoogle広告、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止または変更を提案し、お客様が承認した場合に適用します。"
 
-#. meta description
 #: for-paid-ads.html
 msgid ""
-"Ask why CPA moved. Duct, an open-source AI agent for growth teams, reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve."
+"Ask why CPA moved. Duct reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve. Open source, MIT."
 msgstr ""
-"CPAが変動した理由を尋ねてください。成長チーム向けのオープンソースAIエージェントであるDuctは、Google広告、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止または変更を提案し、お客様が承認した場合に適用します。"
+"CPAが変動した理由を尋ねます。DuctはGoogle Ads、Meta、Apple Search Ads、GA4、Stripeをまとめて読み込み、一時停止または変更を提案し、承認すると適用します。オープンソース、MIT。"
 
 #: for-paid-ads.html
 msgid "CPA jumped and four platforms each have a theory."
@@ -1642,16 +1680,23 @@ msgstr "既にお使いのプラットフォームに接続します"
 msgid "Does Duct modify anything in my ad accounts?"
 msgstr "Ductは私の広告アカウントで何かを変更しますか？"
 
+#: for-paid-ads.html
+msgid "Duct for Paid Ads"
+msgstr "有料広告向けDuct"
+
 #. meta og:title
 #. meta twitter:title
 #: for-paid-ads.html
-msgid ""
-"Duct for performance marketers — Open-source AI agent that reads Google Ads, Meta, GA4 and Stripe together"
-msgstr "パフォーマンスマーケター向けDuct — Google広告、Meta、GA4、Stripeをまとめて読み取るオープンソースAIエージェント"
+msgid "Duct for performance marketers — AI agent for paid ads"
+msgstr "パフォーマンスマーケター向けDuct — 有料広告のためのAIエージェント"
 
 #: for-paid-ads.html
 msgid "Enterprise Media Buyer"
 msgstr "エンタープライズメディアバイヤー"
+
+#: for-paid-ads.html
+msgid "For performance marketers"
+msgstr "パフォーマンスマーケター向け"
 
 #: for-paid-ads.html
 msgid ""
@@ -1893,6 +1938,19 @@ msgid ""
 msgstr ""
 "アクティベーションが低下した理由を尋ねます。Ductはリリース前後のGA4、Clarity、Stripeを読み取り、画面を特定し、来週のブリーフで修正を証明できるよう、何を追跡すべきかを提案します。"
 
+#. meta description
+#: for-product-intelligence.html
+msgid ""
+"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, its sources and the change it proposes."
+msgstr ""
+"アクティベーションが低下した理由を尋ねます。DuctはMixpanel、Clarity、GrowthBook、GA4をまとめて読み込み、原因、その情報源、提案する変更を回答します。"
+
+#: for-product-intelligence.html
+msgid ""
+"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources and the change it proposes. Open source, MIT."
+msgstr ""
+"アクティベーションが低下した理由を尋ねます。DuctはMixpanel、Clarity、GrowthBook、GA4をまとめて読み込み、原因、情報源、提案する変更を回答します。オープンソース、MIT。"
+
 #. meta og:description
 #: for-product-intelligence.html
 msgid ""
@@ -1906,13 +1964,6 @@ msgid ""
 msgstr ""
 "アクティベーションが低下した理由を尋ねます。DuctはMixpanel、Clarity、GrowthBook、GA4をまとめて読み取り、原因、情報源、そして提案する変更を回答します。"
 
-#. meta description
-#: for-product-intelligence.html
-msgid ""
-"Ask why activation dropped. Duct, an open-source AI agent for product and growth teams, reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources and the change it proposes."
-msgstr ""
-"アクティベーションが低下した理由を尋ねます。プロダクトおよびグロースチーム向けのオープンソースAIエージェントであるDuctは、Mixpanel、Clarity、GrowthBook、GA4をまとめて読み取り、原因、情報源、そして提案する変更を回答します。"
-
 #: for-product-intelligence.html
 msgid "Does Duct for product intelligence cost anything?"
 msgstr "プロダクトインテリジェンス向けDuctは費用がかかりますか？"
@@ -1923,16 +1974,23 @@ msgid ""
 msgstr ""
 "DuctはMixpanel、GA4、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat、Google AdsにワンクリックOAuthで接続します。セットアップは5分未満で完了し、接続後、最初のデイリーPMブリーフィングが受信トレイに届きます。"
 
+#: for-product-intelligence.html
+msgid "Duct for Product Intelligence"
+msgstr "プロダクトインテリジェンス向けDuct"
+
 #. meta og:title
 #. meta twitter:title
 #: for-product-intelligence.html
-msgid ""
-"Duct for product teams — Open-source AI agent that reads Mixpanel, Clarity, GrowthBook and GA4 together"
-msgstr "プロダクトチーム向けDuct — Mixpanel、Clarity、GrowthBook、GA4をまとめて読み取るオープンソースAIエージェント"
+msgid "Duct for product teams — AI agent for product intelligence"
+msgstr "プロダクトチーム向けDuct — プロダクトインテリジェンスのためのAIエージェント"
 
 #: for-product-intelligence.html
 msgid "Enterprise Data Team"
 msgstr "エンタープライズデータチーム"
+
+#: for-product-intelligence.html
+msgid "For product teams"
+msgstr "プロダクトチーム向け"
 
 #: for-product-intelligence.html
 msgid "Founding PM"
@@ -2140,15 +2198,19 @@ msgstr "macOS版をダウンロード ↓"
 #. meta description
 #: index.html
 msgid ""
-"Duct reads Google Ads, GA4, Stripe and nine more tools together, proposes the fix and applies it when you approve. Open source, MIT, on your own keys or your ChatGPT plan."
+"Duct reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve. Open source, MIT, your keys or ChatGPT plan."
 msgstr ""
-"DuctはGoogle Ads、GA4、Stripeなど10以上のツールを連携して読み取り、修正案を提案し、承認すると適用します。オープンソースでMITライセンス、ご自身のキーまたはChatGPTプランで利用可能です。"
+"DuctはGoogle Ads、GA4、Stripe、その他10以上のツールをまとめて読み込み、修正を提案し、承認すると適用します。オープンソース、MIT、独自のキーまたはChatGPTプラン。"
 
 #: index.html
 msgid ""
 "Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for."
 msgstr ""
 "Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。お使いのMacで、ご自身のモデルキー、または既にお支払い済みのChatGPTプランで利用できます。"
+
+#: index.html
+msgid "Duct — Cross-Tool Intelligence"
+msgstr "Duct — クロスツールインテリジェンス"
 
 #. meta og:title
 #. meta twitter:title
@@ -2172,7 +2234,7 @@ msgstr "5つの正直な<0>回答</0>"
 msgid "Five tabs, three hours, still a guess."
 msgstr "5つのタブ、3時間、それでも推測。"
 
-#: index.html tools/index.html
+#: index.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Free tools"
 msgstr "無料ツール"
 
@@ -2182,9 +2244,9 @@ msgstr "無料 · アカウント不要、クレジットカード不要 · Wind
 
 #: index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
+"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
 msgstr ""
-"Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、Stripe、RevenueCatに対応。すべての接続はOAuthを使用し、手動でのエクスポートは不要です。"
+"Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat。すべての接続はOAuthであり、手動でエクスポートされるものはありません。"
 
 #: index.html
 msgid "Is it free?"
@@ -2194,6 +2256,16 @@ msgstr "無料ですか？"
 msgid ""
 "It reads Ads, GA4 and Stripe together and answers with the change it proposes."
 msgstr "広告、GA4、Stripeを連携して読み取り、提案する変更を回答します。"
+
+#: index.html
+msgid "MIT licensed. Self-host or run locally at no cost."
+msgstr "MITライセンス。無料でセルフホストまたはローカルで実行できます。"
+
+#: index.html
+msgid ""
+"MIT-licensed AI agent for cross-tool product and growth analytics. Runs as a Tauri desktop app with bring-your-own model keys, or self-hosted as a FastAPI backend."
+msgstr ""
+"クロスツールプロダクトおよびグロースアナリティクス向けのMITライセンスAIエージェント。独自のモデルキーを持つTauriデスクトップアプリとして、またはFastAPIバックエンドとしてセルフホストで実行されます。"
 
 #: index.html
 msgid ""
@@ -2208,6 +2280,12 @@ msgstr ""
 
 #: index.html
 msgid ""
+"Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine. Why it's called Duct is on the about page."
+msgstr ""
+"モデルキーはオペレーティングシステムのキーチェーンに保存され、ジョブの実行中のみリクエストとともに送信されます。コネクタの認証情報はホストされたAPIによって暗号化されて保存されます。デスクトップアプリはそのAPIの薄いシェルであり、セルフホストビルドではすべてがご自身のマシンで実行されます。Ductという名前の由来は「概要」ページにあります。"
+
+#: index.html
+msgid ""
 "No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."
 msgstr ""
 "いいえ。レポートは読み取り専用アクセスで機能します。変更は影響範囲とともに提案され、「適用する」を押した場合にのみ適用されます。破壊的な変更にはフラグが付けられ、ガードレールを超えるものは、確認するまでブロックされます。"
@@ -2215,6 +2293,16 @@ msgstr ""
 #: index.html
 msgid "One Monday, in 30 seconds"
 msgstr "ある月曜日の30秒"
+
+#: index.html
+msgid "Open-source AI agent for cross-tool product and growth analytics."
+msgstr "クロスツールプロダクトおよびグロースアナリティクス向けのオープンソースAIエージェント。"
+
+#: index.html
+msgid ""
+"Open-source AI agent that reads across Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat, and answers questions a single dashboard cannot."
+msgstr ""
+"Google Ads、GA4、Search Console、Tag Manager、Meta Ads、Apple Search Ads、OpenAI Ads、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCatを横断して読み込み、単一のダッシュボードでは答えられない質問に回答するオープンソースAIエージェント。"
 
 #: index.html
 msgid "PMs & growth teams"
@@ -2476,6 +2564,10 @@ msgstr ""
 "Ductは<0>スペインの1人のメンテナー</0>によって構築されており、エージェントがほとんどのタイピングを行っています。ロードマップは公開ボードであり、決定はイシューで議論され、お客様またはお客様のエージェントからのプルリクエストも同じレビューを受けます。"
 
 #: open-source.html
+msgid "Duct is open source"
+msgstr "Ductはオープンソースです"
+
+#: open-source.html
 msgid ""
 "Duct is open source end to end: the agents, the connectors, the prompts, the approval gate, the desktop shell. Download it and we run the service for you. Clone it and nothing touches us."
 msgstr ""
@@ -2573,6 +2665,12 @@ msgstr ""
 
 #: open-source.html
 msgid ""
+"Start with CONTRIBUTING.md. Issues and discussions are on GitHub, the roadmap is a public project board, and agent-written contributions are welcome as long as the pull request says where an agent helped."
+msgstr ""
+"CONTRIBUTING.mdから始めてください。課題と議論はGitHubにあり、ロードマップは公開プロジェクトボードです。エージェントが作成した貢献も歓迎しますが、プルリクエストにエージェントがどこで協力したかを明記してください。"
+
+#: open-source.html
+msgid ""
 "The <0>README</0> is the source of truth for setup, and it also covers the desktop build with the backend bundled inside: SQLite on disk, loopback only, no account. <1>CONTRIBUTING.md</1> lists the checks CI runs."
 msgstr ""
 "<0>README</0>はセットアップの信頼できる情報源であり、バックエンドがバンドルされたデスクトップビルドについても説明しています。ディスク上のSQLite、ループバックのみ、アカウント不要です。<1>CONTRIBUTING.md</1>にはCIが実行するチェックが記載されています。"
@@ -2611,6 +2709,12 @@ msgstr "何がどこで実行されるか"
 msgid "What will cost money"
 msgstr "費用がかかるもの"
 
+#: open-source.html
+msgid ""
+"Why Duct is open source, what runs where in the desktop app versus a self-hosted install, how to self-host it, and what will and will not cost money."
+msgstr ""
+"Ductがオープンソースである理由、デスクトップアプリとセルフホストインストールで何がどこで実行されるか、セルフホストの方法、そして費用がかかるものとかからないもの。"
+
 #. meta description
 #: open-source.html
 msgid ""
@@ -2626,6 +2730,12 @@ msgstr ""
 
 #: open-source.html
 msgid ""
+"Yes. Clone the repository, run make setup, add one model provider key and start the backend and the app. Everything stays on your machine or your server, and no account with Duct is involved."
+msgstr ""
+"はい。リポジトリをクローンし、`make setup`を実行し、モデルプロバイダーキーを1つ追加して、バックエンドとアプリを起動します。すべてはあなたのマシンまたはサーバーに残り、Ductのアカウントは関与しません。"
+
+#: open-source.html
+msgid ""
 "Yes. Duct is MIT licensed and free with your own model keys, and that does not change. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles model access for teams that would rather not hold keys; nothing that is open today moves behind it."
 msgstr ""
 "はい。DuctはMITライセンスで、独自のモデルキーがあれば無料であり、それは変わりません。モデルプロバイダーに直接支払うか、既にお持ちのChatGPTプランでサインインしてください。後日、キーを保持したくないチーム向けにモデルアクセスをバンドルする有料プランが提供されるかもしれませんが、現在オープンなものがその背後に移動することはありません。"
@@ -2635,6 +2745,12 @@ msgid ""
 "Yes. The MIT licence allows commercial use, modification and redistribution. The only exceptions are third-party documentation under <0>docs/guides</0> and the Duct name and mark."
 msgstr ""
 "はい。MITライセンスは商用利用、変更、再配布を許可しています。唯一の例外は<0>docs/guides</0>以下のサードパーティドキュメントと、Ductの名称およびマークです。"
+
+#: open-source.html
+msgid ""
+"Yes. The MIT licence allows commercial use, modification and redistribution. The only exceptions are third-party documentation under docs/guides and the Duct name and mark."
+msgstr ""
+"はい。MITライセンスは商用利用、変更、再配布を許可しています。唯一の例外は、docs/guidesの下にあるサードパーティのドキュメントと、Ductの名称およびマークです。"
 
 #: open-source.html
 msgid "terminal"
@@ -2727,10 +2843,6 @@ msgstr "Cookie設定"
 #: partials/footer-expanded.html
 msgid "Discussions"
 msgstr "ディスカッション"
-
-#: partials/footer-expanded.html partials/nav-simple.html
-msgid "Doctrine"
-msgstr "ドクトリン"
 
 #: partials/footer-expanded.html
 msgid "Download for Desktop"
@@ -2935,10 +3047,6 @@ msgstr "ユースケース"
 #: partials/nav-seo-audit.html
 msgid "How Duct works"
 msgstr "Ductの仕組み"
-
-#: partials/nav-simple.html
-msgid "Home"
-msgstr "ホーム"
 
 #: privacy.html
 msgid "1. Google User Data We Access"
@@ -3394,9 +3502,9 @@ msgstr ""
 #. meta description
 #: privacy.html
 msgid ""
-"Duct's privacy policy: the Google user data we access and why, how we handle data from every connected tool, who we share it with, how long we keep it, and how to delete it."
+"Duct's privacy policy: the Google user data we access and why, how we handle data from every connected tool, who we share it with, and how to delete it."
 msgstr ""
-"Ductのプライバシーポリシー：当社がアクセスするGoogleユーザーデータとその理由、すべての接続ツールからのデータの取り扱い方法、共有相手、保持期間、および削除方法。"
+"Ductのプライバシーポリシー：アクセスするGoogleユーザーデータとその理由、接続されたすべてのツールからのデータの取り扱い方法、共有相手、および削除方法。"
 
 #: privacy.html
 msgid ""
@@ -3979,6 +4087,10 @@ msgstr "修正の順序"
 msgid "Four <0>questions</0>"
 msgstr "4つの<0>質問</0>"
 
+#: seo-audit.html
+msgid "Free SEO Audit by Duct"
+msgstr "Ductによる無料SEO監査"
+
 #. meta og:title
 #. meta twitter:title
 #: seo-audit.html
@@ -3988,6 +4100,10 @@ msgstr "無料SEO監査 — ランキングを妨げている原因を正確に�
 #: seo-audit.html
 msgid "Free SEO Audit — See exactly what's hurting your rankings | Duct"
 msgstr "無料SEO監査 — ランキングを妨げている原因を正確に把握 | Duct"
+
+#: seo-audit.html
+msgid "Free SEO audit"
+msgstr "無料SEO監査"
 
 #: seo-audit.html
 msgid "Free · No credit card · Two to four minutes"
@@ -4018,6 +4134,11 @@ msgid "Not a score. <0>A list of fixes.</0>"
 msgstr "スコアではありません。<0>修正のリストです。</0>"
 
 #. meta description
+#: seo-audit.html
+msgid ""
+"Paste a URL and get a real SEO audit in minutes: a score, every issue on the page it lives on, and the fixes in order. Free, no account, open source."
+msgstr "URLを貼り付けるだけで、数分で実際のSEO監査結果が得られます。スコア、ページ上のすべての問題、そして修正順序。無料、アカウント不要、オープンソース。"
+
 #: seo-audit.html
 msgid ""
 "Paste your URL and get a real SEO audit in minutes: a score, every issue on the page it lives on, and the fixes in order. Free, no account, from the open-source Duct audit agent."
@@ -4470,9 +4591,9 @@ msgstr "Alleviate Labが提供するDuctの利用規約。"
 #. meta description
 #: terms.html
 msgid ""
-"Terms of Service for Duct by Alleviate Lab: connected accounts, approval-gated changes, AI output, content publishing, the desktop app, open-source licensing and beta terms."
+"Terms of Service for Duct by Alleviate Lab: connected accounts, approval-gated changes, AI output, content publishing, desktop app and open-source licensing."
 msgstr ""
-"Alleviate Labが提供するDuctの利用規約：接続済みアカウント、承認ゲート付き変更、AI出力、コンテンツ公開、デスクトップアプリ、オープンソースライセンス、ベータ版規約。"
+"Alleviate LabによるDuctの利用規約：接続されたアカウント、承認ゲート付きの変更、AI出力、コンテンツ公開、デスクトップアプリ、オープンソースライセンス。"
 
 #. meta og:title
 #. meta twitter:title
@@ -4702,11 +4823,6 @@ msgid ""
 msgstr ""
 "SaaSにおける適切なLTV:CAC比率は3:1以上です。これは、顧客獲得に1ユーロ費やすごとに、生涯価値で3ユーロを回収できることを意味します。2～3:1の比率はコストをカバーしますが、持続可能な経済を構築しません。2:1未満は通常、モデルが大規模では実行不可能であることを意味します。5:1以上は、成長への投資不足を示唆することがよくあります。"
 
-#. section aria-label
-#: tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
-msgid "About Duct"
-msgstr "Ductについて"
-
 #: tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/mrr-growth-calculator.html
 msgid "All calculations run in your browser. No data is sent or stored."
 msgstr "すべての計算はブラウザで実行されます。データが送信または保存されることはありません。"
@@ -4755,6 +4871,10 @@ msgid ""
 "CAC (Customer Acquisition Cost) is the total sales and marketing spend required to acquire one new customer. Formula: CAC = Total Sales & Marketing Spend ÷ New Customers Acquired in the same period. Include salaries, tools, ad spend, and agency fees in the numerator for an accurate figure."
 msgstr ""
 "CAC（顧客獲得コスト）は、新規顧客を1人獲得するために必要な総販売・マーケティング費用です。計算式：CAC = 総販売・マーケティング費用 ÷ 同期間に獲得した新規顧客数。正確な数値を出すには、給与、ツール、広告費、代理店手数料を分子に含めます。"
+
+#: tools/cac-ltv-calculator.html
+msgid "CAC / LTV Calculator for SaaS"
+msgstr "SaaS向けCAC / LTV計算ツール"
 
 #. meta og:title
 #. meta twitter:title
@@ -4827,9 +4947,15 @@ msgstr "業界ベンチマークと比較した即時ヘルススコア付きの
 #. meta description
 #: tools/cac-ltv-calculator.html
 msgid ""
-"Free SaaS CAC and LTV calculator. Enter your spend, customers, and revenue to instantly get CAC, LTV, LTV:CAC ratio, and payback period — colour-coded vs SaaS benchmarks."
+"Free SaaS CAC and LTV calculator. Enter spend, customers and revenue to get CAC, LTV, LTV:CAC ratio and payback period, colour-coded against benchmarks."
 msgstr ""
-"無料のSaaS CACおよびLTV計算ツール。費用、顧客数、収益を入力すると、CAC、LTV、LTV:CAC比率、回収期間がSaaSベンチマークと比較して色分けされて即座に表示されます。"
+"無料のSaaS CACおよびLTV計算ツール。支出、顧客数、収益を入力すると、CAC、LTV、LTV:CAC比率、回収期間がベンチマークと色分けされて表示されます。"
+
+#: tools/cac-ltv-calculator.html
+msgid ""
+"Free calculator that computes Customer Acquisition Cost (CAC), Customer Lifetime Value (LTV), LTV:CAC ratio, and CAC payback period from your SaaS metrics, with colour-coded health scores vs industry benchmarks."
+msgstr ""
+"SaaS指標から顧客獲得コスト（CAC）、顧客生涯価値（LTV）、LTV:CAC比率、CAC回収期間を算出し、業界ベンチマークと比較した色分けされた健全性スコアを表示する無料の計算ツールです。"
 
 #: tools/cac-ltv-calculator.html tools/saas-metrics-calculator.html
 msgid "Gross margin % <0>(optional)</0>"
@@ -4908,6 +5034,10 @@ msgid ""
 "Results are benchmarked against widely-cited SaaS standards: a healthy LTV:CAC above 3:1 (David Skok / OpenView), and a payback period under 12 months (OpenView SaaS Benchmarks 2024)."
 msgstr ""
 "結果は広く引用されているSaaS標準に対してベンチマークされています：健全なLTV:CACは3:1以上（David Skok / OpenView）、回収期間は12ヶ月未満（OpenView SaaS Benchmarks 2024）。"
+
+#: tools/cac-ltv-calculator.html
+msgid "SaaS CAC / LTV Calculator"
+msgstr "SaaS CAC / LTV 計算ツール"
 
 #: tools/cac-ltv-calculator.html
 msgid ""
@@ -5020,6 +5150,11 @@ msgid ""
 "Free CPA calculator for marketers. Calculate cost per acquisition, projected conversions, and required CPA targets to compete on paid media efficiency."
 msgstr "マーケター向けの無料CPA計算ツール。顧客獲得単価、予測コンバージョン数、必要なCPA目標を計算し、有料メディアの効率で競争します。"
 
+#: tools/cpa-calculator.html
+msgid ""
+"Free calculator that computes cost per acquisition, projected conversions at target CPA, and required CPA to stay profitable."
+msgstr "獲得単価、目標CPAでの予測コンバージョン数、収益性を維持するために必要なCPAを算出する無料の計算ツールです。"
+
 #. meta twitter:description
 #: tools/cpa-calculator.html
 msgid ""
@@ -5098,6 +5233,11 @@ msgid ""
 "Free CPC calculator for paid media teams. Calculate cost per click, projected spend at target CPC, and required CPC to stay within budget."
 msgstr "有料メディアチーム向けの無料CPC計算ツール。クリック単価、目標CPCでの予測費用、および予算内に収めるための必要なCPCを計算します。"
 
+#: tools/cpc-calculator.html
+msgid ""
+"Free calculator that computes CPC, projected spend at target CPC, and required CPC to stay inside budget."
+msgstr "CPC、目標CPCでの予測支出、予算内に収めるために必要なCPCを算出する無料の計算ツールです。"
+
 #. meta twitter:description
 #: tools/cpc-calculator.html
 msgid ""
@@ -5174,6 +5314,11 @@ msgstr "Ductは、クリック品質、コンバージョン率、チャネル�
 msgid ""
 "Free CPM calculator for advertisers and growth teams. Calculate cost per 1,000 impressions, projected spend, and target CPM scenarios instantly."
 msgstr "広告主および成長チーム向けの無料CPM計算ツール。1,000インプレッションあたりの費用、予測費用、および目標CPMシナリオを即座に計算します。"
+
+#: tools/cpm-calculator.html
+msgid ""
+"Free calculator that computes CPM, projected spend at target CPM, and required CPM to stay within budget."
+msgstr "CPM、目標CPMでの予測支出、予算内に収めるために必要なCPMを算出する無料の計算ツールです。"
 
 #. meta twitter:description
 #: tools/cpm-calculator.html
@@ -5294,9 +5439,13 @@ msgstr ""
 #. meta description
 #: tools/ctr-calculator.html
 msgid ""
-"Free CTR calculator for marketers and growth teams. Enter impressions and clicks to calculate click-through rate, projected clicks, and needed lift scenarios instantly."
-msgstr ""
-"マーケターとグロースチーム向けの無料CTR計算ツール。インプレッション数とクリック数を入力して、クリックスルー率、予測クリック数、必要なリフトシナリオを即座に計算します。"
+"Free CTR calculator for marketers and growth teams. Enter impressions and clicks to get click-through rate, projected clicks and the lift you need."
+msgstr "マーケターとグロースチーム向けの無料CTR計算ツール。インプレッション数とクリック数を入力すると、クリック率、予測クリック数、必要なリフトが得られます。"
+
+#: tools/ctr-calculator.html
+msgid ""
+"Free calculator that computes click-through rate (CTR), projected clicks at target CTR, and required lift to hit click goals."
+msgstr "クリック率（CTR）、目標CTRでの予測クリック数、クリック目標を達成するために必要なリフトを算出する無料の計算ツールです。"
 
 #. meta twitter:description
 #: tools/ctr-calculator.html
@@ -5493,6 +5642,11 @@ msgstr ""
 msgid ""
 "Free calculator for engagement rate by followers, reach, and impressions with practical quality benchmarks."
 msgstr "フォロワー数、リーチ数、インプレッション数に基づくエンゲージメント率を計算する無料ツール。実用的な品質ベンチマーク付き。"
+
+#: tools/engagement-rate-calculator.html
+msgid ""
+"Free calculator that computes engagement rate by followers, reach, and impressions, plus average engagements per post."
+msgstr "フォロワー、リーチ、インプレッションごとのエンゲージメント率、および投稿あたりの平均エンゲージメント数を算出する無料の計算ツールです。"
 
 #. meta description
 #: tools/engagement-rate-calculator.html
@@ -5699,6 +5853,10 @@ msgid "Do I need an account?"
 msgstr "アカウントは必要ですか？"
 
 #: tools/index.html
+msgid "Duct free tools"
+msgstr "Duct 無料ツール"
+
+#: tools/index.html
 msgid "Engagement by followers, reach or impressions, comparable across posts."
 msgstr "フォロワー、リーチ、またはインプレッションによるエンゲージメントで、投稿間で比較可能です。"
 
@@ -5719,9 +5877,18 @@ msgstr "無料のSaaS＆マーケティングツール — 計算ツール＆生
 #. meta description
 #: tools/index.html
 msgid ""
-"Free calculators and generators for SaaS and marketing teams: benchmarks, paid media math, UTMs, and weekly brief templates. No signup — or connect your stack for automated weekly intelligence with Duct."
+"Free calculators and generators for SaaS and marketing teams: benchmarks, paid media math, a UTM builder and weekly brief templates. No signup needed."
 msgstr ""
-"SaaSおよびマーケティングチーム向けの無料計算ツールと生成ツール：ベンチマーク、有料メディア計算、UTM、週次ブリーフテンプレート。サインアップは不要です — または、Ductでスタックを接続して、自動化された週次インテリジェンスを利用できます。"
+"SaaSおよびマーケティングチーム向けの無料計算ツールとジェネレーター：ベンチマーク、有料メディアの計算、UTMビルダー、週次ブリーフテンプレート。サインアップ不要です。"
+
+#: tools/index.html
+msgid ""
+"Free calculators and generators for SaaS benchmarks, paid media efficiency, UTMs, and weekly marketing briefs."
+msgstr "SaaSベンチマーク、有料メディアの効率性、UTM、週次マーケティングブリーフ向けの無料計算ツールとジェネレーター。"
+
+#: tools/index.html
+msgid "Free growth and marketing tools"
+msgstr "無料のグロースおよびマーケティングツール"
 
 #: tools/index.html
 msgid "GA4-friendly campaign links with live preview and validation."
@@ -5784,7 +5951,7 @@ msgstr "収益倍率としての広告費用対効果、目標ROASのギャッ�
 msgid "Runs in your browser"
 msgstr "ブラウザで動作します"
 
-#: tools/index.html
+#: tools/index.html tools/saas-metrics-calculator.html
 msgid "SaaS Metrics Benchmark Calculator"
 msgstr "SaaS指標ベンチマーク計算ツール"
 
@@ -5853,6 +6020,11 @@ msgstr ""
 msgid ""
 "Free ROI calculator for marketing campaigns with profitability and target-planning scenarios."
 msgstr "収益性と目標計画シナリオを備えた、マーケティングキャンペーン向けの無料ROI計算ツール。"
+
+#: tools/marketing-roi-calculator.html
+msgid ""
+"Free calculator that computes marketing ROI, net profit, and break-even revenue targets."
+msgstr "マーケティングROI、純利益、損益分岐点収益目標を算出する無料の計算ツールです。"
 
 #. meta description
 #: tools/marketing-roi-calculator.html
@@ -5981,6 +6153,11 @@ msgstr ""
 msgid ""
 "Free SaaS MRR growth calculator with benchmark-style interpretation and action insights."
 msgstr "ベンチマーク形式の解釈とアクションインサイトを備えた無料SaaS MRR成長計算ツール。"
+
+#: tools/mrr-growth-calculator.html
+msgid ""
+"Free calculator that computes net MRR growth, compound monthly growth rate (CMGR), and required growth rate to hit a target MRR for SaaS businesses."
+msgstr "SaaSビジネス向けの純MRR成長率、複合月間成長率（CMGR）、および目標MRRを達成するために必要な成長率を算出する無料の計算ツールです。"
 
 #: tools/mrr-growth-calculator.html
 msgid ""
@@ -6151,6 +6328,11 @@ msgid ""
 msgstr "パフォーマンスマーケター向けの無料ROAS計算ツール：倍数、目標、ペースチェック。"
 
 #: tools/roas-calculator.html
+msgid ""
+"Free calculator that computes return on ad spend (ROAS), target revenue for a goal ROAS, and maximum efficient spend at observed revenue."
+msgstr "広告費用対効果（ROAS）、目標ROAS達成のための目標収益、および観測された収益での最大効率的な支出を計算する無料計算機。"
+
+#: tools/roas-calculator.html
 msgid "Media cost for the same scope as attributed revenue"
 msgstr "帰属収益と同じ範囲のメディア費用"
 
@@ -6287,9 +6469,15 @@ msgstr ""
 #. meta description
 #: tools/saas-metrics-calculator.html
 msgid ""
-"Free SaaS metrics benchmark calculator. Enter your MRR, churn, CAC, LTV, and trial-to-paid rate. Get instant colour-coded scores vs industry averages from OpenView and ChartMogul."
+"Free SaaS metrics benchmark calculator. Enter MRR, churn, CAC, LTV and trial-to-paid rate for colour-coded scores against OpenView and ChartMogul averages."
 msgstr ""
-"無料のSaaSメトリクスベンチマーク計算ツール。MRR、チャーン、CAC、LTV、トライアルから有料への転換率を入力してください。OpenViewとChartMogulの業界平均と比較した色分けされたスコアを即座に取得できます。"
+"無料のSaaSメトリクスベンチマーク計算機。MRR、チャーン、CAC、LTV、トライアルから有料への移行率を入力すると、OpenViewとChartMogulの平均値に対する色分けされたスコアが得られます。"
+
+#: tools/saas-metrics-calculator.html
+msgid ""
+"Free calculator that benchmarks your SaaS metrics — churn rate, LTV:CAC ratio, CAC payback period, and trial-to-paid conversion — against industry averages from OpenView and ChartMogul."
+msgstr ""
+"SaaSメトリクス（チャーン率、LTV:CAC比率、CAC回収期間、トライアルから有料へのコンバージョン）を、OpenViewとChartMogulの業界平均と比較する無料計算機。"
 
 #: tools/saas-metrics-calculator.html
 msgid "How do I calculate LTV for a SaaS business?"
@@ -6524,6 +6712,11 @@ msgstr "ライブURLプレビューとGA4準拠の検証機能を備えた無料
 msgid ""
 "Free UTM builder with live URL preview and GA4 compliance validation. Build and copy UTM campaign links in seconds. No signup required."
 msgstr "ライブURLプレビューとGA4準拠の検証機能を備えた無料のUTMビルダー。数秒でUTMキャンペーンリンクを作成してコピーできます。サインアップ不要。"
+
+#: tools/utm-builder.html
+msgid ""
+"Free UTM builder with live URL preview and GA4 compliance validation. Build and copy UTM campaign links instantly."
+msgstr "ライブURLプレビューとGA4準拠検証機能を備えた無料のUTMビルダー。UTMキャンペーンリンクを即座に作成・コピーできます。"
 
 #: tools/utm-builder.html
 msgid "GA4 Compliance Note"
@@ -6761,12 +6954,18 @@ msgid ""
 "Duct reads your actual tools, writes the brief with what changed, why, and one action, and remembers what you decided last week."
 msgstr "Ductは実際のツールを読み込み、何が変わり、その理由、そして1つのアクションを含むブリーフを作成し、先週決定したことを記憶します。"
 
+#: tools/weekly-brief-template.html
+msgid ""
+"Free interactive tool that generates a customised weekly marketing report template based on your role (Growth PM, Performance Marketer, SEO Lead) and tool stack (GA4, Mixpanel, HubSpot, Google Ads, Ahrefs, Search Console, Meta Ads, LinkedIn Ads)."
+msgstr ""
+"役割（グロースPM、パフォーマンスマーケター、SEOリード）とツールスタック（GA4、Mixpanel、HubSpot、Google Ads、Ahrefs、Search Console、Meta Ads、LinkedIn Ads）に基づいて、カスタマイズされた週次マーケティングレポートテンプレートを生成する無料のインタラクティブツール。"
+
 #. meta description
 #: tools/weekly-brief-template.html
 msgid ""
-"Free weekly marketing brief template generator. Select your role and tool stack, get a customised weekly report template in seconds. Copy with one click — no signup required."
+"Free weekly marketing brief template generator. Pick your role and tool stack and get a customised weekly report template in seconds. No signup required."
 msgstr ""
-"無料の週次マーケティングブリーフテンプレートジェネレーター。役割とツールスタックを選択すると、カスタマイズされた週次レポートテンプレートを数秒で取得できます。ワンクリックでコピーでき、サインアップは不要です。"
+"無料の週次マーケティングブリーフテンプレートジェネレーター。役割とツールスタックを選択するだけで、カスタマイズされた週次レポートテンプレートを数秒で入手できます。サインアップは不要です。"
 
 #. meta twitter:description
 #: tools/weekly-brief-template.html
@@ -6908,6 +7107,10 @@ msgstr "週次ブリーフテンプレートジェネレーター"
 msgid "Weekly Marketing Brief <0>Template</0> Generator"
 msgstr "週次マーケティングブリーフ<0>テンプレート</0>ジェネレーター"
 
+#: tools/weekly-brief-template.html
+msgid "Weekly Marketing Brief Template Generator"
+msgstr "週次マーケティングブリーフテンプレートジェネレーター"
+
 #. meta og:title
 #. meta twitter:title
 #: tools/weekly-brief-template.html
@@ -6972,3 +7175,279 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid ""
+#~ "Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine."
+#~ msgstr ""
+#~ "モデルキーはオペレーティングシステムのキーチェーンに保存され、ジョブの実行中のみリクエストとともに送信されます。コネクタの認証情報はホストされたAPIによって暗号化されて保存されます。デスクトップアプリはそのAPIの薄いシェルであり、セルフホストビルドはすべてを自身のマシンで実行します。"
+
+#~ msgid ""
+#~ "Start with CONTRIBUTING.md in the repository. Issues and discussions are on GitHub, the roadmap is a public project board, and agent-written contributions are welcome as long as the pull request says where an agent helped."
+#~ msgstr ""
+#~ "リポジトリのCONTRIBUTING.mdから始めてください。課題と議論はGitHubにあり、ロードマップは公開プロジェクトボードです。エージェントが作成した貢献も、プルリクエストにエージェントがどこで貢献したかを明記していれば歓迎されます。"
+
+#~ msgid ""
+#~ "A good LTV:CAC ratio for SaaS is above 3:1. This means for every 1 unit spent acquiring a customer, you recover 3 units in lifetime value. A ratio of 2-3:1 is marginal. Below 2:1 is unsustainable at scale."
+#~ msgstr ""
+#~ "SaaSにおける良好なLTV:CAC比率は3:1以上です。これは、顧客獲得に1単位を費やすごとに、ライフタイムバリューで3単位を回収することを意味します。2-3:1の比率は限界的です。2:1を下回ると、規模を拡大する上で持続不可能です。"
+
+#~ msgid ""
+#~ "CAC (Customer Acquisition Cost) is the total sales and marketing spend required to acquire one new customer. Formula: CAC = Total Sales & Marketing Spend / Number of New Customers Acquired in the same period."
+#~ msgstr ""
+#~ "CAC（顧客獲得コスト）は、新規顧客を1人獲得するために必要な販売およびマーケティング費用の総額です。計算式：CAC = 同期間の販売およびマーケティング費用の総額 / 同期間に獲得した新規顧客数。"
+
+#~ msgid ""
+#~ "CAC payback period is the number of months it takes to recover your customer acquisition cost from a customer's monthly revenue. Formula: Payback Period = CAC / Average Monthly Revenue per Customer. A healthy payback period for SaaS is under 12 months."
+#~ msgstr ""
+#~ "CAC回収期間とは、顧客の月間収益から顧客獲得コストを回収するのにかかる月数です。計算式：回収期間 = CAC / 顧客あたりの平均月間収益。SaaSにとって健全な回収期間は12ヶ月未満です。"
+
+#~ msgid ""
+#~ "LTV = Average Monthly Revenue per Customer multiplied by Average Customer Lifespan in months. Alternatively: LTV = ARPU divided by Monthly Churn Rate. For example, if ARPU is 100 and average lifespan is 36 months, LTV = 3600."
+#~ msgstr ""
+#~ "LTV = 顧客あたりの平均月間収益 × 顧客の平均寿命（月数）。または：LTV = ARPU ÷ 月間チャーン率。例えば、ARPUが100で平均寿命が36ヶ月の場合、LTV = 3600です。"
+
+#~ msgid ""
+#~ "The most effective ways to reduce CAC are: improving organic content (blog, SEO) to reduce paid acquisition dependence; shortening the sales cycle; improving trial-to-paid conversion to get more value from existing top-of-funnel; and building referral or PLG loops that reduce acquisition cost per customer over time."
+#~ msgstr ""
+#~ "CACを削減する最も効果的な方法は、有料獲得への依存を減らすためにオーガニックコンテンツ（ブログ、SEO）を改善すること、営業サイクルを短縮すること、既存のファネル上部からより多くの価値を得るためにトライアルから有料へのコンバージョンを改善すること、そして時間の経過とともに顧客あたりの獲得コストを削減する紹介またはPLGループを構築することです。"
+
+#~ msgid ""
+#~ "CTR indicates how relevant your message is to the audience seeing it. Low CTR can signal weak creative, poor targeting, or low query intent match."
+#~ msgstr ""
+#~ "CTRは、メッセージがそれを見るオーディエンスにとってどれだけ関連性が高いかを示します。低いCTRは、クリエイティブの弱さ、ターゲティングの不適切さ、またはクエリ意図との低い一致を示す可能性があります。"
+
+#~ msgid ""
+#~ "CTR is calculated as Clicks divided by Impressions multiplied by 100. For example, 320 clicks from 16,000 impressions equals a 2.0 percent CTR."
+#~ msgstr ""
+#~ "CTRは、クリック数をインプレッション数で割って100を掛けることで計算されます。例えば、16,000インプレッションから320クリックがあった場合、CTRは2.0パーセントになります。"
+
+#~ msgid "Can I use this for Google Ads CTR?"
+#~ msgstr "Google AdsのCTRにも使えますか？"
+
+#~ msgid ""
+#~ "Good CTR depends on channel and intent. As a rough guide, below 1 percent is often weak, 1 to 3 percent is average, and above 3 percent can be strong for many campaigns."
+#~ msgstr ""
+#~ "良いCTRはチャネルと意図によって異なります。大まかな目安として、1パーセント未満は弱い、1〜3パーセントは平均、3パーセント以上は多くのキャンペーンで強いとされます。"
+
+#~ msgid "How can I improve CTR?"
+#~ msgstr "CTRを改善するにはどうすればよいですか？"
+
+#~ msgid ""
+#~ "Improve headlines and hooks, tighten targeting, refresh creatives, align landing-page promise with ad copy, and test offers and formats regularly."
+#~ msgstr ""
+#~ "ヘッドラインとフックを改善し、ターゲティングを絞り込み、クリエイティブを更新し、ランディングページの約束と広告コピーを一致させ、オファーとフォーマットを定期的にテストします。"
+
+#~ msgid "What is a good CTR?"
+#~ msgstr "良いCTRとは何ですか？"
+
+#~ msgid "Why does CTR matter?"
+#~ msgstr "CTRが重要なのはなぜですか？"
+
+#~ msgid ""
+#~ "Yes. The formula is the same for Google Ads, Meta Ads, LinkedIn, email, and organic search snippets as long as you use clicks and impressions from the same source and period."
+#~ msgstr ""
+#~ "はい。同じソースと期間のクリック数とインプレッション数を使用する限り、Google Ads、Meta Ads、LinkedIn、メール、オーガニック検索スニペットでも同じ計算式が適用されます。"
+
+#~ msgid ""
+#~ "Benchmarks vary by platform and audience size, but many teams use less than 1 percent as weak, 1 to 3 percent as average, 3 to 6 percent as healthy, and above 6 percent as strong for follower-based engagement rate."
+#~ msgstr ""
+#~ "ベンチマークはプラットフォームとオーディエンスの規模によって異なりますが、多くのチームでは、フォロワーベースのエンゲージメント率について、1パーセント未満を弱い、1〜3パーセントを平均、3〜6パーセントを健全、6パーセント以上を強いと見なしています。"
+
+#~ msgid ""
+#~ "Engagement typically includes likes, comments, shares, saves, clicks, and replies depending on platform. Keep your definition consistent across periods for reliable comparison."
+#~ msgstr ""
+#~ "エンゲージメントには通常、プラットフォームに応じて「いいね」、コメント、シェア、保存、クリック、返信が含まれます。信頼性の高い比較のために、期間全体で定義を一貫させてください。"
+
+#~ msgid "Should I calculate engagement rate by followers, reach, or impressions?"
+#~ msgstr "エンゲージメント率はフォロワー、リーチ、インプレッションのどれで計算すべきですか？"
+
+#~ msgid ""
+#~ "The most common formula is Engagement Rate = Total Engagements divided by a denominator such as Followers, Reach, or Impressions, multiplied by 100."
+#~ msgstr ""
+#~ "最も一般的な計算式は、エンゲージメント率 = 総エンゲージメント数 ÷ （フォロワー数、リーチ数、またはインプレッション数などの分母） × 100 です。"
+
+#~ msgid ""
+#~ "Use followers for broad account-level benchmarking, reach for content quality relative to exposed audience, and impressions for efficiency when audiences may see content multiple times."
+#~ msgstr ""
+#~ "広範なアカウントレベルのベンチマークにはフォロワーを使用し、露出したオーディエンスに対するコンテンツの品質にはリーチを使用し、オーディエンスがコンテンツを複数回見る可能性がある場合の効率性にはインプレッションを使用します。"
+
+#~ msgid "What counts as engagement?"
+#~ msgstr "エンゲージメントとして何がカウントされますか？"
+
+#~ msgid ""
+#~ "You can compare trends, but direct comparisons can be misleading because each platform has different feed mechanics and engagement behaviors."
+#~ msgstr ""
+#~ "トレンドを比較することはできますが、各プラットフォームには異なるフィードの仕組みとエンゲージメント行動があるため、直接的な比較は誤解を招く可能性があります。"
+
+#~ msgid ""
+#~ "A healthy target depends on stage, but early-stage SaaS teams often aim for 10 to 20 percent monthly growth. Growth below 5 percent can still be strong for later-stage, efficient businesses with high retention."
+#~ msgstr ""
+#~ "健全な目標はステージによって異なりますが、初期段階のSaaSチームはしばしば月間10〜20パーセントの成長を目指します。5パーセント未満の成長でも、後期段階で効率的かつ高い定着率を持つビジネスにとっては依然として強い場合があります。"
+
+#~ msgid ""
+#~ "CMGR means Compound Monthly Growth Rate. It shows the average monthly growth needed to move from starting MRR to ending MRR over a set number of months. Formula: CMGR = (Ending MRR/Starting MRR)^(1/months) - 1."
+#~ msgstr ""
+#~ "CMGRは複合月間成長率を意味します。これは、設定された月数で開始MRRから終了MRRに移行するために必要な平均月間成長率を示します。計算式：CMGR = (終了MRR/開始MRR)^(1/月数) - 1。"
+
+#~ msgid "Can this calculator handle MRR decline?"
+#~ msgstr "この計算ツールはMRRの減少に対応できますか？"
+
+#~ msgid ""
+#~ "Enter your target MRR to calculate the required compound monthly growth rate from your current MRR over the selected period. This helps evaluate if your growth plan is realistic."
+#~ msgstr "目標MRRを入力すると、選択した期間における現在のMRRからの必要な複合月間成長率が計算されます。これにより、成長計画が現実的であるかを評価できます。"
+
+#~ msgid "How do I project MRR growth to a target?"
+#~ msgstr "目標に向けてMRR成長を予測するにはどうすればよいですか？"
+
+#~ msgid ""
+#~ "Net MRR growth rate is calculated as (Ending MRR minus Starting MRR) divided by Starting MRR. Multiply by 100 to express it as a percentage."
+#~ msgstr "純MRR成長率は、（期末MRRから期首MRRを引いたもの）を期首MRRで割って算出されます。100を掛けてパーセンテージで表します。"
+
+#~ msgid "What is a good MRR growth rate for SaaS?"
+#~ msgstr "SaaSにとって適切なMRR成長率とは何ですか？"
+
+#~ msgid ""
+#~ "Yes. If ending MRR is lower than starting MRR, the calculator shows a negative growth rate and flags contraction risk so you can investigate churn, downgrades, and acquisition efficiency."
+#~ msgstr ""
+#~ "はい。期末MRRが期首MRRより低い場合、計算機はマイナスの成長率を表示し、縮小リスクを警告します。これにより、チャーン、ダウングレード、獲得効率を調査できます。"
+
+#~ msgid ""
+#~ "A good monthly churn rate for SaaS is below 2%. Anything between 2-4% is average and needs attention. Above 4% monthly churn is critical — at that rate you're losing nearly half your revenue base each year."
+#~ msgstr ""
+#~ "SaaSにとって適切な月間チャーン率は2%未満です。2〜4%の間は平均的であり、注意が必要です。月間チャーン率が4%を超えると危機的です。その割合では、毎年収益基盤のほぼ半分を失うことになります。"
+
+#~ msgid ""
+#~ "A healthy LTV:CAC ratio for SaaS is above 3:1. A ratio of 2-3:1 is marginal. Below 2:1 typically means your business model is not viable at scale."
+#~ msgstr ""
+#~ "SaaSにとって健全なLTV:CAC比率は3:1以上です。2-3:1の比率は限界的です。2:1未満は通常、ビジネスモデルが大規模では実行不可能であることを意味します。"
+
+#~ msgid ""
+#~ "Benchmarks come from OpenView Partners SaaS Benchmarks Report (2023-2024) and ChartMogul SaaS Benchmarks Report. LTV:CAC thresholds follow the widely-cited 3:1 standard from David Skok's SaaS metrics framework."
+#~ msgstr ""
+#~ "ベンチマークは、OpenView Partners SaaSベンチマークレポート（2023-2024）およびChartMogul SaaSベンチマークレポートに基づいています。LTV:CACのしきい値は、David SkokのSaaSメトリクスフレームワークで広く引用されている3:1の基準に従っています。"
+
+#~ msgid ""
+#~ "LTV = Average Monthly Revenue per Customer divided by Monthly Churn Rate. For example, if ARPU is 100 and monthly churn is 2%, LTV = 100 divided by 0.02 = 5000."
+#~ msgstr ""
+#~ "LTV = 顧客あたりの平均月間収益 ÷ 月間チャーン率。例えば、ARPUが100で月間チャーンが2%の場合、LTV = 100 ÷ 0.02 = 5000です。"
+
+#~ msgid ""
+#~ "Track core SaaS metrics monthly at minimum — MRR, churn, and CAC are standard monthly reviews. LTV and LTV:CAC are more meaningful on a quarterly basis since they are slow-moving."
+#~ msgstr ""
+#~ "少なくとも毎月、主要なSaaSメトリクスを追跡してください。MRR、チャーン、CACは標準的な月次レビューです。LTVとLTV:CACは動きが遅いため、四半期ベースでより意味があります。"
+
+#~ msgid ""
+#~ "A report shows what happened — raw numbers, charts, tables. A brief tells you what it means and what to do. A good weekly marketing brief has a north star metric, the two or three signals that explain its movement, and one clear action. If your brief requires someone to interpret it, it is a report, not a brief."
+#~ msgstr ""
+#~ "レポートは、生データ、グラフ、表など、何が起こったかを示します。ブリーフは、それが何を意味し、何をすべきかを伝えます。優れた週次マーケティングブリーフには、ノーススターメトリクス、その動きを説明する2つか3つのシグナル、そして1つの明確なアクションが含まれます。ブリーフが誰かの解釈を必要とする場合、それはブリーフではなくレポートです。"
+
+#~ msgid ""
+#~ "A weekly marketing brief should include: your north star metric and whether it moved, 2-3 channel-level metrics for each tool in your stack (traffic, conversions, spend), one anomaly or unexpected change, and a single priority action for the coming week. Keep it under one page — if it requires scrolling it will not get read."
+#~ msgstr ""
+#~ "週次マーケティングブリーフには、ノーススターメトリクスとその変動、スタック内の各ツール（トラフィック、コンバージョン、支出）に関する2〜3のチャネルレベルメトリクス、1つの異常または予期せぬ変更、そして来週の単一の優先アクションを含めるべきです。1ページ以内に収めてください。スクロールが必要な場合、読まれません。"
+
+#~ msgid ""
+#~ "Most growth marketers and PMs spend 2-3 hours per week writing a weekly brief manually — pulling data from GA4, HubSpot, Mixpanel, and ad platforms separately, then synthesising it into a coherent narrative. With a good template, this reduces to 60-90 minutes. With automation, it takes minutes."
+#~ msgstr ""
+#~ "ほとんどのグロースマーケターやPMは、週に2〜3時間かけて手動で週次ブリーフを作成しています。GA4、HubSpot、Mixpanel、および広告プラットフォームから個別にデータを抽出し、それを一貫したナラティブに統合しています。優れたテンプレートを使用すると、これが60〜90分に短縮されます。自動化すれば、数分で済みます。"
+
+#. meta description
+#~ msgid ""
+#~ "Seven opinions Duct is built on, each with the file that enforces it: approval before action, renting an agent harness, membership over ownership, and why agent-written code is welcome here."
+#~ msgstr ""
+#~ "Ductが基づく7つの意見。それぞれを強制するファイル付き：行動前の承認、エージェントハーネスのレンタル、所有権よりもメンバーシップ、そしてエージェントが書いたコードがここで歓迎される理由。"
+
+#. meta description
+#~ msgid ""
+#~ "Duct on your desktop for Mac, Windows and Linux. Ask across your ads, analytics and revenue tools, approve the fix, and keep your model keys in your own keychain."
+#~ msgstr ""
+#~ "Mac、Windows、Linux用のDuctデスクトップアプリ。広告、分析、収益ツール全体に質問し、修正を承認し、モデルキーを独自のキーチェーンに保存します。"
+
+#. meta description
+#~ msgid ""
+#~ "Ask which content converts. Duct, an open-source AI agent for growth teams, reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week's posts on a board."
+#~ msgstr ""
+#~ "どのコンテンツがコンバージョンしているか尋ねてください。成長チーム向けのオープンソースAIエージェントであるDuctは、Search Console、GA4、Clarityをまとめて読み込み、任意のURLを無料で監査し、週の投稿をボード上で計画します。"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid ""
+#~ "Duct for SEO and content teams — Open-source AI agent that reads Search Console, GA4 and Clarity together"
+#~ msgstr "SEOおよびコンテンツチーム向けDuct — Search Console、GA4、Clarityをまとめて読み込むオープンソースAIエージェント"
+
+#. meta description
+#~ msgid ""
+#~ "Ask why CPA moved. Duct, an open-source AI agent for growth teams, reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve."
+#~ msgstr ""
+#~ "CPAが変動した理由を尋ねてください。成長チーム向けのオープンソースAIエージェントであるDuctは、Google広告、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止または変更を提案し、お客様が承認した場合に適用します。"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid ""
+#~ "Duct for performance marketers — Open-source AI agent that reads Google Ads, Meta, GA4 and Stripe together"
+#~ msgstr "パフォーマンスマーケター向けDuct — Google広告、Meta、GA4、Stripeをまとめて読み取るオープンソースAIエージェント"
+
+#. meta description
+#~ msgid ""
+#~ "Ask why activation dropped. Duct, an open-source AI agent for product and growth teams, reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources and the change it proposes."
+#~ msgstr ""
+#~ "アクティベーションが低下した理由を尋ねます。プロダクトおよびグロースチーム向けのオープンソースAIエージェントであるDuctは、Mixpanel、Clarity、GrowthBook、GA4をまとめて読み取り、原因、情報源、そして提案する変更を回答します。"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid ""
+#~ "Duct for product teams — Open-source AI agent that reads Mixpanel, Clarity, GrowthBook and GA4 together"
+#~ msgstr "プロダクトチーム向けDuct — Mixpanel、Clarity、GrowthBook、GA4をまとめて読み取るオープンソースAIエージェント"
+
+#. meta description
+#~ msgid ""
+#~ "Duct reads Google Ads, GA4, Stripe and nine more tools together, proposes the fix and applies it when you approve. Open source, MIT, on your own keys or your ChatGPT plan."
+#~ msgstr ""
+#~ "DuctはGoogle Ads、GA4、Stripeなど10以上のツールを連携して読み取り、修正案を提案し、承認すると適用します。オープンソースでMITライセンス、ご自身のキーまたはChatGPTプランで利用可能です。"
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
+#~ msgstr ""
+#~ "Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、Stripe、RevenueCatに対応。すべての接続はOAuthを使用し、手動でのエクスポートは不要です。"
+
+#. meta description
+#~ msgid ""
+#~ "Duct's privacy policy: the Google user data we access and why, how we handle data from every connected tool, who we share it with, how long we keep it, and how to delete it."
+#~ msgstr ""
+#~ "Ductのプライバシーポリシー：当社がアクセスするGoogleユーザーデータとその理由、すべての接続ツールからのデータの取り扱い方法、共有相手、保持期間、および削除方法。"
+
+#. meta description
+#~ msgid ""
+#~ "Terms of Service for Duct by Alleviate Lab: connected accounts, approval-gated changes, AI output, content publishing, the desktop app, open-source licensing and beta terms."
+#~ msgstr ""
+#~ "Alleviate Labが提供するDuctの利用規約：接続済みアカウント、承認ゲート付き変更、AI出力、コンテンツ公開、デスクトップアプリ、オープンソースライセンス、ベータ版規約。"
+
+#. meta description
+#~ msgid ""
+#~ "Free SaaS CAC and LTV calculator. Enter your spend, customers, and revenue to instantly get CAC, LTV, LTV:CAC ratio, and payback period — colour-coded vs SaaS benchmarks."
+#~ msgstr ""
+#~ "無料のSaaS CACおよびLTV計算ツール。費用、顧客数、収益を入力すると、CAC、LTV、LTV:CAC比率、回収期間がSaaSベンチマークと比較して色分けされて即座に表示されます。"
+
+#. meta description
+#~ msgid ""
+#~ "Free CTR calculator for marketers and growth teams. Enter impressions and clicks to calculate click-through rate, projected clicks, and needed lift scenarios instantly."
+#~ msgstr ""
+#~ "マーケターとグロースチーム向けの無料CTR計算ツール。インプレッション数とクリック数を入力して、クリックスルー率、予測クリック数、必要なリフトシナリオを即座に計算します。"
+
+#. meta description
+#~ msgid ""
+#~ "Free calculators and generators for SaaS and marketing teams: benchmarks, paid media math, UTMs, and weekly brief templates. No signup — or connect your stack for automated weekly intelligence with Duct."
+#~ msgstr ""
+#~ "SaaSおよびマーケティングチーム向けの無料計算ツールと生成ツール：ベンチマーク、有料メディア計算、UTM、週次ブリーフテンプレート。サインアップは不要です — または、Ductでスタックを接続して、自動化された週次インテリジェンスを利用できます。"
+
+#. meta description
+#~ msgid ""
+#~ "Free SaaS metrics benchmark calculator. Enter your MRR, churn, CAC, LTV, and trial-to-paid rate. Get instant colour-coded scores vs industry averages from OpenView and ChartMogul."
+#~ msgstr ""
+#~ "無料のSaaSメトリクスベンチマーク計算ツール。MRR、チャーン、CAC、LTV、トライアルから有料への転換率を入力してください。OpenViewとChartMogulの業界平均と比較した色分けされたスコアを即座に取得できます。"
+
+#. meta description
+#~ msgid ""
+#~ "Free weekly marketing brief template generator. Select your role and tool stack, get a customised weekly report template in seconds. Copy with one click — no signup required."
+#~ msgstr ""
+#~ "無料の週次マーケティングブリーフテンプレートジェネレーター。役割とツールスタックを選択すると、カスタマイズされた週次レポートテンプレートを数秒で取得できます。ワンクリックでコピーでき、サインアップは不要です。"

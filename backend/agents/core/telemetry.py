@@ -87,6 +87,14 @@ SPAN_KIND_LLM = "LLM"
 SPAN_KIND_TOOL = "TOOL"
 SPAN_KIND_AGENT = "AGENT"
 
+# Also OpenInference, on the resource rather than the span: the project a trace
+# belongs to. One local Phoenix collects every project on this machine, so
+# without it Duct's spans land in "default" mixed with everyone else's and the
+# trace list is unreadable. Any other OTLP backend sees one more resource
+# attribute and ignores it.
+OPENINFERENCE_PROJECT_NAME = "openinference.project.name"
+PROJECT_NAME = "duct"
+
 # --- Operation names -------------------------------------------------------
 OP_CHAT = "chat"
 OP_EXECUTE_TOOL = "execute_tool"
@@ -150,7 +158,7 @@ def configure_tracing(endpoint: str, *, environment: str = "") -> Any | None:
     url = endpoint.rstrip("/")
     if not url.endswith(OTLP_TRACES_PATH):
         url += OTLP_TRACES_PATH
-    attributes = {"service.name": SERVICE_NAME}
+    attributes = {"service.name": SERVICE_NAME, OPENINFERENCE_PROJECT_NAME: PROJECT_NAME}
     if environment:
         attributes["deployment.environment"] = environment
     provider = TracerProvider(resource=Resource.create(attributes))

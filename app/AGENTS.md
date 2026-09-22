@@ -59,7 +59,28 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   as a demand rather than an offer to someone who has not decided yet: the
   connector list as pills under the field (it survives as one sentence below
   the fold, with a "when you're ready" clause), and `/start`'s aqueduct strip
-  rendered dry, which is three chores shown before the first click. Its ink is
+  rendered dry, which is three chores shown before the first click. **The
+  `FONS` mosaic is in the sign-in half, not this one**, and putting it back
+  beside the copy is a regression however well it reads at 1440: a 280px panel
+  only fits there above 1280px, and the rule that hid it below that blanked it
+  across the whole band the desktop window occupies (1200px default, 900px
+  minimum), so the desktop app never once showed it. The field and its button
+  are **one row**, not a stack — a single-field form over a full-width button
+  reads as two steps — and they stack again below 30rem.
+  **The sign-in half is one heading, one button and one line of legal, and
+  each thing missing from it was removed on purpose:** the "Already using
+  Duct?" kicker and the "Continue with your Google account" sub-line (three
+  lines introducing a button that says what it does on its face — the sub-line
+  is back only for an expired session, which carries something the button
+  cannot); and four of the five notices that could
+  stack under the button, now one slot filled by `signInNotice()`. The
+  "Keep me signed in for 30 days" checkbox was removed on the same argument
+  and **put back on request** — it is a deliberate keep, not an oversight, so
+  leave it. Turnstile
+  renders `appearance: "interaction-only"`, so the box exists only for a
+  visitor actually challenged, and the button is never disabled waiting for a
+  token — `awaitTurnstileToken` holds the click, because a disabled sign-in
+  button on first paint is indistinguishable from a broken one. Its ink is
   semantic tokens only — the ground is `--start-ground`, which flips with the
   theme, and the fixed `--navy` brand hexes it used to paint with measured
   1.05:1 on it in dark.
@@ -447,12 +468,116 @@ Rules that follow:
   `workspace/ContextRing` over the reducer's `usage`, empty and labelled "New
   thread" until the first call reports — the same place and the same ring
   the insights desk shows. The composer (`workspace/ChatInput`) is the desk
-  composer's card: text on top, a footer with the shell's `composerTools`
-  chips (`workspace/ComposerDials` for insights: autonomy, thinking, model
-  tier, brief format) on the left and the ring and Send on the right. A retry counts down (`retrying.until`, anchored on this
+  composer's card: text on top, a footer with attach and the shell's
+  `composerTools` (`workspace/ComposerDials` for insights: the posture, Ask /
+  Assisted / Auto, folded to the current choice and unfolding on hover,
+  focus or a tap) on the left, and `composerAside` (`TierDial`: the model
+  tier as quiet text, whose popover holds the tier list and thinking as a
+  stepped slider), the ring and Send on the right. The ring carries no
+  label; percent, tokens and cost are its tooltip. Placement follows when a
+  dial binds: the posture applies to the next message, so it is inline;
+  tier and thinking bind at the next session, so they are one tap away; the
+  tier is the one choice people look for by name, so it stands at the
+  corner of the box like every chat app's model name, and thinking is a
+  property of that choice, so it lives under it. That panel is a
+  `ui/popover`, not a menu — a menu swallows Tab and a slider inside one is
+  mouse-only. The brief's shape (`preferred_artifact_format`) has no
+  composer control any more; the preference and the backend's reading of it
+  remain. A retry counts down (`retrying.until`, anchored on this
   client's clock at receipt), and the tooltip carries cost and the cached
   share beside the tokens. After a compaction the ring is empty and says so
   (`usage.last.stale`) until the next call on the thread reports its size.
+- **The right pane is one strip and one document.** `ArtifactPaneHeader`
+  carries everything about the document — the tab, its title, the version
+  picker, and the grid button back to the thread's other documents — so the
+  pane below it is the artifact and nothing else: full bleed, full height,
+  scrolling itself, never a card inside a margin and never a `vh` height,
+  which caps a document inside a pane that already has a size. A markdown
+  brief gets a centred page (`DocumentPage`) because `card` and `background`
+  are the same white in the light theme and something has to say "document"
+  next to the chat; an HTML brief is its own white page already. The strip's
+  two document controls are download and full screen: the download saves the
+  bytes the pane already holds (`briefFile` names the file, `lib/download.js`
+  hands it to the browser — never a second fetch for content that is on
+  screen), and full screen opens `DocumentFocus`, the same `BriefPane` on the
+  app's dialog. Reading mode keeps only what a reader needs — the name, the
+  download, the way out — and never grows tabs or a version picker.
+- **The transcript has a row vocabulary, and every agent gets it for free.**
+  A run is mostly tool calls, and a harness that renders none of them is a
+  text box in front of a black box. `workspace/ActivityRow` draws one row per
+  allowlisted call where it happened — connector logo and name, what it read,
+  the window, the verdict — one line until clicked, with the kind's own detail
+  behind the chevron (row counts, source chips with favicons, the picture, the
+  sub-agent's answer) and, for a failure, the provider's own sentence plus the
+  link that fixes it. It sits beside the other rows of the same register:
+  artifact card, change-set card, memory note, image, notice.
+  - The rows arrive as one event (`TOOL_ACTIVITY`), land through the reducer
+    (`Row.ACTIVITY`, upserted by `activity_id`) and come back on a reopened
+    thread from stored tool traffic (`lib/toolActivity.js`) — **live and replay
+    build the same shape**, and `test_app_event_contract.py` holds the app's
+    allowlist to the backend's.
+  - **A new visible tool is two lines and a scene**: a mapper in
+    `agents/core/activity.py`, an entry in `ACTIVITY_TOOLS` here, and a
+    `/preview` scene. Never a per-agent pane, never a second card component.
+    The backend sends fields, never a sentence: a tool whose card has no
+    sentence of its own (a read of the brand context, a post published) gets
+    its verb from `TOOL_WORDS` in `ActivityRow`, so it is translated with the
+    rest. Ten kinds now — the six tool families plus memory, context,
+    artifact and action — and the run's own "Read project context" row
+    (`contextActivity`, from the stored CONTEXT row on replay) says which
+    blocks the opening turn was enriched with. Memory's "Recalled" and
+    "Remembered" rows come back from their stored rows the same way.
+  - **Where a fact belongs**: in the transcript when it is something the agent
+    *did* (there once, in order), in a pane when it is something the thread
+    *has* (the Data tab's roll-up, grouped by connector — built from the same
+    rows, so the two cannot disagree).
+- **The wait and the seams are said in words, never mimed.** Three rows in
+  `workspace/AgentChat`, each a fact the reader could not otherwise learn:
+  - `WorkingIndicator` replaces the bouncing dots. It shows the running
+    step's label when the ladder has one, "Compacting context" or
+    "Reconnecting" when the harness is doing that, and otherwise rotates a
+    few generic verbs — generic on purpose, because a verb naming a step the
+    run is not on is a lie the reader can catch. Still under reduced motion.
+  - `ThinkingBlock` folds the reasoning under "Thought for 6s": measured on
+    this client between the first reasoning token and the first word of prose
+    (`thinkingStartedAt` / `thinkingEndedAt` on the assistant row), never a
+    token count the client would have to estimate. A row from history has no
+    clock and says "Reasoning".
+  - `Notice` dividers (`lib/agentSession.js`): a compaction is a rule across
+    the transcript that learns what it freed from the next thread-scoped
+    `TOKEN_USAGE`; a run starting on a different model draws "Switched to
+    Claude Sonnet 5" from the `model_label` every `PIPELINE_STARTED` now
+    carries (`agents/models.run_model_fields`), and replay draws it from the
+    stored CONTEXT rows. The compaction rule folds the summary the backend
+    sent (`summary` on `CONTEXT_COMPACTED`, an `EventKind.COMPACTED` row on
+    replay) behind a chevron, set in italic: it is the model's notes, not
+    something the agent said to the person. Anything true of everything
+    after it is a divider, not a bubble.
+- **Two registers, not two bubbles.** The person's message is the one bubble
+  in the transcript — it came from outside the run and the shape says so;
+  past a screen's worth (`LONG_TEXT_LINES` / `LONG_TEXT_CHARS`) it folds
+  behind Show more with the whole text still in the DOM. The reply is prose
+  on the page, no box. Under either, on hover, `RowMeta`: when it was sent
+  as "5 min ago" with the full date and time in the tooltip (from `at`,
+  stamped by the reducer on this client's clock live and from `created_at`
+  on replay, and drawn only after mount so a server render cannot disagree),
+  plus one action on a reply — copy. Always visible where there is no hover.
+  Do not add reactions, regenerate, or a menu there; the row is not a toolbar.
+- **A file on a message is one tile, both sides.** `workspace/Attachments`
+  draws it in the composer (with remove) and on the user's row (read-only,
+  image opens the lightbox); `lib/attachments.js` is the one parser between
+  them — `contentBlocks` builds what the chat route takes (a plain string
+  when nothing is attached, else text plus an image block, a `file` block for
+  a PDF, or a text block wrapped in `<attachment name= type=>` for anything
+  textual) and `describeContent` reads that same list back for the live row
+  and the reopened thread, so the two cannot show different things. The
+  composer takes files three ways into that one shape: the paperclip, a
+  drop anywhere on the card (`DropHint` while a file is over it), and a
+  paste — an image from the clipboard, or text past `PASTE_ATTACH_LINES` /
+  `PASTE_ATTACH_CHARS`, which becomes a tile named for what it looks like
+  (`sniffPaste`: JSON, HTML, CSV, Markdown, else plain text). What cannot
+  be read — a binary, a file over `ATTACH_MAX_BYTES` — says so under the
+  tiles rather than vanishing.
 - **Stop hands a queued message back.** A user row still marked queued when
   the run is stopped never reached the model: the reducer takes it out of the
   transcript and puts its text in `draft`, which `ChatInput` applies once per
@@ -504,6 +629,17 @@ guess, and guesses compound: three plausible-sounding rules in a row produce a
 layout nobody would have drawn on purpose. If a change touches layout, spacing,
 alignment or colour, render it and check — do not use the person reviewing the
 PR as your renderer.
+
+Two things about *where* to look, both learned on the front door. The desktop
+shell is WKWebView, so a screen judged in the desktop app is verified in
+Playwright's `webkit`, not only `chromium` — `site/node_modules` has both. And
+a long-lived Duct Dev window is not a fresh page load: it takes Turbopack's
+hot updates, and on 2026-09-21 it took the JSX updates for a change but not
+the stylesheet, and sat showing new copy on an old layout while every fresh
+load was correct. Its cache (`~/Library/Caches/ai.getduct.desktop.dev/WebKit/
+NetworkCache`) held a stylesheet from before the edits. After a CSS change,
+reload the dev window before trusting what it shows, and before telling
+anyone the layout is broken — or fixed.
 
 **Use `/preview`.** `src/app/preview/` is a dev-only route (404s in production,
 no auth, no backend) that mounts one component at a time in the real app's CSS.
@@ -701,7 +837,9 @@ accepts, and a semver bump broke the build with "failed to run Wasm plugin"
 
 To see a screen in another language: `/preview` has a locale switch, and the
 `pseudo` locale (dev only) stretches every string so clipping shows without a
-German speaker.
+German speaker. The preview is English by default whatever the browser's
+Accept-Language or the app's cookie say — its frame takes `?lang=` and
+nothing else, so a scene's language is in its URL like every other lens.
 
 ## What's not here
 

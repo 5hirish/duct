@@ -9,6 +9,8 @@ import secrets
 import sys
 import time
 from contextlib import AsyncExitStack, asynccontextmanager
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from urllib.parse import urlparse
 
 from fastapi import FastAPI
@@ -55,6 +57,11 @@ _cfg = get_configs()
 # `%(request_id)s` is the correlation id — see RequestIdFilter.
 _LOG_FORMAT = "%(asctime)s %(levelprefix)s %(logname)s [%(request_id)s]: %(message)s"
 
+# One rotation is enough to survive a restart mid-investigation without the
+# file becoming something anyone has to manage.
+_LOG_FILE_MAX_BYTES = 8 * 1024 * 1024
+_LOG_FILE_BACKUPS = 1
+
 # The correlation id of the request a log line belongs to. A contextvar, so it
 # follows the request through `asyncio.to_thread` and into any task the
 # handler spawns: an agent session's whole run logs under the id of the POST
@@ -95,11 +102,39 @@ _log_formatter = DisplayNameFormatter(fmt=_LOG_FORMAT, use_colors=sys.stderr.isa
 _app_handler = logging.StreamHandler()
 _app_handler.setFormatter(_log_formatter)
 _app_handler.addFilter(RequestIdFilter())
+
+
+def _build_file_handler(path: str):
+    """The optional second sink (`DUCT_LOG_FILE`), or None.
+
+    Never fatal: a server that will not boot because its *log* file is
+    unwritable is a worse failure than the one it was meant to help diagnose.
+    Rotates rather than growing without bound, and formats without colour —
+    the escape codes a TTY wants are noise in a file and break a grep.
+    """
+    try:
+        target = Path(path).expanduser()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        handler = RotatingFileHandler(
+            target, maxBytes=_LOG_FILE_MAX_BYTES, backupCount=_LOG_FILE_BACKUPS, encoding="utf-8"
+        )
+    except OSError as exc:
+        print(f"log file {path!r} unusable, logging to stderr only: {exc}", file=sys.stderr)
+        return None
+    handler.setFormatter(DisplayNameFormatter(fmt=_LOG_FORMAT, use_colors=False))
+    handler.addFilter(RequestIdFilter())
+    return handler
+
+
+_file_handler = _build_file_handler(_cfg.duct_log_file) if _cfg.duct_log_file.strip() else None
+
 for _ns in ("agents", "routes", "service", "duct.access"):
     _log = logging.getLogger(_ns)
     _log.setLevel(logging.INFO)
     if not _log.handlers:
         _log.addHandler(_app_handler)
+    if _file_handler:
+        _log.addHandler(_file_handler)
     _log.propagate = False
 
 # Timestamp uvicorn's own startup/error lines; drop its access log (superseded).
@@ -107,6 +142,13 @@ for _uv in ("uvicorn", "uvicorn.error"):
     for _h in logging.getLogger(_uv).handlers:
         _h.setFormatter(_log_formatter)
         _h.addFilter(RequestIdFilter())
+# `uvicorn.error` is where an unhandled ASGI exception's traceback lands, so a
+# file sink that skipped uvicorn would capture every line except the one worth
+# reading. Attached to the parent only: uvicorn leaves `uvicorn.error`
+# handlerless and propagating, so adding it to both writes every traceback
+# twice — which the first version of this did.
+if _file_handler:
+    logging.getLogger("uvicorn").addHandler(_file_handler)
 _uv_access = logging.getLogger("uvicorn.access")
 _uv_access.handlers = []
 _uv_access.propagate = False

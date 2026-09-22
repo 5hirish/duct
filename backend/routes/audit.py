@@ -27,6 +27,7 @@ from agents.audit.schema import (
 )
 from agents.audit.v1.runner import LangChainAuditRunner
 from agents.core.session import close_session, get_session
+from agents.models import run_model_fields
 from agents.engines import (
     Engine,
     resolve_engine,
@@ -165,6 +166,7 @@ async def _run_audit_pipeline(
             "session_id": session_id,
             "url": req.url,
             "status": "running",
+            **run_model_fields(provider, model),
         })
 
         await emit_fn({

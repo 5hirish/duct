@@ -352,6 +352,20 @@ def test_no_preference_asks_for_no_format():
     assert "<deliverable_format>" not in build_insights_user_prompt(prompt="x")
 
 
+def test_the_preference_says_it_can_be_overruled_from_chat():
+    """A thread that read "write briefs in markdown" as a rule told its owner
+    twice that it had to stick to markdown when he asked for HTML."""
+    turn = build_insights_user_prompt(prompt="x", artifact_format="markdown")
+
+    assert "standing preference" in turn and "not a rule" in turn
+
+
+def test_the_contract_example_names_no_format():
+    """The cached contract is read by every thread; an example value in it
+    outlives the user turn's preference on a resumed thread."""
+    assert "format: markdown\n" not in build_insights_system_prompt()
+
+
 def test_insights_declares_versioned_output():
     spec = get_spec(AgentType.INSIGHTS)
 

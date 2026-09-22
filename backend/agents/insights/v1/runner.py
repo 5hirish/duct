@@ -57,6 +57,7 @@ from typing import Any, Callable
 from uuid import UUID, uuid4
 
 from agents.core.connector_tools import build_connector_tools_lc
+from agents.core.activity import activity_hooks, announce_context
 from agents.core.deep_session import (
     FILESYSTEM_TOOLS,
     SUMMARIZATION_FLOOR_TOKENS,
@@ -68,7 +69,7 @@ from agents.core.deep_session import (
     recorder_tool_hooks,
     subagent_step_hooks,
 )
-from agents.core.events import AgentEvent, AgentStep, StepStatus, run_context
+from agents.core.events import AgentEvent, StepStatus, run_context
 from agents.core.lc import (
     build_ask_user_tool,
     inspection_chat_model,
@@ -87,6 +88,7 @@ from agents.insights.prompts.autonomous import (
     CAPABILITIES_UNATTENDED,
     build_insights_system_prompt,
     build_insights_user_prompt,
+    deliverable_format_block,
 )
 from agents.tools.execution_tools import build_execution_tools_lc
 from agents.models import ModelName, Provider
@@ -297,50 +299,15 @@ class AutonomousInsightsRunner:
         # Data reach. The verifier gets the SAME tool objects, so it inherits
         # the parent's project scoping and credential closure rather than
         # resolving its own — there is one place credentials are resolved.
-        def _fetch_label(entity_id: str, date_from: str, date_to: str) -> str:
-            """The window is in the label deliberately: a user watching a brief
-            being built should be able to see the period it covers without
-            waiting for the prose to say so."""
-            window = f" · {date_from} → {date_to}" if date_from else ""
-            return f"{entity_id.replace('_', ' ')}{window}"
-
-        async def _on_fetch_start(entity_id: str, date_from: str, date_to: str) -> None:
-            """A pull begins — the ladder shows it running, not just finished."""
-            if emit is None:
-                return
-            await emit({
-                "event": AgentEvent.STEP_STARTED,
-                "step_id": AgentStep.COLLECT_SOURCE_DATA,
-                "label": _fetch_label(entity_id, date_from, date_to),
-                "status": StepStatus.RUNNING,
-            })
-
-        async def _on_fetch(entity_id: str, result: dict) -> None:
-            """Surface each pull as a step, so a long run is legible."""
-            if emit is None:
-                return
-            ok = result.get("status") == "ok"
-            await emit({
-                "event": AgentEvent.STEP_FINISHED,
-                "step_id": AgentStep.COLLECT_SOURCE_DATA,
-                "label": _fetch_label(
-                    entity_id, str(result.get("date_from") or ""), str(result.get("date_to") or "")
-                ),
-                "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
-                "connector_id": result.get("connector_id", ""),
-                # The provider's own words on a failure. The model paraphrases
-                # ("an API error on our end"); the person debugging it needs
-                # the sentence the API returned.
-                **({} if ok else {"error": str(result.get("message") or "")}),
-            })
-
+        # No per-pull STEP events any more: every fetch is a TOOL_ACTIVITY
+        # card in the transcript, where the reader is already looking, and the
+        # ladder's copy of it was the same line said twice — once as a step
+        # whose label was English built in Python, once in the pane beside it.
         data_tools = build_data_tools_lc(
             project_id,
             user_id=user_id,
             compress=compress,
             log_prefix="insights-v1",
-            on_fetch=_on_fetch,
-            on_fetch_start=_on_fetch_start,
             replay=replay,
         )
         tools += data_tools
@@ -492,10 +459,17 @@ class AutonomousInsightsRunner:
             execute=execute,
         )
 
-        # The verifier's dispatch shows as a running chip for the minute or so
-        # it takes, instead of a silent gap between two fetch rows.
-        on_tool_use, on_tool_result = subagent_step_hooks(
-            emit, *recorder_tool_hooks(getattr(session, "recorder", None)), session_id=session_id
+        # Three jobs, one pair of hooks, wrapped outermost first: the recorder
+        # writes the forensics, the sub-agent hooks move the ladder, and
+        # `activity_hooks` emits the cards the transcript shows for the tools
+        # on its allowlist — a data pull, a search, a page read, a dispatch.
+        on_tool_use, on_tool_result = activity_hooks(
+            emit,
+            *subagent_step_hooks(
+                emit,
+                *recorder_tool_hooks(getattr(session, "recorder", None)),
+                session_id=session_id,
+            ),
         )
 
         # Version counter for this session's brief. One artifact group per
@@ -524,7 +498,12 @@ class AutonomousInsightsRunner:
         # is what opening a thread from the desk asks for); a fresh one takes the
         # assembled opening turn with the per-project blocks.
         is_resume = resume and conversation_id is not None
-        opening = prompt if is_resume else build_insights_user_prompt(
+        # A resumed thread's history holds the preference it opened with,
+        # which may be days old and since changed — one opened under markdown
+        # refused HTML twice after the default moved. The current preference
+        # rides ahead of the follow-up; with no prompt the route restates it
+        # at the first message instead (``_refresh_format``).
+        opening = _resumed_opening(prompt, artifact_format) if is_resume else build_insights_user_prompt(
             prompt=prompt,
             business_context=business_context,
             user_context=user_context,
@@ -540,29 +519,29 @@ class AutonomousInsightsRunner:
         # reviewed or replayed against what its answer was actually a
         # function of — see scripts/session_bundle.py and the session-audit
         # skill. Best-effort like every recorder write.
-        recorder = getattr(session, "recorder", None)
-        if recorder is not None:
-            await recorder.record_context(
-                run_context(
-                    agent_type=str(AgentType.INSIGHTS),
-                    provider=self.provider,
-                    model=self.model,
-                    thinking=self._thinking,
-                    system_prompt=system_prompt_used["text"],
-                    turn=opening,
-                    resume=is_resume,
-                    blocks={
-                        "prompt": prompt,
-                        "business_context": business_context,
-                        "user_context": user_context,
-                        "memory": memory,
-                        "data_sources": data_sources,
-                        "artifact_format": artifact_format,
-                        "autonomy": autonomy,
-                        "compress": compress,
-                    },
-                )
-            )
+        await announce_context(
+            getattr(session, "recorder", None),
+            emit,
+            run_context(
+                agent_type=str(AgentType.INSIGHTS),
+                provider=self.provider,
+                model=self.model,
+                thinking=self._thinking,
+                system_prompt=system_prompt_used["text"],
+                turn=opening,
+                resume=is_resume,
+                blocks={
+                    "prompt": prompt,
+                    "business_context": business_context,
+                    "user_context": user_context,
+                    "memory": memory,
+                    "data_sources": data_sources,
+                    "artifact_format": artifact_format,
+                    "autonomy": autonomy,
+                    "compress": compress,
+                },
+            ),
+        )
         await loop.run(opening, resume=is_resume, chat_idle_timeout=chat_idle_timeout)
 
     def _summariser_model(self, llm: Any) -> Any:
@@ -684,6 +663,14 @@ class AutonomousInsightsRunner:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _resumed_opening(prompt: str, artifact_format: str) -> str:
+    """The follow-up a resumed thread opens with, format preference first."""
+    if not prompt:
+        return ""
+    block = deliverable_format_block(artifact_format)
+    return f"{block}\n\n{prompt}" if block else prompt
+
 
 async def _publish_brief(raw: str, emit: Callable, version: dict) -> dict | None:
     """A closing </duct_artifact>: publish it as the next brief version.

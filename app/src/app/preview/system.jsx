@@ -40,9 +40,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lightbox } from "@/components/ui/lightbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -63,6 +65,55 @@ function Row({ label, children }) {
 
 function Stack({ children }) {
   return <div className="flex flex-col gap-5">{children}</div>;
+}
+
+function SliderDemo() {
+  const STOPS = ["Auto", "Quick", "Balanced", "Deep", "Exhaustive"];
+  const [step, setStep] = useState(2);
+  return (
+    <Stack>
+      <Row label="Stepped">
+        <div className="w-64">
+          <div className="mb-2 flex items-baseline justify-between text-sm">
+            <span id="pv-slider-label">Thinking</span>
+            <span className="text-xs text-muted-foreground">{STOPS[step]}</span>
+          </div>
+          <Slider marks min={0} max={STOPS.length - 1} step={1} value={[step]} onValueChange={([v]) => setStep(v)} aria-labelledby="pv-slider-label" aria-valuetext={STOPS[step]} />
+        </div>
+      </Row>
+      <Row label="Continuous">
+        <Slider className="w-64" defaultValue={[40]} aria-label="Volume" />
+      </Row>
+      <Row label="Disabled">
+        <Slider className="w-64" defaultValue={[60]} disabled aria-label="Locked" />
+      </Row>
+    </Stack>
+  );
+}
+
+function PopoverDemo() {
+  const [open, setOpen] = useState(true);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button size="sm" variant="outline">
+          Weekly brief
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="p-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="pv-pop-sw">Send on Mondays</Label>
+            <Switch id="pv-pop-sw" defaultChecked />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="pv-pop-in">Recipients</Label>
+            <Input id="pv-pop-in" defaultValue="growth@example.com" />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 /** Starts open, since a closed overlay is not a specimen — see AlertDialog and
@@ -289,6 +340,22 @@ export const PRIMITIVES = [
         </Row>
       </Stack>
     ),
+  },
+  {
+    id: "ui-slider",
+    group: "Primitives",
+    title: "Slider",
+    state: "stepped · continuous · disabled",
+    note: "A stepped slider takes `marks`: a dot per step on a thicker track, the covered ones in the range's ink, so the thumb is seen to land on a stop without a row of words under it. Name the current stop somewhere — beside its title, as the composer does. The thumb is the focusable part and has no text, so every slider takes an aria-label or aria-labelledby. Check that arrows move one step, Home/End reach the ends, that the thumb centres on each dot, and that the focus ring is the ring token, not an outline.",
+    render: () => <SliderDemo />,
+  },
+  {
+    id: "ui-popover",
+    group: "Primitives",
+    title: "Popover",
+    state: "open · anchored to its trigger",
+    note: "For content that is a form (a slider, a radio group, a field), not a list of commands — a DropdownMenu roves focus over its items and swallows Tab, so a slider inside one is mouse-only. Same surface as the menu so the two read as one family. Check that Tab walks every control inside and Escape returns focus to the trigger.",
+    render: () => <PopoverDemo />,
   },
   {
     id: "ui-switch",

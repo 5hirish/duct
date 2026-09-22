@@ -2,7 +2,6 @@
 
 import { ArrowRight, Globe } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,10 +30,17 @@ const WORDMARK = "duct";
  * chores. `/start` still has it, where the water actually moves, and holding it
  * back until then makes the hand-off a reveal rather than a repeat.
  *
- * What carries the continuity instead is the ground and the art — the same
- * travertine `--start-ground`, and a mosaic panel one step upstream of the one
- * `/start` opens with. `FONS` is the spring; `SALVE` greets you once you are
- * through the door.
+ * What carries the continuity instead is the ground — the same travertine
+ * `--start-ground`, so submitting the field does not change the floor under
+ * the visitor.
+ *
+ * The `FONS` mosaic used to sit in this half, in a second grid column. It is
+ * in the sign-in panel now, because a 280px picture beside the copy only fits
+ * above 1280px and the rule that hid it below that blanked it for the whole
+ * width band the desktop window lives in — a 1200px default and a 900px
+ * minimum, so the desktop app never once showed it. The navy half has room at
+ * every width. `FONS` is the spring; `SALVE` greets you once you are through
+ * the door at `/start`.
  */
 export default function FrontDoor({ url, onUrlChange, error, onSubmit }) {
   const { t } = useLingui();
@@ -53,11 +59,14 @@ export default function FrontDoor({ url, onUrlChange, error, onSubmit }) {
           </Trans>
         </h1>
 
+        {/* One line. It was two sentences over two lines, the first narrating
+            the field directly below it ("Type your address — that's the whole
+            setup") and the second re-promising what the headline already
+            promises. What is left is the only thing here the headline does not
+            say: *how*. Copy that describes a visible control is believed less
+            than the control and costs a line of the thing it points at. */}
         <p className="landing-start-sub">
-          <Trans>
-            Type your address &mdash; that&rsquo;s the whole setup. Duct reads your
-            site the way a search engine does, then tells you what to fix first.
-          </Trans>
+          <Trans>Duct reads it the way a search engine does.</Trans>
         </p>
 
         <form onSubmit={onSubmit} className="landing-start-form">
@@ -88,20 +97,17 @@ export default function FrontDoor({ url, onUrlChange, error, onSubmit }) {
           className={`landing-start-hint${error ? " landing-start-hint-error" : ""}`}
           role={error ? "alert" : undefined}
         >
-          {error || t`Free, no account, and nothing else connected.`}
+          {error || t`Free, and no account needed.`}
         </p>
 
         <p className="landing-connect">
           <Trans>
-            When you&rsquo;re ready, Duct connects Google Ads, GA4, Search Console
-            and Meta Ads &mdash; read-only, and only the ones you pick.
+            Google Ads, GA4, Search Console and Meta Ads connect later &mdash;
+            read-only, only the ones you pick.
           </Trans>
         </p>
       </div>
 
-      {/* Last in the DOM so a phone gets the field before the picture, and
-          placed into the second column by the grid on a wide screen. */}
-      <MosaicPanel name={MOSAIC.fons} size={280} className="landing-mosaic" />
     </div>
   );
 }

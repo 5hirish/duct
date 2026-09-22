@@ -210,6 +210,7 @@ def test_endpoint_builds_a_batching_otlp_http_exporter_at_the_traces_path():
     attrs = provider.resource.attributes
     assert attrs["service.name"] == t.SERVICE_NAME
     assert attrs["deployment.environment"] == "test"
+    assert attrs[t.OPENINFERENCE_PROJECT_NAME] == t.PROJECT_NAME
     provider.shutdown()
 
     full = t.configure_tracing("https://collector.example/v1/traces")

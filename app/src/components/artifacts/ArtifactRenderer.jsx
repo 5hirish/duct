@@ -23,6 +23,7 @@ import {
 import { Trans, useLingui } from "@lingui/react/macro";
 import AuditReportV1 from "@/components/audit/AuditReportV1";
 import { SkeletonDocument } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export const CONTENT_TYPES = {
   REPORT_JSON: "application/vnd.duct.report+json",
@@ -72,11 +73,19 @@ function safeJson(text) {
   }
 }
 
-export function MarkdownView({ source }) {
+/** Markdown, typeset. `className` carries the measure and the padding, because
+ *  the same renderer draws a thumbnail, a pane-width document and an inline
+ *  reply, and only the caller knows which. */
+export function MarkdownView({ source, className = "max-w-3xl px-1 py-2" }) {
   return (
     // The plugin wraps inline code in literal backticks by default, which
     // reads as unrendered markdown next to a real code style.
-    <div className="prose prose-sm dark:prose-invert max-w-3xl px-1 py-2 prose-code:before:content-none prose-code:after:content-none">
+    <div
+      className={cn(
+        "prose prose-sm dark:prose-invert prose-code:before:content-none prose-code:after:content-none",
+        className
+      )}
+    >
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{source}</ReactMarkdown>
     </div>
   );

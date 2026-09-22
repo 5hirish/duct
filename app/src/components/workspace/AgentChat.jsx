@@ -24,7 +24,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowDownRight, Brain } from "lucide-react";
+import { ArrowDownRight, Brain, Check, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
@@ -32,11 +32,16 @@ import { Lightbox } from "@/components/ui/lightbox";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import { Phase } from "../../lib/agentPhase";
 import { StepStatus } from "../../lib/agentSteps";
-import { ErrorAction, Row, errorAction } from "../../lib/agentSession";
+import { ErrorAction, Notice, Row, errorAction } from "../../lib/agentSession";
+import { compactNumber, formatDate, formatTime, relativeTime } from "../../lib/format";
+import { groupActivityRows } from "../../lib/toolActivity";
+import { Button } from "@/components/ui/button";
+import { AttachmentStrip } from "./Attachments";
 import { AssistantMarkdown, ThinkingMarkdown } from "./ChatMarkdown";
 import ChatInput from "./ChatInput";
 import ContextRing from "./ContextRing";
 import { TIERS } from "@/lib/modelTiers";
+import { ActivityGroup } from "./ActivityRow";
 import { MemoryNote, MemoryRecall } from "./MemoryRows";
 import PauseCard from "./PauseCard";
 import StepProgress from "./StepProgress";
@@ -74,80 +79,254 @@ function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }
   );
 }
 
-function ThinkingBlock({ thinking, streaming }) {
+/** A clock that ticks only while something is being timed. */
+function useNow(active) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return undefined;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return now;
+}
+
+/**
+ * The reasoning, folded, with how long it took on the fold.
+ *
+ * "Thought for 6s" is measured on this client between the first reasoning
+ * token and the first token of prose — a number the reader can trust rather
+ * than a token count the client would have to estimate. While it runs the
+ * clock ticks; a row rebuilt from history has no clock and says "Reasoning".
+ * The text stays behind the fold either way: reasoning is there to be
+ * checked, not read by default.
+ */
+function ThinkingBlock({ thinking, streaming, startedAt, endedAt }) {
   const [expanded, setExpanded] = useState(false);
+  const now = useNow(Boolean(streaming && startedAt && !endedAt));
   if (!thinking) return null;
+  const seconds = startedAt ? Math.max(0, Math.round(((endedAt || now) - startedAt) / 1000)) : null;
+  const running = streaming && !endedAt;
   return (
     <div className="mb-2">
       <button
         type="button"
         onClick={() => setExpanded((x) => !x)}
         aria-expanded={expanded}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 rounded-md py-0.5 pr-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        <span className="font-mono" aria-hidden="true">{expanded ? "▾" : "▸"}</span>
-        <span>{expanded ? <Trans>Hide reasoning</Trans> : <Trans>Show reasoning</Trans>}{streaming ? "…" : ""}</span>
+        {running && <Spinner className="size-3" />}
+        <span>
+          {running ? (
+            seconds !== null ? <Trans>Thinking · {seconds}s</Trans> : <Trans>Thinking…</Trans>
+          ) : seconds !== null ? (
+            <Trans>Thought for {seconds}s</Trans>
+          ) : (
+            <Trans>Reasoning</Trans>
+          )}
+        </span>
+        <ChevronRight
+          className={`size-3 transition-transform ${expanded ? "rotate-90" : ""}`}
+          aria-hidden="true"
+        />
       </button>
       {expanded && (
         <div className="mt-1.5 rounded-lg px-3.5 py-3 bg-muted/40 border border-border/40">
           <ThinkingMarkdown source={thinking} />
-          {streaming && <span className="inline-block w-0.5 h-3 bg-muted-foreground/60 ml-0.5 animate-pulse align-middle" />}
+          {running && <span className="inline-block w-0.5 h-3 bg-muted-foreground/60 ml-0.5 animate-pulse align-middle" />}
         </div>
       )}
     </div>
   );
 }
 
-function TypingIndicator() {
+// What the agent is doing when nothing more specific is known. Rotated, so a
+// long wait reads as work rather than a hang; generic on purpose, because a
+// verb that names a step the run is not on would be a lie the reader can
+// catch. When a step *is* running its own label takes the slot.
+const WORKING_WORDS = [
+  msg`Thinking`,
+  msg`Reading`,
+  msg`Working it through`,
+  msg`Checking the numbers`,
+  msg`Putting it together`,
+];
+const WORKING_WORD_MS = 2400;
+
+/**
+ * The wait, said in words: the house spinner and a phrase that moves.
+ *
+ * Replaces the three bouncing dots, which said only "something, eventually"
+ * and made the same wait feel longer. The phrase is the running step's label
+ * when there is one (the ladder already knows), "Compacting context" or
+ * "Reconnecting" when the harness is doing that, and otherwise one of the
+ * generic verbs, changed every couple of seconds — held still for a reader
+ * who asked for reduced motion.
+ */
+export function WorkingIndicator({ label = "" }) {
+  const { i18n } = useLingui();
+  const [index, setIndex] = useState(0);
+  const [still, setStill] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setStill(query.matches);
+    const onChange = (e) => setStill(e.matches);
+    query.addEventListener?.("change", onChange);
+    return () => query.removeEventListener?.("change", onChange);
+  }, []);
+  useEffect(() => {
+    if (label || still) return undefined;
+    const id = setInterval(() => setIndex((i) => (i + 1) % WORKING_WORDS.length), WORKING_WORD_MS);
+    return () => clearInterval(id);
+  }, [label, still]);
+  const word = label || i18n._(WORKING_WORDS[still ? 0 : index]);
   return (
-    <div className="flex justify-start mb-2">
-      <div className="rounded-2xl rounded-bl-sm px-4 py-3 bg-muted text-foreground">
-        <span className="flex gap-1 items-center">
-          {[0, 150, 300].map((delay) => (
-            <span
-              key={delay}
-              className="inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce"
-              style={{ animationDelay: `${delay}ms` }}
-            />
-          ))}
-        </span>
-      </div>
+    <div className="mb-2 flex items-center gap-2 py-1 text-xs text-muted-foreground" aria-hidden="true">
+      <Spinner className="size-3" />
+      {/* Keyed so the phrase fades in as it changes rather than snapping. */}
+      <span key={word} className="animate-in fade-in-0 duration-300">{word}…</span>
     </div>
   );
 }
 
-function ChatBubble({ role, text, thinking, streaming, queued = false }) {
+// A user message longer than this folds: the transcript is for reading the
+// reply, and a pasted page of context should not push it off the screen.
+const LONG_TEXT_CHARS = 1200;
+const LONG_TEXT_LINES = 12;
+
+function isLongText(text = "") {
+  return text.length > LONG_TEXT_CHARS || text.split("\n").length > LONG_TEXT_LINES;
+}
+
+/** The person's own words, folded past a screen's worth with a way to open
+ *  them — the whole text stays in the DOM, so find-in-page still finds it. */
+function UserText({ text }) {
+  const [expanded, setExpanded] = useState(false);
+  const long = isLongText(text);
+  return (
+    <>
+      <p className={`whitespace-pre-wrap break-words ${long && !expanded ? "line-clamp-[12]" : ""}`}>{text}</p>
+      {long && (
+        <button
+          type="button"
+          onClick={() => setExpanded((x) => !x)}
+          aria-expanded={expanded}
+          className="mt-1.5 inline-flex items-center gap-1 text-xs text-primary-foreground/80 underline-offset-2 hover:underline"
+        >
+          {expanded ? <Trans>Show less</Trans> : <Trans>Show more</Trans>}
+          <ChevronDown className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
+        </button>
+      )}
+    </>
+  );
+}
+
+/**
+ * The line under a bubble that appears on hover: when it was sent, as
+ * "5 min ago" with the full date and time behind it, and for a reply the
+ * one action worth having there, copy. Always visible where there is no
+ * hover to reveal it (touch), because a control that cannot be reached is
+ * not a control.
+ */
+function RowMeta({ at, copyText = "", align = "start" }) {
+  const { t } = useLingui();
+  const [copied, setCopied] = useState(false);
+  // "5 min ago" is measured against this browser's clock, so it is drawn
+  // only once there is one — a server render has a different now, and the
+  // mismatch would make React throw the row away and draw it again.
+  const [now, setNow] = useState(null);
+  useEffect(() => setNow(Date.now()), []);
+  if (!at && !copyText) return null;
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // The clipboard can refuse (an insecure context, a denied permission);
+      // the button just stays as it was.
+    }
+  }
+  const date = at ? new Date(at) : null;
+  return (
+    <div
+      className={`flex items-center gap-1 text-2xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 ${
+        align === "end" ? "justify-end pr-1" : "pl-0.5"
+      }`}
+    >
+      {copyText && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          onClick={copy}
+          aria-label={copied ? t`Copied` : t`Copy response`}
+          title={copied ? t`Copied` : t`Copy response`}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+        </Button>
+      )}
+      {date && now && (
+        <time dateTime={date.toISOString()} title={`${formatDate(date)} · ${formatTime(date)}`}>
+          {relativeTime(date, { fallbackAfterDays: 7 })}
+        </time>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Two registers, not two bubbles. The person's message is a bubble on the
+ * right — it is the one thing in the transcript that came from outside the
+ * run, and the shape says so. The reply is prose on the page: a grey box
+ * around every paragraph of a long answer was chrome around the content,
+ * and the reader's eye had to cross it on every row.
+ */
+function ChatBubble({ role, text, thinking, streaming, queued = false, attachments = [], at, thinkingStartedAt, thinkingEndedAt }) {
   const { t } = useLingui();
   if (role === Row.USER) {
     return (
-      <div className="flex justify-end mb-4">
-        <div className="max-w-[82%]">
-          <div
-            className={`rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed bg-primary text-primary-foreground ${
-              queued ? "opacity-70" : ""
-            }`}
-          >
-            <p className="whitespace-pre-wrap break-words">{text}</p>
-          </div>
-          {queued && (
+      <div className="group flex justify-end mb-4">
+        <div className="max-w-[82%] min-w-0">
+          <AttachmentStrip attachments={attachments} className="justify-end px-0 pb-1.5" />
+          {text && (
+            <div
+              className={`rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed bg-primary text-primary-foreground ${
+                queued ? "opacity-70" : ""
+              }`}
+            >
+              <UserText text={text} />
+            </div>
+          )}
+          {queued ? (
             <p className="mt-1 pr-1 text-right text-2xs text-muted-foreground" title={t`Sent while the agent was busy; it reads this at its next step.`}>
               <Trans>↳ Queued · picked up at the next step</Trans>
             </p>
+          ) : (
+            <RowMeta at={at} align="end" />
           )}
         </div>
       </div>
     );
   }
   return (
-    <div className="flex justify-start mb-4">
-      <div className="w-full space-y-1">
-        <ThinkingBlock thinking={thinking} streaming={streaming && !text} />
+    <div className="group flex justify-start mb-4">
+      <div className="w-full min-w-0 space-y-1">
+        <ThinkingBlock
+          thinking={thinking}
+          streaming={streaming && !text}
+          startedAt={thinkingStartedAt}
+          endedAt={thinkingEndedAt}
+        />
         {text && (
-          <div className="rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-muted text-foreground max-w-none">
+          <div className="text-sm leading-relaxed text-foreground">
             <AssistantMarkdown source={text} streaming={streaming} />
             {streaming && <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />}
           </div>
         )}
+        {text && !streaming && <RowMeta at={at} copyText={text} />}
       </div>
     </div>
   );
@@ -217,12 +396,16 @@ export function TranscriptRow({ msg, onRetrySend }) {
       return <ArtifactCard artifact={msg.artifact} />;
     case Row.CHANGE_SET_CARD:
       return <ChangeSetCard changeSet={msg.changeSet} />;
+    case Row.ACTIVITY:
+      // A single row reaching here is one the grouping pass did not fold —
+      // a preview scene, or a row between two bubbles.
+      return <ActivityGroup activities={[msg.activity]} />;
     case Row.MEMORY_NOTE:
       return <MemoryNote memories={msg.memories} />;
     case Row.MEMORY_RECALL:
       return <MemoryRecall memories={msg.memories} />;
     case Row.NOTICE:
-      return <NoticeRow text={msg.text} />;
+      return <NoticeRow msg={msg} />;
     default:
       return (
         <ChatBubble
@@ -231,6 +414,10 @@ export function TranscriptRow({ msg, onRetrySend }) {
           thinking={msg.thinking}
           streaming={msg.streaming}
           queued={Boolean(msg.queued)}
+          attachments={msg.attachments}
+          at={msg.at}
+          thinkingStartedAt={msg.thinkingStartedAt}
+          thinkingEndedAt={msg.thinkingEndedAt}
         />
       );
   }
@@ -288,12 +475,81 @@ export function formatElapsed(seconds) {
   return `${h}h ${String(m % 60).padStart(2, "0")}m`;
 }
 
-/** A quiet centred line in the transcript — "Context compacted". */
-function NoticeRow({ text }) {
+/**
+ * A quiet line across the transcript. A plain notice is a centred sentence;
+ * a compaction or a model switch is a divider, because it is a fact about
+ * everything after it, not a message in the flow.
+ */
+function NoticeRow({ msg: row }) {
+  const { t } = useLingui();
+  if (row.kind === Notice.COMPACTED) {
+    const freed = row.before != null && row.after != null ? Math.max(0, row.before - row.after) : null;
+    return (
+      <CompactedDivider
+        label={
+          freed !== null
+            ? t`Compacted · ${compactNumber(freed)} tokens freed`
+            : t`Compacted · older history summarised to make room`
+        }
+        summary={row.summary}
+      />
+    );
+  }
+  if (row.kind === Notice.MODEL) {
+    return <Divider label={t`Switched to ${row.label}`} />;
+  }
   return (
     <p className="my-3 text-center text-2xs text-muted-foreground" role="note">
-      {text}
+      {row.text}
     </p>
+  );
+}
+
+/** The label of the step in progress, or "" when none is — the ladder's own
+ *  words, so the indicator and the status row never disagree. */
+function runningStepLabel(steps, labels = {}) {
+  const step = (steps || []).find((s) => s.status === StepStatus.RUNNING && !s.step_id?.startsWith("dispatch_subagent:"));
+  return step ? step.label || labels[step.step_id] || "" : "";
+}
+
+function Divider({ label, children, className = "my-4" }) {
+  return (
+    <div className={`${className} flex items-center gap-3 text-2xs text-muted-foreground`} role="note">
+      <span className="h-px flex-1 bg-border" aria-hidden="true" />
+      {children || <span className="shrink-0">{label}</span>}
+      <span className="h-px flex-1 bg-border" aria-hidden="true" />
+    </div>
+  );
+}
+
+/**
+ * The compaction rule, with the summary the thread now opens with behind
+ * it. Folded by default — the summary is a page of the model's own notes,
+ * and the reader came for the conversation — and set in italic when open,
+ * so it never reads as something the agent said to them.
+ */
+function CompactedDivider({ label, summary = "" }) {
+  const [open, setOpen] = useState(false);
+  if (!summary) return <Divider label={label} />;
+  return (
+    <div className="my-4">
+      <Divider className="my-0">
+        <button
+          type="button"
+          onClick={() => setOpen((x) => !x)}
+          aria-expanded={open}
+          className="inline-flex shrink-0 items-center gap-1 rounded-md py-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {label}
+          <ChevronDown className={`size-3 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+        </button>
+      </Divider>
+      {open && (
+        <div className="-mt-1 border-l-2 border-border pl-3 text-sm italic text-muted-foreground">
+          <ThinkingMarkdown source={summary} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -372,9 +628,12 @@ export default function AgentChat({
   // round trip is done — this conversation, not the Connections page. Empty
   // means the connector flow's own default.
   connectReturnTo = "",
-  // The shell's own chips in the composer's footer (ComposerDials for
-  // insights). Null for a shell with no dials.
+  // The shell's own controls in the composer's footer: `composerTools` on
+  // the left beside attach (ComposerDials for insights), `composerAside` on
+  // the right before the ring and Send (TierDial). Null for a shell with
+  // neither.
   composerTools = null,
+  composerAside = null,
   inputPlaceholder,
   inputAriaLabel,
   inputAccept,
@@ -559,15 +818,32 @@ export default function AgentChat({
             <div className="mb-2">{renderSteps ? renderSteps(steps) : <StepProgress steps={steps} labels={stepLabels} />}</div>
           )}
 
-          {messages.map((msg, i) => (
-            <TranscriptRow
-              key={msg.role === Row.CHANGE_SET_CARD ? msg.changeSet?.change_set_id || i : i}
-              msg={msg}
-              onRetrySend={onRetrySend}
-            />
-          ))}
+          {/* Grouped at render, not in the reducer: a burst of tool calls is
+              one action to a reader and still one row each to everything that
+              indexes the transcript. */}
+          {groupActivityRows(messages, Row.ACTIVITY).map((msg, i) =>
+            msg.group ? (
+              <ActivityGroup key={msg.activities[0]?.id || i} activities={msg.activities} />
+            ) : (
+              <TranscriptRow
+                key={msg.role === Row.CHANGE_SET_CARD ? msg.changeSet?.change_set_id || i : i}
+                msg={msg}
+                onRetrySend={onRetrySend}
+              />
+            ),
+          )}
 
-          {isAgentTyping && <TypingIndicator />}
+          {isAgentTyping && (
+            <WorkingIndicator
+              label={
+                compacting
+                  ? t`Compacting context`
+                  : retrying
+                    ? t`Reconnecting to the model`
+                    : runningStepLabel(steps, stepLabels)
+              }
+            />
+          )}
 
           {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} returnTo={connectReturnTo} />}
 
@@ -629,11 +905,14 @@ export default function AgentChat({
         // there from the first moment: an empty ring says "new thread" where
         // no ring said nothing.
         status={
-          usage?.last ? (
-            <ContextRing used={contextUsed} details={usage} />
-          ) : (
-            <ContextRing used={0} label={t`New thread`} />
-          )
+          <>
+            {composerAside}
+            {usage?.last ? (
+              <ContextRing used={contextUsed} details={usage} />
+            ) : (
+              <ContextRing used={0} label={t`New thread`} />
+            )}
+          </>
         }
       />
     </div>

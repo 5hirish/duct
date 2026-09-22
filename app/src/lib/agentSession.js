@@ -24,6 +24,7 @@
 import { AgentEvent, ErrorCode, PAUSE_EVENTS } from "./agentEvents";
 import { Phase } from "./agentPhase";
 import { StepStatus } from "./agentSteps";
+import { activityFromEvent } from "./toolActivity";
 
 export const Action = Object.freeze({
   EVENT:          "event",          // an SSE frame
@@ -82,6 +83,11 @@ export const initialAgentState = Object.freeze({
   suppressThinking: false,
   // What PIPELINE_STARTED carried (channel, autonomy…), for the workspace.
   started: null,
+  // The model id the thread is on, from the last run start or the state
+  // route; a run that starts on a different one puts a divider in the
+  // transcript, because a change of voice with no explanation reads as a
+  // change of mind.
+  model: "",
   // The run is not on the tier its owner picked, because that tier's provider
   // is out of quota: { ran, requested, detail, until }. Deliberately NOT part
   // of `retrying` and it must not borrow its clearing rules — a retry is "the
@@ -105,7 +111,21 @@ export const Row = Object.freeze({
   MEMORY_NOTE:     "memory_note",
   MEMORY_RECALL:   "memory_recall",
   IMAGE:           "image",
-  NOTICE:          "notice",  // a quiet centred line: "Context compacted"
+  ACTIVITY:        "activity",  // one tool call, shown where it happened
+  NOTICE:          "notice",  // a quiet centred line, or a divider (see Notice)
+});
+
+/**
+ * What a NOTICE row is. `text` is the plain centred sentence; the other two
+ * are dividers across the transcript — a fact about everything after them.
+ * A compaction carries the input size before and, once the next call has
+ * reported, after, so the row can say how much room it made; a model switch
+ * carries the name the run started on.
+ */
+export const Notice = Object.freeze({
+  TEXT:      "text",
+  COMPACTED: "compacted",
+  MODEL:     "model",
 });
 
 /** The assistant bubble tokens are flowing into, if one is open. */
@@ -121,10 +141,12 @@ function closeStreaming(messages) {
   return [...messages.slice(0, -1), { ...last, streaming: false }];
 }
 
-function appendToTail(messages, patch) {
+function appendToTail(messages, patch, at = 0) {
   const tail = streamingTail(messages);
   if (tail) return [...messages.slice(0, -1), { ...tail, ...patch(tail) }];
-  return [...messages, { role: Row.ASSISTANT, text: "", streaming: true, ...patch({ text: "", thinking: "" }) }];
+  // `at` is when the reply began on this client's clock — the hover
+  // timestamp on the row, and the only clock a live transcript has.
+  return [...messages, { role: Row.ASSISTANT, text: "", streaming: true, at: at || undefined, ...patch({ text: "", thinking: "" }) }];
 }
 
 /** Drop a trailing send-error row: a fresh send supersedes it. */
@@ -140,6 +162,45 @@ function releaseQueued(messages, clientId) {
   return messages.map((m) =>
     m.role === Row.USER && m.queued && (!clientId || m.clientId === clientId) ? { ...m, queued: false } : m,
   );
+}
+
+/** The thinking clock on the streaming bubble stops at the first token of
+ *  prose, or at the end of the turn when there was none. */
+function endThinking(messages, at) {
+  const tail = streamingTail(messages);
+  if (!tail?.thinkingStartedAt || tail.thinkingEndedAt) return messages;
+  return [...messages.slice(0, -1), { ...tail, thinkingEndedAt: at }];
+}
+
+/** A compaction divider learns what it freed from the first thread-scoped
+ *  call after it — the only honest "after" there is. */
+function fillCompacted(messages, event) {
+  if (event.scope && event.scope !== "thread") return messages;
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const m = messages[i];
+    if (m.role === Row.NOTICE && m.kind === Notice.COMPACTED) {
+      if (m.after != null) return messages;
+      const next = [...messages];
+      next[i] = { ...m, after: event.input_tokens || 0 };
+      return next;
+    }
+  }
+  return messages;
+}
+
+/** A run starting on a different model than the thread was on: record the
+ *  model and put a divider before whatever it says. */
+function afterModelSwitch(prev, event, next) {
+  const model = event.model || "";
+  if (!model) return next;
+  const switched = Boolean(prev.model) && model !== prev.model;
+  return {
+    ...next,
+    model,
+    messages: switched
+      ? [...closeStreaming(next.messages), { role: Row.NOTICE, kind: Notice.MODEL, label: event.model_label || model, model }]
+      : next.messages,
+  };
 }
 
 function upsertBy(rows, match, row) {
@@ -312,7 +373,7 @@ function usageFromThread(thread) {
 function reduceEvent(state, event, at = 0) {
   switch (event.event) {
     case AgentEvent.TOKEN_USAGE:
-      return { ...state, usage: addUsage(state.usage, event) };
+      return { ...state, usage: addUsage(state.usage, event), messages: fillCompacted(state.messages, event) };
 
     case AgentEvent.CONTEXT_COMPACTING:
       return { ...state, compacting: true };
@@ -326,7 +387,17 @@ function reduceEvent(state, event, at = 0) {
         usage: state.usage.last ? { ...state.usage, last: { ...state.usage.last, stale: true } } : state.usage,
         messages: [
           ...closeStreaming(state.messages),
-          { role: Row.NOTICE, text: "Context compacted — older history summarised to make room." },
+          // `before` is the last call's input size; `after` arrives with the
+          // next call (fillCompacted), and until then the row says only that
+          // it happened. The summary is what the thread now opens with —
+          // shown behind the divider, so the reader can see what survived.
+          {
+            role: Row.NOTICE,
+            kind: Notice.COMPACTED,
+            before: state.usage.last?.input ?? null,
+            after: null,
+            summary: typeof event.summary === "string" ? event.summary : "",
+          },
         ],
       };
 
@@ -335,14 +406,14 @@ function reduceEvent(state, event, at = 0) {
       return { ...state, messages: releaseQueued(state.messages, event.client_message_id) };
 
     case AgentEvent.PIPELINE_STARTED:
-      return {
+      return afterModelSwitch(state, event, {
         ...state,
         started: event,
         tierStepDown: readStepDown(event, at),
         // Leave "Starting…" the instant the backend responds, before any step
         // arrives, so the working state shows immediately.
         phase: state.phase === Phase.STARTING ? Phase.PIPELINE : state.phase,
-      };
+      });
 
     case AgentEvent.STEP_STARTED:
       return {
@@ -381,7 +452,12 @@ function reduceEvent(state, event, at = 0) {
       return {
         ...state,
         retrying: null,
-        messages: appendToTail(state.messages, (t) => ({ thinking: (t.thinking || "") + event.text })),
+        messages: appendToTail(state.messages, (t) => ({
+          thinking: (t.thinking || "") + event.text,
+          // Stamped on the first chunk, on this client's clock; the row shows
+          // "Thought for 6s" from it, which is measured rather than claimed.
+          thinkingStartedAt: t.thinkingStartedAt || at,
+        }), at),
       };
 
     case AgentEvent.AGENT_MESSAGE_CHUNK:
@@ -390,7 +466,7 @@ function reduceEvent(state, event, at = 0) {
         ...state,
         isAgentTyping: false,
         retrying: null,
-        messages: appendToTail(state.messages, (t) => ({ text: (t.text || "") + event.text })),
+        messages: appendToTail(endThinking(state.messages, at), (t) => ({ text: (t.text || "") + event.text }), at),
       };
 
     case AgentEvent.MODEL_RETRYING:
@@ -421,7 +497,7 @@ function reduceEvent(state, event, at = 0) {
         ...state,
         isAgentTyping: false,
         retrying: null,
-        messages: closeStreaming(state.messages),
+        messages: closeStreaming(endThinking(state.messages, at)),
         // Only a chat turn ends here. The opening run ends on PIPELINE_FINISHED,
         // and a pause that arrived just before this stays a pause.
         phase: state.phase === Phase.CHATTING ? Phase.READY : state.phase,
@@ -449,7 +525,7 @@ function reduceEvent(state, event, at = 0) {
         steps: finishRunningSteps(state.steps),
         isAgentTyping: false,
         retrying: null,
-        messages: closeStreaming(state.messages),
+        messages: closeStreaming(endThinking(state.messages, at)),
         phase: state.pauses.length ? Phase.QUESTIONS : Phase.READY,
       };
 
@@ -465,6 +541,23 @@ function reduceEvent(state, event, at = 0) {
         phase: Phase.FAILED,
         messages: closeStreaming(state.messages),
       };
+
+    case AgentEvent.TOOL_ACTIVITY: {
+      const activity = activityFromEvent(event);
+      if (!activity?.id) return state;
+      // The same call arrives twice — running, then its verdict — and the
+      // card updates in place. The streaming bubble closes first, because a
+      // tool runs between sentences: the prose either side of it then stays
+      // in the order it was written.
+      return {
+        ...state,
+        messages: upsertBy(
+          closeStreaming(state.messages),
+          (m) => m.role === Row.ACTIVITY && m.activity?.id === activity.id,
+          { role: Row.ACTIVITY, activity },
+        ),
+      };
+    }
 
     case AgentEvent.ARTIFACT_UPDATED:
       return { ...state, messages: [...state.messages, { role: Row.ARTIFACT_CARD, artifact: event.artifact }] };
@@ -531,6 +624,7 @@ export function reduceAgentSession(state, action) {
         pauses,
         todos: action.todos?.length ? action.todos : state.todos,
         usage: usageFromThread(action.usage) || state.usage,
+        model: usageFromThread(action.usage)?.last?.model || state.model,
         phase: pauses.length ? Phase.QUESTIONS : state.phase,
       };
     }
@@ -541,7 +635,14 @@ export function reduceAgentSession(state, action) {
       // until USER_INPUT_CONSUMED says the model has it, and the phase does
       // not move (a queued note is not a new turn). From READY it is a turn.
       const busy = state.phase === Phase.PIPELINE || state.phase === Phase.CHATTING || state.phase === Phase.QUESTIONS;
-      const row = { role: Row.USER, text: action.text, clientId: action.clientId || "", queued: busy };
+      const row = {
+        role: Row.USER,
+        text: action.text,
+        attachments: action.attachments || [],
+        at: action.at || undefined,
+        clientId: action.clientId || "",
+        queued: busy,
+      };
       return {
         ...state,
         suppressThinking: false,
@@ -551,16 +652,44 @@ export function reduceAgentSession(state, action) {
       };
     }
 
-    case Action.SEND_FAILED:
+    case Action.SEND_FAILED: {
+      // A message that never reached the agent must not sit in the transcript
+      // looking exactly like one that did. Pull the row and hand the text back
+      // to the composer, the same move STOPPED makes with a queued message:
+      // losing what someone typed is worse than any error copy, and a row that
+      // reads as sent is worse than both.
+      //
+      // Only text comes back. `content` is an image for an attachment, which
+      // no text box can hold, so that case keeps its row and the Retry button
+      // on the error bubble instead — the one affordance that can resend it.
+      const returnable = typeof action.content === "string" && Boolean(action.content.trim());
+      const released = releaseQueued(state.messages, action.clientId);
+      const kept =
+        returnable && action.clientId
+          ? released.filter((m) => !(m.role === Row.USER && m.clientId === action.clientId))
+          : released;
       return {
         ...state,
         isAgentTyping: false,
         phase: state.phase === Phase.CHATTING ? Phase.READY : state.phase,
+        draft: returnable
+          ? { text: action.content, key: (state.draft?.key || 0) + 1 }
+          : state.draft,
         messages: [
-          ...releaseQueued(state.messages, action.clientId),
-          { role: Row.SEND_ERROR, text: action.error || "Your message didn't reach the agent.", content: action.content ?? null },
+          ...kept,
+          {
+            role: Row.SEND_ERROR,
+            // Through the same translator every other failure uses. Raw
+            // `err.message` here was "Message failed: 500" and "Failed to
+            // fetch" — a status code in the user's face, and the one string
+            // that most often means "the server is not running".
+            text: friendlyErrorMessage(action.error || "", action.code),
+            content: returnable ? null : action.content ?? null,
+            code: action.code || "",
+          },
         ],
       };
+    }
 
     case Action.ANSWER_SENT: {
       const pauses = state.pauses.filter((p) => !samePause(p, action.pause));
@@ -705,13 +834,15 @@ export function friendlyErrorMessage(raw, code = "") {
   // Common transient classes
   if (/rate limit|429/i.test(msg)) return "We're hitting a rate limit — wait a minute and try again.";
   if (/timeout|timed.?out/i.test(msg)) return "That took longer than expected. Try again.";
-  if (/network|connection|fetch failed|ECONNREFUSED/i.test(msg)) return "Couldn't reach the server. Check your internet and try again.";
+  if (/network|connection|fetch failed|failed to fetch|ECONNREFUSED/i.test(msg)) return "Couldn't reach the server. Check your internet and try again.";
 
   // Validation
   if (/validation|invalid|missing/i.test(msg) && msg.length < 200) return "Some input wasn't valid — please review and try again.";
 
-  // Don't leak status codes / file paths / stack traces.
-  if (/^\d{3}\b/.test(msg) || /Traceback|line \d+/i.test(msg)) return SERVER_FAULT;
+  // Don't leak status codes / file paths / stack traces. The trailing form is
+  // what lib/api.js itself throws ("Message failed: 500"), which the leading
+  // test missed — a failed send put the bare status on screen.
+  if (/^\d{3}\b/.test(msg) || /failed:\s*\d{3}\b/i.test(msg) || /Traceback|line \d+/i.test(msg)) return SERVER_FAULT;
 
   // Reasonably short, doesn't look technical → pass through.
   if (msg.length < 200 && !/^\w+Error:/.test(msg)) return msg;

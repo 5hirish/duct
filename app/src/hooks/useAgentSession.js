@@ -52,6 +52,7 @@ import {
 import { trackEvent, AnalyticsEvent } from "../lib/analytics";
 import { AgentEvent } from "../lib/agentEvents";
 import { mapEventsToMessages } from "../lib/agentHistory";
+import { describeContent } from "../lib/attachments";
 import { Phase } from "../lib/agentPhase";
 import {
   Action,
@@ -224,11 +225,20 @@ export function useAgentSession({
         /* see above */
       }
       if (!hydrateThreadState) return;
-      // The parked card, before any session exists to replay it.
+      // The parked card, before any session exists to replay it — and the
+      // context the thread has already spent, which is what the composer's
+      // ring reads.
       try {
         const thread = await getAgentThreadState(agentType, cid);
         if (dead()) return;
-        if (thread?.pauses?.length || thread?.todos?.length) {
+        // `usage.last` is null until a model call has been billed, so this
+        // restores the ring on a thread that spent context without parking a
+        // question, and still leaves a genuinely empty one reading "New
+        // thread". Gating on pauses/todos alone meant every finished thread
+        // reopened at 0%: the reducer handled it (agentSession.test.js, "a
+        // resumed thread reads its usage from the state route"), but nothing
+        // ever dispatched.
+        if (thread?.pauses?.length || thread?.todos?.length || thread?.usage?.last) {
           dispatch({ type: Action.PAUSES, pauses: thread.pauses || [], todos: thread.todos || [], usage: thread.usage });
         }
       } catch {
@@ -378,10 +388,12 @@ export function useAgentSession({
 
   const send = useCallback(
     async (content, extra = {}) => {
-      const text = typeof content === "string" ? content : "[image attached]";
+      // The row shows the same text and tiles a reopened thread rebuilds
+      // from the stored content — one parser for both (lib/attachments.js).
+      const { text, attachments } = describeContent(content);
       // The id is what lets USER_INPUT_CONSUMED release this row and no other.
       const clientId = newClientId();
-      dispatch({ type: Action.USER_SENT, text, clientId });
+      dispatch({ type: Action.USER_SENT, text, attachments, clientId, at: Date.now() });
       if (!sessionIdRef.current) {
         dispatch({ type: Action.SEND_FAILED, error: NOT_ATTACHED, content, clientId });
         return;

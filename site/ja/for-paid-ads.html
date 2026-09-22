@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
-<title>パフォーマンスマーケター向けDuct — Google広告、Meta、GA4、Stripeをまとめて読み取るオープンソースAIエージェント</title>
+<title>パフォーマンスマーケター向けDuct — 有料広告のためのAIエージェント</title>
 <link rel="canonical" href="https://getduct.ai/ja/for-paid-ads"/>
 <!-- hreflang:start -->
 <link rel="alternate" hreflang="x-default" href="https://getduct.ai/for-paid-ads"/>
@@ -15,29 +15,34 @@
 <link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/for-paid-ads"/>
 <link rel="alternate" hreflang="de" href="https://getduct.ai/de/for-paid-ads"/>
 <link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/for-paid-ads"/>
+<meta property="og:locale" content="ja_JP"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
 <!-- hreflang:end -->
-<meta name="description" content="CPAが変動した理由を尋ねてください。成長チーム向けのオープンソースAIエージェントであるDuctは、Google広告、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止または変更を提案し、お客様が承認した場合に適用します。"/>
+<meta name="description" content="CPAが変動した理由を尋ねてください。DuctはGoogle広告、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止または変更を提案し、お客様が承認した場合に適用します。"/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/ja/for-paid-ads"/>
-<meta property="og:title" content="パフォーマンスマーケター向けDuct — Google広告、Meta、GA4、Stripeをまとめて読み取るオープンソースAIエージェント"/>
+<meta property="og:title" content="パフォーマンスマーケター向けDuct — 有料広告のためのAIエージェント"/>
 <meta property="og:description" content="CPAが変動した理由を尋ねてください。DuctはGoogle広告、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止または変更を提案し、お客様が承認した場合に適用します。"/>
 <meta property="og:image" content="https://getduct.ai/assets/og/for-paid-ads.jpg"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="パフォーマンスマーケター向けDuct — Google広告、Meta、GA4、Stripeをまとめて読み取るオープンソースAIエージェント"/>
+<meta name="twitter:title" content="パフォーマンスマーケター向けDuct — 有料広告のためのAIエージェント"/>
 <meta name="twitter:description" content="パフォーマンスマーケター向けオープンソースAIエージェント：広告、分析、収益をまとめて読み取り、変更を提案し、お客様が承認した場合に適用します。"/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og/for-paid-ads.jpg"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
 <!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
 <script src="/assets/config.js" defer></script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","name":"Duct for Paid Ads","url":"https://getduct.ai/for-paid-ads","description":"Ask why CPA moved. Duct reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve. Open source, MIT.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"有料広告向けDuct","url":"https://getduct.ai/ja/for-paid-ads","description":"CPAが変動した理由を尋ねます。DuctはGoogle Ads、Meta、Apple Search Ads、GA4、Stripeをまとめて読み込み、一時停止または変更を提案し、承認すると適用します。オープンソース、MIT。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Duct for paid ads?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that reads Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 and Stripe together. Ask why CPA moved and it answers across platforms with its sources; when the answer is a pause, a negative or a budget change, it proposes the change set and applies it only when you approve."}},{"@type":"Question","name":"How long does it take to connect my ad platforms to Duct?","acceptedAnswer":{"@type":"Answer","text":"Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe and RevenueCat. No API keys to configure and no developer time required. You select your platforms, authorize access, and your first daily ad intelligence brief arrives the next morning."}},{"@type":"Question","name":"Does Duct modify anything in my ad accounts?","acceptedAnswer":{"@type":"Answer","text":"Not unless you approve it. Duct reads your performance data to build the brief, and reporting works with read-only access alone. When it finds something worth acting on — a wasted-spend search term to add as a negative keyword, a campaign to pause — it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."}},{"@type":"Question","name":"How is Duct different from building cross-platform ad reports in spreadsheets or dashboards?","acceptedAnswer":{"@type":"Answer","text":"Spreadsheets and dashboards show you what happened — Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."}},{"@type":"Question","name":"How much does Duct for paid ads cost?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."}},{"@type":"Question","name":"What kind of changes can it make?","acceptedAnswer":{"@type":"Answer","text":"Pausing a campaign, adding negative keywords, and moving a budget within the guardrail you set for the account. Each arrives as a change set with a preview; destructive changes are flagged, anything over a guardrail is blocked until a person looks, and every applied change can be rolled back."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"有料広告向けDuctとは？","acceptedAnswer":{"@type":"Answer","text":"Google広告、Meta広告、Apple Search Ads、OpenAI Ads、GA4、Stripeをまとめて読み取るオープンソースAIエージェントです。CPAが変動した理由を尋ねると、その情報源とともにプラットフォームを横断して回答します。回答が一時停止、除外、または予算変更である場合、変更セットを提案し、お客様が承認した場合にのみ適用します。"}},{"@type":"Question","name":"広告プラットフォームをDuctに接続するのにどれくらい時間がかかりますか？","acceptedAnswer":{"@type":"Answer","text":"5分以内。DuctはワンクリックOAuthを使用して、Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、HubSpot、Stripe、RevenueCatに接続します。APIキーの設定や開発者の時間は不要です。プラットフォームを選択し、アクセスを承認するだけで、翌朝には最初のデイリー広告インテリジェンスブリーフが届きます。"}},{"@type":"Question","name":"Ductは私の広告アカウントで何かを変更しますか？","acceptedAnswer":{"@type":"Answer","text":"お客様が承認しない限り、変更は行いません。Ductはパフォーマンスデータを読み取ってブリーフを作成し、レポート機能は読み取り専用アクセスのみで動作します。行動すべきこと（無駄な支出の検索語句をネガティブキーワードとして追加すること、一時停止するキャンペーンなど）を見つけた場合、変更を提案し、影響を受けるすべての項目を前後で表示し、お客様が承認した場合にのみ適用します。適用されたすべての変更はログに記録され、プラットフォームが許可する範囲で元に戻すことができます。OAuthトークンは暗号化されてサーバー側に保存され、転送中のすべてのデータはTLSを介して暗号化されます。"}},{"@type":"Question","name":"Ductは、スプレッドシートやダッシュボードでクロスプラットフォームの広告レポートを作成するのとどう違うのですか？","acceptedAnswer":{"@type":"Answer","text":"スプレッドシートやダッシュボードは「何が起こったか」を示しますが、Ductは「それに対して何をすべきか」を伝えます。3つのプラットフォームから毎週手動でCSVを抽出しマージする代わりに、DuctはGoogle Ads、Meta、LinkedInのデータを自動的に関連付け、静的なレポートでは見落とされがちなクリエイティブの疲労、予算再配分の機会、クロスチャネルのアトリビューションギャップを明らかにします。"}},{"@type":"Question","name":"有料広告向けDuctの費用はいくらですか？","acceptedAnswer":{"@type":"Answer","text":"常に独自のキーで無料です。DuctはMITライセンスです。モデルプロバイダーに直接支払うか、既存のChatGPTプランでサインインします。後日、キーを保持したくないチーム向けにモデルをバンドルした有料プランが提供されますが、現在オープンなものはその背後に移動しません。費用がかかるものはオープンソースページに明記されています。"}},{"@type":"Question","name":"どのような変更が可能ですか？","acceptedAnswer":{"@type":"Answer","text":"キャンペーンの一時停止、除外キーワードの追加、アカウントに設定したガードレール内での予算移動。それぞれプレビュー付きの変更セットとして届きます。破壊的な変更はフラグが立てられ、ガードレールを超えるものは人が確認するまでブロックされ、適用されたすべての変更はロールバックできます。"}}]}
 </script>
 <style>
   .skip-link {
@@ -58,6 +63,9 @@
   .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
 
 </style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"パフォーマンスマーケター向け","item":"https://getduct.ai/ja/for-paid-ads"}]}
+</script>
 </head>
 <body>
 

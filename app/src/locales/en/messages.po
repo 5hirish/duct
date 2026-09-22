@@ -41,6 +41,10 @@ msgstr "· set to <0>{configured}</0>, stepped down for this model"
 msgid "(no caption)"
 msgstr "(no caption)"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "(read the first part of the page)"
+msgstr "(read the first part of the page)"
+
 #: src/components/content/PostMiniCard.jsx
 msgid "(untitled)"
 msgstr "(untitled)"
@@ -59,6 +63,48 @@ msgstr "{0, plural, one {# call} other {# calls}}"
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, one {# match} other {# matches}}"
 
+#. placeholder {0}: group.ok
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0, plural, one {# pull} other {# pulls}}"
+msgstr "{0, plural, one {# pull} other {# pulls}}"
+
+#. placeholder {0}: dial.dial
+#. placeholder {1}: dial.default_native
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "{0} {1} · whatever this model does anyway"
+#~ msgstr "{0} {1} · whatever this model does anyway"
+
+#. placeholder {0}: meta.failed
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} failed"
+msgstr "{0} failed"
+
+#. placeholder {0}: docs.length
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0} in this thread"
+msgstr "{0} in this thread"
+
+#. placeholder {0}: meta.count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} matches"
+msgstr "{0} matches"
+
+#. placeholder {0}: group.ok
+#. placeholder {1}: group.failed
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0} read · {1} failed"
+msgstr "{0} read · {1} failed"
+
+#. placeholder {0}: meta.rows
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} rows"
+msgstr "{0} rows"
+
+#. placeholder {0}: meta.source_count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} sources"
+msgstr "{0} sources"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
 msgstr "{blogPosts, plural, one {# blog post} other {# blog posts}}"
@@ -68,8 +114,8 @@ msgid "{blogPosts, plural, one {# post} other {# posts}}"
 msgstr "{blogPosts, plural, one {# post} other {# posts}}"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{cached} cached{cachedShare}"
-msgstr "{cached} cached{cachedShare}"
+#~ msgid "{cached} cached{cachedShare}"
+#~ msgstr "{cached} cached{cachedShare}"
 
 #: src/app/(app)/execute/page.jsx
 msgid "{changeCount, plural, one {# change} other {# changes}}"
@@ -125,8 +171,8 @@ msgid "{destructiveCount, plural, one {# destructive change} other {# destructiv
 msgstr "{destructiveCount, plural, one {# destructive change} other {# destructive changes}} — {destructiveNames}."
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "{dialName} {dialDefault} · whatever this model does anyway"
-msgstr "{dialName} {dialDefault} · whatever this model does anyway"
+#~ msgid "{dialName} {dialDefault} · whatever this model does anyway"
+#~ msgstr "{dialName} {dialDefault} · whatever this model does anyway"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "{done} of 3 done"
@@ -197,8 +243,12 @@ msgid "{impactWord} impact"
 msgstr "{impactWord} impact"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{input} in"
-msgstr "{input} in"
+#~ msgid "{input} in"
+#~ msgstr "{input} in"
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{input} in, {output} out"
+msgstr "{input} in, {output} out"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "{inputProgressPercent}% complete"
@@ -264,6 +314,14 @@ msgstr "{name} · Members"
 msgid "{name} preview"
 msgstr "{name} preview"
 
+#: src/components/workspace/ChatInput.jsx
+msgid "{name} was not attached — send images, PDFs or text files."
+msgstr "{name} was not attached — send images, PDFs or text files."
+
+#: src/components/workspace/ChatInput.jsx
+msgid "{name} was not attached — the limit is {max} MB per file."
+msgstr "{name} was not attached — the limit is {max} MB per file."
+
 #: src/components/insights/Desk.jsx
 msgid "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
 msgstr "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
@@ -285,8 +343,8 @@ msgid "{opportunities, plural, one {# opportunity} other {# opportunities}}"
 msgstr "{opportunities, plural, one {# opportunity} other {# opportunities}}"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{output} out"
-msgstr "{output} out"
+#~ msgid "{output} out"
+#~ msgstr "{output} out"
 
 #: src/components/audit/AuditReport.jsx
 msgid "{pages, plural, one {# page} other {# pages}}"
@@ -309,12 +367,20 @@ msgid "{pending, plural, one {Approve & generate # image — one by one} other {
 msgstr "{pending, plural, one {Approve & generate # image — one by one} other {Approve & generate # images — one by one}}"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{percent}% context"
-msgstr "{percent}% context"
+#~ msgid "{percent}% · {used} of {window}"
+#~ msgstr "{percent}% · {used} of {window}"
+
+#: src/components/workspace/ContextRing.jsx
+#~ msgid "{percent}% context"
+#~ msgstr "{percent}% context"
 
 #: src/components/models/UsagePanel.jsx
 msgid "{percent}% of tokens"
 msgstr "{percent}% of tokens"
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{percent}% used"
+msgstr "{percent}% used"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "{phase}… {elapsed}s"
@@ -372,6 +438,10 @@ msgstr "{robotsLines} lines"
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
 msgstr "{score}/100 — {label}. Weighted average across all 9 SEO categories."
 
+#: src/components/workspace/ContextRing.jsx
+msgid "{share}% from cache"
+msgstr "{share}% from cache"
+
 #: src/components/content/PostViewport.jsx
 msgid "{slideCount, plural, one {# slide} other {# slides}}"
 msgstr "{slideCount, plural, one {# slide} other {# slides}}"
@@ -425,8 +495,12 @@ msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
 msgstr "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{used} of {window}"
-msgstr "{used} of {window}"
+#~ msgid "{used} of {window}"
+#~ msgstr "{used} of {window}"
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{used} of {window} tokens"
+msgstr "{used} of {window} tokens"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{views, plural, one {# view} other {# views}}"
@@ -666,8 +740,8 @@ msgid "A saved key is already in use. Paste a new one to replace it, or choose R
 msgstr "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
-msgstr "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
+#~ msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
+#~ msgstr "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
@@ -836,7 +910,6 @@ msgstr "Advanced"
 
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/execute/page.jsx
-#: src/components/workspace/StepProgress.jsx
 msgid "agent"
 msgstr "agent"
 
@@ -903,10 +976,18 @@ msgstr "all accounts"
 msgid "All clear"
 msgstr "All clear"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents"
+msgstr "All documents"
+
 #. placeholder {0}: docs.length
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "All documents · {0}"
-msgstr "All documents · {0}"
+#~ msgid "All documents · {0}"
+#~ msgstr "All documents · {0}"
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents in this thread"
+msgstr "All documents in this thread"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
@@ -927,8 +1008,8 @@ msgid "All statuses"
 msgstr "All statuses"
 
 #: src/app/(auth)/page.js
-msgid "Already using Duct?"
-msgstr "Already using Duct?"
+#~ msgid "Already using Duct?"
+#~ msgstr "Already using Duct?"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "alt ×{missingAlt}"
@@ -1136,7 +1217,6 @@ msgstr "Artifact version"
 msgid "Artifacts"
 msgstr "Artifacts"
 
-#: src/components/workspace/ComposerDials.jsx
 #: src/lib/projectsApi.js
 msgid "Ask"
 msgstr "Ask"
@@ -1192,6 +1272,11 @@ msgstr "Ask me something"
 msgid "Ask whoever invited you to send a new one, or <0>sign in</0> if you already have access."
 msgstr "Ask whoever invited you to send a new one, or <0>sign in</0> if you already have access."
 
+#. placeholder {0}: activity.title
+#: src/components/workspace/ActivityRow.jsx
+msgid "Asked {0}"
+msgstr "Asked {0}"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Asks freely · nothing applies without you"
 msgstr "Asks freely · nothing applies without you"
@@ -1205,12 +1290,24 @@ msgid "Assisted"
 msgstr "Assisted"
 
 #: src/components/workspace/ChatInput.jsx
+msgid "Attach a file"
+msgstr "Attach a file"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Attach a file — or drop one here"
+msgstr "Attach a file — or drop one here"
+
+#: src/components/workspace/ChatInput.jsx
 msgid "Attach files"
 msgstr "Attach files"
 
 #: src/components/workspace/ChatInput.jsx
-msgid "Attach image"
-msgstr "Attach image"
+#~ msgid "Attach image"
+#~ msgstr "Attach image"
+
+#: src/components/workspace/Attachments.jsx
+msgid "Attachment"
+msgstr "Attachment"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -1245,7 +1342,6 @@ msgid "Audits it in about three minutes"
 msgstr "Audits it in about three minutes"
 
 #: src/app/(app)/activity/page.jsx
-#: src/components/workspace/ComposerDials.jsx
 msgid "auto"
 msgstr "auto"
 
@@ -1361,6 +1457,7 @@ msgid "Bold"
 msgstr "Bold"
 
 #: src/app/(app)/content/page.jsx
+#: src/components/workspace/ActivityRow.jsx
 msgid "brand"
 msgstr "brand"
 
@@ -1382,8 +1479,8 @@ msgid "Brief"
 msgstr "Brief"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Brief: {label}"
-msgstr "Brief: {label}"
+#~ msgid "Brief: {label}"
+#~ msgstr "Brief: {label}"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
@@ -1401,6 +1498,10 @@ msgstr "Building slide HTML"
 #: src/components/content/PlanViewport.jsx
 msgid "Building your plan"
 msgstr "Building your plan"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "business"
+msgstr "business"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Business context"
@@ -1426,6 +1527,10 @@ msgstr "Business settings → Users → System users → Generate token with sco
 msgid "By agent"
 msgstr "By agent"
 
+#: src/app/(auth)/page.js
+msgid "By continuing you agree to the <0>Terms</0> and <1>Privacy Policy</1>."
+msgstr "By continuing you agree to the <0>Terms</0> and <1>Privacy Policy</1>."
+
 #: src/components/content/DiscoverPage.jsx
 msgid "By hashtag"
 msgstr "By hashtag"
@@ -1439,8 +1544,8 @@ msgid "By provider"
 msgstr "By provider"
 
 #: src/app/(auth)/page.js
-msgid "By signing in, you agree to our <0>Terms of Service</0> and <1>Privacy Policy</1>"
-msgstr "By signing in, you agree to our <0>Terms of Service</0> and <1>Privacy Policy</1>"
+#~ msgid "By signing in, you agree to our <0>Terms of Service</0> and <1>Privacy Policy</1>"
+#~ msgstr "By signing in, you agree to our <0>Terms of Service</0> and <1>Privacy Policy</1>"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Cached input"
@@ -1555,9 +1660,17 @@ msgstr "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROX
 msgid "Checked"
 msgstr "Checked"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Checked connected sources"
+msgstr "Checked connected sources"
+
 #: src/components/audit/AuditReport.jsx
 msgid "Checking structured data coverage…"
 msgstr "Checking structured data coverage…"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Checking the numbers"
+msgstr "Checking the numbers"
 
 #: src/app/invite/[token]/page.jsx
 msgid "Checking your invitation…"
@@ -1660,6 +1773,19 @@ msgstr "Commit edits"
 msgid "Community"
 msgstr "Community"
 
+#. placeholder {0}: compactNumber(freed)
+#: src/components/workspace/AgentChat.jsx
+msgid "Compacted · {0} tokens freed"
+msgstr "Compacted · {0} tokens freed"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Compacted · older history summarised to make room"
+msgstr "Compacted · older history summarised to make room"
+
+#: src/components/workspace/ContextRing.jsx
+#~ msgid "compacted · recomputed at the next call"
+#~ msgstr "compacted · recomputed at the next call"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Compacting context"
 msgstr "Compacting context"
@@ -1689,8 +1815,8 @@ msgid "Competitors"
 msgstr "Competitors"
 
 #: src/app/(auth)/page.js
-msgid "Complete security check to continue."
-msgstr "Complete security check to continue."
+#~ msgid "Complete security check to continue."
+#~ msgstr "Complete security check to continue."
 
 #: src/components/audit/AuditReport.jsx
 msgid "Composing findings and priorities…"
@@ -1767,6 +1893,10 @@ msgstr "Connected — {firstAccountName}"
 msgid "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
 msgstr "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "connected sources"
+msgstr "connected sources"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
 msgstr "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
@@ -1830,13 +1960,12 @@ msgid "Content Studio"
 msgstr "Content Studio"
 
 #: src/app/(app)/project/[projectId]/page.jsx
-#: src/components/workspace/ContextRing.jsx
 msgid "Context"
 msgstr "Context"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "context compacted"
-msgstr "context compacted"
+#~ msgid "context compacted"
+#~ msgstr "context compacted"
 
 #: src/components/ContextCompressionCard.jsx
 msgid "Context compression"
@@ -1845,6 +1974,10 @@ msgstr "Context compression"
 #: src/components/workspace/ContextRing.jsx
 msgid "Context used: {percent} percent. Show token usage."
 msgstr "Context used: {percent} percent. Show token usage."
+
+#: src/components/workspace/ContextRing.jsx
+msgid "Context window"
+msgstr "Context window"
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Continue →"
@@ -1868,8 +2001,8 @@ msgid "Continue with ChatGPT"
 msgstr "Continue with ChatGPT"
 
 #: src/app/(auth)/page.js
-msgid "Continue with your Google account"
-msgstr "Continue with your Google account"
+#~ msgid "Continue with your Google account"
+#~ msgstr "Continue with your Google account"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Controls how deeply the AI reasons about your site before writing findings."
@@ -1897,6 +2030,7 @@ msgstr "Cookies, honestly"
 
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/audit/ShareReport.jsx
+#: src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "Copied"
 
@@ -1923,6 +2057,10 @@ msgstr "Copy details"
 #: src/components/AppErrorPanel.jsx
 msgid "Copy failed"
 msgstr "Copy failed"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Copy response"
+msgstr "Copy response"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
@@ -2208,6 +2346,10 @@ msgstr "Diagram failed to render ({error}) — source below."
 msgid "Did anything stop working?"
 msgstr "Did anything stop working?"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Did something"
+msgstr "Did something"
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Did the revenue actually arrive?"
 msgstr "Did the revenue actually arrive?"
@@ -2259,6 +2401,7 @@ msgid "document"
 msgstr "document"
 
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/InsightsWorkspace.jsx
 msgid "Document"
 msgstr "Document"
 
@@ -2291,6 +2434,10 @@ msgstr "Download"
 msgid "Download HTML report"
 msgstr "Download HTML report"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Download this document"
+msgstr "Download this document"
+
 #: src/app/(app)/content/page.jsx
 msgid "draft"
 msgstr "draft"
@@ -2314,6 +2461,19 @@ msgstr "Drafts your project from what it finds"
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Drag to resize — double-click to reset, arrow keys to nudge"
 msgstr "Drag to resize — double-click to reset, arrow keys to nudge"
+
+#. placeholder {0}: meta.model
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drawn by {0}"
+msgstr "Drawn by {0}"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drew an image"
+msgstr "Drew an image"
+
+#: src/components/workspace/Attachments.jsx
+msgid "Drop to attach"
+msgstr "Drop to attach"
 
 #: src/components/UpdateToast.jsx
 msgid "Duct {version} is available"
@@ -2361,8 +2521,8 @@ msgid "Duct needs a connection. Your work is saved and will still be here."
 msgstr "Duct needs a connection. Your work is saved and will still be here."
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
-msgstr "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
+#~ msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
+#~ msgstr "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
@@ -2371,6 +2531,14 @@ msgstr "Duct posts through the OS — open System Settings to turn them on or of
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
 msgstr "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid "Duct reads it the way a search engine does."
+msgstr "Duct reads it the way a search engine does."
+
+#: src/components/onboarding/FrontDoor.jsx
+#~ msgid "Duct reads your site the way a search engine does, then tells you what to fix first."
+#~ msgstr "Duct reads your site the way a search engine does, then tells you what to fix first."
 
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
@@ -2488,6 +2656,10 @@ msgstr "Edit format"
 #: src/components/content/BrandContextForm.jsx
 msgid "Edit project context"
 msgstr "Edit project context"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Edited a slide"
+msgstr "Edited a slide"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "edited by you"
@@ -2663,6 +2835,7 @@ msgstr "FAIL"
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Failed"
 msgstr "Failed"
@@ -2676,8 +2849,8 @@ msgid "Fairly sure"
 msgstr "Fairly sure"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
-msgstr "Fast and cheaper. Headings, text and tables; pastes into a doc"
+#~ msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
+#~ msgstr "Fast and cheaper. Headings, text and tables; pastes into a doc"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Faster, lighter"
@@ -2722,6 +2895,10 @@ msgstr "Finish signing in in your browser, then come back and press “I’ve co
 #: src/app/(auth)/page.js
 msgid "Finish signing in with Google in your browser — this window will continue automatically."
 msgstr "Finish signing in with Google in your browser — this window will continue automatically."
+
+#: src/app/(auth)/page.js
+msgid "Finish the security check above, then try again."
+msgstr "Finish the security check above, then try again."
 
 #: src/components/content/PostViewport.jsx
 msgid "first line is the hook — 2–3 sentences"
@@ -2785,8 +2962,12 @@ msgid "Free SEO Audit"
 msgstr "Free SEO Audit"
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid "Free, no account, and nothing else connected."
-msgstr "Free, no account, and nothing else connected."
+msgid "Free, and no account needed."
+msgstr "Free, and no account needed."
+
+#: src/components/onboarding/FrontDoor.jsx
+#~ msgid "Free, no account, and nothing else connected."
+#~ msgstr "Free, no account, and nothing else connected."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Friendly"
@@ -2836,14 +3017,14 @@ msgstr "Generated at {generatedAt} · {sourceFile}"
 msgid "Generated by <0>Duct</0> · getduct.ai"
 msgstr "Generated by <0>Duct</0> · getduct.ai"
 
-#: src/components/content/ContentWorkspace.jsx
+#: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Generated image"
 msgstr "Generated image"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Generated image · image {imageNo}"
-msgstr "Generated image · image {imageNo}"
+#~ msgid "Generated image · image {imageNo}"
+#~ msgstr "Generated image · image {imageNo}"
 
 #: src/app/(app)/insights/organic-growth/[slug]/page.jsx
 msgid "Generated: {generatedAt}"
@@ -2930,6 +3111,10 @@ msgstr "Google Ads"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Google Ads, GA4 or Mixpanel. This is the step that changes everything — I can’t check a number I can’t see."
 msgstr "Google Ads, GA4 or Mixpanel. This is the step that changes everything — I can’t check a number I can’t see."
+
+#: src/components/onboarding/FrontDoor.jsx
+msgid "Google Ads, GA4, Search Console and Meta Ads connect later — read-only, only the ones you pick."
+msgstr "Google Ads, GA4, Search Console and Meta Ads connect later — read-only, only the ones you pick."
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
@@ -3089,8 +3274,8 @@ msgid "Hide key"
 msgstr "Hide key"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Hide reasoning"
-msgstr "Hide reasoning"
+#~ msgid "Hide reasoning"
+#~ msgstr "Hide reasoning"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Hide superseded"
@@ -3137,8 +3322,8 @@ msgid "How freely Duct may act"
 msgstr "How freely Duct may act"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "How hard the model should think"
-msgstr "How hard the model should think"
+#~ msgid "How hard the model should think"
+#~ msgstr "How hard the model should think"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "How posts sound and what they must (or must not) say."
@@ -3153,8 +3338,8 @@ msgid "Hreflang"
 msgstr "Hreflang"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "HTML"
-msgstr "HTML"
+#~ msgid "HTML"
+#~ msgstr "HTML"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "https://example.com"
@@ -3237,6 +3422,10 @@ msgstr "Impressions, clicks and spend. Conversions stay in Ads Manager."
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "In progress"
 msgstr "In progress"
+
+#: src/components/insights/InsightsWorkspace.jsx
+#~ msgid "in this thread"
+#~ msgstr "in this thread"
 
 #: src/lib/credentialStorage.js
 msgid "In your keychain"
@@ -3337,6 +3526,10 @@ msgstr "It's logged on our side. Try again, and send us the details below if it 
 msgid "Italiano"
 msgstr "Italiano"
 
+#: src/components/workspace/ContextRing.jsx
+msgid "Just compacted — recounted on the next call"
+msgstr "Just compacted — recounted on the next call"
+
 #: src/components/insights/desk/useRelativeTime.js
 msgid "just now"
 msgstr "just now"
@@ -3415,6 +3608,10 @@ msgstr "Last checked {lastChecked}. {sourceCount, plural, one {# source connecte
 #: src/components/UpdateToast.jsx
 msgid "Later"
 msgstr "Later"
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Leave full screen"
+msgstr "Leave full screen"
 
 #: src/components/ProjectMembers.jsx
 msgid "Leave project"
@@ -3495,6 +3692,10 @@ msgstr "Linked styles"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Links"
 msgstr "Links"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Listed this thread's documents"
+msgstr "Listed this thread's documents"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Live data as of {refreshedAt}"
@@ -3600,6 +3801,10 @@ msgstr "Loading session…"
 msgid "Loading the artifact"
 msgstr "Loading the artifact"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Loading the brief"
+msgstr "Loading the brief"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Loading the project"
 msgstr "Loading the project"
@@ -3637,6 +3842,10 @@ msgstr "Local"
 #: src/components/AppSidebar.jsx
 msgid "Log out"
 msgstr "Log out"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Logged metrics"
+msgstr "Logged metrics"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Looking up where {providerName}'s key comes from."
@@ -3697,8 +3906,12 @@ msgid "Mapping your site structure"
 msgstr "Mapping your site structure"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Markdown"
-msgstr "Markdown"
+#~ msgid "Markdown"
+#~ msgstr "Markdown"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Marked as posted"
+msgstr "Marked as posted"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Marketing managers at SaaS startups"
@@ -3742,6 +3955,10 @@ msgstr "Members"
 #: src/app/(app)/projects/page.jsx
 msgid "Members of {name}"
 msgstr "Members of {name}"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "memory"
+msgstr "memory"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 #: src/app/(app)/project/[projectId]/page.jsx
@@ -3827,8 +4044,8 @@ msgid "Mixpanel service accounts guide"
 msgstr "Mixpanel service accounts guide"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "Model"
-msgstr "Model"
+#~ msgid "Model"
+#~ msgstr "Model"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Model calls"
@@ -3847,8 +4064,8 @@ msgid "Model provider"
 msgstr "Model provider"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Model: {label}"
-msgstr "Model: {label}"
+#~ msgid "Model: {label}"
+#~ msgstr "Model: {label}"
 
 #: src/app/(app)/settings/models/page.jsx
 #: src/components/AppNav.jsx
@@ -3966,6 +4183,7 @@ msgstr "New project — audit a site"
 
 #: src/components/insights/desk/DeskComposer.jsx
 #: src/components/workspace/AgentChat.jsx
+#: src/components/workspace/ContextRing.jsx
 msgid "New thread"
 msgstr "New thread"
 
@@ -4447,6 +4665,11 @@ msgstr "On by default, so a crash tells us something without you having to repor
 msgid "On request"
 msgstr "On request"
 
+#. placeholder {0}: meta.attached_to
+#: src/components/workspace/ActivityRow.jsx
+msgid "On slide {0}"
+msgstr "On slide {0}"
+
 #: src/lib/credentialStorage.js
 msgid "On this device"
 msgstr "On this device"
@@ -4572,6 +4795,10 @@ msgstr "Open the command palette"
 msgid "Open the console"
 msgstr "Open the console"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Open the document →"
+msgstr "Open the document →"
+
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
 msgstr "Open the project timeline"
@@ -4585,6 +4812,7 @@ msgid "OpenAI"
 msgstr "OpenAI"
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
 msgid "OpenAI Ads"
 msgstr "OpenAI Ads"
 
@@ -4595,6 +4823,14 @@ msgstr "OpenAI Ads API quickstart"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "OpenAI has changed what third-party apps may do with this plan. An API key works regardless."
 msgstr "OpenAI has changed what third-party apps may do with this plan. An API key works regardless."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Opened"
+msgstr "Opened"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Opened the post"
+msgstr "Opened the post"
 
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "Opening session…"
@@ -4753,6 +4989,10 @@ msgstr "Paste a key first"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr "Paste your key"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "pasted image"
+msgstr "pasted image"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pause remembering"
@@ -5082,6 +5322,14 @@ msgstr "Published"
 msgid "Published {publishedOn}"
 msgstr "Published {publishedOn}"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Published the post"
+msgstr "Published the post"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Putting it together"
+msgstr "Putting it together"
+
 #: src/app/(app)/connections/page.jsx
 msgid "qa-, @yourcompany.com, test-account"
 msgstr "qa-, @yourcompany.com, test-account"
@@ -5106,9 +5354,65 @@ msgstr "Rage clicks, dead clicks, quick-backs and script errors, per page."
 msgid "ran on its own"
 msgstr "ran on its own"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read"
+msgstr "Read"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read {count} pages of"
+msgstr "Read {count} pages of"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read a memory"
+msgstr "Read a memory"
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Read full screen"
+msgstr "Read full screen"
+
 #: src/app/(start)/start/page.jsx
 msgid "Read my site"
 msgstr "Read my site"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read project context"
+msgstr "Read project context"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the asset library"
+msgstr "Read the asset library"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the avatar library"
+msgstr "Read the avatar library"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the brand context"
+msgstr "Read the brand context"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the discovered references"
+msgstr "Read the discovered references"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the format library"
+msgstr "Read the format library"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the slide"
+msgstr "Read the slide"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the topic bank"
+msgstr "Read the topic bank"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read what was posted before"
+msgstr "Read what was posted before"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reading"
+msgstr "Reading"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Reading and parsing your pages"
@@ -5143,6 +5447,10 @@ msgstr "Real problems from a real account. Nothing lands here unchecked."
 msgid "Real upgrades: 13, not 36."
 msgstr "Real upgrades: 13, not 36."
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Reasoning"
+msgstr "Reasoning"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "recalled {recalls}×"
 msgstr "recalled {recalls}×"
@@ -5156,17 +5464,25 @@ msgid "Recommended actions"
 msgstr "Recommended actions"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "recomputed at the next call"
-msgstr "recomputed at the next call"
+#~ msgid "recomputed at the next call"
+#~ msgstr "recomputed at the next call"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
 msgid "Reconnect"
 msgstr "Reconnect"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Reconnect this source →"
+msgstr "Reconnect this source →"
+
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Reconnect to save it to your account."
 msgstr "Reconnect to save it to your account."
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reconnecting to the model"
+msgstr "Reconnecting to the model"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reconnecting to the model ({attempt}/{attempts})"
@@ -5284,7 +5600,7 @@ msgstr "Remove {item}"
 msgid "Remove {memberEmail}"
 msgstr "Remove {memberEmail}"
 
-#: src/components/workspace/ChatInput.jsx
+#: src/components/workspace/Attachments.jsx
 msgid "Remove {name}"
 msgstr "Remove {name}"
 
@@ -5303,6 +5619,10 @@ msgstr "Remove this pillar"
 #: src/components/connections/ProviderCard.jsx
 msgid "Remove your {providerName} key?"
 msgstr "Remove your {providerName} key?"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Rendered a slide"
+msgstr "Rendered a slide"
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Rendering diagram…"
@@ -5345,6 +5665,10 @@ msgstr "Request execution"
 #: src/lib/onboardingApi.js
 msgid "Request failed ({status})."
 msgstr "Request failed ({status})."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "research"
+msgstr "research"
 
 #: src/components/audit/AuditReport.jsx
 #: src/lib/auditEvents.js
@@ -5619,6 +5943,14 @@ msgstr "saved on this device"
 msgid "Saved on this device until you sign in. A signed-in profile follows you, and the scheduled brief can read it."
 msgstr "Saved on this device until you sign in. A signed-in profile follows you, and the scheduled brief can read it."
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Saved the draft"
+msgstr "Saved the draft"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Saved the plan"
+msgstr "Saved the plan"
+
 #: src/components/insights/AccountSelect.jsx
 msgid "Saved to this project, so you won’t be asked again."
 msgstr "Saved to this project, so you won’t be asked again."
@@ -5745,6 +6077,14 @@ msgstr "Search memory…"
 msgid "Search queries, clicks, impressions and average position."
 msgstr "Search queries, clicks, impressions and average position."
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched memory"
+msgstr "Searched memory"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched the web"
+msgstr "Searched the web"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"
 msgstr "Secondary color"
@@ -5754,8 +6094,12 @@ msgid "Secret API key (V2)"
 msgstr "Secret API key (V2)"
 
 #: src/app/(auth)/page.js
-msgid "Security check failed to load. Please refresh and try again."
-msgstr "Security check failed to load. Please refresh and try again."
+#~ msgid "Security check failed to load. Please refresh and try again."
+#~ msgstr "Security check failed to load. Please refresh and try again."
+
+#: src/app/(auth)/page.js
+msgid "Security check failed to load. Refresh and try again."
+msgstr "Security check failed to load. Refresh and try again."
 
 #: src/app/(auth)/page.js
 msgid "Security verification"
@@ -5908,6 +6252,18 @@ msgstr "Session"
 msgid "Session failed"
 msgstr "Session failed"
 
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "Session settings: brief format"
+#~ msgstr "Session settings: brief format"
+
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "Session settings: thinking and brief format"
+#~ msgstr "Session settings: thinking and brief format"
+
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "Session settings: thinking, model tier and brief format"
+#~ msgstr "Session settings: thinking, model tier and brief format"
+
 #: src/components/AppNav.jsx
 msgid "Sessions"
 msgstr "Sessions"
@@ -5985,17 +6341,25 @@ msgstr "Show Duct in"
 msgid "Show key"
 msgstr "Show key"
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Show less"
+msgstr "Show less"
+
 #: src/components/GoogleAdsReport.js
 msgid "Show less signals"
 msgstr "Show less signals"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Show more"
+msgstr "Show more"
 
 #: src/components/GoogleAdsReport.js
 msgid "Show more signals"
 msgstr "Show more signals"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Show reasoning"
-msgstr "Show reasoning"
+#~ msgid "Show reasoning"
+#~ msgstr "Show reasoning"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Show superseded"
@@ -6161,12 +6525,12 @@ msgid "Slide {n} · {kind}"
 msgstr "Slide {n} · {kind}"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Slide {slideNo}"
-msgstr "Slide {slideNo}"
+#~ msgid "Slide {slideNo}"
+#~ msgstr "Slide {slideNo}"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Slide {slideNo} · image {imageNo}"
-msgstr "Slide {slideNo} · image {imageNo}"
+#~ msgid "Slide {slideNo} · image {imageNo}"
+#~ msgstr "Slide {slideNo} · image {imageNo}"
 
 #: src/components/content/SlidesCarousel.jsx
 msgid "slide {slideNo} preview"
@@ -6356,8 +6720,8 @@ msgid "Sub-agent"
 msgstr "Sub-agent"
 
 #: src/components/workspace/StepProgress.jsx
-msgid "Sub-agents"
-msgstr "Sub-agents"
+#~ msgid "Sub-agents"
+#~ msgstr "Sub-agents"
 
 #: src/components/AppSidebar.jsx
 msgid "Suggest an improvement"
@@ -6394,6 +6758,11 @@ msgstr "Switch to light mode"
 #: src/components/commands/AppCommands.jsx
 msgid "Switch to light theme"
 msgstr "Switch to light theme"
+
+#. placeholder {0}: row.label
+#: src/components/workspace/AgentChat.jsx
+msgid "Switched to {0}"
+msgstr "Switched to {0}"
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Switched to {providerLabel}"
@@ -6565,6 +6934,10 @@ msgstr "The backend that runs inside the app is not answering. Quitting and reop
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "The ChatGPT sign-in has lapsed"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "the crawl"
+msgstr "the crawl"
+
 #: src/components/TelemetryCard.jsx
 msgid "The error and stack trace of a crash"
 msgstr "The error and stack trace of a crash"
@@ -6641,6 +7014,10 @@ msgstr "The token IS the project. Clarity allows 10 API requests per project per
 msgid "The tone, messaging, pillars and visual identity the content agent works from."
 msgstr "The tone, messaging, pillars and visual identity the content agent works from."
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "The turn the model read was composed from these, on top of your message — the same way every run on this project starts."
+msgstr "The turn the model read was composed from these, on top of your message — the same way every run on this project starts."
+
 #: src/lib/modelTiers.js
 msgid "The work you act on"
 msgstr "The work you act on"
@@ -6661,9 +7038,18 @@ msgstr "They’ll get an email with a link that works only for this address. Col
 msgid "Thin or weak page and blog copy rewritten for search intent and your keywords."
 msgstr "Thin or weak page and blog copy rewritten for search intent and your keywords."
 
+#: src/components/workspace/AgentChat.jsx
 #: src/components/workspace/ComposerDials.jsx
-msgid "Thinking: {label}"
-msgstr "Thinking: {label}"
+msgid "Thinking"
+msgstr "Thinking"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Thinking · {seconds}s"
+msgstr "Thinking · {seconds}s"
+
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "Thinking: {label}"
+#~ msgstr "Thinking: {label}"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Thinking…"
@@ -6816,6 +7202,10 @@ msgstr "This version of Duct can’t complete sign-in. Update the app from <0>ge
 msgid "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
 msgstr "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Thought for {seconds}s"
+msgstr "Thought for {seconds}s"
+
 #: src/components/insights/desk/DeskLists.jsx
 msgid "thread"
 msgstr "thread"
@@ -6914,8 +7304,8 @@ msgid "Turn off to audit a different business or competitor — only the fields 
 msgstr "Turn off to audit a different business or competitor — only the fields below are used."
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
-msgstr "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
+#~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
+#~ msgstr "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Type your answer…"
@@ -7069,6 +7459,11 @@ msgstr "Using your saved key — the one that also funds scheduled runs"
 msgid "Usually resolves on the first retry"
 msgstr "Usually resolves on the first retry"
 
+#. placeholder {0}: shown.version
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "v{0}"
+msgstr "v{0}"
+
 #: src/components/audit/AuditReport.jsx
 msgid "v{id} — {label}"
 msgstr "v{id} — {label}"
@@ -7082,8 +7477,8 @@ msgid "v{version} — {label}"
 msgstr "v{version} — {label}"
 
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "v{version} · {label}"
-msgstr "v{version} · {label}"
+#~ msgid "v{version} · {label}"
+#~ msgstr "v{version} · {label}"
 
 #: src/app/(app)/artifacts/page.jsx
 #~ msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
@@ -7143,7 +7538,9 @@ msgstr "via Duct"
 msgid "View →"
 msgstr "View →"
 
+#: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
+#: src/components/workspace/Attachments.jsx
 msgid "View full screen"
 msgstr "View full screen"
 
@@ -7283,8 +7680,8 @@ msgid "What is my site actually about?"
 msgstr "What is my site actually about?"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "What shape the brief takes"
-msgstr "What shape the brief takes"
+#~ msgid "What shape the brief takes"
+#~ msgstr "What shape the brief takes"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"
@@ -7306,13 +7703,17 @@ msgstr "What’s Going Right"
 msgid "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 msgstr "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 
+#: src/components/workspace/ComposerDials.jsx
+msgid "Whatever this model does anyway"
+msgstr "Whatever this model does anyway"
+
 #: src/components/content/PublishModal.jsx
 msgid "When to post"
 msgstr "When to post"
 
 #: src/components/onboarding/FrontDoor.jsx
-msgid "When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
-msgstr "When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
+#~ msgid "When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
+#~ msgstr "When you’re ready, Duct connects Google Ads, GA4, Search Console and Meta Ads — read-only, and only the ones you pick."
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where do competitors beat me?"
@@ -7349,6 +7750,10 @@ msgstr "Which model runs which job is set in <0>Models & providers</0>."
 #: src/components/workspace/ComposerDials.jsx
 msgid "Which model tier runs this"
 msgstr "Which model tier runs this"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Which model tier runs this, and how hard it thinks"
+msgstr "Which model tier runs this, and how hard it thinks"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Which pages should rank and don't?"
@@ -7395,8 +7800,13 @@ msgid "Work still moving — mine or yours. Nothing here waits on you."
 msgstr "Work still moving — mine or yours. Nothing here waits on you."
 
 #: src/components/insights/desk/DeskCards.jsx
+#: src/components/workspace/ActivityRow.jsx
 msgid "Working"
 msgstr "Working"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Working it through"
+msgstr "Working it through"
 
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
@@ -7537,6 +7947,10 @@ msgstr "Your answers sharpen the result. Skip if you'd rather Duct decide."
 msgid "your artifacts"
 msgstr "your artifacts"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "your ask"
+msgstr "your ask"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "your ChatGPT account"
 msgstr "your ChatGPT account"
@@ -7627,6 +8041,10 @@ msgstr "Your one-line pitch"
 msgid "your PostBridge accounts"
 msgstr "your PostBridge accounts"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "your profile"
+msgstr "your profile"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Your projects"
 msgstr "Your projects"
@@ -7644,8 +8062,12 @@ msgid "Your saved key"
 msgstr "Your saved key"
 
 #: src/app/(auth)/page.js
-msgid "Your session ended. Sign in again and we'll take you back to where you were."
-msgstr "Your session ended. Sign in again and we'll take you back to where you were."
+#~ msgid "Your session ended. Sign in again and we'll take you back to where you were."
+#~ msgstr "Your session ended. Sign in again and we'll take you back to where you were."
+
+#: src/app/(auth)/page.js
+msgid "Your session ended. Sign in again and we’ll take you back to where you were."
+msgstr "Your session ended. Sign in again and we’ll take you back to where you were."
 
 #: src/app/(start)/start/page.jsx
 msgid "Your site"

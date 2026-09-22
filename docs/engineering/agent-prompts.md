@@ -250,7 +250,7 @@ Fact: trial-to-paid sits at 11% and has not moved in three months.
 
 ## Growth Insights (`insights`)
 
-### System prompt · ~5,591 tokens
+### System prompt · ~5,686 tokens
 
 Cache-stable: identical for every account, so it is the shared prefix.
 
@@ -400,10 +400,12 @@ Wrap it in `<duct_artifact>` … `</duct_artifact>` and open with a front-matter
 <duct_artifact>
 ---
 title: A specific title — what this brief concluded, not "Growth Brief"
-format: markdown
+format: markdown or html — the one this brief is written in
 ---
 # ...
 </duct_artifact>
+
+The `<deliverable_format>` block in the conversation says which format the person prefers; it is a preference, and a request in chat for the other one overrides it. This example names neither, because a thread once read the example's value as the rule and refused an explicit request for HTML twice.
 
 - At most one artifact per turn, at the end of it, after you have said in chat what you found. The chat message is the answer in miniature: the headline number, the decision, and the next thing you need from the person. Never "here is the full breakdown" — the brief is for re-reading, not for finding out what you concluded.
 - **First screen:** the decision in two sentences, then the one table that supports it, with totals. A reader who stops there has the answer.

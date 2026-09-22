@@ -60,12 +60,16 @@ msgstr ""
 msgid "About"
 msgstr "Acerca de"
 
+#. section aria-label
+#: about.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+msgid "About Duct"
+msgstr "Acerca de Duct"
+
 #. meta og:title
 #. meta twitter:title
 #: about.html
 msgid "About Duct — Why an agent for your growth stack is open source"
-msgstr ""
-"Acerca de Duct — Por qué un agente para tu pila de crecimiento es código abierto"
+msgstr "Sobre Duct — Por qué un agente de crecimiento es código abierto"
 
 #: about.html
 msgid "Approval before action"
@@ -118,7 +122,7 @@ msgstr "Blog de Duct"
 msgid ""
 "Duct began as one person's fix for tools that would not talk to each other. It went open source because an agent that reads your business should be readable."
 msgstr ""
-"Duct comenzó como la solución de una persona para herramientas que no se comunicaban entre sí. Se hizo código abierto porque un agente que lee tu negocio debería ser legible."
+"Duct empezó como la solución de una persona a herramientas que no se hablaban. Se hizo código abierto porque un agente que lee tu negocio debería ser legible."
 
 #: about.html
 msgid ""
@@ -166,6 +170,10 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr ""
 "FONS. El manantial, antes de cualquier ejecución. La puerta principal de la app."
+
+#: about.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+msgid "Home"
+msgstr "Inicio"
 
 #: about.html
 msgid "How I work"
@@ -231,7 +239,7 @@ msgstr ""
 msgid "One person, in Spain"
 msgstr "Una persona, en España"
 
-#: about.html partials/footer-expanded.html partials/nav-home.html partials/nav-simple.html
+#: about.html open-source.html partials/footer-expanded.html partials/nav-home.html partials/nav-simple.html
 msgid "Open source"
 msgstr "Código abierto"
 
@@ -589,6 +597,10 @@ msgstr "Los comentarios llevan el porqué. El diff ya muestra el qué."
 msgid "Disagree?"
 msgstr "¿No estás de acuerdo?"
 
+#: doctrine.html partials/footer-expanded.html partials/nav-simple.html
+msgid "Doctrine"
+msgstr "Doctrina"
+
 #: doctrine.html
 msgid ""
 "Duct can prepare a change to your live systems: pause a campaign, add negative keywords, mark a GA4 key event. It shows you a preview and a guardrail check. Then it stops."
@@ -675,9 +687,9 @@ msgstr ""
 #. meta description
 #: doctrine.html
 msgid ""
-"Seven opinions Duct is built on, each with the file that enforces it: approval before action, renting an agent harness, membership over ownership, and why agent-written code is welcome here."
+"Seven opinions Duct is built on, each with the file that enforces it: approval before action, a rented agent harness, and why agent-written code is welcome."
 msgstr ""
-"Siete principios en los que se basa Duct, cada uno con el archivo que lo aplica: aprobación antes de la acción, alquilar un arnés de agente, membresía sobre propiedad, y por qué el código escrito por agentes es bienvenido aquí."
+"Siete principios de Duct, cada uno con el archivo que lo aplica: aprobar antes de actuar, alquilar el arnés de agente y aceptar código escrito por agentes."
 
 #: doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
@@ -702,6 +714,10 @@ msgstr "Iniciar una discusión →"
 #: doctrine.html
 msgid "Strong opinions,<0/>held in <1>code</1>"
 msgstr "Opiniones firmes,<0/>plasmadas en <1>código</1>"
+
+#: doctrine.html
+msgid "The Duct Doctrine"
+msgstr "La doctrina de Duct"
 
 #. meta og:title
 #. meta twitter:title
@@ -879,6 +895,10 @@ msgstr "Autorizaciones de conectores (Google Ads, GA4, Mixpanel…)"
 msgid "Debian / Ubuntu"
 msgstr "Debian / Ubuntu"
 
+#: download.html
+msgid "Download"
+msgstr "Descargar"
+
 #. meta og:title
 #. meta twitter:title
 #: download.html
@@ -896,6 +916,10 @@ msgstr "Descarga Duct ↓"
 #: download.html
 msgid "Download it, or <0>build it.</0>"
 msgstr "Descárgalo, o <0>compílalo.</0>"
+
+#: download.html
+msgid "Download the Duct desktop app for macOS, Windows and Linux."
+msgstr "Descarga la app de escritorio de Duct para macOS, Windows y Linux."
 
 #: download.html
 msgid "Download ↓"
@@ -923,9 +947,9 @@ msgstr ""
 #. meta description
 #: download.html
 msgid ""
-"Duct on your desktop for Mac, Windows and Linux. Ask across your ads, analytics and revenue tools, approve the fix, and keep your model keys in your own keychain."
+"Duct on your desktop for Mac, Windows and Linux. Ask across your ads, analytics and revenue tools, approve the fix, and keep your model keys in your keychain."
 msgstr ""
-"Duct en tu escritorio para Mac, Windows y Linux. Consulta tus herramientas de anuncios, análisis e ingresos, aprueba la solución y mantén tus claves de modelo en tu propio llavero."
+"Duct en tu escritorio para Mac, Windows y Linux. Pregunta a tus herramientas de anuncios, analítica e ingresos, aprueba la solución y guarda tus claves contigo."
 
 #: download.html
 msgid "Encrypted at rest, decrypted only to make a call you asked for"
@@ -1243,25 +1267,25 @@ msgstr "Aprobar el cambio"
 msgid "Ask the question"
 msgstr "Haz la pregunta"
 
+#. meta description
 #. meta og:description
 #: for-organic-growth.html
 msgid ""
 "Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week's posts on a board."
 msgstr ""
-"Pregunta qué contenido convierte. Duct lee Search Console, GA4 y Clarity juntos, audita cualquier URL gratis y planifica las publicaciones de la semana en un tablero."
+"Pregunta qué contenido convierte. Duct lee Search Console, GA4 y Clarity juntos, audita cualquier URL gratis y planifica los posts de la semana en un tablero."
+
+#: for-organic-growth.html
+msgid ""
+"Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week's posts on a board. Open source, MIT."
+msgstr ""
+"Pregunta qué contenido convierte. Duct lee Search Console, GA4 y Clarity juntos, audita cualquier URL gratis y planifica las publicaciones de la semana en un tablero. Código abierto, MIT."
 
 #: for-organic-growth.html
 msgid ""
 "Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week’s posts on a board."
 msgstr ""
 "Pregunta qué contenido convierte. Duct lee Search Console, GA4 y Clarity juntos, audita cualquier URL gratis y planifica las publicaciones de la semana en un tablero."
-
-#. meta description
-#: for-organic-growth.html
-msgid ""
-"Ask which content converts. Duct, an open-source AI agent for growth teams, reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week's posts on a board."
-msgstr ""
-"Pregunta qué contenido convierte. Duct, un agente de IA de código abierto para equipos de crecimiento, lee Search Console, GA4 y Clarity juntos, audita cualquier URL gratis y planifica las publicaciones de la semana en un tablero."
 
 #: for-organic-growth.html
 msgid "Blog → trial CVR dropped to 1.4% this month"
@@ -1316,13 +1340,15 @@ msgid ""
 msgstr ""
 "Duct se conecta a Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads y Stripe a través de OAuth de un solo clic. La configuración toma menos de cinco minutos y tu primer informe semanal llega a tu bandeja de entrada después de conectarte."
 
+#: for-organic-growth.html
+msgid "Duct for Organic Growth"
+msgstr "Duct para el crecimiento orgánico"
+
 #. meta og:title
 #. meta twitter:title
 #: for-organic-growth.html
-msgid ""
-"Duct for SEO and content teams — Open-source AI agent that reads Search Console, GA4 and Clarity together"
-msgstr ""
-"Duct para equipos SEO y de contenido — Agente de IA de código abierto que lee Search Console, GA4 y Clarity juntos"
+msgid "Duct for SEO and content teams — AI agent for organic growth"
+msgstr "Duct para equipos de SEO y contenido — IA para crecimiento orgánico"
 
 #: for-organic-growth.html
 msgid ""
@@ -1337,6 +1363,10 @@ msgstr "Equipo SEO Empresarial"
 #: for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html seo-audit.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
 msgid "FAQ"
 msgstr "FAQ"
+
+#: for-organic-growth.html
+msgid "For SEO and content teams"
+msgstr "Para equipos de SEO y contenido"
 
 #: for-organic-growth.html for-paid-ads.html
 msgid "Founding Marketer"
@@ -1353,6 +1383,12 @@ msgid ""
 "Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. <0>What will cost money</0> is spelled out on the open-source page."
 msgstr ""
 "Gratis con tus propias claves, siempre. Duct tiene licencia MIT: pagas directamente a tu proveedor de modelos, o inicias sesión con el plan ChatGPT que ya tienes. Un plan de pago posterior agrupa los modelos para equipos que prefieren no tener claves; nada abierto hoy se mueve detrás de él. <0>Lo que costará dinero</0> se detalla en la página de código abierto."
+
+#: for-organic-growth.html for-paid-ads.html for-product-intelligence.html
+msgid ""
+"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."
+msgstr ""
+"Gratis con tus propias claves, siempre. Duct tiene licencia MIT: pagas directamente a tu proveedor de modelos o inicias sesión con el plan de ChatGPT que ya tienes. Un plan de pago posterior agrupará los modelos para equipos que prefieran no tener claves; nada de lo que es abierto hoy pasará a ser de pago. Lo que costará dinero se detalla en la página de código abierto."
 
 #: for-organic-growth.html for-paid-ads.html for-product-intelligence.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
 msgid "Frequently asked <0>questions</0>"
@@ -1651,6 +1687,7 @@ msgstr ""
 msgid "Ask why CPA moved"
 msgstr "Pregunta por qué se movió el CPA"
 
+#. meta description
 #. meta og:description
 #: for-paid-ads.html
 msgid ""
@@ -1658,12 +1695,11 @@ msgid ""
 msgstr ""
 "Pregunta por qué se movió el CPA. Duct lee Google Ads, Meta, Apple Search Ads, GA4 y Stripe juntos, propone la pausa o el cambio, y lo aplica cuando lo apruebas."
 
-#. meta description
 #: for-paid-ads.html
 msgid ""
-"Ask why CPA moved. Duct, an open-source AI agent for growth teams, reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve."
+"Ask why CPA moved. Duct reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve. Open source, MIT."
 msgstr ""
-"Pregunta por qué se movió el CPA. Duct, un agente de IA de código abierto para equipos de crecimiento, lee Google Ads, Meta, Apple Search Ads, GA4 y Stripe juntos, propone la pausa o el cambio, y lo aplica cuando lo apruebas."
+"Pregunta por qué se movió el CPA. Duct lee Google Ads, Meta, Apple Search Ads, GA4 y Stripe juntos, propone la pausa o el cambio, y lo aplica cuando lo apruebas. Código abierto, MIT."
 
 #: for-paid-ads.html
 msgid "CPA jumped and four platforms each have a theory."
@@ -1685,17 +1721,23 @@ msgstr "Se conecta a las plataformas que ya usas"
 msgid "Does Duct modify anything in my ad accounts?"
 msgstr "¿Duct modifica algo en mis cuentas de anuncios?"
 
+#: for-paid-ads.html
+msgid "Duct for Paid Ads"
+msgstr "Duct para anuncios de pago"
+
 #. meta og:title
 #. meta twitter:title
 #: for-paid-ads.html
-msgid ""
-"Duct for performance marketers — Open-source AI agent that reads Google Ads, Meta, GA4 and Stripe together"
-msgstr ""
-"Duct para especialistas en marketing de rendimiento — Agente de IA de código abierto que lee Google Ads, Meta, GA4 y Stripe juntos"
+msgid "Duct for performance marketers — AI agent for paid ads"
+msgstr "Duct para marketers de performance — Agente de IA para anuncios"
 
 #: for-paid-ads.html
 msgid "Enterprise Media Buyer"
 msgstr "Comprador de medios empresariales"
+
+#: for-paid-ads.html
+msgid "For performance marketers"
+msgstr "Para especialistas en marketing de rendimiento"
 
 #: for-paid-ads.html
 msgid ""
@@ -1949,6 +1991,19 @@ msgid ""
 msgstr ""
 "Pregunta por qué la activación cayó. Duct lee GA4, Clarity y Stripe a ambos lados del lanzamiento, nombra la pantalla y propone qué rastrear para que el informe de la próxima semana pueda probar la solución."
 
+#. meta description
+#: for-product-intelligence.html
+msgid ""
+"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, its sources and the change it proposes."
+msgstr ""
+"Pregunta por qué cayó la activación. Duct lee Mixpanel, Clarity, GrowthBook y GA4 juntos y responde con la causa, sus fuentes y el cambio que propone."
+
+#: for-product-intelligence.html
+msgid ""
+"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources and the change it proposes. Open source, MIT."
+msgstr ""
+"Pregunta por qué cayó la activación. Duct lee Mixpanel, Clarity, GrowthBook y GA4 juntos y responde con la causa, las fuentes y el cambio que propone. Código abierto, MIT."
+
 #. meta og:description
 #: for-product-intelligence.html
 msgid ""
@@ -1962,13 +2017,6 @@ msgid ""
 msgstr ""
 "Pregunta por qué la activación cayó. Duct lee Mixpanel, Clarity, GrowthBook y GA4 juntos y responde con la causa, las fuentes y el cambio que propone."
 
-#. meta description
-#: for-product-intelligence.html
-msgid ""
-"Ask why activation dropped. Duct, an open-source AI agent for product and growth teams, reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources and the change it proposes."
-msgstr ""
-"Pregunta por qué la activación cayó. Duct, un agente de IA de código abierto para equipos de producto y crecimiento, lee Mixpanel, Clarity, GrowthBook y GA4 juntos y responde con la causa, las fuentes y el cambio que propone."
-
 #: for-product-intelligence.html
 msgid "Does Duct for product intelligence cost anything?"
 msgstr "¿Duct para inteligencia de producto tiene algún costo?"
@@ -1979,17 +2027,23 @@ msgid ""
 msgstr ""
 "Duct se conecta a Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat y Google Ads con OAuth de un solo clic. La configuración toma menos de cinco minutos y tu primer informe diario de PM llega a tu bandeja de entrada después de conectarte."
 
+#: for-product-intelligence.html
+msgid "Duct for Product Intelligence"
+msgstr "Duct para inteligencia de producto"
+
 #. meta og:title
 #. meta twitter:title
 #: for-product-intelligence.html
-msgid ""
-"Duct for product teams — Open-source AI agent that reads Mixpanel, Clarity, GrowthBook and GA4 together"
-msgstr ""
-"Duct para equipos de producto — Agente de IA de código abierto que lee Mixpanel, Clarity, GrowthBook y GA4 juntos"
+msgid "Duct for product teams — AI agent for product intelligence"
+msgstr "Duct para equipos de producto — IA para inteligencia de producto"
 
 #: for-product-intelligence.html
 msgid "Enterprise Data Team"
 msgstr "Equipo de Datos Empresariales"
+
+#: for-product-intelligence.html
+msgid "For product teams"
+msgstr "Para equipos de producto"
 
 #: for-product-intelligence.html
 msgid "Founding PM"
@@ -2206,15 +2260,19 @@ msgstr "Descargar para macOS ↓"
 #. meta description
 #: index.html
 msgid ""
-"Duct reads Google Ads, GA4, Stripe and nine more tools together, proposes the fix and applies it when you approve. Open source, MIT, on your own keys or your ChatGPT plan."
+"Duct reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve. Open source, MIT, your keys or ChatGPT plan."
 msgstr ""
-"Duct lee Google Ads, GA4, Stripe y nueve herramientas más en conjunto, propone la solución y la aplica cuando apruebas. Código abierto, MIT, con tus propias claves o tu plan de ChatGPT."
+"Duct lee Google Ads, GA4, Stripe y diez herramientas más, propone la solución y la aplica cuando apruebas. Código abierto, MIT, tus claves o tu plan de ChatGPT."
 
 #: index.html
 msgid ""
 "Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for."
 msgstr ""
 "Duct lee tus herramientas de anuncios, analíticas e ingresos en conjunto, propone la solución y la aplica cuando tú lo dices. En tu Mac, con tus propias claves de modelo o el plan de ChatGPT que ya pagas."
+
+#: index.html
+msgid "Duct — Cross-Tool Intelligence"
+msgstr "Duct — Inteligencia entre herramientas"
 
 #. meta og:title
 #. meta twitter:title
@@ -2238,7 +2296,7 @@ msgstr "Cinco <0>respuestas</0> honestas"
 msgid "Five tabs, three hours, still a guess."
 msgstr "Cinco pestañas, tres horas, sigue siendo una suposición."
 
-#: index.html tools/index.html
+#: index.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Free tools"
 msgstr "Herramientas gratuitas"
 
@@ -2248,9 +2306,9 @@ msgstr "Gratis · Sin cuenta, sin tarjeta de crédito · También para Windows y
 
 #: index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
+"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
 msgstr ""
-"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe y RevenueCat. Cada conexión es OAuth; nada se exporta manualmente."
+"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe y RevenueCat. Cada conexión es OAuth; nada se exporta manualmente."
 
 #: index.html
 msgid "Is it free?"
@@ -2260,6 +2318,16 @@ msgstr "¿Es gratis?"
 msgid ""
 "It reads Ads, GA4 and Stripe together and answers with the change it proposes."
 msgstr "Lee Ads, GA4 y Stripe en conjunto y responde con el cambio que propone."
+
+#: index.html
+msgid "MIT licensed. Self-host or run locally at no cost."
+msgstr "Licencia MIT. Autoalójalo o ejecútalo localmente sin costo."
+
+#: index.html
+msgid ""
+"MIT-licensed AI agent for cross-tool product and growth analytics. Runs as a Tauri desktop app with bring-your-own model keys, or self-hosted as a FastAPI backend."
+msgstr ""
+"Agente de IA con licencia MIT para análisis de producto y crecimiento entre herramientas. Se ejecuta como una app de escritorio Tauri con tus propias claves de modelo, o autoalojado como un backend FastAPI."
 
 #: index.html
 msgid ""
@@ -2275,6 +2343,12 @@ msgstr ""
 
 #: index.html
 msgid ""
+"Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine. Why it's called Duct is on the about page."
+msgstr ""
+"Las claves del modelo permanecen en el llavero de tu sistema operativo y viajan con una solicitud solo mientras se ejecuta un trabajo. Las autorizaciones del conector se almacenan cifradas por la API alojada. La app de escritorio es una capa delgada sobre esa API; una compilación autoalojada ejecuta todo en tu propia máquina. Por qué se llama Duct está en la página de información."
+
+#: index.html
+msgid ""
 "No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."
 msgstr ""
 "No. Los informes funcionan con acceso de solo lectura. Se propone un cambio con lo que afecta, y se aplica solo cuando pulsas Aplicar. Los cambios destructivos se marcan; cualquier cosa que exceda un límite se bloquea hasta que lo revises."
@@ -2282,6 +2356,17 @@ msgstr ""
 #: index.html
 msgid "One Monday, in 30 seconds"
 msgstr "Un lunes, en 30 segundos"
+
+#: index.html
+msgid "Open-source AI agent for cross-tool product and growth analytics."
+msgstr ""
+"Agente de IA de código abierto para análisis de producto y crecimiento entre herramientas."
+
+#: index.html
+msgid ""
+"Open-source AI agent that reads across Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat, and answers questions a single dashboard cannot."
+msgstr ""
+"Agente de IA de código abierto que lee Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe y RevenueCat, y responde preguntas que un solo panel no puede."
 
 #: index.html
 msgid "PMs & growth teams"
@@ -2552,6 +2637,10 @@ msgstr ""
 "Duct es construido por <0>un mantenedor en España</0>, con agentes haciendo la mayor parte de la escritura. La hoja de ruta es un tablero público, las decisiones se debaten en los issues, y una solicitud de extracción tuya o de tu agente recibe la misma revisión."
 
 #: open-source.html
+msgid "Duct is open source"
+msgstr "Duct es código abierto"
+
+#: open-source.html
 msgid ""
 "Duct is open source end to end: the agents, the connectors, the prompts, the approval gate, the desktop shell. Download it and we run the service for you. Clone it and nothing touches us."
 msgstr ""
@@ -2650,6 +2739,12 @@ msgstr ""
 
 #: open-source.html
 msgid ""
+"Start with CONTRIBUTING.md. Issues and discussions are on GitHub, the roadmap is a public project board, and agent-written contributions are welcome as long as the pull request says where an agent helped."
+msgstr ""
+"Empieza con CONTRIBUTING.md. Los problemas y las discusiones están en GitHub, la hoja de ruta es un tablero de proyecto público, y las contribuciones escritas por agentes son bienvenidas siempre que la solicitud de extracción indique dónde ayudó un agente."
+
+#: open-source.html
+msgid ""
 "The <0>README</0> is the source of truth for setup, and it also covers the desktop build with the backend bundled inside: SQLite on disk, loopback only, no account. <1>CONTRIBUTING.md</1> lists the checks CI runs."
 msgstr ""
 "El <0>README</0> es la fuente de verdad para la configuración, y también cubre la compilación de escritorio con el backend incluido: SQLite en disco, solo loopback, sin cuenta. <1>CONTRIBUTING.md</1> enumera las comprobaciones que ejecuta CI."
@@ -2688,18 +2783,30 @@ msgstr "Qué se ejecuta dónde"
 msgid "What will cost money"
 msgstr "Qué costará dinero"
 
+#: open-source.html
+msgid ""
+"Why Duct is open source, what runs where in the desktop app versus a self-hosted install, how to self-host it, and what will and will not cost money."
+msgstr ""
+"Por qué Duct es código abierto, qué se ejecuta dónde en la app de escritorio versus una instalación autoalojada, cómo autoalojarlo, y qué costará y qué no costará dinero."
+
 #. meta description
 #: open-source.html
 msgid ""
 "Why Duct is open source: MIT licensed end to end, model keys in your own keychain, self-host in five commands, and a plain answer to what will cost money."
 msgstr ""
-"Por qué Duct es código abierto: licencia MIT de principio a fin, claves de modelo en tu propio llavero, autoalojamiento en cinco comandos y una respuesta clara a lo que costará dinero."
+"Por qué Duct es código abierto: MIT de principio a fin, claves de modelo en tu llavero, autoalojamiento en cinco comandos y una respuesta clara a qué costará dinero."
 
 #: open-source.html
 msgid ""
 "Yes. Clone the repository, run <0>make setup</0>, add one model provider key and start the backend and the app. Everything stays on your machine or your server, and no account with Duct is involved."
 msgstr ""
 "Sí. Clona el repositorio, ejecuta <0>make setup</0>, añade una clave de proveedor de modelo e inicia el backend y la app. Todo permanece en tu máquina o tu servidor, y no hay ninguna cuenta de Duct involucrada."
+
+#: open-source.html
+msgid ""
+"Yes. Clone the repository, run make setup, add one model provider key and start the backend and the app. Everything stays on your machine or your server, and no account with Duct is involved."
+msgstr ""
+"Sí. Clona el repositorio, ejecuta make setup, añade una clave de proveedor de modelo e inicia el backend y la app. Todo permanece en tu máquina o servidor, y no hay ninguna cuenta de Duct involucrada."
 
 #: open-source.html
 msgid ""
@@ -2712,6 +2819,12 @@ msgid ""
 "Yes. The MIT licence allows commercial use, modification and redistribution. The only exceptions are third-party documentation under <0>docs/guides</0> and the Duct name and mark."
 msgstr ""
 "Sí. La licencia MIT permite el uso comercial, la modificación y la redistribución. Las únicas excepciones son la documentación de terceros bajo <0>docs/guides</0> y el nombre y la marca de Duct."
+
+#: open-source.html
+msgid ""
+"Yes. The MIT licence allows commercial use, modification and redistribution. The only exceptions are third-party documentation under docs/guides and the Duct name and mark."
+msgstr ""
+"Sí. La licencia MIT permite el uso comercial, la modificación y la redistribución. Las únicas excepciones son la documentación de terceros bajo docs/guides y el nombre y la marca Duct."
 
 #: open-source.html
 msgid "terminal"
@@ -2808,10 +2921,6 @@ msgstr "Configuración de cookies"
 #: partials/footer-expanded.html
 msgid "Discussions"
 msgstr "Debates"
-
-#: partials/footer-expanded.html partials/nav-simple.html
-msgid "Doctrine"
-msgstr "Doctrina"
 
 #: partials/footer-expanded.html
 msgid "Download for Desktop"
@@ -3031,10 +3140,6 @@ msgstr "Casos de uso"
 #: partials/nav-seo-audit.html
 msgid "How Duct works"
 msgstr "Cómo funciona Duct"
-
-#: partials/nav-simple.html
-msgid "Home"
-msgstr "Inicio"
 
 #: privacy.html
 msgid "1. Google User Data We Access"
@@ -3504,9 +3609,9 @@ msgstr ""
 #. meta description
 #: privacy.html
 msgid ""
-"Duct's privacy policy: the Google user data we access and why, how we handle data from every connected tool, who we share it with, how long we keep it, and how to delete it."
+"Duct's privacy policy: the Google user data we access and why, how we handle data from every connected tool, who we share it with, and how to delete it."
 msgstr ""
-"Política de privacidad de Duct: los datos de usuario de Google a los que accedemos y por qué, cómo manejamos los datos de cada herramienta conectada, con quién los compartimos, cuánto tiempo los conservamos y cómo eliminarlos."
+"Política de privacidad de Duct: qué datos de Google usamos y por qué, cómo tratamos los de cada herramienta conectada, con quién los compartimos y cómo borrarlos."
 
 #: privacy.html
 msgid ""
@@ -4113,6 +4218,10 @@ msgstr "Soluciones en orden"
 msgid "Four <0>questions</0>"
 msgstr "Cuatro <0>preguntas</0>"
 
+#: seo-audit.html
+msgid "Free SEO Audit by Duct"
+msgstr "Auditoría SEO gratuita de Duct"
+
 #. meta og:title
 #. meta twitter:title
 #: seo-audit.html
@@ -4121,8 +4230,11 @@ msgstr "Auditoría SEO gratuita — Ve exactamente qué está dañando tus clasi
 
 #: seo-audit.html
 msgid "Free SEO Audit — See exactly what's hurting your rankings | Duct"
-msgstr ""
-"Auditoría SEO gratuita — Ve exactamente qué está dañando tus clasificaciones | Duct"
+msgstr "Auditoría SEO gratuita — Qué está dañando tus rankings | Duct"
+
+#: seo-audit.html
+msgid "Free SEO audit"
+msgstr "Auditoría SEO gratuita"
 
 #: seo-audit.html
 msgid "Free · No credit card · Two to four minutes"
@@ -4153,6 +4265,12 @@ msgid "Not a score. <0>A list of fixes.</0>"
 msgstr "No es una puntuación. <0>Una lista de soluciones.</0>"
 
 #. meta description
+#: seo-audit.html
+msgid ""
+"Paste a URL and get a real SEO audit in minutes: a score, every issue on the page it lives on, and the fixes in order. Free, no account, open source."
+msgstr ""
+"Pega una URL y obtén una auditoría SEO real en minutos: una puntuación, cada problema en su página y las soluciones en orden. Gratis, sin cuenta, código abierto."
+
 #: seo-audit.html
 msgid ""
 "Paste your URL and get a real SEO audit in minutes: a score, every issue on the page it lives on, and the fixes in order. Free, no account, from the open-source Duct audit agent."
@@ -4631,9 +4749,9 @@ msgstr "Términos de Servicio de Duct por Alleviate Lab."
 #. meta description
 #: terms.html
 msgid ""
-"Terms of Service for Duct by Alleviate Lab: connected accounts, approval-gated changes, AI output, content publishing, the desktop app, open-source licensing and beta terms."
+"Terms of Service for Duct by Alleviate Lab: connected accounts, approval-gated changes, AI output, content publishing, desktop app and open-source licensing."
 msgstr ""
-"Términos de Servicio de Duct por Alleviate Lab: cuentas conectadas, cambios sujetos a aprobación, resultados de IA, publicación de contenido, la app de escritorio, licencias de código abierto y términos de la beta."
+"Términos de servicio de Duct por Alleviate Lab: cuentas conectadas, cambios con aprobación, salida de IA, publicación, app de escritorio y licencias abiertas."
 
 #. meta og:title
 #. meta twitter:title
@@ -4887,11 +5005,6 @@ msgid ""
 msgstr ""
 "Un buen ratio LTV:CAC para SaaS es superior a 3:1. Esto significa que por cada 1 € gastado en adquirir un cliente, recuperas 3 € en valor de vida útil. Un ratio de 2–3:1 cubre los costes, pero no construye una economía sostenible. Por debajo de 2:1 normalmente significa que el modelo no es viable a escala. Por encima de 5:1 a menudo indica una inversión insuficiente en crecimiento."
 
-#. section aria-label
-#: tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
-msgid "About Duct"
-msgstr "Acerca de Duct"
-
 #: tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/mrr-growth-calculator.html
 msgid "All calculations run in your browser. No data is sent or stored."
 msgstr ""
@@ -4941,6 +5054,10 @@ msgid ""
 "CAC (Customer Acquisition Cost) is the total sales and marketing spend required to acquire one new customer. Formula: CAC = Total Sales & Marketing Spend ÷ New Customers Acquired in the same period. Include salaries, tools, ad spend, and agency fees in the numerator for an accurate figure."
 msgstr ""
 "CAC (Coste de Adquisición de Cliente) es el gasto total en ventas y marketing necesario para adquirir un nuevo cliente. Fórmula: CAC = Gasto total en ventas y marketing ÷ Nuevos clientes adquiridos en el mismo periodo. Incluye salarios, herramientas, gasto en publicidad y tarifas de agencia en el numerador para una cifra precisa."
+
+#: tools/cac-ltv-calculator.html
+msgid "CAC / LTV Calculator for SaaS"
+msgstr "Calculadora de CAC / LTV para SaaS"
 
 #. meta og:title
 #. meta twitter:title
@@ -5017,9 +5134,15 @@ msgstr ""
 #. meta description
 #: tools/cac-ltv-calculator.html
 msgid ""
-"Free SaaS CAC and LTV calculator. Enter your spend, customers, and revenue to instantly get CAC, LTV, LTV:CAC ratio, and payback period — colour-coded vs SaaS benchmarks."
+"Free SaaS CAC and LTV calculator. Enter spend, customers and revenue to get CAC, LTV, LTV:CAC ratio and payback period, colour-coded against benchmarks."
 msgstr ""
-"Calculadora gratuita de CAC y LTV para SaaS. Introduce tu gasto, clientes e ingresos para obtener al instante el CAC, LTV, ratio LTV:CAC y el periodo de recuperación — codificado por colores frente a los puntos de referencia de SaaS."
+"Calculadora gratuita de CAC y LTV para SaaS. Introduce gasto, clientes e ingresos y obtén CAC, LTV, ratio LTV:CAC y recuperación, con colores según benchmarks."
+
+#: tools/cac-ltv-calculator.html
+msgid ""
+"Free calculator that computes Customer Acquisition Cost (CAC), Customer Lifetime Value (LTV), LTV:CAC ratio, and CAC payback period from your SaaS metrics, with colour-coded health scores vs industry benchmarks."
+msgstr ""
+"Calculadora gratuita que calcula el costo de adquisición de clientes (CAC), el valor de vida del cliente (LTV), la relación LTV:CAC y el período de recuperación del CAC a partir de tus métricas de SaaS, con puntuaciones de salud codificadas por colores frente a los puntos de referencia de la industria."
 
 #: tools/cac-ltv-calculator.html tools/saas-metrics-calculator.html
 msgid "Gross margin % <0>(optional)</0>"
@@ -5101,6 +5224,10 @@ msgid ""
 "Results are benchmarked against widely-cited SaaS standards: a healthy LTV:CAC above 3:1 (David Skok / OpenView), and a payback period under 12 months (OpenView SaaS Benchmarks 2024)."
 msgstr ""
 "Los resultados se comparan con estándares SaaS ampliamente citados: un LTV:CAC saludable superior a 3:1 (David Skok / OpenView) y un período de recuperación inferior a 12 meses (OpenView SaaS Benchmarks 2024)."
+
+#: tools/cac-ltv-calculator.html
+msgid "SaaS CAC / LTV Calculator"
+msgstr "Calculadora de SaaS CAC / LTV"
 
 #: tools/cac-ltv-calculator.html
 msgid ""
@@ -5215,7 +5342,13 @@ msgstr ""
 msgid ""
 "Free CPA calculator for marketers. Calculate cost per acquisition, projected conversions, and required CPA targets to compete on paid media efficiency."
 msgstr ""
-"Calculadora de CPA gratuita para especialistas en marketing. Calcula el costo por adquisición, las conversiones proyectadas y los objetivos de CPA requeridos para competir en la eficiencia de los medios pagados."
+"Calculadora de CPA gratuita para marketers. Calcula el coste por adquisición, las conversiones proyectadas y el CPA objetivo para competir en eficiencia."
+
+#: tools/cpa-calculator.html
+msgid ""
+"Free calculator that computes cost per acquisition, projected conversions at target CPA, and required CPA to stay profitable."
+msgstr ""
+"Calculadora gratuita que calcula el costo por adquisición, las conversiones proyectadas con el CPA objetivo y el CPA requerido para mantener la rentabilidad."
 
 #. meta twitter:description
 #: tools/cpa-calculator.html
@@ -5299,7 +5432,13 @@ msgstr ""
 msgid ""
 "Free CPC calculator for paid media teams. Calculate cost per click, projected spend at target CPC, and required CPC to stay within budget."
 msgstr ""
-"Calculadora de CPC gratuita para equipos de medios pagados. Calcula el costo por clic, el gasto proyectado con el CPC objetivo y el CPC requerido para mantenerse dentro del presupuesto."
+"Calculadora de CPC gratuita para equipos de medios de pago. Calcula el coste por clic, el gasto al CPC objetivo y el CPC necesario para cumplir el presupuesto."
+
+#: tools/cpc-calculator.html
+msgid ""
+"Free calculator that computes CPC, projected spend at target CPC, and required CPC to stay inside budget."
+msgstr ""
+"Calculadora gratuita que calcula el CPC, el gasto proyectado con el CPC objetivo y el CPC requerido para mantenerse dentro del presupuesto."
 
 #. meta twitter:description
 #: tools/cpc-calculator.html
@@ -5384,7 +5523,13 @@ msgstr ""
 msgid ""
 "Free CPM calculator for advertisers and growth teams. Calculate cost per 1,000 impressions, projected spend, and target CPM scenarios instantly."
 msgstr ""
-"Calculadora de CPM gratuita para anunciantes y equipos de crecimiento. Calcula el costo por 1.000 impresiones, el gasto proyectado y los escenarios de CPM objetivo al instante."
+"Calculadora de CPM gratuita para anunciantes y equipos de crecimiento. Calcula el coste por 1.000 impresiones, el gasto proyectado y escenarios de CPM objetivo."
+
+#: tools/cpm-calculator.html
+msgid ""
+"Free calculator that computes CPM, projected spend at target CPM, and required CPM to stay within budget."
+msgstr ""
+"Calculadora gratuita que calcula el CPM, el gasto proyectado con el CPM objetivo y el CPM requerido para mantenerse dentro del presupuesto."
 
 #. meta twitter:description
 #: tools/cpm-calculator.html
@@ -5514,9 +5659,15 @@ msgstr ""
 #. meta description
 #: tools/ctr-calculator.html
 msgid ""
-"Free CTR calculator for marketers and growth teams. Enter impressions and clicks to calculate click-through rate, projected clicks, and needed lift scenarios instantly."
+"Free CTR calculator for marketers and growth teams. Enter impressions and clicks to get click-through rate, projected clicks and the lift you need."
 msgstr ""
-"Calculadora de CTR gratuita para especialistas en marketing y equipos de crecimiento. Introduce impresiones y clics para calcular la tasa de clics, los clics proyectados y los escenarios de mejora necesarios al instante."
+"Calculadora de CTR gratuita para marketers. Introduce impresiones y clics y obtén la tasa de clics, los clics proyectados y la mejora que necesitas."
+
+#: tools/ctr-calculator.html
+msgid ""
+"Free calculator that computes click-through rate (CTR), projected clicks at target CTR, and required lift to hit click goals."
+msgstr ""
+"Calculadora gratuita que calcula la tasa de clics (CTR), los clics proyectados con el CTR objetivo y el aumento requerido para alcanzar los objetivos de clics."
 
 #. meta twitter:description
 #: tools/ctr-calculator.html
@@ -5723,12 +5874,18 @@ msgid ""
 msgstr ""
 "Calculadora gratuita para la tasa de interacción por seguidores, alcance e impresiones con puntos de referencia de calidad prácticos."
 
+#: tools/engagement-rate-calculator.html
+msgid ""
+"Free calculator that computes engagement rate by followers, reach, and impressions, plus average engagements per post."
+msgstr ""
+"Calculadora gratuita que calcula la tasa de engagement por seguidores, alcance e impresiones, más el engagement promedio por publicación."
+
 #. meta description
 #: tools/engagement-rate-calculator.html
 msgid ""
 "Free engagement rate calculator for social and growth teams. Calculate engagement rate by followers, reach, and impressions with instant interpretation."
 msgstr ""
-"Calculadora gratuita de tasa de interacción para equipos sociales y de crecimiento. Calcula la tasa de interacción por seguidores, alcance e impresiones con interpretación instantánea."
+"Calculadora gratuita de tasa de interacción para equipos de social y crecimiento. Calcula la tasa por seguidores, alcance e impresiones, con interpretación."
 
 #: tools/engagement-rate-calculator.html
 msgid "How do you calculate engagement rate?"
@@ -5941,6 +6098,10 @@ msgid "Do I need an account?"
 msgstr "¿Necesito una cuenta?"
 
 #: tools/index.html
+msgid "Duct free tools"
+msgstr "Herramientas gratuitas de Duct"
+
+#: tools/index.html
 msgid "Engagement by followers, reach or impressions, comparable across posts."
 msgstr ""
 "Interacción por seguidores, alcance o impresiones, comparable entre publicaciones."
@@ -5957,15 +6118,24 @@ msgstr "Herramientas gratuitas de SaaS y marketing — Duct"
 
 #: tools/index.html
 msgid "Free SaaS & marketing tools — calculators & generators | Duct"
-msgstr ""
-"Herramientas gratuitas de SaaS y marketing — calculadoras y generadores | Duct"
+msgstr "Herramientas gratuitas de SaaS y marketing — calculadoras | Duct"
 
 #. meta description
 #: tools/index.html
 msgid ""
-"Free calculators and generators for SaaS and marketing teams: benchmarks, paid media math, UTMs, and weekly brief templates. No signup — or connect your stack for automated weekly intelligence with Duct."
+"Free calculators and generators for SaaS and marketing teams: benchmarks, paid media math, a UTM builder and weekly brief templates. No signup needed."
 msgstr ""
-"Calculadoras y generadores gratuitos para equipos de SaaS y marketing: benchmarks, cálculos de medios pagados, UTMs y plantillas de informes semanales. Sin registro — o conecta tu pila de herramientas para inteligencia semanal automatizada con Duct."
+"Calculadoras y generadores gratuitos para equipos SaaS y de marketing: benchmarks, medios de pago, constructor de UTM y plantillas de informe semanal. Sin registro."
+
+#: tools/index.html
+msgid ""
+"Free calculators and generators for SaaS benchmarks, paid media efficiency, UTMs, and weekly marketing briefs."
+msgstr ""
+"Calculadoras y generadores gratuitos para puntos de referencia de SaaS, eficiencia de medios pagados, UTMs e informes de marketing semanales."
+
+#: tools/index.html
+msgid "Free growth and marketing tools"
+msgstr "Herramientas gratuitas de crecimiento y marketing"
 
 #: tools/index.html
 msgid "GA4-friendly campaign links with live preview and validation."
@@ -6034,7 +6204,7 @@ msgstr ""
 msgid "Runs in your browser"
 msgstr "Se ejecuta en tu navegador"
 
-#: tools/index.html
+#: tools/index.html tools/saas-metrics-calculator.html
 msgid "SaaS Metrics Benchmark Calculator"
 msgstr "Calculadora de comparativas de métricas SaaS"
 
@@ -6109,12 +6279,18 @@ msgid ""
 msgstr ""
 "Calculadora de ROI gratuita para campañas de marketing con escenarios de rentabilidad y planificación de objetivos."
 
+#: tools/marketing-roi-calculator.html
+msgid ""
+"Free calculator that computes marketing ROI, net profit, and break-even revenue targets."
+msgstr ""
+"Calculadora gratuita que calcula el ROI de marketing, el beneficio neto y los objetivos de ingresos de equilibrio."
+
 #. meta description
 #: tools/marketing-roi-calculator.html
 msgid ""
 "Free marketing ROI calculator for growth teams and operators. Calculate ROI, profit, and break-even scenarios from campaign spend and revenue."
 msgstr ""
-"Calculadora de ROI de marketing gratuita para equipos de crecimiento y operadores. Calcula el ROI, el beneficio y los escenarios de punto de equilibrio a partir del gasto de la campaña y los ingresos."
+"Calculadora de ROI de marketing gratuita para equipos de crecimiento. Calcula ROI, beneficio y punto de equilibrio a partir del gasto y los ingresos de campaña."
 
 #: tools/marketing-roi-calculator.html tools/roas-calculator.html
 msgid "Gross Margin % (optional)"
@@ -6236,7 +6412,7 @@ msgstr ""
 msgid ""
 "Free MRR growth rate calculator for SaaS teams. Enter start MRR, end MRR, and period to calculate net growth, CMGR, and required growth to hit your target MRR."
 msgstr ""
-"Calculadora gratuita de tasa de crecimiento de MRR para equipos SaaS. Introduce el MRR inicial, el MRR final y el periodo para calcular el crecimiento neto, el CMGR y el crecimiento requerido para alcanzar tu MRR objetivo."
+"Calculadora gratuita de crecimiento de MRR para SaaS. Introduce MRR inicial, MRR final y periodo: crecimiento neto, CMGR y el ritmo necesario para tu MRR objetivo."
 
 #. meta twitter:description
 #: tools/mrr-growth-calculator.html
@@ -6244,6 +6420,12 @@ msgid ""
 "Free SaaS MRR growth calculator with benchmark-style interpretation and action insights."
 msgstr ""
 "Calculadora gratuita de crecimiento de MRR SaaS con interpretación tipo benchmark y hallazgos de acción."
+
+#: tools/mrr-growth-calculator.html
+msgid ""
+"Free calculator that computes net MRR growth, compound monthly growth rate (CMGR), and required growth rate to hit a target MRR for SaaS businesses."
+msgstr ""
+"Calculadora gratuita que calcula el crecimiento neto del MRR, la tasa de crecimiento mensual compuesta (CMGR) y la tasa de crecimiento requerida para alcanzar un MRR objetivo para negocios SaaS."
 
 #: tools/mrr-growth-calculator.html
 msgid ""
@@ -6278,7 +6460,7 @@ msgstr "Calculadora de tasa de crecimiento de MRR <0>para SaaS</0>"
 #. meta twitter:title
 #: tools/mrr-growth-calculator.html
 msgid "MRR Growth Rate Calculator — Free Tool by Duct"
-msgstr "Calculadora de tasa de crecimiento de MRR — Herramienta gratuita de Duct"
+msgstr "Calculadora de crecimiento de MRR — Herramienta gratuita de Duct"
 
 #: tools/mrr-growth-calculator.html
 msgid "MRR at the beginning of your analysis period"
@@ -6412,7 +6594,7 @@ msgstr ""
 msgid ""
 "Free ROAS calculator for paid media teams. Compute return on ad spend from revenue and ad spend, plus target ROAS scenarios for Google Ads, Meta, and ecommerce."
 msgstr ""
-"Calculadora gratuita de ROAS para equipos de medios pagados. Calcula el retorno de la inversión publicitaria a partir de los ingresos y el gasto en anuncios, además de escenarios de ROAS objetivo para Google Ads, Meta y ecommerce."
+"Calculadora gratuita de ROAS para equipos de medios de pago. Calcula el retorno de la inversión publicitaria con ingresos y gasto, más escenarios de ROAS objetivo."
 
 #. meta twitter:description
 #: tools/roas-calculator.html
@@ -6420,6 +6602,12 @@ msgid ""
 "Free ROAS calculator for performance marketers: multiples, targets, and pacing checks."
 msgstr ""
 "Calculadora gratuita de ROAS para especialistas en marketing de rendimiento: múltiplos, objetivos y verificaciones de ritmo."
+
+#: tools/roas-calculator.html
+msgid ""
+"Free calculator that computes return on ad spend (ROAS), target revenue for a goal ROAS, and maximum efficient spend at observed revenue."
+msgstr ""
+"Calculadora gratuita que calcula el retorno de la inversión publicitaria (ROAS), los ingresos objetivo para un ROAS meta y el gasto eficiente máximo con los ingresos observados."
 
 #: tools/roas-calculator.html
 msgid "Media cost for the same scope as attributed revenue"
@@ -6566,9 +6754,15 @@ msgstr ""
 #. meta description
 #: tools/saas-metrics-calculator.html
 msgid ""
-"Free SaaS metrics benchmark calculator. Enter your MRR, churn, CAC, LTV, and trial-to-paid rate. Get instant colour-coded scores vs industry averages from OpenView and ChartMogul."
+"Free SaaS metrics benchmark calculator. Enter MRR, churn, CAC, LTV and trial-to-paid rate for colour-coded scores against OpenView and ChartMogul averages."
 msgstr ""
-"Calculadora gratuita de puntos de referencia de métricas SaaS. Introduce tu MRR, abandono, CAC, LTV y tasa de conversión de prueba a pago. Obtén puntuaciones instantáneas codificadas por colores frente a los promedios de la industria de OpenView y ChartMogul."
+"Calculadora gratuita de benchmarks SaaS. Introduce MRR, churn, CAC, LTV y tasa de prueba a pago y compara con colores frente a OpenView y ChartMogul."
+
+#: tools/saas-metrics-calculator.html
+msgid ""
+"Free calculator that benchmarks your SaaS metrics — churn rate, LTV:CAC ratio, CAC payback period, and trial-to-paid conversion — against industry averages from OpenView and ChartMogul."
+msgstr ""
+"Calculadora gratuita que compara tus métricas SaaS — tasa de rotación, relación LTV:CAC, período de recuperación de CAC y conversión de prueba a pago — con los promedios de la industria de OpenView y ChartMogul."
 
 #: tools/saas-metrics-calculator.html
 msgid "How do I calculate LTV for a SaaS business?"
@@ -6620,8 +6814,7 @@ msgstr "Calculadora <0>de referencia</0> de Métricas SaaS"
 #. meta twitter:title
 #: tools/saas-metrics-calculator.html
 msgid "SaaS Metrics Benchmark Calculator — Free Tool by Duct"
-msgstr ""
-"Calculadora de puntos de referencia de métricas SaaS — Herramienta gratuita de Duct"
+msgstr "Calculadora de benchmarks SaaS — Herramienta gratuita de Duct"
 
 #. div aria-label
 #: tools/saas-metrics-calculator.html
@@ -6813,6 +7006,12 @@ msgid ""
 "Free UTM builder with live URL preview and GA4 compliance validation. Build and copy UTM campaign links in seconds. No signup required."
 msgstr ""
 "Creador de UTM gratuito con vista previa de URL en vivo y validación de cumplimiento de GA4. Crea y copia enlaces de campaña UTM en segundos. No requiere registro."
+
+#: tools/utm-builder.html
+msgid ""
+"Free UTM builder with live URL preview and GA4 compliance validation. Build and copy UTM campaign links instantly."
+msgstr ""
+"Constructor UTM gratuito con vista previa de URL en vivo y validación de cumplimiento de GA4. Crea y copia enlaces de campaña UTM al instante."
 
 #: tools/utm-builder.html
 msgid "GA4 Compliance Note"
@@ -7058,12 +7257,18 @@ msgid ""
 msgstr ""
 "Duct lee tus herramientas reales, escribe el informe con lo que cambió, por qué y una acción, y recuerda lo que decidiste la semana pasada."
 
+#: tools/weekly-brief-template.html
+msgid ""
+"Free interactive tool that generates a customised weekly marketing report template based on your role (Growth PM, Performance Marketer, SEO Lead) and tool stack (GA4, Mixpanel, HubSpot, Google Ads, Ahrefs, Search Console, Meta Ads, LinkedIn Ads)."
+msgstr ""
+"Herramienta interactiva gratuita que genera una plantilla de informe de marketing semanal personalizada basada en tu rol (Growth PM, Performance Marketer, SEO Lead) y pila de herramientas (GA4, Mixpanel, HubSpot, Google Ads, Ahrefs, Search Console, Meta Ads, LinkedIn Ads)."
+
 #. meta description
 #: tools/weekly-brief-template.html
 msgid ""
-"Free weekly marketing brief template generator. Select your role and tool stack, get a customised weekly report template in seconds. Copy with one click — no signup required."
+"Free weekly marketing brief template generator. Pick your role and tool stack and get a customised weekly report template in seconds. No signup required."
 msgstr ""
-"Generador gratuito de plantillas de informe de marketing semanal. Selecciona tu rol y conjunto de herramientas, obtén una plantilla de informe semanal personalizada en segundos. Copia con un clic — no requiere registro."
+"Generador gratuito de plantillas de informe semanal de marketing. Elige tu rol y tus herramientas y obtén una plantilla a medida en segundos. Sin registro."
 
 #. meta twitter:description
 #: tools/weekly-brief-template.html
@@ -7215,12 +7420,15 @@ msgstr "Generador de plantillas de informe semanal"
 msgid "Weekly Marketing Brief <0>Template</0> Generator"
 msgstr "Generador de <0>plantillas</0> de informe de marketing semanal"
 
+#: tools/weekly-brief-template.html
+msgid "Weekly Marketing Brief Template Generator"
+msgstr "Generador de plantillas de informe de marketing semanal"
+
 #. meta og:title
 #. meta twitter:title
 #: tools/weekly-brief-template.html
 msgid "Weekly Marketing Brief Template Generator — Free Tool by Duct"
-msgstr ""
-"Generador de plantillas de informe de marketing semanal — Herramienta gratuita de Duct"
+msgstr "Generador de informe semanal de marketing — Herramienta de Duct"
 
 #: tools/weekly-brief-template.html
 msgid "What is the difference between a report and a brief?"
@@ -7281,3 +7489,284 @@ msgstr "← Volver"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Empezar de nuevo"
+
+#~ msgid ""
+#~ "Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine."
+#~ msgstr ""
+#~ "Las claves del modelo permanecen en el llavero de tu sistema operativo y viajan con una solicitud solo mientras se ejecuta un trabajo. Las autorizaciones del conector se almacenan cifradas por la API alojada. La app de escritorio es una capa delgada sobre esa API; una compilación autoalojada ejecuta todo en tu propia máquina."
+
+#~ msgid ""
+#~ "Start with CONTRIBUTING.md in the repository. Issues and discussions are on GitHub, the roadmap is a public project board, and agent-written contributions are welcome as long as the pull request says where an agent helped."
+#~ msgstr ""
+#~ "Comienza con CONTRIBUTING.md en el repositorio. Los problemas y discusiones están en GitHub, la hoja de ruta es un tablero de proyecto público, y las contribuciones escritas por agentes son bienvenidas siempre que la solicitud de extracción indique dónde ayudó un agente."
+
+#~ msgid ""
+#~ "A good LTV:CAC ratio for SaaS is above 3:1. This means for every 1 unit spent acquiring a customer, you recover 3 units in lifetime value. A ratio of 2-3:1 is marginal. Below 2:1 is unsustainable at scale."
+#~ msgstr ""
+#~ "Una buena relación LTV:CAC para SaaS es superior a 3:1. Esto significa que por cada 1 unidad gastada en adquirir un cliente, recuperas 3 unidades en valor de vida útil. Una relación de 2-3:1 es marginal. Por debajo de 2:1 es insostenible a escala."
+
+#~ msgid ""
+#~ "CAC (Customer Acquisition Cost) is the total sales and marketing spend required to acquire one new customer. Formula: CAC = Total Sales & Marketing Spend / Number of New Customers Acquired in the same period."
+#~ msgstr ""
+#~ "El CAC (Costo de Adquisición de Clientes) es el gasto total de ventas y marketing requerido para adquirir un nuevo cliente. Fórmula: CAC = Gasto total de ventas y marketing / Número de nuevos clientes adquiridos en el mismo período."
+
+#~ msgid ""
+#~ "CAC payback period is the number of months it takes to recover your customer acquisition cost from a customer's monthly revenue. Formula: Payback Period = CAC / Average Monthly Revenue per Customer. A healthy payback period for SaaS is under 12 months."
+#~ msgstr ""
+#~ "El período de recuperación del CAC es el número de meses que tardas en recuperar tu costo de adquisición de clientes de los ingresos mensuales de un cliente. Fórmula: Período de Recuperación = CAC / Ingresos Mensuales Promedio por Cliente. Un período de recuperación saludable para SaaS es inferior a 12 meses."
+
+#~ msgid ""
+#~ "LTV = Average Monthly Revenue per Customer multiplied by Average Customer Lifespan in months. Alternatively: LTV = ARPU divided by Monthly Churn Rate. For example, if ARPU is 100 and average lifespan is 36 months, LTV = 3600."
+#~ msgstr ""
+#~ "LTV = Ingresos Mensuales Promedio por Cliente multiplicado por la Vida Útil Promedio del Cliente en meses. Alternativamente: LTV = ARPU dividido por la Tasa de Abandono Mensual. Por ejemplo, si el ARPU es 100 y la vida útil promedio es de 36 meses, LTV = 3600."
+
+#~ msgid ""
+#~ "The most effective ways to reduce CAC are: improving organic content (blog, SEO) to reduce paid acquisition dependence; shortening the sales cycle; improving trial-to-paid conversion to get more value from existing top-of-funnel; and building referral or PLG loops that reduce acquisition cost per customer over time."
+#~ msgstr ""
+#~ "Las formas más efectivas de reducir el CAC son: mejorar el contenido orgánico (blog, SEO) para reducir la dependencia de la adquisición pagada; acortar el ciclo de ventas; mejorar la conversión de prueba a pago para obtener más valor del embudo superior existente; y construir bucles de referencia o PLG que reduzcan el costo de adquisición por cliente con el tiempo."
+
+#~ msgid ""
+#~ "CTR indicates how relevant your message is to the audience seeing it. Low CTR can signal weak creative, poor targeting, or low query intent match."
+#~ msgstr ""
+#~ "El CTR indica cuán relevante es tu mensaje para la audiencia que lo ve. Un CTR bajo puede indicar una creatividad débil, una segmentación deficiente o una baja coincidencia con la intención de la consulta."
+
+#~ msgid ""
+#~ "CTR is calculated as Clicks divided by Impressions multiplied by 100. For example, 320 clicks from 16,000 impressions equals a 2.0 percent CTR."
+#~ msgstr ""
+#~ "El CTR se calcula como Clics dividido por Impresiones multiplicado por 100. Por ejemplo, 320 clics de 16,000 impresiones equivalen a un CTR del 2.0 por ciento."
+
+#~ msgid "Can I use this for Google Ads CTR?"
+#~ msgstr "¿Puedo usar esto para el CTR de Google Ads?"
+
+#~ msgid ""
+#~ "Good CTR depends on channel and intent. As a rough guide, below 1 percent is often weak, 1 to 3 percent is average, and above 3 percent can be strong for many campaigns."
+#~ msgstr ""
+#~ "Un buen CTR depende del canal y la intención. Como guía aproximada, por debajo del 1 por ciento suele ser débil, del 1 al 3 por ciento es promedio, y por encima del 3 por ciento puede ser fuerte para muchas campañas."
+
+#~ msgid "How can I improve CTR?"
+#~ msgstr "¿Cómo puedo mejorar el CTR?"
+
+#~ msgid ""
+#~ "Improve headlines and hooks, tighten targeting, refresh creatives, align landing-page promise with ad copy, and test offers and formats regularly."
+#~ msgstr ""
+#~ "Mejora los titulares y los ganchos, ajusta la segmentación, actualiza las creatividades, alinea la promesa de la página de destino con el texto del anuncio y prueba ofertas y formatos regularmente."
+
+#~ msgid "What is a good CTR?"
+#~ msgstr "¿Qué es un buen CTR?"
+
+#~ msgid "Why does CTR matter?"
+#~ msgstr "¿Por qué importa el CTR?"
+
+#~ msgid ""
+#~ "Yes. The formula is the same for Google Ads, Meta Ads, LinkedIn, email, and organic search snippets as long as you use clicks and impressions from the same source and period."
+#~ msgstr ""
+#~ "Sí. La fórmula es la misma para Google Ads, Meta Ads, LinkedIn, correo electrónico y fragmentos de búsqueda orgánica, siempre que uses clics e impresiones de la misma fuente y período."
+
+#~ msgid ""
+#~ "Benchmarks vary by platform and audience size, but many teams use less than 1 percent as weak, 1 to 3 percent as average, 3 to 6 percent as healthy, and above 6 percent as strong for follower-based engagement rate."
+#~ msgstr ""
+#~ "Los puntos de referencia varían según la plataforma y el tamaño de la audiencia, pero muchos equipos usan menos del 1 por ciento como débil, del 1 al 3 por ciento como promedio, del 3 al 6 por ciento como saludable y por encima del 6 por ciento como fuerte para la tasa de engagement basada en seguidores."
+
+#~ msgid ""
+#~ "Engagement typically includes likes, comments, shares, saves, clicks, and replies depending on platform. Keep your definition consistent across periods for reliable comparison."
+#~ msgstr ""
+#~ "El engagement suele incluir me gusta, comentarios, compartidos, guardados, clics y respuestas, según la plataforma. Mantén tu definición consistente entre períodos para una comparación fiable."
+
+#~ msgid "Should I calculate engagement rate by followers, reach, or impressions?"
+#~ msgstr "¿Debo calcular la tasa de engagement por seguidores, alcance o impresiones?"
+
+#~ msgid ""
+#~ "The most common formula is Engagement Rate = Total Engagements divided by a denominator such as Followers, Reach, or Impressions, multiplied by 100."
+#~ msgstr ""
+#~ "La fórmula más común es Tasa de Engagement = Engagements Totales dividido por un denominador como Seguidores, Alcance o Impresiones, multiplicado por 100."
+
+#~ msgid ""
+#~ "Use followers for broad account-level benchmarking, reach for content quality relative to exposed audience, and impressions for efficiency when audiences may see content multiple times."
+#~ msgstr ""
+#~ "Usa los seguidores para la evaluación comparativa general a nivel de cuenta, el alcance para la calidad del contenido en relación con la audiencia expuesta y las impresiones para la eficiencia cuando las audiencias pueden ver el contenido varias veces."
+
+#~ msgid "What counts as engagement?"
+#~ msgstr "¿Qué cuenta como engagement?"
+
+#~ msgid ""
+#~ "You can compare trends, but direct comparisons can be misleading because each platform has different feed mechanics and engagement behaviors."
+#~ msgstr ""
+#~ "Puedes comparar tendencias, pero las comparaciones directas pueden ser engañosas porque cada plataforma tiene diferentes mecánicas de feed y comportamientos de engagement."
+
+#~ msgid ""
+#~ "A healthy target depends on stage, but early-stage SaaS teams often aim for 10 to 20 percent monthly growth. Growth below 5 percent can still be strong for later-stage, efficient businesses with high retention."
+#~ msgstr ""
+#~ "Un objetivo saludable depende de la etapa, pero los equipos de SaaS en etapa inicial a menudo apuntan a un crecimiento mensual del 10 al 20 por ciento. Un crecimiento inferior al 5 por ciento aún puede ser fuerte para negocios eficientes en etapas posteriores con alta retención."
+
+#~ msgid ""
+#~ "CMGR means Compound Monthly Growth Rate. It shows the average monthly growth needed to move from starting MRR to ending MRR over a set number of months. Formula: CMGR = (Ending MRR/Starting MRR)^(1/months) - 1."
+#~ msgstr ""
+#~ "CMGR significa Tasa de Crecimiento Mensual Compuesta. Muestra el crecimiento mensual promedio necesario para pasar del MRR inicial al MRR final durante un número determinado de meses. Fórmula: CMGR = (MRR Final/MRR Inicial)^(1/meses) - 1."
+
+#~ msgid "Can this calculator handle MRR decline?"
+#~ msgstr "¿Puede esta calculadora manejar la disminución del MRR?"
+
+#~ msgid ""
+#~ "Enter your target MRR to calculate the required compound monthly growth rate from your current MRR over the selected period. This helps evaluate if your growth plan is realistic."
+#~ msgstr ""
+#~ "Introduce tu MRR objetivo para calcular la tasa de crecimiento mensual compuesta requerida desde tu MRR actual durante el período seleccionado. Esto ayuda a evaluar si tu plan de crecimiento es realista."
+
+#~ msgid "How do I project MRR growth to a target?"
+#~ msgstr "¿Cómo proyecto el crecimiento del MRR a un objetivo?"
+
+#~ msgid ""
+#~ "Net MRR growth rate is calculated as (Ending MRR minus Starting MRR) divided by Starting MRR. Multiply by 100 to express it as a percentage."
+#~ msgstr ""
+#~ "La tasa de crecimiento de MRR neto se calcula como (MRR final menos MRR inicial) dividido por el MRR inicial. Multiplica por 100 para expresarlo como un porcentaje."
+
+#~ msgid "What is a good MRR growth rate for SaaS?"
+#~ msgstr "¿Cuál es una buena tasa de crecimiento de MRR para SaaS?"
+
+#~ msgid ""
+#~ "Yes. If ending MRR is lower than starting MRR, the calculator shows a negative growth rate and flags contraction risk so you can investigate churn, downgrades, and acquisition efficiency."
+#~ msgstr ""
+#~ "Sí. Si el MRR final es inferior al MRR inicial, la calculadora muestra una tasa de crecimiento negativa y señala el riesgo de contracción para que puedas investigar la rotación, las degradaciones y la eficiencia de adquisición."
+
+#~ msgid ""
+#~ "A good monthly churn rate for SaaS is below 2%. Anything between 2-4% is average and needs attention. Above 4% monthly churn is critical — at that rate you're losing nearly half your revenue base each year."
+#~ msgstr ""
+#~ "Una buena tasa de rotación mensual para SaaS es inferior al 2%. Cualquier cosa entre el 2-4% es promedio y necesita atención. Una rotación mensual superior al 4% es crítica; a esa tasa estás perdiendo casi la mitad de tu base de ingresos cada año."
+
+#~ msgid ""
+#~ "A healthy LTV:CAC ratio for SaaS is above 3:1. A ratio of 2-3:1 is marginal. Below 2:1 typically means your business model is not viable at scale."
+#~ msgstr ""
+#~ "Una relación LTV:CAC saludable para SaaS es superior a 3:1. Una relación de 2-3:1 es marginal. Por debajo de 2:1 normalmente significa que tu modelo de negocio no es viable a escala."
+
+#~ msgid ""
+#~ "Benchmarks come from OpenView Partners SaaS Benchmarks Report (2023-2024) and ChartMogul SaaS Benchmarks Report. LTV:CAC thresholds follow the widely-cited 3:1 standard from David Skok's SaaS metrics framework."
+#~ msgstr ""
+#~ "Los puntos de referencia provienen de los informes de puntos de referencia SaaS de OpenView Partners (2023-2024) y ChartMogul. Los umbrales de LTV:CAC siguen el estándar 3:1 ampliamente citado del marco de métricas SaaS de David Skok."
+
+#~ msgid ""
+#~ "LTV = Average Monthly Revenue per Customer divided by Monthly Churn Rate. For example, if ARPU is 100 and monthly churn is 2%, LTV = 100 divided by 0.02 = 5000."
+#~ msgstr ""
+#~ "LTV = Ingresos mensuales promedio por cliente dividido por la tasa de rotación mensual. Por ejemplo, si el ARPU es 100 y la rotación mensual es del 2%, LTV = 100 dividido por 0.02 = 5000."
+
+#~ msgid ""
+#~ "Track core SaaS metrics monthly at minimum — MRR, churn, and CAC are standard monthly reviews. LTV and LTV:CAC are more meaningful on a quarterly basis since they are slow-moving."
+#~ msgstr ""
+#~ "Haz un seguimiento de las métricas SaaS principales mensualmente como mínimo — MRR, rotación y CAC son revisiones mensuales estándar. LTV y LTV:CAC son más significativos trimestralmente ya que se mueven lentamente."
+
+#~ msgid ""
+#~ "A report shows what happened — raw numbers, charts, tables. A brief tells you what it means and what to do. A good weekly marketing brief has a north star metric, the two or three signals that explain its movement, and one clear action. If your brief requires someone to interpret it, it is a report, not a brief."
+#~ msgstr ""
+#~ "Un reporte muestra lo que sucedió — números brutos, gráficos, tablas. Un informe te dice lo que significa y qué hacer. Un buen informe de marketing semanal tiene una métrica estrella, las dos o tres señales que explican su movimiento y una acción clara. Si tu informe requiere que alguien lo interprete, es un reporte, no un informe."
+
+#~ msgid ""
+#~ "A weekly marketing brief should include: your north star metric and whether it moved, 2-3 channel-level metrics for each tool in your stack (traffic, conversions, spend), one anomaly or unexpected change, and a single priority action for the coming week. Keep it under one page — if it requires scrolling it will not get read."
+#~ msgstr ""
+#~ "Un informe de marketing semanal debe incluir: tu métrica estrella y si se movió, 2-3 métricas a nivel de canal para cada herramienta en tu pila (tráfico, conversiones, gasto), una anomalía o cambio inesperado, y una única acción prioritaria para la próxima semana. Mantenlo en una página — si requiere desplazamiento, no se leerá."
+
+#~ msgid ""
+#~ "Most growth marketers and PMs spend 2-3 hours per week writing a weekly brief manually — pulling data from GA4, HubSpot, Mixpanel, and ad platforms separately, then synthesising it into a coherent narrative. With a good template, this reduces to 60-90 minutes. With automation, it takes minutes."
+#~ msgstr ""
+#~ "La mayoría de los especialistas en marketing de crecimiento y PMs dedican 2-3 horas a la semana a escribir un informe semanal manualmente — extrayendo datos de GA4, HubSpot, Mixpanel y plataformas de anuncios por separado, luego sintetizándolos en una narrativa coherente. Con una buena plantilla, esto se reduce a 60-90 minutos. Con la automatización, toma minutos."
+
+#. meta description
+#~ msgid ""
+#~ "Seven opinions Duct is built on, each with the file that enforces it: approval before action, renting an agent harness, membership over ownership, and why agent-written code is welcome here."
+#~ msgstr ""
+#~ "Siete principios en los que se basa Duct, cada uno con el archivo que lo aplica: aprobación antes de la acción, alquilar un arnés de agente, membresía sobre propiedad, y por qué el código escrito por agentes es bienvenido aquí."
+
+#. meta description
+#~ msgid ""
+#~ "Duct on your desktop for Mac, Windows and Linux. Ask across your ads, analytics and revenue tools, approve the fix, and keep your model keys in your own keychain."
+#~ msgstr ""
+#~ "Duct en tu escritorio para Mac, Windows y Linux. Consulta tus herramientas de anuncios, análisis e ingresos, aprueba la solución y mantén tus claves de modelo en tu propio llavero."
+
+#. meta description
+#~ msgid ""
+#~ "Ask which content converts. Duct, an open-source AI agent for growth teams, reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week's posts on a board."
+#~ msgstr ""
+#~ "Pregunta qué contenido convierte. Duct, un agente de IA de código abierto para equipos de crecimiento, lee Search Console, GA4 y Clarity juntos, audita cualquier URL gratis y planifica las publicaciones de la semana en un tablero."
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid ""
+#~ "Duct for SEO and content teams — Open-source AI agent that reads Search Console, GA4 and Clarity together"
+#~ msgstr ""
+#~ "Duct para equipos SEO y de contenido — Agente de IA de código abierto que lee Search Console, GA4 y Clarity juntos"
+
+#. meta description
+#~ msgid ""
+#~ "Ask why CPA moved. Duct, an open-source AI agent for growth teams, reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve."
+#~ msgstr ""
+#~ "Pregunta por qué se movió el CPA. Duct, un agente de IA de código abierto para equipos de crecimiento, lee Google Ads, Meta, Apple Search Ads, GA4 y Stripe juntos, propone la pausa o el cambio, y lo aplica cuando lo apruebas."
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid ""
+#~ "Duct for performance marketers — Open-source AI agent that reads Google Ads, Meta, GA4 and Stripe together"
+#~ msgstr ""
+#~ "Duct para especialistas en marketing de rendimiento — Agente de IA de código abierto que lee Google Ads, Meta, GA4 y Stripe juntos"
+
+#. meta description
+#~ msgid ""
+#~ "Ask why activation dropped. Duct, an open-source AI agent for product and growth teams, reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources and the change it proposes."
+#~ msgstr ""
+#~ "Pregunta por qué la activación cayó. Duct, un agente de IA de código abierto para equipos de producto y crecimiento, lee Mixpanel, Clarity, GrowthBook y GA4 juntos y responde con la causa, las fuentes y el cambio que propone."
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid ""
+#~ "Duct for product teams — Open-source AI agent that reads Mixpanel, Clarity, GrowthBook and GA4 together"
+#~ msgstr ""
+#~ "Duct para equipos de producto — Agente de IA de código abierto que lee Mixpanel, Clarity, GrowthBook y GA4 juntos"
+
+#. meta description
+#~ msgid ""
+#~ "Duct reads Google Ads, GA4, Stripe and nine more tools together, proposes the fix and applies it when you approve. Open source, MIT, on your own keys or your ChatGPT plan."
+#~ msgstr ""
+#~ "Duct lee Google Ads, GA4, Stripe y nueve herramientas más en conjunto, propone la solución y la aplica cuando apruebas. Código abierto, MIT, con tus propias claves o tu plan de ChatGPT."
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
+#~ msgstr ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe y RevenueCat. Cada conexión es OAuth; nada se exporta manualmente."
+
+#. meta description
+#~ msgid ""
+#~ "Duct's privacy policy: the Google user data we access and why, how we handle data from every connected tool, who we share it with, how long we keep it, and how to delete it."
+#~ msgstr ""
+#~ "Política de privacidad de Duct: los datos de usuario de Google a los que accedemos y por qué, cómo manejamos los datos de cada herramienta conectada, con quién los compartimos, cuánto tiempo los conservamos y cómo eliminarlos."
+
+#. meta description
+#~ msgid ""
+#~ "Terms of Service for Duct by Alleviate Lab: connected accounts, approval-gated changes, AI output, content publishing, the desktop app, open-source licensing and beta terms."
+#~ msgstr ""
+#~ "Términos de Servicio de Duct por Alleviate Lab: cuentas conectadas, cambios sujetos a aprobación, resultados de IA, publicación de contenido, la app de escritorio, licencias de código abierto y términos de la beta."
+
+#. meta description
+#~ msgid ""
+#~ "Free SaaS CAC and LTV calculator. Enter your spend, customers, and revenue to instantly get CAC, LTV, LTV:CAC ratio, and payback period — colour-coded vs SaaS benchmarks."
+#~ msgstr ""
+#~ "Calculadora gratuita de CAC y LTV para SaaS. Introduce tu gasto, clientes e ingresos para obtener al instante el CAC, LTV, ratio LTV:CAC y el periodo de recuperación — codificado por colores frente a los puntos de referencia de SaaS."
+
+#. meta description
+#~ msgid ""
+#~ "Free CTR calculator for marketers and growth teams. Enter impressions and clicks to calculate click-through rate, projected clicks, and needed lift scenarios instantly."
+#~ msgstr ""
+#~ "Calculadora de CTR gratuita para especialistas en marketing y equipos de crecimiento. Introduce impresiones y clics para calcular la tasa de clics, los clics proyectados y los escenarios de mejora necesarios al instante."
+
+#. meta description
+#~ msgid ""
+#~ "Free calculators and generators for SaaS and marketing teams: benchmarks, paid media math, UTMs, and weekly brief templates. No signup — or connect your stack for automated weekly intelligence with Duct."
+#~ msgstr ""
+#~ "Calculadoras y generadores gratuitos para equipos de SaaS y marketing: benchmarks, cálculos de medios pagados, UTMs y plantillas de informes semanales. Sin registro — o conecta tu pila de herramientas para inteligencia semanal automatizada con Duct."
+
+#. meta description
+#~ msgid ""
+#~ "Free SaaS metrics benchmark calculator. Enter your MRR, churn, CAC, LTV, and trial-to-paid rate. Get instant colour-coded scores vs industry averages from OpenView and ChartMogul."
+#~ msgstr ""
+#~ "Calculadora gratuita de puntos de referencia de métricas SaaS. Introduce tu MRR, abandono, CAC, LTV y tasa de conversión de prueba a pago. Obtén puntuaciones instantáneas codificadas por colores frente a los promedios de la industria de OpenView y ChartMogul."
+
+#. meta description
+#~ msgid ""
+#~ "Free weekly marketing brief template generator. Select your role and tool stack, get a customised weekly report template in seconds. Copy with one click — no signup required."
+#~ msgstr ""
+#~ "Generador gratuito de plantillas de informe de marketing semanal. Selecciona tu rol y conjunto de herramientas, obtén una plantilla de informe semanal personalizada en segundos. Copia con un clic — no requiere registro."

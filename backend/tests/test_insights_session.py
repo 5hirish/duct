@@ -410,6 +410,9 @@ async def test_a_request_too_long_is_compacted_once_and_retried(session, emitted
     kinds = _kinds(emitted)
     assert AgentEvent.CONTEXT_COMPACTING in kinds
     assert AgentEvent.CONTEXT_COMPACTED in kinds
+    # The divider in the transcript shows what the summariser kept.
+    compacted = next(e for e in emitted.events if e.get("event") == AgentEvent.CONTEXT_COMPACTED)
+    assert isinstance(compacted.get("summary"), str)
     assert AgentEvent.STEP_FAILED not in kinds
     assert AgentEvent.PIPELINE_FAILED not in kinds
     assert kinds.count(AgentEvent.MESSAGE_STOP) == 2  # both turns finished
@@ -1054,6 +1057,71 @@ async def test_a_session_without_a_project_keeps_its_message_untouched(session):
     assert session.chat_queue.get_nowait()["content"] == "hi"
 
 
+async def test_a_format_change_is_restated_at_the_next_turn(session):
+    """The brief format rides in the opening turn like the posture, so the
+    composer's dial used to wait for the next session. Stated once per change."""
+    session.artifact_format = "html"
+    session.artifact_format_stated = "html"
+
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="first", artifact_format="html"), user=None)
+    assert session.chat_queue.get_nowait()["content"] == "first"
+
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="second", artifact_format="markdown"), user=None)
+    queued = session.chat_queue.get_nowait()["content"]
+    assert queued.startswith("<deliverable_format>") and "markdown" in queued and queued.endswith("second")
+    assert session.artifact_format_stated == "markdown"
+
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="third", artifact_format="markdown"), user=None)
+    assert session.chat_queue.get_nowait()["content"] == "third"
+
+
+async def test_a_thread_resumed_without_a_prompt_is_told_the_format_at_its_first_message(session):
+    """Its history carries the preference it opened with — days old, and on
+    2026-09-21 the wrong one: a thread opened under markdown refused HTML
+    twice after the default had moved. The first message says the current one,
+    even from a client that sends no dial value."""
+    session.artifact_format = "html"
+    session.artifact_format_stated = ""
+
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="in html please"), user=None)
+    queued = session.chat_queue.get_nowait()["content"]
+    assert queued.startswith("<deliverable_format>") and "HTML document" in queued
+    assert queued.endswith("in html please")
+    assert session.artifact_format_stated == "html"
+
+
+def test_a_resumed_follow_up_opens_with_the_current_format():
+    from agents.insights.v1.runner import _resumed_opening
+
+    opening = _resumed_opening("and in html?", "html")
+    assert opening.startswith("<deliverable_format>") and opening.endswith("and in html?")
+    assert _resumed_opening("", "html") == ""  # opened from the desk: nothing to say yet
+
+
+async def test_the_chat_loop_stays_open_while_someone_is_attached(session, emitted):
+    """Idle means nobody is there, not nobody has typed. A consumer's
+    keep-alive frames touch the session; a question asked 31 minutes into
+    reading a brief used to find the loop gone and go nowhere."""
+    from agents.core.session import touch_session
+
+    async def reader() -> None:
+        for _ in range(12):  # attached for longer than the idle timeout below
+            touch_session(session)
+            await asyncio.sleep(0.01)
+        await session.chat_queue.put("and what about mobile?")
+        await session.chat_queue.put(None)
+
+    reading = asyncio.create_task(reader())
+    await RUNNER.run_session(
+        session.session_id, emitted, llm=_fake("First answer.", "Second answer."),
+        session=session, prompt="status?",
+        chat_idle_timeout=0.05,
+    )
+    await reading
+
+    assert sum(1 for e in emitted.events if e["event"] == AgentEvent.MESSAGE_STOP) == 2
+
+
 # ---------------------------------------------------------------------------
 # What the model saw is written down
 # ---------------------------------------------------------------------------
@@ -1099,8 +1167,10 @@ async def test_the_run_records_the_turn_the_model_actually_read(session, emitted
 
 
 async def test_a_resumed_thread_records_its_own_context(session, emitted):
-    """Resume takes the raw follow-up with no priming, and says so in the row,
-    so a reviewer does not go looking for a digest that was never read."""
+    """Resume takes the follow-up with no priming — only the current brief
+    format ahead of it, since the thread's own history may carry an old one —
+    and says so in the row, so a reviewer does not go looking for a digest
+    that was never read."""
     session.recorder = _ContextRecorder()
     await RUNNER.run_session(
         session.session_id, emitted, llm=_fake("Still one campaign."),
@@ -1110,5 +1180,5 @@ async def test_a_resumed_thread_records_its_own_context(session, emitted):
 
     [ctx] = session.recorder.contexts
     assert ctx["resume"] is True
-    assert ctx["turn"] == "and last week?"
+    assert ctx["turn"].startswith("<deliverable_format>") and ctx["turn"].endswith("and last week?")
     assert ctx["blocks"]["memory"] == "" and ctx["blocks"]["data_sources"] == ""

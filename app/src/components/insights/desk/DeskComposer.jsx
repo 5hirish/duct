@@ -6,10 +6,11 @@
 // and which dates to consider is the wizard we deleted, in miniature: working
 // that out is the agent's job, and the headline above reports what it decided.
 //
-// The controls are the real dials — how freely Duct may act, how hard the
-// model thinks, which tier it starts on — and they are the same chips the
-// session composer shows once the conversation is open (ComposerDials), so
-// what was chosen here is still visible and changeable there.
+// The controls are the real dials — how freely Duct may act, folded to the
+// current posture on the left; the model tier with its thinking slider as
+// text on the right — and they are the same controls the session composer
+// shows once the conversation is open (ComposerDials, TierDial), so what was
+// chosen here is still visible and changeable there.
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -20,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { faviconUrl } from "@/lib/favicon";
 import { fetchProviderStatus } from "@/lib/modelTiers";
-import ComposerDials from "../../workspace/ComposerDials";
+import ComposerDials, { TierDial } from "../../workspace/ComposerDials";
 import ContextRing from "../../workspace/ContextRing";
 
 const SESSION_ROUTE = "/insights/session";
@@ -160,10 +161,13 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
           aria-label={t`Ask Duct`}
           className="w-full resize-none bg-transparent px-4 py-3.5 text-base leading-relaxed outline-none placeholder:text-muted-foreground"
         />
-        <div className="flex items-center justify-between gap-3 px-3 pb-2.5">
-          <ComposerDials projectId={project?.id} autonomy={autonomy} onAutonomyChange={onAutonomyChange} />
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-2.5 pb-2.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <ComposerDials projectId={project?.id} autonomy={autonomy} onAutonomyChange={onAutonomyChange} />
+          </div>
 
-          <div className="flex items-center gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            <TierDial />
             {/* A new thread starts empty — the ring fills once there is a
                 conversation to spend the window on. */}
             <ContextRing used={0} label={t`New thread`} />

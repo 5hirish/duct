@@ -40,6 +40,11 @@ export const AgentEvent = Object.freeze({
   PROJECT_DRAFT:       "project_draft",
   EXECUTION_PROPOSED:  "execution_proposed",
 
+  // One tool call the person is allowed to watch, twice: running, then the
+  // verdict. Upserted by `activity_id`. The backend allowlists which tools
+  // reach here at all (agents/core/activity.py) — silence is the default.
+  TOOL_ACTIVITY:       "tool_activity",
+
   MEMORY_WRITTEN:      "memory_written",
   MEMORY_RECALLED:     "memory_recalled",
 
@@ -57,6 +62,26 @@ export const AgentEvent = Object.freeze({
 
   LEGACY_REPORT_UPDATED: "report_updated",
   LEGACY_REPORT_CHUNK:   "report_chunk",
+});
+
+/**
+ * Which card an activity draws — mirror of backend `ActivityKind`.
+ *
+ * The kind picks the renderer, never the tool name: two tools draw an image
+ * (`generate_image`, `edit_image`) and one day a third will, and a switch on
+ * tool names is how that ends up as three near-identical branches.
+ */
+export const ActivityKind = Object.freeze({
+  DATA:       "data",
+  WEB_SEARCH: "web_search",
+  WEB_FETCH:  "web_fetch",
+  IMAGE:      "image",
+  SLIDE:      "slide",
+  SUBAGENT:   "subagent",
+  MEMORY:     "memory",
+  CONTEXT:    "context",
+  ARTIFACT:   "artifact",
+  ACTION:     "action",
 });
 
 /** The events that park a run. `pending` in the session state is one of these. */
