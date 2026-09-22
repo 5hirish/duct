@@ -353,7 +353,8 @@ form, asset order, GTM placement — and they live in
 - `<meta name="description">` is 140–160 characters; `og:description` and
   `twitter:description` 120–140.
 - Every page carries JSON-LD — `WebPage` for a landing page, `CollectionPage`
-  for the blog index, `Article` for a post.
+  for the blog index, `Article` for a post — with `inLanguage` on each
+  top-level object, and a `BreadcrumbList` on every page below the root.
 - Page-specific CSS goes in an inline `<style>` at the end of `<head>`, never
   into `assets/duct.css` — that file is shared by every page.
 - JavaScript stays vanilla and conservative. `config.js` loads before

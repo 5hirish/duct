@@ -1,6 +1,6 @@
 # Duct
 
-> Duct is an open-source (MIT) AI agent for product and growth teams. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, remembers what it learns about your business, and, with your approval, changes things in those tools for you. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct.
+> Duct is an open-source (MIT) AI agent for product and growth teams. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, remembers what it learns about your business, and, with your approval, changes things in those tools for you. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct. This site is published in English, Spanish, Brazilian Portuguese, German and Japanese.
 
 Duct is built and maintained by Shirish Kadam in Spain. It answers questions a single dashboard cannot ("why did signups drop last week", "which content converts", "where is the ads budget leaking") by reading the tools together rather than one at a time, and every number in an answer is re-checked by a verification sub-agent before it reaches you.
 
@@ -31,6 +31,41 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 - [About](https://getduct.ai/about): Who builds it and why it went open source. Duct is Latin ductus, "a leading", the word inside aquaeductus.
 - [Changelog](https://getduct.ai/changelog/): Release notes, newest first. RSS at https://getduct.ai/changelog/feed.xml.
 - [Blog](https://getduct.ai/blog/): Articles on growth, SEO and product intelligence. RSS at https://getduct.ai/blog/feed.xml.
+
+## Languages
+
+Every page below, the free tools included, exists in five languages at the same path under a language prefix. The English page is the source; the others are generated from it and carry hreflang and their own canonical.
+
+- [English](https://getduct.ai/): the default, and what `x-default` points to.
+- [Español](https://getduct.ai/es/): https://getduct.ai/es/<page>
+- [Português (Brasil)](https://getduct.ai/pt-br/): https://getduct.ai/pt-br/<page>
+- [Deutsch](https://getduct.ai/de/): https://getduct.ai/de/<page>
+- [日本語](https://getduct.ai/ja/): https://getduct.ai/ja/<page>
+
+The blog and the changelog are English only.
+
+## Frequently asked questions
+
+**What is Duct?**
+An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux.
+
+**Is it free?**
+Yes. The core is MIT licensed and stays that way. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A hosted team plan comes later; the core stays open.
+
+**Does it change my accounts without asking?**
+No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look.
+
+**Which tools does it connect to?**
+Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand.
+
+**Where do my keys and data live?**
+Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine.
+
+**Which models does it use?**
+Whichever you bring: an OpenAI, Anthropic or Google API key, or a ChatGPT subscription signed in through the desktop app. Heavy, standard and light tiers can each be pointed at a different model.
+
+**How do I self-host it?**
+Clone https://github.com/5hirish/duct and follow the open-source page: the FastAPI backend, the agents and the Next.js app run on your own machine or server, with your own database and keys.
 
 ## Free tools
 

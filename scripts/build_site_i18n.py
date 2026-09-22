@@ -15,11 +15,13 @@ own JavaScript injects (wrapped in ``ductT('…')`` in ``assets/*.js``).
 
 Then it writes ``site/es/about.html`` and friends: same markup, translated
 text, ``<html lang>`` set, canonical and ``og:url`` pointing at the localised
-address, an hreflang block for every language, relative asset paths made
-root-absolute (a page under ``/es/`` cannot use ``assets/duct.css``), internal
-links pointed at their localised twin, and a ``window.DUCT_I18N`` dictionary
-for the JavaScript strings. The English pages get the same hreflang block,
-between markers, so both directions of the alternate link exist.
+address, an hreflang block for every language with the matching ``og:locale``
+pair, relative asset paths made root-absolute (a page under ``/es/`` cannot
+use ``assets/duct.css``), internal links pointed at their localised twin, the
+JSON-LD translated with its addresses localised and ``inLanguage`` set, and a
+``window.DUCT_I18N`` dictionary for the JavaScript strings. The English pages
+get the same hreflang block, between markers, so both directions of the
+alternate link exist.
 
 A missing translation renders as English rather than a hole, and ``--check``
 fails on it, because a page that silently ships half-English is the failure
@@ -75,6 +77,22 @@ COPY_ATTRS = {"alt", "title", "aria-label", "aria-description", "placeholder", "
 META_NAMES = {"description", "twitter:title", "twitter:description"}
 META_PROPS = {"og:title", "og:description"}
 URL_ATTRS = {"href", "src", "poster", "data-src", "data-duct-partial"}
+
+#: JSON-LD. The FAQ, breadcrumb and application blocks carry the same copy as
+#: the page, and Google reads them as claims about *this* page: a German page
+#: whose FAQPage is in English contradicts its own text, and a WebApplication
+#: whose `url` is the English address tells the crawler the page is a copy.
+#: So a string under one of these keys is translated like a text run, an
+#: address under one of these keys is localised like an href, and every
+#: top-level object states its `inLanguage`.
+LD_COPY_KEYS = {"name", "headline", "alternativeHeadline", "description", "text", "alternateName", "caption"}
+LD_URL_KEYS = {"url", "mainEntityOfPage", "@id", "item"}
+#: Objects that name a person or an organisation: their `name` is a name, and
+#: an entity has no language.
+LD_ENTITY_TYPES = {"Person", "Organization", "ContactPoint", "Brand"}
+#: What `og:locale` carries for each language tag. Facebook and LinkedIn key
+#: on this, not on `<html lang>`.
+OG_LOCALES = {"en": "en_US", "es": "es_ES", "pt-BR": "pt_BR", "de": "de_DE", "ja": "ja_JP"}
 
 #: Attribute value that is a name, a number or a symbol, not copy.
 NAMES = {
@@ -425,12 +443,82 @@ def rewrite_url(value: str, attr: str, ctx: PageContext) -> str:
 def transform(text: str, tr: Translator, ctx: PageContext) -> str:
     nodes = parse_page(text)
     out: list[str] = []
+    in_ld = False
     for node in nodes:
         if isinstance(node, Segment):
             out.append(_render_segment(node, tr, ctx))
-        else:
-            out.append(_render_tok(node, tr, ctx))
+            continue
+        if node.kind == "raw" and in_ld:
+            out.append(_render_ld(node.raw, tr, ctx))
+            continue
+        if node.tag == "script":
+            in_ld = node.kind == "open" and dict(node.attrs).get("type", "").lower() == "application/ld+json"
+        out.append(_render_tok(node, tr, ctx))
     return "".join(out)
+
+
+# ---------------------------------------------------------------------------
+# JSON-LD: the structured data says in its own language what the page says
+# ---------------------------------------------------------------------------
+
+def _localize_ld(data, tr: Translator, ctx: PageContext):
+    if isinstance(data, list):
+        return [_localize_ld(x, tr, ctx) for x in data]
+    if not isinstance(data, dict):
+        return data
+    is_entity = data.get("@type") in LD_ENTITY_TYPES
+    out = {}
+    for k, v in data.items():
+        if isinstance(v, str):
+            if k in LD_URL_KEYS and ctx.prefix is not None and v.startswith(BASE_URL):
+                path = v[len(BASE_URL):]
+                if path in ctx.localized_paths:
+                    v = BASE_URL + localize_path(path, ctx)
+            elif k in LD_COPY_KEYS and not is_entity and is_copy(v):
+                got = tr(_WS.sub(" ", v).strip())
+                if got is not None:
+                    v = got
+        else:
+            v = _localize_ld(v, tr, ctx)
+        out[k] = v
+    return out
+
+
+def _with_language(obj: dict, lang: str) -> dict:
+    """`inLanguage` right after `@type`, replacing whatever the English block said."""
+    out = {}
+    for k, v in obj.items():
+        if k == "inLanguage":
+            continue
+        out[k] = v
+        if k == "@type":
+            out["inLanguage"] = lang
+    out.setdefault("inLanguage", lang)
+    return out
+
+
+def _render_ld(raw: str, tr: Translator, ctx: PageContext) -> str:
+    body = raw.strip()
+    if not body:
+        return raw
+    try:
+        data = json.loads(body)
+    except ValueError:
+        return raw  # check-pages.py reports it; a broken block is not ours to guess at
+    data = _localize_ld(data, tr, ctx)
+    if ctx.prefix is None:
+        return raw  # extraction: recorded, unchanged
+    if isinstance(data, list):
+        data = [_with_language(o, ctx.lang) if isinstance(o, dict) and o.get("@type") not in LD_ENTITY_TYPES else o for o in data]
+    elif data.get("@type") not in LD_ENTITY_TYPES:
+        data = _with_language(data, ctx.lang)
+    pretty = "\n" in body
+    text = json.dumps(data, ensure_ascii=False, indent=2 if pretty else None, separators=None if pretty else (",", ":"))
+    # "</" inside a script element ends it early in every browser.
+    text = text.replace("</", "<\\/")
+    lead = raw[: len(raw) - len(raw.lstrip())]
+    tail = raw[len(raw.rstrip()):]
+    return lead + text + tail
 
 
 def _render_tok(t: Tok, tr: Translator, ctx: PageContext) -> str:
@@ -568,12 +656,22 @@ def js_strings() -> list[str]:
 # Head blocks: hreflang, and the JS dictionary
 # ---------------------------------------------------------------------------
 
-def hreflang_block(url_path: str) -> str:
+def hreflang_block(url_path: str, lang: str = "en") -> str:
+    """Every language's address for this page, then the OG locale and its alternates.
+
+    The `og:locale` lines live in the same marked block because they are the
+    same fact for a different reader: hreflang is for search engines, the OG
+    pair is for the share cards Facebook and LinkedIn draw.
+    """
     lines = [HREFLANG_START]
     lines.append(f'<link rel="alternate" hreflang="x-default" href="{BASE_URL}{url_path}"/>')
     lines.append(f'<link rel="alternate" hreflang="en" href="{BASE_URL}{url_path}"/>')
     for prefix, tag in LOCALES.items():
         lines.append(f'<link rel="alternate" hreflang="{tag}" href="{BASE_URL}/{prefix}{url_path}"/>')
+    lines.append(f'<meta property="og:locale" content="{OG_LOCALES[lang]}"/>')
+    for tag, code in OG_LOCALES.items():
+        if tag != lang:
+            lines.append(f'<meta property="og:locale:alternate" content="{code}"/>')
     lines.append(HREFLANG_END)
     return "\n".join(lines)
 
@@ -582,12 +680,12 @@ _CANONICAL = re.compile(r'<link rel="canonical" href="[^"]*"\s*/?>')
 _HREFLANG_OLD = re.compile(re.escape(HREFLANG_START) + r".*?" + re.escape(HREFLANG_END) + r"\n?", re.S)
 
 
-def with_hreflang(text: str, url_path: str) -> str:
+def with_hreflang(text: str, url_path: str, lang: str = "en") -> str:
     text = _HREFLANG_OLD.sub("", text)
     m = _CANONICAL.search(text)
     if not m:
         return text
-    return text[: m.end()] + "\n" + hreflang_block(url_path) + text[m.end():]
+    return text[: m.end()] + "\n" + hreflang_block(url_path, lang) + text[m.end():]
 
 
 _CONFIG_SCRIPT = re.compile(r'<script src="(?:\.\./|/)?assets/config\.js"')
@@ -735,7 +833,7 @@ def render_all(check: bool) -> tuple[list[str], dict[str, int]]:
             text = _HREFLANG_OLD.sub("", text)
             out = transform(text, tr, ctx)
             if not rel.startswith("partials/"):
-                out = with_hreflang(out, ctx.url_path)
+                out = with_hreflang(out, ctx.url_path, lang)
                 out = with_js_dictionary(out, js_dict)
             out = select_current(out, prefix)
             lang_missing += len(tr.missing)

@@ -218,6 +218,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
     ld = {
         "@context": "https://schema.org",
         "@type": "Article",
+        "inLanguage": "en",
         "headline": title,
         "description": excerpt,
         "datePublished": published,
@@ -261,6 +262,7 @@ def render_page(slug: str, fm: dict[str, str], body_html: str, siblings: list[di
 <meta name="description" content="{esc(excerpt)}"/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
 <meta property="og:url" content="{canonical}"/>
 <meta property="og:title" content="{esc(full_title)}"/>
 <meta property="og:description" content="{esc(excerpt)}"/>

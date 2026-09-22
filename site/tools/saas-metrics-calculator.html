@@ -14,8 +14,13 @@
 <link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/saas-metrics-calculator"/>
 <link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/saas-metrics-calculator"/>
 <link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/saas-metrics-calculator"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
 <!-- hreflang:end -->
-<meta name="description" content="Free SaaS metrics benchmark calculator. Enter your MRR, churn, CAC, LTV, and trial-to-paid rate. Get instant colour-coded scores vs industry averages from OpenView and ChartMogul."/>
+<meta name="description" content="Free SaaS metrics benchmark calculator. Enter MRR, churn, CAC, LTV and trial-to-paid rate for colour-coded scores against OpenView and ChartMogul averages."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/tools/saas-metrics-calculator"/>
@@ -32,10 +37,10 @@
 <link rel="stylesheet" href="../assets/duct.css"/>
 <script src="../assets/config.js"></script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"SaaS Metrics Benchmark Calculator","url":"https://getduct.ai/tools/saas-metrics-calculator","description":"Free calculator that benchmarks your SaaS metrics — churn rate, LTV:CAC ratio, CAC payback period, and trial-to-paid conversion — against industry averages from OpenView and ChartMogul.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+{"@context":"https://schema.org","@type":"WebApplication","inLanguage":"en","name":"SaaS Metrics Benchmark Calculator","url":"https://getduct.ai/tools/saas-metrics-calculator","description":"Free calculator that benchmarks your SaaS metrics — churn rate, LTV:CAC ratio, CAC payback period, and trial-to-paid conversion — against industry averages from OpenView and ChartMogul.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a good SaaS churn rate?","acceptedAnswer":{"@type":"Answer","text":"A good monthly churn rate for SaaS is below 2%. Anything between 2-4% is average and needs attention. Above 4% monthly churn is critical — at that rate you're losing nearly half your revenue base each year."}},{"@type":"Question","name":"How do I calculate LTV for a SaaS business?","acceptedAnswer":{"@type":"Answer","text":"LTV = Average Monthly Revenue per Customer divided by Monthly Churn Rate. For example, if ARPU is 100 and monthly churn is 2%, LTV = 100 divided by 0.02 = 5000."}},{"@type":"Question","name":"What is a healthy LTV:CAC ratio?","acceptedAnswer":{"@type":"Answer","text":"A healthy LTV:CAC ratio for SaaS is above 3:1. A ratio of 2-3:1 is marginal. Below 2:1 typically means your business model is not viable at scale."}},{"@type":"Question","name":"How often should I track SaaS metrics?","acceptedAnswer":{"@type":"Answer","text":"Track core SaaS metrics monthly at minimum — MRR, churn, and CAC are standard monthly reviews. LTV and LTV:CAC are more meaningful on a quarterly basis since they are slow-moving."}},{"@type":"Question","name":"What data sources does this calculator use?","acceptedAnswer":{"@type":"Answer","text":"Benchmarks come from OpenView Partners SaaS Benchmarks Report (2023-2024) and ChartMogul SaaS Benchmarks Report. LTV:CAC thresholds follow the widely-cited 3:1 standard from David Skok's SaaS metrics framework."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What is a good SaaS churn rate?","acceptedAnswer":{"@type":"Answer","text":"A good monthly churn rate for SaaS is below 2%. Between 2–4% is average and needs attention. Above 4% monthly churn is critical — at that rate you're losing nearly half your revenue base each year. Benchmarks vary by stage: early-stage SaaS typically sees higher churn than mature products."}},{"@type":"Question","name":"How do I calculate LTV for a SaaS business?","acceptedAnswer":{"@type":"Answer","text":"LTV = Average Monthly Revenue per Customer ÷ Monthly Churn Rate. For example, if ARPU is €100 and monthly churn is 2%, LTV = €100 ÷ 0.02 = €5,000. A gross-margin-adjusted version: LTV = (ARPU × Gross Margin %) ÷ Churn Rate. This calculator uses the simple version unless you provide your own LTV."}},{"@type":"Question","name":"What is a healthy LTV:CAC ratio?","acceptedAnswer":{"@type":"Answer","text":"A healthy LTV:CAC ratio for SaaS is above 3:1 — for every €1 spent on acquisition, you recover €3 in lifetime value. A ratio of 2–3:1 covers costs but doesn't build strong unit economics. Below 2:1 typically means the model isn't viable at scale. Above 5:1 often signals underinvestment in growth."}},{"@type":"Question","name":"How often should I track SaaS metrics?","acceptedAnswer":{"@type":"Answer","text":"Track MRR, churn, and new customers monthly. LTV and LTV:CAC are meaningful quarterly since they're slow-moving. A weekly brief covering the 4–5 metrics that matter most beats a monthly spreadsheet dump every time."}},{"@type":"Question","name":"What data sources does this calculator use?","acceptedAnswer":{"@type":"Answer","text":"Benchmarks come from OpenView Partners' SaaS Benchmarks Report (2023–2024) and ChartMogul's SaaS Benchmarks Report. LTV:CAC thresholds follow the widely-cited 3:1 standard from David Skok's SaaS metrics framework at For Entrepreneurs."}}]}
 </script>
 <style>
   .skip-link {
@@ -176,6 +181,9 @@
   }
   .insight-link:hover { background: #dbeafe; }
 </style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"en","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://getduct.ai/"},{"@type":"ListItem","position":2,"name":"Free tools","item":"https://getduct.ai/tools/"},{"@type":"ListItem","position":3,"name":"SaaS Metrics Benchmark Calculator","item":"https://getduct.ai/tools/saas-metrics-calculator"}]}
+</script>
 </head>
 <body>
 
