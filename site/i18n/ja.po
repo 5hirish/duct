@@ -128,9 +128,8 @@ msgstr ""
 
 #: about.html
 msgid ""
-"Duct reads across your existing tools and synthesizes the cross-tool story that has been hiding in plain sight. Not another dashboard. Not another data warehouse project you will abandon in Q3. And when the answer is “pause that campaign” or “mark that GA4 event,” Duct can prepare the change and show you a preview. It cannot apply it. Only you can. That boundary lives in code, not in a prompt."
+"Duct reads across the tools you already run and answers the question none of them can answer alone: why did this move, and what do we do about it. Not another dashboard. Not another data warehouse project you will abandon in Q3. And when the answer is “pause that campaign” or “mark that GA4 event,” Duct can prepare the change and show you a preview. It cannot apply it. Only you can. That boundary lives in code, not in a prompt."
 msgstr ""
-"Ductは既存のツール全体を読み込み、これまで見過ごされてきたツール横断的なストーリーを統合します。別のダッシュボードではありません。第3四半期に放棄する別のデータウェアハウスプロジェクトでもありません。そして、「そのキャンペーンを一時停止する」または「そのGA4イベントをマークする」という回答が出た場合、Ductは変更を準備し、プレビューを表示できます。それを適用することはできません。あなただけができます。その境界はプロンプトではなく、コード内に存在します。"
 
 #: about.html
 msgid ""
@@ -140,9 +139,8 @@ msgstr ""
 
 #: about.html
 msgid ""
-"Each one reads across the twelve connected sources instead of one at a time, and when the answer is a change, it prepares the change and waits for you. Every connector and every prompt is in the repo, so this list is the list, not a roadmap."
+"Each one reads across the thirteen connected sources instead of one at a time, and when the answer is a change, it prepares the change and waits for you. Every connector and every prompt is in the repo, so this list is the list, not a roadmap."
 msgstr ""
-"それぞれが、一度に1つずつではなく、接続された12のソース全体を読み込みます。そして、回答が変更である場合、その変更を準備し、あなたを待ちます。すべてのコネクタとすべてのプロンプトはリポジトリにあります。そのため、このリストはロードマップではなく、実際のリストです。"
 
 #: about.html
 msgid ""
@@ -152,9 +150,8 @@ msgstr ""
 
 #: about.html
 msgid ""
-"Every one of those jobs had the same gap: the answer to “why did that number move” was never inside one tool, and somebody senior burned a morning every week stitching it together by hand. Duct is the thing I wanted for that job, so I built it and made it MIT."
+"Every one of those jobs had the same gap: the answer to “why did that number move” was never inside one tool, and somebody senior burned a morning every week carrying the numbers between tools by hand. Duct is the thing I wanted for that job, so I built it and made it MIT."
 msgstr ""
-"これらの仕事にはすべて同じギャップがありました。「なぜその数字が変動したのか」という答えは、決して一つのツールの中にはなく、毎週、上級者が手作業でそれらをまとめ上げるのに午前中を費やしていました。Ductはその仕事のために私が欲しかったもので、だから私はそれを構築し、MITライセンスにしました。"
 
 #: about.html
 msgid ""
@@ -239,9 +236,8 @@ msgstr "オープンソース"
 
 #: about.html
 msgid ""
-"Paste a URL. Duct crawls the site, reads the technical and content signals, and hands back a prioritised report. It is the <0>free front door</0>: no account needed to run one."
+"Paste a URL. Duct crawls the site, reads the technical and content signals, and hands back a prioritized report. It is the <0>free front door</0>: no account needed to run one."
 msgstr ""
-"URLを貼り付けてください。Ductがサイトをクロールし、技術的およびコンテンツのシグナルを読み取り、優先順位付けされたレポートを返します。<0>無料の入り口</0>です。実行にアカウントは不要です。"
 
 #: about.html
 msgid "Principles, not <0>platitudes</0>"
@@ -338,9 +334,8 @@ msgstr "すべてのコードを読めます"
 
 #: about.html
 msgid ""
-"Your analytics tool knows what happened. Your support tool knows who's upset. Your project tracker knows what shipped. Your ad platform knows what you spent. But none of them talk to each other — so you spend hours every week playing translator between tabs, trying to piece together a story that already exists if only someone would connect the dots."
+"Your analytics tool knows what happened. Your support tool knows who's upset. Your project tracker knows what shipped. Your ad platform knows what you spent. But none of them talk to each other — so once a week somebody carries the numbers between them by hand, and the decision gets made on whichever slice was open. The story was there the whole time. Nobody was reading it whole."
 msgstr ""
-"アナリティクスツールは何が起こったかを知っています。サポートツールは誰が不満を持っているかを知っています。プロジェクトトラッカーは何が出荷されたかを知っています。広告プラットフォームはあなたが何を使ったかを知っています。しかし、それらのどれもが互いに連携しません。そのため、あなたは毎週何時間もタブの間で翻訳者の役割を果たし、誰かが点と点をつなぎ合わせればすでに存在するはずのストーリーを組み立てようとしています。"
 
 #: about.html
 msgid ""
@@ -1063,10 +1058,20 @@ msgstr ""
 msgid "The desktop app"
 msgstr "デスクトップアプリ"
 
+#. meta og:description
+#: download.html
+msgid ""
+"The whole picture in one window on Mac, Windows and Linux. Signed, self-updating, free with your own keys. Nothing to host."
+msgstr ""
+
+#: download.html
+msgid "The whole picture,<0/>in one <1>window.</1>"
+msgstr ""
+
 #: download.html index.html
 msgid ""
-"Twelve connectors. Ads, analytics, revenue and session replays, read together for one question."
-msgstr "12個のコネクタ。広告、アナリティクス、収益、セッションリプレイをまとめて一つの問いに答えます。"
+"Thirteen connectors. Ads, analytics, revenue and session replays, read together for one question."
+msgstr ""
 
 #: download.html
 msgid "Two ways to run it"
@@ -1127,16 +1132,6 @@ msgid ""
 msgstr ""
 "お客様のスタックは同じです。広告、アナリティクス、検索、収益：それぞれの源泉は問題ありません。欠けているのは、それらと意思決定をつなぐチャネルです。それがDuctの役割であり、名前の由来です。"
 
-#. meta og:description
-#: download.html
-msgid ""
-"Your whole growth stack in one window on Mac, Windows and Linux. Signed, self-updating, free with your own keys. Nothing to host."
-msgstr "Mac、Windows、Linuxで、お客様の成長スタック全体を一つのウィンドウで。署名済み、自己更新、お客様自身のキーで無料。ホスティングは不要です。"
-
-#: download.html
-msgid "Your whole stack,<0/>in one <1>window.</1>"
-msgstr "お客様のスタック全体を<0/>一つの<1>ウィンドウで。</1>"
-
 #: download.html
 msgid "apt-based distributions"
 msgstr "aptベースのディストリビューション"
@@ -1177,9 +1172,8 @@ msgstr ""
 
 #: for-organic-growth.html
 msgid ""
-"<0><1/></0> Search Console flagged a query climbing into positions 4–8 three weeks ago. It's still sitting in a tab. The blog calendar doesn't reflect it."
+"<0><1/></0> Search Console flagged a query climbing into positions 4–8 three weeks ago. Nothing in the content calendar knows."
 msgstr ""
-"<0><1/></0> 3週間前、Search Consoleが4〜8位に上昇中のクエリを検出しました。それはまだタブに残っており、ブログカレンダーには反映されていません。"
 
 #: for-organic-growth.html
 msgid ""
@@ -1189,9 +1183,8 @@ msgstr ""
 
 #: for-organic-growth.html
 msgid ""
-"<0><1/></0> You spend Monday mornings pulling rank data, session stats, and content metrics from five different tools just to decide what to work on."
+"<0><1/></0> You spend Monday mornings pulling rank data, session stats and content metrics by hand, just to decide what to work on."
 msgstr ""
-"<0><1/></0> 毎週月曜日の朝、あなたは5つの異なるツールからランキングデータ、セッション統計、コンテンツ指標を引っ張り出して、何に取り組むべきかを決めています。"
 
 #: for-organic-growth.html index.html
 msgid "<0>High</0>63 images without alt text"
@@ -1297,12 +1290,6 @@ msgstr "Content Studioはボード上で週の計画を立て、各投稿をス�
 #: for-organic-growth.html
 msgid "Does Duct store my SEO data or share it with third parties?"
 msgstr "Ductは私のSEOデータを保存したり、第三者と共有したりしますか？"
-
-#: for-organic-growth.html
-msgid ""
-"Duct connects to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads and Stripe via one-click OAuth. Setup takes under five minutes and your first weekly brief lands in your inbox after connecting."
-msgstr ""
-"Ductは、ワンクリックOAuthを介してGoogle Search Console、GA4、Google Tag Manager、Microsoft Clarity、Mixpanel、HubSpot、Google Ads、Stripeに接続します。セットアップは5分未満で完了し、接続後、最初の週次ブリーフが受信トレイに届きます。"
 
 #: for-organic-growth.html
 msgid "Duct for Organic Growth"
@@ -1421,18 +1408,17 @@ msgstr "Mixpanel"
 msgid "Not yet"
 msgstr "まだです"
 
+#: for-organic-growth.html
+msgid ""
+"OAuth for Search Console, GA4 and Tag Manager; a pasted read key for Clarity and Mixpanel. Reporting needs read access only; nothing is exported by hand."
+msgstr ""
+
 #. img alt
 #: for-organic-growth.html
 msgid ""
 "One question and its answer: which content converts, read from Search Console, GA4 and Clarity, with the pages to update first"
 msgstr ""
 "一つの質問とその答え：どのコンテンツがコンバージョンにつながるか、Search Console、GA4、Clarityから読み取り、最初に更新すべきページとともに"
-
-#: for-organic-growth.html
-msgid ""
-"One-click OAuth to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity and Mixpanel. Reporting needs read access only; nothing is exported by hand."
-msgstr ""
-"Google Search Console、GA4、Google Tag Manager、Microsoft Clarity、MixpanelへのワンクリックOAuth。レポートには読み取りアクセスのみが必要です。手動でエクスポートされるものはありません。"
 
 #. meta twitter:description
 #: for-organic-growth.html
@@ -1469,14 +1455,18 @@ msgid "Search Console"
 msgstr "Search Console"
 
 #: for-organic-growth.html
+msgid ""
+"Search Console knows the query and the position. It does not know whether the click became a trial. Duct reads Search Console, GA4, Clarity and Mixpanel together, so you get the pages to update and the queries to target, ranked by what they earn rather than where they rank."
+msgstr ""
+
+#: for-organic-growth.html
 msgid "Search Console says impressions are up. GA4 says trials are flat."
 msgstr "Search Consoleではインプレッションが増加していると表示されます。GA4ではトライアルが横ばいだと表示されます。"
 
 #: for-organic-growth.html
 msgid ""
-"Search Console shows you queries and positions in isolation. Duct correlates ranking, traffic, behaviour and conversion signals across Search Console, GA4, Clarity and Mixpanel, then surfaces prioritised actions instead of disconnected dashboards."
+"Search Console, GA4 and Tag Manager connect with OAuth in one click. Clarity, Mixpanel, HubSpot and Stripe take a read-only key you paste once. About ten minutes for the whole stack, then ask which content converts. The free audit needs nothing connected at all."
 msgstr ""
-"Search Consoleはクエリと順位を単独で表示します。DuctはSearch Console、GA4、Clarity、Mixpanelを横断してランキング、トラフィック、行動、コンバージョンシグナルを関連付け、バラバラのダッシュボードではなく、優先順位付けされたアクションを提示します。"
 
 #: for-organic-growth.html
 msgid "See which content actually converts.<0/><1>Fix it in the same sitting.</1>"
@@ -1617,6 +1607,16 @@ msgid ""
 "<0><1/></0> You spend four hours every week pulling CSVs from three platforms to build a report that's already stale by Monday."
 msgstr "<0><1/></0> 毎週4時間かけて3つのプラットフォームからCSVを抽出し、月曜日にはすでに古くなっているレポートを作成しています。"
 
+#: for-paid-ads.html
+msgid ""
+"A spreadsheet shows you what happened. Duct tells you why, and what to do about it. It reads Google Ads, Meta and Apple Search Ads next to GA4 and Stripe, so a campaign that looks efficient on ROAS and terrible on retention gets named, with the pause or the budget move ready to approve."
+msgstr ""
+
+#: for-paid-ads.html
+msgid ""
+"About ten minutes for the whole stack. Google Ads, GA4 and Search Console connect with OAuth in one click. Meta, Apple Search Ads, OpenAI Ads, Stripe and RevenueCat take a read-only key you paste once. Then ask your first question; there is no report to wait for."
+msgstr ""
+
 #. img alt
 #: for-paid-ads.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/marketing-roi-calculator.html tools/roas-calculator.html tools/utm-builder.html
 msgid ""
@@ -1736,9 +1736,13 @@ msgstr "Meta広告"
 
 #: for-paid-ads.html
 msgid ""
-"Not unless you approve it. Duct reads your performance data to build the brief, and reporting works with read-only access alone. When it finds something worth acting on — a wasted-spend search term to add as a negative keyword, a campaign to pause — it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."
+"Not unless you approve it. Duct reads your performance data to answer you, and reading needs read-only access alone. When it finds something worth acting on — a wasted-spend search term to add as a negative keyword, a campaign to pause — it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."
 msgstr ""
-"お客様が承認しない限り、変更は行いません。Ductはパフォーマンスデータを読み取ってブリーフを作成し、レポート機能は読み取り専用アクセスのみで動作します。行動すべきこと（無駄な支出の検索語句をネガティブキーワードとして追加すること、一時停止するキャンペーンなど）を見つけた場合、変更を提案し、影響を受けるすべての項目を前後で表示し、お客様が承認した場合にのみ適用します。適用されたすべての変更はログに記録され、プラットフォームが許可する範囲で元に戻すことができます。OAuthトークンは暗号化されてサーバー側に保存され、転送中のすべてのデータはTLSを介して暗号化されます。"
+
+#: for-paid-ads.html
+msgid ""
+"OAuth for Google Ads and GA4; a pasted read key for Meta, Apple Search Ads, OpenAI Ads and Stripe. Reporting needs read access only; nothing is exported by hand."
+msgstr ""
 
 #. img alt
 #: for-paid-ads.html
@@ -1750,12 +1754,6 @@ msgstr "1つの質問とその回答：広告予算がどこで漏れている�
 msgid ""
 "One question, every platform read together, and an answer that cites which campaign, which cohort, and what to do."
 msgstr "1つの質問に対し、すべてのプラットフォームをまとめて読み取り、どのキャンペーン、どのコホート、そして何をすべきかを引用した回答を提供します。"
-
-#: for-paid-ads.html
-msgid ""
-"One-click OAuth to Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 and Stripe. Reporting needs read access only; nothing is exported by hand."
-msgstr ""
-"Google広告、Meta広告、Apple Search Ads、OpenAI Ads、GA4、StripeへのワンクリックOAuth。レポートには読み取りアクセスのみが必要です。手動でエクスポートされるものはありません。"
 
 #. meta twitter:description
 #: for-paid-ads.html
@@ -1807,12 +1805,6 @@ msgstr ""
 
 #: for-paid-ads.html
 msgid ""
-"Spreadsheets and dashboards show you what happened — Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."
-msgstr ""
-"スプレッドシートやダッシュボードは「何が起こったか」を示しますが、Ductは「それに対して何をすべきか」を伝えます。3つのプラットフォームから毎週手動でCSVを抽出しマージする代わりに、DuctはGoogle Ads、Meta、LinkedInのデータを自動的に関連付け、静的なレポートでは見落とされがちなクリエイティブの疲労、予算再配分の機会、クロスチャネルのアトリビューションギャップを明らかにします。"
-
-#: for-paid-ads.html
-msgid ""
 "Targets, decisions and what it learned, on a timeline. The next proposal respects them without being told again."
 msgstr "目標、決定、学習した内容がタイムラインに表示されます。次回の提案は、再度指示することなくそれらを尊重します。"
 
@@ -1832,12 +1824,6 @@ msgstr "シグナルはプラットフォーム内にあります。<0/>しか�
 #: for-paid-ads.html
 msgid "Top creative CTR dropped 1.4%"
 msgstr "トップクリエイティブのCTRが1.4%低下しました"
-
-#: for-paid-ads.html
-msgid ""
-"Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe and RevenueCat. No API keys to configure and no developer time required. You select your platforms, authorize access, and your first daily ad intelligence brief arrives the next morning."
-msgstr ""
-"5分以内。DuctはワンクリックOAuthを使用して、Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、HubSpot、Stripe、RevenueCatに接続します。APIキーの設定や開発者の時間は不要です。プラットフォームを選択し、アクセスを承認するだけで、翌朝には最初のデイリー広告インテリジェンスブリーフが届きます。"
 
 #: for-paid-ads.html
 msgid "What is Duct for paid ads?"
@@ -1962,12 +1948,6 @@ msgid "Does Duct for product intelligence cost anything?"
 msgstr "プロダクトインテリジェンス向けDuctは費用がかかりますか？"
 
 #: for-product-intelligence.html
-msgid ""
-"Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting."
-msgstr ""
-"DuctはMixpanel、GA4、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat、Google AdsにワンクリックOAuthで接続します。セットアップは5分未満で完了し、接続後、最初のデイリーPMブリーフィングが受信トレイに届きます。"
-
-#: for-product-intelligence.html
 msgid "Duct for Product Intelligence"
 msgstr "プロダクトインテリジェンス向けDuct"
 
@@ -1998,6 +1978,11 @@ msgstr "創業期のPM"
 msgid "Free during beta · No credit card · For PMs at 20-200 person companies"
 msgstr "ベータ期間中は無料 · クレジットカード不要 · 従業員20～200名の企業PM向け"
 
+#: for-product-intelligence.html
+msgid ""
+"GA4 and Google Ads connect with OAuth in one click. Mixpanel, Clarity, GrowthBook, HubSpot, Stripe and RevenueCat take a read-only key you paste once. About ten minutes for the whole stack, then ask why the number moved."
+msgstr ""
+
 #: for-product-intelligence.html tools/weekly-brief-template.html
 msgid "Growth PM"
 msgstr "グロースPM"
@@ -2021,8 +2006,18 @@ msgid ""
 msgstr "1つの質問に対し、それらすべてを読み込み、原因、情報源、提案する変更を回答します。"
 
 #: for-product-intelligence.html
+msgid ""
+"Mixpanel knows the funnel. It does not know what the session looked like, whether the experiment was on, or whether the account paid. Duct reads Mixpanel, Clarity, GrowthBook and Stripe together and names the cause, so what to ship next is a decision, not a hunch."
+msgstr ""
+
+#: for-product-intelligence.html
 msgid "Next week’s question depends on last week’s call."
 msgstr "来週の質問は先週の会議次第です。"
+
+#: for-product-intelligence.html
+msgid ""
+"OAuth for GA4; a pasted read key for Mixpanel, Clarity, GrowthBook and HubSpot. Reporting needs read access only; nothing is exported by hand."
+msgstr ""
 
 #: for-product-intelligence.html
 msgid "Onboarding fix — rolled out Tuesday"
@@ -2033,12 +2028,6 @@ msgstr "オンボーディングの修正 — 火曜日に展開済み"
 msgid ""
 "One question and its answer: why activation dropped, read from GA4, Clarity and Stripe, naming the day, the platform and the screen"
 msgstr "1つの質問とその回答：なぜアクティベーションが低下したのか、GA4、Clarity、Stripeから読み込み、日付、プラットフォーム、画面を特定します"
-
-#: for-product-intelligence.html
-msgid ""
-"One-click OAuth to Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot. Reporting needs read access only; nothing is exported by hand."
-msgstr ""
-"Mixpanel、Microsoft Clarity、GrowthBook、GA4、HubSpotへのワンクリックOAuth。レポート作成には読み取りアクセスのみが必要で、手動でのエクスポートは一切ありません。"
 
 #. meta twitter:description
 #: for-product-intelligence.html
@@ -2066,12 +2055,6 @@ msgstr "今週、リテンションが4%低下しました"
 #: for-product-intelligence.html
 msgid "See why the number moved.<0/><1>Fix it before the standup.</1>"
 msgstr ""
-
-#: for-product-intelligence.html
-msgid ""
-"Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."
-msgstr ""
-"単一ツールのダッシュボードは、個別の指標しか表示しません。Ductはプロダクト分析、セッション行動、実験結果、収益シグナルを関連付け、手動での関連付けなしに、次に何をリリースすべきかを優先順位付けできます。"
 
 #: for-product-intelligence.html
 msgid ""
@@ -2126,9 +2109,8 @@ msgstr "頼れるアナリストはいません。SQLに時間を割く余裕も
 
 #: for-product-intelligence.html
 msgid ""
-"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."
+"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to answer you and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."
 msgstr ""
-"お客様のデータはTLS経由で転送中に暗号化され、OAuthトークンは保存時に暗号化され、ブラウザに公開されることはありません。Ductはブリーフを作成するためにツールを読み取りますが、特定の変更を最初に承認しない限り、ツール内の何も変更しません。アクセスは招待したプロジェクトメンバーに限定され、いつでも情報源の接続を解除したり、データを削除したりできます。"
 
 #: index.html
 msgid "<0></0> Free on the ChatGPT plan you already pay for"
@@ -2241,9 +2223,8 @@ msgstr "無料 · アカウント不要、クレジットカード不要 · Wind
 
 #: index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
+"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. The four Google tools connect with OAuth; the rest take a read-only key you paste once. Nothing is exported by hand."
 msgstr ""
-"Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat。すべての接続はOAuthであり、手動でエクスポートされるものはありません。"
 
 #: index.html
 msgid "Is it free?"
@@ -2766,22 +2747,22 @@ msgid "Free & open source"
 msgstr "無料＆オープンソース"
 
 #: partials/cta-blog.html
-msgid "Stop stitching reports.<0/><1>Start asking.</1>"
-msgstr "レポートのつなぎ合わせをやめましょう。<0/><1>質問を始めましょう。</1>"
+msgid "Stop reading one tool at a time.<0/><1>Start asking all of them.</1>"
+msgstr ""
+
+#: partials/cta-for-pages.html
+msgid "Ask the question <0>you've been putting off.</0>"
+msgstr ""
 
 #: partials/cta-for-pages.html
 msgid ""
-"Free and open source. Connect your stack, tune your first brief around your north-star metric, and keep every credential on your own machine."
-msgstr "無料でオープンソース。スタックを接続し、北極星指標に合わせて最初のブリーフを調整し、すべての認証情報を自分のマシンに保持します。"
-
-#: partials/cta-for-pages.html
-msgid "Get growth intelligence <0>on your desktop</0>"
-msgstr "<0>デスクトップで</0>成長インテリジェンスを入手"
+"Free and open source. Connect your stack, ask, and approve the fix from the same screen. Your keys stay on your machine."
+msgstr ""
 
 #: partials/cta-home.html
 msgid ""
-"Install the app, connect your tools, and ask the question you've been putting off."
-msgstr "アプリをインストールし、ツールを接続して、後回しにしていた質問をしてください。"
+"Install the app, connect your tools, and put the question to all of them at once."
+msgstr ""
 
 #: partials/cta-home.html
 msgid "Stop deciding on half the picture.<0/><1>Start fixing it with all of it.</1>"
@@ -2943,20 +2924,21 @@ msgid ""
 "<0><1/></0> <2><3>E-commerce / DTC</3><4>ROAS, LTV & retention synthesis</4></2> <5>Soon</5>"
 msgstr "<0><1/></0> <2><3>Eコマース / DTC</3><4>ROAS、LTV、リテンションの統合</4></2> <5>近日公開</5>"
 
-#: partials/nav-blog.html partials/nav-changelog.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
 msgid ""
-"<0><1/></0> <2><3>Organic Growth</3><4>Automated SEO & content intelligence</4></2>"
-msgstr "<0><1/></0> <2><3>オーガニックグロース</3><4>自動化されたSEOとコンテンツインテリジェンス</4></2>"
+"<0><1/></0> <2><3>PMs & growth teams</3><4>Why did signups drop? Read across analytics, ads and revenue</4></2>"
+msgstr ""
+"<0><1/></0> <2><3>PMおよびグロースチーム</3><4>サインアップが減少した理由とは？アナリティクス、広告、収益全体から読み解く</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
 msgid ""
-"<0><1/></0> <2><3>Paid Ads Intelligence</3><4>Cross-platform brief for performance marketers</4></2>"
-msgstr "<0><1/></0> <2><3>有料広告インテリジェンス</3><4>パフォーマンスマーケター向けクロスプラットフォームブリーフ</4></2>"
+"<0><1/></0> <2><3>Performance marketers</3><4>Spend against retention and revenue, not ROAS alone</4></2>"
+msgstr "<0><1/></0> <2><3>パフォーマンスマーケター</3><4>ROASだけでなく、維持率と収益に対して費用を投じる</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
 msgid ""
-"<0><1/></0> <2><3>Product Intelligence</3><4>Weekly brief for PMs & growth teams</4></2>"
-msgstr "<0><1/></0> <2><3>プロダクトインテリジェンス</3><4>PMおよびグロースチーム向け週次ブリーフ</4></2>"
+"<0><1/></0> <2><3>SEO & content teams</3><4>Search Console, GA4 and the audit, in one place</4></2>"
+msgstr "<0><1/></0> <2><3>SEOおよびコンテンツチーム</3><4>Search Console、GA4、および監査を1か所で</4></2>"
 
 #: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
 msgid ""
@@ -3023,22 +3005,6 @@ msgstr "ブログ"
 #: partials/nav-changelog.html
 msgid "changelog"
 msgstr "変更履歴"
-
-#: partials/nav-home.html
-msgid ""
-"<0><1/></0> <2><3>PMs & growth teams</3><4>Why did signups drop? Read across analytics, ads and revenue</4></2>"
-msgstr ""
-"<0><1/></0> <2><3>PMおよびグロースチーム</3><4>サインアップが減少した理由とは？アナリティクス、広告、収益全体から読み解く</4></2>"
-
-#: partials/nav-home.html
-msgid ""
-"<0><1/></0> <2><3>Performance marketers</3><4>Spend against retention and revenue, not ROAS alone</4></2>"
-msgstr "<0><1/></0> <2><3>パフォーマンスマーケター</3><4>ROASだけでなく、維持率と収益に対して費用を投じる</4></2>"
-
-#: partials/nav-home.html
-msgid ""
-"<0><1/></0> <2><3>SEO & content teams</3><4>Search Console, GA4 and the audit, in one place</4></2>"
-msgstr "<0><1/></0> <2><3>SEOおよびコンテンツチーム</3><4>Search Console、GA4、および監査を1か所で</4></2>"
 
 #: partials/nav-home.html
 msgid "Use cases"
@@ -5791,17 +5757,12 @@ msgstr "財務部門が求める数値で健全性をベンチマークし、成
 #. meta og:description
 #: tools/index.html
 msgid ""
-"Benchmarks, paid media calculators, UTMs, and templates. Free in the browser — upgrade to weekly cross-tool briefs when you're ready."
+"Benchmarks, paid media calculators, UTMs and templates. Free in the browser. When you want the number explained, not just computed, Duct reads your tools and answers."
 msgstr ""
-"ベンチマーク、有料メディア計算ツール、UTM、テンプレート。ブラウザで無料で利用できます — 準備ができたら、週次のクロスツールブリーフにアップグレードしてください。"
 
 #: tools/index.html
 msgid "Build UTMs →"
 msgstr "UTMを作成 →"
-
-#: tools/index.html
-msgid "Built by the Duct team"
-msgstr "Ductチームが構築"
 
 #: tools/index.html
 msgid "CAC / LTV Calculator"
@@ -5891,6 +5852,10 @@ msgid "Free growth and marketing tools"
 msgstr "無料のグロースおよびマーケティングツール"
 
 #: tools/index.html
+msgid "From the maker of Duct"
+msgstr ""
+
+#: tools/index.html
 msgid "GA4-friendly campaign links with live preview and validation."
 msgstr "GA4対応のキャンペーンリンク、ライブプレビューと検証付き。"
 
@@ -5961,8 +5926,8 @@ msgstr "SaaS指標と収益"
 
 #: tools/index.html
 msgid ""
-"Same team. A tool answers one question with the numbers you type in. Duct answers it with the numbers in your tools, every time you ask, and proposes what to change."
-msgstr "同じチームです。ツールは入力された数値で一つの質問に答えます。Ductは、ツール内の数値を使って、質問されるたびに答え、変更すべき点を提案します。"
+"Same maker. A tool answers one question with the numbers you type in. Duct answers it with the numbers in your tools, every time you ask, and proposes what to change."
+msgstr ""
 
 #: tools/index.html
 msgid "Template"
@@ -7175,6 +7140,152 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid ""
+#~ "One-click OAuth to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity and Mixpanel. Reporting needs read access only; nothing is exported by hand."
+#~ msgstr ""
+#~ "Google Search Console、GA4、Google Tag Manager、Microsoft Clarity、MixpanelへのワンクリックOAuth。レポートには読み取りアクセスのみが必要です。手動でエクスポートされるものはありません。"
+
+#~ msgid ""
+#~ "One-click OAuth to Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 and Stripe. Reporting needs read access only; nothing is exported by hand."
+#~ msgstr ""
+#~ "Google広告、Meta広告、Apple Search Ads、OpenAI Ads、GA4、StripeへのワンクリックOAuth。レポートには読み取りアクセスのみが必要です。手動でエクスポートされるものはありません。"
+
+#~ msgid ""
+#~ "One-click OAuth to Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot. Reporting needs read access only; nothing is exported by hand."
+#~ msgstr ""
+#~ "Mixpanel、Microsoft Clarity、GrowthBook、GA4、HubSpotへのワンクリックOAuth。レポート作成には読み取りアクセスのみが必要で、手動でのエクスポートは一切ありません。"
+
+#~ msgid ""
+#~ "Duct reads across your existing tools and synthesizes the cross-tool story that has been hiding in plain sight. Not another dashboard. Not another data warehouse project you will abandon in Q3. And when the answer is “pause that campaign” or “mark that GA4 event,” Duct can prepare the change and show you a preview. It cannot apply it. Only you can. That boundary lives in code, not in a prompt."
+#~ msgstr ""
+#~ "Ductは既存のツール全体を読み込み、これまで見過ごされてきたツール横断的なストーリーを統合します。別のダッシュボードではありません。第3四半期に放棄する別のデータウェアハウスプロジェクトでもありません。そして、「そのキャンペーンを一時停止する」または「そのGA4イベントをマークする」という回答が出た場合、Ductは変更を準備し、プレビューを表示できます。それを適用することはできません。あなただけができます。その境界はプロンプトではなく、コード内に存在します。"
+
+#~ msgid ""
+#~ "Each one reads across the twelve connected sources instead of one at a time, and when the answer is a change, it prepares the change and waits for you. Every connector and every prompt is in the repo, so this list is the list, not a roadmap."
+#~ msgstr ""
+#~ "それぞれが、一度に1つずつではなく、接続された12のソース全体を読み込みます。そして、回答が変更である場合、その変更を準備し、あなたを待ちます。すべてのコネクタとすべてのプロンプトはリポジトリにあります。そのため、このリストはロードマップではなく、実際のリストです。"
+
+#~ msgid ""
+#~ "Every one of those jobs had the same gap: the answer to “why did that number move” was never inside one tool, and somebody senior burned a morning every week stitching it together by hand. Duct is the thing I wanted for that job, so I built it and made it MIT."
+#~ msgstr ""
+#~ "これらの仕事にはすべて同じギャップがありました。「なぜその数字が変動したのか」という答えは、決して一つのツールの中にはなく、毎週、上級者が手作業でそれらをまとめ上げるのに午前中を費やしていました。Ductはその仕事のために私が欲しかったもので、だから私はそれを構築し、MITライセンスにしました。"
+
+#~ msgid ""
+#~ "Paste a URL. Duct crawls the site, reads the technical and content signals, and hands back a prioritised report. It is the <0>free front door</0>: no account needed to run one."
+#~ msgstr ""
+#~ "URLを貼り付けてください。Ductがサイトをクロールし、技術的およびコンテンツのシグナルを読み取り、優先順位付けされたレポートを返します。<0>無料の入り口</0>です。実行にアカウントは不要です。"
+
+#~ msgid ""
+#~ "Your analytics tool knows what happened. Your support tool knows who's upset. Your project tracker knows what shipped. Your ad platform knows what you spent. But none of them talk to each other — so you spend hours every week playing translator between tabs, trying to piece together a story that already exists if only someone would connect the dots."
+#~ msgstr ""
+#~ "アナリティクスツールは何が起こったかを知っています。サポートツールは誰が不満を持っているかを知っています。プロジェクトトラッカーは何が出荷されたかを知っています。広告プラットフォームはあなたが何を使ったかを知っています。しかし、それらのどれもが互いに連携しません。そのため、あなたは毎週何時間もタブの間で翻訳者の役割を果たし、誰かが点と点をつなぎ合わせればすでに存在するはずのストーリーを組み立てようとしています。"
+
+#~ msgid ""
+#~ "Twelve connectors. Ads, analytics, revenue and session replays, read together for one question."
+#~ msgstr "12個のコネクタ。広告、アナリティクス、収益、セッションリプレイをまとめて一つの問いに答えます。"
+
+#. meta og:description
+#~ msgid ""
+#~ "Your whole growth stack in one window on Mac, Windows and Linux. Signed, self-updating, free with your own keys. Nothing to host."
+#~ msgstr "Mac、Windows、Linuxで、お客様の成長スタック全体を一つのウィンドウで。署名済み、自己更新、お客様自身のキーで無料。ホスティングは不要です。"
+
+#~ msgid "Your whole stack,<0/>in one <1>window.</1>"
+#~ msgstr "お客様のスタック全体を<0/>一つの<1>ウィンドウで。</1>"
+
+#~ msgid ""
+#~ "<0><1/></0> Search Console flagged a query climbing into positions 4–8 three weeks ago. It's still sitting in a tab. The blog calendar doesn't reflect it."
+#~ msgstr ""
+#~ "<0><1/></0> 3週間前、Search Consoleが4〜8位に上昇中のクエリを検出しました。それはまだタブに残っており、ブログカレンダーには反映されていません。"
+
+#~ msgid ""
+#~ "<0><1/></0> You spend Monday mornings pulling rank data, session stats, and content metrics from five different tools just to decide what to work on."
+#~ msgstr ""
+#~ "<0><1/></0> 毎週月曜日の朝、あなたは5つの異なるツールからランキングデータ、セッション統計、コンテンツ指標を引っ張り出して、何に取り組むべきかを決めています。"
+
+#~ msgid ""
+#~ "Duct connects to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads and Stripe via one-click OAuth. Setup takes under five minutes and your first weekly brief lands in your inbox after connecting."
+#~ msgstr ""
+#~ "Ductは、ワンクリックOAuthを介してGoogle Search Console、GA4、Google Tag Manager、Microsoft Clarity、Mixpanel、HubSpot、Google Ads、Stripeに接続します。セットアップは5分未満で完了し、接続後、最初の週次ブリーフが受信トレイに届きます。"
+
+#~ msgid ""
+#~ "Search Console shows you queries and positions in isolation. Duct correlates ranking, traffic, behaviour and conversion signals across Search Console, GA4, Clarity and Mixpanel, then surfaces prioritised actions instead of disconnected dashboards."
+#~ msgstr ""
+#~ "Search Consoleはクエリと順位を単独で表示します。DuctはSearch Console、GA4、Clarity、Mixpanelを横断してランキング、トラフィック、行動、コンバージョンシグナルを関連付け、バラバラのダッシュボードではなく、優先順位付けされたアクションを提示します。"
+
+#~ msgid ""
+#~ "Not unless you approve it. Duct reads your performance data to build the brief, and reporting works with read-only access alone. When it finds something worth acting on — a wasted-spend search term to add as a negative keyword, a campaign to pause — it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."
+#~ msgstr ""
+#~ "お客様が承認しない限り、変更は行いません。Ductはパフォーマンスデータを読み取ってブリーフを作成し、レポート機能は読み取り専用アクセスのみで動作します。行動すべきこと（無駄な支出の検索語句をネガティブキーワードとして追加すること、一時停止するキャンペーンなど）を見つけた場合、変更を提案し、影響を受けるすべての項目を前後で表示し、お客様が承認した場合にのみ適用します。適用されたすべての変更はログに記録され、プラットフォームが許可する範囲で元に戻すことができます。OAuthトークンは暗号化されてサーバー側に保存され、転送中のすべてのデータはTLSを介して暗号化されます。"
+
+#~ msgid ""
+#~ "Spreadsheets and dashboards show you what happened — Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."
+#~ msgstr ""
+#~ "スプレッドシートやダッシュボードは「何が起こったか」を示しますが、Ductは「それに対して何をすべきか」を伝えます。3つのプラットフォームから毎週手動でCSVを抽出しマージする代わりに、DuctはGoogle Ads、Meta、LinkedInのデータを自動的に関連付け、静的なレポートでは見落とされがちなクリエイティブの疲労、予算再配分の機会、クロスチャネルのアトリビューションギャップを明らかにします。"
+
+#~ msgid ""
+#~ "Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe and RevenueCat. No API keys to configure and no developer time required. You select your platforms, authorize access, and your first daily ad intelligence brief arrives the next morning."
+#~ msgstr ""
+#~ "5分以内。DuctはワンクリックOAuthを使用して、Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、HubSpot、Stripe、RevenueCatに接続します。APIキーの設定や開発者の時間は不要です。プラットフォームを選択し、アクセスを承認するだけで、翌朝には最初のデイリー広告インテリジェンスブリーフが届きます。"
+
+#~ msgid ""
+#~ "Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting."
+#~ msgstr ""
+#~ "DuctはMixpanel、GA4、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat、Google AdsにワンクリックOAuthで接続します。セットアップは5分未満で完了し、接続後、最初のデイリーPMブリーフィングが受信トレイに届きます。"
+
+#~ msgid ""
+#~ "Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."
+#~ msgstr ""
+#~ "単一ツールのダッシュボードは、個別の指標しか表示しません。Ductはプロダクト分析、セッション行動、実験結果、収益シグナルを関連付け、手動での関連付けなしに、次に何をリリースすべきかを優先順位付けできます。"
+
+#~ msgid ""
+#~ "Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."
+#~ msgstr ""
+#~ "お客様のデータはTLS経由で転送中に暗号化され、OAuthトークンは保存時に暗号化され、ブラウザに公開されることはありません。Ductはブリーフを作成するためにツールを読み取りますが、特定の変更を最初に承認しない限り、ツール内の何も変更しません。アクセスは招待したプロジェクトメンバーに限定され、いつでも情報源の接続を解除したり、データを削除したりできます。"
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
+#~ msgstr ""
+#~ "Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat。すべての接続はOAuthであり、手動でエクスポートされるものはありません。"
+
+#~ msgid "Stop stitching reports.<0/><1>Start asking.</1>"
+#~ msgstr "レポートのつなぎ合わせをやめましょう。<0/><1>質問を始めましょう。</1>"
+
+#~ msgid ""
+#~ "Free and open source. Connect your stack, tune your first brief around your north-star metric, and keep every credential on your own machine."
+#~ msgstr "無料でオープンソース。スタックを接続し、北極星指標に合わせて最初のブリーフを調整し、すべての認証情報を自分のマシンに保持します。"
+
+#~ msgid "Get growth intelligence <0>on your desktop</0>"
+#~ msgstr "<0>デスクトップで</0>成長インテリジェンスを入手"
+
+#~ msgid ""
+#~ "Install the app, connect your tools, and ask the question you've been putting off."
+#~ msgstr "アプリをインストールし、ツールを接続して、後回しにしていた質問をしてください。"
+
+#~ msgid ""
+#~ "<0><1/></0> <2><3>Organic Growth</3><4>Automated SEO & content intelligence</4></2>"
+#~ msgstr "<0><1/></0> <2><3>オーガニックグロース</3><4>自動化されたSEOとコンテンツインテリジェンス</4></2>"
+
+#~ msgid ""
+#~ "<0><1/></0> <2><3>Paid Ads Intelligence</3><4>Cross-platform brief for performance marketers</4></2>"
+#~ msgstr "<0><1/></0> <2><3>有料広告インテリジェンス</3><4>パフォーマンスマーケター向けクロスプラットフォームブリーフ</4></2>"
+
+#~ msgid ""
+#~ "<0><1/></0> <2><3>Product Intelligence</3><4>Weekly brief for PMs & growth teams</4></2>"
+#~ msgstr "<0><1/></0> <2><3>プロダクトインテリジェンス</3><4>PMおよびグロースチーム向け週次ブリーフ</4></2>"
+
+#. meta og:description
+#~ msgid ""
+#~ "Benchmarks, paid media calculators, UTMs, and templates. Free in the browser — upgrade to weekly cross-tool briefs when you're ready."
+#~ msgstr ""
+#~ "ベンチマーク、有料メディア計算ツール、UTM、テンプレート。ブラウザで無料で利用できます — 準備ができたら、週次のクロスツールブリーフにアップグレードしてください。"
+
+#~ msgid "Built by the Duct team"
+#~ msgstr "Ductチームが構築"
+
+#~ msgid ""
+#~ "Same team. A tool answers one question with the numbers you type in. Duct answers it with the numbers in your tools, every time you ask, and proposes what to change."
+#~ msgstr "同じチームです。ツールは入力された数値で一つの質問に答えます。Ductは、ツール内の数値を使って、質問されるたびに答え、変更すべき点を提案します。"
 
 #~ msgid ""
 #~ "Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week’s posts on a board."

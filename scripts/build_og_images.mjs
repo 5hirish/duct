@@ -29,7 +29,7 @@ const PAGES = {
   "for-product-intelligence": { title: "See why the number moved. Fix it before the standup.", sub: "Mixpanel, Clarity, GrowthBook and GA4, read together.", shot: "product-session.webp" },
   "for-organic-growth": { title: "See which content actually converts. Fix it in the same sitting.", sub: "Search Console, GA4 and Clarity read together, plus a free audit.", shot: "content-session.webp" },
   "for-paid-ads": { title: "See what your ad spend bought. Move it in the same moment.", sub: "Ads, GA4 and Stripe read together. You approve the shift.", shot: "paid-session.webp" },
-  "download": { title: "Your whole stack, in one window.", sub: "Mac, Windows and Linux. Free, open source, your own keys.", shot: "insights-session.webp" },
+  "download": { title: "The whole picture, in one window.", sub: "Mac, Windows and Linux. Free, open source, your own keys.", shot: "insights-session.webp" },
   "seo-audit": { title: "See exactly what's hurting your rankings.", sub: "A free SEO audit from the open-source Duct agent. No account.", shot: "audit-report.webp" },
   "open-source": { title: "Open source, MIT, your own keys.", sub: "What runs where, how to self-host it, and a plain answer on what will cost money." },
   "about": { title: "Built because my tools wouldn't talk.", sub: "Why an agent that reads your whole business is open source." },

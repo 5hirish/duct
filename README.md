@@ -7,7 +7,7 @@
 **See the whole picture. Fix it in the same moment.**
 
 Duct is an open-source AI agent for product and growth teams. It connects
-Google Ads, GA4, Search Console, Mixpanel, Stripe and seven more, reads across
+Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more, reads across
 all of them at once, remembers what it learns about your business, and, with
 your approval, changes things in those tools for you. The approve tool does
 not exist in the list the model can call; you press the button.
