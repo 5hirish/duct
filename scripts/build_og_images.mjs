@@ -25,7 +25,7 @@ const W = 1200, H = 630, LIMIT = 150 * 1024;
 // slug → the card. `shot` is a file in site/assets/media; its top-left corner
 // is what shows, so pick shots whose first 620×480 carry the point.
 const PAGES = {
-  "index": { title: "Stop stitching five tabs. Start asking one question.", sub: "Open-source AI agent for product and growth teams.", shot: "insights-session.webp" },
+  "index": { title: "Reads your whole growth stack. Changes nothing without you.", sub: "Open-source AI agent for product and growth teams.", shot: "insights-session.webp" },
   "for-product-intelligence": { title: "Ask why activation dropped.", sub: "Mixpanel, Clarity, GrowthBook and GA4, read together.", shot: "product-session.webp" },
   "for-organic-growth": { title: "Ask which content converts.", sub: "Search Console, GA4 and Clarity read together, plus a free audit.", shot: "content-session.webp" },
   "for-paid-ads": { title: "Ask why CPA moved.", sub: "Ads, GA4 and Stripe read together. You approve the shift.", shot: "paid-session.webp" },

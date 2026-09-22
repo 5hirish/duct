@@ -1852,8 +1852,8 @@ msgstr ""
 "Planilhas e painéis mostram o que aconteceu — o Duct diz o que fazer a respeito. Em vez de puxar CSVs manualmente de três plataformas e uni-los semanalmente, o Duct correlaciona dados automaticamente entre Google Ads, Meta e LinkedIn para identificar fadiga criativa, oportunidades de realocação de orçamento e lacunas de atribuição cross-channel que relatórios estáticos perdem completamente."
 
 #: for-paid-ads.html
-msgid "Stop stitching ad reports.<0/><1>Start moving budget.</1>"
-msgstr "Pare de juntar relatórios de anúncios.<0/><1>Comece a mover o orçamento.</1>"
+msgid "Stop paying to acquire churners.<0/><1>Start moving budget.</1>"
+msgstr ""
 
 #: for-paid-ads.html
 msgid ""
@@ -2009,12 +2009,6 @@ msgstr ""
 "Pergunte por que a ativação caiu. O Duct lê Mixpanel, Clarity, GrowthBook e GA4 juntos e responde com a causa, as fontes e a correção que propõe."
 
 #: for-product-intelligence.html
-msgid ""
-"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources, and the change it proposes."
-msgstr ""
-"Pergunte por que a ativação caiu. O Duct lê Mixpanel, Clarity, GrowthBook e GA4 juntos e responde com a causa, as fontes e a alteração que propõe."
-
-#: for-product-intelligence.html
 msgid "Does Duct for product intelligence cost anything?"
 msgstr "O Duct para inteligência de produto custa alguma coisa?"
 
@@ -2033,6 +2027,11 @@ msgstr "Duct para Inteligência de Produto"
 #: for-product-intelligence.html
 msgid "Duct for product teams — AI agent for product intelligence"
 msgstr "Duct para equipes de produto — IA para inteligência de produto"
+
+#: for-product-intelligence.html
+msgid ""
+"Duct reads Mixpanel, Clarity, GrowthBook and GA4 together, names the cause with its sources, and proposes the change. Nothing is applied until you approve it."
+msgstr ""
 
 #: for-product-intelligence.html
 msgid "Enterprise Data Team"
@@ -2073,10 +2072,6 @@ msgid ""
 "It reads all of them for the one question and answers with the cause, the sources, and the change it proposes."
 msgstr ""
 "Ele lê todos eles para a única pergunta e responde com a causa, as fontes e a alteração que propõe."
-
-#: for-product-intelligence.html
-msgid "Mixpanel, Clarity and GrowthBook in three tabs, three hours, still a guess."
-msgstr "Mixpanel, Clarity e GrowthBook em três abas, três horas, ainda é um palpite."
 
 #: for-product-intelligence.html
 msgid "Next week’s question depends on last week’s call."
@@ -2130,10 +2125,6 @@ msgstr ""
 "Painéis de ferramenta única mostram métricas isoladas. O Duct correlaciona análises de produto, comportamento de sessão, resultados de experimentos e sinais de receita para que você possa priorizar o que lançar em seguida sem correlação manual."
 
 #: for-product-intelligence.html
-msgid "Stop tab-switching.<0/>Start <1>knowing.</1>"
-msgstr "Pare de trocar de aba.<0/>Comece a <1>saber.</1>"
-
-#: for-product-intelligence.html
 msgid ""
 "Targets, decisions and what it learned, on a timeline you can correct. The next answer starts from there."
 msgstr ""
@@ -2152,6 +2143,10 @@ msgstr ""
 #: for-product-intelligence.html
 msgid "The answer is “mark that GA4 event” or “pause that campaign”."
 msgstr "A resposta é “marcar aquele evento do GA4” ou “pausar aquela campanha”."
+
+#: for-product-intelligence.html
+msgid "Three hours across Mixpanel, Clarity and GrowthBook, still a guess."
+msgstr ""
 
 #: for-product-intelligence.html
 msgid "Tracking feature launches"
@@ -2178,6 +2173,10 @@ msgid "Why did activation drop?"
 msgstr "Por que a ativação caiu?"
 
 #: for-product-intelligence.html
+msgid "Why did activation drop?<0/><1>Answered before standup, with the fix.</1>"
+msgstr ""
+
+#: for-product-intelligence.html
 msgid ""
 "You don't have analysts to lean on. You don't have time for SQL. You need the full picture, fast — and you need it to be right."
 msgstr ""
@@ -2190,8 +2189,8 @@ msgstr ""
 "Seus dados são criptografados em trânsito via TLS, e os tokens OAuth são criptografados em repouso e nunca expostos ao navegador. O Duct lê suas ferramentas para construir o resumo e não altera nada nelas, a menos que você aprove uma alteração específica primeiro. O acesso é restrito aos membros do projeto que você convida, e você pode desconectar uma fonte ou excluir seus dados a qualquer momento."
 
 #: index.html
-msgid "<0></0> Open source · MIT · bring your own keys"
-msgstr "<0></0> Código aberto · MIT · traga suas próprias chaves"
+msgid "<0></0> Free on the ChatGPT plan you already pay for"
+msgstr ""
 
 #. video aria-label
 #: index.html
@@ -2199,6 +2198,10 @@ msgid ""
 "A 30-second film: a teammate asks why signups dropped; Duct reads Ads, GA4 and Stripe together, proposes pausing the campaign that drives churn, applies it on approval, and remembers what it learned."
 msgstr ""
 "Um filme de 30 segundos: um colega de equipe pergunta por que as inscrições caíram; o Duct lê Ads, GA4 e Stripe juntos, propõe pausar a campanha que gera churn, aplica-a mediante aprovação, e lembra o que aprendeu."
+
+#: index.html
+msgid "A morning gone. The reply is still a guess."
+msgstr ""
 
 #: index.html
 msgid "A paid tool, or a consultant."
@@ -2228,6 +2231,11 @@ msgid ""
 "An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux."
 msgstr ""
 "Um agente de IA de código aberto que conecta suas ferramentas de produto, marketing e receita, responde a perguntas entre elas, propõe alterações e as aplica quando você aprova. Ele é executado como um app para desktop no macOS, Windows e Linux."
+
+#: index.html
+msgid ""
+"An open-source AI agent that reads Google Ads, GA4, Stripe and ten more together, tells you why a number moved and proposes the fix. The approve button isn't in its tool list. You press it."
+msgstr ""
 
 #: index.html
 msgid "Built for"
@@ -2261,12 +2269,6 @@ msgstr ""
 "Duct lê Google Ads, GA4, Stripe e mais dez ferramentas juntos, propõe a correção e aplica quando você aprova. Código aberto, MIT, suas chaves ou plano ChatGPT."
 
 #: index.html
-msgid ""
-"Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for."
-msgstr ""
-"Duct lê suas ferramentas de anúncios, análise e receita juntas, propõe a correção e a aplica quando você diz. No seu Mac, com suas próprias chaves de modelo ou o plano ChatGPT que você já paga."
-
-#: index.html
 msgid "Duct — Cross-Tool Intelligence"
 msgstr "Duct — Inteligência Multiferramentas"
 
@@ -2287,10 +2289,6 @@ msgstr "Explorar ferramentas gratuitas →"
 #: index.html
 msgid "Five honest <0>answers</0>"
 msgstr "Cinco <0>respostas</0> honestas"
-
-#: index.html
-msgid "Five tabs, three hours, still a guess."
-msgstr "Cinco abas, três horas, ainda um palpite."
 
 #: index.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Free tools"
@@ -2345,9 +2343,13 @@ msgstr ""
 
 #: index.html
 msgid ""
-"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."
+"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. <0>The doctrine page</0> links the file that enforces it."
 msgstr ""
-"Não. A geração de relatórios funciona com acesso somente leitura. Uma alteração é proposta com o que ela afeta e aplicada somente quando você pressiona Aplicar. Alterações destrutivas são sinalizadas; qualquer coisa acima de um limite é bloqueada até você verificar."
+
+#: index.html
+msgid ""
+"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. The doctrine page links the file that enforces it."
+msgstr ""
 
 #: index.html
 msgid "One Monday, in 30 seconds"
@@ -2357,6 +2359,13 @@ msgstr "Uma segunda-feira, em 30 segundos"
 msgid "Open-source AI agent for cross-tool product and growth analytics."
 msgstr ""
 "Agente de IA de código aberto para análise de produto e crescimento multiferramentas."
+
+#. meta og:description
+#. meta twitter:description
+#: index.html
+msgid ""
+"Open-source AI agent that reads Google Ads, GA4, Stripe and ten more together, proposes the fix and applies it only when you approve. Changes nothing without you."
+msgstr ""
 
 #: index.html
 msgid ""
@@ -2388,6 +2397,10 @@ msgid "Play the film"
 msgstr "Reproduzir o vídeo"
 
 #: index.html
+msgid "Reads your whole growth stack.<0/><1>Changes nothing without you.</1>"
+msgstr ""
+
+#: index.html
 msgid "SEO & content teams"
 msgstr "Equipes de SEO e conteúdo"
 
@@ -2406,18 +2419,6 @@ msgstr "Alguém pergunta por que os cadastros caíram esta semana."
 #: index.html
 msgid "Sound off"
 msgstr "Desativar som"
-
-#. meta og:description
-#. meta twitter:description
-#: index.html
-msgid ""
-"Stop stitching five tabs. Ask one question: Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so."
-msgstr ""
-"Pare de juntar cinco abas. Faça uma pergunta: Duct lê suas ferramentas de anúncios, análise e receita juntas, propõe a correção e a aplica quando você diz."
-
-#: index.html
-msgid "Stop stitching five tabs.<0/><1>Start asking one question.</1>"
-msgstr "Pare de juntar cinco abas.<0/><1>Comece a fazer uma pergunta.</1>"
 
 #. img alt
 #: index.html
@@ -7468,6 +7469,46 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#~ msgid "Stop stitching ad reports.<0/><1>Start moving budget.</1>"
+#~ msgstr "Pare de juntar relatórios de anúncios.<0/><1>Comece a mover o orçamento.</1>"
+
+#~ msgid ""
+#~ "Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources, and the change it proposes."
+#~ msgstr ""
+#~ "Pergunte por que a ativação caiu. O Duct lê Mixpanel, Clarity, GrowthBook e GA4 juntos e responde com a causa, as fontes e a alteração que propõe."
+
+#~ msgid "Mixpanel, Clarity and GrowthBook in three tabs, three hours, still a guess."
+#~ msgstr "Mixpanel, Clarity e GrowthBook em três abas, três horas, ainda é um palpite."
+
+#~ msgid "Stop tab-switching.<0/>Start <1>knowing.</1>"
+#~ msgstr "Pare de trocar de aba.<0/>Comece a <1>saber.</1>"
+
+#~ msgid "<0></0> Open source · MIT · bring your own keys"
+#~ msgstr "<0></0> Código aberto · MIT · traga suas próprias chaves"
+
+#~ msgid ""
+#~ "Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for."
+#~ msgstr ""
+#~ "Duct lê suas ferramentas de anúncios, análise e receita juntas, propõe a correção e a aplica quando você diz. No seu Mac, com suas próprias chaves de modelo ou o plano ChatGPT que você já paga."
+
+#~ msgid "Five tabs, three hours, still a guess."
+#~ msgstr "Cinco abas, três horas, ainda um palpite."
+
+#~ msgid ""
+#~ "No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."
+#~ msgstr ""
+#~ "Não. A geração de relatórios funciona com acesso somente leitura. Uma alteração é proposta com o que ela afeta e aplicada somente quando você pressiona Aplicar. Alterações destrutivas são sinalizadas; qualquer coisa acima de um limite é bloqueada até você verificar."
+
+#. meta og:description
+#. meta twitter:description
+#~ msgid ""
+#~ "Stop stitching five tabs. Ask one question: Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so."
+#~ msgstr ""
+#~ "Pare de juntar cinco abas. Faça uma pergunta: Duct lê suas ferramentas de anúncios, análise e receita juntas, propõe a correção e a aplica quando você diz."
+
+#~ msgid "Stop stitching five tabs.<0/><1>Start asking one question.</1>"
+#~ msgstr "Pare de juntar cinco abas.<0/><1>Comece a fazer uma pergunta.</1>"
 
 #~ msgid ""
 #~ "Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine."

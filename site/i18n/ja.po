@@ -1809,8 +1809,8 @@ msgstr ""
 "スプレッドシートやダッシュボードは「何が起こったか」を示しますが、Ductは「それに対して何をすべきか」を伝えます。3つのプラットフォームから毎週手動でCSVを抽出しマージする代わりに、DuctはGoogle Ads、Meta、LinkedInのデータを自動的に関連付け、静的なレポートでは見落とされがちなクリエイティブの疲労、予算再配分の機会、クロスチャネルのアトリビューションギャップを明らかにします。"
 
 #: for-paid-ads.html
-msgid "Stop stitching ad reports.<0/><1>Start moving budget.</1>"
-msgstr "広告レポートの結合をやめましょう。<0/><1>予算を動かし始めましょう。</1>"
+msgid "Stop paying to acquire churners.<0/><1>Start moving budget.</1>"
+msgstr ""
 
 #: for-paid-ads.html
 msgid ""
@@ -1959,12 +1959,6 @@ msgstr ""
 "アクティベーションが低下した理由を尋ねます。DuctはMixpanel、Clarity、GrowthBook、GA4をまとめて読み取り、原因とその情報源を回答し、変更を提案し、承認すると適用し、次回の決定を記憶します。"
 
 #: for-product-intelligence.html
-msgid ""
-"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources, and the change it proposes."
-msgstr ""
-"アクティベーションが低下した理由を尋ねます。DuctはMixpanel、Clarity、GrowthBook、GA4をまとめて読み取り、原因、情報源、そして提案する変更を回答します。"
-
-#: for-product-intelligence.html
 msgid "Does Duct for product intelligence cost anything?"
 msgstr "プロダクトインテリジェンス向けDuctは費用がかかりますか？"
 
@@ -1983,6 +1977,11 @@ msgstr "プロダクトインテリジェンス向けDuct"
 #: for-product-intelligence.html
 msgid "Duct for product teams — AI agent for product intelligence"
 msgstr "プロダクトチーム向けDuct — プロダクトインテリジェンスのためのAIエージェント"
+
+#: for-product-intelligence.html
+msgid ""
+"Duct reads Mixpanel, Clarity, GrowthBook and GA4 together, names the cause with its sources, and proposes the change. Nothing is applied until you approve it."
+msgstr ""
 
 #: for-product-intelligence.html
 msgid "Enterprise Data Team"
@@ -2021,10 +2020,6 @@ msgstr "Ductで私のプロダクトデータは安全ですか？"
 msgid ""
 "It reads all of them for the one question and answers with the cause, the sources, and the change it proposes."
 msgstr "1つの質問に対し、それらすべてを読み込み、原因、情報源、提案する変更を回答します。"
-
-#: for-product-intelligence.html
-msgid "Mixpanel, Clarity and GrowthBook in three tabs, three hours, still a guess."
-msgstr "Mixpanel、Clarity、GrowthBookを3つのタブで3時間見ても、まだ推測の域を出ません。"
 
 #: for-product-intelligence.html
 msgid "Next week’s question depends on last week’s call."
@@ -2076,10 +2071,6 @@ msgstr ""
 "単一ツールのダッシュボードは、個別の指標しか表示しません。Ductはプロダクト分析、セッション行動、実験結果、収益シグナルを関連付け、手動での関連付けなしに、次に何をリリースすべきかを優先順位付けできます。"
 
 #: for-product-intelligence.html
-msgid "Stop tab-switching.<0/>Start <1>knowing.</1>"
-msgstr "タブ切り替えをやめる。<0/>そして<1>知る</1>ことから始める。"
-
-#: for-product-intelligence.html
 msgid ""
 "Targets, decisions and what it learned, on a timeline you can correct. The next answer starts from there."
 msgstr "目標、決定、学習内容を修正可能なタイムラインで。次の回答はそこから始まります。"
@@ -2096,6 +2087,10 @@ msgstr "答えはすでにあなたのツールの中にあります。<0/>し�
 #: for-product-intelligence.html
 msgid "The answer is “mark that GA4 event” or “pause that campaign”."
 msgstr "答えは「そのGA4イベントをマークする」か「そのキャンペーンを一時停止する」です。"
+
+#: for-product-intelligence.html
+msgid "Three hours across Mixpanel, Clarity and GrowthBook, still a guess."
+msgstr ""
 
 #: for-product-intelligence.html
 msgid "Tracking feature launches"
@@ -2122,6 +2117,10 @@ msgid "Why did activation drop?"
 msgstr "なぜアクティベーションが低下したのですか？"
 
 #: for-product-intelligence.html
+msgid "Why did activation drop?<0/><1>Answered before standup, with the fix.</1>"
+msgstr ""
+
+#: for-product-intelligence.html
 msgid ""
 "You don't have analysts to lean on. You don't have time for SQL. You need the full picture, fast — and you need it to be right."
 msgstr "頼れるアナリストはいません。SQLに時間を割く余裕もありません。全体像を素早く、そして正確に把握する必要があります。"
@@ -2133,8 +2132,8 @@ msgstr ""
 "お客様のデータはTLS経由で転送中に暗号化され、OAuthトークンは保存時に暗号化され、ブラウザに公開されることはありません。Ductはブリーフを作成するためにツールを読み取りますが、特定の変更を最初に承認しない限り、ツール内の何も変更しません。アクセスは招待したプロジェクトメンバーに限定され、いつでも情報源の接続を解除したり、データを削除したりできます。"
 
 #: index.html
-msgid "<0></0> Open source · MIT · bring your own keys"
-msgstr "<0></0> オープンソース · MIT · 独自のキーを使用"
+msgid "<0></0> Free on the ChatGPT plan you already pay for"
+msgstr ""
 
 #. video aria-label
 #: index.html
@@ -2142,6 +2141,10 @@ msgid ""
 "A 30-second film: a teammate asks why signups dropped; Duct reads Ads, GA4 and Stripe together, proposes pausing the campaign that drives churn, applies it on approval, and remembers what it learned."
 msgstr ""
 "30秒の動画：チームメイトがサインアップが減少した理由を尋ねると、DuctがGoogle Ads、GA4、Stripeをまとめて読み込み、解約を促進するキャンペーンの一時停止を提案し、承認されると適用し、学習した内容を記憶します。"
+
+#: index.html
+msgid "A morning gone. The reply is still a guess."
+msgstr ""
 
 #: index.html
 msgid "A paid tool, or a consultant."
@@ -2170,6 +2173,11 @@ msgid ""
 "An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux."
 msgstr ""
 "プロダクト、マーケティング、収益ツールを接続し、それらを横断して質問に答え、変更を提案し、承認されると適用するオープンソースAIエージェントです。macOS、Windows、Linuxのデスクトップアプリとして動作します。"
+
+#: index.html
+msgid ""
+"An open-source AI agent that reads Google Ads, GA4, Stripe and ten more together, tells you why a number moved and proposes the fix. The approve button isn't in its tool list. You press it."
+msgstr ""
 
 #: index.html
 msgid "Built for"
@@ -2203,12 +2211,6 @@ msgstr ""
 "DuctはGoogle Ads、GA4、Stripe、その他10以上のツールをまとめて読み込み、修正を提案し、承認すると適用します。オープンソース、MIT、独自のキーまたはChatGPTプラン。"
 
 #: index.html
-msgid ""
-"Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for."
-msgstr ""
-"Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。お使いのMacで、ご自身のモデルキー、または既にお支払い済みのChatGPTプランで利用できます。"
-
-#: index.html
 msgid "Duct — Cross-Tool Intelligence"
 msgstr "Duct — クロスツールインテリジェンス"
 
@@ -2229,10 +2231,6 @@ msgstr "無料ツールを見る →"
 #: index.html
 msgid "Five honest <0>answers</0>"
 msgstr "5つの正直な<0>回答</0>"
-
-#: index.html
-msgid "Five tabs, three hours, still a guess."
-msgstr "5つのタブ、3時間、それでも推測。"
 
 #: index.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Free tools"
@@ -2286,9 +2284,13 @@ msgstr ""
 
 #: index.html
 msgid ""
-"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."
+"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. <0>The doctrine page</0> links the file that enforces it."
 msgstr ""
-"いいえ。レポートは読み取り専用アクセスで機能します。変更は影響範囲とともに提案され、「適用する」を押した場合にのみ適用されます。破壊的な変更にはフラグが付けられ、ガードレールを超えるものは、確認するまでブロックされます。"
+
+#: index.html
+msgid ""
+"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. The doctrine page links the file that enforces it."
+msgstr ""
 
 #: index.html
 msgid "One Monday, in 30 seconds"
@@ -2297,6 +2299,13 @@ msgstr "ある月曜日の30秒"
 #: index.html
 msgid "Open-source AI agent for cross-tool product and growth analytics."
 msgstr "クロスツールプロダクトおよびグロースアナリティクス向けのオープンソースAIエージェント。"
+
+#. meta og:description
+#. meta twitter:description
+#: index.html
+msgid ""
+"Open-source AI agent that reads Google Ads, GA4, Stripe and ten more together, proposes the fix and applies it only when you approve. Changes nothing without you."
+msgstr ""
 
 #: index.html
 msgid ""
@@ -2327,6 +2336,10 @@ msgid "Play the film"
 msgstr "動画を再生"
 
 #: index.html
+msgid "Reads your whole growth stack.<0/><1>Changes nothing without you.</1>"
+msgstr ""
+
+#: index.html
 msgid "SEO & content teams"
 msgstr "SEO & コンテンツチーム"
 
@@ -2345,18 +2358,6 @@ msgstr "今週、なぜサインアップが減少したのか尋ねられます
 #: index.html
 msgid "Sound off"
 msgstr "音を消す"
-
-#. meta og:description
-#. meta twitter:description
-#: index.html
-msgid ""
-"Stop stitching five tabs. Ask one question: Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so."
-msgstr ""
-"5つのタブを繋ぎ合わせるのをやめましょう。1つの質問をしてください。Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。"
-
-#: index.html
-msgid "Stop stitching five tabs.<0/><1>Start asking one question.</1>"
-msgstr "5つのタブを繋ぎ合わせるのをやめましょう。<0/><1>1つの質問を始めましょう。</1>"
 
 #. img alt
 #: index.html
@@ -7175,6 +7176,46 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid "Stop stitching ad reports.<0/><1>Start moving budget.</1>"
+#~ msgstr "広告レポートの結合をやめましょう。<0/><1>予算を動かし始めましょう。</1>"
+
+#~ msgid ""
+#~ "Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources, and the change it proposes."
+#~ msgstr ""
+#~ "アクティベーションが低下した理由を尋ねます。DuctはMixpanel、Clarity、GrowthBook、GA4をまとめて読み取り、原因、情報源、そして提案する変更を回答します。"
+
+#~ msgid "Mixpanel, Clarity and GrowthBook in three tabs, three hours, still a guess."
+#~ msgstr "Mixpanel、Clarity、GrowthBookを3つのタブで3時間見ても、まだ推測の域を出ません。"
+
+#~ msgid "Stop tab-switching.<0/>Start <1>knowing.</1>"
+#~ msgstr "タブ切り替えをやめる。<0/>そして<1>知る</1>ことから始める。"
+
+#~ msgid "<0></0> Open source · MIT · bring your own keys"
+#~ msgstr "<0></0> オープンソース · MIT · 独自のキーを使用"
+
+#~ msgid ""
+#~ "Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for."
+#~ msgstr ""
+#~ "Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。お使いのMacで、ご自身のモデルキー、または既にお支払い済みのChatGPTプランで利用できます。"
+
+#~ msgid "Five tabs, three hours, still a guess."
+#~ msgstr "5つのタブ、3時間、それでも推測。"
+
+#~ msgid ""
+#~ "No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."
+#~ msgstr ""
+#~ "いいえ。レポートは読み取り専用アクセスで機能します。変更は影響範囲とともに提案され、「適用する」を押した場合にのみ適用されます。破壊的な変更にはフラグが付けられ、ガードレールを超えるものは、確認するまでブロックされます。"
+
+#. meta og:description
+#. meta twitter:description
+#~ msgid ""
+#~ "Stop stitching five tabs. Ask one question: Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so."
+#~ msgstr ""
+#~ "5つのタブを繋ぎ合わせるのをやめましょう。1つの質問をしてください。Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。"
+
+#~ msgid "Stop stitching five tabs.<0/><1>Start asking one question.</1>"
+#~ msgstr "5つのタブを繋ぎ合わせるのをやめましょう。<0/><1>1つの質問を始めましょう。</1>"
 
 #~ msgid ""
 #~ "Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine."
