@@ -37,7 +37,14 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/40 duration-100 supports-backdrop-filter:backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        // The scrim is the app's own ground at 92% — white in the light
+        // theme, near-black in the dark one — rather than a black wash over
+        // both. A 40% black veil left the whole app legible behind the
+        // dialog, so the thing you were told to read competed with the thing
+        // it covered; on a reading surface it was the same document twice.
+        // Near-opaque is the point: enough translucency to remember the app
+        // is still there, not enough to read it.
+        "fixed inset-0 z-50 bg-background/92 duration-100 supports-backdrop-filter:backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
