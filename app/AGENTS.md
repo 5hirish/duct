@@ -468,9 +468,22 @@ Rules that follow:
   `workspace/ContextRing` over the reducer's `usage`, empty and labelled "New
   thread" until the first call reports — the same place and the same ring
   the insights desk shows. The composer (`workspace/ChatInput`) is the desk
-  composer's card: text on top, a footer with the shell's `composerTools`
-  chips (`workspace/ComposerDials` for insights: autonomy, thinking, model
-  tier, brief format) on the left and the ring and Send on the right. A retry counts down (`retrying.until`, anchored on this
+  composer's card: text on top, a footer with attach and the shell's
+  `composerTools` (`workspace/ComposerDials` for insights: the posture, Ask /
+  Assisted / Auto, folded to the current choice and unfolding on hover,
+  focus or a tap) on the left, and `composerAside` (`TierDial`: the model
+  tier as quiet text, whose popover holds the tier list and thinking as a
+  stepped slider), the ring and Send on the right. The ring carries no
+  label; percent, tokens and cost are its tooltip. Placement follows when a
+  dial binds: the posture applies to the next message, so it is inline;
+  tier and thinking bind at the next session, so they are one tap away; the
+  tier is the one choice people look for by name, so it stands at the
+  corner of the box like every chat app's model name, and thinking is a
+  property of that choice, so it lives under it. That panel is a
+  `ui/popover`, not a menu — a menu swallows Tab and a slider inside one is
+  mouse-only. The brief's shape (`preferred_artifact_format`) has no
+  composer control any more; the preference and the backend's reading of it
+  remain. A retry counts down (`retrying.until`, anchored on this
   client's clock at receipt), and the tooltip carries cost and the cached
   share beside the tokens. After a compaction the ring is empty and says so
   (`usage.last.stale`) until the next call on the thread reports its size.
@@ -733,7 +746,9 @@ accepts, and a semver bump broke the build with "failed to run Wasm plugin"
 
 To see a screen in another language: `/preview` has a locale switch, and the
 `pseudo` locale (dev only) stretches every string so clipping shows without a
-German speaker.
+German speaker. The preview is English by default whatever the browser's
+Accept-Language or the app's cookie say — its frame takes `?lang=` and
+nothing else, so a scene's language is in its URL like every other lens.
 
 ## What's not here
 

@@ -59,6 +59,12 @@ msgstr "{0, plural, other {# 呼び出し}}"
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, other {# 一致}}"
 
+#. placeholder {0}: dial.dial
+#. placeholder {1}: dial.default_native
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "{0} {1} · whatever this model does anyway"
+#~ msgstr "{0} {1} · このモデルの機能"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
 msgstr "{blogPosts, plural, other {# ブログ投稿}}"
@@ -68,8 +74,8 @@ msgid "{blogPosts, plural, one {# post} other {# posts}}"
 msgstr "{blogPosts, plural, other {# 投稿}}"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{cached} cached{cachedShare}"
-msgstr "{cached} キャッシュ済み{cachedShare}"
+#~ msgid "{cached} cached{cachedShare}"
+#~ msgstr "{cached} キャッシュ済み{cachedShare}"
 
 #: src/app/(app)/execute/page.jsx
 msgid "{changeCount, plural, one {# change} other {# changes}}"
@@ -126,8 +132,8 @@ msgid ""
 msgstr "{destructiveCount, plural, other {# 破壊的な変更}} — {destructiveNames}."
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "{dialName} {dialDefault} · whatever this model does anyway"
-msgstr "{dialName} {dialDefault} · いずれにせよ、このモデルが行うこと"
+#~ msgid "{dialName} {dialDefault} · whatever this model does anyway"
+#~ msgstr "{dialName} {dialDefault} · いずれにせよ、このモデルが行うこと"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "{done} of 3 done"
@@ -199,8 +205,12 @@ msgid "{impactWord} impact"
 msgstr "{impactWord} 影響"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{input} in"
-msgstr "{input} 入力"
+#~ msgid "{input} in"
+#~ msgstr "{input} 入力"
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{input} in, {output} out"
+msgstr "{input}入力、{output}出力"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "{inputProgressPercent}% complete"
@@ -289,8 +299,8 @@ msgid "{opportunities, plural, one {# opportunity} other {# opportunities}}"
 msgstr "{opportunities, plural, other {# 機会}}"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{output} out"
-msgstr "{output} 出力"
+#~ msgid "{output} out"
+#~ msgstr "{output} 出力"
 
 #: src/components/audit/AuditReport.jsx
 msgid "{pages, plural, one {# page} other {# pages}}"
@@ -314,12 +324,20 @@ msgid ""
 msgstr "{pending, plural, other {承認して # 画像を生成 — 1つずつ}}"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{percent}% context"
-msgstr "{percent}% コンテキスト"
+#~ msgid "{percent}% · {used} of {window}"
+#~ msgstr "{percent}% · {used}/{window}"
+
+#: src/components/workspace/ContextRing.jsx
+#~ msgid "{percent}% context"
+#~ msgstr "{percent}% コンテキスト"
 
 #: src/components/models/UsagePanel.jsx
 msgid "{percent}% of tokens"
 msgstr "{percent}% トークン"
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{percent}% used"
+msgstr "{percent}% 使用済みです"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "{phase}… {elapsed}s"
@@ -378,6 +396,10 @@ msgstr "{robotsLines} 行"
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
 msgstr "{score}/100 — {label}。9つのSEOカテゴリ全体の加重平均です。"
 
+#: src/components/workspace/ContextRing.jsx
+msgid "{share}% from cache"
+msgstr "キャッシュから{share}%"
+
 #: src/components/content/PostViewport.jsx
 msgid "{slideCount, plural, one {# slide} other {# slides}}"
 msgstr "{slideCount, plural, one {# スライド} other {# スライド}}"
@@ -433,8 +455,12 @@ msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
 msgstr "{unconfirmed, plural, one {# 未確認} other {# 未確認}}"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "{used} of {window}"
-msgstr "{used} / {window}"
+#~ msgid "{used} of {window}"
+#~ msgstr "{used} / {window}"
+
+#: src/components/workspace/ContextRing.jsx
+msgid "{used} of {window} tokens"
+msgstr "{window}トークンのうち{used}"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{views, plural, one {# view} other {# views}}"
@@ -674,9 +700,9 @@ msgid ""
 msgstr "保存済みのキーはすでに使用中です。新しいキーを貼り付けて置き換えるか、「キーを削除」を選択して忘れてください。"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid ""
-"A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
-msgstr "独自のグラフと並べ替え可能なテーブルを備えたスタイル付きページ。作成コストは高くなりますが、読みやすく、1つのファイルとして転送できます"
+#~ msgid ""
+#~ "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
+#~ msgstr "独自のグラフと並べ替え可能なテーブルを備えたスタイル付きページ。作成コストは高くなりますが、読みやすく、1つのファイルとして転送できます"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
@@ -1127,7 +1153,7 @@ msgstr "アーティファクトのバージョン"
 msgid "Artifacts"
 msgstr "アーティファクト"
 
-#: src/components/workspace/ComposerDials.jsx src/lib/projectsApi.js
+#: src/lib/projectsApi.js
 msgid "Ask"
 msgstr "質問"
 
@@ -1229,7 +1255,7 @@ msgstr "サイトを監査"
 msgid "Audits it in about three minutes"
 msgstr "約3分で監査します"
 
-#: src/app/(app)/activity/page.jsx src/components/workspace/ComposerDials.jsx
+#: src/app/(app)/activity/page.jsx
 msgid "auto"
 msgstr "自動"
 
@@ -1363,8 +1389,8 @@ msgid "Brief"
 msgstr "ブリーフ"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Brief: {label}"
-msgstr "ブリーフ: {label}"
+#~ msgid "Brief: {label}"
+#~ msgstr "ブリーフ: {label}"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
@@ -1637,6 +1663,10 @@ msgstr "編集をコミット"
 msgid "Community"
 msgstr "コミュニティ"
 
+#: src/components/workspace/ContextRing.jsx
+#~ msgid "compacted · recomputed at the next call"
+#~ msgstr "圧縮済み · 次の呼び出し時に再計算されます"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Compacting context"
 msgstr "コンテキストを圧縮中"
@@ -1802,13 +1832,13 @@ msgstr "コンテンツピラー"
 msgid "Content Studio"
 msgstr "コンテンツスタジオ"
 
-#: src/app/(app)/project/[projectId]/page.jsx src/components/workspace/ContextRing.jsx
+#: src/app/(app)/project/[projectId]/page.jsx
 msgid "Context"
 msgstr "コンテキスト"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "context compacted"
-msgstr "コンテキストを圧縮しました"
+#~ msgid "context compacted"
+#~ msgstr "コンテキストを圧縮しました"
 
 #: src/components/ContextCompressionCard.jsx
 msgid "Context compression"
@@ -1817,6 +1847,10 @@ msgstr "コンテキスト圧縮"
 #: src/components/workspace/ContextRing.jsx
 msgid "Context used: {percent} percent. Show token usage."
 msgstr "使用されたコンテキスト: {percent}パーセント。トークン使用量を表示。"
+
+#: src/components/workspace/ContextRing.jsx
+msgid "Context window"
+msgstr "コンテキストウィンドウ"
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Continue →"
@@ -2342,9 +2376,9 @@ msgid "Duct needs a connection. Your work is saved and will still be here."
 msgstr "Ductには接続が必要です。あなたの作業は保存されており、ここに残っています。"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid ""
-"Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
-msgstr "Ductがブリーフごとに選択: 短い読み物にはMarkdown、レイアウトやグラフが適している場合はページ"
+#~ msgid ""
+#~ "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
+#~ msgstr "Ductがブリーフごとに選択: 短い読み物にはMarkdown、レイアウトやグラフが適している場合はページ"
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
@@ -2678,8 +2712,8 @@ msgid "Fairly sure"
 msgstr "ほぼ確実"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
-msgstr "高速で安価。見出し、テキスト、テーブル。ドキュメントに貼り付けられます"
+#~ msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
+#~ msgstr "高速で安価。見出し、テキスト、テーブル。ドキュメントに貼り付けられます"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Faster, lighter"
@@ -3160,8 +3194,8 @@ msgid "How freely Duct may act"
 msgstr "Ductがどの程度自由に動作するか"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "How hard the model should think"
-msgstr "モデルがどれだけ深く考えるべきか"
+#~ msgid "How hard the model should think"
+#~ msgstr "モデルがどれだけ深く考えるべきか"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "How posts sound and what they must (or must not) say."
@@ -3177,8 +3211,8 @@ msgid "Hreflang"
 msgstr "Hreflang"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "HTML"
-msgstr "HTML"
+#~ msgid "HTML"
+#~ msgstr "HTML"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "https://example.com"
@@ -3362,6 +3396,10 @@ msgstr "当方で記録されました。もう一度お試しください。引
 #: src/lib/userProfile.js
 msgid "Italiano"
 msgstr "イタリア語"
+
+#: src/components/workspace/ContextRing.jsx
+msgid "Just compacted — recounted on the next call"
+msgstr "圧縮済み — 次回の呼び出し時に再計算されます"
 
 #: src/components/insights/desk/useRelativeTime.js
 msgid "just now"
@@ -3718,8 +3756,8 @@ msgid "Mapping your site structure"
 msgstr "サイト構造をマッピング中"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Markdown"
-msgstr "Markdown"
+#~ msgid "Markdown"
+#~ msgstr "Markdown"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Marketing managers at SaaS startups"
@@ -3843,8 +3881,8 @@ msgid "Mixpanel service accounts guide"
 msgstr "Mixpanelサービスアカウントガイド"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "Model"
-msgstr "モデル"
+#~ msgid "Model"
+#~ msgstr "モデル"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Model calls"
@@ -3863,8 +3901,8 @@ msgid "Model provider"
 msgstr "モデルプロバイダー"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Model: {label}"
-msgstr "モデル: {label}"
+#~ msgid "Model: {label}"
+#~ msgstr "モデル: {label}"
 
 #: src/app/(app)/settings/models/page.jsx src/components/AppNav.jsx src/components/AppSidebar.jsx
 msgid "Models & providers"
@@ -3977,7 +4015,7 @@ msgstr "新規プロジェクト"
 msgid "New project — audit a site"
 msgstr "新規プロジェクト — サイトを監査"
 
-#: src/components/insights/desk/DeskComposer.jsx src/components/workspace/AgentChat.jsx
+#: src/components/insights/desk/DeskComposer.jsx src/components/workspace/AgentChat.jsx src/components/workspace/ContextRing.jsx
 msgid "New thread"
 msgstr "新しいスレッド"
 
@@ -5178,8 +5216,8 @@ msgid "Recommended actions"
 msgstr "推奨されるアクション"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "recomputed at the next call"
-msgstr "次回の呼び出し時に再計算されます"
+#~ msgid "recomputed at the next call"
+#~ msgstr "次回の呼び出し時に再計算されます"
 
 #: src/components/connections/OAuthConnectorCard.jsx src/components/connections/ProviderCard.jsx
 msgid "Reconnect"
@@ -5913,6 +5951,18 @@ msgstr "セッション"
 #: src/components/workspace/AgentChat.jsx
 msgid "Session failed"
 msgstr "セッション失敗"
+
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "Session settings: brief format"
+#~ msgstr "セッション設定: ブリーフ形式"
+
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "Session settings: thinking and brief format"
+#~ msgstr "セッション設定：思考とブリーフ形式"
+
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "Session settings: thinking, model tier and brief format"
+#~ msgstr "セッション設定：思考、モデルティア、ブリーフ形式"
 
 #: src/components/AppNav.jsx
 msgid "Sessions"
@@ -6689,8 +6739,12 @@ msgid ""
 msgstr "検索意図とキーワードに合わせて書き換えられた、内容の薄いまたは弱いページおよびブログのコピー。"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "Thinking: {label}"
-msgstr "思考中: {label}"
+msgid "Thinking"
+msgstr "思考"
+
+#: src/components/workspace/ComposerDials.jsx
+#~ msgid "Thinking: {label}"
+#~ msgstr "思考中: {label}"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Thinking…"
@@ -7323,8 +7377,8 @@ msgid "What is my site actually about?"
 msgstr "私のサイトは実際には何についてですか？"
 
 #: src/components/workspace/ComposerDials.jsx
-msgid "What shape the brief takes"
-msgstr "ブリーフの形式"
+#~ msgid "What shape the brief takes"
+#~ msgstr "ブリーフの形式"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"
@@ -7346,6 +7400,10 @@ msgstr "うまくいっていること"
 msgid ""
 "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 msgstr "{providerName}に保存されているキーは受け入れられないため、実行はスキップされます。「キーを削除」を選択し、新しいキーを貼り付けてください。"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Whatever this model does anyway"
+msgstr "このモデルの機能"
 
 #: src/components/content/PublishModal.jsx
 msgid "When to post"
@@ -7392,6 +7450,10 @@ msgstr "どのモデルがどのジョブを実行するかは、<0>モデルと
 #: src/components/workspace/ComposerDials.jsx
 msgid "Which model tier runs this"
 msgstr "どのモデル層で実行されますか"
+
+#: src/components/workspace/ComposerDials.jsx
+msgid "Which model tier runs this, and how hard it thinks"
+msgstr "どのモデル層がこれを実行し、どの程度思考するか"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Which pages should rank and don't?"

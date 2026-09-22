@@ -23,7 +23,7 @@ import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import FrontDoor from "@/components/onboarding/FrontDoor";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
-import ComposerDials from "@/components/workspace/ComposerDials";
+import ComposerDials, { TierDial } from "@/components/workspace/ComposerDials";
 import ChatInput from "@/components/workspace/ChatInput";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
@@ -539,7 +539,7 @@ export const SCENES = [
     state: "default — a project with a favicon, no thread yet",
     group: "DeskComposer",
     title: "The insights composer",
-    note: "Both Selects here use a custom chip as the trigger's content instead of SelectValue, which is why they're pinned to position=\"popper\" rather than the shadcn default (\"item-aligned\"): item-aligned aligns the selected SelectItem over the trigger by locating it through SelectValue, and silently renders off-screen with nothing to find. Check that both open in place and that picking an option updates the chip's label. Also check the send button's loading spinner and the amber \"no provider connected\" notice (type something, then use the browser's devtools to force a 401 on /api/providers/status) — the notice must not clear the draft.",
+    note: "Left: the posture, folded to the current choice; the other two unfold on hover, keyboard focus, or a tap of the visible one (touch has no hover), and the unfold is a width transition, not a pop. Right: the model tier as quiet text — its popover holds the tier list and, under it, thinking as a stepped slider with the stop's name beside the title, a dot per step on the track and one line saying what the stop buys — then the context ring with no label (percent, tokens and cost are on hover), then Send. Check that the folded pill's text sits centred, that the tier trigger adds the thinking rung only when one is set, that Tab walks tier choices then the slider thumb, and that the send button's loading spinner and the amber \"no provider connected\" notice (type something, then use the browser's devtools to force a 401 on /api/providers/status) do not clear the draft.",
     render: () => (
       <DeskComposerScene
         project={{ id: "p1", name: "Sictec Infotech, Inc.", company: { name: "Sictec Infotech, Inc.", website_url: "https://sictec.example" } }}
@@ -552,7 +552,7 @@ export const SCENES = [
     state: "inside a running session — dials deferred, ring beside Send",
     group: "DeskComposer",
     title: "The session composer",
-    note: "The same card as the desk composer, in the chat shell: attach, the three dials (autonomy, thinking, model tier) on the left, the context ring and Send on the right. `deferred` makes each menu say when the choice lands — autonomy at the next message, thinking and tier at the next session — check the footer line is there in all three menus and that the chips wrap under the text at phone width rather than pushing Send off the card.",
+    note: "The same card as the desk composer, in the chat shell: attach and the folded posture on the left; the tier, the context ring and Send on the right. `deferred` makes the tier panel say the choice lands at the next session and the posture tooltips say next message — check that line is there, that hovering the ring shows the token figures, and that the controls wrap under the text at phone width rather than pushing Send off the card.",
     render: () => (
       <div className="max-w-[720px]">
         <ChatInput
@@ -561,7 +561,18 @@ export const SCENES = [
           onStop={() => {}}
           placeholder="Ask about your growth data…"
           tools={<DialsScene />}
-          status={<ContextRing used={0.08} label="8% context" />}
+          status={
+            <>
+              <TierDial deferred />
+              <ContextRing
+                used={0.34}
+                details={{
+                  last: { input: 61_000, output: 7_200, cached: 48_000, window: 200_000, cost: 0.21, model: "claude-sonnet-5" },
+                  total: { input: 210_000, output: 19_000, cached: 150_000, calls: 4, cost: 0.74 },
+                }}
+              />
+            </>
+          }
         />
       </div>
     ),

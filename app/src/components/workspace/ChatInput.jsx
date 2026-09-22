@@ -178,7 +178,7 @@ export default function ChatInput({
             {tools}
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
             {status}
             {isStreaming && (
               <Button type="button" variant="destructive" size="xs" onClick={onStop}>

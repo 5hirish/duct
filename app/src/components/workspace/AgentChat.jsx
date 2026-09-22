@@ -372,9 +372,12 @@ export default function AgentChat({
   // round trip is done — this conversation, not the Connections page. Empty
   // means the connector flow's own default.
   connectReturnTo = "",
-  // The shell's own chips in the composer's footer (ComposerDials for
-  // insights). Null for a shell with no dials.
+  // The shell's own controls in the composer's footer: `composerTools` on
+  // the left beside attach (ComposerDials for insights), `composerAside` on
+  // the right before the ring and Send (TierDial). Null for a shell with
+  // neither.
   composerTools = null,
+  composerAside = null,
   inputPlaceholder,
   inputAriaLabel,
   inputAccept,
@@ -629,11 +632,14 @@ export default function AgentChat({
         // there from the first moment: an empty ring says "new thread" where
         // no ring said nothing.
         status={
-          usage?.last ? (
-            <ContextRing used={contextUsed} details={usage} />
-          ) : (
-            <ContextRing used={0} label={t`New thread`} />
-          )
+          <>
+            {composerAside}
+            {usage?.last ? (
+              <ContextRing used={contextUsed} details={usage} />
+            ) : (
+              <ContextRing used={0} label={t`New thread`} />
+            )}
+          </>
         }
       />
     </div>
