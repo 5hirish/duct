@@ -41,6 +41,10 @@ msgstr "· <0>{configured}</0> に設定、このモデルでは段階的に引�
 msgid "(no caption)"
 msgstr "(キャプションなし)"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "(read the first part of the page)"
+msgstr "(ページ前半を読み込み)"
+
 #: src/components/content/PostMiniCard.jsx
 msgid "(untitled)"
 msgstr "(無題)"
@@ -59,11 +63,47 @@ msgstr "{0, plural, other {# 呼び出し}}"
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, other {# 一致}}"
 
+#. placeholder {0}: group.ok
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0, plural, one {# pull} other {# pulls}}"
+msgstr "{0, plural, other {# プル}}"
+
 #. placeholder {0}: dial.dial
 #. placeholder {1}: dial.default_native
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "{0} {1} · whatever this model does anyway"
 #~ msgstr "{0} {1} · このモデルの機能"
+
+#. placeholder {0}: meta.failed
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} failed"
+msgstr "{0}が失敗しました"
+
+#. placeholder {0}: docs.length
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0} in this thread"
+msgstr "このスレッドに{0}件"
+
+#. placeholder {0}: meta.count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} matches"
+msgstr "{0}件の一致"
+
+#. placeholder {0}: group.ok
+#. placeholder {1}: group.failed
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0} read · {1} failed"
+msgstr "{0} 読み込み · {1} 失敗"
+
+#. placeholder {0}: meta.rows
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} rows"
+msgstr "{0} 行"
+
+#. placeholder {0}: meta.source_count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} sources"
+msgstr "{0} ソース"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
@@ -277,6 +317,14 @@ msgstr "{name} · メンバー"
 #: src/components/content/StyleGallery.jsx
 msgid "{name} preview"
 msgstr "{name} プレビュー"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "{name} was not attached — send images, PDFs or text files."
+msgstr "{name}は添付されませんでした — 画像、PDF、またはテキストファイルを送信してください。"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "{name} was not attached — the limit is {max} MB per file."
+msgstr "{name}は添付されませんでした — ファイルあたりの上限は{max}MBです。"
 
 #: src/components/insights/Desk.jsx
 msgid "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
@@ -864,7 +912,7 @@ msgstr "広告では4,212。Stripeでは1,890が決済されました。"
 msgid "Advanced"
 msgstr "詳細設定"
 
-#: src/app/(app)/activity/page.jsx src/app/(app)/execute/page.jsx src/components/workspace/StepProgress.jsx
+#: src/app/(app)/activity/page.jsx src/app/(app)/execute/page.jsx
 msgid "agent"
 msgstr "エージェント"
 
@@ -929,10 +977,18 @@ msgstr "すべての広告アカウント"
 msgid "All clear"
 msgstr "問題なし"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents"
+msgstr "すべてのドキュメント"
+
 #. placeholder {0}: docs.length
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "All documents · {0}"
-msgstr "すべてのドキュメント · {0}"
+#~ msgid "All documents · {0}"
+#~ msgstr "すべてのドキュメント · {0}"
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents in this thread"
+msgstr "このスレッド内のすべてのドキュメント"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
@@ -1207,6 +1263,11 @@ msgid ""
 "Ask whoever invited you to send a new one, or <0>sign in</0> if you already have access."
 msgstr "招待者にもう一度送ってもらうか、すでにアクセス権をお持ちの場合は<0>サインイン</0>してください。"
 
+#. placeholder {0}: activity.title
+#: src/components/workspace/ActivityRow.jsx
+msgid "Asked {0}"
+msgstr "{0} を質問しました"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Asks freely · nothing applies without you"
 msgstr "自由に質問します · 承認なしに適用されることはありません"
@@ -1220,12 +1281,24 @@ msgid "Assisted"
 msgstr "アシスト"
 
 #: src/components/workspace/ChatInput.jsx
+msgid "Attach a file"
+msgstr "ファイルを添付"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Attach a file — or drop one here"
+msgstr "ファイルを添付 — またはここにドロップ"
+
+#: src/components/workspace/ChatInput.jsx
 msgid "Attach files"
 msgstr "ファイルを添付"
 
 #: src/components/workspace/ChatInput.jsx
-msgid "Attach image"
-msgstr "画像を添付"
+#~ msgid "Attach image"
+#~ msgstr "画像を添付"
+
+#: src/components/workspace/Attachments.jsx
+msgid "Attachment"
+msgstr "添付ファイル"
 
 #: src/app/(app)/project/[projectId]/page.jsx src/components/content/BrandContextForm.jsx
 msgid "Audience"
@@ -1368,7 +1441,7 @@ msgstr "ブログ / 記事"
 msgid "Bold"
 msgstr "太字"
 
-#: src/app/(app)/content/page.jsx
+#: src/app/(app)/content/page.jsx src/components/workspace/ActivityRow.jsx
 msgid "brand"
 msgstr "ブランド"
 
@@ -1407,6 +1480,10 @@ msgstr "スライドHTMLを作成中"
 #: src/components/content/PlanViewport.jsx
 msgid "Building your plan"
 msgstr "プランを作成中"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "business"
+msgstr "ビジネス"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Business context"
@@ -1560,9 +1637,17 @@ msgstr "接続を確認してください。企業プロキシの背後では、
 msgid "Checked"
 msgstr "確認済み"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Checked connected sources"
+msgstr "接続ソースを確認しました"
+
 #: src/components/audit/AuditReport.jsx
 msgid "Checking structured data coverage…"
 msgstr "構造化データのカバレッジを確認中…"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Checking the numbers"
+msgstr "数字を確認中"
 
 #: src/app/invite/[token]/page.jsx
 msgid "Checking your invitation…"
@@ -1662,6 +1747,15 @@ msgstr "編集をコミット"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Community"
 msgstr "コミュニティ"
+
+#. placeholder {0}: compactNumber(freed)
+#: src/components/workspace/AgentChat.jsx
+msgid "Compacted · {0} tokens freed"
+msgstr "圧縮済み · {0}トークンを解放"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Compacted · older history summarised to make room"
+msgstr "圧縮済み · スペースを確保するため古い履歴を要約"
 
 #: src/components/workspace/ContextRing.jsx
 #~ msgid "compacted · recomputed at the next call"
@@ -1773,6 +1867,10 @@ msgstr "接続済み — {firstAccountName}"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
 msgstr "接続済み · {verifiedModel} · {verifiedLatencyMs} ms"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "connected sources"
+msgstr "接続ソース"
 
 #: src/app/(app)/connections/page.jsx
 msgid ""
@@ -1900,7 +1998,7 @@ msgstr "Cookie設定"
 msgid "Cookies, honestly"
 msgstr "Cookieについて"
 
-#: src/app/(auth)/desktop-auth/page.js src/components/audit/ShareReport.jsx
+#: src/app/(auth)/desktop-auth/page.js src/components/audit/ShareReport.jsx src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "コピーしました"
 
@@ -1927,6 +2025,10 @@ msgstr "詳細をコピー"
 #: src/components/AppErrorPanel.jsx
 msgid "Copy failed"
 msgstr "コピーに失敗しました"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Copy response"
+msgstr "応答をコピー"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
@@ -2216,6 +2318,10 @@ msgstr "図のレンダリングに失敗しました ({error}) — ソースは
 msgid "Did anything stop working?"
 msgstr "何か動作しなくなりましたか？"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Did something"
+msgstr "何かを行いました"
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Did the revenue actually arrive?"
 msgstr "収益は実際に発生しましたか？"
@@ -2264,7 +2370,7 @@ msgstr "ドキュメント / ヘルプ"
 msgid "document"
 msgstr "ドキュメント"
 
-#: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/desk/DeskLists.jsx src/components/insights/InsightsWorkspace.jsx
 msgid "Document"
 msgstr "ドキュメント"
 
@@ -2297,6 +2403,10 @@ msgstr "ダウンロード"
 msgid "Download HTML report"
 msgstr "HTMLレポートをダウンロード"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Download this document"
+msgstr "このドキュメントをダウンロードする"
+
 #: src/app/(app)/content/page.jsx
 msgid "draft"
 msgstr "下書き"
@@ -2320,6 +2430,19 @@ msgstr "見つけたものからプロジェクトを下書きします"
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Drag to resize — double-click to reset, arrow keys to nudge"
 msgstr "ドラッグしてサイズ変更 — ダブルクリックでリセット、矢印キーで微調整"
+
+#. placeholder {0}: meta.model
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drawn by {0}"
+msgstr "{0} が描画"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drew an image"
+msgstr "画像を生成しました"
+
+#: src/components/workspace/Attachments.jsx
+msgid "Drop to attach"
+msgstr "ドロップして添付"
 
 #: src/components/UpdateToast.jsx
 msgid "Duct {version} is available"
@@ -2521,6 +2644,10 @@ msgstr "フォーマットを編集"
 msgid "Edit project context"
 msgstr "プロジェクトコンテキストを編集"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Edited a slide"
+msgstr "スライドを編集しました"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "edited by you"
 msgstr "あなたが編集しました"
@@ -2699,7 +2826,7 @@ msgstr "顔の形、パーソナルカラー…"
 msgid "FAIL"
 msgstr "失敗"
 
-#: src/app/(app)/audit/seo/page.jsx src/app/(app)/execute/page.jsx src/components/execution/ChangeSetCard.jsx src/components/insights/desk/DeskLists.jsx src/components/workspace/AgentChat.jsx
+#: src/app/(app)/audit/seo/page.jsx src/app/(app)/execute/page.jsx src/components/execution/ChangeSetCard.jsx src/components/insights/desk/DeskLists.jsx src/components/workspace/ActivityRow.jsx src/components/workspace/AgentChat.jsx
 msgid "Failed"
 msgstr "失敗しました"
 
@@ -2885,13 +3012,13 @@ msgstr "{generatedAt}に生成 · {sourceFile}"
 msgid "Generated by <0>Duct</0> · getduct.ai"
 msgstr "<0>Duct</0>によって生成 · getduct.ai"
 
-#: src/components/content/ContentWorkspace.jsx src/components/workspace/AgentChat.jsx
+#: src/components/workspace/ActivityRow.jsx src/components/workspace/AgentChat.jsx
 msgid "Generated image"
 msgstr "生成された画像"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Generated image · image {imageNo}"
-msgstr "生成された画像 · 画像 {imageNo}"
+#~ msgid "Generated image · image {imageNo}"
+#~ msgstr "生成された画像 · 画像 {imageNo}"
 
 #: src/app/(app)/insights/organic-growth/[slug]/page.jsx
 msgid "Generated: {generatedAt}"
@@ -3145,8 +3272,8 @@ msgid "Hide key"
 msgstr "キーを非表示にする"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Hide reasoning"
-msgstr "推論を非表示にする"
+#~ msgid "Hide reasoning"
+#~ msgstr "推論を非表示にする"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Hide superseded"
@@ -3296,6 +3423,10 @@ msgstr "インプレッション、クリック、費用。コンバージョン
 #: src/components/insights/desk/DeskCards.jsx src/components/insights/desk/DeskDayOne.jsx
 msgid "In progress"
 msgstr "進行中"
+
+#: src/components/insights/InsightsWorkspace.jsx
+#~ msgid "in this thread"
+#~ msgstr "このスレッド内"
 
 #: src/lib/credentialStorage.js
 msgid "In your keychain"
@@ -3482,6 +3613,10 @@ msgstr ""
 msgid "Later"
 msgstr "後で"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Leave full screen"
+msgstr "全画面表示を終了"
+
 #: src/components/ProjectMembers.jsx
 msgid "Leave project"
 msgstr "プロジェクトを離れる"
@@ -3562,6 +3697,10 @@ msgstr "リンク済みスタイル"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Links"
 msgstr "リンク"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Listed this thread's documents"
+msgstr "このスレッドのドキュメントを一覧表示しました"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Live data as of {refreshedAt}"
@@ -3663,6 +3802,10 @@ msgstr "セッションを読み込み中…"
 msgid "Loading the artifact"
 msgstr "アーティファクトを読み込み中"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Loading the brief"
+msgstr "ブリーフを読み込み中"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Loading the project"
 msgstr "プロジェクトを読み込み中"
@@ -3698,6 +3841,10 @@ msgstr "ローカル"
 #: src/components/AppSidebar.jsx
 msgid "Log out"
 msgstr "ログアウト"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Logged metrics"
+msgstr "メトリクスを記録しました"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Looking up where {providerName}'s key comes from."
@@ -3759,6 +3906,10 @@ msgstr "サイト構造をマッピング中"
 #~ msgid "Markdown"
 #~ msgstr "Markdown"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Marked as posted"
+msgstr "投稿済みとしてマークしました"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Marketing managers at SaaS startups"
 msgstr "SaaSスタートアップのマーケティングマネージャー"
@@ -3798,6 +3949,10 @@ msgstr "メンバー"
 #: src/app/(app)/projects/page.jsx
 msgid "Members of {name}"
 msgstr "{name}のメンバー"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "memory"
+msgstr "メモリ"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx src/app/(app)/project/[projectId]/page.jsx
 msgid "Memory"
@@ -4507,6 +4662,11 @@ msgstr "デフォルトでオンです。これにより、クラッシュが発
 msgid "On request"
 msgstr "リクエストに応じて"
 
+#. placeholder {0}: meta.attached_to
+#: src/components/workspace/ActivityRow.jsx
+msgid "On slide {0}"
+msgstr "スライド {0} に"
+
 #: src/lib/credentialStorage.js
 msgid "On this device"
 msgstr "このデバイスで"
@@ -4634,6 +4794,10 @@ msgstr "コマンドパレットを開く"
 msgid "Open the console"
 msgstr "コンソールを開く"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Open the document →"
+msgstr "ドキュメントを開く →"
+
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
 msgstr "プロジェクトタイムラインを開く"
@@ -4646,7 +4810,7 @@ msgstr "{dayLabel}の週を開く"
 msgid "OpenAI"
 msgstr "OpenAI"
 
-#: src/app/(app)/connections/page.jsx
+#: src/app/(app)/connections/page.jsx src/components/connections/logos.jsx
 msgid "OpenAI Ads"
 msgstr "OpenAI Ads"
 
@@ -4658,6 +4822,14 @@ msgstr "OpenAI Ads APIクイックスタート"
 msgid ""
 "OpenAI has changed what third-party apps may do with this plan. An API key works regardless."
 msgstr "OpenAIは、このプランでサードパーティアプリができることを変更しました。APIキーは関係なく機能します。"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Opened"
+msgstr "開きました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Opened the post"
+msgstr "投稿を開きました"
 
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "Opening session…"
@@ -4815,6 +4987,10 @@ msgstr "まずキーを貼り付けてください"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr "キーを貼り付けてください"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "pasted image"
+msgstr "貼り付けた画像"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pause remembering"
@@ -5142,6 +5318,14 @@ msgstr "公開済み"
 msgid "Published {publishedOn}"
 msgstr "公開済み {publishedOn}"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Published the post"
+msgstr "投稿を公開しました"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Putting it together"
+msgstr "まとめているところ"
+
 #: src/app/(app)/connections/page.jsx
 msgid "qa-, @yourcompany.com, test-account"
 msgstr "qa-, @yourcompany.com, test-account"
@@ -5167,9 +5351,65 @@ msgstr "レイジクリック、デッドクリック、クイックバック、
 msgid "ran on its own"
 msgstr "自動実行されました"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read"
+msgstr "読み込み"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read {count} pages of"
+msgstr "{count}ページを読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read a memory"
+msgstr "メモリを読み込みました"
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Read full screen"
+msgstr "全画面表示で読む"
+
 #: src/app/(start)/start/page.jsx
 msgid "Read my site"
 msgstr "サイトを読み込む"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read project context"
+msgstr "プロジェクトのコンテキストを読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the asset library"
+msgstr "アセットライブラリを読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the avatar library"
+msgstr "アバターライブラリを読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the brand context"
+msgstr "ブランドコンテキストを読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the discovered references"
+msgstr "発見された参照を読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the format library"
+msgstr "フォーマットライブラリを読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the slide"
+msgstr "スライドを読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the topic bank"
+msgstr "トピックバンクを読み込みました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read what was posted before"
+msgstr "以前に投稿された内容を読み込みました"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reading"
+msgstr "読み込み中"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Reading and parsing your pages"
@@ -5203,6 +5443,10 @@ msgstr "実際の問題が実際のアカウントから検出されました。
 msgid "Real upgrades: 13, not 36."
 msgstr "実際のアップグレード: 13、36ではありません。"
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Reasoning"
+msgstr "推論中"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "recalled {recalls}×"
 msgstr "呼び出されました {recalls}×"
@@ -5223,9 +5467,17 @@ msgstr "推奨されるアクション"
 msgid "Reconnect"
 msgstr "再接続"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Reconnect this source →"
+msgstr "このソースを再接続 →"
+
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Reconnect to save it to your account."
 msgstr "再接続してアカウントに保存してください。"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reconnecting to the model"
+msgstr "モデルに再接続中"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reconnecting to the model ({attempt}/{attempts})"
@@ -5340,7 +5592,7 @@ msgstr "{item}を削除"
 msgid "Remove {memberEmail}"
 msgstr "{memberEmail}を削除"
 
-#: src/components/workspace/ChatInput.jsx
+#: src/components/workspace/Attachments.jsx
 msgid "Remove {name}"
 msgstr "{name}を削除"
 
@@ -5359,6 +5611,10 @@ msgstr "この柱を削除"
 #: src/components/connections/ProviderCard.jsx
 msgid "Remove your {providerName} key?"
 msgstr "{providerName}キーを削除しますか？"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Rendered a slide"
+msgstr "スライドをレンダリング"
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Rendering diagram…"
@@ -5401,6 +5657,10 @@ msgstr "実行をリクエスト"
 #: src/lib/onboardingApi.js
 msgid "Request failed ({status})."
 msgstr "リクエストに失敗しました（{status}）。"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "research"
+msgstr "リサーチ"
 
 #: src/components/audit/AuditReport.jsx src/lib/auditEvents.js
 msgid "Researching competitors"
@@ -5667,6 +5927,14 @@ msgid ""
 "Saved on this device until you sign in. A signed-in profile follows you, and the scheduled brief can read it."
 msgstr "サインインするまでこのデバイスに保存されます。サインイン済みのプロフィールは追跡され、スケジュールされたブリーフが読み取ることができます。"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Saved the draft"
+msgstr "下書きを保存しました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Saved the plan"
+msgstr "プランを保存しました"
+
 #: src/components/insights/AccountSelect.jsx
 msgid "Saved to this project, so you won’t be asked again."
 msgstr "このプロジェクトに保存されたため、再度尋ねられることはありません。"
@@ -5789,6 +6057,14 @@ msgstr "メモリを検索…"
 #: src/app/(app)/connections/page.jsx
 msgid "Search queries, clicks, impressions and average position."
 msgstr "クエリ、クリック数、表示回数、平均掲載順位を検索します。"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched memory"
+msgstr "メモリを検索しました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched the web"
+msgstr "ウェブを検索"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"
@@ -6042,17 +6318,25 @@ msgstr "Ductの表示言語"
 msgid "Show key"
 msgstr "キーを表示"
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Show less"
+msgstr "少なく表示"
+
 #: src/components/GoogleAdsReport.js
 msgid "Show less signals"
 msgstr "信号を少なく表示"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Show more"
+msgstr "多く表示"
 
 #: src/components/GoogleAdsReport.js
 msgid "Show more signals"
 msgstr "信号を多く表示"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Show reasoning"
-msgstr "理由を表示"
+#~ msgid "Show reasoning"
+#~ msgstr "理由を表示"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Show superseded"
@@ -6220,12 +6504,12 @@ msgid "Slide {n} · {kind}"
 msgstr "スライド {n} · {kind}"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Slide {slideNo}"
-msgstr "スライド {slideNo}"
+#~ msgid "Slide {slideNo}"
+#~ msgstr "スライド {slideNo}"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Slide {slideNo} · image {imageNo}"
-msgstr "スライド {slideNo} · 画像 {imageNo}"
+#~ msgid "Slide {slideNo} · image {imageNo}"
+#~ msgstr "スライド {slideNo} · 画像 {imageNo}"
 
 #: src/components/content/SlidesCarousel.jsx
 msgid "slide {slideNo} preview"
@@ -6417,8 +6701,8 @@ msgid "Sub-agent"
 msgstr "サブエージェント"
 
 #: src/components/workspace/StepProgress.jsx
-msgid "Sub-agents"
-msgstr "サブエージェント"
+#~ msgid "Sub-agents"
+#~ msgstr "サブエージェント"
 
 #: src/components/AppSidebar.jsx
 msgid "Suggest an improvement"
@@ -6455,6 +6739,11 @@ msgstr "ライトモードに切り替える"
 #: src/components/commands/AppCommands.jsx
 msgid "Switch to light theme"
 msgstr "ライトテーマに切り替える"
+
+#. placeholder {0}: row.label
+#: src/components/workspace/AgentChat.jsx
+msgid "Switched to {0}"
+msgstr "{0}に切り替えました"
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Switched to {providerLabel}"
@@ -6631,6 +6920,10 @@ msgstr "アプリ内で実行されているバックエンドが応答してい
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "ChatGPTのサインインの有効期限が切れました"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "the crawl"
+msgstr "クロール"
+
 #: src/components/TelemetryCard.jsx
 msgid "The error and stack trace of a crash"
 msgstr "クラッシュのエラーとスタックトレース"
@@ -6714,6 +7007,11 @@ msgid ""
 "The tone, messaging, pillars and visual identity the content agent works from."
 msgstr "コンテンツエージェントが作業の基盤とするトーン、メッセージング、柱、ビジュアルアイデンティティ。"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid ""
+"The turn the model read was composed from these, on top of your message — the same way every run on this project starts."
+msgstr "モデルが読み込んだターンは、これらの情報とあなたのメッセージに基づいて構成されました。これは、このプロジェクトのすべての実行が開始される方法と同じです。"
+
 #: src/lib/modelTiers.js
 msgid "The work you act on"
 msgstr "お客様が実行する作業"
@@ -6738,9 +7036,13 @@ msgid ""
 "Thin or weak page and blog copy rewritten for search intent and your keywords."
 msgstr "検索意図とキーワードに合わせて書き換えられた、内容の薄いまたは弱いページおよびブログのコピー。"
 
-#: src/components/workspace/ComposerDials.jsx
+#: src/components/workspace/AgentChat.jsx src/components/workspace/ComposerDials.jsx
 msgid "Thinking"
 msgstr "思考"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Thinking · {seconds}s"
+msgstr "思考中 · {seconds}秒"
 
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "Thinking: {label}"
@@ -6908,6 +7210,10 @@ msgid ""
 "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
 msgstr ""
 "これにより、このサイト用にすでにお持ちのプロジェクトである<0>{targetProjectName}</0>が更新されます。ご自身で入力された内容はそのまま保持されます。"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Thought for {seconds}s"
+msgstr "{seconds}秒間思考しました"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "thread"
@@ -7164,6 +7470,11 @@ msgstr "保存されたキーを使用しています — スケジュールさ�
 msgid "Usually resolves on the first retry"
 msgstr "通常、最初の再試行で解決します"
 
+#. placeholder {0}: shown.version
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "v{0}"
+msgstr "v{0}"
+
 #: src/components/audit/AuditReport.jsx
 msgid "v{id} — {label}"
 msgstr "v{id} — {label}"
@@ -7177,8 +7488,8 @@ msgid "v{version} — {label}"
 msgstr "v{version} — {label}"
 
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "v{version} · {label}"
-msgstr "v{version} · {label}"
+#~ msgid "v{version} · {label}"
+#~ msgstr "v{version} · {label}"
 
 #: src/app/(app)/artifacts/page.jsx
 #~ msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
@@ -7236,7 +7547,7 @@ msgstr "Duct経由"
 msgid "View →"
 msgstr "表示 →"
 
-#: src/components/workspace/AgentChat.jsx
+#: src/components/workspace/ActivityRow.jsx src/components/workspace/AgentChat.jsx src/components/workspace/Attachments.jsx
 msgid "View full screen"
 msgstr "全画面表示"
 
@@ -7500,9 +7811,13 @@ msgstr "勝利"
 msgid "Work still moving — mine or yours. Nothing here waits on you."
 msgstr "作業は進行中 — あなたのものでも私のものでも。ここでは何もあなたを待ちません。"
 
-#: src/components/insights/desk/DeskCards.jsx
+#: src/components/insights/desk/DeskCards.jsx src/components/workspace/ActivityRow.jsx
 msgid "Working"
 msgstr "作業中"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Working it through"
+msgstr "検討中"
 
 #: src/components/audit/AuditReport.jsx src/components/PipelineProgress.jsx
 msgid "Working on your report…"
@@ -7644,6 +7959,10 @@ msgstr "あなたの回答が結果を明確にします。Ductに任せる場�
 msgid "your artifacts"
 msgstr "アーティファクト"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "your ask"
+msgstr "あなたの依頼"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "your ChatGPT account"
 msgstr "ChatGPTアカウント"
@@ -7737,6 +8056,10 @@ msgstr "ワンラインピッチ"
 #: src/components/content/AccountsTab.jsx
 msgid "your PostBridge accounts"
 msgstr "PostBridgeアカウント"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "your profile"
+msgstr "あなたのプロフィール"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Your projects"

@@ -41,6 +41,10 @@ msgstr "· definido para <0>{configured}</0>, reduzido para este modelo"
 msgid "(no caption)"
 msgstr "(sem legenda)"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "(read the first part of the page)"
+msgstr "(ler a primeira parte da página)"
+
 #: src/components/content/PostMiniCard.jsx
 msgid "(untitled)"
 msgstr "(sem título)"
@@ -59,11 +63,47 @@ msgstr "{0, plural, one {# chamada} other {# chamadas}}"
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, one {# correspondência} other {# correspondências}}"
 
+#. placeholder {0}: group.ok
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0, plural, one {# pull} other {# pulls}}"
+msgstr "{0, plural, one {# puxada} other {# puxadas}}"
+
 #. placeholder {0}: dial.dial
 #. placeholder {1}: dial.default_native
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "{0} {1} · whatever this model does anyway"
 #~ msgstr "{0} {1} · o que este modelo faz de qualquer jeito"
+
+#. placeholder {0}: meta.failed
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} failed"
+msgstr "{0} falhou"
+
+#. placeholder {0}: docs.length
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0} in this thread"
+msgstr "{0} neste tópico"
+
+#. placeholder {0}: meta.count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} matches"
+msgstr "{0} correspondências"
+
+#. placeholder {0}: group.ok
+#. placeholder {1}: group.failed
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "{0} read · {1} failed"
+msgstr "{0} lido · {1} falhou"
+
+#. placeholder {0}: meta.rows
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} rows"
+msgstr "{0} linhas"
+
+#. placeholder {0}: meta.source_count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} sources"
+msgstr "{0} fontes"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
@@ -286,6 +326,14 @@ msgstr "{name} · Membros"
 #: src/components/content/StyleGallery.jsx
 msgid "{name} preview"
 msgstr "Prévia de {name}"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "{name} was not attached — send images, PDFs or text files."
+msgstr "{name} não foi anexado — envie imagens, PDFs ou arquivos de texto."
+
+#: src/components/workspace/ChatInput.jsx
+msgid "{name} was not attached — the limit is {max} MB per file."
+msgstr "{name} não foi anexado — o limite é de {max} MB por arquivo."
 
 #: src/components/insights/Desk.jsx
 msgid "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
@@ -896,7 +944,7 @@ msgstr "Anúncios dizem 4.212. Stripe liquidou 1.890."
 msgid "Advanced"
 msgstr "Avançado"
 
-#: src/app/(app)/activity/page.jsx src/app/(app)/execute/page.jsx src/components/workspace/StepProgress.jsx
+#: src/app/(app)/activity/page.jsx src/app/(app)/execute/page.jsx
 msgid "agent"
 msgstr "agente"
 
@@ -962,10 +1010,18 @@ msgstr "todas as contas"
 msgid "All clear"
 msgstr "Tudo limpo"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents"
+msgstr "Todos os documentos"
+
 #. placeholder {0}: docs.length
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "All documents · {0}"
-msgstr "Todos os documentos · {0}"
+#~ msgid "All documents · {0}"
+#~ msgstr "Todos os documentos · {0}"
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "All documents in this thread"
+msgstr "Todos os documentos nesta conversa"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
@@ -1248,6 +1304,11 @@ msgid ""
 msgstr ""
 "Peça a quem te convidou para enviar um novo, ou <0>entrar</0> se você já tem acesso."
 
+#. placeholder {0}: activity.title
+#: src/components/workspace/ActivityRow.jsx
+msgid "Asked {0}"
+msgstr "Perguntou {0}"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Asks freely · nothing applies without you"
 msgstr "Pergunta livremente · nada se aplica sem você"
@@ -1261,12 +1322,24 @@ msgid "Assisted"
 msgstr "Assistido"
 
 #: src/components/workspace/ChatInput.jsx
+msgid "Attach a file"
+msgstr "Anexar um arquivo"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Attach a file — or drop one here"
+msgstr "Anexar um arquivo — ou arraste um para cá"
+
+#: src/components/workspace/ChatInput.jsx
 msgid "Attach files"
 msgstr "Anexar arquivos"
 
 #: src/components/workspace/ChatInput.jsx
-msgid "Attach image"
-msgstr "Anexar imagem"
+#~ msgid "Attach image"
+#~ msgstr "Anexar imagem"
+
+#: src/components/workspace/Attachments.jsx
+msgid "Attachment"
+msgstr "Anexo"
 
 #: src/app/(app)/project/[projectId]/page.jsx src/components/content/BrandContextForm.jsx
 msgid "Audience"
@@ -1410,7 +1483,7 @@ msgstr "Blog / Artigos"
 msgid "Bold"
 msgstr "Negrito"
 
-#: src/app/(app)/content/page.jsx
+#: src/app/(app)/content/page.jsx src/components/workspace/ActivityRow.jsx
 msgid "brand"
 msgstr "marca"
 
@@ -1449,6 +1522,10 @@ msgstr "Gerando HTML do slide"
 #: src/components/content/PlanViewport.jsx
 msgid "Building your plan"
 msgstr "Criando seu plano"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "business"
+msgstr "negócio"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Business context"
@@ -1606,9 +1683,17 @@ msgstr ""
 msgid "Checked"
 msgstr "Verificado"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Checked connected sources"
+msgstr "Verificou as fontes conectadas"
+
 #: src/components/audit/AuditReport.jsx
 msgid "Checking structured data coverage…"
 msgstr "Verificando cobertura de dados estruturados…"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Checking the numbers"
+msgstr "Verificando os números"
 
 #: src/app/invite/[token]/page.jsx
 msgid "Checking your invitation…"
@@ -1709,6 +1794,15 @@ msgstr "Confirmar edições"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Community"
 msgstr "Comunidade"
+
+#. placeholder {0}: compactNumber(freed)
+#: src/components/workspace/AgentChat.jsx
+msgid "Compacted · {0} tokens freed"
+msgstr "Compactado · {0} tokens liberados"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Compacted · older history summarised to make room"
+msgstr "Compactado · histórico antigo resumido para abrir espaço"
 
 #: src/components/workspace/ContextRing.jsx
 #~ msgid "compacted · recomputed at the next call"
@@ -1821,6 +1915,10 @@ msgstr "Conectado — {firstAccountName}"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
 msgstr "Conectado · {verifiedModel} · {verifiedLatencyMs} ms"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "connected sources"
+msgstr "fontes conectadas"
 
 #: src/app/(app)/connections/page.jsx
 msgid ""
@@ -1949,7 +2047,7 @@ msgstr "Configurações de cookies"
 msgid "Cookies, honestly"
 msgstr "Cookies, sinceramente"
 
-#: src/app/(auth)/desktop-auth/page.js src/components/audit/ShareReport.jsx
+#: src/app/(auth)/desktop-auth/page.js src/components/audit/ShareReport.jsx src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "Copiado"
 
@@ -1976,6 +2074,10 @@ msgstr "Copiar detalhes"
 #: src/components/AppErrorPanel.jsx
 msgid "Copy failed"
 msgstr "Falha ao copiar"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Copy response"
+msgstr "Copiar resposta"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
@@ -2271,6 +2373,10 @@ msgstr "Falha ao renderizar o diagrama ({error}) — fonte abaixo."
 msgid "Did anything stop working?"
 msgstr "Algo parou de funcionar?"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Did something"
+msgstr "Fez algo"
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Did the revenue actually arrive?"
 msgstr "A receita realmente chegou?"
@@ -2319,7 +2425,7 @@ msgstr "Documentação / Ajuda"
 msgid "document"
 msgstr "documento"
 
-#: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/desk/DeskLists.jsx src/components/insights/InsightsWorkspace.jsx
 msgid "Document"
 msgstr "Documento"
 
@@ -2353,6 +2459,10 @@ msgstr "Baixar"
 msgid "Download HTML report"
 msgstr "Baixar relatório HTML"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Download this document"
+msgstr "Baixar este documento"
+
 #: src/app/(app)/content/page.jsx
 msgid "draft"
 msgstr "rascunho"
@@ -2376,6 +2486,19 @@ msgstr "Rascunha seu projeto a partir do que encontra"
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Drag to resize — double-click to reset, arrow keys to nudge"
 msgstr "Arraste para redimensionar — clique duplo para redefinir, setas para ajustar"
+
+#. placeholder {0}: meta.model
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drawn by {0}"
+msgstr "Desenhado por {0}"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drew an image"
+msgstr "Desenhou uma imagem"
+
+#: src/components/workspace/Attachments.jsx
+msgid "Drop to attach"
+msgstr "Arraste para anexar"
 
 #: src/components/UpdateToast.jsx
 msgid "Duct {version} is available"
@@ -2592,6 +2715,10 @@ msgstr "Editar formato"
 msgid "Edit project context"
 msgstr "Editar contexto do projeto"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Edited a slide"
+msgstr "Editou um slide"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "edited by you"
 msgstr "editado por você"
@@ -2776,7 +2903,7 @@ msgstr "formato do rosto, estação de cores…"
 msgid "FAIL"
 msgstr "FALHA"
 
-#: src/app/(app)/audit/seo/page.jsx src/app/(app)/execute/page.jsx src/components/execution/ChangeSetCard.jsx src/components/insights/desk/DeskLists.jsx src/components/workspace/AgentChat.jsx
+#: src/app/(app)/audit/seo/page.jsx src/app/(app)/execute/page.jsx src/components/execution/ChangeSetCard.jsx src/components/insights/desk/DeskLists.jsx src/components/workspace/ActivityRow.jsx src/components/workspace/AgentChat.jsx
 msgid "Failed"
 msgstr "Falhou"
 
@@ -2963,13 +3090,13 @@ msgstr "Gerado em {generatedAt} · {sourceFile}"
 msgid "Generated by <0>Duct</0> · getduct.ai"
 msgstr "Gerado por <0>Duct</0> · getduct.ai"
 
-#: src/components/content/ContentWorkspace.jsx src/components/workspace/AgentChat.jsx
+#: src/components/workspace/ActivityRow.jsx src/components/workspace/AgentChat.jsx
 msgid "Generated image"
 msgstr "Imagem gerada"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Generated image · image {imageNo}"
-msgstr "Imagem gerada · imagem {imageNo}"
+#~ msgid "Generated image · image {imageNo}"
+#~ msgstr "Imagem gerada · imagem {imageNo}"
 
 #: src/app/(app)/insights/organic-growth/[slug]/page.jsx
 msgid "Generated: {generatedAt}"
@@ -3230,8 +3357,8 @@ msgid "Hide key"
 msgstr "Ocultar chave"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Hide reasoning"
-msgstr "Ocultar raciocínio"
+#~ msgid "Hide reasoning"
+#~ msgstr "Ocultar raciocínio"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Hide superseded"
@@ -3384,6 +3511,10 @@ msgstr "Impressões, cliques e gastos. As conversões permanecem no Ads Manager.
 #: src/components/insights/desk/DeskCards.jsx src/components/insights/desk/DeskDayOne.jsx
 msgid "In progress"
 msgstr "Em andamento"
+
+#: src/components/insights/InsightsWorkspace.jsx
+#~ msgid "in this thread"
+#~ msgstr "Nesta conversa"
 
 #: src/lib/credentialStorage.js
 msgid "In your keychain"
@@ -3573,6 +3704,10 @@ msgstr ""
 msgid "Later"
 msgstr "Mais tarde"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Leave full screen"
+msgstr "Sair da tela cheia"
+
 #: src/components/ProjectMembers.jsx
 msgid "Leave project"
 msgstr "Sair do projeto"
@@ -3654,6 +3789,10 @@ msgstr "Estilos vinculados"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Links"
 msgstr "Links"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Listed this thread's documents"
+msgstr "Listou os documentos desta conversa"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Live data as of {refreshedAt}"
@@ -3755,6 +3894,10 @@ msgstr "Carregando sessão…"
 msgid "Loading the artifact"
 msgstr "Carregando o artefato"
 
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Loading the brief"
+msgstr "Carregando o resumo"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Loading the project"
 msgstr "Carregando o projeto"
@@ -3790,6 +3933,10 @@ msgstr "Local"
 #: src/components/AppSidebar.jsx
 msgid "Log out"
 msgstr "Sair"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Logged metrics"
+msgstr "Registrou métricas"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Looking up where {providerName}'s key comes from."
@@ -3851,6 +3998,10 @@ msgstr "Mapeando a estrutura do seu site"
 #~ msgid "Markdown"
 #~ msgstr "Markdown"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Marked as posted"
+msgstr "Marcou como postado"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Marketing managers at SaaS startups"
 msgstr "Gerentes de marketing em startups SaaS"
@@ -3890,6 +4041,10 @@ msgstr "Membros"
 #: src/app/(app)/projects/page.jsx
 msgid "Members of {name}"
 msgstr "Membros de {name}"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "memory"
+msgstr "memória"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx src/app/(app)/project/[projectId]/page.jsx
 msgid "Memory"
@@ -4615,6 +4770,11 @@ msgstr ""
 msgid "On request"
 msgstr "Sob demanda"
 
+#. placeholder {0}: meta.attached_to
+#: src/components/workspace/ActivityRow.jsx
+msgid "On slide {0}"
+msgstr "No slide {0}"
+
 #: src/lib/credentialStorage.js
 msgid "On this device"
 msgstr "Neste dispositivo"
@@ -4743,6 +4903,10 @@ msgstr "Abrir a paleta de comandos"
 msgid "Open the console"
 msgstr "Abrir o console"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Open the document →"
+msgstr "Abrir o documento →"
+
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
 msgstr "Abrir a linha do tempo do projeto"
@@ -4755,7 +4919,7 @@ msgstr "Abrir semana de {dayLabel}"
 msgid "OpenAI"
 msgstr "OpenAI"
 
-#: src/app/(app)/connections/page.jsx
+#: src/app/(app)/connections/page.jsx src/components/connections/logos.jsx
 msgid "OpenAI Ads"
 msgstr "OpenAI Ads"
 
@@ -4768,6 +4932,14 @@ msgid ""
 "OpenAI has changed what third-party apps may do with this plan. An API key works regardless."
 msgstr ""
 "A OpenAI mudou o que apps de terceiros podem fazer com este plano. Uma chave de API funciona independentemente."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Opened"
+msgstr "Abriu"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Opened the post"
+msgstr "Abriu o post"
 
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "Opening session…"
@@ -4928,6 +5100,10 @@ msgstr "Cole uma chave primeiro"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr "Cole sua chave"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "pasted image"
+msgstr "imagem colada"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pause remembering"
@@ -5261,6 +5437,14 @@ msgstr "Publicado"
 msgid "Published {publishedOn}"
 msgstr "Publicado em {publishedOn}"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Published the post"
+msgstr "Publicou o post"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Putting it together"
+msgstr "Montando"
+
 #: src/app/(app)/connections/page.jsx
 msgid "qa-, @yourcompany.com, test-account"
 msgstr "qa-, @suaempresa.com, conta-teste"
@@ -5288,9 +5472,65 @@ msgstr ""
 msgid "ran on its own"
 msgstr "executado por conta própria"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read"
+msgstr "Leu"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read {count} pages of"
+msgstr "Leu {count} páginas de"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read a memory"
+msgstr "Leu uma memória"
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Read full screen"
+msgstr "Ver em tela cheia"
+
 #: src/app/(start)/start/page.jsx
 msgid "Read my site"
 msgstr "Ler meu site"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read project context"
+msgstr "Leu o contexto do projeto"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the asset library"
+msgstr "Leu a biblioteca de ativos"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the avatar library"
+msgstr "Leu a biblioteca de avatares"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the brand context"
+msgstr "Leu o contexto da marca"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the discovered references"
+msgstr "Leu as referências descobertas"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the format library"
+msgstr "Leu a biblioteca de formatos"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the slide"
+msgstr "Leu o slide"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read the topic bank"
+msgstr "Leu o banco de tópicos"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read what was posted before"
+msgstr "Leu o que foi postado antes"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reading"
+msgstr "Lendo"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Reading and parsing your pages"
@@ -5324,6 +5564,10 @@ msgstr "Problemas reais de uma conta real. Nada chega aqui sem ser verificado."
 msgid "Real upgrades: 13, not 36."
 msgstr "Atualizações reais: 13, não 36."
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Reasoning"
+msgstr "Raciocinando"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "recalled {recalls}×"
 msgstr "relembrado {recalls}×"
@@ -5344,9 +5588,17 @@ msgstr "Ações recomendadas"
 msgid "Reconnect"
 msgstr "Reconectar"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Reconnect this source →"
+msgstr "Reconectar esta fonte →"
+
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Reconnect to save it to your account."
 msgstr "Reconecte para salvá-lo na sua conta."
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Reconnecting to the model"
+msgstr "Reconectando ao modelo"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reconnecting to the model ({attempt}/{attempts})"
@@ -5463,7 +5715,7 @@ msgstr "Remover {item}"
 msgid "Remove {memberEmail}"
 msgstr "Remover {memberEmail}"
 
-#: src/components/workspace/ChatInput.jsx
+#: src/components/workspace/Attachments.jsx
 msgid "Remove {name}"
 msgstr "Remover {name}"
 
@@ -5482,6 +5734,10 @@ msgstr "Remover este pilar"
 #: src/components/connections/ProviderCard.jsx
 msgid "Remove your {providerName} key?"
 msgstr "Remover sua chave {providerName}?"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Rendered a slide"
+msgstr "Renderizou um slide"
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Rendering diagram…"
@@ -5526,6 +5782,10 @@ msgstr "Solicitar execução"
 #: src/lib/onboardingApi.js
 msgid "Request failed ({status})."
 msgstr "A solicitação falhou ({status})."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "research"
+msgstr "pesquisa"
 
 #: src/components/audit/AuditReport.jsx src/lib/auditEvents.js
 msgid "Researching competitors"
@@ -5802,6 +6062,14 @@ msgid ""
 msgstr ""
 "Salvo neste dispositivo até você entrar. Um perfil conectado te acompanha, e o resumo agendado pode lê-lo."
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Saved the draft"
+msgstr "Salvou o rascunho"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Saved the plan"
+msgstr "Salvou o plano"
+
 #: src/components/insights/AccountSelect.jsx
 msgid "Saved to this project, so you won’t be asked again."
 msgstr "Salvo neste projeto, então você não será perguntado novamente."
@@ -5928,6 +6196,14 @@ msgstr "Pesquisar memória…"
 #: src/app/(app)/connections/page.jsx
 msgid "Search queries, clicks, impressions and average position."
 msgstr "Pesquisar consultas, cliques, impressões e posição média."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched memory"
+msgstr "Pesquisou a memória"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched the web"
+msgstr "Pesquisou na web"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"
@@ -6187,17 +6463,25 @@ msgstr "Mostrar Duct em"
 msgid "Show key"
 msgstr "Mostrar chave"
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Show less"
+msgstr "Mostrar menos"
+
 #: src/components/GoogleAdsReport.js
 msgid "Show less signals"
 msgstr "Mostrar menos sinais"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Show more"
+msgstr "Mostrar mais"
 
 #: src/components/GoogleAdsReport.js
 msgid "Show more signals"
 msgstr "Mostrar mais sinais"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Show reasoning"
-msgstr "Mostrar raciocínio"
+#~ msgid "Show reasoning"
+#~ msgstr "Mostrar raciocínio"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Show superseded"
@@ -6368,12 +6652,12 @@ msgid "Slide {n} · {kind}"
 msgstr "Slide {n} · {kind}"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Slide {slideNo}"
-msgstr "Slide {slideNo}"
+#~ msgid "Slide {slideNo}"
+#~ msgstr "Slide {slideNo}"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Slide {slideNo} · image {imageNo}"
-msgstr "Slide {slideNo} · imagem {imageNo}"
+#~ msgid "Slide {slideNo} · image {imageNo}"
+#~ msgstr "Slide {slideNo} · imagem {imageNo}"
 
 #: src/components/content/SlidesCarousel.jsx
 msgid "slide {slideNo} preview"
@@ -6569,8 +6853,8 @@ msgid "Sub-agent"
 msgstr "Subagente"
 
 #: src/components/workspace/StepProgress.jsx
-msgid "Sub-agents"
-msgstr "Subagentes"
+#~ msgid "Sub-agents"
+#~ msgstr "Subagentes"
 
 #: src/components/AppSidebar.jsx
 msgid "Suggest an improvement"
@@ -6607,6 +6891,11 @@ msgstr "Mudar para o modo claro"
 #: src/components/commands/AppCommands.jsx
 msgid "Switch to light theme"
 msgstr "Mudar para o tema claro"
+
+#. placeholder {0}: row.label
+#: src/components/workspace/AgentChat.jsx
+msgid "Switched to {0}"
+msgstr "Mudou para {0}"
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Switched to {providerLabel}"
@@ -6788,6 +7077,10 @@ msgstr ""
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "O login do ChatGPT expirou"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "the crawl"
+msgstr "o rastreamento"
+
 #: src/components/TelemetryCard.jsx
 msgid "The error and stack trace of a crash"
 msgstr "O erro e o rastreamento de pilha de uma falha"
@@ -6876,6 +7169,12 @@ msgid ""
 msgstr ""
 "O tom, as mensagens, os pilares e a identidade visual a partir dos quais o agente de conteúdo trabalha."
 
+#: src/components/workspace/ActivityRow.jsx
+msgid ""
+"The turn the model read was composed from these, on top of your message — the same way every run on this project starts."
+msgstr ""
+"A vez que o modelo leu foi composta a partir destes, além da sua mensagem — da mesma forma que cada execução neste projeto começa."
+
 #: src/lib/modelTiers.js
 msgid "The work you act on"
 msgstr "O trabalho em que você age"
@@ -6902,9 +7201,13 @@ msgid ""
 msgstr ""
 "Conteúdo de página e blog fraco ou superficial reescrito para intenção de busca e suas palavras-chave."
 
-#: src/components/workspace/ComposerDials.jsx
+#: src/components/workspace/AgentChat.jsx src/components/workspace/ComposerDials.jsx
 msgid "Thinking"
 msgstr "Pensamento"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Thinking · {seconds}s"
+msgstr "Pensando · {seconds}s"
 
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "Thinking: {label}"
@@ -7084,6 +7387,10 @@ msgid ""
 "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
 msgstr ""
 "Isso vai atualizar <0>{targetProjectName}</0>, o projeto que você já tem para este site. Qualquer coisa que você preencheu por conta própria permanece como está."
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Thought for {seconds}s"
+msgstr "Pensou por {seconds}s"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "thread"
@@ -7349,6 +7656,11 @@ msgstr "Usando sua chave salva — aquela que também financia execuções agend
 msgid "Usually resolves on the first retry"
 msgstr "Geralmente resolve na primeira tentativa"
 
+#. placeholder {0}: shown.version
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "v{0}"
+msgstr "v{0}"
+
 #: src/components/audit/AuditReport.jsx
 msgid "v{id} — {label}"
 msgstr "v{id} — {label}"
@@ -7362,8 +7674,8 @@ msgid "v{version} — {label}"
 msgstr "v{version} — {label}"
 
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "v{version} · {label}"
-msgstr "v{version} · {label}"
+#~ msgid "v{version} · {label}"
+#~ msgstr "v{version} · {label}"
 
 #: src/app/(app)/artifacts/page.jsx
 #~ msgid "v{version} · {versionCount, plural, one {# version} other {# versions}}"
@@ -7421,7 +7733,7 @@ msgstr "via Duct"
 msgid "View →"
 msgstr "Ver →"
 
-#: src/components/workspace/AgentChat.jsx
+#: src/components/workspace/ActivityRow.jsx src/components/workspace/AgentChat.jsx src/components/workspace/Attachments.jsx
 msgid "View full screen"
 msgstr "Ver em tela cheia"
 
@@ -7690,9 +8002,13 @@ msgstr "Ganho"
 msgid "Work still moving — mine or yours. Nothing here waits on you."
 msgstr "Trabalho ainda em andamento — meu ou seu. Nada aqui espera por você."
 
-#: src/components/insights/desk/DeskCards.jsx
+#: src/components/insights/desk/DeskCards.jsx src/components/workspace/ActivityRow.jsx
 msgid "Working"
 msgstr "Trabalhando"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Working it through"
+msgstr "Processando"
 
 #: src/components/audit/AuditReport.jsx src/components/PipelineProgress.jsx
 msgid "Working on your report…"
@@ -7840,6 +8156,10 @@ msgstr "Suas respostas aprimoram o resultado. Pule se preferir que o Duct decida
 msgid "your artifacts"
 msgstr "seus artefatos"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "your ask"
+msgstr "seu pedido"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "your ChatGPT account"
 msgstr "sua conta ChatGPT"
@@ -7937,6 +8257,10 @@ msgstr "Seu pitch de uma linha"
 #: src/components/content/AccountsTab.jsx
 msgid "your PostBridge accounts"
 msgstr "suas contas PostBridge"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "your profile"
+msgstr "seu perfil"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Your projects"

@@ -5,6 +5,7 @@
 // served only through these authed endpoints (Bearer JWT), never a public URL.
 
 import { authedFetch, authedRequest } from "./authFetch";
+import { saveBlob } from "./download";
 
 export function listArtifacts({ projectId, kind = "", agentType = "", conversationId = "", limit = 50 } = {}) {
   const params = new URLSearchParams({ project_id: projectId });
@@ -49,16 +50,8 @@ export async function exportArtifact(artifact, format) {
   const res = await authedFetch(
     `/api/user/artifacts/${artifact.id}/export?format=${format}`
   );
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
   const stem = (artifact.filename || artifact.slug || "artifact").replace(/\.[a-z0-9]+$/i, "");
-  a.download = `${stem}.${format}`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  saveBlob(await res.blob(), `${stem}.${format}`);
 }
 
 /** Raw stored bytes as text (freehand HTML, markdown, …). Throws on 404. */
@@ -70,13 +63,5 @@ export async function getArtifactContent(artifactId) {
 /** Trigger a browser download of the artifact's stored file. */
 export async function downloadArtifact(artifact) {
   const res = await authedFetch(`/api/user/artifacts/${artifact.id}/download`);
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = artifact.filename || "artifact";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  saveBlob(await res.blob(), artifact.filename || "artifact");
 }

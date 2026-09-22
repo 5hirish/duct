@@ -52,6 +52,7 @@ import {
 import { trackEvent, AnalyticsEvent } from "../lib/analytics";
 import { AgentEvent } from "../lib/agentEvents";
 import { mapEventsToMessages } from "../lib/agentHistory";
+import { describeContent } from "../lib/attachments";
 import { Phase } from "../lib/agentPhase";
 import {
   Action,
@@ -387,10 +388,12 @@ export function useAgentSession({
 
   const send = useCallback(
     async (content, extra = {}) => {
-      const text = typeof content === "string" ? content : "[image attached]";
+      // The row shows the same text and tiles a reopened thread rebuilds
+      // from the stored content — one parser for both (lib/attachments.js).
+      const { text, attachments } = describeContent(content);
       // The id is what lets USER_INPUT_CONSUMED release this row and no other.
       const clientId = newClientId();
-      dispatch({ type: Action.USER_SENT, text, clientId });
+      dispatch({ type: Action.USER_SENT, text, attachments, clientId, at: Date.now() });
       if (!sessionIdRef.current) {
         dispatch({ type: Action.SEND_FAILED, error: NOT_ATTACHED, content, clientId });
         return;

@@ -4,6 +4,7 @@ import { Phase } from "../agentPhase";
 import {
   Action,
   ErrorAction,
+  Notice,
   Row,
   errorAction,
   friendlyErrorMessage,
@@ -167,6 +168,103 @@ describe("an audit run", () => {
       role: Row.ASSISTANT,
       text: "The title runs past 60 characters and gets truncated in results.",
     });
+  });
+});
+
+describe("a tool call the reader is allowed to watch", () => {
+  const running = {
+    event: AgentEvent.TOOL_ACTIVITY,
+    activity_id: "call-1",
+    kind: "data",
+    tool: "FetchData",
+    status: StepStatus.RUNNING,
+    title: "ga4_landing_pages",
+    source: "ga4",
+    meta: {},
+  };
+  const finished = { ...running, status: StepStatus.SUCCESS, meta: { rows: 842 } };
+
+  it("is one row, updated in place, not two", () => {
+    const { state } = drive([running, finished]);
+    const rows = state.messages.filter((m) => m.role === Row.ACTIVITY);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].activity).toMatchObject({ status: StepStatus.SUCCESS, meta: { rows: 842 } });
+  });
+
+  it("lands after the sentence that introduced it, not inside it", () => {
+    const { state } = drive([
+      { event: AgentEvent.AGENT_MESSAGE_CHUNK, text: "Let me read your analytics." },
+      running,
+      { event: AgentEvent.AGENT_MESSAGE_CHUNK, text: "Traffic is flat." },
+    ]);
+    expect(state.messages.map((m) => m.role)).toEqual([Row.ASSISTANT, Row.ACTIVITY, Row.ASSISTANT]);
+  });
+
+  it("ignores a kind this build cannot draw", () => {
+    const { state } = drive([{ ...running, kind: "hologram" }]);
+    expect(state.messages).toHaveLength(0);
+  });
+});
+
+describe("dividers and the thinking clock", () => {
+  const started = (model, label) => ({ event: AgentEvent.PIPELINE_STARTED, status: "running", model, model_label: label });
+
+  it("draws a divider when a run starts on a different model, and not on the first", () => {
+    const first = drive([started("claude-sonnet-5", "Claude Sonnet 5")]);
+    expect(first.state.model).toBe("claude-sonnet-5");
+    expect(first.state.messages.filter((m) => m.role === Row.NOTICE)).toHaveLength(0);
+
+    const second = drive([started("gpt-5.6-terra", "GPT-5.6 Terra")], first.state);
+    const notices = second.state.messages.filter((m) => m.role === Row.NOTICE);
+    expect(notices).toEqual([{ role: Row.NOTICE, kind: Notice.MODEL, label: "GPT-5.6 Terra", model: "gpt-5.6-terra" }]);
+  });
+
+  it("a compaction learns what it freed from the next call on the thread", () => {
+    const { state } = drive([
+      { event: AgentEvent.TOKEN_USAGE, input_tokens: 180_000, output_tokens: 500, scope: "thread" },
+      { event: AgentEvent.CONTEXT_COMPACTING },
+      { event: AgentEvent.CONTEXT_COMPACTED },
+      // A sub-agent's call is not the thread's size and must not fill it.
+      { event: AgentEvent.TOKEN_USAGE, input_tokens: 9_000, output_tokens: 100, scope: "subagent" },
+      { event: AgentEvent.TOKEN_USAGE, input_tokens: 42_000, output_tokens: 300, scope: "thread" },
+    ]);
+    const [notice] = state.messages.filter((m) => m.role === Row.NOTICE);
+    expect(notice).toMatchObject({ kind: Notice.COMPACTED, before: 180_000, after: 42_000, summary: "" });
+  });
+
+  it("keeps the summary a compaction sends, so the divider can show what survived", () => {
+    const { state } = drive([{ event: AgentEvent.CONTEXT_COMPACTED, summary: "Sessions fell 12%." }]);
+    expect(state.messages.at(-1)).toMatchObject({ kind: Notice.COMPACTED, summary: "Sessions fell 12%." });
+  });
+
+  it("every bubble carries when it began, on this client's clock", () => {
+    let s = reduceAgentSession(initialAgentState, {
+      type: Action.USER_SENT, text: "see attached", at: 5000,
+      attachments: [{ name: "deck.pdf", mediaType: "application/pdf", kind: "pdf" }],
+    });
+    expect(s.messages[0]).toMatchObject({ role: Row.USER, at: 5000, attachments: [{ name: "deck.pdf" }] });
+    s = reduceAgentSession(s, { type: Action.EVENT, event: { event: AgentEvent.THINKING_CHUNK, text: "hm" }, at: 6000 });
+    s = reduceAgentSession(s, { type: Action.EVENT, event: { event: AgentEvent.AGENT_MESSAGE_CHUNK, text: "Yes." }, at: 7000 });
+    // The row began with its first reasoning token, not its first word.
+    expect(s.messages[1]).toMatchObject({ role: Row.ASSISTANT, at: 6000, text: "Yes." });
+  });
+
+  it("times reasoning from its first token to the first word of prose", () => {
+    let s = initialAgentState;
+    const at = (event, ms) => (s = reduceAgentSession(s, { type: Action.EVENT, event, at: ms }));
+    at({ event: AgentEvent.THINKING_CHUNK, text: "Let me" }, 1000);
+    at({ event: AgentEvent.THINKING_CHUNK, text: " check." }, 3000);
+    at({ event: AgentEvent.AGENT_MESSAGE_CHUNK, text: "Traffic is flat." }, 7000);
+    const [row] = s.messages;
+    expect(row.thinkingStartedAt).toBe(1000);
+    expect(row.thinkingEndedAt).toBe(7000);
+  });
+
+  it("stops the clock at the end of a turn that never spoke", () => {
+    let s = initialAgentState;
+    s = reduceAgentSession(s, { type: Action.EVENT, event: { event: AgentEvent.THINKING_CHUNK, text: "hm" }, at: 1000 });
+    s = reduceAgentSession(s, { type: Action.EVENT, event: { event: AgentEvent.MESSAGE_STOP }, at: 4000 });
+    expect(s.messages[0].thinkingEndedAt).toBe(4000);
   });
 });
 

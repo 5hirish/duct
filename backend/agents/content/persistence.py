@@ -387,6 +387,14 @@ class ConversationRecorder:
             await self._flush_turn()
         elif event == AgentEvent.QUESTIONS_REQUIRED:
             await self._append(EventKind.QUESTION, {"questions": body.get("questions", [])})
+        elif event == AgentEvent.CONTEXT_COMPACTED:
+            # Mid-turn, so it lands before the turn's own text is flushed on
+            # MESSAGE_STOP — the same order the live transcript drew it in.
+            await self._append(EventKind.COMPACTED, {"summary": str(body.get("summary") or "")})
+        elif event == AgentEvent.MEMORY_RECALLED and body.get("memories"):
+            await self._append(EventKind.MEMORY_RECALLED, {"memories": list(body["memories"])})
+        elif event == AgentEvent.MEMORY_WRITTEN and body.get("memory"):
+            await self._append(EventKind.MEMORY_WRITTEN, {"memory": body["memory"]})
         await self._track(event, body)
 
     # -- run status ---------------------------------------------------------

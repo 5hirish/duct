@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from agents.core.activity import ACTIVITY_TOOLS, ActivityKind
 from agents.core.errors import ErrorCode
 from agents.core.events import AgentEvent, AgentStep
 from models.memory import MEMORY_KINDS
@@ -59,6 +60,29 @@ def test_error_codes_match_exactly():
     source = (APP_LIB / "agentEvents.js").read_text()
     app_codes = set(_frozen_object(source, "ErrorCode").values())
     assert app_codes == {member.value for member in ErrorCode}
+
+
+def test_activity_kinds_match_exactly():
+    """A kind the app cannot draw is a silent card; one the backend never
+    sends is dead code. Both sides freeze the same six."""
+    source = (APP_LIB / "agentEvents.js").read_text()
+    app_kinds = set(_frozen_object(source, "ActivityKind").values())
+    assert app_kinds == {member.value for member in ActivityKind}
+
+
+def test_the_two_tool_allowlists_agree():
+    """The backend decides what a live run shows; the app rebuilds the same
+    rows from stored tool traffic on a reopened thread. Two lists, one
+    contract — drift means a thread that looks different after a reload than
+    it did while it ran."""
+    source = (APP_LIB / "toolActivity.js").read_text()
+    block = re.search(r"export const ACTIVITY_TOOLS = Object\.freeze\(\{(.*?)\n\}\);", source, re.S)
+    assert block, "ACTIVITY_TOOLS not found as a frozen object literal"
+    app_tools = dict(re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*):\s*ActivityKind\.([A-Z_]+)", block.group(1), re.M))
+    assert set(app_tools) == set(ACTIVITY_TOOLS), "the app and the backend allowlist different tools"
+    for tool, kind_name in app_tools.items():
+        start, _finish = ACTIVITY_TOOLS[tool]
+        assert start({})["kind"] == getattr(ActivityKind, kind_name), f"{tool} maps to two kinds"
 
 
 def test_insights_step_ids_exist_on_the_backend():

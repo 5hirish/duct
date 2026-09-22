@@ -472,9 +472,10 @@ class DeepSession:
                 raise
             logger.info("%s: request too long for %s; compacting once and retrying", self.log_prefix, self.thread_id)
             await self.emit({"event": AgentEvent.CONTEXT_COMPACTING})
-            if not await compact_thread(self.agent, self.config, self._summariser):
+            summary = await compact_thread(self.agent, self.config, self._summariser)
+            if summary is None:
                 raise
-            await self.emit({"event": AgentEvent.CONTEXT_COMPACTED})
+            await self.emit({"event": AgentEvent.CONTEXT_COMPACTED, "summary": summary})
             return await self._stream(None)
 
     async def turn(self, text: str | Command | None) -> Pauses:

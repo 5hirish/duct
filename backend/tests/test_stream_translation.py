@@ -8,7 +8,7 @@ step after each compaction.
 
 from __future__ import annotations
 
-from langchain_core.messages import AIMessage, AIMessageChunk, RemoveMessage, ToolMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, RemoveMessage, ToolMessage
 from langgraph.graph.message import REMOVE_ALL_MESSAGES
 
 from agents.core.events import AgentEvent
@@ -137,13 +137,14 @@ def test_middleware_nodes_are_recognised_by_their_hook_suffix():
 
 
 async def _collect():
-    calls = {"tool_use": [], "compacted": 0}
+    calls = {"tool_use": [], "compacted": 0, "summaries": []}
 
     async def on_tool_use(name, args, call_id):
         calls["tool_use"].append(name)
 
-    async def on_compacted():
+    async def on_compacted(summary):
         calls["compacted"] += 1
+        calls["summaries"].append(summary)
 
     return calls, on_tool_use, on_compacted
 
@@ -153,13 +154,21 @@ async def test_a_compaction_is_reported_and_its_surviving_tool_calls_are_not_rep
     surviving = AIMessage(
         content="", tool_calls=[{"name": "fetch_ga4", "args": {}, "id": "old"}]
     )
+    # The summariser's own message is a HumanMessage like the user's; only
+    # its tag tells them apart, and the transcript gets the text without the
+    # framing sentence.
+    summary = HumanMessage(
+        content="Here is a summary of the conversation to date:\n\nSessions fell 12% after the pricing change.",
+        additional_kwargs={"lc_source": "summarization"},
+    )
     await _dispatch_updates(
         {"_DeepAgentsSummarizationMiddleware.before_model": {
-            "messages": [RemoveMessage(id=REMOVE_ALL_MESSAGES), surviving],
+            "messages": [RemoveMessage(id=REMOVE_ALL_MESSAGES), summary, surviving],
         }},
         on_todo=None, on_tool_use=on_tool_use, on_tool_result=None, on_compacted=on_compacted,
     )
     assert calls["compacted"] == 1
+    assert calls["summaries"] == ["Sessions fell 12% after the pricing change."]
     assert calls["tool_use"] == []  # the old fetch did not become a new step
 
 

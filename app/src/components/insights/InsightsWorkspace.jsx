@@ -24,13 +24,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Database, FileText } from "lucide-react";
+import { Database, Download, FileText, LayoutGrid, Maximize2, Minimize2 } from "lucide-react";
 import { msg } from "@lingui/core/macro";
-import { Trans, useLingui } from "@lingui/react/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { ActivityRow } from "@/components/workspace/ActivityRow";
+import { CONNECTOR_NAMES, LOGOS } from "@/components/connections/logos";
 import AgentChat from "@/components/workspace/AgentChat";
 import EmptyState from "@/components/ui/empty-state";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Skeleton, SkeletonDocument } from "@/components/ui/skeleton";
+import { SkeletonDocument } from "@/components/ui/skeleton";
 import ComposerDials, { TierDial } from "@/components/workspace/ComposerDials";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
@@ -39,10 +42,12 @@ import { MarkdownView } from "@/components/artifacts/ArtifactRenderer";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { useAgentSession } from "../../hooks/useAgentSession";
 import { getArtifactContent, listArtifacts, listArtifactVersions } from "../../lib/artifactsApi";
-import { InsightsEvent, InsightsStep } from "../../lib/insightsEvents";
-import { frontMatterTitle, sniffFormat, stripFrontMatter } from "../../lib/brief";
-import { fetchedFromEvents } from "../../lib/insightsHistory";
+import { InsightsEvent } from "../../lib/insightsEvents";
+import { briefFile, frontMatterTitle, sniffFormat, stripFrontMatter } from "../../lib/brief";
+import { Row } from "../../lib/agentSession";
+import { dataSourceRollup } from "../../lib/toolActivity";
 import { loadPreferences } from "../../lib/userPreferences";
+import { saveText } from "../../lib/download";
 
 const AGENT_TYPE = "insights";
 // `openedGroup` for the brief being written in this session, which has no
@@ -56,13 +61,13 @@ export default function InsightsWorkspace({
   artifactId = "",
 }) {
   const { t } = useLingui();
-  // What the agent pulled, in order.
-  const [fetched, setFetched] = useState([]);
   // The brief: every version this session produced, plus the one being written.
   const [versions, setVersions] = useState([]);
   const [selected, setSelected] = useState(-1);   // -1 = follow the latest
   const [writing, setWriting] = useState("");
   const [pane, setPane] = useState("brief");      // brief | data
+  // The document alone, over the whole window.
+  const [focused, setFocused] = useState(false);
   // Every document this thread has written (latest version per group), and
   // which one the pane is showing: null is the gallery, LIVE_GROUP is the
   // one being written in this session, otherwise a stored group's id.
@@ -137,15 +142,6 @@ export default function InsightsWorkspace({
         setPane("brief");
         break;
       }
-      case InsightsEvent.STEP_FINISHED:
-        // The runner emits one per data pull, labelled with the window it
-        // covers. Anything else with a step_id is ignored rather than guessed at.
-        if (event.step_id === InsightsStep.COLLECT_SOURCE_DATA) {
-          const row = { label: event.label || "", ok: event.status === "success", error: event.error || "" };
-          // A reattached run replays pulls the stored history already listed.
-          setFetched((prev) => (prev.some((f) => f.label === row.label && f.ok === row.ok) ? prev : [...prev, row]));
-        }
-        break;
       default:
         break;
     }
@@ -160,10 +156,17 @@ export default function InsightsWorkspace({
     handleKey: `${AGENT_TYPE}:${projectId || ""}:${conversationId || `q:${initialPrompt}`}`,
     hydrateThreadState: true,
     onEvent,
-    // The Data pane on a reopened thread: every pull is in the stored tool
-    // traffic, so it lists the same rows it showed live.
-    onHydrate: (events) => setFetched(fetchedFromEvents(events)),
   });
+
+  // The Data tab is the transcript's own rows, rolled up: every source this
+  // thread read, grouped by connector. It fills from the same activity rows
+  // the chat shows — live and on a reopened thread alike — so the two can no
+  // longer disagree about what the agent read, which is what happened while
+  // one filled from step events and the other from stored tool traffic.
+  const sources = useMemo(
+    () => dataSourceRollup((agent.messages || []).filter((m) => m.role === Row.ACTIVITY).map((m) => m.activity)),
+    [agent.messages],
+  );
 
   useEffect(() => {
     const level = agent.started?.autonomy;
@@ -217,18 +220,24 @@ export default function InsightsWorkspace({
     if (artifactId) openGroup(artifactId);
   }, [artifactId, openGroup]);
 
+  // A thread's documents are its own whether it was reopened or started in
+  // this tab. Listing only the reopened ones left a live session with no way
+  // to reach the gallery, however many briefs it had written by then.
+  const threadId = conversationId || agent.conversationId;
+
   // Reopening a thread by id alone used to leave the pane empty however many
   // briefs the thread had written — only the desk's ?artifact= link loaded
   // one. Now the thread's documents are listed on open: one is shown as it
   // was, several become the gallery, and nothing needs a click to see the
   // brief you came back for.
+
   useEffect(() => {
-    if (!conversationId || !projectId) {
+    if (!threadId || !projectId) {
       setDocsPending(false);
       return undefined;
     }
     let cancelled = false;
-    listArtifacts({ projectId, agentType: AGENT_TYPE, conversationId })
+    listArtifacts({ projectId, agentType: AGENT_TYPE, conversationId: threadId })
       .then((rows) => {
         if (cancelled) return;
         const list = Array.isArray(rows) ? rows : [];
@@ -244,7 +253,16 @@ export default function InsightsWorkspace({
         if (!cancelled) setDocsPending(false);
       });
     return () => { cancelled = true; };
-  }, [conversationId, projectId, artifactId, docsRefresh, openGroup]);
+  }, [threadId, projectId, artifactId, docsRefresh, openGroup]);
+
+  // The bytes are already here, so saving one is a rename rather than a
+  // fetch — which also means a version still streaming could be saved, and a
+  // stored one needs no round trip.
+  function downloadBrief() {
+    if (!shown?.content) return;
+    const file = briefFile(shown, t`Growth brief`);
+    saveText(shown.content, file.name, file.type);
+  }
 
   function showGallery() {
     openTokenRef.current += 1;  // drop a load still in flight
@@ -256,7 +274,6 @@ export default function InsightsWorkspace({
   }
 
   function handleRetry() {
-    setFetched([]);
     setWriting("");
     briefRef.current = "";
     agent.retry();
@@ -267,9 +284,19 @@ export default function InsightsWorkspace({
   // A document on its way in, or a reopened thread whose list has not come
   // back yet: the pane keeps a brief's shape rather than declaring it empty.
   const loadingBrief = !writing && (opening || (docsPending && !hasBrief));
-  // The gallery is for choosing between several; a single document, or one
-  // being written right now, is simply shown.
-  const gallery = docs.length > 1 && openedGroup === null && !writing && !opening;
+  // The gallery is where the thread's documents live. It opens by itself only
+  // when there is a choice to make; with one document the pane shows it, and
+  // the header's own button is how you get back to the shelf.
+  const gallery = docs.length > 0 && openedGroup === null && !writing && !opening;
+  // The document's name and state. They belong to the pane header rather than
+  // to a strip of its own: the strip under the tabs restated the version the
+  // picker beside it already showed, and the document paid for both.
+  const liveTitle = useMemo(() => frontMatterTitle(writing), [writing]);
+  const docTitle = writing
+    ? liveTitle || t`Writing…`
+    : shown
+      ? shown.title || t`Growth brief`
+      : "";
 
   // A connect asked for mid-run comes back to this thread, resumed — never to
   // the ?q= form of this page, which would ask the question again from scratch.
@@ -332,56 +359,44 @@ export default function InsightsWorkspace({
 
   const viewport = (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center gap-1 border-b border-border/60 px-2 py-1.5">
-        <PaneTab active={pane === "brief"} onClick={() => setPane("brief")}>
-          <Trans>Artifact</Trans>
-        </PaneTab>
-        <PaneTab active={pane === "data"} onClick={() => setPane("data")}>
-          <Trans>Data</Trans>{fetched.length ? ` · ${fetched.length}` : ""}
-        </PaneTab>
-        {pane === "brief" && docs.length > 1 && openedGroup !== null && (
-          <button
-            type="button"
-            onClick={showGallery}
-            className="ml-auto rounded-md px-2 py-1 text-2xs text-muted-foreground hover:text-foreground"
-          >
-            <Trans>All documents · {docs.length}</Trans>
-          </button>
-        )}
-        {pane === "brief" && versions.length > 1 && (
-          <select
-            value={selected < 0 ? versions.length - 1 : selected}
-            aria-label={t`Artifact version`}
-            onChange={(e) => setSelected(Number(e.target.value))}
-            className={`rounded-md border border-input bg-background px-2 py-1 text-2xs ${
-              docs.length > 1 ? "ml-1" : "ml-auto"
-            }`}
-          >
-            {versions.map((v, i) => {
-              const version = v.version;
-              const label = v.label || t`Version ${version}`;
-              return (
-                <option key={version} value={i}>
-                  {t`v${version} — ${label}`}
-                </option>
-              );
-            })}
-          </select>
-        )}
-      </div>
+      <ArtifactPaneHeader
+        pane={pane}
+        onPane={setPane}
+        dataCount={sources.reduce((n, g) => n + g.rows.length, 0)}
+        title={gallery ? t`All documents` : docTitle}
+        status={writing ? t`being written` : gallery ? t`${docs.length} in this thread` : ""}
+        docCount={gallery ? 0 : docs.length}
+        onShowGallery={showGallery}
+        onDownload={shown?.content ? downloadBrief : null}
+        onFocus={shown?.content ? () => setFocused(true) : null}
+        versions={gallery ? [] : versions}
+        selected={selected}
+        onSelect={setSelected}
+      />
 
-      {/* The brief sits on a muted ground, as a document rather than as
-          more of the page: the chat and the pane were the same white, and
-          the artifact read as a continuation of the transcript. */}
-      <div className={`min-h-0 flex-1 overflow-y-auto ${pane === "brief" ? "bg-muted/40" : ""}`}>
+      {/* Each pane scrolls itself, so a document can fill the height it is
+          given instead of being capped at a guessed 74vh inside a scroller
+          that then had a second scrollbar of its own. */}
+      <div className="min-h-0 flex-1 overflow-hidden">
         {pane !== "brief" ? (
-          <DataPane fetched={fetched} />
+          <DataPane sources={sources} />
         ) : gallery ? (
-          <ArtifactGallery docs={docs} onOpen={(doc) => openGroup(doc.id)} />
+          <div className="h-full overflow-y-auto bg-muted/30">
+            <ArtifactGallery docs={docs} onOpen={(doc) => openGroup(doc.id)} />
+          </div>
         ) : (
           <BriefPane brief={shown} writing={writing} empty={!hasBrief} loading={loadingBrief} />
         )}
       </div>
+
+      <DocumentFocus
+        open={focused && Boolean(shown?.content)}
+        onOpenChange={setFocused}
+        brief={shown}
+        title={docTitle}
+        sub={shown ? t`v${shown.version}` : ""}
+        onDownload={downloadBrief}
+      />
     </div>
   );
 
@@ -433,13 +448,124 @@ function AutonomyBadge({ autonomy, level: current = "" }) {
   );
 }
 
+/**
+ * The right pane's chrome, in one strip: which tab, which document, which
+ * version, and the way back to the thread's shelf of documents.
+ *
+ * It used to be two strips — tabs, then a title line restating the version
+ * the picker on the first line already named — above a document sitting in a
+ * card inside a margin. Three nested surfaces for one page. Exported so
+ * /preview can show the strip with the pane under it, which is the only way
+ * to judge either.
+ */
+export function ArtifactPaneHeader({
+  pane,
+  onPane,
+  dataCount = 0,
+  title = "",
+  status = "",
+  docCount = 0,
+  onShowGallery,
+  onDownload,
+  onFocus,
+  versions = [],
+  selected = -1,
+  onSelect,
+}) {
+  const { t } = useLingui();
+  const onBrief = pane === "brief";
+  return (
+    <div className="flex shrink-0 items-center gap-1 border-b border-border/60 px-2 py-1.5">
+      <PaneTab active={onBrief} onClick={() => onPane("brief")}>
+        <Trans>Artifact</Trans>
+      </PaneTab>
+      <PaneTab active={pane === "data"} onClick={() => onPane("data")}>
+        <Trans>Data</Trans>{dataCount ? ` · ${dataCount}` : ""}
+      </PaneTab>
+
+      {onBrief && (title || status) && (
+        // Below a pane of ~28rem the title truncated to three letters while
+        // still taking the room the controls needed, so it stands down.
+        <p className="ml-1 hidden min-w-0 flex-1 items-baseline gap-1.5 border-l border-border/60 pl-2.5 @md:flex">
+          <span className="truncate text-xs font-medium" title={title}>{title}</span>
+          {status && <span className="shrink-0 text-2xs text-muted-foreground">{status}</span>}
+        </p>
+      )}
+
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        {onBrief && docCount > 0 && onShowGallery && (
+          // The shelf. A thread writes several documents and the pane shows
+          // one; without this the others were reachable only by reopening the
+          // thread, and in a live session not at all.
+          <button
+            type="button"
+            onClick={onShowGallery}
+            aria-label={t`All documents in this thread`}
+            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LayoutGrid className="size-3.5" aria-hidden="true" />
+            <span className="hidden @md:inline"><Trans>All documents</Trans></span>
+            <span className="tabular-nums">{docCount}</span>
+          </button>
+        )}
+        {onBrief && onDownload && (
+          <IconAction icon={Download} label={t`Download this document`} onClick={onDownload} />
+        )}
+        {onBrief && onFocus && (
+          // Reading, rather than working: the document over the whole window,
+          // with the chat, the rail and the rest of the app out of the way.
+          <IconAction icon={Maximize2} label={t`Read full screen`} onClick={onFocus} />
+        )}
+        {onBrief && versions.length > 1 && (
+          <select
+            value={selected < 0 ? versions.length - 1 : selected}
+            aria-label={t`Artifact version`}
+            onChange={(e) => onSelect(Number(e.target.value))}
+            // The global select reset draws its chevron 0.75rem from the
+            // right edge; `px-2` put the label underneath it, which is why
+            // this one read "v2 — Update⌄2".
+            className="max-w-[11rem] truncate rounded-md border border-input bg-background py-1 pl-2 pr-7 text-2xs"
+          >
+            {versions.map((v, i) => {
+              const version = v.version;
+              const label = v.label || t`Version ${version}`;
+              return (
+                <option key={version} value={i}>
+                  {t`v${version} — ${label}`}
+                </option>
+              );
+            })}
+          </select>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// A square control in a strip: 1.75rem, which clears the 24px WCAG target and
+// still sits quietly beside a tab. The class is shared because the focus
+// view's close button is the same control wrapped in `DialogClose`.
+const ICON_ACTION =
+  "flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+
+/** Icon, no label; the name is the tooltip and the accessible name. */
+function IconAction({ icon: Icon, label, onClick }) {
+  return (
+    <button type="button" onClick={onClick} title={label} aria-label={label} className={ICON_ACTION}>
+      <Icon className="size-3.5" aria-hidden="true" />
+    </button>
+  );
+}
+
 function PaneTab({ active, onClick, children }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+      // `shrink-0` and no wrapping: in a narrow pane beside the document
+      // controls, "Data · 2" folded onto two lines and took the strip with it.
+      className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
         active ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
       }`}
     >
@@ -449,7 +575,12 @@ function PaneTab({ active, onClick, children }) {
 }
 
 /** The deliverable. A finished version when there is one, otherwise the one
- *  being written — which is the same document a few seconds earlier. */
+ *  being written — which is the same document a few seconds earlier.
+ *
+ *  The document is the pane: full height, full bleed, no card. What sat here
+ *  before was a rounded card inside a 1rem margin inside a muted scroller,
+ *  with an HTML brief pinned to 74vh inside that — chrome around chrome, and
+ *  a second scrollbar, for a page that only ever wanted the room. */
 // Exported for /preview only, the UsagePanel/UsageEmpty precedent: these two
 // panes' empty states are the states a reviewer most needs to open and the
 // ones no fixture-free gallery could otherwise reach.
@@ -458,37 +589,27 @@ export function BriefPane({ brief, writing, empty, loading }) {
   // While it streams there is no parsed version yet, so the front matter has
   // to come off here and the format has to be read from the bytes.
   const live = useMemo(() => stripFrontMatter(writing), [writing]);
-  const liveTitle = useMemo(() => frontMatterTitle(writing), [writing]);
 
   if (writing) {
     return (
-      <div>
-        <BriefHeader title={liveTitle || t`Writing…`} sub={t`being written`} />
-        <div className="m-4 rounded-xl border border-border bg-card px-3 shadow-sm">
-          {sniffFormat(live) === "markdown" ? (
-            <MarkdownView source={live} />
-          ) : (
-            <pre className="whitespace-pre-wrap p-3 text-xs">{live}</pre>
-          )}
-        </div>
-      </div>
+      <DocumentPage>
+        {sniffFormat(live) === "markdown" ? (
+          <MarkdownView source={live} className="max-w-none px-6 py-5" />
+        ) : (
+          <pre className="whitespace-pre-wrap px-6 py-5 text-xs">{live}</pre>
+        )}
+      </DocumentPage>
     );
   }
 
   if (loading && !brief) {
     return (
-      // The pane's own anatomy, drawn in skeleton: the header strip, then a
-      // document card. It swaps texture for words when the bytes land, and
-      // never claims the thread is empty while the answer is still on its way.
-      <div>
-        <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2.5">
-          <Skeleton className="h-3 w-40 rounded" />
-          <Skeleton className="h-2.5 w-16 rounded" />
-        </div>
-        <div className="m-4 rounded-xl border border-border bg-card p-4 shadow-sm">
-          <SkeletonDocument label="Loading the brief" />
-        </div>
-      </div>
+      // The page's own anatomy, drawn in skeleton. It swaps texture for words
+      // when the bytes land, and never claims the thread is empty while the
+      // answer is still on its way.
+      <DocumentPage>
+        <SkeletonDocument className="px-6 py-5" label={t`Loading the brief`} />
+      </DocumentPage>
     );
   }
 
@@ -498,7 +619,7 @@ export function BriefPane({ brief, writing, empty, loading }) {
       // fills this pane is the agent deciding an answer is worth keeping, and
       // the control for that is the composer already on screen beside it — a
       // button here could only say "go and type over there".
-      <div className="p-4">
+      <div className="h-full overflow-y-auto p-4">
         <EmptyState icon={FileText} title={t`Nothing written yet`}>
           <Trans>
             An answer worth keeping becomes an artifact here, and versions pile up as it is
@@ -509,49 +630,110 @@ export function BriefPane({ brief, writing, empty, loading }) {
     );
   }
 
-  const version = brief.version;
-  const label = brief.label || t`Version ${version}`;
   const title = brief.title || t`Growth brief`;
+  if (brief.format === "html") {
+    return (
+      <iframe
+        title={title}
+        srcDoc={brief.content}
+        // See ArtifactRenderer: scripts on, same-origin off.
+        sandbox="allow-scripts allow-modals"
+        className="h-full w-full border-0 bg-white"
+      />
+    );
+  }
   return (
-    <div>
-      <BriefHeader title={title} sub={t`v${version} · ${label}`} />
-      <div className="m-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        {brief.format === "html" ? (
-          <iframe
-            title={title}
-            srcDoc={brief.content}
-            // See ArtifactRenderer: scripts on, same-origin off.
-            sandbox="allow-scripts allow-modals"
-            className="block h-[74vh] w-full border-0 bg-white"
-          />
-        ) : (
-          <div className="px-3">
-            <MarkdownView source={brief.content} />
-          </div>
-        )}
-      </div>
-    </div>
+    <DocumentPage>
+      <MarkdownView source={brief.content} className="max-w-none px-6 py-5" />
+    </DocumentPage>
   );
 }
 
-function BriefHeader({ title, sub }) {
-  return (
-    <div className="flex items-baseline gap-2 border-b border-border/40 px-4 py-2">
-      <span className="truncate text-xs font-medium">{title}</span>
-      <span className="shrink-0 text-2xs text-muted-foreground">{sub}</span>
-    </div>
-  );
-}
-
-/** What the agent pulled, and the window each pull covers. */
-export function DataPane({ fetched }) {
+/**
+ * The document, alone, over the window.
+ *
+ * A brief is a thing to read, and reading it in a pane beside a transcript is
+ * reading it in the corner of a working screen. This is the same `BriefPane`,
+ * so there is one renderer and no second copy of the markdown and iframe
+ * rules — on the app's dialog, so the portal, the focus trap, Escape and the
+ * scroll lock come with it. The portal is the load-bearing part: the pane
+ * declares `container-type`, and a `fixed` overlay rendered inside one is
+ * positioned against the pane rather than the window.
+ */
+export function DocumentFocus({ open, onOpenChange, brief, title = "", sub = "", onDownload }) {
   const { t } = useLingui();
-  if (!fetched.length) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        // Pinned to all four edges, not centred-and-sized. `inset-0` alone
+        // defines the box, so there is no width or height for the browser to
+        // resolve and nothing to fall back to: a fixed box that is given a
+        // centre and a size shrinks to fit its own header the moment one of
+        // those utilities does not reach it, which is a narrow column of
+        // document in the middle of the window.
+        className="inset-0 h-auto max-h-none w-auto max-w-none translate-x-0 translate-y-0 overflow-hidden rounded-none border-0 bg-background p-0"
+      >
+        <DialogTitle className="sr-only">{title || t`Document`}</DialogTitle>
+        {/* Everything the reader needs and nothing else: what this is, a way
+            to keep it, a way out. No tabs, no version picker — those are for
+            working with documents, and this is for reading one. */}
+        <div className="flex shrink-0 items-center gap-2 border-b border-border/60 px-3 py-1.5">
+          <span className="truncate text-xs font-medium">{title}</span>
+          {sub && <span className="shrink-0 text-2xs text-muted-foreground">{sub}</span>}
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            {onDownload && (
+              <IconAction icon={Download} label={t`Download this document`} onClick={onDownload} />
+            )}
+            <DialogClose asChild>
+              <button
+                type="button"
+                title={t`Leave full screen`}
+                aria-label={t`Leave full screen`}
+                className={ICON_ACTION}
+              >
+                <Minimize2 className="size-3.5" aria-hidden="true" />
+              </button>
+            </DialogClose>
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <BriefPane brief={brief} />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** The page a written brief sits on. One surface, floor to ceiling, centred
+ *  on a muted desk when the pane is wider than a column of text is worth —
+ *  which is the whole distinction from the chat beside it, since `card` and
+ *  `background` are the same white in the light theme. */
+function DocumentPage({ children }) {
+  return (
+    <div className="h-full overflow-y-auto bg-muted/30">
+      <div className="mx-auto min-h-full w-full max-w-3xl bg-card">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Every source this thread read, grouped by connector.
+ *
+ * The transcript says what the agent did and when; this says what it has, in
+ * one place, which is the question you ask after forty turns rather than
+ * during them. Both are the same rows — `dataSourceRollup` over the
+ * transcript's activity cards — so the pane cannot claim a pull the chat
+ * never showed.
+ */
+export function DataPane({ sources }) {
+  const { i18n, t } = useLingui();
+  if (!sources?.length) {
     return (
       // This one does get a CTA, because its most common cause is actionable:
       // the pane stays empty for a whole thread when nothing is connected, and
       // that is the state the agent spends the conversation apologising for.
-      <div className="p-4">
+      <div className="h-full overflow-y-auto p-4">
         <EmptyState
           icon={Database}
           title={t`No sources pulled yet`}
@@ -570,22 +752,37 @@ export function DataPane({ fetched }) {
     );
   }
   return (
-    <ul className="space-y-1.5 p-4">
-      {fetched.map((f, i) => (
-        <li key={i} className="flex items-start gap-2 text-xs">
-          <span className={f.ok ? "text-success" : "text-destructive"} aria-hidden="true">
-            {f.ok ? "✓" : "!"}
-          </span>
-          <span className={f.ok ? "" : "text-muted-foreground"}>
-            {f.label}
-            {/* The provider's own sentence. The chat paraphrases a failure;
-                this is where the person debugging it reads the real one. */}
-            {!f.ok && f.error && (
-              <span className="mt-0.5 block break-words font-mono text-2xs text-destructive/80">{f.error}</span>
-            )}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <div className="h-full space-y-4 overflow-y-auto p-4">
+      {sources.map((group) => {
+        const name = CONNECTOR_NAMES[group.source]
+          ? i18n._(CONNECTOR_NAMES[group.source])
+          : String(group.source || "").replace(/_/g, " ");
+        return (
+          // A heading and its rows, not a card: the connector is named once,
+          // at the top, and each pull under it is the transcript's own row
+          // with the name left off — one vocabulary, two places to meet it.
+          <section key={group.source}>
+            <header className="flex items-center gap-2 px-1 pb-1">
+              <span className="flex size-4 items-center justify-center [&_img]:size-4 [&_svg]:size-4">
+                {LOGOS[group.source] || <Database className="size-3.5" aria-hidden="true" />}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-xs font-medium">{name}</span>
+              <span className="shrink-0 text-2xs text-muted-foreground">
+                {group.failed > 0 ? (
+                  <Trans>{group.ok} read · {group.failed} failed</Trans>
+                ) : (
+                  <Plural value={group.ok} one="# pull" other="# pulls" />
+                )}
+              </span>
+            </header>
+            <div className="border-l border-border/60 pl-2">
+              {group.rows.map((row) => (
+                <ActivityRow key={row.id} activity={row} named={false} />
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
   );
 }

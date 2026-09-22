@@ -37,10 +37,12 @@ from agents.audit.schema import CrawlResult
 from agents.audit.scoring import calibrate
 from agents.audit.v1.tools import build_audit_tools
 from agents.core.artifact_tools import build_artifact_tools_lc
-from agents.core.events import AgentEvent
+from agents.core.events import AgentEvent, run_context
+from agents.registry import AgentType
 from agents.core.checkpoint import get_checkpointer
 from agents.core.connector_tools import build_connector_tools_lc
-from agents.core.deep_session import DeepSession, RunLimits
+from agents.core.activity import activity_hooks, announce_context
+from agents.core.deep_session import DeepSession, RunLimits, recorder_tool_hooks
 from agents.core.lc import build_ask_user_tool, resolve_chat_model
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.session import BaseAgentSession
@@ -381,12 +383,11 @@ class LangChainAuditRunner:
             })
             return {"status": "received", "version_id": version_id}
 
+        system_prompt = build_unified_system_prompt(report_mode=report_mode, template_id=template_id)
         agent = build_audit_agent(
             crawl_result=crawl_result,
             llm=llm,
-            system_prompt=build_unified_system_prompt(
-                report_mode=report_mode, template_id=template_id
-            ),
+            system_prompt=system_prompt,
             session=session,
             session_id=session_id,
             emit=emit,
@@ -441,16 +442,37 @@ class LangChainAuditRunner:
         # The whole profile, not three fields off it. Passing the parts is how
         # `display_name` went missing: it was never one of the parts anyone
         # remembered to pass.
-        await loop.turn(
-            build_audit_user_prompt(
-                crawl_result,
-                business_context,
-                prefs,
-                research_context=research_context,
-                extra_context=extra_context,
-                profile=profile,
-            )
+        opening = build_audit_user_prompt(
+            crawl_result,
+            business_context,
+            prefs,
+            research_context=research_context,
+            extra_context=extra_context,
+            profile=profile,
         )
+        # The CONTEXT row a review replays against, and the reader's notice
+        # that the turn was enriched — the same call insights and content
+        # make, so an audit thread is no longer the one that cannot be audited.
+        await announce_context(
+            getattr(session, "recorder", None),
+            emit,
+            run_context(
+                agent_type=str(AgentType.SEO_AUDIT),
+                provider=self.provider,
+                model=self.model,
+                system_prompt=system_prompt,
+                turn=opening,
+                resume=False,
+                blocks={
+                    "business_context": business_context,
+                    "research_context": research_context,
+                    "memory": extra_context,
+                    "profile": profile,
+                    "crawl_pages": len(getattr(crawl_result, "pages", None) or []),
+                },
+            ),
+        )
+        await loop.turn(opening)
 
         await emit({
             "event": _E.STEP_FINISHED,
@@ -484,6 +506,14 @@ class LangChainAuditRunner:
         window — is DeepSession's, shared with content and insights. The audit
         used to have none of it: its runner streamed one turn and returned.
         """
+        # The same tool hooks as the other two runners, and for the same two
+        # reasons: the recorder writes the transcript's forensics, and
+        # `activity_hooks` turns an allowlisted call into the card the chat
+        # shows. The audit passed neither, so a page it read or a search it
+        # ran left no trace in the thread and none on screen.
+        on_tool_use, on_tool_result = activity_hooks(
+            emit, *recorder_tool_hooks(getattr(session, "recorder", None))
+        )
         loop = DeepSession(
             agent,
             session=session,
@@ -495,6 +525,8 @@ class LangChainAuditRunner:
             log_prefix="audit-v1",
             summariser=llm,
             on_artifact_close=on_artifact_close,
+            on_tool_use=on_tool_use,
+            on_tool_result=on_tool_result,
         )
         loop.opened = not announce_finish
         return loop
@@ -597,12 +629,11 @@ class LangChainAuditRunner:
                 logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
 
         llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
+        system_prompt = build_unified_system_prompt(report_mode=report_mode, template_id=template_id)
         agent = build_audit_agent(
             crawl_result=crawl_result,
             llm=llm,
-            system_prompt=build_unified_system_prompt(
-                report_mode=report_mode, template_id=template_id
-            ),
+            system_prompt=system_prompt,
             session=session,
             session_id=session_id,
             emit=emit,
@@ -614,6 +645,21 @@ class LangChainAuditRunner:
             agent, llm, session, emit, session_id,
             on_artifact_close=_on_artifact_close,
             announce_finish=True,
+        )
+        # A resumed thread reads its primer (the report summary and the
+        # memory digest the route composed) on its first message.
+        await announce_context(
+            getattr(session, "recorder", None),
+            emit,
+            run_context(
+                agent_type=str(AgentType.SEO_AUDIT),
+                provider=self.provider,
+                model=self.model,
+                system_prompt=system_prompt,
+                turn="",
+                resume=True,
+                blocks={"resume_primer": getattr(session, "resume_primer", "") or ""},
+            ),
         )
         # resume=True: a thread parked on a question re-raises it, one cut
         # mid-run continues from its checkpoint, an idle one just waits.

@@ -62,6 +62,7 @@ from agents.content.artifacts import (
     parse_artifact_json,
 )
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
+from agents.core.events import run_context
 from agents.content.prompts import (
     build_orchestrator_system_prompt,
     build_plan_user_prompt,
@@ -90,6 +91,7 @@ from agents.content.subagents import (
 )
 from agents.content.tools import build_content_tools_lc
 from agents.core import session as _core_session
+from agents.core.activity import activity_hooks, announce_context
 from agents.core.deep_session import (
     DeepSession,
     RunLimits,
@@ -105,7 +107,7 @@ from agents.core.turn import TurnContext, build_turn, spec_for
 from agents.core.session import register_session
 from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
 from agents.engines import Engine, resolve_fallback_models
-from agents.models import ModelName, Provider
+from agents.models import ModelName, Provider, run_model_fields
 from agents.registry import AgentType
 
 logger = logging.getLogger(__name__)
@@ -298,17 +300,20 @@ def _voice_block(user_id) -> str:
         logger.warning("content: profile unavailable", exc_info=True)
         return ""
 
-async def _memory_block(session: ContentSession, *, query: str = "") -> str:
+async def _memory_block(session: ContentSession, *, query: str = "", emit: EmitFn | None = None) -> str:
     """The project's memory digest for a content run, as a user-turn block.
 
     Same contract as the other agents: per-project data rides in the USER
     message so the cached system prefix stays byte-identical, and a missing
-    digest degrades the turn rather than failing it.
+    digest degrades the turn rather than failing it. What was recalled goes
+    out as MEMORY_RECALLED, the "Recalled" chips under the turn — insights
+    and audit said what they remembered, content read the same digest and
+    said nothing.
     """
     if getattr(session, "memory_off", False):
         return ""
 
-    def _load() -> str:
+    def _load():
         from db.session import get_session as db_session
         from service.memory import build_memory_context, touch_recall
 
@@ -322,13 +327,22 @@ async def _memory_block(session: ContentSession, *, query: str = "") -> str:
                 artifact_kind=None,
             )
             touch_recall(db, context.recalled_ids)
-            return context.text
+            return context
 
     try:
-        return await asyncio.to_thread(_load)
+        context = await asyncio.to_thread(_load)
     except Exception:  # noqa: BLE001
         logger.warning("content: project memory unavailable", exc_info=True)
         return ""
+    if context.recalled and emit is not None:
+        try:
+            await emit({
+                "event": ContentEvent.MEMORY_RECALLED,
+                "memories": [{k: v for k, v in entry.items() if k != "uuid"} for entry in context.recalled],
+            })
+        except Exception:  # noqa: BLE001
+            logger.debug("content: MEMORY_RECALLED emit failed", exc_info=True)
+    return context.text
 
 
 # ---------------------------------------------------------------------------
@@ -638,6 +652,7 @@ class ContentRunner:
                 "event": ContentEvent.PIPELINE_STARTED,
                 "session_id": session.session_id,
                 "mode": session.mode,
+                **run_model_fields(self.provider, self.model),
                 **(started or {}),
             })
             brand = await self._load_project_step(session.project_id, emit)
@@ -656,7 +671,12 @@ class ContentRunner:
             ctx.set("user_context", await asyncio.to_thread(
                 _voice_block, getattr(session, "user_id", None)
             ))
-            ctx.set("project_memory", await _memory_block(session, query=memory_query))
+            ctx.set("project_memory", await _memory_block(session, query=memory_query, emit=emit))
+            context_blocks = {
+                "user_context": ctx.get("user_context"),
+                "project_memory": ctx.get("project_memory"),
+                "brand": brand.project_name,
+            }
             opening_prompt = build_turn(
                 spec=spec_for(AgentType.TIKTOK_STUDIO),
                 context=ctx,
@@ -669,6 +689,7 @@ class ContentRunner:
         else:
             brand = await asyncio.to_thread(_load_brand_context, session.project_id)
             opening_prompt = ""
+            context_blocks = {"brand": brand.project_name}
 
         await self._run_session(
             session, emit,
@@ -680,6 +701,7 @@ class ContentRunner:
             chat_idle_timeout=chat_idle_timeout,
             resume=resume,
             channel=channel,
+            context_blocks=context_blocks,
         )
 
     async def _enrich_step(
@@ -765,6 +787,7 @@ class ContentRunner:
         chat_idle_timeout: float,
         resume: bool,
         channel: Any = None,
+        context_blocks: dict[str, Any] | None = None,
     ) -> None:
         """Run the opening turn, then stay open for follow-ups until idle.
 
@@ -789,6 +812,22 @@ class ContentRunner:
         )
         recorder = getattr(session, "recorder", None)
         is_plan = session.mode == "plan_month"
+        # The CONTEXT row a review replays against, and the reader's notice
+        # that the turn was enriched — the same call the other runners make.
+        await announce_context(
+            recorder,
+            emit,
+            run_context(
+                agent_type=str(AgentType.TIKTOK_STUDIO),
+                provider=self.provider,
+                model=self.model,
+                thinking=self._thinking,
+                system_prompt=system_prompt,
+                turn=opening_prompt,
+                resume=resume,
+                blocks=dict(context_blocks or {}),
+            ),
+        )
 
         def _artifact_produced() -> bool:
             # The canonical "deliverable persisted" signal is the writer tool
@@ -801,10 +840,12 @@ class ContentRunner:
             session.todos = todos
             await emit({"event": ContentEvent.TODO_UPDATE, "todos": todos})
 
-        # Every sub-agent dispatch becomes a step chip; shared with insights,
-        # whose verifier is the second consumer (agents/core/deep_session.py).
-        _on_tool_use, _on_tool_result = subagent_step_hooks(
-            emit, *recorder_tool_hooks(recorder), session_id=session_id
+        # Recorder, then the sub-agent ladder, then the transcript's activity
+        # cards — one pair of hooks wrapping the last (agents/core/activity.py
+        # holds the allowlist; an image the agent draws comes through here).
+        _on_tool_use, _on_tool_result = activity_hooks(
+            emit,
+            *subagent_step_hooks(emit, *recorder_tool_hooks(recorder), session_id=session_id),
         )
 
         async def _on_artifact(raw: str, turn_text: str) -> None:

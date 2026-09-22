@@ -65,6 +65,7 @@ from agents.insights.setup import (
 )
 from agents.core import session as _core_session
 from agents.core.context import format_business_context
+from agents.models import run_model_fields
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.errors import error_payload
 from agents.core.session import CLIENT_MESSAGE_ID
@@ -1459,7 +1460,12 @@ async def _start_seo_audit(
 
         async def resume_pipeline() -> None:
             try:
-                await emit_fn({"event": AuditEvent.PIPELINE_STARTED, "status": "running", "url": url})
+                await emit_fn({
+                    "event": AuditEvent.PIPELINE_STARTED,
+                    "status": "running",
+                    "url": url,
+                    **run_model_fields(provider, model),
+                })
                 await runner.run_resume(
                     session_id=session_id,
                     url=url,
@@ -1513,7 +1519,12 @@ async def _start_seo_audit(
 
     async def pipeline() -> None:
         try:
-            await emit_fn({"event": AuditEvent.PIPELINE_STARTED, "status": "running", "url": url})
+            await emit_fn({
+                "event": AuditEvent.PIPELINE_STARTED,
+                "status": "running",
+                "url": url,
+                **run_model_fields(provider, model),
+            })
             await runner.run_pipeline(
                 session_id=session_id,
                 url=url,
@@ -1689,6 +1700,7 @@ async def _start_insights(
                 "status": StepStatus.RUNNING,
                 "autonomy": run.autonomy,
                 "autonomy_configured": run.configured_autonomy,
+                **run_model_fields(provider, model),
                 # A tier step-down is the same shape of fact and gets the same
                 # treatment. It is true for the whole run and for the artifact
                 # the run produced, so it cannot be a transient toast — and the

@@ -410,6 +410,9 @@ async def test_a_request_too_long_is_compacted_once_and_retried(session, emitted
     kinds = _kinds(emitted)
     assert AgentEvent.CONTEXT_COMPACTING in kinds
     assert AgentEvent.CONTEXT_COMPACTED in kinds
+    # The divider in the transcript shows what the summariser kept.
+    compacted = next(e for e in emitted.events if e.get("event") == AgentEvent.CONTEXT_COMPACTED)
+    assert isinstance(compacted.get("summary"), str)
     assert AgentEvent.STEP_FAILED not in kinds
     assert AgentEvent.PIPELINE_FAILED not in kinds
     assert kinds.count(AgentEvent.MESSAGE_STOP) == 2  # both turns finished

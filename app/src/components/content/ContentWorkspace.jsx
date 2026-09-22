@@ -93,23 +93,13 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           pre.onerror = drop;
           pre.src = mediaUrl(realUrl);
         }
-        // A clickable image bubble in the chat. Only on inline_preview, which
-        // the backend attaches solely when generate_image produced + attached
-        // an image — never on copy edits.
-        const slideIdx = (base.slides || []).findIndex((s) => String(s.slide_id) === String(ip.slide_id));
-        const slideNo = slideIdx + 1;
-        const imageNo = ip.item_index + 1;
-        // Four whole sentences rather than two fragments glued together: a
-        // translator can reorder "image" and "slide" only if both are in view.
-        const caption = slideIdx >= 0
-          ? (ip.item_index != null ? t`Slide ${slideNo} · image ${imageNo}` : t`Slide ${slideNo}`)
-          : (ip.item_index != null ? t`Generated image · image ${imageNo}` : t`Generated image`);
-        appendMessage({
-          role: Row.IMAGE,
-          image: ip.data_uri,
-          fullUrl: realUrl ? mediaUrl(realUrl) : ip.data_uri,
-          caption,
-        });
+        // No image bubble here any more. `generate_image` is on the shared
+        // activity allowlist (agents/core/activity.py), so the picture and
+        // the slide it landed on are already a row in the transcript — this
+        // appended a second copy of the same image directly beneath it, and
+        // a per-agent bubble is exactly the fork the shared vocabulary
+        // exists to replace. The preview above is a different job: it paints
+        // the slide in the right-hand pane before the CDN URL resolves.
         break;
       }
 

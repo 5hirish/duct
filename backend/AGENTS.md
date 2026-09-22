@@ -516,6 +516,43 @@ framework. The rules it implies:
   checkpointer (audit, the slide-render bridge), the interrupt
   for one with durable threads (insights v1, content v1). Same events, same
   route, and the frontend cannot tell them apart.
+- **What the user may watch an agent do is one allowlist, in one place.**
+  Every tool call passes through `recorder_tool_hooks`; `agents/core/activity.py`
+  wraps that pair and emits `TOOL_ACTIVITY` for the tools it maps — a connector
+  pull, a web search, a page read, an image, a sub-agent dispatch — twice per
+  call (running, then the verdict), with **structured fields and no prose**, so
+  the app writes the sentence in the reader's language. Three rules:
+  - **Allowlist, never denylist — and the allowlist is nearly everything.**
+    A tool is invisible until someone writes its card, so a new tool leaks
+    nothing by default; but the standard is transparency, and the only calls
+    left off are the ones with a better row of their own: `RememberFact`
+    (the "Remembered" note, with undo), the pause tools (the cards),
+    `Create/Update/RewriteArtifact` (the artifact card), `write_todos` (the
+    strip), the execution proposal (the change-set card) and the audit's
+    report builders (its step ladder). Memory searches and reads, the
+    connector listing, opening or listing a document, every read the content
+    agent makes of what the project holds, and everything it saves, publishes
+    or logs are rows. A new tool goes on the list unless it has one of those
+    other rows — say which, in the comment above `ACTIVITY_TOOLS`.
+  - **The run's own context is a row too.** `announce_context` records the
+    CONTEXT row and emits the "Read project context · business, memory,
+    connected sources" notice in one call, so a runner cannot do one without
+    the other. Every runner calls it where it composes its opening turn;
+    a resume records the row and draws no notice (the reopened transcript
+    already has one). Memory's two events are stored as rows as well
+    (`EventKind.MEMORY_RECALLED` / `MEMORY_WRITTEN`), so what the run
+    recalled and remembered survives a reload for every agent.
+  - **No bespoke per-tool step events.** The insights runner used to emit a
+    STEP per data pull with an English label built in Python, which the ladder
+    and a separate pane both rendered; that is one line said twice and
+    untranslatable. Add a mapper, not an event.
+  - **Every runner wires the hooks.** `tests/test_tool_activity.py` fails a
+    runner that opens a `DeepSession` without `activity_hooks`, because the
+    audit runner passed no tool hooks at all for months — recording nothing,
+    showing nothing — and nothing failed. The card payload carries the notice
+    that a tool ran, never its output: the full input and result are already in
+    the transcript, and a card holding fetched page text would put
+    attacker-authored bytes in every client's memory.
 - **A durable thread is the conversation.** The insights runner keys its
   LangGraph thread on the conversation id, so a resumed session continues the
   thread — and a pause the thread is parked on comes back as the same SSE
@@ -562,6 +599,12 @@ framework. The rules it implies:
   `context_compacted`, and continues from the checkpoint. A second overflow is
   the ordinary failure. deepagents' own summarisation event is cleared in the
   same write: it indexes into the message list the rewrite just replaced.
+  Both paths — the emergency one and the automatic summariser reported by
+  `_dispatch_updates` — put the **summary text** on `context_compacted`
+  (`compaction_summary` finds it by the summariser's own `lc_source` tag,
+  minus its framing sentence) and the recorder writes it as an
+  `EventKind.COMPACTED` row, so the transcript can show what the thread now
+  opens with, live and after a reload, instead of an unexplained gap.
 - **A model has a price or it has no cost.** `PRICING` in `agents/models.py`
   mirrors `CONTEXT_WINDOW` (a test holds them equal) and `cost_usd()` prices a
   call from LangChain's usage, taking cached tokens out of the input figure.
