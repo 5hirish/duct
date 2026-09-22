@@ -1280,12 +1280,6 @@ msgstr ""
 "Pergunte qual conteúdo converte. Duct lê Search Console, GA4 e Clarity juntos, audita qualquer URL gratuitamente e planeja os posts da semana em um quadro. Código aberto, MIT."
 
 #: for-organic-growth.html
-msgid ""
-"Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week’s posts on a board."
-msgstr ""
-"Pergunte qual conteúdo converte. O Duct lê Search Console, GA4 e Clarity juntos, audita qualquer URL gratuitamente e planeja os posts da semana em um quadro."
-
-#: for-organic-growth.html
 msgid "Blog → trial CVR dropped to 1.4% this month"
 msgstr "Blog → CVR de teste caiu para 1,4% este mês"
 
@@ -1347,6 +1341,11 @@ msgstr "Duct para Crescimento Orgânico"
 #: for-organic-growth.html
 msgid "Duct for SEO and content teams — AI agent for organic growth"
 msgstr "Duct para equipes de SEO e conteúdo — IA para crescimento orgânico"
+
+#: for-organic-growth.html
+msgid ""
+"Duct reads Search Console, GA4 and Clarity together, names the pages to update and the queries to target, audits any URL for free, and plans the week’s posts on a board."
+msgstr ""
 
 #: for-organic-growth.html
 msgid ""
@@ -1510,13 +1509,13 @@ msgid ""
 msgstr ""
 "Search Console mostra consultas e posições isoladamente. Duct correlaciona sinais de ranqueamento, tráfego, comportamento e conversão entre Search Console, GA4, Clarity e Mixpanel, e então apresenta ações priorizadas em vez de painéis desconectados."
 
+#: for-organic-growth.html
+msgid "See which content actually converts.<0/><1>Fix it in the same sitting.</1>"
+msgstr ""
+
 #: for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html
 msgid "Star on GitHub"
 msgstr "Marcar com estrela no GitHub"
-
-#: for-organic-growth.html
-msgid "Stop publishing blind.<0/>Start <1>compounding.</1>"
-msgstr "Pare de publicar às cegas.<0/>Comece a <1>acumular resultados.</1>"
 
 #: for-organic-growth.html
 msgid "Tag Manager"
@@ -1846,14 +1845,14 @@ msgid "RevenueCat"
 msgstr "RevenueCat"
 
 #: for-paid-ads.html
+msgid "See what your ad spend bought.<0/><1>Move it in the same moment.</1>"
+msgstr ""
+
+#: for-paid-ads.html
 msgid ""
 "Spreadsheets and dashboards show you what happened — Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."
 msgstr ""
 "Planilhas e painéis mostram o que aconteceu — o Duct diz o que fazer a respeito. Em vez de puxar CSVs manualmente de três plataformas e uni-los semanalmente, o Duct correlaciona dados automaticamente entre Google Ads, Meta e LinkedIn para identificar fadiga criativa, oportunidades de realocação de orçamento e lacunas de atribuição cross-channel que relatórios estáticos perdem completamente."
-
-#: for-paid-ads.html
-msgid "Stop paying to acquire churners.<0/><1>Start moving budget.</1>"
-msgstr ""
 
 #: for-paid-ads.html
 msgid ""
@@ -2119,6 +2118,10 @@ msgid "Retention dropped 4% this week"
 msgstr "A retenção caiu 4% esta semana"
 
 #: for-product-intelligence.html
+msgid "See why the number moved.<0/><1>Fix it before the standup.</1>"
+msgstr ""
+
+#: for-product-intelligence.html
 msgid ""
 "Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."
 msgstr ""
@@ -2171,10 +2174,6 @@ msgstr "A quais ferramentas o Duct se conecta, e quão difícil é a configuraç
 #: for-product-intelligence.html
 msgid "Why did activation drop?"
 msgstr "Por que a ativação caiu?"
-
-#: for-product-intelligence.html
-msgid "Why did activation drop?<0/><1>Answered before standup, with the fix.</1>"
-msgstr ""
 
 #: for-product-intelligence.html
 msgid ""
@@ -2233,11 +2232,6 @@ msgstr ""
 "Um agente de IA de código aberto que conecta suas ferramentas de produto, marketing e receita, responde a perguntas entre elas, propõe alterações e as aplica quando você aprova. Ele é executado como um app para desktop no macOS, Windows e Linux."
 
 #: index.html
-msgid ""
-"An open-source AI agent that reads Google Ads, GA4, Stripe and ten more together, tells you why a number moved and proposes the fix. The approve button isn't in its tool list. You press it."
-msgstr ""
-
-#: index.html
 msgid "Built for"
 msgstr "Feito para"
 
@@ -2267,6 +2261,11 @@ msgid ""
 "Duct reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve. Open source, MIT, your keys or ChatGPT plan."
 msgstr ""
 "Duct lê Google Ads, GA4, Stripe e mais dez ferramentas juntos, propõe a correção e aplica quando você aprova. Código aberto, MIT, suas chaves ou plano ChatGPT."
+
+#: index.html
+msgid ""
+"Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it."
+msgstr ""
 
 #: index.html
 msgid "Duct — Cross-Tool Intelligence"
@@ -2360,13 +2359,6 @@ msgid "Open-source AI agent for cross-tool product and growth analytics."
 msgstr ""
 "Agente de IA de código aberto para análise de produto e crescimento multiferramentas."
 
-#. meta og:description
-#. meta twitter:description
-#: index.html
-msgid ""
-"Open-source AI agent that reads Google Ads, GA4, Stripe and ten more together, proposes the fix and applies it only when you approve. Changes nothing without you."
-msgstr ""
-
 #: index.html
 msgid ""
 "Open-source AI agent that reads across Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat, and answers questions a single dashboard cannot."
@@ -2397,10 +2389,6 @@ msgid "Play the film"
 msgstr "Reproduzir o vídeo"
 
 #: index.html
-msgid "Reads your whole growth stack.<0/><1>Changes nothing without you.</1>"
-msgstr ""
-
-#: index.html
 msgid "SEO & content teams"
 msgstr "Equipes de SEO e conteúdo"
 
@@ -2411,6 +2399,17 @@ msgstr "Benchmarks de SaaS, modelos de gastos pagos, links UTM. Sem cadastro."
 #: index.html
 msgid "Sales & RevOps"
 msgstr "Vendas e RevOps"
+
+#. meta og:description
+#. meta twitter:description
+#: index.html
+msgid ""
+"See the whole picture, fix it in the same moment. Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. Open source."
+msgstr ""
+
+#: index.html
+msgid "See the whole picture.<0/><1>Fix it in the same moment.</1>"
+msgstr ""
 
 #: index.html
 msgid "Someone asks why signups dropped this week."
@@ -2857,8 +2856,8 @@ msgstr ""
 "Instale o app, conecte suas ferramentas, e faça a pergunta que você tem adiado."
 
 #: partials/cta-home.html
-msgid "Stop reading tools.<0/><1>Start reading signals.</1>"
-msgstr "Pare de ler ferramentas.<0/><1>Comece a ler sinais.</1>"
+msgid "Stop deciding on half the picture.<0/><1>Start fixing it with all of it.</1>"
+msgstr ""
 
 #: partials/cta-tools.html
 msgid "Install the app, connect your tools, and ask why the number moved."
@@ -7469,6 +7468,17 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#~ msgid ""
+#~ "Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week’s posts on a board."
+#~ msgstr ""
+#~ "Pergunte qual conteúdo converte. O Duct lê Search Console, GA4 e Clarity juntos, audita qualquer URL gratuitamente e planeja os posts da semana em um quadro."
+
+#~ msgid "Stop publishing blind.<0/>Start <1>compounding.</1>"
+#~ msgstr "Pare de publicar às cegas.<0/>Comece a <1>acumular resultados.</1>"
+
+#~ msgid "Stop reading tools.<0/><1>Start reading signals.</1>"
+#~ msgstr "Pare de ler ferramentas.<0/><1>Comece a ler sinais.</1>"
 
 #~ msgid "Stop stitching ad reports.<0/><1>Start moving budget.</1>"
 #~ msgstr "Pare de juntar relatórios de anúncios.<0/><1>Comece a mover o orçamento.</1>"

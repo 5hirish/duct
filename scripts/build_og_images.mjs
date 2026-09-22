@@ -25,10 +25,10 @@ const W = 1200, H = 630, LIMIT = 150 * 1024;
 // slug → the card. `shot` is a file in site/assets/media; its top-left corner
 // is what shows, so pick shots whose first 620×480 carry the point.
 const PAGES = {
-  "index": { title: "Reads your whole growth stack. Changes nothing without you.", sub: "Open-source AI agent for product and growth teams.", shot: "insights-session.webp" },
-  "for-product-intelligence": { title: "Ask why activation dropped.", sub: "Mixpanel, Clarity, GrowthBook and GA4, read together.", shot: "product-session.webp" },
-  "for-organic-growth": { title: "Ask which content converts.", sub: "Search Console, GA4 and Clarity read together, plus a free audit.", shot: "content-session.webp" },
-  "for-paid-ads": { title: "Ask why CPA moved.", sub: "Ads, GA4 and Stripe read together. You approve the shift.", shot: "paid-session.webp" },
+  "index": { title: "See the whole picture. Fix it in the same moment.", sub: "Open-source AI agent for product and growth teams.", shot: "insights-session.webp" },
+  "for-product-intelligence": { title: "See why the number moved. Fix it before the standup.", sub: "Mixpanel, Clarity, GrowthBook and GA4, read together.", shot: "product-session.webp" },
+  "for-organic-growth": { title: "See which content actually converts. Fix it in the same sitting.", sub: "Search Console, GA4 and Clarity read together, plus a free audit.", shot: "content-session.webp" },
+  "for-paid-ads": { title: "See what your ad spend bought. Move it in the same moment.", sub: "Ads, GA4 and Stripe read together. You approve the shift.", shot: "paid-session.webp" },
   "download": { title: "Your whole stack, in one window.", sub: "Mac, Windows and Linux. Free, open source, your own keys.", shot: "insights-session.webp" },
   "seo-audit": { title: "See exactly what's hurting your rankings.", sub: "A free SEO audit from the open-source Duct agent. No account.", shot: "audit-report.webp" },
   "open-source": { title: "Open source, MIT, your own keys.", sub: "What runs where, how to self-host it, and a plain answer on what will cost money." },

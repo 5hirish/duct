@@ -4,7 +4,7 @@
 
 # Duct
 
-**Reads your whole growth stack. Changes nothing without you.**
+**See the whole picture. Fix it in the same moment.**
 
 Duct is an open-source AI agent for product and growth teams. It connects
 Google Ads, GA4, Search Console, Mixpanel, Stripe and seven more, reads across
