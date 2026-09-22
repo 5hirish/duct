@@ -82,15 +82,6 @@ function useStoredPreference(key, fallback) {
 
 const NEXT_SESSION = msg`Applies from your next session`;
 
-function Row({ label, blurb }) {
-  return (
-    <span className="flex flex-col items-start gap-0.5">
-      <span>{label}</span>
-      {blurb && <span className="text-2xs leading-snug text-muted-foreground">{blurb}</span>}
-    </span>
-  );
-}
-
 /** A quiet last line in a menu saying when the choice takes effect. */
 function Applies({ text }) {
   return (
@@ -194,9 +185,16 @@ function useThinkingDial(engine) {
   return dial;
 }
 
-/** One choice in the tier list: the same anatomy as a menu radio item, as
- *  a plain button so Tab reaches it inside the popover. */
-function TierChoice({ checked, onSelect, children }) {
+/** One choice in the tier list, as a plain button so Tab reaches it inside
+ *  the popover.
+ *
+ *  Chosen is a primary border over a faint primary wash — the same thing a
+ *  chosen radio card says everywhere else in this app (the execution ladder
+ *  on /execute, the writing presets on /settings/profile). It replaces a
+ *  6px dot in a 36px gutter, which marked one row by indenting all four and
+ *  still did not read as chosen. The border is on every row, transparent
+ *  until it is the one, so nothing moves when the choice does. */
+function TierChoice({ checked, onSelect, label, blurb }) {
   return (
     <button
       type="button"
@@ -204,14 +202,14 @@ function TierChoice({ checked, onSelect, children }) {
       aria-checked={checked}
       onClick={onSelect}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-2xl py-2 pr-3 pl-9 text-left text-sm outline-none transition-colors",
-        "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
+        "flex w-full cursor-default select-none flex-col items-start gap-0.5 rounded-2xl border px-3 py-2 text-left outline-none transition-colors",
+        checked
+          ? "border-primary bg-primary/10"
+          : "border-transparent hover:bg-accent focus-visible:bg-accent",
       )}
     >
-      <span className="pointer-events-none absolute left-3 flex size-3.5 items-center justify-center" aria-hidden>
-        {checked && <span className="size-2 rounded-full bg-current" />}
-      </span>
-      {children}
+      <span className={cn("text-sm", checked && "font-medium")}>{label}</span>
+      <span className="text-2xs leading-snug text-muted-foreground">{blurb}</span>
     </button>
   );
 }
@@ -289,13 +287,20 @@ export function TierDial({ engine = DEFAULT_ENGINE, deferred = false }) {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[300px]">
         <div role="radiogroup" aria-label={t`Which model tier runs this`}>
-          <TierChoice checked={!tier} onSelect={() => saveTier("")}>
-            <Row label={t`Auto`} blurb={t`Duct's pick for the job — Heavy for a brief, Standard for a follow-up`} />
-          </TierChoice>
+          <TierChoice
+            checked={!tier}
+            onSelect={() => saveTier("")}
+            label={t`Auto`}
+            blurb={t`Duct's pick for the job — Heavy for a brief, Standard for a follow-up`}
+          />
           {TIERS.map((option) => (
-            <TierChoice key={option.key} checked={tier === option.key} onSelect={() => saveTier(option.key)}>
-              <Row label={i18n._(option.label)} blurb={i18n._(option.tagline)} />
-            </TierChoice>
+            <TierChoice
+              key={option.key}
+              checked={tier === option.key}
+              onSelect={() => saveTier(option.key)}
+              label={i18n._(option.label)}
+              blurb={i18n._(option.tagline)}
+            />
           ))}
         </div>
         {dial.supported && (
