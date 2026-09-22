@@ -606,7 +606,32 @@ if (barLang) {
   mobileLang.appendChild(copy);
   drawer.appendChild(mobileLang);
 }
-nav.appendChild(toggle);
+// What stays in the bar below 860px: the GitHub mark and the Download pill,
+// beside the menu button. They are the two actions the page exists for, and
+// a phone visitor used to have to open the drawer to find either — the
+// hero's own buttons are a screen below the fold. Clones of the bar's
+// links, so the platform label and the star count keep landing on them
+// through the same `[data-duct-download]` / `[data-duct-stars]` hooks.
+var actions = document.createElement('div');
+actions.className = 'nav-actions';
+var barGh = linksHost.querySelector('.nav-gh');
+if (barGh) {
+  var gh = barGh.cloneNode(true);
+  gh.className = 'nav-gh nav-actions-gh';
+  var ghLabel = gh.querySelector('[data-duct-stars]');
+  // The star count would widen an icon-only mark; the label stays for the name.
+  if (ghLabel) ghLabel.removeAttribute('data-duct-stars');
+  actions.appendChild(gh);
+}
+var barDownload = linksHost.querySelector('a.btn[data-duct-download]');
+if (barDownload) {
+  var dl = barDownload.cloneNode(true);
+  dl.className = 'btn btn-orange nav-actions-download';
+  dl.removeAttribute('style');
+  actions.appendChild(dl);
+}
+actions.appendChild(toggle);
+nav.appendChild(actions);
 document.body.appendChild(backdrop);
 document.body.appendChild(drawer);
 

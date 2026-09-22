@@ -99,6 +99,15 @@ another port (the tests assume 8090).
   the page renders as unstyled black-on-white text. `tests/e2e/site-smoke.spec.js`
   fetches a nested miss and fails if any subresource 404s.
 - `config.js` must load before `duct.js`.
+- **Below 860px the bar keeps the GitHub mark and the Download pill beside
+  the menu button.** `duct.js` builds that `.nav-actions` cluster from clones
+  of the bar's own links when it builds the drawer, so every nav partial gets
+  it and the platform label and star count still land through the same
+  `data-duct-*` hooks. A phone visitor used to have to open the drawer to
+  find either action, with the hero's buttons a screen below. The cluster is
+  `display: none` wherever `.nav-links` shows, so the desktop and iPad
+  landscape bars never carry two of anything; the drawer keeps its own
+  Download row because a menu should end in the action.
 
 ## Icons, art and product shots
 

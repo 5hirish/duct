@@ -140,6 +140,15 @@ color: var(--navy); cursor: pointer; transition: border-color .2s, background .2
 }
 .nav-toggle:hover { border-color: var(--navy); background: var(--off); }
 .nav-toggle svg { width: 18px; height: 18px; }
+/* The mobile bar's right cluster: GitHub mark, Download, menu. Built by
+   duct.js beside the drawer; hidden wherever .nav-links is shown, so the
+   desktop bar never carries two of anything. */
+.nav-actions { display: none; align-items: center; gap: 8px; }
+.nav-actions-gh {
+  width: 42px; height: 42px; border-radius: 999px; justify-content: center;
+  opacity: .8;
+}
+.nav-actions-download { padding: 9px 14px; font-size: 13px; white-space: nowrap; }
 .nav-mobile-backdrop {
 position: fixed; inset: 0; background: rgba(13,15,26,.34);
 opacity: 0; pointer-events: none; transition: opacity .22s ease;
@@ -421,8 +430,9 @@ footer:not(.footer-expanded) { padding: 44px 52px; border-top: 1px solid var(--b
 
 /* ── RESPONSIVE ── */
 @media (max-width: 860px) {
-#nav { padding: 0 24px; }
+#nav { padding: 0 16px 0 20px; }
 .nav-links { display: none; }
+.nav-actions { display: inline-flex; }
 .nav-toggle { display: inline-flex; }
 .hero { padding: 100px 24px 60px; }
 .hero-form { flex-direction: column; align-items: stretch; max-width: 320px; margin: 0 auto; }
