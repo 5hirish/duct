@@ -33,6 +33,25 @@ updates:
         update-types:
           - minor
           - patch
+    # `@lingui/swc-plugin` is pinned exact in app/package.json and has to stay
+    # that way: the plugin ships a Wasm build whose `swc_core` must fall in the
+    # range Next's own runtime accepts, so the pair moves together or not at
+    # all. 6.7.0 against Next 16.3.5 fails with "failed to run Wasm plugin",
+    # the Lingui macros then reach the bundler unexpanded, and the build dies
+    # on an unresolvable `babel-plugin-macros` — which is exactly how #178
+    # arrived red. Dependabot cannot read the reasoning in app/AGENTS.md, so
+    # without this it proposes the same broken bump every Monday.
+    #
+    # Only version updates are ignored: a security advisory is not a
+    # `version-update:*` type, so a real CVE still opens its own PR. Lifting
+    # this is a deliberate act that belongs with a Next bump, and the gate is
+    # `npm --prefix app run build` actually completing.
+    ignore:
+      - dependency-name: "@lingui/swc-plugin"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+          - version-update:semver-patch
     labels:
       - dependencies
       - app
