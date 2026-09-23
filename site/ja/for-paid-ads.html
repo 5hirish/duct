@@ -42,7 +42,7 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"有料広告向けDuct","url":"https://getduct.ai/ja/for-paid-ads","description":"CPAが変動した理由を尋ねます。DuctはGoogle Ads、Meta、Apple Search Ads、GA4、Stripeをまとめて読み込み、一時停止または変更を提案し、承認すると適用します。オープンソース、MIT。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"有料広告向けDuctとは？","acceptedAnswer":{"@type":"Answer","text":"Google広告、Meta広告、Apple Search Ads、OpenAI Ads、GA4、Stripeをまとめて読み取るオープンソースAIエージェントです。CPAが変動した理由を尋ねると、その情報源とともにプラットフォームを横断して回答します。回答が一時停止、除外、または予算変更である場合、変更セットを提案し、お客様が承認した場合にのみ適用します。"}},{"@type":"Question","name":"広告プラットフォームをDuctに接続するのにどれくらい時間がかかりますか？","acceptedAnswer":{"@type":"Answer","text":"5分以内。DuctはワンクリックOAuthを使用して、Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、HubSpot、Stripe、RevenueCatに接続します。APIキーの設定や開発者の時間は不要です。プラットフォームを選択し、アクセスを承認するだけで、翌朝には最初のデイリー広告インテリジェンスブリーフが届きます。"}},{"@type":"Question","name":"Ductは私の広告アカウントで何かを変更しますか？","acceptedAnswer":{"@type":"Answer","text":"お客様が承認しない限り、変更は行いません。Ductはパフォーマンスデータを読み取ってブリーフを作成し、レポート機能は読み取り専用アクセスのみで動作します。行動すべきこと（無駄な支出の検索語句をネガティブキーワードとして追加すること、一時停止するキャンペーンなど）を見つけた場合、変更を提案し、影響を受けるすべての項目を前後で表示し、お客様が承認した場合にのみ適用します。適用されたすべての変更はログに記録され、プラットフォームが許可する範囲で元に戻すことができます。OAuthトークンは暗号化されてサーバー側に保存され、転送中のすべてのデータはTLSを介して暗号化されます。"}},{"@type":"Question","name":"Ductは、スプレッドシートやダッシュボードでクロスプラットフォームの広告レポートを作成するのとどう違うのですか？","acceptedAnswer":{"@type":"Answer","text":"スプレッドシートやダッシュボードは「何が起こったか」を示しますが、Ductは「それに対して何をすべきか」を伝えます。3つのプラットフォームから毎週手動でCSVを抽出しマージする代わりに、DuctはGoogle Ads、Meta、LinkedInのデータを自動的に関連付け、静的なレポートでは見落とされがちなクリエイティブの疲労、予算再配分の機会、クロスチャネルのアトリビューションギャップを明らかにします。"}},{"@type":"Question","name":"有料広告向けDuctの費用はいくらですか？","acceptedAnswer":{"@type":"Answer","text":"常に独自のキーで無料です。DuctはMITライセンスです。モデルプロバイダーに直接支払うか、既存のChatGPTプランでサインインします。後日、キーを保持したくないチーム向けにモデルをバンドルした有料プランが提供されますが、現在オープンなものはその背後に移動しません。費用がかかるものはオープンソースページに明記されています。"}},{"@type":"Question","name":"どのような変更が可能ですか？","acceptedAnswer":{"@type":"Answer","text":"キャンペーンの一時停止、除外キーワードの追加、アカウントに設定したガードレール内での予算移動。それぞれプレビュー付きの変更セットとして届きます。破壊的な変更はフラグが立てられ、ガードレールを超えるものは人が確認するまでブロックされ、適用されたすべての変更はロールバックできます。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"有料広告向けDuctとは？","acceptedAnswer":{"@type":"Answer","text":"Google広告、Meta広告、Apple Search Ads、OpenAI Ads、GA4、Stripeをまとめて読み取るオープンソースAIエージェントです。CPAが変動した理由を尋ねると、その情報源とともにプラットフォームを横断して回答します。回答が一時停止、除外、または予算変更である場合、変更セットを提案し、お客様が承認した場合にのみ適用します。"}},{"@type":"Question","name":"広告プラットフォームをDuctに接続するのにどれくらい時間がかかりますか？","acceptedAnswer":{"@type":"Answer","text":"スタック全体で約10分です。Google Ads、GA4、Search ConsoleはワンクリックのOAuthで接続します。Meta、Apple Search Ads、OpenAI Ads、Stripe、RevenueCatは、読み取り専用キーを一度貼り付けるだけです。あとは最初の質問をしてください。レポートを待つ必要はありません。"}},{"@type":"Question","name":"Ductは私の広告アカウントで何かを変更しますか？","acceptedAnswer":{"@type":"Answer","text":"お客様が承認しない限り、変更は行いません。Ductはパフォーマンスデータを読み取って回答し、読み取りには読み取り専用アクセスだけで十分です。行動すべきこと（無駄な支出の検索語句をネガティブキーワードとして追加すること、一時停止するキャンペーンなど）を見つけた場合、変更を提案し、影響を受けるすべての項目を前後で表示し、お客様が承認した場合にのみ適用します。適用されたすべての変更はログに記録され、プラットフォームが許す範囲で元に戻せます。OAuthトークンは暗号化されてサーバー側に保存され、転送中のすべてのデータはTLSで暗号化されます。"}},{"@type":"Question","name":"Ductは、スプレッドシートやダッシュボードでクロスプラットフォームの広告レポートを作成するのとどう違うのですか？","acceptedAnswer":{"@type":"Answer","text":"スプレッドシートは何が起きたかを示します。Ductはその理由と、何をすべきかを伝えます。Google Ads、Meta、Apple Search AdsをGA4やStripeと並べて読むので、ROASでは効率的に見えてもリテンションでは最悪なキャンペーンが名指しされ、停止や予算の移動をすぐに承認できる状態で届きます。"}},{"@type":"Question","name":"有料広告向けDuctの費用はいくらですか？","acceptedAnswer":{"@type":"Answer","text":"常に独自のキーで無料です。DuctはMITライセンスです。モデルプロバイダーに直接支払うか、既存のChatGPTプランでサインインします。後日、キーを保持したくないチーム向けにモデルをバンドルした有料プランが提供されますが、現在オープンなものはその背後に移動しません。費用がかかるものはオープンソースページに明記されています。"}},{"@type":"Question","name":"どのような変更が可能ですか？","acceptedAnswer":{"@type":"Answer","text":"キャンペーンの一時停止、除外キーワードの追加、アカウントに設定したガードレール内での予算移動。それぞれプレビュー付きの変更セットとして届きます。破壊的な変更はフラグが立てられ、ガードレールを超えるものは人が確認するまでブロックされ、適用されたすべての変更はロールバックできます。"}}]}
 </script>
 <style>
   .skip-link {
@@ -87,7 +87,7 @@
 
 <section class="hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 有料広告ベータ版 · 無料＆オープンソース</div>
-<h1>広告レポートの結合をやめましょう。<br/><em>予算を動かし始めましょう。</em></h1>
+<h1>広告費で何を得たかが見える。<br/><em>その場で予算を動かせる。</em></h1>
 <p class="hero-sub">CPAが変動した理由を尋ねてください。DuctはGoogle広告、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止または変更を提案し、お客様が承認した場合に適用します。</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
@@ -175,7 +175,7 @@
 <span class="step-num">01</span>
 <span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
 <p class="step-title">スタックを接続する</p>
-<p class="step-body">Google広告、Meta広告、Apple Search Ads、OpenAI Ads、GA4、StripeへのワンクリックOAuth。レポートには読み取りアクセスのみが必要です。手動でエクスポートされるものはありません。</p>
+<p class="step-body">Google AdsとGA4はOAuthで、Meta、Apple Search Ads、OpenAI Ads、Stripeは読み取り用キーを貼り付けて接続します。レポートには読み取りアクセスのみが必要です。手動でエクスポートされるものはありません。</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -289,15 +289,15 @@
 </details>
 <details class="faq-item">
 <summary class="faq-q">広告プラットフォームをDuctに接続するのにどれくらい時間がかかりますか？</summary>
-<p class="faq-a">5分以内。DuctはワンクリックOAuthを使用して、Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、HubSpot、Stripe、RevenueCatに接続します。APIキーの設定や開発者の時間は不要です。プラットフォームを選択し、アクセスを承認するだけで、翌朝には最初のデイリー広告インテリジェンスブリーフが届きます。</p>
+<p class="faq-a">スタック全体で約10分です。Google Ads、GA4、Search ConsoleはワンクリックのOAuthで接続します。Meta、Apple Search Ads、OpenAI Ads、Stripe、RevenueCatは、読み取り専用キーを一度貼り付けるだけです。あとは最初の質問をしてください。レポートを待つ必要はありません。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Ductは私の広告アカウントで何かを変更しますか？</summary>
-<p class="faq-a">お客様が承認しない限り、変更は行いません。Ductはパフォーマンスデータを読み取ってブリーフを作成し、レポート機能は読み取り専用アクセスのみで動作します。行動すべきこと（無駄な支出の検索語句をネガティブキーワードとして追加すること、一時停止するキャンペーンなど）を見つけた場合、変更を提案し、影響を受けるすべての項目を前後で表示し、お客様が承認した場合にのみ適用します。適用されたすべての変更はログに記録され、プラットフォームが許可する範囲で元に戻すことができます。OAuthトークンは暗号化されてサーバー側に保存され、転送中のすべてのデータはTLSを介して暗号化されます。</p>
+<p class="faq-a">お客様が承認しない限り、変更は行いません。Ductはパフォーマンスデータを読み取って回答し、読み取りには読み取り専用アクセスだけで十分です。行動すべきこと（無駄な支出の検索語句をネガティブキーワードとして追加すること、一時停止するキャンペーンなど）を見つけた場合、変更を提案し、影響を受けるすべての項目を前後で表示し、お客様が承認した場合にのみ適用します。適用されたすべての変更はログに記録され、プラットフォームが許す範囲で元に戻せます。OAuthトークンは暗号化されてサーバー側に保存され、転送中のすべてのデータはTLSで暗号化されます。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Ductは、スプレッドシートやダッシュボードでクロスプラットフォームの広告レポートを作成するのとどう違うのですか？</summary>
-<p class="faq-a">スプレッドシートやダッシュボードは「何が起こったか」を示しますが、Ductは「それに対して何をすべきか」を伝えます。3つのプラットフォームから毎週手動でCSVを抽出しマージする代わりに、DuctはGoogle Ads、Meta、LinkedInのデータを自動的に関連付け、静的なレポートでは見落とされがちなクリエイティブの疲労、予算再配分の機会、クロスチャネルのアトリビューションギャップを明らかにします。</p>
+<p class="faq-a">スプレッドシートは何が起きたかを示します。Ductはその理由と、何をすべきかを伝えます。Google Ads、Meta、Apple Search AdsをGA4やStripeと並べて読むので、ROASでは効率的に見えてもリテンションでは最悪なキャンペーンが名指しされ、停止や予算の移動をすぐに承認できる状態で届きます。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">有料広告向けDuctの費用はいくらですか？</summary>
