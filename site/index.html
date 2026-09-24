@@ -25,10 +25,10 @@
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/"/>
 <meta property="og:title" content="Duct — Open-source AI agent for your growth stack"/>
-<meta property="og:description" content="Stop stitching five tabs. Ask one question: Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so."/>
+<meta property="og:description" content="See the whole picture, fix it in the same moment. Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. Open source."/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Duct — Open-source AI agent for your growth stack"/>
-<meta name="twitter:description" content="Stop stitching five tabs. Ask one question: Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so."/>
+<meta name="twitter:description" content="See the whole picture, fix it in the same moment. Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. Open source."/>
 <meta property="og:image" content="https://getduct.ai/assets/og/index.jpg"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
@@ -117,6 +117,9 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
   .what-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 860px) {
+  /* The rule above wins over duct.css's 24px phone padding, so restore it here: at 52px a
+     360px phone gives the headline 256px, one word per line, and the pill clips. */
+  .hero { padding: 80px 24px 64px; }
   .what-grid { grid-template-columns: 1fr; }
   .what, .tools-teaser { padding-left: 24px; padding-right: 24px; }
   .film { margin-top: 40px; }
@@ -132,7 +135,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 {"@context":"https://schema.org","@type":"WebSite","inLanguage":"en","name":"Duct","url":"https://getduct.ai","description":"Open-source AI agent for cross-tool product and growth analytics.","publisher":{"@type":"Organization","name":"Duct","url":"https://getduct.ai","logo":"https://getduct.ai/assets/icon.svg","sameAs":["https://github.com/5hirish/duct","https://youtube.com/@5hirish","https://x.com/5hirish"],"founder":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"contactPoint":{"@type":"ContactPoint","email":"hello@getduct.ai"}}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What is Duct?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The core is MIT licensed and stays that way. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A hosted team plan comes later; the core stays open."}},{"@type":"Question","name":"Does it change my accounts without asking?","acceptedAnswer":{"@type":"Answer","text":"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."}},{"@type":"Question","name":"Which tools does it connect to?","acceptedAnswer":{"@type":"Answer","text":"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."}},{"@type":"Question","name":"Where do my keys and data live?","acceptedAnswer":{"@type":"Answer","text":"Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine. Why it's called Duct is on the about page."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What is Duct?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The core is MIT licensed and stays that way. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A hosted team plan comes later; the core stays open."}},{"@type":"Question","name":"Does it change my accounts without asking?","acceptedAnswer":{"@type":"Answer","text":"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. The doctrine page links the file that enforces it."}},{"@type":"Question","name":"Which tools does it connect to?","acceptedAnswer":{"@type":"Answer","text":"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. The four Google tools connect with OAuth; the rest take a read-only key you paste once. Nothing is exported by hand."}},{"@type":"Question","name":"Where do my keys and data live?","acceptedAnswer":{"@type":"Answer","text":"Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine. Why it's called Duct is on the about page."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","inLanguage":"en","name":"Duct","alternateName":"Duct — Cross-Tool Intelligence","applicationCategory":"BusinessApplication","applicationSubCategory":"Analytics","operatingSystem":"macOS, Windows, Linux, Web","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"codeRepository":"https://github.com/5hirish/duct","author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"MIT licensed. Self-host or run locally at no cost."},"description":"Open-source AI agent that reads across Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat, and answers questions a single dashboard cannot."}
@@ -150,7 +153,10 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <!-- End Google Tag Manager (noscript) -->
 
 <!-- EXPERIMENT: product-led home. Hypothesis: a 30 s film of one real job plus ≤600 words converts
-     better than 7,700 px of feature copy. Measured by download clicks per visit (GTM). -->
+     better than 7,700 px of feature copy. Measured by download clicks per visit (GTM).
+     Hero, 2026-09-22: the value loop (see the whole picture, fix it in the same moment) over the
+     workflow-pain line. The home hero names no channel; the outcome each audience values is the
+     for-* hero's job. Measured the same way, split by referrer. -->
 
 <!-- NAV (shared: site/partials/nav-home.html) -->
 <div data-duct-partial="/partials/nav-home.html"></div>
@@ -159,9 +165,9 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 
 <!-- HERO -->
 <section class="hero" id="hero">
-<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Open source · MIT · bring your own keys</div>
-<h1>Stop stitching five tabs.<br/><em>Start asking one question.</em></h1>
-<p class="hero-sub">Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for.</p>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free on the ChatGPT plan you already pay for</div>
+<h1>See the whole picture.<br/><em>Fix it in the same moment.</em></h1>
+<p class="hero-sub">Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it.</p>
 <div class="hero-actions">
 <a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download for macOS ↓</a>
 <a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Star on GitHub</a>
@@ -197,7 +203,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <div class="what-tile">
 <div class="what-shot"><img src="assets/media/connectors.webp" srcset="assets/media/connectors-768.webp 768w, assets/media/connectors-1536.webp 1536w, assets/media/connectors.webp 2208w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2208" height="1134" loading="lazy" alt="The Connections page with twelve tools, five of them connected"//></div>
 <h3>Reads across tools</h3>
-<p>Twelve connectors. Ads, analytics, revenue and session replays, read together for one question.</p>
+<p>Thirteen connectors. Ads, analytics, revenue and session replays, read together for one question.</p>
 </div>
 <div class="what-tile">
 <div class="what-shot"><img src="assets/media/review-card.webp" srcset="assets/media/review-card-768.webp 768w, assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="A change-set card: pause one campaign, one change blocked by a guardrail, Reject and Apply buttons"//></div>
@@ -232,7 +238,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <h3>Insights</h3>
 <dl>
 <dt>When</dt><dd>Someone asks why signups dropped this week.</dd>
-<dt>Today</dt><dd>Five tabs, three hours, still a guess.</dd>
+<dt>Today</dt><dd>A morning gone. The reply is still a guess.</dd>
 <dt>With Duct</dt><dd class="with">It reads Ads, GA4 and Stripe together and answers with the change it proposes.</dd>
 </dl>
 </div>
@@ -313,11 +319,11 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 </details>
 <details class="faq-item">
 <summary class="faq-q">Does it change my accounts without asking?</summary>
-<p class="faq-a">No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look.</p>
+<p class="faq-a">No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. <a href="/doctrine">The doctrine page</a> links the file that enforces it.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Which tools does it connect to?</summary>
-<p class="faq-a">Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand.</p>
+<p class="faq-a">Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. The four Google tools connect with OAuth; the rest take a read-only key you paste once. Nothing is exported by hand.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Where do my keys and data live?</summary>

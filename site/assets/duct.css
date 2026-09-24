@@ -214,7 +214,7 @@ font-size: 12px; font-weight: 500; color: var(--orange);
 white-space: nowrap; max-width: 100%;
 margin-bottom: 40px; animation: fadeUp .5s ease both;
 }
-.hero-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+.hero-pill-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
 h1 {
 font-family: var(--serif);
 font-size: clamp(44px, 6.4vw, 76px);

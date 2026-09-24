@@ -132,9 +132,9 @@ msgstr ""
 
 #: about.html
 msgid ""
-"Duct reads across your existing tools and synthesizes the cross-tool story that has been hiding in plain sight. Not another dashboard. Not another data warehouse project you will abandon in Q3. And when the answer is “pause that campaign” or “mark that GA4 event,” Duct can prepare the change and show you a preview. It cannot apply it. Only you can. That boundary lives in code, not in a prompt."
+"Duct reads across the tools you already run and answers the question none of them can answer alone: why did this move, and what do we do about it. Not another dashboard. Not another data warehouse project you will abandon in Q3. And when the answer is “pause that campaign” or “mark that GA4 event,” Duct can prepare the change and show you a preview. It cannot apply it. Only you can. That boundary lives in code, not in a prompt."
 msgstr ""
-"Duct liest über deine bestehenden Tools hinweg und synthetisiert die Tool-übergreifende Geschichte, die sich im Verborgenen befand. Kein weiteres Dashboard. Kein weiteres Data-Warehouse-Projekt, das du im Q3 aufgeben wirst. Und wenn die Antwort lautet „Kampagne pausieren“ oder „GA4-Ereignis markieren“, kann Duct die Änderung vorbereiten und dir eine Vorschau zeigen. Es kann sie nicht anwenden. Nur du kannst das. Diese Grenze liegt im Code, nicht in einem Prompt."
+"Duct liest die Tools, die du schon nutzt, zusammen und beantwortet die Frage, die keines davon allein beantworten kann: Warum hat sich das bewegt, und was tun wir jetzt? Kein weiteres Dashboard. Kein weiteres Data-Warehouse-Projekt, das du im Q3 aufgeben wirst. Und wenn die Antwort lautet „Kampagne pausieren“ oder „GA4-Ereignis markieren“, kann Duct die Änderung vorbereiten und dir eine Vorschau zeigen. Es kann sie nicht anwenden. Nur du kannst das. Diese Grenze liegt im Code, nicht in einem Prompt."
 
 #: about.html
 msgid ""
@@ -144,9 +144,9 @@ msgstr ""
 
 #: about.html
 msgid ""
-"Each one reads across the twelve connected sources instead of one at a time, and when the answer is a change, it prepares the change and waits for you. Every connector and every prompt is in the repo, so this list is the list, not a roadmap."
+"Each one reads across the thirteen connected sources instead of one at a time, and when the answer is a change, it prepares the change and waits for you. Every connector and every prompt is in the repo, so this list is the list, not a roadmap."
 msgstr ""
-"Jeder liest über die zwölf verbundenen Quellen hinweg, anstatt eine nach der anderen, und wenn die Antwort eine Änderung ist, bereitet es die Änderung vor und wartet auf dich. Jeder Connector und jeder Prompt ist im Repo, daher ist diese Liste die Liste, keine Roadmap."
+"Jeder liest über die dreizehn verbundenen Quellen hinweg, anstatt eine nach der anderen, und wenn die Antwort eine Änderung ist, bereitet es die Änderung vor und wartet auf dich. Jeder Connector und jeder Prompt ist im Repo, daher ist diese Liste die Liste, keine Roadmap."
 
 #: about.html
 msgid ""
@@ -156,9 +156,9 @@ msgstr ""
 
 #: about.html
 msgid ""
-"Every one of those jobs had the same gap: the answer to “why did that number move” was never inside one tool, and somebody senior burned a morning every week stitching it together by hand. Duct is the thing I wanted for that job, so I built it and made it MIT."
+"Every one of those jobs had the same gap: the answer to “why did that number move” was never inside one tool, and somebody senior burned a morning every week carrying the numbers between tools by hand. Duct is the thing I wanted for that job, so I built it and made it MIT."
 msgstr ""
-"Jeder dieser Jobs hatte dieselbe Lücke: Die Antwort auf „warum hat sich diese Zahl verändert“ war nie in einem Tool zu finden, und jemand Höhergestelltes verbrachte jede Woche einen Vormittag damit, es manuell zusammenzufügen. Duct ist das, was ich für diesen Job wollte, also habe ich es gebaut und unter MIT-Lizenz gestellt."
+"Jeder dieser Jobs hatte dieselbe Lücke: Die Antwort auf „warum hat sich diese Zahl verändert“ war nie in einem Tool zu finden, und jemand Höhergestelltes verbrachte jede Woche einen Vormittag damit, die Zahlen von Hand zwischen den Tools hin und her zu tragen. Duct ist das, was ich für diesen Job wollte, also habe ich es gebaut und unter MIT-Lizenz gestellt."
 
 #: about.html
 msgid ""
@@ -244,7 +244,7 @@ msgstr "Open Source"
 
 #: about.html
 msgid ""
-"Paste a URL. Duct crawls the site, reads the technical and content signals, and hands back a prioritised report. It is the <0>free front door</0>: no account needed to run one."
+"Paste a URL. Duct crawls the site, reads the technical and content signals, and hands back a prioritized report. It is the <0>free front door</0>: no account needed to run one."
 msgstr ""
 "Füge eine URL ein. Duct crawlt die Seite, liest die technischen und inhaltlichen Signale und gibt einen priorisierten Bericht zurück. Es ist die <0>kostenlose Eingangstür</0>: kein Konto erforderlich, um einen auszuführen."
 
@@ -343,9 +343,9 @@ msgstr "Du kannst jede Zeile lesen"
 
 #: about.html
 msgid ""
-"Your analytics tool knows what happened. Your support tool knows who's upset. Your project tracker knows what shipped. Your ad platform knows what you spent. But none of them talk to each other — so you spend hours every week playing translator between tabs, trying to piece together a story that already exists if only someone would connect the dots."
+"Your analytics tool knows what happened. Your support tool knows who's upset. Your project tracker knows what shipped. Your ad platform knows what you spent. But none of them talk to each other — so once a week somebody carries the numbers between them by hand, and the decision gets made on whichever slice was open. The story was there the whole time. Nobody was reading it whole."
 msgstr ""
-"Dein Analysetool weiß, was passiert ist. Dein Support-Tool weiß, wer verärgert ist. Dein Projekt-Tracker weiß, was ausgeliefert wurde. Deine Anzeigenplattform weiß, was du ausgegeben hast. Aber keines davon spricht miteinander — also verbringst du jede Woche Stunden damit, zwischen Tabs zu übersetzen, und versuchst, eine Geschichte zusammenzusetzen, die bereits existiert, wenn nur jemand die Punkte verbinden würde."
+"Dein Analytics-Tool weiß, was passiert ist. Dein Support-Tool weiß, wer verärgert ist. Dein Projekttracker weiß, was ausgeliefert wurde. Deine Werbeplattform weiß, was du ausgegeben hast. Aber keines davon spricht mit den anderen — also trägt einmal pro Woche jemand die Zahlen von Hand hin und her, und die Entscheidung fällt auf Basis des Ausschnitts, der gerade offen war. Die Geschichte war die ganze Zeit da. Nur hat sie niemand als Ganzes gelesen."
 
 #: about.html
 msgid ""
@@ -1086,11 +1086,22 @@ msgstr ""
 msgid "The desktop app"
 msgstr "Die Desktop-App"
 
+#. meta og:description
+#: download.html
+msgid ""
+"The whole picture in one window on Mac, Windows and Linux. Signed, self-updating, free with your own keys. Nothing to host."
+msgstr ""
+"Das ganze Bild in einem Fenster auf Mac, Windows und Linux. Signiert, selbstaktualisierend, kostenlos mit deinen eigenen Schlüsseln. Nichts zu hosten."
+
+#: download.html
+msgid "The whole picture,<0/>in one <1>window.</1>"
+msgstr "Das ganze Bild,<0/>in einem <1>Fenster.</1>"
+
 #: download.html index.html
 msgid ""
-"Twelve connectors. Ads, analytics, revenue and session replays, read together for one question."
+"Thirteen connectors. Ads, analytics, revenue and session replays, read together for one question."
 msgstr ""
-"Zwölf Connectors. Anzeigen, Analysen, Umsatz und Session-Replays, zusammen gelesen für eine Frage."
+"Dreizehn Connectors. Anzeigen, Analysen, Umsatz und Session-Replays, zusammen gelesen für eine Frage."
 
 #: download.html
 msgid "Two ways to run it"
@@ -1152,17 +1163,6 @@ msgid ""
 msgstr ""
 "Dein Stack ist derselbe. Anzeigen, Analysen, Suche, Umsatz: Die Quellen sind in Ordnung. Was fehlt, ist der Kanal zwischen ihnen und der Entscheidung. Das ist die Aufgabe und der Name."
 
-#. meta og:description
-#: download.html
-msgid ""
-"Your whole growth stack in one window on Mac, Windows and Linux. Signed, self-updating, free with your own keys. Nothing to host."
-msgstr ""
-"Dein gesamter Growth Stack in einem Fenster auf Mac, Windows und Linux. Signiert, selbstaktualisierend, kostenlos mit deinen eigenen Schlüsseln. Nichts zu hosten."
-
-#: download.html
-msgid "Your whole stack,<0/>in one <1>window.</1>"
-msgstr "Dein gesamter Stack,<0/>in einem <1>Fenster.</1>"
-
 #: download.html
 msgid "apt-based distributions"
 msgstr "apt-basierte Distributionen"
@@ -1203,9 +1203,9 @@ msgstr ""
 
 #: for-organic-growth.html
 msgid ""
-"<0><1/></0> Search Console flagged a query climbing into positions 4–8 three weeks ago. It's still sitting in a tab. The blog calendar doesn't reflect it."
+"<0><1/></0> Search Console flagged a query climbing into positions 4–8 three weeks ago. Nothing in the content calendar knows."
 msgstr ""
-"<0><1/></0> Die Search Console hat vor drei Wochen eine Abfrage gemeldet, die in die Positionen 4–8 aufstieg. Sie liegt immer noch in einem Tab. Der Blog-Kalender spiegelt dies nicht wider."
+"<0><1/></0> Die Search Console hat vor drei Wochen eine Abfrage gemeldet, die in die Positionen 4–8 aufstieg. Im Content-Kalender weiß davon niemand."
 
 #: for-organic-growth.html
 msgid ""
@@ -1215,9 +1215,9 @@ msgstr ""
 
 #: for-organic-growth.html
 msgid ""
-"<0><1/></0> You spend Monday mornings pulling rank data, session stats, and content metrics from five different tools just to decide what to work on."
+"<0><1/></0> You spend Monday mornings pulling rank data, session stats and content metrics by hand, just to decide what to work on."
 msgstr ""
-"<0><1/></0> Du verbringst Montagmorgen damit, Rangdaten, Sitzungsstatistiken und Inhaltsmetriken aus fünf verschiedenen Tools zu ziehen, nur um zu entscheiden, woran du arbeiten sollst."
+"<0><1/></0> Du verbringst Montagmorgen damit, Rangdaten, Sitzungsstatistiken und Inhaltsmetriken von Hand zusammenzuziehen, nur um zu entscheiden, woran du arbeiten sollst."
 
 #: for-organic-growth.html index.html
 msgid "<0>High</0>63 images without alt text"
@@ -1282,12 +1282,6 @@ msgstr ""
 "Frage, welcher Inhalt konvertiert. Duct liest Search Console, GA4 und Clarity zusammen, prüft jede URL kostenlos und plant die Beiträge der Woche auf einem Board. Open Source, MIT."
 
 #: for-organic-growth.html
-msgid ""
-"Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week’s posts on a board."
-msgstr ""
-"Frage, welcher Inhalt konvertiert. Duct liest Search Console, GA4 und Clarity zusammen, führt ein kostenloses Audit für jede URL durch und plant die Beiträge der Woche auf einem Board."
-
-#: for-organic-growth.html
 msgid "Blog → trial CVR dropped to 1.4% this month"
 msgstr "Blog → Test-CVR sank diesen Monat auf 1,4 %"
 
@@ -1335,12 +1329,6 @@ msgid "Does Duct store my SEO data or share it with third parties?"
 msgstr "Speichert Duct meine SEO-Daten oder teilt sie mit Dritten?"
 
 #: for-organic-growth.html
-msgid ""
-"Duct connects to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads and Stripe via one-click OAuth. Setup takes under five minutes and your first weekly brief lands in your inbox after connecting."
-msgstr ""
-"Duct verbindet sich mit Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads und Stripe über One-Click-OAuth. Die Einrichtung dauert weniger als fünf Minuten und dein erstes wöchentliches Briefing landet nach der Verbindung in deinem Posteingang."
-
-#: for-organic-growth.html
 msgid "Duct for Organic Growth"
 msgstr "Duct für organisches Wachstum"
 
@@ -1349,6 +1337,12 @@ msgstr "Duct für organisches Wachstum"
 #: for-organic-growth.html
 msgid "Duct for SEO and content teams — AI agent for organic growth"
 msgstr "Duct für SEO- und Content-Teams – KI-Agent für organisches Wachstum"
+
+#: for-organic-growth.html
+msgid ""
+"Duct reads Search Console, GA4 and Clarity together, names the pages to update and the queries to target, audits any URL for free, and plans the week’s posts on a board."
+msgstr ""
+"Duct liest Search Console, GA4 und Clarity zusammen, nennt die Seiten, die du aktualisieren solltest, und die Suchanfragen, auf die du zielen solltest, auditiert jede URL kostenlos und plant die Beiträge der Woche auf einem Board."
 
 #: for-organic-growth.html
 msgid ""
@@ -1453,18 +1447,18 @@ msgstr "Mixpanel"
 msgid "Not yet"
 msgstr "Noch nicht"
 
+#: for-organic-growth.html
+msgid ""
+"OAuth for Search Console, GA4 and Tag Manager; a pasted read key for Clarity and Mixpanel. Reporting needs read access only; nothing is exported by hand."
+msgstr ""
+"OAuth für Search Console, GA4 und Tag Manager; ein eingefügter Leseschlüssel für Clarity und Mixpanel. Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
+
 #. img alt
 #: for-organic-growth.html
 msgid ""
 "One question and its answer: which content converts, read from Search Console, GA4 and Clarity, with the pages to update first"
 msgstr ""
 "Eine Frage und ihre Antwort: welcher Inhalt konvertiert, gelesen aus Search Console, GA4 und Clarity, mit den zuerst zu aktualisierenden Seiten"
-
-#: for-organic-growth.html
-msgid ""
-"One-click OAuth to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity and Mixpanel. Reporting needs read access only; nothing is exported by hand."
-msgstr ""
-"Ein-Klick-OAuth zu Google Search Console, GA4, Google Tag Manager, Microsoft Clarity und Mixpanel. Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
 
 #. meta twitter:description
 #: for-organic-growth.html
@@ -1502,23 +1496,30 @@ msgid "Search Console"
 msgstr "Search Console"
 
 #: for-organic-growth.html
+msgid ""
+"Search Console knows the query and the position. It does not know whether the click became a trial. Duct reads Search Console, GA4, Clarity and Mixpanel together, so you get the pages to update and the queries to target, ranked by what they earn rather than where they rank."
+msgstr ""
+"Die Search Console kennt die Suchanfrage und die Position. Sie weiß nicht, ob aus dem Klick eine Testphase wurde. Duct liest Search Console, GA4, Clarity und Mixpanel zusammen, damit du die Seiten zum Aktualisieren und die Suchanfragen zum Zielen bekommst, sortiert nach dem, was sie einbringen, nicht nach ihrem Ranking."
+
+#: for-organic-growth.html
 msgid "Search Console says impressions are up. GA4 says trials are flat."
 msgstr ""
 "Search Console meldet mehr Impressionen. GA4 meldet gleichbleibende Testversionen."
 
 #: for-organic-growth.html
 msgid ""
-"Search Console shows you queries and positions in isolation. Duct correlates ranking, traffic, behaviour and conversion signals across Search Console, GA4, Clarity and Mixpanel, then surfaces prioritised actions instead of disconnected dashboards."
+"Search Console, GA4 and Tag Manager connect with OAuth in one click. Clarity, Mixpanel, HubSpot and Stripe take a read-only key you paste once. About ten minutes for the whole stack, then ask which content converts. The free audit needs nothing connected at all."
 msgstr ""
-"Search Console zeigt dir Suchanfragen und Positionen isoliert. Duct korreliert Ranking, Traffic, Verhalten und Konversionssignale über Search Console, GA4, Clarity und Mixpanel hinweg und zeigt dann priorisierte Aktionen anstelle von isolierten Dashboards."
+"Search Console, GA4 und Tag Manager verbinden sich per OAuth mit einem Klick. Clarity, Mixpanel, HubSpot und Stripe brauchen einen Leseschlüssel, den du einmal einfügst. Etwa zehn Minuten für den ganzen Stack, dann frag, welcher Content konvertiert. Das kostenlose Audit braucht gar keine Verbindung."
+
+#: for-organic-growth.html
+msgid "See which content actually converts.<0/><1>Fix it in the same sitting.</1>"
+msgstr ""
+"Sieh, welcher Content wirklich konvertiert.<0/><1>Behebe es in einem Rutsch.</1>"
 
 #: for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html
 msgid "Star on GitHub"
 msgstr "Auf GitHub starren"
-
-#: for-organic-growth.html
-msgid "Stop publishing blind.<0/>Start <1>compounding.</1>"
-msgstr "Hör auf, blind zu veröffentlichen.<0/>Fange an zu <1>wachsen.</1>"
 
 #: for-organic-growth.html
 msgid "Tag Manager"
@@ -1658,6 +1659,18 @@ msgid ""
 msgstr ""
 "<0><1/></0> Du verbringst jede Woche vier Stunden damit, CSVs von drei Plattformen zu ziehen, um einen Bericht zu erstellen, der am Montag schon veraltet ist."
 
+#: for-paid-ads.html
+msgid ""
+"A spreadsheet shows you what happened. Duct tells you why, and what to do about it. It reads Google Ads, Meta and Apple Search Ads next to GA4 and Stripe, so a campaign that looks efficient on ROAS and terrible on retention gets named, with the pause or the budget move ready to approve."
+msgstr ""
+"Eine Tabelle zeigt dir, was passiert ist. Duct sagt dir, warum, und was zu tun ist. Es liest Google Ads, Meta und Apple Search Ads neben GA4 und Stripe, damit eine Kampagne, die bei ROAS effizient und bei der Retention miserabel aussieht, beim Namen genannt wird, mit der Pause oder der Budgetverschiebung bereit zur Freigabe."
+
+#: for-paid-ads.html
+msgid ""
+"About ten minutes for the whole stack. Google Ads, GA4 and Search Console connect with OAuth in one click. Meta, Apple Search Ads, OpenAI Ads, Stripe and RevenueCat take a read-only key you paste once. Then ask your first question; there is no report to wait for."
+msgstr ""
+"Etwa zehn Minuten für den ganzen Stack. Google Ads, GA4 und Search Console verbinden sich per OAuth mit einem Klick. Meta, Apple Search Ads, OpenAI Ads, Stripe und RevenueCat brauchen einen Leseschlüssel, den du einmal einfügst. Dann stell deine erste Frage; es gibt keinen Bericht, auf den du warten musst."
+
 #. img alt
 #: for-paid-ads.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/marketing-roi-calculator.html tools/roas-calculator.html tools/utm-builder.html
 msgid ""
@@ -1779,9 +1792,15 @@ msgstr "Meta Ads"
 
 #: for-paid-ads.html
 msgid ""
-"Not unless you approve it. Duct reads your performance data to build the brief, and reporting works with read-only access alone. When it finds something worth acting on — a wasted-spend search term to add as a negative keyword, a campaign to pause — it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."
+"Not unless you approve it. Duct reads your performance data to answer you, and reading needs read-only access alone. When it finds something worth acting on — a wasted-spend search term to add as a negative keyword, a campaign to pause — it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."
 msgstr ""
-"Nicht, es sei denn, du gibst es frei. Duct liest deine Performance-Daten, um das Briefing zu erstellen, und das Reporting funktioniert allein mit Lesezugriff. Wenn es etwas findet, das Handlungsbedarf erfordert – ein Suchbegriff mit verschwendeten Ausgaben, der als negatives Keyword hinzugefügt werden soll, eine Kampagne, die pausiert werden soll –, schlägt es die Änderung vor, zeigt dir jeden betroffenen Posten vorher und nachher und wendet sie erst an, wenn du sie freigibst. Jede angewendete Änderung wird protokolliert und ist rückgängig machbar, wo die Plattform dies zulässt. OAuth-Tokens werden verschlüsselt und serverseitig gespeichert, und alle Daten während der Übertragung werden über TLS verschlüsselt."
+"Nicht, es sei denn, du gibst es frei. Duct liest deine Performance-Daten, um dir zu antworten, und zum Lesen reicht Lesezugriff. Wenn es etwas findet, das Handlungsbedarf erfordert – ein Suchbegriff mit verschwendeten Ausgaben, der als negatives Keyword hinzugefügt werden soll, eine Kampagne, die pausiert werden soll –, schlägt es die Änderung vor, zeigt dir jeden betroffenen Posten vorher und nachher und wendet sie erst an, wenn du sie freigibst. Jede angewendete Änderung wird protokolliert und ist rückgängig machbar, wo die Plattform dies zulässt. OAuth-Tokens werden verschlüsselt und serverseitig gespeichert, und alle Daten werden bei der Übertragung per TLS verschlüsselt."
+
+#: for-paid-ads.html
+msgid ""
+"OAuth for Google Ads and GA4; a pasted read key for Meta, Apple Search Ads, OpenAI Ads and Stripe. Reporting needs read access only; nothing is exported by hand."
+msgstr ""
+"OAuth für Google Ads und GA4; ein eingefügter Leseschlüssel für Meta, Apple Search Ads, OpenAI Ads und Stripe. Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
 
 #. img alt
 #: for-paid-ads.html
@@ -1795,12 +1814,6 @@ msgid ""
 "One question, every platform read together, and an answer that cites which campaign, which cohort, and what to do."
 msgstr ""
 "Eine Frage, jede Plattform zusammen gelesen, und eine Antwort, die angibt, welche Kampagne, welche Kohorte und was zu tun ist."
-
-#: for-paid-ads.html
-msgid ""
-"One-click OAuth to Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 and Stripe. Reporting needs read access only; nothing is exported by hand."
-msgstr ""
-"Ein-Klick-OAuth zu Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 und Stripe. Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
 
 #. meta twitter:description
 #: for-paid-ads.html
@@ -1848,15 +1861,9 @@ msgid "RevenueCat"
 msgstr "RevenueCat"
 
 #: for-paid-ads.html
-msgid ""
-"Spreadsheets and dashboards show you what happened — Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."
+msgid "See what your ad spend bought.<0/><1>Move it in the same moment.</1>"
 msgstr ""
-"Tabellen und Dashboards zeigen dir, was passiert ist – Duct sagt dir, was du dagegen tun sollst. Anstatt wöchentlich manuell CSVs von drei Plattformen zu ziehen und zusammenzuführen, korreliert Duct Daten automatisch über Google Ads, Meta und LinkedIn hinweg, um kreative Ermüdung, Möglichkeiten zur Budgetumverteilung und kanalübergreifende Attributionslücken aufzudecken, die statische Berichte völlig übersehen."
-
-#: for-paid-ads.html
-msgid "Stop stitching ad reports.<0/><1>Start moving budget.</1>"
-msgstr ""
-"Hör auf, Anzeigenberichte zusammenzuflicken.<0/><1>Fange an, Budget zu verschieben.</1>"
+"Sieh, was dein Werbebudget gekauft hat.<0/><1>Verschieb es im selben Moment.</1>"
 
 #: for-paid-ads.html
 msgid ""
@@ -1882,12 +1889,6 @@ msgstr ""
 #: for-paid-ads.html
 msgid "Top creative CTR dropped 1.4%"
 msgstr "Top-Creative CTR ist um 1,4 % gesunken"
-
-#: for-paid-ads.html
-msgid ""
-"Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe and RevenueCat. No API keys to configure and no developer time required. You select your platforms, authorize access, and your first daily ad intelligence brief arrives the next morning."
-msgstr ""
-"Unter fünf Minuten. Duct verwendet Ein-Klick-OAuth, um Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe und RevenueCat zu verbinden. Keine API-Schlüssel zu konfigurieren und keine Entwicklerzeit erforderlich. Du wählst deine Plattformen aus, autorisierst den Zugriff, und dein erstes tägliches Ad-Intelligence-Briefing kommt am nächsten Morgen an."
 
 #: for-paid-ads.html
 msgid "What is Duct for paid ads?"
@@ -2012,20 +2013,8 @@ msgstr ""
 "Frage, warum die Aktivierung gesunken ist. Duct liest Mixpanel, Clarity, GrowthBook und GA4 zusammen und antwortet mit der Ursache, den Quellen und der von ihm vorgeschlagenen Lösung."
 
 #: for-product-intelligence.html
-msgid ""
-"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources, and the change it proposes."
-msgstr ""
-"Frage, warum die Aktivierung gesunken ist. Duct liest Mixpanel, Clarity, GrowthBook und GA4 zusammen und antwortet mit der Ursache, den Quellen und der von ihm vorgeschlagenen Änderung."
-
-#: for-product-intelligence.html
 msgid "Does Duct for product intelligence cost anything?"
 msgstr "Kostet Duct für Produktintelligenz etwas?"
-
-#: for-product-intelligence.html
-msgid ""
-"Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting."
-msgstr ""
-"Duct verbindet sich mit Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat und Google Ads mit Ein-Klick-OAuth. Die Einrichtung dauert unter fünf Minuten und dein erstes tägliches PM-Briefing kommt nach der Verbindung in deinem Posteingang an."
 
 #: for-product-intelligence.html
 msgid "Duct for Product Intelligence"
@@ -2036,6 +2025,12 @@ msgstr "Duct für Produktintelligenz"
 #: for-product-intelligence.html
 msgid "Duct for product teams — AI agent for product intelligence"
 msgstr "Duct für Produktteams – KI-Agent für Produktintelligenz"
+
+#: for-product-intelligence.html
+msgid ""
+"Duct reads Mixpanel, Clarity, GrowthBook and GA4 together, names the cause with its sources, and proposes the change. Nothing is applied until you approve it."
+msgstr ""
+"Duct liest Mixpanel, Clarity, GrowthBook und GA4 zusammen, nennt die Ursache mit ihren Quellen und schlägt die Änderung vor. Nichts wird angewendet, bevor du es freigibst."
 
 #: for-product-intelligence.html
 msgid "Enterprise Data Team"
@@ -2053,6 +2048,12 @@ msgstr "Gründungs-PM"
 msgid "Free during beta · No credit card · For PMs at 20-200 person companies"
 msgstr ""
 "Kostenlos während der Beta · Keine Kreditkarte · Für PMs in Unternehmen mit 20-200 Mitarbeitern"
+
+#: for-product-intelligence.html
+msgid ""
+"GA4 and Google Ads connect with OAuth in one click. Mixpanel, Clarity, GrowthBook, HubSpot, Stripe and RevenueCat take a read-only key you paste once. About ten minutes for the whole stack, then ask why the number moved."
+msgstr ""
+"GA4 und Google Ads verbinden sich per OAuth mit einem Klick. Mixpanel, Clarity, GrowthBook, HubSpot, Stripe und RevenueCat brauchen einen Leseschlüssel, den du einmal einfügst. Etwa zehn Minuten für den ganzen Stack, dann frag, warum sich die Zahl bewegt hat."
 
 #: for-product-intelligence.html tools/weekly-brief-template.html
 msgid "Growth PM"
@@ -2079,13 +2080,20 @@ msgstr ""
 "Es liest alle für die eine Frage und antwortet mit der Ursache, den Quellen und der vorgeschlagenen Änderung."
 
 #: for-product-intelligence.html
-msgid "Mixpanel, Clarity and GrowthBook in three tabs, three hours, still a guess."
+msgid ""
+"Mixpanel knows the funnel. It does not know what the session looked like, whether the experiment was on, or whether the account paid. Duct reads Mixpanel, Clarity, GrowthBook and Stripe together and names the cause, so what to ship next is a decision, not a hunch."
 msgstr ""
-"Mixpanel, Clarity und GrowthBook in drei Tabs, drei Stunden, immer noch eine Vermutung."
+"Mixpanel kennt den Funnel. Es weiß nicht, wie die Session aussah, ob das Experiment lief oder ob der Account bezahlt hat. Duct liest Mixpanel, Clarity, GrowthBook und Stripe zusammen und nennt die Ursache, damit das, was du als Nächstes auslieferst, eine Entscheidung ist und kein Bauchgefühl."
 
 #: for-product-intelligence.html
 msgid "Next week’s question depends on last week’s call."
 msgstr "Die Frage der nächsten Woche hängt vom Anruf der letzten Woche ab."
+
+#: for-product-intelligence.html
+msgid ""
+"OAuth for GA4; a pasted read key for Mixpanel, Clarity, GrowthBook and HubSpot. Reporting needs read access only; nothing is exported by hand."
+msgstr ""
+"OAuth für GA4; ein eingefügter Leseschlüssel für Mixpanel, Clarity, GrowthBook und HubSpot. Das Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
 
 #: for-product-intelligence.html
 msgid "Onboarding fix — rolled out Tuesday"
@@ -2097,12 +2105,6 @@ msgid ""
 "One question and its answer: why activation dropped, read from GA4, Clarity and Stripe, naming the day, the platform and the screen"
 msgstr ""
 "Eine Frage und ihre Antwort: warum die Aktivierung sank, gelesen aus GA4, Clarity und Stripe, mit Nennung des Tages, der Plattform und des Bildschirms"
-
-#: for-product-intelligence.html
-msgid ""
-"One-click OAuth to Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot. Reporting needs read access only; nothing is exported by hand."
-msgstr ""
-"Ein-Klick-OAuth zu Mixpanel, Microsoft Clarity, GrowthBook, GA4 und HubSpot. Das Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
 
 #. meta twitter:description
 #: for-product-intelligence.html
@@ -2128,14 +2130,8 @@ msgid "Retention dropped 4% this week"
 msgstr "Die Retention sank diese Woche um 4 %."
 
 #: for-product-intelligence.html
-msgid ""
-"Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."
-msgstr ""
-"Dashboards einzelner Tools zeigen isolierte Metriken. Duct korreliert Produktanalysen, Sitzungsverhalten, Experimentergebnisse und Umsatzsignale, damit du priorisieren kannst, was als Nächstes ausgeliefert werden soll, ohne manuelle Korrelation."
-
-#: for-product-intelligence.html
-msgid "Stop tab-switching.<0/>Start <1>knowing.</1>"
-msgstr "Hör auf, Tabs zu wechseln.<0/>Fange an zu <1>wissen.</1>"
+msgid "See why the number moved.<0/><1>Fix it before the standup.</1>"
+msgstr "Sieh, warum sich die Zahl bewegt hat.<0/><1>Behebe es vor dem Standup.</1>"
 
 #: for-product-intelligence.html
 msgid ""
@@ -2157,6 +2153,11 @@ msgstr ""
 msgid "The answer is “mark that GA4 event” or “pause that campaign”."
 msgstr ""
 "Die Antwort ist „dieses GA4-Ereignis markieren“ oder „diese Kampagne pausieren“."
+
+#: for-product-intelligence.html
+msgid "Three hours across Mixpanel, Clarity and GrowthBook, still a guess."
+msgstr ""
+"Drei Stunden in Mixpanel, Clarity und GrowthBook, und immer noch eine Vermutung."
 
 #: for-product-intelligence.html
 msgid "Tracking feature launches"
@@ -2191,13 +2192,13 @@ msgstr ""
 
 #: for-product-intelligence.html
 msgid ""
-"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."
+"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to answer you and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."
 msgstr ""
-"Deine Daten werden während der Übertragung via TLS verschlüsselt, und OAuth-Tokens werden im Ruhezustand verschlüsselt und niemals dem Browser zugänglich gemacht. Duct liest deine Tools, um das Briefing zu erstellen, und ändert nichts daran, es sei denn, du gibst zuerst eine bestimmte Änderung frei. Der Zugriff ist auf die Projektmitglieder beschränkt, die du einlädst, und du kannst eine Quelle jederzeit trennen oder deine Daten löschen."
+"Deine Daten werden während der Übertragung via TLS verschlüsselt, und OAuth-Tokens werden im Ruhezustand verschlüsselt und niemals dem Browser zugänglich gemacht. Duct liest deine Tools, um dir zu antworten, und ändert nichts daran, es sei denn, du gibst zuerst eine bestimmte Änderung frei. Der Zugriff ist auf die Projektmitglieder beschränkt, die du einlädst, und du kannst eine Quelle jederzeit trennen oder deine Daten löschen."
 
 #: index.html
-msgid "<0></0> Open source · MIT · bring your own keys"
-msgstr "<0></0> Open Source · MIT · bring deine eigenen Schlüssel mit"
+msgid "<0></0> Free on the ChatGPT plan you already pay for"
+msgstr "<0></0> Kostenlos mit dem ChatGPT-Abo, das du schon bezahlst"
 
 #. video aria-label
 #: index.html
@@ -2205,6 +2206,10 @@ msgid ""
 "A 30-second film: a teammate asks why signups dropped; Duct reads Ads, GA4 and Stripe together, proposes pausing the campaign that drives churn, applies it on approval, and remembers what it learned."
 msgstr ""
 "Ein 30-Sekunden-Film: Ein Teamkollege fragt, warum die Anmeldungen zurückgingen; Duct liest Ads, GA4 und Stripe zusammen, schlägt vor, die Kampagne zu pausieren, die Abwanderung verursacht, wendet dies nach Freigabe an und erinnert sich an das Gelernte."
+
+#: index.html
+msgid "A morning gone. The reply is still a guess."
+msgstr "Ein Vormittag weg. Die Antwort ist immer noch eine Vermutung."
 
 #: index.html
 msgid "A paid tool, or a consultant."
@@ -2268,9 +2273,9 @@ msgstr ""
 
 #: index.html
 msgid ""
-"Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for."
+"Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it."
 msgstr ""
-"Duct liest deine Anzeigen-, Analyse- und Umsatz-Tools zusammen, schlägt die Lösung vor und wendet sie an, wenn du es sagst. Auf deinem Mac, mit deinen eigenen Modellschlüsseln oder dem ChatGPT-Plan, den du bereits bezahlst."
+"Duct liest alle Tools, die du nutzt, zusammen, findet, was sich ändern muss, und ändert es, wenn du auf „Anwenden“ klickst. Kein Suchen nach der Antwort von Tool zu Tool, keine Entscheidung auf Basis der halben Wahrheit."
 
 #: index.html
 msgid "Duct — Cross-Tool Intelligence"
@@ -2294,10 +2299,6 @@ msgstr "Kostenlose Tools entdecken →"
 msgid "Five honest <0>answers</0>"
 msgstr "Fünf ehrliche <0>Antworten</0>"
 
-#: index.html
-msgid "Five tabs, three hours, still a guess."
-msgstr "Fünf Tabs, drei Stunden, immer noch eine Vermutung."
-
 #: index.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Free tools"
 msgstr "Kostenlose Tools"
@@ -2308,9 +2309,9 @@ msgstr "Kostenlos · Kein Konto, keine Kreditkarte · Auch für Windows und Linu
 
 #: index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
+"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. The four Google tools connect with OAuth; the rest take a read-only key you paste once. Nothing is exported by hand."
 msgstr ""
-"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe und RevenueCat. Jede Verbindung ist OAuth; nichts wird manuell exportiert."
+"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe und RevenueCat. Die vier Google-Tools verbinden sich per OAuth; der Rest braucht einen Leseschlüssel, den du einmal einfügst. Nichts wird manuell exportiert."
 
 #: index.html
 msgid "Is it free?"
@@ -2352,9 +2353,15 @@ msgstr ""
 
 #: index.html
 msgid ""
-"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."
+"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. <0>The doctrine page</0> links the file that enforces it."
 msgstr ""
-"Nein. Das Reporting funktioniert mit Lesezugriff. Eine Änderung wird mit dem vorgeschlagen, was sie betrifft, und nur angewendet, wenn du auf „Anwenden“ klickst. Destruktive Änderungen werden markiert; alles, was eine Schutzgrenze überschreitet, wird blockiert, bis du es überprüfst."
+"Nein. Das Reporting funktioniert mit Lesezugriff. Eine Änderung wird mit dem vorgeschlagen, was sie betrifft, und nur angewendet, wenn du auf „Anwenden“ klickst. In der Liste der Tools, die das Modell aufrufen kann, gibt es kein Freigabe-Tool, also lässt es sich auch zu nichts überreden. Destruktive Änderungen werden markiert; alles, was eine Schutzgrenze überschreitet, wird blockiert, bis du es überprüfst. <0>Die Doktrin-Seite</0> verlinkt die Datei, die das durchsetzt."
+
+#: index.html
+msgid ""
+"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. The doctrine page links the file that enforces it."
+msgstr ""
+"Nein. Das Reporting funktioniert mit Lesezugriff. Eine Änderung wird mit dem vorgeschlagen, was sie betrifft, und nur angewendet, wenn du auf „Anwenden“ klickst. In der Liste der Tools, die das Modell aufrufen kann, gibt es kein Freigabe-Tool, also lässt es sich auch zu nichts überreden. Destruktive Änderungen werden markiert; alles, was eine Schutzgrenze überschreitet, wird blockiert, bis du es überprüfst. Die Doktrin-Seite verlinkt die Datei, die das durchsetzt."
 
 #: index.html
 msgid "One Monday, in 30 seconds"
@@ -2406,6 +2413,18 @@ msgstr "SaaS-Benchmarks, Paid-Spend-Modelle, UTM-Links. Keine Anmeldung."
 msgid "Sales & RevOps"
 msgstr "Sales & RevOps"
 
+#. meta og:description
+#. meta twitter:description
+#: index.html
+msgid ""
+"See the whole picture, fix it in the same moment. Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. Open source."
+msgstr ""
+"Sieh das ganze Bild und behebe es im selben Moment. Duct liest alle Tools, die du nutzt, zusammen, findet, was sich ändern muss, und ändert es, wenn du auf „Anwenden“ klickst. Open Source."
+
+#: index.html
+msgid "See the whole picture.<0/><1>Fix it in the same moment.</1>"
+msgstr "Sieh das ganze Bild.<0/><1>Behebe es im selben Moment.</1>"
+
 #: index.html
 msgid "Someone asks why signups dropped this week."
 msgstr "Jemand fragt, warum die Anmeldungen diese Woche zurückgegangen sind."
@@ -2413,19 +2432,6 @@ msgstr "Jemand fragt, warum die Anmeldungen diese Woche zurückgegangen sind."
 #: index.html
 msgid "Sound off"
 msgstr "Ton aus"
-
-#. meta og:description
-#. meta twitter:description
-#: index.html
-msgid ""
-"Stop stitching five tabs. Ask one question: Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so."
-msgstr ""
-"Hör auf, fünf Tabs zusammenzufügen. Stell eine Frage: Duct liest deine Anzeigen-, Analyse- und Umsatz-Tools zusammen, schlägt die Lösung vor und wendet sie an, wenn du es sagst."
-
-#: index.html
-msgid "Stop stitching five tabs.<0/><1>Start asking one question.</1>"
-msgstr ""
-"Hör auf, fünf Tabs zusammenzufügen.<0/><1>Fang an, eine Frage zu stellen.</1>"
 
 #. img alt
 #: index.html
@@ -2845,28 +2851,29 @@ msgid "Free & open source"
 msgstr "Kostenlos & Open Source"
 
 #: partials/cta-blog.html
-msgid "Stop stitching reports.<0/><1>Start asking.</1>"
-msgstr "Hör auf, Berichte zusammenzufügen.<0/><1>Fange an zu fragen.</1>"
+msgid "Stop reading one tool at a time.<0/><1>Start asking all of them.</1>"
+msgstr "Hör auf, ein Tool nach dem anderen zu lesen.<0/><1>Frag alle auf einmal.</1>"
+
+#: partials/cta-for-pages.html
+msgid "Ask the question <0>you've been putting off.</0>"
+msgstr "Stell die Frage, <0>die du schon lange aufschiebst.</0>"
 
 #: partials/cta-for-pages.html
 msgid ""
-"Free and open source. Connect your stack, tune your first brief around your north-star metric, and keep every credential on your own machine."
+"Free and open source. Connect your stack, ask, and approve the fix from the same screen. Your keys stay on your machine."
 msgstr ""
-"Kostenlos und Open Source. Verbinde deinen Stack, passe dein erstes Briefing an deine North-Star-Metrik an und bewahre alle Anmeldeinformationen auf deiner eigenen Maschine auf."
-
-#: partials/cta-for-pages.html
-msgid "Get growth intelligence <0>on your desktop</0>"
-msgstr "Erhalte Wachstumsintelligenz <0>auf deinem Schreibtisch</0>"
+"Kostenlos und Open Source. Verbinde deinen Stack, frag und gib die Lösung auf demselben Bildschirm frei. Deine Schlüssel bleiben auf deinem Rechner."
 
 #: partials/cta-home.html
 msgid ""
-"Install the app, connect your tools, and ask the question you've been putting off."
+"Install the app, connect your tools, and put the question to all of them at once."
 msgstr ""
-"Installiere die App, verbinde deine Tools und stelle die Frage, die du aufgeschoben hast."
+"Installiere die App, verbinde deine Tools und stell die Frage allen gleichzeitig."
 
 #: partials/cta-home.html
-msgid "Stop reading tools.<0/><1>Start reading signals.</1>"
-msgstr "Hör auf, Tools zu lesen.<0/><1>Fange an, Signale zu lesen.</1>"
+msgid "Stop deciding on half the picture.<0/><1>Start fixing it with all of it.</1>"
+msgstr ""
+"Hör auf, mit dem halben Bild zu entscheiden.<0/><1>Fang an, es mit dem ganzen zu beheben.</1>"
 
 #: partials/cta-tools.html
 msgid "Install the app, connect your tools, and ask why the number moved."
@@ -3027,23 +3034,23 @@ msgid ""
 msgstr ""
 "<0><1/></0> <2><3>E-Commerce / DTC</3><4>ROAS-, LTV- & Retentions-Synthese</4></2> <5>Bald</5>"
 
-#: partials/nav-blog.html partials/nav-changelog.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
 msgid ""
-"<0><1/></0> <2><3>Organic Growth</3><4>Automated SEO & content intelligence</4></2>"
+"<0><1/></0> <2><3>PMs & growth teams</3><4>Why did signups drop? Read across analytics, ads and revenue</4></2>"
 msgstr ""
-"<0><1/></0> <2><3>Organisches Wachstum</3><4>Automatisierte SEO- & Content-Intelligenz</4></2>"
+"<0><1/></0> <2><3>PMs & Wachstumsteams</3><4>Warum sind die Anmeldungen gesunken? Lies über Analysen, Anzeigen und Umsatz hinweg</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
 msgid ""
-"<0><1/></0> <2><3>Paid Ads Intelligence</3><4>Cross-platform brief for performance marketers</4></2>"
+"<0><1/></0> <2><3>Performance marketers</3><4>Spend against retention and revenue, not ROAS alone</4></2>"
 msgstr ""
-"<0><1/></0> <2><3>Intelligenz für bezahlte Anzeigen</3><4>Plattformübergreifendes Briefing für Performance-Marketer</4></2>"
+"<0><1/></0> <2><3>Performance-Marketer</3><4>Ausgaben gegen Bindung und Umsatz, nicht nur ROAS</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
 msgid ""
-"<0><1/></0> <2><3>Product Intelligence</3><4>Weekly brief for PMs & growth teams</4></2>"
+"<0><1/></0> <2><3>SEO & content teams</3><4>Search Console, GA4 and the audit, in one place</4></2>"
 msgstr ""
-"<0><1/></0> <2><3>Product Intelligence</3><4>Wöchentliches Briefing für PMs & Wachstumsteams</4></2>"
+"<0><1/></0> <2><3>SEO- & Content-Teams</3><4>Search Console, GA4 und das Audit, an einem Ort</4></2>"
 
 #: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
 msgid ""
@@ -3114,24 +3121,6 @@ msgstr "Blog"
 #: partials/nav-changelog.html
 msgid "changelog"
 msgstr "Änderungsprotokoll"
-
-#: partials/nav-home.html
-msgid ""
-"<0><1/></0> <2><3>PMs & growth teams</3><4>Why did signups drop? Read across analytics, ads and revenue</4></2>"
-msgstr ""
-"<0><1/></0> <2><3>PMs & Wachstumsteams</3><4>Warum sind die Anmeldungen gesunken? Lies über Analysen, Anzeigen und Umsatz hinweg</4></2>"
-
-#: partials/nav-home.html
-msgid ""
-"<0><1/></0> <2><3>Performance marketers</3><4>Spend against retention and revenue, not ROAS alone</4></2>"
-msgstr ""
-"<0><1/></0> <2><3>Performance-Marketer</3><4>Ausgaben gegen Bindung und Umsatz, nicht nur ROAS</4></2>"
-
-#: partials/nav-home.html
-msgid ""
-"<0><1/></0> <2><3>SEO & content teams</3><4>Search Console, GA4 and the audit, in one place</4></2>"
-msgstr ""
-"<0><1/></0> <2><3>SEO- & Content-Teams</3><4>Search Console, GA4 und das Audit, an einem Ort</4></2>"
 
 #: partials/nav-home.html
 msgid "Use cases"
@@ -6030,17 +6019,13 @@ msgstr ""
 #. meta og:description
 #: tools/index.html
 msgid ""
-"Benchmarks, paid media calculators, UTMs, and templates. Free in the browser — upgrade to weekly cross-tool briefs when you're ready."
+"Benchmarks, paid media calculators, UTMs and templates. Free in the browser. When you want the number explained, not just computed, Duct reads your tools and answers."
 msgstr ""
-"Benchmarks, Paid-Media-Rechner, UTMs und Vorlagen. Kostenlos im Browser – wechsle zu wöchentlichen Tool-übergreifenden Briefings, wenn du bereit bist."
+"Benchmarks, Paid-Media-Rechner, UTMs und Vorlagen. Kostenlos im Browser. Wenn du die Zahl erklärt haben willst, nicht nur berechnet, liest Duct deine Tools und antwortet."
 
 #: tools/index.html
 msgid "Build UTMs →"
 msgstr "UTMs erstellen →"
-
-#: tools/index.html
-msgid "Built by the Duct team"
-msgstr "Erstellt vom Duct-Team"
 
 #: tools/index.html
 msgid "CAC / LTV Calculator"
@@ -6135,6 +6120,10 @@ msgid "Free growth and marketing tools"
 msgstr "Kostenlose Growth- und Marketing-Tools"
 
 #: tools/index.html
+msgid "From the maker of Duct"
+msgstr "Vom Macher von Duct"
+
+#: tools/index.html
 msgid "GA4-friendly campaign links with live preview and validation."
 msgstr "GA4-freundliche Kampagnenlinks mit Live-Vorschau und Validierung."
 
@@ -6209,9 +6198,9 @@ msgstr "SaaS-Metriken & Umsatz"
 
 #: tools/index.html
 msgid ""
-"Same team. A tool answers one question with the numbers you type in. Duct answers it with the numbers in your tools, every time you ask, and proposes what to change."
+"Same maker. A tool answers one question with the numbers you type in. Duct answers it with the numbers in your tools, every time you ask, and proposes what to change."
 msgstr ""
-"Gleiches Team. Ein Tool beantwortet eine Frage mit den Zahlen, die du eingibst. Duct beantwortet sie mit den Zahlen in deinen Tools, jedes Mal, wenn du fragst, und schlägt Änderungen vor."
+"Gleicher Macher. Ein Tool beantwortet eine Frage mit den Zahlen, die du eingibst. Duct beantwortet sie mit den Zahlen in deinen Tools, jedes Mal, wenn du fragst, und schlägt Änderungen vor."
 
 #: tools/index.html
 msgid "Template"
@@ -7479,6 +7468,214 @@ msgstr "← Zurück"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Neu beginnen"
+
+#~ msgid ""
+#~ "One-click OAuth to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity and Mixpanel. Reporting needs read access only; nothing is exported by hand."
+#~ msgstr ""
+#~ "Ein-Klick-OAuth zu Google Search Console, GA4, Google Tag Manager, Microsoft Clarity und Mixpanel. Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
+
+#~ msgid ""
+#~ "One-click OAuth to Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 and Stripe. Reporting needs read access only; nothing is exported by hand."
+#~ msgstr ""
+#~ "Ein-Klick-OAuth zu Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 und Stripe. Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
+
+#~ msgid ""
+#~ "One-click OAuth to Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot. Reporting needs read access only; nothing is exported by hand."
+#~ msgstr ""
+#~ "Ein-Klick-OAuth zu Mixpanel, Microsoft Clarity, GrowthBook, GA4 und HubSpot. Das Reporting benötigt nur Lesezugriff; nichts wird manuell exportiert."
+
+#~ msgid ""
+#~ "Duct reads across your existing tools and synthesizes the cross-tool story that has been hiding in plain sight. Not another dashboard. Not another data warehouse project you will abandon in Q3. And when the answer is “pause that campaign” or “mark that GA4 event,” Duct can prepare the change and show you a preview. It cannot apply it. Only you can. That boundary lives in code, not in a prompt."
+#~ msgstr ""
+#~ "Duct liest über deine bestehenden Tools hinweg und synthetisiert die Tool-übergreifende Geschichte, die sich im Verborgenen befand. Kein weiteres Dashboard. Kein weiteres Data-Warehouse-Projekt, das du im Q3 aufgeben wirst. Und wenn die Antwort lautet „Kampagne pausieren“ oder „GA4-Ereignis markieren“, kann Duct die Änderung vorbereiten und dir eine Vorschau zeigen. Es kann sie nicht anwenden. Nur du kannst das. Diese Grenze liegt im Code, nicht in einem Prompt."
+
+#~ msgid ""
+#~ "Each one reads across the twelve connected sources instead of one at a time, and when the answer is a change, it prepares the change and waits for you. Every connector and every prompt is in the repo, so this list is the list, not a roadmap."
+#~ msgstr ""
+#~ "Jeder liest über die zwölf verbundenen Quellen hinweg, anstatt eine nach der anderen, und wenn die Antwort eine Änderung ist, bereitet es die Änderung vor und wartet auf dich. Jeder Connector und jeder Prompt ist im Repo, daher ist diese Liste die Liste, keine Roadmap."
+
+#~ msgid ""
+#~ "Every one of those jobs had the same gap: the answer to “why did that number move” was never inside one tool, and somebody senior burned a morning every week stitching it together by hand. Duct is the thing I wanted for that job, so I built it and made it MIT."
+#~ msgstr ""
+#~ "Jeder dieser Jobs hatte dieselbe Lücke: Die Antwort auf „warum hat sich diese Zahl verändert“ war nie in einem Tool zu finden, und jemand Höhergestelltes verbrachte jede Woche einen Vormittag damit, es manuell zusammenzufügen. Duct ist das, was ich für diesen Job wollte, also habe ich es gebaut und unter MIT-Lizenz gestellt."
+
+#~ msgid ""
+#~ "Paste a URL. Duct crawls the site, reads the technical and content signals, and hands back a prioritised report. It is the <0>free front door</0>: no account needed to run one."
+#~ msgstr ""
+#~ "Füge eine URL ein. Duct crawlt die Seite, liest die technischen und inhaltlichen Signale und gibt einen priorisierten Bericht zurück. Es ist die <0>kostenlose Eingangstür</0>: kein Konto erforderlich, um einen auszuführen."
+
+#~ msgid ""
+#~ "Your analytics tool knows what happened. Your support tool knows who's upset. Your project tracker knows what shipped. Your ad platform knows what you spent. But none of them talk to each other — so you spend hours every week playing translator between tabs, trying to piece together a story that already exists if only someone would connect the dots."
+#~ msgstr ""
+#~ "Dein Analysetool weiß, was passiert ist. Dein Support-Tool weiß, wer verärgert ist. Dein Projekt-Tracker weiß, was ausgeliefert wurde. Deine Anzeigenplattform weiß, was du ausgegeben hast. Aber keines davon spricht miteinander — also verbringst du jede Woche Stunden damit, zwischen Tabs zu übersetzen, und versuchst, eine Geschichte zusammenzusetzen, die bereits existiert, wenn nur jemand die Punkte verbinden würde."
+
+#~ msgid ""
+#~ "Twelve connectors. Ads, analytics, revenue and session replays, read together for one question."
+#~ msgstr ""
+#~ "Zwölf Connectors. Anzeigen, Analysen, Umsatz und Session-Replays, zusammen gelesen für eine Frage."
+
+#. meta og:description
+#~ msgid ""
+#~ "Your whole growth stack in one window on Mac, Windows and Linux. Signed, self-updating, free with your own keys. Nothing to host."
+#~ msgstr ""
+#~ "Dein gesamter Growth Stack in einem Fenster auf Mac, Windows und Linux. Signiert, selbstaktualisierend, kostenlos mit deinen eigenen Schlüsseln. Nichts zu hosten."
+
+#~ msgid "Your whole stack,<0/>in one <1>window.</1>"
+#~ msgstr "Dein gesamter Stack,<0/>in einem <1>Fenster.</1>"
+
+#~ msgid ""
+#~ "<0><1/></0> Search Console flagged a query climbing into positions 4–8 three weeks ago. It's still sitting in a tab. The blog calendar doesn't reflect it."
+#~ msgstr ""
+#~ "<0><1/></0> Die Search Console hat vor drei Wochen eine Abfrage gemeldet, die in die Positionen 4–8 aufstieg. Sie liegt immer noch in einem Tab. Der Blog-Kalender spiegelt dies nicht wider."
+
+#~ msgid ""
+#~ "<0><1/></0> You spend Monday mornings pulling rank data, session stats, and content metrics from five different tools just to decide what to work on."
+#~ msgstr ""
+#~ "<0><1/></0> Du verbringst Montagmorgen damit, Rangdaten, Sitzungsstatistiken und Inhaltsmetriken aus fünf verschiedenen Tools zu ziehen, nur um zu entscheiden, woran du arbeiten sollst."
+
+#~ msgid ""
+#~ "Duct connects to Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads and Stripe via one-click OAuth. Setup takes under five minutes and your first weekly brief lands in your inbox after connecting."
+#~ msgstr ""
+#~ "Duct verbindet sich mit Google Search Console, GA4, Google Tag Manager, Microsoft Clarity, Mixpanel, HubSpot, Google Ads und Stripe über One-Click-OAuth. Die Einrichtung dauert weniger als fünf Minuten und dein erstes wöchentliches Briefing landet nach der Verbindung in deinem Posteingang."
+
+#~ msgid ""
+#~ "Search Console shows you queries and positions in isolation. Duct correlates ranking, traffic, behaviour and conversion signals across Search Console, GA4, Clarity and Mixpanel, then surfaces prioritised actions instead of disconnected dashboards."
+#~ msgstr ""
+#~ "Search Console zeigt dir Suchanfragen und Positionen isoliert. Duct korreliert Ranking, Traffic, Verhalten und Konversionssignale über Search Console, GA4, Clarity und Mixpanel hinweg und zeigt dann priorisierte Aktionen anstelle von isolierten Dashboards."
+
+#~ msgid ""
+#~ "Not unless you approve it. Duct reads your performance data to build the brief, and reporting works with read-only access alone. When it finds something worth acting on — a wasted-spend search term to add as a negative keyword, a campaign to pause — it proposes the change, shows you every affected item before and after, and applies it only once you approve. Every applied change is logged and reversible where the platform allows it. OAuth tokens are encrypted and stored server-side, and all data in transit is encrypted via TLS."
+#~ msgstr ""
+#~ "Nicht, es sei denn, du gibst es frei. Duct liest deine Performance-Daten, um das Briefing zu erstellen, und das Reporting funktioniert allein mit Lesezugriff. Wenn es etwas findet, das Handlungsbedarf erfordert – ein Suchbegriff mit verschwendeten Ausgaben, der als negatives Keyword hinzugefügt werden soll, eine Kampagne, die pausiert werden soll –, schlägt es die Änderung vor, zeigt dir jeden betroffenen Posten vorher und nachher und wendet sie erst an, wenn du sie freigibst. Jede angewendete Änderung wird protokolliert und ist rückgängig machbar, wo die Plattform dies zulässt. OAuth-Tokens werden verschlüsselt und serverseitig gespeichert, und alle Daten während der Übertragung werden über TLS verschlüsselt."
+
+#~ msgid ""
+#~ "Spreadsheets and dashboards show you what happened — Duct tells you what to do about it. Instead of manually pulling CSVs from three platforms and merging them weekly, Duct automatically correlates data across Google Ads, Meta, and LinkedIn to surface creative fatigue, budget reallocation opportunities, and cross-channel attribution gaps that static reports miss entirely."
+#~ msgstr ""
+#~ "Tabellen und Dashboards zeigen dir, was passiert ist – Duct sagt dir, was du dagegen tun sollst. Anstatt wöchentlich manuell CSVs von drei Plattformen zu ziehen und zusammenzuführen, korreliert Duct Daten automatisch über Google Ads, Meta und LinkedIn hinweg, um kreative Ermüdung, Möglichkeiten zur Budgetumverteilung und kanalübergreifende Attributionslücken aufzudecken, die statische Berichte völlig übersehen."
+
+#~ msgid ""
+#~ "Under five minutes. Duct uses one-click OAuth to connect Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe and RevenueCat. No API keys to configure and no developer time required. You select your platforms, authorize access, and your first daily ad intelligence brief arrives the next morning."
+#~ msgstr ""
+#~ "Unter fünf Minuten. Duct verwendet Ein-Klick-OAuth, um Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, HubSpot, Stripe und RevenueCat zu verbinden. Keine API-Schlüssel zu konfigurieren und keine Entwicklerzeit erforderlich. Du wählst deine Plattformen aus, autorisierst den Zugriff, und dein erstes tägliches Ad-Intelligence-Briefing kommt am nächsten Morgen an."
+
+#~ msgid ""
+#~ "Duct connects to Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat and Google Ads with one-click OAuth. Setup takes under five minutes and your first daily PM briefing arrives in your inbox after connecting."
+#~ msgstr ""
+#~ "Duct verbindet sich mit Mixpanel, GA4, Microsoft Clarity, GrowthBook, HubSpot, Stripe, RevenueCat und Google Ads mit Ein-Klick-OAuth. Die Einrichtung dauert unter fünf Minuten und dein erstes tägliches PM-Briefing kommt nach der Verbindung in deinem Posteingang an."
+
+#~ msgid ""
+#~ "Single-tool dashboards show isolated metrics. Duct correlates product analytics, session behaviour, experiment results and revenue signals so you can prioritise what to ship next without manual correlation."
+#~ msgstr ""
+#~ "Dashboards einzelner Tools zeigen isolierte Metriken. Duct korreliert Produktanalysen, Sitzungsverhalten, Experimentergebnisse und Umsatzsignale, damit du priorisieren kannst, was als Nächstes ausgeliefert werden soll, ohne manuelle Korrelation."
+
+#~ msgid ""
+#~ "Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to build the brief and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."
+#~ msgstr ""
+#~ "Deine Daten werden während der Übertragung via TLS verschlüsselt, und OAuth-Tokens werden im Ruhezustand verschlüsselt und niemals dem Browser zugänglich gemacht. Duct liest deine Tools, um das Briefing zu erstellen, und ändert nichts daran, es sei denn, du gibst zuerst eine bestimmte Änderung frei. Der Zugriff ist auf die Projektmitglieder beschränkt, die du einlädst, und du kannst eine Quelle jederzeit trennen oder deine Daten löschen."
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand."
+#~ msgstr ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe und RevenueCat. Jede Verbindung ist OAuth; nichts wird manuell exportiert."
+
+#~ msgid "Stop stitching reports.<0/><1>Start asking.</1>"
+#~ msgstr "Hör auf, Berichte zusammenzufügen.<0/><1>Fange an zu fragen.</1>"
+
+#~ msgid ""
+#~ "Free and open source. Connect your stack, tune your first brief around your north-star metric, and keep every credential on your own machine."
+#~ msgstr ""
+#~ "Kostenlos und Open Source. Verbinde deinen Stack, passe dein erstes Briefing an deine North-Star-Metrik an und bewahre alle Anmeldeinformationen auf deiner eigenen Maschine auf."
+
+#~ msgid "Get growth intelligence <0>on your desktop</0>"
+#~ msgstr "Erhalte Wachstumsintelligenz <0>auf deinem Schreibtisch</0>"
+
+#~ msgid ""
+#~ "Install the app, connect your tools, and ask the question you've been putting off."
+#~ msgstr ""
+#~ "Installiere die App, verbinde deine Tools und stelle die Frage, die du aufgeschoben hast."
+
+#~ msgid ""
+#~ "<0><1/></0> <2><3>Organic Growth</3><4>Automated SEO & content intelligence</4></2>"
+#~ msgstr ""
+#~ "<0><1/></0> <2><3>Organisches Wachstum</3><4>Automatisierte SEO- & Content-Intelligenz</4></2>"
+
+#~ msgid ""
+#~ "<0><1/></0> <2><3>Paid Ads Intelligence</3><4>Cross-platform brief for performance marketers</4></2>"
+#~ msgstr ""
+#~ "<0><1/></0> <2><3>Intelligenz für bezahlte Anzeigen</3><4>Plattformübergreifendes Briefing für Performance-Marketer</4></2>"
+
+#~ msgid ""
+#~ "<0><1/></0> <2><3>Product Intelligence</3><4>Weekly brief for PMs & growth teams</4></2>"
+#~ msgstr ""
+#~ "<0><1/></0> <2><3>Product Intelligence</3><4>Wöchentliches Briefing für PMs & Wachstumsteams</4></2>"
+
+#. meta og:description
+#~ msgid ""
+#~ "Benchmarks, paid media calculators, UTMs, and templates. Free in the browser — upgrade to weekly cross-tool briefs when you're ready."
+#~ msgstr ""
+#~ "Benchmarks, Paid-Media-Rechner, UTMs und Vorlagen. Kostenlos im Browser – wechsle zu wöchentlichen Tool-übergreifenden Briefings, wenn du bereit bist."
+
+#~ msgid "Built by the Duct team"
+#~ msgstr "Erstellt vom Duct-Team"
+
+#~ msgid ""
+#~ "Same team. A tool answers one question with the numbers you type in. Duct answers it with the numbers in your tools, every time you ask, and proposes what to change."
+#~ msgstr ""
+#~ "Gleiches Team. Ein Tool beantwortet eine Frage mit den Zahlen, die du eingibst. Duct beantwortet sie mit den Zahlen in deinen Tools, jedes Mal, wenn du fragst, und schlägt Änderungen vor."
+
+#~ msgid ""
+#~ "Ask which content converts. Duct reads Search Console, GA4 and Clarity together, audits any URL for free, and plans the week’s posts on a board."
+#~ msgstr ""
+#~ "Frage, welcher Inhalt konvertiert. Duct liest Search Console, GA4 und Clarity zusammen, führt ein kostenloses Audit für jede URL durch und plant die Beiträge der Woche auf einem Board."
+
+#~ msgid "Stop publishing blind.<0/>Start <1>compounding.</1>"
+#~ msgstr "Hör auf, blind zu veröffentlichen.<0/>Fange an zu <1>wachsen.</1>"
+
+#~ msgid "Stop reading tools.<0/><1>Start reading signals.</1>"
+#~ msgstr "Hör auf, Tools zu lesen.<0/><1>Fange an, Signale zu lesen.</1>"
+
+#~ msgid "Stop stitching ad reports.<0/><1>Start moving budget.</1>"
+#~ msgstr ""
+#~ "Hör auf, Anzeigenberichte zusammenzuflicken.<0/><1>Fange an, Budget zu verschieben.</1>"
+
+#~ msgid ""
+#~ "Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources, and the change it proposes."
+#~ msgstr ""
+#~ "Frage, warum die Aktivierung gesunken ist. Duct liest Mixpanel, Clarity, GrowthBook und GA4 zusammen und antwortet mit der Ursache, den Quellen und der von ihm vorgeschlagenen Änderung."
+
+#~ msgid "Mixpanel, Clarity and GrowthBook in three tabs, three hours, still a guess."
+#~ msgstr ""
+#~ "Mixpanel, Clarity und GrowthBook in drei Tabs, drei Stunden, immer noch eine Vermutung."
+
+#~ msgid "Stop tab-switching.<0/>Start <1>knowing.</1>"
+#~ msgstr "Hör auf, Tabs zu wechseln.<0/>Fange an zu <1>wissen.</1>"
+
+#~ msgid "<0></0> Open source · MIT · bring your own keys"
+#~ msgstr "<0></0> Open Source · MIT · bring deine eigenen Schlüssel mit"
+
+#~ msgid ""
+#~ "Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so. On your Mac, with your own model keys or the ChatGPT plan you already pay for."
+#~ msgstr ""
+#~ "Duct liest deine Anzeigen-, Analyse- und Umsatz-Tools zusammen, schlägt die Lösung vor und wendet sie an, wenn du es sagst. Auf deinem Mac, mit deinen eigenen Modellschlüsseln oder dem ChatGPT-Plan, den du bereits bezahlst."
+
+#~ msgid "Five tabs, three hours, still a guess."
+#~ msgstr "Fünf Tabs, drei Stunden, immer noch eine Vermutung."
+
+#~ msgid ""
+#~ "No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look."
+#~ msgstr ""
+#~ "Nein. Das Reporting funktioniert mit Lesezugriff. Eine Änderung wird mit dem vorgeschlagen, was sie betrifft, und nur angewendet, wenn du auf „Anwenden“ klickst. Destruktive Änderungen werden markiert; alles, was eine Schutzgrenze überschreitet, wird blockiert, bis du es überprüfst."
+
+#. meta og:description
+#. meta twitter:description
+#~ msgid ""
+#~ "Stop stitching five tabs. Ask one question: Duct reads your ads, analytics and revenue tools together, proposes the fix and applies it when you say so."
+#~ msgstr ""
+#~ "Hör auf, fünf Tabs zusammenzufügen. Stell eine Frage: Duct liest deine Anzeigen-, Analyse- und Umsatz-Tools zusammen, schlägt die Lösung vor und wendet sie an, wenn du es sagst."
+
+#~ msgid "Stop stitching five tabs.<0/><1>Start asking one question.</1>"
+#~ msgstr ""
+#~ "Hör auf, fünf Tabs zusammenzufügen.<0/><1>Fang an, eine Frage zu stellen.</1>"
 
 #~ msgid ""
 #~ "Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine."

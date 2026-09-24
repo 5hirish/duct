@@ -4,12 +4,13 @@
 
 # Duct
 
-**Your tools have the answers. They just don't talk to each other.**
+**See the whole picture. Fix it in the same moment.**
 
 Duct is an open-source AI agent for product and growth teams. It connects
-Google Ads, GA4, Search Console, Mixpanel, Stripe and seven more, reads across
+Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more, reads across
 all of them at once, remembers what it learns about your business, and, with
-your approval, changes things in those tools for you.
+your approval, changes things in those tools for you. The approve tool does
+not exist in the list the model can call; you press the button.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Backend CI](https://img.shields.io/github/actions/workflow/status/5hirish/duct/backend.yml?branch=main&label=backend&style=flat-square)](.github/workflows/backend.yml)

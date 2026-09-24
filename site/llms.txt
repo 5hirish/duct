@@ -1,6 +1,6 @@
 # Duct
 
-> Duct is an open-source (MIT) AI agent for product and growth teams. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, remembers what it learns about your business, and, with your approval, changes things in those tools for you. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct. This site is published in English, Spanish, Brazilian Portuguese, German and Japanese.
+> Duct is an open-source (MIT) AI agent for product and growth teams: see the whole picture, fix it in the same moment. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, finds what needs to change, and changes it when you approve. It remembers what it learns about your business. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct. This site is published in English, Spanish, Brazilian Portuguese, German and Japanese.
 
 Duct is built and maintained by Shirish Kadam in Spain. It answers questions a single dashboard cannot ("why did signups drop last week", "which content converts", "where is the ads budget leaking") by reading the tools together rather than one at a time, and every number in an answer is re-checked by a verification sub-agent before it reaches you.
 
@@ -21,11 +21,11 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 ## Pages
 
 - [Home](https://getduct.ai/): What Duct does, the 30-second film, and the download.
-- [Download](https://getduct.ai/download): The desktop app for Mac, Windows and Linux. Free, no credit card.
+- [Download](https://getduct.ai/download): The whole picture in one window: the desktop app for Mac, Windows and Linux. Free, no credit card.
 - [Open source](https://getduct.ai/open-source): Why it is MIT, what runs where in the desktop app versus a self-hosted install, how to self-host, and the pricing promise.
-- [For product teams](https://getduct.ai/for-product-intelligence): Why activation dropped, from Mixpanel, Clarity, GrowthBook and GA4 read together.
-- [For SEO and content teams](https://getduct.ai/for-organic-growth): Which content converts, from Search Console, GA4 and Clarity; the free audit; the content plan.
-- [For performance marketers](https://getduct.ai/for-paid-ads): Why CPA moved, from Google Ads, Meta, GA4 and Stripe; the pause or the shift, applied on approval.
+- [For product teams](https://getduct.ai/for-product-intelligence): See why the number moved, from Mixpanel, Clarity, GrowthBook and GA4 read together, and fix it before the standup.
+- [For SEO and content teams](https://getduct.ai/for-organic-growth): See which content actually converts, from Search Console, GA4 and Clarity, and fix it in the same sitting; the free audit; the content plan.
+- [For performance marketers](https://getduct.ai/for-paid-ads): See what your ad spend bought, from Google Ads, Meta, GA4 and Stripe read together, and move it in the same moment; the pause or the shift, applied on approval.
 - [Free SEO audit](https://getduct.ai/seo-audit): Run one on any URL.
 - [Doctrine](https://getduct.ai/doctrine): The seven opinions the project is built on, each linked to the file that enforces it.
 - [About](https://getduct.ai/about): Who builds it and why it went open source. Duct is Latin ductus, "a leading", the word inside aquaeductus.
@@ -53,10 +53,10 @@ An open-source AI agent that connects your product, marketing and revenue tools,
 Yes. The core is MIT licensed and stays that way. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A hosted team plan comes later; the core stays open.
 
 **Does it change my accounts without asking?**
-No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. Destructive changes are flagged; anything over a guardrail is blocked until you look.
+No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look.
 
 **Which tools does it connect to?**
-Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. Every connection is OAuth; nothing is exported by hand.
+Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. The four Google tools connect with OAuth; the rest take a read-only key you paste once. Nothing is exported by hand.
 
 **Where do my keys and data live?**
 Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine.

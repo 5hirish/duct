@@ -25,10 +25,10 @@
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/pt-br/"/>
 <meta property="og:title" content="Duct — Agente de IA de código aberto para sua pilha de crescimento"/>
-<meta property="og:description" content="Pare de juntar cinco abas. Faça uma pergunta: Duct lê suas ferramentas de anúncios, análise e receita juntas, propõe a correção e a aplica quando você diz."/>
+<meta property="og:description" content="Veja o quadro completo e corrija no mesmo instante. O Duct lê juntas todas as ferramentas que você usa, encontra o que precisa mudar e muda quando você pressiona Aplicar. Código aberto."/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Duct — Agente de IA de código aberto para sua pilha de crescimento"/>
-<meta name="twitter:description" content="Pare de juntar cinco abas. Faça uma pergunta: Duct lê suas ferramentas de anúncios, análise e receita juntas, propõe a correção e a aplica quando você diz."/>
+<meta name="twitter:description" content="Veja o quadro completo e corrija no mesmo instante. O Duct lê juntas todas as ferramentas que você usa, encontra o que precisa mudar e muda quando você pressiona Aplicar. Código aberto."/>
 <meta property="og:image" content="https://getduct.ai/assets/og/index.jpg"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
@@ -118,6 +118,9 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
   .what-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 860px) {
+  /* The rule above wins over duct.css's 24px phone padding, so restore it here: at 52px a
+     360px phone gives the headline 256px, one word per line, and the pill clips. */
+  .hero { padding: 80px 24px 64px; }
   .what-grid { grid-template-columns: 1fr; }
   .what, .tools-teaser { padding-left: 24px; padding-right: 24px; }
   .film { margin-top: 40px; }
@@ -133,7 +136,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 {"@context":"https://schema.org","@type":"WebSite","inLanguage":"pt-BR","name":"Duct","url":"https://getduct.ai","description":"Agente de IA de código aberto para análise de produto e crescimento multiferramentas.","publisher":{"@type":"Organization","name":"Duct","url":"https://getduct.ai","logo":"https://getduct.ai/assets/icon.svg","sameAs":["https://github.com/5hirish/duct","https://youtube.com/@5hirish","https://x.com/5hirish"],"founder":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"contactPoint":{"@type":"ContactPoint","email":"hello@getduct.ai"}}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"O que é Duct?","acceptedAnswer":{"@type":"Answer","text":"Um agente de IA de código aberto que conecta suas ferramentas de produto, marketing e receita, responde a perguntas entre elas, propõe alterações e as aplica quando você aprova. Ele é executado como um app para desktop no macOS, Windows e Linux."}},{"@type":"Question","name":"É gratuito?","acceptedAnswer":{"@type":"Answer","text":"Sim. O núcleo tem licença MIT e permanece assim. Você paga seu provedor de modelo diretamente, ou entra com o plano ChatGPT que você já tem. Um plano de equipe hospedado virá depois; o núcleo permanece aberto."}},{"@type":"Question","name":"Ele altera minhas contas sem perguntar?","acceptedAnswer":{"@type":"Answer","text":"Não. A geração de relatórios funciona com acesso somente leitura. Uma alteração é proposta com o que ela afeta e aplicada somente quando você pressiona Aplicar. Alterações destrutivas são sinalizadas; qualquer coisa acima de um limite é bloqueada até você verificar."}},{"@type":"Question","name":"A quais ferramentas ele se conecta?","acceptedAnswer":{"@type":"Answer","text":"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe e RevenueCat. Cada conexão é OAuth; nada é exportado manualmente."}},{"@type":"Question","name":"Onde ficam minhas chaves e dados?","acceptedAnswer":{"@type":"Answer","text":"As chaves do modelo permanecem no chaveiro do seu sistema operacional e viajam com uma solicitação apenas enquanto uma tarefa é executada. As autorizações do conector são armazenadas criptografadas pela API hospedada. O app para desktop é uma camada fina sobre essa API; uma compilação de auto-hospedagem executa tudo na sua própria máquina. Por que se chama Duct está na página 'Sobre'."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"O que é Duct?","acceptedAnswer":{"@type":"Answer","text":"Um agente de IA de código aberto que conecta suas ferramentas de produto, marketing e receita, responde a perguntas entre elas, propõe alterações e as aplica quando você aprova. Ele é executado como um app para desktop no macOS, Windows e Linux."}},{"@type":"Question","name":"É gratuito?","acceptedAnswer":{"@type":"Answer","text":"Sim. O núcleo tem licença MIT e permanece assim. Você paga seu provedor de modelo diretamente, ou entra com o plano ChatGPT que você já tem. Um plano de equipe hospedado virá depois; o núcleo permanece aberto."}},{"@type":"Question","name":"Ele altera minhas contas sem perguntar?","acceptedAnswer":{"@type":"Answer","text":"Não. A geração de relatórios funciona com acesso somente leitura. Uma alteração é proposta com o que ela afeta e aplicada somente quando você pressiona Aplicar. Não existe ferramenta de aprovação na lista que o modelo pode chamar, então ninguém consegue convencê-lo a aplicar nada. Alterações destrutivas são sinalizadas; qualquer coisa acima de um limite é bloqueada até você verificar. A página da doutrina aponta o arquivo que garante isso."}},{"@type":"Question","name":"A quais ferramentas ele se conecta?","acceptedAnswer":{"@type":"Answer","text":"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe e RevenueCat. As quatro ferramentas do Google se conectam com OAuth; as demais usam uma chave somente leitura que você cola uma vez. Nada é exportado manualmente."}},{"@type":"Question","name":"Onde ficam minhas chaves e dados?","acceptedAnswer":{"@type":"Answer","text":"As chaves do modelo permanecem no chaveiro do seu sistema operacional e viajam com uma solicitação apenas enquanto uma tarefa é executada. As autorizações do conector são armazenadas criptografadas pela API hospedada. O app para desktop é uma camada fina sobre essa API; uma compilação de auto-hospedagem executa tudo na sua própria máquina. Por que se chama Duct está na página 'Sobre'."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","inLanguage":"pt-BR","name":"Duct","alternateName":"Duct — Inteligência Multiferramentas","applicationCategory":"BusinessApplication","applicationSubCategory":"Analytics","operatingSystem":"macOS, Windows, Linux, Web","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"codeRepository":"https://github.com/5hirish/duct","author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Licença MIT. Auto-hospede ou execute localmente sem custo."},"description":"Agente de IA de código aberto que lê em Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe e RevenueCat, e responde a perguntas que um único painel não consegue."}
@@ -151,7 +154,10 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <!-- End Google Tag Manager (noscript) -->
 
 <!-- EXPERIMENT: product-led home. Hypothesis: a 30 s film of one real job plus ≤600 words converts
-     better than 7,700 px of feature copy. Measured by download clicks per visit (GTM). -->
+     better than 7,700 px of feature copy. Measured by download clicks per visit (GTM).
+     Hero, 2026-09-22: the value loop (see the whole picture, fix it in the same moment) over the
+     workflow-pain line. The home hero names no channel; the outcome each audience values is the
+     for-* hero's job. Measured the same way, split by referrer. -->
 
 <!-- NAV (shared: site/partials/nav-home.html) -->
 <div data-duct-partial="/pt-br/partials/nav-home.html"></div>
@@ -160,9 +166,9 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 
 <!-- HERO -->
 <section class="hero" id="hero">
-<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Código aberto · MIT · traga suas próprias chaves</div>
-<h1>Pare de juntar cinco abas.<br/><em>Comece a fazer uma pergunta.</em></h1>
-<p class="hero-sub">Duct lê suas ferramentas de anúncios, análise e receita juntas, propõe a correção e a aplica quando você diz. No seu Mac, com suas próprias chaves de modelo ou o plano ChatGPT que você já paga.</p>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Grátis no plano do ChatGPT que você já paga</div>
+<h1>Veja o quadro completo.<br/><em>Corrija no mesmo instante.</em></h1>
+<p class="hero-sub">O Duct lê juntas todas as ferramentas que você usa, encontra o que precisa mudar e muda quando você pressiona Aplicar. Sem caçar a resposta de ferramenta em ferramenta, sem decidir com metade dela.</p>
 <div class="hero-actions">
 <a class="btn btn-orange btn-lg" href="/pt-br/download" data-duct-download>Baixar para macOS ↓</a>
 <a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Marcar com estrela no GitHub</a>
@@ -198,7 +204,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <div class="what-tile">
 <div class="what-shot"><img src="/assets/media/connectors.webp" srcset="/assets/media/connectors-768.webp 768w, /assets/media/connectors-1536.webp 1536w, /assets/media/connectors.webp 2208w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2208" height="1134" loading="lazy" alt="A página de Conexões com doze ferramentas, cinco delas conectadas"/></div>
 <h3>Lê entre ferramentas</h3>
-<p>Doze conectores. Anúncios, análises, receita e replays de sessão, lidos juntos para uma pergunta.</p>
+<p>Treze conectores. Anúncios, análises, receita e replays de sessão, lidos juntos para uma pergunta.</p>
 </div>
 <div class="what-tile">
 <div class="what-shot"><img src="/assets/media/review-card.webp" srcset="/assets/media/review-card-768.webp 768w, /assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="Um cartão de conjunto de alterações: pausar uma campanha, uma alteração bloqueada por uma barreira de segurança, botões Rejeitar e Aplicar"/></div>
@@ -233,7 +239,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <h3>Insights</h3>
 <dl>
 <dt>Quando</dt><dd>Alguém pergunta por que os cadastros caíram esta semana.</dd>
-<dt>Hoje</dt><dd>Cinco abas, três horas, ainda um palpite.</dd>
+<dt>Hoje</dt><dd>Uma manhã perdida. A resposta ainda é um palpite.</dd>
 <dt>Com o Duct</dt><dd class="with">Ele lê Ads, GA4 e Stripe juntos e responde com a alteração que propõe.</dd>
 </dl>
 </div>
@@ -314,11 +320,11 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 </details>
 <details class="faq-item">
 <summary class="faq-q">Ele altera minhas contas sem perguntar?</summary>
-<p class="faq-a">Não. A geração de relatórios funciona com acesso somente leitura. Uma alteração é proposta com o que ela afeta e aplicada somente quando você pressiona Aplicar. Alterações destrutivas são sinalizadas; qualquer coisa acima de um limite é bloqueada até você verificar.</p>
+<p class="faq-a">Não. A geração de relatórios funciona com acesso somente leitura. Uma alteração é proposta com o que ela afeta e aplicada somente quando você pressiona Aplicar. Não existe ferramenta de aprovação na lista que o modelo pode chamar, então ninguém consegue convencê-lo a aplicar nada. Alterações destrutivas são sinalizadas; qualquer coisa acima de um limite é bloqueada até você verificar. <a href="/pt-br/doctrine">A página da doutrina</a> aponta o arquivo que garante isso.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">A quais ferramentas ele se conecta?</summary>
-<p class="faq-a">Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe e RevenueCat. Cada conexão é OAuth; nada é exportado manualmente.</p>
+<p class="faq-a">Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe e RevenueCat. As quatro ferramentas do Google se conectam com OAuth; as demais usam uma chave somente leitura que você cola uma vez. Nada é exportado manualmente.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Onde ficam minhas chaves e dados?</summary>

@@ -25,10 +25,10 @@
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/ja/"/>
 <meta property="og:title" content="Duct — グローススタック向けオープンソースAIエージェント"/>
-<meta property="og:description" content="5つのタブを繋ぎ合わせるのをやめましょう。1つの質問をしてください。Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。"/>
+<meta property="og:description" content="全体像が見えて、その場で直せる。Ductは使っているすべてのツールをまとめて読み、変えるべき点を見つけ、「適用する」を押したときに変更します。オープンソースです。"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Duct — グローススタック向けオープンソースAIエージェント"/>
-<meta name="twitter:description" content="5つのタブを繋ぎ合わせるのをやめましょう。1つの質問をしてください。Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。"/>
+<meta name="twitter:description" content="全体像が見えて、その場で直せる。Ductは使っているすべてのツールをまとめて読み、変えるべき点を見つけ、「適用する」を押したときに変更します。オープンソースです。"/>
 <meta property="og:image" content="https://getduct.ai/assets/og/index.jpg"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
@@ -118,6 +118,9 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
   .what-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 860px) {
+  /* The rule above wins over duct.css's 24px phone padding, so restore it here: at 52px a
+     360px phone gives the headline 256px, one word per line, and the pill clips. */
+  .hero { padding: 80px 24px 64px; }
   .what-grid { grid-template-columns: 1fr; }
   .what, .tools-teaser { padding-left: 24px; padding-right: 24px; }
   .film { margin-top: 40px; }
@@ -133,7 +136,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 {"@context":"https://schema.org","@type":"WebSite","inLanguage":"ja","name":"Duct","url":"https://getduct.ai","description":"クロスツールプロダクトおよびグロースアナリティクス向けのオープンソースAIエージェント。","publisher":{"@type":"Organization","name":"Duct","url":"https://getduct.ai","logo":"https://getduct.ai/assets/icon.svg","sameAs":["https://github.com/5hirish/duct","https://youtube.com/@5hirish","https://x.com/5hirish"],"founder":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"contactPoint":{"@type":"ContactPoint","email":"hello@getduct.ai"}}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"Ductとは？","acceptedAnswer":{"@type":"Answer","text":"プロダクト、マーケティング、収益ツールを接続し、それらを横断して質問に答え、変更を提案し、承認されると適用するオープンソースAIエージェントです。macOS、Windows、Linuxのデスクトップアプリとして動作します。"}},{"@type":"Question","name":"無料ですか？","acceptedAnswer":{"@type":"Answer","text":"はい。コアはMITライセンスであり、その状態を維持します。モデルプロバイダーに直接支払うか、既にお持ちのChatGPTプランでサインインしてください。ホスト型チームプランは後日提供されますが、コアはオープンなままです。"}},{"@type":"Question","name":"許可なくアカウントを変更しますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。レポートは読み取り専用アクセスで機能します。変更は影響範囲とともに提案され、「適用する」を押した場合にのみ適用されます。破壊的な変更にはフラグが付けられ、ガードレールを超えるものは、確認するまでブロックされます。"}},{"@type":"Question","name":"どのツールに接続しますか？","acceptedAnswer":{"@type":"Answer","text":"Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat。すべての接続はOAuthであり、手動でエクスポートされるものはありません。"}},{"@type":"Question","name":"キーとデータはどこに保存されますか？","acceptedAnswer":{"@type":"Answer","text":"モデルキーはオペレーティングシステムのキーチェーンに保存され、ジョブの実行中のみリクエストとともに送信されます。コネクタの認証情報はホストされたAPIによって暗号化されて保存されます。デスクトップアプリはそのAPIの薄いシェルであり、セルフホストビルドではすべてがご自身のマシンで実行されます。Ductという名前の由来は「概要」ページにあります。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"Ductとは？","acceptedAnswer":{"@type":"Answer","text":"プロダクト、マーケティング、収益ツールを接続し、それらを横断して質問に答え、変更を提案し、承認されると適用するオープンソースAIエージェントです。macOS、Windows、Linuxのデスクトップアプリとして動作します。"}},{"@type":"Question","name":"無料ですか？","acceptedAnswer":{"@type":"Answer","text":"はい。コアはMITライセンスであり、その状態を維持します。モデルプロバイダーに直接支払うか、既にお持ちのChatGPTプランでサインインしてください。ホスト型チームプランは後日提供されますが、コアはオープンなままです。"}},{"@type":"Question","name":"許可なくアカウントを変更しますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。レポートは読み取り専用アクセスで機能します。変更は影響範囲とともに提案され、「適用する」を押した場合にのみ適用されます。モデルが呼び出せるツールの一覧に承認ツールは存在しないため、何かを適用するよう言いくるめられることもありません。破壊的な変更にはフラグが付けられ、ガードレールを超えるものは、確認するまでブロックされます。ドクトリンのページに、それを強制しているファイルへのリンクがあります。"}},{"@type":"Question","name":"どのツールに接続しますか？","acceptedAnswer":{"@type":"Answer","text":"Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat。Googleの4つのツールはOAuthで接続し、それ以外は読み取り専用キーを一度貼り付けるだけです。手動でエクスポートするものはありません。"}},{"@type":"Question","name":"キーとデータはどこに保存されますか？","acceptedAnswer":{"@type":"Answer","text":"モデルキーはオペレーティングシステムのキーチェーンに保存され、ジョブの実行中のみリクエストとともに送信されます。コネクタの認証情報はホストされたAPIによって暗号化されて保存されます。デスクトップアプリはそのAPIの薄いシェルであり、セルフホストビルドではすべてがご自身のマシンで実行されます。Ductという名前の由来は「概要」ページにあります。"}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","inLanguage":"ja","name":"Duct","alternateName":"Duct — クロスツールインテリジェンス","applicationCategory":"BusinessApplication","applicationSubCategory":"Analytics","operatingSystem":"macOS, Windows, Linux, Web","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"codeRepository":"https://github.com/5hirish/duct","author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"MITライセンス。無料でセルフホストまたはローカルで実行できます。"},"description":"Google Ads、GA4、Search Console、Tag Manager、Meta Ads、Apple Search Ads、OpenAI Ads、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCatを横断して読み込み、単一のダッシュボードでは答えられない質問に回答するオープンソースAIエージェント。"}
@@ -151,7 +154,10 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <!-- End Google Tag Manager (noscript) -->
 
 <!-- EXPERIMENT: product-led home. Hypothesis: a 30 s film of one real job plus ≤600 words converts
-     better than 7,700 px of feature copy. Measured by download clicks per visit (GTM). -->
+     better than 7,700 px of feature copy. Measured by download clicks per visit (GTM).
+     Hero, 2026-09-22: the value loop (see the whole picture, fix it in the same moment) over the
+     workflow-pain line. The home hero names no channel; the outcome each audience values is the
+     for-* hero's job. Measured the same way, split by referrer. -->
 
 <!-- NAV (shared: site/partials/nav-home.html) -->
 <div data-duct-partial="/ja/partials/nav-home.html"></div>
@@ -160,9 +166,9 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 
 <!-- HERO -->
 <section class="hero" id="hero">
-<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> オープンソース · MIT · 独自のキーを使用</div>
-<h1>5つのタブを繋ぎ合わせるのをやめましょう。<br/><em>1つの質問を始めましょう。</em></h1>
-<p class="hero-sub">Ductは広告、アナリティクス、収益ツールを連携して読み取り、修正案を提案し、指示があった場合に適用します。お使いのMacで、ご自身のモデルキー、または既にお支払い済みのChatGPTプランで利用できます。</p>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> すでに契約しているChatGPTプランで無料</div>
+<h1>全体像が見える。<br/><em>その場で直せる。</em></h1>
+<p class="hero-sub">Ductは使っているすべてのツールをまとめて読み、変えるべき点を見つけ、「適用する」を押したときに変更します。答えを探してツールを渡り歩くことも、半分の情報で決めることもありません。</p>
 <div class="hero-actions">
 <a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>macOS版をダウンロード ↓</a>
 <a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">GitHubでスターを付ける</a>
@@ -198,7 +204,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <div class="what-tile">
 <div class="what-shot"><img src="/assets/media/connectors.webp" srcset="/assets/media/connectors-768.webp 768w, /assets/media/connectors-1536.webp 1536w, /assets/media/connectors.webp 2208w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2208" height="1134" loading="lazy" alt="12個のツールがあり、そのうち5個が接続済みの接続ページ"/></div>
 <h3>ツールを横断して読み込みます</h3>
-<p>12個のコネクタ。広告、アナリティクス、収益、セッションリプレイをまとめて一つの問いに答えます。</p>
+<p>13個のコネクタ。広告、アナリティクス、収益、セッションリプレイをまとめて読み、一つの問いに答えます。</p>
 </div>
 <div class="what-tile">
 <div class="what-shot"><img src="/assets/media/review-card.webp" srcset="/assets/media/review-card-768.webp 768w, /assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="変更セットカード：1つのキャンペーンを一時停止、ガードレールによってブロックされた1つの変更、拒否ボタンと適用ボタン"/></div>
@@ -233,7 +239,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <h3>インサイト</h3>
 <dl>
 <dt>時期</dt><dd>今週、なぜサインアップが減少したのか尋ねられます。</dd>
-<dt>現状</dt><dd>5つのタブ、3時間、それでも推測。</dd>
+<dt>現状</dt><dd>午前中が消えて、返事はまだ推測のまま。</dd>
 <dt>Ductを使用すると</dt><dd class="with">広告、GA4、Stripeを連携して読み取り、提案する変更を回答します。</dd>
 </dl>
 </div>
@@ -314,11 +320,11 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 </details>
 <details class="faq-item">
 <summary class="faq-q">許可なくアカウントを変更しますか？</summary>
-<p class="faq-a">いいえ。レポートは読み取り専用アクセスで機能します。変更は影響範囲とともに提案され、「適用する」を押した場合にのみ適用されます。破壊的な変更にはフラグが付けられ、ガードレールを超えるものは、確認するまでブロックされます。</p>
+<p class="faq-a">いいえ。レポートは読み取り専用アクセスで機能します。変更は影響範囲とともに提案され、「適用する」を押した場合にのみ適用されます。モデルが呼び出せるツールの一覧に承認ツールは存在しないため、何かを適用するよう言いくるめられることもありません。破壊的な変更にはフラグが付けられ、ガードレールを超えるものは、確認するまでブロックされます。<a href="/ja/doctrine">ドクトリンのページ</a>に、それを強制しているファイルへのリンクがあります。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">どのツールに接続しますか？</summary>
-<p class="faq-a">Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat。すべての接続はOAuthであり、手動でエクスポートされるものはありません。</p>
+<p class="faq-a">Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Search Console、Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、HubSpot、Stripe、RevenueCat。Googleの4つのツールはOAuthで接続し、それ以外は読み取り専用キーを一度貼り付けるだけです。手動でエクスポートするものはありません。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">キーとデータはどこに保存されますか？</summary>
