@@ -442,6 +442,15 @@ The data-dir path is duplicated between `telemetry/mod.rs` and `utils/appdirs.py
 by necessity — the shell must resolve it *before* the sidecar exists to ask.
 Change one, change the other.
 
+**Crash reports are symbolicated from the binary's own symbols.** Nothing in
+`desktop-release.yml` uploads debug files to Sentry, so the shipped binary is
+the only place the symbols exist. That makes `strip = true` in
+`[profile.release]` a silent trap: it breaks no build and no test, and turns
+every report from a release into hex addresses. `src-tauri/Cargo.toml` carries
+the same warning at the place someone would add it. If you want stripping — and
+it is worth roughly 30 MB of bundle — add a `sentry-cli debug-files upload`
+step in the same change, never before it.
+
 ## Rules
 
 - Keep this shell thin: no agent code, prompts, or secrets in `desktop/`. The
