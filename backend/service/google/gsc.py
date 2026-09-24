@@ -132,6 +132,101 @@ _PERMISSION_LABELS = {
 }
 
 
+#: Search Analytics' own ceiling per request. Pages beyond it come via
+#: ``startRow``; a site big enough to need a third page is big enough that the
+#: rows past 50,000 are noise next to the ones returned.
+_API_PAGE_ROWS = 25_000
+_MAX_PAGES = 2
+#: What the agent actually receives. Everything fetched still counts toward
+#: ``totals``, so a cut changes which rows are listed, never the totals.
+RETURN_ROWS = 300
+#: API dimension → row key. Written out rather than reusing the dimension
+#: name, so the fields the catalog declares are literally visible here
+#: (tests/test_insights_catalog_contract.py reads this file for them).
+_ROW_KEYS = {"query": "query", "page": "page"}
+
+
+def _search_analytics(
+    site_url: str,
+    date_from: str,
+    date_to: str,
+    dimensions: list[str],
+    report_type: str,
+    *,
+    refresh_token: str,
+    client_id: str,
+    client_secret: str,
+) -> dict[str, Any]:
+    """One Search Analytics report, paginated, cut to the rows worth reading.
+
+    This was two calls at ``rowLimit: 100``. The API sorts by clicks, so the
+    cut kept the queries already earning clicks and dropped the zero-click
+    impression tail — the list an SEO actually works from (``knowledge/gsc.md``
+    measured 71% of impressions missing at 250 rows). Now every row is
+    fetched, the ones returned are the highest-impression rows, and the
+    envelope says how much of the whole they cover so the agent can say
+    "partial" instead of reading a missing row as zero.
+
+    ``dataState: all`` because ``final`` zeroes the last two or three days,
+    which reads as a traffic cliff at the end of every window.
+    """
+    service = _build_service(
+        refresh_token=refresh_token,
+        client_id=client_id,
+        client_secret=client_secret,
+    )
+    fetched: list[dict[str, Any]] = []
+    for page in range(_MAX_PAGES):
+        body = {
+            "startDate": date_from,
+            "endDate": date_to,
+            "dimensions": dimensions,
+            "dataState": "all",
+            "rowLimit": _API_PAGE_ROWS,
+            "startRow": page * _API_PAGE_ROWS,
+        }
+        resp = service.searchanalytics().query(siteUrl=site_url.strip(), body=body).execute()
+        batch = resp.get("rows", [])
+        fetched.extend(batch)
+        if len(batch) < _API_PAGE_ROWS:
+            break
+
+    rows: list[dict[str, Any]] = []
+    for row in fetched:
+        keys = row.get("keys", [])
+        entry: dict[str, Any] = {
+            _ROW_KEYS[dim]: (keys[i] if i < len(keys) else "") for i, dim in enumerate(dimensions)
+        }
+        entry |= {
+            "clicks": float(row.get("clicks", 0.0)),
+            "impressions": float(row.get("impressions", 0.0)),
+            "ctr": float(row.get("ctr", 0.0)),
+            "avg_position": float(row.get("position", 0.0)),
+        }
+        rows.append(entry)
+    rows.sort(key=lambda item: item["impressions"], reverse=True)
+
+    total_impressions = sum(r["impressions"] for r in rows)
+    returned = rows[:RETURN_ROWS]
+    returned_impressions = sum(r["impressions"] for r in returned)
+    return {
+        "report_type": report_type,
+        "date_range": f"{date_from} to {date_to}",
+        "row_count": len(returned),
+        "totals": {
+            "rows_available": len(rows),
+            "clicks": sum(r["clicks"] for r in rows),
+            "impressions": total_impressions,
+        },
+        "truncated": len(rows) > len(returned),
+        # Share of the window's impressions the listed rows account for. Read
+        # it before concluding anything about a row that is not listed.
+        "impressions_coverage": round(returned_impressions / total_impressions, 3) if total_impressions else 1.0,
+        "data_state": "all (the last 2-3 days are not yet final)",
+        "rows": returned,
+    }
+
+
 def fetch_gsc_query_performance(
     site_url: str,
     date_from: str,
@@ -141,41 +236,11 @@ def fetch_gsc_query_performance(
     client_id: str,
     client_secret: str,
 ) -> dict[str, Any]:
-    """Fetch top organic queries from Search Console."""
-    service = _build_service(
-        refresh_token=refresh_token,
-        client_id=client_id,
-        client_secret=client_secret,
+    """Organic queries from Search Console, highest impressions first."""
+    return _search_analytics(
+        site_url, date_from, date_to, ["query"], "gsc_query_performance",
+        refresh_token=refresh_token, client_id=client_id, client_secret=client_secret,
     )
-    body = {
-        "startDate": date_from,
-        "endDate": date_to,
-        "dimensions": ["query"],
-        "rowLimit": 100,
-        "startRow": 0,
-    }
-    resp = service.searchanalytics().query(siteUrl=site_url.strip(), body=body).execute()
-
-    rows: list[dict[str, Any]] = []
-    for row in resp.get("rows", []):
-        keys = row.get("keys", [])
-        rows.append(
-            {
-                "query": keys[0] if keys else "",
-                "clicks": float(row.get("clicks", 0.0)),
-                "impressions": float(row.get("impressions", 0.0)),
-                "ctr": float(row.get("ctr", 0.0)),
-                "avg_position": float(row.get("position", 0.0)),
-            }
-        )
-    rows.sort(key=lambda item: item["impressions"], reverse=True)
-
-    return {
-        "report_type": "gsc_query_performance",
-        "date_range": f"{date_from} to {date_to}",
-        "row_count": len(rows),
-        "rows": rows,
-    }
 
 
 def fetch_gsc_page_performance(
@@ -187,41 +252,32 @@ def fetch_gsc_page_performance(
     client_id: str,
     client_secret: str,
 ) -> dict[str, Any]:
-    """Fetch top organic pages from Search Console."""
-    service = _build_service(
-        refresh_token=refresh_token,
-        client_id=client_id,
-        client_secret=client_secret,
+    """Organic pages from Search Console, highest impressions first."""
+    return _search_analytics(
+        site_url, date_from, date_to, ["page"], "gsc_page_performance",
+        refresh_token=refresh_token, client_id=client_id, client_secret=client_secret,
     )
-    body = {
-        "startDate": date_from,
-        "endDate": date_to,
-        "dimensions": ["page"],
-        "rowLimit": 100,
-        "startRow": 0,
-    }
-    resp = service.searchanalytics().query(siteUrl=site_url.strip(), body=body).execute()
 
-    rows: list[dict[str, Any]] = []
-    for row in resp.get("rows", []):
-        keys = row.get("keys", [])
-        rows.append(
-            {
-                "page": keys[0] if keys else "",
-                "clicks": float(row.get("clicks", 0.0)),
-                "impressions": float(row.get("impressions", 0.0)),
-                "ctr": float(row.get("ctr", 0.0)),
-                "avg_position": float(row.get("position", 0.0)),
-            }
-        )
-    rows.sort(key=lambda item: item["clicks"], reverse=True)
 
-    return {
-        "report_type": "gsc_page_performance",
-        "date_range": f"{date_from} to {date_to}",
-        "row_count": len(rows),
-        "rows": rows,
-    }
+def fetch_gsc_query_page(
+    site_url: str,
+    date_from: str,
+    date_to: str,
+    *,
+    refresh_token: str,
+    client_id: str,
+    client_secret: str,
+) -> dict[str, Any]:
+    """Which page ranks for which query.
+
+    The only view that shows cannibalisation (one query splitting impressions
+    across several pages) or a query landing on the wrong page; flat query and
+    page tables cannot answer either.
+    """
+    return _search_analytics(
+        site_url, date_from, date_to, ["query", "page"], "gsc_query_page",
+        refresh_token=refresh_token, client_id=client_id, client_secret=client_secret,
+    )
 
 
 GSC_META = ConnectorMeta(

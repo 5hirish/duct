@@ -51,6 +51,7 @@ export function resolveDataSourceRows(dataSource, sources) {
     ga4_conversion_paths: extractRows(supplementary.fetch_ga4_conversion_paths),
     gsc_query_performance: extractRows(supplementary.fetch_gsc_query_performance),
     gsc_page_performance: extractRows(supplementary.fetch_gsc_page_performance),
+    gsc_query_page: extractRows(supplementary.fetch_gsc_query_page),
     synthesis: [],
   };
 

@@ -169,7 +169,8 @@ CHECKS: tuple[Check, ...] = (
         title="Value delivered without an ask",
         requires=("ga4_landing_pages", "campaign_performance"),
         question=(
-            "Are paid visitors reaching pages that deliver the product's value without "
+            "Are paid visitors (the paid-channel rows of ga4_landing_pages) reaching pages "
+            "that deliver the product's value without "
             "encountering a paywall, signup or upgrade prompt? An ad platform is "
             "structurally incapable of seeing this — it sees a click in and a pixel out — "
             "and it is where the money usually is."
