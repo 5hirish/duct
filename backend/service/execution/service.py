@@ -338,6 +338,7 @@ def apply_change_set(
         raise StateError(f"Change set is already {row.status}; another request got to it first.")
 
     applied = failed = 0
+    approved_ids = {c["id"] for c in row.changes if c["status"] == "approved"}
     updated = []
     newly_applied: list[dict[str, Any]] = []
     for change in row.changes:
@@ -380,6 +381,10 @@ def apply_change_set(
             failed += 1
         updated.append(change)
 
+    # Approved going in, blocked coming out: a guardrail, a scope or drift
+    # held it back at the last moment. Said in the summary, which is the line
+    # both the activity feed and the agent's next turn read.
+    held = sum(1 for c in updated if c["status"] == "blocked" and c["id"] in approved_ids)
     row.changes = updated
     row.applied_at = utcnow()
     row.updated_at = utcnow()
@@ -404,8 +409,9 @@ def apply_change_set(
         summary=(
             f"{'Auto-applied' if applied_by == 'auto' else 'Applied'} “{row.title}” — "
             f"{applied} applied, {failed} failed"
+            + (f", {held} held back" if held else "")
         ),
-        data={"applied": applied, "failed": failed, "applied_by": applied_by},
+        data={"applied": applied, "failed": failed, "held": held, "applied_by": applied_by},
     )
     _log_gtm_publishes(db, row, newly_applied, source=actor)
     # What we actually did to the account becomes project memory, keyed on the

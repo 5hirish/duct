@@ -689,10 +689,19 @@ const SAMPLE_CHANGE_SET_DRIFTED = {
   context: "",
   status: "applied",
   applied_by: "user",
+  applied_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
   changes: [
     { id: "c6", op_type: "set_campaign_status", diff: "Campaign 1182 (Display — Prospecting): ENABLED → PAUSED", status: "applied" },
     { id: "c7", op_type: "set_campaign_budget", diff: "Campaign 2240 (Search — Core) daily budget: 50 → 60", status: "blocked", drifted: true },
   ],
+};
+
+// The person said no: the card keeps the proposal and says whose call it was.
+const SAMPLE_CHANGE_SET_REJECTED = {
+  ...SAMPLE_CHANGE_SET,
+  change_set_id: "cs_4",
+  status: "rejected",
+  updated_at: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
 };
 
 export const SCENES = [
@@ -1590,15 +1599,16 @@ export const SCENES = [
   },
   {
     id: "change-set-card",
-    state: "proposed with a blocked change · applied, auto-applied · applied with a change held for drift",
+    state: "proposed with a blocked change · applied, auto-applied · applied with a change held for drift · rejected",
     group: "ChangeSetCard",
     title: "The human review gate",
-    note: "The card an agent's proposed changes arrive inside, and the only place a change is approved, rejected or rolled back — so what it must always show is non-negotiable: the destructive flag, guardrail violations and preview errors in full, and whether a set arrived without a click. Check the status marks read as four distinct states at a glance (they were ✓ ✕ ↺ • as text until this pass) and that a long guardrail line wraps under its icon rather than beside it. The third card is an approval that went stale: the budget moved in Google Ads between approve and apply, so that row was held back and says why.",
+    note: "The card an agent's proposed changes arrive inside, and the only place a change is approved, rejected or rolled back — so what it must always show is non-negotiable: the destructive flag, guardrail violations and preview errors in full, and whether a set arrived without a click. Check the status marks read as four distinct states at a glance (they were ✓ ✕ ↺ • as text until this pass) and that a long guardrail line wraps under its icon rather than beside it. The third card is an approval that went stale: the budget moved in Google Ads between approve and apply, so that row was held back and says why. The last two end on the person's own decision, \"You approved this\" or \"You rejected this\" with when, on a tinted strip: it is the one act in a thread only a human makes, so it reads as theirs, not as a badge that changed colour.",
     render: () => (
       <div style={{ display: "grid", gap: 16 }}>
         <ChangeSetCard changeSet={SAMPLE_CHANGE_SET} />
         <ChangeSetCard changeSet={SAMPLE_CHANGE_SET_APPLIED} />
         <ChangeSetCard changeSet={SAMPLE_CHANGE_SET_DRIFTED} />
+        <ChangeSetCard changeSet={SAMPLE_CHANGE_SET_REJECTED} />
       </div>
     ),
   },

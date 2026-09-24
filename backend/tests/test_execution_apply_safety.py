@@ -9,8 +9,9 @@ and an approval applied after the account moved underneath it (approve
 from __future__ import annotations
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, select
 
+from models.activity import ActivityLog
 from models.auth import User
 from models.execution import AUTONOMY_MANUAL, ExecutionChangeSet
 from models.membership import ProjectMember
@@ -127,6 +128,9 @@ def test_a_change_that_moved_since_approval_is_held_back(db, project, account):
     # The additive op declares no drift keys: its snapshot moving is not a reason to stop.
     assert by_op["safetyconn.add"]["status"] == "applied"
     assert account.applied == ["safetyconn.add"]
+    # The log line is what the agent's next turn reads, so it must say so.
+    last = db.exec(select(ActivityLog).order_by(ActivityLog.created_at.desc())).first()
+    assert last.summary.endswith("1 applied, 0 failed, 1 held back")
 
 
 def test_an_unreadable_target_is_not_applied_blind(db, project, account):

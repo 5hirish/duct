@@ -8078,6 +8078,10 @@ msgstr "você"
 msgid "You"
 msgstr "Você"
 
+#: src/components/execution/ChangeSetCard.jsx
+msgid "You approved this"
+msgstr "Você aprovou isso"
+
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
 msgstr "Você pode fechar esta aba."
@@ -8093,6 +8097,10 @@ msgid ""
 "You have more than one project for this site. Which should this audit update?"
 msgstr ""
 "Você tem mais de um projeto para este site. Qual auditoria deve ser atualizada?"
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "You rejected this"
+msgstr "Você rejeitou isso"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid ""

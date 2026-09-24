@@ -165,6 +165,7 @@ def change_set_card(row, *, registry=None) -> dict:
                 "guardrail_violations": change.get("guardrail_violations", []),
                 "preview_error": (change.get("preview") or {}).get("error", ""),
                 "destructive": bool(spec.destructive) if spec else False,
+                "drifted": bool(change.get("drift")),
             }
         )
     return {

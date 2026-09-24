@@ -135,6 +135,17 @@ def load_events(db: Session, conversation_id: UUID, *, after_seq: int = 0) -> li
     )
 
 
+def last_user_turn_at(db: Session, conversation_id: UUID):
+    """When the person last said something in this conversation, or None."""
+    return db.exec(
+        select(AgentEventRow.created_at)
+        .where(AgentEventRow.conversation_id == conversation_id)
+        .where(AgentEventRow.kind == EventKind.USER)
+        .order_by(AgentEventRow.seq.desc())
+        .limit(1)
+    ).first()
+
+
 def get_conversation(db: Session, conversation_id: UUID) -> AgentConversation | None:
     return db.get(AgentConversation, conversation_id)
 

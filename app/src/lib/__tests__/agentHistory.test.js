@@ -47,3 +47,24 @@ describe("memory and context rows come back on a reopened thread", () => {
     expect(rows[2].memories.map((m) => m.id)).toEqual(["m2", "m3"]);
   });
 });
+
+describe("review cards come back on a reopened thread", () => {
+  const card = (status) => ({ change_set_id: "cs-1", title: "Pause Display", status, changes: [] });
+
+  it("rebuilds the card from the stored ProposeChanges result, one per set", () => {
+    const rows = mapEventsToMessages([
+      { kind: "tool_result", data: { name: "ProposeChanges", result: JSON.stringify({ ...card("proposed"), next_step: "wait" }) } },
+      { kind: "assistant", data: { text: "Proposed a pause." } },
+      { kind: "tool_result", data: { name: "RollbackChangeSet", result: card("rolled_back") } },
+    ]);
+    expect(rows.map((r) => r.role)).toEqual(["change_set_card", "assistant"]);
+    expect(rows[0].changeSet).toMatchObject({ change_set_id: "cs-1", status: "rolled_back" });
+  });
+
+  it("draws nothing for a failed proposal", () => {
+    const rows = mapEventsToMessages([
+      { kind: "tool_result", data: { name: "ProposeChanges", is_error: true, result: '{"error": "unknown op"}' } },
+    ]);
+    expect(rows).toEqual([]);
+  });
+});

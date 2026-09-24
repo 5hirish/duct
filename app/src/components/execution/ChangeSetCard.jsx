@@ -24,7 +24,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { Ban, Check, RotateCcw, TriangleAlert, X, Zap } from "lucide-react";
+import { Ban, Check, RotateCcw, TriangleAlert, UserCheck, UserX, X, Zap } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { Badge } from "@/components/ui/badge";
@@ -32,10 +32,11 @@ import { Button } from "@/components/ui/button";
 import {
   approveChangeSet,
   applyChangeSet,
+  getChangeSet,
   rejectChangeSet,
   rollbackChangeSet,
 } from "@/lib/executionApi";
-import { titleCase } from "@/lib/format";
+import { relativeTime, titleCase } from "@/lib/format";
 
 /**
  * The per-change mark. Four states, four lucide glyphs — it was ✓ ✕ ↺ •, which
@@ -66,6 +67,9 @@ export function apiToCard(cs, prevCard) {
     source: cs.source ?? prevCard?.source ?? "agent",
     applied_by: cs.applied_by ?? "",
     auto_apply_eligible: cs.auto_apply_eligible ?? prevCard?.auto_apply_eligible ?? false,
+    approved_at: cs.approved_at ?? prevCard?.approved_at ?? null,
+    applied_at: cs.applied_at ?? prevCard?.applied_at ?? null,
+    updated_at: cs.updated_at ?? prevCard?.updated_at ?? null,
     changes: (cs.changes || []).map((c) => ({
       id: c.id,
       op_type: c.op_type,
@@ -116,6 +120,21 @@ export default function ChangeSetCard({ changeSet: initial }) {
   // A later SSE upsert (e.g. rollback via agent tool) replaces the card data.
   useEffect(() => setCs(initial), [initial]);
 
+  // The card arrives as it was when the agent proposed it, whether live or
+  // rebuilt from the transcript. The change set row is the truth: a decision
+  // made on this card before a reload, or on /execute, only shows if we ask.
+  const id = initial?.change_set_id;
+  useEffect(() => {
+    if (!id) return undefined;
+    let live = true;
+    // Deferred so a synchronous throw (no API base, as in /preview) lands in the catch.
+    Promise.resolve()
+      .then(() => getChangeSet(id))
+      .then((row) => { if (live) setCs((prev) => apiToCard(row, prev)); })
+      .catch(() => {}); // keep the stored card: a stale badge beats an error in the transcript
+    return () => { live = false; };
+  }, [id]);
+
   if (!cs) return null;
   const changes = cs.changes || [];
   const autoApplied = cs.applied_by === "auto";
@@ -131,6 +150,15 @@ export default function ChangeSetCard({ changeSet: initial }) {
       : SET_STATUS[cs.status]
         ? { label: i18n._(SET_STATUS[cs.status].label), className: SET_STATUS[cs.status].className }
         : { label: cs.status.replace("_", " "), className: "bg-muted text-muted-foreground" };
+  // The person's own act on this card, said as theirs. An approve or a reject
+  // is the one thing in a thread only a human can do, so it reads as a line of
+  // its own rather than a badge that quietly changed colour.
+  const decision =
+    cs.status === "rejected"
+      ? { icon: UserX, text: t`You rejected this`, at: cs.updated_at }
+      : cs.applied_by === "user"
+        ? { icon: UserCheck, text: t`You approved this`, at: cs.applied_at || cs.approved_at }
+        : null;
   const where = [cs.connector_type ? titleCase(cs.connector_type) : "", cs.account_name || cs.account_id]
     .filter(Boolean)
     .join(" · ");
@@ -212,6 +240,18 @@ export default function ChangeSetCard({ changeSet: initial }) {
           );
         })}
       </ul>
+
+      {decision && (
+        <p className="flex items-center gap-2 border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs font-medium">
+          <decision.icon className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+          <span>{decision.text}</span>
+          {decision.at && (
+            <span className="font-normal text-muted-foreground">
+              · {relativeTime(decision.at, { locale: i18n.locale })}
+            </span>
+          )}
+        </p>
+      )}
 
       {error && <p className="px-4 pb-2 pt-3 text-xs text-destructive break-words">{error}</p>}
 

@@ -8107,6 +8107,10 @@ msgstr "du"
 msgid "You"
 msgstr "Du"
 
+#: src/components/execution/ChangeSetCard.jsx
+msgid "You approved this"
+msgstr "Du hast dies freigegeben"
+
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
 msgstr "Du kannst diesen Tab schließen."
@@ -8122,6 +8126,10 @@ msgid ""
 "You have more than one project for this site. Which should this audit update?"
 msgstr ""
 "Du hast mehr als ein Projekt für diese Website. Welches soll dieses Audit aktualisieren?"
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "You rejected this"
+msgstr "Du hast dies abgelehnt"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid ""
