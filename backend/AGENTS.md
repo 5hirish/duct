@@ -332,6 +332,25 @@ see the engine consolidation review (duct-cloud, private) §7–8.
   still renders JSONB on Postgres, so it produces no Alembic diff.
 - **Never name a module `models/types.py`** — it shadows the stdlib `types`.
 
+### Before adding a table, an event kind or a log
+
+Name which existing store already records it, and propose new storage only
+when none does. Four overlap on purpose and each answers one question:
+
+| Question | Store |
+|---|---|
+| what was said, what did each tool return | `agent_events` |
+| who did what to a project, when | `activity_logs` |
+| what state is a change in right now | `execution_change_sets` |
+| what the agent knows and cannot re-derive | `project_memories` |
+
+The full list, one line per table, is
+[`docs/engineering/data-model.md`](../docs/engineering/data-model.md), and
+`tests/test_data_model_doc.py` fails when a new table is missing from it.
+Why this rule exists: on 2026-09-24 a "decision event" was designed for chat
+approve/reject rows while `activity_logs` already recorded every one of them,
+with its actor and conversation. The gap was the reader, not the record.
+
 ### Database migrations
 
 Schema changes are applied **manually** with Alembic — a normal local dev step,
