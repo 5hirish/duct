@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: "🏷️ Apply area labels"
-        uses: actions/labeler@v5
+        uses: actions/labeler@v7
         with:
           # Labels are additive: a label added by hand stays put, because a
           # human labelling a PR knows something the paths do not.
