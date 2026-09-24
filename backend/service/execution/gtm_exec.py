@@ -416,6 +416,7 @@ register_executor(
         preview=_upsert_preview("tag"),
         apply=_upsert_apply("tag"),
         rollback=_upsert_rollback("tag"),
+        drift_keys=("existing",),
     )
 )
 
@@ -428,6 +429,7 @@ register_executor(
         preview=_upsert_preview("variable"),
         apply=_upsert_apply("variable"),
         rollback=_upsert_rollback("variable"),
+        drift_keys=("existing",),
     )
 )
 
@@ -440,6 +442,7 @@ register_executor(
         preview=_publish_preview,
         apply=_publish_apply,
         rollback=_publish_rollback,
+        drift_keys=("live_version_id",),
         destructive=True,
     )
 )
@@ -453,6 +456,7 @@ register_executor(
         preview=_rollback_to_preview,
         apply=_rollback_to_apply,
         rollback=_publish_rollback,
+        drift_keys=("live_version_id",),
         destructive=True,
     )
 )

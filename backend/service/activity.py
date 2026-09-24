@@ -14,7 +14,10 @@ service/artifact_store.py::persist_artifact_version (every artifact version).
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from uuid import UUID
+
+from sqlalchemy import select
 
 from models.activity import ActivityLog
 
@@ -63,3 +66,32 @@ def log_activity(
             db.rollback()
         except Exception:  # noqa: BLE001
             pass
+
+
+# How many decisions one turn restates. A person clears a queue of cards in one
+# sitting at most; past this the agent reads the change sets themselves.
+_DECISION_LIMIT = 20
+
+
+def user_decisions_since(db, conversation_id: UUID, since: datetime | None) -> list[ActivityLog]:
+    """What a person did to this conversation's change sets after ``since``.
+
+    The agent that proposed a set is told to wait for the review card and not
+    to poll, so an approve, reject, apply or rollback made on the card never
+    reaches it: this log is the only place those clicks are written down.
+    Agent- and auto-sourced rows are left out, since the agent saw those happen.
+    """
+    stmt = select(ActivityLog).where(
+        ActivityLog.conversation_id == conversation_id,
+        ActivityLog.category == "execution",
+        ActivityLog.source == "user",
+        ActivityLog.action.startswith("change_set."),
+    )
+    if since is not None:
+        stmt = stmt.where(ActivityLog.created_at > since)
+    stmt = stmt.order_by(ActivityLog.created_at).limit(_DECISION_LIMIT)
+    try:
+        return list(db.execute(stmt).scalars().all())
+    except Exception:  # noqa: BLE001 — a missing reminder must never block a message
+        logger.warning("activity: could not read decisions for %s", conversation_id, exc_info=True)
+        return []

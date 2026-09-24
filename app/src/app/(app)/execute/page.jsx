@@ -216,6 +216,11 @@ function DrawerChange({ change, destructive, selectable, checked, onToggle }) {
           <Trans>⛔ Guardrail: {rule}</Trans>
         </p>
       ))}
+      {change.drift && (
+        <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
+          <Trans>⛔ Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal.</Trans>
+        </p>
+      )}
       {previewError && (
         <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>
           <Trans>Preview failed: {previewError}</Trans>

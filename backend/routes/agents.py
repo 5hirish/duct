@@ -50,6 +50,7 @@ from agents.content.persistence import (
     archive_conversation,
     build_reprime_context,
     get_conversation,
+    last_user_turn_at,
     list_conversations,
     load_events,
     resolve_or_create_conversation,
@@ -570,6 +571,9 @@ async def send_message(
     if msg.content is None:
         raise HTTPException(422, "content field required for type='chat'")
 
+    # Read before this message is recorded: "since the last thing they said".
+    decisions = _decisions_block(session)
+
     # Persist the raw user text (before the XML working-context wrapper) so chat
     # history rehydrates as the user actually typed it.
     if recorder is not None:
@@ -593,6 +597,8 @@ async def send_message(
     # brief format lives in the same place and gets the same treatment.
     content = _refresh_autonomy(session, content)
     content = _refresh_format(session, content, msg.artifact_format)
+    if decisions:
+        content = _prepend_context(content, decisions)
 
     item: dict = {"role": "user", "content": content}
     if msg.client_message_id:
@@ -682,6 +688,33 @@ def _refresh_format(session: Any, content: str | list, requested: str | None) ->
     session.artifact_format_stated = wanted
     logger.info("agents: session %s brief format → %s", session.session_id, wanted)
     return _prepend_context(content, block)
+
+
+def _decisions_block(session: Any) -> str:
+    """What the person did on this thread's review cards since they last wrote.
+
+    An agent that proposes a change set is told to wait and not poll, so the
+    click that approves, rejects or rolls it back lands in the execution log and
+    nowhere the model reads. Without this, the next turn talks about a proposal
+    as still pending, or offers again what was just rejected. Stateless on
+    purpose: the cursor is the conversation's previous user row, so a resumed
+    session and a decision made on /execute are covered alike.
+    """
+    conversation_id = getattr(session, "conversation_id", None)
+    if not conversation_id:
+        return ""
+    from service.activity import user_decisions_since
+
+    with next(db_session()) as db:
+        rows = user_decisions_since(db, conversation_id, last_user_turn_at(db, conversation_id))
+    if not rows:
+        return ""
+    lines = "\n".join(f"- {r.created_at:%Y-%m-%d %H:%M} UTC: {r.summary}" for r in rows)
+    return xml_block(
+        "change_set_decisions",
+        "The user acted on your proposed change sets since their last message. "
+        "Take these as settled; call GetChangeSetStatus for per-change detail.\n" + lines,
+    ) + "\n\n"
 
 
 def _inject_working_context(session: Any, content: str | list, version_id: int | None) -> str | list:

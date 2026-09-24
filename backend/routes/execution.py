@@ -41,6 +41,7 @@ from service.execution.registry import EXECUTOR_REGISTRY
 from service.execution.service import (
     StateError,
     apply_change_set as apply_core,
+    claim_transition,
     log_change_set_transition,
     propose_change_set as propose_core,
     rollback_change_set as rollback_core,
@@ -308,13 +309,14 @@ def approve_change_set(
     if not approved_any and not any(c["status"] == "approved" for c in updated):
         raise HTTPException(status_code=422, detail="Nothing approvable in this change set.")
 
-    row.changes = updated
-    row.status = "approved"
-    row.approved_at = utcnow()
-    row.updated_at = utcnow()
-    session.add(row)
-    session.commit()
-    session.refresh(row)
+    # Conditional: an approve read before an apply claimed the row must not
+    # land after it and reset the set to "approved", ready to run a second time.
+    now = utcnow()
+    if not claim_transition(
+        session, row, from_statuses=("proposed", "approved"),
+        changes=updated, status="approved", approved_at=now, updated_at=now,
+    ):
+        raise HTTPException(status_code=409, detail=f"Cannot approve a {row.status} change set.")
     approved_count = sum(1 for c in row.changes if c["status"] == "approved")
     log_change_set_transition(
         session,
@@ -334,13 +336,12 @@ def reject_change_set(
     session: Session = Depends(get_session),
 ) -> dict:
     row = _get_owned(session, user, change_set_id)
-    if row.status in ("applied", "partial", "rolled_back"):
+    # "applying" is deliberately not rejectable: the executors are already
+    # running, and a reject landing mid-run would be overwritten by the result.
+    if not claim_transition(
+        session, row, from_statuses=("proposed", "approved"), status="rejected", updated_at=utcnow(),
+    ):
         raise HTTPException(status_code=409, detail=f"Cannot reject a {row.status} change set.")
-    row.status = "rejected"
-    row.updated_at = utcnow()
-    session.add(row)
-    session.commit()
-    session.refresh(row)
     log_change_set_transition(
         session,
         row,

@@ -33,6 +33,20 @@ function failureRow(data) {
   };
 }
 
+// The tools whose result is a change-set card. The card was drawn live from
+// EXECUTION_PROPOSED, which is not stored; without this a reopened thread lost
+// every review card, and with it the only record on screen of what was decided.
+const CHANGE_SET_TOOLS = new Set(["ProposeChanges", "RollbackChangeSet"]);
+
+function changeSetFromStored(e) {
+  if (!CHANGE_SET_TOOLS.has(e.data?.name) || e.data?.is_error) return null;
+  let result = e.data?.result;
+  if (typeof result === "string") {
+    try { result = JSON.parse(result); } catch { return null; }
+  }
+  return result?.change_set_id ? result : null;
+}
+
 export function mapEventsToMessages(events) {
   const out = [];
   const calls = activityCallIndex(events);
@@ -99,6 +113,15 @@ export function mapEventsToMessages(events) {
         break;
       }
       case "tool_result": {
+        const card = changeSetFromStored(e);
+        if (card) {
+          // Same upsert-by-id as live: a rollback's result replaces the card
+          // it acted on rather than drawing a second one to approve.
+          const at = out.findIndex((m) => m.role === Row.CHANGE_SET_CARD && m.changeSet?.change_set_id === card.change_set_id);
+          if (at >= 0) out[at] = { role: Row.CHANGE_SET_CARD, changeSet: card };
+          else out.push({ role: Row.CHANGE_SET_CARD, changeSet: card });
+          break;
+        }
         const activity = activityFromStored(e, calls);
         if (activity) out.push({ role: Row.ACTIVITY, activity });
         break;

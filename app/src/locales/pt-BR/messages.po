@@ -671,6 +671,12 @@ msgid "~3 min"
 msgstr "~3 min"
 
 #: src/app/(app)/execute/page.jsx
+msgid ""
+"⛔ Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
+msgstr ""
+"⛔ Alterado na conta depois que você o aprovou, então não foi aplicado. Peça uma nova proposta."
+
+#: src/app/(app)/execute/page.jsx
 msgid "⛔ Guardrail: {rule}"
 msgstr "⛔ Barreira de segurança: {rule}"
 
@@ -1649,6 +1655,12 @@ msgstr "Alteração {n}"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "change set {id}"
 msgstr "conjunto de alterações {id}"
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid ""
+"Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
+msgstr ""
+"Alterado na conta depois que você o aprovou, então não foi aplicado. Peça uma nova proposta."
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Changes apply to future drafts that pull this format."
@@ -8066,6 +8078,10 @@ msgstr "você"
 msgid "You"
 msgstr "Você"
 
+#: src/components/execution/ChangeSetCard.jsx
+msgid "You approved this"
+msgstr "Você aprovou isso"
+
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
 msgstr "Você pode fechar esta aba."
@@ -8081,6 +8097,10 @@ msgid ""
 "You have more than one project for this site. Which should this audit update?"
 msgstr ""
 "Você tem mais de um projeto para este site. Qual auditoria deve ser atualizada?"
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "You rejected this"
+msgstr "Você rejeitou isso"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid ""

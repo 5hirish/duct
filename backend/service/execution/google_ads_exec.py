@@ -251,6 +251,7 @@ register_executor(
         preview=_pause_preview,
         apply=_pause_apply,
         rollback=_pause_rollback,
+        drift_keys=("status",),
     )
 )
 
@@ -874,6 +875,7 @@ register_executor(
         preview=_campaign_status_preview,
         apply=_campaign_status_apply,
         rollback=_campaign_status_rollback,
+        drift_keys=("status",),
     )
 )
 
@@ -886,6 +888,7 @@ register_executor(
         preview=_ad_group_status_preview,
         apply=_ad_group_status_apply,
         rollback=_ad_group_status_rollback,
+        drift_keys=("status",),
     )
 )
 
@@ -898,6 +901,7 @@ register_executor(
         preview=_keyword_status_preview,
         apply=_keyword_status_apply,
         rollback=_keyword_status_rollback,
+        drift_keys=("status",),
     )
 )
 
@@ -922,6 +926,7 @@ register_executor(
         preview=_budget_preview,
         apply=_budget_apply,
         rollback=_budget_rollback,
+        drift_keys=("amount_micros",),
     )
 )
 
@@ -934,5 +939,6 @@ register_executor(
         preview=_bidding_preview,
         apply=_bidding_apply,
         rollback=_bidding_rollback,
+        drift_keys=("strategy_type", "target_cpa_micros", "target_roas"),
     )
 )

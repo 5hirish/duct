@@ -637,6 +637,10 @@ msgid "~3 min"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
+msgid "⛔ Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
+msgstr ""
+
+#: src/app/(app)/execute/page.jsx
 msgid "⛔ Guardrail: {rule}"
 msgstr ""
 
@@ -1619,6 +1623,10 @@ msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "change set {id}"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
 msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
@@ -7864,6 +7872,10 @@ msgstr ""
 msgid "You"
 msgstr ""
 
+#: src/components/execution/ChangeSetCard.jsx
+msgid "You approved this"
+msgstr ""
+
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
 msgstr ""
@@ -7874,6 +7886,10 @@ msgstr ""
 
 #: src/app/(start)/start/page.jsx
 msgid "You have more than one project for this site. Which should this audit update?"
+msgstr ""
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid "You rejected this"
 msgstr ""
 
 #: src/components/onboarding/ProviderStep.jsx
