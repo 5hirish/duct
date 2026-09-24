@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlmodel import Session
 
 from models.execution import ExecutionChangeSet, ExecutionGuardrail
@@ -95,6 +95,49 @@ def _log_gtm_publishes(db, row: ExecutionChangeSet, changes: list[dict], *, sour
 
 class StateError(Exception):
     """The change set is not in a status that allows the requested transition."""
+
+
+def claim_transition(
+    db: Session, row: ExecutionChangeSet, *, from_statuses: tuple[str, ...], **values: Any
+) -> bool:
+    """Write ``values`` only if the row is still in ``from_statuses``; False if it moved.
+
+    A read-then-write status check lets two requests (a double click, a second
+    tab, a click racing auto-apply) both see "approved" and both run the
+    executors: a GTM version published twice, an approve landing mid-apply and
+    resetting the set to approved so it can run again. The conditional UPDATE
+    is the lock: exactly one caller's WHERE still matches. ``row`` is refreshed
+    either way, so a loser reports the status that beat it.
+    """
+    result = db.execute(
+        update(ExecutionChangeSet)
+        .where(ExecutionChangeSet.id == row.id, ExecutionChangeSet.status.in_(from_statuses))
+        .values(**values)
+    )
+    db.commit()
+    db.refresh(row)
+    return result.rowcount == 1
+
+
+def drift_since_preview(spec: Any, change: dict[str, Any], creds: dict[str, str]) -> dict[str, Any]:
+    """What moved on the target between the preview a person approved and now.
+
+    Empty means safe to apply. Only the executor's declared ``drift_keys`` are
+    compared; an executor that declares none is never re-read. A failed re-read
+    counts as drift: applying blind is the thing this check exists to stop.
+    """
+    if not spec.drift_keys:
+        return {}
+    approved = change.get("current") or {}
+    try:
+        now = (spec.preview(dict(change), creds) or {}).get("current") or {}
+    except Exception as exc:  # noqa: BLE001 — recorded on the change, never a 500
+        return {"error": f"Could not re-read the current state: {exc}"}
+    return {
+        key: {"approved": approved.get(key), "now": now.get(key)}
+        for key in spec.drift_keys
+        if approved.get(key) != now.get(key)
+    }
 
 
 def guardrails_for(
@@ -291,10 +334,8 @@ def apply_change_set(
         project_id=row.project_id,
     )
 
-    row.status = "applying"
-    row.updated_at = utcnow()
-    db.add(row)
-    db.commit()
+    if not claim_transition(db, row, from_statuses=("approved",), status="applying", updated_at=utcnow()):
+        raise StateError(f"Change set is already {row.status}; another request got to it first.")
 
     applied = failed = 0
     updated = []
@@ -320,6 +361,12 @@ def apply_change_set(
         if missing:
             change["status"] = "blocked"
             change["scope_violations"] = missing
+            updated.append(change)
+            continue
+        drift = drift_since_preview(spec, change, creds)
+        if drift:
+            change["status"] = "blocked"
+            change["drift"] = drift
             updated.append(change)
             continue
         try:

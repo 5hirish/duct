@@ -670,6 +670,12 @@ msgid "~3 min"
 msgstr "~3 Min."
 
 #: src/app/(app)/execute/page.jsx
+msgid ""
+"⛔ Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
+msgstr ""
+"⛔ Im Konto geändert, nachdem du es freigegeben hast, daher wurde es nicht angewendet. Bitte um einen neuen Vorschlag."
+
+#: src/app/(app)/execute/page.jsx
 msgid "⛔ Guardrail: {rule}"
 msgstr "⛔ Leitplanke: {rule}"
 
@@ -1650,6 +1656,12 @@ msgstr "Änderung {n}"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "change set {id}"
 msgstr "Änderungssatz {id}"
+
+#: src/components/execution/ChangeSetCard.jsx
+msgid ""
+"Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
+msgstr ""
+"Im Konto geändert, nachdem du es freigegeben hast, daher wurde es nicht angewendet. Bitte um einen neuen Vorschlag."
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Changes apply to future drafts that pull this format."

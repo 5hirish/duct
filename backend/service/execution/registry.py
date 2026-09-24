@@ -44,6 +44,12 @@ class ExecutorSpec:
     #: connection and still lack `analytics.edit`, and without this the first
     #: sign of that is a 403 at apply time — after a human approved it.
     required_scopes: frozenset[str] = frozenset()
+    #: Keys of the preview's ``current`` snapshot that describe the very thing
+    #: this change overwrites. Apply re-reads them and refuses the change if
+    #: any moved: an approval of "budget 50 → 60" is not an approval to cut a
+    #: budget someone raised to 80 in the meantime. Left empty for additive
+    #: ops, whose snapshot is a count that moves for unrelated reasons.
+    drift_keys: tuple[str, ...] = ()
 
 
 EXECUTOR_REGISTRY: dict[str, ExecutorSpec] = {}

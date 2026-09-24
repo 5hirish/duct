@@ -74,6 +74,7 @@ export function apiToCard(cs, prevCard) {
       diff: c.preview?.diff || "",
       warnings: c.preview?.warnings || [],
       guardrail_violations: c.guardrail_violations || [],
+      drifted: !!c.drift,
       preview_error: c.preview?.error || "",
       destructive: prevById[c.id]?.destructive ?? false,
     })),
@@ -193,6 +194,11 @@ export default function ChangeSetCard({ changeSet: initial }) {
                 {(c.guardrail_violations || []).map((v, j) => (
                   <Note key={j} icon={Ban} tone="text-muted-foreground">{v}</Note>
                 ))}
+                {c.drifted && (
+                  <Note icon={Ban} tone="text-muted-foreground">
+                    <Trans>Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal.</Trans>
+                  </Note>
+                )}
                 {previewError && (
                   <Note icon={Ban} tone="text-destructive"><Trans>Preview failed: {previewError}</Trans></Note>
                 )}

@@ -208,5 +208,6 @@ register_executor(
         preview=_hide_preview,
         apply=_hide_apply,
         rollback=_hide_rollback,
+        drift_keys=("schema_json",),
     )
 )
