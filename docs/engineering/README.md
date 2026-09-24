@@ -13,6 +13,9 @@ How Duct is built. Two kinds of file, by name (the rule is in
 
 ## References
 
+- [`data-model.md`](data-model.md) — every table, what it records, and
+  which of the four stores answers "where is this recorded?". Read before
+  proposing a new table, event kind or log.
 - [`agent-ports-and-events.md`](agent-ports-and-events.md) — the harness
   boundary: the six agent ports and the SSE event contract. The code is the
   source of truth; this explains the shape.
