@@ -88,15 +88,16 @@ by severity.
 
 ## Type
 
-GitHub's native issue type plus a few labels for what it doesn't cover (this
-account can't add custom types, so the rest are labels — not a second type
-system):
+Labels only. GitHub's native issue types exist for organizations, and this
+repository belongs to a personal account, so `gh issue create --type` fails
+with `type "Feature" not found; available types:` (an empty list). On
+2026-09-24 that failed a whole batch of filings.
 
 | What it is | Set it as |
 |---|---|
-| A real defect — should work, doesn't | type `Bug` |
-| Scoped, cleared the bar, ready to build | type `Feature` |
-| Internal work with no product-facing shape (refactor, CI, chore) | type `Task` |
+| A real defect — should work, doesn't | label `bug` |
+| Scoped, cleared the bar, ready to build | label `enhancement` |
+| Internal work with no product-facing shape (refactor, CI, chore) | area label alone |
 | Not yet scoped or agreed — exploratory | label `idea` |
 | Needs an answer, not a decision | label `question` |
 | Security hardening or tracking | label `security` |
@@ -133,6 +134,10 @@ priority rubric depends on the type:
 | **Next iteration** — not blocking this release, priority right after | the following milestone | — | `P1` |
 | **Roadmap** — concretely want it, not this quarter | none yet | `Ready` | `P1` |
 | **Backlog** — want it, don't know when | none | `Backlog` | `P1`/`P2` |
+
+Auto-add drops every new issue into `Backlog`, milestoned or not. Move a
+milestoned one to `Ready` by hand, or the board shows this quarter's work
+as undecided.
 
 Milestones are real GitHub milestones with due dates, not labels; the
 Project mirrors whatever the issue is assigned. Create the next one only
@@ -192,13 +197,13 @@ shipped issue still open, close it with a comment naming the commits, as
 ```bash
 # 1. file it
 gh issue create --repo 5hirish/duct --title "…" --body "…" \
-  --type <Bug|Feature|Task> --label <area>[,idea|question|security] \
+  --label <bug|enhancement,><area>[,idea|question|security] \
   --assignee 5hirish --milestone "<title>"        # omit --milestone for roadmap/backlog
 
-# 2. find its board item (auto-add usually got there first; add only if missing)
-gh project item-list 10 --owner 5hirish --format json \
-  | jq -r '.items[] | select(.content.number == <n>) | .id'
-gh project item-add 10 --owner 5hirish --url <issue-url>     # only if the above is empty
+# 2. get its board item id. item-add is idempotent: it returns the existing
+#    item when auto-add got there first. (Piping item-list into jq breaks on
+#    issue bodies with control characters, so don't.)
+gh project item-add 10 --owner 5hirish --url <issue-url> --format json --jq .id
 
 # 3. set the fields that aren't automatic
 gh project item-edit --id <item-id> --project-id PVT_kwHOAGxEyM4Bi8Ot \
