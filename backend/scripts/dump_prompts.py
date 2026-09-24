@@ -175,6 +175,14 @@ def render_audit() -> str:
         f"System prompt · ~{approx_tokens(system):,} tokens",
         fenced(system),
     ))
+    # Appended to the system prompt only when the in-depth audit of a project
+    # mounts FetchData (agents/audit/v1/runner.mounts_connected_data).
+    from agents.audit.prompts import _CONNECTED_DATA_SECTION
+
+    out.append(section(
+        f"In-depth audit addition · ~{approx_tokens(_CONNECTED_DATA_SECTION):,} tokens",
+        fenced(_CONNECTED_DATA_SECTION.rstrip()),
+    ))
     turn = build_audit_user_prompt(
         CrawlResult(plan=CrawlPlan(root_url="https://northwind.example")),
         _business(),

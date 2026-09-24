@@ -84,6 +84,18 @@ LIMITS = RunLimits(
     tool_results_kept=12,
 )
 
+def mounts_connected_data(project_id: Any, *, lead_magnet: bool, crawl_depth: str) -> bool:
+    """Whether a first audit run reads Search Console and GA4.
+
+    In-depth project audits only. The quick audit (a light crawl, and the
+    public teaser before it) is a crawl because its whole point is speed, and
+    a run with no project has no connections to resolve.
+    """
+    from agents.audit.schema import CrawlDepth
+
+    return project_id is not None and not lead_magnet and crawl_depth != CrawlDepth.LIGHT
+
+
 def build_audit_agent(
     *,
     crawl_result: CrawlResult,
@@ -102,6 +114,7 @@ def build_audit_agent(
     on_artifact: Callable | None = None,    # async (card: dict) -> None
     on_change_set: Callable | None = None,  # async (change_set: dict) -> None
     remember: bool = True,    # False = a session the user asked not to be remembered
+    with_data: bool = False,  # True = in-depth project audit: FetchData + connector notes
 ):
     """Assemble the audit agent: crawl/report tools plus optional mid-run questions."""
     tools = build_audit_tools(
@@ -155,6 +168,15 @@ def build_audit_agent(
         emit=emit,
         log_prefix="audit-v1",
     )
+
+    # The insights agent's data tools, so findings can be ranked by real clicks
+    # and impressions instead of by crawl signals alone. Off for the quick
+    # audit, which exists to be fast, and meaningless without a project to
+    # resolve connections from.
+    if with_data and project_id is not None and user_id is not None:
+        from agents.insights.data_tools import build_data_tools_lc
+
+        tools += build_data_tools_lc(project_id, user_id=user_id, log_prefix="audit-v1")
 
     # Checkpointed: without a saver the graph has no memory between turns, so
     # follow-up chat would re-ask the model to audit a site it just audited,
@@ -383,7 +405,13 @@ class LangChainAuditRunner:
             })
             return {"status": "received", "version_id": version_id}
 
-        system_prompt = build_unified_system_prompt(report_mode=report_mode, template_id=template_id)
+        wiring = self._project_wiring(session, emit)
+        with_data = mounts_connected_data(
+            wiring["project_id"], lead_magnet=lead_magnet, crawl_depth=crawl_depth,
+        )
+        system_prompt = build_unified_system_prompt(
+            report_mode=report_mode, template_id=template_id, with_data=with_data,
+        )
         agent = build_audit_agent(
             crawl_result=crawl_result,
             llm=llm,
@@ -393,7 +421,8 @@ class LangChainAuditRunner:
             emit=emit,
             report_mode=report_mode,
             on_submit_report=_on_submit,
-            **self._project_wiring(session, emit),
+            with_data=with_data,
+            **wiring,
         )
 
         await emit({
@@ -629,7 +658,13 @@ class LangChainAuditRunner:
                 logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
 
         llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
-        system_prompt = build_unified_system_prompt(report_mode=report_mode, template_id=template_id)
+        wiring = self._project_wiring(session, emit)
+        # A resumed thread is a project conversation in the app, so follow-up
+        # questions can reach the data whichever depth the first run was.
+        with_data = wiring["project_id"] is not None
+        system_prompt = build_unified_system_prompt(
+            report_mode=report_mode, template_id=template_id, with_data=with_data,
+        )
         agent = build_audit_agent(
             crawl_result=crawl_result,
             llm=llm,
@@ -639,7 +674,8 @@ class LangChainAuditRunner:
             emit=emit,
             report_mode=report_mode,
             on_submit_report=_on_submit,
-            **self._project_wiring(session, emit),
+            with_data=with_data,
+            **wiring,
         )
         loop = self._session_loop(
             agent, llm, session, emit, session_id,

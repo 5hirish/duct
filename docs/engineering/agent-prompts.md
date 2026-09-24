@@ -205,6 +205,21 @@ no external CSS, no JavaScript). Sections in this order:
 
 ```
 
+### In-depth audit addition · ~313 tokens
+
+```text
+## Connected search data
+
+A crawl sees the site; Search Console and GA4 see what searchers do with it. You have **FetchData** and **ReadConnectorNotes**. Before writing the initial report, call **ListDataSources**. If Search Console is connected:
+- Read **ReadConnectorNotes** for `gsc` (and `ga4` if connected) first.
+- Fetch `gsc_page_performance` and `gsc_query_page` for the default window, and `ga4_landing_pages` if GA4 is connected (read only its 'Organic Search' rows).
+- Rank findings by traffic at stake: a title problem on a page with 20,000 impressions outranks the same problem on a page with none. Put the number and its window in the finding's evidence.
+- Add OPPORTUNITY findings a crawl cannot see: pages at positions 4-20 with high impressions and low CTR, one query splitting impressions across pages (cannibalisation), organic landing pages whose engagement is far below the site's.
+- A page or query missing from the rows is unknown, not zero: check `truncated` and `impressions_coverage` before saying anything about one.
+
+If neither is connected, audit from the crawl alone and do not mention FetchData.
+```
+
 ### Opening user turn · ~439 tokens (crawl elided)
 
 ```text
@@ -250,7 +265,7 @@ Fact: trial-to-paid sits at 11% and has not moved in three months.
 
 ## Growth Insights (`insights`)
 
-### System prompt · ~5,686 tokens
+### System prompt · ~5,884 tokens
 
 Cache-stable: identical for every account, so it is the shared prefix.
 
@@ -311,10 +326,10 @@ Read each entity's description before you use it. If its scope is narrower than 
   description="Last 1–3 days of on-page friction — rage clicks, dead clicks, quick-backs, script errors — overall and per URL, with traffic and engagement context. Costs 2 of the project's 10 daily API calls."
   fields: traffic (dimension), engagement (dimension), friction (dimension), pages (dimension), friction_by_url (dimension), sessions (metric, unit=count, agg=sum), rage_click_sessions_pct (metric, unit=percent, agg=avg), dead_click_sessions_pct (metric, unit=percent, agg=avg)
   sortable_by: sessions, rage_click_sessions_pct, dead_click_sessions_pct
-## Connector "ga4" (schema=1.0.0, api=ga4-data-v1beta, last_audited=2026-08-29)
+## Connector "ga4" (schema=1.0.0, api=ga4-data-v1beta, last_audited=2026-09-24)
 - entity_id="ga4_landing_pages" label="GA4 Landing Pages"
-  description="Paid landing page behavior with engagement and conversion context."
-  fields: page_path (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
+  description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
+  fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
   sortable_by: sessions, bounce_rate, conversions, total_revenue
 - entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
   description="Source/channel path context for assisted-conversion analysis."
@@ -343,14 +358,18 @@ Read each entity's description before you use it. If its scope is narrower than 
   description="Experiments with status, phases, variations, and per-metric results for running ones. `stale_running` flags experiments still marked running whose exposures may have stopped — verify before citing."
   fields: experiments (dimension), results (dimension), status (dimension), stale_running (dimension), running (metric, unit=count, agg=sum), feature_count (metric, unit=count, agg=sum)
   sortable_by: running
-## Connector "gsc" (schema=1.0.0, api=searchconsole-v1, last_audited=2026-08-29)
+## Connector "gsc" (schema=1.0.0, api=searchconsole-v1, last_audited=2026-09-24)
 - entity_id="gsc_query_performance" label="GSC Query Performance"
-  description="Organic query performance with clicks, impressions, CTR, and position."
+  description="Organic queries, highest impressions first, with totals and impressions_coverage for the whole window. Queries Google anonymises are absent by design."
   fields: query (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
   sortable_by: impressions, clicks, ctr, avg_position
 - entity_id="gsc_page_performance" label="GSC Page Performance"
-  description="Organic page-level performance with clicks, impressions, CTR, and position."
+  description="Organic pages, highest impressions first. Use page totals, not query sums, for how much organic traffic there is."
   fields: page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_query_page" label="GSC Query × Page"
+  description="Which page ranks for which query. The only view that shows cannibalisation (one query split across pages) or a query landing on the wrong page."
+  fields: query (dimension), page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
   sortable_by: impressions, clicks, ctr, avg_position
 ## Connector "mixpanel" (schema=1.0.0, api=mixpanel-query-2.0, last_audited=2026-08-31)
 - entity_id="mixpanel_event_counts" label="Mixpanel Key Event Counts"

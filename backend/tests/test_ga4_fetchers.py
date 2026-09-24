@@ -37,10 +37,17 @@ class _FakeClient:
 
     def run_report(self, req):
         type(self).requests.append(req)
-        return _Response([_Row(["/pricing", "google / cpc"], [12, 0.4, 0.6, 33.5, 2, 99.0])])
+        # One canned row, shaped to whichever report asked: landing pages carry
+        # a channel between the page and the source/medium, conversion paths
+        # do not.
+        dims = ["/pricing", "Paid Search", "google / cpc"] if len(req.dimensions) == 3 else ["/pricing", "google / cpc"]
+        return _Response([_Row(dims, [12, 0.4, 0.6, 33.5, 2, 99.0])])
 
 
-def test_landing_pages_builds_a_filtered_report_request(monkeypatch):
+def test_landing_pages_returns_every_channel_tagged(monkeypatch):
+    """This report was filtered to `google / cpc`, so the organic goals were
+    handed paid traffic under an 'organic landing pages' guide. It is
+    unfiltered now, and each row says which channel it is."""
     import google.analytics.data_v1beta as data_api
 
     monkeypatch.setattr(data_api, "BetaAnalyticsDataClient", _FakeClient)
@@ -54,12 +61,13 @@ def test_landing_pages_builds_a_filtered_report_request(monkeypatch):
 
     req = _FakeClient.requests[0]
     assert req.property == "properties/360006549"
-    assert req.dimension_filter.filter.field_name == "sessionSourceMedium"
-    assert req.dimension_filter.filter.string_filter.value == "google / cpc"
+    assert not req.dimension_filter.filter.field_name  # no channel filter at all
+    assert [d.name for d in req.dimensions] == ["pagePath", "sessionDefaultChannelGroup", "sessionSourceMedium"]
     assert [m.name for m in req.metrics][4] == ga4.KEY_EVENTS_METRIC
     assert result["row_count"] == 1
     assert result["rows"][0]["page_path"] == "/pricing"
     assert result["rows"][0]["conversions"] == 2.0
+    assert result["rows"][0]["channel"] == "Paid Search"
 
 
 def test_conversion_paths_orders_channels_by_key_events(monkeypatch):

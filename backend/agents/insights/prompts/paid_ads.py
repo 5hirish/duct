@@ -201,6 +201,8 @@ SUPPLEMENTARY_ANALYSIS_GUIDES: dict[str, str] = {
     ),
     "ga4_landing_pages": (
         "ANALYZE GA4 landing page data by:\n"
+        "- Rows carry every channel: read the paid ones ('Paid Search', 'Paid Social',\n"
+        "  'Cross-network', 'Paid Other') and use the organic rows only as a baseline\n"
         "- Cross-reference with campaigns: which campaigns drive paid traffic to high-bounce pages?\n"
         "- Identify landing pages with >60% bounce rate receiving significant paid sessions\n"
         "- Compare engagement rates across landing pages; low engagement + high CPC implies waste\n"

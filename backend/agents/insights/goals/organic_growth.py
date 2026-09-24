@@ -188,21 +188,25 @@ GOAL_TOOL_ALLOWLIST: dict[OrganicGrowthGoal, list[str]] = {
     OrganicGrowthGoal.DIAGNOSE_TRAFFIC_DROP: [
         "fetch_gsc_query_performance",
         "fetch_gsc_page_performance",
+        "fetch_gsc_query_page",
         "fetch_ga4_landing_pages",
     ],
     OrganicGrowthGoal.GROW_ORGANIC_TRAFFIC: [
         "fetch_gsc_query_performance",
         "fetch_gsc_page_performance",
+        "fetch_gsc_query_page",
         "fetch_ga4_landing_pages",
     ],
     OrganicGrowthGoal.IMPROVE_RANKINGS: [
         "fetch_gsc_query_performance",
         "fetch_gsc_page_performance",
+        "fetch_gsc_query_page",
         "fetch_ga4_landing_pages",
     ],
     OrganicGrowthGoal.CONTENT_GAP_ANALYSIS: [
         "fetch_gsc_query_performance",
         "fetch_gsc_page_performance",
+        "fetch_gsc_query_page",
     ],
     OrganicGrowthGoal.CUSTOM: [
         "fetch_gsc_query_performance",

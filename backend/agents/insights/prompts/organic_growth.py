@@ -194,8 +194,8 @@ SUPPLEMENTARY_ANALYSIS_GUIDES: dict[str, str] = {
         "- For OPPORTUNITY queries: calculate CTR gap using standard CTR curve\n"
         "  (pos 1: 28%, pos 2: 15%, pos 3: 11%, pos 4: 8%, pos 5-10: 5-3%)\n"
         "  Estimated additional clicks = impressions × (target CTR − current CTR)\n"
-        "- CANNIBALIZATION: flag query clusters where 2+ pages rank in positions 5-15\n"
-        "  for near-identical queries — consolidation opportunity\n"
+        "- CANNIBALIZATION: confirm it in gsc_query_page (one query sending impressions\n"
+        "  to 2+ pages in positions 5-15), never infer it from this flat table\n"
         "- BRAND VS NON-BRAND: separate branded query performance from non-branded\n"
         "  Brand declines are often awareness/PR issues; non-brand declines are SEO issues\n"
         "- CTR ANOMALIES: queries with position 1-3 but below-expected CTR\n"
@@ -217,8 +217,19 @@ SUPPLEMENTARY_ANALYSIS_GUIDES: dict[str, str] = {
         "  often need internal linking from authority pages more than on-page changes\n"
         "- Calculate total opportunity value: sum of CTR gap × impressions across top 10 pages"
     ),
+    "gsc_query_page": (
+        "ANALYZE GSC query × page data by:\n"
+        "- CANNIBALIZATION: one query with impressions split across 2+ pages, neither in\n"
+        "  the top 3. Name the query, both pages, and which should own it\n"
+        "- INTENT MISMATCH: a query landing on a page of the wrong type (a pricing page\n"
+        "  for a how-to query, a blog post for a buying query)\n"
+        "- ORPHAN DEMAND: queries with impressions whose only page is weak or off-topic\n"
+        "- Rows are cut to the highest-impression pairs; check impressions_coverage\n"
+        "  before saying a query has no page"
+    ),
     "ga4_landing_pages": (
         "ANALYZE GA4 organic landing page data by:\n"
+        "- Rows carry every channel: read only those whose channel is 'Organic Search'\n"
         "- INTENT MATCH SIGNAL: engagement rate + avg session duration per landing page\n"
         "  High impressions/clicks + low engagement = content doesn't match query intent\n"
         "  (user clicks, reads 10 seconds, leaves — content disappoints)\n"

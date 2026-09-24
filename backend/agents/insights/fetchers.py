@@ -150,7 +150,11 @@ def _build_specs() -> dict[str, FetchSpec]:
         fetch_search_terms,
     )
     from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
-    from service.google.gsc import fetch_gsc_page_performance, fetch_gsc_query_performance
+    from service.google.gsc import (
+        fetch_gsc_page_performance,
+        fetch_gsc_query_page,
+        fetch_gsc_query_performance,
+    )
     from service.clarity.fetch import fetch_clarity
     from service.growthbook.fetch import fetch_growthbook
     from service.mixpanel.fetch import fetch_mixpanel
@@ -165,6 +169,7 @@ def _build_specs() -> dict[str, FetchSpec]:
         "fetch_ga4_conversion_paths": _google_oauth(fetch_ga4_conversion_paths),
         "fetch_gsc_query_performance": _google_oauth(fetch_gsc_query_performance),
         "fetch_gsc_page_performance": _google_oauth(fetch_gsc_page_performance),
+        "fetch_gsc_query_page": _google_oauth(fetch_gsc_query_page),
         "fetch_mixpanel": _manual(fetch_mixpanel, "project_id"),
         "fetch_clarity": _manual(fetch_clarity),
         "fetch_growthbook": _manual(fetch_growthbook, "project_id"),

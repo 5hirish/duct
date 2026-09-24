@@ -19,7 +19,7 @@ from langchain_core.messages import AIMessage
 
 from agents.audit.events import AuditStep
 from agents.audit.schema import CrawlPlan, CrawlResult
-from agents.audit.v1.runner import build_audit_agent
+from agents.audit.v1.runner import build_audit_agent, mounts_connected_data
 from agents.core.events import AgentEvent
 from agents.core.lc import (
     MAX_QUESTIONS,
@@ -134,6 +134,31 @@ def test_ask_user_tool_only_present_with_a_session(crawl_result, session, emitte
 
     assert "AskUserQuestion" not in _tool_names(without)
     assert "AskUserQuestion" in _tool_names(with_session)
+
+
+def test_connected_data_is_mounted_only_for_an_in_depth_project_audit(crawl_result):
+    """The audit ranked findings by crawl signals alone even with Search Console
+    connected, because it had no FetchData. The in-depth audit of a project now
+    gets it; the quick audit stays a crawl, because it exists to be fast."""
+    llm = ToolCallingFake(responses=[AIMessage(content="ok")])
+    project, user = uuid.uuid4(), uuid.uuid4()
+
+    in_depth = build_audit_agent(
+        crawl_result=crawl_result, llm=llm, system_prompt="audit",
+        project_id=project, user_id=user, remember=False, with_data=True,
+    )
+    quick = build_audit_agent(
+        crawl_result=crawl_result, llm=llm, system_prompt="audit",
+        project_id=project, user_id=user, remember=False, with_data=False,
+    )
+
+    assert {"FetchData", "ReadConnectorNotes"} <= set(_tool_names(in_depth))
+    assert "FetchData" not in _tool_names(quick)
+
+    assert mounts_connected_data(project, lead_magnet=False, crawl_depth="deep")
+    assert not mounts_connected_data(project, lead_magnet=False, crawl_depth="light")
+    assert not mounts_connected_data(project, lead_magnet=True, crawl_depth="deep")
+    assert not mounts_connected_data(None, lead_magnet=False, crawl_depth="deep")
 
 
 # ---------------------------------------------------------------------------

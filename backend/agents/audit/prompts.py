@@ -408,6 +408,29 @@ move on. Do not request other sources during an audit.
 - If the user uploads a screenshot or file, analyse it in the context of the site's SEO.
 """
 
+# Mounted only on an in-depth audit of a project (see build_unified_system_prompt).
+# The quick audit stays a crawl, because it exists to be fast.
+_CONNECTED_DATA_SECTION = """\
+## Connected search data
+
+A crawl sees the site; Search Console and GA4 see what searchers do with it. You have \
+**FetchData** and **ReadConnectorNotes**. Before writing the initial report, call \
+**ListDataSources**. If Search Console is connected:
+- Read **ReadConnectorNotes** for `gsc` (and `ga4` if connected) first.
+- Fetch `gsc_page_performance` and `gsc_query_page` for the default window, and \
+`ga4_landing_pages` if GA4 is connected (read only its 'Organic Search' rows).
+- Rank findings by traffic at stake: a title problem on a page with 20,000 impressions \
+outranks the same problem on a page with none. Put the number and its window in the \
+finding's evidence.
+- Add OPPORTUNITY findings a crawl cannot see: pages at positions 4-20 with high \
+impressions and low CTR, one query splitting impressions across pages \
+(cannibalisation), organic landing pages whose engagement is far below the site's.
+- A page or query missing from the rows is unknown, not zero: check `truncated` and \
+`impressions_coverage` before saying anything about one.
+
+If neither is connected, audit from the crawl alone and do not mention FetchData.
+"""
+
 # The shared stanza (agents/core/prompts.py) plus the one audit-specific note:
 # a first audit is where the durable conclusions about a site come from.
 _MEMORY_SECTION = MEMORY_DISCIPLINE + (
@@ -550,6 +573,7 @@ def build_unified_system_prompt(
     report_mode: str = "freehand",
     template_id: str = "",
     knowledge_packs: tuple[str, ...] = (),
+    with_data: bool = False,
 ) -> str:
     """Unified system prompt — single-session artifact pattern.
 
@@ -559,6 +583,10 @@ def build_unified_system_prompt(
 
     knowledge_packs: static per agent configuration (NEVER per-request data —
     that would break the cached system-prefix invariant). See agents/knowledge.
+
+    with_data: the in-depth audit of a project, which mounts FetchData. Two
+    fixed variants, so the prefix still caches; the flag must match the tools
+    the agent was built with, or the prompt promises a tool that is not there.
     """
     from agents.core.persona import with_confidentiality
     from agents.knowledge import knowledge_block
@@ -568,6 +596,8 @@ def build_unified_system_prompt(
         memory_section=_MEMORY_SECTION,
         scoring_rules=scoring_rules_block(),
     )
+    if with_data:
+        prompt = f"{prompt}\n\n---\n\n{_CONNECTED_DATA_SECTION}"
     packs = knowledge_block(knowledge_packs)
     if packs:
         prompt = f"{prompt}\n\n{packs}"

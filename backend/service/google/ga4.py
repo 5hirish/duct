@@ -30,6 +30,8 @@ _TOKEN_URI = "https://oauth2.googleapis.com/token"
 # pack explains the rename to the model rather than making it learn two names.
 KEY_EVENTS_METRIC = "keyEvents"
 
+LANDING_PAGE_ROWS = 250
+
 
 def _build_credentials(*, refresh_token: str, client_id: str, client_secret: str) -> Credentials:
     return Credentials(
@@ -116,13 +118,19 @@ def fetch_ga4_landing_pages(
     client_id: str,
     client_secret: str,
 ) -> dict[str, Any]:
-    """Fetch paid landing page performance from GA4."""
+    """Landing-page behaviour from GA4, one row per page and channel.
+
+    This was filtered to ``sessionSourceMedium CONTAINS "google / cpc"``, so
+    the organic goals, whose analysis guide reads "ANALYZE GA4 organic landing
+    page data", were only ever handed paid traffic. Every channel now comes
+    back tagged with GA4's default channel group; the paid and organic guides
+    each read the rows for their own channel, and Bing and Meta paid traffic
+    stop being invisible to the paid one too.
+    """
     from google.analytics.data_v1beta import BetaAnalyticsDataClient
     from google.analytics.data_v1beta.types import (
         DateRange,
         Dimension,
-        Filter,
-        FilterExpression,
         Metric,
         OrderBy,
         RunReportRequest,
@@ -139,6 +147,7 @@ def fetch_ga4_landing_pages(
         date_ranges=[DateRange(start_date=date_from, end_date=date_to)],
         dimensions=[
             Dimension(name="pagePath"),
+            Dimension(name="sessionDefaultChannelGroup"),
             Dimension(name="sessionSourceMedium"),
         ],
         metrics=[
@@ -149,17 +158,10 @@ def fetch_ga4_landing_pages(
             Metric(name=KEY_EVENTS_METRIC),
             Metric(name="totalRevenue"),
         ],
-        dimension_filter=FilterExpression(
-            filter=Filter(
-                field_name="sessionSourceMedium",
-                string_filter=Filter.StringFilter(
-                    match_type=Filter.StringFilter.MatchType.CONTAINS,
-                    value="google / cpc",
-                ),
-            )
-        ),
         order_bys=[OrderBy(metric=OrderBy.MetricOrderBy(metric_name="sessions"), desc=True)],
-        limit=100,
+        # Wider than the other reports: the channel split multiplies rows per
+        # page, and 100 was already the cut when there was only one channel.
+        limit=LANDING_PAGE_ROWS,
     )
     resp = client.run_report(req)
 
@@ -176,7 +178,8 @@ def fetch_ga4_landing_pages(
         rows.append(
             {
                 "page_path": dims[0].value,
-                "session_source_medium": dims[1].value,
+                "channel": dims[1].value,
+                "session_source_medium": dims[2].value,
                 "sessions": sessions,
                 "bounce_rate": bounce_rate,
                 "engagement_rate": engagement_rate,
@@ -190,6 +193,8 @@ def fetch_ga4_landing_pages(
         "report_type": "ga4_landing_pages",
         "date_range": f"{date_from} to {date_to}",
         "row_count": len(rows),
+        # GA4 reports the full row count even when ``limit`` cuts the list.
+        "truncated": int(getattr(resp, "row_count", 0) or 0) > len(rows),
         "rows": rows,
     }
 
