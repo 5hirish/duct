@@ -20,6 +20,7 @@ import { statusMeta } from "../../lib/contentStatus";
 import { PostStatus } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import SlidesCarousel from "./SlidesCarousel";
+import CloneSourceNote from "./CloneSourceNote";
 import { titleCase } from "@/lib/format";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -244,6 +245,8 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
           <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
 
           <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+
+          <CloneSourceNote source={post.clone_source} />
 
           <PostCopy post={post} patch={patch} />
         </div>

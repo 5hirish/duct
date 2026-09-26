@@ -416,6 +416,17 @@ Postgres `DATABASE_URL` names.
   validates (`agents/audit/prefetch.py`): root page now, the rest in the
   background, handed to `run_pipeline` by `crawl_id`. Duct's bandwidth only;
   inference never runs here.
+- `service/clone_reference.py` — a pasted TikTok link becomes a saved
+  reference for a clone (issue #222). The link is reduced to a handle and a
+  post id and everything after uses the URL rebuilt from them; the Apify input
+  (`single_post_run_input`) takes that parsed post, one result, downloads off.
+  A post the project already saved is reused, else it goes through
+  `service/discovery.py`'s ingest and capture. The clone itself is
+  `ContentRunner.run_clone`: draft_post's system prompt, one structured call on
+  the run's own model for why the reference worked (the slides attached only on
+  `VISION_PROVIDERS`), and the FIT × PROOF discipline in the USER turn.
+  `submit_post_draft` writes `content_posts.clone_source` from the session's
+  link plus the model's verdict; the approach is derived, never typed.
 - `agents/audit/draft.py` — the project drafted from the crawl, two layers
   (`crawl` deterministic, `inferred` one structured call), emitted as
   `PROJECT_DRAFT` when a run sets `draft_project`. Never infers the North

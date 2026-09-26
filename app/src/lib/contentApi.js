@@ -94,7 +94,7 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
  */
 export function contentSessionBody(mode, context = {}) {
   const {
-    projectId, startDate, planId, dayIndex, topic, pillar, channel,
+    projectId, startDate, planId, dayIndex, topic, pillar, channel, cloneUrl,
     conversationId, resume, startFresh, artifactType, artifactId,
   } = context;
   const resumeBody = resumeFields({ conversationId, resume, startFresh, artifactType, artifactId });
@@ -114,6 +114,8 @@ export function contentSessionBody(mode, context = {}) {
     ...(topic ? { topic } : {}),
     ...(pillar ? { pillar } : {}),
     ...(channel ? { channel } : {}),
+    // A draft modelled on a TikTok post; the server validates it again.
+    ...(cloneUrl ? { clone_url: cloneUrl } : {}),
     ...resumeBody,
   };
 }

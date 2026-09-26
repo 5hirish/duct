@@ -109,6 +109,7 @@ export const ErrorCode = Object.freeze({
   MODEL_NOT_FOUND:     "model_not_found",
   CONNECTOR_EXPIRED:   "connector_expired",
   CONNECTOR_FORBIDDEN: "connector_forbidden",
+  REFERENCE_UNAVAILABLE: "reference_unavailable",
   CANCELLED:           "cancelled",
   UNKNOWN:             "unknown",
 });

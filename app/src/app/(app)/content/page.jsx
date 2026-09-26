@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { CopyPlus } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,7 @@ import AnalyticsView from "@/components/content/AnalyticsView";
 import FormatLibrary from "@/components/content/FormatLibrary";
 import StyleGallery from "@/components/content/StyleGallery";
 import PostCard from "@/components/content/PostCard";
+import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import PlanBoard from "@/components/content/PlanBoard";
 
 const TABS = ["plan", "posts", "analytics", "discover", "library", "brand", "accounts"];
@@ -192,9 +195,26 @@ function postRank(p) {
 
 function PostsTab({ projectId }) {
   const { i18n } = useLingui();
+  const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [cloneOpen, setCloneOpen] = useState(false);
+
+  // The one way into a post that no plan asked for: model it on a TikTok
+  // that already worked (issue #222). The workspace does the rest.
+  const cloneButton = (
+    <Button size="sm" variant="outline" onClick={() => setCloneOpen(true)}>
+      <CopyPlus aria-hidden="true" /> <Trans>Clone a TikTok</Trans>
+    </Button>
+  );
+  const cloneDialog = (
+    <CloneFromUrlDialog
+      open={cloneOpen}
+      onOpenChange={setCloneOpen}
+      onClone={(url) => router.push(`/content/posts/new?${new URLSearchParams({ clone_url: url })}`)}
+    />
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -240,15 +260,21 @@ function PostsTab({ projectId }) {
   if (posts.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border/70 p-10 text-center">
-        <p className="mb-3 text-sm text-muted-foreground"><Trans>No posts yet. Generate a plan and draft posts from the board.</Trans></p>
-        <Button asChild><Link href="/content/plan"><Trans>Open plan board →</Trans></Link></Button>
+        <p className="mb-3 text-sm text-muted-foreground"><Trans>No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked.</Trans></p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button asChild><Link href="/content/plan"><Trans>Open plan board →</Trans></Link></Button>
+          {cloneButton}
+        </div>
+        {cloneDialog}
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      {cloneDialog}
       <div className="flex flex-wrap items-center gap-1.5">
+        <div className="order-last ml-auto">{cloneButton}</div>
         {POST_FILTERS.map((f) => {
           const n = counts[f] || 0;
           if (f !== "all" && n === 0) return null;

@@ -14,8 +14,10 @@ import { getActiveProjectId } from "@/lib/projects";
  *   - plan_id      (optional)  — anchor the draft to a specific plan
  *   - day          (optional)  — which Day in the plan we're drafting
  *   - topic, pillar (optional) — for standalone (no-plan) drafts
+ *   - clone_url    (optional)  — a TikTok post to model the draft on
  *
- * Reached from PlanViewport's "Draft this post →" button on a day card.
+ * Reached from PlanViewport's "Draft this post →" button on a day card, and
+ * from "Clone a TikTok" on the Posts tab.
  */
 export default function NewPostDraftPage() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function NewPostDraftPage() {
   const topic     = search.get("topic") || undefined;
   const pillar    = search.get("pillar") || undefined;
   const channel   = search.get("channel") || undefined;
+  const cloneUrl  = search.get("clone_url") || undefined;
 
   useEffect(() => {
     const id = getActiveProjectId();
@@ -53,6 +56,7 @@ export default function NewPostDraftPage() {
           topic,
           pillar,
           channel,
+          cloneUrl,
         }}
         renderViewport={({ payload, onSendMessage }) => (
           <PostViewport payload={payload} onSendMessage={onSendMessage} />
