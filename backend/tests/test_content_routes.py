@@ -72,7 +72,7 @@ def test_content_routes_registered():
         "/api/content/posts",
         "/api/content/posts/{post_id}",
         "/api/content/posts/{post_id}/mark-posted",
-        "/api/content/posts/{post_id}/log-metrics",
+        "/api/content/posts/{post_id}/metrics",
         # Libraries
         "/api/content/formats",
         "/api/content/formats/{format_id}",
@@ -112,6 +112,7 @@ def test_content_routes_registered():
         ("POST",   "/api/content/posts/{uuid}/publish",                      {"social_account_ids": [101]}),
         ("POST",   "/api/content/posts/{uuid}/sync-metrics",                 None),
         ("POST",   "/api/content/posts/{uuid}/sync-daily",                   None),
+        ("POST",   "/api/content/posts/{uuid}/metrics",                      {"saves": 1}),
     ],
 )
 def test_endpoints_require_api_key(method, path, body):

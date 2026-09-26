@@ -13,6 +13,7 @@ import {
 import { Trans, useLingui } from "@lingui/react/macro";
 import { cdnImage, mediaUrl } from "@/lib/contentApi";
 import { SCHEDULED_META, statusMeta } from "@/lib/contentStatus";
+import { metricsOf } from "@/lib/contentMetrics";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import { compactNumber, formatDate, titleCase } from "@/lib/format";
 
@@ -23,24 +24,6 @@ import { compactNumber, formatDate, titleCase } from "@/lib/format";
 // `scheduled` is not a stored post status — it is a plan slot — so it comes
 // from its own entry rather than widening the enum's map.
 const chipFor = (status) => (status === "scheduled" ? SCHEDULED_META : statusMeta(status));
-
-function pick(perf, ...keys) {
-  for (const k of keys) {
-    const v = perf?.[k];
-    if (typeof v === "number") return v;
-  }
-  return null;
-}
-
-function metricsOf(perf = {}) {
-  return {
-    views:    pick(perf, "view_count", "play_count", "views"),
-    likes:    pick(perf, "like_count", "digg_count", "likes"),
-    comments: pick(perf, "comment_count", "comments"),
-    shares:   pick(perf, "share_count", "shares"),
-    saves:    pick(perf, "save_count", "collect_count", "saves"),
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Post card
@@ -53,7 +36,7 @@ export default function PostCard({ post }) {
   const thumb = cdnImage(mediaUrl(post.thumbnail_url), { width: 480 });
   const platforms = Array.isArray(post.platforms) ? post.platforms : [];
   const m = metricsOf(post.perf);
-  const hasMetrics = Object.values(m).some((v) => v != null);
+  const hasMetrics = [m.views, m.likes, m.comments, m.shares, m.saves].some((v) => v != null);
   const status = post.status || "pending";
   const chip = chipFor(status);
   const formatLabel = post.format_name || post.format_slug || "";

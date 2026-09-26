@@ -6,7 +6,9 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PostViewport from "@/components/content/PostViewport";
 import PublishModal from "@/components/content/PublishModal";
+import PostMetricsForm from "@/components/content/PostMetricsForm";
 import { getPost } from "@/lib/contentApi";
+import { PostStatus } from "@/lib/contentEnums";
 import { getActiveProjectId } from "@/lib/projects";
 import LoadError from "@/components/LoadError";
 
@@ -107,7 +109,7 @@ export default function PostDetailPage() {
     );
   }
 
-  const canPublish = post.status !== "posted";
+  const canPublish = post.status !== PostStatus.POSTED;
 
   return (
     <div className="h-full">
@@ -116,7 +118,17 @@ export default function PostDetailPage() {
         canPublish={canPublish}
         onPublish={() => setPublishOpen(true)}
         onRevise={() => router.push(`/content/posts/${postId}?revise=1`)}
-      />
+      >
+        {/* Only perf changes on a metrics save; taking the whole reply would
+            drop active_conversation_id, which only GET /posts/{id} carries. */}
+        {post.status === PostStatus.POSTED && (
+          <PostMetricsForm
+            key={post.id}
+            post={post}
+            onSaved={(updated) => setPost((prev) => ({ ...prev, perf: updated.perf }))}
+          />
+        )}
+      </PostViewport>
 
       <PublishModal
         open={publishOpen}

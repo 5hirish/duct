@@ -830,6 +830,15 @@ don't fit.
   disambiguating line and short chips. Vocabulary is server-side too
   (`ConnectorMeta.entity_noun`), so adding a connector stays one registration
   rather than a registration plus an edit to a table in the frontend.
+- `service/content_metrics.py` — a content post's `perf`, read and written one
+  way. `METRIC_ALIASES` reconciles the three key conventions in the column
+  (PostBridge's `view_count`, migrated `avgWatchTime`, hand-entered `saves`);
+  read through `metric_value`, never `perf.get("…")`. Two writers:
+  `merge_manual_metrics` (the `/metrics` route) records typed-in metrics under
+  `manual_keys`, and `merge_synced_metrics` (the sync route and the agent's
+  `log_metrics`) skips every alias of those, so **a sync never overwrites a
+  number somebody typed.** `app/src/lib/contentMetrics.js` mirrors the table
+  and `tests/test_content_metrics.py` holds the two equal.
 - `service/rest.py` — sync HTTP transport for the reporting connectors:
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;

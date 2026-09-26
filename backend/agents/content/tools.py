@@ -68,6 +68,7 @@ from agents.content.schema import (
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
 from service import storage
+from service.content_metrics import merge_synced_metrics
 from db.session import get_engine
 from models.content import (
     ContentAsset,
@@ -1700,15 +1701,15 @@ def build_content_tools_lc(
                     logger.warning("content: metrics pull failed: %s", exc, exc_info=True)
                     return _err(f"Couldn't pull metrics just now — {exc.error.message or 'please try again shortly'}.")
 
-                merged = dict(post.perf or {})
-                merged.update({
-                    k: v for k, v in analytics.model_dump(mode="json").items()
-                    if v is not None and k not in ("id",)
-                })
-                merged["last_synced_at"] = (
-                    analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+                # The same merge the sync route uses: numbers the person typed
+                # in stay theirs, whichever of the two pulled.
+                post.perf = merge_synced_metrics(
+                    post.perf,
+                    analytics.model_dump(mode="json"),
+                    synced_at=(
+                        analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+                    ),
                 )
-                post.perf = merged
                 post.post_bridge_result_id = chosen.id
                 post.daily_perf = [s.model_dump(mode="json") for s in daily.snapshots]
                 db.add(post)

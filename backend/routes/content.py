@@ -18,7 +18,7 @@ Plans + posts CRUD:
   GET    /api/content/posts?project_id=…  · GET /api/content/posts/{id}
   POST   /api/content/posts               · PATCH /api/content/posts/{id}
   POST   /api/content/posts/{id}/mark-posted
-  POST   /api/content/posts/{id}/log-metrics
+  POST   /api/content/posts/{id}/metrics  — hand-entered numbers; a sync never overwrites them
 
 Format + avatar library CRUD:
   GET/POST/PATCH/DELETE  /api/content/formats[/{id}]
@@ -89,6 +89,7 @@ from models.auth import User
 from models.project import Project
 from service import storage
 from service.auth import get_current_user, get_user_provider_keys
+from service.content_metrics import merge_manual_metrics, merge_synced_metrics
 from service.membership import get_project_for_user, get_project_row_for_user
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso
@@ -1065,6 +1066,9 @@ class PostOut(BaseModel):
     scheduled_at:  str | None
     tiktok_url:    str
     published_via: str
+    # Set when PostBridge published the post, which is when its counts sync —
+    # so the metrics form shows them rather than asking for them.
+    post_bridge_post_id: str = ""
     perf:          dict
     daily_perf:    list
     notes:         str
@@ -1122,6 +1126,7 @@ def _post_out(
         scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
         tiktok_url=p.tiktok_url,
         published_via=p.published_via,
+        post_bridge_post_id=p.post_bridge_post_id or "",
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
         notes=p.notes,
@@ -1351,30 +1356,49 @@ def mark_post_posted(
     return _enrich_one(db, post)
 
 
-class MetricsLog(BaseModel):
-    model_config = ConfigDict(extra="allow")  # forward-compatible with future PostBridge fields
+class ManualMetrics(BaseModel):
+    """Numbers read off the platform's own analytics screen and typed in.
+
+    One field per metric in ``service/content_metrics.METRIC_ALIASES``, named
+    the same, which a test holds. PostBridge supplies only the first four, and
+    only for a post it published; everything else is known to the person alone.
+    An omitted field is left alone; ``null`` withdraws a value entered earlier.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    views:           int | None = Field(default=None, ge=0)
+    likes:           int | None = Field(default=None, ge=0)
+    comments:        int | None = Field(default=None, ge=0)
+    shares:          int | None = Field(default=None, ge=0)
+    saves:           int | None = Field(default=None, ge=0)
+    reach:           int | None = Field(default=None, ge=0)
+    avg_watch_time:  float | None = Field(default=None, ge=0)          # seconds
+    completion_rate: float | None = Field(default=None, ge=0, le=100)  # percent
 
 
-@router.post("/content/posts/{post_id}/log-metrics")
-def log_post_metrics(
+@router.post("/content/posts/{post_id}/metrics")
+def enter_post_metrics(
     post_id: UUID,
-    body: MetricsLog,
+    body: ManualMetrics,
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Append a snapshot to daily_perf + merge into perf (last-write-wins).
+    """Merge hand-entered metrics into perf and mark them manual.
 
-    Phase 4 will wire this into PostBridge sync jobs. For now it accepts any
-    JSON-serialisable body and persists it as-is.
+    This replaced ``/log-metrics``, which took any JSON and merged it
+    last-write-wins, so it could overwrite a typed number (or the record of
+    which ones were typed) as easily as add one. daily_perf is left to
+    ``/sync-daily``: it is PostBridge's history, and a hand-entered point in it
+    would be replaced by the next refresh anyway.
     """
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
-    metrics = body.model_dump()
-    metrics["recorded_at"] = datetime.now(timezone.utc).isoformat()
-    post.daily_perf = (post.daily_perf or []) + [metrics]
-    merged = dict(post.perf or {})
-    merged.update({k: v for k, v in metrics.items() if k != "recorded_at"})
-    merged["last_synced_at"] = metrics["recorded_at"]
-    post.perf = merged
+    entered = body.model_dump(exclude_unset=True)
+    if not entered:
+        raise HTTPException(422, "No metrics to save.")
+    if post.status != ContentStatus.POSTED:
+        raise HTTPException(409, "Mark this post as posted before adding its numbers.")
+    post.perf = merge_manual_metrics(post.perf, entered, at=now_iso())
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -2117,15 +2141,11 @@ async def sync_post_metrics(
     except PostBridgeAPIError as exc:
         raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
 
-    merged = dict(post.perf or {})
-    merged.update({
-        k: v for k, v in analytics.model_dump(mode="json").items()
-        if v is not None and k not in ("id",)
-    })
-    merged["last_synced_at"] = (
-        analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
+    post.perf = merge_synced_metrics(
+        post.perf,
+        analytics.model_dump(mode="json"),
+        synced_at=analytics.last_synced_at.isoformat() if analytics.last_synced_at else None,
     )
-    post.perf = merged
     post.post_bridge_result_id = chosen.id
     db.add(post)
     db.commit()
