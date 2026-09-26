@@ -37,6 +37,7 @@ from uuid import UUID
 
 # Read off the plan schema, so a new type is "untested" the moment Day accepts it.
 from agents.content.schema import POST_TYPES
+from service.content_metrics import METRIC_ALIASES, metric_value
 
 # How many recent posts inform a plan. Recent, because an account's audience
 # and the platform both move; a year-old winner is weak evidence for next month.
@@ -79,40 +80,25 @@ UNTESTED = "untested"
 # Reading a metric
 # ---------------------------------------------------------------------------
 
-# ``perf`` holds three key conventions: PostBridge's ``*_count`` fields, the
-# Perf schema's own names, and whatever a hand-logged snapshot sent. Each
-# metric is read through its aliases in priority order.
-_METRIC_KEYS: dict[str, tuple[str, ...]] = {
-    VIEWS: ("view_count", "play_count", "views"),
-    "saves": ("save_count", "collect_count", "saves"),
-    "shares": ("share_count", "shares"),
-    "completion_rate": ("completion_rate", "completionRate", "watched_full_video", "watchFullVideo"),
-}
-
 
 def read_metric(perf: object, name: str) -> float | None:
     """One metric from a post's ``perf``, or None when it was never recorded.
 
-    The only place this module reads ``perf``. When the shared alias contract
-    (``METRIC_ALIASES``) lands in ``service/content_metrics.py``, this body
-    becomes a call to it and nothing else here changes.
-
-    A completion rate above 1 is a percentage — the app's manual form records
-    0-100, the Perf schema 0-1 — and is scaled so the two compare.
+    The only place this module reads ``perf``. Which keys mean which metric,
+    and which wins when a sync and a person both wrote one, is
+    ``service/content_metrics.py``'s contract; this adds only what a median
+    needs on top: a non-finite number is no reading, and a completion rate
+    is a fraction here — the contract stores 0-100, older snapshots sent 0-1,
+    so anything above 1 is scaled.
     """
-    if not isinstance(perf, dict):
+    if not isinstance(perf, dict) or name not in METRIC_ALIASES:
         return None
-    for key in _METRIC_KEYS.get(name, (name,)):
-        value = perf.get(key)
-        # bool is an int to Python and never a metric.
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            continue
-        if not math.isfinite(value):
-            continue
-        if name == "completion_rate" and value > 1:
-            value = value / 100
-        return float(value)
-    return None
+    value = metric_value(perf, name)
+    if value is None or not math.isfinite(value):
+        return None
+    if name == "completion_rate" and value > 1:
+        value = value / 100
+    return float(value)
 
 
 # ---------------------------------------------------------------------------
