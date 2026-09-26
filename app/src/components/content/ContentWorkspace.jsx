@@ -29,7 +29,7 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  *
  * Props:
  *   - mode: 'plan_month' | 'draft_post'
- *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId }
+ *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId, cloneUrl }
  *   - renderViewport: ({ payload, mode, sessionId, phase, steps, building, onSendMessage }) => ReactNode
  *     Called every render with the latest plan/post payload from the agent.
  *     onSendMessage(text) sends a chat turn into the live session (used by the
@@ -51,8 +51,10 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     notifyAs: t`Content Studio`,
     body,
     // Scoped to the artifact so a reload of this post's workspace resumes
-    // this post's run and never a different one's.
-    handleKey: `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.projectId || ""}`,
+    // this post's run and never a different one's. A clone has no artifact
+    // yet, so its link scopes it: cloning a second post in the same tab must
+    // start a second run, not reattach to the first.
+    handleKey: `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || context.projectId || ""}`,
     onEvent: handleEvent,
   });
 
@@ -198,7 +200,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       right={viewportEl}
       left={
         <AgentChat
-          title={MODE_LABELS[mode] ? i18n._(MODE_LABELS[mode]) : t`Content agent`}
+          title={context.cloneUrl ? t`Cloning a TikTok` : MODE_LABELS[mode] ? i18n._(MODE_LABELS[mode]) : t`Content agent`}
           phase={agent.phase}
           steps={agent.steps}
           todos={agent.todos}

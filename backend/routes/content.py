@@ -2,7 +2,7 @@
 
 Streaming endpoints clone the SSE machinery from routes/audit.py:
   POST   /api/content/plan/stream         — start a plan_month session
-  POST   /api/content/post/stream         — start a draft_post session
+  POST   /api/content/post/stream         — start a draft_post session (a clone with `clone_url`)
   POST   /api/content/answer/{sid}        — resolve pending AskUserQuestion
   POST   /api/content/chat/{sid}          — continued chat into an active session
   DELETE /api/content/session/{sid}       — close session, free resources
@@ -443,15 +443,22 @@ async def _run_draft_worker(
         # Primary channel: explicit request → the day's first platform → default.
         from agents.content.channels import primary_channel
         channel = req.channel or (primary_channel(day_obj.platforms) if day_obj else None)
-        await runner.run_draft(
-            session_id,
-            req.project_id,
-            emit_fn,
-            day=day_obj,
-            topic=req.topic,
-            pillar=req.pillar,
-            channel=channel,
-        )
+        if req.clone_url:
+            # A draft modelled on a TikTok post; the plan link-back below is
+            # the same for both, so a clone can fill a plan slot too.
+            await runner.run_clone(
+                session_id, req.project_id, emit_fn, clone_url=req.clone_url, channel=channel,
+            )
+        else:
+            await runner.run_draft(
+                session_id,
+                req.project_id,
+                emit_fn,
+                day=day_obj,
+                topic=req.topic,
+                pillar=req.pillar,
+                channel=channel,
+            )
         # Link the drafted post back onto its plan-day (post_id) so the board
         # can match the new post to its slot (we link by post_id, not position).
         if req.plan_id is not None and req.day_index is not None:
@@ -1068,6 +1075,8 @@ class PostOut(BaseModel):
     perf:          dict
     daily_perf:    list
     notes:         str
+    # The TikTok a cloned post was modelled on; None for any other post.
+    clone_source:  dict | None = None
     created_at:    str
     updated_at:    str
     # The active agent conversation for this post (if any) — drives "click post →
@@ -1125,6 +1134,7 @@ def _post_out(
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
         notes=p.notes,
+        clone_source=p.clone_source,
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
     )

@@ -892,6 +892,10 @@ msgstr "Aktivität"
 msgid "Ad account id"
 msgstr "Anzeigenkonto-ID"
 
+#: src/lib/contentEnums.js
+msgid "Adapted"
+msgstr "Angepasst"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Adaptive thinking"
 msgstr "Adaptives Denken"
@@ -1637,7 +1641,7 @@ msgstr "Duct nicht erreichbar"
 msgid "Can't reach the provider"
 msgstr "Anbieter nicht erreichbar"
 
-#: src/app/(app)/execute/page.jsx src/app/(app)/projects/page.jsx src/components/connections/ManualConnectorCard.jsx src/components/connections/ProviderCard.jsx src/components/content/FormatLibrary.jsx src/components/content/PublishModal.jsx src/components/memory/MemoryTimeline.jsx src/components/onboarding/ProviderStep.jsx src/components/ProjectMembers.jsx
+#: src/app/(app)/execute/page.jsx src/app/(app)/projects/page.jsx src/components/connections/ManualConnectorCard.jsx src/components/connections/ProviderCard.jsx src/components/content/CloneFromUrlDialog.jsx src/components/content/FormatLibrary.jsx src/components/content/PublishModal.jsx src/components/memory/MemoryTimeline.jsx src/components/onboarding/ProviderStep.jsx src/components/ProjectMembers.jsx
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -1779,6 +1783,14 @@ msgstr "Client-ID"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Client-rendered pages — Google Wave 1 may see empty content."
 msgstr "Client-gerenderte Seiten – Google Wave 1 sieht möglicherweise leeren Inhalt."
+
+#: src/app/(app)/content/page.jsx src/components/content/CloneFromUrlDialog.jsx
+msgid "Clone a TikTok"
+msgstr "Ein TikTok klonen"
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Cloning a TikTok"
+msgstr "TikTok klonen"
 
 #: src/components/AgentDrawer.jsx src/components/audit/ExecutionOffer.jsx
 msgid "Close"
@@ -2085,6 +2097,10 @@ msgstr "Cookies, ehrlich gesagt"
 #: src/app/(auth)/desktop-auth/page.js src/components/audit/ShareReport.jsx src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "Kopiert"
+
+#: src/lib/contentEnums.js
+msgid "Copied closely"
+msgstr "Genau kopiert"
 
 #: src/components/AppErrorPanel.jsx
 msgid "Copied debug info"
@@ -2507,6 +2523,10 @@ msgstr "Entwurf"
 #: src/lib/contentEnums.js
 msgid "Draft"
 msgstr "Entwurf"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Draft a clone"
+msgstr "Einen Klon entwerfen"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
@@ -3481,6 +3501,10 @@ msgstr "https://example.com"
 msgid "https://growthbook.example.com (leave empty for GrowthBook Cloud)"
 msgstr "https://growthbook.example.com (für GrowthBook Cloud leer lassen)"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "https://www.tiktok.com/@creator/video/…"
+msgstr "https://www.tiktok.com/@creator/video/…"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "https://yoursite.com"
 msgstr "https://yoursite.com"
@@ -3701,6 +3725,10 @@ msgid ""
 "Kept only until you close the app, and reports that run without you cannot use it."
 msgstr ""
 "Nur gespeichert, bis du die App schließt, und Berichte, die ohne dich laufen, können es nicht verwenden."
+
+#: src/components/content/CloneSourceNote.jsx
+msgid "Kept:"
+msgstr "Beibehalten:"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Key ID"
@@ -4198,6 +4226,10 @@ msgstr "Modellanbieter"
 #~ msgid "Model: {label}"
 #~ msgstr "Modell: {label}"
 
+#: src/components/content/CloneSourceNote.jsx
+msgid "Modelled on {reference}"
+msgstr "Basierend auf {reference}"
+
 #: src/app/(app)/settings/models/page.jsx src/components/AppNav.jsx src/components/AppSidebar.jsx
 msgid "Models & providers"
 msgstr "Modelle & Anbieter"
@@ -4480,9 +4512,15 @@ msgid "No plan yet for this project."
 msgstr "Noch kein Plan für dieses Projekt."
 
 #: src/app/(app)/content/page.jsx
-msgid "No posts yet. Generate a plan and draft posts from the board."
+msgid ""
+"No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
 msgstr ""
-"Noch keine Beiträge. Erstelle einen Plan und Entwürfe für Beiträge vom Board."
+"Noch keine Beiträge. Erstelle einen Plan und entwirf Beiträge vom Board, oder klone ein TikTok, das funktioniert hat."
+
+#: src/app/(app)/content/page.jsx
+#~ msgid "No posts yet. Generate a plan and draft posts from the board."
+#~ msgstr ""
+#~ "Noch keine Beiträge. Erstelle einen Plan und Entwürfe für Beiträge vom Board."
 
 #: src/components/content/PostCard.jsx
 msgid "No preview yet"
@@ -5159,6 +5197,16 @@ msgstr "PASS"
 msgid "Paste a key first"
 msgstr "Zuerst einen Schlüssel einfügen"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid ""
+"Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
+msgstr ""
+"Füge einen Beitrag ein, der funktioniert hat. Duct liest, warum er funktioniert hat, entwirft dann ein Karussell für deine Marke mit derselben Struktur und sagt dir, was beibehalten wurde."
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Paste the link to one TikTok post."
+msgstr "Füge den Link zu einem TikTok-Beitrag ein."
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr "Deinen Schlüssel einfügen"
@@ -5186,6 +5234,11 @@ msgstr "Berechtigungen"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Persona description"
 msgstr "Persona-Beschreibung"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Photo carousels and videos both work. The clone is always a carousel."
+msgstr ""
+"Foto-Karussells und Videos funktionieren beide. Der Klon ist immer ein Karussell."
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Pick a color"
@@ -5600,6 +5653,10 @@ msgstr "Deine Seiten lesen und parsen"
 #: src/app/(start)/start/page.jsx
 msgid "Reading the rest of the site…"
 msgstr "Lese den Rest der Seite…"
+
+#: src/lib/contentEvents.js
+msgid "Reading the TikTok"
+msgstr "TikTok wird gelesen"
 
 #: src/app/(start)/start/page.jsx
 msgid "Reading…"
@@ -6915,6 +6972,10 @@ msgstr "für diesen Anbieter gespeichert"
 msgid "Stripe"
 msgstr "Stripe"
 
+#: src/lib/contentEnums.js
+msgid "Structure only"
+msgstr "Nur Struktur"
+
 #: src/components/content/PlanViewport.jsx
 msgid "Studying what's worked before…"
 msgstr "Analysiere, was zuvor funktioniert hat…"
@@ -7085,6 +7146,10 @@ msgstr ""
 msgid "That didn’t send — your choices are still here. Try again."
 msgstr "Das wurde nicht gesendet — deine Auswahl ist noch hier. Versuche es erneut."
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That doesn't look like a link."
+msgstr "Das sieht nicht wie ein Link aus."
+
 #: src/components/content/FormatLibrary.jsx
 msgid "That format could not be deleted — it is still in the library."
 msgstr "Dieses Format konnte nicht gelöscht werden — es ist noch in der Bibliothek."
@@ -7107,9 +7172,24 @@ msgstr ""
 msgid "That key was rejected"
 msgstr "Dieser Schlüssel wurde abgelehnt"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid ""
+"That link isn't a single post. It should look like tiktok.com/@creator/video/123…"
+msgstr ""
+"Dieser Link ist kein einzelner Beitrag. Er sollte wie tiktok.com/@creator/video/123… aussehen."
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That link isn't on tiktok.com."
+msgstr "Dieser Link ist nicht von tiktok.com."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "That turn failed"
 msgstr "Dieser Zug ist fehlgeschlagen"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That's a share link. Open it, then copy the full address from your browser."
+msgstr ""
+"Das ist ein Share-Link. Öffne ihn und kopiere dann die vollständige Adresse aus deinem Browser."
 
 #: src/app/(start)/start/page.jsx
 msgid "That's us — continue"
@@ -7486,6 +7566,10 @@ msgstr "Threads"
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
 msgstr "Stufen"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "TikTok link"
+msgstr "TikTok-Link"
 
 #: src/components/insight-blocks/TimeSeriesBlock.jsx
 msgid "Time series"
@@ -8076,6 +8160,10 @@ msgstr "Warum es wichtig ist und wie ein Agent es anwenden sollte"
 msgid "Why it matters, and how an agent should apply it. Optional."
 msgstr "Warum es wichtig ist und wie ein Agent es anwenden sollte. Optional."
 
+#: src/components/content/CloneSourceNote.jsx
+msgid "Why it worked:"
+msgstr "Warum es funktioniert hat:"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Will be encrypted and stored on Duct, so scheduled runs use your key too."
 msgstr ""
@@ -8114,6 +8202,10 @@ msgstr "Durcharbeiten"
 #: src/components/audit/AuditReport.jsx src/components/PipelineProgress.jsx
 msgid "Working on your report…"
 msgstr "Arbeitet an deinem Bericht…"
+
+#: src/lib/contentEvents.js
+msgid "Working out why it worked"
+msgstr "Es wird analysiert, warum es funktioniert hat"
 
 #: src/components/workspace/Todos.jsx
 msgid "working…"

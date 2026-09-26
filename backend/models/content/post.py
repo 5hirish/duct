@@ -108,6 +108,11 @@ class ContentPost(SQLModel, table=True):
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     notes: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    # The TikTok this post was cloned from (issue #222): the saved
+    # discovered_reference asset, its URL and author, why it worked, and the
+    # clone's FIT × PROOF call. None for a post that was not cloned. Written
+    # by submit_post_draft only; see agents/content/schema.clone_source.
+    clone_source: dict | None = Field(default=None, sa_column=Column(json_column(), nullable=True))
 
     created_at: datetime = Field(
         default_factory=utcnow,

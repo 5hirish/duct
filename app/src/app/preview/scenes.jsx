@@ -31,6 +31,8 @@ import { CornerNotice } from "@/components/ui/corner-notice";
 import { FolderOpen, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
+import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
+import CloneSourceNote from "@/components/content/CloneSourceNote";
 import DeskCards from "@/components/insights/desk/DeskCards";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
@@ -1817,7 +1819,75 @@ export const SCENES = [
       "Solo's audit from the story: nine categories, every finding on a page with a value, five priorities, a three-phase plan. (The lead-magnet page shows the same audit as the document the agent hands over, AUDIT_REPORT_HTML in the story, in the briefs' language; scripts/shots captures that one straight from the HTML.) This is a printed thing rather than app chrome: it declares `color-scheme: light` and redefines the semantic tokens for its own subtree, so it looks the same in a dark app as in a light one. It used to take its ground from the theme while painting sixty fixed hexes inside it, which put the finding titles at 1.11:1 in dark. Open this scene in a DARK frame — that is the whole point of it.",
     render: () => <AuditReportV1 data={STORY_AUDIT} />,
   },
+  {
+    id: "clone-dialog",
+    state: "empty — nothing pasted yet",
+    group: "Clone a TikTok",
+    title: "Paste a post that worked",
+    note: "Opened from the Posts tab. What to check: the field has a visible label, the hint under it says the clone is always a carousel, and Draft a clone is the rightmost action. Nothing is fetched here; the session does the rest.",
+    render: () => <CloneDialogScene />,
+  },
+  {
+    id: "clone-dialog-share-link",
+    state: "error — a share link, which carries no post id",
+    group: "Clone a TikTok",
+    title: "A vm.tiktok.com link, refused with what to do instead",
+    note: "The server refuses the same link with a 422 (service/clone_reference.py); this says so before a session starts. The error replaces the hint rather than stacking under it, so the dialog does not grow, and the field is aria-invalid.",
+    render: () => <CloneDialogScene initialValue="https://vm.tiktok.com/ZMabc123/" />,
+  },
+  {
+    id: "clone-source",
+    state: "in niche and proven — a close copy",
+    group: "Clone a TikTok",
+    title: "Where a cloned post came from",
+    note: "Sits in the post viewport between the image bar and the caption. The author links out to the reference; the chip is the approach the server derived from the clone's fit × proof call, not something the model typed.",
+    render: () => (
+      <div style={{ maxWidth: 672, padding: 24 }}>
+        <CloneSourceNote source={CLONE_SOURCE} />
+      </div>
+    ),
+  },
+  {
+    id: "clone-source-inferred",
+    state: "out of niche, the reading failed, no author",
+    group: "Clone a TikTok",
+    title: "A clone whose reference could only be inferred",
+    note: "The diagnosis call failed, so there is no why-it-worked line, and the saved post named no author. The note still says what it was modelled on and how closely, and the link falls back to the word TikTok. An href that is not a TikTok post link is dropped, not rendered.",
+    render: () => (
+      <div style={{ maxWidth: 672, padding: 24 }}>
+        <CloneSourceNote
+          source={{
+            url: "https://www.tiktok.com/@x/video/7300000000000000009",
+            approach: "structure_only",
+            kept: "Only the before-and-after structure: the reference was about skincare, the brand is about haircuts.",
+          }}
+        />
+      </div>
+    ),
+  },
 ];
+
+const CLONE_SOURCE = {
+  reference_asset_id: "5c0f2a57-0000-4000-8000-000000000001",
+  url: "https://www.tiktok.com/@kestrel.studio/video/7300000000000000001",
+  author: "kestrel.studio",
+  why_it_worked: "Slide 4 is a self-test people save: it names the viewer's face shape and the one cut that flatters it, so the post is a tool they come back to rather than a tip they scroll past.",
+  fit: "in_niche",
+  proof: "proven",
+  approach: "close",
+  kept: "The identity-call hook, one face shape per slide, and the self-test on slide 4, because at 42× the creator's following the format carried it.",
+};
+
+/** The clone dialog, open on arrival; the button brings it back after Escape. */
+function CloneDialogScene({ initialValue = "" }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Open the clone dialog</Button>
+      <CloneFromUrlDialog open={open} onOpenChange={setOpen} onClone={() => setOpen(false)} initialValue={initialValue} />
+    </>
+  );
+}
 
 
 /**

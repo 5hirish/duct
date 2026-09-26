@@ -48,6 +48,10 @@ class ErrorCode(StrEnum):
     # A connector the agent reads through, not the model.
     CONNECTOR_EXPIRED = "connector_expired"
     CONNECTOR_FORBIDDEN = "connector_forbidden"
+    # A TikTok post a clone was asked to model could not be read: private,
+    # deleted, or the scrape failed. Not the model's fault and not transient
+    # in any way a retry of the same link reliably fixes.
+    REFERENCE_UNAVAILABLE = "reference_unavailable"
     CANCELLED = "cancelled"
     UNKNOWN = "unknown"
 
@@ -76,6 +80,7 @@ DESCRIPTIONS: dict[ErrorCode, str] = {
     ErrorCode.MODEL_NOT_FOUND: "That model is not available on this provider.",
     ErrorCode.CONNECTOR_EXPIRED: "A connected account needs to be reconnected.",
     ErrorCode.CONNECTOR_FORBIDDEN: "A connected account does not have access to that data.",
+    ErrorCode.REFERENCE_UNAVAILABLE: "Duct could not read that TikTok post.",
     ErrorCode.CANCELLED: "The run was stopped.",
     ErrorCode.UNKNOWN: "Something went wrong.",
 }
@@ -110,6 +115,8 @@ _BY_CLASS_NAME: dict[str, ErrorCode] = {
     "ConnectionError": ErrorCode.NETWORK,
     # Google auth: the refresh token behind a connector is gone.
     "RefreshError": ErrorCode.CONNECTOR_EXPIRED,
+    # service/clone_reference.py: the post a clone was built on is unreadable.
+    "ReferenceUnavailable": ErrorCode.REFERENCE_UNAVAILABLE,
 }
 
 _CONTEXT_WINDOW_RE = re.compile(

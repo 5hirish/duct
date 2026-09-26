@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-24
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-26
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -80,7 +80,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | Table | Holds |
 |---|---|
 | `content_plans` | a content plan and its strategy |
-| `content_posts` | one post: type (slideshow, video), slides, status, performance counts |
+| `content_posts` | one post: type (slideshow, video), slides, status, performance counts, and the TikTok it was cloned from (`clone_source`) |
 | `content_assets` | generated images, uploads and references |
 | `content_formats` | a project's library of post formats |
 | `content_avatars` | a project's library of avatars |

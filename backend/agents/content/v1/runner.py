@@ -48,10 +48,11 @@ them from the first turn.
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
 from collections import deque
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from agents.content.artifacts import (
@@ -64,9 +65,11 @@ from agents.content.artifacts import (
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
 from agents.core.events import run_context
 from agents.content.prompts import (
+    build_clone_user_prompt,
     build_orchestrator_system_prompt,
     build_plan_user_prompt,
     build_post_user_prompt,
+    build_reference_diagnosis_prompt,
 )
 from agents.content.schema import (
     AppFeature,
@@ -78,6 +81,7 @@ from agents.content.schema import (
     Day,
     PlanDraft,
     PostDraft,
+    ReferenceDiagnosis,
     RunMode,
     make_session,
 )
@@ -101,7 +105,13 @@ from agents.core.deep_session import (
     recorder_tool_hooks,
     subagent_step_hooks,
 )
-from agents.core.lc import build_ask_user_tool, inspection_chat_model, interrupt_pause, resolve_chat_model
+from agents.core.lc import (
+    UsageTracker,
+    build_ask_user_tool,
+    inspection_chat_model,
+    interrupt_pause,
+    resolve_chat_model,
+)
 from agents.core.quota import credential_identity
 from agents.core.turn import TurnContext, build_turn, spec_for
 from agents.core.session import register_session
@@ -109,6 +119,9 @@ from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
 from agents.engines import Engine, resolve_fallback_models
 from agents.models import ModelName, Provider, run_model_fields
 from agents.registry import AgentType
+
+if TYPE_CHECKING:
+    from service.clone_reference import CloneReference, TikTokPost
 
 logger = logging.getLogger(__name__)
 
@@ -625,6 +638,152 @@ class ContentRunner:
             chat_idle_timeout=chat_idle_timeout,
         )
 
+    async def run_clone(
+        self,
+        session_id: str,
+        project_id: UUID,
+        emit: EmitFn,
+        *,
+        clone_url: str,
+        channel: str | None = None,
+        chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
+        llm: Any = None,
+    ) -> None:
+        """A draft_post session modelled on a TikTok post (issue #222).
+
+        Not a mode of its own: the deliverable, the tools and the system
+        prompt are draft_post's, so a clone shares its cached prefix and a
+        resumed clone is an ordinary post conversation. What differs is the
+        opening turn — the reference, why it worked, and the clone discipline,
+        all in the USER turn — and the link to the reference the session
+        carries for submit_post_draft to record.
+        """
+        from agents.content.channels import resolve as resolve_channel
+        from service.clone_reference import parse_tiktok_post_url
+
+        session = get_session(session_id) or create_draft_session(session_id, project_id)
+        ch = resolve_channel(channel)
+        post_ref = parse_tiktok_post_url(clone_url)  # canonical already; parsed again, never trusted
+
+        async def _opening(brand: ContentBrandContext) -> str:
+            from service.clone_reference import engagement_prior
+
+            reference = await self._reference_step(project_id, post_ref, emit)
+            prior = engagement_prior(reference.post)
+            diagnosis = await self._diagnose_step(reference, prior, emit, llm)
+            # The URL is the one rebuilt from the parsed link, never the saved
+            # row's: a reference saved through Discover carries whatever URL
+            # the browser sent, and this one ends up as a link on a page.
+            session.clone_reference = {
+                "reference_asset_id": str(reference.asset_id),
+                "url": post_ref.url,
+                "author": reference.author or post_ref.handle,
+                "why_it_worked": diagnosis.why_it_worked.strip() if diagnosis else "",
+            }
+            return build_clone_user_prompt(
+                brand,
+                url=post_ref.url,
+                post=reference.post,
+                prior=prior,
+                diagnosis=diagnosis,
+                channel=ch,
+            )
+
+        await self._run_mode(
+            session, emit,
+            opening=_opening,
+            memory_query="",
+            channel=ch,
+            started={"channel": ch.id, "channel_label": ch.label, "channel_supported": ch.supported},
+            llm=llm,
+            chat_idle_timeout=chat_idle_timeout,
+        )
+
+    async def _reference_step(self, project_id: UUID, post_ref: TikTokPost, emit: EmitFn) -> CloneReference:
+        """The saved reference for a clone, as a visible step.
+
+        A reference that cannot be read ends the run: there is nothing to
+        model. The step is closed as failed first, so the ladder does not
+        spin above the failure; ``ReferenceUnavailable`` then reaches the
+        browser as ``reference_unavailable``.
+        """
+        from service.clone_reference import resolve_clone_reference
+
+        label = STEP_LABELS[ContentStep.READ_REFERENCE]
+        await emit({
+            "event": ContentEvent.STEP_STARTED,
+            "step_id": ContentStep.READ_REFERENCE,
+            "label": label,
+            "status": StepStatus.RUNNING,
+        })
+        try:
+            reference = await resolve_clone_reference(project_id, post_ref)
+        except Exception:  # noqa: BLE001 — re-raised; only the step is closed here
+            await emit({
+                "event": ContentEvent.STEP_FINISHED,
+                "step_id": ContentStep.READ_REFERENCE,
+                "label": label,
+                "status": StepStatus.ERROR,
+            })
+            raise
+        await emit({
+            "event": ContentEvent.STEP_FINISHED,
+            "step_id": ContentStep.READ_REFERENCE,
+            "label": label,
+            "status": StepStatus.SUCCESS,
+            "payload": {
+                "author": reference.author,
+                "slides": len(reference.slide_urls),
+                "saved_before": reference.reused,
+            },
+        })
+        return reference
+
+    async def _diagnose_step(
+        self, reference: CloneReference, prior: dict, emit: EmitFn, llm: Any
+    ) -> ReferenceDiagnosis | None:
+        """Why the reference worked, read by this run's own model.
+
+        One structured call outside the session's thread, so the slides it
+        looks at are never written into a checkpoint. The pictures ride along
+        only on a provider that takes them (``VISION_PROVIDERS``); elsewhere
+        the model reads the caption and the counts. None when the call fails:
+        the clone still runs, and its turn says the reading is inferred.
+        """
+        from service.clone_reference import reference_images
+
+        label = STEP_LABELS[ContentStep.DIAGNOSE_REFERENCE]
+        await emit({
+            "event": ContentEvent.STEP_STARTED,
+            "step_id": ContentStep.DIAGNOSE_REFERENCE,
+            "label": label,
+            "status": StepStatus.RUNNING,
+        })
+        images = await asyncio.to_thread(reference_images, reference) if self.vision else []
+        text = build_reference_diagnosis_prompt(reference.post, prior, images=len(images))
+        content: Any = text if not images else [
+            {"type": "text", "text": text},
+            *({"type": "image", "base64": base64.b64encode(data).decode("ascii"), "mime_type": mime}
+              for data, mime in images),
+        ]
+        diagnosis, raw = await diagnose_reference(self._summariser_model(llm), content)
+        # Billed like any other call on the user's key, but never the gauge:
+        # this call's context (the slides) is not the thread's.
+        tracker = UsageTracker(self.model)
+        if usage := tracker.feed(raw, None) or tracker.flush():
+            await emit({**usage, "scope": "subagent"})
+        await emit({
+            "event": ContentEvent.STEP_FINISHED,
+            "step_id": ContentStep.DIAGNOSE_REFERENCE,
+            "label": label,
+            "status": StepStatus.SUCCESS,
+            # The model's own sentence, like the chat it precedes; nothing
+            # here is interface copy.
+            "summary": (diagnosis.why_it_worked if diagnosis else "")[:_STEP_SUMMARY_CHARS],
+            "payload": {"read": diagnosis is not None, "images": len(images)},
+        })
+        return diagnosis
+
     async def _run_mode(
         self,
         session: ContentSession,
@@ -916,9 +1075,9 @@ class ContentRunner:
         await loop.run(opening_prompt, resume=resume, chat_idle_timeout=chat_idle_timeout)
 
     def _summariser_model(self, llm: Any) -> Any:
-        """The model an emergency compaction summarises with: the injected one
-        when there is one (a test's fake must not fire a real call), else the
-        runner's own."""
+        """The model an emergency compaction summarises with, and a clone's
+        diagnosis reads with: the injected one when there is one (a test's
+        fake must not fire a real call), else the runner's own."""
         if llm is not None:
             return llm
         return resolve_chat_model(
@@ -948,6 +1107,30 @@ class ContentRunner:
 
 async def _drop(_body: dict) -> None:
     return None
+
+
+async def diagnose_reference(
+    model: Any, content: str | list[dict]
+) -> tuple[ReferenceDiagnosis | None, Any]:
+    """One structured call: why a reference worked.
+
+    Returns the diagnosis, None when it fails, and the provider's raw reply,
+    whose usage the caller bills. ``content`` is the user message: the prompt
+    alone, or the prompt followed by standard image blocks. Best-effort in the
+    way the audit's draft inference is: a provider that cannot do structured
+    output, or refuses an image, costs the clone its diagnosis and nothing else.
+    """
+    try:
+        structured = model.with_structured_output(ReferenceDiagnosis, include_raw=True)
+        answer = await structured.ainvoke([{"role": "user", "content": content}])
+    except Exception:  # noqa: BLE001 — the clone runs on the caption and counts instead
+        logger.warning("content: reference diagnosis failed", exc_info=True)
+        return None, None
+    answer = answer if isinstance(answer, dict) else {}
+    parsed = answer.get("parsed")
+    if answer.get("parsing_error") is not None:
+        logger.warning("content: reference diagnosis unparseable: %s", answer["parsing_error"])
+    return (parsed if isinstance(parsed, ReferenceDiagnosis) else None), answer.get("raw")
 
 
 async def _publish_artifact(raw: str, emit: EmitFn, session_id: str) -> dict | None:
