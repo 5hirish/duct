@@ -494,6 +494,8 @@ agents/
 │                         every submit (both engines); the prompt's tables render from it
 └── content/            — Content Studio (plans, posts, images, publishing)
     ├── v1/             — deepagents runner (the only content engine)
+    ├── assessment.py   — the pre-publish review's checks and scoring; the agent
+    │                     scores six markers, the weights stay here
     └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py
 ```
 

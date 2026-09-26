@@ -1,6 +1,6 @@
 """The Content Studio agent's tools, bound for the LangChain (V1) harness.
 
-Three groups:
+Four groups:
   - Writers: submit_plan, submit_post_draft, edit_slide — validate Pydantic,
     upsert DB rows, emit SSE events (PLAN_GENERATED / POST_DRAFT_UPDATED).
   - Readers: fetch_brand_context, fetch_topic_bank, fetch_format_library,
@@ -8,6 +8,9 @@ Three groups:
     fetch_discovered_references, fetch_post, fetch_slide_context.
   - Media + publishing: render_slide, generate_image, edit_image,
     publish_post, mark_posted, log_metrics.
+  - Review: submit_assessment — persists the pre-publish review the
+    review_post sub-agent scored; the checks and the weights are the server's
+    (agents/content/assessment.py).
 
 This file was the Claude Agent SDK's in-process MCP server until content
 moved to V1. The tool *bodies* are what survived the port unchanged — the
@@ -57,13 +60,16 @@ from sqlmodel import Session, select
 
 from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel, image_model_for
 from agents.core.memory_tools import build_memory_tools_lc
+from agents.content.assessment import assess, reassess
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
     ContentStatus,
     ContentTool,
+    MarkerScore,
     PlanDraft,
     PostDraft,
+    ReviewMarker,
     Slide,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
@@ -78,6 +84,7 @@ from models.content import (
     ContentPost,
 )
 from models.project import Project
+from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
 
@@ -391,6 +398,11 @@ def _build_post_payload(row: ContentPost) -> dict:
         "camera_ref_pool": row.camera_ref_pool,
         "platforms":       row.platforms,
         "status":          row.status,
+        # Recomputed on every emit, so the panel's checks follow each edit and
+        # a score from before the edit says it is stale.
+        "assessment":      reassess(
+            row.slides or [], row.caption or "", row.hashtags or [], row.last_assessment
+        ).model_dump(mode="json"),
     }
 
 
@@ -726,6 +738,12 @@ def build_content_tools_lc(
     class FetchPostArgs(BaseModel):
         post_dir_slug: str = Field("", description="Post slug, e.g. '2026-06-08-001'.")
         post_id: str = Field("", description="Post UUID.")
+
+    class SubmitAssessmentArgs(BaseModel):
+        markers: list[MarkerScore] = Field(
+            description="One score per marker, all six, as the review_post sub-agent returned them.",
+        )
+        notes: str = Field("", description="Optional one-sentence overall summary.")
 
     # ----------------------- Writers -----------------------
 
@@ -1726,6 +1744,56 @@ def build_content_tools_lc(
             logger.exception("log_metrics failed")
             return _err(f"log_metrics failed: {exc}")
 
+    async def submit_assessment(markers: list, notes: str = "") -> str:
+        try:
+            scores = [m if isinstance(m, MarkerScore) else MarkerScore.model_validate(m) for m in markers or []]
+            # All six or nothing: a subset would still produce a 0-100 figure,
+            # and the owner could not tell it was judged on half the post.
+            missing = [m.value for m in ReviewMarker if m not in {s.id for s in scores}]
+            if missing:
+                return _err(f"Score every marker; missing: {', '.join(missing)}.")
+            if session.post_id is None:
+                return _err("No current post in this session to review.")
+            with _open_db() as db:
+                row, err = _require_post(db, project_id, session.post_id)
+                if err:
+                    return err
+                result = assess(
+                    row.slides or [], row.caption or "", row.hashtags or [], scores,
+                    notes=(notes or "").strip(), scored_at=now_iso(),
+                )
+                # Only this column is written, so an image attach racing the
+                # review cannot be undone by it; no post lock needed.
+                row.last_assessment = result.model_dump(mode="json")
+                db.add(row)
+                db.commit()
+                db.refresh(row)
+                await emit({
+                    "event":      ContentEvent.POST_DRAFT_UPDATED,
+                    "session_id": session.session_id,
+                    "post_id":    str(row.id),
+                    "payload":    _build_post_payload(row),
+                })
+                weakest = sorted(result.markers, key=lambda m: m.score)[:2]
+                return _ok({
+                    "status":        "ok",
+                    "post_id":       str(row.id),
+                    "topic":         row.topic,
+                    "overall":       result.overall,
+                    "band":          result.band,
+                    "content_score": result.content_score,
+                    "failed_checks": [
+                        c.model_dump(mode="json", include={"id", "severity", "offenders"})
+                        for c in result.checks if not c.passed
+                    ],
+                    "weakest":       [m.model_dump(mode="json", include={"id", "score", "fix"}) for m in weakest],
+                })
+        except ValidationError as exc:
+            return _err(f"markers are invalid — fix and call again:\n{exc}")
+        except Exception as exc:
+            logger.exception("submit_assessment failed")
+            return _err(f"submit_assessment failed: {exc}")
+
     async def render_slide(slide_id: str) -> str | list[dict]:
         try:
             slide_id = (slide_id or "").strip()
@@ -2056,6 +2124,15 @@ def build_content_tools_lc(
             "asset_url. The original asset is preserved — every edit creates a new "
             "content_assets row.",
             EditImageInput,
+        ),
+        _bind(
+            submit_assessment, ContentTool.SUBMIT_ASSESSMENT,
+            "Save the pre-publish review of the current post and show it to the user. "
+            "Pass the six marker scores the review_post sub-agent returned (all six). "
+            "The server adds the completeness checks, weighs the markers and computes "
+            "the overall; the result names the failed checks and the weakest markers "
+            "for you to relay. Advice only — it never blocks publishing.",
+            SubmitAssessmentArgs,
         ),
         _bind(
             publish_post, ContentTool.PUBLISH_POST,

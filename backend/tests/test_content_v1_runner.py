@@ -27,7 +27,12 @@ from langchain_core.messages import AIMessage
 
 from agents.content.artifacts import parse_artifact_json
 from agents.content.schema import ContentSession, ContentTool
-from agents.content.subagents import DRAFT_POST_TOOLS, GENERAL_PURPOSE_TOOLS, RESEARCH_PILLAR_TOOLS
+from agents.content.subagents import (
+    DRAFT_POST_TOOLS,
+    GENERAL_PURPOSE_TOOLS,
+    RESEARCH_PILLAR_TOOLS,
+    REVIEW_POST_TOOLS,
+)
 from agents.content.v1.runner import (
     ContentRunner,
     close_session,
@@ -99,9 +104,9 @@ def test_sub_agents_never_get_the_writer_tools():
     harness's general-purpose default (every tool of the parent) included."""
     writers = {ContentTool.SUBMIT_PLAN, ContentTool.SUBMIT_POST_DRAFT, ContentTool.EDIT_SLIDE,
                ContentTool.GENERATE_IMAGE, ContentTool.EDIT_IMAGE, ContentTool.PUBLISH_POST,
-               ContentTool.MARK_POSTED, ContentTool.RENDER_SLIDE}
+               ContentTool.MARK_POSTED, ContentTool.RENDER_SLIDE, ContentTool.SUBMIT_ASSESSMENT}
 
-    for tools in (RESEARCH_PILLAR_TOOLS, DRAFT_POST_TOOLS, GENERAL_PURPOSE_TOOLS):
+    for tools in (RESEARCH_PILLAR_TOOLS, DRAFT_POST_TOOLS, GENERAL_PURPOSE_TOOLS, REVIEW_POST_TOOLS):
         assert not writers & set(tools)
 
 
