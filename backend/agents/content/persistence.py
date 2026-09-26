@@ -473,6 +473,31 @@ class ConversationRecorder:
             await self._append(EventKind.THINKING, {"text": thinking})
         if assistant:
             await self._append(EventKind.ASSISTANT, {"text": assistant})
+            await self._count_citations(assistant)
+
+    async def _count_citations(self, text: str) -> None:
+        """Credit the memories this reply cites. The recorder is where every
+        agent's finished reply passes, so it is the one place a citation can be
+        counted for all of them — and a cited entry is the only honest meaning
+        of "recalled" (``service.memory.touch_recall``)."""
+        if self._usage_project_id is None and self._usage_user_id is None:
+            return
+        from service.memory import CITATION, touch_cited
+
+        if not CITATION.search(text):
+            return
+
+        def _touch() -> None:
+            with next(db_session()) as db:
+                touch_cited(
+                    db, project_id=self._usage_project_id,
+                    user_id=self._usage_user_id, text=text,
+                )
+
+        try:
+            await asyncio.to_thread(_touch)
+        except Exception:  # noqa: BLE001 — bookkeeping, never a broken stream
+            logger.debug("persistence: citation count failed", exc_info=True)
 
     async def record_user(self, content: Any) -> None:
         await self._append(EventKind.USER, {"content": content})

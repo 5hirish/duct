@@ -33,6 +33,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable, Sequence
+from urllib.parse import urlsplit
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -411,8 +412,12 @@ def set_status(db, row: ProjectMemory, status: str) -> ProjectMemory:
 def touch_recall(db, ids: Iterable[UUID]) -> None:
     """Record that these entries were used in an answer. Best-effort.
 
-    Recall counts feed importance reinforcement in phase 3 and already tell the
-    timeline which memories are actually earning their place.
+    Recall counts feed the reinforcement term of :func:`memory_score` and tell
+    the timeline which memories are earning their place. So "used" has to mean
+    used — cited in a reply (:func:`touch_cited`) or opened with GetMemory —
+    and never "placed in the digest": counting what was shown made every shown
+    entry rank higher and get shown again, a loop new entries could not break
+    into.
     """
     ids = [i for i in ids if i]
     if not ids:
@@ -430,6 +435,38 @@ def touch_recall(db, ids: Iterable[UUID]) -> None:
             db.rollback()
         except Exception:  # noqa: BLE001
             pass
+
+
+#: What a citation looks like in a reply — the short id :func:`short_id` mints.
+CITATION = re.compile(r"\bm_([0-9a-f]{8})\b")
+
+
+def touch_cited(db, *, project_id: UUID | None, user_id: UUID | None = None, text: str) -> int:
+    """Count the memories a reply cites as recalled. Returns how many.
+
+    One read resolves every cited short id at once, scoped to this project (and
+    this user's own entries), so an id the model invented or copied from
+    another project matches nothing. Best-effort, like :func:`touch_recall`.
+    """
+    cited = set(CITATION.findall(text or ""))
+    if not cited or (project_id is None and user_id is None):
+        return 0
+    try:
+        scope = []
+        if project_id is not None:
+            scope.append(ProjectMemory.project_id == project_id)
+        if user_id is not None:
+            scope.append(sa.and_(ProjectMemory.user_id == user_id, ProjectMemory.scope == SCOPE_USER))
+        ids = [
+            row_id
+            for row_id in db.execute(select(ProjectMemory.id).where(sa.or_(*scope))).scalars()
+            if str(row_id).replace("-", "")[:8] in cited
+        ]
+    except Exception:  # noqa: BLE001
+        logger.debug("memory: citation lookup failed", exc_info=True)
+        return 0
+    touch_recall(db, ids)
+    return len(ids)
 
 
 # ---------------------------------------------------------------------------
@@ -1044,14 +1081,28 @@ def _render_ref(row: ProjectMemory) -> str:
 class MemoryContext:
     """Rendered memory for one turn, plus the entries it drew on.
 
+    ``blocks`` is keyed by rendered tag. ``text`` joins them in
+    ``agents/core/turn.MEMORY_BLOCKS`` order, stable to volatile, which is the
+    only order a caller can put them in the turn without costing the cached
+    prefix: a turn carries this string as one unit in the ``project_memory``
+    slot, and the tags it holds are adjacent in ``BLOCK_ORDER``.
+
     ``recalled`` is what MEMORY_RECALLED reports to the UI: each entry carries
     enough to render a chip that says what it remembered and opens the row it
     came from, which is the whole point of attributing an answer to memory.
-    ``recalled_ids`` derives from it for :func:`touch_recall`.
+    Only entries the model was actually shown are in it.
     """
 
-    text: str = ""
+    blocks: dict[str, str] = field(default_factory=dict)
     recalled: list[dict] = field(default_factory=list)
+
+    @property
+    def text(self) -> str:
+        from agents.core.turn import MEMORY_BLOCKS
+
+        ordered = [t for t in MEMORY_BLOCKS if t in self.blocks]
+        ordered += [t for t in self.blocks if t not in MEMORY_BLOCKS]
+        return "\n".join(self.blocks[t] for t in ordered if self.blocks[t])
 
     def __bool__(self) -> bool:
         return bool(self.text)
@@ -1073,6 +1124,19 @@ def recalled_entry(row: ProjectMemory) -> dict:
     }
 
 
+# Digest sections, in the order they are claimed, spent and rendered. An entry
+# appears once, in the first section that claims it, and the character budget
+# is spent top-down — so when the digest is full it is the least specific
+# section that goes short, never the one about this question. The old single
+# cut at the end did the opposite: it truncated "Relevant to this question"
+# first, mid-line, and still reported every cut entry as recalled.
+SECTION_PINNED = "Pinned"
+SECTION_OPEN = "Open"
+SECTION_RELEVANT = "Relevant to this question"
+SECTION_RECENT = f"Last {RECENT_WINDOW_DAYS} days"
+SECTION_ARTIFACTS = "Artifacts"
+
+
 def render_digest(
     db,
     *,
@@ -1080,21 +1144,29 @@ def render_digest(
     query: str = "",
     as_of: datetime | None = None,
     max_entries: int = DIGEST_MAX_ENTRIES,
+    max_chars: int = DIGEST_MAX_CHARS,
+    exclude_entities: Iterable[str] = (),
 ) -> MemoryContext:
-    """The ``<project_memory>`` block: pinned, open, recent, artifacts, relevant.
+    """The ``<project_memory>`` block: pinned, open, relevant, recent, artifacts.
 
-    Sections are disjoint — an entry appears once, in the first section that
-    claims it — so the budget buys breadth rather than repetition.
+    Budgeted in whole entries: ``max_chars`` of entry lines and at most
+    ``max_entries`` of them. An entry that does not fit is left out entirely
+    and is not reported as recalled, so a chip under the answer always names
+    something the model read.
+
+    ``exclude_entities`` drops artifact entries whose report already rides in
+    ``<prior_reports>`` with its summary, which said the same title twice.
     """
     as_of = as_of or utcnow()
     cutoff = as_of - timedelta(days=RECENT_WINDOW_DAYS)
+    excluded = set(exclude_entities)
     seen: set[UUID] = set()
     sections: list[tuple[str, list[ProjectMemory]]] = []
 
     def take(rows: Iterable[ProjectMemory], cap: int) -> list[ProjectMemory]:
         out: list[ProjectMemory] = []
         for row in rows:
-            if row.id in seen or len(out) >= cap:
+            if row.id in seen or row.entity_key in excluded or len(out) >= cap:
                 continue
             seen.add(row.id)
             out.append(row)
@@ -1117,7 +1189,7 @@ def render_digest(
     )
     # Goals and decisions are standing context even when nobody pinned them.
     pinned += take(search(db, kinds=["goal", "decision"], **base), 5)
-    sections.append(("Pinned", pinned))
+    sections.append((SECTION_PINNED, pinned))
 
     # Open work: unresolved incidents (valid_to is NULL) and live watches.
     open_rows = take(
@@ -1134,48 +1206,61 @@ def render_digest(
         ).scalars(),
         10,
     )
-    sections.append(("Open", open_rows))
+    sections.append((SECTION_OPEN, open_rows))
 
-    # Ranked, not merely recent: the budget is 12 entries, so spend it on the
-    # important and often-recalled ones rather than the 12 newest rows.
+    if query.strip():
+        relevant = take(search(db, query=query, time_aware=True, rank=True, **base), 6)
+        sections.append((SECTION_RELEVANT, relevant))
+
+    # Ranked, not merely recent: spend the budget on the important and
+    # often-cited entries rather than the newest rows.
     recent = take(search(db, since=cutoff, rank=True, **base), 12)
-    sections.append((f"Last {RECENT_WINDOW_DAYS} days", recent))
+    sections.append((SECTION_RECENT, recent))
 
     artifacts = take(
         search(db, project_id=project_id, scope=SCOPE_ARTIFACT, limit=6), 6
     )
-    sections.append(("Artifacts", artifacts))
-
-    if query.strip():
-        relevant = take(search(db, query=query, time_aware=True, rank=True, **base), 6)
-        sections.append(("Relevant to this question", relevant))
+    sections.append((SECTION_ARTIFACTS, artifacts))
 
     lines: list[str] = []
     used: list[dict] = []
+    budget = max_chars
     for heading, rows in sections:
-        if not rows:
-            continue
-        lines.append(f"## {heading}")
+        kept: list[str] = []
+        header_cost = len(heading) + 5  # "## " + heading + blank line after
         for row in rows:
-            lines.append(render_entry(row))
+            if len(used) >= max_entries:
+                break
+            line = render_entry(row)
+            cost = len(line) + 1 + (0 if kept else header_cost)
+            if cost > budget:
+                # A long entry is skipped, not cut: a shorter one after it may
+                # still fit, and half an entry is worse than none.
+                continue
+            budget -= cost
+            kept.append(line)
             used.append(recalled_entry(row))
-        lines.append("")
+        if kept:
+            lines += [f"## {heading}", *kept, ""]
 
     if not used:
         return MemoryContext()
 
-    body = "\n".join(lines).strip()[:DIGEST_MAX_CHARS]
+    body = "\n".join(lines).strip()
     block = xml_block(
         "project_memory",
         f"{body}\n\n{MEMORY_PROMPT_RULES}",
         attrs={"as_of": _date(as_of), "entries": str(len(used))},
     )
-    return MemoryContext(text=block, recalled=used)
+    return MemoryContext(blocks={"project_memory": block}, recalled=used)
 
 
 def render_user_memory(db, *, user_id: UUID, max_entries: int = 12) -> MemoryContext:
     """The ``<user_memory>`` block — how this operator wants to be worked with."""
-    rows = search(db, user_id=user_id, scope=SCOPE_USER, limit=max_entries)
+    rows = [
+        row for row in search(db, user_id=user_id, scope=SCOPE_USER, limit=max_entries)
+        if row.entity_key not in _PROFILE_OWNED_KEYS
+    ]
     if not rows:
         return MemoryContext()
     lines = [render_entry(row) for row in rows]
@@ -1183,7 +1268,7 @@ def render_user_memory(db, *, user_id: UUID, max_entries: int = 12) -> MemoryCon
         "user_memory",
         "How this person works — apply it unless they say otherwise:\n" + "\n".join(lines),
     )
-    return MemoryContext(text=block, recalled=[recalled_entry(r) for r in rows])
+    return MemoryContext(blocks={"user_memory": block}, recalled=[recalled_entry(r) for r in rows])
 
 
 MEMORY_PROMPT_RULES = (
@@ -1219,21 +1304,46 @@ def _entity_value(entity_key: str) -> str:
     return key.split(":", 1)[1].strip() if ":" in key else key
 
 
+def _is_site(subject: str) -> bool:
+    """Whether the run's subject is a whole site (an audited URL) rather than
+    a question someone asked."""
+    subject = (subject or "").strip()
+    return " " not in subject and bool(urlsplit(subject).netloc)
+
+
+_PATH_WORDS = re.compile(r"[a-z0-9]+")
+
+
 def _touches(entity_key: str, *, subject: str) -> bool:
     """Does this run touch the thing the entry is about?
 
-    Site-relative entities (``page:/pricing``) match because memory is
-    project-scoped: a path recorded in this project is a path on this project's
-    site, and auditing that site will reach it. Everything else has to appear in
-    the subject itself.
+    A site-relative entity (``page:/pricing``) is touched by any run about the
+    whole site, because memory is project-scoped: a path recorded in this
+    project is a path on this project's site, and auditing that site reaches
+    it. A question touches it only by naming it — the path itself, or its
+    words ("pricing page"). Matching every page on every question opened an
+    ads question with a pricing-page indexation incident. Everything else has
+    to appear in the subject itself.
     """
     value = _entity_value(entity_key)
     if not value:
         return False
-    if value.startswith("/"):
-        return True
     subject = (subject or "").lower()
-    return bool(subject) and (value in subject or subject.rstrip("/").endswith(value))
+    if not subject:
+        return False
+    if value.startswith("/"):
+        if _is_site(subject):
+            return True
+        # The path as a whole token: "/pricing" is not named by "/pricing-guide",
+        # and the home page ("/") is named by no question — every "CPA/ROAS"
+        # would otherwise raise it.
+        if value != "/" and re.search(rf"(?<![\w/-]){re.escape(value)}(?![\w/-])", subject):
+            return True
+        words = _PATH_WORDS.findall(value)
+        return bool(words) and all(
+            re.search(rf"\b{re.escape(word)}\b", subject) for word in words
+        )
+    return value in subject or subject.rstrip("/").endswith(value)
 
 
 def opening_alerts(
@@ -1281,6 +1391,20 @@ def render_opening_alerts(rows: Sequence[ProjectMemory]) -> str:
     )
 
 
+def _digest_query(query: str) -> str:
+    """What the digest's "relevant" section searches for.
+
+    A question searches as itself. An audited URL does not: as words it is
+    ``https``, the brand and ``com``, which match nothing or everything. Its
+    path is what names a page — ``/blog/pricing-guide`` searches for "blog
+    pricing guide", and a bare domain searches for nothing, leaving the
+    section out rather than filling it with noise.
+    """
+    if not _is_site(query):
+        return query
+    return " ".join(_PATH_WORDS.findall(urlsplit(query.strip()).path.lower()))
+
+
 def build_memory_context(
     db,
     *,
@@ -1289,66 +1413,202 @@ def build_memory_context(
     agent_type: str = "",
     query: str = "",
     subject: str = "",
-    include_artifacts: bool = True,
     artifact_kind: str | None = "report",
     artifact_limit: int = 5,
+    conversation_id: UUID | None = None,
 ) -> MemoryContext:
     """Everything the agent should know about this project, as prompt blocks.
 
-    The generalised replacement for ``routes/agents.py::_project_memory_blocks``:
-    memory digest + user memory + prior-artifact summaries + the stored per-agent
-    working context, in that order. Best-effort — an empty context is a valid
-    outcome, never an error.
+    User memory, stored agent context, prior-report summaries, the memory
+    digest and any opening alerts — each a block of its own, returned in
+    ``MEMORY_BLOCKS`` order by ``MemoryContext.text``. The agent's
+    ``ContextSpec`` (``agents/registry.py``) is honoured here rather than at the
+    turn builder, because this is the one place that can skip the query for a
+    block the agent does not want rather than run it and throw the result away.
+    Best-effort — an empty context is a valid outcome, never an error.
 
-    ``subject`` is what this run is about (the audited URL, say). When it is
-    given, open watches and incidents it touches are raised in their own block
-    so the agent speaks about them first instead of waiting to be asked.
+    ``subject`` is what this run is about: the audited URL, or the question.
+    Open watches and incidents it touches are raised in their own block so the
+    agent speaks about them first instead of waiting to be asked.
+
+    ``conversation_id`` stamps the thread as primed now, which is what
+    :func:`memory_refresh` measures staleness from.
 
     Per-project and per-user data, so callers put the result in the USER message.
     """
-    blocks: list[str] = []
+    from agents.core.turn import DEFAULT_SPEC, spec_for
+
+    spec = spec_for(agent_type) if agent_type else DEFAULT_SPEC
+    blocks: dict[str, str] = {}
     recalled: list[dict] = []
     try:
-        if project_id is not None:
-            digest = render_digest(db, project_id=project_id, query=query)
-            if digest:
-                blocks.append(digest.text)
-                recalled += digest.recalled
-            alerts = opening_alerts(db, project_id=project_id, subject=subject)
-            if alerts:
-                blocks.append(render_opening_alerts(alerts))
-                recalled += [recalled_entry(row) for row in alerts]
-        if user_id is not None:
+        if user_id is not None and spec.wants("user_memory"):
             user_block = render_user_memory(db, user_id=user_id)
-            if user_block:
-                blocks.append(user_block.text)
-                recalled += user_block.recalled
+            blocks.update(user_block.blocks)
+            recalled += user_block.recalled
 
-        if project_id is not None and include_artifacts:
+        reported: set[str] = set()
+        if project_id is not None:
             from agents.core.context import format_agent_context, format_prior_artifacts
-            from models.agent_context import AgentContext
-            from service.artifact_store import recent_artifact_summaries
 
-            prior = recent_artifact_summaries(
-                db, project_id, kind=artifact_kind, limit=artifact_limit
-            )
-            blocks.append(format_prior_artifacts(prior))
-            if agent_type:
+            if agent_type and spec.wants("agent_context"):
+                from models.agent_context import AgentContext
+
                 ctx_row = db.execute(
                     select(AgentContext).where(
                         AgentContext.project_id == project_id,
                         AgentContext.agent_id == agent_type,
                     )
                 ).scalars().first()
-                blocks.append(format_agent_context(ctx_row.data if ctx_row else None))
+                blocks["agent_context"] = format_agent_context(ctx_row.data if ctx_row else None)
+
+            if spec.wants("prior_reports"):
+                from service.artifact_store import recent_artifact_summaries
+
+                prior = recent_artifact_summaries(
+                    db, project_id, kind=artifact_kind, limit=artifact_limit
+                )
+                blocks["prior_reports"] = format_prior_artifacts(prior)
+                # Those reports ride with their summaries; the digest's
+                # Artifacts section would only repeat their titles.
+                reported = {f"artifact:{row.group_id}" for row in prior}
+
+            if spec.wants("project_memory"):
+                digest = render_digest(
+                    db, project_id=project_id, query=_digest_query(query),
+                    exclude_entities=reported,
+                )
+                blocks.update(digest.blocks)
+                recalled += digest.recalled
+                alerts = opening_alerts(db, project_id=project_id, subject=subject)
+                if alerts:
+                    blocks["memory_opening"] = render_opening_alerts(alerts)
+                    recalled += [recalled_entry(row) for row in alerts]
     except Exception:  # noqa: BLE001 — a missing digest degrades the turn, never fails it
         logger.warning("memory: context assembly failed for project %s", project_id, exc_info=True)
+
+    if conversation_id is not None:
+        mark_memory_primed(db, conversation_id)
 
     # An alert is usually also in the digest's Open section; the chips should
     # list it once.
     seen: set[str] = set()
     unique = [e for e in recalled if not (e["memory_id"] in seen or seen.add(e["memory_id"]))]
-    return MemoryContext(text="\n".join(b for b in blocks if b), recalled=unique)
+    return MemoryContext(blocks={t: b for t, b in blocks.items() if b}, recalled=unique)
+
+
+# ---------------------------------------------------------------------------
+# Keeping a long-lived thread's memory current
+#
+# A thread reads memory once, in its opening turn, and a conversation can be
+# resumed days later — by which time other sessions, the consolidation sweep
+# and the user have all changed what is known. Chat products snapshot memory at
+# the start and refresh it at boundaries (a new chat, a compaction); retrieval
+# systems re-read every turn. Neither suits a durable thread reopened every few
+# minutes: re-reading per turn spends the digest's tokens on every message,
+# and never re-reading is what we had. So: at most once an hour per thread, and
+# only when something was actually written since the thread last read it.
+# ---------------------------------------------------------------------------
+
+MEMORY_REFRESH_AFTER = timedelta(hours=1)
+_PRIMED_AT = "memory_primed_at"
+
+
+def mark_memory_primed(db, conversation_id: UUID, when: datetime | None = None) -> None:
+    """Record that this conversation's thread has just read memory. Best-effort."""
+    from models.content.conversation import AgentConversation
+
+    try:
+        conv = db.get(AgentConversation, conversation_id)
+        if conv is None:
+            return
+        conv.meta = {**(conv.meta or {}), _PRIMED_AT: (when or utcnow()).isoformat()}
+        db.add(conv)
+        db.commit()
+    except Exception:  # noqa: BLE001
+        logger.debug("memory: could not mark %s primed", conversation_id, exc_info=True)
+        try:
+            db.rollback()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def memory_primed_at(db, conversation_id: UUID) -> datetime | None:
+    """When this thread last read memory. A thread from before this was
+    recorded falls back to when the conversation began, which is when it did."""
+    from models.content.conversation import AgentConversation
+
+    conv = db.get(AgentConversation, conversation_id)
+    if conv is None:
+        return None
+    return parse_iso((conv.meta or {}).get(_PRIMED_AT) or "") or conv.created_at
+
+
+def memory_changed_since(
+    db,
+    *,
+    project_id: UUID | None,
+    user_id: UUID | None,
+    since: datetime,
+    exclude_conversation: UUID | None = None,
+) -> bool:
+    """Whether anything this thread would read was written after ``since``.
+
+    What the thread wrote itself does not count: it already knows.
+    """
+    scope = []
+    if project_id is not None:
+        scope.append(ProjectMemory.project_id == project_id)
+    if user_id is not None:
+        scope.append(sa.and_(ProjectMemory.user_id == user_id, ProjectMemory.scope == SCOPE_USER))
+    if not scope:
+        return False
+    stmt = select(ProjectMemory.id).where(sa.or_(*scope), ProjectMemory.recorded_at > since)
+    if exclude_conversation is not None:
+        stmt = stmt.where(sa.or_(
+            ProjectMemory.conversation_id.is_(None),
+            ProjectMemory.conversation_id != exclude_conversation,
+        ))
+    return db.execute(stmt.limit(1)).first() is not None
+
+
+def memory_refresh(
+    db,
+    *,
+    conversation_id: UUID,
+    project_id: UUID | None,
+    user_id: UUID | None,
+    agent_type: str,
+    query: str = "",
+    now: datetime | None = None,
+) -> tuple[MemoryContext | None, datetime]:
+    """Fresh memory for a thread that has gone stale, or None.
+
+    Returns ``(context, check_again_at)``. The caller holds ``check_again_at``
+    on the live session so every message before it costs no query at all.
+    """
+    now = now or utcnow()
+    primed = memory_primed_at(db, conversation_id)
+    if primed is None:
+        return None, now + MEMORY_REFRESH_AFTER
+    primed = _as_utc(primed)
+    if now - primed < MEMORY_REFRESH_AFTER:
+        return None, primed + MEMORY_REFRESH_AFTER
+    if not memory_changed_since(
+        db, project_id=project_id, user_id=user_id, since=primed,
+        exclude_conversation=conversation_id,
+    ):
+        return None, now + MEMORY_REFRESH_AFTER
+    context = build_memory_context(
+        db,
+        project_id=project_id,
+        user_id=user_id,
+        agent_type=agent_type,
+        query=query,
+        subject=query,
+        conversation_id=conversation_id,
+    )
+    return (context or None), now + MEMORY_REFRESH_AFTER
 
 
 # ---------------------------------------------------------------------------
@@ -1475,23 +1735,36 @@ def record_change_set_memory(db, row: Any, *, applied: int, failed: int) -> Proj
 
 
 # Declared user preferences that become user-scope memory:
-# (field, kind, entity_key, attribute, label). Each is a state — changing the
-# communication style supersedes the old one rather than stacking a second.
+# (field, kind, entity_key, attribute, label). Each is a state — changing it
+# supersedes the old one rather than stacking a second.
+#
+# Role, communication style and report depth used to be mirrored here too. They
+# belong to the operator profile (``service/profile.py``) and already render in
+# ``<user_context>``, so the model read each of them twice — and once a profile
+# was saved, ``profile.resolve`` stopped reading the browser's copy while this
+# kept mirroring it, so the two blocks could disagree. What the profile does
+# not hold is mirrored; what it holds is its alone.
 _PREFERENCE_FIELDS: tuple[tuple[str, str, str, str, str], ...] = (
-    ("role", "identity", "operator:role", "role", "Role"),
-    ("communication_style", "communication", "operator:style", "communication_style", "Wants answers"),
-    ("report_depth", "communication", "operator:depth", "report_depth", "Report depth"),
     ("primary_outcome", "method", "operator:outcome", "primary_outcome", "Optimises for"),
 )
+
+#: Entity keys of preferences the profile now owns. Rows written under them
+#: before the profile took over stay on the timeline but no longer render.
+_PROFILE_OWNED_KEYS = frozenset({"operator:role", "operator:style", "operator:depth"})
 
 
 def seed_user_preferences(db, user_id: UUID, preferences: Any) -> list[ProjectMemory]:
     """Mirror the declared UserPreferences into user-scope memory.
 
-    The client has been sending these on every request from localStorage; here
-    they become dated, superseding entries the server owns, so an agent reads
-    them from the digest like any other memory and a changed preference leaves a
-    trail instead of silently overwriting.
+    The client sends these on every request from localStorage; here they become
+    dated, superseding entries the server owns, so an agent reads them from the
+    digest like any other memory and a changed preference leaves a trail
+    instead of silently overwriting.
+
+    Runs at the start of every run, so it writes only what changed: one read of
+    the current values, and no write at all in the usual case. It used to go
+    through ``remember`` for every field every time, which is a pause check, a
+    duplicate lookup and a commit per field to learn that nothing had moved.
 
     Declared, so ``source_type=user`` and confirmed — a preference the person
     picked is not an inference waiting for approval.
@@ -1500,10 +1773,27 @@ def seed_user_preferences(db, user_id: UUID, preferences: Any) -> list[ProjectMe
     if preferences is None or user_id is None:
         return written
     try:
+        wanted = {
+            entity_key: (field_name, kind, attribute, label, str(value).strip())
+            for field_name, kind, entity_key, attribute, label in _PREFERENCE_FIELDS
+            if str(value := getattr(preferences, field_name, "") or "").strip()
+        }
+        if not wanted:
+            return written
+        current = {
+            row.entity_key: (row.value or {}).get("value")
+            for row in db.execute(
+                select(ProjectMemory).where(
+                    ProjectMemory.user_id == user_id,
+                    ProjectMemory.scope == SCOPE_USER,
+                    ProjectMemory.entity_key.in_(list(wanted)),
+                    ProjectMemory.status.in_(ACTIVE_STATUSES),
+                )
+            ).scalars()
+        }
         now = utcnow()
-        for field_name, kind, entity_key, attribute, label in _PREFERENCE_FIELDS:
-            value = getattr(preferences, field_name, "") or ""
-            if not str(value).strip():
+        for entity_key, (field_name, kind, attribute, label, value) in wanted.items():
+            if current.get(entity_key) == value:
                 continue
             row = remember(
                 db,
@@ -1513,7 +1803,7 @@ def seed_user_preferences(db, user_id: UUID, preferences: Any) -> list[ProjectMe
                 title=f"{label}: {value}",
                 entity_key=entity_key,
                 attribute=attribute,
-                value={"value": str(value), "field": field_name},
+                value={"value": value, "field": field_name},
                 observed_at=now,
                 source_type=SOURCE_USER,
                 source_refs=[{"user_preferences": field_name}],
@@ -1643,6 +1933,9 @@ __all__ = [
     "backfill_artifact_summary",
     "set_status",
     "short_id",
+    "mark_memory_primed",
+    "memory_refresh",
+    "touch_cited",
     "touch_recall",
     "STATUS_ARCHIVED",
     "STATUS_CONFIRMED",

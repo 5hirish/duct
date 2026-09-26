@@ -33,7 +33,7 @@ from models.project import Project
 from service.execution.policy import effective_autonomy
 from service.membership import member_role
 from service.model_settings import get_model_settings
-from service.memory import build_memory_context, seed_user_preferences, touch_recall
+from service.memory import build_memory_context, seed_user_preferences
 from service.connector_scopes import SCOPE_PARTIAL, SCOPE_UNKNOWN
 from service.provider_keys import stored_keys_for
 
@@ -266,6 +266,7 @@ async def memory_blocks(
     query: str = "",
     remember: bool = True,
     emit: Callable | None = None,
+    conversation_id: UUID | None = None,
 ) -> str:
     """The ``<project_memory>`` / ``<user_memory>`` blocks for the opening turn.
 
@@ -283,16 +284,15 @@ async def memory_blocks(
             # Declared preferences become user-scope memory first, so the digest
             # carries them and the agent reads them from one place.
             seed_user_preferences(db, user_id, user_preferences)
-            context = build_memory_context(
+            return build_memory_context(
                 db,
                 project_id=run.project_id,
                 user_id=user_id,
                 agent_type=str(AgentType.INSIGHTS),
                 query=query,
                 subject=query,
+                conversation_id=conversation_id,
             )
-            touch_recall(db, context.recalled_ids)
-            return context
 
     try:
         # A worker thread, not the event loop: this is a dozen-plus queries,

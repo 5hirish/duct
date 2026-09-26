@@ -330,19 +330,18 @@ async def _memory_block(session: ContentSession, *, query: str = "", emit: EmitF
 
     def _load():
         from db.session import get_session as db_session
-        from service.memory import build_memory_context, touch_recall
+        from service.memory import build_memory_context
 
         with next(db_session()) as db:
-            context = build_memory_context(
+            return build_memory_context(
                 db,
                 project_id=session.project_id,
                 user_id=getattr(session, "user_id", None),
                 agent_type=str(AgentType.TIKTOK_STUDIO),
                 query=query,
                 artifact_kind=None,
+                conversation_id=getattr(session, "conversation_id", None),
             )
-            touch_recall(db, context.recalled_ids)
-            return context
 
     try:
         context = await asyncio.to_thread(_load)
