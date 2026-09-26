@@ -104,8 +104,12 @@ class ApifyClient:
         """Start an actor run. Returns the run object including
         defaultDatasetId so the caller can poll → fetch items later."""
         actor_id = _validate_id(actor_id, "actor_id")
-        # Apify accepts ~ and / inside actor id slugs (e.g. user~name).
-        path = f"/v2/acts/{quote(actor_id, safe='~/-_')}/runs"
+        # The API addresses a store actor as `username~actorName`; the Store
+        # shows it as `username/actorName`, which is how the defaults below are
+        # written. A literal `/` is an extra path segment and Apify answers it
+        # with a 404, so every Discover scrape failed before reaching the actor.
+        slug = actor_id.replace("/", "~")
+        path = f"/v2/acts/{quote(slug, safe='~-_')}/runs"
         resp = await self._request("POST", path, json=input_payload)
         try:
             return ApifyRun.model_validate((resp.json() or {}).get("data") or {})
@@ -158,8 +162,12 @@ class ApifyClient:
                 continue
             try:
                 posts.append(ScrapedPost.model_validate(raw))
-            except ValidationError:
-                logger.debug("apify: dropped invalid item (id=%r)", raw.get("id"))
+            except ValidationError as exc:
+                # WARNING, not DEBUG: when the actor changed its hashtag shape
+                # every post failed here and the page just said nothing was
+                # found. Name the fields so the next shape change is one grep.
+                fields = sorted({".".join(str(p) for p in err["loc"]) for err in exc.errors()})
+                logger.warning("apify: dropped invalid item (id=%r, fields=%s)", raw.get("id"), fields)
                 continue
         return posts
 
