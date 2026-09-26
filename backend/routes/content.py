@@ -2258,11 +2258,17 @@ async def discover_start(
     """Kick off an Apify actor run for TikTok content discovery."""
     _project_for_user(db, user, body.project_id)
     from service.apify import ApifyAPIError
+    from service.apify.policy import discover_run_input
+
+    try:
+        run_input = discover_run_input(body.actor_id, body.input_payload)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
     client = _apify_client_or_503()
     try:
         async with client as c:
-            run = await c.start_run(body.actor_id, body.input_payload)
+            run = await c.start_run(body.actor_id, run_input)
     except ApifyAPIError as exc:
         raise HTTPException(exc.status_code or 502, exc.message) from exc
     except ValueError as exc:
