@@ -467,6 +467,20 @@ Postgres `DATABASE_URL` names.
   the rule (Search Console only, after the report, once); the onboarding
   audit's user turn (`draft_project`) is the trigger, so the cached prefix is
   identical across every other audit.
+- `service/discovery.py` — saved TikTok references. `ingest_reference(db,
+  project_id, post)` is the one way a `ScrapedPost` becomes a
+  `discovered_reference` row (one per post per project); `capture_reference_media`
+  copies its cover and slides into project storage and records the outcome in
+  `params["media"]`, because TikTok's image URLs carry a signed expiry. The
+  Discover save runs capture after the response; `/content/discover/recapture`
+  is the backfill, called when Discover opens. A clone-from-URL flow reuses
+  both. Every media fetch goes through `service/url_safety.py`: https only, a
+  host allowlist (`MEDIA_DOMAINS`), redirects re-checked hop by hop, a size cap
+  and an image content type. The URLs arrive in the request body, so without
+  that guard a save is a request the caller aims at our network.
+- `service/apify/run_cache.py` — an identical Discover search (actor + canonical
+  input) inside 30 minutes joins the earlier Apify run instead of paying for a
+  new one. In process; the API runs one worker.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling

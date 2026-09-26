@@ -158,6 +158,10 @@ msgstr "{count, plural, other {# 生成可能な修正}}"
 msgid "{count, plural, one {# fix} other {# fixes}}"
 msgstr "{count, plural, other {# 修正}}"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{count, plural, one {# post} other {# posts}}"
+msgstr "{count, plural, other {# 投稿}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, other {# ページ}}"
@@ -456,6 +460,10 @@ msgstr "{slideCount, plural, one {# スライド} other {# スライド}}"
 msgid "{slides, plural, one {# slide} other {# slides}}"
 msgstr "{slides, plural, one {# スライド} other {# スライド}}"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
+msgstr "{slideShare} の投稿 · <0>{slideEng}</0> エンゲージメント"
+
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
 msgstr "{summary} オペレーターの所見: {takeaway}"
@@ -509,6 +517,10 @@ msgstr "{unconfirmed, plural, one {# 未確認} other {# 未確認}}"
 #: src/components/workspace/ContextRing.jsx
 msgid "{used} of {window} tokens"
 msgstr "{window}トークンのうち{used}"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "{videoShare} of posts · <0>{videoEng}</0> eng."
+msgstr "{videoShare} の投稿 · <0>{videoEng}</0> エンゲージメント"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{views, plural, one {# view} other {# views}}"
@@ -816,6 +828,11 @@ msgstr "Acme Inc."
 #: src/app/(start)/start/page.jsx src/components/onboarding/FrontDoor.jsx
 msgid "acme.com"
 msgstr "acme.com"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid ""
+"Across {total, plural, one {# post} other {# posts}} · median engagement {median}"
+msgstr "{total, plural, other {# 投稿}}全体で · エンゲージメントの中央値 {median}"
 
 #: src/components/GoogleAdsReport.js
 msgid "Action"
@@ -1417,6 +1434,10 @@ msgstr "最高のエンゲージメント"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Between"
 msgstr "間"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Beyond the ones you searched, on two posts or more"
+msgstr "検索した投稿以外で、2つ以上の投稿にわたって"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Big Bets"
@@ -2928,6 +2949,10 @@ msgstr "「{title}」を忘れますか？"
 msgid "Forgotten."
 msgstr "忘れました。"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Format"
+msgstr "形式"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Format D — UGC / Raw Authentic"
 msgstr "フォーマットD — UGC / 生の信頼性"
@@ -4330,6 +4355,10 @@ msgid ""
 msgstr ""
 "モデルプロバイダーが接続されていないため、まだ実行できません。<0>設定 → モデルとプロバイダー → で接続してください。</0> — 入力した内容は戻ってきたときに残っています。"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "No other tag repeats across these posts."
+msgstr "これらの投稿には、他に繰り返されるタグはありません。"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "No payment now — we’ll scope and quote first."
 msgstr "今は支払いはありません — まず範囲を決定し、見積もりを提示します。"
@@ -4840,6 +4869,11 @@ msgstr "開きました"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Opened the post"
 msgstr "投稿を開きました"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid ""
+"Opening lines of the most engaging posts that reached at least a typical audience"
+msgstr "少なくとも一般的なオーディエンスに届いた、最もエンゲージメントの高い投稿の冒頭部分"
 
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "Opening session…"
@@ -5508,6 +5542,10 @@ msgstr "記録済み"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Recorded {recordedAgo}"
 msgstr "記録済み {recordedAgo}"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Recurring hashtags"
+msgstr "繰り返し使われているハッシュタグ"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Redirects"
@@ -6282,6 +6320,10 @@ msgstr "セットアップ手順"
 msgid "Share"
 msgstr "共有"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Share of posts, and the median engagement each earns"
+msgstr "投稿の割合と、それぞれの投稿が獲得するエンゲージメントの中央値"
+
 #: src/components/audit/ShareReport.jsx
 msgid "Share this report"
 msgstr "このレポートを共有"
@@ -6541,6 +6583,10 @@ msgstr "スライドプレビュー"
 msgid ""
 "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
 msgstr "下書きが準備でき次第、スライド、キャプション、ハッシュタグがここに表示されます。通常20〜40秒です。"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Slideshows"
+msgstr "スライドショー"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Slug"
@@ -7553,6 +7599,10 @@ msgstr "バージョン {version}"
 msgid "via Duct"
 msgstr "Duct経由"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Videos"
+msgstr "動画"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "View →"
 msgstr "表示 →"
@@ -7722,6 +7772,10 @@ msgid ""
 "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 msgstr "{providerName}に保存されているキーは受け入れられないため、実行はスキップされます。「キーを削除」を選択し、新しいキーを貼り付けてください。"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "What's working"
+msgstr "効果的なもの"
+
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
 msgstr "このモデルの機能"
@@ -7816,6 +7870,10 @@ msgstr "このマシンのOSキーチェーンに保存されます。"
 #: src/components/GoogleAdsReport.js
 msgid "Win"
 msgstr "勝利"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Winning hooks"
+msgstr "効果的なフック"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Work still moving — mine or yours. Nothing here waits on you."

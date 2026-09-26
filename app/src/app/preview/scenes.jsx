@@ -59,6 +59,7 @@ import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
+import SynthesisPanel from "@/components/content/SynthesisPanel";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
@@ -704,7 +705,62 @@ const SAMPLE_CHANGE_SET_REJECTED = {
   updated_at: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
 };
 
+// A Discover result set for the synthesis panel: a face-shape niche with both
+// formats, tags that recur beyond the two searched for, one post with a big
+// ratio on a tiny audience (it must not win a hook), and captions of every
+// shape — tags first, a long opening line, no words at all.
+const DISCOVER_POSTS = [
+  ["d1", true, 182_000, 21_400, ["faceshape", "colorseason", "contour", "blushplacement"], "#faceshape\nStop contouring a round face like it's an oval"],
+  ["d2", true, 96_000, 8_900, ["faceshape", "contour", "makeuptips"], "The blush placement that lifts a heart-shaped face in three seconds, no filler, no surgery, just where you put it"],
+  ["d3", false, 410_000, 16_800, ["faceshape", "fyp", "makeuptips"], "POV: your stylist finally explains your face shape"],
+  ["d4", false, 64_000, 1_900, ["colorseason", "blushplacement"], "#colorseason #fyp"],
+  ["d5", true, 1_200, 700, ["faceshape", "contour"], "tiny account, huge ratio"],
+  ["d6", false, 38_000, 900, ["faceshape"], "Day 4 of learning my colour season"],
+].map(([id, slideshow, plays, acted, hashtags, text]) => ({
+  id,
+  text,
+  hashtags,
+  is_slideshow: slideshow,
+  play_count: plays,
+  digg_count: Math.round(acted * 0.7),
+  comment_count: Math.round(acted * 0.05),
+  share_count: Math.round(acted * 0.1),
+  collect_count: Math.round(acted * 0.15),
+  web_video_url: `https://www.tiktok.com/@kestrel/video/${id}`,
+}));
+
+// Every post a video, no tag on two posts, no caption with words: the panel
+// must still read as a panel, not a set of holes.
+const DISCOVER_POSTS_SPARSE = [
+  { id: "s1", text: "#grwm", hashtags: ["grwm"], is_slideshow: false, play_count: 12_000, digg_count: 300 },
+  { id: "s2", text: "", hashtags: ["outfit"], is_slideshow: false, play_count: 8_000, digg_count: 120 },
+];
+
 export const SCENES = [
+  {
+    id: "discover-synthesis",
+    state: "mixed formats, recurring tags, three hooks",
+    group: "SynthesisPanel",
+    title: "What's working, above Discover's results",
+    note: "Computed from the result set in the browser (lib/discoverSynthesis.js). What to check: the searched tags (faceshape, colorseason) and the generic fyp never appear under Recurring hashtags; the 1.2k-view post with a 58% ratio does not win a hook; the long caption is clipped to one opening line; the leading format's engagement is the bold one. Drag through @2xl (42rem): the two top blocks go from stacked to side by side.",
+    render: () => (
+      <div style={{ maxWidth: 880, padding: 24 }}>
+        <SynthesisPanel posts={DISCOVER_POSTS} searchedTags={["faceshape", "colorseason"]} />
+      </div>
+    ),
+  },
+  {
+    id: "discover-synthesis-sparse",
+    state: "one format, nothing recurring, no hook with words",
+    group: "SynthesisPanel",
+    title: "What's working, from a thin result set",
+    note: "Two videos from a trend feed. No leader is named when only one format is present, the hashtags block says so in a line instead of leaving a gap, and the hooks block is absent rather than empty.",
+    render: () => (
+      <div style={{ maxWidth: 880, padding: 24 }}>
+        <SynthesisPanel posts={DISCOVER_POSTS_SPARSE} />
+      </div>
+    ),
+  },
   {
     id: "front-door",
     state: "default — signed out, nothing typed",

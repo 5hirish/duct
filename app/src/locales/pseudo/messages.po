@@ -158,6 +158,10 @@ msgstr ""
 msgid "{count, plural, one {# fix} other {# fixes}}"
 msgstr ""
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{count, plural, one {# post} other {# posts}}"
+msgstr ""
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr ""
@@ -450,6 +454,10 @@ msgstr ""
 msgid "{slides, plural, one {# slide} other {# slides}}"
 msgstr ""
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
+msgstr ""
+
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
 msgstr ""
@@ -500,6 +508,10 @@ msgstr ""
 
 #: src/components/workspace/ContextRing.jsx
 msgid "{used} of {window} tokens"
+msgstr ""
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "{videoShare} of posts · <0>{videoEng}</0> eng."
 msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
@@ -800,6 +812,10 @@ msgstr ""
 #: src/app/(start)/start/page.jsx
 #: src/components/onboarding/FrontDoor.jsx
 msgid "acme.com"
+msgstr ""
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Across {total, plural, one {# post} other {# posts}} · median engagement {median}"
 msgstr ""
 
 #: src/components/GoogleAdsReport.js
@@ -1424,6 +1440,10 @@ msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Between"
+msgstr ""
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Beyond the ones you searched, on two posts or more"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
@@ -2926,6 +2946,10 @@ msgstr ""
 msgid "Forgotten."
 msgstr ""
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Format"
+msgstr ""
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Format D — UGC / Raw Authentic"
 msgstr ""
@@ -4333,6 +4357,10 @@ msgstr ""
 msgid "No model provider is connected, so this can’t run yet. <0>Connect one in Settings → Models & providers →</0> — what you typed is still here when you come back."
 msgstr ""
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "No other tag repeats across these posts."
+msgstr ""
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "No payment now — we’ll scope and quote first."
 msgstr ""
@@ -4832,6 +4860,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Opened the post"
+msgstr ""
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Opening lines of the most engaging posts that reached at least a typical audience"
 msgstr ""
 
 #: src/components/insights/desk/DeskComposer.jsx
@@ -5504,6 +5536,10 @@ msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Recorded {recordedAgo}"
+msgstr ""
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Recurring hashtags"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
@@ -6298,6 +6334,10 @@ msgstr ""
 msgid "Share"
 msgstr ""
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Share of posts, and the median engagement each earns"
+msgstr ""
+
 #: src/components/audit/ShareReport.jsx
 msgid "Share this report"
 msgstr ""
@@ -6552,6 +6592,10 @@ msgstr ""
 
 #: src/components/content/PostViewport.jsx
 msgid "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
+msgstr ""
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Slideshows"
 msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
@@ -7536,6 +7580,10 @@ msgstr ""
 msgid "via Duct"
 msgstr ""
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Videos"
+msgstr ""
+
 #: src/components/content/FormatLibrary.jsx
 msgid "View →"
 msgstr ""
@@ -7705,6 +7753,10 @@ msgstr ""
 msgid "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 msgstr ""
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "What's working"
+msgstr ""
+
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
 msgstr ""
@@ -7795,6 +7847,10 @@ msgstr ""
 
 #: src/components/GoogleAdsReport.js
 msgid "Win"
+msgstr ""
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Winning hooks"
 msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx

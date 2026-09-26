@@ -248,7 +248,8 @@ it is a claim about the code, not a way to quiet the check.
   switch in `lib/telemetry.js`.
 - `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
   `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
-  `formatNumber`, `titleCase`, `formatTitle`, `capitalize`, `initials`.
+  `formatNumber`, `formatPercent`, `titleCase`, `formatTitle`, `capitalize`,
+  `initials`.
   Use these instead of a component-local `fmtDate`/`fmtNum`/`prettify` — the
   per-component copies had drifted apart before they were consolidated.
 - `lib/sse.js` — `consumeSseStream` / `parseSseDataFrame`, shared by every

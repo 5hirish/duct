@@ -161,6 +161,10 @@ msgstr ""
 msgid "{count, plural, one {# fix} other {# fixes}}"
 msgstr "{count, plural, one {# Korrektur} other {# Korrekturen}}"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{count, plural, one {# post} other {# posts}}"
+msgstr "{count, plural, one {# Beitrag} other {# Beiträge}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, one {# Seite} other {# Seiten}}"
@@ -468,6 +472,10 @@ msgstr "{slideCount, plural, one {# Folie} other {# Folien}}"
 msgid "{slides, plural, one {# slide} other {# slides}}"
 msgstr "{slides, plural, one {# Folie} other {# Folien}}"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
+msgstr "{slideShare} von Beiträgen · <0>{slideEng}</0> Engagement"
+
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
 msgstr "{summary} Operator-Fazit: {takeaway}"
@@ -525,6 +533,10 @@ msgstr "{unconfirmed, plural, one {# unbestätigt} other {# unbestätigt}}"
 #: src/components/workspace/ContextRing.jsx
 msgid "{used} of {window} tokens"
 msgstr "{used} von {window} Tokens"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "{videoShare} of posts · <0>{videoEng}</0> eng."
+msgstr "{videoShare} von Beiträgen · <0>{videoEng}</0> Engagement"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{views, plural, one {# view} other {# views}}"
@@ -849,6 +861,12 @@ msgstr "Acme Inc."
 #: src/app/(start)/start/page.jsx src/components/onboarding/FrontDoor.jsx
 msgid "acme.com"
 msgstr "acme.com"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid ""
+"Across {total, plural, one {# post} other {# posts}} · median engagement {median}"
+msgstr ""
+"Über {total, plural, one {# Beitrag} other {# Beiträge}} · Median-Engagement {median}"
 
 #: src/components/GoogleAdsReport.js
 msgid "Action"
@@ -1460,6 +1478,10 @@ msgstr "Beste Interaktion"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Between"
 msgstr "Zwischen"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Beyond the ones you searched, on two posts or more"
+msgstr "Über die gesuchten hinaus, bei zwei oder mehr Beiträgen"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Big Bets"
@@ -3014,6 +3036,10 @@ msgstr "„{title}“ vergessen?"
 msgid "Forgotten."
 msgstr "Vergessen."
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Format"
+msgstr "Format"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Format D — UGC / Raw Authentic"
 msgstr "Format D — UGC / Roh Authentisch"
@@ -4436,6 +4462,10 @@ msgid ""
 msgstr ""
 "Kein Modell-Anbieter ist verbunden, daher kann dies noch nicht ausgeführt werden. <0>Verbinde einen in Einstellungen → Modelle & Anbieter →</0> — was du eingegeben hast, ist noch da, wenn du zurückkommst."
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "No other tag repeats across these posts."
+msgstr "Kein anderes Tag wiederholt sich in diesen Beiträgen."
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "No payment now — we’ll scope and quote first."
 msgstr ""
@@ -4965,6 +4995,12 @@ msgstr "Geöffnet"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Opened the post"
 msgstr "Den Beitrag geöffnet"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid ""
+"Opening lines of the most engaging posts that reached at least a typical audience"
+msgstr ""
+"Anfangszeilen der ansprechendsten Beiträge, die mindestens ein typisches Publikum erreichten"
 
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "Opening session…"
@@ -5645,6 +5681,10 @@ msgstr "aufgezeichnet"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Recorded {recordedAgo}"
 msgstr "Aufgezeichnet {recordedAgo}"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Recurring hashtags"
+msgstr "Wiederkehrende Hashtags"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Redirects"
@@ -6447,6 +6487,10 @@ msgstr "Einrichtungsschritte"
 msgid "Share"
 msgstr "Teilen"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Share of posts, and the median engagement each earns"
+msgstr "Anteil der Beiträge und das Median-Engagement, das jeder erzielt"
+
 #: src/components/audit/ShareReport.jsx
 msgid "Share this report"
 msgstr "Diesen Bericht teilen"
@@ -6711,6 +6755,10 @@ msgid ""
 "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
 msgstr ""
 "Folien, Bildunterschrift und Hashtags erscheinen hier, sobald der Entwurf fertig ist. Normalerweise 20–40 Sekunden."
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Slideshows"
+msgstr "Diashows"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Slug"
@@ -7767,6 +7815,10 @@ msgstr "Version {version}"
 msgid "via Duct"
 msgstr "via Duct"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Videos"
+msgstr "Videos"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "View →"
 msgstr "Anzeigen →"
@@ -7939,6 +7991,10 @@ msgid ""
 msgstr ""
 "Was für {providerName} gespeichert ist, ist kein akzeptierter Schlüssel, daher überspringen Läufe ihn. Wähle Schlüssel entfernen, dann füge einen neuen ein."
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "What's working"
+msgstr "Was funktioniert"
+
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
 msgstr "Was dieses Modell sowieso tut"
@@ -8038,6 +8094,10 @@ msgstr "Wird in deinem OS-Schlüsselbund auf diesem Gerät gespeichert."
 #: src/components/GoogleAdsReport.js
 msgid "Win"
 msgstr "Gewinn"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Winning hooks"
+msgstr "Erfolgreiche Hooks"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Work still moving — mine or yours. Nothing here waits on you."
