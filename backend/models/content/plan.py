@@ -30,6 +30,13 @@ class ContentPlan(SQLModel, table=True):
         default_factory=list,
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
+    # What the plan chose from the account's history and why — the type it
+    # scales, the type it tests, the evidence for both. Shape: PlanStrategy in
+    # agents/content/schema.py. `{}` for plans made before it existed.
+    strategy: dict = Field(
+        default_factory=dict,
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
+    )
     status: str = Field(default="draft", sa_column=Column(String, nullable=False, server_default="draft"))
     created_at: datetime = Field(
         default_factory=utcnow,

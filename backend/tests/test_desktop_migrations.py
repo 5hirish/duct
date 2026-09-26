@@ -96,6 +96,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE agent_conversations DROP COLUMN run_error"))
         conn.execute(sa.text("ALTER TABLE oauth_states DROP COLUMN link_user_id"))
         conn.execute(sa.text("ALTER TABLE oauth_states DROP COLUMN remember"))
+        conn.execute(sa.text("ALTER TABLE content_plans DROP COLUMN strategy"))
         conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN clone_source"))
         conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN last_assessment"))
 
@@ -117,6 +118,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     assert "run_error" in _columns(engine, "agent_conversations")
     assert "link_user_id" in _columns(engine, "oauth_states")
     assert "remember" in _columns(engine, "oauth_states")
+    assert "strategy" in _columns(engine, "content_plans")
     assert "clone_source" in _columns(engine, "content_posts")
     assert "last_assessment" in _columns(engine, "content_posts")
     assert _stamped_revision(engine) is not None

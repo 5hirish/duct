@@ -15,6 +15,7 @@ import { getPlan, listPlans, listPosts } from "@/lib/contentApi";
 import LoadError from "@/components/LoadError";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanCalendar from "@/components/content/PlanCalendar";
+import PlanStrategy from "@/components/content/PlanStrategy";
 
 /**
  * Inline plan board — plan selector + Kanban/Calendar toggle. Renders directly
@@ -157,6 +158,8 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
           <ViewToggle view={view} onChange={setView} />
         </div>
       </div>
+
+      {plan && <PlanStrategy strategy={plan.strategy} />}
 
       {/* Board body */}
       {!plan ? (

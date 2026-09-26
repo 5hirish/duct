@@ -9,7 +9,8 @@ import { KIND_LABEL } from "@/lib/contentSchedule";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import { titleCase } from "@/lib/format";
 
-const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
+// Shared with PlanStrategy, so a post type has one icon wherever it appears.
+export const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
 
 const KIND_BADGE = {
   published: "bg-success/15 text-success",
