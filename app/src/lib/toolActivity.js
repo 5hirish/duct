@@ -60,6 +60,7 @@ export const ACTIVITY_TOOLS = Object.freeze({
   submit_plan: ActivityKind.ACTION,
   submit_post_draft: ActivityKind.ACTION,
   edit_slide: ActivityKind.ACTION,
+  submit_assessment: ActivityKind.ACTION,
   publish_post: ActivityKind.ACTION,
   mark_posted: ActivityKind.ACTION,
   log_metrics: ActivityKind.ACTION,
