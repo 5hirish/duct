@@ -3349,8 +3349,12 @@ msgid "Heavy — the deep model"
 msgstr "Schwer – das tiefe Modell"
 
 #: src/lib/credentialStorage.js
-msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
-msgstr "Wird im Schlüsselbund deines Betriebssystems auf diesem Computer gespeichert. Ducts Server sehen es nie."
+msgid "Held by your operating system's keychain on this computer. Duct uses it while the app is open and never stores it."
+msgstr "Wird im Schlüsselbund deines Betriebssystems auf diesem Computer gespeichert. Duct verwendet es, solange die App geöffnet ist, und speichert es nie."
+
+#: src/lib/credentialStorage.js
+#~ msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
+#~ msgstr "Wird im Schlüsselbund deines Betriebssystems auf diesem Computer gespeichert. Ducts Server sehen es nie."
 
 #: src/components/connections/ProviderCard.jsx
 msgid "held for this browser session"
@@ -8134,8 +8138,12 @@ msgid "Will be kept in this browser session only — cleared when you close the 
 msgstr "Wird nur in dieser Browsersitzung gespeichert – beim Schließen des Tabs gelöscht und für geplante Läufe nicht verfügbar."
 
 #: src/components/connections/ProviderCard.jsx
-msgid "Will be stored in your OS keychain on this machine."
-msgstr "Wird in deinem OS-Schlüsselbund auf diesem Gerät gespeichert."
+#~ msgid "Will be stored in your OS keychain on this machine."
+#~ msgstr "Wird in deinem OS-Schlüsselbund auf diesem Gerät gespeichert."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Will be stored in your OS keychain on this machine. Duct can use it only while the app is open, so anything that runs while it’s closed waits until you’re back."
+msgstr "Wird in deinem OS-Schlüsselbund auf diesem Gerät gespeichert. Duct kann es nur verwenden, solange die App geöffnet ist. Was laufen würde, während sie geschlossen ist, wartet, bis du zurück bist."
 
 #: src/components/GoogleAdsReport.js
 msgid "Win"

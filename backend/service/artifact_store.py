@@ -730,9 +730,14 @@ class ArtifactPersister:
         model: Any = None,
         group_id: UUID | None = None,
         adapt: ArtifactAdapter | None = None,
+        lent_keys: dict | None = None,
     ) -> None:
         self.project_id = project_id
         self.user_id = user_id
+        # The creator's own header keys, in memory for this run only: finding
+        # extraction bills the creator, and one whose keys live in a keychain
+        # or a browser tab has no saved key for it to find.
+        self.lent_keys = dict(lent_keys or {})
         self.agent_type = agent_type
         self.kind = kind
         self.conversation_id = conversation_id
@@ -826,7 +831,9 @@ class ArtifactPersister:
             # the adapter's source rather than the summary: the summary is
             # prose, the source still has sections to point at.
             try:
-                await extract_artifact_findings(row, spec.source_text, noun=spec.noun)
+                await extract_artifact_findings(
+                    row, spec.source_text, noun=spec.noun, user_keys=self.lent_keys,
+                )
             except Exception:  # noqa: BLE001
                 logger.warning("artifact_store: finding extraction failed", exc_info=True)
 

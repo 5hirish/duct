@@ -7,6 +7,7 @@ import AppSidebar from "../../components/AppSidebar";
 import { AuthProvider, AuthGuard } from "../../lib/auth";
 import { hydrateProjectsFromBackend, migrateFromLegacyProfile } from "../../lib/projects";
 import { fetchProfile, mirrorInterfaceLanguage } from "../../lib/userProfile";
+import { startMemoryCatchUp } from "../../lib/memoryCatchUp";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AuditNavProvider } from "../../lib/auditNavContext";
 import LocalBackendGate from "../../components/LocalBackendGate.jsx";
@@ -67,8 +68,12 @@ function AppLayoutInner({ children }) {
     fetchProfile().then((profile) => {
       if (alive && mirrorInterfaceLanguage(profile)) router.refresh();
     });
+    // Keys that live only on this device (the keychain, a browser tab) reach
+    // memory consolidation only while the app is open to lend them.
+    const stopCatchUp = startMemoryCatchUp();
     return () => {
       alive = false;
+      stopCatchUp();
     };
     // `router` is stable; this runs once per mount on purpose.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -251,7 +251,24 @@ def build_transcript(rows: list[AgentEventRow]) -> str:
 # The run
 # ---------------------------------------------------------------------------
 
-def _memory_model(owner_id: UUID | None, schema: type[BaseModel]):
+def _spendable(keys: Any) -> dict:
+    """The keys a one-shot structured call can spend: API keys only.
+
+    A ChatGPT plan token is a chat credential routed through Codex, and a
+    Claude plan token is refused by the Messages API outright; neither can
+    back this call, so both are dropped rather than tried and failed.
+    """
+    from agents.core.codex import is_plan_credential, is_usable_credential
+
+    return {
+        provider: value for provider, value in (keys or {}).items()
+        if value and is_usable_credential(provider, value)
+        and not is_plan_credential(provider, value)
+        and not str(value).startswith("sk-ant-oat")
+    }
+
+
+def _memory_model(owner_id: UUID | None, schema: type[BaseModel], *, user_keys: Any = None):
     """The owner's Light-tier model, asked for ``schema``, or None without a key.
 
     ``Job.MEMORY`` is the job the settings page already tells people runs on
@@ -266,8 +283,13 @@ def _memory_model(owner_id: UUID | None, schema: type[BaseModel]):
     as the conversation summarizer. That is why ProviderKeyRequired is
     swallowed rather than raised — on the hosted deployment, a project whose
     owner has connected no key of their own gets no consolidation, not a run
-    on ours. There is no request to carry an ``X-Provider-*`` header this far,
-    so the owner's *saved* keys are the only bring-your-own ones this can see.
+    on ours.
+
+    ``user_keys`` are the owner's own header keys when the owner is there to
+    lend them — a chat they just closed, or their app catching up — which is
+    the only way an install whose keys live in a keychain or a browser tab
+    gets this pass at all. Otherwise the owner's *saved* keys are the only
+    bring-your-own ones this can see.
     """
     from agents.tiers import Job
     from service.model_settings import get_model_settings
@@ -277,6 +299,7 @@ def _memory_model(owner_id: UUID | None, schema: type[BaseModel]):
         run = resolve_job_run(
             Job.MEMORY,
             engine_override=settings.engine,
+            user_keys=_spendable(user_keys) or None,
             stored_keys=stored_keys_for(owner_id),
             tier_map=settings.tiers,
             auto_fallback=settings.auto_fallback,
@@ -297,8 +320,8 @@ def _memory_model(owner_id: UUID | None, schema: type[BaseModel]):
     return llm.with_structured_output(schema, method="json_schema", strict=True)
 
 
-def _build_model(owner_id: UUID | None = None):
-    return _memory_model(owner_id, Consolidation)
+def _build_model(owner_id: UUID | None = None, user_keys: Any = None):
+    return _memory_model(owner_id, Consolidation, user_keys=user_keys)
 
 
 @dataclass
@@ -371,10 +394,24 @@ def _read_pending(conversation_id: UUID, *, force: bool) -> _Pending | str:
         )
 
 
+@dataclass(frozen=True)
+class LentKeys:
+    """Provider keys from a live request, and whose they are.
+
+    Held in memory only, never stored. Spent only when ``user_id`` owns the
+    project: background work on a project is the owner's bill, and a
+    collaborator who happened to close a chat is not the person to charge.
+    """
+
+    user_id: UUID | None
+    keys: dict
+
+
 async def consolidate_conversation(
     conversation_id: UUID,
     *,
     force: bool = False,
+    lent: LentKeys | None = None,
 ) -> ConsolidationResult:
     """Extract memory from one conversation's new turns. Never raises.
 
@@ -399,7 +436,8 @@ async def consolidate_conversation(
         # spend — every desktop install, whose keys live in the OS keychain
         # and never reach a background job — would otherwise pay for a full
         # transcript read to learn that.
-        structured = await asyncio.to_thread(_build_model, owner_id)
+        keys = lent.keys if lent is not None and lent.user_id and lent.user_id == owner_id else None
+        structured = await asyncio.to_thread(_build_model, owner_id, keys)
         if structured is None:
             return result.model_copy(update={"skipped": SKIP_NO_MODEL})
 
@@ -513,7 +551,7 @@ def _apply(
 _background: set[asyncio.Task] = set()
 
 
-def schedule_consolidation(conversation_id: Any) -> None:
+def schedule_consolidation(conversation_id: Any, *, lent: LentKeys | None = None) -> None:
     """Fire-and-forget consolidation for a conversation that just went idle.
 
     Called from the session-close paths as an early flush — the sweep below is
@@ -531,7 +569,7 @@ def schedule_consolidation(conversation_id: Any) -> None:
     except RuntimeError:
         logger.debug("memory: no running loop — consolidation not scheduled")
         return
-    task = loop.create_task(consolidate_conversation(conv_uuid))
+    task = loop.create_task(consolidate_conversation(conv_uuid, lent=lent))
     _background.add(task)
     task.add_done_callback(_background.discard)
 
@@ -602,18 +640,27 @@ SWEEP_RETRY_AFTER = 3600.0
 _sweep_failed_at: dict[UUID, float] = {}
 
 
-def _due_conversations(now: datetime) -> list[UUID]:
-    """Conversations quiet long enough, with enough unread turns, not opted out."""
+def _due_conversations(now: datetime, *, owner_id: UUID | None = None) -> list[UUID]:
+    """Conversations quiet long enough, with enough unread turns, not opted out.
+
+    ``owner_id`` narrows it to projects that user owns — the ones their keys
+    may fund.
+    """
     idle_since = now - timedelta(minutes=SWEEP_IDLE_MINUTES)
     oldest = now - timedelta(days=SWEEP_LOOKBACK_DAYS)
+    stmt = (
+        select(AgentConversation)
+        .where(AgentConversation.last_active_at <= idle_since)
+        .where(AgentConversation.last_active_at >= oldest)
+        .where(AgentConversation.last_seq >= MIN_NEW_EVENTS)
+    )
+    if owner_id is not None:
+        stmt = stmt.join(Project, Project.id == AgentConversation.project_id).where(
+            Project.user_id == owner_id
+        )
     with next(db_session()) as db:
         rows = db.execute(
-            select(AgentConversation)
-            .where(AgentConversation.last_active_at <= idle_since)
-            .where(AgentConversation.last_active_at >= oldest)
-            .where(AgentConversation.last_seq >= MIN_NEW_EVENTS)
-            .order_by(AgentConversation.last_active_at.desc())
-            .limit(500)
+            stmt.order_by(AgentConversation.last_active_at.desc()).limit(500)
         ).scalars()
         due: list[UUID] = []
         for conv in rows:
@@ -645,6 +692,58 @@ async def sweep_once() -> int:
         else:
             _sweep_failed_at.pop(conversation_id, None)
     return ran
+
+
+async def catch_up(user_id: UUID, keys: dict) -> int:
+    """Consolidate the idle conversations in this owner's projects on the keys
+    their app just sent. Returns how many ran.
+
+    The sweep can spend only saved keys, and a desktop install keeps its keys
+    in the OS keychain, so for most desktop owners the sweep finds nothing it
+    may spend. Their app calls this when it opens and while it stays open —
+    the only time those keys exist on this side at all. Paced like the sweep.
+    """
+    lent = LentKeys(user_id=user_id, keys=dict(keys or {}))
+    if not _spendable(lent.keys):
+        return 0
+    due = await asyncio.to_thread(_due_conversations, utcnow(), owner_id=user_id)
+    ran = 0
+    for conversation_id in due[:SWEEP_BATCH]:
+        result = await consolidate_conversation(conversation_id, lent=lent)
+        if not result.skipped:
+            ran += 1
+    return ran
+
+
+_catching_up: set[UUID] = set()
+
+
+def schedule_catch_up(user_id: UUID, keys: dict) -> bool:
+    """Start :func:`catch_up` in the background. False when there is nothing
+    to spend or one is already running for this user — an app that opens two
+    windows asks twice, and the second ask is the same work."""
+    if user_id in _catching_up or not _spendable(keys):
+        return False
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return False
+
+    async def _run() -> None:
+        try:
+            ran = await catch_up(user_id, keys)
+            if ran:
+                logger.info("memory: catch-up consolidated %d conversation(s)", ran)
+        except Exception:  # noqa: BLE001 — a background pass never surfaces
+            logger.warning("memory: catch-up failed", exc_info=True)
+        finally:
+            _catching_up.discard(user_id)
+
+    _catching_up.add(user_id)
+    task = loop.create_task(_run())
+    _background.add(task)
+    task.add_done_callback(_background.discard)
+    return True
 
 
 async def sweep_idle_conversations() -> None:
@@ -683,7 +782,11 @@ MAX_FINDINGS = 6
 
 
 async def extract_artifact_findings(
-    artifact_row: Any, source_text: str, *, noun: str = "website audit report"
+    artifact_row: Any,
+    source_text: str,
+    *,
+    noun: str = "website audit report",
+    user_keys: Any = None,
 ) -> int:
     """Turn a stored artifact's top findings into project memory. Never raises.
 
@@ -699,7 +802,9 @@ async def extract_artifact_findings(
             if is_memory_paused(db, project_id=artifact_row.project_id):
                 return 0
 
-        structured = _build_findings_model(artifact_row.user_id)
+        structured = await asyncio.to_thread(
+            _build_findings_model, artifact_row.user_id, user_keys
+        )
         if structured is None:
             return 0
 
@@ -722,8 +827,8 @@ async def extract_artifact_findings(
         return 0
 
 
-def _build_findings_model(owner_id: UUID | None = None):
-    return _memory_model(owner_id, ArtifactFindings)
+def _build_findings_model(owner_id: UUID | None = None, user_keys: Any = None):
+    return _memory_model(owner_id, ArtifactFindings, user_keys=user_keys)
 
 
 def _write_findings(extracted: ArtifactFindings, artifact_row: Any) -> int:
@@ -767,10 +872,13 @@ __all__ = [
     "ConsolidationResult",
     "ExtractedEntry",
     "MemoryClose",
+    "LentKeys",
     "build_transcript",
+    "catch_up",
     "consolidate_conversation",
     "extract_artifact_findings",
     "record_remember_choice",
+    "schedule_catch_up",
     "schedule_consolidation",
     "sweep_idle_conversations",
     "sweep_once",

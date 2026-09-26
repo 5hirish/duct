@@ -202,7 +202,7 @@ def test_consolidate_conversation_runs_once_per_watermark(db, project, service_d
 
     # Takes the owner whose saved key funds the run — background work has no
     # request to carry a provider header (service/provider_keys.py).
-    monkeypatch.setattr(consolidation, "_build_model", lambda owner_id=None: _StubModel())
+    monkeypatch.setattr(consolidation, "_build_model", lambda owner_id=None, user_keys=None: _StubModel())
 
     first = asyncio.run(consolidation.consolidate_conversation(conv.id))
     assert (first.written, first.through_seq) == (1, 8)
@@ -373,7 +373,9 @@ def test_an_unremembered_session_is_not_consolidated_when_it_closes(monkeypatch)
     scheduled: list = []
     monkeypatch.setattr(agents_routes, "get_session", lambda _sid: _Session())
     monkeypatch.setattr(agents_routes, "close_session", lambda _sid: None)
-    monkeypatch.setattr(agents_routes, "schedule_consolidation", scheduled.append)
+    monkeypatch.setattr(
+        agents_routes, "schedule_consolidation", lambda cid, **_kw: scheduled.append(cid)
+    )
 
     agents_routes._close_and_consolidate("sid")
     assert scheduled == [None]
@@ -476,7 +478,7 @@ def _stub_model(monkeypatch, calls: list):
             calls.append(prompt)
             return Consolidation(entries=[ExtractedEntry(kind="goal", title="Target CPA $45")])
 
-    monkeypatch.setattr(consolidation, "_build_model", lambda owner_id=None: _StubModel())
+    monkeypatch.setattr(consolidation, "_build_model", lambda owner_id=None, user_keys=None: _StubModel())
 
 
 def test_the_sweep_consolidates_a_conversation_whose_session_never_closed(
@@ -583,3 +585,117 @@ def test_consolidation_runs_on_the_owners_light_tier(monkeypatch):
     assert consolidation._build_model(uuid4()) is None
     assert seen["job"] is Job.MEMORY
     assert seen["stored_keys"] == {"openai": "sk-x"}
+
+
+# ---------------------------------------------------------------------------
+# Lent keys — consolidation for owners whose keys are never saved
+# ---------------------------------------------------------------------------
+
+def _record_keys(monkeypatch, seen: list):
+    class _StubModel:
+        async def ainvoke(self, prompt):
+            return Consolidation(entries=[])
+
+    def _build(owner_id=None, user_keys=None):
+        seen.append(user_keys)
+        return _StubModel()
+
+    monkeypatch.setattr(consolidation, "_build_model", _build)
+
+
+def test_the_owners_lent_keys_fund_the_pass(db, project, owner, service_db, monkeypatch):
+    """A desktop owner's keys live in the keychain; closing their chat lends
+    them, and that is the only way the pass can run for them at all."""
+    import asyncio
+
+    conv = _conversation(db, project, turns=8)
+    seen: list = []
+    _record_keys(monkeypatch, seen)
+    lent = consolidation.LentKeys(user_id=owner.id, keys={"openai": "sk-owner"})
+    asyncio.run(consolidation.consolidate_conversation(conv.id, lent=lent))
+    assert seen == [{"openai": "sk-owner"}]
+
+
+def test_a_collaborators_keys_are_never_spent_on_the_owners_project(
+    db, project, service_db, monkeypatch,
+):
+    import asyncio
+
+    conv = _conversation(db, project, turns=8)
+    seen: list = []
+    _record_keys(monkeypatch, seen)
+    lent = consolidation.LentKeys(user_id=uuid4(), keys={"openai": "sk-collaborator"})
+    asyncio.run(consolidation.consolidate_conversation(conv.id, lent=lent))
+    assert seen == [None]
+
+
+def test_plan_tokens_are_not_lent_to_a_structured_call():
+    from agents.models import Provider
+
+    jwt = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ4In0.c2ln"
+    assert consolidation._spendable({
+        Provider.OPENAI: jwt,
+        Provider.ANTHROPIC: "sk-ant-oat01-plan",
+        Provider.GOOGLE_GENAI: "AIza-key",
+    }) == {Provider.GOOGLE_GENAI: "AIza-key"}
+
+
+def test_catch_up_covers_only_the_callers_own_projects(db, project, owner, service_db, monkeypatch):
+    import asyncio
+
+    other_owner = User(email="someone-else@example.com")
+    db.add(other_owner)
+    db.commit()
+    theirs = Project(user_id=other_owner.id, name="Theirs", slug="theirs")
+    db.add(theirs)
+    db.commit()
+    mine = _conversation(db, project, turns=8)
+    not_mine = _conversation(db, theirs, turns=8)
+    for conv in (mine, not_mine):
+        _age(db, conv, minutes=consolidation.SWEEP_IDLE_MINUTES + 5)
+
+    ran: list = []
+
+    async def _consolidate(conversation_id, **_kw):
+        ran.append(conversation_id)
+        return consolidation.ConsolidationResult()
+
+    monkeypatch.setattr(consolidation, "consolidate_conversation", _consolidate)
+    assert asyncio.run(consolidation.catch_up(owner.id, {"openai": "sk-owner"})) == 1
+    assert ran == [mine.id]
+    # Nothing it may spend, nothing it runs.
+    assert asyncio.run(consolidation.catch_up(owner.id, {})) == 0
+
+
+def test_closing_a_session_lends_its_callers_keys(monkeypatch):
+    import routes.agents as agents_routes
+
+    class _Session:
+        conversation_id = uuid4()
+        memory_off = False
+        user_id = uuid4()
+        lent_keys = {"openai": "sk-caller"}
+
+    scheduled: list = []
+    monkeypatch.setattr(agents_routes, "get_session", lambda _sid: _Session())
+    monkeypatch.setattr(agents_routes, "close_session", lambda _sid: None)
+    monkeypatch.setattr(
+        agents_routes, "schedule_consolidation",
+        lambda cid, *, lent=None: scheduled.append((cid, lent)),
+    )
+    agents_routes._close_and_consolidate("sid")
+    (cid, lent), = scheduled
+    assert cid == _Session.conversation_id
+    assert (lent.user_id, lent.keys) == (_Session.user_id, {"openai": "sk-caller"})
+
+
+def test_the_catch_up_route_schedules_only_with_a_key_to_spend(client, monkeypatch):
+    calls: list = []
+    monkeypatch.setattr(
+        consolidation, "schedule_catch_up",
+        lambda user_id, keys: calls.append(keys) or bool(keys),
+    )
+    assert client.post("/api/user/memory/catch-up").json() == {"scheduled": False}
+    body = client.post("/api/user/memory/catch-up", headers={"X-Provider-Gemini": "AIza-test"})
+    assert body.status_code == 202 and body.json() == {"scheduled": True}
+    assert len(calls) == 2 and calls[-1]

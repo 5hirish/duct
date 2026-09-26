@@ -3349,8 +3349,12 @@ msgid "Heavy — the deep model"
 msgstr "ヘビー — ディープモデル"
 
 #: src/lib/credentialStorage.js
-msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
-msgstr "このコンピューターのオペレーティングシステムのキーチェーンに保持されます。Ductのサーバーがこれを見ることはありません。"
+msgid "Held by your operating system's keychain on this computer. Duct uses it while the app is open and never stores it."
+msgstr "このコンピューターのオペレーティングシステムのキーチェーンに保持されます。Ductはアプリが開いている間だけこれを使い、保存することはありません。"
+
+#: src/lib/credentialStorage.js
+#~ msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
+#~ msgstr "このコンピューターのオペレーティングシステムのキーチェーンに保持されます。Ductのサーバーがこれを見ることはありません。"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "held for this browser session"
@@ -8135,8 +8139,12 @@ msgid "Will be kept in this browser session only — cleared when you close the 
 msgstr "このブラウザセッションのみで保持されます — タブを閉じるとクリアされ、スケジュールされた実行では利用できません。"
 
 #: src/components/connections/ProviderCard.jsx
-msgid "Will be stored in your OS keychain on this machine."
-msgstr "このマシンのOSキーチェーンに保存されます。"
+#~ msgid "Will be stored in your OS keychain on this machine."
+#~ msgstr "このマシンのOSキーチェーンに保存されます。"
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Will be stored in your OS keychain on this machine. Duct can use it only while the app is open, so anything that runs while it’s closed waits until you’re back."
+msgstr "このマシンのOSキーチェーンに保存されます。Ductがこれを使えるのはアプリが開いている間だけなので、閉じている間に実行される処理は、次にアプリを開くまで待機します。"
 
 #: src/components/GoogleAdsReport.js
 msgid "Win"

@@ -481,7 +481,15 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 // rather than where anything currently is.
                 <p className="conn-hint">
                   {desktop ? (
-                    <Trans>Will be stored in your OS keychain on this machine.</Trans>
+                    // What the keychain costs, said before the save rather than
+                    // discovered later: the key only reaches Duct with a request
+                    // from this app, so work that would run while it is closed
+                    // (filing what a chat taught Duct, for one) waits for it.
+                    <Trans>
+                      Will be stored in your OS keychain on this machine. Duct can use it only
+                      while the app is open, so anything that runs while it’s closed waits until
+                      you’re back.
+                    </Trans>
                   ) : remember ? (
                     <Trans>
                       Will be encrypted and stored on Duct, so scheduled runs use your key too.
