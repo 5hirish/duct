@@ -224,6 +224,10 @@ class AgentStep(StrEnum):
     BUILD_HTML = "build_html"
     WRITE_META = "write_meta"
     DISPATCH_SUBAGENT = "dispatch_subagent"
+    # A clone's two waits before its opening turn: the scrape (or the saved
+    # reference) with its pictures, then the model reading why it worked.
+    READ_REFERENCE = "read_reference"
+    DIAGNOSE_REFERENCE = "diagnose_reference"
 
     # Insights
     COLLECT_SOURCE_DATA = "collect_source_data"
@@ -252,6 +256,8 @@ STEP_LABELS: dict[AgentStep, str] = {
     AgentStep.BUILD_HTML: "Building slide HTML",
     AgentStep.WRITE_META: "Writing post metadata",
     AgentStep.DISPATCH_SUBAGENT: "Sub-agent",
+    AgentStep.READ_REFERENCE: "Reading the TikTok",
+    AgentStep.DIAGNOSE_REFERENCE: "Working out why it worked",
     # Insights
     AgentStep.COLLECT_SOURCE_DATA: "Collecting source data",
     AgentStep.NORMALIZE_CONNECTOR_OUTPUTS: "Normalizing connector outputs",

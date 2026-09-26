@@ -91,6 +91,41 @@ FIXTURE_DATA_SOURCES = (
 
 FIXTURE_REQUEST = "Why did CPA jump last week?"
 
+# A reference post for the clone prompts: a carousel that outran its
+# creator's following, snake_case as a saved reference stores it. Invented.
+FIXTURE_REFERENCE_POST = dict(
+    id="7300000000000000001",
+    text="3 invoicing mistakes that cost me a week of work\n#electrician #tradesbusiness",
+    web_video_url="https://www.tiktok.com/@sparkybooks/video/7300000000000000001",
+    is_slideshow=True,
+    play_count=412_000,
+    digg_count=31_000,
+    comment_count=940,
+    share_count=6_100,
+    collect_count=18_200,
+    author_meta=dict(name="sparkybooks", fans=9_800),
+    music_meta=dict(music_name="original sound"),
+    hashtags=["electrician", "tradesbusiness"],
+    slideshow_image_links=["s1", "s2", "s3", "s4", "s5", "s6"],
+)
+
+FIXTURE_DIAGNOSIS = dict(
+    hook="A confession with a cost attached: the week of work is the stake, so a tradesperson reads on to avoid it.",
+    structure="One mistake per slide, each ending on the money it cost; slide 5 is a checklist people save; slide 6 asks which one hit them.",
+    on_screen_text=[
+        "3 invoicing mistakes that cost me a week of work",
+        "1. Invoicing at the end of the month",
+        "2. No deposit on jobs over $500",
+        "3. Chasing payment by text",
+        "The 4-line checklist I use now",
+        "Which one got you?",
+    ],
+    lever="saves",
+    why_it_worked="Slide 5's checklist is the save: a tool the viewer uses on Monday. 42x reach on a 9.8k account says the format, not the creator, carried it.",
+    audience="Solo electricians and plumbers two to five years into running their own jobs.",
+    creator="",
+)
+
 #: Rough token estimate. Not a tokenizer: the number is here to show which
 #: prompts are large enough for the cache minimum (~1024 tokens) and which are
 #: growing, and a tokenizer dependency for that is not worth the install.
@@ -219,6 +254,45 @@ def render_content() -> str:
             f"System prompt · mode={mode} · ~{approx_tokens(system):,} tokens",
             fenced(system),
         ))
+    out.append(render_content_clone())
+    return "\n".join(out)
+
+
+def render_content_clone() -> str:
+    """A clone (issue #222) runs on draft_post's system prompt; what differs is
+    the call that reads the reference and the opening turn built from it."""
+    from agents.content.prompts import build_clone_user_prompt, build_reference_diagnosis_prompt
+    from agents.content.schema import ContentBrandContext, ContentPillar, ReferenceDiagnosis
+    from service.clone_reference import engagement_prior
+
+    post = FIXTURE_REFERENCE_POST
+    prior = engagement_prior(post)
+    out = []
+    diagnosis_prompt = build_reference_diagnosis_prompt(post, prior, images=6)
+    out.append(section(
+        f"Clone: reference diagnosis (one structured call) · ~{approx_tokens(diagnosis_prompt):,} tokens",
+        fenced(diagnosis_prompt),
+    ))
+    brand = ContentBrandContext(
+        project_id="00000000-0000-0000-0000-000000000000",
+        project_name=FIXTURE_BUSINESS["business_name"],
+        audience=FIXTURE_BUSINESS["audience_segment"],
+        pillars=[
+            ContentPillar(id="cashflow", name="Getting paid", description="Invoicing, deposits, chasing payment."),
+            ContentPillar(id="scheduling", name="Running the week", description="Booking, routing, no-shows."),
+        ],
+    )
+    turn = build_clone_user_prompt(
+        brand,
+        url=post["web_video_url"],
+        post=post,
+        prior=prior,
+        diagnosis=ReferenceDiagnosis(**FIXTURE_DIAGNOSIS),
+    )
+    out.append(section(
+        f"Clone: opening user turn (system prompt is mode=draft_post) · ~{approx_tokens(turn):,} tokens",
+        fenced(turn),
+    ))
     return "\n".join(out)
 
 

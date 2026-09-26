@@ -57,6 +57,20 @@ export const POST_STATUS_LABELS = Object.freeze({
   [PostStatus.DISCARDED]: msg`Discarded`,
 });
 
+// Mirrors CloneApproach in backend/agents/content/schema.py: how closely a
+// cloned post copies its reference, derived there from FIT × PROOF.
+export const CloneApproach = Object.freeze({
+  CLOSE:          "close",
+  ADAPT:          "adapt",
+  STRUCTURE_ONLY: "structure_only",
+});
+
+export const CLONE_APPROACH_LABELS = Object.freeze({
+  [CloneApproach.CLOSE]:          msg`Copied closely`,
+  [CloneApproach.ADAPT]:          msg`Adapted`,
+  [CloneApproach.STRUCTURE_ONLY]: msg`Structure only`,
+});
+
 export const AspectRatio = Object.freeze({
   SQUARE_1_1:     "1:1",
   PORTRAIT_9_16:  "9:16",

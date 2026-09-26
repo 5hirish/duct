@@ -158,6 +158,10 @@ msgstr "{count, plural, one {# solución que podemos generar} other {# solucione
 msgid "{count, plural, one {# fix} other {# fixes}}"
 msgstr "{count, plural, one {# solución} other {# soluciones}}"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{count, plural, one {# post} other {# posts}}"
+msgstr "{count, plural, one {# publicación} other {# publicaciones}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, one {# página} other {# páginas}}"
@@ -458,6 +462,10 @@ msgstr "{slideCount, plural, one {# diapositiva} other {# diapositivas}}"
 msgid "{slides, plural, one {# slide} other {# slides}}"
 msgstr "{slides, plural, one {# diapositiva} other {# diapositivas}}"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
+msgstr "{slideShare} de publicaciones · <0>{slideEng}</0> interacciones"
+
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
 msgstr "{summary} Conclusión del operador: {takeaway}"
@@ -509,6 +517,10 @@ msgstr "{unconfirmed, plural, one {# sin confirmar} other {# sin confirmar}}"
 #: src/components/workspace/ContextRing.jsx
 msgid "{used} of {window} tokens"
 msgstr "{used} de {window} tokens"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "{videoShare} of posts · <0>{videoEng}</0> eng."
+msgstr "{videoShare} de publicaciones · <0>{videoEng}</0> interacciones"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{views, plural, one {# view} other {# views}}"
@@ -816,6 +828,10 @@ msgstr "Acme Inc."
 msgid "acme.com"
 msgstr "acme.com"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Across {total, plural, one {# post} other {# posts}} · median engagement {median}"
+msgstr "En {total, plural, one {# publicación} other {# publicaciones}} · interacción media {median}"
+
 #: src/components/GoogleAdsReport.js
 msgid "Action"
 msgstr "Acción"
@@ -842,6 +858,10 @@ msgstr "Actividad"
 #: src/app/(app)/connections/page.jsx
 msgid "Ad account id"
 msgstr "ID de cuenta publicitaria"
+
+#: src/lib/contentEnums.js
+msgid "Adapted"
+msgstr "Adaptado"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Adaptive thinking"
@@ -1452,6 +1472,10 @@ msgstr "Mejor interacción"
 msgid "Between"
 msgstr "Entre"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Beyond the ones you searched, on two posts or more"
+msgstr "Más allá de las que buscaste, en dos publicaciones o más"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Big Bets"
 msgstr "Grandes Apuestas"
@@ -1615,6 +1639,7 @@ msgstr "No se puede contactar con el proveedor"
 #: src/app/(app)/projects/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/CloneFromUrlDialog.jsx
 #: src/components/content/FormatLibrary.jsx
 #: src/components/content/PublishModal.jsx
 #: src/components/memory/MemoryTimeline.jsx
@@ -1762,6 +1787,15 @@ msgstr "ID de cliente"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Client-rendered pages — Google Wave 1 may see empty content."
 msgstr "Páginas renderizadas por el cliente — Google Wave 1 puede ver contenido vacío."
+
+#: src/app/(app)/content/page.jsx
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Clone a TikTok"
+msgstr "Clonar un TikTok"
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Cloning a TikTok"
+msgstr "Clonando un TikTok"
 
 #: src/components/AgentDrawer.jsx
 #: src/components/audit/ExecutionOffer.jsx
@@ -2074,6 +2108,10 @@ msgstr "Cookies, sinceramente"
 #: src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "Copiado"
+
+#: src/lib/contentEnums.js
+msgid "Copied closely"
+msgstr "Copiado fielmente"
 
 #: src/components/AppErrorPanel.jsx
 msgid "Copied debug info"
@@ -2490,6 +2528,10 @@ msgstr "borrador"
 #: src/lib/contentEnums.js
 msgid "Draft"
 msgstr "Borrador"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Draft a clone"
+msgstr "Redactar un clon"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
@@ -2969,6 +3011,10 @@ msgstr "¿Olvidar “{title}”?"
 msgid "Forgotten."
 msgstr "Olvidado."
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Format"
+msgstr "Formato"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Format D — UGC / Raw Authentic"
 msgstr "Formato D — UGC / Auténtico y Crudo"
@@ -3399,6 +3445,10 @@ msgstr "https://example.com"
 msgid "https://growthbook.example.com (leave empty for GrowthBook Cloud)"
 msgstr "https://growthbook.example.com (deja vacío para GrowthBook Cloud)"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "https://www.tiktok.com/@creator/video/…"
+msgstr "https://www.tiktok.com/@creator/video/…"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "https://yoursite.com"
 msgstr "https://yoursite.com"
@@ -3616,6 +3666,10 @@ msgstr "Sigue trabajando cuando alcances un límite"
 #: src/lib/credentialStorage.js
 msgid "Kept only until you close the app, and reports that run without you cannot use it."
 msgstr "Se guarda solo hasta que cierres la app, y los informes que se ejecutan sin ti no pueden usarlo."
+
+#: src/components/content/CloneSourceNote.jsx
+msgid "Kept:"
+msgstr "Se mantuvo:"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Key ID"
@@ -4122,6 +4176,10 @@ msgstr "Proveedor del modelo"
 #~ msgid "Model: {label}"
 #~ msgstr "Modelo: {label}"
 
+#: src/components/content/CloneSourceNote.jsx
+msgid "Modelled on {reference}"
+msgstr "Modelado a partir de {reference}"
+
 #: src/app/(app)/settings/models/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/AppSidebar.jsx
@@ -4407,6 +4465,10 @@ msgstr "Ninguna llamada al modelo en esta ventana."
 msgid "No model provider is connected, so this can’t run yet. <0>Connect one in Settings → Models & providers →</0> — what you typed is still here when you come back."
 msgstr "Ningún proveedor de modelos está conectado, así que esto no puede ejecutarse todavía. <0>Conecta uno en Ajustes → Modelos y proveedores →</0> — lo que escribiste seguirá aquí cuando vuelvas."
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "No other tag repeats across these posts."
+msgstr "Ninguna otra etiqueta se repite en estas publicaciones."
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "No payment now — we’ll scope and quote first."
 msgstr "Ningún pago ahora; primero definiremos el alcance y cotizaremos."
@@ -4420,8 +4482,11 @@ msgid "No plan yet for this project."
 msgstr "Ningún plan todavía para este proyecto."
 
 #: src/app/(app)/content/page.jsx
-msgid "No posts yet. Generate a plan and draft posts from the board."
-msgstr "Ninguna publicación todavía. Genera un plan y borradores de publicaciones desde el tablero."
+msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
+msgstr "Aún no hay publicaciones. Genera un plan y redacta publicaciones desde el tablero, o clona un TikTok que funcionó."
+
+#~ msgid "No posts yet. Generate a plan and draft posts from the board."
+#~ msgstr "Ninguna publicación todavía. Genera un plan y borradores de publicaciones desde el tablero."
 
 #: src/components/content/PostCard.jsx
 msgid "No preview yet"
@@ -4916,6 +4981,10 @@ msgstr "Abierto"
 msgid "Opened the post"
 msgstr "Abrió la publicación"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Opening lines of the most engaging posts that reached at least a typical audience"
+msgstr "Líneas de apertura de las publicaciones con más interacción que alcanzaron al menos una audiencia típica"
+
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "Opening session…"
 msgstr "Abriendo sesión…"
@@ -5070,6 +5139,14 @@ msgstr "APROBADO"
 msgid "Paste a key first"
 msgstr "Pega una clave primero"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
+msgstr "Pega una publicación que funcionó. Duct lee por qué funcionó, luego redacta un carrusel para tu marca con la misma estructura, y te dice lo que mantuvo."
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Paste the link to one TikTok post."
+msgstr "Pega el enlace a una publicación de TikTok."
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr "Pega tu clave"
@@ -5101,6 +5178,10 @@ msgstr "Permisos"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Persona description"
 msgstr "Descripción de la persona"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Photo carousels and videos both work. The clone is always a carousel."
+msgstr "Los carruseles de fotos y los videos funcionan. El clon siempre es un carrusel."
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Pick a color"
@@ -5522,6 +5603,10 @@ msgstr "Leyendo y analizando tus páginas"
 msgid "Reading the rest of the site…"
 msgstr "Leyendo el resto del sitio…"
 
+#: src/lib/contentEvents.js
+msgid "Reading the TikTok"
+msgstr "Leyendo el TikTok"
+
 #: src/app/(start)/start/page.jsx
 msgid "Reading…"
 msgstr "Leyendo…"
@@ -5603,6 +5688,10 @@ msgstr "registrado"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Recorded {recordedAgo}"
 msgstr "Registrado {recordedAgo}"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Recurring hashtags"
+msgstr "Hashtags recurrentes"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Redirects"
@@ -6430,6 +6519,10 @@ msgstr "Pasos de configuración"
 msgid "Share"
 msgstr "Compartir"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Share of posts, and the median engagement each earns"
+msgstr "Proporción de publicaciones y la interacción media que cada una obtiene"
+
 #: src/components/audit/ShareReport.jsx
 msgid "Share this report"
 msgstr "Compartir este informe"
@@ -6695,6 +6788,10 @@ msgstr "Vista previa de diapositivas"
 msgid "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
 msgstr "Las diapositivas, el pie de foto y los hashtags aparecen aquí tan pronto como el borrador esté listo. Normalmente 20-40 segundos."
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Slideshows"
+msgstr "Carruseles"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Slug"
 msgstr "Slug"
@@ -6849,6 +6946,10 @@ msgstr "Stripe"
 #: src/lib/contentReview.js
 msgid "Strong"
 msgstr "Fuerte"
+
+#: src/lib/contentEnums.js
+msgid "Structure only"
+msgstr "Solo estructura"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Studying what's worked before…"
@@ -7017,6 +7118,10 @@ msgstr "Eso no se guardó — tu selección ha sido restaurada. Inténtalo de nu
 msgid "That didn’t send — your choices are still here. Try again."
 msgstr "Eso no se envió — tus opciones siguen aquí. Inténtalo de nuevo."
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That doesn't look like a link."
+msgstr "Eso no parece un enlace."
+
 #: src/components/content/FormatLibrary.jsx
 msgid "That format could not be deleted — it is still in the library."
 msgstr "Ese formato no pudo ser eliminado — todavía está en la biblioteca."
@@ -7037,9 +7142,21 @@ msgstr "Son muchos sitios seguidos — inténtalo de nuevo en unos minutos."
 msgid "That key was rejected"
 msgstr "Esa clave fue rechazada"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That link isn't a single post. It should look like tiktok.com/@creator/video/123…"
+msgstr "Ese enlace no es una sola publicación. Debería verse como tiktok.com/@creator/video/123…"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That link isn't on tiktok.com."
+msgstr "Ese enlace no es de tiktok.com."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "That turn failed"
 msgstr "Ese turno falló"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That's a share link. Open it, then copy the full address from your browser."
+msgstr "Ese es un enlace para compartir. Ábrelo, luego copia la dirección completa desde tu navegador."
 
 #: src/app/(start)/start/page.jsx
 msgid "That's us — continue"
@@ -7377,6 +7494,10 @@ msgstr "Hilos"
 msgid "Tiers"
 msgstr "Niveles"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "TikTok link"
+msgstr "Enlace de TikTok"
+
 #: src/components/insight-blocks/TimeSeriesBlock.jsx
 msgid "Time series"
 msgstr "Series temporales"
@@ -7697,6 +7818,10 @@ msgstr "Versión {version}"
 msgid "via Duct"
 msgstr "vía Duct"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Videos"
+msgstr "Videos"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "View →"
 msgstr "Ver →"
@@ -7879,6 +8004,10 @@ msgstr "Qué está funcionando bien"
 msgid "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 msgstr "Lo que está almacenado para {providerName} no es una clave que acepte, por lo que las ejecuciones la omiten. Elige Eliminar clave y luego pega una nueva."
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "What's working"
+msgstr "Qué funciona"
+
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
 msgstr "Lo que haga este modelo de todos modos"
@@ -7955,6 +8084,10 @@ msgstr "Por qué es importante y cómo debería aplicarlo un agente"
 msgid "Why it matters, and how an agent should apply it. Optional."
 msgstr "Por qué es importante y cómo debería aplicarlo un agente. Opcional."
 
+#: src/components/content/CloneSourceNote.jsx
+msgid "Why it worked:"
+msgstr "Por qué funcionó:"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Will be encrypted and stored on Duct, so scheduled runs use your key too."
 msgstr "Se cifrará y almacenará en Duct, para que las ejecuciones programadas también usen tu clave."
@@ -7970,6 +8103,10 @@ msgstr "Se almacenará en el llavero de tu sistema operativo en esta máquina."
 #: src/components/GoogleAdsReport.js
 msgid "Win"
 msgstr "Ganancia"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Winning hooks"
+msgstr "Ganchos ganadores"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Work still moving — mine or yours. Nothing here waits on you."
@@ -7988,6 +8125,10 @@ msgstr "Procesándolo"
 #: src/components/PipelineProgress.jsx
 msgid "Working on your report…"
 msgstr "Trabajando en tu informe…"
+
+#: src/lib/contentEvents.js
+msgid "Working out why it worked"
+msgstr "Descubriendo por qué funcionó"
 
 #: src/components/workspace/Todos.jsx
 msgid "working…"

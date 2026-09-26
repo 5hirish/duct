@@ -416,6 +416,17 @@ Postgres `DATABASE_URL` names.
   validates (`agents/audit/prefetch.py`): root page now, the rest in the
   background, handed to `run_pipeline` by `crawl_id`. Duct's bandwidth only;
   inference never runs here.
+- `service/clone_reference.py` — a pasted TikTok link becomes a saved
+  reference for a clone (issue #222). The link is reduced to a handle and a
+  post id and everything after uses the URL rebuilt from them; the Apify input
+  (`single_post_run_input`) takes that parsed post, one result, downloads off.
+  A post the project already saved is reused, else it goes through
+  `service/discovery.py`'s ingest and capture. The clone itself is
+  `ContentRunner.run_clone`: draft_post's system prompt, one structured call on
+  the run's own model for why the reference worked (the slides attached only on
+  `VISION_PROVIDERS`), and the FIT × PROOF discipline in the USER turn.
+  `submit_post_draft` writes `content_posts.clone_source` from the session's
+  link plus the model's verdict; the approach is derived, never typed.
 - `agents/audit/draft.py` — the project drafted from the crawl, two layers
   (`crawl` deterministic, `inferred` one structured call), emitted as
   `PROJECT_DRAFT` when a run sets `draft_project`. Never infers the North
@@ -467,6 +478,20 @@ Postgres `DATABASE_URL` names.
   the rule (Search Console only, after the report, once); the onboarding
   audit's user turn (`draft_project`) is the trigger, so the cached prefix is
   identical across every other audit.
+- `service/discovery.py` — saved TikTok references. `ingest_reference(db,
+  project_id, post)` is the one way a `ScrapedPost` becomes a
+  `discovered_reference` row (one per post per project); `capture_reference_media`
+  copies its cover and slides into project storage and records the outcome in
+  `params["media"]`, because TikTok's image URLs carry a signed expiry. The
+  Discover save runs capture after the response; `/content/discover/recapture`
+  is the backfill, called when Discover opens. A clone-from-URL flow reuses
+  both. Every media fetch goes through `service/url_safety.py`: https only, a
+  host allowlist (`MEDIA_DOMAINS`), redirects re-checked hop by hop, a size cap
+  and an image content type. The URLs arrive in the request body, so without
+  that guard a save is a request the caller aims at our network.
+- `service/apify/run_cache.py` — an identical Discover search (actor + canonical
+  input) inside 30 minutes joins the earlier Apify run instead of paying for a
+  new one. In process; the API runs one worker.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling

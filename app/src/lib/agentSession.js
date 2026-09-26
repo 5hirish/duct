@@ -797,6 +797,9 @@ const ERROR_COPY = Object.freeze({
   [ErrorCode.BAD_REQUEST]:         { text: "The model provider rejected the request. Try rephrasing.", action: ErrorAction.NONE },
   [ErrorCode.CONNECTOR_EXPIRED]:   { text: "A connected account needs reconnecting before the agent can read it.", action: ErrorAction.CONNECTIONS },
   [ErrorCode.CONNECTOR_FORBIDDEN]: { text: "A connected account doesn't have access to that data. Check its permissions under Connections.", action: ErrorAction.CONNECTIONS },
+  // A clone's TikTok could not be read. Retrying the same link rarely helps
+  // (private, deleted, taken down), so the way on is another link.
+  [ErrorCode.REFERENCE_UNAVAILABLE]: { text: "Duct couldn't read that TikTok. Check it opens in a browser without signing in, or try another post.", action: ErrorAction.NONE },
   [ErrorCode.CANCELLED]:           { text: "Stopped.", action: ErrorAction.RETRY },
   [ErrorCode.UNKNOWN]:             { text: "The run stopped without saying why. Try again.", action: ErrorAction.RETRY },
 });

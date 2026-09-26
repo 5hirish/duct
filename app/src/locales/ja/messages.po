@@ -158,6 +158,10 @@ msgstr "{count, plural, other {# 生成可能な修正}}"
 msgid "{count, plural, one {# fix} other {# fixes}}"
 msgstr "{count, plural, other {# 修正}}"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{count, plural, one {# post} other {# posts}}"
+msgstr "{count, plural, other {# 投稿}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, other {# ページ}}"
@@ -458,6 +462,10 @@ msgstr "{slideCount, plural, one {# スライド} other {# スライド}}"
 msgid "{slides, plural, one {# slide} other {# slides}}"
 msgstr "{slides, plural, one {# スライド} other {# スライド}}"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
+msgstr "{slideShare} の投稿 · <0>{slideEng}</0> エンゲージメント"
+
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
 msgstr "{summary} オペレーターの所見: {takeaway}"
@@ -509,6 +517,10 @@ msgstr "{unconfirmed, plural, one {# 未確認} other {# 未確認}}"
 #: src/components/workspace/ContextRing.jsx
 msgid "{used} of {window} tokens"
 msgstr "{window}トークンのうち{used}"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "{videoShare} of posts · <0>{videoEng}</0> eng."
+msgstr "{videoShare} の投稿 · <0>{videoEng}</0> エンゲージメント"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{views, plural, one {# view} other {# views}}"
@@ -816,6 +828,10 @@ msgstr "Acme Inc."
 msgid "acme.com"
 msgstr "acme.com"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Across {total, plural, one {# post} other {# posts}} · median engagement {median}"
+msgstr "{total, plural, other {# 投稿}}全体で · エンゲージメントの中央値 {median}"
+
 #: src/components/GoogleAdsReport.js
 msgid "Action"
 msgstr "アクション"
@@ -842,6 +858,10 @@ msgstr "アクティビティ"
 #: src/app/(app)/connections/page.jsx
 msgid "Ad account id"
 msgstr "広告アカウントID"
+
+#: src/lib/contentEnums.js
+msgid "Adapted"
+msgstr "調整済み"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Adaptive thinking"
@@ -1452,6 +1472,10 @@ msgstr "最高のエンゲージメント"
 msgid "Between"
 msgstr "間"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Beyond the ones you searched, on two posts or more"
+msgstr "検索した投稿以外で、2つ以上の投稿にわたって"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Big Bets"
 msgstr "ビッグベット"
@@ -1615,6 +1639,7 @@ msgstr "プロバイダーに到達できません"
 #: src/app/(app)/projects/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/CloneFromUrlDialog.jsx
 #: src/components/content/FormatLibrary.jsx
 #: src/components/content/PublishModal.jsx
 #: src/components/memory/MemoryTimeline.jsx
@@ -1762,6 +1787,15 @@ msgstr "クライアントID"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Client-rendered pages — Google Wave 1 may see empty content."
 msgstr "クライアントレンダリングされたページ — Google Wave 1ではコンテンツが空になる場合があります。"
+
+#: src/app/(app)/content/page.jsx
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Clone a TikTok"
+msgstr "TikTokをクローン"
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Cloning a TikTok"
+msgstr "TikTokをクローン中"
 
 #: src/components/AgentDrawer.jsx
 #: src/components/audit/ExecutionOffer.jsx
@@ -2074,6 +2108,10 @@ msgstr "Cookieについて"
 #: src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "コピーしました"
+
+#: src/lib/contentEnums.js
+msgid "Copied closely"
+msgstr "忠実にコピーされました"
 
 #: src/components/AppErrorPanel.jsx
 msgid "Copied debug info"
@@ -2490,6 +2528,10 @@ msgstr "下書き"
 #: src/lib/contentEnums.js
 msgid "Draft"
 msgstr "下書き"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Draft a clone"
+msgstr "クローンを下書き"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
@@ -2969,6 +3011,10 @@ msgstr "「{title}」を忘れますか？"
 msgid "Forgotten."
 msgstr "忘れました。"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Format"
+msgstr "形式"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Format D — UGC / Raw Authentic"
 msgstr "フォーマットD — UGC / 生の信頼性"
@@ -3399,6 +3445,10 @@ msgstr "https://example.com"
 msgid "https://growthbook.example.com (leave empty for GrowthBook Cloud)"
 msgstr "https://growthbook.example.com (GrowthBook Cloudの場合は空欄にしてください)"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "https://www.tiktok.com/@creator/video/…"
+msgstr "https://www.tiktok.com/@creator/video/…"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "https://yoursite.com"
 msgstr "https://yoursite.com"
@@ -3616,6 +3666,10 @@ msgstr "制限に達しても作業を続行する"
 #: src/lib/credentialStorage.js
 msgid "Kept only until you close the app, and reports that run without you cannot use it."
 msgstr "アプリを閉じるまでのみ保持され、あなたなしで実行されるレポートは使用できません。"
+
+#: src/components/content/CloneSourceNote.jsx
+msgid "Kept:"
+msgstr "保持されたもの:"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Key ID"
@@ -4122,6 +4176,10 @@ msgstr "モデルプロバイダー"
 #~ msgid "Model: {label}"
 #~ msgstr "モデル: {label}"
 
+#: src/components/content/CloneSourceNote.jsx
+msgid "Modelled on {reference}"
+msgstr "{reference}をモデルにしています"
+
 #: src/app/(app)/settings/models/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/AppSidebar.jsx
@@ -4407,6 +4465,10 @@ msgstr "このウィンドウでのモデル呼び出しはありません。"
 msgid "No model provider is connected, so this can’t run yet. <0>Connect one in Settings → Models & providers →</0> — what you typed is still here when you come back."
 msgstr "モデルプロバイダーが接続されていないため、まだ実行できません。<0>設定 → モデルとプロバイダー → で接続してください。</0> — 入力した内容は戻ってきたときに残っています。"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "No other tag repeats across these posts."
+msgstr "これらの投稿には、他に繰り返されるタグはありません。"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "No payment now — we’ll scope and quote first."
 msgstr "今は支払いはありません — まず範囲を決定し、見積もりを提示します。"
@@ -4420,8 +4482,12 @@ msgid "No plan yet for this project."
 msgstr "このプロジェクトにはまだプランがありません。"
 
 #: src/app/(app)/content/page.jsx
-msgid "No posts yet. Generate a plan and draft posts from the board."
-msgstr "まだ投稿がありません。ボードからプランを生成し、投稿を下書きしてください。"
+msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
+msgstr "まだ投稿がありません。ボードからプランを生成して投稿を下書きするか、成功したTikTokをクローンしてください。"
+
+#: src/app/(app)/content/page.jsx
+#~ msgid "No posts yet. Generate a plan and draft posts from the board."
+#~ msgstr "まだ投稿がありません。ボードからプランを生成し、投稿を下書きしてください。"
 
 #: src/components/content/PostCard.jsx
 msgid "No preview yet"
@@ -4916,6 +4982,10 @@ msgstr "開きました"
 msgid "Opened the post"
 msgstr "投稿を開きました"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Opening lines of the most engaging posts that reached at least a typical audience"
+msgstr "少なくとも一般的なオーディエンスに届いた、最もエンゲージメントの高い投稿の冒頭部分"
+
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "Opening session…"
 msgstr "セッションを開いています…"
@@ -5070,6 +5140,14 @@ msgstr "PASS"
 msgid "Paste a key first"
 msgstr "まずキーを貼り付けてください"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
+msgstr "成功した投稿を貼り付けてください。Ductがその成功理由を読み取り、同じ構造でブランド向けのカルーセルを下書きし、保持した内容をお知らせします。"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Paste the link to one TikTok post."
+msgstr "TikTokの投稿リンクを貼り付けてください。"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr "キーを貼り付けてください"
@@ -5101,6 +5179,10 @@ msgstr "権限"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Persona description"
 msgstr "ペルソナの説明"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "Photo carousels and videos both work. The clone is always a carousel."
+msgstr "写真カルーセルと動画の両方に対応しています。クローンは常にカルーセル形式になります。"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Pick a color"
@@ -5522,6 +5604,10 @@ msgstr "ページを読み込み、解析しています"
 msgid "Reading the rest of the site…"
 msgstr "サイトの残りを読み込み中…"
 
+#: src/lib/contentEvents.js
+msgid "Reading the TikTok"
+msgstr "TikTokを読み込み中"
+
 #: src/app/(start)/start/page.jsx
 msgid "Reading…"
 msgstr "読み込み中…"
@@ -5603,6 +5689,10 @@ msgstr "記録済み"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Recorded {recordedAgo}"
 msgstr "記録済み {recordedAgo}"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Recurring hashtags"
+msgstr "繰り返し使われているハッシュタグ"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Redirects"
@@ -6430,6 +6520,10 @@ msgstr "セットアップ手順"
 msgid "Share"
 msgstr "共有"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Share of posts, and the median engagement each earns"
+msgstr "投稿の割合と、それぞれの投稿が獲得するエンゲージメントの中央値"
+
 #: src/components/audit/ShareReport.jsx
 msgid "Share this report"
 msgstr "このレポートを共有"
@@ -6695,6 +6789,10 @@ msgstr "スライドプレビュー"
 msgid "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
 msgstr "下書きが準備でき次第、スライド、キャプション、ハッシュタグがここに表示されます。通常20〜40秒です。"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Slideshows"
+msgstr "スライドショー"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Slug"
 msgstr "スラッグ"
@@ -6849,6 +6947,10 @@ msgstr "Stripe"
 #: src/lib/contentReview.js
 msgid "Strong"
 msgstr "強力"
+
+#: src/lib/contentEnums.js
+msgid "Structure only"
+msgstr "構造のみ"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Studying what's worked before…"
@@ -7017,6 +7119,10 @@ msgstr "保存されませんでした。選択内容は元に戻されました
 msgid "That didn’t send — your choices are still here. Try again."
 msgstr "送信されませんでした。選択内容はまだここにあります。もう一度お試しください。"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That doesn't look like a link."
+msgstr "リンクのようには見えません。"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "That format could not be deleted — it is still in the library."
 msgstr "その形式は削除できませんでした。ライブラリに残っています。"
@@ -7037,9 +7143,21 @@ msgstr "連続して多くのサイトが検出されました。数分後にも
 msgid "That key was rejected"
 msgstr "そのキーは拒否されました"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That link isn't a single post. It should look like tiktok.com/@creator/video/123…"
+msgstr "そのリンクは単一の投稿ではありません。tiktok.com/@creator/video/123… のように見えるはずです。"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That link isn't on tiktok.com."
+msgstr "そのリンクはtiktok.comのものではありません。"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "That turn failed"
 msgstr "そのターンは失敗しました"
+
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "That's a share link. Open it, then copy the full address from your browser."
+msgstr "それはシェアリンクです。開いてから、ブラウザから完全なアドレスをコピーしてください。"
 
 #: src/app/(start)/start/page.jsx
 msgid "That's us — continue"
@@ -7377,6 +7495,10 @@ msgstr "スレッド"
 msgid "Tiers"
 msgstr "ティア"
 
+#: src/components/content/CloneFromUrlDialog.jsx
+msgid "TikTok link"
+msgstr "TikTokリンク"
+
 #: src/components/insight-blocks/TimeSeriesBlock.jsx
 msgid "Time series"
 msgstr "時系列"
@@ -7697,6 +7819,10 @@ msgstr "バージョン {version}"
 msgid "via Duct"
 msgstr "Duct経由"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "Videos"
+msgstr "動画"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "View →"
 msgstr "表示 →"
@@ -7879,6 +8005,10 @@ msgstr "うまくいっていること"
 msgid "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 msgstr "{providerName}に保存されているキーは受け入れられないため、実行はスキップされます。「キーを削除」を選択し、新しいキーを貼り付けてください。"
 
+#: src/components/content/SynthesisPanel.jsx
+msgid "What's working"
+msgstr "効果的なもの"
+
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
 msgstr "このモデルの機能"
@@ -7955,6 +8085,10 @@ msgstr "それが重要な理由と、エージェントがどのように適用
 msgid "Why it matters, and how an agent should apply it. Optional."
 msgstr "それが重要な理由と、エージェントがどのように適用すべきか。任意。"
 
+#: src/components/content/CloneSourceNote.jsx
+msgid "Why it worked:"
+msgstr "成功理由:"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Will be encrypted and stored on Duct, so scheduled runs use your key too."
 msgstr "暗号化されDuctに保存されるため、スケジュールされた実行でもあなたのキーが使用されます。"
@@ -7970,6 +8104,10 @@ msgstr "このマシンのOSキーチェーンに保存されます。"
 #: src/components/GoogleAdsReport.js
 msgid "Win"
 msgstr "勝利"
+
+#: src/components/content/SynthesisPanel.jsx
+msgid "Winning hooks"
+msgstr "効果的なフック"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Work still moving — mine or yours. Nothing here waits on you."
@@ -7988,6 +8126,10 @@ msgstr "検討中"
 #: src/components/PipelineProgress.jsx
 msgid "Working on your report…"
 msgstr "レポートを作成中…"
+
+#: src/lib/contentEvents.js
+msgid "Working out why it worked"
+msgstr "成功理由を分析中"
 
 #: src/components/workspace/Todos.jsx
 msgid "working…"

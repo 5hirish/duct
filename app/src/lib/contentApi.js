@@ -94,7 +94,7 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
  */
 export function contentSessionBody(mode, context = {}) {
   const {
-    projectId, startDate, planId, dayIndex, topic, pillar, channel,
+    projectId, startDate, planId, dayIndex, topic, pillar, channel, cloneUrl,
     conversationId, resume, startFresh, artifactType, artifactId,
   } = context;
   const resumeBody = resumeFields({ conversationId, resume, startFresh, artifactType, artifactId });
@@ -114,6 +114,8 @@ export function contentSessionBody(mode, context = {}) {
     ...(topic ? { topic } : {}),
     ...(pillar ? { pillar } : {}),
     ...(channel ? { channel } : {}),
+    // A draft modelled on a TikTok post; the server validates it again.
+    ...(cloneUrl ? { clone_url: cloneUrl } : {}),
     ...resumeBody,
   };
 }
@@ -513,6 +515,24 @@ export async function getDiscoverResults(datasetId, limit = 200) {
     { headers: backendAuthedHeaders() },
   );
   return jsonOrThrow(res);
+}
+
+/**
+ * Ask the backend to copy the pictures of saved references that lack them.
+ * Optional by design: nothing on screen waits for it, so any failure (offline,
+ * signed out, backend without the route) degrades to null instead of throwing.
+ */
+export async function recaptureReferenceMedia(projectId) {
+  try {
+    const res = await fetch(`${BASE}/api/content/discover/recapture`, {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ project_id: projectId }),
+    });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function saveDiscoveredReference({ projectId, actorId, runId, datasetId, request, post }) {

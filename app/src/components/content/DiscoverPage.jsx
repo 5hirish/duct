@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BadgeCheck,
   Bookmark,
@@ -25,19 +25,24 @@ import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { saveDiscoveredReference } from "../../lib/contentApi";
+import { recaptureReferenceMedia, saveDiscoveredReference } from "../../lib/contentApi";
 import { useScraperRun } from "../../hooks/useScraperRun";
+import { engagement } from "@/lib/discoverSynthesis";
+import SynthesisPanel from "./SynthesisPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { compactNumber, formatDate } from "@/lib/format";
 
+// The actor that searches by hashtag; the only one whose input is tags.
+const HASHTAG_ACTOR = "clockworks/tiktok-scraper";
+
 // Labels and hints are message descriptors (module-level tables): render
 // them with `i18n._(...)`.
 const ACTORS = [
   {
-    id:    "clockworks/tiktok-scraper",
+    id:    HASHTAG_ACTOR,
     label: msg`By hashtag`,
     icon:  Hash,
     hint:  msg`Top + recent posts for hashtags you care about. Best for finding what's actually working in the niche.`,
@@ -59,11 +64,10 @@ const SORTS = [
 
 const RUNNING = new Set(["running", "polling", "fetching"]);
 
-function engagement(p) {
-  const plays = p.play_count || 0;
-  if (!plays) return 0;
-  return ((p.digg_count || 0) + (p.comment_count || 0) + (p.share_count || 0) + (p.collect_count || 0)) / plays;
-}
+// Projects whose saved references were already sent for a media backfill in
+// this page load. Once is enough: the backend works through the whole list,
+// and a sweep on every tab switch (or twice under StrictMode) buys nothing.
+const backfilled = new Set();
 
 export default function DiscoverPage({ projectId }) {
   const { t, i18n } = useLingui();
@@ -78,8 +82,17 @@ export default function DiscoverPage({ projectId }) {
   const { phase, results, error, elapsed, runId, datasetId, startRun, reset } = useScraperRun();
   const isRunning = RUNNING.has(phase);
 
+  // Opening Discover is when a reference saved earlier gets its pictures if a
+  // restart ate the copy (or it predates copying). Fire and forget: the page
+  // shows nothing about it, and a failure here costs nothing on screen.
+  useEffect(() => {
+    if (!projectId || backfilled.has(projectId)) return;
+    backfilled.add(projectId);
+    recaptureReferenceMedia(projectId);
+  }, [projectId]);
+
   const buildInput = useCallback(() => {
-    if (actorId === "clockworks/tiktok-scraper") {
+    if (actorId === HASHTAG_ACTOR) {
       return {
         hashtags: tags,
         resultsPerPage: 30,
@@ -120,7 +133,7 @@ export default function DiscoverPage({ projectId }) {
   }, [results, sort]);
 
   const canRun = !!projectId && !isRunning &&
-    (actorId !== "clockworks/tiktok-scraper" || tags.length > 0);
+    (actorId !== HASHTAG_ACTOR || tags.length > 0);
 
   // Apify identifiers for support, not copy: `run=` / `dataset=` are the field
   // names someone would paste into a ticket, so they stay as they are.
@@ -168,7 +181,7 @@ export default function DiscoverPage({ projectId }) {
               })}
             </div>
 
-            {actorId === "clockworks/tiktok-scraper" ? (
+            {actorId === HASHTAG_ACTOR ? (
               <div>
                 <label className="text-2xs font-medium text-muted-foreground"><Trans>Hashtags</Trans></label>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-md border border-border/70 bg-background p-2">
@@ -257,6 +270,7 @@ export default function DiscoverPage({ projectId }) {
       {/* Results */}
       {results.length > 0 && (
         <div className="space-y-3">
+          <SynthesisPanel posts={results} searchedTags={actorId === HASHTAG_ACTOR ? tags : undefined} />
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               <Trans>
@@ -297,7 +311,8 @@ function ResultCard({ post, busy, onSave }) {
   const author = post.author_meta?.name;
   const verified = post.author_meta?.verified;
   const music  = post.music_meta?.music_name;
-  const cover  = (post.slideshow_image_links || [])[0];
+  // A video has no slides; its cover frame is the picture.
+  const cover  = (post.slideshow_image_links || [])[0] || post.video_meta?.cover_url;
   const tags   = (post.hashtags || []).slice(0, 3);
   const eng    = engagement(post);
   const engRate = (eng * 100).toFixed(1);
