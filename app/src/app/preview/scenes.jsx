@@ -61,6 +61,8 @@ import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
+import PlanStrategy from "@/components/content/PlanStrategy";
+import PlanViewport from "@/components/content/PlanViewport";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
@@ -745,6 +747,32 @@ const SAMPLE_CHANGE_SET_REJECTED = {
   change_set_id: "cs_4",
   status: "rejected",
   updated_at: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+};
+
+// What a plan records from the account's history (#224). Evidence strings are
+// the agent's own sentences, so they are shown as written.
+const PLAN_STRATEGY = {
+  exploit: "video",
+  exploit_evidence: "Median completion 42% over 6 posts; slideshows reach 18% over 9.",
+  explore: "image",
+  explore_evidence: "No image posts yet.",
+  lesson: "Question hooks out-completed curiosity gaps 51% to 33%, so four of the seven open with one.",
+  best_times: "Tue and Thu around 18:00 UTC (7pm in Lisbon).",
+};
+
+const PLAN_STRATEGY_COLD = {
+  exploit: "",
+  exploit_evidence: "No published posts yet, so nothing is proven.",
+  explore: "video",
+  explore_evidence: "Spreading the month across all three types; next month's numbers decide.",
+};
+
+const PLAN_STRATEGY_ALL_PROVEN = {
+  exploit: "slideshow",
+  exploit_evidence:
+    "Median shares 54 over 11 posts, ahead of video at 31 over 8 and image at 12 over 5. Completion and saves were not recorded on these posts, so shares decided the ranking; logging saves on the next few would sharpen it considerably.",
+  explore: "",
+  explore_evidence: "Every type has at least three measured posts, so the test slot goes to identity_challenge hooks instead.",
 };
 
 // A Discover result set for the synthesis panel: a face-shape niche with both
@@ -1875,6 +1903,44 @@ export const SCENES = [
     render: () => (
       <div style={{ maxWidth: 512, padding: 20 }}>
         <PublishReviewPanel assessment={REVIEW_UNSCORED} compact />
+      </div>
+    ),
+  },
+  {
+    id: "plan-strategy",
+    state: "history: doubling down on video, testing image",
+    group: "PlanStrategy",
+    title: "The strategy a plan chose",
+    note: "Above the plan, on the Plan tab and in the live workspace. The two choices the account's own history led to, each with the agent's evidence, then what past posts taught it and when to post. What to check: the two choices sit side by side from @xl and stack below it; the notes' text lines up with the choices' text above; nothing here is a pill.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY} /></div>,
+  },
+  {
+    id: "plan-strategy-cold",
+    state: "no posting history yet",
+    group: "PlanStrategy",
+    title: "The strategy of a first plan",
+    note: "An account with nothing published: nothing to double down on, one type named to test, and no notes row because there is no history to learn from or time.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_COLD} /></div>,
+  },
+  {
+    id: "plan-strategy-all-proven",
+    state: "every type proven, long evidence",
+    group: "PlanStrategy",
+    title: "Nothing left untested",
+    note: "Evidence longer than two lines clamps and carries the whole sentence in a tooltip (tab to it). The testing column says every type has results rather than going blank.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_ALL_PROVEN} /></div>,
+  },
+  {
+    id: "plan-viewport-strategy",
+    state: "a live plan with its strategy",
+    group: "PlanViewport",
+    title: "The plan pane in the workspace",
+    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the board. A plan made before strategies were recorded shows no strategy band at all.",
+    render: () => (
+      <div style={{ height: 720, display: "flex" }} className="bg-background">
+        <div className="flex-1 min-w-0">
+          <PlanViewport payload={{ type: "plan", ...STORY_PLAN, strategy: PLAN_STRATEGY }} />
+        </div>
       </div>
     ),
   },

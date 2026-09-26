@@ -1464,6 +1464,10 @@ msgstr "作成中"
 msgid "Best engagement"
 msgstr "最高のエンゲージメント"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Best times"
+msgstr "最適な時間"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Between"
 msgstr "間"
@@ -2500,6 +2504,10 @@ msgstr "完了"
 msgid "DONE FOR YOU"
 msgstr "代行します"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Doubling down on"
+msgstr "注力する"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Download"
 msgstr "ダウンロード"
@@ -2827,6 +2835,10 @@ msgstr "すべてのエントリには実行者が記載されるため、アカ
 #: src/lib/userProfile.js
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr "すべての測定値、方法、修正を構築する人へのメモ"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Every type has results"
+msgstr "すべてのタイプに結果があります"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Every version of it goes with it. This cannot be undone."
@@ -3489,6 +3501,7 @@ msgid "If a stranger asked what you do, what would you say?"
 msgstr "もし見知らぬ人にあなたの仕事内容を尋ねられたら、何と答えますか？"
 
 #: src/components/insights/desk/DeskLists.jsx
+#: src/lib/contentEnums.js
 msgid "Image"
 msgstr "画像"
 
@@ -3707,6 +3720,10 @@ msgstr "最終確認 {lastChecked}。{sourceCount, plural, one {# ソースが�
 #: src/components/UpdateToast.jsx
 msgid "Later"
 msgstr "後で"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Learned"
+msgstr "学んだこと"
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Leave full screen"
@@ -4721,6 +4738,10 @@ msgstr "今、あなたが必要なものはありません。"
 msgid "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
 msgstr "まだ何も提案されていません。監査またはインサイトセッションを実行すると、修正案は承認のためにここに表示されます。"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Nothing proven yet"
+msgstr "まだ証明されていません"
+
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing ran in the last {windowDays} days"
 msgstr "過去{windowDays}日間で何も実行されていません"
@@ -5233,6 +5254,10 @@ msgstr "プラン"
 #: src/components/content/PlanBoard.jsx
 msgid "Plan {shortId}"
 msgstr "プラン {shortId}"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Plan strategy"
+msgstr "プランの戦略"
 
 #: src/lib/contentSchedule.js
 msgid "Planned"
@@ -6761,6 +6786,10 @@ msgstr "スライドプレビュー"
 msgid "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
 msgstr "下書きが準備でき次第、スライド、キャプション、ハッシュタグがここに表示されます。通常20〜40秒です。"
 
+#: src/lib/contentEnums.js
+msgid "Slideshow"
+msgstr "スライドショー"
+
 #: src/components/content/SynthesisPanel.jsx
 msgid "Slideshows"
 msgstr "スライドショー"
@@ -7066,6 +7095,10 @@ msgstr "テクニカル"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Tell us who you are and what you do. This anchors every audit and report we generate."
 msgstr "お客様がどのような方で、何をされているか教えてください。これは、当社が生成するすべての監査とレポートの基礎となります。"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Testing"
+msgstr "テスト"
 
 #: src/components/content/StyleGallery.jsx
 msgid "Text cards"
@@ -7782,6 +7815,10 @@ msgstr "バージョン {version}"
 #: src/components/content/PostMiniCard.jsx
 msgid "via Duct"
 msgstr "Duct経由"
+
+#: src/lib/contentEnums.js
+msgid "Video"
+msgstr "動画"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "Videos"

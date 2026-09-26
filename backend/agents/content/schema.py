@@ -14,7 +14,7 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -82,6 +82,17 @@ class Day(BaseModel):
     format_slug: str = ""   # which library format to build with (e.g. "format-d")
     avatar_id: UUID | None = None
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
+    # The bet this slot makes. Declared rather than left to extra="ignore",
+    # which would drop them on the way in: the next plan grades them against
+    # the post's completion and saves (agents/content/performance.py). Plain
+    # strings, not enums — Gemini refuses an enum with an empty member.
+    hook_type: str = Field("", description="The hook family this post bets on, e.g. curiosity_gap.")
+    funnel_stage: str = Field("", description="awareness, consideration or conversion.")
+    objective: str = Field("", description="The one thing this post should drive, e.g. saves, follows, clicks.")
+
+
+# The post types a plan allocates across, read off Day so there is one list.
+POST_TYPES: tuple[str, ...] = get_args(Day.model_fields["post_type"].annotation)
 
 
 class AvatarRefCell(BaseModel):
@@ -651,6 +662,33 @@ class PostDraft(BaseModel):
     )
 
 
+class PlanStrategy(BaseModel):
+    """The strategy a plan chose from the account's history, in its own words.
+
+    Stored on ``ContentPlan.strategy`` and shown above the plan, so the person
+    can see which type the plan is scaling, which it is testing, and the
+    numbers behind both. The content mix is not here: it is the count of
+    ``days`` by ``post_type``, and a second copy of it would disagree.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    exploit: str = Field("", description='The post_type given the largest share; "" when there is no history to exploit.')
+    exploit_evidence: str = Field("", description="The numbers that earned it, e.g. 'median completion 42% over 6 posts vs 18% for slideshow'.")
+    explore: str = Field("", description='The post_type this plan tests; "" when every type already has evidence.')
+    explore_evidence: str = Field("", description="Why it needs testing, e.g. 'no image posts yet' or '2 posts, too few to judge'.")
+    lesson: str = Field("", description="What past posts' hooks, funnel stages and objectives changed in this plan.")
+    best_times: str = Field("", description="The posting windows this plan recommends, from the account's own history.")
+
+    @field_validator("exploit", "explore")
+    @classmethod
+    def _a_post_type_or_nothing(cls, value: str) -> str:
+        value = value.strip().lower()
+        if value and value not in POST_TYPES:
+            raise ValueError(f"must be one of {list(POST_TYPES)} or empty")
+        return value
+
+
 class PlanDraft(BaseModel):
     """What submit_plan accepts — and the argument schema the model is shown.
 
@@ -667,6 +705,7 @@ class PlanDraft(BaseModel):
     name: str = ""
     start_date: date | None = None
     character: Character = Field(default_factory=Character)
+    strategy: PlanStrategy = Field(default_factory=PlanStrategy)
     days: list[Day] = Field(min_length=1, description="The posts, in order; each needs a topic and a pillar.")
 
     @field_validator("days")
@@ -835,9 +874,11 @@ __all__ = [
     "ImagePrompt",
     "MarkerScore",
     "Perf",
+    "POST_TYPES",
     "PillarHistorySignal",
     "PlanDraft",
     "PlanRequest",
+    "PlanStrategy",
     "PostDraft",
     "PublishAssessment",
     "ReferenceDiagnosis",

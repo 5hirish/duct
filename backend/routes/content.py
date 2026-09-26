@@ -831,6 +831,7 @@ class PlanOut(BaseModel):
     name:       str
     start_date: str | None
     character:  dict
+    strategy:   dict
     days:       list
     status:     str
     created_at: str
@@ -845,6 +846,7 @@ def _plan_out(p: ContentPlan, posts: list[ContentPost] | None = None) -> PlanOut
         name=p.name,
         start_date=p.start_date.isoformat() if p.start_date else None,
         character=p.character or {},
+        strategy=p.strategy or {},
         days=p.days or [],
         status=p.status,
         created_at=p.created_at.isoformat(),

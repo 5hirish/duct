@@ -3,6 +3,7 @@
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import PlanKanban from "./PlanKanban";
+import PlanStrategy from "./PlanStrategy";
 import PipelineProgress from "../PipelineProgress";
 import { ContentStep } from "../../lib/contentEvents";
 
@@ -33,7 +34,7 @@ const PLAN_LINES = [
  * MVP: Kanban only. PlanCalendar lands in a follow-up phase.
  *
  * Props:
- *   - payload: { type: "plan", id, name, days[], character, ... }
+ *   - payload: { type: "plan", id, name, days[], character, strategy, ... }
  *   - steps: live pipeline steps from the workspace (drives the loading ladder)
  *   - building: the plan is still being built (no payload yet, run not failed)
  *   - onReviseDay?(dayIndex)
@@ -77,6 +78,7 @@ export default function PlanViewport({ payload, steps = [], building = false, on
         </span>
       </div>
 
+      <PlanStrategy strategy={payload.strategy} />
       <PlanKanban plan={payload} onReviseDay={onReviseDay} />
     </div>
   );

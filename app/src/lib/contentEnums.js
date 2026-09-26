@@ -57,6 +57,20 @@ export const POST_STATUS_LABELS = Object.freeze({
   [PostStatus.DISCARDED]: msg`Discarded`,
 });
 
+// Mirrors POST_TYPES in backend/agents/content/schema.py (Day.post_type).
+export const PostType = Object.freeze({
+  SLIDESHOW: "slideshow",
+  VIDEO:     "video",
+  IMAGE:     "image",
+});
+
+// Descriptors, rendered with `i18n._(POST_TYPE_LABELS[type])`.
+export const POST_TYPE_LABELS = Object.freeze({
+  [PostType.SLIDESHOW]: msg`Slideshow`,
+  [PostType.VIDEO]:     msg`Video`,
+  [PostType.IMAGE]:     msg`Image`,
+});
+
 // Mirrors CloneApproach in backend/agents/content/schema.py: how closely a
 // cloned post copies its reference, derived there from FIT × PROOF.
 export const CloneApproach = Object.freeze({

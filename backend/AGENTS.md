@@ -521,6 +521,9 @@ agents/
     ├── v1/             — deepagents runner (the only content engine)
     ├── assessment.py   — the pre-publish review's checks and scoring; the agent
     │                     scores six markers, the weights stay here
+    ├── performance.py  — the account's own history for a plan: type ranking (completion,
+    │                     saves, shares; never likes), explore/exploit, graded bets, best
+    │                     posting times. An unrecorded metric is unknown, never zero
     └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py
 ```
 
