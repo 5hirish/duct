@@ -32,13 +32,15 @@ holds each agent's `ContextSpec`.
 | 1 | `<business_context>` | most stable |
 | 2 | `<user_context>` |  |
 | 3 | `<report_guidance>` |  |
-| 4 | `<agent_context>` |  |
-| 5 | `<prior_reports>` |  |
-| 6 | `<project_memory>` |  |
-| 7 | `<data_sources>` |  |
-| 8 | `<deliverable_format>` |  |
-| 9 | `<autonomy>` |  |
-| 10 | `<request>` | the ask |
+| 4 | `<user_memory>` |  |
+| 5 | `<agent_context>` |  |
+| 6 | `<prior_reports>` |  |
+| 7 | `<project_memory>` |  |
+| 8 | `<memory_opening>` |  |
+| 9 | `<data_sources>` |  |
+| 10 | `<deliverable_format>` |  |
+| 11 | `<autonomy>` |  |
+| 12 | `<request>` | the ask |
 
 ### What each agent declares
 

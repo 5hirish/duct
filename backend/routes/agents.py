@@ -85,19 +85,15 @@ from service.auth import get_current_user, get_current_user_optional, get_user_p
 from service.crawl.fetcher import SSRFError, validate_public_url
 from service.lead_access import lead_token_is_live
 from service.membership import accessible_projects, get_project_for_user, member_role
-from service.memory import (
-    build_memory_context,
-    seed_user_preferences,
-    touch_recall,
-)
-from service.memory_consolidation import schedule_consolidation
+from service.memory import build_memory_context, seed_user_preferences
+from service.memory_consolidation import record_remember_choice, schedule_consolidation
 from agents.engines import resolve_job_run
 from agents.tiers import Job, tier_fields
 from service.model_settings import get_model_settings
 from service.profile import resolve as resolve_profile
 from agents.core.voice import user_context_block
 from service.provider_keys import stored_keys_for
-from utils.dates import now_iso
+from utils.dates import now_iso, utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -572,12 +568,21 @@ async def send_message(
         raise HTTPException(422, "content field required for type='chat'")
 
     # Read before this message is recorded: "since the last thing they said".
-    decisions = _decisions_block(session)
+    # Off the event loop: this runs on every message of every agent, and two
+    # synchronous queries here stall every other open stream while they run.
+    decisions = await asyncio.to_thread(_decisions_block, session)
 
     # Persist the raw user text (before the XML working-context wrapper) so chat
     # history rehydrates as the user actually typed it.
     if recorder is not None:
         await recorder.record_user(msg.content)
+
+    # After the user's row, so a refresh's "Recalled" chips land under the
+    # message they were read for, not above it.
+    memory = await _refresh_memory(
+        session, getattr(user, "id", None), _message_text(msg.content),
+        emit=_session_emit(session, recorder),
+    )
 
     # Ground each follow-up in the session's current artifact so edits act on the
     # persisted state, not just the SDK process's (prunable) memory.
@@ -597,6 +602,8 @@ async def send_message(
     # brief format lives in the same place and gets the same treatment.
     content = _refresh_autonomy(session, content)
     content = _refresh_format(session, content, msg.artifact_format)
+    if memory:
+        content = _prepend_context(content, memory)
     if decisions:
         content = _prepend_context(content, decisions)
 
@@ -690,6 +697,81 @@ def _refresh_format(session: Any, content: str | list, requested: str | None) ->
     return _prepend_context(content, block)
 
 
+def _message_text(content: str | list | None) -> str:
+    """The words of a message, for searching memory with."""
+    if isinstance(content, str):
+        return content
+    return " ".join(
+        b.get("text", "") for b in (content or []) if isinstance(b, dict) and b.get("type") == "text"
+    )
+
+
+def _session_emit(session: Any, recorder: Any):
+    """Emit onto a live session's stream from outside its runner, recorded like
+    the runner's own events so it survives a reload."""
+    queue = getattr(session, "event_queue", None)
+    if queue is None:
+        return None
+
+    async def _emit(body: dict) -> None:
+        await _emit_to_queue(queue, body)
+
+    return recorder.wrap_emit(_emit) if recorder is not None else _emit
+
+
+async def _refresh_memory(session: Any, user_id: UUID | None, text: str, *, emit=None) -> str:
+    """Current memory for a thread that has gone stale, or "" (the usual case).
+
+    A thread reads memory in its opening turn and may be resumed days later;
+    ``service.memory.memory_refresh`` holds the rule (at most hourly, and only
+    when something was written since). The session remembers when to look
+    again, so every message inside that window costs nothing. The same path
+    serves every agent, which is why it lives here and not in a runner.
+    """
+    conversation_id = getattr(session, "conversation_id", None)
+    project_id = getattr(session, "artifact_project_id", None) or getattr(session, "project_id", None)
+    if conversation_id is None or project_id is None or getattr(session, "memory_off", False):
+        return ""
+    check_at = getattr(session, "memory_check_at", None)
+    if check_at is not None and utcnow() < check_at:
+        return ""
+
+    from service.memory import memory_refresh
+
+    def _load():
+        with next(db_session()) as db:
+            return memory_refresh(
+                db,
+                conversation_id=conversation_id,
+                project_id=project_id,
+                user_id=user_id,
+                agent_type=str(getattr(session, "agent_type", "") or ""),
+                query=text,
+            )
+
+    try:
+        context, session.memory_check_at = await asyncio.to_thread(_load)
+    except Exception:  # noqa: BLE001 — stale memory is a weaker turn, never a failed one
+        logger.warning("agents: memory refresh failed for %s", conversation_id, exc_info=True)
+        return ""
+    if context is None:
+        return ""
+    logger.info("agents: memory refreshed for conversation %s", conversation_id)
+    if context.recalled and emit is not None:
+        try:
+            await emit({
+                "event": AgentEvent.MEMORY_RECALLED,
+                "memories": [{k: v for k, v in e.items() if k != "uuid"} for e in context.recalled],
+            })
+        except Exception:  # noqa: BLE001
+            logger.debug("agents: MEMORY_RECALLED emit failed", exc_info=True)
+    return (
+        "Project memory has changed since this conversation last read it. "
+        "This is the current version; where it disagrees with an earlier one, it wins.\n"
+        f"{context.text}\n\n"
+    )
+
+
 def _decisions_block(session: Any) -> str:
     """What the person did on this thread's review cards since they last wrote.
 
@@ -705,8 +787,12 @@ def _decisions_block(session: Any) -> str:
         return ""
     from service.activity import user_decisions_since
 
-    with next(db_session()) as db:
-        rows = user_decisions_since(db, conversation_id, last_user_turn_at(db, conversation_id))
+    try:
+        with next(db_session()) as db:
+            rows = user_decisions_since(db, conversation_id, last_user_turn_at(db, conversation_id))
+    except Exception:  # noqa: BLE001 — a missing reminder must never block a message
+        logger.warning("agents: change-set decisions unavailable", exc_info=True)
+        return ""
     if not rows:
         return ""
     lines = "\n".join(f"- {r.created_at:%Y-%m-%d %H:%M} UTC: {r.summary}" for r in rows)
@@ -1392,9 +1478,11 @@ async def _start_seo_audit(
             # prior-artifact tools and memory blocks below.
             session.artifact_project_id = project_uuid
             # "Don't remember this session": the report still persists, but the
-            # runners mount no memory tools, no digest is injected, and the
-            # consolidation pass is skipped on close.
+            # runners mount no memory tools, no digest is injected, and no
+            # consolidation pass reads it — on close, or later from the sweep,
+            # which is why the choice is stored on the conversation too.
             session.memory_off = not req.remember
+            record_remember_choice(conv_id, req.remember)
             return persister.wrap_emit(emit)
         except Exception:
             logger.warning(
@@ -1416,13 +1504,13 @@ async def _start_seo_audit(
         project_uuid = getattr(session, "artifact_project_id", None)
         if project_uuid is None or getattr(session, "memory_off", False):
             return ""
-        try:
+        def _build():
             with next(db_session()) as db:
                 # Declared preferences become user-scope memory first, so the
                 # digest below carries them and the agent reads them from one
                 # place instead of a per-request field.
                 seed_user_preferences(db, owner_id, req.user_preferences)
-                context = build_memory_context(
+                return build_memory_context(
                     db,
                     project_id=project_uuid,
                     user_id=owner_id,
@@ -1431,8 +1519,14 @@ async def _start_seo_audit(
                     # The site under audit: open watches and incidents on it are
                     # raised in the opening summary instead of waiting to be asked.
                     subject=query,
+                    conversation_id=getattr(session, "conversation_id", None),
                 )
-                touch_recall(db, context.recalled_ids)
+
+        try:
+            # A worker thread, as insights does: this is a dozen-plus queries,
+            # and on the event loop every other session's stream stalls for
+            # the whole of them.
+            context = await asyncio.to_thread(_build)
         except Exception:
             logger.warning("agents: project memory blocks unavailable", exc_info=True)
             return ""
@@ -1488,8 +1582,10 @@ async def _start_seo_audit(
             session, api_key, provider=provider, model=model,
             subject="the current audit report (shown in the working_report block)",
         )
-        memory = await _project_memory_blocks(query=url)
-        session.resume_primer = f"{primer}{memory}\n\n" if memory else primer
+        # Memory is not re-read here unconditionally any more: the thread read
+        # it when it opened, and ``_refresh_memory`` re-reads it at the first
+        # message only when it has gone stale — the rule every agent follows.
+        session.resume_primer = primer
 
         async def resume_pipeline() -> None:
             try:
@@ -1635,6 +1731,9 @@ async def _start_insights(
     if session is not None:
         session.artifact_project_id = project_uuid
         session.memory_off = not req.remember
+        await asyncio.to_thread(
+            record_remember_choice, getattr(session, "conversation_id", None), req.remember
+        )
         # What this run operates at, so a change made from the composer
         # mid-conversation can be noticed and applied at the next turn.
         session.autonomy = run.autonomy
@@ -1752,14 +1851,23 @@ async def _start_insights(
             # follow-up (or nothing, from the desk), so the digest went unread
             # — while its MEMORY_RECALLED row landed in the transcript between
             # the restored history and the next message, attached to no turn.
-            memory = "" if is_resume else await insights_memory_blocks(
-                run,
-                user_id=owner_id,
-                user_preferences=req.user_preferences,
-                query=req.prompt,
-                remember=req.remember,
-                emit=emit_fn,
-            )
+            if not is_resume:
+                memory = await insights_memory_blocks(
+                    run,
+                    user_id=owner_id,
+                    user_preferences=req.user_preferences,
+                    query=req.prompt,
+                    remember=req.remember,
+                    emit=emit_fn,
+                    conversation_id=conv_id,
+                )
+            elif req.prompt:
+                # A resume that carries a question runs it as the opening turn,
+                # so the staleness check that send_message makes happens here.
+                memory = await _refresh_memory(session, owner_id, req.prompt, emit=emit_fn)
+            else:
+                # No question yet: the first message makes the check.
+                memory = ""
             # Answered before the first model call, so the agent's opening
             # action is a fetch rather than a lookup of what it could fetch.
             data_sources = "" if is_resume else await asyncio.to_thread(

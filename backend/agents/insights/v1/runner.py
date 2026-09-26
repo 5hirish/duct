@@ -503,7 +503,7 @@ class AutonomousInsightsRunner:
         # refused HTML twice after the default moved. The current preference
         # rides ahead of the follow-up; with no prompt the route restates it
         # at the first message instead (``_refresh_format``).
-        opening = _resumed_opening(prompt, artifact_format) if is_resume else build_insights_user_prompt(
+        opening = _resumed_opening(prompt, artifact_format, memory) if is_resume else build_insights_user_prompt(
             prompt=prompt,
             business_context=business_context,
             user_context=user_context,
@@ -664,12 +664,13 @@ class AutonomousInsightsRunner:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _resumed_opening(prompt: str, artifact_format: str) -> str:
-    """The follow-up a resumed thread opens with, format preference first."""
+def _resumed_opening(prompt: str, artifact_format: str, memory: str = "") -> str:
+    """The follow-up a resumed thread opens with: refreshed memory when the
+    route found it stale, then the format preference, then the ask."""
     if not prompt:
         return ""
-    block = deliverable_format_block(artifact_format)
-    return f"{block}\n\n{prompt}" if block else prompt
+    parts = [memory.strip(), deliverable_format_block(artifact_format), prompt]
+    return "\n\n".join(p for p in parts if p)
 
 
 async def _publish_brief(raw: str, emit: Callable, version: dict) -> dict | None:

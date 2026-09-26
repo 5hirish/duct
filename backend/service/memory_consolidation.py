@@ -32,7 +32,11 @@ model already provides for exactly this, so no migration.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -40,15 +44,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from agents.core.events import EventKind
-from agents.engines import (
-    ProviderKeyRequired,
-    resolve_engine,
-    resolve_engine_model,
-    resolve_engine_provider,
-    resolve_provider_key,
-)
+from agents.engines import ProviderKeyRequired, resolve_job_run
 from agents.models import get_api_key_kwargs
-from config import get_configs
 from db.session import get_session as db_session
 from models.content.conversation import AgentConversation
 from models.content.conversation import AgentEvent as AgentEventRow
@@ -73,6 +70,20 @@ MIN_NEW_EVENTS = 6
 MAX_TRANSCRIPT_CHARS = 60_000
 MAX_ENTRIES_PER_RUN = 12
 CONSOLIDATION_TIMEOUT = 90.0
+
+SKIP_NO_MODEL = "no model configured"
+SKIP_TOO_FEW = "too few new turns"
+
+# What a tool returned used to be left out of the transcript, so a number the
+# agent fetched and never restated in prose could not become a dated metric —
+# the one kind of fact the prompt says is always worth keeping. It is in now,
+# clipped: enough of a result to carry its headline figures and date range,
+# not the 900-row pull, which would push the conversation itself out of
+# MAX_TRANSCRIPT_CHARS.
+TOOL_INPUT_CHARS = 300
+TOOL_RESULT_CHARS = 1_500
+# Their result is memory already, or bookkeeping with nothing to remember.
+_TOOLS_WITHOUT_FACTS = frozenset({"RememberFact", "SearchMemory", "GetMemory", "write_todos"})
 
 # One run per project at a time. In-process only: the sidecar is single-process,
 # and on Railway a duplicate run is harmless — remember() dedupes on the content
@@ -209,8 +220,22 @@ def _event_line(row: AgentEventRow) -> str:
         answers = "; ".join(f"{k}={v}" for k, v in (data.get("answers") or {}).items())
         return f"[{row.seq}] user answered: {answers}"
     if row.kind == EventKind.TOOL_USE:
-        return f"[{row.seq}] agent called {data.get('name', '')}"
+        name = data.get("name", "")
+        args = _clip(data.get("input"), TOOL_INPUT_CHARS)
+        return f"[{row.seq}] agent called {name}" + (f" with {args}" if args else "")
+    if row.kind == EventKind.TOOL_RESULT and data.get("name") not in _TOOLS_WITHOUT_FACTS:
+        verdict = "failed" if data.get("is_error") else "returned"
+        return f"[{row.seq}] {data.get('name', '')} {verdict}: {_clip(data.get('result'), TOOL_RESULT_CHARS)}"
     return ""
+
+
+def _clip(value: Any, limit: int) -> str:
+    """A tool payload as one bounded line."""
+    if value in (None, "", {}, []):
+        return ""
+    text = value if isinstance(value, str) else json.dumps(value, default=str, separators=(",", ":"))
+    text = " ".join(text.split())
+    return text if len(text) <= limit else text[:limit] + "…"
 
 
 def build_transcript(rows: list[AgentEventRow]) -> str:
@@ -226,39 +251,124 @@ def build_transcript(rows: list[AgentEventRow]) -> str:
 # The run
 # ---------------------------------------------------------------------------
 
-def _build_model(owner_id: UUID | None = None):
-    """The configured provider/model, or None when no key is available.
+def _memory_model(owner_id: UUID | None, schema: type[BaseModel]):
+    """The owner's Light-tier model, asked for ``schema``, or None without a key.
 
-    Consolidation is background work: without a key it simply does not run,
-    which is the same fail-soft posture as the conversation summarizer. That
-    posture is why ProviderKeyRequired is swallowed here rather than raised —
-    on the hosted deployment, a project whose owner has connected no key of
-    their own gets no consolidation, not a run on ours.
+    ``Job.MEMORY`` is the job the settings page already tells people runs on
+    Light. This used to resolve the instance's default provider and model
+    instead, which had two costs: the pass ran a tier up from where it was
+    assigned, and an owner whose saved key was for any other provider got no
+    consolidation at all — silently, because a missing key is a skip here.
+    ``resolve_job_run`` walks the owner's own tier map over the keys they
+    actually hold, the same resolution their foreground runs get.
 
-    There is no request to carry an ``X-Provider-*`` header this far, so the
-    owner's *saved* key is the only bring-your-own one this can see.
+    Background work: without a key it does not run, the same fail-soft posture
+    as the conversation summarizer. That is why ProviderKeyRequired is
+    swallowed rather than raised — on the hosted deployment, a project whose
+    owner has connected no key of their own gets no consolidation, not a run
+    on ours. There is no request to carry an ``X-Provider-*`` header this far,
+    so the owner's *saved* keys are the only bring-your-own ones this can see.
     """
-    cfg = get_configs()
-    engine = resolve_engine(cfg.generate_engine or None)
-    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
-    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
+    from agents.tiers import Job
+    from service.model_settings import get_model_settings
+
+    settings = get_model_settings(owner_id)
     try:
-        api_key = resolve_provider_key(
-            provider, stored_keys=stored_keys_for(owner_id)
-        ).key
+        run = resolve_job_run(
+            Job.MEMORY,
+            engine_override=settings.engine,
+            stored_keys=stored_keys_for(owner_id),
+            tier_map=settings.tiers,
+            auto_fallback=settings.auto_fallback,
+            log_prefix="memory",
+        )
     except ProviderKeyRequired:
         return None
-    if not api_key:
+    if not run.api_key:
         return None
     from langchain.chat_models import init_chat_model
 
     llm = init_chat_model(
-        model=model.value,
-        model_provider=provider.value,
+        model=getattr(run.model, "value", run.model),
+        model_provider=run.provider.value,
         temperature=0,
-        **get_api_key_kwargs(provider, api_key),
+        **get_api_key_kwargs(run.provider, run.api_key),
     )
-    return llm.with_structured_output(Consolidation, method="json_schema", strict=True)
+    return llm.with_structured_output(schema, method="json_schema", strict=True)
+
+
+def _build_model(owner_id: UUID | None = None):
+    return _memory_model(owner_id, Consolidation)
+
+
+@dataclass
+class _Pending:
+    """What one consolidation pass reads before it calls the model."""
+
+    project_id: UUID
+    transcript: str
+    last_seq: int
+    digest: str
+    agent_type: str
+
+
+def _owner_of(conversation_id: UUID, *, force: bool) -> tuple[UUID, UUID | None] | str:
+    """The conversation's project and whose key funds background work on it,
+    or why there is nothing to do — answered from the conversation row alone,
+    before anything costs more than that.
+
+    The owner, not whoever was talking: a conversation has no user of its own,
+    and a collaborator who happened to trigger the pass is not the person to
+    bill.
+    """
+    with next(db_session()) as db:
+        conv = db.get(AgentConversation, conversation_id)
+        if conv is None:
+            return "no conversation"
+        if is_memory_paused(db, project_id=conv.project_id):
+            return MEMORY_PAUSE_REASON
+        meta = conv.meta or {}
+        if meta.get("memory_off"):
+            return "not remembered"
+        through = int(meta.get("memory_through_seq") or 0)
+        if conv.last_seq - through < MIN_NEW_EVENTS and not force:
+            return SKIP_TOO_FEW
+        project_row = db.get(Project, conv.project_id)
+        return conv.project_id, getattr(project_row, "user_id", None)
+
+
+def _read_pending(conversation_id: UUID, *, force: bool) -> _Pending | str:
+    """The new turns past the watermark, or the reason there is nothing to do."""
+    with next(db_session()) as db:
+        conv = db.get(AgentConversation, conversation_id)
+        if conv is None:
+            return "no conversation"
+        project_id = conv.project_id
+        if is_memory_paused(db, project_id=project_id):
+            return MEMORY_PAUSE_REASON
+        if (conv.meta or {}).get("memory_off"):
+            return "not remembered"
+        through = int((conv.meta or {}).get("memory_through_seq") or 0)
+        rows = list(
+            db.execute(
+                select(AgentEventRow)
+                .where(AgentEventRow.conversation_id == conversation_id)
+                .where(AgentEventRow.seq > through)
+                .order_by(AgentEventRow.seq)
+            ).scalars()
+        )
+        if len(rows) < MIN_NEW_EVENTS and not force:
+            return SKIP_TOO_FEW
+        transcript = build_transcript(rows)
+        if not transcript.strip():
+            return "empty transcript"
+        return _Pending(
+            project_id=project_id,
+            transcript=transcript,
+            last_seq=rows[-1].seq if rows else through,
+            digest=render_digest(db, project_id=project_id).text,
+            agent_type=conv.agent_type,
+        )
 
 
 async def consolidate_conversation(
@@ -270,52 +380,40 @@ async def consolidate_conversation(
 
     Idempotent by watermark: only events past ``meta["memory_through_seq"]`` are
     read, and the watermark advances only on a run that completed.
+
+    The watermark is read inside the project lock, not before it. Read outside,
+    two triggers for one conversation — a close and a sweep, say — both saw the
+    same watermark, both paid for a model call over the same turns, and the
+    second only found out at the dedupe. Every database step runs in a worker
+    thread: this is a background task, but it runs on the same event loop as
+    every open stream.
     """
     result = ConsolidationResult()
     try:
-        with next(db_session()) as db:
-            conv = db.get(AgentConversation, conversation_id)
-            if conv is None:
-                return result.model_copy(update={"skipped": "no conversation"})
-            project_id = conv.project_id
-            if is_memory_paused(db, project_id=project_id):
-                return result.model_copy(update={"skipped": MEMORY_PAUSE_REASON})
-            through = int((conv.meta or {}).get("memory_through_seq") or 0)
-            rows = list(
-                db.execute(
-                    select(AgentEventRow)
-                    .where(AgentEventRow.conversation_id == conversation_id)
-                    .where(AgentEventRow.seq > through)
-                    .order_by(AgentEventRow.seq)
-                ).scalars()
-            )
-            if len(rows) < MIN_NEW_EVENTS and not force:
-                return result.model_copy(update={"skipped": "too few new turns"})
-            transcript = build_transcript(rows)
-            last_seq = rows[-1].seq if rows else through
-            digest = render_digest(db, project_id=project_id).text
-            agent_type = conv.agent_type
-            # Whose key funds background work on a project: its owner. A
-            # conversation has no user of its own, and a collaborator who
-            # happened to trigger the close is not the person to bill.
-            project_row = db.get(Project, project_id)
-            owner_id = getattr(project_row, "user_id", None)
+        owned = await asyncio.to_thread(_owner_of, conversation_id, force=force)
+        if isinstance(owned, str):
+            return result.model_copy(update={"skipped": owned})
+        project_id, owner_id = owned
 
-        if not transcript.strip():
-            return result.model_copy(update={"skipped": "empty transcript"})
-
-        structured = _build_model(owner_id)
+        # Before the transcript is read: an owner with no key the pass can
+        # spend — every desktop install, whose keys live in the OS keychain
+        # and never reach a background job — would otherwise pay for a full
+        # transcript read to learn that.
+        structured = await asyncio.to_thread(_build_model, owner_id)
         if structured is None:
-            return result.model_copy(update={"skipped": "no model configured"})
-
-        prompt = _PROMPT.format(
-            today=utcnow().strftime("%Y-%m-%d"),
-            max_entries=MAX_ENTRIES_PER_RUN,
-            digest=digest or "Nothing has been remembered for this project yet.",
-            transcript=transcript,
-        )
+            return result.model_copy(update={"skipped": SKIP_NO_MODEL})
 
         async with _lock_for(project_id):
+            pending = await asyncio.to_thread(_read_pending, conversation_id, force=force)
+            if isinstance(pending, str):
+                return result.model_copy(update={"skipped": pending})
+
+            prompt = _PROMPT.format(
+                today=utcnow().strftime("%Y-%m-%d"),
+                max_entries=MAX_ENTRIES_PER_RUN,
+                digest=pending.digest or "Nothing has been remembered for this project yet.",
+                transcript=pending.transcript,
+            )
             verdict: Consolidation = await asyncio.wait_for(
                 structured.ainvoke(prompt), timeout=CONSOLIDATION_TIMEOUT
             )
@@ -324,8 +422,8 @@ async def consolidate_conversation(
                 verdict,
                 project_id=project_id,
                 conversation_id=conversation_id,
-                agent_type=agent_type,
-                last_seq=last_seq,
+                agent_type=pending.agent_type,
+                last_seq=pending.last_seq,
             )
         logger.info(
             "memory: consolidated conversation %s — %d written, %d closed, %d archived",
@@ -410,10 +508,16 @@ def _apply(
     )
 
 
+# In flight, so the event loop holds a strong reference until each finishes: a
+# task nothing references can be collected mid-run (asyncio.create_task docs).
+_background: set[asyncio.Task] = set()
+
+
 def schedule_consolidation(conversation_id: Any) -> None:
     """Fire-and-forget consolidation for a conversation that just went idle.
 
-    Called from the session-close paths. Best-effort in every sense: no event
+    Called from the session-close paths as an early flush — the sweep below is
+    what guarantees the pass happens. Best-effort in every sense: no event
     loop, no conversation, or a failed run all leave memory untouched.
     """
     if not conversation_id:
@@ -427,7 +531,132 @@ def schedule_consolidation(conversation_id: Any) -> None:
     except RuntimeError:
         logger.debug("memory: no running loop — consolidation not scheduled")
         return
-    loop.create_task(consolidate_conversation(conv_uuid))
+    task = loop.create_task(consolidate_conversation(conv_uuid))
+    _background.add(task)
+    task.add_done_callback(_background.discard)
+
+
+def record_remember_choice(conversation_id: Any, remember: bool) -> None:
+    """Store "don't remember this conversation" where the sweep can read it.
+
+    The choice used to live only on the in-memory session, which was enough
+    while close was the only trigger. The sweep finds a conversation after its
+    session is gone — or after the process that held it died — so the choice
+    has to be on the row. Turning memory back on moves the watermark past the
+    turns taken while it was off: they were said on the understanding that
+    nothing would be kept, and turning it on later does not change that.
+    Best-effort: a failure here leaves the close-path skip in place.
+    """
+    if not conversation_id:
+        return
+    try:
+        with next(db_session()) as db:
+            conv = db.get(AgentConversation, conversation_id)
+            if conv is None:
+                return
+            meta = dict(conv.meta or {})
+            was_off = bool(meta.get("memory_off"))
+            if remember == (not was_off):
+                return
+            meta["memory_off"] = not remember
+            if remember and was_off:
+                meta["memory_through_seq"] = max(
+                    int(meta.get("memory_through_seq") or 0), conv.last_seq
+                )
+            conv.meta = meta
+            db.add(conv)
+            db.commit()
+    except Exception:  # noqa: BLE001
+        logger.warning("memory: could not record remember choice for %s", conversation_id, exc_info=True)
+
+
+# ---------------------------------------------------------------------------
+# The sweep — consolidation that does not depend on a session closing
+#
+# Close is an early flush, not a guarantee: a deploy or restart closes every
+# session without it (``close_all_sessions``), a crash closes nothing, quitting
+# the desktop app kills the sidecar, and a pass already running dies with the
+# process. No production memory system relies on close for this reason; the
+# pattern is extraction on inactivity plus a backstop sweep (LangMem's debounced
+# ReflectionExecutor, Microsoft Foundry's update_delay, Vertex Memory Bank's
+# idle trigger and 24-hour flush of abandoned sessions). The watermark already
+# makes a pass idempotent, so the sweep is only a query for conversations that
+# went quiet with turns past it.
+# ---------------------------------------------------------------------------
+
+SWEEP_EVERY = 300.0
+# Quiet this long before a sweep reads a conversation. Matches the session
+# pruner's TTL, so a live session is closed (and flushed) first and the sweep
+# only picks up what that path missed.
+SWEEP_IDLE_MINUTES = 30
+# How far back a sweep looks. Bounds the first run after a deploy, and a
+# conversation idle longer than this has had many sweeps already.
+SWEEP_LOOKBACK_DAYS = 7
+# Passes per sweep, so a backlog is paced across sweeps rather than spent at
+# once against owners' keys.
+SWEEP_BATCH = 5
+# A pass that failed is not retried by the sweep for this long — a provider
+# outage should cost one attempt an hour, not one every five minutes.
+SWEEP_RETRY_AFTER = 3600.0
+
+_sweep_failed_at: dict[UUID, float] = {}
+
+
+def _due_conversations(now: datetime) -> list[UUID]:
+    """Conversations quiet long enough, with enough unread turns, not opted out."""
+    idle_since = now - timedelta(minutes=SWEEP_IDLE_MINUTES)
+    oldest = now - timedelta(days=SWEEP_LOOKBACK_DAYS)
+    with next(db_session()) as db:
+        rows = db.execute(
+            select(AgentConversation)
+            .where(AgentConversation.last_active_at <= idle_since)
+            .where(AgentConversation.last_active_at >= oldest)
+            .where(AgentConversation.last_seq >= MIN_NEW_EVENTS)
+            .order_by(AgentConversation.last_active_at.desc())
+            .limit(500)
+        ).scalars()
+        due: list[UUID] = []
+        for conv in rows:
+            meta = conv.meta or {}
+            if meta.get("memory_off"):
+                continue
+            if conv.last_seq - int(meta.get("memory_through_seq") or 0) < MIN_NEW_EVENTS:
+                continue
+            due.append(conv.id)
+        return due
+
+
+async def sweep_once() -> int:
+    """Consolidate up to ``SWEEP_BATCH`` idle conversations. Returns how many ran."""
+    clock = time.monotonic()
+    due = await asyncio.to_thread(_due_conversations, utcnow())
+    ran = 0
+    for conversation_id in due:
+        if ran >= SWEEP_BATCH:
+            break
+        failed = _sweep_failed_at.get(conversation_id)
+        if failed is not None and clock - failed < SWEEP_RETRY_AFTER:
+            continue
+        result = await consolidate_conversation(conversation_id)
+        ran += 1
+        # No key is a state that lasts, like an outage: wait before asking again.
+        if result.skipped == SKIP_NO_MODEL or result.skipped.startswith("failed"):
+            _sweep_failed_at[conversation_id] = clock
+        else:
+            _sweep_failed_at.pop(conversation_id, None)
+    return ran
+
+
+async def sweep_idle_conversations() -> None:
+    """Run the sweep forever. Launched from the app lifespan in ``server.py``."""
+    while True:
+        await asyncio.sleep(SWEEP_EVERY)
+        try:
+            ran = await sweep_once()
+            if ran:
+                logger.info("memory: sweep consolidated %d idle conversation(s)", ran)
+        except Exception:  # noqa: BLE001 — the loop outlives any one bad sweep
+            logger.warning("memory: sweep failed", exc_info=True)
 
 
 # ---------------------------------------------------------------------------
@@ -494,27 +723,7 @@ async def extract_artifact_findings(
 
 
 def _build_findings_model(owner_id: UUID | None = None):
-    from langchain.chat_models import init_chat_model
-
-    cfg = get_configs()
-    engine = resolve_engine(cfg.generate_engine or None)
-    provider = resolve_engine_provider(engine, cfg.generate_provider or None)
-    model = resolve_engine_model(engine, provider, cfg.generate_model or None)
-    try:
-        api_key = resolve_provider_key(
-            provider, stored_keys=stored_keys_for(owner_id)
-        ).key
-    except ProviderKeyRequired:
-        return None
-    if not api_key:
-        return None
-    llm = init_chat_model(
-        model=model.value,
-        model_provider=provider.value,
-        temperature=0,
-        **get_api_key_kwargs(provider, api_key),
-    )
-    return llm.with_structured_output(ArtifactFindings, method="json_schema", strict=True)
+    return _memory_model(owner_id, ArtifactFindings)
 
 
 def _write_findings(extracted: ArtifactFindings, artifact_row: Any) -> int:
@@ -561,5 +770,8 @@ __all__ = [
     "build_transcript",
     "consolidate_conversation",
     "extract_artifact_findings",
+    "record_remember_choice",
     "schedule_consolidation",
+    "sweep_idle_conversations",
+    "sweep_once",
 ]

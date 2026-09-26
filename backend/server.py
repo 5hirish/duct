@@ -315,11 +315,15 @@ async def lifespan(app: FastAPI):
     from routes.agents import _prune_stale_sessions as _prune_agent_sessions
     from routes.audit import _prune_stale_sessions as _prune_audit_sessions
     from routes.content import _prune_stale_sessions as _prune_content_sessions
+    from service.memory_consolidation import sweep_idle_conversations
 
     pruners = [
         asyncio.create_task(_prune_agent_sessions(), name="prune-agent-sessions"),
         asyncio.create_task(_prune_audit_sessions(), name="prune-audit-sessions"),
         asyncio.create_task(_prune_content_sessions(), name="prune-content-sessions"),
+        # Memory consolidation for conversations whose session never closed
+        # cleanly — a deploy, a crash, a quit desktop app. Close only flushes early.
+        asyncio.create_task(sweep_idle_conversations(), name="memory-sweep"),
     ]
     try:
         yield

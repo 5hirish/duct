@@ -48,14 +48,25 @@ BLOCK_ORDER: tuple[str, ...] = (
     "business_context",   # project settings — changes when someone edits them
     "user_context",       # the operator's profile — changes ~never
     "report_guidance",    # how to shape the deliverable for them — derived from the profile
+    # From here to memory_opening is what ``service.memory.build_memory_context``
+    # returns. It reaches a turn as ONE pre-ordered string in the
+    # ``project_memory`` slot, ordered by this tuple, so these tags must stay
+    # adjacent or the string lands out of order. tests/test_turn.py holds that.
+    "user_memory",        # how this operator works — changes when they say so
     "agent_context",      # stored per-(project, agent) working notes
     "prior_reports",      # artifact summaries — appended to, rarely rewritten
     "project_memory",     # memory digest — moves whenever the agent learns
+    "memory_opening",     # open items this run touches — depends on the ask
     "data_sources",       # connection + account state — per run
     "deliverable_format", # per-run posture
     "autonomy",           # per-run posture
     "request",            # the ask itself — different every turn
 )
+
+#: The run of :data:`BLOCK_ORDER` that memory owns, in order.
+MEMORY_BLOCKS: tuple[str, ...] = BLOCK_ORDER[
+    BLOCK_ORDER.index("user_memory"): BLOCK_ORDER.index("memory_opening") + 1
+]
 
 
 @dataclass(frozen=True)
@@ -75,6 +86,7 @@ class ContextSpec:
     paid_section: bool = True
     organic_section: bool = True
     user_context: bool = True
+    user_memory: bool = True
     agent_context: bool = True
     prior_reports: bool = True
     project_memory: bool = True
@@ -177,6 +189,7 @@ __all__ = [
     "BLOCK_ORDER",
     "ContextSpec",
     "DEFAULT_SPEC",
+    "MEMORY_BLOCKS",
     "TurnContext",
     "build_turn",
     "spec_for",
