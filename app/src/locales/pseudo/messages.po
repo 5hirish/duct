@@ -1405,6 +1405,10 @@ msgstr ""
 msgid "Autonomy is unchanged — that didn't save."
 msgstr ""
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Average watch time (s)"
+msgstr ""
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Avg TTFB"
 msgstr ""
@@ -1826,6 +1830,7 @@ msgid "Commands"
 msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Comments"
 msgstr ""
 
@@ -2128,6 +2133,10 @@ msgstr ""
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Copy response"
+msgstr ""
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Copy these from the platform’s analytics. They stay as you enter them."
 msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
@@ -3751,6 +3760,7 @@ msgid "Light mode"
 msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Likes"
 msgstr ""
 
@@ -5152,6 +5162,10 @@ msgstr ""
 msgid "Pending invitations"
 msgstr ""
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Performance"
+msgstr ""
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "Permissions"
 msgstr ""
@@ -5510,6 +5524,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskActivity.jsx
 msgid "ran on its own"
+msgstr ""
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Reach"
 msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
@@ -6094,6 +6112,10 @@ msgstr ""
 msgid "Save manager account"
 msgstr ""
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Save numbers"
+msgstr ""
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Save project"
 msgstr ""
@@ -6150,10 +6172,15 @@ msgstr ""
 msgid "saved to your Duct account"
 msgstr ""
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Saves"
+msgstr ""
+
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PostMetricsForm.jsx
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
 msgstr ""
@@ -6504,6 +6531,7 @@ msgid "Shared by {owner}"
 msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Shares"
 msgstr ""
 
@@ -7441,6 +7469,10 @@ msgstr ""
 msgid "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
 msgstr ""
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Those numbers didn’t save. Check them and try again."
+msgstr ""
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Thought for {seconds}s"
 msgstr ""
@@ -7636,6 +7668,10 @@ msgstr ""
 msgid "Updated {updated}"
 msgstr ""
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Updated {when}"
+msgstr ""
+
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/usage/page.jsx
 #: src/lib/navigation.js
@@ -7792,6 +7828,7 @@ msgid "View full screen"
 msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Views"
 msgstr ""
 
@@ -7805,6 +7842,10 @@ msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Views over time"
+msgstr ""
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Views, likes, comments and shares update on their own. Add the rest from the platform’s analytics; a sync never changes what you enter."
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
@@ -7863,6 +7904,10 @@ msgstr ""
 
 #: src/components/GoogleAdsReport.js
 msgid "Watch"
+msgstr ""
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Watched to the end (%)"
 msgstr ""
 
 #: src/components/LoadError.jsx

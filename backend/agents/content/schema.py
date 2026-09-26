@@ -2,7 +2,8 @@
 
 Two groups:
   - Domain shapes — ported from nomadapps/marketing/app/src/types.ts
-    (Character, Perf, Day, Avatar, AppContext → ContentBrandContext).
+    (Character, Day, Avatar, AppContext → ContentBrandContext). A post's
+    ``perf`` has no schema here: its keys are service/content_metrics.py's.
   - Wire shapes — request/session models the route layer uses.
   - Sub-agent output schemas — TopicCandidates, PostDraft, PlanDraft.
     Used inside writer @tools to validate JSON the orchestrator passes in.
@@ -12,7 +13,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from enum import StrEnum
 from typing import Any, Literal
 from uuid import UUID
@@ -40,24 +41,6 @@ class Character(BaseModel):
     look: str = ""
     voice: str = ""
     notes: str = ""
-
-
-class Perf(BaseModel):
-    """Per-post performance snapshot mirrored from PostBridge analytics."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    view_count: int | None = None
-    like_count: int | None = None
-    comment_count: int | None = None
-    share_count: int | None = None
-    save_count: int | None = None
-    completion_rate: float | None = None
-    profile_visits: int | None = None
-    bio_link_clicks: int | None = None
-    comments_1h: int | None = None
-    save_rate: float | None = None
-    last_synced_at: datetime | None = None
 
 
 class Day(BaseModel):
@@ -834,7 +817,6 @@ __all__ = [
     "DraftPostRequest",
     "ImagePrompt",
     "MarkerScore",
-    "Perf",
     "PillarHistorySignal",
     "PlanDraft",
     "PlanRequest",

@@ -48,6 +48,9 @@ const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
  * Props:
  *   - payload   : { type:"post", id, slides, slides_html, caption, hashtags[], ... }
  *   - canPublish, onPublish, onRevise — optional header actions (detail page)
+ *   - children — rendered under the copy. The detail page puts a posted post's
+ *     metrics form here: it owns the server copy of the post, which the agent's
+ *     draft payloads (revise mode) do not carry perf for.
  *   - onSendMessage(text) — when present (active session), enables the
  *     "approve & generate images" action, which sends a chat turn to the agent.
  *     Absent on the read-only detail page.
@@ -64,7 +67,7 @@ function stripTransient(slides) {
   }));
 }
 
-export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage }) {
+export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage, children }) {
   const { t, i18n } = useLingui();
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
@@ -260,6 +263,8 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
           <CloneSourceNote source={post.clone_source} />
 
           <PostCopy post={post} patch={patch} />
+
+          {children}
 
           <PostReview assessment={post.assessment} onReview={requestReview} />
         </div>
