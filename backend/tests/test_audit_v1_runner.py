@@ -615,3 +615,50 @@ async def test_each_published_report_is_a_new_numbered_version(crawl_result):
     assert [v.label for v in session.report_versions] == ["Initial audit", "Update 2"]
     # A runner with no session (the eval harness, a script) must not blow up.
     _record_version(None, first, 1)
+
+
+# ---------------------------------------------------------------------------
+# Context pruning — what an in-depth audit read stays readable
+# ---------------------------------------------------------------------------
+
+def _audit_messages(*, data_chars: int, follow_ups: int = 0) -> list:
+    """An in-depth audit's opening run as the pruner sees it: six data reads,
+    StartAuditReport, nine categories and the finish — then, optionally, chat
+    turns that each fetch a batch of pages."""
+    from langchain_core.messages import HumanMessage, ToolMessage
+
+    calls = [
+        ("ListDataSources", 2_000), ("ReadConnectorNotes", 3_000), ("ReadConnectorNotes", 3_000),
+        ("FetchData", data_chars), ("FetchData", data_chars), ("FetchData", data_chars),
+        ("StartAuditReport", 40), *[("AddAuditCategory", 40)] * 9, ("FinalizeAuditReport", 40),
+        *[("FetchPages", 50_000)] * follow_ups,
+    ]
+    messages: list = [HumanMessage(content="crawl " * 8_000)]
+    for i, (name, size) in enumerate(calls):
+        call_id = f"call_{i}"
+        messages.append(AIMessage(content="", tool_calls=[{"name": name, "args": {}, "id": call_id}]))
+        messages.append(ToolMessage(content=f"{name}:" + "x" * size, tool_call_id=call_id, name=name))
+    return messages
+
+
+def _prune(messages: list) -> list:
+    from langchain.agents.middleware import ClearToolUsesEdit
+    from langchain_core.messages.utils import count_tokens_approximately
+
+    from agents.audit.v1.runner import LIMITS
+
+    ClearToolUsesEdit(
+        trigger=LIMITS.tool_result_prune_trigger, keep=LIMITS.tool_results_kept,
+    ).apply(messages, count_tokens=count_tokens_approximately)
+    return [m.name for m in messages if getattr(m, "content", "") == "[cleared]"]
+
+
+def test_an_in_depth_audit_keeps_the_data_it_read_while_it_writes_the_report():
+    """The trigger is in tokens. At 40 it pruned from the first call, and the
+    Search Console reads were cleared before the summary that quotes them."""
+    assert _prune(_audit_messages(data_chars=40_000)) == []
+
+
+def test_a_long_follow_up_chat_is_still_pruned():
+    cleared = _prune(_audit_messages(data_chars=40_000, follow_ups=10))
+    assert cleared, "the trigger must still fire once a chat grows"

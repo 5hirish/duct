@@ -72,6 +72,22 @@ def _record_version(session: Any, report: Any, version_id: int) -> None:
         created_at=report.generated_at,
     ))
 
+# Prune old tool results once the conversation passes this many TOKENS — the
+# unit ClearToolUsesEdit counts in. It was 40, read as a count of tool calls,
+# which meant "always": from the first call on, only the 12 newest results
+# survived, so an in-depth audit (six Search Console / GA4 reads, then nine
+# categories and a finish) had replaced its traffic numbers with "[cleared]" by
+# the time it wrote the summary that quotes them. Each call also cleared one
+# more old result, rewriting the prompt early and missing the provider cache
+# for everything after it.
+#
+# An opening in-depth audit stays under this, so nothing it read is cleared
+# while it writes the report. Long follow-up chats, where every FetchPages adds
+# up to ~12k tokens, are what it catches. Below insights' 120k for that reason,
+# and it must stay under deepagents' summarization floor — RunLimits refuses
+# otherwise.
+TOOL_RESULT_PRUNE_TRIGGER = 100_000
+
 # One audit is a long single turn (nine categories, a tool call each) followed
 # by short chat turns. The recursion ceiling derives from the model-call guard
 # rather than being picked by hand — see RunLimits.
@@ -80,7 +96,7 @@ LIMITS = RunLimits(
     model_calls_per_thread=200,
     tool_calls_per_run=60,
     tool_calls_per_thread=300,
-    tool_result_prune_trigger=40,
+    tool_result_prune_trigger=TOOL_RESULT_PRUNE_TRIGGER,
     tool_results_kept=12,
 )
 
