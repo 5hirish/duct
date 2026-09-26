@@ -742,6 +742,31 @@ don't fit.
   set (`pytest tests/test_memory_retrieval.py -s` prints the per-axis report);
   it exists because it caught the AND-everything query bug that made questions
   retrieve nothing, so extend it before tuning retrieval by feel.
+
+  Five rules about when memory is read and written, each held by
+  `tests/test_memory_context.py` or `tests/test_memory_phase2.py`:
+
+  - **`build_memory_context()` returns its blocks in `MEMORY_BLOCKS` order and
+    applies the agent's `ContextSpec` itself.** A turn carries the result as one
+    string in the `project_memory` slot, so memory's tags stay adjacent in
+    `BLOCK_ORDER`. A block the spec switches off is never queried.
+  - **The digest budget is whole entries**, `DIGEST_MAX_CHARS` (about 1,500
+    tokens) and `DIGEST_MAX_ENTRIES`, spent in section order: pinned, open,
+    relevant to this question, recent, artifacts. An entry that does not fit is
+    left out and is not reported as recalled.
+  - **Recalled means cited or opened, never shown.** `ConversationRecorder`
+    credits the `m_…` ids a reply cites (`touch_cited`), and GetMemory credits
+    what it opens. Counting the digest fed its own ranking.
+  - **Consolidation does not depend on a close.** Close flushes early; the
+    sweep in `service/memory_consolidation.py` (every five minutes, for
+    conversations quiet for 30) is what guarantees the pass after a deploy,
+    crash or quit desktop app. It runs on `Job.MEMORY`, the owner's Light tier.
+    "Don't remember this" is stored on the conversation
+    (`record_remember_choice`), because the sweep never sees the session.
+  - **A thread re-reads memory at most hourly, and only when something changed.**
+    `memory_refresh` compares the conversation's `memory_primed_at` with the
+    newest memory row, excluding the thread's own writes; `routes/agents.py`
+    asks on each message, and the session holds when to ask next.
 - `agents/core/turn.py` — **how every agent's user turn is built.** An agent
   declares a `ContextSpec` in `agents/registry.py` (which shared blocks it
   wants); a run renders a `TurnContext`; `build_turn` orders them. A new agent

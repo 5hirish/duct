@@ -288,17 +288,41 @@ def test_preferences_seed_and_supersede_on_change(db, owner):
         UserPreferences(role="Growth Manager", communication_style="executive",
                         report_depth="summary", primary_outcome="revenue"),
     )
-    assert len(written) == 4
-    assert all(r.scope == SCOPE_USER and r.source_type == SOURCE_USER for r in written)
-    style = next(r for r in written if r.attribute == "communication_style")
+    # Role, style and depth are the profile's (service/profile.py) and render in
+    # <user_context>; mirroring them here said each twice and could contradict it.
+    assert [r.attribute for r in written] == ["primary_outcome"]
+    assert written[0].scope == SCOPE_USER and written[0].source_type == SOURCE_USER
+    outcome = written[0]
 
-    seed_user_preferences(db, owner.id, UserPreferences(communication_style="technical"))
-    db.refresh(style)
-    assert style.status == STATUS_SUPERSEDED
-    assert "technical" in next(
+    seed_user_preferences(db, owner.id, UserPreferences(primary_outcome="efficiency"))
+    db.refresh(outcome)
+    assert outcome.status == STATUS_SUPERSEDED
+    assert "efficiency" in next(
         r.title for r in search(db, user_id=owner.id, scope=SCOPE_USER)
-        if r.attribute == "communication_style"
+        if r.attribute == "primary_outcome"
     )
+
+
+def test_an_unchanged_preference_is_not_written_again(db, owner):
+    """Seeding runs at the start of every run; the usual case writes nothing."""
+    prefs = UserPreferences(primary_outcome="revenue")
+    assert len(seed_user_preferences(db, owner.id, prefs)) == 1
+    before = search(db, user_id=owner.id, scope=SCOPE_USER)[0].recorded_at
+    assert seed_user_preferences(db, owner.id, prefs) == []
+    assert search(db, user_id=owner.id, scope=SCOPE_USER)[0].recorded_at == before
+
+
+def test_profile_owned_preferences_written_before_no_longer_render(db, owner):
+    from service.memory import render_user_memory
+
+    remember(db, scope=SCOPE_USER, kind="identity", title="Role: Growth Manager",
+             user_id=owner.id, entity_key="operator:role", attribute="role",
+             source_type=SOURCE_USER)
+    remember(db, scope=SCOPE_USER, kind="method", title="Compare to last year",
+             user_id=owner.id, source_type=SOURCE_USER)
+    text = render_user_memory(db, user_id=owner.id).text
+    assert "Compare to last year" in text
+    assert "Growth Manager" not in text
 
 
 # ---------------------------------------------------------------------------
@@ -430,3 +454,132 @@ def test_artifact_summary_backfills_the_memory_entry_body(db, project, owner):
     backfill_artifact_summary(db, artifact, "Score 72. Two FAILs on indexation.")
     db.refresh(entry)
     assert entry.body.startswith("Score 72.")
+
+
+# ---------------------------------------------------------------------------
+# The sweep — consolidation that does not wait for a close
+# ---------------------------------------------------------------------------
+
+def _age(db, conv, minutes: int) -> None:
+    from datetime import timedelta
+
+    from utils.dates import utcnow
+
+    conv.last_active_at = utcnow() - timedelta(minutes=minutes)
+    db.add(conv)
+    db.commit()
+
+
+def _stub_model(monkeypatch, calls: list):
+    class _StubModel:
+        async def ainvoke(self, prompt):
+            calls.append(prompt)
+            return Consolidation(entries=[ExtractedEntry(kind="goal", title="Target CPA $45")])
+
+    monkeypatch.setattr(consolidation, "_build_model", lambda owner_id=None: _StubModel())
+
+
+def test_the_sweep_consolidates_a_conversation_whose_session_never_closed(
+    db, project, service_db, monkeypatch,
+):
+    """A deploy, a crash or a quit desktop app closes nothing. The watermark is
+    the only record of what was read, so an idle conversation past it is due."""
+    import asyncio
+
+    conv = _conversation(db, project, turns=8)
+    _age(db, conv, minutes=consolidation.SWEEP_IDLE_MINUTES + 5)
+    calls: list = []
+    _stub_model(monkeypatch, calls)
+
+    assert asyncio.run(consolidation.sweep_once()) == 1
+    assert len(calls) == 1
+    # Once read, it is not due again.
+    assert asyncio.run(consolidation.sweep_once()) == 0
+
+
+def test_the_sweep_leaves_active_and_opted_out_conversations_alone(
+    db, project, service_db, monkeypatch,
+):
+    import asyncio
+
+    active = _conversation(db, project, turns=8)
+    _age(db, active, minutes=2)
+    quiet = _conversation(db, project, turns=8)
+    _age(db, quiet, minutes=consolidation.SWEEP_IDLE_MINUTES + 5)
+    consolidation.record_remember_choice(quiet.id, remember=False)
+    calls: list = []
+    _stub_model(monkeypatch, calls)
+
+    assert asyncio.run(consolidation.sweep_once()) == 0
+    assert calls == []
+
+
+def test_turning_memory_back_on_does_not_read_what_was_said_while_it_was_off(
+    db, project, service_db,
+):
+    conv = _conversation(db, project, turns=8)
+    consolidation.record_remember_choice(conv.id, remember=False)
+    consolidation.record_remember_choice(conv.id, remember=True)
+    db.expire_all()
+    meta = db.get(AgentConversation, conv.id).meta
+    assert meta["memory_off"] is False
+    assert meta["memory_through_seq"] == 8
+
+
+def test_a_closed_and_a_swept_trigger_pay_for_one_model_call(db, project, service_db, monkeypatch):
+    """The watermark is read inside the lock, so the second of two concurrent
+    triggers finds the turns already read instead of paying for them again."""
+    import asyncio
+
+    conv = _conversation(db, project, turns=8)
+    calls: list = []
+    _stub_model(monkeypatch, calls)
+
+    async def both():
+        return await asyncio.gather(
+            consolidation.consolidate_conversation(conv.id),
+            consolidation.consolidate_conversation(conv.id),
+        )
+
+    results = asyncio.run(both())
+    assert len(calls) == 1
+    assert sorted(r.skipped for r in results) == ["", "too few new turns"]
+
+
+def test_the_transcript_carries_what_a_tool_returned(db, project):
+    conv = _conversation(db, project, turns=1)
+    rows = [
+        AgentEventRow(conversation_id=conv.id, seq=2, kind=EventKind.TOOL_USE,
+                      data={"name": "FetchData", "input": {"entity_id": "ga4_sessions"}}),
+        AgentEventRow(conversation_id=conv.id, seq=3, kind=EventKind.TOOL_RESULT,
+                      data={"name": "FetchData", "result": {"sessions": 1234, "window": "2026-09-01..07"}}),
+        AgentEventRow(conversation_id=conv.id, seq=4, kind=EventKind.TOOL_RESULT,
+                      data={"name": "RememberFact", "result": {"status": "remembered"}}),
+    ]
+    text = build_transcript(rows)
+    assert "ga4_sessions" in text
+    assert "1234" in text and "2026-09-01..07" in text
+    # A memory tool's result is memory already.
+    assert "remembered" not in text
+
+
+def test_consolidation_runs_on_the_owners_light_tier(monkeypatch):
+    """Job.MEMORY is what the settings page says runs on Light; the pass used
+    to take the instance's default provider and model instead."""
+    from agents.tiers import Job
+
+    seen = {}
+
+    def _resolve(job, **kwargs):
+        seen["job"] = job
+        seen["stored_keys"] = kwargs.get("stored_keys")
+        raise consolidation.ProviderKeyRequired(None)
+
+    import service.model_settings as model_settings
+
+    monkeypatch.setattr(model_settings, "get_model_settings", lambda _owner: model_settings.DEFAULTS)
+    monkeypatch.setattr(consolidation, "resolve_job_run", _resolve)
+    monkeypatch.setattr(consolidation, "stored_keys_for", lambda _owner: {"openai": "sk-x"})
+    assert consolidation._build_model(uuid4()) is None
+    assert seen["job"] is Job.MEMORY
+    assert seen["stored_keys"] == {"openai": "sk-x"}

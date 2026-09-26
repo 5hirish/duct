@@ -258,7 +258,7 @@ def _search_sync(args: dict, *, project_id, user_id, scope) -> dict:
 
 def _get_sync(memory_id: str, *, project_id, user_id) -> dict:
     from db.session import get_session as db_session
-    from service.memory import resolve_short_id
+    from service.memory import resolve_short_id, touch_recall
 
     with next(db_session()) as db:
         row = resolve_short_id(db, memory_id, project_id=project_id, user_id=user_id)
@@ -267,7 +267,11 @@ def _get_sync(memory_id: str, *, project_id, user_id) -> dict:
                 "status": "not_found",
                 "message": f"No memory {memory_id!r} in this project. Use SearchMemory to find it.",
             }
-        return {"memory": _entry_payload(row, full=True)}
+        payload = {"memory": _entry_payload(row, full=True)}
+        # Opening an entry is using it — the other half of what "recalled"
+        # counts, beside a citation in the reply.
+        touch_recall(db, [row.id])
+        return payload
 
 
 # The tool each DB helper backs. Mapped here rather than passed at every call
