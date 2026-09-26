@@ -1334,7 +1334,7 @@ def _touches(entity_key: str, *, subject: str) -> bool:
     if value.startswith("/"):
         if _is_site(subject):
             return True
-        # The path as a whole token: "/pricing" is not named by "/pricing-guide",
+        # Match the path as a whole token, so "/pricing" is not named by "/pricing-guide",
         # and the home page ("/") is named by no question — every "CPA/ROAS"
         # would otherwise raise it.
         if value != "/" and re.search(rf"(?<![\w/-]){re.escape(value)}(?![\w/-])", subject):
