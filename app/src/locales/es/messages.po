@@ -1411,6 +1411,10 @@ msgstr "Autonomía — {projectName}"
 msgid "Autonomy is unchanged — that didn't save."
 msgstr "La autonomía no ha cambiado — eso no se guardó."
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Average watch time (s)"
+msgstr "Tiempo de visualización promedio (s)"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Avg TTFB"
 msgstr "TTFB promedio"
@@ -1836,6 +1840,7 @@ msgid "Commands"
 msgstr "Comandos"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Comments"
 msgstr "Comentarios"
 
@@ -2139,6 +2144,10 @@ msgstr "Error al copiar"
 #: src/components/workspace/AgentChat.jsx
 msgid "Copy response"
 msgstr "Copiar respuesta"
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Copy these from the platform’s analytics. They stay as you enter them."
+msgstr "Copia estos de los análisis de la plataforma. Permanecen como los introduces."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
@@ -3774,6 +3783,7 @@ msgid "Light mode"
 msgstr "Modo claro"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Likes"
 msgstr "Me gusta"
 
@@ -5178,6 +5188,10 @@ msgstr "Pendiente"
 msgid "Pending invitations"
 msgstr "Invitaciones pendientes"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Performance"
+msgstr "Rendimiento"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "Permissions"
 msgstr "Permisos"
@@ -5541,6 +5555,10 @@ msgstr "Clics furiosos, clics muertos, retrocesos rápidos y errores de script, 
 #: src/components/insights/desk/DeskActivity.jsx
 msgid "ran on its own"
 msgstr "se ejecutó solo"
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Reach"
+msgstr "Alcance"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -6124,6 +6142,10 @@ msgstr "Error al guardar."
 msgid "Save manager account"
 msgstr "Guardar cuenta de administrador"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Save numbers"
+msgstr "Guardar números"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Save project"
 msgstr "Guardar proyecto"
@@ -6180,10 +6202,15 @@ msgstr "Guardado en tu cuenta"
 msgid "saved to your Duct account"
 msgstr "guardado en tu cuenta de Duct"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Saves"
+msgstr "Guardados"
+
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PostMetricsForm.jsx
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
 msgstr "Guardando…"
@@ -6534,6 +6561,7 @@ msgid "Shared by {owner}"
 msgstr "Compartido por {owner}"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Shares"
 msgstr "Compartidos"
 
@@ -7479,6 +7507,10 @@ msgstr "Esta versión de Duct no puede completar el inicio de sesión. Actualiza
 msgid "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
 msgstr "Esto actualizará <0>{targetProjectName}</0>, el proyecto que ya tienes para este sitio. Todo lo que hayas rellenado tú mismo se mantendrá tal cual."
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Those numbers didn’t save. Check them and try again."
+msgstr "Esos números no se guardaron. Revísalos e inténtalo de nuevo."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Thought for {seconds}s"
 msgstr "Pensamiento durante {seconds}s"
@@ -7674,6 +7706,10 @@ msgstr "Actualiza la app de escritorio; esta versión no puede ejecutar el inici
 msgid "Updated {updated}"
 msgstr "Actualizado {updated}"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Updated {when}"
+msgstr "Actualizado {when}"
+
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/usage/page.jsx
 #: src/lib/navigation.js
@@ -7834,6 +7870,7 @@ msgid "View full screen"
 msgstr "Ver en pantalla completa"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Views"
 msgstr "Vistas"
 
@@ -7848,6 +7885,10 @@ msgstr "Vistas por pilar"
 #: src/components/content/AnalyticsView.jsx
 msgid "Views over time"
 msgstr "Vistas a lo largo del tiempo"
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Views, likes, comments and shares update on their own. Add the rest from the platform’s analytics; a sync never changes what you enter."
+msgstr "Las vistas, me gusta, comentarios y compartidos se actualizan solos. Añade el resto de los análisis de la plataforma; una sincronización nunca cambia lo que introduces."
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Visual identity"
@@ -7906,6 +7947,10 @@ msgstr "advertencias"
 #: src/components/GoogleAdsReport.js
 msgid "Watch"
 msgstr "Ver"
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Watched to the end (%)"
+msgstr "Visto hasta el final (%)"
 
 #: src/components/LoadError.jsx
 msgid "We couldn’t load {what}."

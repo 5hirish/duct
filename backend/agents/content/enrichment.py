@@ -51,6 +51,7 @@ from agents.core.web_tools import build_web_tools_lc, web_search_available
 from agents.models import ModelName, Provider
 from db.session import get_engine
 from models.content import ContentPost
+from service.content_metrics import save_rate
 
 logger = logging.getLogger(__name__)
 
@@ -120,13 +121,14 @@ def _local_content_signals(project_id: UUID) -> ContentResearchContext:
         hook_counter: Counter[str] = Counter(p.hook_type for p in recent if p.hook_type)
         recent_hook_types = [h for h, _ in hook_counter.most_common(5)]
 
-        # save_rate median where present
-        rates = [
-            float(p.perf.get("save_rate"))
-            for p in posts
-            if isinstance(p.perf, dict) and isinstance(p.perf.get("save_rate"), (int, float))
-        ]
-        rates.sort()
+        # Median save rate over the posts that have one. Derived from the
+        # metric contract: nothing stores a rate, so reading a stored
+        # `save_rate` left this None for every post with synced views and
+        # typed-in saves.
+        rates = sorted(
+            rate for p in posts
+            if isinstance(p.perf, dict) and (rate := save_rate(p.perf)) is not None
+        )
         median = rates[len(rates) // 2] if rates else None
 
         history.append(PillarHistorySignal(
