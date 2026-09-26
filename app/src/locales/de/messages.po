@@ -1639,6 +1639,10 @@ msgstr "Duct nicht erreichbar"
 msgid "Can't reach the provider"
 msgstr "Anbieter nicht erreichbar"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "Can't read your key"
+msgstr "Schlüssel nicht lesbar"
+
 #: src/app/(app)/execute/page.jsx
 #: src/app/(app)/projects/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
@@ -7380,6 +7384,14 @@ msgstr "Dieser Audit-Link ist nicht mehr gültig. Links verfallen nach 24 Stunde
 msgid "This computer's key"
 msgstr "Der Schlüssel dieses Computers"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer's keychain didn't let Duct read the {providerName} key saved in it."
+msgstr "Der Schlüsselbund dieses Computers hat Duct den dort gespeicherten {providerName}-Schlüssel nicht lesen lassen."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer’s keychain didn’t let Duct read this key: {readError}"
+msgstr "Der Schlüsselbund dieses Computers hat Duct diesen Schlüssel nicht lesen lassen: {readError}"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "This connection was made before Duct recorded which permissions Google granted. Reconnect to find out — nothing is assumed either way."
 msgstr "Diese Verbindung wurde hergestellt, bevor Duct aufgezeichnet hat, welche Berechtigungen Google erteilt hat. Verbinde dich erneut, um es herauszufinden – es wird so oder so nichts angenommen."
@@ -7600,6 +7612,7 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "Testphasen, Verlängerungen, Rückerstattungen und MRR im App Store und Play."
 
 #: src/components/AppErrorPanel.jsx
+#: src/components/connections/ProviderCard.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "Erneut versuchen"
@@ -8389,6 +8402,10 @@ msgstr "Dein Key wird vor dem Plan verwendet. Geplante Läufe finden ohne geöff
 #: src/components/models/UsagePanel.jsx
 msgid "Your key was charged {charged} across {earlierCalls, plural, one {# model call} other {# model calls}} in the last {widest} days. This window is just a quiet one."
 msgstr "Dein Schlüssel wurde mit {charged} über {earlierCalls, plural, one {# Modellaufruf} other {# Modellaufrufe}} in den letzten {widest} Tagen belastet. Dieses Fenster ist nur ein ruhiges."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
+msgstr "Dein Mac hat Duct diesen Schlüssel nicht lesen lassen. Wähle „Erneut versuchen“, und wenn dein Mac nach deinem Passwort fragt, klicke auf <0>Immer erlauben</0>, damit er nicht mehr fragt. Oder füge den Schlüssel erneut ein und speichere."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your memory"

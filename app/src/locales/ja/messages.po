@@ -1639,6 +1639,10 @@ msgstr "Ductに到達できません"
 msgid "Can't reach the provider"
 msgstr "プロバイダーに到達できません"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "Can't read your key"
+msgstr "キーを読み取れません"
+
 #: src/app/(app)/execute/page.jsx
 #: src/app/(app)/projects/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
@@ -7381,6 +7385,14 @@ msgstr "この監査リンクは無効です。リンクは24時間で期限切�
 msgid "This computer's key"
 msgstr "このコンピューターのキー"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer's keychain didn't let Duct read the {providerName} key saved in it."
+msgstr "このコンピューターのキーチェーンが、保存されている{providerName}のキーをDuctに読み取らせませんでした。"
+
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer’s keychain didn’t let Duct read this key: {readError}"
+msgstr "このコンピューターのキーチェーンが、このキーをDuctに読み取らせませんでした: {readError}"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "This connection was made before Duct recorded which permissions Google granted. Reconnect to find out — nothing is assumed either way."
 msgstr "この接続は、DuctがGoogleから付与された権限を記録する前に行われました。再接続して確認してください — いずれにしても何も仮定されません。"
@@ -7601,6 +7613,7 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "App StoreとPlay全体でのトライアル、更新、払い戻し、MRR。"
 
 #: src/components/AppErrorPanel.jsx
+#: src/components/connections/ProviderCard.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "再試行"
@@ -8390,6 +8403,10 @@ msgstr "あなたのキーはプランより前に使用されます。スケジ
 #: src/components/models/UsagePanel.jsx
 msgid "Your key was charged {charged} across {earlierCalls, plural, one {# model call} other {# model calls}} in the last {widest} days. This window is just a quiet one."
 msgstr "過去{widest}日間で、{earlierCalls, plural, one {# モデル呼び出し} other {# モデル呼び出し}}に対し、キーに{charged}が請求されました。この期間は静かなものでした。"
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
+msgstr "MacがこのキーをDuctに読み取らせませんでした。「再試行」を選び、Macからパスワードを求められたら<0>常に許可</0>を選んでください。以後は確認されなくなります。または、キーをもう一度貼り付けて保存してください。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your memory"

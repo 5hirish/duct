@@ -11,6 +11,11 @@
 /** Where a browser user goes to get the shell. Some flows only exist there. */
 export const DESKTOP_DOWNLOAD_URL = "https://getduct.ai/download";
 
+/** macOS, where a keychain prompt and the ⌘ key are the platform's own. */
+export function isMac() {
+  return typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+}
+
 export function isDesktopShell() {
   return typeof window !== "undefined" && Boolean(window.__TAURI__);
 }

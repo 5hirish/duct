@@ -1639,6 +1639,10 @@ msgstr "No se puede contactar con Duct"
 msgid "Can't reach the provider"
 msgstr "No se puede contactar con el proveedor"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "Can't read your key"
+msgstr "No se puede leer tu clave"
+
 #: src/app/(app)/execute/page.jsx
 #: src/app/(app)/projects/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
@@ -7380,6 +7384,14 @@ msgstr "Este enlace de auditoría ya no es válido. Los enlaces caducan después
 msgid "This computer's key"
 msgstr "La clave de esta computadora"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer's keychain didn't let Duct read the {providerName} key saved in it."
+msgstr "El llavero de este equipo no dejó que Duct leyera la clave de {providerName} guardada en él."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer’s keychain didn’t let Duct read this key: {readError}"
+msgstr "El llavero de este equipo no dejó que Duct leyera esta clave: {readError}"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "This connection was made before Duct recorded which permissions Google granted. Reconnect to find out — nothing is assumed either way."
 msgstr "Esta conexión se hizo antes de que Duct registrara qué permisos concedió Google. Vuelve a conectar para averiguarlo; no se asume nada en ningún caso."
@@ -7600,6 +7612,7 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "Pruebas, renovaciones, reembolsos y MRR en App Store y Play."
 
 #: src/components/AppErrorPanel.jsx
+#: src/components/connections/ProviderCard.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "Intentar de nuevo"
@@ -8389,6 +8402,10 @@ msgstr "Tu clave se usa antes del plan. Las ejecuciones programadas ocurren sin 
 #: src/components/models/UsagePanel.jsx
 msgid "Your key was charged {charged} across {earlierCalls, plural, one {# model call} other {# model calls}} in the last {widest} days. This window is just a quiet one."
 msgstr "Tu clave fue cargada con {charged} en {earlierCalls, plural, one {# llamada al modelo} other {# llamadas al modelo}} en los últimos {widest} días. Esta ventana es solo una tranquila."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
+msgstr "Tu Mac no dejó que Duct leyera esta clave. Elige «Intentar de nuevo» y, cuando tu Mac te pida la contraseña, pulsa <0>Permitir siempre</0> para que no vuelva a preguntar. O pega la clave de nuevo y guárdala."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your memory"

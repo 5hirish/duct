@@ -174,6 +174,16 @@ const stubLoader = (payload, { delayMs = 0, fail = "" } = {}) =>
 
 const NOUNS = { entity_noun: "property", entity_noun_plural: "properties" };
 
+// A keychain that holds the key and will not hand it over: what macOS answers
+// a build whose signature is not the one that saved the item, or a Deny. The
+// sentence is the shell's own (`describe_keyring_error`), shown off a Mac.
+// Module level so the card's read effect does not rerun on every render.
+const REFUSING_KEYCHAIN = async () => ({
+  key: "",
+  error:
+    "the keychain would not release this item (Platform secure storage failure: errSecAuthFailed (-25293)). macOS grants access per application signature, so a rebuilt or re-signed app cannot read what an earlier build stored. Saving it again fixes it.",
+});
+
 /** A dialog has to be opened to be looked at; this is the trigger. */
 function DialogScene({ label, ...props }) {
   const [open, setOpen] = useState(false);
@@ -1118,6 +1128,23 @@ export const SCENES = [
           logo={LOGO}
           status={undefined}
           loading
+        />
+      </div>
+    ),
+  },
+  {
+    id: "provider-key-unreadable",
+    state: "keychain refused the read",
+    group: "ProviderCard",
+    title: "Saved, but the keychain said no",
+    note: "The desktop keychain holds a key and would not hand it over, which is not the same as no key: the tile says Can't read your key rather than No key set. Open it: on a Mac the alert says to choose Try again and pick Always Allow when macOS asks, the one moment that advice is worth reading, since a signed release never asks at all. Elsewhere it quotes the shell's own sentence. Try again re-reads (this stub refuses every time), Remove key is offered, and pasting the key again repairs the item. The Remember checkbox is the browser variant showing through: only the desktop app has a keychain to refuse, and it never offers that choice.",
+    render: () => (
+      <div className="conn-grid">
+        <ProviderCard
+          provider={PROVIDERS.find((p) => p.id === "anthropic")}
+          logo={LOGO}
+          status={{ id: "anthropic", source: "none", reachable: false, stored: false }}
+          readKey={REFUSING_KEYCHAIN}
         />
       </div>
     ),
