@@ -78,8 +78,10 @@ export function useScraperRun() {
       setDatasetId(run.dataset_id);
       setPhase("polling");
 
-      // Poll status every 3s until SUCCEEDED / FAILED / aborted.
-      await new Promise((resolve, reject) => {
+      // A repeat search can come back as a run that already finished (the
+      // backend reuses recent identical runs); its results are ready now, so
+      // there is nothing to poll. Otherwise poll every 3s until it settles.
+      if (run.status !== "SUCCEEDED") await new Promise((resolve, reject) => {
         pollRef.current = setInterval(async () => {
           if (cancelled.current) {
             clearInterval(pollRef.current); pollRef.current = null;

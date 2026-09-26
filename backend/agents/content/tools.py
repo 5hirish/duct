@@ -71,6 +71,7 @@ from agents.content.schema import (
     PostDraft,
     ReviewMarker,
     Slide,
+    clone_source,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
 from service import storage
@@ -397,6 +398,7 @@ def _build_post_payload(row: ContentPost) -> dict:
         "camera_ref_pool": row.camera_ref_pool,
         "platforms":       row.platforms,
         "status":          row.status,
+        "clone_source":    row.clone_source,
         # Recomputed on every emit, so the panel's checks follow each edit and
         # a score from before the edit says it is stale.
         "assessment":      reassess(
@@ -881,6 +883,16 @@ def build_content_tools_lc(
                     "camera_ref_pool": draft.camera_ref_pool or "",
                     "platforms":       [p.value for p in draft.platforms],
                 }
+                # A clone records its reference. The link is the server's (the
+                # session's, or the row's on a later write); only the verdict
+                # is the model's. Absent from `values` otherwise, so an
+                # ordinary re-submit never clears it.
+                recorded = clone_source(
+                    session.clone_reference or (existing.clone_source if existing is not None else None),
+                    draft.clone,
+                )
+                if recorded is not None:
+                    values["clone_source"] = recorded
                 if existing is not None:
                     for k, v in values.items():
                         setattr(existing, k, v)

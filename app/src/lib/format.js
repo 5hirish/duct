@@ -101,6 +101,13 @@ export function formatNumber(value, { fallback = "—", locale } = {}) {
     : fallback;
 }
 
+/** A ratio as a percentage in the reader's locale: 0.062 → "6.2%" / "6,2 %". */
+export function formatPercent(ratio, { locale, digits = 1 } = {}) {
+  const v = Number(ratio);
+  return new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: digits })
+    .format(Number.isFinite(v) ? v : 0);
+}
+
 /** "938" / "1.2k" / "3M" — for metric chips where width is tight. */
 export function compactNumber(value) {
   const v = Number(value) || 0;

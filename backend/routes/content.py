@@ -2,7 +2,7 @@
 
 Streaming endpoints clone the SSE machinery from routes/audit.py:
   POST   /api/content/plan/stream         — start a plan_month session
-  POST   /api/content/post/stream         — start a draft_post session
+  POST   /api/content/post/stream         — start a draft_post session (a clone with `clone_url`)
   POST   /api/content/answer/{sid}        — resolve pending AskUserQuestion
   POST   /api/content/chat/{sid}          — continued chat into an active session
   DELETE /api/content/session/{sid}       — close session, free resources
@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, select
@@ -445,15 +445,22 @@ async def _run_draft_worker(
         # Primary channel: explicit request → the day's first platform → default.
         from agents.content.channels import primary_channel
         channel = req.channel or (primary_channel(day_obj.platforms) if day_obj else None)
-        await runner.run_draft(
-            session_id,
-            req.project_id,
-            emit_fn,
-            day=day_obj,
-            topic=req.topic,
-            pillar=req.pillar,
-            channel=channel,
-        )
+        if req.clone_url:
+            # A draft modelled on a TikTok post; the plan link-back below is
+            # the same for both, so a clone can fill a plan slot too.
+            await runner.run_clone(
+                session_id, req.project_id, emit_fn, clone_url=req.clone_url, channel=channel,
+            )
+        else:
+            await runner.run_draft(
+                session_id,
+                req.project_id,
+                emit_fn,
+                day=day_obj,
+                topic=req.topic,
+                pillar=req.pillar,
+                channel=channel,
+            )
         # Link the drafted post back onto its plan-day (post_id) so the board
         # can match the new post to its slot (we link by post_id, not position).
         if req.plan_id is not None and req.day_index is not None:
@@ -1070,6 +1077,8 @@ class PostOut(BaseModel):
     perf:          dict
     daily_perf:    list
     notes:         str
+    # The TikTok a cloned post was modelled on; None for any other post.
+    clone_source:  dict | None = None
     created_at:    str
     updated_at:    str
     # The active agent conversation for this post (if any) — drives "click post →
@@ -1136,6 +1145,7 @@ def _post_out(
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
         notes=p.notes,
+        clone_source=p.clone_source,
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
     )
@@ -2253,6 +2263,27 @@ class DiscoverSaveIn(BaseModel):
     post:       dict   # raw ScrapedPost — re-validated server-side
 
 
+class DiscoverRecaptureIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: UUID
+
+
+class DiscoverRecaptureOut(BaseModel):
+    queued: int
+
+
+def _session_factory(db: Session):
+    """Sessions on the request's own engine, for work that outlives the request.
+
+    A background task runs after the request's session is closed, so it opens
+    its own — on the engine the request used rather than the global one, which
+    is the same engine in production and the test's in-memory one in a test.
+    """
+    engine = db.get_bind()
+    return lambda: Session(engine)
+
+
 def _apify_client_or_503():
     cfg = get_configs()
     if not cfg.apify_api_key:
@@ -2267,10 +2298,15 @@ async def discover_start(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> DiscoverStartOut:
-    """Kick off an Apify actor run for TikTok content discovery."""
+    """Start an Apify actor run for TikTok discovery, or join an identical recent one.
+
+    The same actor and input inside the reuse window get the earlier run back
+    instead of a second billed run (service/apify/run_cache.py).
+    """
     _project_for_user(db, user, body.project_id)
     from service.apify import ApifyAPIError
     from service.apify.policy import discover_run_input
+    from service.apify.run_cache import apify_runs
 
     try:
         run_input = discover_run_input(body.actor_id, body.input_payload)
@@ -2280,12 +2316,16 @@ async def discover_start(
     client = _apify_client_or_503()
     try:
         async with client as c:
-            run = await c.start_run(body.actor_id, run_input)
+            run, reused = await apify_runs.start(c, body.actor_id, run_input)
     except ApifyAPIError as exc:
         raise HTTPException(exc.status_code or 502, exc.message) from exc
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
+    logger.info(
+        "discover: %s run %s (actor=%s, status=%s)",
+        "reused" if reused else "started", run.id, body.actor_id, run.status.value,
+    )
     return DiscoverStartOut(
         run_id=run.id,
         dataset_id=run.default_dataset_id,
@@ -2345,16 +2385,20 @@ async def discover_results(dataset_id: str, limit: int = 200) -> DiscoverResultO
 @router.post("/content/discover/save", status_code=201)
 def discover_save(
     body: DiscoverSaveIn,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> ContentAssetOut:
-    """Persist one discovered post as a ContentAsset reference.
+    """Save one discovered post as a reference, then copy its pictures.
 
-    No bytes downloaded — we save the metadata + slideshow image URLs in
-    `params` so the agent can reference them by URL when generating new
-    posts. Downloading + caching the image bytes is a follow-up.
+    The row is written now. The cover and slides are copied into project
+    storage after the response, because TikTok signs its image URLs with an
+    expiry and a reference is saved to be looked at later
+    (service/discovery.py). A copy lost to a restart is picked up by
+    /content/discover/recapture.
     """
     from service.apify.schema import ScrapedPost
+    from service.discovery import capture_references_media, ingest_reference, needs_media
 
     _project_for_user(db, user, body.project_id)
     try:
@@ -2362,28 +2406,42 @@ def discover_save(
     except Exception as exc:  # ValidationError or anything else odd
         raise HTTPException(400, f"Invalid scraped post payload: {exc}") from exc
 
-    # The asset's URL points at the TikTok webVideoUrl (the source of
-    # truth); slideshow_image_links go in params so the agent can pull
-    # them when constructing image prompts.
-    asset = ContentAsset(
-        project_id=body.project_id,
-        asset_type="discovered_reference",
-        source="apify",
-        url=post.web_video_url or f"apify://{body.actor_id}/{post.id}",
-        filename=f"tiktok-{post.id}",
-        mime_type="application/json",
-        prompt="",
-        model="",
-        params={
-            "actor_id":    body.actor_id,
-            "run_id":      body.run_id,
-            "dataset_id":  body.dataset_id,
-            "request":     body.request,
-            "post":        post.model_dump(mode="json"),
-            "saved_at":    datetime.now(timezone.utc).isoformat(),
+    asset = ingest_reference(
+        db,
+        body.project_id,
+        post,
+        provenance={
+            "actor_id":   body.actor_id,
+            "run_id":     body.run_id,
+            "dataset_id": body.dataset_id,
+            "request":    body.request,
         },
     )
-    db.add(asset)
-    db.commit()
-    db.refresh(asset)
+    if needs_media(asset.params):
+        background_tasks.add_task(
+            capture_references_media, [asset.id], open_db=_session_factory(db)
+        )
     return _asset_out(asset)
+
+
+@router.post("/content/discover/recapture", status_code=202)
+def discover_recapture(
+    body: DiscoverRecaptureIn,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> DiscoverRecaptureOut:
+    """Copy the pictures of references that do not have them yet.
+
+    The backfill: references saved before capture existed, and captures lost
+    to a restart or failed on a flaky CDN (retried up to a ceiling). Discover
+    calls it when it opens, so nobody has to remember to. Returns how many
+    were queued; the copying happens after the response.
+    """
+    from service.discovery import capture_references_media, references_missing_media
+
+    _project_for_user(db, user, body.project_id)
+    ids = references_missing_media(db, body.project_id)
+    if ids:
+        background_tasks.add_task(capture_references_media, ids, open_db=_session_factory(db))
+    return DiscoverRecaptureOut(queued=len(ids))

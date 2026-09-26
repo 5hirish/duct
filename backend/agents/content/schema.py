@@ -179,6 +179,19 @@ class DraftPostRequest(BaseModel):
     topic: str | None = None
     pillar: str | None = None
     channel: str | None = None   # primary platform (platforms[0]); selects the agent playbook
+    # A TikTok post to model the draft on (issue #222). Stored canonical, so
+    # the runner and the session only ever see a URL rebuilt from a parsed
+    # handle and post id; anything else is a 422 before a session starts.
+    clone_url: str | None = None
+
+    @field_validator("clone_url")
+    @classmethod
+    def _clone_url_is_one_tiktok_post(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
+            return None
+        from service.clone_reference import parse_tiktok_post_url
+
+        return parse_tiktok_post_url(value).url
 
 
 class ContentAnswerRequest(BaseModel):
@@ -231,6 +244,11 @@ class ContentSession(BaseAgentSession):
     # other image provider, so a run on an OpenAI key gets OpenAI pictures and
     # no Gemini-grounded search — the same as before images went multi-provider.
     gemini_api_key: str = ""
+    # A clone run's link to its reference — asset id, URL, author, why it
+    # worked — set by the runner before the opening turn. submit_post_draft
+    # writes it onto the post as `clone_source` with the model's verdict, so
+    # the model never types an id it could get wrong.
+    clone_reference: dict | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -495,6 +513,96 @@ class Slide(BaseModel):
         return (self.image_prompt or "").strip() != (self.image_prompt_used or "").strip()
 
 
+# ---------------------------------------------------------------------------
+# Cloning a reference (issue #222)
+# ---------------------------------------------------------------------------
+
+
+class CloneFit(StrEnum):
+    """Whether the reference's subject already lives in one of the pillars."""
+
+    IN_NICHE     = "in_niche"
+    OUT_OF_NICHE = "out_of_niche"
+
+
+class CloneProof(StrEnum):
+    """Whether the reference clearly outperformed."""
+
+    PROVEN = "proven"
+    WEAK   = "weak"
+
+
+class CloneApproach(StrEnum):
+    """How closely a clone copies its reference — FIT × PROOF, decided here.
+
+    Derived rather than asked for, so the recorded approach cannot disagree
+    with the verdict it came from. Mirrored in app/src/lib/contentEnums.js.
+    """
+
+    CLOSE          = "close"           # in niche and proven: a recipe, copy it tightly
+    ADAPT          = "adapt"           # in niche, weak proof: keep the structure, fix the rest
+    STRUCTURE_ONLY = "structure_only"  # out of niche: borrow the format, rebuild the substance
+
+
+def clone_approach(fit: CloneFit, proof: CloneProof) -> CloneApproach:
+    if fit is CloneFit.OUT_OF_NICHE:
+        return CloneApproach.STRUCTURE_ONLY
+    return CloneApproach.CLOSE if proof is CloneProof.PROVEN else CloneApproach.ADAPT
+
+
+class CloneVerdict(BaseModel):
+    """The clone's own call, carried on the PostDraft of a clone run."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    fit: CloneFit = Field(description="in_niche when the reference's subject is one of the brand's pillars.")
+    proof: CloneProof = Field(description="proven when the reference clearly outperformed for its creator's size.")
+    kept: str = Field(description="Which elements of the reference you kept, and why — one or two sentences.")
+
+
+def clone_source(link: dict | None, verdict: CloneVerdict | None) -> dict | None:
+    """What a cloned post records about its reference, or None for any other post.
+
+    ``link`` is the server's half (reference id, URL, author, why it worked):
+    the session's on the first write, the row's own on a later one, so a
+    refinement in a resumed conversation keeps the link and updates the call.
+    """
+    if not link:
+        return None
+    record = dict(link)
+    if verdict is not None:
+        record.update(
+            fit=verdict.fit.value,
+            proof=verdict.proof.value,
+            approach=clone_approach(verdict.fit, verdict.proof).value,
+            kept=verdict.kept.strip(),
+        )
+    return record
+
+
+class ReferenceDiagnosis(BaseModel):
+    """Why a reference worked, read by the run's own model before the clone.
+
+    One structured call (agents/content/v1/runner.py); the kickoff turn
+    carries the result as text, and ``why_it_worked`` is what the post keeps.
+    Every field has a default, as ``DraftInference`` does: a provider that
+    leaves one out still returns the rest, which beats no diagnosis at all.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    hook: str = Field("", description="What stops the scroll in the first second, and the mechanism behind it.")
+    structure: str = Field("", description="How each slide or beat pulls to the next; where the payoff and the save-worthy moment sit.")
+    on_screen_text: list[str] = Field(
+        default_factory=list,
+        description="The text on each slide, verbatim and in order. Empty when you cannot see the slides.",
+    )
+    lever: str = Field("", description="The one signal it won on: saves, shares, comments, completion or reach.")
+    why_it_worked: str = Field("", description="Two or three sentences naming the specific element that drove the result.")
+    audience: str = Field("", description="Who this was for: the viewer it won, as specifically as the post shows.")
+    creator: str = Field("", description="Who is on screen (approximate age, look, energy), or empty when nobody is.")
+
+
 class PostDraft(BaseModel):
     """One draft post coming back from the draft_post sub-agent or orchestrator.
 
@@ -538,6 +646,9 @@ class PostDraft(BaseModel):
     emotional_arc: str = ""             # 5-slide energy arc, one line per slide
     camera_ref_pool: str = ""           # 'selfie-talking' | 'lifestyle' | 'closeup' — which ref pool to draw from
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
+    clone: CloneVerdict | None = Field(
+        None, description="Clone runs only: your FIT × PROOF call and what you kept. Omit otherwise.",
+    )
 
 
 class PlanDraft(BaseModel):
@@ -707,6 +818,10 @@ __all__ = [
     "AvatarRefCell",
     "Character",
     "CheckSeverity",
+    "CloneApproach",
+    "CloneFit",
+    "CloneProof",
+    "CloneVerdict",
     "ContentAnswerRequest",
     "ContentBrandContext",
     "ContentChatMessage",
@@ -725,6 +840,7 @@ __all__ = [
     "PlanRequest",
     "PostDraft",
     "PublishAssessment",
+    "ReferenceDiagnosis",
     "ReviewBand",
     "ReviewMarker",
     "RunMode",
@@ -736,5 +852,7 @@ __all__ = [
     "TopicCandidate",
     "TopicCandidates",
     "TrendSignal",
+    "clone_approach",
+    "clone_source",
     "make_session",
 ]
