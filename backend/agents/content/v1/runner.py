@@ -89,9 +89,11 @@ from agents.content.subagents import (
     DRAFT_POST_TOOLS,
     GENERAL_PURPOSE_TOOLS,
     RESEARCH_PILLAR_TOOLS,
+    REVIEW_POST_TOOLS,
     build_draft_post_subagent,
     build_general_purpose_subagent,
     build_research_pillar_subagent,
+    build_review_post_subagent,
 )
 from agents.content.tools import build_content_tools_lc
 from agents.core import session as _core_session
@@ -470,6 +472,8 @@ class ContentRunner:
                     _pick(RESEARCH_PILLAR_TOOLS), self._sibling_model(llm, injected_llm)
                 ),
                 build_draft_post_subagent(_pick(DRAFT_POST_TOOLS), llm),
+                # Judging, like drafting, stays on the run's model.
+                build_review_post_subagent(_pick(REVIEW_POST_TOOLS), llm),
                 # deepagents adds a "general-purpose" sub-agent carrying EVERY
                 # tool of the parent unless one by that name is supplied. That
                 # would hand the writers to a sub-agent; this one reads only.

@@ -12,7 +12,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ApifyRunStatus(str, Enum):
@@ -105,6 +105,27 @@ class ScrapedPost(BaseModel):
     video_meta:        ScrapedPostVideo | None = Field(default=None, validation_alias="videoMeta")
     hashtags:          list[str] = Field(default_factory=list)
     slideshow_image_links: list[str] = Field(default_factory=list, validation_alias="slideshowImageLinks")
+
+    @field_validator("hashtags", mode="before")
+    @classmethod
+    def _normalize_hashtags(cls, v: Any) -> list[str]:
+        """Bare tag names, whatever shape the actor sends.
+
+        The actor returns hashtags as objects (``{id, name, title, cover}``)
+        for some posts and as strings for others. Typed as ``list[str]`` with
+        no coercion, one object failed the whole post, and get_dataset_posts
+        dropped it; a page of them read as "no results".
+        """
+        if not isinstance(v, list):
+            return []
+        tags = []
+        for item in v:
+            if isinstance(item, dict):
+                item = item.get("name") or ""
+            tag = str(item).strip() if isinstance(item, str) else ""
+            if tag:
+                tags.append(tag)
+        return tags
 
 
 class DiscoveredReferenceRecord(BaseModel):

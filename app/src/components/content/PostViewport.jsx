@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Check,
+  ClipboardCheck,
   Hash,
   Image as ImageIcon,
   Images,
@@ -21,6 +22,8 @@ import { PostStatus } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import SlidesCarousel from "./SlidesCarousel";
 import CloneSourceNote from "./CloneSourceNote";
+import PublishReviewPanel from "./PublishReviewPanel";
+import { SanityCheckId, isScored } from "@/lib/contentReview";
 import { titleCase } from "@/lib/format";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -134,6 +137,14 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
   }
 
   function handleDiscard() { setDraft(payload); setDirty(false); setSaveError(""); }
+
+  // Absent on the read-only detail page: there is no session to ask.
+  const requestReview = onSendMessage
+    ? async () => {
+        await commitIfDirty();
+        onSendMessage("Review this post before I publish it: score it and tell me what to fix. Don't change anything yet.");
+      }
+    : undefined;
 
   if (!post || (post.type && post.type !== "post" && !post.id)) {
     return <DraftingPulse />;
@@ -249,6 +260,8 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
           <CloneSourceNote source={post.clone_source} />
 
           <PostCopy post={post} patch={patch} />
+
+          <PostReview assessment={post.assessment} onReview={requestReview} />
         </div>
       </div>
     </div>
@@ -331,6 +344,27 @@ function PostCopy({ post, patch }) {
         <HashtagInput value={Array.isArray(post.hashtags) ? post.hashtags : []} onChange={(v) => patch("hashtags", v)} />
       </Labeled>
     </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pre-publish review — the panel once the agent has scored the post; before
+// that, in a live session, one button, offered only once every slide has its
+// image: a review of a post still waiting on pictures is mostly about that.
+// ---------------------------------------------------------------------------
+
+function PostReview({ assessment, onReview }) {
+  if (isScored(assessment)) return <PublishReviewPanel assessment={assessment} onReview={onReview} />;
+  const imagesDone = (assessment?.checks || []).some((c) => c.id === SanityCheckId.SLIDES_HAVE_IMAGES && c.passed);
+  if (!onReview || !imagesDone) return null;
+  return (
+    <button
+      type="button"
+      onClick={onReview}
+      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted/50"
+    >
+      <ClipboardCheck className="size-3.5" aria-hidden="true" /> <Trans>Review before publishing</Trans>
+    </button>
   );
 }
 

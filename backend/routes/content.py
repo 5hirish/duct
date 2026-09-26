@@ -48,6 +48,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, select
 from sqlmodel import Session
 
+from agents.content.assessment import reassess
 from agents.content.events import ContentEvent
 from agents.content.styles import base_css, list_styles
 from agents.content.schema import (
@@ -56,6 +57,7 @@ from agents.content.schema import (
     ContentStatus,
     DraftPostRequest,
     PlanRequest,
+    PublishAssessment,
 )
 from agents.content.v1.runner import (
     ContentRunner,
@@ -1082,6 +1084,10 @@ class PostOut(BaseModel):
     # The active agent conversation for this post (if any) — drives "click post →
     # resume the chat" on the detail page. None ⇒ open a fresh session.
     active_conversation_id: UUID | None = None
+    # The pre-publish review as it stands now: fresh checks, plus the last
+    # scores if the agent has reviewed it. Detail responses only — the board
+    # lists many posts and shows none of it.
+    assessment: PublishAssessment | None = None
 
 
 def _post_out(
@@ -1090,10 +1096,15 @@ def _post_out(
     fmt: tuple[str, str] | None = None,
     thumbnail_url: str = "",
     active_conversation_id: UUID | None = None,
+    with_assessment: bool = False,
 ) -> PostOut:
     """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
     return PostOut(
         active_conversation_id=active_conversation_id,
+        assessment=(
+            reassess(p.slides or [], p.caption, p.hashtags or [], p.last_assessment)
+            if with_assessment else None
+        ),
         id=p.id,
         project_id=p.project_id,
         plan_id=p.plan_id,
@@ -1191,7 +1202,7 @@ def _fmt_for(post: ContentPost, by_id: dict) -> tuple[str, str] | None:
 def _enrich_one(db: Session, post: ContentPost) -> PostOut:
     by_id = _format_map(db, post.project_id)
     thumb = _thumb_map(db, [post.id]).get(post.id, "")
-    return _post_out(post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb)
+    return _post_out(post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb, with_assessment=True)
 
 
 def _rerender_slides(post: ContentPost) -> None:
@@ -1262,6 +1273,7 @@ def get_post(
         fmt=_fmt_for(post, by_id),
         thumbnail_url=thumb,
         active_conversation_id=active_conversation_id,
+        with_assessment=True,
     )
 
 
@@ -2293,12 +2305,18 @@ async def discover_start(
     """
     _project_for_user(db, user, body.project_id)
     from service.apify import ApifyAPIError
+    from service.apify.policy import discover_run_input
     from service.apify.run_cache import apify_runs
+
+    try:
+        run_input = discover_run_input(body.actor_id, body.input_payload)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
     client = _apify_client_or_503()
     try:
         async with client as c:
-            run, reused = await apify_runs.start(c, body.actor_id, body.input_payload)
+            run, reused = await apify_runs.start(c, body.actor_id, run_input)
     except ApifyAPIError as exc:
         raise HTTPException(exc.status_code or 502, exc.message) from exc
     except ValueError as exc:

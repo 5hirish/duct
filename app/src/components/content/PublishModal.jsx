@@ -11,15 +11,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  getPost,
   listLinkedAccounts,
   listSocialAccounts,
   publishPost,
 } from "@/lib/contentApi";
 import { PLATFORM_LABELS } from "@/lib/contentEnums";
 import { friendlyErrorMessage } from "@/lib/agentSession";
+import PublishReviewPanel from "./PublishReviewPanel";
 
 /**
  * Publish flow:
+ *   0. The pre-publish review, read fresh: the checks as the post stands and
+ *      the agent's last score. Advice — nothing below waits on it.
  *   1. Pick one or more connected accounts
  *   2. (Optional) pick a schedule time
  *   3. Submit → backend uploads images to PostBridge + creates the post
@@ -39,6 +43,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   const [loading, setLoading]       = useState(false);
   const [error,   setError]         = useState("");
   const [stage,   setStage]         = useState("");  // "" | "loading" | "publishing" | "done"
+  const [assessment, setAssessment] = useState(null);
 
   // Group accounts by platform for the select grid
   const grouped = useMemo(() => {
@@ -53,12 +58,16 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
     let cancelled = false;
     (async () => {
       try {
-        const [list, linked] = await Promise.all([
+        const [list, linked, fresh] = await Promise.all([
           listSocialAccounts(post.project_id),
           listLinkedAccounts(post.project_id).catch(() => []),
+          // Re-read, not the page's copy: edits committed since the page
+          // loaded change the checks. A failed read only loses the review.
+          getPost(post.id).catch(() => null),
         ]);
         if (cancelled) return;
         setAccounts(list || []);
+        setAssessment(fresh?.assessment || null);
         const availableIds = new Set((list || []).map(a => a.id));
         const linkedIds = (linked || [])
           .map(a => Number(a.account_id))
@@ -78,7 +87,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [open, post?.project_id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, post?.project_id, post?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!open) return null;
 
@@ -152,6 +161,8 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
 
           {stage !== "loading" && stage !== "done" && (
             <>
+              <PublishReviewPanel assessment={assessment} compact />
+
               {!hasAccounts && (
                 <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs">
                   <Trans>

@@ -107,6 +107,13 @@ class ContentPost(SQLModel, table=True):
         default_factory=list,
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
+    # The latest pre-publish review the agent scored (PublishAssessment), NULL
+    # until one runs. Read through agents/content/assessment.reassess, never
+    # served raw: its checks are recomputed against the post as it is now.
+    last_assessment: dict | None = Field(
+        default=None,
+        sa_column=Column(json_column(), nullable=True),
+    )
     notes: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     # The TikTok this post was cloned from (issue #222): the saved
     # discovered_reference asset, its URL and author, why it worked, and the

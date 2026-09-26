@@ -109,6 +109,7 @@ FRAMEWORK_FREE: tuple[str, ...] = (
     "agents/content/schema.py",
     "agents/content/prompts.py",
     "agents/content/artifacts.py",
+    "agents/content/assessment.py",
     # The two session runners: what they own is tools, prompts, limits and
     # hooks, and none of that needs a framework symbol. If one of them grows a
     # harness import again, the shared session has a gap — fill it there.
@@ -118,6 +119,7 @@ FRAMEWORK_FREE: tuple[str, ...] = (
     "agents/content/subagents/draft_post.py",
     "agents/content/subagents/general_purpose.py",
     "agents/content/subagents/research_pillar.py",
+    "agents/content/subagents/review_post.py",
     "agents/insights/schema.py",
 )
 

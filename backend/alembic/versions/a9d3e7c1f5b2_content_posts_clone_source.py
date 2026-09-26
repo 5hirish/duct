@@ -1,7 +1,7 @@
 """content_posts: the reference a post was cloned from
 
 Revision ID: a9d3e7c1f5b2
-Revises: b7c3e9a1d2f4
+Revises: b336354c84b5
 Create Date: 2026-09-26 00:00:00.000000
 
 A post cloned from a pasted TikTok (issue #222) records its source: the saved
@@ -21,7 +21,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = 'a9d3e7c1f5b2'
-down_revision = 'b7c3e9a1d2f4'
+down_revision = 'b336354c84b5'
 branch_labels = None
 depends_on = None
 

@@ -62,6 +62,7 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
+import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
@@ -439,9 +440,48 @@ const TOOL_TRAFFIC = [
   returned("GetArtifact", "t9", { artifact_id: "a1", title: "Organic growth, week of 8 Sept", kind: "brief", version: 3 }),
   use("FetchPages", "t10", { urls: ["https://acme.io/", "https://acme.io/pricing", "https://acme.io/blog/launch"] }),
   returned("FetchPages", "t10", { pages: [{ url: "https://acme.io/" }, { url: "https://acme.io/pricing" }], errors: ["https://acme.io/blog/launch: 404"] }),
+  use("submit_assessment", "t12", { markers: [], notes: "" }),
+  returned("submit_assessment", "t12", { status: "ok", post_id: "p1", topic: "Why your colours look off", overall: 56, band: "needs_work" }),
   use("publish_post", "t11", { post_id: "p1" }),
   returned("publish_post", "t11", { status: "ok", post_id: "p1", post_bridge_post_id: "pb1", status_label: "scheduled", scheduled_at: "2026-09-23T09:00:00Z" }),
 ];
+
+// A post's pre-publish review as `PostOut.assessment` carries it. Ids only —
+// the panel words them — and the scores already weighed by the server.
+const REVIEW_CHECKS = [
+  { id: "slides_have_images", passed: true, severity: "hard", offenders: [] },
+  { id: "images_fresh", passed: true, severity: "hard", offenders: [] },
+  { id: "slides_have_headlines", passed: true, severity: "hard", offenders: [] },
+  { id: "caption_present", passed: true, severity: "hard", offenders: [] },
+  { id: "caption_length", passed: true, severity: "soft", offenders: [] },
+  { id: "no_placeholder_text", passed: true, severity: "hard", offenders: [] },
+  { id: "hashtags_present", passed: true, severity: "soft", offenders: [] },
+  { id: "hashtags_unique", passed: true, severity: "soft", offenders: [] },
+];
+const failing = (overrides) => REVIEW_CHECKS.map((c) => (overrides[c.id] ? { ...c, passed: false, offenders: overrides[c.id] } : c));
+const REVIEW_MARKERS = [
+  { id: "hook_strength", score: 58, weight: 0.25, verdict: "Reads as advice, not a confession.", why: "", fix: "Open on the $300 appointment: \"I paid a colourist $300 to tell me what a free app did in 30 seconds.\"" },
+  { id: "narrative_momentum", score: 74, weight: 0.2, verdict: "Slide 2 opens a real loop.", why: "", fix: "Hold the third finding back until slide 5; slide 4 gives it away." },
+  { id: "save_worthiness", score: 81, weight: 0.2, verdict: "The vein test on slide 3 is screenshot-worthy.", why: "", fix: "" },
+  { id: "shareability_resonance", score: 66, weight: 0.15, verdict: "Relatable, a little generic.", why: "", fix: "Name the moment: the wedding photo where the dress looked grey." },
+  { id: "visual_quality", score: 52, weight: 0.12, verdict: "The caption sits on her face on slide 4.", why: "", fix: "Move slide 4's caption to the top safe area, or switch it to the pill style." },
+  { id: "cta_caption_fit", score: 70, weight: 0.08, verdict: "Save CTA is clear.", why: "", fix: "Tie the follow to a named next post: the undertone test for jewellery." },
+];
+const REVIEW_SCORED = {
+  overall: 56, content_score: 67, band: "needs_work", stale: false,
+  scored_at: new Date(Date.now() - 4 * 60_000).toISOString(),
+  notes: "A strong middle held back by a soft hook and one caption over a face.",
+  markers: REVIEW_MARKERS,
+  checks: failing({ images_fresh: ["slide-04"], hashtags_unique: ["#colouranalysis"] }),
+};
+const REVIEW_STALE = {
+  ...REVIEW_SCORED, overall: 67, stale: true, checks: REVIEW_CHECKS,
+  scored_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
+};
+const REVIEW_UNSCORED = {
+  overall: null, content_score: null, band: null, stale: false, scored_at: "", notes: "", markers: [],
+  checks: failing({ slides_have_images: ["slide-03", "slide-06"], caption_present: [], no_placeholder_text: ["slide-02", "caption"] }),
+};
 
 // The run's own notice comes first: it is what the opening turn was built
 // from, before any tool ran.
@@ -1787,6 +1827,54 @@ export const SCENES = [
     render: () => (
       <div style={{ height: 640, display: "flex" }}>
         <PlanKanban plan={STORY_PLAN} postsById={STORY_POSTS} />
+      </div>
+    ),
+  },
+  {
+    id: "publish-review-scored",
+    state: "scored 56, needs work · one hard and one soft failure · fixes under every marker",
+    group: "PublishReviewPanel",
+    title: "Pre-publish review, in the post pane",
+    note: "What the post pane shows once the agent has scored the post. The score is the server's: the six markers at its own weights, less a penalty per failed check, so fixing the caption here raises the number without another model call. Check that hard failures (red) list before soft ones (amber), that a long fix wraps under its bar rather than widening the row, and that Review again is there only because a session is open.",
+    render: () => (
+      <div style={{ maxWidth: 672, padding: 20 }}>
+        <PublishReviewPanel assessment={REVIEW_SCORED} onReview={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "publish-review-stale",
+    state: "scored, then the post was edited · every check passes",
+    group: "PublishReviewPanel",
+    title: "A score from before the last edit",
+    note: "The checks are recomputed on every read, so they are current; the reviewer's judgement is not, and the amber line says so. The read-only detail page has no session, so there is no Review again button.",
+    render: () => (
+      <div style={{ maxWidth: 672, padding: 20 }}>
+        <PublishReviewPanel assessment={REVIEW_STALE} />
+      </div>
+    ),
+  },
+  {
+    id: "publish-review-dialog",
+    state: "compact cut · the two weakest fixes",
+    group: "PublishReviewPanel",
+    title: "In the publish dialog",
+    note: "The last look before posting: score, failed checks, the two biggest fixes. Nothing here disables the publish button below it, and the subtitle says so.",
+    render: () => (
+      <div style={{ maxWidth: 512, padding: 20 }}>
+        <PublishReviewPanel assessment={REVIEW_SCORED} compact />
+      </div>
+    ),
+  },
+  {
+    id: "publish-review-unscored",
+    state: "never reviewed · checks only · no session",
+    group: "PublishReviewPanel",
+    title: "Checks without a score",
+    note: "What the publish dialog shows for a post the agent never reviewed: the server's checks, and how to get a score. In a live session the post pane shows a Review before publishing button instead, once every slide has its image.",
+    render: () => (
+      <div style={{ maxWidth: 512, padding: 20 }}>
+        <PublishReviewPanel assessment={REVIEW_UNSCORED} compact />
       </div>
     ),
   },
