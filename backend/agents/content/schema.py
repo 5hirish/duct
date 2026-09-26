@@ -418,6 +418,7 @@ class ContentTool(StrEnum):
     RENDER_SLIDE                = "render_slide"
     GENERATE_IMAGE              = "generate_image"
     EDIT_IMAGE                  = "edit_image"
+    SUBMIT_ASSESSMENT           = "submit_assessment"
     PUBLISH_POST                = "publish_post"
     MARK_POSTED                 = "mark_posted"
     LOG_METRICS                 = "log_metrics"
@@ -606,6 +607,115 @@ class PlanDraft(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Pre-publish review — deterministic checks plus six markers the reviewer
+# scores. The scoring math and the marker weights are in
+# agents/content/assessment.py. Every id below crosses the wire: the app words
+# them (app/src/lib/contentReview.js), so the backend sends ids, never labels.
+# ---------------------------------------------------------------------------
+
+
+class ReviewMarker(StrEnum):
+    """The six signals a carousel's reach turns on, as the reviewer scores them."""
+
+    HOOK_STRENGTH          = "hook_strength"
+    NARRATIVE_MOMENTUM     = "narrative_momentum"
+    SAVE_WORTHINESS        = "save_worthiness"
+    SHAREABILITY_RESONANCE = "shareability_resonance"
+    VISUAL_QUALITY         = "visual_quality"
+    CTA_CAPTION_FIT        = "cta_caption_fit"
+
+
+class SanityCheckId(StrEnum):
+    """One deterministic check each, and one way for each to fail — which is
+    why the caption and the hashtags are two checks apiece: the app can say
+    what is wrong from the id alone."""
+
+    SLIDES_HAVE_IMAGES    = "slides_have_images"
+    IMAGES_FRESH          = "images_fresh"
+    SLIDES_HAVE_HEADLINES = "slides_have_headlines"
+    CAPTION_PRESENT       = "caption_present"
+    CAPTION_LENGTH        = "caption_length"
+    NO_PLACEHOLDER_TEXT   = "no_placeholder_text"
+    HASHTAGS_PRESENT      = "hashtags_present"
+    HASHTAGS_UNIQUE       = "hashtags_unique"
+
+
+class CheckSeverity(StrEnum):
+    """How much a failure costs the overall: HARD ships a broken post (a slide
+    with no image, no caption), SOFT ships a weaker one (no hashtags)."""
+
+    HARD = "hard"
+    SOFT = "soft"
+
+
+class ReviewBand(StrEnum):
+    STRONG     = "strong"
+    GOOD       = "good"
+    NEEDS_WORK = "needs_work"
+    NOT_READY  = "not_ready"
+
+
+class MarkerScore(BaseModel):
+    """One marker as the reviewer scores it — and everything it may say.
+
+    There is no weight here on purpose: this is the argument schema of
+    submit_assessment, so a model cannot send one, and an extra key is dropped
+    rather than trusted. The server stamps the weight (``ContentMarker``).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: ReviewMarker
+    score: int = Field(ge=0, le=100, description="0-100. 90+ exceptional, 70-89 strong, 50-69 mixed, 30-49 weak, below 30 broken.")
+    verdict: str = Field("", description="One line: the judgement.")
+    why: str = Field("", description="The evidence, naming slides.")
+    fix: str = Field("", description="The single most valuable concrete change.")
+
+
+class ContentMarker(MarkerScore):
+    """A scored marker with the weight the server gave it."""
+
+    weight: float = 0.0
+
+
+class SanityCheck(BaseModel):
+    """One deterministic check. Advisory: a failure is shown and costs points;
+    it never disables Publish. ``offenders`` names what failed — slide ids,
+    ``caption``, or the repeated hashtags — so the fix can be pointed at."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: SanityCheckId
+    passed: bool
+    severity: CheckSeverity = CheckSeverity.HARD
+    offenders: list[str] = Field(default_factory=list)
+
+
+class PublishAssessment(BaseModel):
+    """A post's pre-publish review. Stored whole in ``content_posts.last_assessment``
+    when the agent scores it; served re-read against the post as it is now
+    (``assessment.reassess``), so the checks are always current.
+
+    ``overall`` / ``content_score`` / ``band`` are None until the post has been
+    scored. ``stale`` is true when the post changed after the markers were
+    scored — the checks cannot be stale, the reviewer's judgement can.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    overall: int | None = None
+    content_score: int | None = None
+    band: ReviewBand | None = None
+    markers: list[ContentMarker] = Field(default_factory=list)
+    checks: list[SanityCheck] = Field(default_factory=list)
+    notes: str = ""
+    scored_at: str = ""
+    # Digest of the slides, caption and hashtags that were scored.
+    fingerprint: str = ""
+    stale: bool = False
+
+
+# ---------------------------------------------------------------------------
 # Convenience for session construction
 # ---------------------------------------------------------------------------
 
@@ -635,9 +745,11 @@ __all__ = [
     "Avatar",
     "AvatarRefCell",
     "Character",
+    "CheckSeverity",
     "ContentAnswerRequest",
     "ContentBrandContext",
     "ContentChatMessage",
+    "ContentMarker",
     "ContentPillar",
     "ContentResearchContext",
     "ContentSession",
@@ -645,6 +757,7 @@ __all__ = [
     "Day",
     "DraftPostRequest",
     "ImagePrompt",
+    "MarkerScore",
     "Perf",
     "POST_TYPES",
     "PillarHistorySignal",
@@ -652,7 +765,12 @@ __all__ = [
     "PlanRequest",
     "PlanStrategy",
     "PostDraft",
+    "PublishAssessment",
+    "ReviewBand",
+    "ReviewMarker",
     "RunMode",
+    "SanityCheck",
+    "SanityCheckId",
     "Slide",
     "SlideItem",
     "SlideLayout",

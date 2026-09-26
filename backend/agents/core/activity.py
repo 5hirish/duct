@@ -476,6 +476,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "submit_plan": (_action_start, _action_finish),
     "submit_post_draft": (_action_start, _action_finish),
     "edit_slide": (_action_start, _action_finish),
+    "submit_assessment": (_action_start, _action_finish),
     "publish_post": (_action_start, _action_finish),
     "mark_posted": (_action_start, _action_finish),
     "log_metrics": (_action_start, _action_finish),

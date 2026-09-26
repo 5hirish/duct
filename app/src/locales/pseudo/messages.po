@@ -278,6 +278,10 @@ msgstr ""
 msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{label} score"
+msgstr ""
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{landingPages, plural, one {# landing page} other {# landing pages}}"
 msgstr ""
@@ -360,6 +364,10 @@ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{passCount} passing"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{passed} of {total} checks pass"
 msgstr ""
 
 #: src/components/content/PostViewport.jsx
@@ -906,6 +914,10 @@ msgstr ""
 msgid "Advanced"
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Advice only, publish either way"
+msgstr ""
+
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/execute/page.jsx
 msgid "agent"
@@ -964,6 +976,10 @@ msgstr ""
 #: src/app/(app)/artifacts/page.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "All"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "All {total} checks pass"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -1434,6 +1450,10 @@ msgstr ""
 msgid "Big Bets"
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Biggest fixes"
+msgstr ""
+
 #: src/components/AppSidebar.jsx
 msgid "Blocked"
 msgstr ""
@@ -1557,6 +1577,10 @@ msgstr ""
 msgid "Calendar"
 msgstr ""
 
+#: src/lib/contentReview.js
+msgid "Call to action"
+msgstr ""
+
 #: src/components/GoogleAdsReport.js
 msgid "Campaign"
 msgstr ""
@@ -1599,6 +1623,10 @@ msgstr ""
 
 #: src/components/content/PostViewport.jsx
 msgid "Caption"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Caption is longer than Instagram allows"
 msgstr ""
 
 #: src/components/content/StyleGallery.jsx
@@ -3114,6 +3142,7 @@ msgid "Go to Sign In"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
+#: src/lib/contentReview.js
 msgid "Good"
 msgstr ""
 
@@ -3319,6 +3348,10 @@ msgstr ""
 msgid "High volume, low judgement"
 msgstr ""
 
+#: src/lib/contentReview.js
+msgid "Hook"
+msgstr ""
+
 #: src/components/content/StyleGallery.jsx
 msgid "Hooks"
 msgstr ""
@@ -3414,6 +3447,10 @@ msgstr ""
 #: src/components/insights/desk/DeskLists.jsx
 #: src/lib/contentEnums.js
 msgid "Image"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Image older than its prompt on {at}"
 msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
@@ -4092,6 +4129,10 @@ msgstr ""
 msgid "Models & providers"
 msgstr ""
 
+#: src/lib/contentReview.js
+msgid "Momentum"
+msgstr ""
+
 #: src/components/content/PlanBoard.jsx
 msgid "Month"
 msgstr ""
@@ -4154,6 +4195,10 @@ msgstr ""
 
 #: src/app/(app)/connections/page.jsx
 msgid "Needed only if the token lacks business_management (no account discovery)."
+msgstr ""
+
+#: src/lib/contentReview.js
+msgid "Needs work"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
@@ -4271,6 +4316,7 @@ msgid "no canonical"
 msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PublishReviewPanel.jsx
 msgid "No caption"
 msgstr ""
 
@@ -4308,6 +4354,18 @@ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "No H1"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "No hashtags"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "No headline on {at}"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "No image on {at}"
 msgstr ""
 
 #: src/components/models/ModelPicker.jsx
@@ -4495,6 +4553,10 @@ msgstr ""
 msgid "Not published"
 msgstr ""
 
+#: src/lib/contentReview.js
+msgid "Not ready"
+msgstr ""
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "Not recorded"
 msgstr ""
@@ -4525,6 +4587,10 @@ msgstr ""
 
 #: src/components/content/PostViewport.jsx
 msgid "Not scheduled"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Not scored yet. Revise with Duct and ask for a review to get one."
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
@@ -5085,6 +5151,10 @@ msgstr ""
 msgid "Pipeline stopped early: {error} — your partial report is still available above."
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Placeholder text on {at}"
+msgstr ""
+
 #: src/app/(app)/content/page.jsx
 msgid "plan"
 msgstr ""
@@ -5167,6 +5237,10 @@ msgstr ""
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Pre-publish review"
 msgstr ""
 
 #: src/components/commands/AppCommands.jsx
@@ -5655,6 +5729,10 @@ msgstr ""
 msgid "Rendering diagram…"
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Repeated hashtags: {at}"
+msgstr ""
+
 #: src/components/audit/AuditWorkspace.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/LocalInsightDetail.jsx
@@ -5782,11 +5860,24 @@ msgid "Reversible changes on the allowlist apply on their own; the rest waits he
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PublishReviewPanel.jsx
 msgid "Review"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Review again"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Review before publishing"
 msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Review what changed"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Reviewed the post"
 msgstr ""
 
 #: src/components/audit/AuditReport.jsx
@@ -5942,6 +6033,10 @@ msgstr ""
 msgid "Save project"
 msgstr ""
 
+#: src/lib/contentReview.js
+msgid "Save-worthiness"
+msgstr ""
+
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/settings/profile/page.jsx
 #: src/components/content/AccountsTab.jsx
@@ -6058,6 +6153,10 @@ msgstr ""
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "score {scoreBefore} → {scoreAfter}"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Scored {scoredAgo} · advice only, publish either way"
 msgstr ""
 
 #: src/components/audit/AuditReport.jsx
@@ -6327,6 +6426,10 @@ msgstr ""
 msgid "Share this report"
 msgstr ""
 
+#: src/lib/contentReview.js
+msgid "Shareability"
+msgstr ""
+
 #: src/app/(app)/projects/page.jsx
 msgid "Shared by {owner}"
 msgstr ""
@@ -6543,6 +6646,10 @@ msgstr ""
 msgid "Skipping is fine — Duct will say what it couldn’t check."
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "slide {n}"
+msgstr ""
+
 #: src/components/content/SlidesCarousel.jsx
 msgid "Slide {n}"
 msgstr ""
@@ -6732,6 +6839,10 @@ msgstr ""
 
 #: src/components/connections/logos.jsx
 msgid "Stripe"
+msgstr ""
+
+#: src/lib/contentReview.js
+msgid "Strong"
 msgstr ""
 
 #: src/components/content/PlanViewport.jsx
@@ -6965,6 +7076,10 @@ msgstr ""
 msgid "The backend that runs inside the app is not answering. Quitting and reopening Duct restarts it."
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "the caption"
+msgstr ""
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The ChatGPT sign-in has lapsed"
 msgstr ""
@@ -7011,6 +7126,10 @@ msgstr ""
 
 #: src/components/audit/AuditReport.jsx
 msgid "The pipeline stopped early — your partial results are still visible above."
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "The post changed after this score."
 msgstr ""
 
 #: src/components/onboarding/ProviderStep.jsx
@@ -7601,6 +7720,10 @@ msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Visual identity"
+msgstr ""
+
+#: src/lib/contentReview.js
+msgid "Visuals"
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx

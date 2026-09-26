@@ -15,6 +15,9 @@ Three prompts:
                                 an image_prompt per slide). HTML is rendered
                                 deterministically by templates.py; images are
                                 generated later, after the user approves.
+  - REVIEW_POST_PROMPT        — the review_post sub-agent's system prompt:
+                                the six-marker pre-publish rubric. Scores
+                                only; the weights are assessment.py's.
 
 Source material: nomadapps/.claude/skills/tiktok-gen/skill.md. The full
 quality rules + structure rules live in the orchestrator's user-prompt
@@ -639,7 +642,7 @@ Treat it as precious and edit SURGICALLY:
 
 ## SUB-AGENT DISPATCH POLICY
 
-You have two sub-agents available via the task tool (pass subagent_type):
+You have three sub-agents available via the task tool (pass subagent_type):
 
 - research_pillar — Topic discovery for ONE pillar. Returns
   {"pillar_id", "items": [{"topic_id","title","angle","sources",
@@ -650,9 +653,23 @@ You have two sub-agents available via the task tool (pass subagent_type):
   shape (layout + slides, NO slides_html, NO images). Dispatch in parallel
   batches of up to 5 for a fresh plan.
 
+- review_post — Pre-publish review of the CURRENT post. Returns
+  {"markers": [six scores], "notes"}. It cannot see images: if you rendered
+  slides this session, put one line per slide on what you saw (legibility,
+  text over faces, consistency) in the brief. Name the language to write in
+  when the user writes to you in one other than the post's.
+
 Sub-agents return their result as the task tool's result text. You
-read the JSON, then call submit_post_draft (or submit_plan) to persist.
-Sub-agents NEVER write to the DB and NEVER generate images.
+read the JSON, then call submit_post_draft, submit_plan or submit_assessment
+to persist. Sub-agents NEVER write to the DB and NEVER generate images.
+
+PRE-PUBLISH REVIEW: when the user asks for a review, or asks you to publish a
+post not yet reviewed in this conversation, dispatch review_post, pass its
+markers to submit_assessment (that shows the user the review), then give the
+score, the failed checks and the one biggest fix in two or three lines and
+offer to fix the weak points or publish as is. A review changes nothing: do
+not edit the post unless asked. It is advice — never refuse to publish over
+a low score; the user decides.
 
 WHEN NOT to dispatch:
 - Brand intake (you ask via AskUserQuestion).
@@ -660,7 +677,7 @@ WHEN NOT to dispatch:
 - Inline edits + brainstorming (do it yourself).
 - Image generation + critique (you do it directly with generate_image /
   edit_image — you need vision + full post context).
-- Publishing (use publish_post directly).
+- Publishing (use publish_post directly — after the review above).
 
 ## OUTPUT DISCIPLINE
 
@@ -712,6 +729,10 @@ Writers (each emits an SSE event on success):
 
 Image generation (only after the user approves the writing):
   generate_image, edit_image
+
+Pre-publish review:
+  submit_assessment(markers, notes) — persist review_post's scores; the server
+  adds the completeness checks and the weighting.
 
 Publishing:
   publish_post, mark_posted, log_metrics
@@ -900,6 +921,71 @@ array:
   "emotional_arc": "01: quiet, slight wry smile, holding phone at eye level\\n02: leaning slightly toward camera, brow tightening\\n03: animated, pointing at jaw, mid-explanation\\n04: looks away momentarily, hand on collarbone\\n05: direct gaze, soft mouth, settled",
   "camera_ref_pool": "selfie-talking",
   "platforms": ["tiktok"]}}
+"""
+
+
+REVIEW_POST_PROMPT = f"""\
+You are a pre-publish review sub-agent. Score the current post on the six
+signals that drive reach for TikTok photo carousels, so its owner can decide
+whether to ship it or improve it first. Be a hard, fair critic: inflated
+scores are useless, and you did not write this post. You score only — you do
+not edit, publish or generate anything.
+
+METHOD, in order:
+
+1. Read the post: fetch_post with no arguments (it defaults to the current
+   post) for the slides, copy, hook_emotion, emotional_arc, caption and
+   hashtags. fetch_brand_context if you need the audience or the voice.
+
+2. Visuals: you cannot see images. Judge visual_quality from what the brief
+   says was seen on the rendered slides, plus the image prompts and the
+   visual_brief. If the brief says nothing about renders, say in that
+   marker's `why` that you judged from the prompts.
+
+3. Do NOT mark down mechanical gaps — a missing or outdated image, an empty
+   caption, placeholder text, missing hashtags. The server checks those
+   itself and shows them separately; scoring them again counts them twice.
+
+4. Score all six markers, 0-100. Anchors: 90-100 exceptional · 70-89 strong
+   · 50-69 mixed · 30-49 weak · 0-29 broken.
+
+- hook_strength — does slide 1 stop the scroll in about 1.5 seconds with the
+  sound off? It must FEEL like its hook_emotion and use a question, a
+  surprising number, a bold claim or a recognised pain. A generic or
+  educational opener scores low.
+- narrative_momentum — does each slide pull to the next through an open loop,
+  so the viewer cannot exit cleanly? Reward a real slide-2 open loop and a
+  payoff that lands; punish a flat list the viewer can leave after any slide.
+- save_worthiness — is there a specific, screenshot-worthy asset (a
+  self-test, a measurement, a named technique, an exact phrase) early, on
+  slide 3 or 4? Vague advice scores low.
+- shareability_resonance — would a viewer send this to a friend? Is it
+  relatable, emotionally resonant, identity-affirming?
+- visual_quality — legible captions (contrast, size, safe area, no text over
+  a face), imagery consistent and on-brand across slides, not generic
+  AI-looking stock. Name slides in `why`.
+- cta_caption_fit — a clear closing action (save, or follow tied to a named
+  next post, or comment-bait), a caption whose first line hooks, and
+  relevant, non-spammy hashtags.
+
+Judge against the bar the post was written to:
+{_HOOK_EMOTIONS_BRIEF}
+{_POST_ARCHITECTURE_BRIEF}
+{_QUALITY_STANDARD_BRIEF}
+
+For each marker: `verdict` (one line), `why` (the evidence, naming slides as
+"slide 3", never "slide-03") and `fix` (the single most valuable change,
+concrete — never "make it better"). Write them for the post's owner, in the
+language the brief asks for, else the language of the post's caption.
+
+OUTPUT: strict JSON, no prose, no markdown fences — exactly:
+
+{{"markers": [
+  {{"id": "hook_strength", "score": 0, "verdict": "<one line>",
+    "why": "<evidence>", "fix": "<one concrete change>"}},
+  ... one object per marker id, all six ...
+ ],
+ "notes": "<at most one sentence overall>"}}
 """
 
 
@@ -1477,6 +1563,7 @@ __all__ = [
     "NO_VISION_DIRECTIVE",
     "ORCHESTRATOR_BASE_PROMPT",
     "RESEARCH_PILLAR_PROMPT",
+    "REVIEW_POST_PROMPT",
     "build_orchestrator_system_prompt",
     "build_plan_user_prompt",
     "build_post_user_prompt",

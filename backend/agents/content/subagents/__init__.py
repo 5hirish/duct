@@ -7,7 +7,7 @@ runner picks which tool objects each sub-agent gets (by ``ContentTool`` name)
 and which model it runs on; the spec says what the sub-agent is for.
 
 The orchestrator dispatches them through the harness's ``task`` tool and reads
-their final message as the tool result. Neither writes to the DB and neither
+their final message as the tool result. None writes to the DB and none
 generates images — the orchestrator persists through the writer tools.
 
 build_slides_html was retired when slide HTML moved to a deterministic Python
@@ -30,6 +30,11 @@ from agents.content.subagents.research_pillar import (
     RESEARCH_PILLAR_TOOLS,
     build_research_pillar_subagent,
 )
+from agents.content.subagents.review_post import (
+    REVIEW_POST_SUBAGENT,
+    REVIEW_POST_TOOLS,
+    build_review_post_subagent,
+)
 
 __all__ = [
     "DRAFT_POST_SUBAGENT",
@@ -38,7 +43,10 @@ __all__ = [
     "GENERAL_PURPOSE_TOOLS",
     "RESEARCH_PILLAR_SUBAGENT",
     "RESEARCH_PILLAR_TOOLS",
+    "REVIEW_POST_SUBAGENT",
+    "REVIEW_POST_TOOLS",
     "build_draft_post_subagent",
     "build_general_purpose_subagent",
     "build_research_pillar_subagent",
+    "build_review_post_subagent",
 ]
