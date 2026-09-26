@@ -62,6 +62,7 @@ from agents.content.artifacts import (
     parse_artifact_json,
 )
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
+from agents.content.performance import AccountPerformance, load_account_performance
 from agents.core.events import run_context
 from agents.content.prompts import (
     build_orchestrator_system_prompt,
@@ -299,6 +300,19 @@ def _voice_block(user_id) -> str:
     except Exception:  # noqa: BLE001 — a preference, never a blocker
         logger.warning("content: profile unavailable", exc_info=True)
         return ""
+
+async def _account_performance(project_id: UUID) -> AccountPerformance | None:
+    """What the account's own posts say, for the plan's opening turn.
+
+    None when it cannot be read: the prompt then says so rather than claiming
+    the account has no history, and the plan still gets made.
+    """
+    try:
+        return await asyncio.to_thread(load_account_performance, project_id)
+    except Exception:  # noqa: BLE001 — a signal for the plan, never a blocker
+        logger.warning("content: account performance unavailable", exc_info=True)
+        return None
+
 
 async def _memory_block(session: ContentSession, *, query: str = "", emit: EmitFn | None = None) -> str:
     """The project's memory digest for a content run, as a user-turn block.
@@ -577,7 +591,10 @@ class ContentRunner:
 
         async def _opening(brand: ContentBrandContext) -> str:
             research = await self._enrich_step(brand, emit, llm, session)
-            return build_plan_user_prompt(brand, history=[], formats=[], avatars=[], research=research)
+            performance = await _account_performance(project_id)
+            return build_plan_user_prompt(
+                brand, history=[], formats=[], avatars=[], research=research, performance=performance,
+            )
 
         await self._run_mode(
             session, emit,

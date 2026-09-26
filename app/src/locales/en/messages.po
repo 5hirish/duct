@@ -1428,6 +1428,10 @@ msgstr "being written"
 msgid "Best engagement"
 msgstr "Best engagement"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Best times"
+msgstr "Best times"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Between"
 msgstr "Between"
@@ -2434,6 +2438,10 @@ msgstr "Done"
 msgid "DONE FOR YOU"
 msgstr "DONE FOR YOU"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Doubling down on"
+msgstr "Doubling down on"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Download"
 msgstr "Download"
@@ -2757,6 +2765,10 @@ msgstr "Every entry names who did it, so the trail starts once there is an accou
 #: src/lib/userProfile.js
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr "Every measurement, the method, notes for whoever builds the fix"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Every type has results"
+msgstr "Every type has results"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Every version of it goes with it. This cannot be undone."
@@ -3406,6 +3418,7 @@ msgid "If a stranger asked what you do, what would you say?"
 msgstr "If a stranger asked what you do, what would you say?"
 
 #: src/components/insights/desk/DeskLists.jsx
+#: src/lib/contentEnums.js
 msgid "Image"
 msgstr "Image"
 
@@ -3616,6 +3629,10 @@ msgstr "Last checked {lastChecked}. {sourceCount, plural, one {# source connecte
 #: src/components/UpdateToast.jsx
 msgid "Later"
 msgstr "Later"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Learned"
+msgstr "Learned"
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Leave full screen"
@@ -4589,6 +4606,10 @@ msgstr "Nothing needs you right now."
 msgid "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
 msgstr "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Nothing proven yet"
+msgstr "Nothing proven yet"
+
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing ran in the last {windowDays} days"
 msgstr "Nothing ran in the last {windowDays} days"
@@ -5081,6 +5102,10 @@ msgstr "Plan"
 #: src/components/content/PlanBoard.jsx
 msgid "Plan {shortId}"
 msgstr "Plan {shortId}"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Plan strategy"
+msgstr "Plan strategy"
 
 #: src/lib/contentSchedule.js
 msgid "Planned"
@@ -6560,6 +6585,10 @@ msgstr "Slides preview"
 msgid "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
 msgstr "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
 
+#: src/lib/contentEnums.js
+msgid "Slideshow"
+msgstr "Slideshow"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Slug"
 msgstr "Slug"
@@ -6853,6 +6882,10 @@ msgstr "Technical"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Tell us who you are and what you do. This anchors every audit and report we generate."
 msgstr "Tell us who you are and what you do. This anchors every audit and report we generate."
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Testing"
+msgstr "Testing"
 
 #: src/components/content/StyleGallery.jsx
 msgid "Text cards"
@@ -7541,6 +7574,10 @@ msgstr "Version {version}"
 #: src/components/content/PostMiniCard.jsx
 msgid "via Duct"
 msgstr "via Duct"
+
+#: src/lib/contentEnums.js
+msgid "Video"
+msgstr "Video"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "View →"

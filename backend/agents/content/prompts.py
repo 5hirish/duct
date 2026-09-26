@@ -26,7 +26,10 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+from utils.formatting import number, percent
+
 if TYPE_CHECKING:
+    from agents.content.performance import AccountPerformance, Measure
     from agents.content.schema import (
         Avatar,
         ContentBrandContext,
@@ -506,7 +509,8 @@ in_progress / completed as you go. Use the real steps you're actually doing.
    fill the gaps. Then fetch_content_history + fetch_format_library +
    fetch_avatar_library so you know what's shipped + available styles.
 2. Plan mode (plan_month). Synthesize the plan: balanced pillar mix,
-   varied hooks, sensible post-type distribution. If topic bank is stale,
+   varied hooks, a post-type mix weighted by the account's own history (see
+   EXPLORE / EXPLOIT in the mode notes). If topic bank is stale,
    dispatch one research_pillar sub-agent PER PILLAR IN PARALLEL (single
    turn, multiple task tool calls). Compose the plan yourself and emit
    <duct_artifact>{"type":"plan",...}</duct_artifact>. Call submit_plan with
@@ -1017,13 +1021,23 @@ submit_plan to see what it accepts.
  "name": "October 2026 plan",
  "character": {"name": "...", "age_range": "22-28", "look": "...",
                "voice": "...", "notes": "..."},
+ "strategy": {"exploit": "video",
+              "exploit_evidence": "median completion 42% over 6 posts, slideshow 18% over 5",
+              "explore": "image",
+              "explore_evidence": "no image posts yet",
+              "lesson": "question hooks out-completed curiosity_gap 51% to 33%, so more of them",
+              "best_times": "Tue and Thu around 18:00 UTC (19:00 in Madrid)"},
  "days": [
    {"topic": "<topic title>", "pillar": "<pillar id>",
     "topic_id": "<id from research, optional>",
-    "post_type": "slideshow", "format_slug": "format-d",
-    "platforms": ["tiktok"]},
-   {"topic": "...", "pillar": "...", "post_type": "slideshow",
-    "format_slug": "", "platforms": ["tiktok"]}
+    "post_type": "video", "format_slug": "format-d",
+    "platforms": ["tiktok"],
+    "hook_type": "curiosity_gap", "funnel_stage": "awareness",
+    "objective": "saves"},
+   {"topic": "...", "pillar": "...", "post_type": "image",
+    "format_slug": "", "platforms": ["tiktok"],
+    "hook_type": "identity_challenge", "funnel_stage": "consideration",
+    "objective": "follows"}
  ]}
 
 FIELD RULES:
@@ -1032,7 +1046,37 @@ FIELD RULES:
   (a pillar id from the brand context); a plan with an empty day is rejected.
 - `post_type` ∈ {slideshow, video, image}; `platforms` from the brand's
   channels; `format_slug` from the format library or "".
+- `hook_type`, `funnel_stage` (awareness / consideration / conversion) and
+  `objective` are the bets each post makes. Fill all three: the next plan
+  grades them against what the posts earned.
+- `strategy.exploit` / `strategy.explore` name a post_type, or "" when there
+  is nothing to exploit (no history) or nothing left to test. The evidence
+  fields quote the numbers from <account_performance>, never invented ones.
 - `character` is the persona narrating the month; fill what you know.
+"""
+
+_EXPLORE_EXPLOIT_BRIEF = """\
+EXPLORE / EXPLOIT — the post-type mix comes from the account's own history,
+never a fixed ratio. The <account_performance> block in the opening turn has
+the numbers.
+- Rank on completion, saves and shares, never likes. An unproven type, or a
+  bet only a few posts measured, is a hint, not proof. A metric the block
+  says was not recorded is unknown, not zero.
+- EXPLOIT: the type the block names under `exploit` gets the largest share of
+  the plan.
+- EXPLORE: at least one post in every seven tests the first type under
+  `explore`. Never zero a type out for having no history; that is how it
+  never gets any.
+- No history yet: there is nothing to exploit. Spread the plan across the
+  types and let the next plan's numbers decide.
+- Past bets: repeat the hook_type, funnel_stage and objective that earned;
+  drop the ones that did not.
+- Best times: when the block lists windows, recommend them in
+  `strategy.best_times`. They are UTC; convert them when you know where the
+  audience is.
+Record the choice in `strategy`. It is shown to the person above the plan, so
+write it for them: the type you scale and the numbers that earned it, the type
+you test and why.
 """
 
 
@@ -1043,6 +1087,8 @@ def _mode_tail(mode: RunMode) -> str:
             "content plan (an ordered list of posts for the current month, no "
             "day numbers) as a PlanDraft wrapped in <duct_artifact>. Call "
             "submit_plan once after emitting the tag.\n\n"
+            + _EXPLORE_EXPLOIT_BRIEF
+            + "\n"
             + _PLANDRAFT_SHAPE
         ),
         "draft_post": (
@@ -1116,8 +1162,10 @@ def build_plan_user_prompt(
     formats: list[dict],
     avatars: list["Avatar | dict"],
     research: "ContentResearchContext | None" = None,
+    performance: "AccountPerformance | None" = None,
 ) -> str:
-    """Kickoff prompt for plan_month — includes brand stanza + research context."""
+    """Kickoff prompt for plan_month — brand, research, and the account's own
+    posting history (``performance``; None when it could not be read)."""
     history_lines = (
         "\n".join(
             f"  - day {h.get('day_index', '?')}: {h.get('topic', '')} "
@@ -1140,6 +1188,8 @@ def build_plan_user_prompt(
 {_brand_stanza(brand)}
 
 {_research_stanza(research)}
+
+{_performance_stanza(performance)}
 
 Plan a content calendar for the current month for {brand.project_name}.
 
@@ -1164,7 +1214,10 @@ Now:
 3. Synthesize the monthly plan: balanced pillar distribution favouring
    under-used pillars from pillar_history; varied hook EMOTIONS
    ({{frustration, shock, disbelief, anger, sadness}} — never twice in a
-   row); sensible post-type mix; narrative arc.
+   row); the post-type mix <account_performance> calls for (exploit the
+   leader, test the explore type at least once in every seven posts);
+   narrative arc. Tag every day with its hook_type, funnel_stage and
+   objective, and record the choice in `strategy`.
 
    ## 4-PART SERIES STRUCTURE (use whenever the pillar set allows)
 
@@ -1187,6 +1240,93 @@ Now:
    then call submit_plan with the same payload.
 5. Brief summary in chat: what the plan covers and what comes next.
 """
+
+
+_SIGNAL_NAMES = {"completion_rate": "completion", "saves": "saves", "shares": "shares", "views": "views"}
+
+
+def _measure_text(metric: str, measure: "Measure") -> str:
+    name = _SIGNAL_NAMES[metric]
+    if measure.median is None:
+        return f"{name} not recorded"
+    value = percent(measure.median) if metric == "completion_rate" else number(measure.median)
+    return f"{name} {value} ({measure.measured})"
+
+
+def _performance_stanza(perf: "AccountPerformance | None") -> str:
+    """Render the account's posting history as an <account_performance> block.
+
+    Per-project data, so it rides in the user turn. Unknown metrics are said
+    to be unknown in words — an absent number printed as 0 is how a model
+    concludes a format failed when nobody measured it.
+    """
+    from agents.content.performance import BET_DIMENSIONS, MIN_MEASURED_POSTS, RANKING_SIGNALS, UNTESTED, VIEWS
+
+    def block(lines: list[str]) -> str:
+        return "\n".join(["<account_performance>", *lines, "</account_performance>"])
+
+    if perf is None:
+        return block([
+            "  The posting history could not be read this run. Plan as if nothing is",
+            "  proven, and say so in strategy.",
+        ])
+    if not perf.has_history:
+        return block([
+            "  No published posts yet, so there is nothing to exploit. Spread the plan",
+            f"  across {', '.join(perf.explore)} so the next plan has evidence to weigh.",
+        ])
+
+    lines: list[str] = []
+    if perf.ranked_by:
+        lines.append(
+            f"  From the last {perf.posts} published posts, ranked by median "
+            f"{_SIGNAL_NAMES[perf.ranked_by]}. (n) is how many posts recorded the metric."
+        )
+    else:
+        lines.append(
+            f"  From the last {perf.posts} published posts. None recorded completion, saves\n"
+            "  or shares on enough posts to rank, so no type is proven yet."
+        )
+    lines.append("  post types:")
+    for group in perf.types:
+        if group.verdict == UNTESTED:
+            lines.append(f"    - {group.key} · untested · no posts yet")
+            continue
+        measures = " · ".join(
+            _measure_text(m, group.measures[m]) for m in (*RANKING_SIGNALS, VIEWS)
+        )
+        lines.append(f"    - {group.key} · {group.verdict} · {group.posts} posts · {measures}")
+
+    if perf.exploit:
+        lines.append(f"  exploit: {perf.exploit}")
+    else:
+        lines.append(f"  exploit: none yet (no type has {MIN_MEASURED_POSTS} measured posts)")
+    if perf.explore:
+        lines.append(f"  explore: {', '.join(perf.explore)}")
+    else:
+        lines.append("  explore: every type has evidence; spend the test slot on the least-tried hook_type")
+
+    if perf.ranked_by and any(perf.bets.get(d) for d in BET_DIMENSIONS):
+        lines.append(f"  past bets, ranked by {_SIGNAL_NAMES[perf.ranked_by]}:")
+        for dimension in BET_DIMENSIONS:
+            graded = perf.bets.get(dimension) or []
+            if graded:
+                entries = " | ".join(
+                    f"{g.key} {g.posts} posts, {_measure_text(perf.ranked_by, g.measures[perf.ranked_by])}"
+                    for g in graded
+                )
+                lines.append(f"    {dimension}: {entries}")
+
+    if perf.hours_utc or perf.weekdays:
+        lines.append(f"  best posting times, UTC, from {perf.timed_posts} posts with views:")
+        for label, windows in (("hours", perf.hours_utc), ("weekdays", perf.weekdays)):
+            if windows:
+                entries = " | ".join(
+                    f"{w.label} median {number(w.median_views)} views ({w.posts} posts)" for w in windows
+                )
+                lines.append(f"    {label}: {entries}")
+
+    return block(lines)
 
 
 def _research_stanza(research: "ContentResearchContext | None") -> str:
@@ -1277,6 +1417,15 @@ def build_post_user_prompt(
             f"topic={day.topic} · pillar={day.pillar} · "
             f"format_slug={day.format_slug} · post_type={day.post_type}"
         )
+        # The plan's bet for this slot, so the draft makes the bet the next
+        # plan will grade. Absent on plans made before bets were recorded.
+        bets = " · ".join(
+            f"{name}={value}"
+            for name, value in (("hook_type", day.hook_type), ("funnel_stage", day.funnel_stage), ("objective", day.objective))
+            if value
+        )
+        if bets:
+            target = f"{target} · {bets}"
     else:
         target = (
             f"Standalone draft · topic={topic or '(unspecified)'} · "

@@ -752,6 +752,7 @@ def build_content_tools_lc(
                     name=draft.name or f"{month_label} plan",
                     start_date=month_start,
                     character=draft.character.model_dump(mode="json"),
+                    strategy=draft.strategy.model_dump(mode="json"),
                     days=[d.model_dump(mode="json") for d in draft.days],
                     status="draft",
                 )
@@ -770,6 +771,7 @@ def build_content_tools_lc(
                         "start_date": row.start_date.isoformat() if row.start_date else None,
                         "days": row.days,
                         "character": row.character,
+                        "strategy": row.strategy,
                     },
                 })
                 return _ok_model(SubmitPlanResult(plan_id=str(row.id), days=len(draft.days)))

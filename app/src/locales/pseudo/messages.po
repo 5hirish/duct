@@ -1422,6 +1422,10 @@ msgstr ""
 msgid "Best engagement"
 msgstr ""
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Best times"
+msgstr ""
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Between"
 msgstr ""
@@ -2428,6 +2432,10 @@ msgstr ""
 msgid "DONE FOR YOU"
 msgstr ""
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Doubling down on"
+msgstr ""
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Download"
 msgstr ""
@@ -2750,6 +2758,10 @@ msgstr ""
 
 #: src/lib/userProfile.js
 msgid "Every measurement, the method, notes for whoever builds the fix"
+msgstr ""
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Every type has results"
 msgstr ""
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
@@ -3400,6 +3412,7 @@ msgid "If a stranger asked what you do, what would you say?"
 msgstr ""
 
 #: src/components/insights/desk/DeskLists.jsx
+#: src/lib/contentEnums.js
 msgid "Image"
 msgstr ""
 
@@ -3609,6 +3622,10 @@ msgstr ""
 #: src/components/ReloadToast.jsx
 #: src/components/UpdateToast.jsx
 msgid "Later"
+msgstr ""
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Learned"
 msgstr ""
 
 #: src/components/insights/InsightsWorkspace.jsx
@@ -4583,6 +4600,10 @@ msgstr ""
 msgid "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
 msgstr ""
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Nothing proven yet"
+msgstr ""
+
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing ran in the last {windowDays} days"
 msgstr ""
@@ -5074,6 +5095,10 @@ msgstr ""
 
 #: src/components/content/PlanBoard.jsx
 msgid "Plan {shortId}"
+msgstr ""
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Plan strategy"
 msgstr ""
 
 #: src/lib/contentSchedule.js
@@ -6554,6 +6579,10 @@ msgstr ""
 msgid "Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds."
 msgstr ""
 
+#: src/lib/contentEnums.js
+msgid "Slideshow"
+msgstr ""
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Slug"
 msgstr ""
@@ -6846,6 +6875,10 @@ msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Tell us who you are and what you do. This anchors every audit and report we generate."
+msgstr ""
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Testing"
 msgstr ""
 
 #: src/components/content/StyleGallery.jsx
@@ -7534,6 +7567,10 @@ msgstr ""
 #: src/components/content/PostCard.jsx
 #: src/components/content/PostMiniCard.jsx
 msgid "via Duct"
+msgstr ""
+
+#: src/lib/contentEnums.js
+msgid "Video"
 msgstr ""
 
 #: src/components/content/FormatLibrary.jsx

@@ -1457,6 +1457,10 @@ msgstr "wird geschrieben"
 msgid "Best engagement"
 msgstr "Beste Interaktion"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Best times"
+msgstr "Beste Zeiten"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Between"
 msgstr "Zwischen"
@@ -2466,6 +2470,10 @@ msgstr "Fertig"
 msgid "DONE FOR YOU"
 msgstr "FÜR DICH ERLEDIGT"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Doubling down on"
+msgstr "Fokus auf"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Download"
 msgstr "Herunterladen"
@@ -2832,6 +2840,10 @@ msgstr ""
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr ""
 "Jede Messung, die Methode, Notizen für denjenigen, der die Korrektur erstellt"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Every type has results"
+msgstr "Jeder Typ hat Ergebnisse"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Every version of it goes with it. This cannot be undone."
@@ -3507,7 +3519,7 @@ msgstr "Identität"
 msgid "If a stranger asked what you do, what would you say?"
 msgstr "Wenn dich ein Fremder fragt, was du machst, was würdest du sagen?"
 
-#: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/desk/DeskLists.jsx src/lib/contentEnums.js
 msgid "Image"
 msgstr "Bild"
 
@@ -3723,6 +3735,10 @@ msgstr ""
 #: src/components/audit/AuditReportV1.jsx src/components/ReloadToast.jsx src/components/UpdateToast.jsx
 msgid "Later"
 msgstr "Später"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Learned"
+msgstr "Gelernt"
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Leave full screen"
@@ -4697,6 +4713,10 @@ msgid ""
 msgstr ""
 "Noch nichts vorgeschlagen. Führe ein Audit oder eine Erkenntnis-Sitzung aus, und die Korrekturen landen hier zur Freigabe."
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Nothing proven yet"
+msgstr "Noch nichts bewiesen"
+
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing ran in the last {windowDays} days"
 msgstr "Nichts wurde in den letzten {windowDays} Tagen ausgeführt"
@@ -5213,6 +5233,10 @@ msgstr "Plan"
 #: src/components/content/PlanBoard.jsx
 msgid "Plan {shortId}"
 msgstr "Plan {shortId}"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Plan strategy"
+msgstr "Strategie des Plans"
 
 #: src/lib/contentSchedule.js
 msgid "Planned"
@@ -6712,6 +6736,10 @@ msgid ""
 msgstr ""
 "Folien, Bildunterschrift und Hashtags erscheinen hier, sobald der Entwurf fertig ist. Normalerweise 20–40 Sekunden."
 
+#: src/lib/contentEnums.js
+msgid "Slideshow"
+msgstr "Diashow"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Slug"
 msgstr "Slug"
@@ -7009,6 +7037,10 @@ msgid ""
 "Tell us who you are and what you do. This anchors every audit and report we generate."
 msgstr ""
 "Sag uns, wer du bist und was du tust. Das ist die Grundlage für jedes Audit und jeden Bericht, den wir erstellen."
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Testing"
+msgstr "Testen"
 
 #: src/components/content/StyleGallery.jsx
 msgid "Text cards"
@@ -7766,6 +7798,10 @@ msgstr "Version {version}"
 #: src/components/content/AnalyticsView.jsx src/components/content/PostCard.jsx src/components/content/PostMiniCard.jsx
 msgid "via Duct"
 msgstr "via Duct"
+
+#: src/lib/contentEnums.js
+msgid "Video"
+msgstr "Video"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "View →"
