@@ -321,6 +321,25 @@ export async function syncPostMetrics(postId) {
   return out;
 }
 
+/**
+ * POST /api/content/posts/{id}/metrics — numbers typed in from the platform's
+ * own analytics. `metrics` is `metricChanges()` from lib/contentMetrics: a
+ * number sets a metric, null withdraws one. A later sync never overwrites them.
+ */
+export async function enterPostMetrics(postId, metrics) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/metrics`,
+    {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(metrics),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
 export async function listSocialAccounts(projectId, platform) {
   const url = new URL(`${BASE}/api/content/social-accounts`);
   url.searchParams.set("project_id", projectId);

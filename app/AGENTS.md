@@ -252,6 +252,13 @@ it is a claim about the code, not a way to quiet the check.
   `initials`.
   Use these instead of a component-local `fmtDate`/`fmtNum`/`prettify` — the
   per-component copies had drifted apart before they were consolidated.
+- `lib/contentMetrics.js` — a content post's numbers, read the same way on
+  every screen: `metricValue` / `metricsOf` walk `METRIC_ALIASES`, the mirror
+  of `backend/service/content_metrics.py` that a backend test parses and holds
+  equal, order included. Never read `post.perf.view_count` directly.
+  `PostMetricsForm` is the one place numbers are typed in, and sends only what
+  changed (`metricChanges`), because a sent value is marked manual and no sync
+  refreshes it again.
 - `lib/sse.js` — `consumeSseStream` / `parseSseDataFrame`, shared by every
   streaming endpoint (audit, content, insights)
 - `lib/authFetch.js` — the one home for the auth token: `AUTH_TOKEN_KEY`,

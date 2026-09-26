@@ -1411,6 +1411,10 @@ msgstr "自律性 — {projectName}"
 msgid "Autonomy is unchanged — that didn't save."
 msgstr "自律性は変更されていません — 保存されませんでした。"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Average watch time (s)"
+msgstr "平均視聴時間 (秒)"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Avg TTFB"
 msgstr "Avg TTFB"
@@ -1832,6 +1836,7 @@ msgid "Commands"
 msgstr "コマンド"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Comments"
 msgstr "コメント"
 
@@ -2135,6 +2140,10 @@ msgstr "コピーに失敗しました"
 #: src/components/workspace/AgentChat.jsx
 msgid "Copy response"
 msgstr "応答をコピー"
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Copy these from the platform’s analytics. They stay as you enter them."
+msgstr "プラットフォームの分析からコピーしてください。入力値はそのまま保持されます。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
@@ -3757,6 +3766,7 @@ msgid "Light mode"
 msgstr "ライトモード"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Likes"
 msgstr "いいね"
 
@@ -5158,6 +5168,10 @@ msgstr "保留中"
 msgid "Pending invitations"
 msgstr "保留中の招待"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Performance"
+msgstr "パフォーマンス"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "Permissions"
 msgstr "権限"
@@ -5517,6 +5531,10 @@ msgstr "レイジクリック、デッドクリック、クイックバック、
 #: src/components/insights/desk/DeskActivity.jsx
 msgid "ran on its own"
 msgstr "自動実行されました"
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Reach"
+msgstr "リーチ"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -6100,6 +6118,10 @@ msgstr "保存に失敗しました。"
 msgid "Save manager account"
 msgstr "マネージャーアカウントを保存"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Save numbers"
+msgstr "数値を保存"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Save project"
 msgstr "プロジェクトを保存"
@@ -6156,10 +6178,15 @@ msgstr "アカウントに保存済み"
 msgid "saved to your Duct account"
 msgstr "Ductアカウントに保存済み"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Saves"
+msgstr "保存"
+
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PostMetricsForm.jsx
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
 msgstr "保存中…"
@@ -6510,6 +6537,7 @@ msgid "Shared by {owner}"
 msgstr "{owner}が共有"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Shares"
 msgstr "共有"
 
@@ -7447,6 +7475,10 @@ msgstr "このバージョンのDuctではサインインを完了できませ�
 msgid "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
 msgstr "これにより、このサイト用にすでにお持ちのプロジェクトである<0>{targetProjectName}</0>が更新されます。ご自身で入力された内容はそのまま保持されます。"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Those numbers didn’t save. Check them and try again."
+msgstr "数値が保存されませんでした。確認してもう一度お試しください。"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Thought for {seconds}s"
 msgstr "{seconds}秒間思考しました"
@@ -7642,6 +7674,10 @@ msgstr "デスクトップアプリを更新してください — このバー�
 msgid "Updated {updated}"
 msgstr "更新日: {updated}"
 
+#: src/components/content/PostMetricsForm.jsx
+msgid "Updated {when}"
+msgstr "更新: {when}"
+
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/usage/page.jsx
 #: src/lib/navigation.js
@@ -7798,6 +7834,7 @@ msgid "View full screen"
 msgstr "全画面表示"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMetricsForm.jsx
 msgid "Views"
 msgstr "表示回数"
 
@@ -7812,6 +7849,10 @@ msgstr "ピラー別の表示回数"
 #: src/components/content/AnalyticsView.jsx
 msgid "Views over time"
 msgstr "期間別の表示回数"
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Views, likes, comments and shares update on their own. Add the rest from the platform’s analytics; a sync never changes what you enter."
+msgstr "表示回数、いいね、コメント、シェアは自動更新されます。残りはプラットフォームの分析から追加してください。同期で入力値が変更されることはありません。"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Visual identity"
@@ -7870,6 +7911,10 @@ msgstr "警告"
 #: src/components/GoogleAdsReport.js
 msgid "Watch"
 msgstr "視聴"
+
+#: src/components/content/PostMetricsForm.jsx
+msgid "Watched to the end (%)"
+msgstr "最後まで視聴 (%)"
 
 #: src/components/LoadError.jsx
 msgid "We couldn’t load {what}."

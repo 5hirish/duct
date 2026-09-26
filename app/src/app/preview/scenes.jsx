@@ -61,6 +61,7 @@ import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
+import PostMetricsForm from "@/components/content/PostMetricsForm";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
@@ -746,6 +747,34 @@ const SAMPLE_CHANGE_SET_REJECTED = {
   status: "rejected",
   updated_at: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
 };
+
+// A posted post's numbers, as the metrics form receives them. The published
+// one carries what a PostBridge sync writes plus a typed saves count; the
+// other went out from the platform's own app, so nothing has synced.
+const METRICS_SYNCED_POST = {
+  ...STORY_POSTS.post_1,
+  post_bridge_post_id: "pb_story_1",
+  perf: {
+    view_count: 18400, like_count: 1120, comment_count: 86, share_count: 240,
+    last_synced_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+    saves: 610,
+    manual_keys: ["saves"],
+    manual_updated_at: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
+  },
+};
+const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, post_bridge_post_id: "", perf: {} };
+
+// Stands in for POST /metrics on one post: enough of the backend's merge to
+// show the saved state, without its alias clean-up or manual_keys.
+const previewSaveMetrics = (post) => async (_id, changes) => {
+  const perf = { ...post.perf };
+  for (const [name, value] of Object.entries(changes)) {
+    if (value == null) delete perf[name];
+    else perf[name] = value;
+  }
+  return { perf: { ...perf, manual_updated_at: new Date().toISOString() } };
+};
+const previewSaveFails = async () => { throw new Error("preview: save rejected"); };
 
 // A Discover result set for the synthesis panel: a face-shape niche with both
 // formats, tags that recur beyond the two searched for, one post with a big
@@ -1875,6 +1904,42 @@ export const SCENES = [
     render: () => (
       <div style={{ maxWidth: 512, padding: 20 }}>
         <PublishReviewPanel assessment={REVIEW_UNSCORED} compact />
+      </div>
+    ),
+  },
+  {
+    id: "post-metrics-synced",
+    state: "published through PostBridge · four counts synced, saves typed in",
+    group: "PostMetricsForm",
+    title: "A posted post's numbers",
+    note: "The four counts PostBridge syncs sit above the form as read-only figures; the inputs are only what it cannot pull. Change a value and Save lights up; save it and \"Updated\" moves to now while the inputs keep what was typed. Drag the frame through 36rem: the two rows of two become one row of four, and the inputs must stay bottom-aligned when a label wraps.",
+    render: () => (
+      <div className="max-w-2xl p-5">
+        <PostMetricsForm post={METRICS_SYNCED_POST} save={previewSaveMetrics(METRICS_SYNCED_POST)} />
+      </div>
+    ),
+  },
+  {
+    id: "post-metrics-manual",
+    state: "posted from the platform's own app · nothing synced, nothing entered",
+    group: "PostMetricsForm",
+    title: "A posted post's numbers",
+    note: "No PostBridge link, so all eight metrics are inputs and there is no synced row and no \"Updated\" line. The hint changes with it: nothing here updates on its own.",
+    render: () => (
+      <div className="max-w-2xl p-5">
+        <PostMetricsForm post={METRICS_MANUAL_POST} save={previewSaveMetrics(METRICS_MANUAL_POST)} />
+      </div>
+    ),
+  },
+  {
+    id: "post-metrics-error",
+    state: "save rejected · the inputs keep what was typed",
+    group: "PostMetricsForm",
+    title: "A posted post's numbers",
+    note: "Type a number and press Enter: the form submits, the save fails, and the alert says so under the hint without clearing anything the person typed.",
+    render: () => (
+      <div className="max-w-2xl p-5">
+        <PostMetricsForm post={METRICS_SYNCED_POST} save={previewSaveFails} />
       </div>
     ),
   },
