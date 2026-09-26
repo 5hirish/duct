@@ -80,7 +80,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | Table | Holds |
 |---|---|
 | `content_plans` | a content plan and its strategy |
-| `content_posts` | one post: type (slideshow, video), slides, status, performance counts, its last pre-publish review |
+| `content_posts` | one post: type (slideshow, video), slides, status, performance counts, its last pre-publish review, and the TikTok it was cloned from (`clone_source`) |
 | `content_assets` | generated images, uploads and references |
 | `content_formats` | a project's library of post formats |
 | `content_avatars` | a project's library of avatars |

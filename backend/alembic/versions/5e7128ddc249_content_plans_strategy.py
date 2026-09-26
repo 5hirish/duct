@@ -11,7 +11,7 @@ variant rather than raw JSONB, and a server default so existing rows satisfy
 NOT NULL.
 
 Revision ID: 5e7128ddc249
-Revises: b336354c84b5
+Revises: a9d3e7c1f5b2
 Create Date: 2026-09-25 00:00:00.000000
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = '5e7128ddc249'
-down_revision = 'b336354c84b5'
+down_revision = 'a9d3e7c1f5b2'
 branch_labels = None
 depends_on = None
 

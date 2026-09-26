@@ -54,11 +54,25 @@ class ScrapedPostAuthor(BaseModel):
 
 
 class ScrapedPostMusic(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="ignore", validate_by_name=True)
 
     music_name: str = Field(default="", validation_alias="musicName")
     music_author: str = Field(default="", validation_alias="musicAuthor")
     music_id: str = Field(default="", validation_alias="musicId")
+
+
+class ScrapedPostVideo(BaseModel):
+    """The cover frame of a video post.
+
+    Its only image: a video has no slideshow links, so without this a saved
+    video reference had nothing to keep. Both URLs are TikTok CDN links with a
+    signed expiry, which is why a saved reference copies the bytes.
+    """
+
+    model_config = ConfigDict(extra="ignore", validate_by_name=True)
+
+    cover_url:          str = Field(default="", validation_alias="coverUrl")
+    original_cover_url: str = Field(default="", validation_alias="originalCoverUrl")
 
 
 class ScrapedPost(BaseModel):
@@ -67,9 +81,14 @@ class ScrapedPost(BaseModel):
     extra='ignore' lets the actor evolve without breaking us — fields
     we don't model just get dropped. The frontend gets the raw post
     via the route layer's pass-through `raw` field if it needs them.
+
+    validate_by_name because the post makes a round trip: the results route
+    dumps it snake_case, the browser sends that back to be saved, and with the
+    camelCase aliases alone every aliased field (the URL, the counts, the slide
+    links) validated to its default and the saved reference was an empty shell.
     """
 
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="ignore", validate_by_name=True)
 
     id:                str
     text:              str = ""
@@ -83,6 +102,7 @@ class ScrapedPost(BaseModel):
     share_count:       int = Field(default=0, validation_alias="shareCount")
     music_meta:        ScrapedPostMusic | None = Field(default=None, validation_alias="musicMeta")
     author_meta:       ScrapedPostAuthor | None = Field(default=None, validation_alias="authorMeta")
+    video_meta:        ScrapedPostVideo | None = Field(default=None, validation_alias="videoMeta")
     hashtags:          list[str] = Field(default_factory=list)
     slideshow_image_links: list[str] = Field(default_factory=list, validation_alias="slideshowImageLinks")
 
