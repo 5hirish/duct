@@ -19,9 +19,14 @@ How Duct is built. Two kinds of file, by name (the rule is in
 - [`agent-ports-and-events.md`](agent-ports-and-events.md) — the harness
   boundary: the six agent ports and the SSE event contract. The code is the
   source of truth; this explains the shape.
+- [`agent-engineering.md`](agent-engineering.md) — how an agent is built
+  and changed on LangChain / `deepagents`: the rules, the primitive behind
+  each, what enforces it, checklists, and the open gaps. Read before adding
+  or changing an agent.
 - [`agent-harness-references.md`](agent-harness-references.md) — the
-  coding-agent harnesses we read (Codex, OpenCode, pi): why each matters,
-  the revision last read, findings pinned to `file:line`.
+  coding-agent harnesses we read (Codex, OpenCode, pi) and the indexes we
+  mine: why each matters, the revision last read, findings pinned to
+  `file:line`.
 - [`agent-evaluation.md`](agent-evaluation.md) — LLM-as-judge output QA:
   the harness in `backend/tests/eval/`, judge biases and mitigations.
 - [`credential-storage.md`](credential-storage.md) — where every secret

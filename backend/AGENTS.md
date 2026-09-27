@@ -664,6 +664,13 @@ framework. The rules it implies:
   call from LangChain's usage, taking cached tokens out of the input figure.
   `TOKEN_USAGE` and the state route carry `cost_usd`, `None` when unpriced —
   never a guess, because on BYO keys the figure is what the user pays.
+- **Before adding an agent or changing one — a prompt, a tool, a model
+  default, a middleware, a LangChain bump — read
+  [`docs/engineering/agent-engineering.md`](../docs/engineering/agent-engineering.md).**
+  It is the rulebook for agent work on this stack: each rule, the LangChain
+  primitive behind it and the test that enforces it, the add/change
+  checklists, and the ranked open gaps. Fixing a gap means adding its test and
+  striking it from that list in the same change.
 - **A change to an agent runs the eval gate.** `agent-eval.yml` runs
   `scripts/agent_eval.py` on any PR touching `agents/`, `service/memory.py`,
   `service/profile.py` or the lock: each case in `tests/eval/cases/` three
