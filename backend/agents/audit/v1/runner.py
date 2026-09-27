@@ -31,20 +31,24 @@ from uuid import UUID
 import logging
 from typing import Any, Callable
 
-from langchain.agents import create_agent
-
 from agents.audit.schema import CrawlResult
 from agents.audit.scoring import calibrate
 from agents.audit.v1.tools import build_audit_tools
 from agents.core.artifact_tools import build_artifact_tools_lc
 from agents.core.events import AgentEvent, run_context
 from agents.registry import AgentType
-from agents.core.checkpoint import get_checkpointer
 from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.activity import activity_hooks, announce_context
-from agents.core.deep_session import DeepSession, RunLimits, recorder_tool_hooks
+from agents.core.deep_session import (
+    DeepSession,
+    RunLimits,
+    build_session_agent,
+    fallback_chain,
+    recorder_tool_hooks,
+)
 from agents.core.lc import build_ask_user_tool, resolve_chat_model
 from agents.core.memory_tools import build_memory_tools_lc
+from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
 from agents.tools.execution_tools import build_execution_tools_lc
 from agents.models import ModelName, Provider
@@ -74,12 +78,12 @@ def _record_version(session: Any, report: Any, version_id: int) -> None:
 
 # Prune old tool results once the conversation passes this many TOKENS — the
 # unit ClearToolUsesEdit counts in. It was 40, read as a count of tool calls,
-# which meant "always": from the first call on, only the 12 newest results
-# survived, so an in-depth audit (six Search Console / GA4 reads, then nine
-# categories and a finish) had replaced its traffic numbers with "[cleared]" by
-# the time it wrote the summary that quotes them. Each call also cleared one
-# more old result, rewriting the prompt early and missing the provider cache
-# for everything after it.
+# which would have meant "always": from the first call on, only the 12 newest
+# results surviving, an in-depth audit (six Search Console / GA4 reads, then
+# nine categories and a finish) quoting "[cleared]" in its summary, and every
+# call rewriting the prompt early and missing the provider cache. It never
+# fired only because the audit's graph mounted no middleware at all until
+# build_session_agent; neither value applied before that.
 #
 # An opening in-depth audit stays under this, so nothing it read is cleared
 # while it writes the report. Long follow-up chats, where every FetchPages adds
@@ -131,6 +135,9 @@ def build_audit_agent(
     on_change_set: Callable | None = None,  # async (change_set: dict) -> None
     remember: bool = True,    # False = a session the user asked not to be remembered
     with_data: bool = False,  # True = in-depth project audit: FetchData + connector notes
+    fallbacks: list[Any] | None = None,  # deep_session.fallback_chain, or none for a test's fake
+    identity: str = "",       # quota.credential_identity of the key, for a final 429
+    provider: Provider | None = None,
 ):
     """Assemble the audit agent: crawl/report tools plus optional mid-run questions."""
     tools = build_audit_tools(
@@ -194,14 +201,20 @@ def build_audit_agent(
 
         tools += build_data_tools_lc(project_id, user_id=user_id, log_prefix="audit-v1")
 
-    # Checkpointed: without a saver the graph has no memory between turns, so
-    # follow-up chat would re-ask the model to audit a site it just audited,
-    # and a resumed conversation would start blank beside its own transcript.
-    return create_agent(
-        model=llm,
+    # The shared assembly, so LIMITS are enforced rather than declared and the
+    # prefix is cached. Checkpointed there: without a saver the graph has no
+    # memory between turns, so follow-up chat would re-ask the model to audit
+    # a site it just audited, and a resumed conversation would start blank
+    # beside its own transcript.
+    return build_session_agent(
+        llm=llm,
         tools=tools,
         system_prompt=system_prompt,
-        checkpointer=get_checkpointer(),
+        limits=LIMITS,
+        session=session,
+        fallbacks=fallbacks,
+        identity=identity,
+        provider=provider,
     )
 
 
@@ -235,6 +248,22 @@ class LangChainAuditRunner:
         # Backs Duct's own WebSearch when the run's provider has no usable
         # built-in one; without it the research pass degrades to local signals.
         self._gemini_api_key = gemini_api_key
+
+    def _resilience(self) -> dict:
+        """What the shared middleware needs from this run's credential.
+
+        The same one-step fallback and quota attribution insights and content
+        get, so a provider outage nine categories into an audit falls back
+        instead of ending the report, and a final 429 cools this key down for
+        the next run rather than every customer's.
+        """
+        return {
+            "fallbacks": fallback_chain(
+                self.provider, self.model, self._api_key, self._temperature,
+            ),
+            "identity": credential_identity(self._api_key),
+            "provider": self.provider,
+        }
 
     async def run_pipeline(
         self,
@@ -322,7 +351,11 @@ class LangChainAuditRunner:
         # context yet and the one that needs the competitors most.
         # One model for the whole run: synthesis and the research pass share it,
         # so a test's fake reaches both and production builds one client.
-        llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
+        # Keyed on the thread so OpenAI serves every call of the loop from
+        # the machine that holds its prefix (see resolve_chat_model).
+        llm = resolve_chat_model(
+            self.provider, self.model, self._api_key, self._temperature, cache_key=session_id,
+        )
 
         research_context = None
         wants_research = not lead_magnet and (draft_project or bool(
@@ -439,6 +472,7 @@ class LangChainAuditRunner:
             on_submit_report=_on_submit,
             with_data=with_data,
             **wiring,
+            **self._resilience(),
         )
 
         await emit({
@@ -673,7 +707,11 @@ class LangChainAuditRunner:
             except Exception:  # noqa: BLE001 — a malformed inline payload is not fatal
                 logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
 
-        llm = resolve_chat_model(self.provider, self.model, self._api_key, self._temperature)
+        # Keyed on the thread so OpenAI serves every call of the loop from
+        # the machine that holds its prefix (see resolve_chat_model).
+        llm = resolve_chat_model(
+            self.provider, self.model, self._api_key, self._temperature, cache_key=session_id,
+        )
         wiring = self._project_wiring(session, emit)
         # A resumed thread is a project conversation in the app, so follow-up
         # questions can reach the data whichever depth the first run was.
@@ -692,6 +730,7 @@ class LangChainAuditRunner:
             on_submit_report=_on_submit,
             with_data=with_data,
             **wiring,
+            **self._resilience(),
         )
         loop = self._session_loop(
             agent, llm, session, emit, session_id,

@@ -10,9 +10,11 @@ twenty-three ``_utcnow()`` definitions started.
 
 Two pieces, kept separate because they answer different questions:
 
-* ``build_deep_session_agent`` — **assembly.** The middleware stack, the
-  virtual filesystem, the runaway guards, the fallback chain and the
-  checkpointer, in the order the harness needs them. A runner supplies what is
+* ``build_deep_session_agent`` / ``build_session_agent`` — **assembly**, on
+  the ``deepagents`` rung and the plain ``create_agent`` rung. The middleware
+  stack (``session_middleware``, one list for both), the runaway guards, the
+  fallback chain and the checkpointer, in the order the harness needs them;
+  the virtual filesystem on the deep rung only. A runner supplies what is
   *its own*: tools, sub-agents, the system prompt, and its ``RunLimits``.
 * ``DeepSession`` — **the loop.** One object per live session: opening turn
   or resume, pauses, steers, compaction, the chat loop, and the failure
@@ -37,6 +39,7 @@ from typing import Any
 
 from deepagents import FilesystemMiddleware, create_deep_agent
 from deepagents.backends import StateBackend
+from langchain.agents import create_agent
 from langchain.agents.middleware import (
     ClearToolUsesEdit,
     ContextEditingMiddleware,
@@ -58,6 +61,7 @@ from agents.core.lc import (
     compact_thread,
     drain_steers,
     live_pauses,
+    prompt_caching_middleware,
     resolve_chat_model,
     stream_agent,
     usage_from_messages,
@@ -237,45 +241,119 @@ def build_deep_session_agent(
             # Explicit rather than default, to drop the shell tool — see
             # FILESYSTEM_TOOLS.
             FilesystemMiddleware(backend=backend, tools=list(FILESYSTEM_TOOLS)),
-            # Prune stale tool results so an LLM compaction is the second
-            # response to a filling window, not the first. `keep` holds the
-            # most recent results intact — the ones the model is still
-            # reasoning over.
-            ContextEditingMiddleware(
-                edits=[
-                    ClearToolUsesEdit(
-                        trigger=limits.tool_result_prune_trigger,
-                        keep=limits.tool_results_kept,
-                        clear_tool_inputs=False,
-                        exclude_tools=NEVER_PRUNED,
-                    )
-                ],
+            *session_middleware(
+                limits,
+                session=session,
+                fallbacks=fallbacks,
+                prune_seen_images=prune_seen_images,
+                identity=identity,
+                provider=provider,
             ),
-            *([SeenImagePruneMiddleware()] if prune_seen_images else []),
-            ModelCallLimitMiddleware(
-                thread_limit=limits.model_calls_per_thread,
-                run_limit=limits.model_calls_per_run,
-                exit_behavior="end",
-            ),
-            ToolCallLimitMiddleware(
-                thread_limit=limits.tool_calls_per_thread,
-                run_limit=limits.tool_calls_per_run,
-                exit_behavior="continue",
-            ),
-            # Last of ours, so it sits closest to the model call and the limit
-            # guards above still count a fallback attempt as the call it is.
-            *([ModelFallbackMiddleware(*fallbacks)] if fallbacks else []),
-            # Innermost, so each model in the chain gets its retries before
-            # the fallback moves on, and a transient 429 on the primary never
-            # costs a downgrade. Reports every attempt to the UI.
-            ReportedRetryMiddleware(identity=identity, provider=provider),
-            # A message typed mid-turn reaches the model at its next call.
-            *([SteerMiddleware(session)] if session is not None else []),
         ],
         # Continuity across turns, durable: the saver is opened once by the
         # app lifespan and follows DATABASE_URL; in-memory outside a server.
         checkpointer=checkpointer if checkpointer is not None else get_checkpointer(),
     )
+
+
+def build_session_agent(
+    *,
+    llm: Any,
+    tools: list[Any],
+    system_prompt: str,
+    limits: RunLimits,
+    session: BaseAgentSession | None = None,
+    fallbacks: list[Any] | None = None,
+    checkpointer: Any = None,
+    identity: str = "",
+    provider: Provider | None = None,
+) -> Any:
+    """The same session on the ``create_agent`` rung.
+
+    For an agent that needs none of what ``deepagents`` adds (planning,
+    sub-agents, the scratch filesystem) but is still a durable, multi-turn
+    thread driven by ``DeepSession``: the audit. It gets the loop's whole
+    middleware stack, not just a model and tools. It was a bare
+    ``create_agent`` from 2026-08-16 to 09-27: no pruning, no call guards
+    (its ``RunLimits``, added 09-06, were declared and never enforced), no
+    fallback, no retry events, and no prompt caching, which
+    ``create_deep_agent`` appends for its own graphs and ``create_agent`` does
+    not. ``tests/test_agent_assembly.py`` keeps graphs from being built
+    anywhere else.
+
+    No automatic summarisation, unlike the deep rung: the pruning pass and
+    ``DeepSession``'s one emergency compaction on a ``context_window`` refusal
+    cover a thread whose long turn is the first one.
+    """
+    return create_agent(
+        model=llm,
+        tools=tools,
+        system_prompt=system_prompt,
+        middleware=[
+            *session_middleware(
+                limits,
+                session=session,
+                fallbacks=fallbacks,
+                identity=identity,
+                provider=provider,
+            ),
+            *prompt_caching_middleware(),
+        ],
+        checkpointer=checkpointer if checkpointer is not None else get_checkpointer(),
+    )
+
+
+def session_middleware(
+    limits: RunLimits,
+    *,
+    session: BaseAgentSession | None = None,
+    fallbacks: list[Any] | None = None,
+    prune_seen_images: bool = False,
+    identity: str = "",
+    provider: Provider | None = None,
+) -> list[Any]:
+    """The loop's middleware, in the order the harness needs it.
+
+    One list for both rungs, so a guard added here reaches every agent. It
+    lived inline in ``build_deep_session_agent`` while that was the only
+    builder, and the audit, built elsewhere, silently had none of it.
+    """
+    return [
+        # Prune stale tool results so an LLM compaction is the second
+        # response to a filling window, not the first. `keep` holds the most
+        # recent results intact — the ones the model is still reasoning over.
+        ContextEditingMiddleware(
+            edits=[
+                ClearToolUsesEdit(
+                    trigger=limits.tool_result_prune_trigger,
+                    keep=limits.tool_results_kept,
+                    clear_tool_inputs=False,
+                    exclude_tools=NEVER_PRUNED,
+                )
+            ],
+        ),
+        *([SeenImagePruneMiddleware()] if prune_seen_images else []),
+        ModelCallLimitMiddleware(
+            thread_limit=limits.model_calls_per_thread,
+            run_limit=limits.model_calls_per_run,
+            exit_behavior="end",
+        ),
+        ToolCallLimitMiddleware(
+            thread_limit=limits.tool_calls_per_thread,
+            run_limit=limits.tool_calls_per_run,
+            exit_behavior="continue",
+        ),
+        # Last of the guards, so it sits closest to the model call and the
+        # limits above still count a fallback attempt as the call it is.
+        *([ModelFallbackMiddleware(*fallbacks)] if fallbacks else []),
+        # Inside the fallback, so each model in the chain gets its retries
+        # before the fallback moves on, and a transient 429 on the primary
+        # never costs a downgrade. Reports every attempt to the UI.
+        ReportedRetryMiddleware(identity=identity, provider=provider),
+        # A message typed mid-turn reaches the model at its next call. Inert
+        # for a session that sets no `steer_queue` (the route then queues).
+        *([SteerMiddleware(session)] if session is not None else []),
+    ]
 
 
 def recorder_tool_hooks(recorder: Any) -> tuple[Callable, Callable]:
