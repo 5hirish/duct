@@ -89,3 +89,10 @@ docs/assets/readme/*.failed.png
 
 # Worktrees live inside the repo, never beside it (root AGENTS.md, "git hygiene")
 .worktrees/
+
+# Eval gate output (scripts/agent_eval.py) and live-eval scorecards: a run's
+# record, uploaded as a CI artifact, never a baseline. Baselines are
+# backend/tests/eval/baselines.json, changed only by a ratchet PR.
+eval-results.jsonl
+audit-eval-scorecard.json
+scorecard-*.json

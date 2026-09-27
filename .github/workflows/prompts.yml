@@ -26,6 +26,13 @@ on:
       - 'backend/agents/core/voice.py'
       - 'backend/agents/audit/scoring.py'
       - 'backend/agents/registry.py'
+      # The "Model defaults" section: which model, at what effort, under what
+      # run limits. A default moved there is behaviour, like a prompt edit.
+      - 'backend/agents/models.py'
+      - 'backend/agents/tiers.py'
+      - 'backend/agents/thinking.py'
+      - 'backend/agents/*/v1/runner.py'
+      - 'backend/service/memory.py'
       - 'backend/service/profile.py'
       - 'backend/scripts/dump_prompts.py'
       - 'docs/engineering/agent-prompts.md'

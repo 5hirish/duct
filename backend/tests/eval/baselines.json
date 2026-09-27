@@ -1,0 +1,11 @@
+{
+  "insights/solo-organic-slip": {
+    "median_cost_usd": 0.0257,
+    "median_model_calls": 4,
+    "model": "deepseek/deepseek-v4-pro",
+    "pass_rate": 0.667,
+    "provider": "openrouter",
+    "recorded": "2026-09-28",
+    "trials": 3
+  }
+}

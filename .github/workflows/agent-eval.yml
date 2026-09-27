@@ -1,0 +1,90 @@
+name: Agent Eval
+
+# Tier 1 of the eval gate (docs/engineering/2026-09-27-agent-eval-gating-design.md):
+# a change to an agent runs the real agent, k=3, on synthetic accounts, and
+# gets PASS / INCONCLUSIVE / FAIL against tests/eval/baselines.json. The free
+# tier (request invariants, the gate's own plumbing) runs in backend.yml with
+# every other offline test.
+#
+# DeepSeek V4 Pro on OpenRouter for the agent and the judge: a full run is a
+# few US cents, which is what makes it affordable on every harness PR. No
+# database: scripts/agent_eval.py points DATABASE_URL at a throwaway SQLite.
+#
+# SHADOW until an A/A window shows no false FAILs on an unchanged main: the job
+# reports, and continue-on-error keeps it from blocking. Removing that line and
+# making the check required is the owner's decision, in its own PR.
+#
+# Needs the repository secret OPENROUTER_API_KEY, ideally a dedicated key with
+# a spend limit set on OpenRouter. Without it (a fork, or before it is added)
+# the job says so and passes.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+    paths:
+      - 'backend/agents/**'
+      - 'backend/service/memory.py'
+      - 'backend/service/profile.py'
+      - 'backend/poetry.lock'
+      - 'backend/tests/eval/**'
+      - 'backend/scripts/agent_eval.py'
+      - '.github/workflows/agent-eval.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    name: Agent eval (shadow)
+    # A draft runs only when asked, with the run-evals label.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !github.event.pull_request.draft ||
+      contains(github.event.pull_request.labels.*.name, 'run-evals')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      DUCT_EVAL_BUDGET_USD: "3"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install backend dependencies
+        run: poetry install --with dev
+
+      - name: Run the eval gate
+        run: |
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "No OPENROUTER_API_KEY secret; skipping the paid eval." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          poetry run python scripts/agent_eval.py --out eval-results.jsonl
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: agent-eval-results
+          path: backend/eval-results.jsonl
+          if-no-files-found: ignore

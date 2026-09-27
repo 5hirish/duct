@@ -29,7 +29,12 @@ from dataclasses import dataclass, field
 
 from pydantic import ValidationError
 
-from tests.eval.client import DEFAULT_JUDGE_MODEL, build_judge_client
+from tests.eval.client import (
+    DEFAULT_JUDGE_MODEL,
+    build_judge_client,
+    resolve_text_judge,
+    text_judge_available,
+)
 from tests.eval.prompts import build_judge_system_prompt, render_rubric
 from tests.eval.rubric import Rubric
 from tests.eval.verdict import JudgeVerdict, Scorecard, build_scorecard
@@ -79,8 +84,12 @@ def evaluate(
     usual cause is the JSON being cut off mid-rationale, which twice failed an
     audit run whose report was fine.
     """
+    if client is None and not artifact.images and text_judge_available():
+        return _evaluate_text(rubric, artifact, model=model)
     client = client or build_judge_client()
-    model = model or os.environ.get("DUCT_JUDGE_MODEL") or DEFAULT_JUDGE_MODEL
+    model = model or (
+        os.environ.get("DUCT_JUDGE_MODEL") if os.environ.get("DUCT_JUDGE_PROVIDER") == "gemini" else None
+    ) or DEFAULT_JUDGE_MODEL
     budget = max_output_tokens
     for attempt in range(1, _VERDICT_ATTEMPTS + 1):
         try:
@@ -94,6 +103,41 @@ def evaluate(
             )
             budget *= 2
             continue
+        return build_scorecard(rubric, verdict)
+    raise AssertionError("unreachable")  # pragma: no cover
+
+
+def _evaluate_text(rubric: Rubric, artifact: JudgeArtifact, *, model: str | None = None) -> Scorecard:
+    """The text judge: one structured call through Duct's own model transport.
+
+    The same transport the agents run on (``resolve_chat_model``), so an
+    OpenRouter slug, its reasoning parameter and its retries behave here as
+    they do in a session. A verdict that fails validation is retried once.
+    """
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    from agents.core.lc import resolve_chat_model
+    from agents.models import Provider
+
+    provider, default_model, key = resolve_text_judge()
+    llm = resolve_chat_model(Provider(provider), model or default_model, key, temperature=0.2)
+    judge = llm.with_structured_output(JudgeVerdict)
+    messages = [
+        SystemMessage(content=build_judge_system_prompt(rubric.persona)),
+        HumanMessage(content=(
+            f"{render_rubric(rubric)}\n\n# Artifact under review: {artifact.title}\n\n{artifact.body}"
+        )),
+    ]
+    for attempt in range(1, _VERDICT_ATTEMPTS + 1):
+        try:
+            verdict = judge.invoke(messages)
+        except ValidationError:
+            if attempt == _VERDICT_ATTEMPTS:
+                raise
+            logger.warning("judge: text verdict did not parse; retrying once")
+            continue
+        if isinstance(verdict, dict):
+            verdict = JudgeVerdict.model_validate(verdict)
         return build_scorecard(rubric, verdict)
     raise AssertionError("unreachable")  # pragma: no cover
 
