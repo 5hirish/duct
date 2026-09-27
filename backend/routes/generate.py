@@ -344,6 +344,7 @@ async def generate_insight(
                 kind=ARTIFACT_KIND,
                 api_key=run.summary_key,
                 adapt=brief_artifact_version,
+                lent_keys=user_keys,
             )
             emit_fn = persister.wrap_emit(emit)
         except Exception:

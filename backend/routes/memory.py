@@ -36,7 +36,7 @@ from models.memory import (
     USER_KINDS,
     ProjectMemory,
 )
-from service.auth import get_current_user
+from service.auth import get_current_user, get_user_provider_keys
 from service.membership import get_project_for_user
 from service.memory import remember, search, short_id
 from utils.dates import parse_iso, utcnow
@@ -454,6 +454,24 @@ def delete_user_memory(
 ) -> None:
     session.delete(_get_user_owned(session, user, memory_id))
     session.commit()
+
+
+@user_router.post("/catch-up", status_code=202)
+async def catch_up_memory(
+    user: User = Depends(get_current_user),
+    user_keys: dict = Depends(get_user_provider_keys),
+) -> dict:
+    """Consolidate this owner's idle conversations on the keys in this request.
+
+    The desktop app calls it when it opens and every half hour while it stays
+    open: its keys live in the OS keychain, so this is the only time the
+    background pass can spend them (``service/memory_consolidation.catch_up``).
+    Scoped to projects the caller owns, since the owner pays for background
+    work. Returns at once; the pass runs behind the response.
+    """
+    from service.memory_consolidation import schedule_catch_up
+
+    return {"scheduled": schedule_catch_up(user.id, user_keys)}
 
 
 @user_router.post("/pause")

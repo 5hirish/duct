@@ -19,8 +19,11 @@
 //
 // So the choice is offered rather than made silently: remembering means the
 // key is on our servers, which the old copy explicitly promised it never was.
-// On desktop the question does not arise — the OS keychain is strictly better
-// than the local sidecar's database, and "our servers" is your own machine.
+// On desktop the question is never asked. Keys stay in the OS keychain and are
+// never saved on Duct: that is what the desktop app offers, and work that needs
+// a key while the app is closed waits until it is open again
+// (`lib/memoryCatchUp.js`). The keychain can refuse a read, though, and that
+// is its own state below, not "No key set".
 
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
@@ -48,10 +51,10 @@ import {
   serverStorage,
 } from "../../lib/credentialStorage";
 import { isLocalBackendActive } from "../../lib/localBackend";
-import { clearProviderKey, getProviderKey, setProviderKey } from "../../lib/providerKeys";
+import { clearProviderKey, readProviderKey, setProviderKey } from "../../lib/providerKeys";
 import { forgetProviderKey, rememberProviderKey } from "../../lib/providerKeysRemote";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DESKTOP_DOWNLOAD_URL, isDesktopShell } from "../../lib/shell";
+import { DESKTOP_DOWNLOAD_URL, isDesktopShell, isMac } from "../../lib/shell";
 import {
   chatgptAuthAvailable,
   chatgptLogin,
@@ -92,6 +95,9 @@ const TILE_TONE = { ok: "on", info: "info", warn: "off" };
  * @param loading  The page has not heard back about this provider yet.
  *   Separate from the card's own two async reads below, because all three
  *   default to "nothing here" and "nothing here" renders as a verdict.
+ * @param readKey  Where the saved key is read from. The default is the real
+ *   store; `/preview` passes a stub, because a keychain that refuses cannot be
+ *   arranged in a browser.
  */
 /**
  * How the confirm names what it is about to drop, completing "Duct forgets the
@@ -121,7 +127,14 @@ const REMOVAL_SCOPE = {
   [STORAGE_NONE]: msg`stored for this provider`,
 };
 
-export default function ProviderCard({ provider, logo, status, planEnabled = true, loading = false }) {
+export default function ProviderCard({
+  provider,
+  logo,
+  status,
+  planEnabled = true,
+  loading = false,
+  readKey = readProviderKey,
+}) {
   const { t, i18n } = useLingui();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
@@ -157,6 +170,13 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
   // no plan, so "Not set". That is the flash the user sees on every open.
   const [keyLoaded, setKeyLoaded] = useState(false);
   const [planLoaded, setPlanLoaded] = useState(false);
+  // Why the keychain would not hand the saved key over, when it would not.
+  // Only the desktop keychain refuses; a browser's storage either has the key
+  // or does not. Bumping `readAttempt` asks again, which on macOS is the moment
+  // the password prompt, and its Always Allow button, appears.
+  const [readError, setReadError] = useState("");
+  const [readAttempt, setReadAttempt] = useState(0);
+  const unreadable = Boolean(readError);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
   const planConnected = planOffered && plan.available && Boolean(plan.status?.connected);
@@ -195,21 +215,20 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
   useEffect(() => {
     let alive = true;
     setKeyLoaded(false);
-    getProviderKey(provider.id)
-      .then((stored) => {
+    readKey(provider.id)
+      .then(({ key, error: reason }) => {
         if (!alive) return;
-        setValue(stored || "");
-        setSaved(Boolean(stored));
+        setValue(key || "");
+        setSaved(Boolean(key));
+        setReadError(reason || "");
       })
-      // A keychain that will not answer is not a key that is absent, but the
-      // card has to stop waiting either way.
       .finally(() => {
         if (alive) setKeyLoaded(true);
       });
     return () => {
       alive = false;
     };
-  }, [provider.id]);
+  }, [provider.id, readKey, readAttempt]);
 
   const trimmed = value.trim();
   const looksValid = !provider.prefix || trimmed.startsWith(provider.prefix);
@@ -254,8 +273,8 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
   // that will actually be spent, which on a plan sign-in is the keychain
   // bundle. Using one value for both painted "Held by your keychain" under an
   // empty field the moment the plan connected.
-  const keyStorage = desktop
-    ? saved
+  const keyStorage = desktop || unreadable
+    ? saved || unreadable
       ? STORAGE_KEYCHAIN
       : STORAGE_NONE
     : remembered
@@ -282,6 +301,12 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
         tone: "off",
         label: t`Not a key we can use`,
         detail: t`What's stored for ${providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one.`,
+      }
+    : unreadable
+    ? {
+        tone: "off",
+        label: t`Can't read your key`,
+        detail: t`This computer's keychain didn't let Duct read the ${providerName} key saved in it.`,
       }
     : {
         tone: TILE_TONE[SOURCE_TONE[source]] || "on",
@@ -311,6 +336,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
       } else {
         await setProviderKey(provider.id, trimmed);
         setSaved(Boolean(trimmed));
+        setReadError("");
       }
     } catch (err) {
       setError(String(err?.message || err));
@@ -332,6 +358,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
       setSaved(false);
       setRemembered(false);
       setRevealed(false);
+      setReadError("");
     } catch (err) {
       setError(String(err?.message || err));
     } finally {
@@ -409,7 +436,7 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
             {/* "Remove key", not "Remove": this dialog can hold two
                 credentials at once, and a bare verb in the footer does not say
                 which of them it drops. */}
-            {(saved || remembered || mismatched) && (
+            {(saved || remembered || mismatched || unreadable) && (
               <Button
                 type="button"
                 variant="destructive"
@@ -481,7 +508,15 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 // rather than where anything currently is.
                 <p className="conn-hint">
                   {desktop ? (
-                    <Trans>Will be stored in your OS keychain on this machine.</Trans>
+                    // What the keychain costs, said before the save rather than
+                    // discovered later: the key only reaches Duct with a request
+                    // from this app, so work that would run while it is closed
+                    // (filing what a chat taught Duct, for one) waits for it.
+                    <Trans>
+                      Will be stored in your OS keychain on this machine. Duct can use it only
+                      while the app is open, so anything that runs while it’s closed waits until
+                      you’re back.
+                    </Trans>
                   ) : remember ? (
                     <Trans>
                       Will be encrypted and stored on Duct, so scheduled runs use your key too.
@@ -498,6 +533,38 @@ export default function ProviderCard({ provider, logo, status, planEnabled = tru
                 <p className="conn-hint conn-hint--alert" role="alert">
                   {tile.detail}
                 </p>
+              )}
+              {!settling && unreadable && (
+                // Said here, at the moment it matters, rather than as a warning
+                // before the first save: a signed release reads its own keys
+                // with no prompt, so most people never see the dialog this
+                // explains. When they do, Always Allow is the button that makes
+                // it the last time, and Try again is what brings it back.
+                <>
+                  <p className="conn-hint conn-hint--alert" role="alert">
+                    {isMac() ? (
+                      <Trans>
+                        Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac
+                        asks for your password, pick <b>Always Allow</b> so it won’t ask again. Or
+                        paste the key again and save.
+                      </Trans>
+                    ) : (
+                      // The shell's sentence names the fix on Linux, where the
+                      // usual cause is no keyring daemon running at all.
+                      <Trans>This computer’s keychain didn’t let Duct read this key: {readError}</Trans>
+                    )}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="justify-self-start"
+                    onClick={() => setReadAttempt((n) => n + 1)}
+                    disabled={busy}
+                  >
+                    <Trans>Try again</Trans>
+                  </Button>
+                </>
               )}
               {remembered && (
                 <p className="conn-hint">

@@ -1,6 +1,6 @@
 # Credential storage: the local API key and provider auth
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-14
+**Author:** Shirish Kadam · **Updated:** 2026-09-27
 
 **Reference.** Where every secret Duct holds actually lives, what protects it,
 and what breaks it. Written 2026-09-12 after a debugging session in which a
@@ -100,7 +100,10 @@ requirement built from the bundle identifier and the team OU, both stable
 across versions, which is exactly why real users are not asked again.
 
 This is also why "Always Allow" exists on that dialog: it adds the asking app to
-the item's ACL permanently. We should never rely on a user finding it.
+the item's ACL permanently. We should never rely on a user finding it, and we do
+not warn about it up front either, since a signed release never shows the
+dialog. The key card says it at the one moment it matters, when a read has just
+been refused (§9).
 
 **Design rule that follows.** Only one signed binary should ever touch the
 keychain: the Tauri shell. The sidecar is a separate executable with its own
@@ -245,21 +248,31 @@ keychain costs reconnection, never a corrupt state.
 
 ## 9. What happens when it does break
 
-Three behaviours, all added 2026-09-12, exist so that a credential failure is
-legible instead of looking like a feature bug:
+Three behaviours, added 2026-09-12 for the sign-in and 2026-09-27 for provider
+keys, exist so that a credential failure is legible instead of looking like a
+feature bug:
 
 - **A failed read is never reported as a negative answer.** `chatgptStatus()` in
   `app/src/lib/chatgpt.js` returns `{ connected: false, error }` rather than a
   bare `connected: false`. The card renders "your sign-in is saved but this build
   cannot read it", with the reason, and the button becomes "Sign in again". The
   old code collapsed "the keychain refused" into "you never signed in", which is
-  what made this take a session to find.
+  what made this take a session to find. Provider keys had the same collapse
+  until `readProviderKey()` in `app/src/lib/providerKeys.js`: the key card now
+  reads "Can't read your key" rather than "No key set", and on a Mac tells the
+  user to choose Try again and pick **Always Allow** when macOS asks, or to
+  paste the key again. Requests still read keys through the quiet
+  `getProviderKey()`, which holds each key it has read for the page's lifetime,
+  so a user who clicked "Allow" instead is asked once per launch, not once per
+  message.
 - **macOS keyring errors name the cause.** `describe_keyring_error()` in
   `desktop/src-tauri/src/lib.rs` explains that access is granted per signature
   and that saving again fixes it, instead of returning a bare OSStatus.
 - **A write repairs an unwritable item.** An item this build cannot read often
   cannot be overwritten either, which would break the sign-in that repairs the
-  situation. `store()` in `chatgpt.rs` deletes and retries.
+  situation. `store()` in `chatgpt.rs` deletes and retries, and
+  `setProviderKey()` does the same for provider keys from the page, so the fix
+  reaches shells already installed.
 
 And for the developer-facing half: `desktop/scripts/install-dev-app.mjs` refuses
 to install over a running copy, because swapping the bundle underneath a live

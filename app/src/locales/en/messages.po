@@ -1639,6 +1639,10 @@ msgstr "Can't reach Duct"
 msgid "Can't reach the provider"
 msgstr "Can't reach the provider"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "Can't read your key"
+msgstr "Can't read your key"
+
 #: src/app/(app)/execute/page.jsx
 #: src/app/(app)/projects/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
@@ -3349,8 +3353,12 @@ msgid "Heavy — the deep model"
 msgstr "Heavy — the deep model"
 
 #: src/lib/credentialStorage.js
-msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
-msgstr "Held by your operating system's keychain on this computer. Duct's servers never see it."
+msgid "Held by your operating system's keychain on this computer. Duct uses it while the app is open and never stores it."
+msgstr "Held by your operating system's keychain on this computer. Duct uses it while the app is open and never stores it."
+
+#: src/lib/credentialStorage.js
+#~ msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
+#~ msgstr "Held by your operating system's keychain on this computer. Duct's servers never see it."
 
 #: src/components/connections/ProviderCard.jsx
 msgid "held for this browser session"
@@ -7377,6 +7385,14 @@ msgstr "This audit link is no longer valid. Links expire after 24 hours. Please 
 msgid "This computer's key"
 msgstr "This computer's key"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer's keychain didn't let Duct read the {providerName} key saved in it."
+msgstr "This computer's keychain didn't let Duct read the {providerName} key saved in it."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer’s keychain didn’t let Duct read this key: {readError}"
+msgstr "This computer’s keychain didn’t let Duct read this key: {readError}"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "This connection was made before Duct recorded which permissions Google granted. Reconnect to find out — nothing is assumed either way."
 msgstr "This connection was made before Duct recorded which permissions Google granted. Reconnect to find out — nothing is assumed either way."
@@ -7597,6 +7613,7 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "Trials, renewals, refunds and MRR across the App Store and Play."
 
 #: src/components/AppErrorPanel.jsx
+#: src/components/connections/ProviderCard.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "Try again"
@@ -8135,8 +8152,12 @@ msgid "Will be kept in this browser session only — cleared when you close the 
 msgstr "Will be kept in this browser session only — cleared when you close the tab, and unavailable to scheduled runs."
 
 #: src/components/connections/ProviderCard.jsx
-msgid "Will be stored in your OS keychain on this machine."
-msgstr "Will be stored in your OS keychain on this machine."
+#~ msgid "Will be stored in your OS keychain on this machine."
+#~ msgstr "Will be stored in your OS keychain on this machine."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Will be stored in your OS keychain on this machine. Duct can use it only while the app is open, so anything that runs while it’s closed waits until you’re back."
+msgstr "Will be stored in your OS keychain on this machine. Duct can use it only while the app is open, so anything that runs while it’s closed waits until you’re back."
 
 #: src/components/GoogleAdsReport.js
 msgid "Win"
@@ -8382,6 +8403,10 @@ msgstr "Your key is used before the plan. Scheduled runs happen with no app open
 #: src/components/models/UsagePanel.jsx
 msgid "Your key was charged {charged} across {earlierCalls, plural, one {# model call} other {# model calls}} in the last {widest} days. This window is just a quiet one."
 msgstr "Your key was charged {charged} across {earlierCalls, plural, one {# model call} other {# model calls}} in the last {widest} days. This window is just a quiet one."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
+msgstr "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your memory"

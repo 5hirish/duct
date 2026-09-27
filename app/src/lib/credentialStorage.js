@@ -57,7 +57,7 @@ export const STORAGE_LABELS = {
 export const STORAGE_DETAIL = {
   [STORAGE_CLOUD]: msg`Encrypted on Duct's servers, so any device — and any report that runs while you are away — can use it.`,
   [STORAGE_LOCAL]: msg`Encrypted on this computer only, so nothing running elsewhere can use it, including scheduled reports.`,
-  [STORAGE_KEYCHAIN]: msg`Held by your operating system's keychain on this computer. Duct's servers never see it.`,
+  [STORAGE_KEYCHAIN]: msg`Held by your operating system's keychain on this computer. Duct uses it while the app is open and never stores it.`,
   [STORAGE_SESSION]: msg`Kept only until you close the app, and reports that run without you cannot use it.`,
   [STORAGE_NONE]: msg`Nothing stored yet.`,
 };

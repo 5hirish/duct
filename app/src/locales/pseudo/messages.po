@@ -1633,6 +1633,10 @@ msgstr ""
 msgid "Can't reach the provider"
 msgstr ""
 
+#: src/components/connections/ProviderCard.jsx
+msgid "Can't read your key"
+msgstr ""
+
 #: src/app/(app)/execute/page.jsx
 #: src/app/(app)/projects/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
@@ -3343,8 +3347,12 @@ msgid "Heavy — the deep model"
 msgstr ""
 
 #: src/lib/credentialStorage.js
-msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
+msgid "Held by your operating system's keychain on this computer. Duct uses it while the app is open and never stores it."
 msgstr ""
+
+#: src/lib/credentialStorage.js
+#~ msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
+#~ msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
 msgid "held for this browser session"
@@ -7371,6 +7379,14 @@ msgstr ""
 msgid "This computer's key"
 msgstr ""
 
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer's keychain didn't let Duct read the {providerName} key saved in it."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer’s keychain didn’t let Duct read this key: {readError}"
+msgstr ""
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "This connection was made before Duct recorded which permissions Google granted. Reconnect to find out — nothing is assumed either way."
 msgstr ""
@@ -7591,6 +7607,7 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr ""
 
 #: src/components/AppErrorPanel.jsx
+#: src/components/connections/ProviderCard.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr ""
@@ -8129,7 +8146,11 @@ msgid "Will be kept in this browser session only — cleared when you close the 
 msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
-msgid "Will be stored in your OS keychain on this machine."
+#~ msgid "Will be stored in your OS keychain on this machine."
+#~ msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Will be stored in your OS keychain on this machine. Duct can use it only while the app is open, so anything that runs while it’s closed waits until you’re back."
 msgstr ""
 
 #: src/components/GoogleAdsReport.js
@@ -8375,6 +8396,10 @@ msgstr ""
 
 #: src/components/models/UsagePanel.jsx
 msgid "Your key was charged {charged} across {earlierCalls, plural, one {# model call} other {# model calls}} in the last {widest} days. This window is just a quiet one."
+msgstr ""
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
 msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx

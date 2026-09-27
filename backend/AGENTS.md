@@ -766,6 +766,14 @@ don't fit.
     crash or quit desktop app. It runs on `Job.MEMORY`, the owner's Light tier.
     "Don't remember this" is stored on the conversation
     (`record_remember_choice`), because the sweep never sees the session.
+    The sweep can spend only *saved* keys, so an owner whose keys live in the
+    desktop keychain or a browser tab is covered by keys they lend instead:
+    a closing session lends its caller's header keys (`LentKeys`), and the app
+    calls `POST /api/user/memory/catch-up` when it opens and every 30 minutes
+    (`app/src/lib/memoryCatchUp.js`). Lent keys are held in memory, never
+    stored, and spent only on projects the lender owns, because the owner pays
+    for background work. Plan tokens are never lent: a structured one-shot
+    call cannot spend them.
   - **A thread re-reads memory at most hourly, and only when something changed.**
     `memory_refresh` compares the conversation's `memory_primed_at` with the
     newest memory row, excluding the thread's own writes; `routes/agents.py`

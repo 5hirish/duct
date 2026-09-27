@@ -94,21 +94,52 @@ function isTauri() {
   return typeof window !== "undefined" && Boolean(window.__TAURI__);
 }
 
-/** Read a stored provider key. Returns "" when unset or storage is unavailable. */
-export async function getProviderKey(providerId) {
-  if (typeof window === "undefined") return "";
+/**
+ * Keys this page has already read from the desktop keychain.
+ *
+ * Every request reads every provider's key (`providerKeyHeaders`), and the
+ * memory catch-up reads them again every half hour. A signed release reads its
+ * own items silently, so that costs nothing. When macOS does ask (a keychain
+ * locked after a password change, an item written by a differently signed
+ * build) and the answer is "Allow" rather than "Always Allow", it asks again on
+ * every read: every message, and a dialog out of nowhere every half hour.
+ * Holding what was read makes it once per launch, and exposes nothing new, since
+ * each read hands this page the key anyway. Only keys are held: a refusal is
+ * retried on the next read, and an absence costs no prompt to check again.
+ */
+const keychainKeys = new Map();
+
+/**
+ * Read a stored provider key, and say why when the store refused.
+ *
+ * Returns `{ key }`, with `key` "" when none is set, or `{ key: "", error }`
+ * when the desktop keychain would not answer. A refusal is not an absence: the
+ * key card must not tell someone whose key is sitting in the keychain that none
+ * is set, because the fix is different. `chatgptStatus` draws the same line for
+ * the sign-in.
+ */
+export async function readProviderKey(providerId) {
+  if (typeof window === "undefined") return { key: "" };
   if (isTauri()) {
+    if (keychainKeys.has(providerId)) return { key: keychainKeys.get(providerId) };
     try {
-      return (await window.__TAURI__.core.invoke("get_provider_key", { provider: providerId })) || "";
-    } catch {
-      return "";
+      const key = (await window.__TAURI__.core.invoke("get_provider_key", { provider: providerId })) || "";
+      if (key) keychainKeys.set(providerId, key);
+      return { key };
+    } catch (err) {
+      return { key: "", error: String(err?.message ?? err) };
     }
   }
   try {
-    return window.sessionStorage.getItem(STORAGE_PREFIX + providerId) || "";
+    return { key: window.sessionStorage.getItem(STORAGE_PREFIX + providerId) || "" };
   } catch {
-    return "";
+    return { key: "" };
   }
+}
+
+/** Read a stored provider key. Returns "" when unset or storage is unavailable. */
+export async function getProviderKey(providerId) {
+  return (await readProviderKey(providerId)).key;
 }
 
 /**
@@ -120,17 +151,36 @@ export async function getProviderKey(providerId) {
  * all, so the key silently vanished and the user was left with a settings page
  * that appeared to have saved. The shell returns a message naming the cause
  * (`describe_keyring_error` in `desktop/src-tauri/src/lib.rs`); callers should
- * show it. Reads still degrade quietly — a missing key reads as absent, which
- * is both true and harmless.
+ * show it. `getProviderKey` still degrades quietly, since a request has no one
+ * to tell; `readProviderKey` reports the refusal for the card that can.
  */
 export async function setProviderKey(providerId, value) {
   if (typeof window === "undefined") return;
   const trimmed = (value || "").trim();
   if (isTauri()) {
-    await window.__TAURI__.core.invoke(trimmed ? "set_provider_key" : "delete_provider_key", {
-      provider: providerId,
-      key: trimmed,
-    });
+    keychainKeys.delete(providerId);
+    const invoke = window.__TAURI__.core.invoke;
+    if (!trimmed) {
+      await invoke("delete_provider_key", { provider: providerId });
+      return;
+    }
+    try {
+      await invoke("set_provider_key", { provider: providerId, key: trimmed });
+    } catch (first) {
+      // An item a differently signed build wrote can refuse the overwrite as
+      // well as the read, and then pasting the key again, the fix the card
+      // offers, fails the same way. Deleting first costs nothing, since the item
+      // was unusable, and it is what `store()` in chatgpt.rs does for the
+      // sign-in. Here rather than in the shell because the page is deployed and
+      // the shell is not: this reaches every copy already installed.
+      try {
+        await invoke("delete_provider_key", { provider: providerId });
+        await invoke("set_provider_key", { provider: providerId, key: trimmed });
+      } catch {
+        throw first;
+      }
+    }
+    keychainKeys.set(providerId, trimmed);
     return;
   }
   try {

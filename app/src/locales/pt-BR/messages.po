@@ -1639,6 +1639,10 @@ msgstr "Não é possível alcançar o Duct"
 msgid "Can't reach the provider"
 msgstr "Não é possível alcançar o provedor"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "Can't read your key"
+msgstr "Não foi possível ler sua chave"
+
 #: src/app/(app)/execute/page.jsx
 #: src/app/(app)/projects/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
@@ -3349,8 +3353,12 @@ msgid "Heavy — the deep model"
 msgstr "Pesado — o modelo profundo"
 
 #: src/lib/credentialStorage.js
-msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
-msgstr "Mantido no chaveiro do seu sistema operacional neste computador. Os servidores do Duct nunca o veem."
+msgid "Held by your operating system's keychain on this computer. Duct uses it while the app is open and never stores it."
+msgstr "Mantido no chaveiro do seu sistema operacional neste computador. O Duct o usa enquanto o app está aberto e nunca o armazena."
+
+#: src/lib/credentialStorage.js
+#~ msgid "Held by your operating system's keychain on this computer. Duct's servers never see it."
+#~ msgstr "Mantido no chaveiro do seu sistema operacional neste computador. Os servidores do Duct nunca o veem."
 
 #: src/components/connections/ProviderCard.jsx
 msgid "held for this browser session"
@@ -7377,6 +7385,14 @@ msgstr "Este link da auditoria não é mais válido. Links expiram após 24 hora
 msgid "This computer's key"
 msgstr "A chave deste computador"
 
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer's keychain didn't let Duct read the {providerName} key saved in it."
+msgstr "O chaveiro deste computador não deixou o Duct ler a chave do {providerName} salva nele."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "This computer’s keychain didn’t let Duct read this key: {readError}"
+msgstr "O chaveiro deste computador não deixou o Duct ler esta chave: {readError}"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "This connection was made before Duct recorded which permissions Google granted. Reconnect to find out — nothing is assumed either way."
 msgstr "Esta conexão foi feita antes do Duct registrar quais permissões o Google concedeu. Reconecte para descobrir — nada é assumido de qualquer forma."
@@ -7597,6 +7613,7 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "Testes, renovações, reembolsos e MRR na App Store e Play."
 
 #: src/components/AppErrorPanel.jsx
+#: src/components/connections/ProviderCard.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "Tentar novamente"
@@ -8135,8 +8152,12 @@ msgid "Will be kept in this browser session only — cleared when you close the 
 msgstr "Será mantido apenas nesta sessão do navegador — limpo ao fechar a aba e indisponível para execuções agendadas."
 
 #: src/components/connections/ProviderCard.jsx
-msgid "Will be stored in your OS keychain on this machine."
-msgstr "Será armazenado no seu chaveiro do sistema operacional nesta máquina."
+#~ msgid "Will be stored in your OS keychain on this machine."
+#~ msgstr "Será armazenado no seu chaveiro do sistema operacional nesta máquina."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Will be stored in your OS keychain on this machine. Duct can use it only while the app is open, so anything that runs while it’s closed waits until you’re back."
+msgstr "Será armazenado no seu chaveiro do sistema operacional nesta máquina. O Duct só pode usá-lo enquanto o app está aberto, então o que rodaria com ele fechado espera até você voltar."
 
 #: src/components/GoogleAdsReport.js
 msgid "Win"
@@ -8382,6 +8403,10 @@ msgstr "Sua chave é usada antes do plano. Execuções agendadas acontecem sem o
 #: src/components/models/UsagePanel.jsx
 msgid "Your key was charged {charged} across {earlierCalls, plural, one {# model call} other {# model calls}} in the last {widest} days. This window is just a quiet one."
 msgstr "Sua chave foi cobrada {charged} em {earlierCalls, plural, one {# chamada de modelo} other {# chamadas de modelo}} nos últimos {widest} dias. Este período está tranquilo."
+
+#: src/components/connections/ProviderCard.jsx
+msgid "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
+msgstr "Seu Mac não deixou o Duct ler esta chave. Escolha “Tentar novamente” e, quando o Mac pedir sua senha, clique em <0>Sempre Permitir</0> para que ele não pergunte de novo. Ou cole a chave novamente e salve."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your memory"

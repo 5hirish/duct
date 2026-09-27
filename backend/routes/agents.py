@@ -86,7 +86,7 @@ from service.crawl.fetcher import SSRFError, validate_public_url
 from service.lead_access import lead_token_is_live
 from service.membership import accessible_projects, get_project_for_user, member_role
 from service.memory import build_memory_context, seed_user_preferences
-from service.memory_consolidation import record_remember_choice, schedule_consolidation
+from service.memory_consolidation import LentKeys, record_remember_choice, schedule_consolidation
 from agents.engines import resolve_job_run
 from agents.tiers import Job, tier_fields
 from service.model_settings import get_model_settings
@@ -142,8 +142,12 @@ def _close_and_consolidate(session_id: str) -> None:
             recorder.close()
         except Exception:  # noqa: BLE001 - never let bookkeeping block a close
             logger.debug("agents: recorder close failed for %s", session_id, exc_info=True)
+    lent = LentKeys(
+        user_id=getattr(session, "user_id", None),
+        keys=getattr(session, "lent_keys", None) or {},
+    ) if session is not None else None
     close_session(session_id)
-    schedule_consolidation(conversation_id)
+    schedule_consolidation(conversation_id, lent=lent)
 
 
 def _cancel_grace(session) -> None:
@@ -401,6 +405,11 @@ async def create_session(
     # Signed-in creator (optional — API-key-only callers get None). Downstream
     # features (artifact persistence, execution proposals) key off this.
     session.user_id = user.id if user else None
+    # The caller's header keys, in memory for the session's life and never
+    # stored — the runner holds them anyway. Closing the session lends them to
+    # the consolidation pass, which otherwise sees only saved keys: a desktop
+    # install keeps its keys in the keychain and would never be consolidated.
+    session.lent_keys = dict(user_keys or {})
     # Whose bill this run's model calls land on. Set here rather than at each
     # agent's start, because this is the one function that builds a session for
     # every agent type — so a fourth agent is covered without remembering to add
@@ -1472,6 +1481,7 @@ async def _start_seo_audit(
                 provider=provider,
                 model=model,
                 group_id=group_id,
+                lent_keys=user_keys,
             )
             session.artifact_persister = persister
             # Membership just verified — this also unlocks the project-scoped
@@ -1786,6 +1796,7 @@ async def _start_insights(
                 model=model,
                 group_id=group_id,
                 adapt=brief_artifact_version,
+                lent_keys=user_keys,
             )
             if session is not None:
                 session.artifact_persister = persister

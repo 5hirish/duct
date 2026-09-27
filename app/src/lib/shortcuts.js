@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { isMac } from "./shell";
 
 /**
  * Keyboard shortcuts, declared where they are owned.
@@ -14,9 +15,6 @@ import { useEffect, useRef } from "react";
  * Combos are written platform-neutrally as "mod+k": `mod` is ⌘ on macOS and
  * Ctrl elsewhere, so nothing has to branch on the platform at the call site.
  */
-
-const isMac = () =>
-  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
 
 /** Parse "mod+shift+k" into the pieces an event can be checked against. */
 function parseCombo(combo) {
