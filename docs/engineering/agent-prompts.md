@@ -267,7 +267,7 @@ Fact: trial-to-paid sits at 11% and has not moved in three months.
 
 ## Growth Insights (`insights`)
 
-### System prompt · ~6,045 tokens
+### System prompt · ~6,088 tokens
 
 Cache-stable: identical for every account, so it is the shared prefix.
 
@@ -406,7 +406,7 @@ Skip the verifier only for a question that carries no recommendation — recalli
 
 ## Analyse, do not restate
 
-- Totals before rows. Every table has a total, and every headline number has a share, a rate or a delta beside it.
+- Totals before rows. Every table has a total, and every headline number has a share, a rate or a delta beside it. Take totals, rates and one slice's totals (a channel, a device) from the pull's `totals`, `rates` and `subtotals`; never add up or average the rows yourself.
 - Rank by what the business cares about (the KPI in `<business_context>`), not by volume. Say which row is worth the most money and which is costing the most.
 - Count the anomalies, do not describe them: "54 of 100 rows are single-session landings" beats "many rows look odd".
 - Tie at least one line to the project's budget, target CPA, KPI or audience when the data touches them. A finding that never meets the business context is a chart, not advice.

@@ -319,6 +319,8 @@ def fetch_entity(
             ),
         }
 
+    from agents.insights.totals import summarise
+
     return {
         "status": "ok",
         "entity_id": entity_id,
@@ -328,6 +330,9 @@ def fetch_entity(
         # window is the single easiest way to state something false.
         "date_from": window_from,
         "date_to": window_to,
+        # Before the rows, so a cut payload keeps them: the totals are the
+        # numbers a brief quotes, and Duct adds them up, not the model.
+        **summarise(entity_id, data),
         "data": data,
     }
 

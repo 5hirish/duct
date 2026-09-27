@@ -39,6 +39,7 @@ from agents.insights.fetchers import (
     MAX_RESPONSE_CHARS,
     fetch_entity,
     known_entities,
+    resolve_window,
 )
 from agents.knowledge import load_knowledge_pack
 
@@ -88,7 +89,10 @@ FETCH_DESCRIPTION = (
     "Fetch one entity of live data for this project. The account, property or site and "
     "the credentials are resolved server-side from the project's connections — you name "
     "the entity and the window, nothing else. Returns the data plus the exact window it "
-    "covers; cite that window whenever you cite a number from it. Fetching an entity and "
+    "covers; cite that window whenever you cite a number from it. Row reports also carry "
+    "`totals`, `rates` and per-channel or per-device `subtotals` that Duct computed (what "
+    "they cover is in `totals_cover`): quote those, never your own sum or average of the "
+    "rows. Fetching an entity and "
     "window already fetched this session returns the same result instantly, so re-asking "
     "costs nothing. A non-'ok' status is an "
     "instruction: 'needs_account' means call SelectAccount first, 'not_connected' means "
@@ -180,8 +184,12 @@ def build_data_tools_lc(
         import asyncio
 
         key = (entity_id.strip(), date_from.strip(), date_to.strip())
+        # The same pull asked two ways ("" for the default window, then those
+        # dates written out) is one pull. A replay keeps the typed key alone:
+        # its default window resolves against the day it ran, not today.
+        resolved = key if replaying else (key[0], *resolve_window(key[1], key[2]))
         with tool_span(tool_name="FetchData", agent_name=log_prefix) as span:
-            cached = cache.get(key)
+            cached = cache.get(key, cache.get(resolved))
             if replaying and cached is not None and on_fetch is not None:
                 # A live session's cache hit is silent (the ladder listed the
                 # pull when it was made). In a replay the seed IS the session's
@@ -269,7 +277,7 @@ def build_data_tools_lc(
             # be retried when the agent narrows the window or the token is
             # refreshed, not replayed.
             if result.get("status") == "ok" and len(cache) < FETCH_CACHE_MAX:
-                cache[key] = body
+                cache[key] = cache[resolved] = body
             return body
 
     tools.append(
