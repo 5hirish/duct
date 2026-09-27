@@ -38,6 +38,7 @@ import DeskActivity, { activityGridClass } from "@/components/insights/desk/Desk
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { ArtifactPaneHeader, BriefPane, DataPane, DocumentFocus } from "@/components/insights/InsightsWorkspace";
 import { ActivityGroup, ActivityRow } from "@/components/workspace/ActivityRow";
+import { MemoryRecall } from "@/components/workspace/MemoryRows";
 import { activitiesFromEvents, contextActivity, dataSourceRollup } from "@/lib/toolActivity";
 import { briefFile } from "@/lib/brief";
 import { saveText } from "@/lib/download";
@@ -1459,6 +1460,25 @@ export const SCENES = [
             at: Date.now() - 3 * 60_000,
             text: "Sessions are flat; the mix moved.\n\nMobile organic to the pricing page is down **12%** since the 4th, and that is the whole of the drop. Desktop is up slightly. The tag was redeployed the same week, so before calling it demand I would check the mobile hit count in the raw events.",
           }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "memory-recall-freshness",
+    state: "a state seen this week · a state past its shelf life · a target",
+    group: "AgentChat",
+    title: "What a turn remembered, and how old it is",
+    note: "The recall row, opened. A state outside Duct (a campaign's status, a budget) says when it was last seen; past its shelf life it adds \"may have changed\", in words and not in colour alone, because the agent was told the same thing and must re-read it before calling it current. A target carries no date: it cannot drift under us. What to check: the date never wraps away from its entry, the caveat reads as a caveat and not an error, and the short id stays last before Forget.",
+    render: () => (
+      <div className="max-w-xl">
+        <MemoryRecall
+          open
+          memories={[
+            { id: "m_1a2b3c4d", memory_id: "preview-1", kind: "status", title: "Brand max CPC is $2.10", seen_at: new Date(Date.now() - 2 * 86_400_000).toISOString(), freshness: "current" },
+            { id: "m_5e6f7a8b", memory_id: "preview-2", kind: "status", title: "Brand campaign is enabled", seen_at: new Date(Date.now() - 44 * 86_400_000).toISOString(), freshness: "verify" },
+            { id: "m_9c0d1e2f", memory_id: "preview-3", kind: "goal", title: "Target CPA $45" },
+          ]}
         />
       </div>
     ),

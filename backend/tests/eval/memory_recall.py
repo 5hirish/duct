@@ -20,6 +20,10 @@ runs in CI in under a second. That also makes it a regression test for the
 Phase 3 ranking and time-expansion code, not just a benchmark.
 
 Dates are relative to now, so the corpus stays valid whenever it runs.
+
+A sixth axis, **freshness**, asks a different question of the same ledger:
+not whether the right row comes back, but whether the line the model reads
+admits how old it is. See :func:`run_freshness_eval`.
 """
 
 from __future__ import annotations
@@ -28,7 +32,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from uuid import UUID
 
-from service.memory import remember, search
+from service.memory import FRESHNESS_VERIFY, remember, render_entry, search
 from utils.dates import utcnow
 
 # --- axes -------------------------------------------------------------------
@@ -325,3 +329,166 @@ def format_report(results: dict[str, AxisResult]) -> str:
             f"{axis:<16} {r.asked:>5} {r.recall:>6.0%} {r.leak_rate:>6.0%} {abstain:>8}"
         )
     return "\n".join(lines)
+
+
+# --- freshness --------------------------------------------------------------
+# Scored on the rendered digest line, because that line is all the model reads
+# about an entry. A state outside Duct seen past its shelf life has to carry
+# the verify mark, or the model states a 44-day-old "enabled" as today's: the
+# **stale-assertion rate**, which was 100% while every open row rendered
+# "<start> – present". A goal, a dated metric, a decision or a state seen this
+# week must not carry it, or the mark turns into noise the model learns to
+# skip: the **false-alarm rate**. Neither is the knowledge-update axis's
+# stale-fact rate, which only asks whether a superseded row is served; a row
+# nobody re-read is never superseded at all.
+
+FRESHNESS = "freshness"
+
+
+@dataclass(frozen=True)
+class FreshnessCase:
+    slug: str
+    kind: str
+    title: str
+    days_ago: int
+    entity_key: str = ""
+    attribute: str = ""
+    period: str = ""
+    must_verify: bool = False
+
+
+FRESHNESS_CORPUS: tuple[FreshnessCase, ...] = (
+    # Can drift, and was last seen past its shelf life: must say verify.
+    FreshnessCase("brand_status", "status", "Brand campaign is enabled", 44,
+                  "campaign:brand", "status", must_verify=True),
+    FreshnessCase("brand_budget", "status", "Brand budget $50/day", 21,
+                  "campaign:brand", "budget", must_verify=True),
+    FreshnessCase("pricing_redirect", "status", "/pricing 301s to /plans", 47,
+                  "page:/pricing", "indexation", must_verify=True),
+    FreshnessCase("sessions_28d", "metric", "GA4 sessions 8,900 over the last 28 days", 30,
+                  "kpi:sessions", "actual", period="last-28d", must_verify=True),
+    FreshnessCase("checkout_incident", "incident", "Checkout returns 500 on mobile Safari", 20,
+                  "page:/checkout", "errors", must_verify=True),
+    # Cannot drift, or was seen this week: must not.
+    FreshnessCase("cpa_target", "goal", "Target CPA $45", 60, "kpi:cpa", "target"),
+    FreshnessCase("cpa_q2", "metric", "Brand CPA $52 in Q2", 75, "kpi:cpa", "actual",
+                  period="2026-Q2"),
+    FreshnessCase("cvr_june", "metric", "Conversion rate 2.4% in June", 90, "kpi:cvr", "actual",
+                  period="2026-06"),
+    FreshnessCase("bid_fresh", "status", "Brand max CPC $2.10", 2, "campaign:brand", "max_cpc"),
+    FreshnessCase("redirect_decision", "decision", "Redirected /pricing to /plans", 47),
+)
+
+
+def _marks(line: str) -> list[str]:
+    """The ``·``-separated fields of a line's bracketed head, never its title."""
+    return line.split("]", 1)[0].lstrip("[").split(" · ")
+
+
+def says_verify(line: str) -> bool:
+    return FRESHNESS_VERIFY in _marks(line)
+
+
+@dataclass
+class FreshnessResult:
+    must_verify: int = 0
+    stale_assertions: int = 0
+    must_not_verify: int = 0
+    false_alarms: int = 0
+    round_trips: dict[str, bool] = field(default_factory=dict)
+    misses: list[str] = field(default_factory=list)
+
+    @property
+    def stale_assertion_rate(self) -> float:
+        return self.stale_assertions / self.must_verify if self.must_verify else 0.0
+
+    @property
+    def false_alarm_rate(self) -> float:
+        return self.false_alarms / self.must_not_verify if self.must_not_verify else 0.0
+
+
+def run_freshness_eval(db, project_id: UUID) -> FreshnessResult:
+    """Seed the freshness corpus, grade every rendered line, then three round trips.
+
+    * **refresh** — the agent re-reads Brand's status and RememberFacts the same
+      fact: the line loses verify and shows today.
+    * **contradiction** — the re-read says paused: the new value is current and
+      the old one is no longer served.
+    * **consolidation is not a re-read** — the post-session pass extracting the
+      same budget line from a transcript that only repeated memory must leave
+      the verify mark where it was.
+    """
+    now = utcnow()
+    result = FreshnessResult()
+    rows = {}
+    for case in FRESHNESS_CORPUS:
+        row = remember(
+            db, kind=case.kind, title=case.title, project_id=project_id,
+            entity_key=case.entity_key, attribute=case.attribute, period=case.period,
+            observed_at=now - timedelta(days=case.days_ago),
+            source_refs=[{"source": "eval"}],
+        )
+        rows[case.slug] = row
+        line = render_entry(row, now)
+        flagged = says_verify(line) and "present" not in line
+        if case.must_verify:
+            result.must_verify += 1
+            if not flagged:
+                result.stale_assertions += 1
+                result.misses.append(f"{case.slug} asserts currency: {line}")
+        else:
+            result.must_not_verify += 1
+            if says_verify(line):
+                result.false_alarms += 1
+                result.misses.append(f"{case.slug} raised a false alarm: {line}")
+
+    status = BY_FRESH["brand_status"]
+    refreshed = remember(
+        db, kind=status.kind, title=status.title, project_id=project_id,
+        entity_key=status.entity_key, attribute=status.attribute,
+        source_refs=[{"source": "eval-reread"}],
+    )
+    line = render_entry(refreshed, now)
+    result.round_trips["refresh"] = (
+        refreshed.id == rows["brand_status"].id
+        and not says_verify(line)
+        and f"seen {now:%Y-%m-%d}" in line
+    )
+
+    paused = remember(
+        db, kind=status.kind, title="Brand campaign is paused", project_id=project_id,
+        entity_key=status.entity_key, attribute=status.attribute,
+        source_refs=[{"source": "eval-reread"}],
+    )
+    served = {r.id for r in search(db, project_id=project_id, query="brand campaign")}
+    result.round_trips["contradiction"] = (
+        paused.id in served
+        and rows["brand_status"].id not in served
+        and not says_verify(render_entry(paused, now))
+    )
+
+    budget = BY_FRESH["brand_budget"]
+    consolidated = remember(
+        db, kind=budget.kind, title=budget.title, project_id=project_id,
+        entity_key=budget.entity_key, attribute=budget.attribute,
+        source_refs=[{"source": "eval-consolidation"}], meta={"consolidated": True},
+    )
+    result.round_trips["consolidation is not a re-read"] = says_verify(render_entry(consolidated, now))
+
+    for name, ok in result.round_trips.items():
+        if not ok:
+            result.misses.append(f"round trip failed: {name}")
+    return result
+
+
+BY_FRESH: dict[str, FreshnessCase] = {c.slug: c for c in FRESHNESS_CORPUS}
+
+
+def format_freshness(result: FreshnessResult) -> str:
+    trips = sum(result.round_trips.values())
+    return (
+        f"{FRESHNESS:<16} stale-assertion {result.stale_assertion_rate:.0%} "
+        f"({result.stale_assertions}/{result.must_verify}) · false-alarm "
+        f"{result.false_alarm_rate:.0%} ({result.false_alarms}/{result.must_not_verify}) · "
+        f"round trips {trips}/{len(result.round_trips)}"
+    )

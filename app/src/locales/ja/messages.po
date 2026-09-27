@@ -1257,6 +1257,14 @@ msgstr "アーティファクトのバージョン"
 msgid "Artifacts"
 msgstr "アーティファクト"
 
+#: src/components/workspace/MemoryRows.jsx
+msgid "as of {date}"
+msgstr "{date}時点"
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "as of {date} · may have changed"
+msgstr "{date}時点 · 変更されている可能性があります"
+
 #: src/lib/projectsApi.js
 msgid "Ask"
 msgstr "質問"

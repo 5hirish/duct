@@ -356,13 +356,29 @@ def test_digest_shows_only_the_current_value_of_a_state(db, project):
     assert "Target CPA $60" not in text
 
 
-def test_render_entry_marks_unconfirmed_and_shows_validity(db, project):
+def test_render_entry_marks_unconfirmed_and_shows_when_a_state_was_seen(db, project):
     row = _write(db, project, kind="status", title="Paused", entity_key="campaign:brand",
                  attribute="status")
     line = render_entry(row)
     assert short_id(row.id) in line
     assert "unconfirmed" in line
-    assert "present" in line  # open-ended state
+    # A state outside Duct never claims "present": it says when it was seen.
+    assert f"seen {utcnow():%Y-%m-%d} · 0d" in line and "present" not in line
+
+
+def test_a_recalled_state_carries_its_age_to_the_chip_and_the_tool(db, project):
+    from agents.core.memory_tools import _entry_payload
+    from service.memory import recalled_entry
+
+    old = _write(db, project, kind="status", title="Brand enabled", entity_key="campaign:brand",
+                 attribute="status", observed_at=utcnow() - timedelta(days=30))
+    goal = _write(db, project, kind="goal", title="Target CPA $45", entity_key="kpi:cpa",
+                  attribute="target")
+    assert recalled_entry(old)["freshness"] == "verify"
+    assert recalled_entry(old)["seen_at"].startswith((utcnow() - timedelta(days=30)).strftime("%Y-%m-%d"))
+    assert _entry_payload(old)["freshness"] == "verify"
+    # A target cannot drift under us, so it carries no age at all.
+    assert "freshness" not in recalled_entry(goal) and "seen_at" not in _entry_payload(goal)
 
 
 def test_build_memory_context_composes_all_blocks(db, project, owner):

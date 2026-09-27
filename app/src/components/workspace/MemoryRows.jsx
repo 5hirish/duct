@@ -16,6 +16,7 @@ import { useState } from "react";
 import { Brain } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { formatDate } from "@/lib/format";
 import { MEMORY_KIND_ICONS, deleteMemory } from "@/lib/memoryApi";
 import { getActiveProject } from "@/lib/projects";
 
@@ -91,11 +92,39 @@ export function MemoryNote({ memories }) {
   );
 }
 
+/** "as of 14 Aug" beside a remembered state that can change outside Duct (a
+ * campaign's status, a budget, a redirect), and "may have changed" once it is
+ * past its shelf life. The agent is told to re-read those before calling them
+ * current; the reader gets the same caveat, in words rather than colour alone.
+ * Targets, decisions and dated metrics cannot drift and carry no date here
+ * (the backend sends `seen_at` only for what can). */
+function SeenAt({ memory }) {
+  const { i18n } = useLingui();
+  const seen = memory.seen_at ? new Date(memory.seen_at) : null;
+  if (!seen || Number.isNaN(seen.getTime())) return null;
+  const date = formatDate(seen, {
+    withYear: seen.getFullYear() !== new Date().getFullYear(),
+    locale: i18n.locale,
+  });
+  if (memory.freshness === "verify") {
+    return (
+      <span className="ml-auto shrink-0 text-warning">
+        <Trans>as of {date} · may have changed</Trans>
+      </span>
+    );
+  }
+  return (
+    <span className="ml-auto shrink-0 opacity-70">
+      <Trans>as of {date}</Trans>
+    </span>
+  );
+}
+
 /** "Recalled N memories" — what this turn was primed with, opening to a chip per
  * entry: what it remembered, a link to its row, and Forget. An answer should
  * always be traceable to the facts behind it, and forgetting one should not
  * require going looking for it. */
-export function MemoryRecall({ memories }) {
+export function MemoryRecall({ memories, open = false }) {
   const { t } = useLingui();
   const projectId = getActiveProject()?.id;
   const [forgotten, setForgotten] = useState(() => new Set());
@@ -123,7 +152,7 @@ export function MemoryRecall({ memories }) {
   return (
     <>
       {dialog}
-      <details className="my-1.5 px-1 text-xs text-muted-foreground">
+      <details open={open} className="my-1.5 px-1 text-xs text-muted-foreground">
       <summary className="cursor-pointer select-none hover:text-foreground">
         <Brain size={13} className="mr-1 inline-block align-[-2px]" aria-hidden="true" />
         <Plural value={recalledCount} one="Recalled # memory" other="Recalled # memories" />
@@ -135,17 +164,22 @@ export function MemoryRecall({ memories }) {
             className={`flex items-start gap-1.5 ${forgotten.has(m.memory_id) ? "opacity-50 line-through" : ""}`}
           >
             <span aria-hidden="true">{MEMORY_KIND_ICONS[m.kind] || "•"}</span>
-            {projectId && m.memory_id ? (
-              <a
-                href={memoryHref(projectId, m)}
-                onClick={() => trackChip("recalled", m)}
-                className="min-w-0 flex-1 underline underline-offset-2 hover:text-foreground"
-              >
-                {m.title}
-              </a>
-            ) : (
-              <span className="min-w-0 flex-1">{m.title}</span>
-            )}
+            {/* Title and date share a wrapping row, so on a phone the date
+                drops under the title instead of squeezing it a word per line. */}
+            <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
+              {projectId && m.memory_id ? (
+                <a
+                  href={memoryHref(projectId, m)}
+                  onClick={() => trackChip("recalled", m)}
+                  className="min-w-0 underline underline-offset-2 hover:text-foreground"
+                >
+                  {m.title}
+                </a>
+              ) : (
+                <span className="min-w-0">{m.title}</span>
+              )}
+              <SeenAt memory={m} />
+            </span>
             <span className="font-mono text-2xs opacity-70">{m.id}</span>
             {projectId && m.memory_id && !forgotten.has(m.memory_id) && (
               <button

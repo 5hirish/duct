@@ -29,8 +29,10 @@ from service.memory import (
 from tests.eval.memory_recall import (
     ABSTENTION,
     KNOWLEDGE_UPDATE,
+    format_freshness,
     format_report,
     run_eval,
+    run_freshness_eval,
     seed_corpus,
 )
 from utils.dates import utcnow
@@ -288,3 +290,40 @@ def test_the_known_synonym_gap_is_the_only_knowledge_update_miss(graded):
     """Pin the one documented failure so a second one cannot hide behind it."""
     misses = [m for m in graded[KNOWLEDGE_UPDATE].misses if "missed" in m]
     assert len(misses) == 1 and "still resolve" in misses[0], misses
+
+
+# ---------------------------------------------------------------------------
+# The freshness axis
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def freshness():
+    """Seed the freshness corpus in a project of its own, so it cannot move
+    the 50-question retrieval scores above."""
+    engine = make_sqlite_engine()
+    with Session(engine) as db:
+        project = Project(id=uuid4(), user_id=uuid4(), name="Acme")
+        db.add(project)
+        db.commit()
+        result = run_freshness_eval(db, project.id)
+        print("\n" + format_freshness(result))
+        yield result
+
+
+def test_no_stale_state_is_rendered_as_current(freshness):
+    """Every open "<start> – present" line scored here until 2026-09-27: 100%."""
+    assert freshness.stale_assertion_rate == 0.0, "\n".join(freshness.misses)
+
+
+def test_what_cannot_drift_is_never_flagged(freshness):
+    assert freshness.false_alarm_rate == 0.0, "\n".join(freshness.misses)
+
+
+def test_a_reread_refreshes_and_a_contradiction_replaces(freshness):
+    assert all(freshness.round_trips.values()), "\n".join(freshness.misses)
+
+
+def test_the_freshness_corpus_graded_both_ways(freshness):
+    """Guards the eval itself: an empty side would score a perfect rate."""
+    assert freshness.must_verify >= 4 and freshness.must_not_verify >= 4
+    assert len(freshness.round_trips) == 3

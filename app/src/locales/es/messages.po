@@ -1257,6 +1257,14 @@ msgstr "Versión del artefacto"
 msgid "Artifacts"
 msgstr "Artefactos"
 
+#: src/components/workspace/MemoryRows.jsx
+msgid "as of {date}"
+msgstr "visto el {date}"
+
+#: src/components/workspace/MemoryRows.jsx
+msgid "as of {date} · may have changed"
+msgstr "visto el {date} · puede haber cambiado"
+
 #: src/lib/projectsApi.js
 msgid "Ask"
 msgstr "Preguntar"
