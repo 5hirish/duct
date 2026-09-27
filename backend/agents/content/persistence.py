@@ -294,6 +294,58 @@ CANCELLED_FAILURE = {
 }
 
 
+def cancel_orphaned_runs(db: Session) -> int:
+    """Record every run a dead process left ``running`` as cancelled.
+
+    The recorder writes ``cancelled`` when a session closes mid-turn, but only
+    through ``_close_and_consolidate``. A process that stops writes nothing:
+    server shutdown closes sessions with ``close_all_sessions``, which never
+    reaches a recorder, and an OOM kill or a quit desktop app does not shut
+    down at all. So every deploy left its in-flight turns "Working…" forever,
+    with the desk polling them every thirty seconds.
+
+    Called once at startup, before this process can have a turn of its own,
+    so every ``running`` row belongs to a process that no longer exists. That
+    assumes one API process, as the backend runs today: during a deploy's
+    overlap a turn still finishing on the old container is marked here and
+    corrects itself at its own next status write. ``last_active_at`` is left
+    alone, so old threads do not jump to the top of every list. Same failure
+    row and status the recorder writes, so the transcript ends where the run
+    stopped and a resume continues it.
+    """
+    orphaned = list(db.exec(
+        select(AgentConversation.id, AgentConversation.last_active_at)
+        .where(AgentConversation.run_status == str(RunStatus.RUNNING))
+    ))
+    for conversation_id, last_active_at in orphaned:
+        append_event(db, conversation_id, EventKind.FAILURE, dict(CANCELLED_FAILURE))
+        db.execute(
+            update(AgentConversation)
+            .where(AgentConversation.id == conversation_id)
+            .where(AgentConversation.run_status == str(RunStatus.RUNNING))
+            .values(
+                run_status=str(RunStatus.CANCELLED),
+                run_error=dict(CANCELLED_FAILURE),
+                # append_event bumped it; this is bookkeeping, not activity.
+                last_active_at=last_active_at,
+            )
+        )
+        db.commit()
+    return len(orphaned)
+
+
+def cancel_orphaned_runs_at_startup() -> None:
+    """``cancel_orphaned_runs`` for the app lifespan: logs, never raises."""
+    try:
+        with next(db_session()) as db:
+            cancelled = cancel_orphaned_runs(db)
+    except Exception:  # noqa: BLE001 — bookkeeping never blocks a boot
+        logger.warning("persistence: could not reconcile orphaned runs at startup", exc_info=True)
+        return
+    if cancelled:
+        logger.info("persistence: %d run(s) the last process left running marked cancelled", cancelled)
+
+
 class ConversationRecorder:
     """Persists a conversation by wrapping the runner's emit callback.
 

@@ -141,6 +141,34 @@ async def test_closing_mid_turn_is_a_cancellation_and_closing_idle_is_nothing(en
     assert _kinds(engine, conversation) == [EventKind.FAILURE]  # no second one
 
 
+async def test_a_run_the_last_process_left_running_is_cancelled_at_startup(engine, conversation):
+    """A deploy closes sessions without their recorders, and a killed process
+    closes nothing, so a turn in flight stayed "Working…" forever. Startup is
+    the one moment every `running` row is known to be dead."""
+    recorder = ConversationRecorder(conversation)
+    await _drive(recorder, {"event": AgentEvent.PIPELINE_STARTED})  # ...and the process dies
+    with Session(engine) as db:
+        parked = AgentConversation(agent_type="insights", project_id=_row(engine, conversation).project_id)
+        db.add(parked)
+        db.commit()
+        persistence.set_run_status(db, parked.id, RunStatus.PAUSED)
+        parked_id = parked.id
+    active_before = _row(engine, conversation).last_active_at
+
+    with Session(engine) as db:
+        assert persistence.cancel_orphaned_runs(db) == 1
+
+    row = _row(engine, conversation)
+    assert row.run_status == RunStatus.CANCELLED
+    assert row.run_error["code"] == "cancelled"
+    assert _kinds(engine, conversation) == [EventKind.FAILURE]  # the transcript ends where it stopped
+    assert row.last_active_at == active_before  # not bumped to the top of every list
+    # A pause is checkpointed and survives a restart; it is not an orphan.
+    assert _row(engine, parked_id).run_status == RunStatus.PAUSED
+    with Session(engine) as db:
+        assert persistence.cancel_orphaned_runs(db) == 0  # idempotent
+
+
 async def test_a_replayed_pause_changes_nothing(engine, conversation):
     """A resumed session re-emits the card it is parked on; that is the same
     pause, already recorded as such."""

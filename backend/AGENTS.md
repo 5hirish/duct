@@ -628,6 +628,11 @@ framework. The rules it implies:
   the same code. Do not set the status from a runner — a second writer is how
   two agents end up disagreeing about one column. A session closed mid-turn is
   recorded as `cancelled` by `recorder.close()` in `_close_and_consolidate`.
+  A process that stops writes nothing (server shutdown's `close_all_sessions`
+  never reaches a recorder, and a kill runs no shutdown), so every run still
+  `running` at the next boot is cancelled by `cancel_orphaned_runs` from the
+  lifespan. It assumes one API process; a second replica would need a lease
+  or heartbeat instead.
 - **A retry says how long, and the provider's `Retry-After` wins.**
   `MODEL_RETRYING` carries `retry_in` (seconds, a duration — the client anchors
   it to its own clock so skew cannot show a countdown already over), computed by

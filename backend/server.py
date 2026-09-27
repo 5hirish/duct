@@ -309,6 +309,12 @@ async def lifespan(app: FastAPI):
 
     log_stale_catalog_warnings()
 
+    # Turns the previous process was running when it stopped are over; say so
+    # before anything lists them as "Working…" — see cancel_orphaned_runs.
+    from agents.content.persistence import cancel_orphaned_runs_at_startup
+
+    cancel_orphaned_runs_at_startup()
+
     # Background session-pruner loops: the shared agent registry plus the two
     # legacy per-route session maps. Each runs forever; cancel on shutdown.
     # Imported here (not at module top) to keep startup wiring beside the tasks.
