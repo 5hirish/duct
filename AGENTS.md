@@ -204,6 +204,11 @@ Codex Desktop worktrees use `.codex/environments/environment.toml`. It runs
 as actions in the app. It contains no credentials; local secrets stay outside
 the repository.
 
+GitHub Copilot's coding agent prepares its environment with
+`.github/workflows/copilot-setup-steps.yml`, which runs `make setup`, and reads
+these `AGENTS.md` files itself. `.github/copilot-instructions.md` only points
+here, so there is nothing to keep in sync.
+
 Two editors are configured, `.vscode/` and `.zed/`, and each holds the same
 material in its own shape because neither format is a superset of the other:
 the LSP and exclusion settings that keep rust-analyzer off 167k files, the
