@@ -329,3 +329,48 @@ def test_a_case_runs_its_trials_at_once_and_each_keeps_its_own_pulls(monkeypatch
     assert [t.n for t in trials] == [1, 2, 3] and sorted(finished) == [1, 2, 3]
     assert all(t.passed for t in trials), [t.failures for t in trials]
     assert all(len(t.fetches) == 2 for t in trials)
+
+
+def test_a_brief_written_to_a_scratch_file_is_named_in_the_failure(monkeypatch):
+    """What two of six DeepSeek trials did on 2026-09-28: the brief went to
+    the virtual filesystem, the reply said it was written, and no artifact."""
+    import db.session as session_module
+
+    monkeypatch.setattr(session_module, "get_engine", lambda: make_sqlite_engine())
+    llm = ToolCallingFake(responses=[
+        AIMessage(content="", tool_calls=[{"name": "write_file", "id": "w1",
+                                           "args": {"file_path": "/brief.md", "content": "# Organic fell"}}]),
+        AIMessage(content="The brief is written."),
+    ])
+
+    trial = run_trial(ORGANIC, 1, provider=Provider.OPENROUTER, model="x", api_key="unused",
+                      llm=llm, judge=False)
+
+    assert trial.tools == ["write_file"] and trial.files == ["/brief.md"]
+    assert any("having written /brief.md to its scratch files" in f for f in trial.failures)
+
+
+class _Card:
+    def __init__(self, failures: list[str]):
+        self.failures = failures
+
+    def as_dict(self) -> dict:
+        return {"failures": self.failures}
+
+
+@pytest.mark.parametrize("cards, judged, failures", [
+    ([["marker 'names_the_slip' missing from judge verdict"]] * 2, {"skipped": "IncompleteVerdict"}, []),
+    ([["marker 'names_the_slip' missing from judge verdict"], ["marker 'names_the_slip': NOT HONORED"]],
+     {"failures": ["marker 'names_the_slip': NOT HONORED"]}, ["judge: marker 'names_the_slip': NOT HONORED"]),
+])
+def test_a_verdict_that_leaves_markers_out_is_the_judges_failure(monkeypatch, cards, judged, failures):
+    import tests.eval.judge as judge_module
+    from tests.eval import gate
+
+    answers = iter(cards)
+    monkeypatch.setattr(judge_module, "evaluate", lambda *a, **k: _Card(next(answers)))
+    trial = Trial(case_id=ORGANIC.id, n=1, brief="# The tax guide slipped")
+
+    gate._judge(ORGANIC, trial)
+
+    assert trial.judge == judged and trial.failures == failures

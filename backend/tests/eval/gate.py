@@ -57,6 +57,9 @@ DRIFT = 0.30
 BASELINES = Path(__file__).with_name("baselines.json")
 #: A judge verdict is one call; a minute is slow, five is a stalled stream.
 JUDGE_SECONDS = 300.0
+#: A verdict that leaves markers out is asked for again this many times in all.
+JUDGE_ATTEMPTS = 2
+_MISSING = "missing from judge verdict"
 
 # Figures worth tracing: three or more significant digits, the size of number
 # a reader repeats. Percentages, abbreviations (10.7k) and dates are skipped:
@@ -118,6 +121,8 @@ class Trial:
     judge: dict | None = None
     brief: str = ""
     reply: str = ""
+    tools: list[str] = field(default_factory=list)
+    files: list[str] = field(default_factory=list)
 
     @property
     def provenance(self) -> float | None:
@@ -265,8 +270,9 @@ async def _run_one(
                 task.cancel()
 
     started = time.monotonic()
+    session_id = f"eval-{case.id}-{trial.n}-{uuid.uuid4().hex[:6]}"
     task = asyncio.ensure_future(runner.run_session(
-        f"eval-{case.id}-{trial.n}-{uuid.uuid4().hex[:6]}",
+        session_id,
         emit,
         llm=llm,
         prompt=case.question,
@@ -293,6 +299,7 @@ async def _run_one(
         trial.failures.append(f"timed out after {case.max_seconds:.0f}s and {trial.model_calls} model calls")
     trial.seconds = round(time.monotonic() - started, 1)
     trial.cost_usd = round(trial.cost_usd, 4)
+    trial.tools, trial.files = await _thread_trace(runner, session_id)
 
     _check(case, trial, events, pulls)
     if judge and trial.brief:
@@ -314,10 +321,10 @@ def _check(case: Case, trial: Trial, events: list[dict], pulls: list[dict]) -> N
         # The stream parser drops a <duct_artifact> that never closes, and the
         # runner an empty one, so a started brief leaves chunks and no version.
         started = any(e.get("event") == AgentEvent.ARTIFACT_CHUNK for e in events)
-        trial.failures.append(
-            "no brief: one was started and never published" if started
-            else "no brief: the run ended without an artifact"
-        )
+        why = "one was started and never published" if started else "the run ended without an artifact"
+        if trial.files:
+            why += f", having written {', '.join(trial.files)} to its scratch files"
+        trial.failures.append(f"no brief: {why}")
     errors = [e for e in events if e.get("event") in (AgentEvent.PIPELINE_FAILED, AgentEvent.STEP_FAILED)]
     if errors:
         trial.failures.append(f"error event: {errors[0].get('code') or errors[0].get('error')}")
@@ -356,6 +363,31 @@ def _check(case: Case, trial: Trial, events: list[dict], pulls: list[dict]) -> N
     trial.figures_traced = sum(1 for f in figures if f in known)
 
 
+async def _thread_trace(runner: Any, thread_id: str) -> tuple[list[str], list[str]]:
+    """The tools a run called, in order, and the files left in its virtual
+    filesystem, read back from the thread's state.
+
+    Not from the event stream: the file tools draw no activity row, so a
+    brief written to ``/brief.md`` instead of a ``<duct_artifact>`` left no
+    trace there at all. Read the way ``thread_state`` reads a thread, on a
+    placeholder model that is never called.
+    """
+    from agents.core.lc import inspection_chat_model
+
+    try:
+        agent = runner.build_agent(llm=inspection_chat_model(), remember=False, execute=False, interactive=False)
+        values = (await agent.aget_state({"configurable": {"thread_id": thread_id}})).values or {}
+    except Exception:  # noqa: BLE001 — a trace is diagnosis, never a verdict
+        logger.warning("gate: could not read the thread of %s", thread_id, exc_info=True)
+        return [], []
+    tools = [
+        str(call.get("name", ""))
+        for message in values.get("messages") or ()
+        for call in getattr(message, "tool_calls", None) or ()
+    ]
+    return tools, sorted(values.get("files") or {})
+
+
 def _judge(case: Case, trial: Trial) -> None:
     from tests.eval.judge import evaluate
     from tests.eval.rubrics.insights_brief import insights_brief_rubric, render_brief_artifact
@@ -363,9 +395,16 @@ def _judge(case: Case, trial: Trial) -> None:
     outcome: dict[str, Any] = {}
 
     def verdict() -> None:
+        # A verdict that leaves markers out is the judge failing, not the
+        # brief: on 2026-09-28 one came back with all eight missing and the
+        # gate failed a brief the judge never read.
         try:
-            outcome["card"] = evaluate(insights_brief_rubric(case.markers),
-                                       render_brief_artifact(trial.brief, question=case.question))
+            for _ in range(JUDGE_ATTEMPTS):
+                outcome["card"] = evaluate(insights_brief_rubric(case.markers),
+                                           render_brief_artifact(trial.brief, question=case.question))
+                if not any(_MISSING in f for f in outcome["card"].failures):
+                    return
+            outcome["error"] = IncompleteVerdict()
         except Exception as exc:  # noqa: BLE001 — a judge outage is not the agent's failure
             outcome["error"] = exc
 
@@ -383,6 +422,10 @@ def _judge(case: Case, trial: Trial) -> None:
     card = outcome["card"]
     trial.judge = card.as_dict()
     trial.failures += [f"judge: {f}" for f in card.failures if "marker" in f]
+
+
+class IncompleteVerdict(Exception):
+    """The judge answered, but not about every marker."""
 
 
 # ---------------------------------------------------------------------------

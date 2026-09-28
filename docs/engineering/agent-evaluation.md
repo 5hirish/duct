@@ -47,9 +47,12 @@ ratchet PR only; never raise k, lower a threshold or drop a case to turn a run
 green.
 
 **Reading a failed trial.** The step summary gives each failing trial's
-reasons and, for one that wrote no brief, the last thing it said in chat.
-`eval-results.jsonl`, kept as the run's artifact, holds every trial's brief,
-chat reply, pulls and judge card.
+reasons and, for one that wrote no brief, the last thing it said in chat and
+any file it wrote to its scratch filesystem instead. `eval-results.jsonl`,
+kept as the run's artifact, holds every trial's brief, chat reply, tool calls,
+scratch files, pulls and judge card. A judge verdict that leaves markers out
+is asked for again, then counted as a judge outage (the trial is judged on
+its deterministic checks alone), never as the brief's failure.
 
 **Models.** Agent and judge default to DeepSeek V4 Pro on OpenRouter: a full
 trial measured $0.03 (2026-09-28), which is what makes a gate on every harness
