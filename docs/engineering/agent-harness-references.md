@@ -1,6 +1,6 @@
 # Agent harnesses we learn from
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-14
+**Author:** Shirish Kadam · **Updated:** 2026-09-28
 
 Three coding-agent harnesses are being built in the open, by teams that hit
 every problem our agent shell hits — reconnect, resume, pauses that outlive a
@@ -20,6 +20,19 @@ into the area `AGENTS.md`; this file records where they came from.
 | **Codex** (OpenAI) | `github.com/openai/codex` | The desktop and IDE apps are clients of `codex app-server`, a JSON-RPC server whose thread / turn / item contract is the most fully specified agent-UI protocol in the open. The desktop app itself is closed; the TUI in the same repo is the reference client. | `de78740`, 2026-09-04 — shallow clone at `../codex` |
 | **OpenCode** (Anomaly) | `github.com/anomalyco/opencode` (moved from `sst/opencode`; default branch `dev`) | TypeScript server + clients over a session / message / part model with an SSE event bus, mid-migration to an event-sourced v2; provider-agnostic; closest in shape to our Next.js app talking to a backend. | `5cf9f51`, 2026-09-04 — shallow clone at `../opencode` |
 | **pi** (Earendil) | `github.com/earendil-works/pi` (moved from `badlogic/pi-mono`; docs at `pi.dev/docs/latest` are `packages/coding-agent/docs/*.md`) | A deliberately small TypeScript agent loop and TUI; the reference for "how little harness do you need". Explicit steer-vs-follow-up input modes, abortable retry, session trees. | `9841914`, 2026-09-05 — shallow clone at `../pi` |
+
+## Indexes we mine
+
+A harness is read at a revision; an index is read for leads. The one below
+curates the harness-engineering literature (vendor engineering posts, papers,
+open implementations) by concern: loop, planning, context, tools, memory,
+permissions, human-in-the-loop, evals, observability. Mine it for sources,
+then read the primary one: its one-line summaries are an editor's, and some
+of them run ahead of what the source measured.
+
+| Index | Repo | What we took | Last read |
+|-------|------|--------------|-----------|
+| **awesome-harness-engineering** | `github.com/ai-boost/awesome-harness-engineering` (raw README, no clone needed) | The rules in [`agent-engineering.md`](agent-engineering.md), and four records of the same day: eval gating, insights code execution, execution approvals, memory freshness. Found through it: the audit graph had none of the shared middleware (fixed, `tests/test_agent_assembly.py`), and a process that stopped left its runs `running` (fixed, `cancel_orphaned_runs`). | `5592ad5`, 2026-09-27 |
 
 ## How to read one
 
