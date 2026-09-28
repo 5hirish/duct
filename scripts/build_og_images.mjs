@@ -39,6 +39,7 @@ const PAGES = {
   "changelog": { title: "What changed in Duct.", sub: "Release notes, newest first: connectors, agents, desktop builds." },
   "tools": { title: "Free tools for growth teams.", sub: "Calculators and generators that run in your browser. No account." },
   "blog": { title: "What your tools don't tell you on their own.", sub: "Writing on organic growth, product intelligence and the numbers that only make sense read together." },
+  "docs": { title: "The fact sheets behind Duct.", sub: "The data model, the agent contract, where credentials live, and a map of the code. Generated from the repository." },
   "tools/saas-metrics-calculator": { title: "SaaS metrics benchmark calculator.", sub: "Churn, LTV:CAC, payback and trial-to-paid against industry medians.", shot: "insights-session.webp" },
   "tools/cac-ltv-calculator": { title: "CAC and LTV calculator.", sub: "CAC, LTV, the ratio and payback, with benchmark context.", shot: "insights-session.webp" },
   "tools/mrr-growth-calculator": { title: "MRR growth rate calculator.", sub: "Net MRR growth, CMGR, and the rate you need to hit a target.", shot: "insights-session.webp" },
@@ -119,7 +120,20 @@ async function card(slug, { title, sub, shot, kicker }) {
   return size_;
 }
 
-const ALL = { ...PAGES, ...blogCards() };
+// Fact sheets take their title from the document itself (its h1) and the line
+// under it from docs/factsheets.json, the same description their page carries.
+function docsCards() {
+  const cards = {};
+  for (const page of JSON.parse(readFileSync(join(REPO, "docs/factsheets.json"), "utf8"))) {
+    const text = readFileSync(join(REPO, page.source), "utf8");
+    const m = page.source.endsWith(".html") ? text.match(/<h1[^>]*>(.*?)<\/h1>/) : text.match(/^# (.+)$/m);
+    if (!m) throw new Error(`${page.source}: no title (an h1) to draw`);
+    cards[`docs/${page.slug}`] = { kicker: "Docs", title: m[1].trim(), sub: page.description };
+  }
+  return cards;
+}
+
+const ALL = { ...PAGES, ...blogCards(), ...docsCards() };
 let total = 0;
 for (const [slug, spec] of Object.entries(ALL)) total += await card(slug, spec);
 console.log(`${Object.keys(ALL).length} cards in site/assets/og, ${Math.round(total / 1024)} KB together`);

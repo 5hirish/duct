@@ -18,6 +18,8 @@ on:
     # so this can only ever remove work from a PR, never from a release.
     paths:
       - 'site/**'
+      - 'docs/**'
+      - 'scripts/build_docs.py'
       - 'CHANGELOG.md'
       - 'scripts/check_changelog_sync.py'
       - '.github/workflows/site.yml'
@@ -38,6 +40,11 @@ jobs:
 
       - name: "📝 Check generated blog pages are current"
         run: python3 scripts/build_blog.py --check
+
+      # site/docs/ is rendered from docs/ (docs/factsheets.json names which); a
+      # stale copy ships last month's fact sheet under this month's date.
+      - name: "📚 Check generated docs pages are current"
+        run: python3 scripts/build_docs.py --check
 
       # The translated trees under site/<lang>/ are generated from the English
       # pages; a stale tree ships yesterday's copy in four languages, and an

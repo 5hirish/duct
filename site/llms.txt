@@ -31,6 +31,19 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 - [About](https://getduct.ai/about): Who builds it and why it went open source. Duct is Latin ductus, "a leading", the word inside aquaeductus.
 - [Changelog](https://getduct.ai/changelog/): Release notes, newest first. RSS at https://getduct.ai/changelog/feed.xml.
 - [Blog](https://getduct.ai/blog/): Articles on growth, SEO and product intelligence. RSS at https://getduct.ai/blog/feed.xml.
+- [Docs](https://getduct.ai/docs/): The engineering fact sheets, generated from the repository's docs/ folder.
+
+## Documentation
+
+Fact sheets rendered from the repository's `docs/` folder; the file named on each page is the source, and the page follows it.
+
+- [Duct architecture](https://getduct.ai/docs/architecture): An interactive map of the Duct monorepo: the backend, app, desktop shell and site, how they talk to each other, and which file to open first for each job.
+- [Data model](https://getduct.ai/docs/data-model): Every table the Duct backend owns, what it records, and which of the four stores answers where something is recorded: rows, events, logs or memories.
+- [Agent ports and the event contract](https://getduct.ai/docs/agent-ports-and-events): The harness boundary of Duct's agents: the six ports a runner implements and the server-sent event contract the app renders, and the code that enforces each.
+- [Building and changing agents](https://getduct.ai/docs/agent-engineering): How an agent is built and changed in Duct on LangChain, LangGraph and deepagents: the rules, the primitive behind each, what enforces it, and the checklists.
+- [Agent output QA — the LLM-as-judge eval harness](https://getduct.ai/docs/agent-evaluation): How Duct tests agents whose output is subjective, a brief or a post, with an LLM-as-judge harness: the trials, the rubric, the judge's biases and mitigations.
+- [Credential storage: the local API key and provider auth](https://getduct.ai/docs/credential-storage): Where every secret Duct holds actually lives, on the desktop and on a server: the local API key, provider keys and OAuth tokens, and what protects each of them.
+- [Local Security Audit Skill](https://getduct.ai/docs/security-audit-skill-and-hooks): The local security gate for Duct's backend and app: the audit skill, the leak scanner, the pre-commit hook and the policy they enforce before a change ships.
 
 ## Languages
 

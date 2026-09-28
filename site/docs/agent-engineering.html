@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Building and changing agents — Duct docs</title>
+<link rel="canonical" href="https://getduct.ai/docs/agent-engineering"/>
+<meta name="description" content="How an agent is built and changed in Duct on LangChain, LangGraph and deepagents: the rules, the primitive behind each, what enforces it, and the checklists."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/docs/agent-engineering"/>
+<meta property="og:title" content="Building and changing agents — Duct docs"/>
+<meta property="og:description" content="How an agent is built and changed in Duct on LangChain, LangGraph and deepagents: the rules, the primitive behind each, what enforces it, and the checklists."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/docs-agent-engineering.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:modified_time" content="2026-09-28T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Building and changing agents — Duct docs"/>
+<meta name="twitter:description" content="How an agent is built and changed in Duct on LangChain, LangGraph and deepagents: the rules, the primitive behind each, what enforces it, and the checklists."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/docs-agent-engineering.jpg"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "inLanguage": "en",
+  "headline": "Building and changing agents",
+  "description": "How an agent is built and changed in Duct on LangChain, LangGraph and deepagents: the rules, the primitive behind each, what enforces it, and the checklists.",
+  "url": "https://getduct.ai/docs/agent-engineering",
+  "dateModified": "2026-09-28T00:00:00+00:00",
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "isPartOf": {
+    "@type": "CollectionPage",
+    "name": "Documentation",
+    "url": "https://getduct.ai/docs/"
+  },
+  "license": "https://github.com/5hirish/duct/blob/main/LICENSE"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Docs",
+      "item": "https://getduct.ai/docs/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Building and changing agents",
+      "item": "https://getduct.ai/docs/agent-engineering"
+    }
+  ]
+}
+</script>
+<style>
+.doc-header { max-width: 760px; margin: 0 auto; padding: 72px 24px 0; }
+.doc-header .tag { margin-bottom: 18px; }
+.doc-header h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); line-height: 1.15; color: var(--navy); margin-bottom: 16px; letter-spacing: -.5px; }
+.doc-meta { font-size: 13px; color: var(--navy-3); display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 8px; }
+.doc-meta a { color: var(--navy-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+.doc-meta a:hover { border-color: var(--navy); }
+.doc-lede { max-width: 760px; margin: 0 auto; padding: 0 24px; font-size: 16px; font-weight: 300; line-height: 1.7; color: var(--navy-3); }
+.doc-toc { max-width: 760px; margin: 28px auto 0; padding: 20px 24px; }
+.doc-toc-inner { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px 22px; background: var(--off); }
+.doc-toc-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 10px; }
+.doc-toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+.doc-toc li { font-size: 14px; line-height: 1.6; margin: 0 0 4px; break-inside: avoid; }
+.doc-toc a { color: var(--navy-2); text-decoration: none; }
+.doc-toc a:hover { color: var(--orange); }
+.prose { max-width: 760px; padding-top: 24px; }
+.prose h2 { scroll-margin-top: 88px; }
+.prose h3 { scroll-margin-top: 88px; }
+.prose h2 code, .prose h3 code { font-size: .8em; }
+.prose li p { margin: 0; }
+.table-wrap { overflow-x: auto; margin: 0 0 28px; -webkit-overflow-scrolling: touch; width: min(1040px, 100vw - 48px); position: relative; left: 50%; transform: translateX(-50%); }
+.prose table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--navy-3); font-weight: 300; }
+.prose th { font-weight: 600; color: var(--navy); border-bottom: 2px solid var(--border); white-space: nowrap; }
+.prose th code { white-space: nowrap; }
+.prose tbody tr:hover td { background: var(--off); }
+.doc-nav { display: flex; justify-content: space-between; gap: 24px; max-width: 760px; margin: 0 auto; padding: 8px 24px 72px; }
+.doc-nav a { font-size: 14px; font-weight: 500; color: var(--navy-3); text-decoration: none; max-width: 46%; }
+.doc-nav a:hover { color: var(--navy); }
+.doc-nav-next { margin-left: auto; text-align: right; }
+.doc-frame-wrap { max-width: 1240px; margin: 28px auto 0; padding: 0 24px 24px; }
+.doc-frame { display: block; width: 100%; height: max(640px, min(1400px, calc(100vh - 96px))); border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--off); }
+.doc-frame-actions { display: flex; gap: 18px; margin-top: 12px; font-size: 13px; }
+.doc-frame-actions a { color: var(--navy-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+.doc-frame-actions a:hover { border-color: var(--navy); }
+.doc-list { max-width: 760px; margin: 0 auto; padding: 40px 24px 96px; }
+.doc-item { display: block; text-decoration: none; color: inherit; padding: 26px 0; border-bottom: 1px solid var(--border); }
+.doc-item:first-child { border-top: 1px solid var(--border); }
+.doc-item .tag { font-size: 11px; margin-bottom: 8px; }
+.doc-item h2 { font-family: var(--serif); font-size: 22px; line-height: 1.25; color: var(--navy); margin: 0 0 8px; transition: color .15s; }
+.doc-item:hover h2 { color: var(--orange); }
+.doc-item p { font-size: 15px; font-weight: 300; line-height: 1.65; color: var(--navy-3); margin: 0 0 10px; }
+.doc-item-meta { font-size: 12px; color: var(--navy-3); display: flex; gap: 16px; }
+@media (max-width: 640px) {
+  .doc-toc ol { columns: 1; }
+  .doc-nav { flex-direction: column; gap: 12px; }
+  .doc-nav a { max-width: 100%; }
+  .doc-nav-next { margin-left: 0; text-align: left; }
+  .doc-frame { height: max(560px, calc(100vh - 120px)); }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED FILE — edit docs/engineering/agent-engineering.md and run scripts/build_docs.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">docs</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang">
+<label class="sr-only" for="nav-lang">Language</label>
+<select id="nav-lang" class="nav-lang-select" data-duct-lang>
+<option value="en">English</option>
+<option value="es">Español</option>
+<option value="pt-br">Português (Brasil)</option>
+<option value="de">Deutsch</option>
+<option value="ja">日本語</option>
+</select>
+</div>
+</div>
+</nav>
+
+<main id="main-content">
+<header class="doc-header">
+<p class="tag">Docs · Guide</p>
+<h1>Building and changing agents</h1>
+<div class="doc-meta">
+<span>Updated 2026-09-28</span>
+<span>Shirish Kadam</span>
+<a href="https://github.com/5hirish/duct/blob/main/docs/engineering/agent-engineering.md" rel="noopener">Source: docs/engineering/agent-engineering.md</a>
+<a href="https://github.com/5hirish/duct/edit/main/docs/engineering/agent-engineering.md" rel="noopener">Edit on GitHub</a>
+</div>
+</header>
+<nav class="doc-toc" aria-label="On this page">
+<div class="doc-toc-inner">
+<p class="doc-toc-title">On this page</p>
+<ol>
+<li><a href="#the-harness-in-five-files">The harness, in five files</a></li>
+<li><a href="#rules">Rules</a></li>
+<li><a href="#middleware-what-we-mount-and-why">Middleware: what we mount and why</a></li>
+<li><a href="#checklists">Checklists</a></li>
+<li><a href="#open-gaps">Open gaps</a></li>
+<li><a href="#sources">Sources</a></li>
+</ol>
+</div>
+</nav>
+
+<article class="prose">
+<p>How an agent is built and maintained here, on LangChain 1.x, LangGraph and <code>deepagents</code>. Read it before adding an agent or changing one: a prompt, a tool, a model default, a middleware, a dependency pin. Each rule names the LangChain primitive that implements it and what enforces it. <strong>A rule with no test is a note, and notes get skipped</strong> (a study of 481 public <code>CLAUDE.md</code> files found 4–16% of their prose security rules backed by a real control; arXiv 2608.23550). So where a rule can be a test, it is one, and the "Enforced by" column says which.</p>
+<p>The rules are Duct's reading of the harness-engineering literature, indexed in <a href="https://github.com/5hirish/duct/blob/main/docs/engineering/agent-harness-references.md"><code>agent-harness-references.md</code></a>. The research behind the larger items is in four dated records of 2026-09-27: eval gating, insights code execution, execution approvals and memory freshness.</p>
+<h2 id="the-harness-in-five-files">The harness, in five files</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>File</th><th>Owns</th></tr></thead>
+<tbody>
+<tr><td><code>backend/agents/core/deep_session.py</code></td><td><strong>Assembly</strong> (<code>build_deep_session_agent</code>, <code>build_session_agent</code>, one <code>session_middleware</code> list) and <strong>the loop</strong> (<code>DeepSession</code>: turns, pauses, steers, compaction, failure posture)</td></tr>
+<tr><td><code>backend/agents/core/lc.py</code></td><td>The LangChain adapter: <code>resolve_chat_model</code>, <code>stream_agent</code>, <code>interrupt_pause</code>, <code>prompt_caching_middleware</code>, and Duct's own middleware (<code>ReportedRetryMiddleware</code>, <code>SteerMiddleware</code>, <code>SeenImagePruneMiddleware</code>)</td></tr>
+<tr><td><code>backend/agents/core/turn.py</code></td><td>How every user turn is built: <code>ContextSpec</code>, <code>BLOCK_ORDER</code> (stable first)</td></tr>
+<tr><td><code>backend/agents/core/errors.py</code></td><td>One classifier: a failure is a code before it is a message</td></tr>
+<tr><td><code>backend/agents/core/*_tools.py</code></td><td>Binders: framework-free domain functions, thin LangChain wrappers</td></tr>
+</tbody>
+</table></div>
+<p>A runner (<code>agents/&lt;type&gt;/v1/runner.py</code>) owns tools, prompts, <code>RunLimits</code> and hooks, and imports no framework (<code>tests/test_harness_boundaries.py</code>).</p>
+<h2 id="rules">Rules</h2>
+<h3 id="shape">Shape</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Primitive</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td>Lowest rung that works: one structured call, then a fixed workflow, then <code>create_agent</code>, then <code>deepagents</code> only for what it adds (sub-agents, scratch filesystem, planning). Say in the runner docstring which of those the agent spends, and re-justify when one is switched off.</td><td><code>init_chat_model</code>, <code>create_agent</code> (1.x, semver-stable), <code>create_deep_agent</code> (0.x, pinned exactly)</td><td>review; <code>backend/AGENTS.md</code> "Pick the lowest rung"</td></tr>
+<tr><td><strong>Build every session graph in one place.</strong> The rung is chosen; the middleware is not.</td><td><code>build_session_agent</code> / <code>build_deep_session_agent</code></td><td><code>tests/test_agent_assembly.py</code> (a graph built elsewhere fails)</td></tr>
+<tr><td>A sub-agent exists to isolate context for a bounded side job. Name its tools; never let <code>deepagents</code> default them. The auto-added <code>general-purpose</code> sub-agent gets <strong>every</strong> parent tool unless one by that name is supplied.</td><td><code>SubAgent</code> dicts with explicit <code>tools</code></td><td>content: <code>test_sub_agents_never_get_the_writer_tools</code>; insights: <strong>gap 1</strong></td></tr>
+</tbody>
+</table></div>
+<h3 id="tools">Tools</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Primitive</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td>Few, workflow-level tools with meaningful ids. Insights reaches every connector entity through one <code>FetchData(entity_id)</code>.</td><td><code>StructuredTool</code> + Pydantic <code>args_schema</code></td><td>review</td></tr>
+<tr><td>Bound every result, and never cut mid-structure: fold losslessly first.</td><td><code>agents/core/compaction.py</code>; <code>FilesystemMiddleware</code> eviction on the deep rung</td><td>per-binder oversized-fixture tests</td></tr>
+<tr><td>An error is a result that says what to do next, with a code. Never <code>str(exc)</code> to a client.</td><td><code>classify_error</code>; <code>ToolErrorMiddleware</code> (LangChain 1.4, not yet mounted: gap 5)</td><td><code>tests/test_agent_errors.py</code></td></tr>
+<tr><td>Tool definitions are prompt: they head the cached prefix, so review them like prompt and keep their order deterministic.</td><td>—</td><td>gap 7 (<code>make dump-prompts</code> renders no tools yet)</td></tr>
+<tr><td>Anything a tool returns from outside Duct (a search query, a page, an ad) is data, never instructions. Label it in the prompt.</td><td>—</td><td>each agent's system prompt (insights: <code>BOUNDARIES</code>)</td></tr>
+<tr><td>Arithmetic over rows is Duct's, not the model's. A row report carries <code>totals</code>, <code>rates</code> (ratios of totals, or weighted means, never a mean of rates) and per-dimension <code>subtotals</code>, computed from the catalog's <code>agg</code>, <code>ratio</code> and <code>weight</code>, and says what they cover.</td><td><code>agents/insights/totals.py</code>, called by <code>fetch_entity</code></td><td><code>tests/test_insights_totals.py</code>, the catalog contract test; the eval gate's <code>must_quote</code> check</td></tr>
+</tbody>
+</table></div>
+<h3 id="context-and-caching">Context and caching</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Primitive</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td>Per-user and per-project text goes in the USER turn, never the system prompt. Stable blocks first.</td><td><code>ContextSpec</code>, <code>BLOCK_ORDER</code></td><td><code>tests/test_turn.py</code></td></tr>
+<tr><td>Every graph asks for caching. Anthropic caches only a request that says so; Gemini caches implicitly; OpenAI routes by <code>prompt_cache_key</code>.</td><td><code>AnthropicPromptCachingMiddleware</code> (appended by <code>create_deep_agent</code>, by <code>build_session_agent</code>, and by <code>prompt_caching_middleware()</code> for a one-shot pass); <code>resolve_chat_model(cache_key=thread)</code></td><td><code>tests/test_agent_assembly.py</code>; cache share on <code>TOKEN_USAGE</code></td></tr>
+<tr><td>Duct owns the final system prompt byte for byte. <code>deepagents</code> harness profiles append text per model: 0.7.15 ships coding-agent guidance ("Never speculate about code you have not opened…") for Haiku 4.5, Sonnet 4.6 and Opus 4.7, plus profiles for OpenAI Codex models, and packages can register more.</td><td><code>register_harness_profile</code></td><td>gap 6</td></tr>
+<tr><td>Prune before you summarise, and batch the pruning so each cache break buys something.</td><td><code>ContextEditingMiddleware</code> + <code>ClearToolUsesEdit(clear_at_least=…)</code></td><td><code>RunLimits.__post_init__</code> (trigger below the summarisation floor)</td></tr>
+<tr><td>Set the summarisation trigger from <code>CONTEXT_WINDOW</code>, not the library's model profile (0.85 × the profile's <code>max_input_tokens</code> is ~850k on Opus 5 and Sonnet 5, where Duct budgets 200k).</td><td><code>deepagents</code> <code>SummarizationMiddleware</code> with <code>trigger=("tokens", N)</code></td><td>gap 3</td></tr>
+<tr><td>One emergency compaction and one retry on a real overflow; a second overflow is the ordinary failure.</td><td><code>compact_thread</code> in <code>DeepSession</code></td><td><code>tests/test_deep_session.py</code></td></tr>
+</tbody>
+</table></div>
+<h3 id="the-loop">The loop</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Primitive</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td>Every agent declares <code>RunLimits</code>: model and tool calls per run and per thread. Recursion is derived, never picked.</td><td><code>ModelCallLimitMiddleware</code>, <code>ToolCallLimitMiddleware</code></td><td><code>RunLimits.__post_init__</code>, <code>tests/test_deep_session.py</code></td></tr>
+<tr><td>Retry in exactly one layer, the one that reports each attempt and honours <code>Retry-After</code>. Provider SDKs retry underneath by default (Gemini up to 6 times), invisibly.</td><td><code>ReportedRetryMiddleware</code>; SDK <code>max_retries=0</code></td><td>gap 2</td></tr>
+<tr><td>Fall back only on transient failures. <code>ModelFallbackMiddleware</code> falls back on every exception, auth and overflow included.</td><td>classified <code>ModelFallbackMiddleware</code> subclass</td><td>gap 4</td></tr>
+<tr><td>Input typed mid-turn is steered or queued, never refused.</td><td><code>SteerMiddleware</code> + the session's <code>steer_queue</code></td><td><code>tests/test_insights_session.py</code></td></tr>
+<tr><td>A pause is a checkpointed <code>interrupt()</code> and survives a redeploy. Work before the interrupt is idempotent, because the node reruns on resume.</td><td><code>langgraph.types.interrupt</code>, <code>Command(resume=…)</code></td><td><code>tests/test_deepagents_harness.py</code></td></tr>
+<tr><td>A thread is keyed on the conversation, never the session.</td><td>checkpointer <code>thread_id</code></td><td><code>backend/AGENTS.md</code></td></tr>
+<tr><td>Run status comes from the stream, in the recorder. A dead process's <code>running</code> rows are cancelled at the next boot.</td><td><code>ConversationRecorder</code>, <code>cancel_orphaned_runs</code></td><td><code>tests/test_conversation_run_status.py</code></td></tr>
+</tbody>
+</table></div>
+<h3 id="memory">Memory</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Primitive</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td>One write path (<code>remember()</code>), one read path (<code>search()</code>), recalled into the USER turn. No <code>MemoryMiddleware</code>, no LangGraph <code>Store</code>.</td><td><code>service/memory.py</code></td><td><code>tests/test_memory*.py</code></td></tr>
+<tr><td>A remembered state of an outside system (a campaign's status, a budget, a redirect) is a claim with a date, not a fact. Show its age and re-read it before asserting it.</td><td><code>volatility()</code> / <code>freshness()</code> in <code>service/memory.py</code>; the <code>seen · Nd · verify</code> digest line; <code>MEMORY_DISCIPLINE</code></td><td>the freshness axis of <code>tests/test_memory_retrieval.py</code> (stale-assertion and false-alarm rates held at 0)</td></tr>
+</tbody>
+</table></div>
+<h3 id="humans-and-authority">Humans and authority</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Primitive</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td>Authority lives in code, never the prompt. No agent-facing approve or apply tool, in either harness.</td><td><code>service/execution/policy.py</code></td><td><code>tests/test_execution_policy.py</code></td></tr>
+<tr><td>Nothing that moves money, goes live, or cannot be fully undone applies without a click on that set.</td><td>the auto-apply allowlist</td><td><code>tests/test_execution_policy.py</code>; the allowlist is under review (gap 8)</td></tr>
+<tr><td>The agent acts with the user's delegated credentials, scoped to the project at build time. Non-members get 404.</td><td>binders take a membership-checked <code>project_id</code></td><td><code>tests/test_route_auth_boundaries.py</code></td></tr>
+</tbody>
+</table></div>
+<h3 id="evals-and-observability">Evals and observability</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Primitive</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td>Offline tests drive the real harness with a canned model and assert events, tool names and payloads, never prompt prose.</td><td><code>ToolCallingFake</code>, <code>emitted</code></td><td><code>make test</code></td></tr>
+<tr><td>What is <em>sent</em> to the model is tested too: byte-stable prefix across calls, history and reasoning kept, effort passed. The Claude Code regressions of April 2026 were exactly these.</td><td><code>RecordingFake</code> (<code>tests/fakes.py</code>); the "Model defaults" section of <code>make dump-prompts</code></td><td><code>tests/test_request_invariants.py</code> (both rungs and the insights runner); <code>prompts.yml</code> fails a default changed without the dump</td></tr>
+<tr><td>A prompt, model default, effort or harness change is judged k times against a baseline, on synthetic accounts, before it merges. Binary markers gate; 1–5 scores are logged.</td><td><code>tests/eval/gate.py</code>, <code>tests/eval/cases/</code>, <code>make agent-eval</code> (DeepSeek V4 Pro on OpenRouter)</td><td><code>agent-eval.yml</code> on harness PRs, in shadow until an A/A window; <code>tests/test_eval_gate.py</code> holds the gate's own logic. One provider today; the per-provider matrix is tier 2</td></tr>
+<tr><td>One span per model call and one per tool call, at one choke point.</td><td><code>ReportedRetryMiddleware</code> (model); <code>awrap_tool_call</code> middleware (tool)</td><td>four binders span tools today (gap, runner-up)</td></tr>
+</tbody>
+</table></div>
+<h3 id="maintenance">Maintenance</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td>Bump the LangChain stack alone, never inside a grouped Dependabot PR; <code>poetry install --with dev</code> locally the same day, or local tests run other versions than CI.</td><td><code>tests/test_deepagents_harness.py</code>, <code>tests/test_agent_assembly.py</code></td></tr>
+<tr><td>A new model is a table migration: <code>PRICING</code>, <code>CONTEXT_WINDOW</code>, <code>MODEL_FALLBACK</code>, tiers, thinking, and a check of the LangChain profile and <code>deepagents</code> harness profiles for that id.</td><td>the <code>PRICING</code>/<code>CONTEXT_WINDOW</code> equality test</td></tr>
+<tr><td>Every harness component names the failure it compensates for, and is re-measured when the model changes. <code>planning=False</code> on insights is the worked example: two of five turns were checklist rewrites.</td><td><code>STYLE.md</code> (comments carry reasoning)</td></tr>
+</tbody>
+</table></div>
+<h2 id="middleware-what-we-mount-and-why">Middleware: what we mount and why</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Middleware</th><th>Mounted</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td><code>ContextEditingMiddleware</code> + <code>ClearToolUsesEdit</code></td><td><code>session_middleware</code></td><td>keep; add <code>clear_at_least</code></td></tr>
+<tr><td><code>ModelCallLimitMiddleware</code>, <code>ToolCallLimitMiddleware</code></td><td><code>session_middleware</code></td><td>keep; add per-tool caps for <code>ProposeChanges</code> and <code>task</code></td></tr>
+<tr><td><code>ModelFallbackMiddleware</code></td><td><code>session_middleware</code></td><td>keep, classified (gap 4)</td></tr>
+<tr><td><code>ReportedRetryMiddleware</code> (ours)</td><td><code>session_middleware</code></td><td>keep: <code>ModelRetryMiddleware</code> has no per-attempt hook and ignores <code>Retry-After</code></td></tr>
+<tr><td><code>SteerMiddleware</code>, <code>SeenImagePruneMiddleware</code> (ours)</td><td><code>session_middleware</code></td><td>keep; no prebuilt equivalent</td></tr>
+<tr><td><code>AnthropicPromptCachingMiddleware</code></td><td>every graph</td><td>keep; measure a 1h TTL for idle chats</td></tr>
+<tr><td><code>TodoListMiddleware</code></td><td>content only</td><td>keep as measured</td></tr>
+<tr><td><code>FilesystemMiddleware</code></td><td>deep rung, no <code>execute</code></td><td>keep; never the shell</td></tr>
+<tr><td><code>SubAgentMiddleware</code></td><td>deep rung</td><td>keep; always supply <code>general-purpose</code> yourself</td></tr>
+<tr><td><code>SummarizationMiddleware</code> (deepagents)</td><td>deep rung</td><td>keep; set the trigger (gap 3)</td></tr>
+<tr><td><code>PatchToolCallsMiddleware</code></td><td>deep rung</td><td>keep</td></tr>
+<tr><td><code>ToolErrorMiddleware</code></td><td>—</td><td><strong>adopt</strong> (gap 5)</td></tr>
+<tr><td><code>HumanInTheLoopMiddleware</code></td><td>—</td><td>skip: change-set cards and <code>policy.py</code> do this</td></tr>
+<tr><td><code>PIIMiddleware</code></td><td>—</td><td>skip; <code>remember()</code> redacts. Revisit for traces</td></tr>
+<tr><td><code>LLMToolSelectorMiddleware</code>, <code>ProviderToolSearchMiddleware</code></td><td>—</td><td>skip: changing tools per call breaks the cache; tool tokens are small</td></tr>
+<tr><td><code>ModelRetryMiddleware</code>, <code>ToolRetryMiddleware</code>, <code>LLMToolEmulator</code></td><td>—</td><td>skip: ours reports; <code>service/rest.py</code> retries; fakes exist</td></tr>
+<tr><td><code>ShellToolMiddleware</code>, <code>FilesystemFileSearchMiddleware</code>, Claude-native tool middleware</td><td>—</td><td>never on a server; a capability the model may lack is a Duct tool</td></tr>
+</tbody>
+</table></div>
+<h2 id="checklists">Checklists</h2>
+<h3 id="adding-an-agent">Adding an agent</h3>
+<ol>
+<li>Run it through the <code>prioritize</code> skill.</li>
+<li>Pick the rung and write down which <code>deepagents</code> features it spends.</li>
+<li>Build it with <code>build_session_agent</code> or <code>build_deep_session_agent</code> (<code>tests/test_agent_assembly.py</code>).</li>
+<li>Declare its <code>RunLimits</code> and a <code>ContextSpec</code> (<code>tests/test_deep_session.py</code>, <code>tests/test_turn.py</code>).</li>
+<li>Supply every sub-agent, <code>general-purpose</code> included, with a named, read-only tool list.</li>
+<li>Wire <code>activity_hooks</code>, and record a <code>CONTEXT</code> row so the session can be audited (<code>tests/test_tool_activity.py</code>).</li>
+<li>Classify failures through <code>agents/core/errors.py</code>.</li>
+<li><code>make dump-prompts</code>; write its rubric under <code>backend/tests/eval/rubrics/</code> and a synthetic case under <code>backend/tests/eval/cases/</code>.</li>
+<li><code>make check</code>.</li>
+</ol>
+<h3 id="changing-an-agent">Changing an agent</h3>
+<ul>
+<li><strong>Prompt:</strong> <code>make dump-prompts</code> and read the diff as prose (<code>prompts.yml</code>). Nothing volatile above the stable blocks. Replay the bundles that motivated it (<code>make session-replay</code>) on two providers, and run <code>make agent-eval</code> (<code>agent-eval.yml</code> runs it on the PR): FAIL does not merge; INCONCLUSIVE needs a line in the PR saying why it is acceptable.</li>
+<li><strong>Tool:</strong> bound its output; errors carry a code and a next step; decide its activity card; keep writers off every sub-agent list; batch tool changes, since each one invalidates the cache.</li>
+<li><strong>Model or tier default:</strong> update <code>PRICING</code>, <code>CONTEXT_WINDOW</code>, <code>MODEL_FALLBACK</code> and the tier map together; check the LangChain profile window and any <code>deepagents</code> harness profile for that id; run the live web-search matrix.</li>
+<li><strong>Middleware:</strong> change <code>session_middleware</code>, nowhere else. Re-measure <code>SUPERSTEPS_PER_MODEL_CALL</code> (<code>tests/test_deep_session.py</code>). Comment the failure it prevents.</li>
+<li><strong>Dependency bump:</strong> alone; <code>poetry install --with dev</code>; <code>tests/test_deepagents_harness.py</code> and <code>tests/test_agent_assembly.py</code>; diff <code>create_deep_agent</code>'s stack order and <code>deepagents/profiles/</code> against the previous version.</li>
+</ul>
+<h2 id="open-gaps">Open gaps</h2>
+<p>Ranked by failure prevented or money saved, over effort. Each goes through <code>prioritize</code> into an issue before code; this list is struck through as they land.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Gap</th><th>Change</th><th>Effort</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Insights' auto-added <code>general-purpose</code> sub-agent carries every tool, <code>ProposeChanges</code>, <code>RollbackChangeSet</code> and <code>RememberFact</code> included, with no retry or limits</td><td>supply a read-only one, as content does; generalise content's test into <code>test_agent_assembly.py</code></td><td>S</td></tr>
+<tr><td>2</td><td>SDK retries stack under <code>ReportedRetryMiddleware</code>, invisible to the UI and the quota cooldown</td><td><code>max_retries=0</code> (Gemini: <code>retries=1</code>) and a timeout in <code>resolve_chat_model</code>; a test per provider</td><td>S</td></tr>
+<tr><td>3</td><td>Deep-rung summarisation fires at ~850k on the current Claude models</td><td>trigger from <code>context_window_for(model)</code>; test across the catalogue</td><td>S–M</td></tr>
+<tr><td>4</td><td>Fallback fires on auth, bad-request and overflow errors</td><td>classified fallback subclass</td><td>S</td></tr>
+<tr><td>5</td><td>Sub-agents run without retry or limits; a sub-agent exception ends the parent turn</td><td><code>subagent_middleware(limits)</code>; <code>ToolErrorMiddleware</code> in <code>session_middleware</code></td><td>S–M</td></tr>
+<tr><td>6</td><td><code>deepagents</code> can append to Duct's system prompt per model</td><td>test the final prompt per model; render it in <code>make dump-prompts</code></td><td>S</td></tr>
+<tr><td>7</td><td>Tool definitions are unreviewed prompt</td><td>render tools in <code>make dump-prompts</code>; widen <code>prompts.yml</code> paths</td><td>S–M</td></tr>
+<tr><td>8</td><td>Execution policy hardening: the auto-apply allowlist, agent-initiated rollback, a drift check on rollback</td><td>G1–G2 of the execution-approvals record</td><td>S</td></tr>
+<tr><td>9</td><td>Execution policy hardening, part two</td><td>tracked with the maintainer, not here</td><td>M</td></tr>
+<tr><td>10</td><td>~~The memory digest says "present" for any open state, however old~~</td><td>done 2026-09-28: <code>seen · Nd · verify</code>, re-read before asserting, refresh on re-remember</td><td>S</td></tr>
+<tr><td>11</td><td>~~No gate runs a harness change against real models~~</td><td>done 2026-09-28: tier 0 offline, tier 1 in shadow (<code>agent-eval.yml</code>)</td><td>M</td></tr>
+<tr><td>12</td><td>No dollar ceiling per run</td><td>a cost guard on <code>RunLimits</code></td><td>M</td></tr>
+</tbody>
+</table></div>
+<p>Runners-up: eval tier 2 (nightly, a weekly provider matrix, audit and content cases); <code>cache_key</code> for content (audit got it 2026-09-27); tool spans at one choke point; checkpoint deletion when a project is deleted; the LangChain stack out of the grouped Dependabot PR.</p>
+<h2 id="sources">Sources</h2>
+<p>Primary: LangChain 1.x and <code>deepagents</code> docs and installed source; LangChain "The Anatomy of an Agent Harness", "How Middleware Lets You Customize Your Agent Harness", "Organizing Context in a Multi-Agent Harness", "Agent Evaluation Readiness Checklist"; Anthropic "Building Effective Agents", "Writing Effective Tools for Agents", "Effective Context Engineering", "Harness Design for Long-Running Application Development", "An Update on Recent Claude Code Quality Reports", "Demystifying Evals"; OpenAI "A Practical Guide to Building Agents"; Böckeler, "Harness engineering"; Willison, "The lethal trifecta"; OWASP Top 10 for Agentic Applications 2026. Full lists with URLs are in the four records; the index is <a href="https://github.com/5hirish/duct/blob/main/docs/engineering/agent-harness-references.md"><code>agent-harness-references.md</code></a>.</p>
+</article>
+<nav class="doc-nav" aria-label="More documentation">
+<a class="doc-nav-prev" href="/docs/agent-ports-and-events">← Agent ports and the event contract</a>
+<a class="doc-nav-all" href="/docs/">All docs</a>
+<a class="doc-nav-next" href="/docs/agent-evaluation">Agent output QA — the LLM-as-judge eval harness →</a>
+</nav>
+</main>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/docs/">Docs</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+<div class="footer-col">
+<h4>Project</h4>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/changelog/">Changelog</a>
+<a href="/blog/">Blog</a>
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</div>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · MIT licensed</span>
+<span>Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+
+</body>
+</html>

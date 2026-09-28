@@ -78,6 +78,7 @@ check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 
 check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 scripts/build_blog.py --check
+	python3 scripts/build_docs.py --check
 	python3 scripts/build_site_i18n.py --check
 	python3 .github/scripts/check-pages.py
 	python3 scripts/check_changelog_sync.py

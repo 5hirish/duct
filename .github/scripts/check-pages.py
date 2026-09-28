@@ -234,6 +234,10 @@ def main():
         glob.glob(os.path.join(site_root, "*.html")) +
         glob.glob(os.path.join(site_root, "blog", "*.html")) +
         glob.glob(os.path.join(site_root, "changelog", "*.html")) +
+        # docs/embed/<slug>.html is deliberately absent: it is a verbatim copy of a
+        # self-contained docs/ page shown inside docs/<slug>.html, which is the page
+        # that carries the head, the chrome and the canonical (scripts/build_docs.py).
+        glob.glob(os.path.join(site_root, "docs", "*.html")) +
         glob.glob(os.path.join(site_root, "tools", "*.html")) +
         [f for d in locale_dirs for f in glob.glob(os.path.join(site_root, d, "*.html"))] +
         [f for d in locale_dirs for f in glob.glob(os.path.join(site_root, d, "tools", "*.html"))]

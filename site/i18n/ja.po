@@ -1381,7 +1381,7 @@ msgstr "Ductは私のSEOおよびコンテンツツールにどのように接�
 msgid "How is Duct different from using Search Console directly?"
 msgstr "DuctはSearch Consoleを直接使用する場合とどう違いますか？"
 
-#: for-organic-growth.html for-paid-ads.html for-product-intelligence.html partials/nav-blog.html partials/nav-changelog.html
+#: for-organic-growth.html for-paid-ads.html for-product-intelligence.html partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html
 msgid "How it works"
 msgstr "仕組み"
 
@@ -2805,7 +2805,7 @@ msgid ""
 msgstr ""
 "Alleviate Labによるオープンソースプロジェクト。グローススタック全体を読み取り、承認を得て行動し、記憶するAIエージェント。MITライセンス。"
 
-#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "Blog"
 msgstr "ブログ"
 
@@ -2849,6 +2849,10 @@ msgid "Discussions"
 msgstr "ディスカッション"
 
 #: partials/footer-expanded.html
+msgid "Docs"
+msgstr "ドキュメント"
+
+#: partials/footer-expanded.html
 msgid "Download for Desktop"
 msgstr "デスクトップ版をダウンロード"
 
@@ -2866,7 +2870,7 @@ msgstr "フッターナビゲーション"
 msgid "Free SEO Audit"
 msgstr "無料SEO監査"
 
-#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "Free Tools"
 msgstr "無料ツール"
 
@@ -2929,7 +2933,7 @@ msgstr "ユースケース"
 msgid "X / Twitter"
 msgstr "X / Twitter"
 
-#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
 msgid "duct <0></0>"
 msgstr "Duct <0></0>"
 
@@ -2937,87 +2941,87 @@ msgstr "Duct <0></0>"
 msgid "© 2026 Alleviate Lab · Spain · MIT licensed"
 msgstr "© 2026 Alleviate Lab · スペイン · MITライセンス"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>Customer Success</3><4>Early churn & health score signals</4></2> <5>Soon</5>"
 msgstr "<0><1/></0> <2><3>カスタマーサクセス</3><4>早期チャーンとヘルススコアのシグナル</4></2> <5>近日公開</5>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>E-commerce / DTC</3><4>ROAS, LTV & retention synthesis</4></2> <5>Soon</5>"
 msgstr "<0><1/></0> <2><3>Eコマース / DTC</3><4>ROAS、LTV、リテンションの統合</4></2> <5>近日公開</5>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>PMs & growth teams</3><4>Why did signups drop? Read across analytics, ads and revenue</4></2>"
 msgstr ""
 "<0><1/></0> <2><3>PMおよびグロースチーム</3><4>サインアップが減少した理由とは？アナリティクス、広告、収益全体から読み解く</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>Performance marketers</3><4>Spend against retention and revenue, not ROAS alone</4></2>"
 msgstr "<0><1/></0> <2><3>パフォーマンスマーケター</3><4>ROASだけでなく、維持率と収益に対して費用を投じる</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>SEO & content teams</3><4>Search Console, GA4 and the audit, in one place</4></2>"
 msgstr "<0><1/></0> <2><3>SEOおよびコンテンツチーム</3><4>Search Console、GA4、および監査を1か所で</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>Sales / RevOps</3><4>Pipeline & revenue intelligence</4></2> <5>Soon</5>"
 msgstr "<0><1/></0> <2><3>セールス / RevOps</3><4>パイプライン＆収益インテリジェンス</4></2> <5>近日公開</5>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>CPC Calculator</0><1>Cost per click from spend and volume</1>"
 msgstr "<0>CPC計算ツール</0><1>費用とボリュームからのクリック単価</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>CPM Calculator</0><1>Cost per 1,000 impressions</1>"
 msgstr "<0>CPM計算ツール</0><1>1,000インプレッションあたりの費用</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>CTR Calculator</0><1>Click-through rate from impressions and clicks</1>"
 msgstr "<0>CTR計算ツール</0><1>インプレッションとクリックからのクリック率</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid ""
 "<0>Engagement Rate Calculator</0><1>Engagement vs followers, reach, or impressions</1>"
 msgstr "<0>エンゲージメント率計算ツール</0><1>フォロワー、リーチ、またはインプレッションに対するエンゲージメント</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid ""
 "<0>Marketing ROI Calculator</0><1>ROI and profit from campaign spend vs revenue</1>"
 msgstr "<0>マーケティングROI計算ツール</0><1>キャンペーン費用と収益からのROIと利益</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>ROAS Calculator</0><1>Return on ad spend from revenue and spend</1>"
 msgstr "<0>ROAS計算ツール</0><1>収益と費用からの広告費用対効果</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid ""
 "<0>See all tools</0><1>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</1>"
 msgstr "<0>すべてのツールを見る</0><1>SaaSメトリクス、CAC/LTV、CPA、週次ブリーフなど</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>UTM Builder</0><1>Build GA4-compliant UTM links with live preview</1>"
 msgstr "<0>UTMビルダー</0><1>ライブプレビュー付きGA4準拠UTMリンクを作成</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "Download →"
 msgstr "ダウンロード →"
 
 #. a title
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
 msgid "Duct on GitHub"
 msgstr "GitHub上のDuct"
 
 #. nav aria-label
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
 msgid "Main navigation"
 msgstr "メインナビゲーション"
 
-#: partials/nav-blog.html partials/nav-changelog.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html
 msgid "Solutions"
 msgstr "ソリューション"
 
@@ -3028,6 +3032,10 @@ msgstr "ブログ"
 #: partials/nav-changelog.html
 msgid "changelog"
 msgstr "変更履歴"
+
+#: partials/nav-docs.html
+msgid "docs"
+msgstr "ドキュメント"
 
 #: partials/nav-home.html
 msgid "Use cases"

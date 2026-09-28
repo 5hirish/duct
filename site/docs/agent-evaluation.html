@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Agent output QA — the LLM-as-judge eval harness — Duct docs</title>
+<link rel="canonical" href="https://getduct.ai/docs/agent-evaluation"/>
+<meta name="description" content="How Duct tests agents whose output is subjective, a brief or a post, with an LLM-as-judge harness: the trials, the rubric, the judge&#x27;s biases and mitigations."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/docs/agent-evaluation"/>
+<meta property="og:title" content="Agent output QA — the LLM-as-judge eval harness — Duct docs"/>
+<meta property="og:description" content="How Duct tests agents whose output is subjective, a brief or a post, with an LLM-as-judge harness: the trials, the rubric, the judge&#x27;s biases and mitigations."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/docs-agent-evaluation.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:modified_time" content="2026-09-28T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Agent output QA — the LLM-as-judge eval harness — Duct docs"/>
+<meta name="twitter:description" content="How Duct tests agents whose output is subjective, a brief or a post, with an LLM-as-judge harness: the trials, the rubric, the judge&#x27;s biases and mitigations."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/docs-agent-evaluation.jpg"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "inLanguage": "en",
+  "headline": "Agent output QA — the LLM-as-judge eval harness",
+  "description": "How Duct tests agents whose output is subjective, a brief or a post, with an LLM-as-judge harness: the trials, the rubric, the judge's biases and mitigations.",
+  "url": "https://getduct.ai/docs/agent-evaluation",
+  "dateModified": "2026-09-28T00:00:00+00:00",
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "isPartOf": {
+    "@type": "CollectionPage",
+    "name": "Documentation",
+    "url": "https://getduct.ai/docs/"
+  },
+  "license": "https://github.com/5hirish/duct/blob/main/LICENSE"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Docs",
+      "item": "https://getduct.ai/docs/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Agent output QA — the LLM-as-judge eval harness",
+      "item": "https://getduct.ai/docs/agent-evaluation"
+    }
+  ]
+}
+</script>
+<style>
+.doc-header { max-width: 760px; margin: 0 auto; padding: 72px 24px 0; }
+.doc-header .tag { margin-bottom: 18px; }
+.doc-header h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); line-height: 1.15; color: var(--navy); margin-bottom: 16px; letter-spacing: -.5px; }
+.doc-meta { font-size: 13px; color: var(--navy-3); display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 8px; }
+.doc-meta a { color: var(--navy-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+.doc-meta a:hover { border-color: var(--navy); }
+.doc-lede { max-width: 760px; margin: 0 auto; padding: 0 24px; font-size: 16px; font-weight: 300; line-height: 1.7; color: var(--navy-3); }
+.doc-toc { max-width: 760px; margin: 28px auto 0; padding: 20px 24px; }
+.doc-toc-inner { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px 22px; background: var(--off); }
+.doc-toc-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 10px; }
+.doc-toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+.doc-toc li { font-size: 14px; line-height: 1.6; margin: 0 0 4px; break-inside: avoid; }
+.doc-toc a { color: var(--navy-2); text-decoration: none; }
+.doc-toc a:hover { color: var(--orange); }
+.prose { max-width: 760px; padding-top: 24px; }
+.prose h2 { scroll-margin-top: 88px; }
+.prose h3 { scroll-margin-top: 88px; }
+.prose h2 code, .prose h3 code { font-size: .8em; }
+.prose li p { margin: 0; }
+.table-wrap { overflow-x: auto; margin: 0 0 28px; -webkit-overflow-scrolling: touch; width: min(1040px, 100vw - 48px); position: relative; left: 50%; transform: translateX(-50%); }
+.prose table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--navy-3); font-weight: 300; }
+.prose th { font-weight: 600; color: var(--navy); border-bottom: 2px solid var(--border); white-space: nowrap; }
+.prose th code { white-space: nowrap; }
+.prose tbody tr:hover td { background: var(--off); }
+.doc-nav { display: flex; justify-content: space-between; gap: 24px; max-width: 760px; margin: 0 auto; padding: 8px 24px 72px; }
+.doc-nav a { font-size: 14px; font-weight: 500; color: var(--navy-3); text-decoration: none; max-width: 46%; }
+.doc-nav a:hover { color: var(--navy); }
+.doc-nav-next { margin-left: auto; text-align: right; }
+.doc-frame-wrap { max-width: 1240px; margin: 28px auto 0; padding: 0 24px 24px; }
+.doc-frame { display: block; width: 100%; height: max(640px, min(1400px, calc(100vh - 96px))); border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--off); }
+.doc-frame-actions { display: flex; gap: 18px; margin-top: 12px; font-size: 13px; }
+.doc-frame-actions a { color: var(--navy-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+.doc-frame-actions a:hover { border-color: var(--navy); }
+.doc-list { max-width: 760px; margin: 0 auto; padding: 40px 24px 96px; }
+.doc-item { display: block; text-decoration: none; color: inherit; padding: 26px 0; border-bottom: 1px solid var(--border); }
+.doc-item:first-child { border-top: 1px solid var(--border); }
+.doc-item .tag { font-size: 11px; margin-bottom: 8px; }
+.doc-item h2 { font-family: var(--serif); font-size: 22px; line-height: 1.25; color: var(--navy); margin: 0 0 8px; transition: color .15s; }
+.doc-item:hover h2 { color: var(--orange); }
+.doc-item p { font-size: 15px; font-weight: 300; line-height: 1.65; color: var(--navy-3); margin: 0 0 10px; }
+.doc-item-meta { font-size: 12px; color: var(--navy-3); display: flex; gap: 16px; }
+@media (max-width: 640px) {
+  .doc-toc ol { columns: 1; }
+  .doc-nav { flex-direction: column; gap: 12px; }
+  .doc-nav a { max-width: 100%; }
+  .doc-nav-next { margin-left: 0; text-align: left; }
+  .doc-frame { height: max(560px, calc(100vh - 120px)); }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED FILE — edit docs/engineering/agent-evaluation.md and run scripts/build_docs.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">docs</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang">
+<label class="sr-only" for="nav-lang">Language</label>
+<select id="nav-lang" class="nav-lang-select" data-duct-lang>
+<option value="en">English</option>
+<option value="es">Español</option>
+<option value="pt-br">Português (Brasil)</option>
+<option value="de">Deutsch</option>
+<option value="ja">日本語</option>
+</select>
+</div>
+</div>
+</nav>
+
+<main id="main-content">
+<header class="doc-header">
+<p class="tag">Docs · Guide</p>
+<h1>Agent output QA — the LLM-as-judge eval harness</h1>
+<div class="doc-meta">
+<span>Updated 2026-09-28</span>
+<span>Shirish Kadam, Claude</span>
+<a href="https://github.com/5hirish/duct/blob/main/docs/engineering/agent-evaluation.md" rel="noopener">Source: docs/engineering/agent-evaluation.md</a>
+<a href="https://github.com/5hirish/duct/edit/main/docs/engineering/agent-evaluation.md" rel="noopener">Edit on GitHub</a>
+</div>
+</header>
+<nav class="doc-toc" aria-label="On this page">
+<div class="doc-toc-inner">
+<p class="doc-toc-title">On this page</p>
+<ol>
+<li><a href="#the-gate-on-agent-changes">The gate on agent changes</a></li>
+<li><a href="#why-a-critique-agent-not-assertions">Why a critique agent, not assertions</a></li>
+<li><a href="#what-we-built-backend-tests-eval">What we built (backend/tests/eval/)</a></li>
+<li><a href="#best-practices-we-follow-and-the-biases-behind-them">Best practices we follow (and the biases behind them)</a></li>
+<li><a href="#persona-user-simulation-and-its-limits">Persona / user-simulation — and its limits</a></li>
+<li><a href="#what-others-do-landscape-2025-26">What others do (landscape, 2025–26)</a></li>
+<li><a href="#how-to-extend">How to extend</a></li>
+<li><a href="#sources">Sources</a></li>
+</ol>
+</div>
+</nav>
+
+<article class="prose">
+<p>How we test agents whose output is <strong>subjective</strong> (a TikTok post, an SEO audit, a brief), why we do it this way, and where to take it next. The harness lives in <code>backend/tests/eval/</code>. Its consumers: the <strong>eval gate</strong> on agent PRs (below), and the live content and audit tests (<code>test_content_post_e2e.py</code>, <code>test_audit_eval.py</code>). The design and the evidence behind it are in <a href="https://github.com/5hirish/duct/blob/main/docs/engineering/2026-09-27-agent-eval-gating-design.md"><code>2026-09-27-agent-eval-gating-design.md</code></a>.</p>
+<h2 id="the-gate-on-agent-changes">The gate on agent changes</h2>
+<p>Three tiers; the first two exist.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Tier</th><th>Runs</th><th>What</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>every PR, offline, free</td><td>what is <em>sent</em> to the model: the system prompt and tool schemas byte-stable across calls, the history append-only; the gate's own arithmetic and verdicts; model, tier, effort and run limits rendered in the prompt dump</td><td><code>tests/test_request_invariants.py</code>, <code>tests/test_eval_gate.py</code>, <code>make dump-prompts</code></td></tr>
+<tr><td>1</td><td>PRs touching <code>backend/agents/**</code>, memory, profile or the lock; shadow for now</td><td>each case k=3 on a synthetic account, verdict against <code>tests/eval/baselines.json</code></td><td><code>make agent-eval</code>, <code>.github/workflows/agent-eval.yml</code></td></tr>
+<tr><td>2</td><td>nightly and weekly</td><td>the provider matrix, harder capability cases, private replays</td><td>not built</td></tr>
+</tbody>
+</table></div>
+<p><strong>A case</strong> (<code>tests/eval/cases/</code>) is a question, a synthetic business, and a simulated account that answers <strong>any</strong> window from daily series, installed under the real <code>fetch_entity</code>, so envelopes, totals and the payload cut are production code. Solo's world plants one story (the tax guide slipped in Search Console); a good brief finds it. Customer sessions never become cases: the repository is public. A bug from a real session becomes a case when it reproduces on a synthetic account, and otherwise stays a private replay.</p>
+<p><strong>A trial passes</strong> when every deterministic check holds (the run finished with a brief and no error event; the named entities were read; the brief quotes a total exactly as Duct computed it) and every <strong>binary</strong> judge marker does. The 1–5 dimensions are logged, never gated: a blended score hid a failure a HONORED/IGNORED rubric exposed, and binary answers resist self-preference far better than scores do. A <strong>provenance</strong> share (figures of three or more significant digits found in the run's pulls) is reported as a metric first.</p>
+<p><strong>Verdicts per case.</strong> PASS: passed as often as its baseline. INCONCLUSIVE: one trial short, or median cost or model calls moved more than 30% either way (an effort downgrade shows first as a cost drop); the CLI runs three more once. FAIL: two or more short. A per-trial cost and call cap stops a runaway; a run budget stops new trials. <code>--write-baseline</code> is for a ratchet PR only; never raise k, lower a threshold or drop a case to turn a run green.</p>
+<p><strong>Models.</strong> Agent and judge default to DeepSeek V4 Pro on OpenRouter: a full trial measured $0.03 (2026-09-28), which is what makes a gate on every harness PR affordable. <code>--provider</code> / <code>--model</code> run any other; the text judge follows <code>DUCT_JUDGE_PROVIDER</code> / <code>DUCT_JUDGE_MODEL</code>. Same family for agent and judge is a known self-preference risk, contained by gating on binary markers only.</p>
+<h2 id="why-a-critique-agent-not-assertions">Why a critique agent, not assertions</h2>
+<p>For subjective deliverables "correct" isn't a string match. Exact-match asserts miss the failures that matter — a weak hook, an off-brand image, a flattened narrative all still "validate" structurally. So we grade real output with a <strong>critique agent</strong>: a third-party LLM judge that scores the artifact against a rubric and gates a threshold. This is the standard <em>LLM-as-a-judge</em> pattern. We add a <strong>persona</strong> so the judge assesses <em>as the end user</em> ("masking as the user") — for short-form content, a sound-off short-form scroller reacting to the hook, per-slide retention, and save/share-worthiness — rather than as a neutral grader.</p>
+<h2 id="what-we-built-backend-tests-eval">What we built (<code>backend/tests/eval/</code>)</h2>
+<ul>
+<li><strong><code>Rubric</code> / <code>Dimension</code> / <code>Marker</code></strong> — weighted 1–5 dimensions, present/absent markers, a <code>pass_threshold</code>, and a <code>persona</code>. Agent-agnostic; each agent ships its own rubric (<code>rubrics/content_post.py</code>, <code>rubrics/audit_report.py</code>; insights can add its own). A rubric's renderer must show the judge the whole deliverable: the audit judge once failed two reports for an "empty" roadmap because the renderer printed the phase labels without the tasks.</li>
+<li><strong><code>JudgeVerdict</code> (structured output) + a deterministic <code>Scorecard</code></strong> — the judge returns scores + rationale; <em>we</em> compute the weighted overall, the per-dimension floors, and the marker gates. Scoring lives on our side so thresholds are auditable and stable across judge runs.</li>
+<li><strong><code>judge.py</code></strong> — two judges. A rubric with <strong>images</strong> gets one <strong>Gemini</strong> <code>generate_content</code> call: rubric + artifact text + images as parts, with <code>response_schema=JudgeVerdict</code>. Gemini is chosen for native multimodality: image dimensions (composition, legibility at a glance, on-brand styling) are graded on the actual pixels. A <strong>text</strong> rubric (the insights brief, the audit report) goes through Duct's own <code>resolve_chat_model</code> with <code>with_structured_output(JudgeVerdict)</code>, on OpenRouter by default.</li>
+<li><strong><code>prompts.py</code></strong> — the judge's system prompt + persona framing, in one place to review and tune.</li>
+<li><strong>Live e2e</strong> runs the real agent → generates an image → judges it, on the provider <code>DUCT_EVAL_PROVIDER</code> names (Claude by default; the Actions workflow runs a Claude leg and a Gemini leg). A second live test drives plan mode — enrichment, the research sub-agents, WebSearch — and asserts one real plan landed, with no rubric: it is the machinery check for the capabilities the V1 port had to rebuild. <strong>Offline tests</strong> (<code>test_eval_framework.py</code>) lock the scoring logic and run on every PR.</li>
+</ul>
+<h2 id="best-practices-we-follow-and-the-biases-behind-them">Best practices we follow (and the biases behind them)</h2>
+<p>LLM judges have well-documented biases; design around them.</p>
+<ul>
+<li><strong>Verbosity / formatting bias</strong> — judges over-reward long, fluent, well-formatted answers regardless of substance. → The system prompt explicitly says not to reward length, formatting, or fluent prose; the rubric scores substance.</li>
+<li><strong>Self-preference bias</strong> — a model scores its <em>own</em> outputs higher. ⚠️ Our judge is Gemini and our images are Gemini-generated, so the <strong>image</strong> dimensions carry some self-preference risk; the copy is Claude-generated (cross-model, lower risk). Mitigation today: humans spot-check image quality; later option: a second/different-provider judge for image dimensions.</li>
+<li><strong>Position bias</strong> — order changes the verdict. Only applies to <em>pairwise</em> judging; we do <em>pointwise/absolute</em> scoring, so it's not in play. If we add A/B regression, randomize order and average both orders.</li>
+<li><strong>Determinism</strong> — low temperature + structured output + our own threshold math.</li>
+<li><strong>Calibrate against humans</strong> — an LLM judge is only trustworthy once its scores correlate with human ratings on a sample. Treat <code>pass_threshold</code>/weights as provisional until calibrated.</li>
+</ul>
+<h2 id="persona-user-simulation-and-its-limits">Persona / user-simulation — and its limits</h2>
+<p>Persona-driven evaluation (the judge "masking as the user") is an active, effective technique for content and conversational agents. <strong>Caveat from the literature:</strong> LLM-simulated users are <em>unreliable proxies</em> for real users — they over-ask, are over-polite, and can systematically diverge — so persona-judging is a cheap, fast proxy, <strong>not</strong> a replacement for real engagement signal (retention, saves, shares). Use it to catch regressions early; validate against real metrics before trusting absolute numbers.</p>
+<h2 id="what-others-do-landscape-2025-26">What others do (landscape, 2025–26)</h2>
+<ul>
+<li><strong>CI gating (lightweight, code-defined):</strong> Promptfoo (now part of OpenAI; strong red-teaming), DeepEval, RAGAS. Our harness sits in this tier.</li>
+<li><strong>Platforms (tracing, human annotation, regression, dashboards):</strong> Braintrust, LangSmith, Arize <strong>Phoenix</strong> (already a backend dev dependency here), Helicone.</li>
+<li>The recommended division of labor: a lightweight framework for CI gating + a platform for human annotation and regression tracking. A natural next step is exporting our scorecards into Phoenix for trend/regression views.</li>
+</ul>
+<h2 id="how-to-extend">How to extend</h2>
+<ul>
+<li><strong>More agents:</strong> define a <code>Rubric</code> (+ persona) for the deliverable and reuse <code>evaluate()</code> / <code>assert_scorecard</code>.</li>
+<li><strong>Trajectory (process) eval:</strong> today we grade the <em>outcome</em> (the final post). Add <em>process</em> checks from the emitted events — did the agent call the right tools, avoid banned ones, stay within turn/budget limits.</li>
+<li><strong>Regression / A-B:</strong> pairwise-judge old vs. new on a fixed topic set (randomize order) to catch drift between prompt/model changes.</li>
+<li><strong>Human calibration:</strong> periodically hand-score a sample and check judge↔human correlation; adjust thresholds and weights from that.</li>
+<li><strong>Multi-judge:</strong> average independent judges for high-stakes dimensions to blunt single-model bias (with the caveat that naive multi-agent panels can <em>amplify</em> shared biases — keep them independent).</li>
+</ul>
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://www.emergentmind.com/topics/llm-as-a-judge-evaluations">LLM-as-a-Judge overview</a></li>
+<li><a href="https://llm-judge-bias.github.io/">Justice or Prejudice? Quantifying Biases in LLM-as-a-Judge</a></li>
+<li><a href="https://aclanthology.org/2025.ijcnlp-long.18/">Position Bias in LLM-as-a-Judge (ACL 2025)</a></li>
+<li><a href="https://arxiv.org/pdf/2410.21819">Self-Preference Bias in LLM-as-a-Judge</a></li>
+<li><a href="https://arxiv.org/html/2601.17087">Lost in Simulation: LLM-Simulated Users are Unreliable Proxies</a></li>
+<li><a href="https://aclanthology.org/2025.emnlp-industry.16/">Persona-driven user simulation for evaluating conversational agents (EMNLP 2025)</a></li>
+<li><a href="https://aws.amazon.com/blogs/machine-learning/evaluating-ai-agents-real-world-lessons-from-building-agentic-systems-at-amazon/">Evaluating AI agents — lessons from Amazon</a></li>
+<li><a href="https://arize.com/llm-evaluation-platforms-top-frameworks/">LLM evaluation platforms comparison (Arize)</a></li>
+</ul>
+</article>
+<nav class="doc-nav" aria-label="More documentation">
+<a class="doc-nav-prev" href="/docs/agent-engineering">← Building and changing agents</a>
+<a class="doc-nav-all" href="/docs/">All docs</a>
+<a class="doc-nav-next" href="/docs/credential-storage">Credential storage: the local API key and provider auth →</a>
+</nav>
+</main>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/docs/">Docs</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+<div class="footer-col">
+<h4>Project</h4>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/changelog/">Changelog</a>
+<a href="/blog/">Blog</a>
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</div>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · MIT licensed</span>
+<span>Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+
+</body>
+</html>

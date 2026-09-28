@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Duct docs: data model, agent contract, architecture</title>
+<link rel="canonical" href="https://getduct.ai/docs/"/>
+<meta name="description" content="Duct&#x27;s engineering fact sheets: the data model, the agent ports and event contract, credential storage, agent evaluation and an interactive map of the code, all generated from the repository."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/docs/"/>
+<meta property="og:title" content="Duct docs: data model, agent contract, architecture"/>
+<meta property="og:description" content="Duct&#x27;s engineering fact sheets: the data model, the agent ports and event contract, credential storage, agent evaluation and an interactive map of the code, all generated from the repository."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/docs.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct docs: data model, agent contract, architecture"/>
+<meta name="twitter:description" content="Duct&#x27;s engineering fact sheets: the data model, the agent ports and event contract, credential storage, agent evaluation and an interactive map of the code, all generated from the repository."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/docs.jpg"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "inLanguage": "en",
+  "name": "Duct documentation",
+  "url": "https://getduct.ai/docs/",
+  "description": "Duct's engineering fact sheets: the data model, the agent ports and event contract, credential storage, agent evaluation and an interactive map of the code, all generated from the repository.",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "hasPart": [
+    {
+      "@type": "TechArticle",
+      "name": "Duct architecture",
+      "url": "https://getduct.ai/docs/architecture"
+    },
+    {
+      "@type": "TechArticle",
+      "name": "Data model",
+      "url": "https://getduct.ai/docs/data-model"
+    },
+    {
+      "@type": "TechArticle",
+      "name": "Agent ports and the event contract",
+      "url": "https://getduct.ai/docs/agent-ports-and-events"
+    },
+    {
+      "@type": "TechArticle",
+      "name": "Building and changing agents",
+      "url": "https://getduct.ai/docs/agent-engineering"
+    },
+    {
+      "@type": "TechArticle",
+      "name": "Agent output QA — the LLM-as-judge eval harness",
+      "url": "https://getduct.ai/docs/agent-evaluation"
+    },
+    {
+      "@type": "TechArticle",
+      "name": "Credential storage: the local API key and provider auth",
+      "url": "https://getduct.ai/docs/credential-storage"
+    },
+    {
+      "@type": "TechArticle",
+      "name": "Local Security Audit Skill",
+      "url": "https://getduct.ai/docs/security-audit-skill-and-hooks"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Docs",
+      "item": "https://getduct.ai/docs/"
+    }
+  ]
+}
+</script>
+<style>
+.doc-header { max-width: 760px; margin: 0 auto; padding: 72px 24px 0; }
+.doc-header .tag { margin-bottom: 18px; }
+.doc-header h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); line-height: 1.15; color: var(--navy); margin-bottom: 16px; letter-spacing: -.5px; }
+.doc-meta { font-size: 13px; color: var(--navy-3); display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 8px; }
+.doc-meta a { color: var(--navy-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+.doc-meta a:hover { border-color: var(--navy); }
+.doc-lede { max-width: 760px; margin: 0 auto; padding: 0 24px; font-size: 16px; font-weight: 300; line-height: 1.7; color: var(--navy-3); }
+.doc-toc { max-width: 760px; margin: 28px auto 0; padding: 20px 24px; }
+.doc-toc-inner { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px 22px; background: var(--off); }
+.doc-toc-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 10px; }
+.doc-toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+.doc-toc li { font-size: 14px; line-height: 1.6; margin: 0 0 4px; break-inside: avoid; }
+.doc-toc a { color: var(--navy-2); text-decoration: none; }
+.doc-toc a:hover { color: var(--orange); }
+.prose { max-width: 760px; padding-top: 24px; }
+.prose h2 { scroll-margin-top: 88px; }
+.prose h3 { scroll-margin-top: 88px; }
+.prose h2 code, .prose h3 code { font-size: .8em; }
+.prose li p { margin: 0; }
+.table-wrap { overflow-x: auto; margin: 0 0 28px; -webkit-overflow-scrolling: touch; width: min(1040px, 100vw - 48px); position: relative; left: 50%; transform: translateX(-50%); }
+.prose table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--navy-3); font-weight: 300; }
+.prose th { font-weight: 600; color: var(--navy); border-bottom: 2px solid var(--border); white-space: nowrap; }
+.prose th code { white-space: nowrap; }
+.prose tbody tr:hover td { background: var(--off); }
+.doc-nav { display: flex; justify-content: space-between; gap: 24px; max-width: 760px; margin: 0 auto; padding: 8px 24px 72px; }
+.doc-nav a { font-size: 14px; font-weight: 500; color: var(--navy-3); text-decoration: none; max-width: 46%; }
+.doc-nav a:hover { color: var(--navy); }
+.doc-nav-next { margin-left: auto; text-align: right; }
+.doc-frame-wrap { max-width: 1240px; margin: 28px auto 0; padding: 0 24px 24px; }
+.doc-frame { display: block; width: 100%; height: max(640px, min(1400px, calc(100vh - 96px))); border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--off); }
+.doc-frame-actions { display: flex; gap: 18px; margin-top: 12px; font-size: 13px; }
+.doc-frame-actions a { color: var(--navy-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+.doc-frame-actions a:hover { border-color: var(--navy); }
+.doc-list { max-width: 760px; margin: 0 auto; padding: 40px 24px 96px; }
+.doc-item { display: block; text-decoration: none; color: inherit; padding: 26px 0; border-bottom: 1px solid var(--border); }
+.doc-item:first-child { border-top: 1px solid var(--border); }
+.doc-item .tag { font-size: 11px; margin-bottom: 8px; }
+.doc-item h2 { font-family: var(--serif); font-size: 22px; line-height: 1.25; color: var(--navy); margin: 0 0 8px; transition: color .15s; }
+.doc-item:hover h2 { color: var(--orange); }
+.doc-item p { font-size: 15px; font-weight: 300; line-height: 1.65; color: var(--navy-3); margin: 0 0 10px; }
+.doc-item-meta { font-size: 12px; color: var(--navy-3); display: flex; gap: 16px; }
+@media (max-width: 640px) {
+  .doc-toc ol { columns: 1; }
+  .doc-nav { flex-direction: column; gap: 12px; }
+  .doc-nav a { max-width: 100%; }
+  .doc-nav-next { margin-left: 0; text-align: left; }
+  .doc-frame { height: max(560px, calc(100vh - 120px)); }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED FILE — edit docs/factsheets.json and run scripts/build_docs.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">docs</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang">
+<label class="sr-only" for="nav-lang">Language</label>
+<select id="nav-lang" class="nav-lang-select" data-duct-lang>
+<option value="en">English</option>
+<option value="es">Español</option>
+<option value="pt-br">Português (Brasil)</option>
+<option value="de">Deutsch</option>
+<option value="ja">日本語</option>
+</select>
+</div>
+</div>
+</nav>
+
+<main id="main-content">
+<section class="blog-hero">
+<h1>Documentation</h1>
+<p>The fact sheets behind Duct: what it stores, how its agents are wired, where credentials live, and a map of the code. Generated from the repository, so they cannot drift from it.</p>
+</section>
+<div class="doc-list">
+<a class="doc-item" href="/docs/architecture">
+<span class="tag">Map</span>
+<h2>Duct architecture</h2>
+<p>An interactive map of the Duct monorepo: the backend, app, desktop shell and site, how they talk to each other, and which file to open first for each job.</p>
+<div class="doc-item-meta"><span>Updated 2026-09-17</span><span>docs/architecture.html</span></div>
+</a>
+<a class="doc-item" href="/docs/data-model">
+<span class="tag">Reference</span>
+<h2>Data model</h2>
+<p>Every table the Duct backend owns, what it records, and which of the four stores answers where something is recorded: rows, events, logs or memories.</p>
+<div class="doc-item-meta"><span>Updated 2026-09-26</span><span>docs/engineering/data-model.md</span></div>
+</a>
+<a class="doc-item" href="/docs/agent-ports-and-events">
+<span class="tag">Reference</span>
+<h2>Agent ports and the event contract</h2>
+<p>The harness boundary of Duct&#x27;s agents: the six ports a runner implements and the server-sent event contract the app renders, and the code that enforces each.</p>
+<div class="doc-item-meta"><span>Updated 2026-09-14</span><span>docs/engineering/agent-ports-and-events.md</span></div>
+</a>
+<a class="doc-item" href="/docs/agent-engineering">
+<span class="tag">Guide</span>
+<h2>Building and changing agents</h2>
+<p>How an agent is built and changed in Duct on LangChain, LangGraph and deepagents: the rules, the primitive behind each, what enforces it, and the checklists.</p>
+<div class="doc-item-meta"><span>Updated 2026-09-28</span><span>docs/engineering/agent-engineering.md</span></div>
+</a>
+<a class="doc-item" href="/docs/agent-evaluation">
+<span class="tag">Guide</span>
+<h2>Agent output QA — the LLM-as-judge eval harness</h2>
+<p>How Duct tests agents whose output is subjective, a brief or a post, with an LLM-as-judge harness: the trials, the rubric, the judge&#x27;s biases and mitigations.</p>
+<div class="doc-item-meta"><span>Updated 2026-09-28</span><span>docs/engineering/agent-evaluation.md</span></div>
+</a>
+<a class="doc-item" href="/docs/credential-storage">
+<span class="tag">Reference</span>
+<h2>Credential storage: the local API key and provider auth</h2>
+<p>Where every secret Duct holds actually lives, on the desktop and on a server: the local API key, provider keys and OAuth tokens, and what protects each of them.</p>
+<div class="doc-item-meta"><span>Updated 2026-09-27</span><span>docs/engineering/credential-storage.md</span></div>
+</a>
+<a class="doc-item" href="/docs/security-audit-skill-and-hooks">
+<span class="tag">Runbook</span>
+<h2>Local Security Audit Skill</h2>
+<p>The local security gate for Duct&#x27;s backend and app: the audit skill, the leak scanner, the pre-commit hook and the policy they enforce before a change ships.</p>
+<div class="doc-item-meta"><span>Updated 2026-09-14</span><span>docs/engineering/security-audit-skill-and-hooks.md</span></div>
+</a>
+</div>
+</main>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/docs/">Docs</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+<div class="footer-col">
+<h4>Project</h4>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/changelog/">Changelog</a>
+<a href="/blog/">Blog</a>
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</div>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · MIT licensed</span>
+<span>Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+
+</body>
+</html>

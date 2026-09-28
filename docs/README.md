@@ -18,6 +18,17 @@ Product strategy, go-to-market and MVP scope are kept in a separate private
 repository along with the deployment runbooks, so this index covers engineering
 and reference material only.
 
+## Published on the site
+
+The fact sheets a reader wants before installing anything are published on
+the site's `/docs/` pages, rendered from the files here so there is one copy
+to maintain. [`factsheets.json`](factsheets.json) is the list: slug, source
+file, kicker, and the description the page and its share card carry.
+`scripts/build_docs.py` renders them into `site/docs/`, and CI fails when
+that output lags a source. References only: a record is frozen on its date
+and would be read as current. Publishing one more is a manifest entry plus
+the steps in [`../site/AGENTS.md`](../site/AGENTS.md#docs-pages-docs).
+
 ## Naming
 
 Two kinds of document, told apart by the filename:

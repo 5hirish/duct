@@ -76,6 +76,9 @@ another port (the tests assume 8090).
 | `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` (redirect shim, noindex) |
 | `https://getduct.ai/changelog/` | `site/changelog/index.html` |
 | `https://getduct.ai/changelog/YYYY` | `site/changelog/YYYY.html` (year archive, created at rollover) |
+| `https://getduct.ai/docs/` | `site/docs/index.html` (**generated** by `scripts/build_docs.py`) |
+| `https://getduct.ai/docs/<slug>` | `site/docs/<slug>.html` (**generated** from the `docs/` file `docs/factsheets.json` names) |
+| `https://getduct.ai/docs/embed/<slug>` | `site/docs/embed/<slug>.html` (**generated**: a self-contained HTML doc copied verbatim, framed by the page above) |
 | `https://getduct.ai/<lang>/…` | `site/<lang>/…` (**generated** by `scripts/build_site_i18n.py`; `es`, `pt-br`, `de`, `ja`) |
 
 ## Shared assets
@@ -395,6 +398,45 @@ tools pages use (headline, one paragraph, Download, a session shot), so the
 product is shown, not described, and the copy changes in one place.
 
 Also add the post to `site/sitemap.xml` and an `<item>` to `site/blog/feed.xml`.
+
+## Docs pages (`docs/`)
+
+The fact sheets in the repository's `docs/` folder are published here without
+a second copy to maintain. `docs/factsheets.json` names which ones: slug,
+source file, kicker, and the 140–160 character description the page and its
+card carry. `scripts/build_docs.py` renders each into `site/docs/<slug>.html`
+in the site's chrome, the output is committed, and CI fails when it lags its
+source (`build_docs.py --check`, beside the blog check). References only: a
+dated record is frozen on its date and would be read as current.
+
+Two kinds of source. A markdown reference is rendered from a small Markdown
+subset (the blog's, plus tables, code blocks and the `**Author:** … ·
+**Updated:** …` byline, which becomes the page's date); anything outside it
+fails the build rather than rendering wrong. A self-contained HTML document
+(the architecture map: its own styles, script and figure) is copied verbatim
+to `site/docs/embed/<slug>.html` with a `noindex` meta added, and shown inside
+a framing page that carries the `<head>` checklist and the chrome. Restyling
+it into the site would mean maintaining it twice; `check-pages.py` scans the
+framing pages and, deliberately, not the embeds.
+
+Relative links inside a document name repository paths. The builder rewrites
+one to the published page when its target is another fact sheet, and to the
+file on GitHub otherwise; a link to a path that no longer exists fails the
+build. Docs are English only, like the blog: `nav-docs.html` is inlined and
+nothing under `site/<lang>/` is generated for them.
+
+To publish a document, add it to `docs/factsheets.json`, then:
+
+```bash
+node scripts/build_og_images.mjs       # draws site/assets/og/docs-<slug>.jpg from the manifest
+python3 scripts/build_docs.py          # writes site/docs/
+python3 scripts/build_docs.py --check  # what CI runs; fails if the tree is stale
+```
+
+Then add its URL to `site/sitemap.xml` (`lastmod` is the document's Updated
+line) and to the Documentation section of `site/llms.txt`. The builder fails
+until both are there, for the same reason the blog does: a page nobody can
+find is not published.
 
 ## Translated pages (`site/<lang>/`)
 

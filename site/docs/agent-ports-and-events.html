@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Agent ports and the event contract — Duct docs</title>
+<link rel="canonical" href="https://getduct.ai/docs/agent-ports-and-events"/>
+<meta name="description" content="The harness boundary of Duct&#x27;s agents: the six ports a runner implements and the server-sent event contract the app renders, and the code that enforces each."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/docs/agent-ports-and-events"/>
+<meta property="og:title" content="Agent ports and the event contract — Duct docs"/>
+<meta property="og:description" content="The harness boundary of Duct&#x27;s agents: the six ports a runner implements and the server-sent event contract the app renders, and the code that enforces each."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/docs-agent-ports-and-events.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:modified_time" content="2026-09-14T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Agent ports and the event contract — Duct docs"/>
+<meta name="twitter:description" content="The harness boundary of Duct&#x27;s agents: the six ports a runner implements and the server-sent event contract the app renders, and the code that enforces each."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/docs-agent-ports-and-events.jpg"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "inLanguage": "en",
+  "headline": "Agent ports and the event contract",
+  "description": "The harness boundary of Duct's agents: the six ports a runner implements and the server-sent event contract the app renders, and the code that enforces each.",
+  "url": "https://getduct.ai/docs/agent-ports-and-events",
+  "dateModified": "2026-09-14T00:00:00+00:00",
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "isPartOf": {
+    "@type": "CollectionPage",
+    "name": "Documentation",
+    "url": "https://getduct.ai/docs/"
+  },
+  "license": "https://github.com/5hirish/duct/blob/main/LICENSE"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Docs",
+      "item": "https://getduct.ai/docs/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Agent ports and the event contract",
+      "item": "https://getduct.ai/docs/agent-ports-and-events"
+    }
+  ]
+}
+</script>
+<style>
+.doc-header { max-width: 760px; margin: 0 auto; padding: 72px 24px 0; }
+.doc-header .tag { margin-bottom: 18px; }
+.doc-header h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); line-height: 1.15; color: var(--navy); margin-bottom: 16px; letter-spacing: -.5px; }
+.doc-meta { font-size: 13px; color: var(--navy-3); display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 8px; }
+.doc-meta a { color: var(--navy-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+.doc-meta a:hover { border-color: var(--navy); }
+.doc-lede { max-width: 760px; margin: 0 auto; padding: 0 24px; font-size: 16px; font-weight: 300; line-height: 1.7; color: var(--navy-3); }
+.doc-toc { max-width: 760px; margin: 28px auto 0; padding: 20px 24px; }
+.doc-toc-inner { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px 22px; background: var(--off); }
+.doc-toc-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 10px; }
+.doc-toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+.doc-toc li { font-size: 14px; line-height: 1.6; margin: 0 0 4px; break-inside: avoid; }
+.doc-toc a { color: var(--navy-2); text-decoration: none; }
+.doc-toc a:hover { color: var(--orange); }
+.prose { max-width: 760px; padding-top: 24px; }
+.prose h2 { scroll-margin-top: 88px; }
+.prose h3 { scroll-margin-top: 88px; }
+.prose h2 code, .prose h3 code { font-size: .8em; }
+.prose li p { margin: 0; }
+.table-wrap { overflow-x: auto; margin: 0 0 28px; -webkit-overflow-scrolling: touch; width: min(1040px, 100vw - 48px); position: relative; left: 50%; transform: translateX(-50%); }
+.prose table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--navy-3); font-weight: 300; }
+.prose th { font-weight: 600; color: var(--navy); border-bottom: 2px solid var(--border); white-space: nowrap; }
+.prose th code { white-space: nowrap; }
+.prose tbody tr:hover td { background: var(--off); }
+.doc-nav { display: flex; justify-content: space-between; gap: 24px; max-width: 760px; margin: 0 auto; padding: 8px 24px 72px; }
+.doc-nav a { font-size: 14px; font-weight: 500; color: var(--navy-3); text-decoration: none; max-width: 46%; }
+.doc-nav a:hover { color: var(--navy); }
+.doc-nav-next { margin-left: auto; text-align: right; }
+.doc-frame-wrap { max-width: 1240px; margin: 28px auto 0; padding: 0 24px 24px; }
+.doc-frame { display: block; width: 100%; height: max(640px, min(1400px, calc(100vh - 96px))); border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--off); }
+.doc-frame-actions { display: flex; gap: 18px; margin-top: 12px; font-size: 13px; }
+.doc-frame-actions a { color: var(--navy-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+.doc-frame-actions a:hover { border-color: var(--navy); }
+.doc-list { max-width: 760px; margin: 0 auto; padding: 40px 24px 96px; }
+.doc-item { display: block; text-decoration: none; color: inherit; padding: 26px 0; border-bottom: 1px solid var(--border); }
+.doc-item:first-child { border-top: 1px solid var(--border); }
+.doc-item .tag { font-size: 11px; margin-bottom: 8px; }
+.doc-item h2 { font-family: var(--serif); font-size: 22px; line-height: 1.25; color: var(--navy); margin: 0 0 8px; transition: color .15s; }
+.doc-item:hover h2 { color: var(--orange); }
+.doc-item p { font-size: 15px; font-weight: 300; line-height: 1.65; color: var(--navy-3); margin: 0 0 10px; }
+.doc-item-meta { font-size: 12px; color: var(--navy-3); display: flex; gap: 16px; }
+@media (max-width: 640px) {
+  .doc-toc ol { columns: 1; }
+  .doc-nav { flex-direction: column; gap: 12px; }
+  .doc-nav a { max-width: 100%; }
+  .doc-nav-next { margin-left: 0; text-align: left; }
+  .doc-frame { height: max(560px, calc(100vh - 120px)); }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED FILE — edit docs/engineering/agent-ports-and-events.md and run scripts/build_docs.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">docs</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang">
+<label class="sr-only" for="nav-lang">Language</label>
+<select id="nav-lang" class="nav-lang-select" data-duct-lang>
+<option value="en">English</option>
+<option value="es">Español</option>
+<option value="pt-br">Português (Brasil)</option>
+<option value="de">Deutsch</option>
+<option value="ja">日本語</option>
+</select>
+</div>
+</div>
+</nav>
+
+<main id="main-content">
+<header class="doc-header">
+<p class="tag">Docs · Reference</p>
+<h1>Agent ports and the event contract</h1>
+<div class="doc-meta">
+<span>Updated 2026-09-14</span>
+<span>Shirish Kadam, Claude</span>
+<a href="https://github.com/5hirish/duct/blob/main/docs/engineering/agent-ports-and-events.md" rel="noopener">Source: docs/engineering/agent-ports-and-events.md</a>
+<a href="https://github.com/5hirish/duct/edit/main/docs/engineering/agent-ports-and-events.md" rel="noopener">Edit on GitHub</a>
+</div>
+</header>
+<nav class="doc-toc" aria-label="On this page">
+<div class="doc-toc-inner">
+<p class="doc-toc-title">On this page</p>
+<ol>
+<li><a href="#1-why-a-seam-and-not-a-framework">1. Why a seam and not a framework</a></li>
+<li><a href="#2-the-ports">2. The ports</a></li>
+<li><a href="#3-the-event-contract">3. The event contract</a></li>
+<li><a href="#4-artifacts-not-reports">4. Artifacts, not reports</a></li>
+<li><a href="#5-model-transport-and-bring-your-own-model">5. Model transport and bring-your-own-model</a></li>
+<li><a href="#6-observability">6. Observability</a></li>
+</ol>
+</div>
+</nav>
+
+<article class="prose">
+<p><strong>Status:</strong> implemented · Source of truth is the code, not this page — <a href="https://github.com/5hirish/duct/blob/main/backend/agents/core/ports/__init__.py"><code>backend/agents/core/ports/__init__.py</code></a> declares the ports and <a href="https://github.com/5hirish/duct/blob/main/backend/agents/core/events.py"><code>backend/agents/core/events.py</code></a> holds the event vocabulary and the AG-UI map.</p>
+<p>Duct rents an agent harness; it does not marry one. This document explains the seam that makes that true, and publishes the event contract that crosses it.</p>
+<hr/>
+<h2 id="1-why-a-seam-and-not-a-framework">1. Why a seam and not a framework</h2>
+<p>Agent harnesses are the fastest-churning, least-differentiated layer in this stack. At the time of writing: <code>deepagents</code> is 0.7.x on a weekly cadence, <code>claude-agent-sdk</code> is 0.2.x, <code>google-adk</code> ships roughly bi-weekly and its 2.x line already forced one breaking migration on us. Meanwhile <code>langchain</code> 1.x is an LTS release under semver, with no breaking changes promised until 2.0.</p>
+<p>The durable assets are elsewhere: prompts, tools, schemas, goals, scoring, the artifact contract. Those are framework-neutral and survive any harness swap. So the useful question is not "which SDK is best" but <strong>"how small is the surface through which an SDK touches us, and which SDK keeps that surface smallest?"</strong></p>
+<h3 id="the-anti-pattern-we-deliberately-avoid">The anti-pattern we deliberately avoid</h3>
+<p>There is no <code>AgentHarness</code> interface in this codebase, and there should never be one. Harnesses differ in <em>capability</em>, not just API shape:</p>
+<ul>
+<li>Take the <strong>intersection</strong> and you lose subagents, filesystem, skills, HITL granularity and compaction — the entire reason to rent a harness.</li>
+<li>Take the <strong>union</strong> and you are writing a framework, plus adapters for it, which is strictly worse than the three-engine problem this replaced.</li>
+</ul>
+<p>So the harness stays harness-shaped <em>inside a runner</em>, and only its boundary is standardized. The evidence that this works is already in the repo: the LangChain audit runner is 376 lines against the Claude SDK runner's 1,175, not because LangChain is terser but because the boundaries were already in place and only the middle had to be rewritten.</p>
+<h3 id="pick-the-lowest-rung-that-works">Pick the lowest rung that works</h3>
+<p>LangChain 1.x is layered, and the layers carry different stability guarantees. That makes "how much framework do I adopt" a risk decision, not just a convenience one:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Rung</th><th>Stability</th><th>Duct agent</th></tr></thead>
+<tbody>
+<tr><td><code>init_chat_model</code> + <code>.with_structured_output()</code></td><td>1.x LTS, semver</td><td>conversation compaction, artifact digests</td></tr>
+<tr><td><code>create_agent</code></td><td>1.x LTS, semver</td><td>audit v1, content's enrichment pass</td></tr>
+<tr><td><code>deepagents</code></td><td>0.x, no policy, weekly</td><td>insights session, content session (planning, sub-agents, scratch space)</td></tr>
+</tbody>
+</table></div>
+<p>The first-party LangChain surface is still small — <code>create_agent</code>, <code>init_chat_model</code>, <code>StructuredTool</code>, the middleware classes and the message classes, all on the LTS tier. <code>deepagents</code> is now load-bearing for the two session agents, which is why it is pinned exactly and gated by <code>tests/test_deepagents_harness.py</code>.</p>
+<p>The test that matters: <em>if <code>deepagents</code> were abandoned tomorrow, what breaks?</em> The two session runners' middle — assembly and the stream loop. Their tools, prompts, schemas and events are framework-free and the boundary test keeps them so, so the fallback is a rung down onto <code>create_agent</code>, not a rewrite. That asymmetry is the case for this design.</p>
+<hr/>
+<h2 id="2-the-ports">2. The ports</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Port</th><th>Contract</th><th>Adapters</th></tr></thead>
+<tbody>
+<tr><td><strong>Tools</strong></td><td>plain domain callable + a description single-sourced beside it</td><td><code>build_memory_tools_lc</code>, <code>build_artifact_tools_lc</code>, <code>build_execution_tools_lc</code> — each had an SDK twin, retired with v3</td></tr>
+<tr><td><strong>Events out</strong></td><td><code>AgentEvent</code> / <code>EventKind</code> + an <code>Emitter</code></td><td>v1 LangChain stream; the SDK's <code>pump_stream_event</code> was the second, until v3 went</td></tr>
+<tr><td><strong>Human-in-the-loop</strong></td><td><code>PauseFn</code> — <code>await pause(event, payload)</code> returns the user's answer</td><td><code>make_future_pause</code> (in-process Future; audit v1, the slide-render bridge), <code>interrupt_pause</code> (LangGraph <code>interrupt()</code>; insights v1, content v1)</td></tr>
+<tr><td><strong>Artifacts</strong></td><td><code>&lt;duct_artifact&gt;</code> + <code>DuctArtifactStreamParser</code> + <code>ArtifactPersister</code></td><td>harness-neutral by construction</td></tr>
+<tr><td><strong>Session / state</strong></td><td><code>BaseAgentSession</code> registry for the live process; the conversation id as the durable thread</td><td>in-process registry; LangGraph checkpointer keyed on the conversation, driven by the shared <code>DeepSession</code> loop (<code>agents/core/deep_session.py</code>; insights v1, content v1)</td></tr>
+<tr><td><strong>Model transport</strong></td><td><code>Provider</code> / <code>ModelName</code> / <code>Engine</code> registries</td><td>OpenAI-compatible, native Anthropic, native Gemini</td></tr>
+</tbody>
+</table></div>
+<p><strong>The rule for adding one: write the adapter on the second implementation, not the first.</strong> A port with one implementation is a guess; with two it is a fact. The pause port is the worked example. <code>bridge_user_input</code> was the only way a run could park until the insights runner moved its pauses onto LangGraph's <code>interrupt()</code>; the <code>PauseFn</code> protocol was declared at that point, from two real implementations, and the tool bodies (<code>agents/core/connector_tools.py</code>) stopped knowing which one they had been handed.</p>
+<p>What the checkpointed implementation buys, and the in-process one cannot: a pause lives in the thread's checkpoint, so it survives a redeploy, has no timeout, and a session opened later on the same conversation is shown the question it is still waiting on (<code>GET …/conversations/{id}/state</code>, and the <code>replay</code> flag on the re-emitted event). The frontend contract is unchanged — the same three events, one answer endpoint, plus an <code>interrupt_id</code> the client passes back so two pauses raised in one turn are resolved separately.</p>
+<h3 id="the-external-standard-behind-each-port">The external standard behind each port</h3>
+<p>Ports point at contracts with multi-vendor backing, not at Duct inventions:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Port</th><th>Standard</th><th>Maturity</th></tr></thead>
+<tbody>
+<tr><td>Tools</td><td><strong>MCP</strong> — under the Linux Foundation's Agentic AI Foundation since Dec 2025 (OpenAI, Anthropic, Google, Microsoft, AWS, Block)</td><td>the most durable of the four</td></tr>
+<tr><td>Model transport</td><td><strong>OpenAI-compatible chat completions</strong></td><td>de facto universal</td></tr>
+<tr><td>Events out</td><td><strong>AG-UI</strong></td><td>credible, younger, single-vendor origin</td></tr>
+<tr><td>Observability</td><td><strong>OpenTelemetry GenAI semantic conventions</strong></td><td><code>gen_ai.client</code> settled, <code>gen_ai.agent</code> still experimental</td></tr>
+</tbody>
+</table></div>
+<p>The protocols are outliving the SDKs, which is the reason to express contracts in their terms even when we do not take the dependency.</p>
+<h3 id="enforcement">Enforcement</h3>
+<p><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_harness_boundaries.py"><code>backend/tests/test_harness_boundaries.py</code></a> fails if a framework import appears outside the declared adapter allowlist, if an allowlist entry goes stale, if a domain module grows a framework import, or if an event is missing from the AG-UI map. That is what makes "modular" a property of the codebase rather than an intention in a document.</p>
+<p>The allowlist also records three files as <strong>boundary debt</strong> — <code>routes/chat.py</code>, <code>service/artifact_store.py</code> and <code>service/memory_consolidation.py</code> import a harness from the wrong layer. They are named rather than silently blessed.</p>
+<hr/>
+<h2 id="3-the-event-contract">3. The event contract</h2>
+<p>Duct's SSE vocabulary predates AG-UI and largely agrees with it — <code>step_started</code> / <code>step_finished</code> are already name-for-name identical.</p>
+<p><strong>We map rather than rename</strong>, deliberately. Renaming <code>agent_message_chunk</code> to <code>text_message_content</code> would break every consumer to buy nothing; the wire value is an internal contract, and what has to be portable is the <em>meaning</em>. And roughly half of these are domain events that no protocol will ever cover — AG-UI's answer for those is <code>Custom</code>, so "aligning" them would flatten real meaning into a generic envelope. Contorting domain events to fit a standard is the same mistake as contorting them to fit an SDK.</p>
+<p>The map below is the entire AG-UI adapter. A future AG-UI endpoint is a ~30-line translation over it, not a refactor.</p>
+<h3 id="live-sse-events">Live SSE events</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Duct event</th><th>AG-UI</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>pipeline_started</code></td><td><code>RunStarted</code></td><td>a run began</td></tr>
+<tr><td><code>pipeline_finished</code></td><td><code>RunFinished</code></td><td>a run completed</td></tr>
+<tr><td><code>pipeline_failed</code></td><td><code>RunError</code></td><td>a run failed</td></tr>
+<tr><td><code>step_started</code></td><td><code>StepStarted</code></td><td>a workflow stage began</td></tr>
+<tr><td><code>step_finished</code></td><td><code>StepFinished</code></td><td>a workflow stage completed</td></tr>
+<tr><td><code>step_failed</code></td><td><code>StepFinished</code></td><td>AG-UI has no StepFailed; failure rides in <code>status</code></td></tr>
+<tr><td><code>agent_message_chunk</code></td><td><code>TextMessageContent</code></td><td>prose token</td></tr>
+<tr><td><code>agent_message</code></td><td><code>TextMessageChunk</code></td><td>a complete message</td></tr>
+<tr><td><code>message_stop</code></td><td><code>TextMessageEnd</code></td><td>turn boundary</td></tr>
+<tr><td><code>thinking_chunk</code></td><td><code>ReasoningMessageContent</code></td><td>extended-thinking delta</td></tr>
+<tr><td><code>synthesis_chunk</code></td><td><code>TextMessageContent</code></td><td>insights synthesis stream (legacy on audit)</td></tr>
+<tr><td><code>todo_update</code></td><td><code>ActivitySnapshot</code></td><td>full todo list; snapshot, never a delta</td></tr>
+<tr><td><code>questions_required</code></td><td><code>Custom</code></td><td>HITL — the agent needs an answer to continue; carries <code>interrupt_id</code> on a checkpointed run, <code>replay: true</code> when re-emitted on resume</td></tr>
+<tr><td><code>connection_required</code></td><td><code>Custom</code></td><td>HITL — a connector the project lacks; answer <code>{connected}</code> or <code>{skipped}</code></td></tr>
+<tr><td><code>account_selection_required</code></td><td><code>Custom</code></td><td>HITL — which account/property/site; answer <code>{account_id, account_name}</code></td></tr>
+<tr><td><code>slide_render_requested</code></td><td><code>Custom</code></td><td>agent asks the browser to rasterize a slide</td></tr>
+<tr><td><code>artifact_chunk</code></td><td><code>Custom</code></td><td>token inside <code>&lt;duct_artifact&gt;</code></td></tr>
+<tr><td><code>artifact_version</code></td><td><code>Custom</code></td><td>new <strong>version</strong> of the primary artifact, full payload</td></tr>
+<tr><td><code>artifact_updated</code></td><td><code>Custom</code></td><td>compact artifact <strong>card</strong> for the transcript</td></tr>
+<tr><td><code>plan_generated</code></td><td><code>Custom</code></td><td>content: a plan</td></tr>
+<tr><td><code>post_draft_updated</code></td><td><code>Custom</code></td><td>content: a post draft</td></tr>
+<tr><td><code>execution_proposed</code></td><td><code>Custom</code></td><td>staged-execution change set; upsert by <code>change_set_id</code></td></tr>
+<tr><td><code>memory_written</code></td><td><code>Custom</code></td><td>entries this turn stored, with undo</td></tr>
+<tr><td><code>memory_recalled</code></td><td><code>Custom</code></td><td>entry ids this turn was primed with</td></tr>
+<tr><td><code>model_retrying</code></td><td><code>Custom</code></td><td>a model call failed and is being retried: <code>attempt</code>, <code>max_attempts</code>, <code>code</code>, <code>retry_in</code> (seconds until the next attempt — a duration, so the client anchors it to its own clock and counts down). Status, not failure — the next token clears it</td></tr>
+<tr><td><code>token_usage</code></td><td><code>Custom</code></td><td>one model call's bill: <code>input_tokens</code>, <code>output_tokens</code>, <code>cache_read_tokens</code>, <code>context_window</code>, <code>model</code>, <code>scope</code> (<code>thread</code>, <code>subagent</code>, or <code>compaction</code> for the summariser — all three are on the bill, only <code>thread</code> drives the gauge), <code>cost_usd</code> (from <code>agents/models.PRICING</code>; <code>null</code> for an unpriced model, never a guess)</td></tr>
+<tr><td><code>context_compacting</code>, <code>context_compacted</code></td><td><code>Custom</code></td><td>the harness is summarising old history to make room, then did. The summariser's own tokens never reach the transcript. Also emitted by the insights runner around an emergency compaction: a request the provider rejected as too long is summarised once (<code>compact_thread</code>) and retried from its checkpoint; a second rejection is the ordinary <code>context_window</code> failure</td></tr>
+<tr><td><code>user_input_consumed</code></td><td><code>Custom</code></td><td>a message sent mid-turn has reached the model; carries the <code>client_message_id</code> the client stamped on it</td></tr>
+</tbody>
+</table></div>
+<h3 id="failures-carry-a-code-never-the-exception">Failures carry a code, never the exception</h3>
+<p><code>step_failed</code> (no <code>step_id</code>) and <code>pipeline_failed</code> carry <code>code</code>, <code>retryable</code> and a one-sentence <code>error</code>. The code is <code>agents/core/errors.ErrorCode</code>, decided once by <code>classify_error</code> from the exception's class names and status codes, looking through whatever wraps it. The same classifier is the <code>retry_on</code> of the model-call retry (<code>agents/core/lc.ReportedRetryMiddleware</code>), so a rate limit retries with backoff and a rejected key fails on the first attempt; and the frontend maps the code — not the message text — to copy and to the action it offers (<code>lib/agentSession.js</code> <code>errorAction</code>: retry, open model settings, open connections, start fresh). <code>str(exc)</code> never reaches the browser: it has carried request ids, and once a URL with a key in it.</p>
+<p>The failure is also durable. <code>ConversationRecorder</code> appends a <code>failure</code> event where the turn died and writes <code>agent_conversations.run_status</code> (<code>RunStatus</code>: idle / running / paused / failed / cancelled) and <code>run_error</code> with the same <code>{code, retryable, error}</code>; a session closed mid-turn is recorded as <code>cancelled</code>. The conversation list and the state route carry <code>run_status</code> and <code>run_error</code>, so a thread list can badge "Needs you" or "Failed" before anyone opens the thread, and a reloaded transcript shows the failure as the same row the live client did — with the same action under it. The status is derived from the stream in that one place on purpose: a runner that also wrote it would be a second opinion about one column.</p>
+<h3 id="input-while-a-turn-runs-steer-or-queue-never-refuse">Input while a turn runs: steer or queue, never refuse</h3>
+<p>The chat route never answers 409 to a message. If the session's harness can inject a message at its next model call — <code>BaseAgentSession.steer_queue</code> is set, which the insights runner does through <code>agents/core/lc.SteerMiddleware</code>, a <code>before_model</code> hook so the injected message is checkpointed with the thread — a message that arrives mid-turn or while parked on a card is steered: the model reads it right after the tool result it was waiting on. Otherwise it waits on <code>chat_queue</code> for the next turn. Either way the client marks the row "queued" until <code>user_input_consumed</code> names it. A steer that lands after the turn's last model call becomes the next turn (<code>_leftover_steers</code> in the insights runner), not a surprise at the top of whatever the user asks next.</p>
+<h3 id="persisted-conversation-kinds">Persisted conversation kinds</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Kind</th><th>AG-UI</th></tr></thead>
+<tbody>
+<tr><td><code>user</code>, <code>assistant</code></td><td><code>MessagesSnapshot</code></td></tr>
+<tr><td><code>thinking</code></td><td><code>ReasoningMessageContent</code></td></tr>
+<tr><td><code>tool_use</code></td><td><code>ToolCallStart</code></td></tr>
+<tr><td><code>tool_result</code></td><td><code>ToolCallResult</code></td></tr>
+<tr><td><code>question</code>, <code>answer</code></td><td><code>Custom</code></td></tr>
+<tr><td><code>failure</code></td><td><code>RunError</code> — <code>{code, retryable, error}</code> where a turn or run died; <code>code: cancelled</code> for a stop</td></tr>
+</tbody>
+</table></div>
+<hr/>
+<h2 id="4-artifacts-not-reports">4. Artifacts, not reports</h2>
+<p>The streaming tag is <code>&lt;duct_artifact&gt;</code>. It used to be <code>&lt;duct_report&gt;</code>, which stopped being accurate the moment content started emitting plans and post drafts through the same mechanism and the artifact store began versioning all of them alike. "Report" was audit vocabulary sitting on a shared primitive.</p>
+<p>Two wire values changed with it:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Was</th><th>Is</th></tr></thead>
+<tbody>
+<tr><td><code>report_chunk</code></td><td><code>artifact_chunk</code></td></tr>
+<tr><td><code>report_updated</code></td><td><code>artifact_version</code></td></tr>
+</tbody>
+</table></div>
+<p><strong>Migration:</strong> the parser accepts <em>both</em> tags, so conversations recorded before the rename still replay and a turn in flight against a cached system prompt does not strand its payload. The frontend accepts both event strings; the backend emits only the new ones. An older app meeting a newer backend is the only broken pairing, so:</p>
+<blockquote><p><strong>Deploy the app first, then the backend.</strong></p></blockquote>
+<p>Drop the frontend's <code>LEGACY_*</code> branches once both are out. The Python aliases <code>AgentEvent.REPORT_CHUNK</code> / <code>REPORT_UPDATED</code> are gone — nothing referenced them, and a deprecated alias nobody uses is just a second name to keep true.</p>
+<h3 id="what-deliberately-did-not-change-artifacts-kind">What deliberately did <em>not</em> change: <code>artifacts.kind</code></h3>
+<p><code>kind</code> on the <code>artifacts</code> row stays <code>"report"</code> for audit output, and that is not an oversight. It is a <strong>semantic discriminator</strong> — <code>report | document | ticket | image</code> (<a href="https://github.com/5hirish/duct/blob/main/backend/models/artifact.py"><code>models/artifact.py</code></a>) — so it names what an artifact <em>is</em>, not the mechanism carrying it. Renaming it to <code>"artifact"</code> would make every artifact's kind be "artifact": the column would carry zero information, and it would take a data migration to get there.</p>
+<p>The distinction that matters:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Layer</th><th>Vocabulary</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Mechanism — tag, events, parser, persister</td><td><strong>artifact</strong></td><td>shared by every agent</td></tr>
+<tr><td>Value — <code>artifacts.kind</code>, <code>AuditReport</code>, <code>summarize_report</code></td><td><strong>report</strong></td><td>this artifact really is a report</td></tr>
+</tbody>
+</table></div>
+<p><code>tests/test_harness_boundaries.py::test_no_live_event_uses_report_vocabulary</code> pins the first row. The second is left alone on purpose.</p>
+<hr/>
+<h2 id="5-model-transport-and-bring-your-own-model">5. Model transport and bring-your-own-model</h2>
+<p><code>Provider.OPENROUTER</code> is not a fourth SDK — it is the OpenAI-compatible chat completions shape pointed at a different base URL. Adopting the shape rather than the vendor is the point: the endpoint is a config value (<code>openrouter_base_url</code>), so the same code path reaches OpenRouter, a local Ollama, vLLM, llama.cpp, or a self-hosted gateway.</p>
+<p>Two details worth knowing:</p>
+<ul>
+<li><strong>The model list is curated, not a whitelist.</strong> OpenRouter fronts hundreds of models, so an unrecognised <code>vendor/slug</code> is passed through verbatim rather than silently replaced by a default — substituting would discard the model a BYO-key customer explicitly chose, which is the whole feature. A bare name with no slash is treated as a typo and does fall back.</li>
+<li><strong>Only v1 supports it.</strong> The Claude Agent SDK is provider-locked by design (upstream issue #410, closed <code>not planned</code>), so v3 asked for OpenRouter degrades to Anthropic rather than appearing to work. That asymmetry is the argument for v1 as the target harness, stated in code.</li>
+</ul>
+<h3 id="open-source-gateways-work-already-that-is-the-point">Open-source gateways work already — that is the point</h3>
+<p>Because the port is the <em>shape</em> and not the vendor, every self-hostable OpenAI-compatible gateway is reachable today by setting <code>openrouter_base_url</code>. No new provider, no code change:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Gateway</th><th>License</th><th>Runtime</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><strong>LiteLLM</strong></td><td>MIT</td><td>Python</td><td>100+ providers, virtual keys, spend control. The default choice.</td></tr>
+<tr><td><strong>Bifrost</strong></td><td>open source</td><td>Go</td><td>~11µs routing overhead at 5k RPS; LiteLLM's Python path climbs sharply past ~500 RPS</td></tr>
+<tr><td><strong>Portkey Gateway</strong></td><td>MIT</td><td>Node</td><td>adds guardrails + observability</td></tr>
+<tr><td><strong>LLM Gateway</strong></td><td><strong>AGPLv3</strong></td><td>Docker</td><td>closest OSS equivalent to OpenRouter's whole platform (dashboard, caching, analytics) — but check the licence before embedding</td></tr>
+<tr><td><strong>Envoy AI Gateway</strong></td><td>open source</td><td>Kubernetes</td><td>for a cluster that already runs Envoy</td></tr>
+<tr><td>Ollama / vLLM / llama.cpp</td><td>open source</td><td>local</td><td>not gateways — model servers, same OpenAI-compatible path</td></tr>
+</tbody>
+</table></div>
+<p><strong>The honest limit.</strong> These replace OpenRouter's <em>interface and key management</em>, not its <strong>commercial aggregation</strong>. Self-hosting LiteLLM does not get you DeepSeek — it gets you a uniform way to call DeepSeek once you hold a DeepSeek account. OpenRouter's distinct value is that one commercial relationship reaches 60+ providers, which for a bring-your-own-key product is the difference between a customer pasting one key and pasting fifteen.</p>
+<p>So the two are complements, not substitutes: OpenRouter as the default for "paste one key and go", a self-hosted gateway for anyone who wants no third party in the request path, local model servers for fully-private runs. All three are the same code path.</p>
+<p>If a second endpoint ever ships as a first-class option, the clean shape is to split <code>Provider.OPENROUTER</code> into a generic <code>Provider.OPENAI_COMPATIBLE</code> (base URL required, no default) with OpenRouter as one preset. That is a second implementation of the port, so build it when it exists — not before.</p>
+<hr/>
+<h2 id="6-observability">6. Observability</h2>
+<p>The harness gives us nothing. LangChain's own tracing goes to LangSmith, a second vendor and a second place to look. The one harness that carried OTel built in was the Claude Agent SDK — its subprocess inherited Sentry's OTLP endpoint from an env var — and it went, taking that plumbing with it. "Observability comes free with the harness" was never true of the harness we kept.</p>
+<p>So <a href="https://github.com/5hirish/duct/blob/main/backend/agents/core/telemetry.py"><code>backend/agents/core/telemetry.py</code></a> emits the OpenTelemetry GenAI conventions from our side of the boundary: <code>model_span</code> around model calls, <code>tool_span</code> around tool execution — the latter placed at the choke point <em>both</em> binders share, so one span shape covers LangChain and the Claude Agent SDK alike.</p>
+<p>The conventions are still experimental and moved to their own repository in June 2026, so the attribute names are <strong>pinned as our own copy</strong> rather than imported from the package's private <code>_incubating</code> module, and <code>tests/test_telemetry.py</code> diffs the copy against the installed package. Drift surfaces as a failing test instead of as silently wrong telemetry.</p>
+<p><code>opentelemetry-api</code> is a declared dependency rather than one inherited transitively from <code>google-adk</code> — otherwise retiring the frozen v2 engine would have silently stopped the spans. The import is still guarded and degrades to a no-op regardless, because telemetry must never be why an agent run fails.</p>
+</article>
+<nav class="doc-nav" aria-label="More documentation">
+<a class="doc-nav-prev" href="/docs/data-model">← Data model</a>
+<a class="doc-nav-all" href="/docs/">All docs</a>
+<a class="doc-nav-next" href="/docs/agent-engineering">Building and changing agents →</a>
+</nav>
+</main>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/docs/">Docs</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+<div class="footer-col">
+<h4>Project</h4>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/changelog/">Changelog</a>
+<a href="/blog/">Blog</a>
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</div>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · MIT licensed</span>
+<span>Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+
+</body>
+</html>

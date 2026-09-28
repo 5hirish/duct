@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "architecture",
+    "source": "docs/architecture.html",
+    "kicker": "Map",
+    "description": "An interactive map of the Duct monorepo: the backend, app, desktop shell and site, how they talk to each other, and which file to open first for each job."
+  },
+  {
+    "slug": "data-model",
+    "source": "docs/engineering/data-model.md",
+    "kicker": "Reference",
+    "description": "Every table the Duct backend owns, what it records, and which of the four stores answers where something is recorded: rows, events, logs or memories."
+  },
+  {
+    "slug": "agent-ports-and-events",
+    "source": "docs/engineering/agent-ports-and-events.md",
+    "kicker": "Reference",
+    "description": "The harness boundary of Duct's agents: the six ports a runner implements and the server-sent event contract the app renders, and the code that enforces each."
+  },
+  {
+    "slug": "agent-engineering",
+    "source": "docs/engineering/agent-engineering.md",
+    "kicker": "Guide",
+    "description": "How an agent is built and changed in Duct on LangChain, LangGraph and deepagents: the rules, the primitive behind each, what enforces it, and the checklists."
+  },
+  {
+    "slug": "agent-evaluation",
+    "source": "docs/engineering/agent-evaluation.md",
+    "kicker": "Guide",
+    "description": "How Duct tests agents whose output is subjective, a brief or a post, with an LLM-as-judge harness: the trials, the rubric, the judge's biases and mitigations."
+  },
+  {
+    "slug": "credential-storage",
+    "source": "docs/engineering/credential-storage.md",
+    "kicker": "Reference",
+    "description": "Where every secret Duct holds actually lives, on the desktop and on a server: the local API key, provider keys and OAuth tokens, and what protects each of them."
+  },
+  {
+    "slug": "security-audit-skill-and-hooks",
+    "source": "docs/engineering/security-audit-skill-and-hooks.md",
+    "kicker": "Runbook",
+    "description": "The local security gate for Duct's backend and app: the audit skill, the leak scanner, the pre-commit hook and the policy they enforce before a change ships."
+  }
+]

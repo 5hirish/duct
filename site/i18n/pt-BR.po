@@ -1412,7 +1412,7 @@ msgstr "Como o Duct se conecta às minhas ferramentas de SEO e conteúdo?"
 msgid "How is Duct different from using Search Console directly?"
 msgstr "Qual a diferença entre o Duct e o uso direto do Search Console?"
 
-#: for-organic-growth.html for-paid-ads.html for-product-intelligence.html partials/nav-blog.html partials/nav-changelog.html
+#: for-organic-growth.html for-paid-ads.html for-product-intelligence.html partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html
 msgid "How it works"
 msgstr "Como funciona"
 
@@ -2881,7 +2881,7 @@ msgid ""
 msgstr ""
 "Um projeto de código aberto da Alleviate Lab. Um agente de IA que lê em toda a sua pilha de crescimento, age com sua aprovação e lembra. Licenciado sob MIT."
 
-#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "Blog"
 msgstr "Blog"
 
@@ -2925,6 +2925,10 @@ msgid "Discussions"
 msgstr "Discussões"
 
 #: partials/footer-expanded.html
+msgid "Docs"
+msgstr "Documentação"
+
+#: partials/footer-expanded.html
 msgid "Download for Desktop"
 msgstr "Baixar para desktop"
 
@@ -2942,7 +2946,7 @@ msgstr "Navegação do rodapé"
 msgid "Free SEO Audit"
 msgstr "Auditoria SEO Gratuita"
 
-#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "Free Tools"
 msgstr "Ferramentas gratuitas"
 
@@ -3005,7 +3009,7 @@ msgstr "Casos de Uso"
 msgid "X / Twitter"
 msgstr "X / Twitter"
 
-#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+#: partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
 msgid "duct <0></0>"
 msgstr "duct <0></0>"
 
@@ -3013,98 +3017,98 @@ msgstr "duct <0></0>"
 msgid "© 2026 Alleviate Lab · Spain · MIT licensed"
 msgstr "© 2026 Alleviate Lab · Espanha · Licenciado sob MIT"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>Customer Success</3><4>Early churn & health score signals</4></2> <5>Soon</5>"
 msgstr ""
 "<0><1/></0> <2><3>Sucesso do Cliente</3><4>Sinais de churn precoce e pontuação de saúde</4></2> <5>Em breve</5>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>E-commerce / DTC</3><4>ROAS, LTV & retention synthesis</4></2> <5>Soon</5>"
 msgstr ""
 "<0><1/></0> <2><3>E-commerce / DTC</3><4>Síntese de ROAS, LTV e retenção</4></2> <5>Em breve</5>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>PMs & growth teams</3><4>Why did signups drop? Read across analytics, ads and revenue</4></2>"
 msgstr ""
 "<0><1/></0> <2><3>PMs e equipes de crescimento</3><4>Por que os cadastros caíram? Leia em analytics, anúncios e receita</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>Performance marketers</3><4>Spend against retention and revenue, not ROAS alone</4></2>"
 msgstr ""
 "<0><1/></0> <2><3>Profissionais de marketing de performance</3><4>Gaste em retenção e receita, não apenas em ROAS</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>SEO & content teams</3><4>Search Console, GA4 and the audit, in one place</4></2>"
 msgstr ""
 "<0><1/></0> <2><3>Equipes de SEO e conteúdo</3><4>Search Console, GA4 e a auditoria, em um só lugar</4></2>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html
 msgid ""
 "<0><1/></0> <2><3>Sales / RevOps</3><4>Pipeline & revenue intelligence</4></2> <5>Soon</5>"
 msgstr ""
 "<0><1/></0> <2><3>Vendas / RevOps</3><4>Inteligência de pipeline e receita</4></2> <5>Em breve</5>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>CPC Calculator</0><1>Cost per click from spend and volume</1>"
 msgstr "<0>Calculadora de CPC</0><1>Custo por clique a partir de gasto e volume</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>CPM Calculator</0><1>Cost per 1,000 impressions</1>"
 msgstr "<0>Calculadora de CPM</0><1>Custo por 1.000 impressões</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>CTR Calculator</0><1>Click-through rate from impressions and clicks</1>"
 msgstr ""
 "<0>Calculadora de CTR</0><1>Taxa de cliques a partir de impressões e cliques</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid ""
 "<0>Engagement Rate Calculator</0><1>Engagement vs followers, reach, or impressions</1>"
 msgstr ""
 "<0>Calculadora de Taxa de Engajamento</0><1>Engajamento vs seguidores, alcance ou impressões</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid ""
 "<0>Marketing ROI Calculator</0><1>ROI and profit from campaign spend vs revenue</1>"
 msgstr ""
 "<0>Calculadora de ROI de Marketing</0><1>ROI e lucro a partir do gasto da campanha vs receita</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>ROAS Calculator</0><1>Return on ad spend from revenue and spend</1>"
 msgstr ""
 "<0>Calculadora de ROAS</0><1>Retorno sobre o gasto com anúncios a partir de receita e gasto</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid ""
 "<0>See all tools</0><1>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</1>"
 msgstr ""
 "<0>Ver todas as ferramentas</0><1>Métricas SaaS, CAC/LTV, CPA, resumo semanal e mais</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "<0>UTM Builder</0><1>Build GA4-compliant UTM links with live preview</1>"
 msgstr ""
 "<0>Construtor de UTM</0><1>Crie links UTM compatíveis com GA4 com prévia ao vivo</1>"
 
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-simple.html
 msgid "Download →"
 msgstr "Baixar →"
 
 #. a title
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
 msgid "Duct on GitHub"
 msgstr "Duct no GitHub"
 
 #. nav aria-label
-#: partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
 msgid "Main navigation"
 msgstr "Navegação principal"
 
-#: partials/nav-blog.html partials/nav-changelog.html
+#: partials/nav-blog.html partials/nav-changelog.html partials/nav-docs.html
 msgid "Solutions"
 msgstr "Soluções"
 
@@ -3115,6 +3119,10 @@ msgstr "blog"
 #: partials/nav-changelog.html
 msgid "changelog"
 msgstr "changelog"
+
+#: partials/nav-docs.html
+msgid "docs"
+msgstr "docs"
 
 #: partials/nav-home.html
 msgid "Use cases"
