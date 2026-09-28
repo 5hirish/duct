@@ -35,7 +35,7 @@
     "@lingui/react": "^6.7.0",
     "@nivo/core": "^0.99.0",
     "@nivo/heatmap": "^0.99.0",
-    "@sentry/nextjs": "^10.75.0",
+    "@sentry/nextjs": "^11.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.15",
