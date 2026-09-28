@@ -6,8 +6,15 @@
     <atom:link href="https://getduct.ai/changelog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>What shipped in Duct — new connectors, agent and model upgrades, execution controls, and desktop builds.</description>
     <language>en</language>
-    <lastBuildDate>Tue, 15 Sep 2026 09:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 28 Sep 2026 09:00:00 GMT</lastBuildDate>
 
+    <item>
+      <title>Duct in five languages</title>
+      <link>https://getduct.ai/changelog/#2026-09-28</link>
+      <guid isPermaLink="false">duct-changelog-2026-09-28</guid>
+      <pubDate>Mon, 28 Sep 2026 09:00:00 GMT</pubDate>
+      <description>Duct now speaks Spanish, Brazilian Portuguese, German and Japanese. Briefs quote totals, rates and subtotals Duct computed from the data instead of numbers the model added up, and memory says how old a remembered fact is before the agent repeats it. An approval now applies once and only to what you approved, and desktop 0.7.1 carries a security fix for the framework the app is built on.</description>
+    </item>
     <item>
       <title>Agents that know your business</title>
       <link>https://getduct.ai/changelog/#2026-09-15</link>
