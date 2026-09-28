@@ -33,7 +33,7 @@ python-multipart = ">=0.0.32"
 # config keys, the same day Google sunset developer tokens. Access level now
 # follows the Cloud project that owns the OAuth client, so there is no token
 # left to send. Do not float back below this.
-google-ads = "^32.0"
+google-ads = "^33.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.200.0"
 google-genai = "^2.24"
