@@ -104,3 +104,16 @@ def test_catalog_is_not_stale(connector):
         f"(today {date.today()}). Re-verify its fields and api_version against "
         f"{', '.join(FETCHER_SOURCES[connector])}, then bump last_audited."
     )
+
+
+@pytest.mark.parametrize("connector", CONNECTORS)
+def test_the_fields_a_rate_is_built_from_are_emitted(connector):
+    """A `ratio` or `weight` naming a key the rows never carry would total to
+    nothing, silently; the same rename-one-side drift as the fields above."""
+    catalog = get_catalog_for_connector(connector)
+    emitted = _dict_literal_keys(*FETCHER_SOURCES[connector])
+    for entity in catalog["entities"]:
+        for name, meta in entity["fields"].items():
+            named = list(meta.get("ratio") or []) + ([meta["weight"]] if meta.get("weight") else [])
+            missing = sorted(set(named) - emitted)
+            assert not missing, f"{connector}/{entity['entity_id']}.{name} totals from {missing}"

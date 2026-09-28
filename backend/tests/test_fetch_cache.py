@@ -65,3 +65,17 @@ def test_an_expired_grant_is_a_reauth_status_not_a_fetch_failure(monkeypatch):
     result = fetchers.fetch_entity(spec.entity_id, user_id=uuid4(), project_id=None)
     assert result["status"] == "reauth_required"
     assert "reconnect" in result["message"]
+
+
+@pytest.mark.asyncio
+async def test_the_default_window_and_its_dates_written_out_are_one_pull(monkeypatch):
+    """The cache used to key on what the model typed, so "" and the same 30
+    days spelled out were two fetches of one report."""
+    from agents.insights.fetchers import resolve_window
+
+    calls: list[str] = []
+    fetch = _fetch_tool(monkeypatch, calls, {"status": "ok", "data": {"rows": [1]}})
+    date_from, date_to = resolve_window("", "")
+    await fetch.ainvoke({"entity_id": "ga4_landing_pages"})
+    await fetch.ainvoke({"entity_id": "ga4_landing_pages", "date_from": date_from, "date_to": date_to})
+    assert calls == ["ga4_landing_pages"]
