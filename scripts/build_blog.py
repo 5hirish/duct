@@ -911,15 +911,20 @@ def render_page(slug: str, fm: dict[str, str], body: str, siblings: list[dict]) 
 
 # Swaps a video facade for the privacy-enhanced player on the reader's click.
 # Emitted only on posts that have a video; a modified click opens YouTube.
+# The id is re-checked in the browser, not trusted because _YOUTUBE_ID wrote
+# it: an attribute is page text by the time this runs (CodeQL flagged it on
+# #255), and an id of any other shape falls through to the plain link.
 VIDEO_SCRIPT = """<script>
 (function () {
   var links = document.querySelectorAll('[data-youtube]');
   for (var i = 0; i < links.length; i++) {
     links[i].addEventListener('click', function (e) {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var id = this.getAttribute('data-youtube') || '';
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return;
       e.preventDefault();
       var frame = document.createElement('iframe');
-      frame.src = 'https://www.youtube-nocookie.com/embed/' + this.getAttribute('data-youtube') + '?autoplay=1&rel=0';
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
       frame.title = this.getAttribute('data-title');
       frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
       this.parentNode.replaceChild(frame, this);

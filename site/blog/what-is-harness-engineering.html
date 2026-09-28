@@ -783,9 +783,11 @@
   for (var i = 0; i < links.length; i++) {
     links[i].addEventListener('click', function (e) {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var id = this.getAttribute('data-youtube') || '';
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return;
       e.preventDefault();
       var frame = document.createElement('iframe');
-      frame.src = 'https://www.youtube-nocookie.com/embed/' + this.getAttribute('data-youtube') + '?autoplay=1&rel=0';
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
       frame.title = this.getAttribute('data-title');
       frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
       this.parentNode.replaceChild(frame, this);
