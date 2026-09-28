@@ -29,8 +29,8 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   Claude / xAI / OpenRouter) and the Claude Agent SDK was Anthropic-only by
   design (upstream issue #410, closed `not planned`). Insights
   (`agents/insights/v1/runner.py`) and content (`agents/content/v1/runner.py`)
-  are `deepagents` sessions; audit's runner is `create_agent` driven by the same
-  shared `DeepSession`.
+  are `deepagents` sessions; audit's runner is on the `create_agent` rung
+  (`build_session_agent`) driven by the same shared `DeepSession`.
 
   **V3 (Claude Agent SDK) was removed** last, because it was the hardest: the
   project-scoped audit ran it unconditionally, and four capabilities existed
@@ -512,7 +512,7 @@ agents/
 │   ├── v1/             — deepagents runner (the only insights engine)
 │   └── catalog/, goals/, schema.py, prompts/, subagents/
 ├── audit/              — SEO audit agent
-│   ├── v1/             — create_agent runner (default)
+│   ├── v1/             — create_agent-rung session runner (build_session_agent)
 │   ├── crawl.py        — engine-neutral: the session, the crawl, report parsing
 │   ├── enrichment.py   — competitor research; create_agent + web tools, any provider
 │   └── scoring.py      — the report's scores and counts, computed from its findings on
@@ -680,9 +680,20 @@ framework. The rules it implies:
   session (`agents/content/v1/runner.py`) spends three of them from its first
   turn: `write_todos` is the checklist the workspace renders, `research_pillar`
   and `draft_post` are sub-agents, and the virtual scratch space holds drafts.
-  Audit's V1 runner is still `create_agent`, and content's enrichment pass
-  (`agents/content/enrichment.py`) is one too — search, fetch, structured
-  answer, no planning.
+  Audit's V1 runner is still on the `create_agent` rung, and content's
+  enrichment pass (`agents/content/enrichment.py`) is one too — search, fetch,
+  structured answer, no planning.
+
+  **The rung is chosen; the middleware is not.** A session graph is built by
+  `agents/core/deep_session.py` — `build_deep_session_agent` or, on the
+  `create_agent` rung, `build_session_agent` — and both mount the same
+  `session_middleware` list (pruning, call limits, fallback, reported retry,
+  steer) plus provider prompt caching. The audit was a bare `create_agent`
+  from 2026-08-16 to 2026-09-27: its `RunLimits` (added 09-06) were declared
+  and never enforced and Anthropic never cached its prefix, all tests green.
+  `tests/test_agent_assembly.py` now fails a graph built anywhere else; a
+  bounded one-shot pass (the two enrichment modules) is listed there and must
+  still pass `prompt_caching_middleware()`.
 
   Three consumers of the 0.x pin now, so `tests/test_deepagents_harness.py`
   matters more, not less: run it before moving the pin. `tests/test_content_v1_runner.py`

@@ -44,11 +44,10 @@ SOURCE_ROOTS = ("agents", "routes", "service", "models", "utils")
 # ---------------------------------------------------------------------------
 
 ADAPTERS: dict[str, str] = {
-    # -- Harness runners. The middle of a runner is allowed to be harness-shaped;
-    #    that is the whole point of the ports design. The two deepagents session
-    #    runners are NOT here: their harness-shaped middle moved into
-    #    agents/core/deep_session.py, and they are pinned framework-free below.
-    "agents/audit/v1/runner.py":            "LangChain runner (create_agent)",
+    # -- No runner is here. Each one's harness-shaped middle moved into
+    #    agents/core/deep_session.py (the audit's last, when its bare
+    #    create_agent turned out to mount none of the shared middleware), and
+    #    all three are pinned framework-free below.
 
     # -- Shared LangChain adapter: the model-transport + events-out ports for
     #    every V1 runner. Extracted from agents/audit/v1/runner.py on the second
@@ -110,9 +109,10 @@ FRAMEWORK_FREE: tuple[str, ...] = (
     "agents/content/prompts.py",
     "agents/content/artifacts.py",
     "agents/content/assessment.py",
-    # The two session runners: what they own is tools, prompts, limits and
-    # hooks, and none of that needs a framework symbol. If one of them grows a
+    # The session runners: what they own is tools, prompts, limits and hooks,
+    # and none of that needs a framework symbol. If one of them grows a
     # harness import again, the shared session has a gap — fill it there.
+    "agents/audit/v1/runner.py",
     "agents/content/v1/runner.py",
     "agents/insights/v1/runner.py",
     "agents/content/subagents/__init__.py",

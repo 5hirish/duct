@@ -260,6 +260,8 @@ async def _research(prompt: str, llm: Any, web_tools: list[Any]) -> _RawTrending
     from langchain.agents import create_agent
     from langchain.agents.structured_output import ToolStrategy
 
+    from agents.core.lc import prompt_caching_middleware
+
     agent = create_agent(
         model=llm,
         # No session, no keys, no writers: the open web is attacker-authored
@@ -267,6 +269,8 @@ async def _research(prompt: str, llm: Any, web_tools: list[Any]) -> _RawTrending
         # reach here is another page.
         tools=list(web_tools),
         response_format=ToolStrategy(_RawTrendingResult),
+        # Every call re-sends the pages already fetched; cached on Anthropic.
+        middleware=prompt_caching_middleware(),
     )
     result = await agent.ainvoke(
         {"messages": [{"role": "user", "content": prompt}]},

@@ -36,6 +36,7 @@ from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware, SummarizationMiddleware
 from langchain.chat_models import init_chat_model
+from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import StructuredTool
@@ -223,8 +224,10 @@ def resolve_chat_model(
     ``cache_key`` is the thread the calls belong to. OpenAI routes a request
     carrying ``prompt_cache_key`` to the machine holding that prefix, so a
     tool loop's ten calls on the same conversation hit the cache instead of
-    landing on ten machines and rebuilding it. Anthropic and Google key
-    caching on content alone, so it contributes nothing there.
+    landing on ten machines and rebuilding it. It contributes nothing on the
+    other providers: Gemini caches implicitly, and Anthropic caches only a
+    request that asks for it, which is a middleware's job, not the
+    transport's (``prompt_caching_middleware``).
     """
     cache = _cache_kwargs(provider, cache_key)
     # A ChatGPT access token is not an API key and does not go to the public
@@ -258,6 +261,21 @@ def _cache_kwargs(provider: Provider, cache_key: str) -> dict:
     if provider is not Provider.OPENAI or not cache_key:
         return {}
     return {"model_kwargs": {PROMPT_CACHE_KEY_FIELD: cache_key}}
+
+
+def prompt_caching_middleware() -> list[AgentMiddleware]:
+    """What a ``create_agent`` graph mounts so Anthropic caches its prefix.
+
+    Anthropic bills a cached prefix at a tenth of the input price, but only
+    caches a request carrying ``cache_control``: nothing is cached by default.
+    ``create_deep_agent`` appends this middleware itself; a plain
+    ``create_agent`` gets nothing, so the audit re-bought its whole prompt at
+    full price on every call of its tool loop until this existed. Innermost
+    in the list, where deepagents puts it, so it marks the request a fallback
+    model actually sends. ``ignore`` makes it a no-op on every other model,
+    which is why it is safe to mount unconditionally.
+    """
+    return [AnthropicPromptCachingMiddleware(unsupported_model_behavior="ignore")]
 
 
 # ---------------------------------------------------------------------------
