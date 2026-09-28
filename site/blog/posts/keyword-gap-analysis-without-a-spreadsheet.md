@@ -2,7 +2,8 @@
 title: "Keyword Gap Analysis Without a Spreadsheet"
 date: Mar 10 2026
 author: Shirish Kadam
-category: Content Strategy
+category: Growth
+tags: keyword research, content strategy, search console, seo
 excerpt: "The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup."
 readTime: 5
 ---

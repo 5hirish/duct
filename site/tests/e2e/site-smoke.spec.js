@@ -76,9 +76,27 @@ test("post HTML carries the article without JavaScript", async ({ request }) => 
 
   expect(raw).toContain(`<link rel="canonical" href="https://getduct.ai${POST_PATH}"/>`);
   expect(raw).toMatch(/<meta name="description" content="[^"]{60,}"/);
-  expect(raw).toContain('"@type": "Article"');
+  expect(raw).toContain('"@type": "BlogPosting"');
+  expect(raw).toContain('"@type": "BreadcrumbList"');
   expect(raw).toContain("Shirish Kadam");
-  expect(raw).toContain("<h2>");
+  expect(raw).toMatch(/<h2 id="[a-z0-9-]+">/);
+});
+
+// The grid and its filter are generated from front matter; without the
+// filter a reader looking for engineering posts scrolls past growth ones.
+test("blog index filters posts by category and keeps it in the URL", async ({ page }) => {
+  await page.goto("/blog/");
+  const cards = page.locator(".blog-grid > li");
+  const total = await cards.count();
+  await page.locator('.blog-filter-chip[data-category="engineering"]').click();
+  await expect(page).toHaveURL(/\?category=engineering$/);
+  const visible = page.locator(".blog-grid > li:not([hidden])");
+  expect(await visible.count()).toBeLessThan(total);
+  for (const cat of await visible.evaluateAll((els) => els.map((e) => e.dataset.category))) {
+    expect(cat).toBe("engineering");
+  }
+  await page.goto("/blog/?category=growth");
+  await expect(page.locator('.blog-filter-chip[data-category="growth"]')).toHaveAttribute("aria-pressed", "true");
 });
 
 test("each post declares its own canonical", async ({ request }) => {

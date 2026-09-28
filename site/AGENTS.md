@@ -195,7 +195,7 @@ under 860px (`index.html` swaps the source before anything is fetched);
 | `site/blog/feed.xml` | RSS. Hand-maintained: add an `<item>` with every new post. CI fails if it is missing, empty, or carries an off-domain `<link>`. |
 | `site/changelog/feed.xml` | RSS for releases. Same hand-maintained rule: an `<item>` per release, `pubDate` in RFC 822. |
 | `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. Names the five languages and the prefix each lives under, and repeats the home page's FAQ word for word: a model answering "what is Duct" lifts a direct answer over prose, and one asked in German has no other signal that `/de/` exists. Edit its FAQ and the page's `<details>` together. |
-| `site/_headers` | `Link:` discovery headers, the RSS content type Cloudflare would otherwise get wrong, and a one-week `Cache-Control` for shots, art, cards and icons (Pages revalidates everything on every view by default; `duct.css`/`duct.js` are deliberately left on that default because nothing versions their URLs). |
+| `site/_headers` | `Link:` discovery headers, the RSS content type Cloudflare would otherwise get wrong, and a one-week `Cache-Control` for shots, art, cards, icons and post images (Pages revalidates everything on every view by default; `duct.css`/`duct.js` are deliberately left on that default because nothing versions their URLs). |
 
 JSON-LD is validated by `check-pages.py`: every `application/ld+json` block must
 parse and carry an `@type`. A malformed block is dropped silently by every
@@ -363,8 +363,17 @@ not fork it.
 
 ## New blog post
 
+Run the `add-blog-post` skill (`.agents/skills/add-blog-post/`): it holds the
+research, writing, illustration and publishing recipe, and the cadence. What
+follows is the mechanics it relies on.
+
 Posts live in `site/blog/posts/<slug>.md` with required front matter: `title`,
-`date`, `author`, `category`, `excerpt`, `readTime`.
+`date`, `author`, `category`, `tags`, `excerpt`, `readTime`. The category is
+one of five, enforced by the generator (`CATEGORIES` in
+`scripts/build_blog.py`: Engineering, Design, Growth, Announcement, Story); tags
+are 1–6 lowercase topics. Optional: `description` (140–160), `seoTitle` (≤60),
+`updated`, `hero` + `heroAlt`, `audience`. The generator's docstring is the
+reference for every key.
 
 **Then draw its card, run the generator, and commit both outputs:**
 
@@ -376,25 +385,55 @@ python3 scripts/build_blog.py --check  # what CI runs; fails if the tree is stal
 
 The generator refuses a post whose card is missing rather than falling back
 to a shared image. The card is the post's `og:image` and its cover on the
-index, so the index card for a new post is
-`<img class="blog-card-img" src="../assets/og/blog-<slug>.jpg" width="1200" height="630" loading="lazy" alt=""/>`,
-with the excerpt under it copied from the front matter.
+index, where the generator places it with the excerpt from the front matter.
 
 Posts are pre-rendered, not rendered in the browser. They used to be, and a
 crawler without JavaScript received 49 characters of body text plus a canonical
 of `/blog/post` shared by every post. The generator inlines the nav and
 footer partials for the same reason: a runtime `fetch` is not a crawlable link.
 
-The Markdown subset is deliberately small: h2, paragraphs, ordered and bullet
-lists, bold, links, a `---` rule. Anything else raises rather than rendering
-wrong. Extend `render_markdown()` before using a new construct.
+The Markdown subset is small and grows only when a post needs a construct:
+h2 and h3 (each with an anchor id), paragraphs, lists, bold, italics, inline
+code, links, a `---` rule, figures (`![alt](src "caption")`, size read from the
+file), pipe tables, attributed quotes (`> …` then `> -- [Who](url)`), code
+blocks, and two embeds drawn at build time: `[!github](repo-url "…")`, a static
+repository card, and `[!youtube](watch-url "…")`, a click-to-play facade that
+fetches nothing from YouTube until the reader presses play. Anything else
+raises rather than rendering wrong. Extend `render_markdown()` before using a
+new construct. A third-party widget that loads on page view is never an
+option: it would load outside the consent gate.
+
+Post images live in `site/blog/assets/<slug>/` (a `-768` variant beside a file
+joins its srcset); product shots are referenced from `../assets/media/`.
+
+The generator writes `BlogPosting` (with a `citation` for every outside source
+linked), `BreadcrumbList`, and `FAQPage` from a `## FAQ` section of `###`
+questions, all from the rendered text, so structured data never says something
+the page does not.
 
 A post ends where its argument ends. Do not write a pitch or a download line
-into the Markdown: the generator closes every post with the same bridge the
-tools pages use (headline, one paragraph, Download, a session shot), so the
-product is shown, not described, and the copy changes in one place.
+into the Markdown: the generator closes every post with a bridge (headline,
+one paragraph, the actions, a shot), so the product is shown, not described,
+and the copy changes in one place. The bridge follows the category: growth
+readers get Download and an insights session; builders (Engineering, Design)
+get Star on GitHub and the approval card, because a reader who came for the
+code converts on the code.
 
-Also add the post to `site/sitemap.xml` and an `<item>` to `site/blog/feed.xml`.
+**The blog index's card grid and category filter are generated.** They sit
+between `blog-index:start` / `blog-index:end` markers in `site/blog/index.html`
+and are rewritten from the posts' front matter, newest first; the page around
+them is hand-written. The filter shows one chip per category that has posts,
+filters without a reload, and keeps the choice in `?category=`; with
+JavaScript off the chips stay hidden and every post shows.
+
+**Every post must also appear in three hand-kept listings**: `site/sitemap.xml`,
+an `<item>` in `site/blog/feed.xml`, and a line in `site/llms.txt`.
+`build_blog.py` fails, in both modes, until all three have it.
+
+A `[!youtube]` embed shows the video's thumbnail from a copy committed beside
+the post (`python3 scripts/build_blog.py --fetch-thumbnails` saves it once;
+the only network step, never run by `--check`), so a page view still sends
+YouTube nothing.
 
 ## Translated pages (`site/<lang>/`)
 

@@ -73,6 +73,7 @@ Calculators and generators that run in the browser, no account: [SaaS metrics be
 
 ## Blog posts
 
+- [What Is Harness Engineering? Lessons From a Shipping Agent](https://getduct.ai/blog/what-is-harness-engineering): what harness engineering is, why the same model scores differently in different harnesses, a reading order for the awesome-harness-engineering list, and the harness rules Duct enforces with tests.
 - [Why Your SEO Metrics Aren't Telling You the Full Story](https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story)
 - [Keyword Gap Analysis Without a Spreadsheet](https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet)
 
