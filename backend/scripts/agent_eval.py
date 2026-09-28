@@ -17,8 +17,9 @@ there. Connectors are answered by the case's synthetic account.
 
 Writes ``eval-results.jsonl`` (one line per trial, brief and chat reply
 included) and the markdown report, also to ``$GITHUB_STEP_SUMMARY`` when set.
-Exits 1 on any FAIL; INCONCLUSIVE is reported and does not fail the run. Judge
-calls are not counted against ``--budget`` (a verdict is about a cent).
+Exits 1 on any FAIL; INCONCLUSIVE is reported and does not fail the run. A
+case's trials run at once, so ``--budget`` is checked before each batch, and
+judge calls are not counted against it (a verdict is about a cent).
 
 See tests/eval/gate.py for the verdict rules, and never raise k, lower a
 threshold or delete a case to turn a run green: loosening the gate is its own
@@ -39,7 +40,6 @@ os.environ["DATABASE_URL"] = f"sqlite:///{_SCRATCH / 'eval.db'}"
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import argparse  # noqa: E402
-import asyncio  # noqa: E402
 import json  # noqa: E402
 from datetime import date  # noqa: E402
 
@@ -72,7 +72,7 @@ def main(argv: list[str] | None = None) -> int:
     from tests.eval.cases import CASES, cases_for
     from tests.eval.gate import (
         BASELINES, DEFAULT_TRIALS, FAIL, INCONCLUSIVE, CaseResult, baseline_entry,
-        decide, load_baselines, report, run_trial, trial_record,
+        decide, load_baselines, report, run_trials, trial_record,
     )
 
     provider = Provider(args.provider)
@@ -92,20 +92,21 @@ def main(argv: list[str] | None = None) -> int:
 
     def trials_for(case, start: int, count: int) -> list:
         nonlocal spent
-        out = []
-        for n in range(start, start + count):
-            if spent >= args.budget:
-                print(f"  budget ${args.budget:.2f} spent; no more trials", flush=True)
-                break
-            trial = asyncio.run(run_trial(
-                case, n, provider=provider, model=args.model, api_key=api_key, judge=not args.no_judge,
-            ))
-            spent += trial.cost_usd
+        if spent >= args.budget:
+            print(f"  budget ${args.budget:.2f} spent; no more trials", flush=True)
+            return []
+
+        def done(trial) -> None:
             state = "pass" if trial.passed else "FAIL: " + "; ".join(trial.failures)
-            print(f"  #{n} {state} · ${trial.cost_usd:.3f} · {trial.model_calls} calls · "
+            print(f"  #{trial.n} {state} · ${trial.cost_usd:.3f} · {trial.model_calls} calls · "
                   f"{trial.seconds:.0f}s", flush=True)
-            out.append(trial)
-        return out
+
+        trials = run_trials(
+            case, range(start, start + count), provider=provider, model=args.model, api_key=api_key,
+            judge=not args.no_judge, on_done=done,
+        )
+        spent += sum(t.cost_usd for t in trials)
+        return trials
 
     for case in cases:
         print(f"{case.id} ({k} trials)", flush=True)
