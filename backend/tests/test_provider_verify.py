@@ -21,7 +21,7 @@ import routes.providers as providers
 import service.auth as auth_service
 import service.provider_keys as provider_keys
 from models.auth import User
-from tests.fakes import AuthenticationError, RateLimitError
+from tests.fakes import AuthenticationError, RateLimitError, responses_stream_error
 
 
 class _Answering:
@@ -49,6 +49,19 @@ class _Raising:
 )
 def test_failures_classify_into_something_actionable(exc, code):
     assert providers._verify_code(exc) == code
+
+
+@pytest.mark.parametrize(
+    ("exc", "code"),
+    [
+        # Mid-stream, where a plan's failures arrive as bare ValueErrors.
+        (responses_stream_error("insufficient_quota", "You exceeded your current quota."), providers.VERIFY_SUBSCRIPTION_QUOTA),
+        (responses_stream_error("rate_limit_exceeded", "Rate limit reached.", event="error"), providers.VERIFY_SUBSCRIPTION_QUOTA),
+        (responses_stream_error("usage_not_included", "Not included."), providers.VERIFY_SUBSCRIPTION_BLOCKED),
+    ],
+)
+def test_a_plans_stream_failure_names_the_plan(exc, code):
+    assert providers._verify_code(exc, subscription=True) == code
 
 
 @pytest.fixture

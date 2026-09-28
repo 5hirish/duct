@@ -128,6 +128,44 @@ _OVERLOADED_RE = re.compile(r"overloaded", re.IGNORECASE)
 _TIMEOUT_RE = re.compile(r"timed?.?out", re.IGNORECASE)
 _NETWORK_RE = re.compile(r"connection (refused|reset|error)|network|ECONNREFUSED|unreachable", re.IGNORECASE)
 
+# langchain-openai (1.6.6, langchain-ai/langchain#40791) raises a bare
+# ValueError when a Responses stream reports a failure mid-stream — the path
+# every ChatGPT-plan run takes, since the Codex backend only streams. No class
+# and no status survive, only the payload's code inside the text:
+# ``ResponseError(code='…', message='…')`` from a `response.failed` event,
+# ``<code>: <message>`` from an `error` event, and ``Response <id> failed.``
+# when the backend gave no reason. The codes and what they mean are the ones
+# the Codex CLI branches on (codex-rs/codex-api/src/sse/responses_error.rs).
+# Before this table a plan's server error or spent quota was UNKNOWN: never
+# retried, and the generic copy instead of the plan's own.
+_RESPONSES_STREAM_CODES: dict[str, ErrorCode] = {
+    "rate_limit_exceeded": ErrorCode.RATE_LIMITED,
+    "slow_down": ErrorCode.RATE_LIMITED,
+    # The same exhaustion as an HTTP 429 `insufficient_quota`, and classified
+    # the same, so the verify step still names a plan's spent window.
+    "insufficient_quota": ErrorCode.RATE_LIMITED,
+    "server_is_overloaded": ErrorCode.OVERLOADED,
+    "server_error": ErrorCode.UPSTREAM_ERROR,
+    "context_length_exceeded": ErrorCode.CONTEXT_WINDOW,
+    # The plan does not cover this use; only an API key does.
+    "usage_not_included": ErrorCode.PERMISSION,
+    "invalid_prompt": ErrorCode.BAD_REQUEST,
+}
+_RESPONSES_STREAM_CODE_RE = re.compile(r"^(?:ResponseError\(code='(?P<failed>\w+)'|(?P<event>\w+): )")
+_RESPONSES_FAILED_WITHOUT_REASON_RE = re.compile(r"^Response \S+ failed\.$")
+
+
+def _responses_stream_code(message: str) -> ErrorCode | None:
+    """The code for a failure langchain-openai read off a Responses stream,
+    or None when the message is not one of its shapes or names a code this
+    table does not know (the generic rules below still get a look at it)."""
+    match = _RESPONSES_STREAM_CODE_RE.match(message)
+    if match:
+        return _RESPONSES_STREAM_CODES.get(match.group("failed") or match.group("event"))
+    if _RESPONSES_FAILED_WITHOUT_REASON_RE.match(message):
+        return ErrorCode.UPSTREAM_ERROR
+    return None
+
 
 def _from_status(status: int, message: str, *, connector: bool = False) -> ErrorCode | None:
     if status == 429:
@@ -172,6 +210,10 @@ def _classify_one(exc: BaseException) -> ErrorCode | None:
     status = getattr(exc, "status_code", None)
     if isinstance(status, int):
         code = _from_status(status, message)
+        if code is not None:
+            return code
+    if "ValueError" in names:
+        code = _responses_stream_code(message)
         if code is not None:
             return code
     if _CONTEXT_WINDOW_RE.search(message):
