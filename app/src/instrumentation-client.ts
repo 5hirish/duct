@@ -37,13 +37,44 @@ function _scrubUrl(u?: string): string | undefined {
   return idx === -1 ? u : u.slice(0, idx) + "?[Filtered]";
 }
 
+// Header, cookie and query names that identify a visitor or their network path.
+// `@sentry/core` 10 applied exactly this list under `sendDefaultPii: false`
+// (`PII_HEADER_SNIPPETS`); 11 no longer exports it, so it is copied here.
+// Matched as case-insensitive substrings.
+const PII_KEY_SNIPPETS = ["forwarded", "-ip", "remote-", "via", "-user"];
+
+/**
+ * What the browser SDK may collect: Sentry 10's `sendDefaultPii: false`,
+ * written out.
+ *
+ * Sentry 11 replaced that flag with `dataCollection`, and leaving it unset now
+ * collects every category — including `userInfo`, which lets Sentry store each
+ * visitor's IP (`infer_ip: "auto"`). Sentry is not behind the cookie-consent
+ * gate, so that would be new personal data from every web visitor with nobody
+ * asked. Headers and query strings keep v10's filter. Cookies and GraphQL are
+ * off where v10 filtered or allowed them, as in the SDK's own migration recipe:
+ * no integration loaded here reads either, so the stricter value collects
+ * the same nothing and cannot start collecting if one is added. Deleting this
+ * block is not a cleanup; it turns every category on.
+ */
+const CLIENT_DATA_COLLECTION = {
+  userInfo: false,
+  cookies: false,
+  httpHeaders: { request: { deny: PII_KEY_SNIPPETS }, response: { deny: PII_KEY_SNIPPETS } },
+  httpBodies: [],
+  urlQueryParams: { deny: PII_KEY_SNIPPETS },
+  graphQL: { document: false, variables: false },
+  genAI: { inputs: false, outputs: false },
+  databaseQueryData: false,
+  queues: false,
+} satisfies Sentry.BrowserOptions["dataCollection"];
+
 if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: appEnv,
-    sendDefaultPii: false,
+    dataCollection: CLIENT_DATA_COLLECTION,
     tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.5,
-    enableLogs: process.env.NODE_ENV !== "production",
     /**
      * Profiling only happens if all three of these agree, and two of them are
      * not in this file.
@@ -104,6 +135,16 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
 }
 
 /**
+ * A tag reaches errors only. Sentry 11 streams spans, and streamed spans carry
+ * attributes, never scope tags, so a key written as a tag alone silently drops
+ * out of performance data, which is where desktop and web get compared.
+ */
+function setShellTag(key: string, value: string) {
+  Sentry.setTag(key, value);
+  Sentry.setAttribute(key, value);
+}
+
+/**
  * Tell Sentry which shell this session is running in.
  *
  * The desktop app loads this same hosted build in a webview, so without this
@@ -118,23 +159,23 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
  */
 async function tagShellContext() {
   if (typeof window === "undefined") return;
-  Sentry.setTag("shell", "web");
+  setShellTag("shell", "web");
   const tauri = (window as { __TAURI__?: { core?: { invoke: (cmd: string) => Promise<unknown> } } })
     .__TAURI__;
   if (!tauri?.core?.invoke) return;
 
-  Sentry.setTag("shell", "desktop");
+  setShellTag("shell", "desktop");
   try {
     const info = (await tauri.core.invoke("get_shell_info")) as {
       version?: string;
       capabilities?: Record<string, boolean>;
     };
-    if (info?.version) Sentry.setTag("shell.version", info.version);
+    if (info?.version) setShellTag("shell.version", info.version);
     if (info?.capabilities) {
       Sentry.setContext("shell", { version: info.version, ...info.capabilities });
       // Whether requests are going to the bundled backend or the hosted API is
       // the first thing worth knowing when triaging a desktop report.
-      Sentry.setTag("shell.localSidecar", String(Boolean(info.capabilities.localSidecar)));
+      setShellTag("shell.localSidecar", String(Boolean(info.capabilities.localSidecar)));
     }
   } catch {
     // An older shell without the command still reports as shell:desktop.

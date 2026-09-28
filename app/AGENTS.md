@@ -11,6 +11,7 @@ Next.js App Router report viewer and agent interface.
 - **HTTP:** Native `fetch` wrapped in `lib/api.js`. No type-safe client or OpenAPI generation.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
 - **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
+  Sentry is **not** behind the consent gate, so the client's `dataCollection` block (`instrumentation-client.ts`) is Sentry 10's restrictive baseline written out — no IP, no bodies. Since Sentry 11 an unset `dataCollection` collects every category, so removing that block is a privacy change, not a tidy-up. Streamed spans pass through neither `beforeSend` nor scope tags: a header that must never leave goes in `dataCollection.httpHeaders` (as `sentry.server.config.ts` does for `X-Provider-*`), and a tag performance data is split by is also set with `Sentry.setAttribute`.
 
 ## Deployment
 
