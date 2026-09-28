@@ -97,6 +97,69 @@ def test_conversion_paths_orders_channels_by_key_events(monkeypatch):
     assert (row["conversions"], row["total_revenue"], row["sessions"], row["engaged_sessions"]) == (12.0, 0.4, 0, 33)
 
 
+class _CaveatedClient(_FakeClient):
+    """Answers with the library's own response type, so a field this module
+    misspells fails here rather than on a customer's property."""
+
+    metadata = None
+
+    def run_report(self, req):
+        from google.analytics.data_v1beta.types import DimensionValue, MetricValue, Row, RunReportResponse
+
+        type(self).requests.append(req)
+        return RunReportResponse(
+            rows=[Row(
+                dimension_values=[DimensionValue(value=v) for v in ("/pricing", "Organic Search", "google / organic")],
+                metric_values=[MetricValue(value=str(m)) for m in (12, 0.4, 0.6, 33.5, 2, 99.0)],
+            )],
+            row_count=1,
+            metadata=type(self).metadata,
+        )
+
+
+def _pull(monkeypatch, metadata, fetch):
+    import google.analytics.data_v1beta as data_api
+
+    monkeypatch.setattr(data_api, "BetaAnalyticsDataClient", _CaveatedClient)
+    monkeypatch.setattr(ga4, "_build_credentials", lambda **_: object())
+    _CaveatedClient.metadata = metadata
+    return fetch("360006549", "2026-08-14", "2026-09-12", refresh_token="r", client_id="c", client_secret="s")
+
+
+def test_ga4s_own_caveats_ride_on_the_payload(monkeypatch):
+    """GA4 thresholds, samples, rolls up and date-truncates without an error;
+    the rows that come back just add up to less. A brief quoted them as the
+    whole window until the report said otherwise."""
+    from google.analytics.data_v1beta.types import ResponseMetaData, SamplingMetadata
+
+    reason = ResponseMetaData.DataTruncationReason
+    metadata = ResponseMetaData(
+        subject_to_thresholding=True,
+        data_loss_from_other_row=True,
+        sampling_metadatas=[SamplingMetadata(samples_read_count=250_000, sampling_space_size=1_000_000)],
+        data_truncation_reasons=[reason(
+            data_truncation_type=reason.DataTruncationType.DATA_TRUNCATION_TYPE_PROPERTY,
+            data_truncation_date="2026-08-20",
+        )],
+    )
+
+    result = _pull(monkeypatch, metadata, ga4.fetch_ga4_landing_pages)
+
+    notes = result["data_quality"]
+    assert [n.split(":")[0] for n in notes] == ["thresholded", "sampled", "other_row", "date_truncated"]
+    assert "25.0% of events (250,000 of 1,000,000)" in notes[1]
+    assert "property" in notes[3] and "before 2026-08-20" in notes[3]
+    # Ahead of the rows, so a payload cut for size keeps it.
+    assert list(result).index("data_quality") < list(result).index("rows")
+    assert _pull(monkeypatch, metadata, ga4.fetch_ga4_conversion_paths)["data_quality"] == notes
+
+
+def test_a_report_ga4_raised_nothing_about_carries_no_caveat(monkeypatch):
+    from google.analytics.data_v1beta.types import ResponseMetaData
+
+    assert "data_quality" not in _pull(monkeypatch, ResponseMetaData(currency_code="USD"), ga4.fetch_ga4_landing_pages)
+
+
 def test_property_listing_reads_account_summaries_from_the_admin_api(monkeypatch):
     from types import SimpleNamespace
 

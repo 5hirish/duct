@@ -32,6 +32,52 @@ KEY_EVENTS_METRIC = "keyEvents"
 
 LANDING_PAGE_ROWS = 250
 
+# What GA4 says it left out of a report, or estimated. It withholds low-count
+# rows under its privacy thresholds, samples a large query, rolls
+# high-cardinality combinations into "(other)" and cuts dates its retention
+# rules do not serve, all without an error: the rows that come back simply
+# add up to less than the property saw, and a brief quoted them as the whole
+# window. Said in words, like Search Console's ``data_state``, so the model
+# repeats the caveat instead of decoding a flag.
+_THRESHOLDED = (
+    "thresholded: GA4 withheld rows below its privacy thresholds, so small counts "
+    "are missing rather than zero and totals are a floor"
+)
+_OTHER_ROW = (
+    "other_row: GA4 rolled some dimension combinations into an '(other)' row, so a "
+    "page or source missing from the rows may still have traffic"
+)
+_TRUNCATION_TYPE_PREFIX = "DATA_TRUNCATION_TYPE_"
+
+
+def _data_quality(metadata: Any) -> list[str]:
+    """GA4's own caveats on one report (``RunReportResponse.metadata``), empty
+    when it raised none. v1beta fields; ``data_truncation_reasons`` needs
+    google-analytics-data 0.23.1."""
+    if metadata is None:
+        return []
+    notes: list[str] = []
+    if metadata.subject_to_thresholding:
+        notes.append(_THRESHOLDED)
+    for sampling in metadata.sampling_metadatas:
+        read, space = int(sampling.samples_read_count), int(sampling.sampling_space_size)
+        if space:
+            notes.append(
+                f"sampled: GA4 read {read / space:.1%} of events ({read:,} of {space:,}), "
+                "so every figure is an estimate"
+            )
+    if metadata.data_loss_from_other_row:
+        notes.append(_OTHER_ROW)
+    for reason in metadata.data_truncation_reasons:
+        what = reason.data_truncation_message or (
+            reason.data_truncation_type.name.removeprefix(_TRUNCATION_TYPE_PREFIX).lower().replace("_", " ")
+        )
+        spans = [f"before {reason.data_truncation_date}"] if reason.data_truncation_date else []
+        spans += [f"{r.start_date} to {r.end_date}" for r in reason.data_truncation_date_ranges]
+        where = f" (missing: {', '.join(spans)})" if spans else ""
+        notes.append(f"date_truncated: {what}{where}; totals for the window are a floor")
+    return notes
+
 
 def _build_credentials(*, refresh_token: str, client_id: str, client_secret: str) -> Credentials:
     return Credentials(
@@ -189,12 +235,15 @@ def fetch_ga4_landing_pages(
             }
         )
 
+    notes = _data_quality(getattr(resp, "metadata", None))
     return {
         "report_type": "ga4_landing_pages",
         "date_range": f"{date_from} to {date_to}",
         "row_count": len(rows),
         # GA4 reports the full row count even when ``limit`` cuts the list.
         "truncated": int(getattr(resp, "row_count", 0) or 0) > len(rows),
+        # Before the rows, so a payload cut for size keeps it.
+        **({"data_quality": notes} if notes else {}),
         "rows": rows,
     }
 
@@ -255,10 +304,12 @@ def fetch_ga4_conversion_paths(
             }
         )
 
+    notes = _data_quality(getattr(resp, "metadata", None))
     return {
         "report_type": "ga4_conversion_paths",
         "date_range": f"{date_from} to {date_to}",
         "row_count": len(rows),
+        **({"data_quality": notes} if notes else {}),
         "rows": rows,
     }
 
