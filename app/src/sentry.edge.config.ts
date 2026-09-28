@@ -6,8 +6,8 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: appEnv,
-    sendDefaultPii: true,
+    // No `dataCollection`: Sentry 11's defaults are what `sendDefaultPii: true`
+    // meant in 10.
     tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.5,
-    enableLogs: true,
   });
 }

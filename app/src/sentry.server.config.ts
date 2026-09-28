@@ -3,10 +3,11 @@ import * as Sentry from "@sentry/nextjs";
 const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 
 /**
- * Secrets that must never reach Sentry, even with `sendDefaultPii` on. Mirrors
- * `_SENSITIVE_HEADERS` in `backend/server.py` — the app's route handlers proxy
- * the same bring-your-own provider keys the backend receives, so scrubbing on
- * one side only leaves the other side publishing them.
+ * Request headers that must never reach Sentry, which records the rest by
+ * default. Mirrors `_SENSITIVE_HEADERS` in `backend/server.py` — the app's
+ * route handlers proxy the same bring-your-own provider keys the backend
+ * receives, so scrubbing on one side only leaves the other side publishing
+ * them.
  */
 const SENSITIVE_HEADERS = new Set([
   "x-api-key",
@@ -24,9 +25,17 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: appEnv,
-    sendDefaultPii: true,
+    // Sentry 11's defaults are what `sendDefaultPii: true` meant in 10, so the
+    // only departure is the header denylist. It exists because `beforeSend`
+    // below sees error events and nothing else: streamed spans carry request
+    // headers as `http.request.header.*` attributes and never pass through it.
+    // The SDK's own list already catches `authorization`, `cookie` and any name
+    // containing `key`, not `x-provider-*` or `x-openai-account-id`. Terms
+    // match as case-insensitive substrings, so exact names are enough.
+    dataCollection: {
+      httpHeaders: { request: { deny: [...SENSITIVE_HEADERS] } },
+    },
     tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.5,
-    enableLogs: true,
     // No profiling here, deliberately. Node profiling needs
     // `@sentry/profiling-node`, which is a native V8 addon, and this app
     // deploys to Cloudflare Workers via OpenNext — workerd cannot load one.

@@ -1,4 +1,4 @@
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import { linguiMacroSwcPlugin } from "@lingui/swc-plugin/options";
 
 /** @type {import('next').NextConfig} */
