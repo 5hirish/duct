@@ -82,6 +82,17 @@ def test_a_report_the_source_cut_says_its_totals_are_a_floor():
     assert "floor" in summarise("ga4_landing_pages", data)["totals_cover"]
 
 
+def test_totals_point_at_the_sources_own_caveats():
+    """A thresholded or sampled report's rows look complete; the totals are
+    what a brief quotes, so they say the source flagged them."""
+    clean = summarise("ga4_landing_pages", _landing([10, 20], [0.1, 0.2]))["totals_cover"]
+    flagged = summarise(
+        "ga4_landing_pages", _landing([10, 20], [0.1, 0.2]) | {"data_quality": ["thresholded: …"]}
+    )["totals_cover"]
+    assert "data_quality" not in clean
+    assert flagged.startswith(clean) and "data_quality" in flagged
+
+
 @pytest.mark.parametrize("data", [
     {"summary": {"event_totals": {"signup": 40}}},  # Mixpanel did its own arithmetic
     {"rows": []},

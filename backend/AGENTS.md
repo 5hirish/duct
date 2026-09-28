@@ -908,7 +908,11 @@ don't fit.
 - `agents/insights/totals.py` — **Duct adds up a pull; the model quotes the
   sum.** `fetch_entity` puts `totals`, `rates` and per-dimension `subtotals`
   on every row report, from the catalog's `agg`, `ratio` and `weight`, and
-  says in `totals_cover` whether they are the window's or a floor. A replay
+  says in `totals_cover` whether they are the window's or a floor, and
+  whether the source flagged the report itself: a fetcher puts a source's
+  own caveats in `data_quality` as sentences (GA4's thresholding, sampling,
+  "(other)" roll-up and date truncation, from the response metadata), and
+  the cover points at them. A replay
   of a real brief reasoned right and added wrong (2,504 against 2,681
   sessions); summing is now never the model's job. A ratio metric is total
   over total, never a mean of rates (CPA weighted by conversions would drop
