@@ -111,6 +111,25 @@ class ContextOverflowError(Exception):
     how the classifier knows it."""
 
 
+def responses_stream_error(code: str | None, message: str = "", *, event: str = "response.failed") -> ValueError:
+    """The ValueError langchain-openai (1.6.6 on) raises when a Responses
+    stream reports a failure, built from the SDK's own event types the way
+    ``_convert_responses_chunk_to_generation_chunk`` builds it
+    (langchain-ai/langchain#40791). The SDK parses stream events without
+    validation, so a code outside its ``Literal`` — the Codex backend sends
+    several — arrives as-is; ``model_construct`` keeps that true here."""
+    from openai.types.responses import ResponseErrorEvent
+    from openai.types.responses.response_error import ResponseError
+
+    if event == "error":
+        chunk = ResponseErrorEvent.model_construct(
+            type="error", code=code, message=message, param=None, sequence_number=1
+        )
+        return ValueError(f"{chunk.code}: {chunk.message}" if chunk.code else chunk.message)
+    error = ResponseError.model_construct(code=code, message=message) if code else None
+    return ValueError(str(error or "Response resp_123 failed."))
+
+
 class OverflowFake(ToolCallingFake):
     """Rejects the request as too long `overflows` times, the way a provider
     does when the summariser's estimate ran behind the real count; answers

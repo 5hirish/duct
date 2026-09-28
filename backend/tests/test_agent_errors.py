@@ -19,6 +19,7 @@ from agents.core.errors import (
     is_retryable,
     retry_after_seconds,
 )
+from tests.fakes import responses_stream_error
 
 
 def _named(name: str, message: str = "", **attrs):
@@ -93,6 +94,51 @@ def test_the_cause_decides_when_a_tool_rewraps_a_provider_error():
 def test_an_exception_group_classifies_by_its_members():
     group = ExceptionGroup("tasks", [ValueError("x"), _named("APIConnectionError")])
     assert classify_error(group) is ErrorCode.NETWORK
+
+
+# Message texts as the Codex backend sends them (its CLI's own fixtures).
+_CODEX_RATE_LIMIT = (
+    "Rate limit reached for gpt-5.1 in organization org-AAA on tokens per min (TPM): Limit 30000, "
+    "Used 22999, Requested 12528. Please try again in 11.054s. Visit "
+    "https://platform.openai.com/account/rate-limits to learn more."
+)
+_CODEX_SERVER_ERROR = (
+    "An error occurred while processing your request. You can retry your request, or contact us "
+    "through our help center at help.openai.com if the error persists."
+)
+
+
+@pytest.mark.parametrize(
+    "exc, code",
+    [
+        (responses_stream_error("rate_limit_exceeded", _CODEX_RATE_LIMIT), ErrorCode.RATE_LIMITED),
+        (responses_stream_error("slow_down", "Please slow down."), ErrorCode.RATE_LIMITED),
+        (responses_stream_error("insufficient_quota", "You exceeded your current quota."), ErrorCode.RATE_LIMITED),
+        (responses_stream_error("server_is_overloaded", "Please try again later."), ErrorCode.OVERLOADED),
+        (responses_stream_error("server_error", _CODEX_SERVER_ERROR), ErrorCode.UPSTREAM_ERROR),
+        # A failed response that gave no reason is the backend's failure.
+        (responses_stream_error(None), ErrorCode.UPSTREAM_ERROR),
+        (
+            responses_stream_error(
+                "context_length_exceeded",
+                "Your input exceeds the context window of this model. Please adjust your input and try again.",
+            ),
+            ErrorCode.CONTEXT_WINDOW,
+        ),
+        (responses_stream_error("usage_not_included", "Not included in your plan."), ErrorCode.PERMISSION),
+        (responses_stream_error("invalid_prompt", "Invalid prompt."), ErrorCode.BAD_REQUEST),
+        # The `error` event's shape: "<code>: <message>".
+        (responses_stream_error("server_error", _CODEX_SERVER_ERROR, event="error"), ErrorCode.UPSTREAM_ERROR),
+        (responses_stream_error("rate_limit_exceeded", "Rate limit reached.", event="error"), ErrorCode.RATE_LIMITED),
+        # A code nobody mapped, or a ValueError of some other origin, is not guessed at.
+        (responses_stream_error("image_parse_error", "Could not parse the image."), ErrorCode.UNKNOWN),
+        (ValueError("invalid_literal: not a stream failure"), ErrorCode.UNKNOWN),
+    ],
+)
+def test_a_failure_read_off_a_responses_stream_classifies_by_its_payload_code(exc, code):
+    """langchain-openai raises a bare ValueError for these — the ChatGPT-plan
+    path's every mid-stream failure — so the code in its text is all there is."""
+    assert classify_error(exc) is code
 
 
 def test_only_transient_codes_retry():

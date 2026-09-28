@@ -8,6 +8,7 @@ step after each compaction.
 
 from __future__ import annotations
 
+import pytest
 from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, RemoveMessage, ToolMessage
 from langgraph.graph.message import REMOVE_ALL_MESSAGES
 
@@ -19,9 +20,11 @@ from agents.core.lc import (
     is_middleware_node,
     is_summarization_node,
     retry_delay,
+    stream_agent,
     usage_from_messages,
 )
 from agents.models import CONTEXT_WINDOW, DEFAULT_CONTEXT_WINDOW, PRICING, ModelName, cost_usd
+from tests.fakes import ToolCallingFake, fake_llm
 
 
 def _usage(inp, out, cached=0):
@@ -85,14 +88,40 @@ def test_a_call_without_a_stop_marker_is_billed_at_the_end_of_the_turn():
     assert billed["cost_usd"] is None  # unpriced: tokens shown, no dollar figure
 
 
-def test_the_summarisers_call_is_billed_but_does_not_drive_the_gauge():
+# What each summariser's model call carries in the stream. deepagents' runs
+# inside the model node, so only its `lc_source` tag tells it from the reply;
+# LangChain's has a `before_model` node of its own.
+DEEPAGENTS_SUMMARY_META = {
+    "langgraph_node": "model", "langgraph_checkpoint_ns": "model:abc", "lc_source": "summarization",
+}
+LANGCHAIN_SUMMARY_META = {
+    "langgraph_node": "SummarizationMiddleware.before_model",
+    "langgraph_checkpoint_ns": "SummarizationMiddleware.before_model:abc",
+    "lc_source": "summarization",
+}
+
+
+@pytest.mark.parametrize("meta", [DEEPAGENTS_SUMMARY_META, LANGCHAIN_SUMMARY_META])
+def test_the_summarisers_call_is_billed_but_does_not_drive_the_gauge(meta):
     tracker = UsageTracker(ModelName.CLAUDE_SONNET)
     billed = tracker.feed(
         AIMessageChunk(content="", usage_metadata=_usage(150_000, 900), response_metadata={"stop_reason": "end_turn"}),
-        {"langgraph_node": "_DeepAgentsSummarizationMiddleware.before_model"},
+        meta,
     )
     assert billed["scope"] == "compaction"
     assert billed["input_tokens"] == 150_000  # still on the bill
+
+
+def test_a_subagents_summariser_is_the_subagents_not_the_threads():
+    """deepagents mounts a summariser on every subagent. Its state update
+    never reaches the parent's stream, so reading it as the thread's
+    compaction would leave the chat "compacting" with no end."""
+    tracker = UsageTracker(ModelName.CLAUDE_SONNET)
+    billed = tracker.feed(
+        AIMessageChunk(content="", usage_metadata=_usage(1, 1), response_metadata={"stop_reason": "end_turn"}),
+        {**DEEPAGENTS_SUMMARY_META, "langgraph_checkpoint_ns": "tools:abc|model:def"},
+    )
+    assert billed["scope"] == "subagent"
 
 
 def test_a_nested_call_is_a_subagents_not_the_threads():
@@ -128,11 +157,11 @@ def test_stored_usage_is_the_last_call_and_the_sum_of_what_survives():
 # ---------------------------------------------------------------------------
 
 def test_middleware_nodes_are_recognised_by_their_hook_suffix():
-    assert is_middleware_node("_DeepAgentsSummarizationMiddleware.before_model")
+    assert is_middleware_node("SummarizationMiddleware.before_model")
     assert is_middleware_node("ContextEditingMiddleware.before_model")
     assert not is_middleware_node("model")
     assert not is_middleware_node("tools")
-    assert is_summarization_node("_DeepAgentsSummarizationMiddleware.before_model")
+    assert is_summarization_node("SummarizationMiddleware.before_model")
     assert not is_summarization_node("ContextEditingMiddleware.before_model")
 
 
@@ -161,8 +190,9 @@ async def test_a_compaction_is_reported_and_its_surviving_tool_calls_are_not_rep
         content="Here is a summary of the conversation to date:\n\nSessions fell 12% after the pricing change.",
         additional_kwargs={"lc_source": "summarization"},
     )
+    # LangChain's summariser: its own node, and a rewrite of the history.
     await _dispatch_updates(
-        {"_DeepAgentsSummarizationMiddleware.before_model": {
+        {"SummarizationMiddleware.before_model": {
             "messages": [RemoveMessage(id=REMOVE_ALL_MESSAGES), summary, surviving],
         }},
         on_todo=None, on_tool_use=on_tool_use, on_tool_result=None, on_compacted=on_compacted,
@@ -170,6 +200,75 @@ async def test_a_compaction_is_reported_and_its_surviving_tool_calls_are_not_rep
     assert calls["compacted"] == 1
     assert calls["summaries"] == ["Sessions fell 12% after the pricing change."]
     assert calls["tool_use"] == []  # the old fetch did not become a new step
+
+
+async def test_deepagents_summary_rides_on_the_model_nodes_own_update():
+    """deepagents keeps the history and records the summary as an event on
+    the model node's update, wrapped in its own framing (the offloaded file,
+    <summary> tags). The reply's tool calls on that update are still new."""
+    from deepagents.backends import StateBackend
+    from deepagents.middleware.summarization import SUMMARIZATION_EVENT_KEY, SummarizationMiddleware
+
+    framed = SummarizationMiddleware(model=fake_llm("x"), backend=StateBackend())._build_new_messages_with_path(
+        "Sessions fell 12% after the pricing change.", "/conversation_history/abc.md"
+    )[0]
+    calls, on_tool_use, on_compacted = await _collect()
+    await _dispatch_updates(
+        {"model": {
+            "messages": [AIMessage(content="", tool_calls=[{"name": "fetch_ga4", "args": {}, "id": "n"}])],
+            SUMMARIZATION_EVENT_KEY: {"cutoff_index": 4, "summary_message": framed, "file_path": "/conversation_history/abc.md"},
+        }},
+        on_todo=None, on_tool_use=on_tool_use, on_tool_result=None, on_compacted=on_compacted,
+    )
+    assert calls["summaries"] == ["Sessions fell 12% after the pricing change."]
+    assert calls["tool_use"] == ["fetch_ga4"]
+
+
+async def test_the_deep_rungs_summariser_is_a_compaction_not_the_agents_reply(emitted):
+    """The real summariser on the real assembly. A model profile with a small
+    window makes deepagents summarise turn one's history before turn two's
+    call — inside that call's `model` node. Before the fix the summary
+    streamed into the chat as the agent's prose, was billed to the thread,
+    and no divider appeared."""
+    from langgraph.checkpoint.memory import InMemorySaver
+
+    from agents.core.deep_session import RunLimits, build_deep_session_agent
+
+    def _answer(text, inp):
+        return AIMessage(content=text, usage_metadata=_usage(inp, 5), response_metadata={"stop_reason": "end_turn"})
+
+    summary = "Sessions fell 12% after the pricing change."
+    # Calls in order: turn one's reply, turn two's summary, turn two's reply.
+    llm = ToolCallingFake(
+        responses=[_answer("First look done.", 9_000), _answer(summary, 9_000), _answer("Second answer.", 4_000)],
+        profile={"max_input_tokens": 20_000},
+    )
+    agent = build_deep_session_agent(
+        llm=llm, tools=[], system_prompt="x", checkpointer=InMemorySaver(),
+        limits=RunLimits(
+            model_calls_per_run=5, model_calls_per_thread=50, tool_calls_per_run=10,
+            tool_calls_per_thread=100, tool_result_prune_trigger=1_000, tool_results_kept=2,
+        ),
+    )
+    config = {"configurable": {"thread_id": "summarised"}, "recursion_limit": 100}
+
+    async def _no_artifact(_raw, _text):
+        return None
+
+    long_message = "hello " * 5_000  # ~7.5k tokens by the summariser's estimate
+    await stream_agent(agent, long_message, emitted, on_artifact_close=_no_artifact, config=config)
+    emitted.events.clear()
+    await stream_agent(agent, long_message, emitted, on_artifact_close=_no_artifact, config=config)
+
+    kinds = [e["event"] for e in emitted.events]
+    prose = "".join(e["text"] for e in emitted.events if e["event"] == AgentEvent.AGENT_MESSAGE_CHUNK)
+    assert prose == "Second answer."
+    assert kinds.count(AgentEvent.CONTEXT_COMPACTING) == 1
+    compacted = [e for e in emitted.events if e["event"] == AgentEvent.CONTEXT_COMPACTED]
+    assert [e["summary"] for e in compacted] == [summary]  # once, though the update also carries it
+    # The divider precedes the reply that runs on the summary.
+    assert kinds.index(AgentEvent.CONTEXT_COMPACTED) < kinds.index(AgentEvent.AGENT_MESSAGE_CHUNK)
+    assert [e["scope"] for e in emitted.events if e["event"] == AgentEvent.TOKEN_USAGE] == ["compaction", "thread"]
 
 
 async def test_pruning_tool_results_is_not_a_compaction():
