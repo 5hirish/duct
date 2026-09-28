@@ -24,8 +24,63 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-09-28
+
+The app in five languages, briefs that quote numbers Duct computed rather than
+numbers the model added up, and an approval that applies once and only to what
+was approved.
+
+### Added
+
+- **The interface speaks Spanish, Brazilian Portuguese, German and Japanese.**
+  Every string goes through Lingui, with the message id derived from the
+  English, so a changed string invalidates its own translations. The language
+  is a cookie, then the browser's, then English; the profile keeps the choice so
+  another device follows it, and the switch sits in the account menu.
+- **Duct computes a pull's totals, rates and subtotals.** A replayed brief
+  reasoned correctly and added wrong: 2,504 sessions where its rows summed to
+  2,681. Every row report now arrives with totals, rates as a ratio of totals
+  or a weighted mean (never a mean of rates) and per-channel subtotals, and the
+  prompt says to quote them rather than add rows.
+- **Memory says how old a remembered state is.** A status, budget or rolling
+  metric reads "seen <date>", and past a shelf life (7 days for campaigns, 14
+  for pages, 30 for competitors) the agent re-reads it before stating it as
+  current, or says "as of". Stale assertions in the memory eval went from 5 of
+  5 to 0 of 5.
+- **The transcript shows what the agent did, read and was given.** Connector
+  pulls, web searches, page reads, sub-agents, memory and actions on your
+  behalf are rows where they happened, rebuilt on a reopened thread; reasoning
+  folds under "Thought for 6s", and a compaction or model switch is a rule
+  across the thread.
+- **Content Studio clones a post from a TikTok link**, plans from the
+  account's own history (content types ranked by completion, then saves, then
+  shares; posting times from its own posts), and reviews a carousel before it
+  goes out, with weights and penalties the agent can score against but not
+  move. Saved references keep their media after TikTok's links expire.
+- **An agent can draw a figure as SVG**, rendered as an image so it runs no
+  script, and the artifact library shows each document by its first screen.
+- **Desktop: a splash paints at once** instead of an empty window for as long
+  as the network takes, greets a first launch once, and reveals the app when it
+  has loaded, or after 30 seconds regardless.
+
 ### Changed
 
+- **A brief defaults to HTML**, a styled page with its own charts and sortable
+  tables. A request in chat for the other format wins over the composer's
+  preference, and a resumed thread hears the current one. HTML briefs run
+  their scripts in an opaque origin with no reach into the app.
+- **Search Console is read whole and GA4 by channel.** The fetcher pages
+  through every row and keeps the zero-click impression tail, the last days of
+  a window are no longer zeroed, organic goals stop reading a report filtered
+  to paid traffic, and the in-depth SEO audit ranks findings by traffic at
+  stake.
+- **Briefs take fewer model turns.** Planning is off for insights, and the
+  verifier reuses the analyst's pulls instead of fetching them again.
+- **The composer footer says less.** The posture stays inline; the model tier
+  and its thinking level sit together on the right, and the context ring's
+  detail is its tooltip.
+- **Every wait is one shimmer** in the shape of what is coming, instead of
+  spinners, pulsing boxes and "Loading…".
 - **The site is product-led.** The home page opens on a 30-second film of a real
   session, `/seo-audit` sells the report with a sample of the real thing, and
   the tools, blog and for-\* pages speak the product's current voice. Every page
@@ -38,9 +93,48 @@ published without one. The same script, with no arguments, holds
 
 ### Fixed
 
+- **An approval applies once, and only against what was approved.** Two
+  requests (a double click, a second tab, a click racing auto-apply) could both
+  run a change set; a conditional update now lets exactly one through. A change
+  whose target moved since preview, such as a budget someone raised in Google
+  Ads, is held back and says why.
+- **Review cards survive a reload**, read "You approved this" with when, and
+  the agent hears the decision on its next turn.
+- **Desktop conversations are remembered.** Background learning needs a key
+  the server holds and a desktop install holds none, so it never ran for
+  desktop users. Closing a chat now lends the app's keys to it, in memory only;
+  keys are still never stored on Duct's servers.
+- **Memory is learned without waiting for a close**, which a deploy, crash or
+  quit never sends: conversations quiet for 30 minutes are consolidated.
+- **The in-depth SEO audit keeps the data it reads.** Its pruning threshold was
+  counted in tokens and passed on the first call, so the Search Console and
+  GA4 results its summary quotes had been cleared. It also runs with prompt
+  caching, model fallback and its call limits now.
+- **A run a deploy interrupted is closed at boot** instead of showing
+  "Working…" forever.
+- **Desktop: a key the keychain will not hand over says so**, with how to allow
+  it, and is asked for once per launch rather than on every message.
+- **A message that never reached the agent goes back to the composer**, and
+  the browser's "Failed to fetch" and bare status codes no longer reach the
+  screen.
+- Markdown briefs are typeset (the typography plugin was never installed), a
+  reopened thread shows the briefs it wrote and the data it pulled, a resumed
+  thread's context gauge is restored, and the language menu opens on screen.
+- A ChatGPT plan no longer offers image generation it cannot pay for.
+- Content Studio's Discover search reaches its scraper again and survives
+  hashtags sent as objects.
 - A phone no longer scrolls sideways past the privacy cookie table or the
   download page's file locations, footer links are a thumb's height apart, no
   label sits under 11 px, and revealed sections show without JavaScript.
+
+### Security
+
+- **The desktop shell moves to Tauri 2.11.6**, which fixes a high-severity
+  IPC access-control flaw in Tauri's fetch command
+  ([GHSA-w28w-mhc8-qvjv](https://github.com/tauri-apps/tauri/security/advisories/GHSA-w28w-mhc8-qvjv))
+  present in every earlier Duct shell.
+- Discover's scrape endpoint rebuilds its input from the two scrapers it uses
+  instead of passing the browser's actor and input to Apify on Duct's key.
 
 ## [0.7.0] — 2026-09-15
 
@@ -309,7 +403,8 @@ First version cut after the desktop shell became self-contained.
 - Three false-positive CRITICAL findings that had the security audit failing on
   every pull request.
 
-[Unreleased]: https://github.com/5hirish/duct/compare/desktop-v0.7.0...HEAD
+[Unreleased]: https://github.com/5hirish/duct/compare/desktop-v0.7.1...HEAD
+[0.7.1]: https://github.com/5hirish/duct/releases/tag/desktop-v0.7.1
 [0.7.0]: https://github.com/5hirish/duct/releases/tag/desktop-v0.7.0
 [0.5.0]: https://github.com/5hirish/duct/releases/tag/desktop-v0.5.0
 [0.4.1]: https://github.com/5hirish/duct/releases/tag/desktop-v0.4.1
