@@ -168,7 +168,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
-- **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In). Project access is by membership (`project_members`), not by `projects.user_id` — always go through `service/membership.py`.
+- **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In), and a GitHub App for GitHub, with a pasted fine-grained token where no App is configured (self-host). Project access is by membership (`project_members`), not by `projects.user_id` — always go through `service/membership.py`.
 
   **`validate_api_key` is not an authorization boundary.** `DUCT_API_KEY` ships to
   the browser as `NEXT_PUBLIC_DUCT_API_KEY`, so it proves "this is the Duct app"
@@ -291,8 +291,8 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   where GA4 landing pages were broken for six weeks (`StringFilter` imported
   from the wrong module) with every test green. So each read fetcher has a
   request-shape test one layer down: `FakeWire` replaces `httpx.request`
-  beneath `service/rest.py` so a whole Meta, Apple, Stripe or RevenueCat pull
-  runs with the vendor's own encoding, headers and pagination real
+  beneath `service/rest.py` so a whole Meta, Apple, Stripe, RevenueCat or
+  GitHub pull runs with the vendor's own encoding, headers and pagination real
   (`test_rest_connector_requests.py`); `RecordingHttp` plus
   `discovery_build_offline` let `googleapiclient` build Search Console and the
   GA4 admin API from the discovery document it ships, so method names and
@@ -960,6 +960,12 @@ don't fit.
   disambiguating line and short chips. Vocabulary is server-side too
   (`ConnectorMeta.entity_noun`), so adding a connector stays one registration
   rather than a registration plus an edit to a table in the frontend.
+  `ConnectorMeta.server_only_keys` names credential keys **no request may
+  write**, and both routes that take credentials from a body refuse them.
+  It exists for the GitHub App (`service/github/app.py`): Duct's private key
+  mints a token for any installation id it is handed, so an id a browser
+  could store is someone else's repository. The only writer is the claim
+  route, bound to the user whose signed-in session started the connect.
 - `service/content_metrics.py` — a content post's `perf`, read and written one
   way. `METRIC_ALIASES` reconciles the three key conventions in the column
   (PostBridge's `view_count`, migrated `avgWatchTime`, hand-entered `saves`);

@@ -100,7 +100,7 @@ correct it, pin what matters, pause it or reset it.
 
 Google Ads · Google Analytics 4 · Search Console · Tag Manager · Meta Ads ·
 Apple Search Ads · OpenAI Ads · Mixpanel · Microsoft Clarity · GrowthBook ·
-Stripe · RevenueCat · HubSpot, with new ones landing as the agents need them.
+Stripe · RevenueCat · GitHub · HubSpot, with new ones landing as the agents need them.
 
 Google connects with OAuth, read-only unless you grant more; the rest take a key you paste. Credentials
 are encrypted at rest, scoped to one project at a time, and Duct tells you

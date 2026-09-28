@@ -6,7 +6,12 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
-from service.connectors import CAP_ACCOUNTS, ConnectorAuthContext, get_connector
+from service.connectors import (
+    CAP_ACCOUNTS,
+    ConnectorAuthContext,
+    get_connector,
+    server_only_keys_in,
+)
 
 router = APIRouter(tags=["connectors"])
 
@@ -33,6 +38,14 @@ def _list_accounts(connector_id: str, body: ConnectorAccountsRequest) -> dict:
         raise HTTPException(
             status_code=HTTP_501_NOT_IMPLEMENTED,
             detail=f"Connector {connector_id!r} does not support listing accounts.",
+        )
+    # The same refusal as saving: listing with a grant this caller did not
+    # earn would read someone else's repository names.
+    reserved = server_only_keys_in(connector_id, body.credentials)
+    if reserved:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{', '.join(reserved)} is set by Duct's own connect flow, never by a request.",
         )
 
     extras = {

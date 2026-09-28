@@ -19,6 +19,13 @@ Referer headers.
   Google, and between minting it and clicking the button the user may read
   the page.
 
+* **GitHub App connect** — both directions at once. The authorize route is a
+  bare navigation again, so the signed-in app first mints a *connect link*
+  naming its user (five minutes, like the guest link). What comes back is a
+  *grant*: the repositories GitHub says that user may read, parked for the
+  claim route, which honours it only for the same user
+  (`service/github/app.py` explains why that binding is the whole point).
+
 Codes are namespaced so one kind can never be redeemed as the other: a connector
 refresh token presented at `/auth/exchange` would otherwise be handed back as if
 it were a session JWT.
@@ -33,11 +40,23 @@ from typing import Any
 _NS_SIGNIN = "signin"
 _NS_CONNECTOR = "connector"
 _NS_LINK = "link"
+_NS_CONNECT_LINK = "connect_link"
+_NS_GITHUB_GRANT = "github_grant"
 
 _store: dict[str, tuple[str, Any, float]] = {}  # code → (namespace, payload, issued_at)
 _TTL = 60  # seconds
 _LINK_TTL = 300  # seconds
-_TTL_BY_NAMESPACE = {_NS_SIGNIN: _TTL, _NS_CONNECTOR: _TTL, _NS_LINK: _LINK_TTL}
+# A grant crosses back into the desktop app through a deep link, which may
+# have to wake the app first; a minute has been enough for the connector
+# refresh token on the same route, and two leave room for a slow wake.
+_GRANT_TTL = 120  # seconds
+_TTL_BY_NAMESPACE = {
+    _NS_SIGNIN: _TTL,
+    _NS_CONNECTOR: _TTL,
+    _NS_LINK: _LINK_TTL,
+    _NS_CONNECT_LINK: _LINK_TTL,
+    _NS_GITHUB_GRANT: _GRANT_TTL,
+}
 
 
 def _ttl_for(namespace: str) -> float:
@@ -112,6 +131,33 @@ def consume_link_code(code: str) -> str | None:
     """Return the guest user id for a valid link code and delete it."""
     payload = _consume_code(_NS_LINK, code)
     return payload if isinstance(payload, str) else None
+
+
+def store_connect_link_code(user_id: str) -> str:
+    """Name the user a connector connect belongs to; return a single-use code (5 min)."""
+    return _store_code(_NS_CONNECT_LINK, str(user_id))
+
+
+def consume_connect_link_code(code: str) -> str | None:
+    """Return the user id for a valid connect-link code and delete it."""
+    payload = _consume_code(_NS_CONNECT_LINK, code)
+    return payload if isinstance(payload, str) else None
+
+
+def store_github_grant(*, user_id: str, grant: dict[str, Any]) -> str:
+    """Park a GitHub App grant for ``user_id`` to claim; return a single-use code (2 min)."""
+    return _store_code(_NS_GITHUB_GRANT, {"user_id": str(user_id), "grant": grant})
+
+
+def consume_github_grant(code: str) -> dict[str, Any] | None:
+    """Return ``{user_id, grant}`` for a valid code and delete it.
+
+    Spent whoever presents it: the caller compares ``user_id`` with the
+    session, and a code offered by the wrong account is no longer worth
+    keeping for the right one.
+    """
+    payload = _consume_code(_NS_GITHUB_GRANT, code)
+    return payload if isinstance(payload, dict) else None
 
 
 def _purge_expired() -> None:
