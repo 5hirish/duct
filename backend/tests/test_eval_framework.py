@@ -165,7 +165,7 @@ def test_build_content_post_artifact_renders_copy_and_flags_missing_images():
         bridge_text="I found this free app", emotional_arc="build → reveal",
         strategic_note="loops the pillar", visual_brief="soft daylight",
         caption="the mistake nobody told you", hashtags=["#grooming", "#jawline"],
-        tiktok_title="3 mistakes", slides=[
+        title="3 mistakes", slides=[
             {"slide_id": "slide-01", "role": "hook", "kind": "photo",
              "headline": "Still no jawline?", "image_prompt": "man, soft light", "image_url": "/uploads/x.png"},
             {"slide_id": "slide-02", "role": "finding", "kind": "photo",

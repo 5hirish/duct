@@ -48,7 +48,16 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, select
 from sqlmodel import Session
 
-from agents.content.assessment import reassess
+from agents.content.assessment import reassess_post
+from agents.content.channels import channel_payload, primary_channel
+from agents.content.publishing import (
+    create_request,
+    is_text_only,
+    metrics_sync,
+    no_sync_message,
+    publish_blockers,
+    record_published,
+)
 from agents.content.events import ContentEvent
 from agents.content.styles import base_css, list_styles
 from agents.content.schema import (
@@ -990,8 +999,9 @@ class PostIn(BaseModel):
     slides:        list = Field(default_factory=list)
     slides_html:   str = ""
     caption:       str = ""
+    replies:       list[str] = Field(default_factory=list)
     hashtags:      list = Field(default_factory=list)
-    tiktok_title:  str = ""
+    title:         str = ""
     hook_type:     str = ""
     hook_text:     str = ""
     hook_emotion:  str = ""
@@ -1022,8 +1032,9 @@ class PostPatch(BaseModel):
     slides:        list | None = None
     slides_html:   str | None = None
     caption:       str | None = None
+    replies:       list[str] | None = None
     hashtags:      list | None = None
-    tiktok_title:  str | None = None
+    title:         str | None = None
     hook_type:     str | None = None
     hook_text:     str | None = None
     hook_emotion:  str | None = None
@@ -1059,8 +1070,9 @@ class PostOut(BaseModel):
     slides:        list
     slides_html:   str
     caption:       str
+    replies:       list
     hashtags:      list
-    tiktok_title:  str
+    title:         str
     hook_type:     str
     hook_text:     str
     hook_emotion:  str
@@ -1073,9 +1085,13 @@ class PostOut(BaseModel):
     emotional_arc: str
     camera_ref_pool: str
     platforms:     list
+    # The primary channel's rules (agents/content/channels.channel_payload):
+    # the limit the preview counts against, where the feed folds, how many
+    # replies publish. Sent so the app never keeps its own copy of a number.
+    channel:       dict = Field(default_factory=dict)
     posted_at:     str | None
     scheduled_at:  str | None
-    tiktok_url:    str
+    published_url: str
     published_via: str
     # Set when PostBridge published the post, which is when its counts sync —
     # so the metrics form shows them rather than asking for them.
@@ -1108,8 +1124,7 @@ def _post_out(
     return PostOut(
         active_conversation_id=active_conversation_id,
         assessment=(
-            reassess(p.slides or [], p.caption, p.hashtags or [], p.last_assessment)
-            if with_assessment else None
+            reassess_post(p) if with_assessment else None
         ),
         id=p.id,
         project_id=p.project_id,
@@ -1130,8 +1145,9 @@ def _post_out(
         slides=p.slides or [],
         slides_html=p.slides_html,
         caption=p.caption,
+        replies=p.replies or [],
         hashtags=p.hashtags or [],
-        tiktok_title=p.tiktok_title,
+        title=p.title,
         hook_type=p.hook_type,
         hook_text=p.hook_text,
         hook_emotion=p.hook_emotion,
@@ -1144,9 +1160,10 @@ def _post_out(
         emotional_arc=p.emotional_arc,
         camera_ref_pool=p.camera_ref_pool,
         platforms=p.platforms or [],
+        channel=channel_payload(primary_channel(p.platforms)),
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
         scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
-        tiktok_url=p.tiktok_url,
+        published_url=p.published_url,
         published_via=p.published_via,
         post_bridge_post_id=p.post_bridge_post_id or "",
         perf=p.perf or {},
@@ -1367,13 +1384,13 @@ def mark_post_posted(
     post_id: UUID,
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
-    tiktok_url: str | None = None,
+    published_url: str | None = None,
 ) -> PostOut:
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
     post.status = "posted"
     post.posted_at = datetime.now(timezone.utc)
-    if tiktok_url:
-        post.tiktok_url = tiktok_url
+    if published_url:
+        post.published_url = published_url
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -2054,22 +2071,23 @@ async def publish_post_route(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Upload each linked asset to PostBridge, then create the post."""
-    from service.post_bridge import (
-        PostBridgeAPIError,
-        PostBridgeCreatePostRequest,
-        client_for_user,
-    )
+    """Upload each linked asset to PostBridge, then create the post. A text
+    post with no slides goes out as words alone."""
+    from service.post_bridge import PostBridgeAPIError, client_for_user
 
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
     proj = _project_for_user(db, user, post.project_id)
+    blockers = publish_blockers(post)
+    if blockers:
+        raise HTTPException(400, " ".join(blockers))
 
-    asset_rows = db.execute(
+    text_only = is_text_only(post)
+    asset_rows = [] if text_only else db.execute(
         select(ContentAsset)
         .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
         .order_by(ContentAsset.created_at)
     ).scalars().all()
-    if not asset_rows:
+    if not asset_rows and not text_only:
         raise HTTPException(400, "Generate or upload at least one image before publishing.")
 
     cfg = get_configs()
@@ -2082,7 +2100,7 @@ async def publish_post_route(
         if not disk.exists():
             raise HTTPException(500, f"Asset bytes missing on disk for {a.url}.")
         asset_paths.append((disk, a.filename or disk.name, a.mime_type or "image/png", a.url))
-    if not asset_paths:
+    if not asset_paths and not text_only:
         raise HTTPException(400, "Couldn't find any uploaded image files for this post.")
 
     try:
@@ -2099,32 +2117,17 @@ async def publish_post_route(
                 await pb.upload_media(data, upload.upload_url, mime)
                 media_ids.append(upload.media_id)
 
-            platform_configs: dict = {}
-            if body.tiktok_draft:
-                platform_configs["tiktok"] = {"draft": True}
-
-            request = PostBridgeCreatePostRequest(
-                caption=post.caption or "",
-                social_accounts=body.social_account_ids,
-                media=media_ids,
+            resp = await pb.create_post(create_request(
+                post,
+                social_account_ids=body.social_account_ids,
+                media_ids=media_ids,
                 scheduled_at=body.scheduled_at,
-                platform_configurations=platform_configs or None,
-            )
-            resp = await pb.create_post(request)
+                tiktok_draft=body.tiktok_draft,
+            ))
     except PostBridgeAPIError as exc:
         raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
 
-    post.post_bridge_post_id = resp.id
-    post.published_via = "duct"  # published through our system
-    if body.scheduled_at is not None:
-        post.scheduled_at = body.scheduled_at
-    if resp.status.value == "posted":
-        post.status = "posted"
-        post.posted_at = datetime.now(timezone.utc)
-    elif resp.status.value == "scheduled":
-        post.status = "scheduled"
-    else:
-        post.status = resp.status.value
+    record_published(post, resp, body.scheduled_at)
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -2144,6 +2147,9 @@ async def sync_post_metrics(
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
     if not post.post_bridge_post_id:
         raise HTTPException(400, "Publish this post first — then we can pull metrics.")
+    synced, sync_filter = metrics_sync(post)
+    if not synced:
+        raise HTTPException(409, no_sync_message(post))
     proj = _project_for_user(db, user, post.project_id)
 
     try:
@@ -2153,7 +2159,7 @@ async def sync_post_metrics(
 
     try:
         async with client as pb:
-            await pb.sync_analytics(platform="tiktok")
+            await pb.sync_analytics(platform=sync_filter)
             results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
             if not results:
                 raise HTTPException(409, "No post result yet — try again in a few minutes.")

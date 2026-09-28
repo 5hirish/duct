@@ -861,7 +861,7 @@ export const DRAFT_POST = Object.freeze({
   plan_id: PLAN.id,
   day_index: 2,
   layout: "full-bleed",
-  tiktok_title: "The 12% rule for tax money",
+  title: "The 12% rule for tax money",
   caption: "Every payment that lands, move 12% out the same day. Not 30%, not “whatever is left”. It is not your tax rate, it is the amount you will not miss. Full breakdown in Solo.",
   hashtags: ["freelancetax", "selfemployed", "moneyhabits", "solo"],
   slides: [

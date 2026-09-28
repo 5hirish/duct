@@ -67,6 +67,8 @@ import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
+import TextPostEditor from "@/components/content/TextPostEditor";
+import PostCard from "@/components/content/PostCard";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
@@ -802,6 +804,48 @@ const METRICS_SYNCED_POST = {
   },
 };
 const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, post_bridge_post_id: "", perf: {} };
+
+// Text posts (X, LinkedIn). `channel` is what the backend sends with every
+// post (agents/content/channels.channel_payload); the editor counts against it.
+const X_CHANNEL = {
+  id: "twitter", supported: true, playbook: "twitter", text_first: true, label: "Twitter / X",
+  max_chars: 280, fold_chars: 0, publishable_replies: 1, requires_media: false, hashtags: false, synced_metrics: false,
+};
+const LINKEDIN_CHANNEL = {
+  id: "linkedin", supported: true, playbook: "linkedin", text_first: true, label: "LinkedIn",
+  max_chars: 3000, fold_chars: 210, publishable_replies: 0, requires_media: false, hashtags: false, synced_metrics: false,
+};
+const X_THREAD_POST = {
+  id: "text-x-1", type: "post", post_type: "text", status: "draft", platforms: ["twitter"], channel: X_CHANNEL,
+  topic: "Set aside tax money the day an invoice is paid",
+  caption: "I kept 12% of every invoice for tax for two years.\n\nThe rate was never the problem. The day I moved it was: I waited for month end, and by month end it was rent.\n\nNow it moves the hour the invoice clears. Same 12%. No more April panic.",
+  replies: [
+    "The rule is directional on purpose: your rate depends on your country and bracket. The habit is the part that transfers.",
+    "What changed the numbers: I stopped seeing the tax money at all. It lives in an account my card is not attached to.",
+    "Next week: the one invoice clause that got me paid in 7 days instead of 45.",
+  ],
+};
+const LINKEDIN_POST = {
+  id: "text-li-1", type: "post", post_type: "text", status: "draft", platforms: ["linkedin"], channel: LINKEDIN_CHANNEL,
+  topic: "Why the 12% rule failed until it was automatic",
+  caption: "Two years of freelancing, and every April the same panic: the tax money had been spent.\n\nI already had a rule. 12% of every invoice, set aside. The rule was fine. The timing was not.\n\nI moved the money at month end, which meant it sat in my current account for up to four weeks, looking like spending money. By month end some of it was rent.\n\nThe fix was not a better rule. It was taking the decision away: the transfer now runs the hour an invoice is paid, into an account with no card attached.\n\nWhat is the one money habit you only kept once you stopped having to remember it?",
+  replies: ["The account setup, step by step, is in the Kestrel guide: kestrel.example/tax-pot"],
+};
+const X_OVER_POST = {
+  ...X_THREAD_POST, id: "text-x-2", replies: [],
+  caption: "Most freelancers who ask me about tax want a better percentage. The percentage is almost never the problem. The problem is that the money sits in the same account as everything else for weeks, and money that looks spendable gets spent. Move it the hour the invoice clears, into an account with no card.",
+};
+const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", post_bridge_post_id: "pb_story_x", perf: {} };
+
+/** TextPostEditor is controlled by the post pane; this is that pane's state. */
+function TextPostScene({ initial }) {
+  const [post, setPost] = useState(initial);
+  return (
+    <div className="max-w-2xl p-5">
+      <TextPostEditor post={post} patch={(field, value) => setPost((prev) => ({ ...prev, [field]: value }))} />
+    </div>
+  );
+}
 
 // Stands in for POST /metrics on one post: enough of the backend's merge to
 // show the saved state, without its alias clean-up or manual_keys.
@@ -1979,6 +2023,55 @@ export const SCENES = [
     render: () => (
       <div style={{ maxWidth: 512, padding: 20 }}>
         <PublishReviewPanel assessment={REVIEW_UNSCORED} compact />
+      </div>
+    ),
+  },
+  {
+    id: "text-post-x-thread",
+    state: "X · a post near the limit and three replies · one publishes, two by hand",
+    group: "TextPostEditor",
+    title: "An X post, edited where it will be read",
+    note: "The post and its replies as the feed threads them, each with its count against X's 280 (amber past 90%, red over) and a copy button. Only the first reply publishes — PostBridge posts it as the first reply — so the other two say so in amber: the author posts them. Type into any part; the counter follows. Add a reply, remove one, and check the thread line joins exactly the parts that follow each other.",
+    render: () => <TextPostScene initial={X_THREAD_POST} />,
+  },
+  {
+    id: "text-post-linkedin-fold",
+    state: "LinkedIn · past the fold · a first comment that does not publish",
+    group: "TextPostEditor",
+    title: "A LinkedIn post and what the feed shows before “see more”",
+    note: "LinkedIn cuts a post at about 210 characters behind “see more”, so the dashed box shows the reader's first screen: the hook has to work there alone. The first comment is for the author to paste once the post is live, and says so. Shorten the post under 210 and the box disappears.",
+    render: () => <TextPostScene initial={LINKEDIN_POST} />,
+  },
+  {
+    id: "text-post-over-limit",
+    state: "X · over 280 · no replies",
+    group: "TextPostEditor",
+    title: "Over the platform's limit",
+    note: "The counter turns red and the review marks it a hard failure: X refuses the post, so this is not a style note. The agent's writer refuses the same draft before saving it.",
+    render: () => <TextPostScene initial={X_OVER_POST} />,
+  },
+  {
+    id: "post-card-text",
+    state: "a text post on the Posts tab · no picture",
+    group: "PostCard",
+    title: "A text post's card",
+    note: "A text post has no thumbnail, so the card shows its opening words, faded at the bottom, where a carousel shows its cover. The status pill and the platform badge sit on a plain card here, with no dark gradient behind them.",
+    render: () => (
+      <div className="grid max-w-md grid-cols-2 gap-4 p-5">
+        <PostCard post={X_THREAD_POST} />
+        <PostCard post={LINKEDIN_POST} />
+      </div>
+    ),
+  },
+  {
+    id: "post-metrics-x",
+    state: "X post published through PostBridge · nothing syncs",
+    group: "PostMetricsForm",
+    title: "An X post's numbers",
+    note: "PostBridge published it but does not report X numbers, so every metric is an input, as for a post made outside Duct. Compare A posted post's numbers, where four counts sync.",
+    render: () => (
+      <div className="max-w-2xl p-5">
+        <PostMetricsForm post={X_METRICS_POST} save={previewSaveMetrics(X_METRICS_POST)} />
       </div>
     ),
   },

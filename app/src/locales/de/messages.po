@@ -210,6 +210,14 @@ msgstr "{eventCount, plural, one {# Ereignis} other {# Ereignisse}}"
 msgid "{extra, plural, one {+# more} other {+# more}}"
 msgstr "{extra, plural, one {+# weitere} other {+# weitere}}"
 
+#: src/components/content/PublishModal.jsx
+msgid "{extra, plural, one {Post the other reply yourself once it's live: each part has a copy button.} other {Post the other # replies yourself once it's live: each part has a copy button.}}"
+msgstr "{extra, plural, one {Poste die andere Antwort selbst, sobald der Beitrag live ist: Jeder Teil hat einen Kopieren-Button.} other {Poste die anderen # Antworten selbst, sobald der Beitrag live ist: Jeder Teil hat einen Kopieren-Button.}}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{extra} over the limit"
+msgstr "{extra} über dem Limit"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{failCount, plural, one {# Error} other {# Errors}}"
 msgstr "{failCount, plural, one {# Fehler} other {# Fehler}}"
@@ -229,6 +237,10 @@ msgstr "{from} – {to}"
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "{granted} of {total} granted"
 msgstr "{granted} von {total} gewährt"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{hidden, plural, one {# character sits behind the fold.} other {# characters sit behind the fold.}}"
+msgstr "{hidden, plural, one {# Zeichen steht hinter „mehr anzeigen“.} other {# Zeichen stehen hinter „mehr anzeigen“.}}"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{hreflangCount, plural, one {# lang} other {# langs}}"
@@ -278,9 +290,29 @@ msgstr "{label} — demnächst"
 msgid "{label} API key"
 msgstr "{label} API-Schlüssel"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} doesn't publish comments. Paste this under the post once it's live."
+msgstr "{label} veröffentlicht keine Kommentare. Füge das unter dem Beitrag ein, sobald er live ist."
+
+#: src/components/content/PublishModal.jsx
+msgid "{label} doesn't publish comments. The post goes out alone; paste your first comment under it once it's live."
+msgstr "{label} veröffentlicht keine Kommentare. Der Beitrag geht allein raus; füge deinen ersten Kommentar darunter ein, sobald er live ist."
+
 #: src/components/insights/ConnectionRequest.jsx
 msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
 msgstr "{label} benötigt einen API-Schlüssel statt einer Anmeldung. Füge ihn auf der <0>Verbindungen-Seite</0> hinzu, dann sage Duct, dass es weitermachen soll."
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} only publishes the first reply. Post this one yourself."
+msgstr "{label} veröffentlicht nur die erste Antwort. Poste diese selbst."
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} post"
+msgstr "{label}-Beitrag"
+
+#: src/components/content/PublishModal.jsx
+msgid "{label} publishes the post and its first reply."
+msgstr "{label} veröffentlicht den Beitrag und seine erste Antwort."
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "{label} score"
@@ -293,6 +325,10 @@ msgstr "{landingPages, plural, one {# Landingpage} other {# Landingpages}}"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{landingPages, plural, one {# page} other {# pages}}"
 msgstr "{landingPages, plural, one {# Seite} other {# Seiten}}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{left} left"
+msgstr "Noch {left}"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
@@ -867,6 +903,10 @@ msgstr "Angepasst"
 msgid "Adaptive thinking"
 msgstr "Adaptives Denken"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Add a first comment"
+msgstr "Ersten Kommentar hinzufügen"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Add a guardrail"
 msgstr "Leitplanke hinzufügen"
@@ -878,6 +918,10 @@ msgstr "Hashtag hinzufügen"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
 msgstr "Projekt hinzufügen"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Add a reply"
+msgstr "Antwort hinzufügen"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Add a tag"
@@ -1673,8 +1717,8 @@ msgid "Caption"
 msgstr "Bildunterschrift"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Caption is longer than Instagram allows"
-msgstr "Bildunterschrift ist länger als Instagram erlaubt"
+#~ msgid "Caption is longer than Instagram allows"
+#~ msgstr "Bildunterschrift ist länger als Instagram erlaubt"
 
 #: src/components/content/StyleGallery.jsx
 msgid "Captions"
@@ -2121,6 +2165,7 @@ msgstr "Cookies, ehrlich gesagt"
 
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/audit/ShareReport.jsx
+#: src/components/content/TextPostEditor.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "Kopiert"
@@ -2138,6 +2183,7 @@ msgid "copy"
 msgstr "Kopieren"
 
 #: src/components/audit/ShareReport.jsx
+#: src/components/content/TextPostEditor.jsx
 msgid "Copy"
 msgstr "Kopieren"
 
@@ -2160,6 +2206,10 @@ msgstr "Antwort kopieren"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Copy these from the platform’s analytics. They stay as you enter them."
 msgstr "Kopiere diese aus den Analysedaten der Plattform. Sie bleiben, wie du sie eingibst."
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Copy this part"
+msgstr "Diesen Teil kopieren"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
@@ -2987,6 +3037,10 @@ msgstr "Gefiltert auf eine Konversation · <0>alle anzeigen</0>"
 msgid "Finalizing report"
 msgstr "Bericht wird fertiggestellt"
 
+#: src/components/content/PostViewport.jsx
+msgid "Finding a source…"
+msgstr "Suche eine Quelle…"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Findings by Category"
 msgstr "Befunde nach Kategorie"
@@ -3010,6 +3064,10 @@ msgstr "Melde dich mit Google in deinem Browser an — dieses Fenster wird autom
 #: src/app/(auth)/page.js
 msgid "Finish the security check above, then try again."
 msgstr "Schließe die Sicherheitsprüfung oben ab, versuche es dann erneut."
+
+#: src/components/content/TextPostEditor.jsx
+msgid "First comment"
+msgstr "Erster Kommentar"
 
 #: src/components/content/PostViewport.jsx
 msgid "first line is the hook — 2–3 sentences"
@@ -3989,6 +4047,10 @@ msgstr "Abmelden"
 msgid "Logged metrics"
 msgstr "Metriken protokolliert"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Longer than the platform allows: {at}"
+msgstr "Länger, als die Plattform erlaubt: {at}"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Looking up where {providerName}'s key comes from."
 msgstr "Es wird nachgeschlagen, woher der Schlüssel von {providerName} stammt."
@@ -4327,6 +4389,10 @@ msgstr "Neues Format"
 msgid "New invitation sent to {invitee}."
 msgstr "Neue Einladung an {invitee} gesendet."
 
+#: src/app/(app)/content/page.jsx
+msgid "New post"
+msgstr "Neuer Beitrag"
+
 #: src/components/AppSidebar.jsx
 msgid "New project"
 msgstr "Neues Projekt"
@@ -4515,11 +4581,15 @@ msgid "No plan yet for this project."
 msgstr "Noch kein Plan für dieses Projekt."
 
 #: src/app/(app)/content/page.jsx
-msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
-msgstr "Noch keine Beiträge. Erstelle einen Plan und entwirf Beiträge vom Board, oder klone ein TikTok, das funktioniert hat."
+#~ msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
+#~ msgstr "Noch keine Beiträge. Erstelle einen Plan und entwirf Beiträge vom Board, oder klone ein TikTok, das funktioniert hat."
 
 #~ msgid "No posts yet. Generate a plan and draft posts from the board."
 #~ msgstr "Noch keine Beiträge. Erstelle einen Plan und Entwürfe für Beiträge vom Board."
+
+#: src/app/(app)/content/page.jsx
+msgid "No posts yet. Write one for TikTok, LinkedIn or X, draft them from a plan, or clone a TikTok that worked."
+msgstr "Noch keine Beiträge. Schreib einen für TikTok, LinkedIn oder X, entwirf sie aus einem Plan oder klone ein TikTok, das funktioniert hat."
 
 #: src/components/content/PostCard.jsx
 msgid "No preview yet"
@@ -5245,6 +5315,10 @@ msgid "Pick what you’d like done. We’ll scope it and follow up."
 msgstr "Wähle aus, was du erledigt haben möchtest. Wir werden es eingrenzen und uns melden."
 
 #: src/components/content/PostViewport.jsx
+msgid "Picking the angle…"
+msgstr "Wähle den Blickwinkel…"
+
+#: src/components/content/PostViewport.jsx
 msgid "Picking the hook…"
 msgstr "Den Hook auswählen..."
 
@@ -5309,6 +5383,7 @@ msgid "Português"
 msgstr "Portugiesisch"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr "Beitrag"
 
@@ -5544,6 +5619,10 @@ msgstr "Veröffentlicht {publishedOn}"
 msgid "Published the post"
 msgstr "Den Beitrag veröffentlicht"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Publishes as the post's first reply."
+msgstr "Wird als erste Antwort auf den Beitrag veröffentlicht."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Putting it together"
 msgstr "Zusammenfügen"
@@ -5647,6 +5726,10 @@ msgstr "Lese den Rest der Seite…"
 #: src/lib/contentEvents.js
 msgid "Reading the TikTok"
 msgstr "TikTok wird gelesen"
+
+#: src/components/content/PostViewport.jsx
+msgid "Reading what you've already said…"
+msgstr "Lese, was du schon gesagt hast…"
 
 #: src/app/(start)/start/page.jsx
 msgid "Reading…"
@@ -5842,6 +5925,10 @@ msgstr "{removalTarget} entfernen?"
 msgid "Remove key"
 msgstr "Schlüssel entfernen"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Remove reply {n}"
+msgstr "Antwort {n} entfernen"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Remove this pillar"
 msgstr "Diese Säule entfernen"
@@ -5861,6 +5948,14 @@ msgstr "Diagramm wird gerendert…"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
 msgstr "Wiederholte Hashtags: {at}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Reply {n}"
+msgstr "Antwort {n}"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "reply {r}"
+msgstr "Antwort {r}"
 
 #: src/components/audit/AuditWorkspace.jsx
 #: src/components/insights/desk/DeskLists.jsx
@@ -6368,6 +6463,10 @@ msgstr "Sicherheitsprüfung konnte nicht geladen werden. Aktualisiere und versuc
 #: src/app/(auth)/page.js
 msgid "Security verification"
 msgstr "Sicherheitsverifizierung"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "see more"
+msgstr "mehr anzeigen"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "See what we’d do"
@@ -7143,6 +7242,10 @@ msgstr "Sag uns, wer du bist und was du tust. Das ist die Grundlage für jedes A
 msgid "Testing"
 msgstr "Testen"
 
+#: src/lib/contentEnums.js
+msgid "Text"
+msgstr "Text"
+
 #: src/components/content/StyleGallery.jsx
 msgid "Text cards"
 msgstr "Textkarten"
@@ -7271,6 +7374,10 @@ msgstr "die Ausführungswarteschlange"
 msgid "The fact in one line — with its number or date if it has one."
 msgstr "Die Tatsache in einer Zeile – mit ihrer Nummer oder ihrem Datum, falls vorhanden."
 
+#: src/components/content/TextPostEditor.jsx
+msgid "The first line is the hook."
+msgstr "Die erste Zeile ist der Aufhänger."
+
 #: src/components/content/FormatLibrary.jsx
 msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
 msgstr "Die vollständige Rezeptur – Folienstruktur, Bild-Prompt-Regeln, Fehlermodi. GFM-Tabellen werden unterstützt."
@@ -7294,6 +7401,14 @@ msgstr "Die Pipeline endete unerwartet. Dein Teilbericht ist weiterhin verfügba
 #: src/components/audit/AuditReport.jsx
 msgid "The pipeline stopped early — your partial results are still visible above."
 msgstr "Die Pipeline wurde frühzeitig gestoppt – deine Teilergebnisse sind oben noch sichtbar."
+
+#: src/components/content/PublishModal.jsx
+msgid "The post and its first reply go out together."
+msgstr "Der Beitrag und seine erste Antwort gehen zusammen raus."
+
+#: src/components/content/PostViewport.jsx
+msgid "The post appears here as soon as the draft is ready, with its character count."
+msgstr "Der Beitrag erscheint hier, sobald der Entwurf fertig ist, mit seiner Zeichenzahl."
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "The post changed after this score."
@@ -7326,6 +7441,10 @@ msgstr "Die Seite antwortete <0>{httpStatus}</0> auf unseren Crawler, daher wird
 #: src/components/content/StyleGallery.jsx
 msgid "the slide styles"
 msgstr "die Folienstile"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "The source, the link, or the why."
+msgstr "Die Quelle, der Link oder das Warum."
 
 #: src/app/(app)/connections/page.jsx
 msgid "The token IS the project. Clarity allows 10 API requests per project per day; verifying spends 1 and each Duct pull spends 2."
@@ -8050,6 +8169,10 @@ msgstr "Worum geht es auf meiner Website eigentlich?"
 msgid "What should Duct call you?"
 msgstr "Wie soll Duct dich nennen?"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "What the {label} feed shows before “see more”"
+msgstr "Was der {label}-Feed vor „mehr anzeigen“ zeigt"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What was observed, why it matters, how to apply it."
 msgstr "Was beobachtet wurde, warum es wichtig ist, wie man es anwendet."
@@ -8224,6 +8347,10 @@ msgstr "Schreibt Folientext"
 msgid "Writing the caption…"
 msgstr "Schreibt die Bildunterschrift…"
 
+#: src/components/content/PostViewport.jsx
+msgid "Writing the hook…"
+msgstr "Schreibe den Aufhänger…"
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Writing your report…"
@@ -8262,8 +8389,12 @@ msgid "You can close this tab."
 msgstr "Du kannst diesen Tab schließen."
 
 #: src/components/content/PublishModal.jsx
-msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
-msgstr "Du hast noch keine Social-Media-Konten verbunden. Bitte deinen Admin, ein TikTok-/Instagram-/YouTube-Konto zu verbinden."
+#~ msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
+#~ msgstr "Du hast noch keine Social-Media-Konten verbunden. Bitte deinen Admin, ein TikTok-/Instagram-/YouTube-Konto zu verbinden."
+
+#: src/components/content/PublishModal.jsx
+msgid "You don't have any social accounts connected yet. Connect the account you want to post from in the Accounts tab."
+msgstr "Du hast noch keine Social-Media-Konten verbunden. Verbinde das Konto, von dem du posten willst, im Tab Konten."
 
 #: src/app/(start)/start/page.jsx
 msgid "You have more than one project for this site. Which should this audit update?"

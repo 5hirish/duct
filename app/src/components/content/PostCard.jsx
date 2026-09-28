@@ -13,6 +13,7 @@ import {
 import { Trans, useLingui } from "@lingui/react/macro";
 import { cdnImage, mediaUrl } from "@/lib/contentApi";
 import { SCHEDULED_META, statusMeta } from "@/lib/contentStatus";
+import { PostType } from "@/lib/contentEnums";
 import { metricsOf } from "@/lib/contentMetrics";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import { compactNumber, formatDate, titleCase } from "@/lib/format";
@@ -58,6 +59,12 @@ export default function PostCard({ post }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             loading="lazy"
           />
+        ) : post.post_type === PostType.TEXT && post.caption ? (
+          // A text post's preview is its opening words, set like a post, and
+          // faded out above the platform badges rather than under them.
+          <div className="absolute inset-x-4 bottom-11 top-10 overflow-hidden [mask-image:linear-gradient(to_bottom,black_65%,transparent)]">
+            <p className="whitespace-pre-line text-sm leading-relaxed">{post.caption}</p>
+          </div>
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
             <ImageOff className="h-7 w-7" />
@@ -65,8 +72,8 @@ export default function PostCard({ post }) {
           </div>
         )}
 
-        {/* top gradient for legibility */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent" />
+        {/* top gradient for legibility — over a picture, not over words */}
+        {thumb && <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent" />}
 
         {/* status pill */}
         <span className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-2xs font-semibold capitalize shadow-sm ${chip.solidClass}`}>

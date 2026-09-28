@@ -60,7 +60,24 @@ from sqlmodel import Session, select
 
 from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel, image_model_for
 from agents.core.memory_tools import build_memory_tools_lc
-from agents.content.assessment import assess, reassess
+from agents.content.assessment import assess, reassess_post
+from agents.content.channels import (
+    Platform,
+    brand_platforms,
+    channel_payload,
+    copy_problems,
+    primary_channel,
+    resolve as resolve_channel,
+)
+from agents.content.publishing import (
+    create_request,
+    is_text_only,
+    metrics_sync,
+    no_sync_message,
+    publish_blockers,
+    record_published,
+    unpublished_replies,
+)
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
@@ -71,6 +88,7 @@ from agents.content.schema import (
     PostDraft,
     ReviewMarker,
     Slide,
+    TEXT_POST_TYPE,
     clone_source,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
@@ -384,8 +402,11 @@ def _build_post_payload(row: ContentPost) -> dict:
         "slide_count":     row.slide_count,
         "slides":          row.slides,
         "slides_html":     row.slides_html,
+        "post_type":       row.post_type,
         "caption":         row.caption,
+        "replies":         row.replies or [],
         "hashtags":        row.hashtags,
+        "title":           row.title,
         "hook_type":       row.hook_type,
         "hook_text":       row.hook_text,
         "hook_emotion":    row.hook_emotion,
@@ -398,13 +419,12 @@ def _build_post_payload(row: ContentPost) -> dict:
         "emotional_arc":   row.emotional_arc,
         "camera_ref_pool": row.camera_ref_pool,
         "platforms":       row.platforms,
+        "channel":         channel_payload(primary_channel(row.platforms)),
         "status":          row.status,
         "clone_source":    row.clone_source,
         # Recomputed on every emit, so the panel's checks follow each edit and
         # a score from before the edit says it is stale.
-        "assessment":      reassess(
-            row.slides or [], row.caption or "", row.hashtags or [], row.last_assessment
-        ).model_dump(mode="json"),
+        "assessment":      reassess_post(row).model_dump(mode="json"),
     }
 
 
@@ -729,7 +749,7 @@ def build_content_tools_lc(
 
     class MarkPostedArgs(BaseModel):
         post_id: str = Field(description="UUID of the content_posts row.")
-        tiktok_url: str | None = Field(None, description="Optional external URL of the live post.")
+        url: str | None = Field(None, description="Optional link to the live post, on whichever platform.")
 
     class PostIdArgs(BaseModel):
         post_id: str = Field(description="UUID of the content_posts row.")
@@ -812,6 +832,26 @@ def build_content_tools_lc(
                     f"project_id mismatch: payload has {draft.project_id}, "
                     f"session is scoped to {project_id}."
                 )
+            # The session's channel files the post when the model left
+            # `platforms` out, and a text channel's draft with no slides is a
+            # text post whatever post_type defaulted to. "Left out" is read
+            # off what the model sent: the harness hands over a validated
+            # PostDraft, and the dump above fills every default in, so the
+            # re-validated draft cannot tell an omitted field from a given one.
+            sent = post.model_fields_set if isinstance(post, PostDraft) else set(post)
+            if "platforms" not in sent and session.channel in set(Platform):
+                draft.platforms = [Platform(session.channel)]
+            ch = resolve_channel(primary_channel(draft.platforms))
+            if ch.text_first and not draft.slides:
+                draft.post_type = TEXT_POST_TYPE
+            if draft.post_type == TEXT_POST_TYPE and not draft.caption.strip():
+                return _err("A text post carries its words in `caption`; it is empty.")
+            replies = [r for r in draft.replies if r.strip()]
+            # The platform's own limits, checked here rather than trusted to
+            # the model: an over-length tweet does not publish.
+            problems = copy_problems(ch.id, draft.caption, replies)
+            if problems:
+                return _err("Nothing saved. " + " ".join(problems) + " Tighten it and submit again.")
             # Serialize against concurrent image-attach / edit_slide on this post.
             lock_key = str(session.post_id) if session.post_id else f"slug:{project_id}:{draft.post_dir_slug}"
             async with _post_lock(lock_key):
@@ -871,8 +911,9 @@ def build_content_tools_lc(
                     "slides":          slides_json,
                     "slides_html":     slides_html,
                     "caption":         draft.caption,
+                    "replies":         replies,
                     "hashtags":        draft.hashtags,
-                    "tiktok_title":    draft.tiktok_title,
+                    "title":           draft.title,
                     "hook_type":       draft.hook_type,
                     "hook_text":       draft.hook_text,
                     "hook_emotion":    draft.hook_emotion or "",
@@ -1017,6 +1058,11 @@ def build_content_tools_lc(
                     "content_brand":         proj.content_brand,
                     "content_pillars":       proj.content_pillars,
                     "content_visual_assets": proj.content_visual_assets,
+                    # Where the brand already posts, as the platform values a
+                    # plan day's `platforms` takes.
+                    "active_channels":       brand_platforms(
+                        (proj.brand_channels or {}).get("active_channels")
+                    ),
                 }
                 return _ok(payload)
         except Exception as exc:
@@ -1513,11 +1559,7 @@ def build_content_tools_lc(
         allow_uncomposed: bool = False,
     ) -> str:
         try:
-            from service.post_bridge import (
-                PostBridgeAPIError,
-                PostBridgeCreatePostRequest,
-                client_for_user,
-            )
+            from service.post_bridge import PostBridgeAPIError, client_for_user
 
             post_id_raw = post_id
             raw_ids     = social_account_ids or []
@@ -1548,6 +1590,9 @@ def build_content_tools_lc(
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
+                blockers = publish_blockers(post)
+                if blockers:
+                    return _err(" ".join(blockers))
 
                 # Gather what to upload, in slide order. PREFER the composed
                 # slide renders (caption + layout baked in) — those are what
@@ -1589,6 +1634,9 @@ def build_content_tools_lc(
                             uncomposed.append(sid or "(unnamed)")
                         else:
                             missing.append(sid or "(unnamed)")
+                elif is_text_only(post):
+                    # Words alone. Nothing linked to the post rides along.
+                    asset_rows = []
                 else:
                     # Legacy posts with no structured slides — upload whatever's linked.
                     asset_rows = list(all_assets)
@@ -1601,7 +1649,9 @@ def build_content_tools_lc(
                         "single-image slides as raw photos (captions won't appear; "
                         "collage / before-after still require a render)."
                     )
-                if not asset_rows:
+                # A text post goes out as words alone; a post with slides
+                # carries them.
+                if not asset_rows and not is_text_only(post):
                     return _err("No slide images to publish — render or generate images first.")
 
                 try:
@@ -1625,30 +1675,18 @@ def build_content_tools_lc(
                             await pb.upload_media(data, upload.upload_url, asset.mime_type or "image/png")
                             media_ids.append(upload.media_id)
 
-                        platform_configs: dict = {}
-                        if tiktok_draft:
-                            platform_configs["tiktok"] = {"draft": True}
-
-                        request = PostBridgeCreatePostRequest(
-                            caption=post.caption or "",
-                            social_accounts=social_account_ids,
-                            media=media_ids,
+                        resp = await pb.create_post(create_request(
+                            post,
+                            social_account_ids=social_account_ids,
+                            media_ids=media_ids,
                             scheduled_at=scheduled_at,
-                            platform_configurations=platform_configs or None,
-                        )
-                        resp = await pb.create_post(request)
+                            tiktok_draft=tiktok_draft,
+                        ))
                 except PostBridgeAPIError as exc:
                     logger.warning("content: publish failed: %s", exc, exc_info=True)
                     return _err(f"Couldn't publish that just now — {exc.error.message or 'please try again shortly'}.")
 
-                post.post_bridge_post_id = resp.id
-                if resp.status.value == "posted":
-                    post.status    = "posted"
-                    post.posted_at = datetime.now(timezone.utc)
-                elif resp.status.value == "scheduled":
-                    post.status = "scheduled"
-                else:
-                    post.status = resp.status.value
+                record_published(post, resp, scheduled_at)
                 db.add(post)
                 db.commit()
                 db.refresh(post)
@@ -1662,13 +1700,16 @@ def build_content_tools_lc(
                     "status":                post.status,
                     "scheduled_at":          resp.scheduled_at.isoformat() if resp.scheduled_at else None,
                     "media_count":           len(media_ids),
+                    # Replies the channel does not publish: tell the user to
+                    # post them by hand (a thread's tail, a LinkedIn comment).
+                    "replies_to_post_by_hand": unpublished_replies(post),
                     "uncomposed_slides":     uncomposed,   # published as raw photos (no caption)
                 })
         except Exception as exc:
             logger.exception("publish_post failed")
             return _err(f"publish_post failed: {exc}")
 
-    async def mark_posted(post_id: str, tiktok_url: str | None = None) -> str:
+    async def mark_posted(post_id: str, url: str | None = None) -> str:
         try:
             post_id_raw = post_id
             if not post_id_raw:
@@ -1680,8 +1721,8 @@ def build_content_tools_lc(
                     return err
                 post.status    = "posted"
                 post.posted_at = datetime.now(timezone.utc)
-                if tiktok_url:
-                    post.tiktok_url = str(tiktok_url)
+                if url:
+                    post.published_url = str(url)
                 db.add(post)
                 db.commit()
                 db.refresh(post)
@@ -1705,6 +1746,9 @@ def build_content_tools_lc(
                     return err
                 if not post.post_bridge_post_id:
                     return _err("Post hasn't been published yet — run publish_post first.")
+                synced, sync_filter = metrics_sync(post)
+                if not synced:
+                    return _err(no_sync_message(post))
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
@@ -1718,7 +1762,7 @@ def build_content_tools_lc(
                     async with client as pb:
                         # Trigger a sync (best-effort) then chase the chain
                         # post → post_result → analytics → daily.
-                        await pb.sync_analytics(platform="tiktok")
+                        await pb.sync_analytics(platform=sync_filter)
                         results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
                         if not results:
                             return _err("This post hasn't finished publishing yet — try again in a few minutes.")
@@ -1774,6 +1818,7 @@ def build_content_tools_lc(
                     return err
                 result = assess(
                     row.slides or [], row.caption or "", row.hashtags or [], scores,
+                    replies=row.replies or [], channel=primary_channel(row.platforms),
                     notes=(notes or "").strip(), scored_at=now_iso(),
                 )
                 # Only this column is written, so an image attach racing the
@@ -2038,7 +2083,8 @@ def build_content_tools_lc(
             fetch_brand_context, ContentTool.FETCH_BRAND_CONTEXT,
             "Return the current brand context for this project: identity "
             "(name/slug/tagline/url), audience, content_brand JSONB, pillars, "
-            "and visual assets. No arguments. Call this FIRST in a new session.",
+            "visual assets, and active_channels (where the brand already posts, "
+            "as platform values). No arguments. Call this FIRST in a new session.",
         ),
         _bind(
             fetch_topic_bank, ContentTool.FETCH_TOPIC_BANK,
@@ -2150,18 +2196,24 @@ def build_content_tools_lc(
         ),
         _bind(
             publish_post, ContentTool.PUBLISH_POST,
-            "Publish a saved post via PostBridge. Uploads each slide's COMPOSED "
-            "render (caption baked in — call render_slide first) to PostBridge, "
-            "creates the post bound to one or more social_account_ids (numeric, "
-            "from list_social_accounts), and stores the resulting PostBridge post "
-            "id on the content_posts row. By default it refuses slides that have "
-            "no render (their captions wouldn't appear).",
+            "Publish a saved post via PostBridge to one or more "
+            "social_account_ids (numeric, from list_social_accounts), now or at "
+            "scheduled_at, and record the result on the post. A slideshow "
+            "uploads each slide's COMPOSED render (call render_slide first; by "
+            "default slides with no render are refused, since their captions "
+            "wouldn't appear). A text post goes out as words alone, its first "
+            "reply as the post's first reply where the channel publishes one, "
+            "and the result counts the replies left for the user to post by "
+            "hand. A post the platform would refuse (over its limit, words "
+            "alone where it needs media) is refused here with the reason.",
             PublishPostArgs,
         ),
         _bind(
             mark_posted, ContentTool.MARK_POSTED,
             "Mark a post as posted (manual flag — use when the user posted "
-            "outside of PostBridge). Sets status='posted' and posted_at=now.",
+            "outside of PostBridge, e.g. a thread they pasted by hand). Sets "
+            "status='posted' and posted_at=now, and stores the live post's link "
+            "when given.",
             MarkPostedArgs,
         ),
         _bind(
@@ -2169,7 +2221,9 @@ def build_content_tools_lc(
             "Refresh performance metrics for a post from PostBridge. Looks up "
             "the post_result for this post, fetches lifetime + daily analytics, "
             "and merges them into post.perf / post.daily_perf. Requires "
-            "post_bridge_post_id set on the row (i.e. publish_post ran first).",
+            "post_bridge_post_id set on the row (i.e. publish_post ran first). "
+            "PostBridge reports TikTok, YouTube, Instagram and Facebook only; for "
+            "any other channel it says so and the numbers are typed in by hand.",
             PostIdArgs,
         ),
     ]

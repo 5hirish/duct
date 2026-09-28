@@ -62,6 +62,7 @@ export const PostType = Object.freeze({
   SLIDESHOW: "slideshow",
   VIDEO:     "video",
   IMAGE:     "image",
+  TEXT:      "text",   // words first: X, LinkedIn
 });
 
 // Descriptors, rendered with `i18n._(POST_TYPE_LABELS[type])`.
@@ -69,7 +70,24 @@ export const POST_TYPE_LABELS = Object.freeze({
   [PostType.SLIDESHOW]: msg`Slideshow`,
   [PostType.VIDEO]:     msg`Video`,
   [PostType.IMAGE]:     msg`Image`,
+  [PostType.TEXT]:      msg`Text`,
 });
+
+// The channels a draft can be written for, and which of them are words
+// first. Mirrors PLAYBOOKS / TEXT_PLAYBOOKS in
+// backend/agents/content/channels.py, and
+// backend/tests/test_content_text_channels.py holds the two equal. Only the
+// list is mirrored: a channel's limits arrive on each post as `post.channel`,
+// so no character count lives here.
+export const DRAFT_CHANNELS = Object.freeze([
+  { id: Platform.TIKTOK,   textFirst: false },
+  { id: Platform.LINKEDIN, textFirst: true },
+  { id: Platform.TWITTER,  textFirst: true },
+]);
+
+export function isTextChannel(id) {
+  return DRAFT_CHANNELS.some((c) => c.id === id && c.textFirst);
+}
 
 // Mirrors CloneApproach in backend/agents/content/schema.py: how closely a
 // cloned post copies its reference, derived there from FIT × PROOF.
