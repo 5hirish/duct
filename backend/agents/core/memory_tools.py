@@ -146,7 +146,7 @@ class GetMemoryArgs(BaseModel):
 # ---------------------------------------------------------------------------
 
 def _entry_payload(row, *, full: bool = False) -> dict:
-    from service.memory import short_id
+    from service.memory import freshness_fields, short_id
 
     out = {
         "id": short_id(row.id),
@@ -154,6 +154,9 @@ def _entry_payload(row, *, full: bool = False) -> dict:
         "title": row.title,
         "observed_at": row.observed_at.isoformat() if row.observed_at else "",
         "status": row.status,
+        # The same seen/verify marks the digest shows, so a searched entry is
+        # held to the same re-read rule as one the turn opened with.
+        **freshness_fields(row),
     }
     if row.entity_key:
         out["entity_key"] = row.entity_key

@@ -762,8 +762,9 @@ don't fit.
   it exists because it caught the AND-everything query bug that made questions
   retrieve nothing, so extend it before tuning retrieval by feel.
 
-  Five rules about when memory is read and written, each held by
-  `tests/test_memory_context.py` or `tests/test_memory_phase2.py`:
+  Six rules about when memory is read and written, each held by
+  `tests/test_memory_context.py`, `tests/test_memory_phase2.py` or
+  `tests/test_memory_retrieval.py`:
 
   - **`build_memory_context()` returns its blocks in `MEMORY_BLOCKS` order and
     applies the agent's `ContextSpec` itself.** A turn carries the result as one
@@ -794,6 +795,15 @@ don't fit.
     `memory_refresh` compares the conversation's `memory_primed_at` with the
     newest memory row, excluding the thread's own writes; `routes/agents.py`
     asks on each message, and the session holds when to ask next.
+  - **A state outside Duct is shown with its age, never as "present".** A
+    campaign's status, a budget, a rolling metric renders `seen <date> · Nd`,
+    and past its entity's shelf life (`FRESHNESS_TTL_DAYS`) `verify`, which
+    `MEMORY_DISCIPLINE` turns into a re-read before the entry is stated as
+    current. Remembering the same fact again stamps `meta.verified_at` and
+    starts the age over; a consolidation pass does not, because a transcript
+    that repeated memory is not a sighting. Derived at read time
+    (`volatility()`, `freshness()`), so no column. The freshness axis of the
+    memory eval holds the stale-assertion and false-alarm rates at zero.
 - `agents/core/turn.py` — **how every agent's user turn is built.** An agent
   declares a `ContextSpec` in `agents/registry.py` (which shared blocks it
   wants); a run renders a `TurnContext`; `build_turn` orders them. A new agent
