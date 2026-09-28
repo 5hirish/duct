@@ -60,7 +60,7 @@
     "node": ">=20.9.0"
   },
   "devDependencies": {
-    "@lingui/cli": "^6.7.0",
+    "@lingui/cli": "^6.8.0",
     "@lingui/format-po": "^6.7.0",
     "@lingui/swc-plugin": "6.6.0",
     "@opennextjs/cloudflare": "^1.20.5",
