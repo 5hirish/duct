@@ -283,17 +283,32 @@ The vocabulary is small and consistent — keep it that way:
 - The measure is the design: 700px `.prose`, 16px/1.8 body, orange links
   (→ text-safe accent per the contrast rule), the 3px reading-progress bar.
   One idea per H2; front-load the H2s — they are what scanners read.
-- Post titles are Title Case; everything else sentence case. Excerpts on
-  the index must match the post's front-matter excerpt — they drifted once.
+- Post titles are Title Case; everything else sentence case. The index
+  cards are generated from each post's front matter, so an excerpt cannot
+  drift from its post again (it did once, when they were typed by hand).
+- The index groups posts by their one category (Engineering, Design,
+  Growth, Announcement, Story) with filter chips above the grid; tags are
+  shown under each post. Don't add a category for a single post; that is
+  what tags are for.
 - Card art is the post's own Open Graph card, drawn by
   `scripts/build_og_images.mjs` from the front matter: kicker, title, author
   and read time, no excerpt (it sits under the cover). One image per post
   serves the share preview and the index, which is why the index box keeps
   the card's 1200:630 ratio rather than 16:9.
-- A post teaches the reader to *stop doing manual work*; the two live
-  posts' shape ("The old way… The new way…") is the house post structure.
-  The post itself carries no pitch: the generator's bridge closer (the same
-  block the tools pages end on, with a session shot) is where Duct appears.
+- A Growth post teaches the reader to *stop doing manual work*; the shape
+  of the first two ("The old way… The new way…") is the house structure for
+  that category. An Engineering post shows how Duct solved a problem, with
+  the file and the test as evidence and its open gaps named. Either way the
+  post carries no pitch: the generator's bridge closer is where Duct appears,
+  and it follows the post's category (Download for growth readers, the repo
+  for builders).
+- Every post has a hero: a 16:9 mosaic scene in the brand's six stones
+  (`add-blog-post` skill, Phase 4), kept to the text measure so the
+  answer-first opening stays above the fold, and drawn again on the post's
+  card. Diagrams are hand-written SVG in the site's colours, legible at
+  652px; never an image model's attempt at text.
+- Post prose uses no em dashes: readers take them as the mark of generated
+  text. (Page chrome and UI copy keep the house dash.)
 - The blog speaks in the product's current voice: read, ask, approve,
   download. "Brief in your inbox" and "join the beta" were the previous
   product and were removed on 2026-09-17; do not bring them back.
@@ -361,15 +376,14 @@ the *landing-page* tells:
   fetch.
 - **`prefers-reduced-motion`** covers 3 demo transitions; extend to
   `.reveal`, `fadeUp`, the marquee, the logo pulse, smooth scroll.
-- **Dead code**: `.quotes`/`.qcard` family; `.prose pre/code` unexercised;
-  `.blog-card-img` styled for `<img>` but used as a gradient div.
+- **Dead code**: `.quotes`/`.qcard` family; `.prose pre` unexercised (no post has a code block yet).
 - **Five shadow recipes, no shadow tokens; no spacing scale** — tokenize
   when a page is touched, don't add a sixth.
 - **`.skip-link` re-declared inline on 6+ pages** (it's in `duct.css`);
   four pages have no skip link at all (`about`, `404`, `privacy`, `terms`).
 - **Semantic drift**: 20–22px serif "titles" marked up as `<p>`
   (`.feat-title`, `.step-title`) — they read as headings but aren't in the
-  outline; `role="list"` on the blog grid overrides the links' semantics.
+  outline.
 - Mixed root-absolute vs relative asset paths within one head
   (`index.html`); `→` vs `&rarr;` inconsistency; British/American mix on
   `for-organic-growth`.

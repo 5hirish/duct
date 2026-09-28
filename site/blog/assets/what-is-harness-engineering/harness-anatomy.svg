@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 830" width="1000" height="830" role="img" aria-labelledby="t d">
+  <title id="t">An agent harness, as Duct builds it</title>
+  <desc id="d">The model sits inside a larger harness. Context feeds the model; the model calls tools and reads bounded results; proposed changes go to an authority step where policy in code sorts safe from risky and a person approves the risky ones. The loop runs under limits, every harness change is evaluated before merge, and every model call is traced.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b5068"/></marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff5c00"/></marker>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+      .h { font-size: 27px; font-weight: bold; fill: #0d0f1a; }
+      .l { font-size: 19px; fill: #4b5068; }
+      .b { font-size: 19px; fill: #0d0f1a; font-weight: bold; }
+      .k { font-size: 15px; font-weight: bold; letter-spacing: 2.5px; fill: #ff5c00; }
+      .flow { stroke: #4b5068; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="1000" height="830" fill="#ffffff"/>
+  <text x="20" y="46" class="serif" font-size="34" fill="#0d0f1a">An agent harness, as Duct builds it</text>
+  <text x="20" y="80" class="sans" font-size="20" fill="#4b5068">The model is rented. Everything around it is code you write, test and version.</text>
+
+  <!-- the harness boundary -->
+  <rect x="20" y="100" width="960" height="660" rx="20" fill="#faf8f5" stroke="#d9dbe3" stroke-width="2" stroke-dasharray="9 7"/>
+  <text x="44" y="134" class="sans k">THE HARNESS</text>
+
+  <!-- the loop -->
+  <rect x="40" y="150" width="920" height="60" rx="12" fill="#eef0f5"/>
+  <text x="64" y="187" class="sans b">Loop<tspan class="l" font-weight="normal" dx="16">limits per run and per thread · one retry layer · steer, never refuse</tspan></text>
+
+  <!-- context -->
+  <rect x="40" y="236" width="290" height="270" rx="14" fill="#ffffff" stroke="#d9dbe3" stroke-width="2"/>
+  <text x="64" y="282" class="serif h">Context</text>
+  <text x="64" y="320" class="sans l">Stable blocks first, so</text>
+  <text x="64" y="346" class="sans l">the prompt cache holds</text>
+  <text x="64" y="384" class="sans l">Per-user text goes in</text>
+  <text x="64" y="410" class="sans l">the user turn</text>
+  <text x="64" y="448" class="sans l">Memories carry their age:</text>
+  <text x="64" y="476" class="mono" font-size="17" fill="#0d0f1a">seen 12d · verify</text>
+
+  <path d="M334 371 H370" class="flow" marker-end="url(#ah)"/>
+
+  <!-- model -->
+  <rect x="376" y="236" width="220" height="270" rx="14" fill="#0d0f1a"/>
+  <text x="486" y="352" text-anchor="middle" class="serif" font-size="36" fill="#ffffff">Model</text>
+  <text x="486" y="390" text-anchor="middle" class="sans" font-size="19" fill="#c9ccd8">Rented. Swappable.</text>
+  <text x="486" y="438" text-anchor="middle" class="sans" font-size="16" fill="#9ea3b8">Claude · GPT · Gemini</text>
+  <text x="486" y="462" text-anchor="middle" class="sans" font-size="16" fill="#9ea3b8">DeepSeek · your key</text>
+
+  <!-- model <-> tools -->
+  <path d="M600 330 H658" class="flow" marker-end="url(#ah)"/>
+  <text x="629" y="318" text-anchor="middle" class="sans" font-size="16" fill="#4b5068">call</text>
+  <path d="M658 414 H600" class="flow" marker-end="url(#ah)"/>
+  <text x="629" y="440" text-anchor="middle" class="sans" font-size="16" fill="#4b5068">result</text>
+
+  <!-- tools -->
+  <rect x="662" y="236" width="298" height="270" rx="14" fill="#ffffff" stroke="#d9dbe3" stroke-width="2"/>
+  <text x="686" y="282" class="serif h">Tools</text>
+  <text x="686" y="320" class="sans l">Few and workflow-level</text>
+  <text x="686" y="358" class="sans l">Results bounded, folded</text>
+  <text x="686" y="384" class="sans l">before they are ever cut</text>
+  <text x="686" y="422" class="sans l">Errors carry a next step</text>
+  <text x="686" y="460" class="sans l">Outside text is data,</text>
+  <text x="686" y="486" class="sans l">never instructions</text>
+
+  <path d="M811 510 V548" stroke="#ff5c00" stroke-width="2.5" fill="none" marker-end="url(#ao)"/>
+  <text x="826" y="535" class="sans" font-size="16" fill="#c2410c">propose</text>
+
+  <!-- authority -->
+  <rect x="40" y="552" width="920" height="96" rx="14" fill="#fff4ec" stroke="#ff5c00" stroke-width="2.5"/>
+  <text x="64" y="609" class="serif h">Authority</text>
+  <text x="232" y="590" class="sans l">Policy in code sorts each proposed change, safe from risky.</text>
+  <text x="232" y="620" class="sans l">A person approves the risky ones before anything applies.</text>
+
+  <!-- evals and traces -->
+  <rect x="40" y="668" width="450" height="74" rx="12" fill="#eef0f5"/>
+  <text x="64" y="699" class="sans b">Evals</text>
+  <text x="64" y="726" class="sans l" font-size="18">k trials against a baseline before merge</text>
+  <rect x="510" y="668" width="450" height="74" rx="12" fill="#eef0f5"/>
+  <text x="534" y="699" class="sans b">Traces</text>
+  <text x="534" y="726" class="sans l" font-size="18">one span per model call, at one choke point</text>
+
+  <text x="20" y="804" class="mono" font-size="16" fill="#6b7086">github.com/5hirish/duct · backend/agents/core · service/execution/policy.py</text>
+</svg>
