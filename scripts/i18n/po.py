@@ -3,9 +3,10 @@
 Not ``polib``: the site build runs in CI on a bare ``python3`` and this is the
 only consumer. It understands what Lingui writes (``#.`` extracted comments,
 ``#:`` references, ``#,`` flags, ``msgctxt``, ``msgid``, ``msgstr``, the
-``#~`` obsolete prefix, multi-line strings) and writes it back in the same
-shape, so a round trip through ``fill.py`` produces a diff of exactly the
-translations that changed.
+``#~`` obsolete prefix, multi-line strings) and writes each file back in the
+layout it was written in, so a round trip through ``fill.py`` produces a diff
+of exactly the translations that changed. ``dump(parse(text)) == text`` holds
+for every catalogue in the repo; keep it that way.
 """
 
 from __future__ import annotations
@@ -53,7 +54,12 @@ class Catalog:
         return [e for e in self.entries if e.needs_translation]
 
 
-_ESCAPES = {"n": "\n", "t": "\t", '"': '"', "\\": "\\", "r": "\r"}
+# The escapes Lingui's writer (pofile-ts) emits, and their inverse for reading.
+_WRITE_ESCAPES = {
+    "\\": "\\\\", '"': '\\"', "\n": "\\n", "\t": "\\t",
+    "\r": "\\r", "\a": "\\a", "\b": "\\b", "\v": "\\v", "\f": "\\f",
+}
+_ESCAPES = {seq[1]: ch for ch, seq in _WRITE_ESCAPES.items()}
 
 
 def _unquote(text: str) -> str:
@@ -73,23 +79,53 @@ def _unquote(text: str) -> str:
 
 
 def _quote(text: str) -> str:
-    return '"' + text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n").replace("\t", "\\t") + '"'
+    return '"' + "".join(_WRITE_ESCAPES.get(ch, ch) for ch in text) + '"'
 
 
-def _emit(keyword: str, text: str, obsolete: bool) -> list[str]:
+# Which layout a catalogue is written back in depends on who owns it.
+# `lingui check sync` compares the app's catalogues with what extract would
+# write, byte for byte, so those must come back exactly as Lingui's writer
+# (pofile-ts, folding off) lays them out: every string on one line however
+# long, one `#:` line per reference. This used to write gettext's layout for
+# everything, which fails that check on every file `fill.py` touches; nobody
+# saw it because the old gate re-ran `lingui extract` over the files and could
+# not fail. The site's catalogues are only ever compared with this module's
+# own output (`build_site_i18n.py --check`), so they keep the gettext layout
+# they were written in rather than reflowing thousands of lines for a tool
+# that never reads them.
+_LINGUI_GENERATOR = "X-Generator: @lingui/cli"
+
+
+def _written_by_lingui(catalog: Catalog) -> bool:
+    header = catalog.header
+    return header is not None and _LINGUI_GENERATOR in header.msgstr
+
+
+def _gettext_lines(keyword: str, text: str) -> list[str]:
+    if not ("\n" in text and text.endswith("\n") and text.count("\n") > 1 or len(text) > 76):
+        return [f"{keyword} {_quote(text)}"]
+    # An empty first line, then one line per source line.
+    parts = text.split("\n")
+    tail = [_quote(parts[-1])] if parts[-1] else []
+    return [f'{keyword} ""', *(_quote(part + "\n") for part in parts[:-1]), *tail]
+
+
+def _lingui_lines(keyword: str, text: str) -> list[str]:
+    if "\n" not in text:
+        return [f"{keyword} {_quote(text)}"]
+    # Break after each newline, keyword on the first segment unless the string
+    # opens with a newline; a trailing empty segment is written, not dropped.
+    parts = text.split("\n")
+    segments = [_quote(part + "\n") for part in parts[:-1]] + [_quote(parts[-1])]
+    if parts[0] == "":
+        return [f'{keyword} ""', *segments]
+    return [f"{keyword} {segments[0]}", *segments[1:]]
+
+
+def _emit(keyword: str, text: str, obsolete: bool, lingui: bool) -> list[str]:
     prefix = "#~ " if obsolete else ""
-    if "\n" in text and text.endswith("\n") and text.count("\n") > 1 or len(text) > 76:
-        # gettext's own layout for long or multi-line strings: an empty first
-        # line, then one line per source line.
-        lines = [f"{prefix}{keyword} \"\""]
-        parts = text.split("\n")
-        for idx, part in enumerate(parts):
-            if idx < len(parts) - 1:
-                lines.append(f"{prefix}{_quote(part + chr(10))}")
-            elif part:
-                lines.append(f"{prefix}{_quote(part)}")
-        return lines
-    return [f"{prefix}{keyword} {_quote(text)}"]
+    lines = _lingui_lines(keyword, text) if lingui else _gettext_lines(keyword, text)
+    return [prefix + line for line in lines]
 
 
 def parse(text: str) -> Catalog:
@@ -162,19 +198,22 @@ def parse(text: str) -> Catalog:
 
 
 def dump(catalog: Catalog) -> str:
+    lingui = _written_by_lingui(catalog)
     blocks: list[str] = []
     for e in catalog.entries:
         lines: list[str] = []
         lines += [f"# {c}" if c else "#" for c in e.translator_comments]
-        lines += [f"#. {c}" for c in e.extracted_comments]
+        lines += [f"#. {c}" if c else "#." for c in e.extracted_comments]
         if e.references:
-            lines.append("#: " + " ".join(e.references))
+            lines += [f"#: {ref}" for ref in e.references] if lingui else ["#: " + " ".join(e.references)]
         if e.flags:
-            lines.append("#, " + ", ".join(e.flags))
+            lines.append("#, " + ("," if lingui else ", ").join(e.flags))
+        # Lingui writes its header the gettext way too.
+        lingui_layout = lingui and not e.is_header
         if e.msgctxt is not None:
-            lines += _emit("msgctxt", e.msgctxt, e.obsolete)
-        lines += _emit("msgid", e.msgid, e.obsolete)
-        lines += _emit("msgstr", e.msgstr, e.obsolete)
+            lines += _emit("msgctxt", e.msgctxt, e.obsolete, lingui_layout)
+        lines += _emit("msgid", e.msgid, e.obsolete, lingui_layout)
+        lines += _emit("msgstr", e.msgstr, e.obsolete, lingui_layout)
         blocks.append("\n".join(lines))
     return "\n\n".join(blocks) + "\n"
 
