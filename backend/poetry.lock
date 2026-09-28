@@ -642,18 +642,18 @@ lxml = ["lxml"]
 
 [[package]]
 name = "boto3"
-version = "1.43.98"
+version = "1.43.102"
 description = "The AWS SDK for Python (Boto3)"
 optional = false
 python-versions = ">=3.10"
 groups = ["main", "dev"]
 files = [
-    {file = "boto3-1.43.98-py3-none-any.whl", hash = "sha256:7454f666a9e852a56db0a7fa23be33a899f64e27828930eac43c3edba7b34e17"},
-    {file = "boto3-1.43.98.tar.gz", hash = "sha256:1ec732e023fb29c12dc8520f925b5bbbed29eeb36b5764b5a5c26052d7c721f7"},
+    {file = "boto3-1.43.102-py3-none-any.whl", hash = "sha256:b2a06cbbcb2cb0484f126172eab0881252f01007e8f7e0607ecac131cff9f744"},
+    {file = "boto3-1.43.102.tar.gz", hash = "sha256:440bdd9fbf88d57809b68839fb690f19e4db65fa5539e60cc803ebd7b9e5e8fc"},
 ]
 
 [package.dependencies]
-botocore = ">=1.43.98,<1.44.0"
+botocore = ">=1.43.102,<1.44.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.19.0,<0.20.0"
 
@@ -662,14 +662,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.43.99"
+version = "1.43.103"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.10"
 groups = ["main", "dev"]
 files = [
-    {file = "botocore-1.43.99-py3-none-any.whl", hash = "sha256:6c9d66621b31c9f9af2b85a0b4c0c208e17d59d7d49f91c9111baca6d41d0299"},
-    {file = "botocore-1.43.99.tar.gz", hash = "sha256:fb8b6e9b193a7c2ac1a22832f7635fe44c452f405aab82eca1e1b629b81dabb7"},
+    {file = "botocore-1.43.103-py3-none-any.whl", hash = "sha256:6a6a561a6de43845ae42bc7ff7e2c798742bfa277f5215398f9c15ed9b1bd67c"},
+    {file = "botocore-1.43.103.tar.gz", hash = "sha256:8c7f220e09f3b7ec99c59c716aa66cf6f5b2b57fd8731544054f3778aa744c6a"},
 ]
 
 [package.dependencies]
@@ -1228,19 +1228,19 @@ langdetect = ["langdetect (>=1.0.0)"]
 
 [[package]]
 name = "deepagents"
-version = "0.7.17"
+version = "0.7.19"
 description = "Production-ready, extensible agent harness with a built-in filesystem and context management, sub-agent delegation, skills, and long-term memory."
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main"]
 files = [
-    {file = "deepagents-0.7.17-py3-none-any.whl", hash = "sha256:5ec2e536acf5fee7246f89657b2d20b9534e81a42bb0f8cc1f493cb8af4fab08"},
-    {file = "deepagents-0.7.17.tar.gz", hash = "sha256:de19e9f1a29e862d2efa2242c9246c13ed24eb44ade24ed3f17376e31127423f"},
+    {file = "deepagents-0.7.19-py3-none-any.whl", hash = "sha256:e09026cc1f392fad1bf601b0a2c590e28e5c8aaca021eced15a6cf022fc8200b"},
+    {file = "deepagents-0.7.19.tar.gz", hash = "sha256:5cd493dbfb5b3d2877a20782a2c232857c44febdeb513aca82c2e0bea03379e7"},
 ]
 
 [package.dependencies]
 langchain = ">=1.4.2,<2.0.0"
-langchain-anthropic = ">=1.7.2,<2.0.0"
+langchain-anthropic = ">=1.7.4,<2.0.0"
 langchain-core = ">=1.6.4,<2.0.0"
 langchain-google-genai = ">=4.4.0,<5.0.0"
 langsmith = ">=0.14.0"
@@ -1919,14 +1919,14 @@ tests = ["nox (>=2025.2.9)"]
 
 [[package]]
 name = "google-analytics-data"
-version = "0.23.1"
+version = "0.23.2"
 description = "Google Analytics Data API client library"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "google_analytics_data-0.23.1-py3-none-any.whl", hash = "sha256:63e9e52a4887917f4c7a028e47cebdb61da99616112db6e402e0d50ab28e968a"},
-    {file = "google_analytics_data-0.23.1.tar.gz", hash = "sha256:d13ebb89251e3fa50e7233f5a4cace6933be159c0118acd60e2f397c79e39cbb"},
+    {file = "google_analytics_data-0.23.2-py3-none-any.whl", hash = "sha256:94db2dd419859a2a51cf039ec53a3414ee9cb63c541ada3fe6fa7481ff47a4d9"},
+    {file = "google_analytics_data-0.23.2.tar.gz", hash = "sha256:9b34dea480e4ebe1eae3e6dee44c09e7ca84e99c008ab0546ae9be7a67aee999"},
 ]
 
 [package.dependencies]
@@ -2050,14 +2050,14 @@ tool = ["click (>=6.0.0)"]
 
 [[package]]
 name = "google-genai"
-version = "2.24.0"
+version = "2.25.0"
 description = "GenAI Python SDK"
 optional = false
 python-versions = ">=3.10"
 groups = ["main", "dev"]
 files = [
-    {file = "google_genai-2.24.0-py3-none-any.whl", hash = "sha256:59e5f2d88bc2d6ed04aa1aa14cb5629090cfe9458401745e620b24d1fe9893d7"},
-    {file = "google_genai-2.24.0.tar.gz", hash = "sha256:814b63d05dca4776c5a322699eb30c565040cf8d5fd77c38714076535fb2e019"},
+    {file = "google_genai-2.25.0-py3-none-any.whl", hash = "sha256:2e8f3a5f76ed00d5ffc3153f6089bc7d3511054eed53ad9cfc6095a7dc59b028"},
+    {file = "google_genai-2.25.0.tar.gz", hash = "sha256:ab603baa5eee0205926ad0f8d7f93e0400df6d67650e99c33e01ab228ea16ad6"},
 ]
 
 [package.dependencies]
@@ -2332,24 +2332,24 @@ hyperframe = ">=6.1,<7"
 
 [[package]]
 name = "headroom-ai"
-version = "0.37.0"
+version = "0.38.0"
 description = "The Context Optimization Layer for LLM Applications - Cut costs by 50-90%"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "headroom_ai-0.37.0-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:d89fd5858e701ada53d01849f73039d891fad84d9eb370f952d56581962d9cf8"},
-    {file = "headroom_ai-0.37.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:b4392f68a8d02d74c62c1734cf5bf327511dcc72678f01669f44f0612944d59c"},
-    {file = "headroom_ai-0.37.0-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:bc30d31a6b9336155d62bbdd99f3c2f6c5a1ed3882a8730ea0cd8ede4c40fa19"},
-    {file = "headroom_ai-0.37.0-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:2efc5cdf681a10c5fc7a2a271a471179c409074537045f682b10e4d724976f46"},
-    {file = "headroom_ai-0.37.0-cp310-abi3-win_amd64.whl", hash = "sha256:e961f892786f7577e75f2c26229f11e2609fc007083dae24d336e76fc4c72e58"},
-    {file = "headroom_ai-0.37.0.tar.gz", hash = "sha256:7ffdecba91ce44dd02f1601499f6c935c47374b7cb6ec61e569b816a4bb78a26"},
+    {file = "headroom_ai-0.38.0-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:ae6a18f6fd185da262de71656240ffa980ed0a99a2ea20a5e9811166e391cdcb"},
+    {file = "headroom_ai-0.38.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:456ba6bddba827267291fca4843728c8aad5fb66eb961ff6804ab26b84398b03"},
+    {file = "headroom_ai-0.38.0-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:80603045483022cc4c65c78121eb1e66aedf02e876c2d378ddbbef6b99fe5a3f"},
+    {file = "headroom_ai-0.38.0-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:941d1f0c0aa0754bd4959bba0b212d1554a56c179c0643dd7852a4b9d95c7db7"},
+    {file = "headroom_ai-0.38.0-cp310-abi3-win_amd64.whl", hash = "sha256:acff25742f03e5a9f0249b49ffb09cd937c40ce72591a88c375aebddea4f591b"},
+    {file = "headroom_ai-0.38.0.tar.gz", hash = "sha256:63800dfc037fcb38dfdb2d0582f672218c489048546a76de70fb9afde9312f59"},
 ]
 
 [package.dependencies]
 ast-grep-cli = ">=0.30.0,<0.44.1 || >0.44.1"
 click = ">=8.3.3"
-litellm = {version = ">=1.86.2,<2.0", markers = "python_full_version < \"3.14.0\""}
+litellm = ">=1.96.2,<2.0"
 opentelemetry-api = ">=1.24.0"
 pydantic = ">=2.0.0"
 pyyaml = ">=6.0"
@@ -2364,18 +2364,19 @@ anyllm = ["any-llm-sdk (>=1.0.0) ; python_full_version >= \"3.11.0\""]
 autogen = ["autogen-agentchat (>=0.7)"]
 bedrock = ["boto3 (>=1.41.0)", "botocore[crt] (>=1.41.0)"]
 code = ["tree-sitter (>=0.25.2,<0.27)", "tree-sitter-language-pack (>=0.10.0,<1.0)"]
-crewai = ["crewai (>=1.0)"]
-dev = ["anthropic (>=0.18.0)", "fastapi (>=0.100.0)", "hnswlib (>=0.8.0)", "httpx[http2] (>=0.24.0)", "langchain-ollama (>=0.2.0)", "litellm (>=1.86.2,<2.0) ; python_full_version < \"3.14.0\"", "mypy (>=1.0.0)", "numpy (>=1.24.0)", "ollama (>=0.4.0)", "openai (>=1.0.0)", "openpyxl (>=3.1.0)", "opentelemetry-exporter-otlp-proto-http (>=1.24.0)", "opentelemetry-sdk (>=1.24.0)", "pre-commit (>=3.0.0)", "pytest (>=7.0.0)", "pytest-asyncio (>=0.21.0)", "pytest-cov (>=4.0.0)", "respx (>=0.20.0)", "ruff (==0.16.3)", "sentence-transformers (>=2.2.0,<6.0)", "sqlite-vec (>=0.1.6)", "uvicorn (>=0.23.0,<1.0)", "websockets (>=13.0)"]
-evals = ["anthropic (>=0.18.0)", "datasets (>=5.0.1)", "numpy (>=1.24.0)", "openai (>=1.0.0)", "scikit-learn (>=1.3.0)", "sentence-transformers (>=2.2.0,<6.0) ; platform_machine != \"x86_64\" or sys_platform != \"darwin\""]
+crewai = ["crewai (>=1.15.21)"]
+dev = ["anthropic (>=0.18.0)", "fastapi (>=0.100.0)", "hnswlib (>=0.8.0)", "httpx[http2] (>=0.24.0)", "langchain-ollama (>=0.2.0)", "litellm (>=1.96.2,<2.0)", "mypy (>=1.0.0)", "numpy (>=1.24.0)", "ollama (>=0.4.0)", "openai (>=1.0.0)", "openpyxl (>=3.1.0)", "opentelemetry-exporter-otlp-proto-http (>=1.24.0)", "opentelemetry-sdk (>=1.24.0)", "pre-commit (>=3.0.0)", "pytest (>=7.0.0)", "pytest-asyncio (>=0.21.0)", "pytest-cov (>=4.0.0)", "respx (>=0.20.0)", "ruff (==0.16.7)", "sentence-transformers (>=2.2.0,<7.0)", "sqlite-vec (>=0.1.6)", "uvicorn (>=0.23.0,<1.0)", "websockets (>=13.0)", "xlrd (>=2.0.1)", "xlwt (>=1.3.0)"]
+evals = ["anthropic (>=0.18.0)", "datasets (>=5.0.1)", "numpy (>=1.24.0)", "openai (>=1.0.0)", "scikit-learn (>=1.3.0)", "sentence-transformers (>=2.2.0,<7.0) ; platform_machine != \"x86_64\" or sys_platform != \"darwin\""]
 html = ["trafilatura (>=1.6.0)"]
 image = ["onnxruntime (>=1.7,<2) ; python_full_version >= \"3.13.0\"", "pillow (>=12.3.0)", "rapidocr (>=3.0,<4) ; python_full_version >= \"3.13.0\"", "rapidocr-onnxruntime (>=1.4.0,<2) ; python_full_version < \"3.13.0\"", "sentencepiece (>=0.1.99)"]
 langchain = ["langchain-core (>=1.3.3,<4.0)", "langchain-openai (>=1.1.14,<2.0)"]
+langgraph = ["langchain-core (>=1.3.3,<4.0)", "langchain-openai (>=1.1.14,<2.0)", "langgraph (>=1.0,<2.0)"]
 mcp = ["httpx (>=0.24.0)", "mcp (>=1.28.1,<2.0.0)", "starlette (>=0.27.0)", "uvicorn (>=0.23.0,<1.0)"]
-memory = ["sentence-transformers (>=2.2.0,<6.0) ; platform_machine != \"x86_64\" or sys_platform != \"darwin\"", "sqlite-vec (>=0.1.6)"]
+memory = ["sentence-transformers (>=2.2.0,<7.0) ; platform_machine != \"x86_64\" or sys_platform != \"darwin\"", "sqlite-vec (>=0.1.6)"]
 memory-stack = ["mem0ai (>=2.0.0,<3.0)", "neo4j (>=5.20.0,<7.0)", "qdrant-client (>=1.9.0,<2.0)"]
 ml = ["huggingface-hub (>=1.5.0,<2.0)", "torch (>=2.12.1) ; platform_machine != \"x86_64\" or sys_platform != \"darwin\"", "transformers (>=5.5.0,<6.0)"]
 otel = ["opentelemetry-exporter-otlp-proto-http (>=1.24.0)", "opentelemetry-sdk (>=1.24.0)"]
-proxy = ["fastapi (>=0.100.0)", "httpx[http2] (>=0.24.0)", "magika (>=0.6.0)", "mcp (>=1.28.1,<2.0.0)", "onnxruntime (>=1.16.0,<1.24.0) ; python_full_version < \"3.11.0\"", "onnxruntime (>=1.24.0) ; python_full_version >= \"3.11.0\"", "openai (>=2.14.0)", "orjson (>=3.9.14) ; platform_python_implementation != \"PyPy\"", "sqlite-vec (>=0.1.6)", "transformers (>=5.5.0,<6.0)", "uvicorn (>=0.23.0,<1.0)", "watchdog (>=4.0.0)", "websockets (>=13.0)", "zstandard (>=0.20.0)"]
+proxy = ["fastapi (>=0.100.0)", "httpx[http2] (>=0.24.0)", "magika (>=0.6.0)", "mcp (>=1.28.1,<2.0.0)", "onnxruntime (>=1.16.0,<1.24.0) ; python_full_version < \"3.11.0\"", "onnxruntime (>=1.24.0) ; python_full_version >= \"3.11.0\"", "openai (>=2.14.0)", "orjson (>=3.9.14) ; platform_python_implementation != \"PyPy\"", "sqlite-vec (>=0.1.6)", "transformers (>=5.5.0,<6.0)", "uvicorn (>=0.23.0,<1.0)", "watchdog (>=4.0.0) ; python_full_version < \"3.14.0\" or sys_platform != \"darwin\"", "websockets (>=13.0)", "zstandard (>=0.20.0)"]
 proxy-prod = ["gunicorn (>=21.0.0) ; sys_platform != \"win32\"", "headroom-ai[proxy]"]
 pytorch-mps = ["sentence-transformers (>=2.2.0) ; sys_platform == \"darwin\"", "torch (>=2.12.1) ; sys_platform == \"darwin\""]
 relevance = ["fastembed (>=0.4.0)", "numpy (>=1.24.0)"]
@@ -3275,19 +3276,19 @@ xai = ["langchain-xai"]
 
 [[package]]
 name = "langchain-anthropic"
-version = "1.7.2"
+version = "1.7.4"
 description = "Integration package connecting Claude (Anthropic) APIs and LangChain"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_anthropic-1.7.2-py3-none-any.whl", hash = "sha256:9d114c3766f57bbffe8e84093efe396306520c51587263b96d00c055d3bb8370"},
-    {file = "langchain_anthropic-1.7.2.tar.gz", hash = "sha256:0d39665211b3b40421de8be621536c4e32149500d20a75ee4338cac4ae97db19"},
+    {file = "langchain_anthropic-1.7.4-py3-none-any.whl", hash = "sha256:eec1178389358eaa4cff4f3dd353f063746b8c61090cffe9236d9035df71e66c"},
+    {file = "langchain_anthropic-1.7.4.tar.gz", hash = "sha256:7d540300665a1c906986e505cdec41204e759f14dbd989f53f0c180d82624b94"},
 ]
 
 [package.dependencies]
 anthropic = ">=0.120.0,<2.0.0"
-langchain-core = ">=1.6.2,<2.0.0"
+langchain-core = ">=1.6.4,<2.0.0"
 pydantic = ">=2.7.4,<3.0.0"
 
 [[package]]
@@ -3334,32 +3335,32 @@ pydantic = ">=2.0.0,<3.0.0"
 
 [[package]]
 name = "langchain-openai"
-version = "1.6.2"
+version = "1.6.6"
 description = "An integration package connecting OpenAI and LangChain"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_openai-1.6.2-py3-none-any.whl", hash = "sha256:368e34ab3bdd30af422371b2f2f9346f21e79beae8b0823c253633819d1fd2f8"},
-    {file = "langchain_openai-1.6.2.tar.gz", hash = "sha256:bec6d190e1e47e774c2be8728bc93457cef1ab2ec3295c277d8daefab434e880"},
+    {file = "langchain_openai-1.6.6-py3-none-any.whl", hash = "sha256:60dcaa443ddfdf1559feaf1d25916f394c7dda809aebe22a769fc39f02705be7"},
+    {file = "langchain_openai-1.6.6.tar.gz", hash = "sha256:7b3848f42825aca40165463aa37757051165eb292ba7f24658a2f58f9bb221f9"},
 ]
 
 [package.dependencies]
 certifi = ">=2024.6.2"
-langchain-core = ">=1.6.2,<2.0.0"
+langchain-core = ">=1.6.4,<2.0.0"
 openai = ">=2.45.0,<4.0.0"
 tiktoken = ">=0.7.0,<1.0.0"
 
 [[package]]
 name = "langchain-openrouter"
-version = "0.2.8"
+version = "0.2.9"
 description = "An integration package connecting OpenRouter and LangChain"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_openrouter-0.2.8-py3-none-any.whl", hash = "sha256:c2c8d719a3ee6406a69f818b1c8cd0db3313a33d9c3b27dea0a44ba751ba97d0"},
-    {file = "langchain_openrouter-0.2.8.tar.gz", hash = "sha256:97c044fdd71dbba01d8f9418e37a11ae4c17b3d6c34b48e2b272c9d5f2b8f065"},
+    {file = "langchain_openrouter-0.2.9-py3-none-any.whl", hash = "sha256:375a79a4a849069d2254627185210b2f2b9fe84c69326e10d71c3d48f8b41f06"},
+    {file = "langchain_openrouter-0.2.9.tar.gz", hash = "sha256:e3c130bfc58a517811044b6cb56e13b2e7d1ee219c38e025f4522aa0400f9c8e"},
 ]
 
 [package.dependencies]
@@ -3401,14 +3402,14 @@ requests = ">=2.0.0,<3.0.0"
 
 [[package]]
 name = "langgraph"
-version = "1.2.11"
+version = "1.2.12"
 description = "Building stateful, multi-actor applications with LLMs"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "langgraph-1.2.11-py3-none-any.whl", hash = "sha256:8bab70de7b2d00b5300fb289bcf38d8b241400f3184c1e95e8ce706fb0e8686b"},
-    {file = "langgraph-1.2.11.tar.gz", hash = "sha256:9ecfe11e50d338b34b15cf4d8a442642de103e8ae6971320efba84e4542eb363"},
+    {file = "langgraph-1.2.12-py3-none-any.whl", hash = "sha256:95403af7b510de8d79164742f71daaf866c69ca804a8cb72bef2cc1fa1ab9813"},
+    {file = "langgraph-1.2.12.tar.gz", hash = "sha256:5fae9fa4ce771e90f10ff19ce0d5aaef4b41d7632c713d769e89cbce1241a4b9"},
 ]
 
 [package.dependencies]
@@ -6038,14 +6039,14 @@ packaging = ">=22.0"
 
 [[package]]
 name = "pyjwt"
-version = "2.14.0"
+version = "2.15.0"
 description = "JSON Web Token implementation in Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
 files = [
-    {file = "pyjwt-2.14.0-py3-none-any.whl", hash = "sha256:ad0cef71c756a56e74863c2919cf0985f72decbcfcb550ee2f422e7c62b5eedc"},
-    {file = "pyjwt-2.14.0.tar.gz", hash = "sha256:77283c83fb56ecf566a886c757a714bc83668e38156de2cce8263302f42e0b86"},
+    {file = "pyjwt-2.15.0-py3-none-any.whl", hash = "sha256:7a3742debf6b879e912dbb9819ceec1594be812452b78c5f2e2dfc56564954f8"},
+    {file = "pyjwt-2.15.0.tar.gz", hash = "sha256:b11c5f9791d7bf51c2b39a81ed669f6b2dbbd669df2942f6c60167e9e3d1abe4"},
 ]
 
 [package.dependencies]
@@ -7071,14 +7072,14 @@ files = [
 
 [[package]]
 name = "sentry-sdk"
-version = "2.69.2"
+version = "2.70.0"
 description = "Python client for Sentry (https://sentry.io)"
 optional = false
 python-versions = ">=3.6"
 groups = ["main"]
 files = [
-    {file = "sentry_sdk-2.69.2-py3-none-any.whl", hash = "sha256:25bc0a6c55bba0b83398212a7247f4f9f3190f189a1909b68e4807ef4b785895"},
-    {file = "sentry_sdk-2.69.2.tar.gz", hash = "sha256:b4d8915a526e626b0b14a2925907554b722d3b8e3e3781570fc35791712af323"},
+    {file = "sentry_sdk-2.70.0-py3-none-any.whl", hash = "sha256:89600e8bb5fc5239cad5c4434217f453204f2207ad29399ea58947460b37a62e"},
+    {file = "sentry_sdk-2.70.0.tar.gz", hash = "sha256:27e4b512f47be93136645dbe8f02d430473ee73a389ce430b2b7104baa66cf75"},
 ]
 
 [package.dependencies]
@@ -7444,14 +7445,14 @@ files = [
 
 [[package]]
 name = "sqlmodel"
-version = "0.0.42"
+version = "0.0.47"
 description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "sqlmodel-0.0.42-py3-none-any.whl", hash = "sha256:a732dab1a40e5cbd6ac250cf2b12e8d9b1bf1a47edf27c34d612f359e8875c63"},
-    {file = "sqlmodel-0.0.42.tar.gz", hash = "sha256:9ecec2b6aa4c2aa58da39d2572e7bef4373419dcd6ec52973c07de7be2b1c516"},
+    {file = "sqlmodel-0.0.47-py3-none-any.whl", hash = "sha256:165294386c3e4b25fa02f151ca1abb0cbf5fdb76f6093a38aca33fdc30dfd485"},
+    {file = "sqlmodel-0.0.47.tar.gz", hash = "sha256:3606430ea6db7f00c8ae2157458b9766644ea3ad365c601e26a86cf23f5910d5"},
 ]
 
 [package.dependencies]
@@ -7903,14 +7904,14 @@ files = [
 
 [[package]]
 name = "uvicorn"
-version = "0.53.0"
+version = "0.54.0"
 description = "The lightning-fast ASGI server."
 optional = false
 python-versions = ">=3.10"
 groups = ["main", "dev"]
 files = [
-    {file = "uvicorn-0.53.0-py3-none-any.whl", hash = "sha256:e8dca71ec86dce5f04e333f0d56cdedf942446e6643b9cea1af0d6d3a02cb03e"},
-    {file = "uvicorn-0.53.0.tar.gz", hash = "sha256:a9356f0cb89b3b8621529c5d5eebd69bfe154f4c3f68b4cf2de47e45fa855c2e"},
+    {file = "uvicorn-0.54.0-py3-none-any.whl", hash = "sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf"},
+    {file = "uvicorn-0.54.0.tar.gz", hash = "sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620"},
 ]
 
 [package.dependencies]
@@ -8762,4 +8763,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "6f8fdf3e40a2c4145d4f2a804cf60f1a669f204c86be44585a1bd179171769a8"
+content-hash = "d30125292583e5a9c9f73f459b192bce00e5c0b2380bb8c7d6ef914527c14f23"
