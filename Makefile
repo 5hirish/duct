@@ -13,7 +13,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-backend setup-app setup-site setup-desktop \
         check check-backend check-app check-site check-desktop check-security check-docs \
-        i18n fmt test dump-prompts serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean clean-deep clean-prune
+        i18n fmt test dump-prompts agent-eval serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean clean-deep clean-prune
 
 # ---------------------------------------------------------------------------
 
@@ -118,6 +118,9 @@ session-bundle: ## Pull one agent session for review: make session-bundle ID=<co
 
 session-replay: ## Re-run a bundled session on its own data with today's prompt/model: make session-replay BUNDLE=<dir> [ARGS="--model ... --tier heavy"]
 	cd backend && poetry run python scripts/session_replay.py "$(BUNDLE)" $(ARGS)
+
+agent-eval: ## Paid eval gate, k=3 on synthetic accounts (DeepSeek V4 Pro on OpenRouter): make agent-eval [ARGS="-k 1 --agent insights"]
+	cd backend && poetry run python scripts/agent_eval.py $(ARGS)
 
 # Run after ANY change to user-facing copy in app/ or site/, before `make check`.
 # Extracts the new and changed strings, translates only what is missing (needs

@@ -1,11 +1,53 @@
 # Agent output QA — the LLM-as-judge eval harness
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-14
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-28
 
 How we test agents whose output is **subjective** (a TikTok post, an SEO audit, a
 brief), why we do it this way, and where to take it next. The harness lives in
-`backend/tests/eval/`; the first consumer is the content agent
-(`backend/tests/test_content_post_e2e.py`).
+`backend/tests/eval/`. Its consumers: the **eval gate** on agent PRs (below),
+and the live content and audit tests (`test_content_post_e2e.py`,
+`test_audit_eval.py`). The design and the evidence behind it are in
+[`2026-09-27-agent-eval-gating-design.md`](2026-09-27-agent-eval-gating-design.md).
+
+## The gate on agent changes
+
+Three tiers; the first two exist.
+
+| Tier | Runs | What | Where |
+|---|---|---|---|
+| 0 | every PR, offline, free | what is *sent* to the model: the system prompt and tool schemas byte-stable across calls, the history append-only; the gate's own arithmetic and verdicts; model, tier, effort and run limits rendered in the prompt dump | `tests/test_request_invariants.py`, `tests/test_eval_gate.py`, `make dump-prompts` |
+| 1 | PRs touching `backend/agents/**`, memory, profile or the lock; shadow for now | each case k=3 on a synthetic account, verdict against `tests/eval/baselines.json` | `make agent-eval`, `.github/workflows/agent-eval.yml` |
+| 2 | nightly and weekly | the provider matrix, harder capability cases, private replays | not built |
+
+**A case** (`tests/eval/cases/`) is a question, a synthetic business, and a
+simulated account that answers **any** window from daily series, installed
+under the real `fetch_entity`, so envelopes, totals and the payload cut are
+production code. Solo's world plants one story (the tax guide slipped in
+Search Console); a good brief finds it. Customer sessions never become cases:
+the repository is public. A bug from a real session becomes a case when it
+reproduces on a synthetic account, and otherwise stays a private replay.
+
+**A trial passes** when every deterministic check holds (the run finished with
+a brief and no error event; the named entities were read; the brief quotes a
+total exactly as Duct computed it) and every **binary** judge marker does. The
+1–5 dimensions are logged, never gated: a blended score hid a failure a
+HONORED/IGNORED rubric exposed, and binary answers resist self-preference far
+better than scores do. A **provenance** share (figures of three or more
+significant digits found in the run's pulls) is reported as a metric first.
+
+**Verdicts per case.** PASS: passed as often as its baseline. INCONCLUSIVE: one
+trial short, or median cost or model calls moved more than 30% either way (an
+effort downgrade shows first as a cost drop); the CLI runs three more once.
+FAIL: two or more short. A per-trial cost and call cap stops a runaway; a run
+budget stops new trials. `--write-baseline` is for a ratchet PR only; never
+raise k, lower a threshold or drop a case to turn a run green.
+
+**Models.** Agent and judge default to DeepSeek V4 Pro on OpenRouter: a full
+trial measured $0.03 (2026-09-28), which is what makes a gate on every harness
+PR affordable. `--provider` / `--model` run any other; the text judge follows
+`DUCT_JUDGE_PROVIDER` / `DUCT_JUDGE_MODEL`. Same family for agent and judge is
+a known self-preference risk, contained by gating on binary markers only.
+
 
 ## Why a critique agent, not assertions
 
@@ -31,11 +73,13 @@ grader.
   judge returns scores + rationale; *we* compute the weighted overall, the
   per-dimension floors, and the marker gates. Scoring lives on our side so
   thresholds are auditable and stable across judge runs.
-- **`judge.py`** — one **Gemini** `generate_content` call: rubric + artifact text
-  + **images as parts**, with `response_schema=JudgeVerdict` (typed output — no
-  JSON-shape prompting). Gemini is chosen precisely for native multimodality:
+- **`judge.py`** — two judges. A rubric with **images** gets one **Gemini**
+  `generate_content` call: rubric + artifact text + images as parts, with
+  `response_schema=JudgeVerdict`. Gemini is chosen for native multimodality:
   image dimensions (composition, legibility at a glance, on-brand styling) are
-  graded on the actual pixels, in the same request as the copy.
+  graded on the actual pixels. A **text** rubric (the insights brief, the
+  audit report) goes through Duct's own `resolve_chat_model` with
+  `with_structured_output(JudgeVerdict)`, on OpenRouter by default.
 - **`prompts.py`** — the judge's system prompt + persona framing, in one place to
   review and tune.
 - **Live e2e** runs the real agent → generates an image → judges it, on the

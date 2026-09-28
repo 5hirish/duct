@@ -357,11 +357,67 @@ def build_document() -> str:
         off = sorted(f"`{f}`" for f in vars(spec) if not getattr(spec, f)) if spec else []
         parts.append(f"| {label} (`{agent_type}`) | {', '.join(off) if off else 'nothing'} |")
 
+    parts.append(render_model_defaults())
+
     for agent_type, (label, render) in sorted(RENDERERS.items()):
         parts.append(f"\n---\n\n## {label} (`{agent_type}`)\n")
         parts.append(render())
 
     return "\n".join(parts).rstrip() + "\n"
+
+
+def render_model_defaults() -> str:
+    """Which model, at what effort, under what limits: settings as prose.
+
+    Anthropic's April 2026 postmortem traced a quality drop to an effort
+    default and a caching change, neither of them a prompt, and neither of
+    them visible in a diff a reviewer reads as behaviour. Rendered here, a
+    lowered effort or a cheaper rung is a line in the pull request like any
+    prompt edit, and ``--check`` fails the PR that changes one without it.
+    """
+    from agents.audit.v1.runner import LIMITS as AUDIT_LIMITS
+    from agents.content.v1.runner import LIMITS as CONTENT_LIMITS
+    from agents.insights.v1.runner import LIMITS as INSIGHTS_LIMITS
+    from agents.models import CONTEXT_WINDOW, PRICING
+    from agents.thinking import support_for
+    from agents.tiers import DEFAULT_PROVIDER, JOB_TIER, PROVIDER_TRIPLES, TIER_ORDER
+
+    out = ["\n## Model defaults\n",
+           "Generated from `agents/tiers.py`, `agents/thinking.py`, `agents/models.py` and "
+           "each runner's `LIMITS`. Effort is what the provider does when Duct sends none.\n",
+           "| Job | Tier |", "|-----|------|"]
+    out += [f"| `{job.value}` | {tier.value} |" for job, tier in JOB_TIER.items()]
+
+    out += ["", "| Provider | " + " | ".join(t.value.title() for t in TIER_ORDER) + " |",
+            "|----------|" + "---|" * len(TIER_ORDER)]
+    models = []
+    for provider, triple in PROVIDER_TRIPLES.items():
+        mark = " (default)" if provider == DEFAULT_PROVIDER else ""
+        out.append(f"| {provider.value}{mark} | " + " | ".join(f"`{triple[t].value}`" for t in TIER_ORDER) + " |")
+        for tier in TIER_ORDER:
+            if triple[tier] not in models:
+                models.append(triple[tier])
+
+    out += ["", "| Model | Default effort | Context | $ in / out per M |", "|---|---|---:|---:|"]
+    for model in models:
+        support = support_for(model)
+        price = PRICING.get(model)
+        cost = f"{price.input:g} / {price.output:g}" if price else "unpriced"
+        window = CONTEXT_WINDOW.get(model)
+        out.append(
+            f"| `{model.value}` | {support.default if support else 'no dial'} | "
+            f"{f'{window:,}' if window else '?'} | {cost} |"
+        )
+
+    out += ["", "| Agent | Model calls per turn / thread | Tool calls per turn / thread | Prune tool results past |",
+            "|---|---|---|---|"]
+    for label, limits in (("audit", AUDIT_LIMITS), ("content", CONTENT_LIMITS), ("insights", INSIGHTS_LIMITS)):
+        out.append(
+            f"| {label} | {limits.model_calls_per_run} / {limits.model_calls_per_thread} | "
+            f"{limits.tool_calls_per_run} / {limits.tool_calls_per_thread} | "
+            f"{limits.tool_result_prune_trigger:,} tokens, keep {limits.tool_results_kept} |"
+        )
+    return "\n".join(out)
 
 
 def main() -> int:

@@ -59,6 +59,31 @@ class FlakyFake(ToolCallingFake):
         return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
 
 
+class RecordingFake(ToolCallingFake):
+    """Records what every model call was sent: its messages and the tools bound.
+
+    What reaches the provider is the prompt cache's key, and a fake is the one
+    place a test can see it whole. ``tests/test_request_invariants.py`` reads
+    ``requests`` to hold the cached prefix byte-stable and the history
+    append-only, which is how Anthropic's April 2026 quality drop would have
+    been caught for free: the harness cleared older reasoning every turn.
+    """
+
+    def bind_tools(self, tools, **kwargs):  # noqa: ARG002
+        from langchain_core.utils.function_calling import convert_to_openai_tool
+
+        self.__dict__["_bound"] = [convert_to_openai_tool(t) for t in tools]
+        return self
+
+    @property
+    def requests(self) -> list[dict]:
+        return self.__dict__.setdefault("_requests", [])
+
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        self.requests.append({"messages": list(messages), "tools": list(self.__dict__.get("_bound", []))})
+        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
+
+
 def fake_llm(*responses: str, cls: type[ToolCallingFake] = ToolCallingFake) -> ToolCallingFake:
     """A fake that replies with ``responses`` in order, one per model call."""
     return cls(responses=[AIMessage(content=r) for r in responses])

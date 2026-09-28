@@ -664,6 +664,19 @@ framework. The rules it implies:
   call from LangChain's usage, taking cached tokens out of the input figure.
   `TOKEN_USAGE` and the state route carry `cost_usd`, `None` when unpriced —
   never a guess, because on BYO keys the figure is what the user pays.
+- **A change to an agent runs the eval gate.** `agent-eval.yml` runs
+  `scripts/agent_eval.py` on any PR touching `agents/`, `service/memory.py`,
+  `service/profile.py` or the lock: each case in `tests/eval/cases/` three
+  times on a synthetic account, DeepSeek V4 Pro on OpenRouter, a verdict
+  against `tests/eval/baselines.json` (`make agent-eval` locally, a few cents).
+  It is in shadow until an A/A window on unchanged `main` shows no false
+  FAIL; from then on FAIL does not merge, and INCONCLUSIVE needs one line in
+  the PR saying why it is acceptable. A harness change also adds an offline
+  test of what reaches the model for the invariant it touches
+  (`tests/test_request_invariants.py` is the model), never a prompt-wording
+  test. A bug found in a real session ships with a synthetic case that fails
+  without the fix. Never raise k, lower a threshold or delete a case to turn a
+  run green: loosening the gate is its own PR, with the numbers.
 - **Read the harnesses built in the open before designing a lifecycle
   feature.** [`docs/engineering/agent-harness-references.md`](../docs/engineering/agent-harness-references.md)
   is the watch-list — Codex, OpenCode, pi — with the revision each was last
