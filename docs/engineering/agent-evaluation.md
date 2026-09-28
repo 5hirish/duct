@@ -38,9 +38,21 @@ significant digits found in the run's pulls) is reported as a metric first.
 **Verdicts per case.** PASS: passed as often as its baseline. INCONCLUSIVE: one
 trial short, or median cost or model calls moved more than 30% either way (an
 effort downgrade shows first as a cost drop); the CLI runs three more once.
-FAIL: two or more short. A per-trial cost and call cap stops a runaway; a run
-budget stops new trials. `--write-baseline` is for a ratchet PR only; never
-raise k, lower a threshold or drop a case to turn a run green.
+FAIL: two or more short. A case's trials run at once, each on its own thread,
+so a run takes about as long as its slowest trial. A per-trial cost, call and
+time cap stops a runaway, a trial that will not stop when cancelled is
+abandoned (a stalled OpenRouter stream once held a run for three hours), and
+the run budget is checked before each batch. `--write-baseline` is for a
+ratchet PR only; never raise k, lower a threshold or drop a case to turn a run
+green.
+
+**Reading a failed trial.** The step summary gives each failing trial's
+reasons and, for one that wrote no brief, the last thing it said in chat and
+any file it wrote to its scratch filesystem instead. `eval-results.jsonl`,
+kept as the run's artifact, holds every trial's brief, chat reply, tool calls,
+scratch files, pulls and judge card. A judge verdict that leaves markers out
+is asked for again, then counted as a judge outage (the trial is judged on
+its deterministic checks alone), never as the brief's failure.
 
 **Models.** Agent and judge default to DeepSeek V4 Pro on OpenRouter: a full
 trial measured $0.03 (2026-09-28), which is what makes a gate on every harness

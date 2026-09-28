@@ -21,7 +21,9 @@ Verdicts, per case:
   in one line why it is acceptable.
 * **FAIL** — two or more trials short: the change broke the case.
 
-A cost or call cap stops a trial; the run budget stops starting new ones.
+A case's trials run at once, each on its own thread. A cost, call or time
+cap stops a trial, a trial that will not stop is abandoned, and the run
+budget is checked before each batch.
 """
 
 from __future__ import annotations
@@ -29,10 +31,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import queue
 import re
 import statistics
+import threading
 import time
 import uuid
+from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -50,6 +55,11 @@ DEFAULT_TRIALS = 3
 #: an effort downgrade shows up first as a cost drop with no visible change.
 DRIFT = 0.30
 BASELINES = Path(__file__).with_name("baselines.json")
+#: A judge verdict is one call; a minute is slow, five is a stalled stream.
+JUDGE_SECONDS = 300.0
+#: A verdict that leaves markers out is asked for again this many times in all.
+JUDGE_ATTEMPTS = 2
+_MISSING = "missing from judge verdict"
 
 # Figures worth tracing: three or more significant digits, the size of number
 # a reader repeats. Percentages, abbreviations (10.7k) and dates are skipped:
@@ -86,6 +96,11 @@ class Case:
     markers: tuple[Marker, ...] = ()
     cost_cap_usd: float = 1.0
     max_model_calls: int = 40
+    #: A wall clock beside the cost and call caps. OpenRouter keeps a stalled
+    #: stream alive with keep-alive bytes, so no read timeout ever fires and
+    #: one call hung a six-trial run for three hours on 2026-09-28. A slow
+    #: trial has taken eight minutes.
+    max_seconds: float = 900.0
 
 
 @dataclass
@@ -105,6 +120,9 @@ class Trial:
     figures_traced: int = 0
     judge: dict | None = None
     brief: str = ""
+    reply: str = ""
+    tools: list[str] = field(default_factory=list)
+    files: list[str] = field(default_factory=list)
 
     @property
     def provenance(self) -> float | None:
@@ -128,41 +146,114 @@ class CaseResult:
 
 
 # ---------------------------------------------------------------------------
-# One trial
+# Trials
 # ---------------------------------------------------------------------------
 
-async def run_trial(
+#: How long a trial past its clock may take to stop before it is abandoned.
+#: On 2026-09-28 a trial cancelled on a stalled OpenRouter stream never
+#: finished stopping, and ``asyncio.wait_for`` and ``asyncio.run``'s cleanup
+#: both wait for a cancelled task to finish, so the run hung with it.
+STOP_GRACE_SECONDS = 60.0
+
+# Each trial's pulls, recorded by one wrapper around ``fetch_entity``: the
+# trials of a case run at once, and a context variable is what follows a
+# trial into the executor threads its tools run on.
+_PULLS: ContextVar[list[dict] | None] = ContextVar("eval_pulls", default=None)
+
+
+def run_trials(
     case: Case,
-    n: int,
+    ns: Any,
     *,
     provider: Any,
     model: str,
     api_key: str,
     llm: Any = None,
     judge: bool = True,
-) -> Trial:
-    """One real session on the case's synthetic account, then the checks.
+    on_done: Callable[[Trial], None] | None = None,
+) -> list[Trial]:
+    """Trials ``ns`` of one case, all at once, each on its own thread and loop.
 
-    ``llm`` is the offline seam: a scripted fake drives the same harness, so
-    the gate's own plumbing is tested for free on every PR.
+    At once because a trial is minutes of waiting on a model, and six in a
+    row took half an hour. On threads because a thread can be abandoned: one
+    still running past its clock, :data:`STOP_GRACE_SECONDS` and the judge's
+    is recorded as timed out and left to die with the process. ``on_done``
+    sees each trial as it finishes. ``llm`` is the offline seam: a scripted
+    fake drives the same harness, so the gate's own plumbing is tested for
+    free on every PR.
     """
-    from agents.core.events import AgentEvent
     from agents.insights import data_tools
-    from agents.insights.setup import render_data_sources
-    from agents.insights.v1.runner import AutonomousInsightsRunner
-    from models.execution import AUTONOMY_ASK
 
-    trial = Trial(case_id=case.id, n=n)
     world = case.world()
-    events: list[dict] = []
-    pulls: list[dict] = []
     real_fetch = data_tools.fetch_entity
 
     def recording_fetch(entity_id: str, **kw: Any) -> dict:
         result = real_fetch(entity_id, **kw)
-        pulls.append(result)
+        if (pulls := _PULLS.get()) is not None:
+            pulls.append(result)
         return result
 
+    working = {n: Trial(case_id=case.id, n=n) for n in ns}
+    finished: queue.Queue[Trial] = queue.Queue()
+
+    def run(trial: Trial) -> None:
+        try:
+            asyncio.run(_run_one(case, trial, world, provider=provider, model=model,
+                                 api_key=api_key, llm=llm, judge=judge))
+        except Exception as exc:  # noqa: BLE001 — one trial's crash is that trial's failure
+            trial.failures.append(f"crashed: {type(exc).__name__}: {exc}")
+        finished.put(trial)
+
+    done: dict[int, Trial] = {}
+    started = time.monotonic()
+    deadline = started + case.max_seconds + STOP_GRACE_SECONDS + (JUDGE_SECONDS if judge else 0.0)
+    data_tools.fetch_entity = recording_fetch
+    try:
+        with world.install():
+            for trial in working.values():
+                threading.Thread(target=run, args=(trial,), name=f"trial-{trial.n}", daemon=True).start()
+            while len(done) < len(working):
+                try:
+                    trial = finished.get(timeout=max(0.0, deadline - time.monotonic()))
+                except queue.Empty:
+                    break
+                done[trial.n] = trial
+                if on_done is not None:
+                    on_done(trial)
+    finally:
+        data_tools.fetch_entity = real_fetch
+
+    for n, trial in working.items():
+        if n in done:
+            continue
+        # A copy: the abandoned thread still holds its trial and may write to it.
+        done[n] = Trial(
+            case_id=case.id, n=n, cost_usd=round(trial.cost_usd, 4), model_calls=trial.model_calls,
+            seconds=round(time.monotonic() - started, 1),
+            failures=[f"timed out after {case.max_seconds:.0f}s and did not stop; abandoned"],
+        )
+        if on_done is not None:
+            on_done(done[n])
+    return [done[n] for n in ns]
+
+
+def run_trial(case: Case, n: int, **kwargs: Any) -> Trial:
+    """One trial, the same way :func:`run_trials` runs several."""
+    return run_trials(case, [n], **kwargs)[0]
+
+
+async def _run_one(
+    case: Case, trial: Trial, world: Any, *, provider: Any, model: str, api_key: str, llm: Any, judge: bool,
+) -> None:
+    """One real session on the case's synthetic account, then the checks."""
+    from agents.core.events import AgentEvent
+    from agents.insights.setup import render_data_sources
+    from agents.insights.v1.runner import AutonomousInsightsRunner
+    from models.execution import AUTONOMY_ASK
+
+    events: list[dict] = []
+    pulls: list[dict] = []
+    _PULLS.set(pulls)
     runner = AutonomousInsightsRunner(
         api_key=api_key, provider=provider, model=model, thinking="",
         verify_provider=provider, verify_model=model, verify_api_key=api_key,
@@ -179,43 +270,41 @@ async def run_trial(
                 task.cancel()
 
     started = time.monotonic()
-    data_tools.fetch_entity = recording_fetch
+    session_id = f"eval-{case.id}-{trial.n}-{uuid.uuid4().hex[:6]}"
+    task = asyncio.ensure_future(runner.run_session(
+        session_id,
+        emit,
+        llm=llm,
+        prompt=case.question,
+        business_context=case.business_context,
+        data_sources=render_data_sources(world.data_sources()),
+        project_id=None,
+        user_id=uuid.uuid4(),
+        conversation_id=None,
+        remember=False,
+        artifact_format="markdown",
+        autonomy=AUTONOMY_ASK,
+        chat_idle_timeout=1.0,
+        interactive=False,
+        execute=False,
+    ))
     try:
-        with world.install():
-            task = asyncio.ensure_future(runner.run_session(
-                f"eval-{case.id}-{n}-{uuid.uuid4().hex[:6]}",
-                emit,
-                llm=llm,
-                prompt=case.question,
-                business_context=case.business_context,
-                data_sources=render_data_sources(world.data_sources()),
-                project_id=None,
-                user_id=uuid.uuid4(),
-                conversation_id=None,
-                remember=False,
-                artifact_format="markdown",
-                autonomy=AUTONOMY_ASK,
-                chat_idle_timeout=1.0,
-                interactive=False,
-                execute=False,
-            ))
-            try:
-                await task
-            except asyncio.CancelledError:
-                trial.failures.append(
-                    f"stopped at ${trial.cost_usd:.2f} / {trial.model_calls} model calls "
-                    f"(caps ${case.cost_cap_usd:.2f} / {case.max_model_calls})"
-                )
-    finally:
-        data_tools.fetch_entity = real_fetch
+        await asyncio.wait_for(task, timeout=case.max_seconds)
+    except asyncio.CancelledError:
+        trial.failures.append(
+            f"stopped at ${trial.cost_usd:.2f} / {trial.model_calls} model calls "
+            f"(caps ${case.cost_cap_usd:.2f} / {case.max_model_calls})"
+        )
+    except TimeoutError:
+        trial.failures.append(f"timed out after {case.max_seconds:.0f}s and {trial.model_calls} model calls")
     trial.seconds = round(time.monotonic() - started, 1)
     trial.cost_usd = round(trial.cost_usd, 4)
+    trial.tools, trial.files = await _thread_trace(runner, session_id)
 
     _check(case, trial, events, pulls)
     if judge and trial.brief:
         _judge(case, trial)
     trial.passed = not trial.failures
-    return trial
 
 
 def _check(case: Case, trial: Trial, events: list[dict], pulls: list[dict]) -> None:
@@ -223,8 +312,19 @@ def _check(case: Case, trial: Trial, events: list[dict], pulls: list[dict]) -> N
 
     versions = [e for e in events if e.get("event") == AgentEvent.ARTIFACT_VERSION]
     trial.brief = str(((versions[-1].get("payload") or {}).get("content")) or "") if versions else ""
+    # The chat side of the run. Without a brief it is the only account of why:
+    # the first CI run lost two briefs out of six and could not say how.
+    trial.reply = "".join(
+        str(e.get("text") or "") for e in events if e.get("event") == AgentEvent.AGENT_MESSAGE_CHUNK
+    ).strip()
     if not trial.brief:
-        trial.failures.append("no brief: the run ended without an artifact")
+        # The stream parser drops a <duct_artifact> that never closes, and the
+        # runner an empty one, so a started brief leaves chunks and no version.
+        started = any(e.get("event") == AgentEvent.ARTIFACT_CHUNK for e in events)
+        why = "one was started and never published" if started else "the run ended without an artifact"
+        if trial.files:
+            why += f", having written {', '.join(trial.files)} to its scratch files"
+        trial.failures.append(f"no brief: {why}")
     errors = [e for e in events if e.get("event") in (AgentEvent.PIPELINE_FAILED, AgentEvent.STEP_FAILED)]
     if errors:
         trial.failures.append(f"error event: {errors[0].get('code') or errors[0].get('error')}")
@@ -263,19 +363,69 @@ def _check(case: Case, trial: Trial, events: list[dict], pulls: list[dict]) -> N
     trial.figures_traced = sum(1 for f in figures if f in known)
 
 
+async def _thread_trace(runner: Any, thread_id: str) -> tuple[list[str], list[str]]:
+    """The tools a run called, in order, and the files left in its virtual
+    filesystem, read back from the thread's state.
+
+    Not from the event stream: the file tools draw no activity row, so a
+    brief written to ``/brief.md`` instead of a ``<duct_artifact>`` left no
+    trace there at all. Read the way ``thread_state`` reads a thread, on a
+    placeholder model that is never called.
+    """
+    from agents.core.lc import inspection_chat_model
+
+    try:
+        agent = runner.build_agent(llm=inspection_chat_model(), remember=False, execute=False, interactive=False)
+        values = (await agent.aget_state({"configurable": {"thread_id": thread_id}})).values or {}
+    except Exception:  # noqa: BLE001 — a trace is diagnosis, never a verdict
+        logger.warning("gate: could not read the thread of %s", thread_id, exc_info=True)
+        return [], []
+    tools = [
+        str(call.get("name", ""))
+        for message in values.get("messages") or ()
+        for call in getattr(message, "tool_calls", None) or ()
+    ]
+    return tools, sorted(values.get("files") or {})
+
+
 def _judge(case: Case, trial: Trial) -> None:
     from tests.eval.judge import evaluate
     from tests.eval.rubrics.insights_brief import insights_brief_rubric, render_brief_artifact
 
-    try:
-        card = evaluate(insights_brief_rubric(case.markers),
-                        render_brief_artifact(trial.brief, question=case.question))
-    except Exception as exc:  # noqa: BLE001 — a judge outage is not the agent's failure
-        logger.warning("gate: judge unavailable for %s #%d: %s", case.id, trial.n, exc)
-        trial.judge = {"skipped": type(exc).__name__}
+    outcome: dict[str, Any] = {}
+
+    def verdict() -> None:
+        # A verdict that leaves markers out is the judge failing, not the
+        # brief: on 2026-09-28 one came back with all eight missing and the
+        # gate failed a brief the judge never read.
+        try:
+            for _ in range(JUDGE_ATTEMPTS):
+                outcome["card"] = evaluate(insights_brief_rubric(case.markers),
+                                           render_brief_artifact(trial.brief, question=case.question))
+                if not any(_MISSING in f for f in outcome["card"].failures):
+                    return
+            outcome["error"] = IncompleteVerdict()
+        except Exception as exc:  # noqa: BLE001 — a judge outage is not the agent's failure
+            outcome["error"] = exc
+
+    # The judge is a blocking call, so no asyncio deadline reaches it. A
+    # daemon thread can be abandoned when it stalls, and does not hold the
+    # process open at exit the way an executor's worker would.
+    worker = threading.Thread(target=verdict, name=f"judge-{trial.n}", daemon=True)
+    worker.start()
+    worker.join(JUDGE_SECONDS)
+    if worker.is_alive() or "error" in outcome:
+        reason = "Timeout" if worker.is_alive() else type(outcome["error"]).__name__
+        logger.warning("gate: judge unavailable for %s #%d: %s", case.id, trial.n, reason)
+        trial.judge = {"skipped": reason}
         return
+    card = outcome["card"]
     trial.judge = card.as_dict()
     trial.failures += [f"judge: {f}" for f in card.failures if "marker" in f]
+
+
+class IncompleteVerdict(Exception):
+    """The judge answered, but not about every marker."""
 
 
 # ---------------------------------------------------------------------------
@@ -412,11 +562,20 @@ def report(results: list[CaseResult], *, provider: str, model: str, spent: float
             lines += ["", f"**{r.case_id}** — {r.reason}"]
             for t in failing:
                 lines += [f"- trial {t.n}: " + "; ".join(t.failures)]
+                if not t.brief:
+                    lines += [f"  > ended on: {_tail(t.reply) or '(nothing said in chat)'}"]
     return "\n".join(lines)
+
+
+def _tail(text: str, limit: int = 280) -> str:
+    """The end of a reply on one line: where a run that wrote no brief stopped."""
+    flat = " ".join(text.split())
+    return flat if len(flat) <= limit else "…" + flat[-limit:]
 
 
 def trial_record(result: CaseResult, trial: Trial, *, provider: str, model: str) -> str:
     """One JSONL line per trial: what CI keeps as an artifact."""
     row = asdict(trial) | {"verdict": result.verdict, "provider": provider, "model": model}
     row["brief"] = trial.brief[:20_000]
+    row["reply"] = trial.reply[:20_000]
     return json.dumps(row, default=str)
