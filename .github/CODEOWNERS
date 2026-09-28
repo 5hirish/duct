@@ -54,6 +54,7 @@
 
 # The contract files themselves.
 /LICENSE                        @5hirish
+/NOTICE                         @5hirish
 /SECURITY.md                    @5hirish
 /CODEOWNERS                     @5hirish
 /.github/CODEOWNERS             @5hirish
