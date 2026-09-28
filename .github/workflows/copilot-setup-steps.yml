@@ -1,0 +1,49 @@
+name: Copilot Setup Steps
+
+# GitHub Copilot's coding agent runs this job (by this exact name) to prepare
+# its environment before it starts work. `make setup` is the same install a
+# contributor runs, so the agent works against the checks `make check` runs.
+
+on:
+  # GitHub's documented triggers: run when this file changes, to prove the
+  # agent's environment still builds, and on demand. Not on every lockfile
+  # change: app.yml, backend.yml and desktop-check.yml already install each
+  # area on those, and this job is all four installs plus a Chromium download.
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 59
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Resolve Node version
+        id: node-version
+        run: echo "value=$(tr -d '[:space:]' < app/.nvmrc)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ steps.node-version.outputs.value }}
+
+      - name: Install project dependencies
+        run: make setup
