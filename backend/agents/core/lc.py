@@ -37,6 +37,7 @@ from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware, SummarizationMiddleware
 from langchain.chat_models import init_chat_model
+from langchain_anthropic import ChatAnthropic
 from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import HumanMessage
@@ -250,6 +251,28 @@ def resolve_chat_model(
         **cache,
         **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
     )
+
+
+def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
+    """``llm.with_structured_output(schema)`` on a method that constrains the
+    reply on this provider, for a one-shot structured call.
+
+    Each integration picks its own default, and Anthropic's is the weak one:
+    ``function_calling`` forces a tool call, which Fable 5.1 refuses outright
+    (a 400 through langchain-anthropic 1.7.2; from 1.7.4 the call is simply
+    not forced, a best effort — langchain-ai/langchain#40766), as the API
+    does beside extended thinking. ``json_schema`` is Claude's own structured
+    output, constrained decoding on every Claude in the catalogue.
+
+    Everyone else keeps their default. OpenAI (the ChatGPT plan included)
+    and Gemini already default to ``json_schema``. OpenRouter and xAI default
+    to tool calling, and OpenRouter fronts open-weight models whose hosts do
+    not all accept a JSON-schema response format — moving them is a change
+    to measure live, not to ride along with this one.
+    """
+    if isinstance(llm, ChatAnthropic):
+        kwargs.setdefault("method", "json_schema")
+    return llm.with_structured_output(schema, **kwargs)
 
 
 # The OpenAI request field that pins a conversation to one cache. Not a

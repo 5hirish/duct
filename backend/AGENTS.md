@@ -909,7 +909,10 @@ don't fit.
   the `AgentEvent` vocabulary), plus `build_ask_user_tool`, the LangChain half
   of the human-in-the-loop port. Extracted from `agents/audit/v1/runner.py` when
   insights became the second V1 runner. A V1 runner should not talk to
-  `init_chat_model` or drive `astream` itself.
+  `init_chat_model` or drive `astream` itself. A one-shot typed answer goes
+  through `structured_output`, not `with_structured_output`: it asks Claude
+  for its own JSON-schema output, since the integration's default forces a
+  tool call that Fable 5.1 refuses.
 - `agents/insights/totals.py` — **Duct adds up a pull; the model quotes the
   sum.** `fetch_entity` puts `totals`, `rates` and per-dimension `subtotals`
   on every row report, from the catalog's `agg`, `ratio` and `weight`, and

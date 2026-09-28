@@ -114,6 +114,7 @@ from agents.core.lc import (
     inspection_chat_model,
     interrupt_pause,
     resolve_chat_model,
+    structured_output,
 )
 from agents.core.quota import credential_identity
 from agents.core.turn import TurnContext, build_turn, spec_for
@@ -1141,7 +1142,7 @@ async def diagnose_reference(
     output, or refuses an image, costs the clone its diagnosis and nothing else.
     """
     try:
-        structured = model.with_structured_output(ReferenceDiagnosis, include_raw=True)
+        structured = structured_output(model, ReferenceDiagnosis, include_raw=True)
         answer = await structured.ainvoke([{"role": "user", "content": content}])
     except Exception:  # noqa: BLE001 — the clone runs on the caption and counts instead
         logger.warning("content: reference diagnosis failed", exc_info=True)
