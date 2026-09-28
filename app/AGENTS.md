@@ -786,6 +786,18 @@ python3 ../scripts/i18n/fill.py      # translates only what is missing (needs a 
 npm run check:i18n                   # stale? missing? literal outside Lingui? → red
 ```
 
+Staleness is `lingui check sync`: it compares each catalogue with what
+extract would write, **byte for byte**, and writes nothing. Two consequences:
+
+- `scripts/i18n/po.py` writes an app catalogue back in Lingui's own layout,
+  so `fill.py` output passes the check. If the check fails straight after a
+  fill run with nothing else changed, that writer has drifted; fix it rather
+  than re-running extract to paper over it.
+- Run it on Node 22, the version in `.nvmrc` and CI. Lingui 6.8 starts every
+  subcommand behind `import.meta.main`, which Node 23 does not have, so there
+  `extract`, `compile` and `check` all exit 0 having done nothing: a green
+  gate that ran no check.
+
 **How to write copy so the catalogue sees it.** One import per file:
 `import { Trans, useLingui } from "@lingui/react/macro";`
 
