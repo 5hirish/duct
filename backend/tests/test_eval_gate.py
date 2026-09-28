@@ -9,6 +9,7 @@ with a real one.
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import date, timedelta
 
@@ -27,11 +28,14 @@ from tests.eval.gate import (
     FAIL,
     INCONCLUSIVE,
     PASS,
+    CaseResult,
     Trial,
     decide,
     figures_in,
     quotes,
+    report,
     run_trial,
+    trial_record,
 )
 from tests.fakes import ToolCallingFake
 
@@ -198,3 +202,23 @@ async def test_a_brief_that_added_the_rows_itself_is_caught(monkeypatch):
 
     assert not trial.passed
     assert any("does not quote" in f for f in trial.failures)
+
+
+@pytest.mark.parametrize("said, why", [
+    ("Nothing moved enough to be worth a brief this week.", "ended without an artifact"),
+    (f"Here is the brief.\n{DUCT_ARTIFACT_OPEN}\n# The tax guide slipped\n", "started and never published"),
+])
+async def test_a_run_without_a_brief_keeps_what_the_agent_said(monkeypatch, said, why):
+    """The first CI run lost two briefs in six and its record could not say how."""
+    import db.session as session_module
+
+    monkeypatch.setattr(session_module, "get_engine", lambda: make_sqlite_engine())
+    trial = await run_trial(ORGANIC, 1, provider=Provider.OPENROUTER, model="x", api_key="unused",
+                            llm=ToolCallingFake(responses=[AIMessage(content=said)]), judge=False)
+    result = CaseResult(ORGANIC.id, FAIL, "", [trial])
+
+    assert any(why in f for f in trial.failures)
+    assert trial.reply == said.split(DUCT_ARTIFACT_OPEN)[0].strip()
+    assert json.loads(trial_record(result, trial, provider="p", model="m"))["reply"] == trial.reply
+    assert f"> ended on: {trial.reply}" in report([result], provider="p", model="m", spent=0)
+

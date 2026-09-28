@@ -105,6 +105,7 @@ class Trial:
     figures_traced: int = 0
     judge: dict | None = None
     brief: str = ""
+    reply: str = ""
 
     @property
     def provenance(self) -> float | None:
@@ -223,8 +224,19 @@ def _check(case: Case, trial: Trial, events: list[dict], pulls: list[dict]) -> N
 
     versions = [e for e in events if e.get("event") == AgentEvent.ARTIFACT_VERSION]
     trial.brief = str(((versions[-1].get("payload") or {}).get("content")) or "") if versions else ""
+    # The chat side of the run. Without a brief it is the only account of why:
+    # the first CI run lost two briefs out of six and could not say how.
+    trial.reply = "".join(
+        str(e.get("text") or "") for e in events if e.get("event") == AgentEvent.AGENT_MESSAGE_CHUNK
+    ).strip()
     if not trial.brief:
-        trial.failures.append("no brief: the run ended without an artifact")
+        # The stream parser drops a <duct_artifact> that never closes, and the
+        # runner an empty one, so a started brief leaves chunks and no version.
+        started = any(e.get("event") == AgentEvent.ARTIFACT_CHUNK for e in events)
+        trial.failures.append(
+            "no brief: one was started and never published" if started
+            else "no brief: the run ended without an artifact"
+        )
     errors = [e for e in events if e.get("event") in (AgentEvent.PIPELINE_FAILED, AgentEvent.STEP_FAILED)]
     if errors:
         trial.failures.append(f"error event: {errors[0].get('code') or errors[0].get('error')}")
@@ -412,11 +424,20 @@ def report(results: list[CaseResult], *, provider: str, model: str, spent: float
             lines += ["", f"**{r.case_id}** — {r.reason}"]
             for t in failing:
                 lines += [f"- trial {t.n}: " + "; ".join(t.failures)]
+                if not t.brief:
+                    lines += [f"  > ended on: {_tail(t.reply) or '(nothing said in chat)'}"]
     return "\n".join(lines)
+
+
+def _tail(text: str, limit: int = 280) -> str:
+    """The end of a reply on one line: where a run that wrote no brief stopped."""
+    flat = " ".join(text.split())
+    return flat if len(flat) <= limit else "…" + flat[-limit:]
 
 
 def trial_record(result: CaseResult, trial: Trial, *, provider: str, model: str) -> str:
     """One JSONL line per trial: what CI keeps as an artifact."""
     row = asdict(trial) | {"verdict": result.verdict, "provider": provider, "model": model}
     row["brief"] = trial.brief[:20_000]
+    row["reply"] = trial.reply[:20_000]
     return json.dumps(row, default=str)

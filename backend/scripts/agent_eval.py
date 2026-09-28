@@ -15,10 +15,10 @@ throwaway SQLite before anything reads the settings, because ``.env.local``
 names the hosted one and a stray query from a tool would otherwise land
 there. Connectors are answered by the case's synthetic account.
 
-Writes ``eval-results.jsonl`` (one line per trial, brief included) and the
-markdown report, also to ``$GITHUB_STEP_SUMMARY`` when set. Exits 1 on any
-FAIL; INCONCLUSIVE is reported and does not fail the run. Judge calls are not
-counted against ``--budget`` (a verdict is about a cent).
+Writes ``eval-results.jsonl`` (one line per trial, brief and chat reply
+included) and the markdown report, also to ``$GITHUB_STEP_SUMMARY`` when set.
+Exits 1 on any FAIL; INCONCLUSIVE is reported and does not fail the run. Judge
+calls are not counted against ``--budget`` (a verdict is about a cent).
 
 See tests/eval/gate.py for the verdict rules, and never raise k, lower a
 threshold or delete a case to turn a run green: loosening the gate is its own
