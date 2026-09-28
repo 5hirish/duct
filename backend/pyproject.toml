@@ -65,7 +65,7 @@ trafilatura = ">=2.2.0"
 # manylinux_2_28 and macOS wheels, so no toolchain is needed to build it, and
 # agents/core/compaction.py degrades to plain JSON wherever it is absent.
 headroom-ai = "~0.37"
-deepagents = "0.7.15"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
+deepagents = "0.7.17"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
 # OTel GenAI spans for the agents (agents/core/telemetry.py). The API is what
 # the spans are opened with; the SDK and the OTLP/HTTP exporter are what
 # `configure_tracing` installs when OTEL_EXPORTER_OTLP_ENDPOINT is set
