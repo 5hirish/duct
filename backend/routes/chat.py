@@ -7,12 +7,16 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from agents.models import Provider, get_api_key_kwargs, resolve_model, resolve_provider
-from config import get_configs
+from agents.engines import ProviderKeyRequired, resolve_job_run
+from agents.tiers import Job
+from models.auth import User
+from service.auth import get_current_user, get_user_provider_keys
+from service.model_settings import get_model_settings
+from service.provider_keys import stored_keys_for
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["insights"])
@@ -30,11 +34,36 @@ class InsightChatRequest(BaseModel):
 
 
 @router.post("/chat")
-async def insight_chat(req: InsightChatRequest) -> StreamingResponse:
-    """Stream an LLM reply grounded in the insight chat payload."""
-    cfg = get_configs()
-    provider = resolve_provider(cfg.generate_provider or None)
-    model = resolve_model(cfg.generate_model or None, provider)
+async def insight_chat(
+    req: InsightChatRequest,
+    user: User = Depends(get_current_user),
+    user_keys: dict = Depends(get_user_provider_keys),
+) -> StreamingResponse:
+    """Stream an LLM reply grounded in the insight chat payload, on the caller's key.
+
+    It used to stream from this instance's own key, with a prompt the caller
+    writes, and a guest counts as signed in: anyone who opened /start had a
+    free model on Duct's account. It resolves like every other run now
+    (``resolve_job_run``): the caller's keys, this instance's only where
+    ``allow_server_provider_keys()`` holds, else the 402 the browser handles.
+    """
+    settings = get_model_settings(user.id)
+    run = resolve_job_run(
+        Job.CHAT,
+        engine_override=settings.engine,
+        user_keys=user_keys,
+        stored_keys=stored_keys_for(user.id),
+        tier_map=settings.tiers,
+        auto_fallback=settings.auto_fallback,
+        log_prefix="insight chat",
+    )
+    if not run.api_key:
+        # The one credential the gate returns without a key (the operator's
+        # `claude` login) cannot drive a LangChain call.
+        raise ProviderKeyRequired(
+            run.provider,
+            f"Chat needs a {run.provider.value} API key. Add your key in Settings → Providers.",
+        )
 
     cp = req.chat_payload
     findings = cp.get("findings", [])[:8]
@@ -74,23 +103,11 @@ async def insight_chat(req: InsightChatRequest) -> StreamingResponse:
     history.append({"role": "user", "content": req.message})
 
     async def stream_response():
-        from langchain.chat_models import init_chat_model
         from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-        key_map = {
-            Provider.OPENAI: cfg.openai_api_key,
-            Provider.GOOGLE_GENAI: cfg.gemini_api_key,
-            Provider.ANTHROPIC: cfg.anthropic_api_key,
-        }
-        api_key = key_map.get(provider, "") or ""
-        api_key_kwargs = get_api_key_kwargs(provider, api_key)
+        from agents.core.lc import resolve_chat_model
 
-        llm = init_chat_model(
-            model=model.value,
-            model_provider=provider.value,
-            temperature=0.7,
-            **api_key_kwargs,
-        )
+        llm = resolve_chat_model(run.provider, run.model, run.api_key, temperature=0.7)
 
         lc_messages = [SystemMessage(content=system)]
         for msg in history[:-1]:
