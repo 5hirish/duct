@@ -430,6 +430,14 @@ JavaScript off the chips stay hidden and every post shows.
 an `<item>` in `site/blog/feed.xml`, and a line in `site/llms.txt`.
 `build_blog.py` fails, in both modes, until all three have it.
 
+**A post published somewhere else is shared, not copied**: a *link post* is a
+`posts/<slug>.md` with front matter only and `link:` set to the original's
+https address. It becomes a card on the index that goes there, marked with the
+other site's name, and nothing else: no page on getduct.ai (so no second copy
+for search engines to weigh against the first), no listings, no place in the
+previous/next links. It still needs its card from `build_og_images.mjs`, which
+is its cover on the index.
+
 A `[!youtube]` embed shows the video's thumbnail from a copy committed beside
 the post (`python3 scripts/build_blog.py --fetch-thumbnails` saves it once;
 the only network step, never run by `--check`), so a page view still sends
