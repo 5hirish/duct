@@ -31,10 +31,10 @@ from uuid import UUID
 import httpx
 from sqlmodel import Session, select
 
-from config import get_configs
 from db.session import get_engine
 from models.content import ContentAsset
 from service import storage
+from service.apify.client import APIFY_KEY
 from service.apify.schema import ScrapedPost
 from service.url_safety import FetchRefused, fetch_allowlisted
 from utils.dates import now_iso
@@ -212,15 +212,15 @@ def _media_sources(post: Mapping[str, Any]) -> tuple[str, list[str]]:
     return cover, slides[:MAX_SLIDES]
 
 
-def _auth_headers(url: str) -> dict[str, str]:
+def _auth_headers(url: str, token: str) -> dict[str, str]:
+    """The project owner's Apify token, for Apify's own record URLs and nothing else."""
     parts = urlsplit(url)
     if (parts.hostname or "").lower() != _APIFY_API_HOST or not parts.path.startswith(_APIFY_RECORD_PATH):
         return {}
-    token = (get_configs().apify_api_key or "").strip()
     return {"Authorization": f"Bearer {token}"} if token else {}
 
 
-def _copy_image(client: httpx.Client, url: str, key_stem: str) -> str | None:
+def _copy_image(client: httpx.Client, url: str, key_stem: str, token: str = "") -> str | None:
     """Fetch one image under the URL rules and store it; its public URL, or None."""
     try:
         got = fetch_allowlisted(
@@ -229,7 +229,7 @@ def _copy_image(client: httpx.Client, url: str, key_stem: str) -> str | None:
             domains=MEDIA_DOMAINS,
             content_types=_IMAGE_EXTENSIONS.keys(),
             max_bytes=MAX_IMAGE_BYTES,
-            headers=_auth_headers(url),
+            headers=_auth_headers(url, token),
         )
     except FetchRefused as exc:
         logger.warning("reference media: %s", exc)
@@ -263,6 +263,7 @@ def capture_reference_media(
         if asset is None:
             return None
         project_id = asset.project_id
+        token = APIFY_KEY.for_project(project_id, db)
         params = asset.params or {}
         attempts = int((params.get("media") or {}).get("attempts") or 0)
         cover_src, slide_srcs = _media_sources(params.get("post") or {})
@@ -271,11 +272,11 @@ def capture_reference_media(
     own_client = client is None
     http = client or _new_media_client()
     try:
-        cover = _copy_image(http, cover_src, f"{stem}/cover") if cover_src else None
+        cover = _copy_image(http, cover_src, f"{stem}/cover", token) if cover_src else None
         slides = [
             stored
             for i, src in enumerate(slide_srcs)
-            if (stored := _copy_image(http, src, f"{stem}/slide-{i:02d}"))
+            if (stored := _copy_image(http, src, f"{stem}/slide-{i:02d}", token))
         ]
     finally:
         if own_client:

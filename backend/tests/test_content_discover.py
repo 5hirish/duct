@@ -23,10 +23,13 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
+import config
 import routes.content as content_routes
 import service.apify.run_cache as run_cache
 import service.auth as auth_service
+import service.credentials as credentials_service
 import service.discovery as discovery
+import service.vendor_keys as vendor_keys
 from config import Configs
 from db.session import get_session as get_session_dep
 from models.auth import User
@@ -34,7 +37,8 @@ from models.content import ContentAsset
 from models.membership import ProjectMember
 from models.project import Project
 from service import storage
-from service.apify import ApifyClient
+from cryptography.fernet import Fernet
+from service.apify import APIFY_KEY, ApifyClient
 from service.apify.schema import ScrapedPost
 from service.discovery import MAX_CAPTURE_ATTEMPTS, MediaStatus
 from service.membership import ROLE_OWNER
@@ -260,9 +264,17 @@ def test_an_image_url_off_the_allowlist_is_never_fetched(db, project, owner, cdn
     assert len(asset.params["media"]["slides"]) == 1
 
 
-def test_an_apify_record_gets_the_token_and_nothing_else_does(db, project, owner, cdn, uploads, monkeypatch):
-    token = "apify-test-token"
-    monkeypatch.setattr(discovery, "get_configs", lambda: Configs(apify_api_key=token))
+def test_an_apify_record_gets_the_owners_token_and_nothing_else_does(db, project, owner, cdn, uploads, monkeypatch):
+    # Hosted, with an operator key the capture must not spend: the owner's is the one sent.
+    cfg = Configs(
+        app_env="production", apify_api_key="operator-key",
+        credentials_encryption_key=Fernet.generate_key().decode(),
+    )
+    for module in (config, vendor_keys, credentials_service):
+        monkeypatch.setattr(module, "get_configs", lambda: cfg)
+    token = "owners-apify-token"
+    APIFY_KEY.save(owner.id, token, db)
+    db.commit()
     record = "https://api.apify.com/v2/key-value-stores/kv1/records/cover-7300"
     cdn.images[record] = (JPEG, "image/jpeg")
 
@@ -388,7 +400,12 @@ class Clock:
 @pytest.fixture
 def apify(monkeypatch):
     fake = Apify()
-    monkeypatch.setattr(content_routes, "_apify_client_or_503", fake.client)
+    # Local dev, where the instance's key is the owner's own; the key choice
+    # itself is tests/test_vendor_keys.py.
+    cfg = Configs(app_env="local", apify_api_key="apify-test-key")
+    for module in (config, vendor_keys):
+        monkeypatch.setattr(module, "get_configs", lambda: cfg)
+    monkeypatch.setattr(content_routes, "_apify_client", lambda _key: fake.client())
     return fake
 
 
@@ -459,3 +476,19 @@ def test_the_cache_forgets_the_oldest_run_past_its_cap():
 
     asyncio.run(run_all())
     assert apify.starts == 4  # "a" was evicted by "c", so its repeat ran again
+
+
+def test_two_accounts_never_share_a_run():
+    """A run belongs to the Apify account that started it, and another
+    account's key cannot read it — so the same search on two keys is two runs."""
+    apify = Apify()
+    cache = run_cache.RunCache(clock=Clock())
+    transport = httpx.MockTransport(apify)
+
+    async def run_both():
+        for key in ("alice-key", "bob-key"):
+            async with ApifyClient(key, client=httpx.AsyncClient(transport=transport)) as c:
+                await cache.start(c, "actor", {"hashtags": ["same"]})
+
+    asyncio.run(run_both())
+    assert apify.starts == 2

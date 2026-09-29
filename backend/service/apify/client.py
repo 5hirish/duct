@@ -21,6 +21,7 @@ import httpx
 from pydantic import ValidationError
 
 from service.apify.schema import ApifyRun, ScrapedPost
+from service.vendor_keys import VendorKey, VendorKeyRejected, VendorKeyUnchecked
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +78,14 @@ class ApifyClient:
                 "Accept":        "application/json",
             },
         )
+
+    @property
+    def account(self) -> str:
+        """Whose key this is, as a tag that cannot be turned back into it: for
+        a cache that must not hand one account's run to another. Keyed with a
+        per-process salt, the way the quota cooldowns tag a key."""
+        from agents.core.quota import credential_identity
+        return credential_identity(self._api_key)
 
     async def __aenter__(self) -> "ApifyClient":
         return self
@@ -175,6 +184,26 @@ class ApifyClient:
 # ---------------------------------------------------------------------------
 # Convenience: the two MVP actor IDs the Discover page exposes.
 # ---------------------------------------------------------------------------
+
+
+async def check_api_key(api_key: str) -> None:
+    """The account the key belongs to: the cheapest read that proves it works."""
+    try:
+        async with ApifyClient(api_key) as client:
+            await client._request("GET", "/v2/users/me")
+    except ApifyAPIError as exc:
+        if exc.status_code in (401, 403):
+            raise VendorKeyRejected() from exc
+        raise VendorKeyUnchecked() from exc
+
+
+APIFY_KEY = VendorKey(
+    connector_type="apify",
+    setting="apify_api_key",
+    label="Apify",
+    where="Content → Discover",
+    check=check_api_key,
+)
 
 
 def get_default_actor_ids() -> dict[str, str]:
