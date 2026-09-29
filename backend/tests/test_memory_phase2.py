@@ -6,6 +6,7 @@ Phase 1 routes are exercised in tests/test_memory.py and are not repeated here.
 
 from __future__ import annotations
 
+import threading
 from uuid import uuid4
 
 import pytest
@@ -76,11 +77,36 @@ def project(db, owner):
     return row
 
 
+class _OneAtATime(Session):
+    """A session that holds the engine's one connection for as long as it is open.
+
+    The test engine is StaticPool: every session shares a single SQLite
+    connection. Consolidation reads the conversation on a worker thread before
+    it takes the project lock, so two concurrent triggers ran two queries on
+    that one connection at once, and SQLite handed one of them the other's
+    cursor: "tuple index out of range", about one run in six (main, 2026-09-28).
+    Postgres gives each session its own connection, so the service is fine; the
+    harness has to take turns instead.
+    """
+
+    _turn = threading.RLock()  # re-entrant: a nested session on the same thread must not wait on itself
+
+    def __enter__(self):
+        self._turn.acquire()
+        return super().__enter__()
+
+    def __exit__(self, *exc):
+        try:
+            return super().__exit__(*exc)
+        finally:
+            self._turn.release()
+
+
 @pytest.fixture
 def service_db(engine, monkeypatch):
     """Point the consolidation service's own sessions at the test engine."""
     def _fake_db():
-        yield Session(engine)
+        yield _OneAtATime(engine)
 
     monkeypatch.setattr(consolidation, "db_session", _fake_db)
     return engine
