@@ -15,6 +15,13 @@ The short version: engines lift **self-contained, specific, sourced passages**
 from **crawlable pages** that **other places already mention**. Every phase
 below serves one of those three.
 
+**Sharing a post published somewhere else** (Shirish's own blog, a guest
+post) is not this recipe: it is a *link post*, a card on the blog index that
+goes to the original, with no page and no copy here. Write the front matter
+only, with `link:` set to the original's address, then draw the card and run
+the generator (`scripts/build_blog.py` docstring, "Link posts"). Nothing in
+the phases below applies to it.
+
 ## The value bar: no post without it
 
 A post earns its place only if a reader leaves able to **do something they
