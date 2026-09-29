@@ -986,6 +986,16 @@ don't fit.
   auth headers, query encoding and pagination stay vendor-side. Not for
   `service/apify` or `service/post_bridge` — those are async, hold a
   long-lived client, and need no retry.
+- `service/vendor_keys.py` — a third-party key each user brings for
+  themselves (PostBridge, Apify). A request spends the key its project's
+  owner saved; the instance's env key only where `allow_server_provider_keys()`
+  holds, because on a hosted instance it is Duct's account and every signup
+  would be spending it. A new user-facing vendor declares one `VendorKey`
+  beside its client (with a `check`: the cheapest read that proves a pasted
+  key works) and joins `_vendor_key` in `routes/content.py`; the routes, the
+  app's `VendorKeyForm` and the tests are already generic. Never read the
+  vendor's `Configs` key directly. A vendor's 401 is about that key, so it
+  never reaches the browser as a 401: the app signs the user out on one.
 
 ## Sequencing rules from the plans
 

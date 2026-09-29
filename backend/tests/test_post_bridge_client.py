@@ -244,28 +244,4 @@ async def test_bearer_token_attached_to_api_calls_only():
         assert captured["ua"].startswith("DuctContentAgent/")
 
 
-# ---------------------------------------------------------------------------
-# Credential resolver — MVP .env fallback behaviour
-# ---------------------------------------------------------------------------
-
-
-def test_client_for_user_falls_back_to_env_then_raises_when_missing():
-    """MVP: no ConnectorCredential row → use POSTBRIDGE_API_KEY env. If
-    that's also empty, raise with an actionable message the route layer
-    can pass through to the user."""
-    from unittest.mock import MagicMock, patch
-    from service.post_bridge import client_for_user
-
-    db = MagicMock()
-    db.execute.return_value.scalars.return_value.first.return_value = None
-
-    fake_cfg = MagicMock()
-    fake_cfg.postbridge_api_key = "env-fallback-key"
-    with patch("service.post_bridge.client.get_configs", return_value=fake_cfg):
-        client = client_for_user(__import__("uuid").uuid4(), db)
-        assert client._api_key == "env-fallback-key"
-
-    fake_cfg.postbridge_api_key = ""
-    with patch("service.post_bridge.client.get_configs", return_value=fake_cfg):
-        with pytest.raises(ValueError, match="PostBridge isn't connected"):
-            client_for_user(__import__("uuid").uuid4(), db)
+# Whose key a request spends is tests/test_post_bridge_key.py.

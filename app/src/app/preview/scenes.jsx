@@ -65,6 +65,7 @@ import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
 import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
+import VendorKeyForm from "@/components/content/VendorKeyForm";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import TextPostEditor from "@/components/content/TextPostEditor";
@@ -2108,6 +2109,52 @@ export const SCENES = [
     render: () => (
       <div className="max-w-2xl p-5">
         <PostMetricsForm post={METRICS_SYNCED_POST} save={previewSaveFails} />
+      </div>
+    ),
+  },
+  {
+    id: "vendor-key-postbridge",
+    state: "owner · PostBridge not connected yet",
+    group: "VendorKeyForm",
+    title: "Connecting a vendor account",
+    note: "The Accounts tab before a PostBridge key is saved; Discover shows the same card for Apify. The field is a password input and Connect stays off until something is typed. Paste anything and press Enter: the preview accepts the key after a beat, the way the real save waits for the vendor to answer. In a narrow pane the button drops under the field.",
+    render: () => (
+      <div className="p-5">
+        <VendorKeyForm
+          vendor="PostBridge"
+          homeUrl="https://app.post-bridge.com"
+          description="Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
+          onConnect={() => new Promise((resolve) => setTimeout(resolve, 900))}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "vendor-key-refused",
+    state: "owner · Apify refused the key",
+    group: "VendorKeyForm",
+    title: "Connecting a vendor account",
+    note: "Submit any key: the save fails the way a wrong key does, and the server's sentence appears under the field, announced, with the field marked invalid and what was typed kept.",
+    render: () => (
+      <div className="p-5">
+        <VendorKeyForm
+          vendor="Apify"
+          homeUrl="https://console.apify.com"
+          description="Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
+          onConnect={() => Promise.reject(new Error("Apify didn't accept that key. Copy it again from your Apify account."))}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "vendor-key-collaborator",
+    state: "collaborator · the owner hasn't connected PostBridge",
+    group: "VendorKeyForm",
+    title: "Connecting a vendor account",
+    note: "A project uses its owner's key, so a collaborator gets no form, only who to ask.",
+    render: () => (
+      <div className="p-5">
+        <VendorKeyForm vendor="PostBridge" homeUrl="https://app.post-bridge.com" isOwner={false} onConnect={() => Promise.resolve()} />
       </div>
     ),
   },

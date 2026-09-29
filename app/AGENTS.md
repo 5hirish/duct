@@ -12,6 +12,7 @@ Next.js App Router report viewer and agent interface.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
 - **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
   Sentry is **not** behind the consent gate, so the client's `dataCollection` block (`instrumentation-client.ts`) is Sentry 10's restrictive baseline written out — no IP, no bodies. Since Sentry 11 an unset `dataCollection` collects every category, so removing that block is a privacy change, not a tidy-up. Streamed spans pass through neither `beforeSend` nor scope tags: a header that must never leave goes in `dataCollection.httpHeaders` (as `sentry.server.config.ts` does for `X-Provider-*`), and a tag performance data is split by is also set with `Sentry.setAttribute`.
+- **Overrides:** `package.json` forces `lodash-es` to ^4.18.1. `mermaid` 12.0.0 depends on `chevrotain` 11.1.2, which pins `lodash-es` 4.17.23 exactly, and that version carries a high advisory (code injection via `_.template`) and a moderate one (prototype pollution in `_.unset`/`_.omit`). Delete the override once `mermaid` moves to `chevrotain` 12 or later, which no longer uses lodash.
 
 ## Deployment
 

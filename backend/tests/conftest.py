@@ -14,7 +14,7 @@ from sqlmodel import SQLModel
 from agents.audit.schema import AuditBusinessContext
 
 
-def make_sqlite_engine(*, drop_partial_indexes: bool = False):
+def make_sqlite_engine(*, drop_partial_indexes: bool = False, path=None):
     """An in-memory SQLite engine with every registered SQLModel table created.
 
     Eleven test modules were each hand-rolling this same four-line incantation.
@@ -30,12 +30,21 @@ def make_sqlite_engine(*, drop_partial_indexes: bool = False):
     UNIQUE constraints that reject legitimate rows. Dropping them lets these
     tests exercise the application logic; Postgres keeps them as the real
     backstop, and the migration is what enforces them in production.
+
+    ``path`` trades the shared connection for a file, so each thread gets its
+    own. A test that runs two sessions *at the same time* needs that: two
+    threads interleaving on one ``sqlite3`` connection read each other's rows
+    half-finished, which surfaced in CI as ``Invalid isoformat string: ''``
+    from the memory consolidation race test.
     """
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+    if path is not None:
+        engine = create_engine(f"sqlite:///{path}", connect_args={"check_same_thread": False})
+    else:
+        engine = create_engine(
+            "sqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
     SQLModel.metadata.create_all(engine)
     if drop_partial_indexes:
         with engine.begin() as conn:
