@@ -1825,11 +1825,96 @@ async def list_social_accounts(
         async with client as pb:
             accounts = await pb.list_social_accounts(platform=platform)
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+        raise _pb_http_error(exc) from exc
     return [
         SocialAccountOut(id=a.id, platform=a.platform.value, username=a.username)
         for a in accounts
     ]
+
+
+# ---------------------------------------------------------------------------
+# Vendor keys — each user brings their own PostBridge and Apify key. A project
+# spends its owner's, the way it spends its owner's connectors, so only the
+# owner connects one (service/vendor_keys.py).
+# ---------------------------------------------------------------------------
+
+def _vendor_key(vendor: str):
+    from service.apify import APIFY_KEY
+    from service.post_bridge import POSTBRIDGE_KEY
+    key = {"post-bridge": POSTBRIDGE_KEY, "apify": APIFY_KEY}.get(vendor)
+    if key is None:
+        raise HTTPException(404, "Unknown vendor.")
+    return key
+
+
+class VendorKeyStatusOut(BaseModel):
+    connected: bool   # the project can use this vendor
+    own_key:   bool   # through a key the owner saved (not the local env one)
+    is_owner:  bool   # the caller can connect or replace it
+
+
+class VendorKeyIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # No min_length: Pydantic's 422 is a list the app can only show as "Server
+    # error 422". The vendor judges the key; the route says what it answered.
+    api_key: str = Field(max_length=512)
+
+
+@router.get("/content/vendor-keys/{vendor}")
+def vendor_key_status(
+    vendor: str,
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> VendorKeyStatusOut:
+    from service.vendor_keys import KEY_OWN
+    key = _vendor_key(vendor)
+    proj = _project_for_user(db, user, project_id)
+    source = key.source(proj.user_id, db)
+    return VendorKeyStatusOut(
+        connected=source is not None,
+        own_key=source == KEY_OWN,
+        is_owner=proj.user_id == user.id,
+    )
+
+
+@router.put("/content/vendor-keys/{vendor}")
+async def connect_vendor_key(
+    vendor: str,
+    body: VendorKeyIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> VendorKeyStatusOut:
+    """Save the caller's key for ``vendor``, once the vendor accepts it."""
+    from service.vendor_keys import VendorKeyRejected, VendorKeyUnchecked
+    key = _vendor_key(vendor)
+    api_key = body.api_key.strip()
+    if not api_key:
+        raise HTTPException(422, f"Paste your {key.label} API key first.")
+    try:
+        await key.check(api_key)
+    except VendorKeyRejected as exc:
+        raise HTTPException(
+            422, f"{key.label} didn't accept that key. Copy it again from your {key.label} account.",
+        ) from exc
+    except VendorKeyUnchecked as exc:
+        raise HTTPException(
+            502, f"Couldn't reach {key.label} to check that key. Try again in a moment.",
+        ) from exc
+    key.save(user.id, api_key, db)
+    db.commit()
+    return VendorKeyStatusOut(connected=True, own_key=True, is_owner=True)
+
+
+@router.delete("/content/vendor-keys/{vendor}", status_code=204)
+def disconnect_vendor_key(
+    vendor: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> None:
+    _vendor_key(vendor).forget(user.id, db)
+    db.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -1994,7 +2079,7 @@ async def list_content_analytics(
             except PostBridgeAPIError:
                 pass
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+        raise _pb_http_error(exc) from exc
 
     # Index this project's local posts so each analytics row can be tied back to
     # a pillar/format and badged "via Duct" — by result id (direct) or post id.
@@ -2112,7 +2197,7 @@ async def publish_post_route(
             )
             resp = await pb.create_post(request)
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+        raise _pb_http_error(exc) from exc
 
     post.post_bridge_post_id = resp.id
     post.published_via = "duct"  # published through our system
@@ -2163,7 +2248,7 @@ async def sync_post_metrics(
                 raise HTTPException(409, "Analytics haven't synced yet — try again in a few minutes.")
             analytics = analytics_list[0]
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+        raise _pb_http_error(exc) from exc
 
     post.perf = merge_synced_metrics(
         post.perf,
@@ -2212,7 +2297,7 @@ async def sync_post_daily(
                 post.post_bridge_result_id = chosen.id
             daily = await pb.get_analytics_daily(analytics_id)
     except PostBridgeAPIError as exc:
-        raise HTTPException(exc.status_code or 502, _friendly_pb_error(exc)) from exc
+        raise _pb_http_error(exc) from exc
 
     post.daily_perf = [s.model_dump(mode="json") for s in daily.snapshots]
     db.add(post)
@@ -2220,6 +2305,15 @@ async def sync_post_daily(
     db.refresh(post)
     _invalidate_analytics(post.project_id)
     return _enrich_one(db, post)
+
+
+def _pb_http_error(exc) -> HTTPException:
+    """A PostBridge failure as this API's answer. Its 401 and 403 are about the
+    PostBridge key, never the Duct session, and must not reach the browser as
+    one: the app's throwForStatus signs the user out on a 401."""
+    code = getattr(exc, "status_code", 0) or 0
+    status = 502 if code in (0, 401, 403) or code >= 500 else code
+    return HTTPException(status, _friendly_pb_error(exc))
 
 
 def _friendly_pb_error(exc) -> str:
@@ -2231,7 +2325,7 @@ def _friendly_pb_error(exc) -> str:
     msg = (getattr(exc, "error", None) and getattr(exc.error, "message", "")) or ""
     code = getattr(exc, "status_code", 0)
     if code == 401 or code == 403:
-        return "Publishing isn't connected — ask your admin to set up the PostBridge connection."
+        return "PostBridge didn't accept the saved API key. Paste a fresh one in Content → Accounts."
     if code == 429:
         return "Hit the publishing rate limit — wait a minute and try again."
     if code == 0:
@@ -2306,12 +2400,30 @@ def _session_factory(db: Session):
     return lambda: Session(engine)
 
 
-def _apify_client_or_503():
-    cfg = get_configs()
-    if not cfg.apify_api_key:
-        raise HTTPException(503, "Discovery isn't connected — APIFY_API_KEY is not set.")
+def _apify_client(api_key: str):
+    """The one place a Discover route builds its client; tests replace it."""
     from service.apify import ApifyClient
-    return ApifyClient(cfg.apify_api_key)
+    return ApifyClient(api_key)
+
+
+def _apify_client_for(db: Session, user: User, project_id: UUID):
+    """A client on the project owner's Apify key (service/vendor_keys.py)."""
+    from service.apify import APIFY_KEY
+    from service.vendor_keys import VendorNotConnected
+    proj = _project_for_user(db, user, project_id)
+    try:
+        return _apify_client(APIFY_KEY.resolve(proj.user_id, db))
+    except VendorNotConnected as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+def _apify_http_error(exc) -> HTTPException:
+    """An Apify failure as this API's answer. Its 401 and 403 are about the
+    Apify key, and the app signs the user out on a 401 (see _pb_http_error)."""
+    code = exc.status_code or 0
+    if code in (401, 403):
+        return HTTPException(502, "Apify didn't accept the saved API key. Paste a fresh one in Content → Discover.")
+    return HTTPException(502 if code == 0 or code >= 500 else code, exc.message)
 
 
 @router.post("/content/discover/start")
@@ -2325,7 +2437,7 @@ async def discover_start(
     The same actor and input inside the reuse window get the earlier run back
     instead of a second billed run (service/apify/run_cache.py).
     """
-    _project_for_user(db, user, body.project_id)
+    client = _apify_client_for(db, user, body.project_id)
     from service.apify import ApifyAPIError
     from service.apify.policy import discover_run_input
     from service.apify.run_cache import apify_runs
@@ -2335,12 +2447,11 @@ async def discover_start(
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
-    client = _apify_client_or_503()
     try:
         async with client as c:
             run, reused = await apify_runs.start(c, body.actor_id, run_input)
     except ApifyAPIError as exc:
-        raise HTTPException(exc.status_code or 502, exc.message) from exc
+        raise _apify_http_error(exc) from exc
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
@@ -2357,15 +2468,22 @@ async def discover_start(
 
 
 @router.get("/content/discover/status/{run_id}")
-async def discover_status(run_id: str) -> DiscoverStatusOut:
+async def discover_status(
+    run_id: str,
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> DiscoverStatusOut:
+    """On the project owner's key, so a run is only ever read by the account
+    that started it."""
     from service.apify import ApifyAPIError
 
-    client = _apify_client_or_503()
+    client = _apify_client_for(db, user, project_id)
     try:
         async with client as c:
             run = await c.get_run(run_id)
     except ApifyAPIError as exc:
-        raise HTTPException(exc.status_code or 502, exc.message) from exc
+        raise _apify_http_error(exc) from exc
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
@@ -2379,7 +2497,13 @@ async def discover_status(run_id: str) -> DiscoverStatusOut:
 
 
 @router.get("/content/discover/results/{dataset_id}")
-async def discover_results(dataset_id: str, limit: int = 200) -> DiscoverResultOut:
+async def discover_results(
+    dataset_id: str,
+    project_id: UUID,
+    limit: int = 200,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> DiscoverResultOut:
     """Fetch raw items from a finished run's dataset.
 
     We pass items through the ScrapedPost model to drop weird rows, then
@@ -2387,12 +2511,12 @@ async def discover_results(dataset_id: str, limit: int = 200) -> DiscoverResultO
     """
     from service.apify import ApifyAPIError
 
-    client = _apify_client_or_503()
+    client = _apify_client_for(db, user, project_id)
     try:
         async with client as c:
             posts = await c.get_dataset_posts(dataset_id, limit=limit)
     except ApifyAPIError as exc:
-        raise HTTPException(exc.status_code or 502, exc.message) from exc
+        raise _apify_http_error(exc) from exc
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 

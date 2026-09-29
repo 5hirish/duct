@@ -18,11 +18,12 @@ Analytics flow:
   3. GET  /v1/analytics?post_result_id=…     — lifetime metrics
   4. GET  /v1/analytics/{id}/daily           — daily snapshots + deltas
 
-Credentials: ConnectorCredential row with connector_type='post_bridge'
-takes precedence; falls back to .env POSTBRIDGE_API_KEY for MVP.
+Credentials: each user's own key (``POSTBRIDGE_KEY``); POSTBRIDGE_API_KEY is
+a local and desktop fallback only (service/vendor_keys.py).
 """
 
 from service.post_bridge.client import (
+    POSTBRIDGE_KEY,
     PostBridgeAPIError,
     PostBridgeClient,
     client_for_user,
@@ -46,6 +47,7 @@ from service.post_bridge.schema import (
 )
 
 __all__ = [
+    "POSTBRIDGE_KEY",
     "CreateUploadUrlRequest",
     "PostBridgeAPIError",
     "PostBridgeAnalytics",

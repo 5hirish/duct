@@ -518,6 +518,14 @@ msgstr ""
 msgid "{used} of {window} tokens"
 msgstr ""
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "{vendor} API key"
+msgstr ""
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "{vendor} isn't set up yet"
+msgstr ""
+
 #: src/components/content/SynthesisPanel.jsx
 msgid "{videoShare} of posts · <0>{videoEng}</0> eng."
 msgstr ""
@@ -1927,6 +1935,10 @@ msgstr ""
 msgid "Confirm"
 msgstr ""
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Connect"
+msgstr ""
+
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Connect {label}"
 msgstr ""
@@ -1959,6 +1971,14 @@ msgstr ""
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Connect one data source"
 msgstr ""
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "Connect your {vendor} account"
+msgstr ""
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Connect your PostBridge account"
+#~ msgstr ""
 
 #: src/app/(app)/connections/page.jsx
 #: src/app/(auth)/desktop-auth/page.js
@@ -2457,11 +2477,29 @@ msgstr ""
 
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/AccountsTab.jsx
+#: src/components/content/DiscoverPage.jsx
 msgid "Disconnect"
 msgstr ""
 
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Disconnect Apify"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Disconnect Apify?"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Disconnect PostBridge"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Disconnect PostBridge?"
 msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
@@ -2470,6 +2508,10 @@ msgstr ""
 
 #: src/app/(app)/content/page.jsx
 msgid "discover"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
 msgstr ""
 
 #: src/components/content/DiscoverPage.jsx
@@ -2609,6 +2651,14 @@ msgstr ""
 msgid "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
 msgstr ""
 
+#: src/components/content/AccountsTab.jsx
+msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
+msgstr ""
+
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Duct has a quick question"
 msgstr ""
@@ -2624,6 +2674,10 @@ msgstr ""
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
 #~ msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
+msgstr ""
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
@@ -4927,6 +4981,10 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Open {vendor}"
+msgstr ""
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Open <0>Settings → Models & providers → OpenAI</0> and choose <1>Continue with ChatGPT</1>."
 msgstr ""
@@ -4967,6 +5025,10 @@ msgstr ""
 #: src/components/content/AnalyticsView.jsx
 msgid "Open post"
 msgstr ""
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Open PostBridge"
+#~ msgstr ""
 
 #: src/components/commands/CommandPaletteTrigger.jsx
 msgid "Open the command palette"
@@ -5179,6 +5241,10 @@ msgstr ""
 msgid "Paste the link to one TikTok post."
 msgstr ""
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Paste your API key"
+msgstr ""
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr ""
@@ -5326,6 +5392,10 @@ msgstr ""
 #: src/components/content/PublishModal.jsx
 msgid "Post scheduled"
 msgstr ""
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "PostBridge API key"
+#~ msgstr ""
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"
@@ -5538,6 +5608,10 @@ msgstr ""
 #: src/components/workspace/ActivityRow.jsx
 msgid "Published the post"
 msgstr ""
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Publishing isn't set up yet"
+#~ msgstr ""
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Putting it together"
@@ -6975,6 +7049,10 @@ msgstr ""
 msgid "Stopped — pick up where it left off"
 msgstr ""
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Stored encrypted, and used only for projects you own."
+msgstr ""
+
 #: src/components/connections/ProviderCard.jsx
 msgid "stored for this provider"
 msgstr ""
@@ -7152,6 +7230,14 @@ msgstr ""
 
 #: src/app/(app)/connections/page.jsx
 msgid "That connection didn't finish — the link expires after a minute. Please try again."
+msgstr ""
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "That didn't connect. Check the key and try again."
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "That didn't disconnect. Try again."
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
@@ -7482,6 +7568,14 @@ msgstr ""
 msgid "This project"
 msgstr ""
 
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "This project posts through its owner's PostBridge account. Ask them to connect it here, and the accounts will show up for you too."
+#~ msgstr ""
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."
+msgstr ""
+
 #: src/app/(app)/activity/page.jsx
 msgid "this project's activity"
 msgstr ""
@@ -7738,6 +7832,10 @@ msgstr ""
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Use {projectName}'s business context"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Use a different PostBridge key"
 msgstr ""
 
 #: src/components/connections/ProjectBinding.jsx

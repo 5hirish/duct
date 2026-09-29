@@ -349,6 +349,38 @@ export async function listSocialAccounts(projectId, platform) {
 }
 
 /**
+ * The vendors each user brings their own key for: PostBridge (publishing) and
+ * Apify (Discover). A project spends its owner's key, so only the owner
+ * connects one. Status is { connected, own_key, is_owner }.
+ */
+export const VENDOR = Object.freeze({ POSTBRIDGE: "post-bridge", APIFY: "apify" });
+
+export async function getVendorKeyStatus(vendor, projectId) {
+  const url = new URL(`${BASE}/api/content/vendor-keys/${vendor}`);
+  url.searchParams.set("project_id", projectId);
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
+  return jsonOrThrow(res);
+}
+
+/** Save the caller's key for `vendor`. The server keeps it only once the vendor accepts it. */
+export async function connectVendorKey(vendor, apiKey) {
+  const res = await fetch(`${BASE}/api/content/vendor-keys/${vendor}`, {
+    method: "PUT",
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ api_key: apiKey }),
+  });
+  return jsonOrThrow(res);
+}
+
+export async function disconnectVendorKey(vendor) {
+  const res = await fetch(`${BASE}/api/content/vendor-keys/${vendor}`, {
+    method: "DELETE",
+    headers: backendAuthedHeaders(),
+  });
+  return jsonOrThrow(res);
+}
+
+/**
  * Per-post analytics for the project's linked accounts, pulled live from
  * PostBridge. Pass { refresh: true } to trigger a PostBridge sync first.
  */
@@ -501,19 +533,20 @@ export async function startDiscoverRun({ projectId, actorId, inputPayload }) {
   return jsonOrThrow(res);
 }
 
-export async function getDiscoverRunStatus(runId) {
-  const res = await fetch(
-    `${BASE}/api/content/discover/status/${encodeURIComponent(runId)}`,
-    { headers: backendAuthedHeaders() },
-  );
+// Status and results read the run on the project owner's Apify key, so both
+// name the project.
+export async function getDiscoverRunStatus(runId, projectId) {
+  const url = new URL(`${BASE}/api/content/discover/status/${encodeURIComponent(runId)}`);
+  url.searchParams.set("project_id", projectId);
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
   return jsonOrThrow(res);
 }
 
-export async function getDiscoverResults(datasetId, limit = 200) {
-  const res = await fetch(
-    `${BASE}/api/content/discover/results/${encodeURIComponent(datasetId)}?limit=${limit}`,
-    { headers: backendAuthedHeaders() },
-  );
+export async function getDiscoverResults(datasetId, projectId, limit = 200) {
+  const url = new URL(`${BASE}/api/content/discover/results/${encodeURIComponent(datasetId)}`);
+  url.searchParams.set("project_id", projectId);
+  url.searchParams.set("limit", String(limit));
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
   return jsonOrThrow(res);
 }
 
