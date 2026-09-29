@@ -8,8 +8,11 @@ its actor and canonical input for ``RUN_REUSE_TTL_SECONDS``, and an identical
 start inside that window gets the remembered run back: still running, the
 caller joins it; finished, its dataset is served as it is.
 
-Keyed on actor and input, not on project. The results are public TikTok posts,
-so a second project searching the same tags learns nothing about the first.
+Keyed on the Apify account, actor and input, not on project. Each user runs on
+their own key (service/vendor_keys.py), a run belongs to the account that
+started it, and one account's key cannot read another's run. Within an account
+the results are public TikTok posts, so a second project searching the same tags
+learns nothing about the first.
 
 In process and deliberately not durable. The API runs one replica with one
 worker (``railway.json``), so one dict serves every request; a restart forgets
@@ -76,13 +79,13 @@ class RunCache:
         self._ttl = ttl_seconds
         self._max = max_entries
         self._clock = clock
-        self._runs: dict[tuple[str, str], tuple[float, str]] = {}
+        self._runs: dict[tuple[str, str, str], tuple[float, str]] = {}
 
     async def start(
         self, client: ApifyClient, actor_id: str, payload: dict[str, Any]
     ) -> tuple[ApifyRun, bool]:
         """Return ``(run, reused)``: a live remembered run, or a newly started one."""
-        key = run_key(actor_id, payload)
+        key = (client.account, *run_key(actor_id, payload))
         remembered = self._runs.get(key)
         if remembered is not None:
             started_at, run_id = remembered
@@ -100,7 +103,7 @@ class RunCache:
         self._remember(key, run.id)
         return run, False
 
-    def _remember(self, key: tuple[str, str], run_id: str) -> None:
+    def _remember(self, key: tuple[str, str, str], run_id: str) -> None:
         now = self._clock()
         for stale in [k for k, (at, _) in self._runs.items() if now - at >= self._ttl]:
             del self._runs[stale]

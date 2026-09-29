@@ -237,15 +237,16 @@ class Configs(BaseSettings):
     # /api/user/artifacts endpoints (service/storage.py put_private).
     r2_artifacts_bucket:  str = ""
 
-    # PostBridge — server-wide API key (MVP). Used as fallback when no
-    # ConnectorCredential row exists for the calling user. Future: drop
-    # this once a per-user "connect PostBridge" UI lands.
+    # PostBridge — a fallback for local dev and the desktop sidecar only
+    # (service/vendor_keys.py). Each user saves their own key in Content →
+    # Accounts; a hosted instance never spends this one, because it is the
+    # operator's account and every signup would be publishing through it.
     postbridge_api_key: str = ""
 
-    # Apify API token — used by service/apify/ for TikTok content
-    # discovery (trending posts / hashtags / sounds). Server-side key for
-    # MVP, same shape as gemini_api_key. Future: per-user when billing
-    # demands it.
+    # Apify API token, for TikTok discovery (service/apify/). Like PostBridge's:
+    # users save their own in Content → Discover, and this one is spent only
+    # in local dev and the desktop sidecar (service/vendor_keys.py), never on
+    # a hosted instance, where it would pay for every signup's scraping.
     apify_api_key: str = ""
 
     # Which email provider delivers everything: "cloudflare", "resend" or

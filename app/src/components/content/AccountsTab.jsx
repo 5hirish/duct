@@ -5,12 +5,18 @@ import { Check, Plus } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
+  VENDOR,
+  connectVendorKey,
+  disconnectVendorKey,
+  getVendorKeyStatus,
   listLinkedAccounts,
   listSocialAccounts,
   saveLinkedAccounts,
 } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import VendorKeyForm from "./VendorKeyForm";
 import LoadError from "@/components/LoadError";
 
 const POSTBRIDGE_URL = "https://app.post-bridge.com";
@@ -27,7 +33,8 @@ function avatarUrl(platform, username) {
  *
  * Lists the PostBridge accounts available to the user and lets them select
  * which ones are linked to this project. The linked set is persisted (DB) and
- * pre-selected when scheduling / used for analytics.
+ * pre-selected when scheduling / used for analytics. Before any of that, the
+ * project's owner connects their own PostBridge account with its API key.
  */
 export default function AccountsTab({ projectId }) {
   const { t } = useLingui();
@@ -42,6 +49,9 @@ export default function AccountsTab({ projectId }) {
   // someone whose request simply failed that they have nothing connected.
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  // null until known; { connected, own_key, is_owner } after.
+  const [postBridge, setPostBridge] = useState(null);
+  const { confirm, dialog } = useConfirm();
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +60,13 @@ export default function AccountsTab({ projectId }) {
       setError("");
       setLoadError("");
       try {
+        const status = await getVendorKeyStatus(VENDOR.POSTBRIDGE, projectId);
+        if (cancelled) return;
+        setPostBridge(status);
+        if (!status?.connected) {
+          setAccounts([]);
+          return;
+        }
         const [available, linked] = await Promise.all([
           listSocialAccounts(projectId),
           listLinkedAccounts(projectId).catch(() => []),
@@ -108,6 +125,27 @@ export default function AccountsTab({ projectId }) {
     setLinked(next);
   }
 
+  async function connect(apiKey) {
+    await connectVendorKey(VENDOR.POSTBRIDGE, apiKey);
+    setReloadKey((k) => k + 1);
+  }
+
+  async function disconnect() {
+    const ok = await confirm({
+      title: t`Disconnect PostBridge?`,
+      description: t`Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge.`,
+      action: t`Disconnect`,
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await disconnectVendorKey(VENDOR.POSTBRIDGE);
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      setError(e.message || t`That didn't disconnect. Try again.`);
+    }
+  }
+
   const allIds = useMemo(() => accounts.map((a) => Number(a.id)), [accounts]);
   const allLinked = allIds.length > 0 && allIds.every((id) => linkedIds.has(id));
 
@@ -125,6 +163,25 @@ export default function AccountsTab({ projectId }) {
     );
   }
 
+  if (postBridge && !postBridge.connected) {
+    return (
+      <VendorKeyForm
+        vendor="PostBridge"
+        homeUrl={POSTBRIDGE_URL}
+        isOwner={postBridge.is_owner}
+        onConnect={connect}
+        description={
+          <Trans>
+            Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your
+            API key, and paste it here.
+          </Trans>
+        }
+      />
+    );
+  }
+
+  const canDisconnect = Boolean(postBridge?.own_key && postBridge?.is_owner);
+
   if (accounts.length === 0) {
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border/70 p-10 text-center">
@@ -141,6 +198,15 @@ export default function AccountsTab({ projectId }) {
         <Button className="mt-4" asChild>
           <a href={POSTBRIDGE_URL} target="_blank" rel="noreferrer"><Trans>Connect in PostBridge →</Trans></a>
         </Button>
+        {canDisconnect && (
+          <div className="mt-3">
+            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={disconnect}>
+              <Trans>Use a different PostBridge key</Trans>
+            </Button>
+          </div>
+        )}
+        {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+        {dialog}
       </div>
     );
   }
@@ -200,12 +266,20 @@ export default function AccountsTab({ projectId }) {
         })}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        <Trans>
-          Profile pictures are resolved from public handles. PostBridge doesn&apos;t expose
-          bios or follower counts, so those aren&apos;t shown.
-        </Trans>
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          <Trans>
+            Profile pictures are resolved from public handles. PostBridge doesn&apos;t expose
+            bios or follower counts, so those aren&apos;t shown.
+          </Trans>
+        </p>
+        {canDisconnect && (
+          <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={disconnect}>
+            <Trans>Disconnect PostBridge</Trans>
+          </Button>
+        )}
+      </div>
+      {dialog}
     </div>
   );
 }

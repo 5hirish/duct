@@ -45,9 +45,15 @@ from service.memory_consolidation import (
 
 
 @pytest.fixture
-def engine():
-    engine = make_sqlite_engine()
-    return engine
+def engine(request, tmp_path):
+    # ``"file"`` gives each thread its own connection, for a test that runs two
+    # consolidations at once. It costs ~3x per test, so it is opt-in.
+    if getattr(request, "param", None) == "file":
+        engine = make_sqlite_engine(path=tmp_path / "memory.db")
+        yield engine
+        engine.dispose()
+    else:
+        yield make_sqlite_engine()
 
 
 @pytest.fixture
@@ -528,6 +534,7 @@ def test_turning_memory_back_on_does_not_read_what_was_said_while_it_was_off(
     assert meta["memory_through_seq"] == 8
 
 
+@pytest.mark.parametrize("engine", ["file"], indirect=True)
 def test_a_closed_and_a_swept_trigger_pay_for_one_model_call(db, project, service_db, monkeypatch):
     """The watermark is read inside the lock, so the second of two concurrent
     triggers finds the turns already read instead of paying for them again."""

@@ -36,10 +36,9 @@ from uuid import UUID
 
 from sqlmodel import select
 
-from config import get_configs
 from models.content import ContentAsset
 from service import storage
-from service.apify import ApifyAPIError, ApifyClient, ApifyRunStatus, ScrapedPost, run_cache
+from service.apify import APIFY_KEY, ApifyAPIError, ApifyClient, ApifyRunStatus, ScrapedPost, run_cache
 from service.discovery import (
     REFERENCE_ASSET_TYPE,
     OpenDb,
@@ -297,8 +296,10 @@ def _reload(open_db: OpenDb, asset_id: UUID, *, reused: bool) -> CloneReference 
         return _snapshot(asset, reused=reused) if asset is not None else None
 
 
-def _apify_client() -> ApifyClient | None:
-    key = (get_configs().apify_api_key or "").strip()
+def _apify_client(open_db: OpenDb, project_id: UUID) -> ApifyClient | None:
+    """On the project owner's Apify key (service/vendor_keys.py), or None."""
+    with open_db() as db:
+        key = APIFY_KEY.for_project(project_id, db)
     return ApifyClient(key) if key else None
 
 
@@ -306,7 +307,7 @@ async def resolve_clone_reference(
     project_id: UUID,
     post: TikTokPost,
     *,
-    apify: Callable[[], ApifyClient | None] = _apify_client,
+    apify: Callable[[], ApifyClient | None] | None = None,
     open_db: OpenDb = _open_db,
 ) -> CloneReference:
     """The project's reference for *post*: reused if saved, else scraped and saved.
@@ -318,9 +319,9 @@ async def resolve_clone_reference(
     """
     reference = await asyncio.to_thread(_saved, open_db, project_id, post.post_id)
     if reference is None:
-        client = apify()
+        client = apify() if apify is not None else await asyncio.to_thread(_apify_client, open_db, project_id)
         if client is None:
-            raise ReferenceUnavailable("APIFY_API_KEY is not set on this instance")
+            raise ReferenceUnavailable(APIFY_KEY.not_connected)
         async with client as c:
             scraped, provenance = await scrape_post(c, post)
         reference = await asyncio.to_thread(_ingest, open_db, project_id, scraped, provenance)

@@ -25,7 +25,16 @@ import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { recaptureReferenceMedia, saveDiscoveredReference } from "../../lib/contentApi";
+import {
+  VENDOR,
+  connectVendorKey,
+  disconnectVendorKey,
+  getVendorKeyStatus,
+  recaptureReferenceMedia,
+  saveDiscoveredReference,
+} from "../../lib/contentApi";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import VendorKeyForm from "./VendorKeyForm";
 import { useScraperRun } from "../../hooks/useScraperRun";
 import { engagement } from "@/lib/discoverSynthesis";
 import SynthesisPanel from "./SynthesisPanel";
@@ -69,8 +78,35 @@ const RUNNING = new Set(["running", "polling", "fetching"]);
 // and a sweep on every tab switch (or twice under StrictMode) buys nothing.
 const backfilled = new Set();
 
+const APIFY_URL = "https://console.apify.com";
+
+function DiscoverHeader({ aside }) {
+  return (
+    <header className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <Sparkles className="h-4 w-4 text-primary" /> <Trans>Discover what&apos;s working</Trans>
+        </h2>
+        <p className="mt-0.5 max-w-prose text-xs text-muted-foreground">
+          <Trans>
+            Scrape real posts in your niche. What you save, the research agent cites when it
+            proposes topics.
+          </Trans>
+        </p>
+      </div>
+      {aside}
+    </header>
+  );
+}
+
 export default function DiscoverPage({ projectId }) {
   const { t, i18n } = useLingui();
+  // Searches run on the project owner's own Apify account. null until known,
+  // and left null when the check fails: the page then works as before and a
+  // search says why it could not run.
+  const [apify, setApify] = useState(null);
+  const [apifyCheck, setApifyCheck] = useState(0);
+  const { confirm, dialog } = useConfirm();
   const [actorId, setActorId]       = useState(ACTORS[0].id);
   const [tags, setTags]             = useState(["faceshape", "colorseason"]);
   const [tagDraft, setTagDraft]     = useState("");
@@ -90,6 +126,36 @@ export default function DiscoverPage({ projectId }) {
     backfilled.add(projectId);
     recaptureReferenceMedia(projectId);
   }, [projectId]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    let cancelled = false;
+    getVendorKeyStatus(VENDOR.APIFY, projectId)
+      .then((status) => { if (!cancelled) setApify(status); })
+      .catch(() => { if (!cancelled) setApify(null); });
+    return () => { cancelled = true; };
+  }, [projectId, apifyCheck]);
+
+  async function connectApify(apiKey) {
+    await connectVendorKey(VENDOR.APIFY, apiKey);
+    setApifyCheck((n) => n + 1);
+  }
+
+  async function disconnectApify() {
+    const ok = await confirm({
+      title: t`Disconnect Apify?`,
+      description: t`Duct forgets your Apify token and stops searching through your account. References you saved stay saved.`,
+      action: t`Disconnect`,
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await disconnectVendorKey(VENDOR.APIFY);
+      reset();
+    } finally {
+      setApifyCheck((n) => n + 1); // re-read either way: the status says what is true now
+    }
+  }
 
   const buildInput = useCallback(() => {
     if (actorId === HASHTAG_ACTOR) {
@@ -142,19 +208,36 @@ export default function DiscoverPage({ projectId }) {
     datasetId && `dataset=${datasetId.slice(0, 12)}`,
   ].filter(Boolean).join(" · ");
 
+  if (apify && !apify.connected) {
+    return (
+      <div className="space-y-5">
+        <DiscoverHeader />
+        <VendorKeyForm
+          vendor="Apify"
+          homeUrl={APIFY_URL}
+          isOwner={apify.is_owner}
+          onConnect={connectApify}
+          description={
+            <Trans>
+              Discover searches TikTok through Apify, on your own account, so the scraping is
+              billed to you. Log in to Apify, copy your API token, and paste it here.
+            </Trans>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
-      <header>
-        <h2 className="flex items-center gap-2 text-base font-semibold">
-          <Sparkles className="h-4 w-4 text-primary" /> <Trans>Discover what&apos;s working</Trans>
-        </h2>
-        <p className="mt-0.5 max-w-prose text-xs text-muted-foreground">
-          <Trans>
-            Scrape real posts in your niche. What you save, the research agent cites when it
-            proposes topics.
-          </Trans>
-        </p>
-      </header>
+      <DiscoverHeader
+        aside={apify?.own_key && apify?.is_owner && (
+          <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={disconnectApify}>
+            <Trans>Disconnect Apify</Trans>
+          </Button>
+        )}
+      />
+      {dialog}
 
       {/* Control panel */}
       <section className="rounded-xl border border-border/70 bg-card p-4">

@@ -4,10 +4,8 @@ Wraps every endpoint we use, returning Pydantic models from schema.py.
 Non-2xx responses raise PostBridgeAPIError carrying a parsed
 PostBridgeError so route handlers can translate to clean HTTPExceptions.
 
-Auth: API key is stored as a ConnectorCredential row with
-connector_type='post_bridge'. For MVP we resolve from the configured
-.env (`POSTBRIDGE_API_KEY`) as a fallback when no row exists — this
-keeps the developer flow simple before the user-key UI lands.
+Auth: each user's own PostBridge API key (``POSTBRIDGE_KEY`` below, and
+service/vendor_keys.py for why a hosted instance never spends its own).
 """
 
 from __future__ import annotations
@@ -17,12 +15,9 @@ from typing import Any
 from uuid import UUID
 
 import httpx
-from sqlalchemy import select
 from sqlmodel import Session
 
-from config import get_configs
-from models.connector import ConnectorCredential
-from service.credentials import decrypt_credentials
+from service.vendor_keys import VendorKey, VendorKeyRejected, VendorKeyUnchecked
 from service.post_bridge.schema import (
     CreateUploadUrlRequest,
     PostBridgeAnalytics,
@@ -334,40 +329,26 @@ class PostBridgeClient:
 # ---------------------------------------------------------------------------
 
 
-def _api_key_for_user(user_id: UUID | None, db: Session) -> tuple[str, str]:
-    """Resolve PostBridge api_key + base_url, preferring the user's stored
-    credential and falling back to .env (`POSTBRIDGE_API_KEY`).
+async def check_api_key(api_key: str) -> None:
+    """Listing one account is the cheapest read that proves a key works."""
+    try:
+        async with PostBridgeClient(api_key=api_key) as pb:
+            await pb.list_social_accounts(limit=1)
+    except PostBridgeAPIError as exc:
+        if exc.status_code in (401, 403):
+            raise VendorKeyRejected() from exc
+        raise VendorKeyUnchecked() from exc
 
-    MVP behaviour: most users won't have connected via UI yet, so the .env
-    fallback keeps the dev flow working end-to-end. Future: drop the
-    fallback once a settings UI exists.
-    """
-    if user_id is not None:
-        row = db.execute(
-            select(ConnectorCredential).where(
-                ConnectorCredential.user_id == user_id,
-                ConnectorCredential.connector_type == "post_bridge",
-            )
-        ).scalars().first()
-        if row is not None:
-            creds = decrypt_credentials(row.credentials_enc)
-            key = creds.get("api_key") or creds.get("token") or ""
-            base = creds.get("base_url") or _DEFAULT_BASE_URL
-            if key:
-                return key, base
 
-    cfg = get_configs()
-    env_key = getattr(cfg, "postbridge_api_key", "") or ""
-    if env_key:
-        return env_key, _DEFAULT_BASE_URL
-
-    raise ValueError(
-        "PostBridge isn't connected yet. Ask your admin to set "
-        "POSTBRIDGE_API_KEY, or connect it from Settings → Connectors."
-    )
+POSTBRIDGE_KEY = VendorKey(
+    connector_type="post_bridge",
+    setting="postbridge_api_key",
+    label="PostBridge",
+    where="Content → Accounts",
+    check=check_api_key,
+)
 
 
 def client_for_user(user_id: UUID, db: Session) -> PostBridgeClient:
-    """Build a PostBridgeClient using the user's credential (or .env fallback)."""
-    api_key, base_url = _api_key_for_user(user_id, db)
-    return PostBridgeClient(api_key=api_key, base_url=base_url)
+    """A client on the key ``user_id`` may spend (service/vendor_keys.py)."""
+    return PostBridgeClient(api_key=POSTBRIDGE_KEY.resolve(user_id, db))
