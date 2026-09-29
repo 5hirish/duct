@@ -8,7 +8,10 @@
       ]
     },
     "github": {
-      "url": "https://api.githubcopilot.com/mcp/"
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${env:GITHUB_MCP_TOKEN}"
+      }
     },
     "figma": {
       "url": "https://mcp.figma.com/mcp"
