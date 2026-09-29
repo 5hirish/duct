@@ -7935,13 +7935,13 @@ msgstr "Uso"
 msgid "Use {projectName}'s business context"
 msgstr "Usar el contexto de negocio de {projectName}"
 
-#: src/app/(app)/connections/page.jsx
-msgid "Use a token instead"
-msgstr "Usar un token en su lugar"
-
 #: src/components/content/AccountsTab.jsx
 msgid "Use a different PostBridge key"
 msgstr "Usar otra clave de PostBridge"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Use a token instead"
+msgstr "Usar un token en su lugar"
 
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"

@@ -5172,6 +5172,12 @@ msgstr "<0></0> Gerado a partir do código-fonte do Duct"
 
 #: integrations/index.html
 msgid ""
+"<0>GitHub</0><1>What shipped and when: merged pull requests, releases, closed issues.</1><2><3>GitHub App</3><4>Read-only</4></2>"
+msgstr ""
+"<0>GitHub</0><1>O que foi entregue e quando: pull requests mesclados, releases, issues fechadas.</1><2><3>GitHub App</3><4>Somente leitura</4></2>"
+
+#: integrations/index.html
+msgid ""
 "<0>HubSpot</0><1>CRM lifecycle stages, pipeline and closed revenue.</1><2><3>Coming soon</3></2>"
 msgstr ""
 "<0>HubSpot</0><1>Estágios do ciclo de vida do CRM, pipeline e receita fechada.</1><2><3>Em breve</3></2>"
@@ -5228,18 +5234,18 @@ msgstr "Integrações do Duct"
 #. meta og:title
 #. meta twitter:title
 #: integrations/index.html
-msgid "Duct integrations: twelve tools, read as one"
-msgstr "Integrações do Duct: doze ferramentas, lidas como uma"
+msgid "Duct integrations: thirteen tools, read as one"
+msgstr "Integrações do Duct: treze ferramentas, lidas como uma"
 
 #: integrations/index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
 msgstr ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe e RevenueCat. As quatro ferramentas do Google se conectam quando você entra com o Google; as demais exigem uma chave que você cola uma vez. HubSpot é o próximo."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe e RevenueCat. As quatro ferramentas do Google se conectam quando você entra com o Google; as demais exigem uma chave que você cola uma vez. HubSpot é o próximo."
 
 #: integrations/index.html
-msgid "Integrations: Google Ads, GA4, Stripe and 9 more | Duct"
-msgstr "Integrações: Google Ads, GA4, Stripe e mais 9 | Duct"
+msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
+msgstr "Integrações: Google Ads, GA4, Stripe e mais 10 | Duct"
 
 #: integrations/index.html
 msgid "Missing <0>yours?</0>"
@@ -5280,9 +5286,9 @@ msgstr "Receita"
 #. meta description
 #: integrations/index.html
 msgid ""
-"The 12 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+"The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
 msgstr ""
-"As 12 ferramentas que o Duct lê, do Google Ads e Meta ao GA4, Mixpanel e Stripe, o que cada uma pode alterar e como você a conecta. Somente leitura por padrão."
+"As 13 ferramentas que o Duct lê, do Google Ads e Meta ao GA4, Mixpanel e Stripe, o que cada uma pode alterar e como você a conecta. Somente leitura por padrão."
 
 #: integrations/index.html
 msgid ""
@@ -5292,13 +5298,14 @@ msgstr ""
 
 #. meta twitter:description
 #: integrations/index.html
-msgid "Twelve connectors, read-only by default. Every change waits for your Apply."
+msgid ""
+"Thirteen connectors, read-only by default. Every change waits for your Apply."
 msgstr ""
-"Doze conectores, somente leitura por padrão. Toda alteração aguarda sua aplicação."
+"Treze conectores, somente leitura por padrão. Toda alteração aguarda sua aplicação."
 
 #: integrations/index.html
-msgid "Twelve tools. <0>Read as one.</0>"
-msgstr "Doze ferramentas. <0>Lidas como uma só.</0>"
+msgid "Thirteen tools. <0>Read as one.</0>"
+msgstr "Treze ferramentas. <0>Lidas como uma só.</0>"
 
 #: integrations/index.html
 msgid "Where are my connector credentials stored?"
@@ -11609,6 +11616,33 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct integrations: twelve tools, read as one"
+#~ msgstr "Integrações do Duct: doze ferramentas, lidas como uma"
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+#~ msgstr ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe e RevenueCat. As quatro ferramentas do Google se conectam quando você entra com o Google; as demais exigem uma chave que você cola uma vez. HubSpot é o próximo."
+
+#~ msgid "Integrations: Google Ads, GA4, Stripe and 9 more | Duct"
+#~ msgstr "Integrações: Google Ads, GA4, Stripe e mais 9 | Duct"
+
+#. meta description
+#~ msgid ""
+#~ "The 12 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+#~ msgstr ""
+#~ "As 12 ferramentas que o Duct lê, do Google Ads e Meta ao GA4, Mixpanel e Stripe, o que cada uma pode alterar e como você a conecta. Somente leitura por padrão."
+
+#. meta twitter:description
+#~ msgid "Twelve connectors, read-only by default. Every change waits for your Apply."
+#~ msgstr ""
+#~ "Doze conectores, somente leitura por padrão. Toda alteração aguarda sua aplicação."
+
+#~ msgid "Twelve tools. <0>Read as one.</0>"
+#~ msgstr "Doze ferramentas. <0>Lidas como uma só.</0>"
 
 #~ msgid ""
 #~ "<0>Apple Search Ads</0><1>Spend, taps and installs, by campaign and search term.</1><2><3>API key pair</3><4>Read-only</4></2>"

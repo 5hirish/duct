@@ -5186,6 +5186,12 @@ msgstr "<0></0> Generiert aus Ducts Quellcode"
 
 #: integrations/index.html
 msgid ""
+"<0>GitHub</0><1>What shipped and when: merged pull requests, releases, closed issues.</1><2><3>GitHub App</3><4>Read-only</4></2>"
+msgstr ""
+"<0>GitHub</0><1>Was wann ausgeliefert wurde: gemergte Pull Requests, Releases, geschlossene Issues.</1><2><3>GitHub App</3><4>Nur Lesezugriff</4></2>"
+
+#: integrations/index.html
+msgid ""
 "<0>HubSpot</0><1>CRM lifecycle stages, pipeline and closed revenue.</1><2><3>Coming soon</3></2>"
 msgstr ""
 "<0>HubSpot</0><1>CRM-Lebenszyklusphasen, Pipeline und abgeschlossene Einnahmen.</1><2><3>Demnächst verfügbar</3></2>"
@@ -5242,18 +5248,18 @@ msgstr "Duct Integrationen"
 #. meta og:title
 #. meta twitter:title
 #: integrations/index.html
-msgid "Duct integrations: twelve tools, read as one"
-msgstr "Duct Integrationen: zwölf Tools, als eines gelesen"
+msgid "Duct integrations: thirteen tools, read as one"
+msgstr "Duct Integrationen: dreizehn Tools, als eines gelesen"
 
 #: integrations/index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
 msgstr ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe und RevenueCat. Die vier Google-Tools verbinden sich, wenn du dich mit Google anmeldest; der Rest benötigt einen Schlüssel, den du einmal einfügst. HubSpot ist als Nächstes dran."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe und RevenueCat. Die vier Google-Tools verbinden sich, wenn du dich mit Google anmeldest; der Rest benötigt einen Schlüssel, den du einmal einfügst. HubSpot ist als Nächstes dran."
 
 #: integrations/index.html
-msgid "Integrations: Google Ads, GA4, Stripe and 9 more | Duct"
-msgstr "Integrationen: Google Ads, GA4, Stripe und 9 weitere | Duct"
+msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
+msgstr "Integrationen: Google Ads, GA4, Stripe und 10 weitere | Duct"
 
 #: integrations/index.html
 msgid "Missing <0>yours?</0>"
@@ -5294,9 +5300,9 @@ msgstr "Umsatz"
 #. meta description
 #: integrations/index.html
 msgid ""
-"The 12 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+"The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
 msgstr ""
-"Die 12 Tools, die Duct liest, von Google Ads und Meta bis GA4, Mixpanel und Stripe, was jedes ändern kann und wie du es verbindest. Standardmäßig schreibgeschützt."
+"Die 13 Tools, die Duct liest, von Google Ads und Meta bis GA4, Mixpanel und Stripe, was jedes ändern kann und wie du es verbindest. Standardmäßig schreibgeschützt."
 
 #: integrations/index.html
 msgid ""
@@ -5306,13 +5312,14 @@ msgstr ""
 
 #. meta twitter:description
 #: integrations/index.html
-msgid "Twelve connectors, read-only by default. Every change waits for your Apply."
+msgid ""
+"Thirteen connectors, read-only by default. Every change waits for your Apply."
 msgstr ""
-"Zwölf Connectors, standardmäßig schreibgeschützt. Jede Änderung wartet auf dein Anwenden."
+"Dreizehn Connectors, standardmäßig schreibgeschützt. Jede Änderung wartet auf dein Anwenden."
 
 #: integrations/index.html
-msgid "Twelve tools. <0>Read as one.</0>"
-msgstr "Zwölf Tools. <0>Als eines lesen.</0>"
+msgid "Thirteen tools. <0>Read as one.</0>"
+msgstr "Dreizehn Tools. <0>Als eines lesen.</0>"
 
 #: integrations/index.html
 msgid "Where are my connector credentials stored?"
@@ -11629,6 +11636,33 @@ msgstr "← Zurück"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Neu beginnen"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct integrations: twelve tools, read as one"
+#~ msgstr "Duct Integrationen: zwölf Tools, als eines gelesen"
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+#~ msgstr ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe und RevenueCat. Die vier Google-Tools verbinden sich, wenn du dich mit Google anmeldest; der Rest benötigt einen Schlüssel, den du einmal einfügst. HubSpot ist als Nächstes dran."
+
+#~ msgid "Integrations: Google Ads, GA4, Stripe and 9 more | Duct"
+#~ msgstr "Integrationen: Google Ads, GA4, Stripe und 9 weitere | Duct"
+
+#. meta description
+#~ msgid ""
+#~ "The 12 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+#~ msgstr ""
+#~ "Die 12 Tools, die Duct liest, von Google Ads und Meta bis GA4, Mixpanel und Stripe, was jedes ändern kann und wie du es verbindest. Standardmäßig schreibgeschützt."
+
+#. meta twitter:description
+#~ msgid "Twelve connectors, read-only by default. Every change waits for your Apply."
+#~ msgstr ""
+#~ "Zwölf Connectors, standardmäßig schreibgeschützt. Jede Änderung wartet auf dein Anwenden."
+
+#~ msgid "Twelve tools. <0>Read as one.</0>"
+#~ msgstr "Zwölf Tools. <0>Als eines lesen.</0>"
 
 #~ msgid ""
 #~ "<0>Apple Search Ads</0><1>Spend, taps and installs, by campaign and search term.</1><2><3>API key pair</3><4>Read-only</4></2>"

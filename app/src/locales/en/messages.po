@@ -7936,13 +7936,13 @@ msgstr "Usage"
 msgid "Use {projectName}'s business context"
 msgstr "Use {projectName}'s business context"
 
-#: src/app/(app)/connections/page.jsx
-msgid "Use a token instead"
-msgstr "Use a token instead"
-
 #: src/components/content/AccountsTab.jsx
 msgid "Use a different PostBridge key"
 msgstr "Use a different PostBridge key"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Use a token instead"
+msgstr "Use a token instead"
 
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"
