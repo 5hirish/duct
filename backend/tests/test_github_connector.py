@@ -59,6 +59,17 @@ def test_fetchdata_reaches_github_and_its_notes():
     assert load_knowledge_pack(GITHUB_CONNECTOR_ID).strip()
 
 
+def test_the_catalog_literals_match_the_service():
+    """The catalog is spelled in literals for the integrations build; these are
+    the names they stand for."""
+    from agents.insights.catalog.github import ENTITY_CATALOG
+    from service.github import WorkEventKind
+
+    assert ENTITY_CATALOG["connector_id"] == GITHUB_CONNECTOR_ID
+    (entity,) = ENTITY_CATALOG["entities"]
+    assert entity["fields"]["kind"]["values"] == [kind.value for kind in WorkEventKind]
+
+
 def test_the_fetcher_adapter_keeps_the_exact_dates_and_the_picked_repository():
     from agents.insights.fetchers import _manual_dated
 

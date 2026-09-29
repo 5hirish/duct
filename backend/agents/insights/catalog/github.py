@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from service.github import GITHUB_CONNECTOR_ID, WorkEventKind
-
+# Literal on purpose, like every other catalog: scripts/build_integrations.py
+# reads this dict with ast.literal_eval to build the integrations pages, so a
+# name here (GITHUB_CONNECTOR_ID, WorkEventKind) breaks the site build.
+# tests/test_github_connector.py holds the literals to those names.
 ENTITY_CATALOG = {
-    "connector_id": GITHUB_CONNECTOR_ID,
+    "connector_id": "github",
     "schema_version": "1.0.0",
     "last_audited": "2026-09-28",
     "api_version": "github-rest-2022-11-28",
@@ -23,7 +25,7 @@ ENTITY_CATALOG = {
                 "only (all of them in a window of two days or less); the summary says how many."
             ),
             "fields": {
-                "kind": {"type": "dimension", "values": [kind.value for kind in WorkEventKind]},
+                "kind": {"type": "dimension", "values": ["commit", "pull_request", "issue", "release", "docs_change"]},
                 "at": {"type": "dimension"},
                 "ref": {"type": "dimension"},
                 "title": {"type": "dimension"},
