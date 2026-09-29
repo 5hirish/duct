@@ -56,7 +56,7 @@ msgid ""
 msgstr ""
 "Um plano em um quadro, um post por cartão, slides e imagens gerados para cada um, um clique para publicar em nove redes. Os resultados voltam para o cartão, para que o próximo plano aprenda com o anterior."
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/index.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "About"
 msgstr "Sobre"
 
@@ -170,7 +170,7 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr "FONS. A nascente, antes que algo tenha corrido. A porta de entrada do app."
 
-#: about.html compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/index.html integrations/stripe.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: about.html compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Home"
 msgstr "Início"
 
@@ -252,7 +252,7 @@ msgstr ""
 msgid "Principles, not <0>platitudes</0>"
 msgstr "Princípios, não <0>clichês</0>"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/index.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Privacy Policy"
 msgstr "Política de privacidade"
 
@@ -305,7 +305,7 @@ msgstr "Marcar com estrela no GitHub →"
 msgid "Substance over ceremony"
 msgstr "Substância acima da cerimônia"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/index.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Terms of Service"
 msgstr "Termos de serviço"
 
@@ -692,7 +692,7 @@ msgstr ""
 msgid "Before you <0>choose</0>"
 msgstr "Antes de você <0>escolher</0>"
 
-#: compare.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
+#: compare.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
 msgid "Better together"
 msgstr "Melhor juntos"
 
@@ -766,7 +766,7 @@ msgstr "Critério"
 msgid "Docs, email and the web"
 msgstr "Documentos, e-mail e a web"
 
-#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Download Duct ↓"
 msgstr "Baixar Duct ↓"
 
@@ -816,7 +816,7 @@ msgstr ""
 msgid "Explain why a number moved"
 msgstr "Explique por que um número mudou"
 
-#: compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/index.html integrations/stripe.html seo-audit.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
+#: compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html seo-audit.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
 msgid "FAQ"
 msgstr "FAQ"
 
@@ -977,7 +977,7 @@ msgstr "Veja onde o Duct ganha"
 msgid "Self-host, no licence fee"
 msgstr "Auto-hospede, sem taxa de licença"
 
-#: compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/index.html integrations/stripe.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
 msgstr "Pular para o conteúdo"
 
@@ -2698,7 +2698,7 @@ msgstr "<0></0> Grátis no plano do ChatGPT que você já paga"
 msgid "<0>Applied</0> Brand search"
 msgstr "<0>Aplicado</0> pesquisa de marca"
 
-#: index.html integrations/ga4.html integrations/google-ads.html
+#: index.html integrations/ga4.html integrations/google-ads.html integrations/google-tag-manager.html integrations/mixpanel.html
 msgid "<0>Apply</0><1><2/>Applied</1><3/>"
 msgstr "<0>Aplicar</0><1><2/>Aplicado</1><3/>"
 
@@ -2867,7 +2867,7 @@ msgid ""
 msgstr ""
 "Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe e RevenueCat, com HubSpot em seguida. As quatro ferramentas do Google se conectam com OAuth; o restante precisa de uma chave que você cola uma vez. Nada é exportado manualmente."
 
-#: index.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
+#: index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
 msgid "Is it free?"
 msgstr "É gratuito?"
 
@@ -2974,7 +2974,7 @@ msgstr "Reproduzir o vídeo"
 msgid "Previous screen"
 msgstr "Tela anterior"
 
-#: index.html integrations/ga4.html integrations/google-ads.html
+#: index.html integrations/ga4.html integrations/google-ads.html integrations/google-tag-manager.html integrations/mixpanel.html
 msgid "Reject"
 msgstr "Rejeitar"
 
@@ -3095,6 +3095,350 @@ msgstr "agente"
 msgid "you"
 msgstr "você"
 
+#: integrations/apple-search-ads.html
+msgid "<0/><1/><2>Apple Search Ads + RevenueCat</2>"
+msgstr "<0/><1/><2>Apple Search Ads + RevenueCat</2>"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "<0/>What it can change"
+msgstr "<0/>O que ele pode alterar"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "<0/>What it reads"
+msgstr "<0/>O que ele lê"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Installs in, subscribers out.</4><5>Apple Search Ads + RevenueCat <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Instalações entram, assinantes saem.</4><5>Apple Search Ads + RevenueCat <6/></5>"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"<0><1/><2></2><3/></0><4>One search budget, split between Google and Apple.</4><5>Apple Search Ads + Google Ads <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Um orçamento de pesquisa, dividido entre Google e Apple.</4><5>Apple Search Ads + Google Ads <6/></5>"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Which campaigns bring customers who pay?</4><5>Apple Search Ads + Stripe <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Quais campanhas trazem clientes que pagam?</4><5>Apple Search Ads + Stripe <6/></5>"
+
+#: integrations/apple-search-ads.html
+msgid "<0>impressions</0><1>taps</1><2>installs</2><3>spend</3>"
+msgstr "<0>impressões</0><1>toques</1><2>instalações</2><3>gasto</3>"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"<0>impressions</0><1>taps</1><2>tap-through installs</2><3>total installs</3><4>spend</4><5>average cost per tap</5>"
+msgstr ""
+"<0>impressões</0><1>toques</1><2>instalações por toque</2><3>total de instalações</3><4>gasto</4><5>custo médio por toque</5>"
+
+#: integrations/apple-search-ads.html
+msgid "<0>name</0><1>status</1>"
+msgstr "<0>nome</0><1>status</1>"
+
+#. img alt
+#: integrations/apple-search-ads.html
+msgid ""
+"A Duct session: asked whether a bid raise paid off, Duct reads Solo's Apple Search Ads campaigns day by day beside RevenueCat and finds installs doubled while trials did not move"
+msgstr ""
+"Uma sessão do Duct: perguntou se um aumento de lance valeu a pena, Duct lê as campanhas de Apple Search Ads da Solo dia a dia junto com RevenueCat e descobre que as instalações dobraram enquanto os testes não se moveram"
+
+#: integrations/apple-search-ads.html
+msgid "API key pair"
+msgstr "Par de chaves da API"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Access"
+msgstr "Acesso"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "All integrations"
+msgstr "Todas as integrações"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "An example answer. Yours is read from your own accounts."
+msgstr "Uma resposta de exemplo. A sua é lida das suas próprias contas."
+
+#. meta og:title
+#. meta twitter:title
+#: integrations/apple-search-ads.html
+msgid "Apple Search Ads AI analyst: installs to subscribers"
+msgstr "Analista de IA de Apple Search Ads: instalações para assinantes"
+
+#: integrations/apple-search-ads.html
+msgid "Apple Search Ads AI analyst: installs to subscribers | Duct"
+msgstr "Analista de IA de Apple Search Ads: instalações para assinantes | Duct"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Apple Search Ads Campaign Management API v5 · checked against the fetch code Sep 29, 2026 · <0>read the source</0>"
+msgstr ""
+"Apple Search Ads Campaign Management API v5 · verificado com o código de busca em 29 de setembro de 2026 · <0>leia o código-fonte</0>"
+
+#: integrations/apple-search-ads.html
+msgid "Apple Search Ads, <0>answered</0>"
+msgstr "Apple Search Ads, <0>respondido</0>"
+
+#: integrations/apple-search-ads.html
+msgid "Apple Search Ads, <0>past the install.</0>"
+msgstr "Apple Search Ads, <0>além da instalação.</0>"
+
+#: integrations/apple-search-ads.html
+msgid "Apple counts installs, never money."
+msgstr "Apple conta instalações, nunca dinheiro."
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Apple reports installs and stops there. Duct reads your campaigns beside RevenueCat and Stripe, and says which ones bring subscribers, not just downloads."
+msgstr ""
+"Apple relata instalações e para por aí. Duct lê suas campanhas junto com RevenueCat e Stripe, e diz quais trazem assinantes, não apenas downloads."
+
+#. meta og:description
+#: integrations/apple-search-ads.html
+msgid ""
+"Apple reports installs, never subscribers. Duct reads Apple Search Ads beside RevenueCat and says which campaigns bring people who pay."
+msgstr ""
+"Apple relata instalações, nunca assinantes. Duct lê Apple Search Ads junto com RevenueCat e diz quais campanhas trazem pessoas que pagam."
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Apple returns every amount as a string with its currency. Duct parses each one before adding anything up."
+msgstr ""
+"Apple retorna cada valor como uma string com sua moeda. Duct analisa cada um antes de somar qualquer coisa."
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Apple's campaign reports mix every app in the org. Duct filters them to your campaigns first, so another app's spend can't reach your totals."
+msgstr ""
+"Os relatórios de campanha da Apple misturam todos os apps da organização. Duct os filtra para suas campanhas primeiro, para que o gasto de outro app não chegue aos seus totais."
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Ask"
+msgstr "Perguntar"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Ask whether the bid raise paid. Apple reports installs, so Duct checks them against RevenueCat trials, scoped to your app's campaigns."
+msgstr ""
+"Pergunte se o aumento de lance valeu a pena. Apple relata instalações, então Duct os verifica em relação aos testes do RevenueCat, delimitado às campanhas do seu app."
+
+#. ul aria-label
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "At a glance"
+msgstr "Visão geral"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Because Apple stops at the install. Whether those installs started a trial or paid is in your billing, so Duct reads it beside Apple before calling a campaign good or bad."
+msgstr ""
+"Porque a Apple para na instalação. Se essas instalações iniciaram um teste ou pagaram está na sua fatura, então Duct o lê junto com a Apple antes de chamar uma campanha de boa ou ruim."
+
+#. nav aria-label
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Breadcrumb"
+msgstr "Navegação"
+
+#: integrations/apple-search-ads.html
+msgid "Campaign report, this period and the last"
+msgstr "Relatório de campanha, deste período e do último"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html
+msgid "Campaigns"
+msgstr "Campanhas"
+
+#: integrations/apple-search-ads.html
+msgid "Can Duct change bids or budgets in Apple Search Ads?"
+msgstr "Duct pode alterar lances ou orçamentos em Apple Search Ads?"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/google-tag-manager.html integrations/meta-ads.html integrations/revenuecat.html integrations/stripe.html
+msgid "Checked Sep 29, 2026"
+msgstr "Verificado em 29 de Set de 2026"
+
+#: integrations/apple-search-ads.html
+msgid "Connect Apple Search Ads <0>in three steps</0>"
+msgstr "Conecte Apple Search Ads <0>em três passos</0>"
+
+#: integrations/apple-search-ads.html
+msgid "Daily campaign report"
+msgstr "Relatório diário de campanha"
+
+#: integrations/apple-search-ads.html
+msgid "Did the bid raise buy subscribers, or only installs?"
+msgstr "O aumento de lance comprou assinantes, ou apenas instalações?"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Discovery's installs doubled after the bid raise. Active trials in RevenueCat didn't move."
+msgstr ""
+"As instalações do Discovery dobraram após o aumento de lance. Testes ativos no RevenueCat não se moveram."
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Duct has no Apple Search Ads change operation, so it cannot edit anything in Apple Search Ads. It can still recommend a change for you to make there."
+msgstr ""
+"Duct não tem operação de alteração para Apple Search Ads, então não pode editar nada em Apple Search Ads. Ele ainda pode recomendar uma alteração para você fazer lá."
+
+#. meta description
+#: integrations/apple-search-ads.html
+msgid ""
+"Duct reads Apple Search Ads campaign reports, scoped to your app's campaigns, and checks the installs against RevenueCat and Stripe. Read-only, key pair."
+msgstr ""
+"Duct lê relatórios de campanha de Apple Search Ads, delimitado às campanhas do seu app, e verifica as instalações em relação a RevenueCat e Stripe. Somente leitura, par de chaves."
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Generate an EC P-256 key pair, and upload the public key in Apple Search Ads under Account Settings, then API."
+msgstr ""
+"Gere um par de chaves EC P-256, e carregue a chave pública em Apple Search Ads em Ajustes da Conta, depois API."
+
+#: integrations/apple-search-ads.html
+msgid "How many installs came from a tap, and how many from a view?"
+msgstr "Quantas instalações vieram de um toque, e quantas de uma visualização?"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
+msgstr ""
+"No Duct, abra Conexões, escolha Apple Search Ads e cole os três IDs e a chave privada."
+
+#. meta twitter:description
+#: integrations/apple-search-ads.html
+msgid "Installs are Apple's number. Subscribers are yours. Duct reads both."
+msgstr "Instalações são o número da Apple. Assinantes são os seus. Duct lê ambos."
+
+#: integrations/apple-search-ads.html
+msgid "Installs were renamed."
+msgstr "Instalações foram renomeadas."
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
+msgid "Integrations"
+msgstr "Integrações"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid ""
+"Keys and tokens are stored encrypted by Duct's hosted API, never in your browser, and you can remove a connection at any time. A self-host build keeps them on your own machine."
+msgstr ""
+"Chaves e tokens são armazenados criptografados pela API hospedada do Duct, nunca no seu navegador, e você pode remover uma conexão a qualquer momento. Uma versão auto-hospedada os mantém na sua própria máquina."
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Knowledge"
+msgstr "Conhecimento"
+
+#: integrations/apple-search-ads.html
+msgid "Money arrives as text."
+msgstr "Dinheiro chega como texto."
+
+#: integrations/apple-search-ads.html
+msgid ""
+"No. Duct conditions every report on the campaigns it lists for you, so another app's spend never reaches those totals."
+msgstr ""
+"Não. Duct condiciona cada relatório às campanhas que lista para você, para que o gasto de outro app nunca chegue a esses totais."
+
+#: integrations/apple-search-ads.html
+msgid ""
+"No. Duct has no Apple Search Ads change operation. It reads campaigns and their reports and can recommend a change for you to make in Apple's console."
+msgstr ""
+"Não. Duct não tem operação de alteração para Apple Search Ads. Ele lê campanhas e seus relatórios e pode recomendar uma alteração para você fazer no console da Apple."
+
+#: integrations/apple-search-ads.html
+msgid "Note the client ID, team ID and key ID Apple shows for it."
+msgstr ""
+"Anote o ID do cliente, ID da equipe e ID da chave que a Apple mostra para ele."
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/google-search-console.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/revenuecat.html integrations/stripe.html
+msgid "Nothing."
+msgstr "Nada."
+
+#: integrations/apple-search-ads.html
+msgid "Our Apple Ads org runs more than one app. Will the numbers mix?"
+msgstr ""
+"Nossa organização de Apple Ads executa mais de um app. Os números vão se misturar?"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Questions you can <0>just ask</0>"
+msgstr "Perguntas que você pode <0>simplesmente fazer</0>"
+
+#: integrations/apple-search-ads.html
+msgid "Read the Apple Search Ads notes Duct's agent works from <0/>"
+msgstr "Leia as notas de Apple Search Ads que o agente do Duct usa <0/>"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/google-search-console.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/revenuecat.html integrations/stripe.html
+msgid "Read-only"
+msgstr "Somente leitura"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Read-only: Duct has no Apple Search Ads change operation, and give the API user a read-only role so the key could not change a campaign either."
+msgstr ""
+"Somente leitura: Duct não tem operação de alteração para Apple Search Ads, e dê ao usuário da API uma função somente leitura para que a chave também não possa alterar uma campanha."
+
+#: integrations/apple-search-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
+msgid "Reads three datasets"
+msgstr "Lê três conjuntos de dados"
+
+#: integrations/apple-search-ads.html
+msgid "Reports cover the whole organisation."
+msgstr "Relatórios cobrem toda a organização."
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Setup"
+msgstr "Configuração"
+
+#: integrations/apple-search-ads.html
+msgid ""
+"There is no revenue or subscriber metric in Apple Search Ads. Duct judges a campaign against RevenueCat or Stripe, not against its installs."
+msgstr ""
+"Não há métrica de receita ou assinante no Apple Search Ads. Duct julga uma campanha em relação ao RevenueCat ou Stripe, não em relação às suas instalações."
+
+#: integrations/apple-search-ads.html
+msgid ""
+"Version 5 of the API split installs into tap-through and total, which includes view-through. The old field reads as zero, so Duct reads both new ones."
+msgstr ""
+"A versão 5 da API dividiu as instalações em por toque e total, que inclui por visualização. O campo antigo lê como zero, então Duct lê ambos os novos."
+
+#: integrations/apple-search-ads.html
+msgid "What Apple Search Ads answers <0>with a partner</0>"
+msgstr "O que o Apple Search Ads responde <0>com um parceiro</0>"
+
+#: integrations/apple-search-ads.html
+msgid "What Duct already knows <0>about Apple Search Ads</0>"
+msgstr "O que Duct já sabe <0>sobre Apple Search Ads</0>"
+
+#: integrations/apple-search-ads.html
+msgid "What does an install cost this month against last?"
+msgstr "Quanto custa uma instalação este mês em comparação com o mês passado?"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "What it reads. <0>What it can change.</0>"
+msgstr "O que ele lê. <0>O que ele pode mudar.</0>"
+
+#: integrations/apple-search-ads.html
+msgid "Which campaigns should get next month's budget?"
+msgstr "Quais campanhas devem receber o orçamento do próximo mês?"
+
+#: integrations/apple-search-ads.html
+msgid "Why does Duct need RevenueCat or Stripe for Apple?"
+msgstr "Por que Duct precisa de RevenueCat ou Stripe para Apple?"
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid ""
+"Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. <0>What will cost money</0>."
+msgstr ""
+"Sim. Duct é gratuito com suas próprias chaves de modelo ou o plano ChatGPT que você já tem, e o núcleo tem licença MIT. Um plano pago posteriormente agrupará os modelos; nada que é aberto hoje passará a ser pago. <0>O que vai custar dinheiro</0>."
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid ""
+"Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."
+msgstr ""
+"Sim. Duct é gratuito com suas próprias chaves de modelo ou o plano ChatGPT que você já tem, e o núcleo tem licença MIT. Um plano pago posteriormente agrupará os modelos; nada que é aberto hoje passará a ser pago. O que vai custar dinheiro."
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+msgid "duct <0></0>"
+msgstr "duct <0></0>"
+
 #: integrations/chatgpt-ads.html
 msgid ""
 "312 clicks from ChatGPT this month. Nine became paying customers in Stripe: $204 each."
@@ -3116,14 +3460,6 @@ msgstr "<0/><1/><2>ChatGPT Ads + GA4</2>"
 #: integrations/chatgpt-ads.html
 msgid "<0/><1/><2>ChatGPT Ads + Stripe</2>"
 msgstr "<0/><1/><2>ChatGPT Ads + Stripe</2>"
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "<0/>What it can change"
-msgstr "<0/>O que ele pode alterar"
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "<0/>What it reads"
-msgstr "<0/>O que ele lê"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -3155,9 +3491,12 @@ msgstr "<0>impressões</0><1>cliques</1><2>gasto</2><3>CTR</3><4>CPC</4><5>CPM</
 msgid "<0>name</0><1>currency</1>"
 msgstr "<0>nome</0><1>moeda</1>"
 
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "Access"
-msgstr "Acesso"
+#. img alt
+#: integrations/chatgpt-ads.html
+msgid ""
+"A Duct session: asked what ChatGPT Ads is buying, Duct reads its spend and clicks, follows them through GA4 to Stripe, and writes a brief costing the channel per paying customer"
+msgstr ""
+"Uma sessão Duct: perguntado o que o ChatGPT Ads está comprando, Duct lê seus gastos e cliques, os segue através do GA4 até o Stripe, e escreve um resumo custeando o canal por cliente pagante"
 
 #: integrations/chatgpt-ads.html
 msgid "Ad account"
@@ -3166,10 +3505,6 @@ msgstr "Conta de anúncios"
 #: integrations/chatgpt-ads.html
 msgid "Ads API key"
 msgstr "Chave da API de anúncios"
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "All integrations"
-msgstr "Todas as integrações"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -3183,35 +3518,19 @@ msgid ""
 msgstr ""
 "Uma chave da API de anúncios acessa exatamente uma conta de anúncios. Duct lê qual delas primeiro, então uma chave da conta errada informa isso em vez de parecer vazia."
 
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "An example answer. Yours is read from your own accounts."
-msgstr "Uma resposta de exemplo. A sua é lida das suas próprias contas."
-
 #: integrations/chatgpt-ads.html
 msgid "Are ChatGPT Ads and OpenAI Ads the same thing?"
 msgstr "ChatGPT Ads e OpenAI Ads são a mesma coisa?"
 
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "Ask"
-msgstr "Perguntar"
-
-#. ul aria-label
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "At a glance"
-msgstr "Visão geral"
-
-#. nav aria-label
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "Breadcrumb"
-msgstr "Navegação"
+#: integrations/chatgpt-ads.html
+msgid ""
+"Ask what ChatGPT Ads is buying. Its own report ends at the click, so Duct follows the clicks through GA4 to Stripe and costs the channel per paying customer."
+msgstr ""
+"Pergunte o que o ChatGPT Ads está comprando. Seu próprio relatório termina no clique, então Duct segue os cliques através do GA4 até o Stripe e custeia o canal por cliente pagante."
 
 #: integrations/chatgpt-ads.html integrations/google-ads.html
 msgid "Campaign performance"
 msgstr "Desempenho da campanha"
-
-#: integrations/chatgpt-ads.html
-msgid "Campaigns"
-msgstr "Campanhas"
 
 #: integrations/chatgpt-ads.html
 msgid "Can Duct see ChatGPT Ads conversions?"
@@ -3241,10 +3560,6 @@ msgstr "ChatGPT Ads, medido em relação à receita real"
 #: integrations/chatgpt-ads.html
 msgid "ChatGPT Ads, measured against real revenue | Duct"
 msgstr "ChatGPT Ads, medido em relação à receita real | Duct"
-
-#: integrations/chatgpt-ads.html integrations/stripe.html
-msgid "Checked Sep 29, 2026"
-msgstr "Verificado em 29 de Set de 2026"
 
 #. meta description
 #: integrations/chatgpt-ads.html
@@ -3307,25 +3622,11 @@ msgid ""
 msgstr ""
 "Insights reportam gastos como um decimal (18.42); o pixel reporta centavos (1499). Misturá-los é um erro de 100×, então o Duct converte antes de comparar."
 
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/index.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-simple.html
-msgid "Integrations"
-msgstr "Integrações"
-
 #: integrations/chatgpt-ads.html
 msgid ""
 "Its metrics are impressions, clicks, spend, CTR, CPC and CPM. Pixel conversions show only in Ads Manager, so Duct never calls the channel good on CPC alone. It checks Stripe."
 msgstr ""
 "Suas métricas são impressões, cliques, gastos, CTR, CPC e CPM. As conversões do pixel aparecem apenas no Ads Manager, então o Duct nunca considera o canal bom apenas pelo CPC. Ele verifica o Stripe."
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/index.html integrations/stripe.html
-msgid ""
-"Keys and tokens are stored encrypted by Duct's hosted API, never in your browser, and you can remove a connection at any time. A self-host build keeps them on your own machine."
-msgstr ""
-"Chaves e tokens são armazenados criptografados pela API hospedada do Duct, nunca no seu navegador, e você pode remover uma conexão a qualquer momento. Uma versão auto-hospedada os mantém na sua própria máquina."
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "Knowledge"
-msgstr "Conhecimento"
 
 #: integrations/chatgpt-ads.html
 msgid "Listed as OpenAI Ads in the Duct app."
@@ -3343,10 +3644,6 @@ msgid ""
 msgstr ""
 "Não. O conector é somente leitura. O Duct pode recomendar mover o orçamento entre campanhas ou canais; você faz a alteração no Ads Manager."
 
-#: integrations/chatgpt-ads.html integrations/stripe.html
-msgid "Nothing."
-msgstr "Nada."
-
 #: integrations/chatgpt-ads.html
 msgid "One key, one ad account."
 msgstr "Uma chave, uma conta de anúncio."
@@ -3361,25 +3658,13 @@ msgid ""
 msgstr ""
 "OpenAI Ads API v1 · verificado em relação ao código de busca em 29 de Set de 2026 · <0>leia o código-fonte</0>"
 
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "Questions you can <0>just ask</0>"
-msgstr "Perguntas que você pode <0>simplesmente fazer</0>"
-
 #: integrations/chatgpt-ads.html
 msgid "Read the ChatGPT Ads notes Duct's agent works from <0/>"
 msgstr "Leia as notas do ChatGPT Ads com as quais o agente do Duct trabalha <0/>"
 
-#: integrations/chatgpt-ads.html integrations/stripe.html
-msgid "Read-only"
-msgstr "Somente leitura"
-
-#: integrations/chatgpt-ads.html
+#: integrations/chatgpt-ads.html integrations/meta-ads.html
 msgid "Reads four datasets"
 msgstr "Lê quatro conjuntos de dados"
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "Setup"
-msgstr "Configuração"
 
 #: integrations/chatgpt-ads.html
 msgid "The Ads API cannot see conversions."
@@ -3415,35 +3700,15 @@ msgid "What did this month's ChatGPT Ads spend buy, in money Stripe settled?"
 msgstr ""
 "O que os gastos do ChatGPT Ads deste mês compraram, em dinheiro liquidado pelo Stripe?"
 
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid "What it reads. <0>What it can change.</0>"
-msgstr "O que ele lê. <0>O que ele pode mudar.</0>"
-
 #: integrations/chatgpt-ads.html
 msgid "Which ChatGPT campaign has earned next week's budget?"
 msgstr "Qual campanha do ChatGPT ganhou o orçamento da próxima semana?"
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid ""
-"Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. <0>What will cost money</0>."
-msgstr ""
-"Sim. Duct é gratuito com suas próprias chaves de modelo ou o plano ChatGPT que você já tem, e o núcleo tem licença MIT. Um plano pago posteriormente agrupará os modelos; nada que é aberto hoje passará a ser pago. <0>O que vai custar dinheiro</0>."
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html
-msgid ""
-"Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."
-msgstr ""
-"Sim. Duct é gratuito com suas próprias chaves de modelo ou o plano ChatGPT que você já tem, e o núcleo tem licença MIT. Um plano pago posteriormente agrupará os modelos; nada que é aberto hoje passará a ser pago. O que vai custar dinheiro."
 
 #: integrations/chatgpt-ads.html
 msgid ""
 "Yes. OpenAI sells the ads that run in ChatGPT through its Ads Manager and Ads API. The Duct app lists the connector as OpenAI Ads."
 msgstr ""
 "Sim. OpenAI vende os anúncios que rodam no ChatGPT através do seu Ads Manager e Ads API. O app Duct lista o conector como OpenAI Ads."
-
-#: integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
-msgid "duct <0></0>"
-msgstr "duct <0></0>"
 
 #: integrations/chatgpt-ads.html
 msgid "name"
@@ -3497,13 +3762,20 @@ msgid ""
 msgstr ""
 "<0>origem / mídia</0><1>grupo de canais</1><2>conversões</2><3>receita</3><4>sessões</4>"
 
+#. img alt
+#: integrations/ga4.html
+msgid ""
+"A Duct session: asked why activation dropped after an Android release, Duct reads GA4, Clarity and Stripe, finds the permission dead end and proposes two GA4 key events"
+msgstr ""
+"Uma sessão Duct: perguntado por que a ativação caiu após um lançamento Android, Duct lê GA4, Clarity e Stripe, encontra o beco sem saída da permissão e propõe dois eventos-chave do GA4"
+
 #: integrations/ga4.html
 msgid ""
 "A GA4 audience only collects members from the day it is created. Duct says so when it proposes one."
 msgstr ""
 "Uma audiência do GA4 coleta membros apenas a partir do dia em que é criada. Duct avisa quando propõe uma."
 
-#: integrations/ga4.html
+#: integrations/ga4.html integrations/google-tag-manager.html
 msgid "Always waits for you"
 msgstr "Sempre espera por você"
 
@@ -3521,6 +3793,12 @@ msgid ""
 "Ask GA4 why signups dropped and get an answer that reads Search Console, your ads and Stripe too, with the fix one click away."
 msgstr ""
 "Pergunte ao GA4 por que os cadastros caíram e obtenha uma resposta que também lê Search Console, seus anúncios e Stripe, com a correção a um clique de distância."
+
+#: integrations/ga4.html
+msgid ""
+"Ask why activation dropped. Duct splits GA4 either side of the release, finds the dead end, and proposes the two key events that will prove the fix."
+msgstr ""
+"Pergunte por que a ativação caiu. Duct divide o GA4 antes e depois do lançamento, encontra o beco sem saída e propõe os dois eventos-chave que provarão a correção."
 
 #: integrations/ga4.html
 msgid ""
@@ -3573,13 +3851,13 @@ msgstr ""
 msgid "Event names are exact."
 msgstr "Nomes de eventos são exatos."
 
-#: integrations/ga4.html integrations/google-ads.html
+#: integrations/ga4.html integrations/google-ads.html integrations/google-tag-manager.html integrations/mixpanel.html
 msgid ""
 "Every one rolls back. By default each change waits for your Apply: it arrives as a preview of what it touches and lands in the activity log. <0>How approval works</0>"
 msgstr ""
 "Cada um pode ser revertido. Por padrão, cada alteração espera sua aplicação: ela chega como uma prévia do que afeta e aparece no registro de atividades. <0>Como funciona a aprovação</0>"
 
-#: integrations/ga4.html
+#: integrations/ga4.html integrations/google-search-console.html
 msgid "Fields audited Sep 24, 2026"
 msgstr "Campos auditados 24 de set de 2026"
 
@@ -3634,7 +3912,7 @@ msgstr "No Duct, abra Conexões e escolha Google Analytics."
 msgid "Link Google Ads account to GA4"
 msgstr "Vincular conta do Google Ads ao GA4"
 
-#: integrations/ga4.html integrations/google-ads.html
+#: integrations/ga4.html integrations/google-ads.html integrations/google-tag-manager.html integrations/mixpanel.html
 msgid "May self-apply in assisted mode"
 msgstr "Pode se aplicar automaticamente no modo assistido"
 
@@ -3684,7 +3962,7 @@ msgstr "Registrar evento-chave do GA4"
 msgid "Remove GA4 key event"
 msgstr "Remover evento-chave do GA4"
 
-#: integrations/ga4.html integrations/google-ads.html
+#: integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html
 msgid "Sign in with Google"
 msgstr "Entrar com o Google"
 
@@ -3802,6 +4080,13 @@ msgid ""
 msgstr ""
 "<0>termo de pesquisa</0><1>campanha</1><2>tipo de correspondência</2><3>gasto</3><4>cliques</4><5>conversões</5><6>custo por conversão</6><7>ROAS</7><8>CTR</8>"
 
+#. img alt
+#: integrations/google-ads.html
+msgid ""
+"A Duct session: asked where the ads budget is leaking, Duct reads Google Ads campaigns and search terms beside GA4 and Stripe, proposes a pause, two negatives and a budget raise, and writes the spend brief"
+msgstr ""
+"Uma sessão Duct: perguntado onde o orçamento de anúncios está vazando, Duct lê campanhas e termos de pesquisa do Google Ads ao lado de GA4 e Stripe, propõe uma pausa, dois negativos e um aumento de orçamento, e escreve o resumo de gastos"
+
 #: integrations/google-ads.html
 msgid "Ad group performance"
 msgstr "Desempenho do grupo de anúncios"
@@ -3813,6 +4098,12 @@ msgstr "Adicionar palavras-chave"
 #: integrations/google-ads.html
 msgid "Add negative keywords"
 msgstr "Adicionar palavras-chave negativas"
+
+#: integrations/google-ads.html
+msgid ""
+"Ask where the budget leaks. Duct costs every campaign against your CPA target and proposes the pause, the negatives and the budget shift. The one over the guardrail waits for you."
+msgstr ""
+"Pergunte onde o orçamento vaza. Duct custeia cada campanha em relação ao seu alvo de CPA e propõe a pausa, os negativos e a mudança de orçamento. O que está acima do limite espera por você."
 
 #: integrations/google-ads.html
 msgid "Can Duct change my Google Ads without asking?"
@@ -4047,6 +4338,768 @@ msgstr ""
 msgid "Your approval is for the number you saw."
 msgstr "Sua aprovação é para o número que você viu."
 
+#: integrations/google-search-console.html
+msgid "<0/><1/><2>Search Console + GA4</2>"
+msgstr "<0/><1/><2>Search Console + GA4</2>"
+
+#: integrations/google-search-console.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Are you paying for clicks you already rank for?</4><5>Search Console + Google Ads <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Você está pagando por cliques para os quais já ranqueia?</4><5>Search Console + Google Ads <6/></5>"
+
+#: integrations/google-search-console.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Pages that rank, then lose people on arrival.</4><5>Search Console + Clarity <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Páginas que ranqueiam, mas perdem pessoas na chegada.</4><5>Search Console + Clarity <6/></5>"
+
+#: integrations/google-search-console.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Which searches bring visitors who stay?</4><5>Search Console + GA4 <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Quais pesquisas trazem visitantes que ficam?</4><5>Search Console + GA4 <6/></5>"
+
+#: integrations/google-search-console.html
+msgid "<0>page</0><1>clicks</1><2>impressions</2><3>CTR</3><4>avg. position</4>"
+msgstr "<0>página</0><1>cliques</1><2>impressões</2><3>CTR</3><4>pos. média</4>"
+
+#: integrations/google-search-console.html
+msgid "<0>query</0><1>clicks</1><2>impressions</2><3>CTR</3><4>avg. position</4>"
+msgstr "<0>consulta</0><1>cliques</1><2>impressões</2><3>CTR</3><4>pos. média</4>"
+
+#: integrations/google-search-console.html
+msgid ""
+"<0>query</0><1>page</1><2>clicks</2><3>impressions</3><4>CTR</4><5>avg. position</5>"
+msgstr ""
+"<0>consulta</0><1>página</1><2>cliques</2><3>impressões</3><4>CTR</4><5>pos. média</5>"
+
+#. img alt
+#: integrations/google-search-console.html
+msgid ""
+"A Duct session: asked why organic trials are flat while impressions rise, Duct reads Search Console queries and query by page beside GA4 and finds two pages splitting the same queries"
+msgstr ""
+"Uma sessão Duct: perguntado por que os testes orgânicos estão estáveis enquanto as impressões aumentam, Duct lê consultas do Search Console e consulta por página ao lado do GA4 e encontra duas páginas dividindo as mesmas consultas"
+
+#: integrations/google-search-console.html
+msgid ""
+"Ask why impressions rose and trials didn't. Duct reads query by page, finds two of your pages splitting one query, and joins it to trials in GA4."
+msgstr ""
+"Pergunte por que as impressões aumentaram e os testes não. Duct lê consulta por página, encontra duas das suas páginas dividindo uma consulta e a une aos testes no GA4."
+
+#: integrations/google-search-console.html
+msgid "Can Duct change anything in Search Console?"
+msgstr "Duct pode mudar algo no Search Console?"
+
+#: integrations/google-search-console.html
+msgid "Connect Search Console <0>in three steps</0>"
+msgstr "Conecte o Search Console <0>em três passos</0>"
+
+#: integrations/google-search-console.html
+msgid ""
+"Duct has no Search Console change operation, so it cannot edit anything in Search Console. It can still recommend a change for you to make there."
+msgstr ""
+"Duct não tem operação de alteração no Search Console, então não pode editar nada no Search Console. Ainda pode recomendar uma alteração para você fazer lá."
+
+#. meta description
+#: integrations/google-search-console.html
+msgid ""
+"Duct reads Search Console query by page, up to 50,000 rows, and joins it to GA4, so it can say which searches bring trials and which only bring impressions."
+msgstr ""
+"Duct lê consulta por página do Search Console, até 50.000 linhas, e a une ao GA4, para que possa dizer quais pesquisas trazem testes e quais apenas trazem impressões."
+
+#: integrations/google-search-console.html
+msgid ""
+"Duct reads the queries and pages in Search Console, and which query lands on which page, then joins it to GA4. So it can say what organic search is worth, not just how much of it there is."
+msgstr ""
+"Duct lê as consultas e páginas no Search Console, e qual consulta chega em qual página, então a une ao GA4. Assim, pode dizer o valor da pesquisa orgânica, não apenas o quanto dela existe."
+
+#: integrations/google-search-console.html
+msgid ""
+"Final data zeroes the newest days, which reads like a cliff. Duct asks for all data, so the week ends where it really ends."
+msgstr ""
+"Dados finais zeram os dias mais recentes, o que parece uma queda brusca. Duct pede todos os dados, para que a semana termine onde realmente termina."
+
+#: integrations/google-search-console.html
+msgid "GSC page performance"
+msgstr "Desempenho da página GSC"
+
+#: integrations/google-search-console.html
+msgid "GSC query performance"
+msgstr "Desempenho da consulta GSC"
+
+#: integrations/google-search-console.html
+msgid "GSC query × page"
+msgstr "GSC consulta × página"
+
+#: integrations/google-search-console.html
+msgid ""
+"Google hides rare queries, so the page table shows several times the clicks of the query table. Duct uses pages for how much, and queries for which terms."
+msgstr ""
+"O Google esconde consultas raras, então a tabela de páginas mostra várias vezes os cliques da tabela de consultas. Duct usa páginas para o quanto, e consultas para quais termos."
+
+#: integrations/google-search-console.html
+msgid "How much of my property does it read?"
+msgstr "Quanto da minha propriedade ele lê?"
+
+#: integrations/google-search-console.html
+msgid "Impressions are up. Why are trials flat?"
+msgstr "As impressões aumentaram. Por que os testes estão estáveis?"
+
+#: integrations/google-search-console.html
+msgid ""
+"Impressions up 23%, on invoicing queries at position 11. The tax pages still earn 61% of trials."
+msgstr ""
+"Impressões aumentaram 23%, em consultas de faturamento na posição 11. As páginas de impostos ainda geram 61% dos testes."
+
+#. meta og:description
+#: integrations/google-search-console.html
+msgid ""
+"Impressions up, trials flat? Duct reads Search Console query by page beside GA4 and finds the queries you rank for and don't convert."
+msgstr ""
+"Impressões aumentaram, testes estáveis? Duct lê consulta por página do Search Console ao lado do GA4 e encontra as consultas para as quais você ranqueia e não converte."
+
+#: integrations/google-search-console.html
+msgid "In Duct, open Connections and choose Google Search Console."
+msgstr "No Duct, abra Conexões e escolha Google Search Console."
+
+#: integrations/google-search-console.html
+msgid "Is organic growth real, or bots?"
+msgstr "O crescimento orgânico é real, ou bots?"
+
+#: integrations/google-search-console.html
+msgid "Most clicks come without a query."
+msgstr "A maioria dos cliques vem sem uma consulta."
+
+#: integrations/google-search-console.html
+msgid ""
+"No. It asks for read access only and has no Search Console change operation. It reads queries, pages and positions and can tell you what to change on your site."
+msgstr ""
+"Não. Ele pede acesso de leitura apenas e não tem operação de alteração no Search Console. Ele lê consultas, páginas e posições e pode dizer o que mudar no seu site."
+
+#: integrations/google-search-console.html
+msgid "Pick the property this project reads."
+msgstr "Escolha a propriedade que este projeto lê."
+
+#: integrations/google-search-console.html
+msgid "Query by page is the only view of cannibalisation."
+msgstr "Consulta por página é a única visão de canibalização."
+
+#: integrations/google-search-console.html
+msgid "Read the Search Console notes Duct's agent works from <0/>"
+msgstr "Leia as notas do Search Console que o agente do Duct usa <0/>"
+
+#: integrations/google-search-console.html
+msgid ""
+"Read-only: Duct asks Google for Search Console read access and has no Search Console change operation."
+msgstr ""
+"Somente leitura: o Duct pede ao Google acesso de leitura ao Search Console e não tem operação de alteração no Search Console."
+
+#. meta og:title
+#. meta twitter:title
+#: integrations/google-search-console.html
+msgid "Search Console AI analyst: queries that convert"
+msgstr "Analista de IA do Search Console: consultas que convertem"
+
+#: integrations/google-search-console.html
+msgid "Search Console AI analyst: queries that convert | Duct"
+msgstr "Analista de IA do Search Console: consultas que convertem | Duct"
+
+#: integrations/google-search-console.html
+msgid ""
+"Search Console API (searchconsole-v1) · fields audited Sep 24, 2026 · <0>read the source</0>"
+msgstr ""
+"API do Search Console (searchconsole-v1) · campos auditados em 24 de setembro de 2026 · <0>leia a fonte</0>"
+
+#: integrations/google-search-console.html
+msgid ""
+"Search Console counts clicks from Google; GA4 counts sessions from every search engine. A GA4 figure one to three and a half times the Search Console one is normal. Far outside that, Duct suspects bots or a tagging break before reporting either number."
+msgstr ""
+"O Search Console conta cliques do Google; o GA4 conta sessões de todos os mecanismos de busca. Um valor do GA4 de uma a três vezes e meia o do Search Console é normal. Muito fora disso, o Duct suspeita de bots ou de uma falha de tag antes de relatar qualquer número."
+
+#: integrations/google-search-console.html
+msgid ""
+"Search Console sorts by clicks and returns 25,000 rows at a time. Read short, and the zero-click impressions, the list of what to write next, disappear. Duct reads two pages, up to 50,000 rows."
+msgstr ""
+"O Search Console classifica por cliques e retorna 25.000 linhas por vez. Se lido de forma curta, as impressões de zero clique, a lista do que escrever em seguida, desaparecem. O Duct lê duas páginas, até 50.000 linhas."
+
+#: integrations/google-search-console.html
+msgid "Search Console, <0>answered</0>"
+msgstr "Search Console, <0>respondido</0>"
+
+#: integrations/google-search-console.html
+msgid "Search Console, <0>down to the query that converts.</0>"
+msgstr "Search Console, <0>até a consulta que converte.</0>"
+
+#. meta twitter:description
+#: integrations/google-search-console.html
+msgid "Search Console, read to the long tail and joined to GA4."
+msgstr "Search Console, lido até a cauda longa e unido ao GA4."
+
+#: integrations/google-search-console.html
+msgid "Sign in with Google and allow read access."
+msgstr "Entrar com o Google e permitir acesso de leitura."
+
+#: integrations/google-search-console.html
+msgid "The last three days aren't final."
+msgstr "Os últimos três dias não são finais."
+
+#: integrations/google-search-console.html
+msgid "The long tail is where the work is."
+msgstr "A cauda longa é onde está o trabalho."
+
+#: integrations/google-search-console.html
+msgid ""
+"Two of your pages splitting one query shows up nowhere else. Duct reads query and page together."
+msgstr ""
+"Duas das suas páginas dividindo uma consulta não aparece em nenhum outro lugar. O Duct lê consulta e página juntas."
+
+#: integrations/google-search-console.html
+msgid ""
+"Up to 50,000 rows a window, two of Search Console's pages. Past that the rows are too small to change an answer."
+msgstr ""
+"Até 50.000 linhas por janela, duas das páginas do Search Console. Além disso, as linhas são muito pequenas para mudar uma resposta."
+
+#: integrations/google-search-console.html
+msgid "What Duct already knows <0>about Search Console</0>"
+msgstr "O que o Duct já sabe <0>sobre o Search Console</0>"
+
+#: integrations/google-search-console.html
+msgid "What Search Console answers <0>with a partner</0>"
+msgstr "O que o Search Console responde <0>com um parceiro</0>"
+
+#: integrations/google-search-console.html
+msgid "Which of my pages compete for the same query?"
+msgstr "Quais das minhas páginas competem pela mesma consulta?"
+
+#: integrations/google-search-console.html
+msgid "Which pages just off page one are worth pushing?"
+msgstr "Quais páginas, logo após a primeira página, valem a pena impulsionar?"
+
+#: integrations/google-search-console.html
+msgid "Why does Duct's organic number differ from GA4's?"
+msgstr "Por que o número orgânico do Duct difere do do GA4?"
+
+#: integrations/google-tag-manager.html
+msgid "<0/><1/><2/><3>Tag Manager + GA4 + Mixpanel</3>"
+msgstr "<0/><1/><2/><3>Tag Manager + GA4 + Mixpanel</3>"
+
+#: integrations/google-tag-manager.html
+msgid "<0/><1/><2>Tag Manager + GA4</2>"
+msgstr "<0/><1/><2>Tag Manager + GA4</2>"
+
+#: integrations/google-tag-manager.html
+msgid "<0/><1/><2>Tag Manager + Mixpanel</2>"
+msgstr "<0/><1/><2>Tag Manager + Mixpanel</2>"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Did the new tag break the page?</4><5>Tag Manager + Clarity <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>A nova tag quebrou a página?</4><5>Tag Manager + Clarity <6/></5>"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Web and app, one event name.</4><5>Tag Manager + Mixpanel <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Web e app, um nome de evento.</4><5>Tag Manager + Mixpanel <6/></5>"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Which tag broke the key event?</4><5>Tag Manager + GA4 <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Qual tag quebrou o evento chave?</4><5>Tag Manager + GA4 <6/></5>"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"<0>Publish container version 15</0><1>Replaces version 14 for every visitor. Rollback ready.</1>"
+msgstr ""
+"<0>Publicar versão 15 do contêiner</0><1>Substitui a versão 14 para cada visitante. Reversão pronta.</1>"
+
+#: integrations/google-tag-manager.html
+msgid "<0>account</0><1>container</1><2>public ID</2>"
+msgstr "<0>conta</0><1>contêiner</1><2>ID público</2>"
+
+#: integrations/google-tag-manager.html
+msgid "<0>name</0><1>type</1><2>parameters</2>"
+msgstr "<0>nome</0><1>tipo</1><2>parâmetros</2>"
+
+#. img alt
+#: integrations/google-tag-manager.html
+msgid ""
+"A Duct session: asked why GA4 stopped counting an event on the web, Duct finds the tag a container version renamed, and proposes a workspace fix and a publish that waits for approval"
+msgstr ""
+"Uma execução do Duct: perguntado por que o GA4 parou de contar um evento na web, o Duct encontra a tag que uma versão do contêiner renomeou e propõe uma correção no workspace e uma publicação que aguarda aprovação"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"A tag can fire on every page and send nothing useful. Duct checks what arrived in GA4 or Mixpanel, not the fire status."
+msgstr ""
+"Uma tag pode disparar em todas as páginas e não enviar nada útil. O Duct verifica o que chegou no GA4 ou Mixpanel, não o status de disparo."
+
+#. meta og:description
+#: integrations/google-tag-manager.html
+msgid ""
+"A tag can fire on every page and still send the wrong event. Duct finds it, stages the fix in Tag Manager, and waits for you before it publishes."
+msgstr ""
+"Uma tag pode disparar em todas as páginas e ainda enviar o evento errado. O Duct a encontra, prepara a correção no Tag Manager e espera por você antes de publicar."
+
+#: integrations/google-tag-manager.html
+msgid "A tag that fires can still be broken."
+msgstr "Uma tag que dispara ainda pode estar quebrada."
+
+#: integrations/google-tag-manager.html
+msgid "Accounts and containers"
+msgstr "Contas e contêineres"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Ask why an event stopped counting. Duct finds the tag version 14 changed, stages the fix in a workspace, and holds the publish for you with version 14 as the rollback."
+msgstr ""
+"Pergunte por que um evento parou de ser contado. O Duct encontra a tag que a versão 14 alterou, prepara a correção em um workspace e mantém a publicação para você com a versão 14 como reversão."
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Before a publish Duct records the version that is live, so a rollback republishes exactly what was there."
+msgstr ""
+"Antes de uma publicação, o Duct registra a versão que está ativa, para que uma reversão republique exatamente o que estava lá."
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Before it publishes, Duct records the version that is live. Rolling back republishes that version, and the activity log shows both."
+msgstr ""
+"Antes de publicar, o Duct registra a versão ativa. Reverter republica essa versão, e o registro de atividades mostra ambos."
+
+#: integrations/google-tag-manager.html
+msgid "Can you fix the tag and let me approve the publish?"
+msgstr "Você pode corrigir a tag e me deixar aprovar a publicação?"
+
+#: integrations/google-tag-manager.html
+msgid "Connect Tag Manager <0>in three steps</0>"
+msgstr "Conecte o Tag Manager <0>em três passos</0>"
+
+#: integrations/google-tag-manager.html
+msgid "Create/update GTM tag (workspace)"
+msgstr "Criar/atualizar tag GTM (espaço de trabalho)"
+
+#: integrations/google-tag-manager.html
+msgid "Create/update GTM variable (workspace)"
+msgstr "Criar/atualizar variável GTM (espaço de trabalho)"
+
+#: integrations/google-tag-manager.html
+msgid "Do web and app still send the same event names?"
+msgstr "Web e app ainda enviam os mesmos nomes de evento?"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Duct asks for edit and publish access when you sign in, because both are needed to fix a tag. Edits stay in a workspace, and a publish always waits for your Apply."
+msgstr ""
+"O Duct solicita acesso de edição e publicação quando você entra, porque ambos são necessários para corrigir uma tag. Edições ficam em um espaço de trabalho, e uma publicação sempre espera pela sua Aplicação."
+
+#. meta description
+#: integrations/google-tag-manager.html
+msgid ""
+"Duct finds broken tracking by reading GA4 beside Mixpanel, stages the Tag Manager fix in a workspace, and publishes only when you approve, rollback ready."
+msgstr ""
+"O Duct encontra rastreamento quebrado lendo GA4 ao lado do Mixpanel, prepara a correção do Tag Manager em um espaço de trabalho e publica apenas quando você aprova, pronto para reverter."
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Duct notices when a count goes to zero, finds the tag behind it, and stages the fix in a workspace. A publish replaces your live container, so that step always waits for you, with the version to roll back to named."
+msgstr ""
+"O Duct percebe quando uma contagem vai a zero, encontra a tag por trás disso e prepara a correção em um espaço de trabalho. Uma publicação substitui seu contêiner ativo, então esse passo sempre espera por você, com a versão para reverter nomeada."
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Edits in a workspace change nothing on your site. Duct stages its changes there, and the publish, which replaces the live container for every visitor, always waits for you."
+msgstr ""
+"Edições em um espaço de trabalho não mudam nada no seu site. O Duct prepara suas alterações lá, e a publicação, que substitui o contêiner ativo para cada visitante, sempre espera por você."
+
+#: integrations/google-tag-manager.html
+msgid "Four kinds of change"
+msgstr "Quatro tipos de alteração"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Four: create/update GTM tag (workspace), create/update GTM variable (workspace), publish GTM container version and republish an older GTM version. By default each one waits for your Apply, and every one can be rolled back."
+msgstr ""
+"Quatro: criar/atualizar tag GTM (espaço de trabalho), criar/atualizar variável GTM (espaço de trabalho), publicar versão do contêiner GTM e republicar uma versão GTM mais antiga. Por padrão, cada um espera pela sua Aplicação, e cada um pode ser revertido."
+
+#: integrations/google-tag-manager.html
+msgid "How does rollback work?"
+msgstr "Como funciona a reversão?"
+
+#: integrations/google-tag-manager.html
+msgid "In Duct, open Connections and choose Google Tag Manager."
+msgstr "No Duct, abra Conexões e escolha Google Tag Manager."
+
+#: integrations/google-tag-manager.html
+msgid "Is the tag firing, or firing the wrong thing?"
+msgstr "A tag está disparando, ou disparando a coisa errada?"
+
+#: integrations/google-tag-manager.html
+msgid "Live container version"
+msgstr "Versão do contêiner ativa"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"No. A publish replaces the live container for every visitor, so it always waits for you, whatever the project's autonomy. Workspace edits can apply on their own in assisted mode, and they change nothing live until a publish."
+msgstr ""
+"Não. Uma publicação substitui o contêiner ativo para cada visitante, então ela sempre espera por você, qualquer que seja a autonomia do projeto. Edições do espaço de trabalho podem ser aplicadas por conta própria no modo assistido, e elas não mudam nada ao vivo até uma publicação."
+
+#: integrations/google-tag-manager.html
+msgid "Nothing is live until it's published."
+msgstr "Nada está ativo até ser publicado."
+
+#: integrations/google-tag-manager.html
+msgid "Pick the container this project uses."
+msgstr "Escolha o contêiner que este projeto usa."
+
+#: integrations/google-tag-manager.html
+msgid "Publish GTM container version"
+msgstr "Publicar versão do contêiner GTM"
+
+#: integrations/google-tag-manager.html
+msgid "Read the Tag Manager notes Duct's agent works from <0/>"
+msgstr "Leia as notas do Tag Manager das quais o agente do Duct trabalha <0/>"
+
+#: integrations/google-tag-manager.html
+msgid "Renames don't follow references."
+msgstr "Renomeações não seguem referências."
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Renaming a variable through the API leaves every tag pointing at the old name. Duct patches the tags in the same change, or doesn't rename."
+msgstr ""
+"Renomear uma variável pela API deixa cada tag apontando para o nome antigo. O Duct corrige as tags na mesma alteração, ou não renomeia."
+
+#: integrations/google-tag-manager.html
+msgid "Republish an older GTM version"
+msgstr "Republicar uma versão GTM mais antiga"
+
+#: integrations/google-tag-manager.html
+msgid "Sign in with Google and allow access to edit and publish containers."
+msgstr "Entrar com o Google e permitir acesso para editar e publicar contêineres."
+
+#. meta og:title
+#. meta twitter:title
+#: integrations/google-tag-manager.html
+msgid "Tag Manager AI agent: tracking fixes with rollback"
+msgstr "Agente de IA do Tag Manager: correções de rastreamento com reversão"
+
+#: integrations/google-tag-manager.html
+msgid "Tag Manager AI agent: tracking fixes with rollback | Duct"
+msgstr "Agente de IA do Tag Manager: correções de rastreamento com reversão | Duct"
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Tag Manager API v2 · checked against the fetch code Sep 29, 2026 · <0>read the source</0>"
+msgstr ""
+"Tag Manager API v2 · verificado contra o código de busca 29 de setembro de 2026 · <0>leia o código-fonte</0>"
+
+#: integrations/google-tag-manager.html
+msgid "Tag Manager, <0>answered</0>"
+msgstr "Tag Manager, <0>respondido</0>"
+
+#: integrations/google-tag-manager.html
+msgid "Tag Manager, <0>with the rollback named first.</0>"
+msgstr "Tag Manager, <0>com a reversão nomeada primeiro.</0>"
+
+#: integrations/google-tag-manager.html
+msgid "The rollback target is read first."
+msgstr "O alvo da reversão é lido primeiro."
+
+#. meta twitter:description
+#: integrations/google-tag-manager.html
+msgid ""
+"Tracking broke on Tuesday. Duct finds the tag, stages the fix, and waits for your publish."
+msgstr ""
+"O rastreamento quebrou na terça-feira. O Duct encontra a tag, prepara a correção e espera pela sua publicação."
+
+#: integrations/google-tag-manager.html
+msgid ""
+"Version 14 renamed the event the Connect bank tag sends. GA4 has counted zero since 9 Sep."
+msgstr ""
+"A versão 14 renomeou o evento que a tag Connect bank envia. O GA4 tem contado zero desde 9 de setembro."
+
+#: integrations/google-tag-manager.html
+msgid "What Duct already knows <0>about Tag Manager</0>"
+msgstr "O que o Duct já sabe <0>sobre o Tag Manager</0>"
+
+#: integrations/google-tag-manager.html
+msgid "What Tag Manager answers <0>with a partner</0>"
+msgstr "O que o Tag Manager responde <0>com um parceiro</0>"
+
+#: integrations/google-tag-manager.html
+msgid "What can Duct change in Tag Manager?"
+msgstr "O que o Duct pode mudar no Tag Manager?"
+
+#: integrations/google-tag-manager.html
+msgid "Why did an event stop counting in GA4 overnight?"
+msgstr "Por que um evento parou de contar no GA4 da noite para o dia?"
+
+#: integrations/google-tag-manager.html
+msgid "Will Duct publish to my live site on its own?"
+msgstr "O Duct publicará no meu site ativo por conta própria?"
+
+#: integrations/google-tag-manager.html
+msgid "Workspace tags and variables"
+msgstr "Tags e variáveis do espaço de trabalho"
+
+#: integrations/google-tag-manager.html
+msgid "version ID"
+msgstr "ID da versão"
+
+#. meta twitter:description
+#: integrations/growthbook.html
+msgid "94% chance to win, on 62 users. Duct checks before you call the test."
+msgstr ""
+"94% de chance de vitória, em 62 usuários. Duct verifica antes de você encerrar o teste."
+
+#: integrations/growthbook.html
+msgid "<0/><1/><2>GrowthBook + Mixpanel</2>"
+msgstr "<0/><1/><2>GrowthBook + Mixpanel</2>"
+
+#: integrations/growthbook.html
+msgid "<0/><1/><2>GrowthBook + Stripe</2>"
+msgstr "<0/><1/><2>GrowthBook + Stripe</2>"
+
+#: integrations/growthbook.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Did the variant change what people do on the site?</4><5>GrowthBook + GA4 <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>A variante mudou o que as pessoas fazem no site?</4><5>GrowthBook + GA4 <6/></5>"
+
+#: integrations/growthbook.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Did the winner change revenue?</4><5>GrowthBook + Stripe <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>O vencedor mudou a receita?</4><5>GrowthBook + Stripe <6/></5>"
+
+#: integrations/growthbook.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Is the metric the event you think it is?</4><5>GrowthBook + Mixpanel <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>A métrica é o evento que você pensa que é?</4><5>GrowthBook + Mixpanel <6/></5>"
+
+#: integrations/growthbook.html
+msgid ""
+"<0>experiments</0><1>results</1><2>status</2><3>stale running</3><4>running</4><5>feature count</5>"
+msgstr ""
+"<0>experimentos</0><1>resultados</1><2>status</2><3>execução inativa</3><4>em execução</4><5>contagem de recursos</5>"
+
+#. img alt
+#: integrations/growthbook.html
+msgid ""
+"A Duct session: asked whether a pricing test is ready to call, Duct reads GrowthBook and Stripe and finds the test stopped bucketing with its control arm under the minimum sample"
+msgstr ""
+"Uma sessão do Duct: perguntado se um teste de precificação está pronto para ser encerrado, Duct lê GrowthBook e Stripe e descobre que o teste parou de segmentar com seu braço de controle abaixo da amostra mínima"
+
+#: integrations/growthbook.html
+msgid ""
+"A chance to win on an arm under the configured minimum is noise with a percentage sign. Duct says so instead of quoting it."
+msgstr ""
+"Uma chance de vitória em um braço abaixo do mínimo configurado é ruído com um sinal de porcentagem. Duct diz isso em vez de citá-lo."
+
+#. meta og:description
+#: integrations/growthbook.html
+msgid ""
+"A test can say running for weeks after it stopped bucketing anyone. Duct checks before you call it, and reads the outcome in Stripe."
+msgstr ""
+"Um teste pode aparecer como 'em execução' por semanas depois de parar de segmentar qualquer pessoa. Duct verifica antes de você encerrá-lo e lê o resultado no Stripe."
+
+#: integrations/growthbook.html
+msgid ""
+"A test can say running for weeks after it stopped bucketing anyone. Duct reads your experiments and results, checks exposures are still arriving and the sample is big enough, and reads the outcome in Stripe."
+msgstr ""
+"Um teste pode aparecer como 'em execução' por semanas depois de parar de segmentar qualquer pessoa. Duct lê seus experimentos e resultados, verifica se as exposições ainda estão chegando e se a amostra é grande o suficiente, e lê o resultado no Stripe."
+
+#: integrations/growthbook.html
+msgid "API key"
+msgstr "Chave de API"
+
+#: integrations/growthbook.html
+msgid ""
+"An experiment can show running while bucketing nobody. Duct flags a running test whose phase is over 45 days old and whose results stop short of the last week."
+msgstr ""
+"Um experimento pode aparecer como 'em execução' enquanto não segmenta ninguém. Duct sinaliza um teste em execução cuja fase tem mais de 45 dias e cujos resultados não chegam à última semana."
+
+#: integrations/growthbook.html
+msgid ""
+"Ask whether the test is ready to call. Duct finds it stopped bucketing on 1 Sep, under its minimum sample, and reads the real baseline in Stripe."
+msgstr ""
+"Pergunte se o teste está pronto para ser encerrado. Duct descobre que ele parou de segmentar em 1º de setembro, abaixo de sua amostra mínima, e lê a linha de base real no Stripe."
+
+#: integrations/growthbook.html
+msgid "Both sides need the same identity."
+msgstr "Ambos os lados precisam da mesma identidade."
+
+#: integrations/growthbook.html
+msgid "Connect GrowthBook <0>in three steps</0>"
+msgstr "Conecte GrowthBook <0>em três passos</0>"
+
+#: integrations/growthbook.html
+msgid "Did the winning variant change revenue?"
+msgstr "A variante vencedora mudou a receita?"
+
+#: integrations/growthbook.html
+msgid "Does the test's metric match the event we track?"
+msgstr "A métrica do teste corresponde ao evento que rastreamos?"
+
+#: integrations/growthbook.html
+msgid "Duct doesn't touch your flags."
+msgstr "Duct não mexe nas suas flags."
+
+#: integrations/growthbook.html
+msgid ""
+"Duct has no GrowthBook change operation, so it cannot edit anything in GrowthBook. It can still recommend a change for you to make there."
+msgstr ""
+"Duct não tem operação de alteração no GrowthBook, então não pode editar nada no GrowthBook. Ele ainda pode recomendar uma alteração para você fazer lá."
+
+#. meta description
+#: integrations/growthbook.html
+msgid ""
+"Duct reads GrowthBook experiments and results, flags tests that stopped bucketing or never reached their sample, and checks the outcome in Stripe. Read-only."
+msgstr ""
+"Duct lê experimentos e resultados do GrowthBook, sinaliza testes que pararam de segmentar ou nunca atingiram sua amostra, e verifica o resultado no Stripe. Somente leitura."
+
+#: integrations/growthbook.html integrations/microsoft-clarity.html integrations/mixpanel.html
+msgid "Fields audited Aug 31, 2026"
+msgstr "Campos auditados em 31 de agosto de 2026"
+
+#: integrations/growthbook.html
+msgid ""
+"Flag flips and experiment stops are product decisions. Duct reads GrowthBook and never writes to it."
+msgstr ""
+"Alterações de flags e paradas de experimentos são decisões de produto. Duct lê GrowthBook e nunca escreve nele."
+
+#. meta og:title
+#. meta twitter:title
+#: integrations/growthbook.html
+msgid "GrowthBook AI analyst: is the test still running?"
+msgstr "Analista de IA do GrowthBook: o teste ainda está em execução?"
+
+#: integrations/growthbook.html
+msgid "GrowthBook AI analyst: is the test still running? | Duct"
+msgstr "Analista de IA do GrowthBook: o teste ainda está em execução? | Duct"
+
+#: integrations/growthbook.html
+msgid ""
+"GrowthBook REST API (growthbook-v1) · fields audited Aug 31, 2026 · <0>read the source</0>"
+msgstr ""
+"GrowthBook REST API (growthbook-v1) · campos auditados em 31 de agosto de 2026 · <0>leia o código-fonte</0>"
+
+#: integrations/growthbook.html
+msgid "GrowthBook, <0>answered</0>"
+msgstr "GrowthBook, <0>respondido</0>"
+
+#: integrations/growthbook.html
+msgid "GrowthBook, <0>before you call the test.</0>"
+msgstr "GrowthBook, <0>antes de você encerrar o teste.</0>"
+
+#: integrations/growthbook.html
+msgid "Growthbook experiments"
+msgstr "Experimentos do GrowthBook"
+
+#: integrations/growthbook.html
+msgid "How does Duct know a test stopped bucketing?"
+msgstr "Como Duct sabe que um teste parou de segmentar?"
+
+#: integrations/growthbook.html
+msgid ""
+"If assignment hashes one ID and analysis joins on another, users are misattributed wherever the two differ. Duct asks which ID each side uses."
+msgstr ""
+"Se a atribuição usa um ID e a análise se une a outro, os usuários são atribuídos incorretamente onde quer que os dois difiram. Duct pergunta qual ID cada lado usa."
+
+#: integrations/growthbook.html
+msgid ""
+"In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
+msgstr "No Duct, abra Conexões, escolha GrowthBook e cole a chave e o ID do projeto."
+
+#: integrations/growthbook.html
+msgid "In GrowthBook, open Settings, then API Keys, and create a read-only key."
+msgstr ""
+"No GrowthBook, abra Configurações, depois Chaves de API, e crie uma chave somente leitura."
+
+#: integrations/growthbook.html
+msgid "Is this experiment ready to call?"
+msgstr "Este experimento está pronto para ser encerrado?"
+
+#: integrations/growthbook.html
+msgid ""
+"It flags a running experiment whose phase is older than 45 days and whose results don't reach the last week: the pattern of a test that looks alive and isn't."
+msgstr ""
+"Ele sinaliza um experimento em execução cuja fase tem mais de 45 dias e cujos resultados não chegam à última semana: o padrão de um teste que parece ativo e não está."
+
+#: integrations/growthbook.html
+msgid ""
+"It says running, 94% to win. It stopped bucketing on 1 Sep, with 62 users in control."
+msgstr ""
+"Ele diz 'em execução', 94% de chance de vitória. Ele parou de segmentar em 1º de setembro, com 62 usuários no controle."
+
+#: integrations/growthbook.html
+msgid ""
+"No. Duct never writes to GrowthBook. It reads experiments and results and tells you what it found; stopping or restarting a test is yours."
+msgstr ""
+"Não. Duct nunca escreve no GrowthBook. Ele lê experimentos e resultados e diz o que encontrou; parar ou reiniciar um teste é sua responsabilidade."
+
+#: integrations/growthbook.html
+msgid "Not if you give Duct the project ID. It filters experiments to that project."
+msgstr ""
+"Não, se você der o ID do projeto ao Duct. Ele filtra os experimentos para aquele projeto."
+
+#: integrations/growthbook.html
+msgid "Note the project ID if your organisation runs more than one product."
+msgstr "Anote o ID do projeto se sua organização gerencia mais de um produto."
+
+#: integrations/growthbook.html
+msgid "Our GrowthBook organisation has several products. Will they mix?"
+msgstr "Nossa organização GrowthBook tem vários produtos. Eles vão se misturar?"
+
+#: integrations/growthbook.html
+msgid "Read the GrowthBook notes Duct's agent works from <0/>"
+msgstr "Leia as notas do GrowthBook com as quais o agente do Duct trabalha <0/>"
+
+#: integrations/growthbook.html
+msgid ""
+"Read-only: a read-only key is enough, Duct has no GrowthBook change operation, and it filters to your project so another product's experiments stay out."
+msgstr ""
+"Somente leitura: uma chave somente leitura é suficiente, Duct não tem operação de alteração no GrowthBook, e ele filtra para o seu projeto para que os experimentos de outro produto fiquem de fora."
+
+#: integrations/growthbook.html integrations/microsoft-clarity.html integrations/mixpanel.html
+msgid "Reads one datasets"
+msgstr "Lê um conjunto de dados"
+
+#: integrations/growthbook.html
+msgid "Running is a setting, not a signal."
+msgstr "Execução é uma configuração, não um sinal."
+
+#: integrations/growthbook.html
+msgid "Under the minimum sample, it isn't a result."
+msgstr "Abaixo da amostra mínima, não é um resultado."
+
+#: integrations/growthbook.html
+msgid "What Duct already knows <0>about GrowthBook</0>"
+msgstr "O que Duct já sabe <0>sobre GrowthBook</0>"
+
+#: integrations/growthbook.html
+msgid "What GrowthBook answers <0>with a partner</0>"
+msgstr "O que GrowthBook responde <0>com um parceiro</0>"
+
+#: integrations/growthbook.html
+msgid "Which running tests have stopped bucketing?"
+msgstr "Quais testes em execução pararam de segmentar?"
+
+#: integrations/growthbook.html
+msgid "Will Duct stop or change an experiment?"
+msgstr "Duct vai parar ou alterar um experimento?"
+
+#: integrations/index.html
+msgid ""
+"<0/><1><2>Apple Search Ads</2><3>Spend, taps and installs, by campaign and search term.</3><4><5>API key pair</5><6>Read-only</6></4></1><7><8/></7>"
+msgstr ""
+"<0/><1><2>Apple Search Ads</2><3>Gastos, toques e instalações, por campanha e termo de busca.</3><4><5>Par de chaves API</5><6>Somente leitura</6></4></1><7><8/></7>"
+
 #: integrations/index.html
 msgid ""
 "<0/><1><2>ChatGPT Ads</2><3>ChatGPT's ads report clicks and spend, not conversions. Duct measures the channel against what Stripe settled.</3><4><5>Ads API key</5><6>Read-only</6></4></1><7><8/></7>"
@@ -4067,6 +5120,48 @@ msgstr ""
 
 #: integrations/index.html
 msgid ""
+"<0/><1><2>Google Search Console</2><3>Search queries, clicks, impressions and average position.</3><4><5>Sign in with Google</5><6>Read-only</6></4></1><7><8/></7>"
+msgstr ""
+"<0/><1><2>Google Search Console</2><3>Consultas de busca, cliques, impressões e posição média.</3><4><5>Entrar com Google</5><6>Somente leitura</6></4></1><7><8/></7>"
+
+#: integrations/index.html
+msgid ""
+"<0/><1><2>Google Tag Manager</2><3>Tags, variables and container versions, staged, with rollback.</3><4><5>Sign in with Google</5><6>4 kinds of change</6></4></1><7><8/></7>"
+msgstr ""
+"<0/><1><2>Google Tag Manager</2><3>Tags, variáveis e versões de contêiner, em preparação, com reversão.</3><4><5>Entrar com Google</5><6>4 tipos de alteração</6></4></1><7><8/></7>"
+
+#: integrations/index.html
+msgid ""
+"<0/><1><2>GrowthBook</2><3>Which tests are live, whether they still bucket, per-metric results.</3><4><5>API key</5><6>Read-only</6></4></1><7><8/></7>"
+msgstr ""
+"<0/><1><2>GrowthBook</2><3>Quais testes estão ativos, se ainda segmentam, resultados por métrica.</3><4><5>Chave API</5><6>Somente leitura</6></4></1><7><8/></7>"
+
+#: integrations/index.html
+msgid ""
+"<0/><1><2>Meta Ads</2><3>Facebook and Instagram spend, reach, conversions and CPA.</3><4><5>System User token</5><6>Read-only</6></4></1><7><8/></7>"
+msgstr ""
+"<0/><1><2>Meta Ads</2><3>Gastos no Facebook e Instagram, alcance, conversões e CPA.</3><4><5>Token de System User</5><6>Somente leitura</6></4></1><7><8/></7>"
+
+#: integrations/index.html
+msgid ""
+"<0/><1><2>Microsoft Clarity</2><3>Rage clicks, dead clicks, quick-backs and script errors, per page.</3><4><5>Export token</5><6>Read-only</6></4></1><7><8/></7>"
+msgstr ""
+"<0/><1><2>Microsoft Clarity</2><3>Cliques de raiva, cliques mortos, retornos rápidos e erros de script, por página.</3><4><5>Token de exportação</5><6>Somente leitura</6></4></1><7><8/></7>"
+
+#: integrations/index.html
+msgid ""
+"<0/><1><2>Mixpanel</2><3>Signups, logins and upgrades, one name across web and app.</3><4><5>Service account</5><6>2 kinds of change</6></4></1><7><8/></7>"
+msgstr ""
+"<0/><1><2>Mixpanel</2><3>Cadastros, logins e upgrades, um nome para web e app.</3><4><5>Conta de serviço</5><6>2 tipos de alteração</6></4></1><7><8/></7>"
+
+#: integrations/index.html
+msgid ""
+"<0/><1><2>RevenueCat</2><3>Trials, renewals, refunds and MRR across the App Store and Play.</3><4><5>Secret key (V2)</5><6>Read-only</6></4></1><7><8/></7>"
+msgstr ""
+"<0/><1><2>RevenueCat</2><3>Testes, renovações, reembolsos e MRR na App Store e Play.</3><4><5>Chave secreta (V2)</5><6>Somente leitura</6></4></1><7><8/></7>"
+
+#: integrations/index.html
+msgid ""
 "<0/><1><2>Stripe</2><3>Settled revenue, subscriptions, refunds and payment outcomes.</3><4><5>Restricted read key</5><6>Read-only</6></4></1><7><8/></7>"
 msgstr ""
 "<0/><1><2>Stripe</2><3>Receita liquidada, assinaturas, reembolsos e resultados de pagamento.</3><4><5>Chave de leitura restrita</5><6>Somente leitura</6></4></1><7><8/></7>"
@@ -4077,57 +5172,9 @@ msgstr "<0></0> Gerado a partir do código-fonte do Duct"
 
 #: integrations/index.html
 msgid ""
-"<0>Apple Search Ads</0><1>Spend, taps and installs, by campaign and search term.</1><2><3>API key pair</3><4>Read-only</4></2>"
-msgstr ""
-"<0>Apple Search Ads</0><1>Gastos, toques e instalações, por campanha e termo de pesquisa.</1><2><3>Par de chaves da API</3><4>Somente leitura</4></2>"
-
-#: integrations/index.html
-msgid ""
-"<0>Google Search Console</0><1>Search queries, clicks, impressions and average position.</1><2><3>Sign in with Google</3><4>Read-only</4></2>"
-msgstr ""
-"<0>Google Search Console</0><1>Consultas de pesquisa, cliques, impressões e posição média.</1><2><3>Entrar com o Google</3><4>Somente leitura</4></2>"
-
-#: integrations/index.html
-msgid ""
-"<0>Google Tag Manager</0><1>Tags, variables and container versions, staged, with rollback.</1><2><3>Sign in with Google</3><4>4 kinds of change</4></2>"
-msgstr ""
-"<0>Google Tag Manager</0><1>Tags, variáveis e versões de contêiner, em preparação, com reversão.</1><2><3>Entrar com o Google</3><4>4 tipos de alteração</4></2>"
-
-#: integrations/index.html
-msgid ""
-"<0>GrowthBook</0><1>Which tests are live, whether they still bucket, per-metric results.</1><2><3>API key</3><4>Read-only</4></2>"
-msgstr ""
-"<0>GrowthBook</0><1>Quais testes estão ativos, se ainda agrupam, resultados por métrica.</1><2><3>Chave da API</3><4>Somente leitura</4></2>"
-
-#: integrations/index.html
-msgid ""
 "<0>HubSpot</0><1>CRM lifecycle stages, pipeline and closed revenue.</1><2><3>Coming soon</3></2>"
 msgstr ""
 "<0>HubSpot</0><1>Estágios do ciclo de vida do CRM, pipeline e receita fechada.</1><2><3>Em breve</3></2>"
-
-#: integrations/index.html
-msgid ""
-"<0>Meta Ads</0><1>Facebook and Instagram spend, reach, conversions and CPA.</1><2><3>System User token</3><4>Read-only</4></2>"
-msgstr ""
-"<0>Meta Ads</0><1>Gastos no Facebook e Instagram, alcance, conversões e CPA.</1><2><3>Token de Usuário do Sistema</3><4>Somente leitura</4></2>"
-
-#: integrations/index.html
-msgid ""
-"<0>Microsoft Clarity</0><1>Rage clicks, dead clicks, quick-backs and script errors, per page.</1><2><3>Export token</3><4>Read-only</4></2>"
-msgstr ""
-"<0>Microsoft Clarity</0><1>Cliques de raiva, cliques mortos, retornos rápidos e erros de script, por página.</1><2><3>Token de exportação</3><4>Somente leitura</4></2>"
-
-#: integrations/index.html
-msgid ""
-"<0>Mixpanel</0><1>Signups, logins and upgrades, one name across web and app.</1><2><3>Service account</3><4>2 kinds of change</4></2>"
-msgstr ""
-"<0>Mixpanel</0><1>Registros, logins e upgrades, um nome para web e app.</1><2><3>Conta de serviço</3><4>2 tipos de alteração</4></2>"
-
-#: integrations/index.html
-msgid ""
-"<0>RevenueCat</0><1>Trials, renewals, refunds and MRR across the App Store and Play.</1><2><3>Secret key (V2)</3><4>Read-only</4></2>"
-msgstr ""
-"<0>RevenueCat</0><1>Testes, renovações, reembolsos e MRR na App Store e Play.</1><2><3>Chave secreta (V2)</3><4>Somente leitura</4></2>"
 
 #: integrations/index.html
 msgid "Ads"
@@ -4289,6 +5336,1028 @@ msgstr "conectores"
 msgid "kinds of change"
 msgstr "tipos de alteração"
 
+#: integrations/meta-ads.html
+msgid "<0/><1/><2>Meta Ads + Google Ads</2>"
+msgstr "<0/><1/><2>Meta Ads + Google Ads</2>"
+
+#: integrations/meta-ads.html
+msgid "<0/><1/><2>Meta Ads + Stripe</2>"
+msgstr "<0/><1/><2>Meta Ads + Stripe</2>"
+
+#: integrations/meta-ads.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Do Meta clicks become sessions that stay?</4><5>Meta Ads + GA4 <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Cliques do Meta se tornam sessões que permanecem?</4><5>Meta Ads + GA4 <6/></5>"
+
+#: integrations/meta-ads.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Does Meta's purchase count survive Stripe?</4><5>Meta Ads + Stripe <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>A contagem de compras do Meta sobrevive ao Stripe?</4><5>Meta Ads + Stripe <6/></5>"
+
+#: integrations/meta-ads.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Meta and Google, counted the same way.</4><5>Meta Ads + Google Ads <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Meta e Google, contados da mesma forma.</4><5>Meta Ads + Google Ads <6/></5>"
+
+#: integrations/meta-ads.html
+msgid "<0>name</0><1>last fired</1><2>event type</2><3>default value</3>"
+msgstr "<0>nome</0><1>último disparo</1><2>tipo de evento</2><3>valor padrão</3>"
+
+#: integrations/meta-ads.html
+msgid ""
+"<0>name</0><1>status</1><2>daily budget</2><3>optimization goal</3><4>bid amount</4><5>attribution setting</5>"
+msgstr ""
+"<0>nome</0><1>status</1><2>orçamento diário</2><3>meta de otimização</3><4>valor do lance</4><5>configuração de atribuição</5>"
+
+#: integrations/meta-ads.html
+msgid ""
+"<0>name</0><1>status</1><2>objective</2><3>bid strategy</3><4>daily budget</4><5>lifetime budget</5><6>spend cap</6>"
+msgstr ""
+"<0>nome</0><1>status</1><2>objetivo</2><3>estratégia de lance</3><4>orçamento diário</4><5>orçamento vitalício</5><6>limite de gasto</6>"
+
+#: integrations/meta-ads.html
+msgid ""
+"<0>spend</0><1>impressions</1><2>clicks</2><3>CTR</3><4>CPC</4><5>CPM</5><6>purchases</6><7>purchase value</7><8>ROAS</8>"
+msgstr ""
+"<0>gasto</0><1>impressões</1><2>cliques</2><3>CTR</3><4>CPC</4><5>CPM</5><6>compras</6><7>valor da compra</7><8>ROAS</8>"
+
+#. img alt
+#: integrations/meta-ads.html
+msgid ""
+"A Duct session: asked why Meta looks cheaper than Google, Duct reads Meta ad sets and insights on three attribution windows beside Google Ads, and recounts purchases on one-day click"
+msgstr ""
+"Uma sessão do Duct: perguntado por que o Meta parece mais barato que o Google, Duct lê conjuntos de anúncios e insights do Meta em três janelas de atribuição ao lado do Google Ads, e recontabiliza compras em clique de um dia"
+
+#: integrations/meta-ads.html
+msgid ""
+"A token made from a person's login expires after about 60 days, and the connection stops without warning. A System User token does not expire, so the weekly brief keeps working."
+msgstr ""
+"Um token feito a partir do login de uma pessoa expira após cerca de 60 dias, e a conexão para sem aviso. Um token de System User não expira, então o resumo semanal continua funcionando."
+
+#: integrations/meta-ads.html
+msgid "Ad sets and ads"
+msgstr "Conjuntos de anúncios e anúncios"
+
+#: integrations/meta-ads.html
+msgid ""
+"Ask why Meta looks three times cheaper. Duct recounts its purchases the way Google counts, one action type and a one-day click, and puts the two side by side."
+msgstr ""
+"Pergunte por que o Meta parece três vezes mais barato. Duct recontabiliza suas compras da forma como o Google conta, um tipo de ação e um clique de um dia, e coloca os dois lado a lado."
+
+#: integrations/meta-ads.html
+msgid "Attribution is a choice, not a fact."
+msgstr "Atribuição é uma escolha, não um fato."
+
+#: integrations/meta-ads.html
+msgid "Budgets come back in cents."
+msgstr "Orçamentos voltam em centavos."
+
+#: integrations/meta-ads.html
+msgid "Campaigns, every status"
+msgstr "Campanhas, todos os status"
+
+#: integrations/meta-ads.html
+msgid "Can Duct change my Meta campaigns?"
+msgstr "Duct pode alterar minhas campanhas do Meta?"
+
+#: integrations/meta-ads.html
+msgid "Connect Meta Ads <0>in three steps</0>"
+msgstr "Conecte o Meta Ads <0>em três passos</0>"
+
+#: integrations/meta-ads.html
+msgid ""
+"Duct has no Meta Ads change operation, so it cannot edit anything in Meta Ads. It can still recommend a change for you to make there."
+msgstr ""
+"Duct não tem operação de alteração no Meta Ads, então ele não pode editar nada no Meta Ads. Ele ainda pode recomendar uma alteração para você fazer lá."
+
+#. meta description
+#: integrations/meta-ads.html
+msgid ""
+"Duct reads Meta Ads with a System User token, counts each purchase once on the attribution window you choose, and checks it against Stripe. Read-only."
+msgstr ""
+"Duct lê o Meta Ads com um token de System User, conta cada compra uma vez na janela de atribuição que você escolher, e verifica com o Stripe. Somente leitura."
+
+#: integrations/meta-ads.html
+msgid ""
+"Generate a token for it with ads_read (and business_management, so Duct can list your accounts)."
+msgstr ""
+"Gere um token para ele com ads_read (e business_management, para que Duct possa listar suas contas)."
+
+#: integrations/meta-ads.html
+msgid "How much of Meta's credit comes from views, not clicks?"
+msgstr "Quanto do crédito do Meta vem de visualizações, não de cliques?"
+
+#: integrations/meta-ads.html
+msgid "In Duct, open Connections, choose Meta Ads and paste the token."
+msgstr "No Duct, abra Conexões, escolha Meta Ads e cole o token."
+
+#: integrations/meta-ads.html
+msgid ""
+"In Meta Business Settings, open Users, then System users, and give one access to the ad account."
+msgstr ""
+"Nas Configurações de Negócios do Meta, abra Usuários, depois System users, e dê acesso a um à conta de anúncio."
+
+#: integrations/meta-ads.html
+msgid "Is Meta really cheaper than Google, counted the same way?"
+msgstr "O Meta é realmente mais barato que o Google, contado da mesma forma?"
+
+#. meta og:title
+#. meta twitter:title
+#: integrations/meta-ads.html
+msgid "Meta Ads AI analyst: purchases counted once"
+msgstr "Analista de IA do Meta Ads: compras contadas uma vez"
+
+#: integrations/meta-ads.html
+msgid "Meta Ads AI analyst: purchases counted once | Duct"
+msgstr "Analista de IA do Meta Ads: compras contadas uma vez | Duct"
+
+#: integrations/meta-ads.html
+msgid "Meta Ads, <0>answered</0>"
+msgstr "Meta Ads, <0>respondido</0>"
+
+#: integrations/meta-ads.html
+msgid "Meta Ads, <0>counted once.</0>"
+msgstr "Meta Ads, <0>contado uma vez.</0>"
+
+#: integrations/meta-ads.html
+msgid ""
+"Meta Marketing API v26.0 · checked against the fetch code Sep 29, 2026 · <0>read the source</0>"
+msgstr ""
+"Meta Marketing API v26.0 · verificado com o código de busca em 29 de set de 2026 · <0>leia o código-fonte</0>"
+
+#. meta twitter:description
+#: integrations/meta-ads.html
+msgid ""
+"Meta can count one purchase three times. Duct counts it once, then checks Stripe."
+msgstr ""
+"O Meta pode contar uma compra três vezes. Duct a conta uma vez, depois verifica com o Stripe."
+
+#: integrations/meta-ads.html
+msgid ""
+"Meta claims 41 purchases at €34. On one-day click it's 14, at €100. Google is at €105."
+msgstr ""
+"O Meta afirma 41 compras a €34. Com clique de um dia, são 14, a €100. O Google está a €105."
+
+#: integrations/meta-ads.html
+msgid ""
+"Meta credits itself with a week of clicks and a day of views, and can report one purchase three times. Duct reads Meta Ads, recounts on the window you choose, and checks the result against Stripe."
+msgstr ""
+"O Meta se credita com uma semana de cliques e um dia de visualizações, e pode relatar uma compra três vezes. Duct lê o Meta Ads, recontabiliza na janela que você escolher e verifica o resultado com o Stripe."
+
+#: integrations/meta-ads.html
+msgid ""
+"Meta credits itself with purchases up to seven days after a click and a day after a view, and can report one order under three action types. Stripe counts money that settled. Duct counts each purchase once, on the window you pick, and reconciles against Stripe."
+msgstr ""
+"O Meta se credita com compras até sete dias após um clique e um dia após uma visualização, e pode relatar um pedido sob três tipos de ação. O Stripe conta o dinheiro que foi liquidado. Duct conta cada compra uma vez, na janela que você escolher, e concilia com o Stripe."
+
+#: integrations/meta-ads.html
+msgid ""
+"Meta defaults to seven-day click and one-day view; Google counts the last click. Duct asks Meta for one-day click, seven-day click and one-day view separately, so the platforms can be compared on the same terms."
+msgstr ""
+"O Meta usa como padrão clique de sete dias e visualização de um dia; o Google conta o último clique. Duct pede ao Meta clique de um dia, clique de sete dias e visualização de um dia separadamente, para que as plataformas possam ser comparadas nos mesmos termos."
+
+#: integrations/meta-ads.html
+msgid ""
+"Meta reports budgets in minor units and spend in whole currency. Read as euros, a €25 daily budget becomes €2,500."
+msgstr ""
+"O Meta relata orçamentos em unidades menores e gastos em moeda inteira. Lido como euros, um orçamento diário de €25 se torna €2.500."
+
+#. meta og:description
+#: integrations/meta-ads.html
+msgid ""
+"Meta's ROAS looks three times better than Google's. Duct recounts it the way Google counts, checks it against Stripe, and says which is right."
+msgstr ""
+"O ROAS do Meta parece três vezes melhor que o do Google. Duct o recontabiliza da forma como o Google conta, verifica com o Stripe e diz qual está certo."
+
+#: integrations/meta-ads.html
+msgid "My ad account runs ads for two products. Can Duct keep them apart?"
+msgstr ""
+"Minha conta de anúncios veicula anúncios para dois produtos. Duct pode mantê-los separados?"
+
+#: integrations/meta-ads.html
+msgid ""
+"No. Duct has no Meta change operation. It reads campaigns, ad sets, ads, pixels and results, and can recommend a change for you to make in Ads Manager."
+msgstr ""
+"Não. Duct não tem operação de alteração no Meta. Ele lê campanhas, conjuntos de anúncios, anúncios, pixels e resultados, e pode recomendar uma alteração para você fazer no Gerenciador de Anúncios."
+
+#: integrations/meta-ads.html
+msgid "One purchase, three action types."
+msgstr "Uma compra, três tipos de ação."
+
+#: integrations/meta-ads.html
+msgid "Paused history is hidden by default."
+msgstr "Histórico pausado está oculto por padrão."
+
+#: integrations/meta-ads.html
+msgid "Performance"
+msgstr "Desempenho"
+
+#: integrations/meta-ads.html
+msgid "Pixels and custom conversions"
+msgstr "Pixels e conversões personalizadas"
+
+#: integrations/meta-ads.html
+msgid "Read the Meta Ads notes Duct's agent works from <0/>"
+msgstr "Leia as notas do Meta Ads com as quais o agente do Duct trabalha <0/>"
+
+#: integrations/meta-ads.html
+msgid ""
+"Read-only: the token needs ads_read, and Duct has no Meta change operation. A System User token does not expire the way a person's login does."
+msgstr ""
+"Somente leitura: o token precisa de ads_read, e Duct não tem operação de alteração no Meta. Um token de Usuário do Sistema não expira da mesma forma que o login de uma pessoa."
+
+#: integrations/meta-ads.html
+msgid "System User token"
+msgstr "Token de Usuário do Sistema"
+
+#: integrations/meta-ads.html
+msgid ""
+"The same order can arrive as a pixel purchase, a purchase and an omni purchase. Summing them triples the count, so Duct picks one."
+msgstr ""
+"O mesmo pedido pode chegar como uma compra de pixel, uma compra e uma compra omni. Somá-los triplica a contagem, então Duct escolhe um."
+
+#: integrations/meta-ads.html
+msgid "What Duct already knows <0>about Meta Ads</0>"
+msgstr "O que Duct já sabe <0>sobre Meta Ads</0>"
+
+#: integrations/meta-ads.html
+msgid "What Meta Ads answers <0>with a partner</0>"
+msgstr "O que o Meta Ads responde <0>com um parceiro</0>"
+
+#: integrations/meta-ads.html
+msgid "Which ad sets bring customers who pay?"
+msgstr "Quais conjuntos de anúncios trazem clientes que pagam?"
+
+#: integrations/meta-ads.html
+msgid "Why a System User token and not my own login?"
+msgstr "Por que um token de Usuário do Sistema e não meu próprio login?"
+
+#: integrations/meta-ads.html
+msgid "Why did a campaign stop getting results?"
+msgstr "Por que uma campanha parou de gerar resultados?"
+
+#: integrations/meta-ads.html
+msgid "Why doesn't Meta's purchase count match Stripe?"
+msgstr "Por que a contagem de compras do Meta não corresponde ao Stripe?"
+
+#: integrations/meta-ads.html
+msgid ""
+"Without a status list Meta returns only active campaigns. Duct asks for every status, so what was switched off last month is still in the audit."
+msgstr ""
+"Sem uma lista de status, o Meta retorna apenas campanhas ativas. Duct pede por todos os status, para que o que foi desativado no mês passado ainda esteja na auditoria."
+
+#: integrations/meta-ads.html
+msgid ""
+"Yes. Give it the part of the campaign names that marks this product, and Duct filters to those campaigns before Meta adds anything up, so the other product never reaches the totals."
+msgstr ""
+"Sim. Dê a ele a parte dos nomes das campanhas que marca este produto, e Duct filtra para essas campanhas antes que o Meta some qualquer coisa, para que o outro produto nunca chegue aos totais."
+
+#: integrations/microsoft-clarity.html
+msgid "<0/><1/><2/><3>Clarity + GA4 + Google Ads</3>"
+msgstr "<0/><1/><2/><3>Clarity + GA4 + Google Ads</3>"
+
+#: integrations/microsoft-clarity.html
+msgid "<0/><1/><2>Clarity + Google Ads</2>"
+msgstr "<0/><1/><2>Clarity + Google Ads</2>"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Is it the ad, or the page after it?</4><5>Clarity + Google Ads <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>É o anúncio, ou a página depois dele?</4><5>Clarity + Google Ads <6/></5>"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Where in the funnel do people get stuck?</4><5>Clarity + Mixpanel <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Onde no funil as pessoas ficam presas?</4><5>Clarity + Mixpanel <6/></5>"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Which friction costs conversions?</4><5>Clarity + GA4 <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Qual atrito custa conversões?</4><5>Clarity + GA4 <6/></5>"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"<0>traffic</0><1>engagement</1><2>friction</2><3>pages</3><4>friction by url</4><5>sessions</5><6>rage click sessions pct</6><7>dead click sessions pct</7>"
+msgstr ""
+"<0>tráfego</0><1>engajamento</1><2>atrito</2><3>páginas</3><4>atrito por URL</4><5>sessões</5><6>pct de sessões com rage click</6><7>pct de sessões com dead click</7>"
+
+#. img alt
+#: integrations/microsoft-clarity.html
+msgid ""
+"A Duct session: asked why a landing page loses paid visitors, Duct reads Clarity friction per page beside GA4 and finds a pricing toggle failing on Android Chrome"
+msgstr ""
+"Uma sessão do Duct: perguntado por que uma landing page perde visitantes pagos, Duct lê o atrito do Clarity por página ao lado do GA4 e encontra um seletor de preços falhando no Android Chrome"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"A friction figure is the share of sessions that had at least one. Duct compares pages by that share, so a busy page doesn't look worse for being busy."
+msgstr ""
+"Um valor de atrito é a parcela de sessões que tiveram pelo menos um. Duct compara páginas por essa parcela, para que uma página movimentada não pareça pior por estar movimentada."
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Ask why a landing page loses paid visitors. Duct reads the last three days of Clarity, bots removed, beside GA4, and names the broken toggle."
+msgstr ""
+"Pergunte por que uma landing page perde visitantes pagos. Duct lê os últimos três dias do Clarity, bots removidos, ao lado do GA4, e nomeia o seletor quebrado."
+
+#: integrations/microsoft-clarity.html
+msgid "Bots are in the sessions."
+msgstr "Bots estão nas sessões."
+
+#: integrations/microsoft-clarity.html
+msgid "Can Duct change anything in Clarity?"
+msgstr "O Duct pode alterar algo no Clarity?"
+
+#: integrations/microsoft-clarity.html
+msgid "Can Duct see session recordings?"
+msgstr "O Duct pode ver gravações de sessão?"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Clarity Data Export API (clarity-export-data-v1) · fields audited Aug 31, 2026 · <0>read the source</0>"
+msgstr ""
+"Clarity Data Export API (clarity-export-data-v1) · campos auditados em 31 de agosto de 2026 · <0>ler a fonte</0>"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Clarity allows ten API requests per project per day and a Duct read costs two, so Duct never polls. Hitting the limit means tomorrow, not a retry."
+msgstr ""
+"O Clarity permite dez requisições de API por projeto por dia e uma leitura do Duct custa duas, então o Duct nunca faz polling. Atingir o limite significa amanhã, não uma nova tentativa."
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Clarity counts bot sessions with the rest. Duct takes them out before it works out any rate."
+msgstr ""
+"O Clarity conta sessões de bot com as demais. O Duct as remove antes de calcular qualquer taxa."
+
+#: integrations/microsoft-clarity.html
+msgid "Clarity keeps three days."
+msgstr "O Clarity mantém três dias."
+
+#: integrations/microsoft-clarity.html
+msgid "Clarity landing-page friction"
+msgstr "Fricção na landing page do Clarity"
+
+#: integrations/microsoft-clarity.html
+msgid "Clarity, <0>answered</0>"
+msgstr "Clarity, <0>respondido</0>"
+
+#: integrations/microsoft-clarity.html
+msgid "Clarity, <0>what happened after the click.</0>"
+msgstr "Clarity, <0>o que aconteceu após o clique.</0>"
+
+#: integrations/microsoft-clarity.html
+msgid "Compare by share, not count."
+msgstr "Compare por participação, não por contagem."
+
+#: integrations/microsoft-clarity.html
+msgid "Connect Clarity <0>in three steps</0>"
+msgstr "Conecte o Clarity <0>em três passos</0>"
+
+#: integrations/microsoft-clarity.html
+msgid "Did yesterday's release break something people use?"
+msgstr "O lançamento de ontem quebrou algo que as pessoas usam?"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Duct has no Clarity change operation, so it cannot edit anything in Clarity. It can still recommend a change for you to make there."
+msgstr ""
+"O Duct não tem operação de alteração no Clarity, então não pode editar nada lá. Ele ainda pode recomendar uma alteração para você fazer."
+
+#. meta description
+#: integrations/microsoft-clarity.html
+msgid ""
+"Duct reads Clarity's rage clicks, dead clicks, quick-backs and script errors per page, beside GA4 and your ads, to find the page that wastes a paid click."
+msgstr ""
+"O Duct lê os rage clicks, dead clicks, quick-backs e erros de script por página do Clarity, ao lado do GA4 e dos seus anúncios, para encontrar a página que desperdiça um clique pago."
+
+#: integrations/microsoft-clarity.html
+msgid "Export token"
+msgstr "Token de exportação"
+
+#: integrations/microsoft-clarity.html
+msgid "In Clarity, open Settings, then Data Export, and generate an API token."
+msgstr ""
+"No Clarity, abra Configurações, depois Exportação de Dados, e gere um token de API."
+
+#: integrations/microsoft-clarity.html
+msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
+msgstr "No Duct, abra Conexões, escolha Microsoft Clarity e cole o token."
+
+#. meta twitter:description
+#: integrations/microsoft-clarity.html
+msgid "Is it the ad or the page? Duct reads Clarity beside your campaigns."
+msgstr "É o anúncio ou a página? O Duct lê o Clarity ao lado das suas campanhas."
+
+#: integrations/microsoft-clarity.html
+msgid "Is the conversion drop the ads, or the page?"
+msgstr "A queda na conversão é dos anúncios, ou da página?"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Its API returns only the last one to three days, so it is a health check, not history. Duct reads it for what is happening now, and daily when something needs watching."
+msgstr ""
+"Sua API retorna apenas os últimos um a três dias, então é uma verificação de saúde, não histórico. O Duct o lê para o que está acontecendo agora, e diariamente quando algo precisa ser monitorado."
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Make it in the project Duct should read: the token is the project, with no ID beside it."
+msgstr "Crie-o no projeto que o Duct deve ler: o token é o projeto, sem ID ao lado."
+
+#. meta og:title
+#. meta twitter:title
+#: integrations/microsoft-clarity.html
+msgid "Microsoft Clarity AI analyst: after the click"
+msgstr "Analista de IA do Microsoft Clarity: após o clique"
+
+#: integrations/microsoft-clarity.html
+msgid "Microsoft Clarity AI analyst: after the click | Duct"
+msgstr "Analista de IA do Microsoft Clarity: após o clique | Duct"
+
+#: integrations/microsoft-clarity.html
+msgid "No. It has no Clarity change operation. It can tell you which page to fix."
+msgstr ""
+"Não. Ele não tem operação de alteração no Clarity. Ele pode dizer qual página corrigir."
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"No. It reads Clarity's exported numbers per page, not recordings or heatmaps."
+msgstr ""
+"Não. Ele lê os números exportados por página do Clarity, não gravações ou mapas de calor."
+
+#: integrations/microsoft-clarity.html
+msgid "Read the Clarity notes Duct's agent works from <0/>"
+msgstr "Leia as notas do Clarity que o agente do Duct usa <0/>"
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Read-only: an export token can only read, and Duct has no Clarity change operation."
+msgstr ""
+"Somente leitura: um token de exportação só pode ler, e o Duct não tem operação de alteração no Clarity."
+
+#: integrations/microsoft-clarity.html
+msgid "Ten calls a day, hard."
+msgstr "Dez chamadas por dia, fixo."
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"That is all Clarity's API returns. Duct treats it as a live health signal and, when a problem needs following, reads it daily."
+msgstr ""
+"Isso é tudo que a API do Clarity retorna. O Duct o trata como um sinal de saúde em tempo real e, quando um problema precisa ser acompanhado, o lê diariamente."
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"The pricing toggle on /freelancers fails on Android Chrome. 71% of its visitors came from ads."
+msgstr ""
+"O seletor de preços em /freelancers falha no Android Chrome. 71% dos seus visitantes vieram de anúncios."
+
+#: integrations/microsoft-clarity.html
+msgid "What Clarity answers <0>with a partner</0>"
+msgstr "O que o Clarity responde <0>com um parceiro</0>"
+
+#: integrations/microsoft-clarity.html
+msgid "What Duct already knows <0>about Clarity</0>"
+msgstr "O que o Duct já sabe <0>sobre o Clarity</0>"
+
+#: integrations/microsoft-clarity.html
+msgid "Where do people rage-click on the pricing page?"
+msgstr "Onde as pessoas clicam com raiva na página de preços?"
+
+#: integrations/microsoft-clarity.html
+msgid "Which landing page is wasting paid clicks?"
+msgstr "Qual landing page está desperdiçando cliques pagos?"
+
+#: integrations/microsoft-clarity.html
+msgid "Why only the last three days?"
+msgstr "Por que apenas os últimos três dias?"
+
+#. meta og:description
+#: integrations/microsoft-clarity.html
+msgid ""
+"Your ads report the click. Clarity sees what came next. Duct reads both and names the page that wastes them."
+msgstr ""
+"Seus anúncios reportam o clique. O Clarity vê o que veio a seguir. O Duct lê ambos e nomeia a página que os desperdiça."
+
+#: integrations/microsoft-clarity.html
+msgid ""
+"Your ads report the click. Clarity sees what came next: rage clicks, dead clicks, people leaving in seconds, scripts failing. Duct reads it beside GA4 and your campaigns and names the page that is wasting them."
+msgstr ""
+"Seus anúncios reportam o clique. O Clarity vê o que veio a seguir: cliques de raiva, cliques mortos, pessoas saindo em segundos, scripts falhando. O Duct o lê ao lado do GA4 e das suas campanhas e nomeia a página que os está desperdiçando."
+
+#: integrations/mixpanel.html
+msgid "<0/><1/><2>Mixpanel + GA4</2>"
+msgstr "<0/><1/><2>Mixpanel + GA4</2>"
+
+#: integrations/mixpanel.html
+msgid "<0/><1/><2>Mixpanel + Stripe</2>"
+msgstr "<0/><1/><2>Mixpanel + Stripe</2>"
+
+#: integrations/mixpanel.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Is the test's metric the event you think it is?</4><5>Mixpanel + GrowthBook <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>A métrica do teste é o evento que você pensa que é?</4><5>Mixpanel + GrowthBook <6/></5>"
+
+#: integrations/mixpanel.html
+msgid ""
+"<0><1/><2></2><3/></0><4>One signup count, not two.</4><5>Mixpanel + GA4 <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Uma contagem de cadastros, não duas.</4><5>Mixpanel + GA4 <6/></5>"
+
+#: integrations/mixpanel.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Upgrades counted, upgrades paid.</4><5>Mixpanel + Stripe <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Upgrades contados, upgrades pagos.</4><5>Mixpanel + Stripe <6/></5>"
+
+#: integrations/mixpanel.html
+msgid ""
+"<0>Annotate 2 Sep: Android rebuild</0><1>A dated note on the timeline. Rollback ready.</1>"
+msgstr ""
+"<0>Anotar 2 Set: Reconstrução Android</0><1>Uma nota datada na linha do tempo. Reverter pronto.</1>"
+
+#: integrations/mixpanel.html
+msgid ""
+"<0>key events</0><1>event totals</1><2>funnels</2><3>internal traffic excluded</3>"
+msgstr ""
+"<0>eventos chave</0><1>totais de eventos</1><2>funis</2><3>tráfego interno excluído</3>"
+
+#. img alt
+#: integrations/mixpanel.html
+msgid ""
+"A Duct session: asked whether a release lifted upgrades, Duct reads Mixpanel with QA accounts removed, checks Stripe, and proposes a timeline annotation and hiding a typo event"
+msgstr ""
+"Uma sessão do Duct: perguntou se um lançamento aumentou os upgrades, o Duct lê o Mixpanel com contas de QA removidas, verifica o Stripe e propõe uma anotação na linha do tempo e ocultar um evento com erro de digitação"
+
+#: integrations/mixpanel.html
+msgid "Add Mixpanel timeline annotation"
+msgstr "Adicionar anotação à linha do tempo do Mixpanel"
+
+#: integrations/mixpanel.html
+msgid ""
+"An old misspelt event keeps firing from old app versions. Duct hides it in Lexicon rather than filtering every query, and never adds it to its twin."
+msgstr ""
+"Um evento antigo com erro de digitação continua sendo disparado por versões antigas do app. O Duct o oculta no Lexicon em vez de filtrar cada consulta e nunca o adiciona ao seu gêmeo."
+
+#: integrations/mixpanel.html
+msgid ""
+"Ask whether the release lifted upgrades. Duct takes the QA accounts out, checks Stripe, and proposes an annotation and a Lexicon clean-up."
+msgstr ""
+"Pergunte se o lançamento aumentou os upgrades. O Duct remove as contas de QA, verifica o Stripe e propõe uma anotação e uma limpeza do Lexicon."
+
+#: integrations/mixpanel.html
+msgid "Connect Mixpanel <0>in three steps</0>"
+msgstr "Conectar Mixpanel <0>em três passos</0>"
+
+#: integrations/mixpanel.html
+msgid "Did the release move upgrades, or only the test accounts?"
+msgstr "O lançamento aumentou os upgrades, ou apenas as contas de teste?"
+
+#. meta description
+#: integrations/mixpanel.html
+msgid ""
+"Duct reads Mixpanel's key events with staff and QA accounts taken out, checks them against Stripe, and can annotate the timeline or hide a typo event."
+msgstr ""
+"O Duct lê os eventos chave do Mixpanel com contas de equipe e QA removidas, os verifica com o Stripe e pode anotar a linha do tempo ou ocultar um evento com erro de digitação."
+
+#: integrations/mixpanel.html
+msgid "Hide/unhide event in Mixpanel Lexicon"
+msgstr "Ocultar/exibir evento no Mixpanel Lexicon"
+
+#: integrations/mixpanel.html
+msgid "How many signups carry no campaign at all?"
+msgstr "Quantos cadastros não têm nenhuma campanha?"
+
+#: integrations/mixpanel.html
+msgid "In Duct, open Connections, choose Mixpanel and paste them."
+msgstr "No Duct, abra Conexões, escolha Mixpanel e cole-os."
+
+#: integrations/mixpanel.html
+msgid ""
+"In Mixpanel, open Organization settings, then Service Accounts, and create one with access to this project."
+msgstr ""
+"No Mixpanel, abra as configurações da Organização, depois Contas de Serviço, e crie uma com acesso a este projeto."
+
+#: integrations/mixpanel.html
+msgid "It's the count the others are checked against."
+msgstr "É a contagem com a qual os outros são verificados."
+
+#. meta og:title
+#. meta twitter:title
+#: integrations/mixpanel.html
+msgid "Mixpanel AI analyst: clean counts, web and app"
+msgstr "Analista de IA do Mixpanel: contagens limpas, web e app"
+
+#: integrations/mixpanel.html
+msgid "Mixpanel AI analyst: clean counts, web and app | Duct"
+msgstr "Analista de IA do Mixpanel: contagens limpas, web e app | Duct"
+
+#: integrations/mixpanel.html
+msgid ""
+"Mixpanel Query API (mixpanel-query-2.0) · fields audited Aug 31, 2026 · <0>read the source</0>"
+msgstr ""
+"Mixpanel Query API (mixpanel-query-2.0) · campos auditados 31 Ago, 2026 · <0>leia a fonte</0>"
+
+#: integrations/mixpanel.html
+msgid "Mixpanel has no internal-traffic filter."
+msgstr "O Mixpanel não tem filtro de tráfego interno."
+
+#: integrations/mixpanel.html
+msgid ""
+"Mixpanel is the one count that spans web and app. Duct reads it with internal accounts taken out, checks it against Stripe, and keeps the timeline honest with annotations and a tidy Lexicon."
+msgstr ""
+"O Mixpanel é a única contagem que abrange web e app. O Duct o lê com contas internas removidas, o verifica com o Stripe e mantém a linha do tempo precisa com anotações e um Lexicon organizado."
+
+#: integrations/mixpanel.html
+msgid "Mixpanel key event counts"
+msgstr "Contagens de eventos chave do Mixpanel"
+
+#. meta og:description
+#: integrations/mixpanel.html
+msgid ""
+"Mixpanel sees every platform under one name, and every QA account too. Duct takes them out, checks Stripe, and marks the timeline."
+msgstr ""
+"O Mixpanel vê cada plataforma sob um único nome, e cada conta de QA também. O Duct as remove, verifica o Stripe e marca a linha do tempo."
+
+#: integrations/mixpanel.html
+msgid "Mixpanel, <0>answered</0>"
+msgstr "Mixpanel, <0>respondido</0>"
+
+#: integrations/mixpanel.html
+msgid "Mixpanel, <0>without the QA team in it.</0>"
+msgstr "Mixpanel, <0>sem a equipe de QA.</0>"
+
+#: integrations/mixpanel.html
+msgid ""
+"Most signups carry no campaign tag at all. Duct won't count a missing tag as organic search."
+msgstr ""
+"A maioria dos cadastros não tem nenhuma tag de campanha. O Duct não contará uma tag ausente como busca orgânica."
+
+#: integrations/mixpanel.html
+msgid "My project is in the EU. Does that work?"
+msgstr "Meu projeto está na UE. Isso funciona?"
+
+#: integrations/mixpanel.html
+msgid ""
+"Neither can read Mixpanel's Query API. A service account can, and it is scoped to the projects you grant it."
+msgstr ""
+"Nenhum pode ler a Query API do Mixpanel. Uma conta de serviço pode, e ela é limitada aos projetos que você concede a ela."
+
+#: integrations/mixpanel.html
+msgid ""
+"Note its username and secret, the project ID, and whether the project lives in the US, EU or India."
+msgstr ""
+"Anote seu nome de usuário e segredo, o ID do projeto e se o projeto está nos EUA, UE ou Índia."
+
+#: integrations/mixpanel.html
+msgid "Read the Mixpanel notes Duct's agent works from <0/>"
+msgstr "Leia as notas do Mixpanel que o agente do Duct usa <0/>"
+
+#: integrations/mixpanel.html
+msgid ""
+"Reading needs a service account with access to the project. The two changes below also need it to edit annotations and Lexicon, and by default each waits for your Apply."
+msgstr ""
+"A leitura requer uma conta de serviço com acesso ao projeto. As duas alterações abaixo também precisam dela para editar anotações e o Lexicon, e, por padrão, cada uma aguarda sua aplicação."
+
+#: integrations/mixpanel.html
+msgid "Service account"
+msgstr "Conta de serviço"
+
+#: integrations/mixpanel.html
+msgid ""
+"Staff and QA accounts sit inside every funnel. Duct removes the patterns you name before it quotes a number, and says which it removed."
+msgstr ""
+"Contas de equipe e QA estão dentro de cada funil. O Duct remove os padrões que você nomeia antes de citar um número e diz quais removeu."
+
+#: integrations/mixpanel.html
+msgid "Two kinds of change"
+msgstr "Dois tipos de alteração"
+
+#: integrations/mixpanel.html
+msgid ""
+"Two: add Mixpanel timeline annotation and hide/unhide event in Mixpanel Lexicon. By default each one waits for your Apply, and every one can be rolled back."
+msgstr ""
+"Duas: adicionar anotação à linha do tempo do Mixpanel e ocultar/exibir evento no Mixpanel Lexicon. Por padrão, cada uma aguarda sua aplicação, e cada uma pode ser revertida."
+
+#: integrations/mixpanel.html
+msgid "Typo events live forever."
+msgstr "Eventos com erro de digitação vivem para sempre."
+
+#: integrations/mixpanel.html
+msgid "Untagged is not organic."
+msgstr "Sem tag não é orgânico."
+
+#: integrations/mixpanel.html
+msgid "Upgrades up 18%, until the QA accounts come out. Then 4.0% against 4.1%."
+msgstr ""
+"Upgrades aumentaram 18%, até que as contas de QA sejam removidas. Depois 4,0% contra 4,1%."
+
+#: integrations/mixpanel.html
+msgid ""
+"Web and app send the same event name to Mixpanel, so when GA4 or an ad platform disagrees, Duct treats the gap as a measurement bug until shown otherwise."
+msgstr ""
+"Web e app enviam o mesmo nome de evento para o Mixpanel, então, quando o GA4 ou uma plataforma de anúncios discorda, o Duct trata a diferença como um bug de medição até que se prove o contrário."
+
+#: integrations/mixpanel.html
+msgid "What Duct already knows <0>about Mixpanel</0>"
+msgstr "O que o Duct já sabe <0>sobre o Mixpanel</0>"
+
+#: integrations/mixpanel.html
+msgid "What Mixpanel answers <0>with a partner</0>"
+msgstr "O que o Mixpanel responde <0>com um parceiro</0>"
+
+#: integrations/mixpanel.html
+msgid "What can Duct change in Mixpanel?"
+msgstr "O que o Duct pode mudar no Mixpanel?"
+
+#: integrations/mixpanel.html
+msgid "Which events have a typo twin still firing?"
+msgstr "Quais eventos têm um gêmeo com erro de digitação ainda ativo?"
+
+#: integrations/mixpanel.html
+msgid "Why does GA4 count fewer signups than Mixpanel?"
+msgstr "Por que o GA4 conta menos cadastros que o Mixpanel?"
+
+#: integrations/mixpanel.html
+msgid "Why not a project token or API secret?"
+msgstr "Por que não um token de projeto ou segredo de API?"
+
+#: integrations/mixpanel.html
+msgid ""
+"Yes. Pick the region when you connect and Duct reads from that region's host. A key that works but is refused usually means the region is wrong."
+msgstr ""
+"Sim. Escolha a região ao conectar e o Duct lê do host dessa região. Uma chave que funciona, mas é recusada, geralmente significa que a região está errada."
+
+#. meta twitter:description
+#: integrations/mixpanel.html
+msgid "Your upgrade spike was the QA team. Duct takes them out and checks Stripe."
+msgstr ""
+"Seu pico de upgrade foi a equipe de QA. O Duct os remove e verifica o Stripe."
+
+#: integrations/revenuecat.html
+msgid "<0/><1/><2>RevenueCat + Apple Search Ads</2>"
+msgstr "<0/><1/><2>RevenueCat + Apple Search Ads</2>"
+
+#: integrations/revenuecat.html
+msgid "<0/><1/><2>RevenueCat + Stripe</2>"
+msgstr "<0/><1/><2>RevenueCat + Stripe</2>"
+
+#: integrations/revenuecat.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Installs in, subscribers out.</4><5>RevenueCat + Apple Search Ads <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Instalações entram, assinantes saem.</4><5>RevenueCat + Apple Search Ads <6/></5>"
+
+#: integrations/revenuecat.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Upgrades counted, upgrades paid.</4><5>RevenueCat + Mixpanel <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Upgrades contados, upgrades pagos.</4><5>RevenueCat + Mixpanel <6/></5>"
+
+#: integrations/revenuecat.html
+msgid ""
+"<0><1/><2></2><3/></0><4>Web and app revenue, read as one number.</4><5>RevenueCat + Stripe <6/></5>"
+msgstr ""
+"<0><1/><2></2><3/></0><4>Receita da web e do app, lida como um único número.</4><5>RevenueCat + Stripe <6/></5>"
+
+#: integrations/revenuecat.html
+msgid ""
+"<0>active trials</0><1>active subscriptions</1><2>MRR</2><3>revenue</3><4>new customers</4><5>active users</5>"
+msgstr ""
+"<0>testes ativos</0><1>assinaturas ativas</1><2>MRR</2><3>receita</3><4>novos clientes</4><5>usuários ativos</5>"
+
+#: integrations/revenuecat.html
+msgid ""
+"<0>first seen</0><1>last seen</1><2>country</2><3>platform</3><4>active entitlements</4>"
+msgstr ""
+"<0>primeira vez visto</0><1>última vez visto</1><2>país</2><3>plataforma</3><4>direitos ativos</4>"
+
+#: integrations/revenuecat.html
+msgid "<0>name</0><1>store</1><2>identifier</2>"
+msgstr "<0>nome</0><1>loja</1><2>identificador</2>"
+
+#. img alt
+#: integrations/revenuecat.html
+msgid ""
+"A Duct session: asked what the app earns next to the web, Duct reads RevenueCat metrics and a hashed customer sample beside Stripe and adds app MRR to web MRR"
+msgstr ""
+"Uma execução do Duct: perguntado o que o app ganha em comparação com a web, o Duct lê métricas do RevenueCat e uma amostra de clientes com hash ao lado do Stripe e adiciona o MRR do app ao MRR da web"
+
+#: integrations/revenuecat.html
+msgid "An SDK key can't read the API."
+msgstr "Uma chave SDK não pode ler a API."
+
+#: integrations/revenuecat.html
+msgid "Apps, products, entitlements and offerings"
+msgstr "Apps, produtos, direitos e ofertas"
+
+#: integrations/revenuecat.html
+msgid ""
+"Ask what the app earns. Duct adds RevenueCat's app MRR to Stripe's web MRR and shows which platform pays."
+msgstr ""
+"Pergunte o que o app ganha. O Duct adiciona o MRR do app do RevenueCat ao MRR da web do Stripe e mostra qual plataforma paga."
+
+#: integrations/revenuecat.html
+msgid "Can Duct change products, offerings or subscriptions?"
+msgstr "O Duct pode mudar produtos, ofertas ou assinaturas?"
+
+#: integrations/revenuecat.html
+msgid "Connect RevenueCat <0>in three steps</0>"
+msgstr "Conecte o RevenueCat <0>em três passos</0>"
+
+#: integrations/revenuecat.html
+msgid "Customer IDs are hashed."
+msgstr "IDs de clientes têm hash."
+
+#: integrations/revenuecat.html
+msgid "Customers, a sample of 500"
+msgstr "Clientes, uma amostra de 500"
+
+#: integrations/revenuecat.html
+msgid "Did the Apple Search Ads installs start trials?"
+msgstr "As instalações do Apple Search Ads iniciaram testes?"
+
+#: integrations/revenuecat.html
+msgid "Do Android users pay like iOS users?"
+msgstr "Usuários Android pagam como usuários iOS?"
+
+#: integrations/revenuecat.html
+msgid ""
+"Duct has no RevenueCat change operation, so it cannot edit anything in RevenueCat. It can still recommend a change for you to make there."
+msgstr ""
+"O Duct não tem operação de alteração no RevenueCat, então não pode editar nada no RevenueCat. Ele ainda pode recomendar uma alteração para você fazer lá."
+
+#: integrations/revenuecat.html
+msgid ""
+"Duct keeps a SHA-256 of each app user ID: enough to join one pull to the next, useless for identifying a person."
+msgstr ""
+"O Duct mantém um SHA-256 de cada ID de usuário do app: o suficiente para unir uma extração à próxima, inútil para identificar uma pessoa."
+
+#. meta description
+#: integrations/revenuecat.html
+msgid ""
+"Duct reads RevenueCat's subscriptions, trials and MRR beside Stripe and your app ads, so web and app revenue read as one number. Read-only, customer IDs hashed."
+msgstr ""
+"O Duct lê as assinaturas, testes e MRR do RevenueCat ao lado do Stripe e dos seus anúncios de app, para que a receita da web e do app seja lida como um único número. Somente leitura, IDs de clientes com hash."
+
+#: integrations/revenuecat.html
+msgid ""
+"From a sample of 500 customers: when each was first and last seen, their country and platform, and their active entitlements, with the user ID hashed."
+msgstr ""
+"De uma amostra de 500 clientes: quando cada um foi visto pela primeira e última vez, seu país e plataforma, e seus direitos ativos, com o ID de usuário com hash."
+
+#: integrations/revenuecat.html
+msgid ""
+"Give it read access to project configuration, customer information and charts metrics."
+msgstr ""
+"Dê a ele acesso de leitura à configuração do projeto, informações do cliente e métricas de gráficos."
+
+#: integrations/revenuecat.html
+msgid "How many trials are active right now?"
+msgstr "Quantos testes estão ativos agora?"
+
+#: integrations/revenuecat.html
+msgid "In Duct, open Connections, choose RevenueCat and paste the key."
+msgstr "No Duct, abra Conexões, escolha RevenueCat e cole a chave."
+
+#: integrations/revenuecat.html
+msgid ""
+"In RevenueCat, open Project settings, then API keys, and create a secret API key (V2)."
+msgstr ""
+"No RevenueCat, abra Configurações do projeto, depois Chaves de API, e crie uma chave de API secreta (V2)."
+
+#: integrations/revenuecat.html
+msgid ""
+"Installs and in-app events are signals. RevenueCat sees refunds, billing retries and cancellations, so Duct checks app ad conversions against it, never the reverse."
+msgstr ""
+"Instalações e eventos no app são sinais. O RevenueCat vê reembolsos, novas tentativas de cobrança e cancelamentos, então o Duct verifica as conversões de anúncios do app em relação a ele, nunca o contrário."
+
+#: integrations/revenuecat.html
+msgid ""
+"Keys starting appl_ or goog_ are for the app. Reading needs a secret V2 key, and Duct tells you if you pasted the wrong kind."
+msgstr ""
+"Chaves que começam com appl_ ou goog_ são para o app. A leitura precisa de uma chave V2 secreta, e o Duct avisa se você colou o tipo errado."
+
+#: integrations/revenuecat.html
+msgid "Metrics are rate-limited hard."
+msgstr "As métricas têm limite de taxa rigoroso."
+
+#: integrations/revenuecat.html
+msgid ""
+"No. Duct has no RevenueCat change operation. It reads metrics, configuration and a customer sample."
+msgstr ""
+"Não. O Duct não tem operação de alteração no RevenueCat. Ele lê métricas, configuração e uma amostra de clientes."
+
+#: integrations/revenuecat.html
+msgid "Overview metrics"
+msgstr "Métricas de visão geral"
+
+#: integrations/revenuecat.html
+msgid "Read the RevenueCat notes Duct's agent works from <0/>"
+msgstr "Leia as notas do RevenueCat que o agente do Duct usa <0/>"
+
+#: integrations/revenuecat.html
+msgid ""
+"Read-only: a key with read scopes cannot change a product or a subscription, and Duct has no RevenueCat change operation."
+msgstr ""
+"Somente leitura: uma chave com escopos de leitura não pode mudar um produto ou uma assinatura, e o Duct não tem operação de alteração no RevenueCat."
+
+#. meta og:title
+#. meta twitter:title
+#: integrations/revenuecat.html
+msgid "RevenueCat AI analyst: app revenue beside the web"
+msgstr "Analista de IA do RevenueCat: receita do app ao lado da web"
+
+#: integrations/revenuecat.html
+msgid "RevenueCat AI analyst: app revenue beside the web | Duct"
+msgstr "Analista de IA do RevenueCat: receita do app ao lado da web | Duct"
+
+#: integrations/revenuecat.html
+msgid ""
+"RevenueCat API v2 · checked against the fetch code Sep 29, 2026 · <0>read the source</0>"
+msgstr ""
+"API v2 do RevenueCat · verificado contra o código de busca em 29 de setembro de 2026 · <0>ler o código-fonte</0>"
+
+#: integrations/revenuecat.html
+msgid "RevenueCat is the app's money truth."
+msgstr "RevenueCat é a verdade financeira do app."
+
+#: integrations/revenuecat.html
+msgid ""
+"RevenueCat's metrics API allows 25 requests a minute. Duct paces its reads rather than finding the limit by failing."
+msgstr ""
+"A API de métricas do RevenueCat permite 25 requisições por minuto. Duct cadencia suas leituras em vez de encontrar o limite falhando."
+
+#: integrations/revenuecat.html
+msgid "RevenueCat, <0>answered</0>"
+msgstr "RevenueCat, <0>respondido</0>"
+
+#: integrations/revenuecat.html
+msgid "RevenueCat, <0>the app's half of the revenue.</0>"
+msgstr "RevenueCat, <0>a metade da receita do app.</0>"
+
+#: integrations/revenuecat.html
+msgid "Secret key (V2)"
+msgstr "Chave secreta (V2)"
+
+#: integrations/revenuecat.html
+msgid ""
+"Stripe sees the web. RevenueCat sees the App Store and Google Play. Duct reads both so MRR is one number, and checks app ad installs against the subscriptions they turned into."
+msgstr ""
+"Stripe vê a web. RevenueCat vê a App Store e o Google Play. Duct lê ambos para que o MRR seja um número, e verifica as instalações de anúncios de apps contra as assinaturas em que se transformaram."
+
+#. meta og:description
+#: integrations/revenuecat.html
+msgid ""
+"Stripe sees the web. RevenueCat sees the App Store and Google Play. Duct reads both, so MRR is one number and app ads answer to it."
+msgstr ""
+"Stripe vê a web. RevenueCat vê a App Store e o Google Play. Duct lê ambos, então o MRR é um número e os anúncios de apps respondem a ele."
+
+#: integrations/revenuecat.html
+msgid ""
+"The app earns €6,900 MRR on top of Stripe's €18,400. Android pays at half the iOS rate."
+msgstr ""
+"O app gera €6.900 de MRR além dos €18.400 do Stripe. Android paga pela metade da taxa do iOS."
+
+#: integrations/revenuecat.html
+msgid ""
+"The keys in your app are public SDK keys, and they cannot read RevenueCat's REST API. A secret V2 key with read scopes can."
+msgstr ""
+"As chaves no seu app são chaves públicas de SDK, e elas não podem ler a API REST do RevenueCat. Uma chave secreta V2 com escopos de leitura pode."
+
+#. meta twitter:description
+#: integrations/revenuecat.html
+msgid ""
+"Web MRR plus app MRR, read as one number. Then the app ads, checked against it."
+msgstr ""
+"MRR da web mais MRR do app, lido como um único número. Depois, os anúncios do app, verificados contra ele."
+
+#: integrations/revenuecat.html
+msgid "What Duct already knows <0>about RevenueCat</0>"
+msgstr "O que Duct já sabe <0>sobre RevenueCat</0>"
+
+#: integrations/revenuecat.html
+msgid "What RevenueCat answers <0>with a partner</0>"
+msgstr "O que RevenueCat responde <0>com um parceiro</0>"
+
+#: integrations/revenuecat.html
+msgid "What is our MRR across web and app together?"
+msgstr "Qual é o nosso MRR na web e no app juntos?"
+
+#: integrations/revenuecat.html
+msgid "Which customer data does Duct keep?"
+msgstr "Quais dados de clientes Duct mantém?"
+
+#: integrations/revenuecat.html
+msgid "Why a secret key and not the one in my app?"
+msgstr "Por que uma chave secreta e não a do meu app?"
+
 #: integrations/stripe.html
 msgid "<0/><1/><2/><3/><4>Stripe + Google Ads + Meta Ads + ChatGPT Ads</4>"
 msgstr "<0/><1/><2/><3/><4>Stripe + Google Ads + Meta Ads + ChatGPT Ads</4>"
@@ -4337,6 +6406,13 @@ msgid ""
 msgstr ""
 "<0>status</0><1>plano</1><2>valor</2><3>intervalo</3><4>criado</4><5>cancelado</5>"
 
+#. img alt
+#: integrations/stripe.html
+msgid ""
+"A Duct session: asked how many paying customers the ads brought, Duct reads Google Ads, Meta and Stripe and reconciles 64 claimed purchases against 23 first payments"
+msgstr ""
+"Uma execução do Duct: perguntado quantos clientes pagantes os anúncios trouxeram, Duct lê Google Ads, Meta e Stripe e reconcilia 64 compras alegadas contra 23 primeiros pagamentos"
+
 #: integrations/stripe.html
 msgid "A checkout that never charged is not a sale."
 msgstr "Um checkout que nunca foi cobrado não é uma venda."
@@ -4353,6 +6429,12 @@ msgid ""
 "Ad platforms report conversions they attribute to themselves; Stripe reports money that settled. When they disagree, Duct sides with Stripe."
 msgstr ""
 "Plataformas de anúncios relatam conversões que atribuem a si mesmas; Stripe relata o dinheiro que foi liquidado. Quando eles discordam, o Duct fica do lado do Stripe."
+
+#: integrations/stripe.html
+msgid ""
+"Ask how many customers the ads brought. The platforms claim 64; Stripe settled 23. Duct counts first payments, not upgrades or checkouts that never charged."
+msgstr ""
+"Pergunte quantos clientes os anúncios trouxeram. As plataformas alegam 64; Stripe liquidou 23. Duct conta os primeiros pagamentos, não upgrades ou checkouts que nunca foram cobrados."
 
 #: integrations/stripe.html
 msgid ""
@@ -4457,10 +6539,6 @@ msgid ""
 "Read-only by construction: a restricted key with read permissions cannot move money or edit a customer, and Duct has no Stripe change operation at all."
 msgstr ""
 "Somente leitura por construção: uma chave restrita com permissões de leitura não pode mover dinheiro ou editar um cliente, e o Duct não tem nenhuma operação de alteração no Stripe."
-
-#: integrations/stripe.html
-msgid "Reads three datasets"
-msgstr "Lê três conjuntos de dados"
 
 #: integrations/stripe.html
 msgid "Refunds come off, and no plan reads as zero."
@@ -9531,6 +11609,46 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#~ msgid ""
+#~ "<0>Apple Search Ads</0><1>Spend, taps and installs, by campaign and search term.</1><2><3>API key pair</3><4>Read-only</4></2>"
+#~ msgstr ""
+#~ "<0>Apple Search Ads</0><1>Gastos, toques e instalações, por campanha e termo de pesquisa.</1><2><3>Par de chaves da API</3><4>Somente leitura</4></2>"
+
+#~ msgid ""
+#~ "<0>Google Search Console</0><1>Search queries, clicks, impressions and average position.</1><2><3>Sign in with Google</3><4>Read-only</4></2>"
+#~ msgstr ""
+#~ "<0>Google Search Console</0><1>Consultas de pesquisa, cliques, impressões e posição média.</1><2><3>Entrar com o Google</3><4>Somente leitura</4></2>"
+
+#~ msgid ""
+#~ "<0>Google Tag Manager</0><1>Tags, variables and container versions, staged, with rollback.</1><2><3>Sign in with Google</3><4>4 kinds of change</4></2>"
+#~ msgstr ""
+#~ "<0>Google Tag Manager</0><1>Tags, variáveis e versões de contêiner, em preparação, com reversão.</1><2><3>Entrar com o Google</3><4>4 tipos de alteração</4></2>"
+
+#~ msgid ""
+#~ "<0>GrowthBook</0><1>Which tests are live, whether they still bucket, per-metric results.</1><2><3>API key</3><4>Read-only</4></2>"
+#~ msgstr ""
+#~ "<0>GrowthBook</0><1>Quais testes estão ativos, se ainda agrupam, resultados por métrica.</1><2><3>Chave da API</3><4>Somente leitura</4></2>"
+
+#~ msgid ""
+#~ "<0>Meta Ads</0><1>Facebook and Instagram spend, reach, conversions and CPA.</1><2><3>System User token</3><4>Read-only</4></2>"
+#~ msgstr ""
+#~ "<0>Meta Ads</0><1>Gastos no Facebook e Instagram, alcance, conversões e CPA.</1><2><3>Token de Usuário do Sistema</3><4>Somente leitura</4></2>"
+
+#~ msgid ""
+#~ "<0>Microsoft Clarity</0><1>Rage clicks, dead clicks, quick-backs and script errors, per page.</1><2><3>Export token</3><4>Read-only</4></2>"
+#~ msgstr ""
+#~ "<0>Microsoft Clarity</0><1>Cliques de raiva, cliques mortos, retornos rápidos e erros de script, por página.</1><2><3>Token de exportação</3><4>Somente leitura</4></2>"
+
+#~ msgid ""
+#~ "<0>Mixpanel</0><1>Signups, logins and upgrades, one name across web and app.</1><2><3>Service account</3><4>2 kinds of change</4></2>"
+#~ msgstr ""
+#~ "<0>Mixpanel</0><1>Registros, logins e upgrades, um nome para web e app.</1><2><3>Conta de serviço</3><4>2 tipos de alteração</4></2>"
+
+#~ msgid ""
+#~ "<0>RevenueCat</0><1>Trials, renewals, refunds and MRR across the App Store and Play.</1><2><3>Secret key (V2)</3><4>Read-only</4></2>"
+#~ msgstr ""
+#~ "<0>RevenueCat</0><1>Testes, renovações, reembolsos e MRR na App Store e Play.</1><2><3>Chave secreta (V2)</3><4>Somente leitura</4></2>"
 
 #~ msgid "Clarity"
 #~ msgstr "Clarity"

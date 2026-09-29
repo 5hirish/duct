@@ -4,7 +4,7 @@
 // hatches the mock understands — `{ __answer__ }` answers the pending
 // question, `{ __send__ }` is the user typing the next message.
 import { readFileSync } from "node:fs";
-import { ANSWERS, BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, DRAFT_POST, MEMORIES, PAID_BRIEF_HTML, PLAN, PRODUCT_BRIEF_HTML, PRODUCT_CHANGE_SET, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import { ANSWERS, BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, CONNECTOR_SESSIONS, DRAFT_POST, MEMORIES, PAID_BRIEF_HTML, PLAN, PRODUCT_BRIEF_HTML, PRODUCT_CHANGE_SET, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 // The backend's slide CSS, rendered once from agents/content/templates.py
 // (see assets/slides-head.html for how). The live slide preview reads its
@@ -22,12 +22,17 @@ const step = (id, label, connector) => [
   { event: "step_finished", step_id: id, label, status: "success", ...(connector ? { connector_id: connector } : {}) },
 ];
 const say = (text) => ({ event: "agent_message_chunk", text });
+// A memory's id is its place in the story, so it is stable and unique; the
+// digits of the slug were neither (every slug without one got the same id).
+const memoryId = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const recall = (ids) => ids.map((id) => {
+  const at = MEMORIES.findIndex((x) => x.id === id);
+  return { id, memory_id: memoryId(at + 1), title: MEMORIES[at].title, kind: MEMORIES[at].kind };
+});
 
 export function insightsFrames() {
   const m = (id) => MEMORIES.find((x) => x.id === id);
-  const recalled = ["mem-cpa", "mem-legacy", "mem-android"].map((id) => ({
-    id, memory_id: `00000000-0000-4000-8000-${id.replace(/\D/g, "").padStart(12, "0")}`, title: m(id).title, kind: m(id).kind,
-  }));
+  const recalled = recall(["mem-cpa", "mem-legacy", "mem-android"]);
   const range = `${STORY.week.start} → ${STORY.week.end}`;
   return [
     { event: "pipeline_started", status: "running", autonomy: "ask", autonomy_configured: "assisted" },
@@ -76,11 +81,14 @@ export function insightsFrames() {
   ];
 }
 
-const sources = (key) => ANSWERS[key].sources.flatMap((s, i) => step(`collect_source_data:${s.id}:${i}`, s.label, s.id));
-const recall = (ids) => ids.map((id) => {
-  const m = MEMORIES.find((x) => x.id === id);
-  return { id, memory_id: `00000000-0000-4000-8000-${id.replace(/\D/g, "").padStart(12, "0")}`, title: m.title, kind: m.kind };
-});
+// A source with an entity is a pull the way the agent reports one now: a
+// tool_activity row, started then finished under one id, which the app draws
+// with the connector's logo. The older sessions' labelled steps stay steps.
+const pulls = (list) => list.flatMap((s, i) => s.entity ? [
+  { event: "tool_activity", activity_id: `pull_${i}_${s.entity}`, tool: "FetchData", kind: "data", status: "running", title: s.entity, source: s.id, meta: { date_from: s.from, date_to: s.to } },
+  { event: "tool_activity", activity_id: `pull_${i}_${s.entity}`, tool: "FetchData", kind: "data", status: "success", title: s.entity, source: s.id, meta: { date_from: s.from, date_to: s.to } },
+] : step(`collect_source_data:${s.id}:${i}`, s.label, s.id));
+const sources = (key) => pulls(ANSWERS[key].sources);
 
 // The same week asked from the product side: not "why are signups down" but
 // "why did activation drop". Same rebuild, same rage clicks, same Android
@@ -180,6 +188,38 @@ export function paidFrames() {
   ];
 }
 
+// One session per connector page (CONNECTOR_SESSIONS): the same shape as the
+// three above, told from that connector's question. A change set only where
+// Duct can act on the tool; the rest end on the answer and what to do by hand.
+export function connectorFrames(s, i) {
+  const todos = (done) => s.todos.map((content, k) => ({ content, status: k < done ? "completed" : k === done ? "in_progress" : "pending" }));
+  const ask = s.ask;
+  return [
+    { event: "pipeline_started", status: "running", autonomy: "ask", autonomy_configured: "assisted" },
+    { event: "memory_recalled", memories: recall(s.recalled) },
+    { event: "todo_update", todos: todos(0) },
+    ...pulls(s.sources),
+    ...s.thinking.map((text) => ({ event: "thinking_chunk", text })),
+    say("One thing before I go on."),
+    { event: "questions_required", interrupt_id: `int_${s.shot}`, questions: [
+      { question: ask.question, header: ask.header, options: ask.options },
+    ] },
+    { event: "message_stop" },
+    usage(36000 + i * 900, 800),
+    { __answer__: { [ask.question]: ask.pick } },
+    { event: "todo_update", todos: todos(2) },
+    ...step("verify", `verification sub-agent · re-checking ${s.verify} numbers`),
+    say(s.answer),
+    { event: "artifact_version", version_id: 1, label: "Version 1", payload: { title: `${s.brief.title} brief · ${STORY.week.label}`, format: "html", content: s.brief.html } },
+    ...(s.change_set ? [{ event: "execution_proposed", change_set: s.change_set }] : []),
+    { event: "memory_written", memories: [{ id: `mem-${s.shot}`, memory_id: memoryId(100 + i), title: s.memory.title, kind: s.memory.kind }] },
+    say(` ${s.close}`),
+    { event: "message_stop" },
+    usage(58000 + i * 1100, 1800),
+    { event: "pipeline_finished", status: "success" },
+  ];
+}
+
 // The content agent drafting one post from the plan: the carousel for day 3,
 // six slides, the first image already in. It stops there, mid-run, with the
 // other five waiting for a go-ahead — that is the moment the screenshot wants.
@@ -214,10 +254,24 @@ export function auditFrames() {
   return [{ event: "pipeline_started", status: "running" }, { event: "pipeline_finished", status: "success" }];
 }
 
+// A change set as GET /api/execute/{id} returns it. ChangeSetCard re-reads
+// its row as it mounts, and the mock's catch-all `[]` has no status, so a
+// card without its row here throws.
+const apiRow = (cs) => ({
+  ...cs,
+  changes: cs.changes.map((c) => ({
+    id: c.id, op_type: c.op_type, status: c.status, summary: "",
+    preview: { diff: c.diff, warnings: c.warnings || [] },
+    guardrail_violations: c.guardrail_violations || [],
+  })),
+});
+const PROPOSED = [CHANGE_SET, PRODUCT_CHANGE_SET, ...CONNECTOR_SESSIONS.map((s) => s.change_set).filter(Boolean)];
+
 // What the app asks the backend for around a session, answered from the
 // story so the shell around the workspace is not empty.
 export function routes() {
   return {
+    ...Object.fromEntries(PROPOSED.map((cs) => [`GET /api/execute/${cs.id}`, apiRow(cs)])),
     "GET /api/providers/status": {
       chatgpt_auth_enabled: true,
       providers: [

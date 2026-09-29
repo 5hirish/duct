@@ -47,6 +47,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
 OUT = SITE / "integrations"
+MEDIA = SITE / "assets/media"
+MEDIA_WIDTHS = (768, 1536)  # scripts/build_media_variants.mjs
 BACKEND = ROOT / "backend"
 BASE_URL = "https://getduct.ai"
 REPO_BLOB = "https://github.com/5hirish/duct/blob/main/"
@@ -156,6 +158,7 @@ def build_model():
     catalogs, executors, metas = read_catalogs(), read_executors(), read_metas()
     allow = _module_literal(BACKEND / "service/execution/policy.py", "AUTO_APPLY_ALLOWLIST")
     stripe_version = _module_literal(BACKEND / "service/stripe/client.py", "STRIPE_VERSION")
+    meta_version = _module_literal(BACKEND / "service/meta/ads/client.py", "API_VERSION")
     errors: list[str] = []
     by_id = {c["id"]: c for c in copy.CONNECTORS}
     groups = {g for g, _ in copy.GROUPS}
@@ -203,7 +206,7 @@ def build_model():
                 errors.append(f"{cid}: no entity catalogue, so the copy needs `reads`, `source` and `checked`")
             elif not (ROOT / c["source"]).is_file():
                 errors.append(f"{cid}: source {c['source']} does not exist")
-            c["api_line"] = c.get("api", "").format(stripe_version=stripe_version)
+            c["api_line"] = c.get("api", "").format(stripe_version=stripe_version, meta_version=meta_version)
         if len(page["title"]) > TITLE_MAX:
             errors.append(f"{cid}: title is {len(page['title'])} characters, the limit is {TITLE_MAX}")
         lo, hi = DESCRIPTION_RANGE
@@ -213,6 +216,15 @@ def build_model():
         for other in named:
             if other not in by_id or by_id[other].get("soon"):
                 errors.append(f"{cid}: names {other!r}, which is not a live connector")
+        shot = page.get("shot")
+        if not shot:
+            errors.append(f"{cid}: no session shot; add one to scripts/shots (CONNECTOR_SESSIONS) and name it here")
+        else:
+            missing = [f for f in [f"{shot['file']}.webp"] + [f"{shot['file']}-{w}.webp" for w in MEDIA_WIDTHS]
+                       if not (MEDIA / f).is_file()]
+            if missing:
+                errors.append(f"{cid}: site/assets/media is missing {', '.join(missing)}: copy the shot in from "
+                              "docs/assets/readme and run scripts/build_media_variants.mjs")
         if not c["ops"] and any("{changes}" in a for _, a in page["faq"]):
             errors.append(f"{cid}: the FAQ lists its changes, but the backend registers none for it")
     if errors:
@@ -239,6 +251,37 @@ def icon(name: str) -> str:
 
 def logo(c: dict, size: int) -> str:
     return f'<img src="../assets/icons/{c["logo"]}" width="{size}" height="{size}" alt=""/>'
+
+
+def webp_size(path: Path) -> tuple[int, int]:
+    """Canvas size from a WebP header, so the page's width/height follow the file."""
+    b = path.read_bytes()[:30]
+    kind = b[12:16]
+    if kind == b"VP8X":
+        return 1 + int.from_bytes(b[24:27], "little"), 1 + int.from_bytes(b[27:30], "little")
+    if kind == b"VP8 ":
+        return int.from_bytes(b[26:28], "little") & 0x3FFF, int.from_bytes(b[28:30], "little") & 0x3FFF
+    if kind == b"VP8L":
+        bits = int.from_bytes(b[21:25], "little")
+        return 1 + (bits & 0x3FFF), 1 + ((bits >> 14) & 0x3FFF)
+    raise BuildError(f"{path.name} is not a WebP this script can read")
+
+
+def shot_section(shot: dict) -> str:
+    """The session this connector answers, mid-run, the way the landing pages
+    show theirs: below the fold, so lazy, with the variants in srcset."""
+    name = shot["file"]
+    w, h = webp_size(MEDIA / f"{name}.webp")
+    srcset = ", ".join([f"../assets/media/{name}-{v}.webp {v}w" for v in MEDIA_WIDTHS] + [f"../assets/media/{name}.webp {w}w"])
+    return f"""
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="../assets/media/{name}.webp" srcset="{srcset}" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="{w}" height="{h}" alt="{e(shot['alt'])}"/>
+<figcaption>{e(shot['caption'])}</figcaption>
+</figure>
+</section>
+"""
 
 
 def human_date(iso: str) -> str:
@@ -547,7 +590,7 @@ def connector_page(c: dict, copy, by_id: dict) -> str:
 </div>
 {mock(c, by_id)}
 </section>
-
+{shot_section(p["shot"])}
 <div class="channel" aria-hidden="true"></div>
 
 <!-- ASK -->

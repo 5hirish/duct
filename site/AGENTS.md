@@ -356,12 +356,21 @@ connectors while HubSpot was still "Coming soon" in the app:
 | May self-apply in assisted mode | `AUTO_APPLY_ALLOWLIST` in `backend/service/execution/policy.py` |
 | How you sign in | `ConnectorMeta.oauth_scope` (a scope, or `None` for a pasted key) |
 | What Duct already knows | the connector's knowledge pack in `backend/agents/knowledge/`, in plain words, linked |
+| The session under the hero | `CONNECTOR_SESSIONS` in `app/src/lib/__fixtures__/solo-story.mjs`, shot by `scripts/shots/shoot.mjs` |
 
 Everything else (questions, the knowledge rules in plain words, setup, FAQ)
 is hand-written in `scripts/integrations/connectors.py`, whose docstring holds
 the editing rules: a claim about behaviour names the code that does it.
 
+Each page shows one mid-run session: the question that connector is the one
+to answer, its sources as logo rows, the brief, and the change set where Duct
+can act. The session is told from what the connector really reads (its
+fetcher and knowledge pack), so a page never shows an answer from data Duct
+cannot see; the generator fails on a page without its shot and variants.
+
 ```bash
+node scripts/shots/shoot.mjs session-<slug>   # the session, into docs/assets/readme/
+cp docs/assets/readme/session-<slug>.webp site/assets/media/ && node scripts/build_media_variants.mjs
 node scripts/build_og_images.mjs              # a new page first gets its card (a row with `logo`)
 python3 scripts/build_integrations.py         # writes site/integrations/*.html
 python3 scripts/build_integrations.py --check # CI: stale page, unlisted connector, missing card or listing

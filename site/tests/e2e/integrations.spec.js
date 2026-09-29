@@ -10,11 +10,14 @@ test("the hub links every connector page, and each one renders", async ({ page, 
   expect(await page.locator(".ig-card").count()).toBeGreaterThanOrEqual(12);
 
   const hrefs = await page.locator("a.ig-card.is-link").evaluateAll((els) => els.map((a) => a.getAttribute("href")));
-  expect(hrefs.length).toBeGreaterThanOrEqual(4);
+  expect(hrefs.length).toBeGreaterThanOrEqual(12);
   for (const href of hrefs) {
     const res = await request.get(href);
     expect(res.ok(), href).toBeTruthy();
-    expect(await res.text()).toContain('class="ig-lockup"');
+    const html = await res.text();
+    expect(html).toContain('class="ig-lockup"');
+    // Every connector page shows its session mid-run.
+    expect(html).toMatch(/class="shot-frame[^"]*"[\s\S]*?assets\/media\/[a-z-]+\.webp/);
   }
 });
 
