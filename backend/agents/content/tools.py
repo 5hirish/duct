@@ -50,6 +50,7 @@ from agents.content.results import (
     EditImageResult,
     EditSlideResult,
     GenerateImageResult,
+    GenerateVideoResult,
     LogMetricsResult,
     MarkPostedResult,
     RenderSlideResult,
@@ -58,7 +59,17 @@ from agents.content.results import (
 )
 from sqlmodel import Session, select
 
-from agents.models import DEFAULT_IMAGE_MODEL, AspectRatio, ImageModel, image_model_for
+from agents.models import (
+    DEFAULT_IMAGE_MODEL,
+    AspectRatio,
+    ImageModel,
+    Provider,
+    VideoModel,
+    image_model_for,
+    video_cost_usd,
+    video_model_for,
+)
+from agents.core.events import AgentEvent
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.content.assessment import assess, reassess
 from agents.content.events import ContentEvent
@@ -74,6 +85,7 @@ from agents.content.schema import (
     clone_source,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
+from agents.content.video import VIDEO_POST_TYPE, cut_of, publish_asset, video_takes
 from service import storage
 from service.content_metrics import merge_synced_metrics
 from db.session import get_engine
@@ -113,6 +125,46 @@ _NO_IMAGE_KEY = (
     "Google Gemini, OpenAI, xAI or OpenRouter. Add one in Settings \u2192 Providers, "
     "then try again."
 )
+
+# The video tool's refusal, on the same principle: every key that would work.
+_NO_VIDEO_KEY = (
+    "Video needs an API key from a provider with a video model \u2014 Google Gemini "
+    "(Veo) or OpenRouter (Seedance). Add one in Settings \u2192 Providers, then try again."
+)
+
+_PROVIDER_NAMES = {Provider.GOOGLE_GENAI: "Gemini", Provider.OPENROUTER: "OpenRouter"}
+
+
+def _video_failure(exc: Any, provider: Provider) -> str:
+    """The sentence the agent gets for a failed clip, by error code — each one
+    asks for something different, and "try again" fits only two of them."""
+    from service.videos import VideoErrorCode
+
+    name = _PROVIDER_NAMES.get(provider, provider.value)
+    detail = str(getattr(exc, "detail", "") or "")[:300]
+    code = getattr(exc, "code", VideoErrorCode.PROVIDER)
+    if code is VideoErrorCode.SAFETY:
+        return (
+            "The video service's safety filter refused this clip"
+            + (f" ({detail})" if detail else "")
+            + ". Change what the prompt or the frame shows rather than retrying it as it is."
+        )
+    if code is VideoErrorCode.PERSON:
+        return (
+            "This model won't animate a first frame that shows a realistic person. Use a frame "
+            "without a realistic face (the product, hands, a stylised character) or make the clip "
+            "from the prompt alone; a Gemini key's Veo models do take such frames."
+        )
+    if code is VideoErrorCode.TIMEOUT:
+        return "The clip wasn't ready after ten minutes, so it was abandoned. Try again, or a shorter clip."
+    if code is VideoErrorCode.AUTH:
+        return f"The {name} key was refused for video. Check it in Settings \u2192 Providers."
+    if code is VideoErrorCode.BILLING:
+        return f"The {name} account behind this key is out of credit for video. Top it up, then try again."
+    if code is VideoErrorCode.INVALID:
+        return f"The video service rejected the request: {detail or 'no reason given'}."
+    return "The video service had a problem making this clip. Try again in a moment."
+
 
 def _post_lock(key: str) -> asyncio.Lock:
     """Get-or-create the lock for a post key. Safe under single-threaded asyncio
@@ -372,11 +424,16 @@ def _merge_slide_images(incoming: list[Slide], existing_row: ContentPost | None)
     return merged
 
 
-def _build_post_payload(row: ContentPost) -> dict:
-    """The POST_DRAFT_UPDATED payload — shared by submit_post_draft and the
-    per-slide image attach path so the frontend always gets the same shape."""
+def _build_post_payload(row: ContentPost, db: Session) -> dict:
+    """The POST_DRAFT_UPDATED payload — shared by submit_post_draft, the
+    per-slide image attach path and the video attach, so the frontend always
+    gets the same shape. ``post_type`` and the clip ride on it because the
+    viewport decides between the slide carousel and the player from them."""
     return {
         "id":              str(row.id),
+        "post_type":       row.post_type,
+        "video":           row.video,
+        "video_takes":     video_takes(db, row) if row.video else [],
         "post_dir_slug":   row.post_dir_slug,
         "pillar":          row.pillar,
         "topic":           row.topic,
@@ -660,6 +717,54 @@ def build_content_tools_lc(
         number_of_images: int = Field(1, ge=1, le=4, description="How many images to generate (1-4).")
         negative_prompt: str | None = Field(None, description="Accepted but inert — see generate_image.")
 
+    from service.videos.schema import VideoAspectRatio, VideoResolution
+
+    class GenerateVideoInput(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        prompt: str = Field(
+            description=(
+                "What happens in the clip, as one continuous shot: the subject and its action, the "
+                "camera (shot size, angle, movement), the setting and light, the look, and the sound. "
+                "Spoken lines go in double quotes. Sent to the video model as written."
+            ),
+        )
+        duration_seconds: int = Field(
+            8, ge=4, le=30,
+            description=(
+                "Clip length. Veo makes 4, 6 or 8 s; Seedance 2.0 Mini 4-15 s; Seedance 2.5 4-30 s. "
+                "Anything else is fitted to the nearest length the model makes, and the result says so."
+            ),
+        )
+        aspect_ratio: VideoAspectRatio = Field(
+            VideoAspectRatio.PORTRAIT_9_16, description="Default 9:16 portrait (TikTok, Reels, Shorts).",
+        )
+        resolution: VideoResolution = Field(
+            VideoResolution.P720,
+            description="720p by default. 1080p only on Veo, and only for an 8 s clip.",
+        )
+        first_frame_asset_id: str | None = Field(
+            None,
+            description=(
+                "An image asset the clip opens on (image-to-video): one generate_image returned, or an "
+                "upload from fetch_content_assets. The best way to keep the brand's look, product or "
+                "character exact. Omit to make the clip from the prompt alone."
+            ),
+        )
+        last_frame_asset_id: str | None = Field(
+            None,
+            description="An image the clip ends on — a before-to-after. Needs first_frame_asset_id.",
+        )
+        model: VideoModel | None = Field(
+            None,
+            description=(
+                "Leave empty: the run's video model follows the user's keys and settings. Name one "
+                "only when the user asked for it by name."
+            ),
+        )
+        negative_prompt: str | None = Field(
+            None, description="What to keep out of the clip (Veo only), e.g. 'text, warped hands'.",
+        )
+
     def _image_result(image_blocks: list[dict], m: BaseModel) -> str | list[dict]:
         """Success result for an image tool: the pictures plus the typed
         payload where the provider can look, the payload alone where it
@@ -921,7 +1026,7 @@ def build_content_tools_lc(
                     "event": ContentEvent.POST_DRAFT_UPDATED,
                     "session_id": session.session_id,
                     "post_id": str(row.id),
-                    "payload": _build_post_payload(row),
+                    "payload": _build_post_payload(row, db),
                 })
                 return _ok_model(SubmitPostResult(
                     post_id=str(row.id),
@@ -985,7 +1090,7 @@ def build_content_tools_lc(
                     "event": ContentEvent.POST_DRAFT_UPDATED,
                     "session_id": session.session_id,
                     "post_id": str(row.id),
-                    "payload": _build_post_payload(row),
+                    "payload": _build_post_payload(row, db),
                 })
                 return _ok_model(EditSlideResult(
                     post_id=str(row.id),
@@ -1390,7 +1495,7 @@ def build_content_tools_lc(
                                     "event": ContentEvent.POST_DRAFT_UPDATED,
                                     "session_id": session.session_id,
                                     "post_id": str(row.id),
-                                    "payload": _build_post_payload(row),
+                                    "payload": _build_post_payload(row, db2),
                                     "inline_preview": {
                                         "slide_id":   target_slide_id,
                                         "item_index": target_item_index,
@@ -1413,6 +1518,155 @@ def build_content_tools_lc(
         except Exception:
             logger.exception("generate_image failed")
             return _err("Image generation hit a snag — please try again.")
+
+    def _load_frame(db: Session, raw_id: str | None, which: str) -> tuple[Any, str | None]:
+        """A frame for the clip from one of this project's image assets."""
+        from service.videos import VideoFrame
+
+        if not raw_id:
+            return None, None
+        try:
+            asset = db.get(ContentAsset, UUID(str(raw_id).strip()))
+        except ValueError:
+            return None, _err(f"{which}_frame_asset_id {raw_id!r} is not an asset id.")
+        if asset is None or asset.project_id != project_id:
+            return None, _err(f"{which} frame asset {raw_id} not found for this project.")
+        mime = str(asset.mime_type or "image/png")
+        if not mime.startswith("image/"):
+            return None, _err(f"The {which} frame has to be an image; {raw_id} is {mime}.")
+        data = _load_asset_bytes(asset)
+        if not data:
+            return None, _err(f"The {which} frame couldn't be loaded — regenerate the image and try again.")
+        url = asset.url if str(asset.url).startswith("https://") else ""
+        return VideoFrame(data=data, mime_type=mime, url=url), None
+
+    async def generate_video(**args: Any) -> str:
+        try:
+            from service.generated_media import persist_generated_media
+            from service.images import asset_source_for
+            from service.videos import GenerateVideoRequest, VideoAPIError, fit_request, video_client_for
+
+            provider, key = session.video_provider, session.video_api_key
+            if provider is None or not key:
+                return _err(_NO_VIDEO_KEY)
+            first_id = args.get("first_frame_asset_id")
+            last_id = args.get("last_frame_asset_id")
+            if last_id and not first_id:
+                return _err("A last frame needs a first frame: pass first_frame_asset_id too, or drop the last frame.")
+
+            model = video_model_for(provider, args.get("model") or session.video_model or None)
+            try:
+                request = GenerateVideoRequest(
+                    prompt=str(args.get("prompt") or "").strip(),
+                    model=model,
+                    duration_seconds=int(args.get("duration_seconds") or 8),
+                    aspect_ratio=args.get("aspect_ratio") or VideoAspectRatio.PORTRAIT_9_16,
+                    resolution=args.get("resolution") or VideoResolution.P720,
+                    negative_prompt=args.get("negative_prompt") or None,
+                )
+            except ValidationError as exc:
+                return _err(f"The video request was invalid: {exc}")
+            request, notes = fit_request(request, has_last_frame=bool(last_id))
+
+            # A short session: check the post and read the frames, then let it
+            # go. The wait below runs to minutes and must not hold a connection.
+            with _open_db() as db:
+                _post, err = _require_post(db, project_id, session.post_id)
+                if err:
+                    return err
+                first_frame, err = _load_frame(db, first_id, "first")
+                if err:
+                    return err
+                last_frame, err = _load_frame(db, last_id, "last")
+                if err:
+                    return err
+                first_url = ""
+                if first_id:
+                    first_url = db.get(ContentAsset, UUID(str(first_id).strip())).url
+
+            try:
+                clip = await video_client_for(provider, key).generate_video(
+                    request, first_frame=first_frame, last_frame=last_frame,
+                )
+            except VideoAPIError as exc:
+                logger.warning("content: video generation failed: %s", exc)
+                return _err(_video_failure(exc, provider))
+
+            cost = clip.cost_usd if clip.cost_usd is not None else video_cost_usd(
+                request.model, request.resolution.value, request.duration_seconds,
+            )
+            params = {
+                "duration_seconds": request.duration_seconds,
+                "aspect_ratio": request.aspect_ratio.value,
+                "resolution": request.resolution.value,
+                "negative_prompt": request.negative_prompt,
+                "first_frame_asset_id": str(first_id or ""),
+                "last_frame_asset_id": str(last_id or ""),
+                "first_frame_url": first_url,
+                "cost_usd": cost,
+                "provider": provider.value,
+            }
+            async with _post_lock(str(session.post_id)):
+                with _open_db() as db2:
+                    asset = persist_generated_media(
+                        project_id, clip.data, clip.mime_type,
+                        db=db2, prompt=request.prompt, model=request.model.value, params=params,
+                        post_id=session.post_id, source=asset_source_for(provider),
+                    )
+                    row = db2.get(ContentPost, session.post_id)
+                    attached = row is not None and row.project_id == project_id
+                    if attached:
+                        # Making a clip makes this a video post: the viewport,
+                        # the review and publishing all key off post_type.
+                        row.video = cut_of(asset)
+                        row.post_type = VIDEO_POST_TYPE
+                        row.updated_at = datetime.now(timezone.utc)
+                        db2.add(row)
+                        db2.commit()
+                        db2.refresh(row)
+                        await emit({
+                            "event": ContentEvent.POST_DRAFT_UPDATED,
+                            "session_id": session.session_id,
+                            "post_id": str(row.id),
+                            "payload": _build_post_payload(row, db2),
+                        })
+
+            if cost is not None:
+                # Billed like a model call so the conversation's spend includes
+                # it; `media` scope counts toward the total and never moves the
+                # context gauge (see agents/core/lc._usage_scope).
+                await emit({
+                    "event": AgentEvent.TOKEN_USAGE,
+                    "model": request.model.value,
+                    "scope": "media",
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "cache_read_tokens": 0,
+                    "cache_creation_tokens": 0,
+                    "total_tokens": 0,
+                    "context_window": 0,
+                    "cost_usd": cost,
+                })
+
+            logger.info(
+                "content: %s s clip on %s for post %s (%s)",
+                request.duration_seconds, request.model.value, session.post_id,
+                f"${cost:.2f}" if cost is not None else "unpriced",
+            )
+            return _ok_model(GenerateVideoResult(
+                asset_id=str(asset.id),
+                url=asset.url,
+                model=request.model.value,
+                duration_seconds=request.duration_seconds,
+                aspect_ratio=request.aspect_ratio.value,
+                resolution=request.resolution.value,
+                cost_usd=cost,
+                attached_to_post=str(session.post_id) if attached else None,
+                notes=notes,
+            ))
+        except Exception:
+            logger.exception("generate_video failed")
+            return _err("Video generation hit a snag — please try again.")
 
     async def edit_image(**args: Any) -> str | list[dict]:
         try:
@@ -1572,7 +1826,17 @@ def build_content_tools_lc(
                 asset_rows: list[ContentAsset] = []
                 missing: list[str] = []
                 uncomposed: list[str] = []
-                if slides_meta:
+                if post.post_type == VIDEO_POST_TYPE:
+                    # A video post sends its cut, alone — not the keyframes
+                    # and references that also carry its id.
+                    clip = publish_asset(db, post)
+                    if clip is None:
+                        return _err(
+                            "This video post has no clip yet — make one with generate_video, "
+                            "then publish."
+                        )
+                    asset_rows = [clip]
+                elif slides_meta:
                     for s in slides_meta:
                         sid = str(s.get("slide_id") or "")
                         ren = renders_by_slide.get(sid)
@@ -1786,7 +2050,7 @@ def build_content_tools_lc(
                     "event":      ContentEvent.POST_DRAFT_UPDATED,
                     "session_id": session.session_id,
                     "post_id":    str(row.id),
-                    "payload":    _build_post_payload(row),
+                    "payload":    _build_post_payload(row, db),
                 })
                 weakest = sorted(result.markers, key=lambda m: m.score)[:2]
                 return _ok({
@@ -2130,6 +2394,16 @@ def build_content_tools_lc(
             "asset_url. Defaults: 9:16 portrait, 1 image. Generated images are "
             "saved to the project's media library.",
             GenerateImageInput,
+        ),
+        _bind(
+            generate_video, ContentTool.GENERATE_VIDEO,
+            "Make a video clip for the current post and make it the post's clip. From the prompt "
+            "alone, or animated from a first frame (an image asset), optionally ending on a last "
+            "frame. Waits until the clip is ready — ten seconds to several minutes — then saves "
+            "the mp4 as the post's cut (earlier clips stay as takes the user can switch back to) "
+            "and returns its URL, its cost, and any change made to fit the model (length, ratio, "
+            "resolution). Every second of video costs money: make one clip at a time.",
+            GenerateVideoInput,
         ),
         _bind(
             edit_image, ContentTool.EDIT_IMAGE,

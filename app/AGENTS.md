@@ -201,6 +201,9 @@ it is a claim about the code, not a way to quiet the check.
   spendable key, falls through to `IMAGE_PROVIDER_ORDER` rather than failing
   the run. `/providers/status` takes the same argument and must keep giving
   the same answer, because that row is a promise about what the run will do.
+  The **Videos row** under it is the same picker on the same rule
+  (`video_model`, `resolve_video_run`, `VIDEO_PROVIDER_ORDER`), and the two
+  share one divider because neither is a rung of the ladder above.
   Its `UsageEmpty` is exported for one reason: `/preview` renders fixtures and
   never the API, and this panel's first paint is a fetch, so without that seam
   the two states most worth reviewing would be the two nobody could open.
@@ -531,9 +534,10 @@ Rules that follow:
     The backend sends fields, never a sentence: a tool whose card has no
     sentence of its own (a read of the brand context, a post published) gets
     its verb from `TOOL_WORDS` in `ActivityRow`, so it is translated with the
-    rest. Ten kinds now — the six tool families plus memory, context,
-    artifact and action — and the run's own "Read project context" row
-    (`contextActivity`, from the stored CONTEXT row on replay) says which
+    rest. Eleven kinds now — the seven tool families (a video clip since
+    #284) plus memory, context, artifact and action — and the run's own
+    "Read project context" row (`contextActivity`, from the stored CONTEXT
+    row on replay) says which
     blocks the opening turn was enriched with. Memory's "Recalled" and
     "Remembered" rows come back from their stored rows the same way.
   - **Where a fact belongs**: in the transcript when it is something the agent

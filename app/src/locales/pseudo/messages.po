@@ -146,6 +146,10 @@ msgstr ""
 msgid "{contentGaps, plural, one {# gap} other {# gaps}}"
 msgstr ""
 
+#: src/components/content/PostVideo.jsx
+msgid "{cost} to make"
+msgstr ""
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
 msgstr ""
@@ -448,6 +452,11 @@ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
+msgstr ""
+
+#: src/components/content/PostVideo.jsx
+#: src/components/workspace/ActivityRow.jsx
+msgid "{seconds} s"
 msgstr ""
 
 #: src/components/workspace/ContextRing.jsx
@@ -1398,7 +1407,15 @@ msgid "Auto — whichever key can draw"
 msgstr ""
 
 #: src/components/models/TierSummary.jsx
+msgid "Auto — whichever key can make video"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
 msgid "Auto · {drawn}"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Auto · {made}"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -2189,6 +2206,10 @@ msgstr ""
 
 #: src/app/(app)/execute/page.jsx
 msgid "Couldn't load your guardrails. The queue above is unaffected."
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't make a video clip"
 msgstr ""
 
 #: src/app/(start)/start/page.jsx
@@ -4023,6 +4044,18 @@ msgstr ""
 msgid "Lowercase, numbers, hyphens only"
 msgstr ""
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Made a video clip"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Made by {model}"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Making a video clip"
+msgstr ""
+
 #: src/app/(app)/projects/page.jsx
 #: src/components/AppSidebar.jsx
 #: src/components/commands/AppCommands.jsx
@@ -4193,6 +4226,10 @@ msgstr ""
 
 #: src/components/models/TierSummary.jsx
 msgid "Model for generating images"
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "Model for generating videos"
 msgstr ""
 
 #: src/components/models/TierCard.jsx
@@ -4408,6 +4445,10 @@ msgstr ""
 msgid "No caption"
 msgstr ""
 
+#: src/components/content/PostVideo.jsx
+msgid "No clip yet"
+msgstr ""
+
 #: src/components/commands/CommandPalette.jsx
 msgid "No commands match “{query}”."
 msgstr ""
@@ -4465,11 +4506,19 @@ msgid "No key"
 msgstr ""
 
 #: src/components/models/TierSummary.jsx
+msgid "No key for {picked}, so clips are made with {made}."
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
 msgid "No key for {picked}, so images are drawn with {drawn}."
 msgstr ""
 
 #: src/components/models/TierSummary.jsx
 msgid "No key of yours can generate images yet — add one on the Providers tab."
+msgstr ""
+
+#: src/components/models/TierSummary.jsx
+msgid "No key of yours can make video yet — add a Gemini or OpenRouter key on the Providers tab."
 msgstr ""
 
 #: src/lib/modelTiers.js
@@ -4861,6 +4910,10 @@ msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On-page content rewrites"
+msgstr ""
+
+#: src/components/content/PostVideo.jsx
+msgid "Once the writing is right, ask Duct to make the clip. It shows up here to watch before it publishes."
 msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -5541,6 +5594,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Published the post"
+msgstr ""
+
+#: src/components/content/PostVideo.jsx
+msgid "Publishing this take"
 msgstr ""
 
 #: src/components/workspace/AgentChat.jsx
@@ -7101,6 +7158,18 @@ msgstr ""
 msgid "Tags, variables and container versions — staged, with rollback."
 msgstr ""
 
+#: src/components/content/PostVideo.jsx
+msgid "Take {number}"
+msgstr ""
+
+#: src/components/content/PostVideo.jsx
+msgid "Take {number}, publishing"
+msgstr ""
+
+#: src/components/content/PostVideo.jsx
+msgid "Takes"
+msgstr ""
+
 #: src/app/(app)/execute/page.jsx
 msgid "Target contains"
 msgstr ""
@@ -7196,6 +7265,10 @@ msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "That link isn't on tiktok.com."
+msgstr ""
+
+#: src/components/content/PostVideo.jsx
+msgid "That take couldn't be chosen. Try again."
 msgstr ""
 
 #: src/components/workspace/AgentChat.jsx
@@ -7768,6 +7841,10 @@ msgstr ""
 msgid "Use this plan"
 msgstr ""
 
+#: src/components/content/PostVideo.jsx
+msgid "Use this take"
+msgstr ""
+
 #: src/lib/modelTiers.js
 msgid "Using a key already on the machine running Duct, not one you added here"
 msgstr ""
@@ -7879,7 +7956,13 @@ msgstr ""
 msgid "Video"
 msgstr ""
 
+#: src/components/content/PostVideo.jsx
+#: src/components/workspace/ActivityRow.jsx
+msgid "Video clip"
+msgstr ""
+
 #: src/components/content/SynthesisPanel.jsx
+#: src/components/models/TierSummary.jsx
 msgid "Videos"
 msgstr ""
 

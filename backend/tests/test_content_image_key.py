@@ -307,13 +307,21 @@ def test_a_pick_the_catalogue_no_longer_knows_is_ignored(monkeypatch):
     assert session.image_provider is Provider.GOOGLE_GENAI
 
 
+def _images_status(sources, preferred=""):
+    from agents.engines import preferred_image_model
+    from agents.models import DEFAULT_IMAGE_MODELS, IMAGE_PROVIDER_ORDER
+    from routes.providers import _media_status
+
+    return _media_status(
+        sources, preferred_image_model(preferred), IMAGE_PROVIDER_ORDER, DEFAULT_IMAGE_MODELS
+    )
+
+
 def test_the_settings_page_promises_what_the_run_will_do(monkeypatch):
     """`/providers/status` and `resolve_image_run` take the same argument and
     must answer the same way — the row a user reads is a promise about the run,
     and an unreachable pick shown as the answer is the one lie it must not
     tell."""
-    from routes.providers import _images_status
-
     sources = {"google_genai": "user", "openai": "none"}
     assert _images_status(sources, ImageModel.GEMINI_3_PRO_IMAGE.value)["model"] == (
         ImageModel.GEMINI_3_PRO_IMAGE.value
@@ -326,8 +334,6 @@ def test_the_images_row_does_not_offer_a_plan_it_cannot_spend():
     """The tile is honest — OpenAI *is* reachable on a ChatGPT plan — and the
     Images row still must not name it, because the run will not. The two facts
     live in different fields for exactly this reason."""
-    from routes.providers import _images_status
-
     assert _images_status({"openai": "none"}) == {
         "provider": None, "model": None, "source": "none",
     }

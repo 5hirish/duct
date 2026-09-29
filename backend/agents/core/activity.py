@@ -53,6 +53,7 @@ class ActivityKind(StrEnum):
     WEB_SEARCH = "web_search"  # a query and the sources it came back with
     WEB_FETCH = "web_fetch"    # one page read, by host
     IMAGE = "image"            # an image the agent drew, shown inline
+    VIDEO = "video"            # a clip the agent made, playable inline
     SLIDE = "slide"            # a rendered slide
     SUBAGENT = "subagent"      # a dispatched sub-agent
     MEMORY = "memory"          # a search of, or a read from, project memory
@@ -66,6 +67,7 @@ class ActivityKind(StrEnum):
 FETCH_DATA_TOOL = "FetchData"
 GENERATE_IMAGE_TOOL = "generate_image"
 EDIT_IMAGE_TOOL = "edit_image"
+GENERATE_VIDEO_TOOL = "generate_video"
 RENDER_SLIDE_TOOL = "render_slide"
 # Not a tool the model calls: the runner's own "I read the project context"
 # notice, emitted where the run's CONTEXT row is recorded, so the person sees
@@ -247,6 +249,32 @@ def _image_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str
             "images": [_text(u) for u in urls if _text(u)],
             "model": _text(env.get("model")),
             "attached_to": _text(env.get("attached_to")),
+        },
+        "error": "" if ok else _text(env.get("message") or env.get("error")),
+    }
+
+
+def _video_start(args: dict[str, Any]) -> dict[str, Any]:
+    return {"kind": ActivityKind.VIDEO, "title": _text(args.get("prompt"))[:TITLE_CHARS]}
+
+
+def _video_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
+    env = _envelope(result)
+    url = _text(env.get("url"))
+    ok = bool(url) and not is_error
+    cost = env.get("cost_usd")
+    seconds = env.get("duration_seconds")
+    return {
+        "kind": ActivityKind.VIDEO,
+        "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
+        "title": _text(args.get("prompt"))[:TITLE_CHARS],
+        # The clip is the card, and what it cost is on it: a clip is dollars,
+        # and the person should not have to open the usage tooltip to see that.
+        "meta": {
+            "videos": [url] if url else [],
+            "model": _text(env.get("model")),
+            "duration_seconds": seconds if isinstance(seconds, int) else None,
+            "cost_usd": cost if isinstance(cost, (int, float)) else None,
         },
         "error": "" if ok else _text(env.get("message") or env.get("error")),
     }
@@ -454,6 +482,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "FetchPages": (_pages_start, _pages_finish),
     GENERATE_IMAGE_TOOL: (_image_start, _image_finish),
     EDIT_IMAGE_TOOL: (_image_start, _image_finish),
+    GENERATE_VIDEO_TOOL: (_video_start, _video_finish),
     RENDER_SLIDE_TOOL: (_slide_start, _slide_finish),
     "task": (_subagent_start, _subagent_finish),
     "SearchMemory": (_memory_search_start, _memory_search_finish),

@@ -36,11 +36,14 @@ from typing import TYPE_CHECKING
 from agents.core.codex import is_plan_credential, is_usable_credential
 from agents.models import (
     DEFAULT_IMAGE_MODELS,
+    DEFAULT_VIDEO_MODELS,
     IMAGE_PROVIDER_ORDER,
     MODEL_FALLBACK,
+    VIDEO_PROVIDER_ORDER,
     ImageModel,
     ModelName,
     Provider,
+    VideoModel,
     current_model_id,
     provider_of,
 )
@@ -396,36 +399,34 @@ def resolve_image_run(
     plan, and every picture came back 401. ``plan_ok=False`` makes that
     provider fall through to their stored key, or out of the running.
     """
-    wanted = preferred_image_model(preferred)
-    if wanted is not None:
-        provider = provider_of(wanted)
-        try:
-            resolved = resolve_provider_key(
-                provider, user_keys, stored_keys=stored_keys, plan_ok=False
-            )
-        except ProviderKeyRequired:
-            pass  # asked for, cannot pay for it — fall through to the order
-        else:
-            return ImageRun(
-                provider=provider,
-                model=wanted,
-                api_key=resolved.key,
-                source=resolved.source,
-            )
+    hit = _first_spendable_media(
+        preferred_image_model(preferred), IMAGE_PROVIDER_ORDER, DEFAULT_IMAGE_MODELS,
+        user_keys, stored_keys,
+    )
+    if hit is None:
+        return None
+    provider, model, resolved = hit
+    return ImageRun(provider=provider, model=model, api_key=resolved.key, source=resolved.source)
 
-    for provider in IMAGE_PROVIDER_ORDER:
+
+def _first_spendable_media(wanted, order, defaults, user_keys, stored_keys):
+    """The saved pick when its provider can pay, else each provider in
+    ``order`` with its default model, first spendable wins; or None.
+
+    Images and video both resolve this way, under one credential rule:
+    ``plan_ok=False``, because a ChatGPT plan authenticates the Codex backend
+    and nothing that makes media. Returns ``(provider, model, ProviderKey)``.
+    """
+    candidates = [(provider_of(wanted), wanted)] if wanted is not None else []
+    candidates += [(provider, defaults[provider]) for provider in order]
+    for provider, model in candidates:
         try:
             resolved = resolve_provider_key(
                 provider, user_keys, stored_keys=stored_keys, plan_ok=False
             )
         except ProviderKeyRequired:
-            continue
-        return ImageRun(
-            provider=provider,
-            model=DEFAULT_IMAGE_MODELS[provider],
-            api_key=resolved.key,
-            source=resolved.source,
-        )
+            continue  # asked for, cannot pay for it — fall through to the order
+        return provider, model, resolved
     return None
 
 
@@ -441,6 +442,51 @@ def preferred_image_model(preferred: str) -> "ImageModel | None":
         return None
     try:
         return ImageModel(str(preferred).strip())
+    except ValueError:
+        return None
+
+
+@dataclass(frozen=True)
+class VideoRun:
+    """The provider, model and key a run spends on video clips."""
+
+    provider: Provider
+    model: VideoModel
+    api_key: str
+    #: Same vocabulary as ``ProviderKey.source``.
+    source: str
+
+
+def resolve_video_run(
+    user_keys: Mapping[Provider, str] | None = None,
+    stored_keys: Mapping[Provider, str] | None = None,
+    *,
+    preferred: str = "",
+) -> VideoRun | None:
+    """Which video-capable provider this run may spend, or None for none.
+
+    The image rules exactly (``resolve_image_run``): its own resolution, a
+    saved pick that is a preference rather than an instruction, no ChatGPT
+    plan, and None as a normal answer — the video tool then declines with a
+    sentence naming the keys that would unblock it.
+    """
+    hit = _first_spendable_media(
+        preferred_video_model(preferred), VIDEO_PROVIDER_ORDER, DEFAULT_VIDEO_MODELS,
+        user_keys, stored_keys,
+    )
+    if hit is None:
+        return None
+    provider, model, resolved = hit
+    return VideoRun(provider=provider, model=model, api_key=resolved.key, source=resolved.source)
+
+
+def preferred_video_model(preferred: str) -> "VideoModel | None":
+    """The saved video pick as a catalogue member, or None (see
+    ``preferred_image_model``)."""
+    if not preferred:
+        return None
+    try:
+        return VideoModel(str(preferred).strip())
     except ValueError:
         return None
 

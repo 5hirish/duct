@@ -36,11 +36,13 @@ class ModelSettings:
     engine: str = ""
     #: Which model draws. Empty = whichever key can, in IMAGE_PROVIDER_ORDER.
     image_model: str = ""
+    #: Which model makes clips. Empty = whichever key can, in VIDEO_PROVIDER_ORDER.
+    video_model: str = ""
 
 
 #: What an install that has never opened the settings page gets. Empty map, so
 #: resolution is byte-for-byte the behaviour that shipped before this table.
-DEFAULTS = ModelSettings(tiers={}, auto_fallback=True, engine="", image_model="")
+DEFAULTS = ModelSettings(tiers={}, auto_fallback=True, engine="", image_model="", video_model="")
 
 
 def _clean(tiers: object) -> dict[str, str]:
@@ -72,12 +74,7 @@ def get_model_settings(user_id: UUID | None) -> ModelSettings:
             row = db.get(UserModelSettings, user_id)
             if row is None:
                 return DEFAULTS
-            return ModelSettings(
-                tiers=_clean(row.tiers),
-                auto_fallback=bool(row.auto_fallback),
-                engine=str(row.engine or ""),
-                image_model=str(row.image_model or ""),
-            )
+            return _settings_of(row)
     except Exception:
         logger.warning("model settings unavailable — using defaults", exc_info=True)
         return DEFAULTS
@@ -90,6 +87,7 @@ def save_model_settings(
     auto_fallback: bool | None = None,
     engine: str | None = None,
     image_model: str | None = None,
+    video_model: str | None = None,
 ) -> ModelSettings:
     """Upsert the fields the caller sent, leaving the rest alone.
 
@@ -110,11 +108,18 @@ def save_model_settings(
             row.engine = str(engine or "").strip()
         if image_model is not None:
             row.image_model = str(image_model or "").strip()
+        if video_model is not None:
+            row.video_model = str(video_model or "").strip()
         row.updated_at = utcnow()
         db.commit()
-        return ModelSettings(
-            tiers=_clean(row.tiers),
-            auto_fallback=bool(row.auto_fallback),
-            engine=str(row.engine or ""),
-            image_model=str(row.image_model or ""),
-        )
+        return _settings_of(row)
+
+
+def _settings_of(row: UserModelSettings) -> ModelSettings:
+    return ModelSettings(
+        tiers=_clean(row.tiers),
+        auto_fallback=bool(row.auto_fallback),
+        engine=str(row.engine or ""),
+        image_model=str(row.image_model or ""),
+        video_model=str(row.video_model or ""),
+    )

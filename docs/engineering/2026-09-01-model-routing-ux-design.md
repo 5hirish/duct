@@ -238,6 +238,12 @@ Today branch 1 is unreachable and branch 2 always wins. That is the correct thin
 
 ### Video is a connector, not a model
 
+> **Superseded 2026-09-29 (issue #284).** Veo and Seedance became reachable
+> with keys users already bring — a Gemini key and an OpenRouter key — so video
+> shipped as a modality like images: `VideoModel`, `service/videos/`, and a
+> Videos *picker* row under Images, not a connection state. The reasoning below
+> is kept as it was written.
+
 Worth stating because it breaks the pattern deliberately. There is **no video model in the backend at all** — no enum, no call path. The planned route is the Higgsfield hosted MCP over bearer auth, which is a *connected service*: it has an account, a subscription and an OAuth-shaped setup, not a model id in a dropdown.
 
 So the Video row renders as a connection state — *"Not connected · Connect Higgsfield"* — and links to Connections. It appears on this page because this is where a user goes to ask "what makes my media", and answering "nowhere, here's how" is better than the row not existing. It ships with the video feature, not before.

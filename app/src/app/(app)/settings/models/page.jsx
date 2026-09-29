@@ -105,6 +105,8 @@ function ModelSettings() {
   const [providers, setProviders] = useState(null);
   // The server's pick for the image tools, or null until it answers.
   const [images, setImages] = useState(null);
+  // …and for the video tool.
+  const [videos, setVideos] = useState(null);
   // The backend's kill switch for the ChatGPT tile; off until it answers.
   const [chatgptAuthEnabled, setChatgptAuthEnabled] = useState(false);
   const [preview, setPreview] = useState(null);
@@ -122,7 +124,7 @@ function ModelSettings() {
     // never blank; this corrects it a moment later, and a stale tab loses.
     fetchModelSettings().then((settings) => {
       const tiers = Object.keys(settings.tiers || {}).length ? settings.tiers : null;
-      if (!tiers && !settings.image_model) return;
+      if (!tiers && !settings.image_model && !settings.video_model) return;
       setMap((current) => {
         const next = { ...current };
         if (tiers) next.tiers = tiers;
@@ -130,6 +132,9 @@ function ModelSettings() {
         // local one only paints first.
         if (settings.image_model) {
           next.modality = { ...(current.modality || {}), image: settings.image_model };
+        }
+        if (settings.video_model) {
+          next.modality = { ...(next.modality || current.modality || {}), video: settings.video_model };
         }
         saveModelMap(next);
         return next;
@@ -139,6 +144,7 @@ function ModelSettings() {
     fetchProviderStatus().then((status) => {
       setProviders(status.providers);
       setImages(status.images);
+      setVideos(status.videos);
       setChatgptAuthEnabled(Boolean(status.chatgptAuthEnabled));
     });
   }, []);
@@ -255,6 +261,17 @@ function ModelSettings() {
     flash(t`Saved`);
   }
 
+  function setVideoModel(model) {
+    const modality = { ...(map.modality || {}) };
+    if (model) modality.video = model;
+    else delete modality.video;
+    const next = { ...map, modality };
+    setMap(next);
+    saveModelMap(next);
+    saveModelSettings({ video_model: model || "" });
+    flash(t`Saved`);
+  }
+
   function fillFromProvider(providerId) {
     const triple = catalogue?.provider_triples?.[providerId];
     if (!triple) return;
@@ -338,6 +355,10 @@ function ModelSettings() {
             imageModels={catalogue?.image_models ?? []}
             imagePick={map.modality?.image || ""}
             onImageChange={setImageModel}
+            videos={videos}
+            videoModels={catalogue?.video_models ?? []}
+            videoPick={map.modality?.video || ""}
+            onVideoChange={setVideoModel}
           />
 
           {customising && (

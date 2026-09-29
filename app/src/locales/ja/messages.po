@@ -146,6 +146,10 @@ msgstr "{connectorName} 接続済み"
 msgid "{contentGaps, plural, one {# gap} other {# gaps}}"
 msgstr "{contentGaps, plural, other {# ギャップ}}"
 
+#: src/components/content/PostVideo.jsx
+msgid "{cost} to make"
+msgstr "{cost} で作成"
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
 msgstr "{count, plural, other {# 承認が必要な変更}}"
@@ -449,6 +453,11 @@ msgstr "{robotsLines} 行"
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
 msgstr "{score}/100 — {label}。9つのSEOカテゴリ全体の加重平均です。"
+
+#: src/components/content/PostVideo.jsx
+#: src/components/workspace/ActivityRow.jsx
+msgid "{seconds} s"
+msgstr "{seconds} 秒"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "{share}% from cache"
@@ -1404,8 +1413,16 @@ msgid "Auto — whichever key can draw"
 msgstr "自動 — 描画可能なキー"
 
 #: src/components/models/TierSummary.jsx
+msgid "Auto — whichever key can make video"
+msgstr "自動 — 動画を作成できるキー"
+
+#: src/components/models/TierSummary.jsx
 msgid "Auto · {drawn}"
 msgstr "自動 · {drawn}"
+
+#: src/components/models/TierSummary.jsx
+msgid "Auto · {made}"
+msgstr "自動 · {made}"
 
 #: src/app/(app)/execute/page.jsx
 msgid "auto-applied"
@@ -2196,6 +2213,10 @@ msgstr "ブランドコンテキストを読み込めませんでした。"
 #: src/app/(app)/execute/page.jsx
 msgid "Couldn't load your guardrails. The queue above is unaffected."
 msgstr "ガードレールを読み込めませんでした。上記のキューには影響ありません。"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't make a video clip"
+msgstr "動画クリップを作成できませんでした"
 
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
@@ -4029,6 +4050,18 @@ msgstr "低影響 · 高労力"
 msgid "Lowercase, numbers, hyphens only"
 msgstr "小文字、数字、ハイフンのみ"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Made a video clip"
+msgstr "動画クリップを作成しました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Made by {model}"
+msgstr "作成元: {model}"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Making a video clip"
+msgstr "動画クリップを作成中"
+
 #: src/app/(app)/projects/page.jsx
 #: src/components/AppSidebar.jsx
 #: src/components/commands/AppCommands.jsx
@@ -4200,6 +4233,10 @@ msgstr "モデル呼び出し"
 #: src/components/models/TierSummary.jsx
 msgid "Model for generating images"
 msgstr "画像生成用モデル"
+
+#: src/components/models/TierSummary.jsx
+msgid "Model for generating videos"
+msgstr "動画生成用モデル"
 
 #: src/components/models/TierCard.jsx
 msgid "Model for the {tierName} tier"
@@ -4414,6 +4451,10 @@ msgstr "正規化なし"
 msgid "No caption"
 msgstr "キャプションなし"
 
+#: src/components/content/PostVideo.jsx
+msgid "No clip yet"
+msgstr "まだクリップがありません"
+
 #: src/components/commands/CommandPalette.jsx
 msgid "No commands match “{query}”."
 msgstr "「{query}」に一致するコマンドはありません。"
@@ -4471,12 +4512,20 @@ msgid "No key"
 msgstr "キーなし"
 
 #: src/components/models/TierSummary.jsx
+msgid "No key for {picked}, so clips are made with {made}."
+msgstr "{picked} のキーがないため、クリップは {made} で作成されます。"
+
+#: src/components/models/TierSummary.jsx
 msgid "No key for {picked}, so images are drawn with {drawn}."
 msgstr "{picked}のキーがないため、画像は{drawn}で描画されます。"
 
 #: src/components/models/TierSummary.jsx
 msgid "No key of yours can generate images yet — add one on the Providers tab."
 msgstr "まだ画像を生成できるキーがありません。プロバイダータブで追加してください。"
+
+#: src/components/models/TierSummary.jsx
+msgid "No key of yours can make video yet — add a Gemini or OpenRouter key on the Providers tab."
+msgstr "まだ動画を作成できるキーがありません — プロバイダータブで Gemini または OpenRouter のキーを追加してください。"
 
 #: src/lib/modelTiers.js
 msgid "No key set"
@@ -4868,6 +4917,10 @@ msgstr "このデバイスで"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On-page content rewrites"
 msgstr "ページ内コンテンツの書き換え"
+
+#: src/components/content/PostVideo.jsx
+msgid "Once the writing is right, ask Duct to make the clip. It shows up here to watch before it publishes."
+msgstr "記事が完成したら、Duct にクリップの作成を依頼してください。公開前にここで視聴できます。"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Once you connect a source:"
@@ -5548,6 +5601,10 @@ msgstr "公開済み {publishedOn}"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Published the post"
 msgstr "投稿を公開しました"
+
+#: src/components/content/PostVideo.jsx
+msgid "Publishing this take"
+msgstr "このテイクを公開中"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Putting it together"
@@ -7107,6 +7164,18 @@ msgstr "投稿全体で使用されるタグラインと説明です。"
 msgid "Tags, variables and container versions — staged, with rollback."
 msgstr "タグ、変数、コンテナバージョン — ロールバック付きでステージング済み。"
 
+#: src/components/content/PostVideo.jsx
+msgid "Take {number}"
+msgstr "テイク {number}"
+
+#: src/components/content/PostVideo.jsx
+msgid "Take {number}, publishing"
+msgstr "テイク {number}、公開中"
+
+#: src/components/content/PostVideo.jsx
+msgid "Takes"
+msgstr "テイク"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Target contains"
 msgstr "ターゲットに含まれる"
@@ -7203,6 +7272,10 @@ msgstr "そのリンクは単一の投稿ではありません。tiktok.com/@cre
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "That link isn't on tiktok.com."
 msgstr "そのリンクはtiktok.comのものではありません。"
+
+#: src/components/content/PostVideo.jsx
+msgid "That take couldn't be chosen. Try again."
+msgstr "そのテイクは選択できませんでした。もう一度お試しください。"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "That turn failed"
@@ -7774,6 +7847,10 @@ msgstr "このアカウントを使用する →"
 msgid "Use this plan"
 msgstr "このプランを使用する"
 
+#: src/components/content/PostVideo.jsx
+msgid "Use this take"
+msgstr "このテイクを使用する"
+
 #: src/lib/modelTiers.js
 msgid "Using a key already on the machine running Duct, not one you added here"
 msgstr "Ductを実行しているマシンにすでに存在するキーを使用しています。ここに追加したものではありません"
@@ -7885,7 +7962,13 @@ msgstr "Duct経由"
 msgid "Video"
 msgstr "動画"
 
+#: src/components/content/PostVideo.jsx
+#: src/components/workspace/ActivityRow.jsx
+msgid "Video clip"
+msgstr "動画クリップ"
+
 #: src/components/content/SynthesisPanel.jsx
+#: src/components/models/TierSummary.jsx
 msgid "Videos"
 msgstr "動画"
 

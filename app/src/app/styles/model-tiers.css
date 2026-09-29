@@ -204,14 +204,20 @@
   white-space: nowrap;
 }
 
-/* Images is a peer of the three rows above it but not a fourth rung — nothing
-   falls through to it — so a rule says "related, not in the ladder" without
-   needing a sentence to say it. */
+/* Images and Videos are peers of the three rows above them but not rungs —
+   nothing falls through to them — so one rule says "related, not in the
+   ladder" without needing a sentence to say it. One rule, above the pair. */
 .mt-setup-row--aside {
   margin-top: 0.5rem;
   padding-top: 0.625rem;
   border-top: 1px solid var(--border);
   align-items: center;
+}
+
+.mt-setup-row--aside + .mt-setup-row--aside {
+  margin-top: 0.25rem;
+  padding-top: 0;
+  border-top: 0;
 }
 
 /* The only row whose value is a control rather than a statement; it takes the

@@ -23,6 +23,18 @@ class GenerateImageResult(BaseModel):
     attached_to: str | None = None  # slide_id the image was attached to, or null
 
 
+class GenerateVideoResult(BaseModel):
+    asset_id: str
+    url: str
+    model: str
+    duration_seconds: int
+    aspect_ratio: str
+    resolution: str
+    cost_usd: float | None = None     # None when the provider reported nothing and the table has no row
+    attached_to_post: str | None = None
+    notes: list[str] = []             # what fit_request changed to suit the model
+
+
 class EditImageResult(BaseModel):
     asset_ids: list[str]
     asset_urls: list[str]

@@ -140,6 +140,38 @@ describe("groupActivityRows", () => {
   });
 });
 
+describe("a clip the agent made", () => {
+  it("replays as the live card drew it: the clip, its length, what it cost", () => {
+    const [row] = activitiesFromEvents([
+      use("generate_video", "v1", { prompt: "a kettle boils" }),
+      result("generate_video", "v1", {
+        asset_id: "a1", url: "/uploads/c.mp4", model: "veo-3.1-lite-generate-preview",
+        duration_seconds: 8, aspect_ratio: "9:16", resolution: "720p", cost_usd: 0.4, notes: [],
+      }),
+    ]);
+    expect(row).toMatchObject({
+      kind: ActivityKind.VIDEO, status: StepStatus.SUCCESS, title: "a kettle boils",
+      meta: { model: "veo-3.1-lite-generate-preview", duration_seconds: 8, cost_usd: 0.4 },
+    });
+    expect(row.meta.videos).toHaveLength(1);
+    expect(row.meta.videos[0].endsWith("/uploads/c.mp4")).toBe(true);
+  });
+
+  it("keeps the refusal's own sentence", () => {
+    const [row] = activitiesFromEvents([
+      use("generate_video", "v2", { prompt: "a founder speaks" }),
+      result("generate_video", "v2", { status: "error", message: "won't animate a realistic person" }),
+    ]);
+    expect(row).toMatchObject({ kind: ActivityKind.VIDEO, status: StepStatus.ERROR, error: "won't animate a realistic person" });
+  });
+
+  it("resolves a live card's clip against the API origin, as it does pictures", () => {
+    const row = activityFromEvent({ activity_id: "v3", kind: "video", meta: { videos: ["/uploads/c.mp4"] } });
+    expect(row.meta.videos[0].endsWith("/uploads/c.mp4")).toBe(true);
+    expect(row.meta.videos[0]).not.toBe("/uploads/c.mp4");
+  });
+});
+
 describe("the wider allowlist", () => {
   it("draws the audit's page read as one row naming the site and what failed", () => {
     const [row] = activitiesFromEvents([

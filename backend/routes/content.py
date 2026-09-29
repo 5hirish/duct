@@ -49,6 +49,7 @@ from sqlalchemy import delete, select
 from sqlmodel import Session
 
 from agents.content.assessment import reassess
+from agents.content.video import cut_of, publish_asset, take_for, video_takes
 from agents.content.events import ContentEvent
 from agents.content.styles import base_css, list_styles
 from agents.content.schema import (
@@ -72,6 +73,7 @@ from agents.engines import (
     ProviderKeyRequired,
     resolve_image_run,
     resolve_job_run,
+    resolve_video_run,
 )
 from agents.models import Provider
 from agents.tiers import Job
@@ -260,6 +262,36 @@ def _attach_image_run(
     sess.gemini_api_key = run.api_key if run.provider is Provider.GOOGLE_GENAI else ""
 
 
+def _attach_video_run(
+    session_id: str, user_keys: dict | None = None, owner_id=None
+) -> None:
+    """``_attach_image_run`` for clips: resolved once per runner, on the same
+    credential rules, and absent-able — no key means the video tool declines
+    with a sentence naming the keys that would unblock it."""
+    from agents.core.session import get_session as _get_agent_session
+
+    sess = _get_agent_session(session_id)
+    if sess is None:
+        return
+    if owner_id is None:
+        owner_id = getattr(sess, "user_id", None)
+    run = resolve_video_run(
+        user_keys,
+        stored_keys_for(owner_id),
+        preferred=get_model_settings(owner_id).video_model,
+    )
+    if run is None:
+        sess.video_provider = None
+        sess.video_api_key = ""
+        sess.video_model = ""
+        return
+    if run.source == "cloud":
+        logger.info("content: video billed to Duct (%s/%s)", run.provider.value, run.source)
+    sess.video_provider = run.provider
+    sess.video_api_key = run.api_key
+    sess.video_model = run.model.value
+
+
 async def _emit(queue: asyncio.Queue, body: dict[str, Any]) -> None:
     body.setdefault("ts", now_iso())
     await queue.put(body)
@@ -336,6 +368,7 @@ def _link_conversation_artifact(session_id: str, kind: str) -> None:
 def _runner_for(session_id: str, user_keys: dict | None) -> ContentRunner:
     run = _resolve_run_model(session_id, user_keys)
     _attach_image_run(session_id, user_keys)
+    _attach_video_run(session_id, user_keys)
     return ContentRunner(api_key=run.api_key, provider=run.provider, model=run.model)
 
 
@@ -1085,6 +1118,10 @@ class PostOut(BaseModel):
     notes:         str
     # The TikTok a cloned post was modelled on; None for any other post.
     clone_source:  dict | None = None
+    # A video post's chosen clip (agents/content/video.cut_of), and on a detail
+    # response its takes, newest first. None / [] for any other post.
+    video:         dict | None = None
+    video_takes:   list = []
     created_at:    str
     updated_at:    str
     # The active agent conversation for this post (if any) — drives "click post →
@@ -1103,6 +1140,7 @@ def _post_out(
     thumbnail_url: str = "",
     active_conversation_id: UUID | None = None,
     with_assessment: bool = False,
+    video_takes: list | None = None,
 ) -> PostOut:
     """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
     return PostOut(
@@ -1153,6 +1191,8 @@ def _post_out(
         daily_perf=p.daily_perf or [],
         notes=p.notes,
         clone_source=p.clone_source,
+        video=p.video,
+        video_takes=video_takes or [],
         created_at=p.created_at.isoformat(),
         updated_at=p.updated_at.isoformat(),
     )
@@ -1193,6 +1233,9 @@ def _thumb_map(db: Session, post_ids: list[UUID]) -> dict[UUID, str]:
         .where(ContentAsset.post_id.in_(post_ids))
         .where(ContentAsset.asset_type.in_(["generated", "upload"]))
         .where(ContentAsset.url != "")
+        # A clip is not a thumbnail: the card draws an <img>. A video post's
+        # card shows its first frame when it has one, else the clip itself.
+        .where(~ContentAsset.mime_type.like("video/%"))
         .order_by(ContentAsset.created_at.asc())
     ).all()
     out: dict[UUID, str] = {}
@@ -1209,7 +1252,10 @@ def _fmt_for(post: ContentPost, by_id: dict) -> tuple[str, str] | None:
 def _enrich_one(db: Session, post: ContentPost) -> PostOut:
     by_id = _format_map(db, post.project_id)
     thumb = _thumb_map(db, [post.id]).get(post.id, "")
-    return _post_out(post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb, with_assessment=True)
+    return _post_out(
+        post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb, with_assessment=True,
+        video_takes=video_takes(db, post),
+    )
 
 
 def _rerender_slides(post: ContentPost) -> None:
@@ -1281,7 +1327,37 @@ def get_post(
         thumbnail_url=thumb,
         active_conversation_id=active_conversation_id,
         with_assessment=True,
+        video_takes=video_takes(db, post),
     )
+
+
+class SelectVideoRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    asset_id: UUID
+
+
+@router.post("/content/posts/{post_id}/video/select")
+def select_post_video(
+    post_id: UUID,
+    body: SelectVideoRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """Make one of the post's takes its cut — the clip the player shows first
+    and publishing sends. The asset has to be a clip of *this* post: the row
+    is resolved through the post the caller is a member of, never trusted
+    from the body."""
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
+    take = take_for(db, post, body.asset_id)
+    if take is None:
+        raise HTTPException(404, "That clip isn't one of this post's takes.")
+    post.video = cut_of(take)
+    post.post_type = "video"
+    post.updated_at = datetime.now(timezone.utc)
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return _enrich_one(db, post)
 
 
 @router.post("/content/posts", status_code=201)
@@ -2054,15 +2130,22 @@ async def publish_post_route(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Upload each linked asset to PostBridge, then create the post."""
-    from service.post_bridge import (
-        PostBridgeAPIError,
-        PostBridgeCreatePostRequest,
-        client_for_user,
-    )
-
+    """Upload the post's media to PostBridge, then create the post."""
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
     proj = _project_for_user(db, user, post.project_id)
+
+    if post.post_type == "video":
+        # A video post sends its cut and nothing else — not the keyframes or
+        # references that also carry its id. Read through storage.get_bytes,
+        # which serves R2 and local paths alike.
+        clip = publish_asset(db, post)
+        if clip is None:
+            raise HTTPException(400, "Make a clip for this video post before publishing it.")
+        data = storage.get_bytes(clip.url)
+        if not data:
+            raise HTTPException(500, "The clip for this post couldn't be loaded.")
+        media = [(data, clip.filename or "clip.mp4", clip.mime_type or "video/mp4")]
+        return await _publish_media(db, post, proj, body, media)
 
     asset_rows = db.execute(
         select(ContentAsset)
@@ -2074,16 +2157,33 @@ async def publish_post_route(
 
     cfg = get_configs()
     base = Path(cfg.uploads_dir or "/app/uploads")
-    asset_paths: list[tuple[Path, str, str, str]] = []
+    media: list[tuple[bytes, str, str]] = []
     for a in asset_rows:
         if not a.url.startswith("/uploads/"):
             continue
         disk = base / a.url[len("/uploads/"):]
         if not disk.exists():
             raise HTTPException(500, f"Asset bytes missing on disk for {a.url}.")
-        asset_paths.append((disk, a.filename or disk.name, a.mime_type or "image/png", a.url))
-    if not asset_paths:
+        media.append((disk.read_bytes(), a.filename or disk.name, a.mime_type or "image/png"))
+    if not media:
         raise HTTPException(400, "Couldn't find any uploaded image files for this post.")
+    return await _publish_media(db, post, proj, body, media)
+
+
+async def _publish_media(
+    db: Session,
+    post: ContentPost,
+    proj,
+    body: PublishRequest,
+    media: list[tuple[bytes, str, str]],
+) -> PostOut:
+    """Upload ``media`` (bytes, name, mime) to PostBridge in order, create the
+    post, and record what PostBridge answered."""
+    from service.post_bridge import (
+        PostBridgeAPIError,
+        PostBridgeCreatePostRequest,
+        client_for_user,
+    )
 
     try:
         client = client_for_user(proj.user_id, db)
@@ -2093,8 +2193,7 @@ async def publish_post_route(
     try:
         async with client as pb:
             media_ids: list[str] = []
-            for disk, name, mime, _url in asset_paths:
-                data = disk.read_bytes()
+            for data, name, mime in media:
                 upload = await pb.create_upload_url(name=name, mime_type=mime, size_bytes=len(data))
                 await pb.upload_media(data, upload.upload_url, mime)
                 media_ids.append(upload.media_id)

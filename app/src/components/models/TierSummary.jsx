@@ -36,6 +36,10 @@ export default function TierSummary({
   imageModels = [],
   imagePick = "",
   onImageChange,
+  videos,
+  videoModels = [],
+  videoPick = "",
+  onVideoChange,
 }) {
   const { t, i18n } = useLingui();
   const rows = TIERS.map((tier) => {
@@ -73,7 +77,9 @@ export default function TierSummary({
   // version of this looked them up there and printed the id every time.
   const nameOf = (id) => {
     const model =
-      models.find((entry) => entry.id === id) || imageModels.find((entry) => entry.id === id);
+      models.find((entry) => entry.id === id) ||
+      imageModels.find((entry) => entry.id === id) ||
+      videoModels.find((entry) => entry.id === id);
     return model ? modelLabel(model) : id;
   };
 
@@ -117,6 +123,18 @@ export default function TierSummary({
     // The server resolved past the pick: its provider has no spendable key.
     const picked = nameOf(imagePick) || imagePick;
     imageNote = t`No key for ${picked}, so images are drawn with ${drawn}.`;
+  }
+
+  // The same two answers for video, from the server's `videos` pick. Only a
+  // Gemini or an OpenRouter key makes clips, so the no-key sentence names them.
+  const made = videos?.model ? nameOf(videos.model) || videos.model : "";
+  const autoVideoLabel = made ? t`Auto · ${made}` : t`Auto — whichever key can make video`;
+  let videoNote = "";
+  if (videos && !videos.provider) {
+    videoNote = t`No key of yours can make video yet — add a Gemini or OpenRouter key on the Providers tab.`;
+  } else if (videoPick && videos?.model && videoPick !== videos.model) {
+    const picked = nameOf(videoPick) || videoPick;
+    videoNote = t`No key for ${picked}, so clips are made with ${made}.`;
   }
 
   return (
@@ -173,10 +191,30 @@ export default function TierSummary({
               />
             </dd>
           </div>
+          {onVideoChange && (
+            <div className="mt-setup-row mt-setup-row--aside">
+              <dt>
+                <Trans>Videos</Trans>
+              </dt>
+              <dd>
+                <ModelPicker
+                  id="video-model"
+                  label={t`Model for generating videos`}
+                  loading={loading}
+                  value={videoPick}
+                  models={videoModels}
+                  providersById={providersById}
+                  autoOption={autoVideoLabel}
+                  onChange={onVideoChange}
+                />
+              </dd>
+            </div>
+          )}
         </dl>
 
         {note && <p className="mt-setup-note">{note}</p>}
         {imageNote && <p className="mt-setup-note">{imageNote}</p>}
+        {videoNote && <p className="mt-setup-note">{videoNote}</p>}
       </article>
 
       <div className="mt-actions">

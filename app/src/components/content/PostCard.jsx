@@ -15,6 +15,7 @@ import { cdnImage, mediaUrl } from "@/lib/contentApi";
 import { SCHEDULED_META, statusMeta } from "@/lib/contentStatus";
 import { metricsOf } from "@/lib/contentMetrics";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
+import { ClipStill } from "@/components/content/PostVideo";
 import { compactNumber, formatDate, titleCase } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
@@ -58,6 +59,8 @@ export default function PostCard({ post }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             loading="lazy"
           />
+        ) : post.video?.url ? (
+          <ClipStill url={post.video.url} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
             <ImageOff className="h-7 w-7" />

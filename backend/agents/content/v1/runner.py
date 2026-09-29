@@ -149,6 +149,11 @@ TOOL_CALLS_PER_THREAD = 1200
 TOOL_RESULT_PRUNE_TRIGGER = 120_000
 TOOL_RESULTS_KEPT = 8
 
+# Clips per turn. A clip costs dollars where a model call costs cents (an 8 s
+# Veo 3.1 clip is $3.20), and the prompt asks for one at a time; this is the
+# guard for when a loop forgets. Issue #284's spec sets it at three.
+VIDEO_CLIPS_PER_RUN = 3
+
 LIMITS = RunLimits(
     model_calls_per_run=MODEL_CALLS_PER_RUN,
     model_calls_per_thread=MODEL_CALLS_PER_THREAD,
@@ -156,6 +161,7 @@ LIMITS = RunLimits(
     tool_calls_per_thread=TOOL_CALLS_PER_THREAD,
     tool_result_prune_trigger=TOOL_RESULT_PRUNE_TRIGGER,
     tool_results_kept=TOOL_RESULTS_KEPT,
+    per_tool_run_limits=((ContentTool.GENERATE_VIDEO.value, VIDEO_CLIPS_PER_RUN),),
 )
 
 # How long a session waits for a follow-up before closing itself. Matches
