@@ -461,7 +461,7 @@ def test_enrich_skips_research_when_no_web_search_is_available():
     brand = ContentBrandContext(project_id=uuid4(), project_name="X")
     with patch("agents.content.enrichment.get_engine", return_value=None):
         ctx = asyncio.run(enrich_content_context(
-            brand, api_key="k", provider=Provider.OPENROUTER, model=ModelName.OR_DEEPSEEK_V4_FLASH,
+            brand, api_key="k", provider=Provider.OPENROUTER, model=ModelName.OR_DEEPSEEK_V4_1_FLASH,
             llm=_Explodes(responses=[AIMessage(content="x")]),
         ))
     assert ctx.trending_hooks == [] and ctx.total_posts_to_date == 0

@@ -266,7 +266,7 @@ export function TierDial({ engine = DEFAULT_ENGINE, deferred = false }) {
   const chosen = TIERS.find((option) => option.key === tier);
   const Icon = chosen ? TIER_ICONS[chosen.key] : Scale;
   const label = chosen ? i18n._(chosen.label) : t`Auto`;
-  // The trigger reads like "Sonnet 5 · Medium": the tier, then the thinking
+  // The trigger reads like "Sonnet 5.5 · Medium": the tier, then the thinking
   // rung only when one is set, since Auto beside Auto says nothing twice.
   const thinkingLabel = dial.supported ? dial.levels.find((l) => l.level === thinking)?.label : "";
   return (

@@ -210,13 +210,13 @@ describe("dividers and the thinking clock", () => {
   const started = (model, label) => ({ event: AgentEvent.PIPELINE_STARTED, status: "running", model, model_label: label });
 
   it("draws a divider when a run starts on a different model, and not on the first", () => {
-    const first = drive([started("claude-sonnet-5", "Claude Sonnet 5")]);
-    expect(first.state.model).toBe("claude-sonnet-5");
+    const first = drive([started("claude-sonnet-5-5", "Claude Sonnet 5.5")]);
+    expect(first.state.model).toBe("claude-sonnet-5-5");
     expect(first.state.messages.filter((m) => m.role === Row.NOTICE)).toHaveLength(0);
 
-    const second = drive([started("gpt-5.6-terra", "GPT-5.6 Terra")], first.state);
+    const second = drive([started("gpt-6.1-sol", "GPT-6.1 Sol")], first.state);
     const notices = second.state.messages.filter((m) => m.role === Row.NOTICE);
-    expect(notices).toEqual([{ role: Row.NOTICE, kind: Notice.MODEL, label: "GPT-5.6 Terra", model: "gpt-5.6-terra" }]);
+    expect(notices).toEqual([{ role: Row.NOTICE, kind: Notice.MODEL, label: "GPT-6.1 Sol", model: "gpt-6.1-sol" }]);
   });
 
   it("a compaction learns what it freed from the next call on the thread", () => {
@@ -455,12 +455,12 @@ describe("typed failures", () => {
 describe("context and cost", () => {
   const bill = (input, output, extra = {}) => ({
     event: AgentEvent.TOKEN_USAGE, input_tokens: input, output_tokens: output, cache_read_tokens: 0,
-    context_window: 200000, model: "claude-sonnet-5", scope: "thread", ...extra,
+    context_window: 200000, model: "claude-sonnet-5-5", scope: "thread", ...extra,
   });
 
   it("the gauge follows the thread's last call; the total counts every call", () => {
     const s = replayEvents([bill(40000, 500), bill(9000, 200, { scope: "subagent" }), bill(61000, 800)]);
-    expect(s.usage.last).toMatchObject({ input: 61000, output: 800, window: 200000, model: "claude-sonnet-5" });
+    expect(s.usage.last).toMatchObject({ input: 61000, output: 800, window: 200000, model: "claude-sonnet-5-5" });
     expect(s.usage.total).toEqual({ input: 110000, output: 1500, cached: 0, calls: 3, cost: 0 });
   });
 
@@ -538,10 +538,10 @@ describe("context and cost", () => {
         last: { input_tokens: 52000, output_tokens: 700, cache_read_tokens: 30000 },
         total: { input_tokens: 120000, output_tokens: 3000, cache_read_tokens: 60000, calls: 4 },
         context_window: 200000,
-        model: "claude-sonnet-5",
+        model: "claude-sonnet-5-5",
       },
     });
-    expect(s.usage.last).toEqual({ input: 52000, output: 700, cached: 30000, window: 200000, model: "claude-sonnet-5", cost: null });
+    expect(s.usage.last).toEqual({ input: 52000, output: 700, cached: 30000, window: 200000, model: "claude-sonnet-5-5", cost: null });
     expect(s.usage.total.calls).toBe(4);
     expect(s.phase).toBe(Phase.STARTING);
   });

@@ -41,7 +41,7 @@ def test_xai_chat_models_resolve_to_xai():
     """Had returned None, so the catalogue silently listed no xAI models."""
     from agents.models import ModelName
 
-    assert provider_of(ModelName.GROK_4_6) is Provider.XAI
+    assert provider_of(ModelName.GROK_4_7) is Provider.XAI
 
 
 def test_the_factory_refuses_a_provider_with_no_image_model():

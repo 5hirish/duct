@@ -65,8 +65,10 @@ from agents.models import (
     GATEWAY_BASE_URL,
     ModelName,
     Provider,
+    binds_thinking_to_conversation,
     get_api_key_kwargs,
     langchain_provider,
+    takes_temperature,
 )
 from agents.thinking import thinking_kwargs
 
@@ -199,14 +201,50 @@ def _thinking_kwargs_for(provider: Provider, model, thinking: str) -> dict:
         kwargs["reasoning"] = {"effort": effort}
     elif effort:
         kwargs["reasoning_effort"] = effort
+    if provider is Provider.ANTHROPIC and binds_thinking_to_conversation(model):
+        kwargs.update(_bound_thinking_kwargs(summarized=bool(effort)))
     return kwargs
+
+
+# The Anthropic beta that lets a request say what to do with a thinking block
+# whose conversation has changed since it was produced.
+THINKING_BINDING_BETA = "thinking-binding-controls-2026-08-01"
+
+
+def _bound_thinking_kwargs(*, summarized: bool) -> dict:
+    """Drop a stale thinking block rather than refuse the request.
+
+    On a model that binds each thinking block to the conversation before it
+    (``agents/models.CLAUDE_BOUND_THINKING``), replaying one after an earlier
+    turn changed is a 400 on accounts created on or after 2026-08-31, and the
+    harness changes earlier turns on purpose — ``ClearToolUsesEdit`` prunes old
+    tool results, ``SeenImagePruneMiddleware`` swaps an image for a note, and
+    compaction rewrites the thread. ``drop_block`` makes the API drop the
+    first stale block and every one after it instead: the turn loses that
+    reasoning and the run carries on. Older accounts are opted into the same
+    check by it, which costs them the same reasoning after an edit and buys
+    one behaviour for every customer rather than a 400 that depends on when
+    their account was opened.
+
+    Setting ``thinking`` explicitly switches off langchain-anthropic's own
+    default of ``{"type": "adaptive", "display": "summarized"}`` when an effort
+    is set, so ``summarized`` restates that default: the reasoning pane shows
+    a summary exactly when it did before.
+    """
+    config: dict[str, Any] = {
+        "type": "adaptive",
+        "block_binding": {"prefix_mismatch_behavior": "drop_block"},
+    }
+    if summarized:
+        config["display"] = "summarized"
+    return {"thinking": config, "betas": [THINKING_BINDING_BETA]}
 
 
 def resolve_chat_model(
     provider: Provider,
     model: ModelName | str,
     api_key: str,
-    temperature: float = 1.0,
+    temperature: float | None = 1.0,
     *,
     base_url: str = "",
     thinking: str = "",
@@ -230,8 +268,14 @@ def resolve_chat_model(
     other providers: Gemini caches implicitly, and Anthropic caches only a
     request that asks for it, which is a middleware's job, not the
     transport's (``prompt_caching_middleware``).
+
+    ``temperature`` is dropped for a model that refuses one while it reasons
+    (``agents/models.takes_temperature``), so a caller asking for 0 on a
+    verify call or a memory pass does not need to know which models those are.
     """
     cache = _cache_kwargs(provider, cache_key)
+    if not takes_temperature(model):
+        temperature = None
     # A ChatGPT access token is not an API key and does not go to the public
     # API: the credential's own shape sends it to the Codex backend. Decided
     # here, at the one seam every run passes through, so no runner knows.
@@ -258,11 +302,12 @@ def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
     reply on this provider, for a one-shot structured call.
 
     Each integration picks its own default, and Anthropic's is the weak one:
-    ``function_calling`` forces a tool call, which Fable 5.1 refuses outright
-    (a 400 through langchain-anthropic 1.7.2; from 1.7.4 the call is simply
-    not forced, a best effort — langchain-ai/langchain#40766), as the API
-    does beside extended thinking. ``json_schema`` is Claude's own structured
-    output, constrained decoding on every Claude in the catalogue.
+    ``function_calling`` forces a tool call, which Fable 5.1, Opus 5.5 and
+    Sonnet 5.5 refuse outright (a 400 through langchain-anthropic 1.7.2; from
+    1.7.4 the call is simply not forced, a best effort —
+    langchain-ai/langchain#40766), as the API does beside extended thinking.
+    ``json_schema`` is Claude's own structured output, constrained decoding on
+    every Claude in the catalogue.
 
     Everyone else keeps their default. OpenAI (the ChatGPT plan included)
     and Gemini already default to ``json_schema``. OpenRouter and xAI default

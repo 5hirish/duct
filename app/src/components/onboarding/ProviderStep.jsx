@@ -47,7 +47,7 @@ const CHOICES = [...PROVIDERS].sort((a, b) => (a.id === RECOMMENDED_ID ? -1 : b.
 // them. `PROVIDERS[].description` talks about engines, which is the settings
 // page's concern, not a first-run one.
 const BLURBS = {
-  openai: msg`GPT-5.6 · about a cent per audit`,
+  openai: msg`GPT · about a cent per audit`,
   anthropic: msg`Claude · a few cents per audit`,
   gemini: msg`Gemini · a free tier covers a first audit`,
   openrouter: msg`One key, hundreds of models`,

@@ -15,7 +15,7 @@ const slidesHtml = () => `<!doctype html>\n<html lang="en">\n<head>\n<meta chars
 const usage = (input, output) => ({
   event: "token_usage",
   input_tokens: input, output_tokens: output, cache_read_tokens: Math.round(input * 0.6), cache_creation_tokens: 0,
-  total_tokens: input + output, model: "claude-sonnet-5", context_window: 200000, scope: "thread",
+  total_tokens: input + output, model: "claude-sonnet-5-5", context_window: 200000, scope: "thread",
 });
 const step = (id, label, connector) => [
   { event: "step_started", step_id: id, label, status: "running" },

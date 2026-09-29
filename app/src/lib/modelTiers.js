@@ -5,7 +5,7 @@
  * deliberately *not* mirrored here is the resolution: which model actually
  * serves a job, and what happens when a tier has no key, is answered by
  * `POST /api/models/preview` on the server. The page prints a promise
- * ("Light jobs run on Claude Sonnet 5 until you add an OpenAI key"), and a
+ * ("Light jobs run on Claude Sonnet 5.5 until you add an OpenAI key"), and a
  * promise computed in the browser from whichever keys this tab happens to hold
  * would drift the first time the resolver gained a rule.
  *

@@ -11,7 +11,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from agents.models import Provider, get_api_key_kwargs, resolve_model, resolve_provider
+from agents.models import Provider, get_api_key_kwargs, resolve_model, resolve_provider, takes_temperature
 from config import get_configs
 
 logger = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ async def insight_chat(req: InsightChatRequest) -> StreamingResponse:
         llm = init_chat_model(
             model=model.value,
             model_provider=provider.value,
-            temperature=0.7,
+            temperature=0.7 if takes_temperature(model) else None,
             **api_key_kwargs,
         )
 

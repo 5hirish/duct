@@ -64,11 +64,13 @@ WEB_FETCH_MAX_CHARS = 8_000
 ANTHROPIC_WEB_SEARCH_MAX_USES = 8
 
 # The tool `type` is versioned per model, not per provider. The 2026-02-09
-# variant adds dynamic filtering and is documented for Opus 5 and Sonnet 5;
-# every other model — Haiku, and Fable until it is on that list — takes the
-# 2025-03-05 basic variant, which is still served everywhere. Naming a
-# variant a model does not accept is a 400 on every turn, so the default
-# here is the one that works everywhere rather than the newest.
+# variant adds dynamic filtering, which Anthropic documents for "Claude 4.6 and
+# later models", Opus 5.5 and Sonnet 5.5 among them; every other model here —
+# Haiku, and Fable until it is verified on that variant — takes the 2025-03-05
+# basic variant, which is still served everywhere. Naming a variant a model
+# does not accept is a 400 on every turn, so the default here is the one that
+# works everywhere rather than the newest. (2026-03-18 adds response-inclusion
+# control on top of dynamic filtering; nothing here needs it yet.)
 ANTHROPIC_WEB_SEARCH_DYNAMIC = "web_search_20260209"
 ANTHROPIC_WEB_SEARCH_BASIC = "web_search_20250305"
 ANTHROPIC_DYNAMIC_SEARCH_MODELS: frozenset[str] = frozenset({

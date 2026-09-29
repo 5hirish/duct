@@ -15,9 +15,9 @@ so they can pick a number is the same mistake the deleted wizard made — making
 the user carry the vendor's model of the world.
 
 So Duct names four rungs of its own and owns the translation. The user picks
-"Deep"; this module decides that means ``high`` on Opus 5, ``high`` on Gemini
-3.8 Flash, and ``high`` on GPT-5.6 — and that "Exhaustive" means ``xhigh`` on
-Opus 5 but is *the same as Deep* on Gemini 3.8 Flash, which has no rung above
+"Deep"; this module decides that means ``high`` on Opus 5.5, ``high`` on Gemini
+3.8 Flash, and ``high`` on GPT-6 — and that "Exhaustive" means ``xhigh`` on
+Opus 5.5 but is *the same as Deep* on Gemini 3.8 Flash, which has no rung above
 ``high``. The UI shows the resolved native value beside the Duct name, so the
 abstraction never lies about what was actually sent.
 
@@ -54,7 +54,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from agents.models import ModelName
+from agents.models import ModelName, current_model_id
 
 
 class ThinkingLevel(StrEnum):
@@ -131,12 +131,26 @@ class ThinkingSupport:
 _ANTHROPIC_5 = ThinkingSupport(
     native=(LOW, MEDIUM, HIGH, XHIGH, MAX), default=HIGH, label="effort"
 )
+# Opus 5.5 takes the same ladder and defaults one rung lower, to medium. Only
+# the label depends on it — Duct never sends a level nobody chose (rule 3) —
+# but a picker marking `high` as the default on Opus 5.5 would be lying.
+_ANTHROPIC_OPUS_5_5 = ThinkingSupport(
+    native=(LOW, MEDIUM, HIGH, XHIGH, MAX), default=MEDIUM, label="effort"
+)
 # 4.6-generation Anthropic models have max but not xhigh.
 _ANTHROPIC_46 = ThinkingSupport(
     native=(LOW, MEDIUM, HIGH, MAX), default=HIGH, label="effort"
 )
+# GPT-5.6, and GPT-6 Sol and Luna, which kept its ladder and its default.
 _GPT_5_6 = ThinkingSupport(
     native=(NONE, LOW, MEDIUM, HIGH, XHIGH, MAX), default=MEDIUM, label="reasoning effort"
+)
+# GPT-6 Astra and 6.1 Sol have no `none` rung ("minimal reasoning efforts
+# are not supported"). 6.1 Sol publishes medium as its default; Astra says
+# nothing, so medium is assumed there, and only the picker's default marker
+# depends on it.
+_GPT_6_REASONING_ONLY = ThinkingSupport(
+    native=(LOW, MEDIUM, HIGH, XHIGH, MAX), default=MEDIUM, label="reasoning effort"
 )
 # The GPT-5 family's per-model matrix is not published in full. low/medium/high
 # is the subset every member accepts, so the picker offers only what is safe
@@ -149,7 +163,7 @@ _GPT_5_CONSERVATIVE = ThinkingSupport(
 # xAI publishes the full ladder per model and says reasoning cannot be
 # disabled, so unlike the GPT-5 family there is nothing to be conservative
 # about — and no `none` rung to offer. xhigh is grok-4.6 and later; grok-4.5
-# silently treats it as high.
+# silently treats it as high. Grok 4.7 kept the ladder and the high default.
 _XAI = ThinkingSupport(
     native=(LOW, MEDIUM, HIGH, XHIGH), default=HIGH, label="reasoning effort"
 )
@@ -174,17 +188,17 @@ _OPEN_WEIGHT = ThinkingSupport(
 # deliberately absent, and a test pairs the two so a new model cannot be added
 # without deciding which side it falls on.
 MODEL_THINKING: dict[str, ThinkingSupport] = {
-    # --- Anthropic. Fable 5.1 takes the same effort ladder; what differs is
-    # that its thinking cannot be turned off, which is a request-shape concern
-    # (agents/core/lc.py), not a ladder concern.
+    # --- Anthropic. Fable 5.1 and the 5.5 models take the same effort ladder;
+    # what differs is that their thinking cannot be turned off, which is a
+    # request-shape concern (agents/core/lc.py), not a ladder concern.
     ModelName.CLAUDE_FABLE: _ANTHROPIC_5,
-    ModelName.CLAUDE_OPUS: _ANTHROPIC_5,
+    ModelName.CLAUDE_OPUS: _ANTHROPIC_OPUS_5_5,
     ModelName.CLAUDE_SONNET: _ANTHROPIC_5,
 
     # --- OpenAI
-    ModelName.GPT_5_6_SOL: _GPT_5_6,
-    ModelName.GPT_5_6_TERRA: _GPT_5_6,
-    ModelName.GPT_5_6_LUNA: _GPT_5_6,
+    ModelName.GPT_6_ASTRA: _GPT_6_REASONING_ONLY,
+    ModelName.GPT_6_1_SOL: _GPT_6_REASONING_ONLY,
+    ModelName.GPT_6_LUNA: _GPT_5_6,
     ModelName.GPT_5_MINI: _GPT_5_CONSERVATIVE,
 
     # --- Google. thinking_level is Gemini 3 and later; the 2.5 line takes a
@@ -196,28 +210,41 @@ MODEL_THINKING: dict[str, ThinkingSupport] = {
     ModelName.GEMINI_3_5_FLASH_LITE: _gemini((MINIMAL, LOW, MEDIUM, HIGH), MINIMAL),
 
     # --- xAI
-    ModelName.GROK_4_6: _XAI,
+    ModelName.GROK_4_7: _XAI,
 
     # --- OpenRouter open-weight slugs. It normalises the parameter, but what
     # the upstream model does with it varies, so only the middle of the ladder
     # is offered. Vendor-prefixed slugs for models Duct also offers natively
-    # (anthropic/claude-opus-5 …) resolve through _strip_vendor to the row
-    # above rather than repeating it here.
-    ModelName.OR_DEEPSEEK_V4_FLASH: _OPEN_WEIGHT,
+    # (openai/gpt-6-luna …) resolve through _strip_vendor to the row above
+    # rather than repeating it here; OpenRouter's dotted Claude slugs
+    # (anthropic/claude-opus-5.5) through _dash_version as well.
+    ModelName.OR_DEEPSEEK_V4_1_FLASH: _OPEN_WEIGHT,
     ModelName.OR_DEEPSEEK_V4_PRO: _OPEN_WEIGHT,
     ModelName.OR_KIMI_K3: _OPEN_WEIGHT,
     ModelName.OR_GLM_5_3_FLASH: _OPEN_WEIGHT,
 
-    # --- Models Duct does not offer yet.
+    # --- Models Duct does not offer, or no longer does.
     # Plain strings on purpose: adding one to ModelName is a product decision
     # about what appears in the engine picker, and these rows exist only so a
     # BYO-key customer naming one through OpenRouter still gets a correct
     # ladder. Promote a key to ModelName when the model joins the catalogue.
+    # A retired catalogue id also answers for its successor first (see
+    # support_for), so its row here serves only an OpenRouter slug for it.
+    "claude-opus-5": _ANTHROPIC_5,
+    "claude-sonnet-5": _ANTHROPIC_5,
     "claude-opus-4-8": _ANTHROPIC_5,
     "claude-opus-4-7": _ANTHROPIC_5,
     "claude-fable-5": _ANTHROPIC_5,
     "claude-opus-4-6": _ANTHROPIC_46,
     "claude-sonnet-4-6": _ANTHROPIC_46,
+    "gpt-5.6-sol": _GPT_5_6,
+    "gpt-5.6-terra": _GPT_5_6,
+    "gpt-5.6-luna": _GPT_5_6,
+    "gpt-6-sol": _GPT_5_6,
+    "grok-4.6": _XAI,
+    # Retired from the list with no successor (agents/models.RETIRED_MODELS),
+    # so a saved pick still runs it and still needs its ladder.
+    "deepseek-v4-flash": _OPEN_WEIGHT,
     "gemini-3.5-flash": _gemini((MINIMAL, LOW, MEDIUM, HIGH), MEDIUM),
 }
 
@@ -266,13 +293,27 @@ def _strip_variant(model_id: str) -> str:
     return model_id.split("[", 1)[0]
 
 
+def _dash_version(model_id: str) -> str:
+    """``claude-opus-5.5`` → ``claude-opus-5-5``.
+
+    OpenRouter writes a Claude version with a dot; Anthropic's own id uses a
+    dash. Same model, same ladder.
+    """
+    return model_id.replace(".", "-") if model_id.startswith("claude-") else model_id
+
+
 def support_for(model) -> ThinkingSupport | None:
-    """What this model accepts, or None when it has no thinking dial."""
-    model_id = _model_id(model)
+    """What this model accepts, or None when it has no thinking dial.
+
+    A retired id answers for its successor, because that is the model a saved
+    pick of it now runs on (``agents/models.RETIRED_MODELS``).
+    """
+    model_id = current_model_id(_model_id(model))
     if not model_id:
         return None
-    for candidate in (model_id, _strip_variant(model_id), _strip_vendor(model_id),
-                      _strip_vendor(_strip_variant(model_id))):
+    bare = _strip_vendor(_strip_variant(model_id))
+    for candidate in (model_id, _strip_variant(model_id), _strip_vendor(model_id), bare,
+                      _dash_version(bare)):
         found = MODEL_THINKING.get(candidate)
         if found is not None:
             return found

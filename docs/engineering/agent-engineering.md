@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-28
+**Author:** Shirish Kadam · **Updated:** 2026-09-29
 
 How an agent is built and maintained here, on LangChain 1.x, LangGraph and
 `deepagents`. Read it before adding an agent or changing one: a prompt, a tool,
@@ -58,7 +58,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 | Every graph asks for caching. Anthropic caches only a request that says so; Gemini caches implicitly; OpenAI routes by `prompt_cache_key`. | `AnthropicPromptCachingMiddleware` (appended by `create_deep_agent`, by `build_session_agent`, and by `prompt_caching_middleware()` for a one-shot pass); `resolve_chat_model(cache_key=thread)` | `tests/test_agent_assembly.py`; cache share on `TOKEN_USAGE` |
 | Duct owns the final system prompt byte for byte. `deepagents` harness profiles append text per model: 0.7.15 ships coding-agent guidance ("Never speculate about code you have not opened…") for Haiku 4.5, Sonnet 4.6 and Opus 4.7, plus profiles for OpenAI Codex models, and packages can register more. | `register_harness_profile` | gap 6 |
 | Prune before you summarise, and batch the pruning so each cache break buys something. | `ContextEditingMiddleware` + `ClearToolUsesEdit(clear_at_least=…)` | `RunLimits.__post_init__` (trigger below the summarisation floor) |
-| Set the summarisation trigger from `CONTEXT_WINDOW`, not the library's model profile (0.85 × the profile's `max_input_tokens` is ~850k on Opus 5 and Sonnet 5, where Duct budgets 200k). | `deepagents` `SummarizationMiddleware` with `trigger=("tokens", N)` | gap 3 |
+| Set the summarisation trigger from `CONTEXT_WINDOW`, not the library's model profile (0.85 × the profile's `max_input_tokens` is ~850k on Opus 5.5 and Sonnet 5.5, where Duct budgets 200k). | `deepagents` `SummarizationMiddleware` with `trigger=("tokens", N)` | gap 3 |
 | One emergency compaction and one retry on a real overflow; a second overflow is the ordinary failure. | `compact_thread` in `DeepSession` | `tests/test_deep_session.py` |
 
 ### The loop
@@ -145,7 +145,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 
 - **Prompt:** `make dump-prompts` and read the diff as prose (`prompts.yml`). Nothing volatile above the stable blocks. Replay the bundles that motivated it (`make session-replay`) on two providers, and run `make agent-eval` (`agent-eval.yml` runs it on the PR): FAIL does not merge; INCONCLUSIVE needs a line in the PR saying why it is acceptable.
 - **Tool:** bound its output; errors carry a code and a next step; decide its activity card; keep writers off every sub-agent list; batch tool changes, since each one invalidates the cache.
-- **Model or tier default:** update `PRICING`, `CONTEXT_WINDOW`, `MODEL_FALLBACK` and the tier map together; check the LangChain profile window and any `deepagents` harness profile for that id; run the live web-search matrix.
+- **Model or tier default:** update `PRICING`, `CONTEXT_WINDOW`, `MODEL_FALLBACK` and the tier map together, and add a `RETIRED_MODELS` row for any id the new one replaces; classify it in `CLAUDE_BOUND_THINKING` and `takes_temperature`; check the LangChain profile exists for that id, not just its window (langchain-anthropic 1.7.4 had none for `claude-sonnet-5-5`, which meant `max_tokens=4096` with thinking inside it), and any `deepagents` harness profile; run the live web-search matrix. For an OpenRouter slug, price it at the model vendor's own endpoint (`/api/v1/models/<slug>/endpoints`), not the one price `/api/v1/models` shows, and read the vendor's changelog: a slug pins a build the vendor may already have retired.
 - **Middleware:** change `session_middleware`, nowhere else. Re-measure `SUPERSTEPS_PER_MODEL_CALL` (`tests/test_deep_session.py`). Comment the failure it prevents.
 - **Dependency bump:** alone; `poetry install --with dev`; `tests/test_deepagents_harness.py` and `tests/test_agent_assembly.py`; diff `create_deep_agent`'s stack order and `deepagents/profiles/` against the previous version.
 

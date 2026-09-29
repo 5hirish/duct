@@ -43,7 +43,7 @@ def _usage(inp, out, cached=0):
 def test_a_call_is_billed_once_at_its_stop_marker():
     tracker = UsageTracker(ModelName.CLAUDE_SONNET)
     # Anthropic: model name on the first chunk, usage on the last.
-    first = AIMessageChunk(content="", response_metadata={"model_name": "claude-sonnet-5"})
+    first = AIMessageChunk(content="", response_metadata={"model_name": "claude-sonnet-5-5"})
     assert tracker.feed(first, {}) is None
     middle = AIMessageChunk(content="Hel")
     assert tracker.feed(middle, {}) is None
@@ -58,7 +58,7 @@ def test_a_call_is_billed_once_at_its_stop_marker():
         "output_tokens": 40,
         "cache_read_tokens": 900,
         "cache_creation_tokens": 0,
-        "model": "claude-sonnet-5",
+        "model": "claude-sonnet-5-5",
         "scope": "thread",
         "total_tokens": 1240,
         "context_window": 200_000,
@@ -148,8 +148,21 @@ def test_stored_usage_is_the_last_call_and_the_sum_of_what_survives():
         "cost_usd": round(first + second, 6),
     }
     assert usage["context_window"] == CONTEXT_WINDOW[ModelName.CLAUDE_OPUS]
-    assert usage["model"] == "claude-opus-5"
+    assert usage["model"] == "claude-opus-5-5"
     assert usage_from_messages([], ModelName.CLAUDE_SONNET)["last"] is None
+
+
+def test_a_thread_served_by_a_retired_model_keeps_its_own_price():
+    """A thread Opus 5 answered was billed at Opus 5's $5/$25. Repricing it at
+    its successor's $4/$20 on reopen would under-report what the user paid, and
+    dropping the price would blank a figure they saw yesterday."""
+    served = AIMessage(
+        content="a", usage_metadata=_usage(1_000, 100),
+        response_metadata={"model_name": "claude-opus-5"},
+    )
+    usage = usage_from_messages([served], "claude-opus-5")
+    assert usage["last"]["cost_usd"] == round((1_000 * 5.0 + 100 * 25.0) / 1_000_000, 6)
+    assert usage["context_window"] == 200_000
 
 
 # ---------------------------------------------------------------------------

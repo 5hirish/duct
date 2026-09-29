@@ -109,16 +109,17 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
 }
 
 # Human-facing tier hint per model, so the picker can group options the way the
-# page is organised. Derived from the catalogue's own comments (`gpt-5.6-sol`
-# is annotated "flagship", `luna` "cost-sensitive") rather than invented here.
+# page is organised. Derived from the catalogue's own comments (`gpt-6-astra`
+# is annotated "flagship", `luna` "efficient, repeatable work") rather than
+# invented here.
 _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.CLAUDE_FABLE.value: Tier.HEAVY,
     ModelName.CLAUDE_OPUS.value: Tier.HEAVY,
     ModelName.CLAUDE_SONNET.value: Tier.STANDARD,
     ModelName.CLAUDE_HAIKU.value: Tier.LIGHT,
-    ModelName.GPT_5_6_SOL.value: Tier.HEAVY,
-    ModelName.GPT_5_6_TERRA.value: Tier.STANDARD,
-    ModelName.GPT_5_6_LUNA.value: Tier.LIGHT,
+    ModelName.GPT_6_ASTRA.value: Tier.HEAVY,
+    ModelName.GPT_6_1_SOL.value: Tier.HEAVY,
+    ModelName.GPT_6_LUNA.value: Tier.LIGHT,
     ModelName.GPT_5_MINI.value: Tier.LIGHT,
     ModelName.GPT_4O.value: Tier.STANDARD,
     ModelName.GPT_4O_MINI.value: Tier.LIGHT,
@@ -126,7 +127,7 @@ _MODEL_TIER_HINT: dict[str, Tier] = {
     ModelName.GEMINI_3_8_FLASH.value: Tier.STANDARD,
     ModelName.GEMINI_3_5_FLASH_LITE.value: Tier.LIGHT,
     ModelName.GEMINI_2_5_FLASH.value: Tier.LIGHT,
-    ModelName.GROK_4_6.value: Tier.HEAVY,
+    ModelName.GROK_4_7.value: Tier.HEAVY,
 }
 
 
@@ -551,7 +552,7 @@ def models_preview(
     """What each tier would actually run, resolved by the code that will run it.
 
     The settings page needs to print a sentence like "Light jobs run on Claude
-    Sonnet 5 until you add an OpenAI key". That sentence is a promise, and a
+    Sonnet 5.5 until you add an OpenAI key". That sentence is a promise, and a
     promise computed in JavaScript from a list of which keys the browser
     happens to hold is a promise that drifts the first time the resolver gains
     a rule. So the browser sends its draft map and renders whatever comes back

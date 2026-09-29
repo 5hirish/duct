@@ -608,8 +608,8 @@ const MODEL_CATALOGUE = {
     { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro (preview)", provider: "google_genai", engines: ["v1"] },
     { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", provider: "google_genai", engines: ["v1"] },
     { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", provider: "google_genai", engines: ["v1"] },
-    { id: "claude-opus-5", label: "Claude Opus 5", provider: "anthropic", engines: ["v1"] },
-    { id: "claude-sonnet-5", label: "Claude Sonnet 5", provider: "anthropic", engines: ["v1"] },
+    { id: "claude-opus-5-5", label: "Claude Opus 5.5", provider: "anthropic", engines: ["v1"] },
+    { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5", provider: "anthropic", engines: ["v1"] },
     { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", provider: "anthropic", engines: ["v1"] },
   ],
   tiers: [
@@ -624,7 +624,7 @@ const MODEL_CATALOGUE = {
   ],
   image_provider_order: ["google_genai", "openai", "xai"],
   provider_triples: {
-    anthropic: { heavy: "claude-opus-5", standard: "claude-sonnet-5", light: "claude-haiku-4-5" },
+    anthropic: { heavy: "claude-opus-5-5", standard: "claude-sonnet-5-5", light: "claude-haiku-4-5" },
     google_genai: { heavy: "gemini-3.1-pro-preview", standard: "gemini-3.8-flash", light: "gemini-3.5-flash-lite" },
   },
 };
@@ -662,7 +662,7 @@ const MODEL_PREVIEW_BLOCKED = {
   heavy: {
     id: "heavy",
     provider: "anthropic",
-    model: "claude-opus-5",
+    model: "claude-opus-5-5",
     runnable: false,
     reason: "no_credential",
     serves: { model: "gemini-3.8-flash", engine_default: false },
@@ -920,7 +920,7 @@ export const SCENES = [
               <ContextRing
                 used={0.34}
                 details={{
-                  last: { input: 61_000, output: 7_200, cached: 48_000, window: 200_000, cost: 0.21, model: "claude-sonnet-5" },
+                  last: { input: 61_000, output: 7_200, cached: 48_000, window: 200_000, cost: 0.21, model: "claude-sonnet-5-5" },
                   total: { input: 210_000, output: 19_000, cached: 150_000, calls: 4, cost: 0.74 },
                 }}
               />
@@ -1423,7 +1423,7 @@ export const SCENES = [
         <TranscriptRow msg={{ role: "assistant", text: "Let me look at the last thirty days." }} />
         <TranscriptRow msg={{ role: "notice", kind: "compacted", before: 180000, after: null }} />
         <TranscriptRow msg={{ role: "notice", kind: "compacted", before: 180000, after: 42000, summary: "**Where this started.** Sessions fell 12% after the September pricing change; the drop is entirely mobile organic.\n\n**What was checked.** GA4 landing pages for the last thirty days, Search Console queries for the pricing page, and the Ads campaign that was paused on the 4th.\n\n**Open.** Whether the mobile drop is a tracking change rather than a demand change — the tag was redeployed the same week." }} />
-        <TranscriptRow msg={{ role: "notice", kind: "model", label: "GPT-5.6 Terra", model: "gpt-5.6-terra" }} />
+        <TranscriptRow msg={{ role: "notice", kind: "model", label: "GPT-6.1 Sol", model: "gpt-6.1-sol" }} />
         <TranscriptRow msg={{ role: "notice", text: "Stopped here — the turn was interrupted." }} />
       </div>
     ),
@@ -1665,7 +1665,7 @@ export const SCENES = [
             key={tag}
             used={used}
             details={{
-              last: { window: 200000, input: Math.round(used * 200000 * 0.8), output: Math.round(used * 200000 * 0.2), cached, model: "claude-sonnet-5" },
+              last: { window: 200000, input: Math.round(used * 200000 * 0.8), output: Math.round(used * 200000 * 0.2), cached, model: "claude-sonnet-5-5" },
               total: { input: 512000, output: 48000, cached: 180000, calls: 14, cost: 1.86 },
             }}
           />
@@ -1683,7 +1683,7 @@ export const SCENES = [
       <Row>
         <ContextRing
           used={0.87}
-          details={{ last: { window: 200000, input: 174000, output: 8200, stale: true, model: "claude-sonnet-5" }, total: { input: 512000, output: 48000, calls: 14 } }}
+          details={{ last: { window: 200000, input: 174000, output: 8200, stale: true, model: "claude-sonnet-5-5" }, total: { input: 512000, output: 48000, calls: 14 } }}
         />
         <span className="text-xs text-muted-foreground">No details prop — decorative only, as on a thread that hasn&rsquo;t started</span>
         <ContextRing used={0} />
@@ -1744,7 +1744,7 @@ export const SCENES = [
     note: "The state the redesign is most at risk of hiding: the cards that used to carry the warning are behind Customise now, so the summary has to say it. Heavy is struck through and the note names what serves its work instead. The card loses its tinted ground here — an amber border on a primary-tinted gradient reads as decoration rather than as a problem.",
     render: () => (
       <TierSummaryScene
-        picks={{ ...MODEL_PICKS, heavy: "claude-opus-5" }}
+        picks={{ ...MODEL_PICKS, heavy: "claude-opus-5-5" }}
         previewByTier={MODEL_PREVIEW_BLOCKED}
       />
     ),
@@ -1762,7 +1762,7 @@ export const SCENES = [
             key={tier.key}
             tier={tier}
             index={index}
-            value={tier.key === "heavy" ? "claude-opus-5" : MODEL_PICKS[tier.key]}
+            value={tier.key === "heavy" ? "claude-opus-5-5" : MODEL_PICKS[tier.key]}
             models={MODEL_CATALOGUE.models}
             providersById={MODEL_PROVIDERS}
             engine="v1"

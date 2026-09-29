@@ -17,6 +17,7 @@ import logging
 from dataclasses import dataclass
 from uuid import UUID
 
+from agents.models import current_model_id
 from agents.tiers import TIER_ORDER
 from db.session import get_session as db_session
 from models.settings import UserModelSettings
@@ -43,11 +44,16 @@ DEFAULTS = ModelSettings(tiers={}, auto_fallback=True, engine="", image_model=""
 
 
 def _clean(tiers: object) -> dict[str, str]:
-    """Only the three known tiers, only non-empty string picks."""
+    """Only the three known tiers, only non-empty string picks.
+
+    A pick the catalogue has since retired reads back as its successor, so
+    the settings page names the model that will actually run rather than one
+    it no longer lists (``agents.models.RETIRED_MODELS``).
+    """
     if not isinstance(tiers, dict):
         return {}
     return {
-        tier.value: str(tiers[tier.value]).strip()
+        tier.value: current_model_id(str(tiers[tier.value]))
         for tier in TIER_ORDER
         if str(tiers.get(tier.value) or "").strip()
     }

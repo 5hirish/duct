@@ -17,7 +17,7 @@ def test_fields_name_the_provider_the_model_and_a_human_label():
     assert fields == {
         "provider": Provider.ANTHROPIC.value,
         "model": ModelName.CLAUDE_SONNET.value,
-        "model_label": "Claude Sonnet 5",
+        "model_label": "Claude Sonnet 5.5",
     }
 
 
@@ -34,4 +34,4 @@ def test_every_chat_model_has_a_label():
     """A new catalogue row without a name is a divider that reads as a slug."""
     missing = sorted(m.value for m in ModelName if m.value not in MODEL_LABELS)
     assert not missing, f"models with no display name: {missing}"
-    assert model_label(ModelName.GPT_5_6_TERRA) == "GPT-5.6 Terra"
+    assert model_label(ModelName.GPT_6_1_SOL) == "GPT-6.1 Sol"

@@ -190,6 +190,18 @@ def test_dated_model_snapshots_stay_trusted():
     assert model_allows_auto_posture("") is False
 
 
+def test_every_frontier_vendors_heavy_default_may_run_auto():
+    """A Heavy default outside the allowlist quietly runs every `auto` project
+    on that vendor at `assisted`. GPT-6 replacing GPT-5.6 was nearly that: the
+    list said `gpt-5` and the new ids start `gpt-6`."""
+    from agents.tiers import PROVIDER_TRIPLES, Tier
+
+    for provider, triple in PROVIDER_TRIPLES.items():
+        if provider.value in {"openrouter", "xai"}:
+            continue  # the open-weight ladder and Grok are off the list by design
+        assert model_allows_auto_posture(triple[Tier.HEAVY].value), provider
+
+
 # ---------------------------------------------------------------------------
 # The tool surface — the same asymmetry in both harnesses
 # ---------------------------------------------------------------------------

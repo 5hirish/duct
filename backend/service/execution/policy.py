@@ -67,6 +67,9 @@ AUTO_POSTURE_MODEL_PREFIXES: tuple[str, ...] = (
     "claude-opus-",
     "claude-sonnet-",
     "gpt-5",
+    # The OpenAI Heavy and Standard rungs since 2026-09-29. Missing, every
+    # OpenAI `auto` project would have run at `assisted` with no signal why.
+    "gpt-6",
     # "gemini-3-pro" matches nothing Google actually serves — the 3.x Pro line
     # ships as `gemini-3.1-pro-preview`, which does not start with it. Left in
     # place for whenever a bare `gemini-3-pro` appears; the 3.1 entry is the one
