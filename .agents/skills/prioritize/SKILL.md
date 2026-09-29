@@ -1,7 +1,7 @@
 ---
 name: prioritize
 description: Product management for Duct — find what deserves attention, run it through the lean prioritization bar, file it as a properly-typed and scheduled GitHub issue, keep the board honest, and report where things stand.
-argument-hint: "<idea, issue number, short description, or 'sweep' / 'readout'>"
+argument-hint: "<idea, issue number, short description, or 'sweep' / 'readout' / 'sprint'>"
 ---
 
 Development here is 100% agent-executed, so implementation speed is not the
@@ -183,65 +183,58 @@ more than gets read.
 is `Ready` (spec complete, milestone set), which is the maintainer's call
 under "What needs the maintainer".
 
-**Refresh at the start of every sprint**, and top up whenever an item
-finishes mid-sprint. The refresh is one pass:
+**Plan once, then keep it honest.** A sprint is planned once, by the first
+refresh after it starts: unfinished items roll over and the sprint fills to
+ten. Every later refresh in the same sprint is maintenance and adds no
+scope. It syncs statuses, closes what shipped, clears duplicates and dead
+milestones, files a bug when `main` goes red, and reports. An item that
+finishes early frees a slot, and the slot stays free: the readout names the
+next candidates and the maintainer decides. Topping up automatically would
+turn the sprint back into a queue, which is the thing it exists to replace.
+The two exceptions are in-flight work, because started means committed, and
+a `P0` bug, because it can't wait two weeks. Anything else new is never
+filed by an unattended run; it goes to the maintainer as a candidate.
 
-- Unfinished items roll into the new sprint (they still lead the order
-  above). Each roll leaves a comment on the issue — `Rolled into Iteration
-  N (2nd time)` — because the Iteration field holds one value and that
-  comment trail is the only place the count survives. An item rolling for
-  the **second** time is named in the readout as stalled; on the **third**,
-  it leaves the sprint, moves to the following milestone, and the comment
-  says so — a thing that sat through six weeks of sprints was not a
-  commitment, and pretending otherwise hides the real ones.
-- `Ready` items with a milestone whose due date has passed move to the
-  next milestone, with a comment. Closed issues still showing `Backlog` or
-  `Ready` are set to `Done` (the auto-close automation misses issues that
-  were on the board before it was enabled).
-- End with the readout below.
+**Nothing waits unseen.** The fill order only picks items with a priority,
+so a refresh gives every open issue without one a priority from the rubric
+above, reports each with its reason, and never changes one already set. In
+the sprint's second week the readout also previews the next sprint, without
+assigning anything: that week is the maintainer's window to reorder it by
+changing priority, status or milestone on the issues themselves.
 
-```bash
-# the current iteration id (iterations rotate; the field id is stable)
-gh api graphql -f query='{ user(login:"5hirish"){ projectV2(number:10){
-  field(name:"Iteration"){ ... on ProjectV2IterationField {
-    configuration { iterations { id title startDate duration } } } } } } }' \
-  --jq '.data.user.projectV2.field.configuration.iterations[0] | "\(.id) \(.title) from \(.startDate)"'
-# ^ iterations[] lists only current and future, oldest first, so [0] is @current
+**Rollover.** Each roll leaves a comment on the issue, `Rolled into
+Iteration N (2nd time)`, because the Iteration field holds one value and
+that comment trail is the only place the count survives. An item rolling
+for the **second** time is named in the readout as stalled; on the
+**third**, it leaves the sprint, moves to the following milestone, and the
+comment says so. A thing that sat through six weeks of sprints was not a
+commitment, and pretending otherwise hides the real ones.
 
-gh project item-edit --id <item-id> --project-id PVT_kwHOAGxEyM4Bi8Ot \
-  --field-id PVTIF_lAHOAGxEyM4Bi8OtzhhydDk --iteration-id <iteration-id>
+**How it runs.** `/prioritize sprint` runs a refresh in the current session,
+as often as you like: every step is idempotent, so a second run changes only
+what changed in between. A local launchd job on the maintainer's Mac
+(`ai.getduct.sprint-refresh`) runs the same refresh every Wednesday at
+08:07; every second Wednesday starts a sprint, so the job alternates
+planning and maintenance. Both follow
+`.claude/scheduled-tasks/duct-sprint-refresh/SKILL.md`, which is this
+section's procedure: the steps, the ids and the commands. `run.sh` beside it
+starts `claude -p` headless; only the plist that schedules it lives outside
+the repo, and launchd runs a slot the Mac slept through when it wakes. Run
+headless, the refresh asks nothing and puts every decision in the readout;
+run by hand, it asks them as one table.
 
-# take an item out of every sprint (item-edit cannot clear a field)
-gh api graphql -f query='mutation($p:ID!,$i:ID!,$f:ID!){
-  clearProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f}){ projectV2Item { id } } }' \
-  -f p=PVT_kwHOAGxEyM4Bi8Ot -f i=<item-id> -f f=PVTIF_lAHOAGxEyM4Bi8OtzhhydDk
-```
+**Why local.** In Anthropic-hosted cloud sessions every GitHub request goes
+through a proxy that serves only a pinned set of pull-request GraphQL
+operations, and Projects v2 is GraphQL-only, so a cloud routine gets a 403
+on every board edit however its token is supplied. A cloud routine was
+tried and disabled on 2026-09-28 for exactly that reason; don't recreate
+one.
 
-A **local** Claude Code Desktop scheduled task (`duct-sprint-refresh`, on
-the maintainer's Mac) runs this refresh every Wednesday morning. Its prompt
-is versioned at `.claude/scheduled-tasks/duct-sprint-refresh/SKILL.md`, and
-Desktop's own copy at `~/.claude/scheduled-tasks/duct-sprint-refresh/SKILL.md`
-is a symlink to it, so edit the repo file and the next run picks it up. The
-schedule, folder, model and permission mode live in Desktop, not in the file.
-The sprint
-boundary is every second Wednesday and the run in between is a top-up, so
-the sprint exists whether or not anyone opened a session that week. It is local on
-purpose: in Anthropic-hosted cloud sessions every GitHub request goes through
-a proxy that serves only a pinned set of pull-request GraphQL operations,
-and Projects v2 is GraphQL-only, so a cloud routine gets a 403 on every
-board edit however its token is supplied. A cloud routine was tried and
-disabled on 2026-09-28 for exactly that reason; don't recreate one. It edits board fields, comments
-and milestones, and nothing else: no commits, no PRs, no new issues, no
-priority changes, and it never promotes `Backlog` into a sprint. It
-posts its readout as a **Project status update** (the "Add status update"
-button on the board; `createProjectV2StatusUpdate` in GraphQL), which is
-where the board's own history lives, and nowhere else:
-
-```bash
-gh api graphql -f query='mutation($p:ID!,$b:String!,$s:ProjectV2StatusUpdateStatus!){
-  createProjectV2StatusUpdate(input:{projectId:$p, body:$b, status:$s}){ statusUpdate { id } } }' \
-  -f p=PVT_kwHOAGxEyM4Bi8Ot -f b="$(cat readout.md)" -f s=ON_TRACK   # AT_RISK / OFF_TRACK
-```
+**The readout** is a Project status update (the "Add status update" button
+on the board), which is where the board's own history lives. A refresh
+posts one only when it planned the sprint, changed something, or the last
+update is a week old, so the history stays a record of events rather than
+a heartbeat.
 
 **A milestone needs exit criteria, not just a date.** If its description
 doesn't say what has to be true to call it shipped, that's the first thing
@@ -311,7 +304,7 @@ gh project item-edit --id <item-id> --project-id PVT_kwHOAGxEyM4Bi8Ot \
 |---|---|---|
 | Priority | `PVTSSF_lAHOAGxEyM4Bi8OtzhhydDY` | P0 `79628723` · P1 `0a877460` · P2 `da944a9c` |
 | Status | `PVTSSF_lAHOAGxEyM4Bi8OtzhhycIY` | Backlog `f75ad846` · Ready `e18bf179` · In progress `47fc9ee4` · In review `aba860b9` · Done `98236657` |
-| Iteration | `PVTIF_lAHOAGxEyM4Bi8OtzhhydDk` | rotates every two weeks — query it, see "The sprint" |
+| Iteration | `PVTIF_lAHOAGxEyM4Bi8OtzhhydDk` | rotates every two weeks — the query and the edit commands are in `.claude/scheduled-tasks/duct-sprint-refresh/SKILL.md` |
 
 Ids are stable unless the project is recreated; re-derive with `gh project
 field-list 10 --owner 5hirish`. Status moves at the moment the event
