@@ -70,13 +70,19 @@ from agents.content.channels import (
     resolve as resolve_channel,
 )
 from agents.content.publishing import (
+    PostAlreadyOut,
     create_request,
+    is_queued_at_postbridge,
     is_text_only,
     metrics_sync,
     no_sync_message,
     publish_blockers,
+    publish_failure,
+    push_edit,
     record_published,
     unpublished_replies,
+    went_out,
+    words_changed,
 )
 from agents.content.events import ContentEvent
 from agents.content.schema import (
@@ -820,6 +826,39 @@ def build_content_tools_lc(
             logger.exception("submit_plan failed")
             return _err(f"submit_plan failed: {exc}")
 
+    async def _push_queued_edit(db: Session, post: ContentPost) -> str | None:
+        """A rewrite of a post PostBridge is holding reaches PostBridge before
+        it is saved, or it is not saved: the queue would publish the old words.
+        Returns the refusal for the model, or None once PostBridge has it."""
+        from service.post_bridge import PostBridgeAPIError, client_for_user
+
+        proj = db.get(Project, project_id)
+        try:
+            client = client_for_user(proj.user_id, db)
+        except ValueError as exc:
+            db.rollback()
+            return _err(f"The post is scheduled on PostBridge and the rewrite can't reach it: {exc}")
+        try:
+            async with client as pb:
+                await push_edit(pb, post)
+        except PostAlreadyOut:
+            db.rollback()
+            db.refresh(post)
+            went_out(post)
+            db.add(post)
+            db.commit()
+            return _err(
+                "That post already went out, so the rewrite can't reach it; it is marked posted now. "
+                "Draft a new post for the new words."
+            )
+        except PostBridgeAPIError as exc:
+            db.rollback()
+            return _err(
+                "The post is scheduled on PostBridge and the update didn't go through, so nothing "
+                f"was saved: {exc.error.message or 'try again shortly'}."
+            )
+        return None
+
     async def submit_post_draft(post: PostDraft | dict) -> str:
         try:
             payload = post if isinstance(post, dict) else post.model_dump(mode="json")
@@ -938,6 +977,8 @@ def build_content_tools_lc(
                 if recorded is not None:
                     values["clone_source"] = recorded
                 if existing is not None:
+                    queued = is_queued_at_postbridge(existing)
+                    before = (existing.caption, list(existing.replies or []))
                     for k, v in values.items():
                         setattr(existing, k, v)
                     # Preserve a saved status across agent re-submits (chat
@@ -945,6 +986,10 @@ def build_content_tools_lc(
                     # published must NOT be reset to "pending". `status` is
                     # deliberately absent from `values` above.
                     row = existing
+                    if queued and words_changed(existing, *before):
+                        refused = await _push_queued_edit(db, existing)
+                        if refused:
+                            return refused
                 else:
                     # A brand-new post is unsaved — the user's Save flips it
                     # pending → draft (see routes/content.py PATCH + the UI).
@@ -1686,6 +1731,8 @@ def build_content_tools_lc(
                     logger.warning("content: publish failed: %s", exc, exc_info=True)
                     return _err(f"Couldn't publish that just now — {exc.error.message or 'please try again shortly'}.")
 
+                if why := publish_failure(resp):
+                    return _err(why)
                 record_published(post, resp, scheduled_at)
                 db.add(post)
                 db.commit()

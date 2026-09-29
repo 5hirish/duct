@@ -43,6 +43,7 @@ from service.post_bridge.schema import (
     PostBridgePostResult,
     PostBridgePostStatus,
     PostBridgeSocialAccount,
+    PostBridgeUpdatePostRequest,
     PostBridgeUploadUrl,
 )
 
@@ -64,6 +65,7 @@ __all__ = [
     "PostBridgePostResult",
     "PostBridgePostStatus",
     "PostBridgeSocialAccount",
+    "PostBridgeUpdatePostRequest",
     "PostBridgeUploadUrl",
     "client_for_user",
 ]

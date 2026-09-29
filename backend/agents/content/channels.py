@@ -16,6 +16,7 @@ and the prompt can say no dedicated agent exists yet.
 
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 
@@ -63,9 +64,14 @@ class ChannelRules:
     ``max_chars`` is the platform's own ceiling on one post's words — X's is
     for a standard account, the one every account has. Counted as Python
     ``len`` (code points), which is exact for the Latin text these playbooks
-    write; X weighs CJK and most emoji double and every URL as 23, and a
-    playbook that keeps links out of the post (PostBridge strips them from a
-    tweet anyway) never meets the URL case.
+    write; X weighs CJK and most emoji double and every URL as 23, and a post
+    that keeps its links in the reply (``strips_links``) never meets the URL
+    case.
+
+    ``strips_links``: PostBridge deletes every link from the post itself on
+    X, bare domains included, because X charges more for a post with one. It
+    says nothing when it does, so a link there is a copy problem, and the
+    reply, which keeps its links, is where one goes.
 
     ``fold_chars`` is where the feed cuts to "see more" (0: it does not), so
     the preview can show the reader's first screen. ``publishable_replies`` is
@@ -84,6 +90,7 @@ class ChannelRules:
     requires_media:      bool = False
     hashtags:            bool = True    # does the playbook expect them at all
     synced_metrics:      bool = False   # PostBridge reports this platform's numbers
+    strips_links:        bool = False   # PostBridge drops links from the post itself
 
 
 # Keyed by the enum so a Platform without rules is a visible hole (the unit
@@ -95,7 +102,7 @@ RULES: dict[Platform, ChannelRules] = {
     Platform.INSTAGRAM:       ChannelRules("Instagram", 2200, fold_chars=125, requires_media=True, synced_metrics=True),
     Platform.YOUTUBE:         ChannelRules("YouTube", 5000, requires_media=True, synced_metrics=True),
     Platform.LINKEDIN:        ChannelRules("LinkedIn", 3000, fold_chars=210, hashtags=False),
-    Platform.TWITTER:         ChannelRules("Twitter / X", 280, publishable_replies=1, hashtags=False),
+    Platform.TWITTER:         ChannelRules("Twitter / X", 280, publishable_replies=1, hashtags=False, strips_links=True),
     Platform.FACEBOOK:        ChannelRules("Facebook", 63206, synced_metrics=True),
     Platform.THREADS:         ChannelRules("Threads", 500, publishable_replies=1),
     Platform.BLUESKY:         ChannelRules("Bluesky", 300),
@@ -201,6 +208,26 @@ def channel_payload(channel: str | None) -> dict:
     }
 
 
+# What PostBridge strips from a tweet: full URLs, www. hosts, and bare domains
+# like foo.com or foo.io/path (its own docs). Its exact pattern is not
+# published, so the bare-domain half names the endings people actually link
+# to, and a word such as "Node.js" or "e.g." is never taken for a link.
+_LINK_TLDS = (
+    "com", "net", "org", "io", "ai", "co", "app", "dev", "xyz", "me", "so", "sh",
+    "gg", "ly", "tv", "fm", "to", "us", "uk", "eu", "de", "fr", "es", "in", "ca",
+    "au", "info", "biz", "tech", "site", "online", "store", "blog", "page", "link",
+)
+_LINK = re.compile(
+    r"(?i)(?:https?://|\bwww\.)\S+"
+    r"|\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*"
+    r"\.(?:" + "|".join(_LINK_TLDS) + r")\b(?:/\S*)?"
+)
+
+
+def links_in(text: str) -> list[str]:
+    return [m.group(0).rstrip(".,;:!?)\"'") for m in _LINK.finditer(text or "")]
+
+
 def copy_problems(channel: str | None, caption: str, replies: list[str] | None = None) -> list[str]:
     """What is wrong with a post's words for its channel, as sentences a model
     or a person can act on. Empty when it fits. The limits are the platform's
@@ -210,6 +237,12 @@ def copy_problems(channel: str | None, caption: str, replies: list[str] | None =
     caption = caption or ""
     if len(caption) > rules.max_chars:
         out.append(f"The post is {len(caption)} characters; {rules.label} allows {rules.max_chars}.")
+    if rules.strips_links and (found := links_in(caption)):
+        out.append(
+            f"{rules.label} loses every link in the post itself on the way out "
+            f"({', '.join(found)}), bare domains included. Put the link in the reply, "
+            "where it is kept."
+        )
     for i, reply in enumerate(replies or [], start=1):
         reply = reply or ""
         if not reply.strip():

@@ -77,10 +77,10 @@ def project(db, owner):
     return row
 
 
-def _text_post(db, project, *, platforms=("twitter",), replies=(), caption="Shipped the eval gate. It failed us twice.") -> ContentPost:
+def _text_post(db, project, *, platforms=("twitter",), replies=(), caption="Shipped the eval gate. It failed us twice.", slug="2026-09-28-001") -> ContentPost:
     row = ContentPost(
         project_id=project.id,
-        post_dir_slug="2026-09-28-001",
+        post_dir_slug=slug,
         post_type=TEXT_POST_TYPE,
         caption=caption,
         replies=list(replies),
@@ -272,6 +272,39 @@ def test_a_linkedin_post_with_a_first_comment_still_publishes(db, project, owner
 
     assert res.status_code == 200, res.text
     assert "linkedin" not in (wire.created().get("platform_configurations") or {})
+
+
+def test_a_link_in_the_tweet_itself_is_refused_and_the_reply_keeps_one(engine, db, project, monkeypatch):
+    """PostBridge deletes every link from the post itself on X, bare domains
+    included, and says nothing. The reply keeps its links, so that is where
+    the refusal sends it."""
+    session = make_session("text-6", project.id, "draft_post")
+    session.channel = "twitter"
+    tools = _tools(session, engine, monkeypatch)
+
+    refused = json.loads(asyncio.run(tools["submit_post_draft"].ainvoke({"post": _draft(
+        project, caption="We moved the docs to getduct.ai/docs today.",
+    )})))
+    kept = json.loads(asyncio.run(tools["submit_post_draft"].ainvoke({"post": _draft(
+        project, caption="We moved the docs today. Node.js users, e.g. you, read the reply.",
+        replies=["Here: https://getduct.ai/docs"],
+    )})))
+
+    assert refused["status"] == "error"
+    assert "getduct.ai/docs" in refused["message"] and "reply" in refused["message"]
+    assert kept.get("status") != "error", kept
+
+
+def test_the_publish_route_holds_a_typed_link_back_from_x_but_not_linkedin(db, project, owner, wire):
+    tweet = _text_post(db, project, caption="Read it at https://getduct.ai/blog/evals.")
+    post = _text_post(db, project, platforms=("linkedin",), caption="Read it at https://getduct.ai/blog/evals.", slug="2026-09-28-002")
+
+    refused = _api(db, owner).post(f"/api/content/posts/{tweet.id}/publish", json={"social_account_ids": [101]})
+    sent = _api(db, owner).post(f"/api/content/posts/{post.id}/publish", json={"social_account_ids": [101]})
+
+    assert refused.status_code == 400 and "https://getduct.ai/blog/evals" in refused.json()["detail"]
+    assert sent.status_code == 200, sent.text
+    assert [r.url.path for r in wire.requests] == ["/v1/posts"]   # only LinkedIn's went out
 
 
 def test_a_text_post_cannot_go_to_a_channel_that_needs_media():
