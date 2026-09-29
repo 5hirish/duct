@@ -239,16 +239,17 @@ export const CHANGE_SET_HISTORY = Object.freeze([
 // One question per audience, and the answer the insights agent gives. The
 // session shots open with the question and end on the answer; the answer
 // cards on the landing pages show only this, so the two cannot disagree.
-// Sources are the steps the agent reports, in order; `recalled` the memories
-// it opened with.
+// Sources are the pulls the agent reports, in order (`label` for the answer
+// cards, `entity` and the window for the session's logo rows); `recalled` the
+// memories it opened with.
 export const ANSWERS = Object.freeze({
   product: {
     question: "Why did activation drop after the Android onboarding release?",
     recalled: ["mem-android", "mem-clarity"],
     sources: [
-      { id: "ga4", label: "ga4 onboarding funnel by platform · 25 Aug → 14 Sep" },
-      { id: "clarity", label: "clarity rage clicks by screen · 25 Aug → 14 Sep" },
-      { id: "stripe", label: "stripe trial starts · 25 Aug → 14 Sep" },
+      { id: "ga4", label: "ga4 onboarding funnel by platform · 25 Aug → 14 Sep", entity: "ga4_landing_pages", from: "2026-08-25", to: "2026-09-14" },
+      { id: "clarity", label: "clarity rage clicks by screen · 25 Aug → 14 Sep", entity: "clarity_friction", from: "2026-09-12", to: "2026-09-14" },
+      { id: "stripe", label: "stripe trial starts · 25 Aug → 14 Sep", entity: "stripe_subscriptions", from: "2026-08-25", to: "2026-09-14" },
     ],
     answer: `**Android activation fell from ${STORY.numbers.activation.androidBefore} to ${STORY.numbers.activation.androidAfter} on 2 Sep, the day the rebuild shipped. iOS did not move.** The rebuild put the bank step behind a system permission prompt, and Android users who tap Deny land on an empty screen: that is where this week's three rage-click clusters are. Two events to track below, so next week's brief can prove the fix.`,
   },
@@ -256,10 +257,10 @@ export const ANSWERS = Object.freeze({
     question: "Where is the ads budget leaking this week?",
     recalled: ["mem-cpa", "mem-legacy"],
     sources: [
-      { id: "google_ads", label: `google ads campaigns · ${STORY.week.start} → ${STORY.week.end}` },
-      { id: "google_ads", label: `google ads search terms · ${STORY.week.start} → ${STORY.week.end}` },
-      { id: "ga4", label: `ga4 signups by campaign · ${STORY.week.start} → ${STORY.week.end}` },
-      { id: "stripe", label: `stripe subscriptions · ${STORY.week.start} → ${STORY.week.end}` },
+      { id: "google_ads", label: `google ads campaigns · ${STORY.week.start} → ${STORY.week.end}`, entity: "campaign_performance", from: STORY.week.start, to: STORY.week.end },
+      { id: "google_ads", label: `google ads search terms · ${STORY.week.start} → ${STORY.week.end}`, entity: "search_terms", from: STORY.week.start, to: STORY.week.end },
+      { id: "ga4", label: `ga4 signups by campaign · ${STORY.week.start} → ${STORY.week.end}`, entity: "ga4_conversion_paths", from: STORY.week.start, to: STORY.week.end },
+      { id: "stripe", label: `stripe subscriptions · ${STORY.week.start} → ${STORY.week.end}`, entity: "stripe_subscriptions", from: STORY.week.start, to: STORY.week.end },
     ],
     answer: `**${STORY.numbers.pmaxSpend} of this week's spend went to Performance Max at €${STORY.numbers.pmaxCpa} a signup, against the €${STORY.targets.cpa} target.** Brand search is at €${STORY.numbers.brandCpa} and capped by its €40 budget. Two template-hunter search terms spent ${STORY.numbers.templateTermsSpend} for zero signups. The moves are below: two apply on your say-so, the budget raise is over the guardrail so it needs you.`,
   },
@@ -429,6 +430,434 @@ export const PAID_BRIEF_HTML = brief({
     "Raise brand search to €60 a day. Over the 25% guardrail, so that one is yours to make.",
   ],
 });
+
+// One session per connector, for its page on the site: the question that
+// connector is the one to answer, the sources it reads beside it, one
+// clarifying question, the answer, the brief, and the change set where Duct
+// can act on that tool. Each is told from what the connector really reads
+// (its fetcher and its knowledge pack under backend/agents/knowledge), so a
+// page never shows Duct answering from data it cannot see. Google Ads and
+// GA4 already have theirs: the paid and product sessions above.
+const src = (id, entity, from = STORY.week.start, to = STORY.week.end) => ({ id, entity, from, to });
+const opt = (label, description) => ({ label, description });
+const titled = (spec) => ({ title: spec.title, h1: spec.h1, html: brief(spec) });
+
+export const CONNECTOR_SESSIONS = Object.freeze([
+  {
+    connector: "openai_ads", shot: "session-chatgpt-ads", verify: 5,
+    question: "What is ChatGPT Ads actually buying us?",
+    recalled: ["mem-cpa", "mem-pref"],
+    todos: ["Pull ChatGPT Ads spend and clicks for the week", "Follow the clicks through GA4 to Stripe", "Cost the channel per paying customer"],
+    sources: [src("openai_ads", "openai_ads_campaign_performance"), src("ga4", "ga4_landing_pages"), src("stripe", "stripe_subscriptions")],
+    thinking: ["ChatGPT's report stops at spend and clicks. ", "The signups have to come from GA4 and the payments from Stripe."],
+    ask: { question: "What should ChatGPT Ads be judged on?", header: "Goal", options: [opt("Paying customers", "What Stripe settled"), opt("Signups", "The €12 CPA target")], pick: "Paying customers" },
+    answer: "Paying customers it is. **€640 bought 1,130 clicks and 48 signups at €13.30, close to the €12 target. Three of them have paid: €213 a paying customer, against €24 on brand search.** ChatGPT's own report ends at the click; the signups are GA4's and the payments Stripe's. The brief is on the right.",
+    close: "Two of the three who paid came in on the tax calendar. I'll check again on 28 Sep, when this week's trials end.",
+    memory: { title: "Re-check ChatGPT Ads paying customers on 28 Sep", kind: "watch" },
+    brief: titled({
+      title: "ChatGPT Ads",
+      h1: "ChatGPT Ads buys signups on target and customers at €213.",
+      sources: "ChatGPT Ads, GA4, Stripe",
+      verdict: "The channel looks cheap in its own report because the report ends at the click. Joined to GA4 and Stripe it brings signups near the €12 target, and very few who pay so far.",
+      kpis: [
+        kpi("€640", "Spend", "this week"),
+        kpi("1,130", "Clicks", "€0.57 a click"),
+        kpi("48", "Signups · GA4", "€13.30 each"),
+        kpi("3", "Paying · Stripe", "€213 each", "down"),
+        kpi("€24", "Brand search", "per paying customer", "up"),
+        kpi("0", "Conversions in its report", "it has no such metric"),
+      ],
+      chart: { heading: "Cost per paying customer, by channel", rows: [
+        bar("Brand search", 11, "good", "€24"), bar("Performance Max", 25, "", "€54"), bar("ChatGPT Ads", 100, "bad", "€213"),
+      ] },
+      findings: [
+        finding("crit", "The report can't see a conversion", "ChatGPT Ads reports impressions, clicks, spend, CTR, CPC and CPM. Nothing after the click, so CPC is not the number to judge it on."),
+        finding("warn", "Signups arrive, payments lag", "48 signups at €13.30 is near target. Most of their trials end on 28 Sep, so the three will move."),
+        finding("good", "The tax calendar lands", `Two of the three payers came in on <i>${n.blogPost}</i>, the page that already converts from search.`),
+      ],
+      todo: [
+        "Hold the budget until the trials end on 28 Sep.",
+        "Point the ads at the tax calendar, the page the payers came in on.",
+        "Judge it on paying customers, not CPC.",
+      ],
+    }),
+  },
+  {
+    connector: "stripe", shot: "session-stripe", verify: 6,
+    question: "How many paying customers did the ads bring this week?",
+    recalled: ["mem-cpa", "mem-pref"],
+    todos: ["Pull Google Ads and Meta conversions for the week", "Count first payments in Stripe", "Reconcile the two"],
+    sources: [src("google_ads", "campaign_performance"), src("meta_ads", "meta_ads_campaign_insights"), src("stripe", "stripe_subscriptions"), src("stripe", "stripe_charges")],
+    thinking: ["The two platforms claim 64 purchases. ", "Separate first payments from upgrades and abandoned checkouts before comparing."],
+    ask: { question: "Count upgrades as new customers?", header: "Counting", options: [opt("New customers only", "First payments, no plan changes"), opt("Include upgrades", "Any new paid subscription")], pick: "New customers only" },
+    answer: "New customers only. **Stripe settled 23 first payments this week, from every channel together. Google Ads and Meta claim 64 between them.** Another 18 checkouts started and never charged, and 6 new subscriptions were upgrades from people already paying. The brief is on the right.",
+    close: "From next week, every paid number in the brief is checked against Stripe first.",
+    memory: { title: "Paid conversions are reconciled to Stripe first payments", kind: "decision" },
+    brief: titled({
+      title: "Revenue",
+      h1: "The ads claim 64 customers. Stripe settled 23.",
+      sources: "Stripe, Google Ads, Meta Ads",
+      verdict: "Each ad platform counts conversions its own way, and some of the same people twice. Stripe counts money: 23 new paying customers this week, across every channel, organic included.",
+      kpis: [
+        kpi("23", "First payments", "every channel"),
+        kpi("64", "Claimed by the ads", "Google 23 · Meta 41", "down"),
+        kpi("18", "Never charged", "abandoned checkouts", "down"),
+        kpi("6", "Upgrades", "expansion, not new"),
+        kpi("€276", "New MRR", "23 × €12 a month", "up"),
+        kpi(n.mrr, "MRR", `▲ ${n.mrrDelta.replace("+", "")}`, "up"),
+      ],
+      chart: { heading: "Paying customers: claimed and settled", rows: [
+        bar("Meta · default window", 100, "bad", "41"), bar("Google Ads", 56, "", "23"), bar("Stripe · every channel", 56, "good", "23"),
+      ] },
+      findings: [
+        finding("crit", "The platforms claim nearly three times what settled", "64 claimed against 23 first payments, and Stripe's 23 includes organic and ChatGPT. Some customers are counted by both platforms."),
+        finding("warn", "18 checkouts never charged", "Incomplete subscriptions are abandoned or failed checkouts, not sales. Counting them would have made it 41."),
+        finding("good", "Upgrades are healthy", "6 customers moved to annual this week. Expansion, counted apart from acquisition."),
+      ],
+      todo: [
+        "Judge paid channels on Stripe first payments, not platform conversions.",
+        "Look at the 18 abandoned checkouts: 11 failed on card authentication.",
+        "Compare Meta on one-day click before moving budget to it.",
+      ],
+    }),
+  },
+  {
+    connector: "meta_ads", shot: "session-meta-ads", verify: 6,
+    question: "Why does Meta look three times cheaper than Google?",
+    recalled: ["mem-cpa", "mem-pref"],
+    todos: ["Pull Meta campaigns and ad sets, paused ones included", "Re-count purchases on Google's window", "Compare cost per purchase"],
+    sources: [src("meta_ads", "meta_ads_ad_sets"), src("meta_ads", "meta_ads_campaign_insights"), src("google_ads", "campaign_performance")],
+    thinking: ["Meta's default credits a click for a week and a view for a day. ", "And one purchase can arrive under three action types. Count it once."],
+    ask: { question: "Compare on which attribution window?", header: "Attribution", options: [opt("One-day click", "The way Google counts"), opt("Meta's default", "7-day click, 1-day view")], pick: "One-day click" },
+    answer: "One-day click it is. **Meta isn't cheaper. On its default window it claims 41 purchases at €34; counted the way Google counts, one-day click and one action type, it's 14, at €100. Google is at €105.** The lookalike ad set earns its budget; retargeting mostly collects credit from views. The brief is on the right.",
+    close: "Meta is read-only in Duct, so moving retargeting's €25 a day into the lookalike is yours to make.",
+    memory: { title: "Compare Meta and Google on one-day click, one purchase action type", kind: "decision" },
+    brief: titled({
+      title: "Meta",
+      h1: "Meta's €34 purchase is €100 on Google's terms.",
+      sources: "Meta Ads, Google Ads",
+      verdict: "Two things flatter Meta: a longer attribution window, and one purchase reported under up to three action types. On one-day click, counting the pixel purchase once, it costs what Google costs.",
+      kpis: [
+        kpi("€1,400", "Spend", "3 ad sets"),
+        kpi("41", "Purchases · default", "7-day click, 1-day view"),
+        kpi("14", "Purchases · 1-day click", "one action type", "down"),
+        kpi("€100", "Per purchase · 1-day click", "€34 on the default", "down"),
+        kpi("€105", "Google Ads", "per purchase"),
+        kpi("€71", "Lookalike ad set", "per purchase", "up"),
+      ],
+      chart: { heading: "Cost per purchase at one-day click, by ad set", rows: [
+        bar("Lookalike · freelancers", 44, "good", "€71"), bar("Interest · finance", 66, "", "€106"), bar("Retargeting · site", 100, "bad", "€160"),
+      ] },
+      findings: [
+        finding("crit", "One purchase, three action types", "Meta reports the same order as pixel purchase, purchase and omni purchase. Summed, that alone triples the count; Duct reads the pixel purchase once."),
+        finding("warn", "Retargeting lives on views", "€160 a purchase at one-day click. Most of its default-window credit comes from people who saw an ad, not people who clicked one."),
+        finding("good", "The lookalike works", "€71 a purchase on Google's terms, under Google and under the account average."),
+      ],
+      todo: [
+        "Move retargeting's €25 a day into the lookalike. Read-only in Duct, so that one's yours.",
+        "Report Meta on one-day click from now on.",
+        "Budgets come back in cents: 2500 is €25 a day, not €2,500.",
+      ],
+    }),
+  },
+  {
+    connector: "apple_ads", shot: "session-apple-search-ads", verify: 5,
+    question: "Is the Discovery bid raise on Apple Search Ads paying off?",
+    recalled: ["mem-cpa", "mem-pref"],
+    todos: ["Pull Solo's Apple Search Ads campaigns, day by day", "Check trials in RevenueCat over the same days", "Decide whether the raise pays"],
+    sources: [src("apple_ads", "apple_ads_campaign_report"), src("apple_ads", "apple_ads_daily_report", "2026-09-01"), src("revenuecat", "revenuecat_metrics_overview", "", "")],
+    thinking: ["The org also runs Solo Invoices. ", "Condition the report on Solo's four campaigns before adding anything up."],
+    ask: { question: "Which installs should I count?", header: "Installs", options: [opt("Tap-through only", "Tapped the ad, then installed"), opt("Include view-through", "Saw the ad, installed later")], pick: "Tap-through only" },
+    answer: "Tap-through it is. **Not yet. Discovery's installs doubled after the 5 Sep raise, to 610 at €1.90 each, and active trials in RevenueCat stayed at 214.** Apple reports installs, never subscribers, so RevenueCat is the check. Everything is scoped to Solo's four campaigns: the org-wide report also carries Solo Invoices, which would have added €1,180. The brief is on the right.",
+    close: "Apple Search Ads is read-only in Duct, so the Discovery bid is yours to lower. Brand and Category can keep theirs.",
+    memory: { title: "Scope Apple Search Ads reports to Solo's campaigns; Solo Invoices shares the org", kind: "status" },
+    brief: titled({
+      title: "Apple Search Ads",
+      h1: "Discovery doubled its installs. Trials didn't move.",
+      sources: "Apple Search Ads, RevenueCat",
+      verdict: "The 5 Sep bid raise bought installs that don't start trials. Brand and Category keep converting; Discovery's extra 300 installs a week show up nowhere in RevenueCat.",
+      kpis: [
+        kpi("€1,920", "Spend · Solo only", "org total adds €1,180"),
+        kpi("1,370", "Tap installs", "€1.40 each"),
+        kpi("610", "Discovery installs", "2× since 5 Sep"),
+        kpi("€1.90", "Discovery per install", "▲ from €1.10", "down"),
+        kpi("214", "Active trials · RevenueCat", "211 a week ago"),
+        kpi("1,120", "Active subscriptions", "App Store + Play"),
+      ],
+      chart: { heading: "Tap installs by campaign, this week", rows: [
+        bar("Brand", 38, "good", "230"), bar("Category", 57, "good", "350"), bar("Competitors", 30, "", "180"), bar("Discovery", 100, "bad", "610"),
+      ] },
+      findings: [
+        finding("crit", "Discovery buys installs that don't trial", "610 installs this week, twice the week before, and active trials went from 211 to 214."),
+        finding("warn", "The org-wide report mixes two apps", "Without a campaign filter Apple adds Solo Invoices' spend to Solo's. Every number here is scoped to Solo's four campaigns."),
+        finding("good", "Brand and Category hold", "580 installs between them at €1.10, steady since August."),
+      ],
+      todo: [
+        "Take Discovery back to its old bid. Read-only in Duct, so that one's yours.",
+        "Leave Brand and Category alone.",
+        "Judge Apple on RevenueCat trials, never on installs.",
+      ],
+    }),
+  },
+  {
+    connector: "gsc", shot: "session-search-console", verify: 5,
+    question: `Impressions are up ${n.organicImpressionsDelta.replace("+", "")}. Why are organic trials flat?`,
+    recalled: ["mem-pref"],
+    todos: ["Pull queries, pages and query × page from Search Console", "Match landing pages to trials in GA4", "Find where the impressions went"],
+    sources: [src("gsc", "gsc_query_performance", "2026-08-18"), src("gsc", "gsc_query_page", "2026-08-18"), src("ga4", "ga4_landing_pages", "2026-08-18")],
+    thinking: ["The last three days aren't final yet. ", "Read query × page: a flat table can't show two pages splitting one query."],
+    ask: { question: "The last three days aren't final yet. Include them?", header: "Window", options: [opt("Include, labelled", "Newest data, marked unfinished"), opt("Final data only", "Stop on 11 Sep")], pick: "Include, labelled" },
+    answer: "Included and labelled. **The new impressions are on queries you don't convert. Two invoicing queries gained 38,000 impressions at positions 11 and 12 and drew 190 clicks, and each is split between two of your pages.** The tax pages still earn 61% of organic trials from 28% of the clicks. The brief is on the right.",
+    close: "Nothing to change in Search Console itself: merging /invoice-template into /invoicing stops the two pages splitting both queries.",
+    memory: { title: "/invoicing and /invoice-template split the same two queries", kind: "watch" },
+    brief: titled({
+      title: "Organic",
+      h1: `Impressions up ${n.organicImpressionsDelta.replace("+", "")}, on queries that don't convert.`,
+      sources: "Search Console, GA4",
+      verdict: "The growth is invoicing queries ranking just off page one, where two Solo pages compete for each. The tax cluster, which earns most organic trials, is flat and healthy.",
+      kpis: [
+        kpi(n.organicImpressionsDelta, "Impressions", "28 days", "up"),
+        kpi("+2%", "Clicks", "28 days"),
+        kpi("312", "Organic trials", "▲ 1%"),
+        kpi("38,000", "New invoicing impressions", "positions 11–12"),
+        kpi("190", "Clicks from them", "0.5% CTR", "down"),
+        kpi("2", "Pages per query", "cannibalised", "down"),
+      ],
+      chart: { heading: "Share of clicks and trials, by cluster", rows: [
+        bar("Tax · clicks", 28), bar("Tax · trials", 61, "good"), bar("Invoicing · clicks", 41), bar("Invoicing · trials", 9, "bad"),
+      ] },
+      findings: [
+        finding("crit", "Two pages split each invoicing query", "Query × page shows /invoicing and /invoice-template both ranking for “freelance invoice template” and “invoice generator for freelancers”. Neither reaches page one."),
+        finding("warn", "Most clicks have no query attached", "The page table shows 3.4× the clicks of the query table: Google anonymises rare queries. Totals here use pages."),
+        finding("good", "The tax cluster converts", `28% of the clicks, 61% of organic trials. <i>${n.blogPost}</i> ranks on page one for two target terms.`),
+      ],
+      todo: [
+        "Merge /invoice-template into /invoicing with a 301.",
+        "Leave the tax pages alone.",
+        "Re-read query × page in two weeks, once the merge is indexed.",
+      ],
+    }),
+  },
+  {
+    connector: "gtm", shot: "session-tag-manager", verify: 4,
+    question: "Why did GA4 stop counting Connect bank on the web?",
+    recalled: ["mem-android", "mem-pref"],
+    todos: ["Find where connect_bank stopped counting", "Check the app and the web apart", "Stage the fix in Tag Manager"],
+    sources: [src("ga4", "ga4_landing_pages", "2026-09-01"), src("mixpanel", "mixpanel_event_counts", "2026-09-01")],
+    thinking: ["Mixpanel still sees connect_bank on the web. GA4 went to zero on 9 Sep. ", "Something in the web container changed that day."],
+    ask: { question: "Fix it in Tag Manager or in GA4?", header: "Fix", options: [opt("The tag in Tag Manager", "Send connect_bank again, one name everywhere"), opt("The key event in GA4", "Count connectBank too, two names from now on")], pick: "The tag in Tag Manager" },
+    answer: "The tag it is. **Version 14, published 9 Sep, renamed the event the GA4 · Connect bank tag sends to connectBank. GA4's key event is still connect_bank, so web completions went from 212 a week to zero that day.** The app sends the event directly and never stopped. Two changes below: fix the tag in the workspace, then publish. The publish replaces the live container, so it waits for you.",
+    close: "If anything looks wrong after the publish, rolling back republishes version 14.",
+    memory: { title: "Container version 14 renamed connect_bank; web counts from 9 to 14 Sep are missing", kind: "event" },
+    change_set: {
+      change_set_id: "cs_solo_0914", id: "cs_solo_0914",
+      connector_type: "gtm", account_id: "GTM-K7S0L9Q", account_name: "solobudget.app · web",
+      title: "Send connect_bank from the web again",
+      context: "Version 14 renamed the event the GA4 · Connect bank tag sends. Fix the tag in the workspace, then publish; rollback republishes version 14.",
+      status: "proposed", source: "insights", project_id: STORY.project.id,
+      created_at: "2026-09-14T08:20:00Z", auto_apply_eligible: false, applied_by: null,
+      changes: [
+        { id: "c1", op_type: "gtm.upsert_tag", status: "pending", diff: "Update tag “GA4 · Connect bank” in Default Workspace: event name connectBank → connect_bank" },
+        { id: "c2", op_type: "gtm.publish_version", status: "pending", destructive: true, diff: "Publish the workspace as version 15, replacing live version 14 for every visitor", warnings: ["Rollback republishes version 14"] },
+      ],
+    },
+    brief: titled({
+      title: "Tracking",
+      h1: "Web Connect bank stopped counting on 9 Sep.",
+      sources: "GA4, Tag Manager",
+      verdict: "Nothing broke in the product. A container version renamed the event the web tag sends, and GA4 kept counting the old name. The funnel has read zero web completions since.",
+      kpis: [
+        kpi("0", "Web connect_bank", "▼ from 212 a week", "down"),
+        kpi("1,040", "App connect_bank", "same as the week before"),
+        kpi("v14", "Live container", "published 9 Sep"),
+        kpi("1", "Tag changed", "GA4 · Connect bank"),
+        kpi("6 days", "Web data missing", "9 → 14 Sep", "down"),
+        kpi("v14", "Rollback target", "if the publish misbehaves"),
+      ],
+      chart: { heading: "connect_bank a week, by platform", rows: [
+        bar("Web · before 9 Sep", 20, "", "212"), bar("Web · since 9 Sep", 1, "bad", "0"), bar("App · before 9 Sep", 100, "good", "1,050"), bar("App · since 9 Sep", 99, "good", "1,040"),
+      ] },
+      findings: [
+        finding("crit", "The tag fires. It sends the wrong name.", "Version 14 changed the event name in GA4 · Connect bank from connect_bank to connectBank. The tag fired on every completion; GA4 counted none of them as the key event."),
+        finding("warn", "Six days of web funnel are missing", "9–14 Sep can't be recovered in GA4. Mixpanel saw those completions, so use it for that week."),
+        finding("good", "The app was never affected", "iOS and Android send connect_bank directly, not through the container."),
+      ],
+      todo: [
+        "Point the tag back at connect_bank in the workspace. Proposed in chat.",
+        "Publish it as version 15. It replaces the live container, so it waits for you.",
+        "Use Mixpanel for web Connect bank from 9 to 14 Sep.",
+      ],
+    }),
+  },
+  {
+    connector: "mixpanel", shot: "session-mixpanel", verify: 5,
+    question: "Did the Android rebuild lift upgrades?",
+    recalled: ["mem-android", "mem-pref"],
+    todos: ["Pull upgrades from Mixpanel either side of 2 Sep", "Take internal accounts out", "Check it against Stripe"],
+    sources: [src("mixpanel", "mixpanel_event_counts", "2026-08-19"), src("stripe", "stripe_subscriptions", "2026-08-19")],
+    thinking: ["Upgrades jumped the fortnight the new paywall was in QA. ", "Mixpanel has no internal-traffic filter. Check who those upgrades are."],
+    ask: { question: "Which accounts are internal?", header: "Internal", options: [opt("@solobudget.app and qa-*", "Staff and the QA test accounts"), opt("@solobudget.app only", "Staff accounts")], pick: "@solobudget.app and qa-*" },
+    answer: "Both, then. **No. Upgrades look up 18% since 2 Sep, and 12 of them came from QA accounts testing the new paywall. Without them the upgrade rate is 4.0%, against 4.1% before.** Stripe agrees: 46 new paid subscriptions this fortnight, 47 the one before. Two changes below, both reversible.",
+    close: "With the annotation in, anyone reading a Mixpanel chart that crosses 2 Sep will see why.",
+    memory: { title: "Exclude @solobudget.app and qa-* accounts from every Mixpanel count", kind: "decision" },
+    change_set: {
+      change_set_id: "cs_solo_0915", id: "cs_solo_0915",
+      connector_type: "mixpanel", account_id: "mp-solo", account_name: "Solo (EU)",
+      title: "Mark the rebuild, hide the typo event",
+      context: "An annotation on 2 Sep so every chart that crosses the rebuild says why, and the Android 3.x typo event hidden so no one sums it with its twin.",
+      status: "proposed", source: "insights", project_id: STORY.project.id,
+      created_at: "2026-09-14T08:40:00Z", auto_apply_eligible: false, applied_by: null,
+      changes: [
+        { id: "c1", op_type: "mixpanel.create_annotation", status: "pending", diff: "Annotate 2 Sep 2026: “Android onboarding rebuild shipped”" },
+        { id: "c2", op_type: "mixpanel.hide_event", status: "pending", diff: "Hide plan_upgrade_initated in Lexicon, the typo twin of plan_upgrade_initiated" },
+      ],
+    },
+    brief: titled({
+      title: "Upgrades",
+      h1: "The rebuild didn't lift upgrades. The QA team did.",
+      sources: "Mixpanel, Stripe",
+      verdict: "The 18% jump after 2 Sep is test accounts running through the new paywall. Without them the upgrade rate is flat, and Stripe's new paid subscriptions say the same.",
+      kpis: [
+        kpi("+18%", "Upgrades · raw", "what the dashboard shows"),
+        kpi("12", "QA upgrades", "inside the funnel", "down"),
+        kpi("4.0%", "Upgrade rate · clean", "4.1% before 2 Sep"),
+        kpi("46", "New paid · Stripe", "47 the fortnight before"),
+        kpi("2", "Upgrade events", "one is a typo", "down"),
+        kpi("89%", "Untagged signups", "no utm is not organic"),
+      ],
+      chart: { heading: "Upgrades a fortnight, either side of 2 Sep", rows: [
+        bar("Before · clean", 81, "", "47"), bar("After · raw", 100, "bad", "58"), bar("After · clean", 79, "good", "46"), bar("Stripe · after", 79, "good", "46"),
+      ] },
+      findings: [
+        finding("crit", "Test accounts are inside every funnel", "Mixpanel has no internal-traffic filter. 12 of the 58 upgrades since 2 Sep came from qa-* accounts on the new paywall."),
+        finding("warn", "Two names for one event", "plan_upgrade_initated, a typo from Android 3.x, still fires beside plan_upgrade_initiated. One saved funnel counts both."),
+        finding("good", "Stripe and Mixpanel agree once it's clean", "46 against 46. Mixpanel is the count across platforms; Stripe is the money."),
+      ],
+      todo: [
+        "Annotate 2 Sep on the Mixpanel timeline. Proposed in chat.",
+        "Hide plan_upgrade_initated in Lexicon. Proposed in chat.",
+        "Leave the paywall as it is: it neither helped nor hurt.",
+      ],
+    }),
+  },
+  {
+    connector: "clarity", shot: "session-clarity", verify: 5,
+    question: "Why does the Freelancers landing page lose paid visitors?",
+    recalled: ["mem-clarity", "mem-pref"],
+    todos: ["Pull Clarity friction per page for the last three days", "Match pages to paid sessions in GA4", "Find what people are clicking"],
+    sources: [src("clarity", "clarity_friction", "2026-09-12"), src("ga4", "ga4_landing_pages")],
+    thinking: ["312 of 2,140 sessions are bots. Take them out before any rate. ", "Compare pages by share of sessions, not raw counts."],
+    ask: { question: "Clarity only keeps three days. Is that enough?", header: "Window", options: [opt("Read them, then watch daily", "Pull every morning until it's fixed"), opt("Just these three days", "One read, no follow-up")], pick: "Read them, then watch daily" },
+    answer: "Three days now, then daily. **The pricing toggle on /freelancers is broken on Android Chrome. 14% of that page's sessions had a rage click, almost all on the monthly/annual switch, beside a script error on the same page.** Paid search sends 71% of the page's visitors, so the campaign is paying for a page that doesn't work. The brief is on the right.",
+    close: "Nothing to apply: the fix is in the page. I'll pull Clarity every morning until the toggle stops failing.",
+    memory: { title: "Watch rage clicks on the /freelancers pricing toggle daily", kind: "watch" },
+    brief: titled({
+      title: "Landing page",
+      h1: "/freelancers has a broken pricing toggle on Android.",
+      sources: "Clarity, GA4",
+      verdict: "Not a bidding problem. The page most paid visitors land on throws a script error on Android Chrome, and the monthly/annual switch stops responding.",
+      kpis: [
+        kpi("14%", "Rage-click sessions", "/freelancers", "down"),
+        kpi("1%", "Rage-click sessions", "home page", "up"),
+        kpi("9%", "Script-error sessions", "all Android Chrome", "down"),
+        kpi("22%", "Quick-backs", "left within seconds", "down"),
+        kpi("71%", "From paid search", "of /freelancers sessions"),
+        kpi("312", "Bot sessions removed", "of 2,140"),
+      ],
+      chart: { heading: "Sessions with a rage click, by page", rows: [
+        bar("/freelancers · Android", 100, "bad", "21%"), bar("/freelancers · iOS", 14, "", "3%"), bar("/tax-calendar", 10, "good", "2%"), bar("Home", 5, "good", "1%"),
+      ] },
+      findings: [
+        finding("crit", "The toggle throws on Android Chrome", "Script errors on 9% of /freelancers sessions, every one on Android Chrome, and the rage clicks sit on the same switch."),
+        finding("warn", "Paid visitors hit it first", "71% of the page's sessions come from paid search. The ads are fine; the page after them isn't."),
+        finding("good", "The rest of the site is calm", "The tax calendar and the home page sit at 1–2% rage-click sessions."),
+      ],
+      todo: [
+        "Fix the toggle's script error on Android Chrome.",
+        "Until then, send Performance Max to /tax-calendar instead.",
+        "Clarity keeps three days, so it gets read every morning.",
+      ],
+    }),
+  },
+  {
+    connector: "growthbook", shot: "session-growthbook", verify: 4,
+    question: "Is the annual-first pricing test ready to call?",
+    recalled: ["mem-pref"],
+    todos: ["Pull the experiment, its phases and results", "Check exposures are still arriving", "Check the result against Stripe"],
+    sources: [src("growthbook", "growthbook_experiments", "2026-07-20"), src("stripe", "stripe_subscriptions", "2026-07-20")],
+    thinking: ["It says running, with a 94% chance to win. ", "Check exposures first: running is a setting, not a signal."],
+    ask: { question: "What should the test be judged on?", header: "Metric", options: [opt("Annual share of new subscriptions", "What the test was set up to move"), opt("Checkout starts", "Earlier, noisier")], pick: "Annual share of new subscriptions" },
+    answer: "Annual share it is. **No. It stopped bucketing on 1 Sep, when its assignment query was edited, and the control arm has 62 users against a minimum of 150.** GrowthBook still shows it running at a 94% chance to win; on 62 users that is noise. Stripe puts annual at 31% of new subscriptions before and during the test. The brief is on the right.",
+    close: "Duct doesn't change GrowthBook: fixing the assignment query and restarting the test are yours.",
+    memory: { title: "Annual-first test stopped bucketing on 1 Sep; results after that are not results", kind: "event" },
+    brief: titled({
+      title: "Experiment",
+      h1: "The pricing test says running. It stopped on 1 Sep.",
+      sources: "GrowthBook, Stripe",
+      verdict: "The test has bucketed nobody for two weeks and never reached its minimum sample. Its 94% chance to win is computed on 62 control users. Nothing here can be called.",
+      kpis: [
+        kpi("56 days", "Marked running", "since 20 Jul"),
+        kpi("1 Sep", "Last exposure", "assignment query edited", "down"),
+        kpi("62", "Control users", "minimum 150", "down"),
+        kpi("94%", "Chance to win", "on an underpowered arm"),
+        kpi("31%", "Annual share · Stripe", "before and during"),
+        kpi("0", "Exposures this week", "stale", "down"),
+      ],
+      chart: { heading: "Users per arm against the minimum sample", rows: [
+        bar("Minimum", 100, "", "150"), bar("Control", 41, "bad", "62"), bar("Annual first", 45, "bad", "68"),
+      ] },
+      findings: [
+        finding("crit", "Nobody has been bucketed since 1 Sep", "Exposures stopped the day the assignment query was edited. The experiment still shows running, and nothing in GrowthBook flagged it."),
+        finding("warn", "Both arms are under the minimum", "62 and 68 users against a minimum sample of 150. A chance to win on that is a guess with a percentage sign."),
+        finding("good", "Stripe gives the honest baseline", "Annual is 31% of new subscriptions before and during the test. That's the number a restarted test has to beat."),
+      ],
+      todo: [
+        "Fix the assignment query, then restart the test. Duct doesn't write to GrowthBook, so that's yours.",
+        "Don't call it on today's numbers.",
+        "Once it restarts, check exposures weekly.",
+      ],
+    }),
+  },
+  {
+    connector: "revenuecat", shot: "session-revenuecat", verify: 5,
+    question: "What is the app earning next to the web?",
+    recalled: ["mem-pref", "mem-android"],
+    todos: ["Pull RevenueCat's overview and a customer sample", "Pull Stripe for the web", "Put app and web side by side"],
+    sources: [src("revenuecat", "revenuecat_metrics_overview", "", ""), src("revenuecat", "revenuecat_customers", "", ""), src("stripe", "stripe_subscriptions")],
+    thinking: ["Every brief so far has quoted Stripe's MRR. That's the web only. ", "The App Store and Play subscriptions live in RevenueCat."],
+    ask: { question: "Count active trials as revenue?", header: "Trials", options: [opt("No, paid only", "MRR from paying subscriptions"), opt("Yes, at the usual rate", "Trials × last month's conversion")], pick: "No, paid only" },
+    answer: `Paid only. **The app earns €6,900 MRR on top of Stripe's ${n.mrr}, so Solo is at €25,300, not ${n.mrr}.** RevenueCat shows 1,120 active subscriptions and 214 active trials. In a 500-customer sample, Android users are 41% of the app's users and hold 27% of its paid entitlements. The brief is on the right.`,
+    close: "From now on the brief reports MRR as web plus app. RevenueCat is read-only in Duct, so there's nothing to apply.",
+    memory: { title: "Report MRR as Stripe (web) plus RevenueCat (app)", kind: "decision" },
+    brief: titled({
+      title: "Subscriptions",
+      h1: `Solo earns €25,300 a month. The briefs said ${n.mrr}.`,
+      sources: "RevenueCat, Stripe",
+      verdict: "Every brief so far quoted Stripe, which only sees the web. The App Store and Play add €6,900 MRR, most of it from iOS. Android users pay at half the iOS rate.",
+      kpis: [
+        kpi("€25,300", "MRR · web + app", "first full count", "up"),
+        kpi("€6,900", "MRR · app", "RevenueCat"),
+        kpi(n.mrr, "MRR · web", "Stripe"),
+        kpi("1,120", "Active subscriptions", "App Store + Play"),
+        kpi("214", "Active trials", "not counted as revenue"),
+        kpi("27%", "Android share of paid", "41% of app users", "down"),
+      ],
+      chart: { heading: "Share of app users and of paid entitlements, by platform", rows: [
+        bar("iOS · users", 52), bar("iOS · paying", 66, "good"), bar("Android · users", 41), bar("Android · paying", 27, "bad"),
+      ] },
+      findings: [
+        finding("crit", "Android pays at half the iOS rate", "41% of the app's users, 27% of its paid entitlements. The Connect bank dead end after the 2 Sep rebuild is the likeliest reason."),
+        finding("warn", "The briefs have reported the web alone", `${n.mrr} is Stripe. The app's €6,900 was never in it.`),
+        finding("good", "iOS carries the app", "66% of paid entitlements from 52% of the app's users."),
+      ],
+      todo: [
+        "Report MRR as web plus app from now on.",
+        "Fix Connect bank on Android before buying more Android users.",
+        "Re-read in two weeks, after the fix ships.",
+      ],
+    }),
+  },
+]);
 
 // The SEO audit of solobudget.app, as the audit agent writes it: nine
 // categories, every finding tied to a page and a value, five priorities in

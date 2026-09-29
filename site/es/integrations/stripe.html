@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Analista de IA de Stripe: ingresos junto a tus anuncios | Duct</title>
+<link rel="canonical" href="https://getduct.ai/es/integrations/stripe"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/stripe"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/stripe"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/stripe"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/stripe"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/stripe"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/stripe"/>
+<meta property="og:locale" content="es_ES"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct lee Stripe con una clave de lectura restringida y verifica las conversiones de cada plataforma de anuncios contra el dinero liquidado. Cuenta nuevos clientes, no renovaciones."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/es/integrations/stripe"/>
+<meta property="og:title" content="Analista de IA de Stripe: ingresos junto a tus anuncios"/>
+<meta property="og:description" content="Las plataformas de anuncios cuentan sus propias conversiones. Stripe cuenta el dinero. Duct lee Stripe junto a tus anuncios y dice cuál es el correcto."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-stripe.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Analista de IA de Stripe: ingresos junto a tus anuncios"/>
+<meta name="twitter:description" content="Tus anuncios reclaman la venta. Stripe sabe si se pagó. Duct lee ambos y te dice la diferencia."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-stripe.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, sinceramente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Rechaza y el sitio se comportará exactamente igual.","Privacy Policy":"Política de privacidad","Decline":"Rechazar","Accept":"Aceptar","{n} stars on GitHub":"{n} estrellas en GitHub","UTM Builder":"Constructor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de comparativa de métricas SaaS","Weekly Marketing Brief Generator":"Generador de informes de marketing semanales","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de tasa de crecimiento de MRR","Engagement Rate Calculator":"Calculadora de tasa de interacción","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menú de navegación","Close navigation menu":"Cerrar menú de navegación","Menu":"Menú","Free Tools":"Herramientas gratuitas","Solutions":"Soluciones","Download Duct ↓":"Descargar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de pantalla ampliada","Close":"Cerrar","Fit to screen":"Ajustar a la pantalla","Zoom in":"Acercar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 y posteriores","Runs on any distribution":"Funciona en cualquier distribución","Debian and Ubuntu":"Debian y Ubuntu","Download ↓":"Descargar ↓","Download for {label} ↓":"Descargar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de ejemplo. Cambia cualquier campo y calcula de nuevo para los tuyos."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"es","name":"Analista de IA de Stripe: ingresos junto a tus anuncios","url":"https://getduct.ai/es/integrations/stripe","description":"Duct lee Stripe con una clave de lectura restringida y verifica las conversiones de cada plataforma de anuncios contra el dinero liquidado. Cuenta nuevos clientes, no renovaciones.","about":{"@type":"SoftwareApplication","name":"Stripe"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"es","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://getduct.ai/es/"},{"@type":"ListItem","position":2,"name":"Integraciones","item":"https://getduct.ai/es/integrations/"},{"@type":"ListItem","position":3,"name":"Stripe","item":"https://getduct.ai/es/integrations/stripe"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"es","mainEntity":[{"@type":"Question","name":"¿Puede Duct mover dinero o editar clientes en Stripe?","acceptedAnswer":{"@type":"Answer","text":"No. Se conecta con una clave restringida que solo tiene permisos de lectura, y Duct no tiene ninguna operación de cambio en Stripe. Lee las suscripciones y los cargos e informa sobre ellos."}},{"@type":"Question","name":"¿Qué permisos de Stripe necesita Duct?","acceptedAnswer":{"@type":"Answer","text":"Acceso de lectura a Suscripciones, Cargos, Facturas, Clientes, Productos y Precios. Si falta uno, Duct lo nombra cuando te conectas en lugar de informar un vacío en los datos como cero."}},{"@type":"Question","name":"¿Por qué Stripe no coincide con lo que informan mis plataformas de anuncios?","acceptedAnswer":{"@type":"Answer","text":"Porque cada plataforma cuenta las compras que se atribuye a sí misma, con su propia ventana de atribución, y varias de ellas reclaman la misma venta. Espera que el total de las plataformas sea de 1.5 a 3 veces lo que Stripe liquidó. Duct concilia las plataformas con Stripe, nunca al revés."}},{"@type":"Question","name":"¿Es gratis?","acceptedAnswer":{"@type":"Answer","text":"Sí. Duct es gratis con tus propias claves de modelo o el plan de ChatGPT que ya tienes, y el núcleo tiene licencia MIT. Un plan de pago posterior agrupará los modelos; nada de lo que es abierto hoy pasará a ser de pago. Qué costará dinero."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: &#x27;stripe ai&#x27; is 480 searches a month (KD 30, informational). Hypothesis: a founder or growth lead who already doubts their ad platforms&#x27; numbers converts on a page that shows the reconciliation, not on a feature list. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/es/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Ruta de navegación"><a href="/es/integrations/">Integraciones</a><span aria-hidden="true">/</span><span aria-current="page">Stripe</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/stripe.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Stripe, <em>el número al que responden tus anuncios.</em></h1>
+<p class="hero-sub">Cada plataforma de anuncios informa las conversiones que se atribuye a sí misma. Stripe informa el dinero que se liquidó. Duct lee ambos y te dice qué campañas trajeron clientes que pagaron.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/es/download" data-duct-download>Descarga Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/es/integrations/">Todas las integraciones</a>
+</div>
+<ul class="ig-facts" aria-label="De un vistazo"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Clave de lectura restringida</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Lee tres conjuntos de datos</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Solo lectura</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Comprobado 29 de septiembre de 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/><img src="/assets/icons/google-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/meta.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Tus anuncios reclamaron 64 compras en septiembre. Stripe liquidó 23 nuevas suscripciones.</span></div>
+</div>
+<figcaption>Una respuesta de ejemplo. La tuya se lee de tus propias cuentas.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-stripe.webp" srcset="/assets/media/session-stripe-768.webp 768w, /assets/media/session-stripe-1536.webp 1536w, /assets/media/session-stripe.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Una ejecución de Duct: se le preguntó cuántos clientes de pago trajeron los anuncios, Duct lee Google Ads, Meta y Stripe y concilia 64 compras reclamadas con 23 primeros pagos"/>
+<figcaption>Pregunta cuántos clientes trajeron los anuncios. Las plataformas reclaman 64; Stripe liquidó 23. Duct cuenta los primeros pagos, no las actualizaciones o pagos que nunca se cobraron.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Preguntar</p>
+<h2>Preguntas que puedes <em>simplemente hacer</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>¿Cuántos clientes de pago trajeron los anuncios pagados este mes?</p><span class="ig-q-joins"><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><span>Stripe + Google Ads + Meta Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>¿Cuánto cuesta un cliente de pago, por plataforma de anuncios?</p><span class="ig-q-joins"><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><span>Stripe + Google Ads + Meta Ads + ChatGPT Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>¿Cuántos pagos se iniciaron y nunca se cobraron?</p><span class="ig-q-joins"><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>¿La nueva página de precios movió los registros pagados, o solo las pruebas?</p><span class="ig-q-joins"><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Stripe + GA4</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Acceso</p>
+<h2>Lo que lee. <em>Lo que puede cambiar.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Qué lee</h3>
+<ul class="ig-reads">
+<li><b>Suscripciones</b><span class="ig-fields"><span>estado</span><span>plan</span><span>cantidad</span><span>intervalo</span><span>creado</span><span>cancelado</span></span></li>
+<li><b>Cargos</b><span class="ig-fields"><span>estado</span><span>cantidad</span><span>cantidad reembolsada</span><span>código de error</span><span>cliente</span></span></li>
+<li><b>Resumen de ingresos</b><span class="ig-fields"><span>nuevas suscripciones pagadas</span><span>pagos nunca completados</span><span>bruto</span><span>reembolsado</span><span>neto</span><span>nuevo MRR</span></span></li>
+</ul>
+<p class="ig-note">Stripe API 2026-07-29.dahlia · verificado con el código de obtención 29 de septiembre de 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/stripe/fetch.py" rel="noopener">lee el código fuente</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Qué puede cambiar</h3>
+<p class="ig-readonly-big">Nada.</p>
+<p>Duct no tiene operaciones de cambio en Stripe, por lo que no puede editar nada en Stripe. Aún puede recomendarte un cambio para que lo hagas allí.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Conocimiento</p>
+<h2>Lo que Duct ya sabe <em>sobre Stripe</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Stripe es la verdad del dinero.</h3><p>Las plataformas de anuncios informan las conversiones que se atribuyen a sí mismas; Stripe informa el dinero que se liquidó. Cuando no están de acuerdo, Duct se pone del lado de Stripe.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Un pago que nunca se cobró no es una venta.</h3><p>Las suscripciones incompletas son pagos abandonados o fallidos. Contarlas sobreestima la adquisición dos o tres veces, por lo que Duct las omite.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>La mayoría de los cargos son renovaciones.</h3><p>El volumen de cargos es principalmente de tus clientes existentes pagando de nuevo. Duct cuenta las nuevas suscripciones pagadas, no los cargos, cuando mide la adquisición.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Los reembolsos se restan, y ningún plan se lee como cero.</h3><p>Los ingresos son netos de reembolsos, y los precios provienen de los artículos de suscripción, por lo que un plan de varios artículos nunca se muestra como $0.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/stripe.md" rel="noopener">Lee las notas de Stripe con las que trabaja el agente de Duct <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Mejor juntos</p>
+<h2>Lo que Stripe responde <em>con un socio</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/es/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">¿Qué campañas de Google traen clientes que pagan?</span><span class="ig-pair-go">Stripe + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/es/integrations/meta-ads"><span class="ig-pair-logos"><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">¿Sobrevive el recuento de compras de Meta a Stripe?</span><span class="ig-pair-go">Stripe + Meta Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/es/integrations/revenuecat"><span class="ig-pair-logos"><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/revenuecat.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Ingresos web y de app, leídos como un solo número.</span><span class="ig-pair-go">Stripe + RevenueCat <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Configuración</p>
+<h2>Conecta Stripe <em>en tres pasos</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>En Stripe, abre Desarrolladores, luego claves API, y crea una clave restringida.</p></li>
+<li><span class="ig-step-n">2</span><p>Dale acceso de lectura a Suscripciones, Cargos, Facturas, Clientes, Productos y Precios. Nada más.</p></li>
+<li><span class="ig-step-n">3</span><p>En Duct, abre Conexiones, elige Stripe y pega la clave. Duct verifica cada permiso y nombra cualquiera que falte.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Solo lectura por construcción: una clave restringida con permisos de lectura no puede mover dinero ni editar un cliente, y Duct no tiene ninguna operación de cambio en Stripe.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Las claves y tokens se almacenan cifrados por la API alojada de Duct, nunca en tu navegador, y puedes eliminar una conexión en cualquier momento. Una versión autoalojada los mantiene en tu propia máquina.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Stripe, <em>respondido</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">¿Puede Duct mover dinero o editar clientes en Stripe?</summary>
+<p class="faq-a">No. Se conecta con una clave restringida que solo tiene permisos de lectura, y Duct no tiene ninguna operación de cambio en Stripe. Lee las suscripciones y los cargos e informa sobre ellos.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">¿Qué permisos de Stripe necesita Duct?</summary>
+<p class="faq-a">Acceso de lectura a Suscripciones, Cargos, Facturas, Clientes, Productos y Precios. Si falta uno, Duct lo nombra cuando te conectas en lugar de informar un vacío en los datos como cero.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">¿Por qué Stripe no coincide con lo que informan mis plataformas de anuncios?</summary>
+<p class="faq-a">Porque cada plataforma cuenta las compras que se atribuye a sí misma, con su propia ventana de atribución, y varias de ellas reclaman la misma venta. Espera que el total de las plataformas sea de 1.5 a 3 veces lo que Stripe liquidó. Duct concilia las plataformas con Stripe, nunca al revés.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">¿Es gratis?</summary>
+<p class="faq-a">Sí. Duct es gratis con tus propias claves de modelo o el plan de ChatGPT que ya tienes, y el núcleo tiene licencia MIT. Un plan de pago posterior agrupará los modelos; nada de lo que es abierto hoy pasará a ser de pago. <a href="/es/open-source#pricing">Qué costará dinero</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/es/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/es/partials/footer-expanded.html"><div class="legal-fallback"><a href="/es/">Duct</a><a href="/es/about">Acerca de</a><a href="/es/privacy">Política de privacidad</a><a href="/es/terms">Términos de servicio</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

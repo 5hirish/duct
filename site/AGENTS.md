@@ -71,6 +71,9 @@ another port (the tests assume 8090).
 | `https://getduct.ai/for-organic-growth` | `site/for-organic-growth.html` |
 | `https://getduct.ai/for-paid-ads` | `site/for-paid-ads.html` |
 | `https://getduct.ai/doctrine` | `site/doctrine.html` |
+| `https://getduct.ai/compare` | `site/compare.html` (Duct beside Claude Cowork and n8n: a three-question finder, a job chart where each tool wins rows, and the full table folded; every cell dated and sourced) |
+| `https://getduct.ai/integrations/` | `site/integrations/index.html` (**generated**: every connector, grouped) |
+| `https://getduct.ai/integrations/<slug>` | `site/integrations/<slug>.html` (**generated** from the backend, see below) |
 | `https://getduct.ai/blog/` | `site/blog/index.html` |
 | `https://getduct.ai/blog/<slug>` | `site/blog/<slug>.html` (**generated**) |
 | `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` (redirect shim, noindex) |
@@ -336,6 +339,56 @@ clears it. A new calculator gets the call at the end of its script and
 placeholders that make a sensible example. Outputs carry no currency symbol
 (the inputs say "in your currency"). The results grid auto-fits, so any
 number of cards lays out. `check-pages.py` covers this folder.
+
+## Integrations (`integrations/`)
+
+A hub listing every connector and one page per connector, **generated** by
+`scripts/build_integrations.py` and never edited by hand. A connector page
+answers what an evaluator checks before installing (what Duct reads, what it
+can change, when a change waits for a person), and all three are read from
+the backend rather than restated, because the site once said thirteen
+connectors while HubSpot was still "Coming soon" in the app:
+
+| On the page | Read from |
+|---|---|
+| What it reads | the entity catalogue in `backend/agents/insights/catalog/`, or `reads` in the copy file for a connector without one |
+| What it can change | every `ExecutorSpec` in `backend/service/execution/*_exec.py`, with its rollback and destructive flags |
+| May self-apply in assisted mode | `AUTO_APPLY_ALLOWLIST` in `backend/service/execution/policy.py` |
+| How you sign in | `ConnectorMeta.oauth_scope` (a scope, or `None` for a pasted key) |
+| What Duct already knows | the connector's knowledge pack in `backend/agents/knowledge/`, in plain words, linked |
+| The session under the hero | `CONNECTOR_SESSIONS` in `app/src/lib/__fixtures__/solo-story.mjs`, shot by `scripts/shots/shoot.mjs` |
+
+Everything else (questions, the knowledge rules in plain words, setup, FAQ)
+is hand-written in `scripts/integrations/connectors.py`, whose docstring holds
+the editing rules: a claim about behaviour names the code that does it.
+
+Each page shows one mid-run session: the question that connector is the one
+to answer, its sources as logo rows, the brief, and the change set where Duct
+can act. The session is told from what the connector really reads (its
+fetcher and knowledge pack), so a page never shows an answer from data Duct
+cannot see; the generator fails on a page without its shot and variants.
+
+```bash
+node scripts/shots/shoot.mjs session-<slug>   # the session, into docs/assets/readme/
+cp docs/assets/readme/session-<slug>.webp site/assets/media/ && node scripts/build_media_variants.mjs
+node scripts/build_og_images.mjs              # a new page first gets its card (a row with `logo`)
+python3 scripts/build_integrations.py         # writes site/integrations/*.html
+python3 scripts/build_integrations.py --check # CI: stale page, unlisted connector, missing card or listing
+```
+
+`--check` also fails when the backend registers a connector the hub does not
+list, and when a page is missing from `sitemap.xml` or `llms.txt`.
+`backend.yml` runs the same check, so a backend PR that adds a field, an
+operation or a connector finds out on its own diff. The pages are
+translated like any English page (`integrations/*.html` is in the i18n
+generator's sources), and their layout is the `── INTEGRATIONS ──` block of
+`assets/duct.css`: one template makes every page, so, like the changelog, the
+rules live once rather than inline in each copy.
+
+A connector gets a page only when its copy is written; until then it is a card
+on the hub. No pair pages ("Stripe + Google Ads"): pair searches are near zero
+and a page per pair is the thin, scaled content search engines discount. No
+"{tool} MCP" wording until Duct ships an MCP server (#197).
 
 ## New changelog entry
 

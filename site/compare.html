@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
+<title>Duct vs Claude Cowork vs n8n for marketing teams</title>
+<link rel="canonical" href="https://getduct.ai/compare"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/compare"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/compare"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/compare"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/compare"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/compare"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/compare"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Claude Cowork, n8n or Duct for your marketing? Where each one is the right call: connectors, cross-tool questions, who approves a change, licence and price."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/compare"/>
+<meta property="og:title" content="Duct vs Claude Cowork vs n8n for marketing teams"/>
+<meta property="og:description" content="Three good tools, three different jobs. An honest comparison by job, checked against each vendor&#x27;s own site."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/compare.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct vs Claude Cowork vs n8n for marketing teams"/>
+<meta name="twitter:description" content="Cowork is the generalist, n8n the automator, Duct the growth analyst that waits for your Apply. Where each one wins."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/compare.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="assets/duct.css"/>
+<script src="assets/config.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Duct vs Claude Cowork vs n8n","url":"https://getduct.ai/compare","description":"Claude Cowork, n8n or Duct for your marketing? Where each one is the right call: connectors, cross-tool questions, who approves a change, licence and price.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai/"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"en","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://getduct.ai/"},{"@type":"ListItem","position":2,"name":"Compare","item":"https://getduct.ai/compare"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"Is Duct a Claude Cowork alternative?","acceptedAnswer":{"@type":"Answer","text":"For one job, yes: finding why your growth numbers moved and making the change inside your guardrails, with a rollback. For everything else Cowork does, from documents to browsing the web, no, and it does not try to be. Running both is reasonable."}},{"@type":"Question","name":"Can n8n do what Duct does?","acceptedAnswer":{"@type":"Answer","text":"Much of it, if you build it. n8n can pull Google Ads, GA4 and Stripe data, put an AI agent on it, and hold its tool calls for an approval in Slack. Duct ships that as the product: the connectors, the joins, the change preview, the guardrails and the rollback, with nothing to wire."}},{"@type":"Question","name":"Is n8n open source?","acceptedAnswer":{"@type":"Answer","text":"n8n is fair-code under its Sustainable Use License. The source is public and self-hosting for your own business is free, but commercial resale is restricted, so it is not open source in the OSI sense. Duct is MIT licensed."}},{"@type":"Question","name":"Which one is cheapest?","acceptedAnswer":{"@type":"Answer","text":"Duct is free with your own model keys or your ChatGPT plan; you pay the model provider for what you use. n8n is free to self-host, and its cloud starts at 20 euros a month billed annually. Cowork comes with a paid Claude plan, from 20 dollars a month."}},{"@type":"Question","name":"How current is this page?","acceptedAnswer":{"@type":"Answer","text":"Every cell was checked against the vendor's own site, pricing page or documentation on September 29, 2026. Plans and features change without notice. If a cell is wrong, open an issue on the Duct repository and it will be corrected with the date."}}]}
+</script>
+<style>
+/* ── COMPARE-ONLY STYLES ── */
+.cmp-hero { padding: 112px 52px 88px; min-height: 0; }
+.cmp-hero h1 { font-size: clamp(38px, 5.4vw, 66px); max-width: 980px; }
+.cmp-hero .hero-sub { max-width: 600px; }
+
+/* The finder: three questions, three taps, one answer. Radios in fieldsets, so it is a real
+   control for a keyboard and a screen reader, and with scripts off it still reads as a quiz. */
+.finder { width: 100%; max-width: 1160px; margin: 48px auto 0; display: grid; grid-template-columns: 1.35fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); box-shadow: 0 24px 64px rgba(13,15,26,.08); overflow: hidden; text-align: left; animation: fadeUp .6s .3s ease both; }
+.finder-qs { padding: 28px 30px 30px; display: flex; flex-direction: column; gap: 22px; }
+.fq { border: 0; margin: 0; padding: 0; min-width: 0; }
+.fq legend { display: flex; align-items: center; gap: 10px; padding: 0; margin-bottom: 12px; font-family: var(--serif); font-size: 19px; color: var(--navy); }
+.fq-n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--navy); color: #fff; font-family: var(--sans); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; transition: background .2s ease-out; }
+.fq.is-done .fq-n { background: var(--orange); }
+.fq-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fo { position: relative; display: flex; align-items: center; gap: 9px; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: var(--r); cursor: pointer; font-size: 13.5px; line-height: 1.35; color: var(--navy-2); background: var(--white); transition: border-color .2s ease-out, background .2s ease-out, transform .2s ease-out; }
+.fo:hover { border-color: var(--navy-3); transform: translateY(-2px); }
+.fo input { position: absolute; opacity: 0; pointer-events: none; }
+.fo .ic { flex: none; width: 18px; height: 18px; color: var(--navy-3); transition: color .2s ease-out; }
+.fo:has(input:checked) { border-color: var(--navy); background: var(--off); color: var(--navy); }
+.fo:has(input:checked) .ic { color: var(--orange); }
+.fo:has(input:focus-visible) { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.finder-out { background: var(--off); border-left: 1px solid var(--border); padding: 28px 30px 30px; display: flex; flex-direction: column; gap: 22px; }
+.meter { display: flex; flex-direction: column; gap: 10px; }
+.meter-row { display: grid; grid-template-columns: 110px 1fr 18px; align-items: center; gap: 12px; font-size: 13px; color: var(--navy-2); }
+.meter-track { height: 8px; border-radius: var(--pill); background: #e7e7e4; overflow: hidden; }
+.meter-bar { display: block; height: 100%; border-radius: inherit; background: var(--navy); transform-origin: left center; transform: scaleX(0); transition: transform .3s ease-out; }
+.meter-row.is-duct .meter-bar { background: var(--orange); }
+.meter-row b { font-weight: 600; color: var(--navy); text-align: right; font-variant-numeric: tabular-nums; }
+.verdict-card { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; border-top: 1px dashed var(--border); padding-top: 22px; }
+.verdict-card[hidden] { display: none; }
+.verdict-title { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1.12; letter-spacing: -.5px; color: var(--navy); margin: 0; }
+.verdict-title em { color: var(--orange); }
+.verdict-card p:not(.verdict-title) { font-size: 15px; line-height: 1.6; color: var(--navy-3); margin: 0; max-width: 42ch; }
+.verdict-card .facts { display: flex; flex-wrap: wrap; gap: 6px; }
+.verdict-card .facts span { font-size: 12px; font-weight: 500; color: var(--navy-2); background: var(--white); border: 1px solid var(--border); border-radius: var(--pill); padding: 4px 10px; }
+.verdict-card .btn { align-self: flex-start; margin-top: 4px; }
+.verdict-card .alt { font-size: 14px; font-weight: 600; color: var(--navy); text-decoration: none; border-bottom: 2px solid var(--orange); padding-bottom: 2px; align-self: flex-start; }
+.verdict-card.is-empty p { color: var(--navy-3); }
+@keyframes verdict-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) { .verdict-card.is-new { animation: verdict-in .3s ease-out both; } }
+
+/* The chart: where each one wins. A real table, so it reads job, tool, verdict. */
+.jobs-sec { padding: 96px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.jobs-inner { max-width: 1160px; margin: 0 auto; }
+.jm-legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 26px; font-size: 13px; color: var(--navy-3); }
+.jm-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.jm-wrap { margin-top: 18px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); overflow: hidden; }
+.jm { width: 100%; border-collapse: collapse; font-size: 15px; }
+.jm th, .jm td { padding: 14px 18px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.jm tbody tr:last-child th, .jm tbody tr:last-child td { border-bottom: 0; }
+.jm thead th { font-family: var(--serif); font-size: 18px; color: var(--navy); background: var(--off); font-weight: 700; }
+.jm thead th:first-child { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.jm tbody th { font-weight: 500; color: var(--navy); line-height: 1.45; width: 46%; }
+.jm td { width: 18%; color: var(--navy-3); font-size: 13.5px; }
+.jm .is-duct { background: #fff8f3; }
+.jm thead .is-duct { background: #ffefe3; }
+.jm-cell { display: inline-flex; align-items: center; gap: 9px; }
+/* Three states, never colour alone: a full dot, a half dot and an empty ring, each with its word */
+.dot { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--navy); }
+.dot.best { background: var(--navy); }
+.dot.can { background: linear-gradient(90deg, var(--navy) 50%, transparent 50%); }
+.dot.no { border-color: #c9cad2; }
+.is-duct .dot { border-color: var(--orange); }
+.is-duct .dot.best { background: var(--orange); }
+.is-duct .dot.can { background: linear-gradient(90deg, var(--orange) 50%, transparent 50%); }
+.is-duct .dot.no { border-color: #f3c7aa; }
+.jm-cell .best + span { color: var(--navy); font-weight: 600; }
+
+/* Better together: three roles joined by the aqueduct's own water */
+.together { padding: 96px 52px; }
+.together-inner { max-width: 1160px; margin: 0 auto; }
+.flow { display: grid; grid-template-columns: 1fr 72px 1fr 72px 1fr; align-items: center; margin-top: 44px; }
+.flow-node { border: 1.5px solid var(--border); border-radius: var(--r-lg); background: var(--white); padding: 22px 22px 24px; text-align: center; }
+.flow-node .ic { width: 26px; height: 26px; color: var(--navy); margin-bottom: 10px; }
+.flow-node b { display: block; font-family: var(--serif); font-size: 22px; color: var(--navy); }
+.flow-node span { display: block; font-size: 14px; color: var(--navy-3); margin-top: 4px; }
+.flow-node.is-duct { border-color: var(--orange); box-shadow: 0 18px 44px rgba(255,92,0,.12); }
+.flow-node.is-duct .ic { color: var(--orange); }
+.pipe { position: relative; height: 12px; overflow: hidden; border-top: 2px solid rgba(13,15,26,.18); border-bottom: 2px solid rgba(13,15,26,.18); }
+.pipe::after { content: ''; position: absolute; top: 50%; left: -16px; right: 0; height: 2px; margin-top: -1px; background: repeating-linear-gradient(90deg, var(--orange) 0 8px, transparent 8px 16px); }
+@keyframes pipe-flow { to { transform: translateX(16px); } }
+@media (prefers-reduced-motion: no-preference) { .pipe::after { animation: pipe-flow 1.1s linear infinite; } }
+.ads-note { margin-top: 32px; font-size: 14px; line-height: 1.7; color: var(--navy-3); max-width: 78ch; }
+.ads-note a, .cmp-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+
+/* The long version, folded: every row is in the page for search and for the careful reader */
+.cmp { padding: 0 52px 96px; }
+.cmp-inner { max-width: 1160px; margin: 0 auto; }
+.cmp-more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); font-family: var(--serif); font-size: 20px; color: var(--navy); transition: border-color .2s ease-out; }
+.cmp-more > summary::-webkit-details-marker { display: none; }
+.cmp-more > summary:hover { border-color: var(--navy-3); }
+.cmp-more > summary:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.cmp-more > summary small { font-family: var(--sans); font-size: 13px; color: var(--navy-3); }
+.cmp-more > summary .ic { flex: none; width: 20px; height: 20px; transition: transform .25s ease-out; }
+.cmp-more[open] > summary .ic { transform: rotate(180deg); }
+.cmp-more[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.cmp-scroll { overflow-x: auto; border: 1px solid var(--border); border-top: 0; border-radius: 0 0 var(--r-lg) var(--r-lg); background: var(--white); }
+.cmp table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 820px; font-size: 14.5px; line-height: 1.6; }
+.cmp th, .cmp td { text-align: left; vertical-align: top; padding: 16px 18px; border-bottom: 1px solid var(--border); color: var(--navy-3); }
+.cmp thead th { font-family: var(--serif); font-size: 18px; color: var(--navy); letter-spacing: -.2px; background: var(--off); }
+.cmp tbody th { font-weight: 600; color: var(--navy); font-size: 14px; width: 17%; background: var(--white); position: sticky; left: 0; z-index: 1; box-shadow: 1px 0 0 var(--border); }
+.cmp tr:last-child th, .cmp tr:last-child td { border-bottom: 0; }
+.cmp .pick { background: #fff8f3; }
+.cmp thead th.pick { background: #ffefe3; }
+.cmp .lead { color: var(--navy); font-weight: 500; }
+.cmp-note { margin-top: 16px; font-size: 13px; font-weight: 300; color: var(--navy-3); max-width: 80ch; line-height: 1.7; }
+
+/* The chart's dots pop in row by row when it reveals: one pass, transform and opacity only */
+@keyframes jm-pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .jm-wrap.in .dot { animation: jm-pop .3s ease-out both; }
+  .jm-wrap.in tbody tr:nth-child(1) .dot { animation-delay: .20s; }
+  .jm-wrap.in tbody tr:nth-child(2) .dot { animation-delay: .26s; }
+  .jm-wrap.in tbody tr:nth-child(3) .dot { animation-delay: .32s; }
+  .jm-wrap.in tbody tr:nth-child(4) .dot { animation-delay: .38s; }
+  .jm-wrap.in tbody tr:nth-child(5) .dot { animation-delay: .44s; }
+  .jm-wrap.in tbody tr:nth-child(6) .dot { animation-delay: .50s; }
+  .jm-wrap.in tbody tr:nth-child(7) .dot { animation-delay: .56s; }
+  .jm-wrap.in tbody tr:nth-child(8) .dot { animation-delay: .62s; }
+  .jm-wrap.in tbody tr:nth-child(9) .dot { animation-delay: .68s; }
+  .jm-wrap.in tbody tr:nth-child(10) .dot { animation-delay: .74s; }
+}
+@media (prefers-reduced-motion: reduce) { .finder { animation: none; } }
+/* Without scripts nothing can tally the answers, so the panel that would show the verdict goes. */
+@media (scripting: none) { .finder { grid-template-columns: 1fr; } .finder-out { display: none; } }
+
+@media (max-width: 1100px) {
+  .finder { grid-template-columns: 1fr; }
+  .finder-out { border-left: 0; border-top: 1px solid var(--border); }
+}
+@media (max-width: 860px) {
+  .cmp-hero { padding: 100px 24px 56px; }
+  /* The pill is nowrap site-wide; this date line is longer than a phone is wide. */
+  .cmp-hero .hero-pill { white-space: normal; text-align: left; line-height: 1.45; }
+  .finder-qs, .finder-out { padding: 22px 18px 24px; }
+  .fq-opts { grid-template-columns: 1fr; }
+  .jobs-sec, .together { padding: 64px 24px; }
+  .cmp { padding: 0 24px 64px; }
+  .cmp table { font-size: 13.5px; }
+  .cmp th, .cmp td { padding: 13px 14px; }
+  .cmp-more > summary { font-size: 17px; padding: 16px 18px; }
+  .cmp-more > summary small { display: none; }
+  /* On a phone the chart's words go to screen readers only; the dots and the legend carry it */
+  .jm th, .jm td { padding: 13px 6px; }
+  .jm th:first-child { padding-left: 14px; }
+  .jm thead th { font-size: 13px; text-align: center; }
+  .jm thead th:first-child { text-align: left; }
+  .jm tbody th { font-size: 14px; width: auto; }
+  .jm td { width: 50px; text-align: center; }
+  .jm-cell { justify-content: center; }
+  .jm-cell > span:not(.dot) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+  .flow { grid-template-columns: 1fr; justify-items: center; }
+  .flow-node { width: 100%; }
+  .pipe { width: 12px; height: 34px; border: 0; border-left: 2px solid rgba(13,15,26,.18); border-right: 2px solid rgba(13,15,26,.18); }
+  .pipe::after { top: -16px; bottom: 0; left: 50%; right: auto; width: 2px; height: auto; margin: 0 0 0 -1px; background: repeating-linear-gradient(180deg, var(--orange) 0 8px, transparent 8px 16px); }
+  @keyframes pipe-flow-down { to { transform: translateY(16px); } }
+  .pipe::after { animation-name: pipe-flow-down; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EXPERIMENT: the comparison a growth buyer actually makes. The 2026-09-29 research showed the
+     alternatives people weigh are general agent tools, not the ads plugins Duct launched beside:
+     "claude cowork" 135,000 searches a month, "n8n alternative" 1,000 and "claude cowork
+     alternative" 210, both near zero difficulty. Hypothesis: a visitor from those searches
+     downloads at a higher rate than one from the home page, because a three-tap finder gives the
+     answer at once and the page concedes what Cowork and n8n do better, so it is believed on the
+     jobs where Duct wins. The finder writes data-finder-result for a GTM trigger. Measured by download clicks
+     per visit (GTM), split by landing page. Every cell is checked against the vendor's own pages and
+     dated; each tool wins rows in the job chart, because a page where Duct wins everything is a
+     page nobody weighing Cowork will trust. -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO + FINDER -->
+<section class="hero cmp-hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Checked against each vendor's own site on September 29, 2026</div>
+<h1>Claude Cowork, n8n or Duct?<br/><em>Three taps to your answer.</em></h1>
+<p class="hero-sub">855 connectors, over 1,000 integrations, or 12 built for growth. The count is not the question. The job is.</p>
+<div class="finder" id="finder">
+<div class="finder-qs">
+<fieldset class="fq">
+<legend><span class="fq-n" aria-hidden="true">1</span>What should the AI do?</legend>
+<div class="fq-opts">
+<label class="fo"><input type="radio" name="q1" value="c"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><span>Write, research, sort files</span></label>
+<label class="fo"><input type="radio" name="q1" value="n"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#git-branch"/></svg><span>Run a fixed process</span></label>
+<label class="fo"><input type="radio" name="q1" value="d"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg><span>Explain why a number moved</span></label>
+</div>
+</fieldset>
+<fieldset class="fq">
+<legend><span class="fq-n" aria-hidden="true">2</span>What does it need to reach?</legend>
+<div class="fq-opts">
+<label class="fo"><input type="radio" name="q2" value="d"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Ads, analytics and revenue</span></label>
+<label class="fo"><input type="radio" name="q2" value="c"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mail"/></svg><span>Docs, email and the web</span></label>
+<label class="fo"><input type="radio" name="q2" value="n"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>Lots of apps, in a chain</span></label>
+</div>
+</fieldset>
+<fieldset class="fq">
+<legend><span class="fq-n" aria-hidden="true">3</span>Who says yes to a change?</legend>
+<div class="fq-opts">
+<label class="fo"><input type="radio" name="q3" value="n"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#settings-2"/></svg><span>A rule I set once</span></label>
+<label class="fo"><input type="radio" name="q3" value="d"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Me, after a preview</span></label>
+<label class="fo"><input type="radio" name="q3" value="c"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>The AI, while I steer</span></label>
+</div>
+</fieldset>
+</div>
+<div class="finder-out" aria-live="polite">
+<div class="meter" aria-hidden="true">
+<div class="meter-row" data-meter="c"><span>Claude Cowork</span><span class="meter-track"><span class="meter-bar"></span></span><b>0</b></div>
+<div class="meter-row" data-meter="n"><span>n8n</span><span class="meter-track"><span class="meter-bar"></span></span><b>0</b></div>
+<div class="meter-row is-duct" data-meter="d"><span>Duct</span><span class="meter-track"><span class="meter-bar"></span></span><b>0</b></div>
+</div>
+<div class="verdict-card is-empty" data-verdict="none">
+<p class="verdict-title">Your match lands here.</p>
+<p>One answer on each line. Honest answers get an honest pick, even when it is not us.</p>
+</div>
+<div class="verdict-card" data-verdict="d" hidden>
+<p class="verdict-title"><em>Duct</em> is your tool.</p>
+<p>It reads your ads, analytics and revenue together, tells you why the number moved, and waits for your Apply.</p>
+<div class="facts"><span>Free with your own keys</span><span>MIT</span><span>macOS, Windows, Linux</span></div>
+<a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
+</div>
+<div class="verdict-card" data-verdict="c" hidden>
+<p class="verdict-title">Claude Cowork is your tool.</p>
+<p>The best generalist for documents, research and the web. Keep Duct in mind for the day signups drop.</p>
+<div class="facts"><span>From $20 a month with Claude Pro</span></div>
+<a class="alt" href="#jobs">See where Duct wins</a>
+</div>
+<div class="verdict-card" data-verdict="n" hidden>
+<p class="verdict-title">n8n is your tool.</p>
+<p>Draw the process once and it runs the same way every time. Add Duct when you need the why.</p>
+<div class="facts"><span>Free to self-host</span></div>
+<a class="alt" href="#jobs">See where Duct wins</a>
+</div>
+<div class="verdict-card" data-verdict="mix" hidden>
+<p class="verdict-title">You need two of them.</p>
+<p>Your answers span jobs. Let each tool take the one it wins.</p>
+<a class="alt" href="#together">See how they fit together</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHERE EACH ONE WINS -->
+<section class="jobs-sec" id="jobs" aria-labelledby="jobs-heading">
+<div class="jobs-inner">
+<div class="reveal">
+<p class="tag">Where each one wins</p>
+<h2 id="jobs-heading">Each one wins somewhere.<br/><em>Here is where.</em></h2>
+</div>
+<div class="jm-legend" aria-hidden="true">
+<span><span class="dot best"></span>Built for it</span>
+<span><span class="dot can"></span>Can do it, with setup</span>
+<span><span class="dot no"></span>Not its job</span>
+</div>
+<div class="jm-wrap reveal">
+<table class="jm">
+<thead>
+<tr>
+<th scope="col">The job</th>
+<th scope="col">Cowork</th>
+<th scope="col">n8n</th>
+<th scope="col" class="is-duct">Duct</th>
+</tr>
+</thead>
+<tbody>
+<tr><th scope="row">Write a doc from your files</th><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td></tr>
+<tr><th scope="row">Research the web, build a deck</th><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td></tr>
+<tr><th scope="row">Hand off a task from your phone</th><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td></tr>
+<tr><th scope="row">A form lead into your CRM</th><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td></tr>
+<tr><th scope="row">A fixed process across many apps</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td></tr>
+<tr><th scope="row">Why signups dropped, across tools</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td></tr>
+<tr><th scope="row">Change a campaign, with a rollback</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td></tr>
+<tr><th scope="row">Missed the CPA target? Say why</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td></tr>
+<tr><th scope="row">An SEO audit, no account</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>Can do it</span></span></td><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td></tr>
+<tr><th scope="row">Self-host, no licence fee</th><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>Not its job</span></span></td><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>Built for it</span></span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- BETTER TOGETHER -->
+<section class="together" id="together">
+<div class="together-inner">
+<div class="reveal">
+<p class="tag">Better together</p>
+<h2>You don't have to pick one.<br/><em>Give each the job it wins.</em></h2>
+</div>
+<div class="flow reveal" style="transition-delay:.1s">
+<div class="flow-node"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#git-branch"/></svg><b>n8n</b><span>moves the data</span></div>
+<div class="pipe" aria-hidden="true"></div>
+<div class="flow-node is-duct"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg><b>Duct</b><span>finds why, waits for you</span></div>
+<div class="pipe" aria-hidden="true"></div>
+<div class="flow-node"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><b>Claude Cowork</b><span>writes it up</span></div>
+</div>
+<p class="ads-note">Only after an ads plugin for the chat you already use? <a href="https://www.adspirer.com/" rel="nofollow noopener">Adspirer</a> and <a href="https://paidsync.ai/compare" rel="nofollow noopener">PaidSync</a> add ad write tools to Claude and ChatGPT, and <a href="https://github.com/kLOsk/adloop" rel="nofollow noopener">AdLoop</a> is an MIT console for Google Ads. They go deeper on each ad network; Duct reads the ads next to your revenue.</p>
+</div>
+</section>
+
+<!-- THE LONG VERSION, FOLDED -->
+<section class="cmp" id="table" aria-labelledby="cmp-heading">
+<div class="cmp-inner">
+<details class="cmp-more reveal">
+<summary><span id="cmp-heading">Every row, side by side <small>Ten criteria, with sources</small></span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></summary>
+<div class="cmp-scroll">
+<table>
+<thead>
+<tr>
+<th scope="col"><span class="sr-only">Criterion</span></th>
+<th scope="col">Claude Cowork</th>
+<th scope="col">n8n</th>
+<th scope="col" class="pick">Duct</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">What it is</th>
+<td>Claude's agent for knowledge work. Give it a goal; it works across your files, apps and a built-in browser, and shows each step.</td>
+<td>A workflow automation platform with AI agent steps. You draw the workflow; it runs the same way every time.</td>
+<td class="pick"><span class="lead">An AI marketing agent for growth data.</span> It reads your tools together, writes a cited brief and proposes the change.</td>
+</tr>
+<tr>
+<th scope="row">Reaching your marketing data</th>
+<td>855 connectors in Claude's directory, HubSpot and Amplitude among them. Supermetrics covers Google Ads, Meta, GA4 and over 200 platforms; Google's own Google Ads server is read-only.</td>
+<td>Over 1,000 integrations, with nodes for Google Ads, Google Analytics, HubSpot and Stripe, and an HTTP node for any other API.</td>
+<td class="pick">Twelve, built in: Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Clarity, GrowthBook, Stripe and RevenueCat. <a href="/integrations/">What each one reads</a>.</td>
+</tr>
+<tr>
+<th scope="row">“Why did this move?”</th>
+<td>Yes, once the connectors are in. Claude does the join inside the conversation.</td>
+<td>You design the join as a workflow; then it runs it on schedule, identically.</td>
+<td class="pick"><span class="lead">The core job.</span> The joins are wired in, and the brief cites the source of each number.</td>
+</tr>
+<tr>
+<th scope="row">Changes, and who approves</th>
+<td>Manual mode, the default, asks before each action; Auto and Skip modes ask less or not at all. What it can change depends on the connector.</td>
+<td>Human-in-the-loop can hold any AI tool call for an approval in Slack, email, Teams or n8n Chat. Its Google Ads node only reads.</td>
+<td class="pick"><span class="lead">A change set previews what it touches.</span> Per-account guardrails block a change that breaks them, nothing applies until you press Apply, and applied changes roll back. The model has no approve tool.</td>
+</tr>
+<tr>
+<th scope="row">Memory and record</th>
+<td>Memory shared with your Claude chats, and each step shown as it works.</td>
+<td>An execution log for every run; anything else it remembers is what you store.</td>
+<td class="pick">A memory timeline of targets and decisions you can correct, and an activity log of who proposed, approved, applied or rolled back each change.</td>
+</tr>
+<tr>
+<th scope="row">On a schedule</th>
+<td>Scheduled tasks, daily, weekly or monthly, with your connectors.</td>
+<td><span class="lead">Its home ground:</span> schedules, webhooks and app triggers.</td>
+<td class="pick">Scheduled briefs, which run with a stored model key.</td>
+</tr>
+<tr>
+<th scope="row">Models</th>
+<td>Claude.</td>
+<td>The provider you pick for each AI step.</td>
+<td class="pick">Your OpenAI, Anthropic or Google key, or your ChatGPT plan.</td>
+</tr>
+<tr>
+<th scope="row">Licence and where it runs</th>
+<td>Proprietary. Desktop, web and mobile; cloud sessions, in beta, run on Anthropic's servers.</td>
+<td>Fair-code under the Sustainable Use License: source public, free for internal use and self-hosting, commercial resale restricted. Or n8n Cloud.</td>
+<td class="pick"><span class="lead">MIT, the whole product.</span> A desktop app for macOS, Windows and Linux, or a self-host build.</td>
+</tr>
+<tr>
+<th scope="row">Price</th>
+<td>With a paid Claude plan: Pro at $20 a month ($17 billed annually), Max from $100, Team from $20 a seat billed annually.</td>
+<td>Community Edition free to self-host. Cloud Starter €20 and Pro €50 a month, billed annually, priced by workflow executions.</td>
+<td class="pick"><span class="lead">Free with your own keys or your ChatGPT plan.</span> You pay the model provider for what you use.</td>
+</tr>
+<tr>
+<th scope="row">Also in the box</th>
+<td>Everything else Claude does: documents, research, code, and a browser that fills forms.</td>
+<td>A community with 206,000 GitHub stars and thousands of marketing workflow templates.</td>
+<td class="pick">A free SEO audit for any URL, no account, and a content studio that plans, drafts and publishes to nine networks.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="cmp-note">Sources, read on September 29, 2026: Anthropic's <a href="https://claude.com/product/cowork" rel="nofollow noopener">Cowork page</a>, <a href="https://claude.com/pricing" rel="nofollow noopener">pricing</a>, <a href="https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork" rel="nofollow noopener">Cowork guide</a> and <a href="https://claude.com/connectors/supermetrics" rel="nofollow noopener">Supermetrics connector</a>; Google's <a href="https://developers.google.com/google-ads/api/docs/developer-toolkit/mcp-server" rel="nofollow noopener">Google Ads MCP server</a>; n8n's <a href="https://n8n.io/pricing/" rel="nofollow noopener">pricing</a>, <a href="https://docs.n8n.io/privacy-and-security/sustainable-use-license" rel="nofollow noopener">licence</a>, <a href="https://docs.n8n.io/advanced-ai/human-in-the-loop-tools/" rel="nofollow noopener">human-in-the-loop docs</a>, <a href="https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googleads/" rel="nofollow noopener">Google Ads node</a> and <a href="https://github.com/n8n-io/n8n" rel="nofollow noopener">repository</a>. If a cell is wrong, <a href="https://github.com/5hirish/duct/issues" rel="noopener">open an issue</a> and it will be corrected with the date.</p>
+</details>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Before you <em>choose</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Is Duct a Claude Cowork alternative?</summary>
+<p class="faq-a">For one job, yes: finding why your growth numbers moved and making the change inside your guardrails, with a rollback. For everything else Cowork does, from documents to browsing the web, no, and it does not try to be. Running both is reasonable.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Can n8n do what Duct does?</summary>
+<p class="faq-a">Much of it, if you build it. n8n can pull Google Ads, GA4 and Stripe data, put an AI agent on it, and hold its tool calls for an approval in Slack. Duct ships that as the product: the connectors, the joins, the change preview, the guardrails and the rollback, with nothing to wire.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Is n8n open source?</summary>
+<p class="faq-a">n8n is fair-code under its Sustainable Use License. The source is public and self-hosting for your own business is free, but commercial resale is restricted, so it is not open source in the OSI sense. Duct is MIT licensed.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Which one is cheapest?</summary>
+<p class="faq-a">Duct is free with your own model keys or your ChatGPT plan; you pay the model provider for what you use. n8n is free to self-host, and its cloud starts at 20 euros a month billed annually. Cowork comes with a paid Claude plan, from 20 dollars a month.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">How current is this page?</summary>
+<p class="faq-a">Every cell was checked against the vendor&#x27;s own site, pricing page or documentation on September 29, 2026. Plans and features change without notice. If a cell is wrong, open an issue on the Duct repository and it will be corrected with the date.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
+
+<script src="assets/duct-partials.js"></script>
+<script>
+// The finder: three answers, one pick. Every tap moves the meter; the verdict waits for all
+// three, then names the tool with two or more votes, or says the answers span jobs. The verdict
+// copy lives in the page (hidden cards), so translation stays with the HTML.
+(function () {
+  var finder = document.getElementById('finder');
+  if (!finder) return;
+  var sets = finder.querySelectorAll('.fq');
+  var cards = finder.querySelectorAll('[data-verdict]');
+  var show = function (key) {
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i], on = card.getAttribute('data-verdict') === key;
+      if (on && card.hidden) { card.hidden = false; card.classList.remove('is-new'); void card.offsetWidth; card.classList.add('is-new'); }
+      else if (!on) card.hidden = true;
+    }
+  };
+  var update = function () {
+    var count = { c: 0, n: 0, d: 0 }, answered = 0;
+    for (var i = 0; i < sets.length; i++) {
+      var picked = sets[i].querySelector('input:checked');
+      sets[i].classList.toggle('is-done', !!picked);
+      if (picked) { count[picked.value]++; answered++; }
+    }
+    ['c', 'n', 'd'].forEach(function (k) {
+      var row = finder.querySelector('[data-meter="' + k + '"]');
+      row.querySelector('.meter-bar').style.transform = 'scaleX(' + (count[k] / 3) + ')';
+      row.querySelector('b').textContent = count[k];
+    });
+    if (answered < sets.length) { show('none'); return; }
+    var key = count.d >= 2 ? 'd' : count.c >= 2 ? 'c' : count.n >= 2 ? 'n' : 'mix';
+    var changed = finder.getAttribute('data-finder-result') !== key;
+    finder.setAttribute('data-finder-result', key);
+    show(key);
+    // Stacked on a phone, the verdict sits under the questions: bring it up when it changes,
+    // unless it is already on screen.
+    var card = finder.querySelector('[data-verdict="' + key + '"]');
+    var box = card.getBoundingClientRect();
+    if (changed && (box.bottom > window.innerHeight || box.top < 0)) {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    }
+  };
+  finder.addEventListener('change', update);
+  update();
+})();
+</script>
+<script src="assets/duct.js" defer></script>
+<script src="assets/duct-download.js" defer></script>
+</body>
+</html>

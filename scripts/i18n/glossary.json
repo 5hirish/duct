@@ -4,7 +4,9 @@
     "Duct", "GA4", "GSC", "GTM", "Search Console", "Google Ads", "Stripe", "Mixpanel",
     "Clarity", "GrowthBook", "PostHog", "TikTok", "YouTube", "ChatGPT", "Claude", "Codex",
     "OpenAI", "Anthropic", "Gemini", "Ollama", "GitHub", "MIT", "ROAS", "CPA", "CPC", "CPM",
-    "CTR", "LTV", "CAC", "MRR", "SEO", "URL", "API", "JSON", "CSV", "macOS", "Windows", "Linux"
+    "CTR", "LTV", "CAC", "MRR", "SEO", "URL", "API", "JSON", "CSV", "macOS", "Windows", "Linux",
+    "Meta Ads", "Apple Search Ads", "ChatGPT Ads", "OpenAI Ads", "Google Analytics", "Tag Manager",
+    "Microsoft Clarity", "RevenueCat", "HubSpot"
   ],
   "terms": {
     "brief": { "es": "informe", "pt-BR": "resumo", "de": "Briefing", "ja": "ブリーフ", "note": "The weekly synthesis Duct writes. A noun." },

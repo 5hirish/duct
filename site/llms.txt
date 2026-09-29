@@ -1,6 +1,6 @@
 # Duct
 
-> Duct is an open-source (MIT) AI agent for product and growth teams: see the whole picture, fix it in the same moment. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, finds what needs to change, and changes it when you approve. It remembers what it learns about your business. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct. This site is published in English, Spanish, Brazilian Portuguese, German and Japanese.
+> Duct (Duct AI) is an open-source (MIT) AI marketing agent for product and growth teams: see the whole picture, fix it in the same moment. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, finds what needs to change, and changes it when you approve. It remembers what it learns about your business. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct. This site is published in English, Spanish, Brazilian Portuguese, German and Japanese.
 
 Duct is built and maintained by Shirish Kadam in Spain. It answers questions a single dashboard cannot ("why did signups drop last week", "which content converts", "where is the ads budget leaking") by reading the tools together rather than one at a time, and every number in an answer is re-checked by a verification sub-agent before it reaches you.
 
@@ -14,7 +14,7 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 
 - It reads by default. When it can fix something it prepares a change set, shows a preview and a guardrail check, and waits for approval. Changes can be rolled back.
 - It remembers: goals, decisions, conclusions from earlier briefs, per project and per user, with a timeline of what it learned and when.
-- Connectors: Google Ads, Google Analytics 4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe, RevenueCat, HubSpot. Google connects with OAuth, read-only unless more is granted; the rest take a key. Credentials are encrypted at rest and scoped to one project.
+- Connectors: Google Ads, Google Analytics 4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe, RevenueCat; HubSpot is next. What each one reads and can change: https://getduct.ai/integrations/. Google connects with OAuth, read-only unless more is granted; the rest take a key. Credentials are encrypted at rest and scoped to one project.
 - Models: bring your own API key (OpenAI, Anthropic, Google), or sign in with a ChatGPT subscription on the desktop app. Keys live in the OS keychain.
 - Pricing: free with your own keys, always. A paid plan later bundles the models so nobody has to hold keys; nothing open today moves behind it.
 
@@ -22,6 +22,7 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 
 - [Home](https://getduct.ai/): What Duct does, the 30-second film, and the download.
 - [Download](https://getduct.ai/download): The whole picture in one window: the desktop app for Mac, Windows and Linux. Free, no credit card.
+- [Compare](https://getduct.ai/compare): Duct beside Claude Cowork and n8n, by job: where each is the right call, what each connects, cross-tool questions, who approves a change, licence and price. Checked September 29, 2026.
 - [Open source](https://getduct.ai/open-source): Why it is MIT, what runs where in the desktop app versus a self-hosted install, how to self-host, and the pricing promise.
 - [For product teams](https://getduct.ai/for-product-intelligence): See why the number moved, from Mixpanel, Clarity, GrowthBook and GA4 read together, and fix it before the standup.
 - [For SEO and content teams](https://getduct.ai/for-organic-growth): See which content actually converts, from Search Console, GA4 and Clarity, and fix it in the same sitting; the free audit; the content plan.
@@ -47,7 +48,7 @@ The blog and the changelog are English only.
 ## Frequently asked questions
 
 **What is Duct?**
-An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux.
+Duct AI is an open-source AI marketing agent. It connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux.
 
 **Is it free?**
 Yes. The core is MIT licensed and stays that way. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A hosted team plan comes later; the core stays open.
@@ -56,7 +57,7 @@ Yes. The core is MIT licensed and stays that way. You pay your model provider di
 No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look.
 
 **Which tools does it connect to?**
-Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. The four Google tools connect with OAuth; the rest take a read-only key you paste once. Nothing is exported by hand.
+Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat, with HubSpot next. The four Google tools connect with OAuth; the rest take a key you paste once. Nothing is exported by hand.
 
 **Where do my keys and data live?**
 Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine.
@@ -70,6 +71,10 @@ Clone https://github.com/5hirish/duct and follow the open-source page: the FastA
 ## Free tools
 
 Calculators and generators that run in the browser, no account: [SaaS metrics benchmarks](https://getduct.ai/tools/saas-metrics-calculator), [CAC and LTV](https://getduct.ai/tools/cac-ltv-calculator), [MRR growth](https://getduct.ai/tools/mrr-growth-calculator), [CTR](https://getduct.ai/tools/ctr-calculator), [CPM](https://getduct.ai/tools/cpm-calculator), [CPC](https://getduct.ai/tools/cpc-calculator), [CPA](https://getduct.ai/tools/cpa-calculator), [ROAS](https://getduct.ai/tools/roas-calculator), [marketing ROI](https://getduct.ai/tools/marketing-roi-calculator), [engagement rate](https://getduct.ai/tools/engagement-rate-calculator), a [UTM builder](https://getduct.ai/tools/utm-builder) and a [weekly brief template](https://getduct.ai/tools/weekly-brief-template). Index at https://getduct.ai/tools/.
+
+## Integrations
+
+What Duct reads in each connected tool, what it can change there, and how each one connects, generated from the source code: https://getduct.ai/integrations/. One page per connector, each with a mid-run session showing the question it answers. Ads: [Google Ads](https://getduct.ai/integrations/google-ads) (eight kinds of change; by default each waits for approval), [Meta Ads](https://getduct.ai/integrations/meta-ads) (read-only; purchases counted once, on the attribution window you choose, and checked against Stripe), [Apple Search Ads](https://getduct.ai/integrations/apple-search-ads) (read-only; Apple reports installs, so Duct checks them against RevenueCat), [ChatGPT Ads](https://getduct.ai/integrations/chatgpt-ads) (the OpenAI Ads API reports no conversions, so Duct measures the channel against Stripe). Analytics: [GA4](https://getduct.ai/integrations/ga4) (key events, audiences and the Google Ads link, with approval), [Search Console](https://getduct.ai/integrations/google-search-console) (read-only; query by page, up to 50,000 rows, joined to GA4), [Tag Manager](https://getduct.ai/integrations/google-tag-manager) (fixes staged in a workspace; a publish always waits for approval and rolls back to the prior live version). Product: [Mixpanel](https://getduct.ai/integrations/mixpanel) (counts with internal accounts removed; timeline annotations and Lexicon clean-up), [Microsoft Clarity](https://getduct.ai/integrations/microsoft-clarity) (read-only; the last three days of friction per page), [GrowthBook](https://getduct.ai/integrations/growthbook) (read-only; flags tests that stopped bucketing or sit under their minimum sample). Revenue: [Stripe](https://getduct.ai/integrations/stripe) (read-only, the revenue every ad platform is checked against), [RevenueCat](https://getduct.ai/integrations/revenuecat) (read-only; app MRR beside Stripe's web MRR).
 
 ## Blog posts
 
