@@ -12,7 +12,6 @@ header, structured error raising).
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import re
 from typing import Any
@@ -83,8 +82,10 @@ class ApifyClient:
     @property
     def account(self) -> str:
         """Whose key this is, as a tag that cannot be turned back into it: for
-        a cache that must not hand one account's run to another."""
-        return hashlib.sha256(self._api_key.encode()).hexdigest()[:16]
+        a cache that must not hand one account's run to another. Keyed with a
+        per-process salt, the way the quota cooldowns tag a key."""
+        from agents.core.quota import credential_identity
+        return credential_identity(self._api_key)
 
     async def __aenter__(self) -> "ApifyClient":
         return self
