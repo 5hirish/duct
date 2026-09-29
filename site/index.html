@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="assets/apple-icon.svg"/>
-<title>Duct — Open-source AI agent for your growth stack</title>
-<meta name="description" content="Duct reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve. Open source, MIT, your keys or ChatGPT plan."/>
+<title>Duct AI — Open-source AI marketing agent for growth teams</title>
+<meta name="description" content="Duct AI is the open-source AI marketing agent: it reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <link rel="canonical" href="https://getduct.ai/"/>
 <!-- hreflang:start -->
@@ -24,11 +24,11 @@
 <!-- hreflang:end -->
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/"/>
-<meta property="og:title" content="Duct — Open-source AI agent for your growth stack"/>
-<meta property="og:description" content="See the whole picture, fix it in the same moment. Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. Open source."/>
+<meta property="og:title" content="Duct AI — Open-source AI marketing agent for growth teams"/>
+<meta property="og:description" content="The open-source AI marketing agent. Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply."/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Duct — Open-source AI agent for your growth stack"/>
-<meta name="twitter:description" content="See the whole picture, fix it in the same moment. Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. Open source."/>
+<meta name="twitter:title" content="Duct AI — Open-source AI marketing agent for growth teams"/>
+<meta name="twitter:description" content="See the whole picture, fix it in the same moment. An AI marketing agent that reads ads, analytics and revenue together. MIT, your own keys."/>
 <meta property="og:image" content="https://getduct.ai/assets/og/index.jpg"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
@@ -76,19 +76,145 @@
 .film-play:hover { transform: translate(-50%, -30%) scale(1.06); background: var(--orange-h, #e65300); }
 .film.is-playing .film-play { display: none; }
 
-/* What it does: four tiles on a hairline grid */
-.what { padding: 100px 52px; background: var(--off); border-top: 1px solid var(--border); }
-.what-inner { max-width: 1160px; margin: 0 auto; }
-.what-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
-  background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg);
-  overflow: hidden; margin-top: 52px;
+/* What it does: four product screens on a horizontal strip. In a four-column grid each shot
+   was a 250px thumbnail of a 1,100px screen and nothing in it could be read; here a card is
+   620px wide, the shots show close to their native size, and the strip bleeds to the right edge
+   so the next card peeks in. It scrolls natively; the arrows are for a mouse without a sideways
+   wheel. */
+.what { padding: 100px 0; background: var(--off); border-top: 1px solid var(--border); }
+.what-inner { max-width: 1264px; margin: 0 auto; padding: 0 52px; }
+.what-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.what-nav { display: flex; gap: 8px; flex: none; }
+.what-nav[hidden] { display: none; }
+.what-arrow { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); color: var(--navy); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color .2s ease-out, transform .2s ease-out, opacity .2s ease-out; }
+.what-arrow .ic { width: 18px; height: 18px; }
+.what-arrow[data-what-prev] .ic { transform: rotate(180deg); }
+.what-arrow:hover:not(:disabled) { border-color: var(--navy); transform: translateY(-2px); }
+.what-arrow:disabled { opacity: .35; cursor: default; }
+.what-arrow:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.what-strip {
+  --edge: max(52px, calc((100% - 1160px) / 2));
+  display: flex; gap: 20px; margin-top: 44px; padding: 4px var(--edge) 8px;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--edge);
+  overscroll-behavior-x: contain; scrollbar-width: none;
 }
-.what-tile { background: var(--white); padding: 24px 24px 28px; display: flex; flex-direction: column; gap: 14px; }
-.what-shot { aspect-ratio: 4 / 3; border-radius: var(--r); overflow: hidden; background: var(--off); border: 1px solid var(--border); }
-.what-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
-.what-tile h3 { font-family: var(--serif); font-size: 20px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
-.what-tile p { font-size: 14px; color: var(--navy-3); line-height: 1.7; }
+.what-strip::-webkit-scrollbar { display: none; }
+.what-strip:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+.what-tile { flex: 0 0 min(620px, 84%); scroll-snap-align: start; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; display: flex; flex-direction: column; }
+.what-shot { aspect-ratio: 6 / 5; background: #f7f4f0; border-bottom: 1px solid var(--border); overflow: hidden; }
+.what-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+/* The Connections page is twice as wide as it is tall; filling the height and keeping the left
+   edge shows the first two columns at a readable size instead of all three at a squint. */
+.what-shot.is-wide img { object-position: left top; }
+.what-body { padding: 22px 26px 28px; display: flex; flex-direction: column; gap: 8px; }
+.what-body a { color: var(--navy); font-weight: 600; text-decoration: none; border-bottom: 2px solid var(--orange); white-space: nowrap; }
+.what-tile h3 { font-family: var(--serif); font-size: 22px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
+.what-tile p { font-size: 15px; color: var(--navy-3); line-height: 1.7; max-width: 46ch; }
+
+/* What an AI marketing agent is: three tests, each proved by a CSS mock above the copy. No shot
+   exists for a tool list or a policy file, and a screenshot of code reads worse than the lines. */
+.agent { padding: 100px 52px; background: var(--white); border-top: 1px solid var(--border); }
+.agent-inner { max-width: 1160px; margin: 0 auto; }
+.agent-inner .sub { max-width: 66ch; margin-top: 14px; }
+.agent-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 52px; }
+/* Subgrid rows so the three mocks end on one line whatever each holds; a browser without it
+   falls back to auto rows and each card simply sizes itself. */
+.agent-tile { border: 1.5px solid var(--border); border-radius: var(--r-lg); background: var(--white); overflow: hidden; display: grid; grid-template-rows: subgrid; grid-row: span 2; }
+.agent-body { padding: 22px 24px 26px; display: flex; flex-direction: column; gap: 10px; }
+.agent-num { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--orange); }
+.agent-tile h3 { font-family: var(--serif); font-size: 20px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; text-wrap: balance; }
+.agent-tile p { font-size: 14px; color: var(--navy-3); line-height: 1.7; }
+.agent-note { margin-top: 32px; font-size: 15px; color: var(--navy-3); }
+.agent-note a { font-weight: 600; color: var(--navy); text-decoration: none; border-bottom: 2px solid var(--orange); padding-bottom: 2px; }
+.agent-note .ic { width: 1em; height: 1em; vertical-align: -.15em; margin-left: 4px; }
+
+/* The mocks share one frame: off-white panel, one idea each. Connector logos are the files in
+   assets/icons shown bare; a bordered tile around them read as a redrawn copy of the app. */
+.agent-mock { flex: none; padding: 26px 24px; background: var(--off); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 14px; font-size: 13px; color: var(--navy); }
+.agent-mock .ic { width: 14px; height: 14px; flex: none; }
+.agent-mock img { display: block; flex: none; }
+.am-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; }
+
+/* Test 1: three sources, one channel, one answer */
+.am-sources { display: flex; justify-content: center; gap: 32px; }
+.am-flow { display: block; margin: -8px auto; overflow: visible; }
+.am-flow path { fill: none; stroke-width: 2; stroke-linecap: round; }
+.am-flow-bed path { stroke: var(--navy); opacity: .18; }
+.am-flow-water path { stroke: var(--orange); stroke-dasharray: 4 6; }
+.am-result { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px; background: var(--orange); color: #fff; border-radius: var(--r); line-height: 1.5; font-weight: 500; }
+
+/* Test 2: the change waits on a person */
+.am-change { display: flex; align-items: center; gap: 12px; }
+.am-change b { display: block; font-weight: 500; }
+.am-change s { display: block; font-size: 11px; color: var(--navy-3); text-decoration: none; }
+.am-actions { display: flex; gap: 8px; }
+.am-btn { flex: 1; text-align: center; font-size: 12px; font-weight: 600; border-radius: var(--pill); padding: 8px 12px; border: 1px solid var(--border); background: var(--white); color: var(--navy); }
+.am-btn-apply { position: relative; background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 6px 16px rgba(255,92,0,.25); }
+.am-btn-apply::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; border: 2px solid var(--orange); opacity: 0; pointer-events: none; }
+.am-apply-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 5px; opacity: 0; }
+.am-cursor { position: absolute; left: 56%; top: 46%; width: 22px; height: 22px; opacity: 0; pointer-events: none;
+  fill: #fff; stroke: var(--navy); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 3px rgba(13,15,26,.3)); }
+
+/* Test 3: the Activity page, one row per transition, each naming who did it. Badge colours are
+   the app's own: agent green, you grey. */
+.am-log { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); }
+.am-log-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; line-height: 1.4; }
+.am-log-row:last-child { border-bottom: 0; }
+.am-log-row span { flex: 1; min-width: 0; color: var(--navy-3); }
+.am-log-row span b { font-weight: 500; color: var(--navy); }
+.am-who { flex: none; font-size: 11px; font-weight: 600; border-radius: var(--pill); padding: 2px 8px; background: #eef0f3; color: var(--navy-3); }
+.am-who.is-agent { background: #e6f4ea; color: #1a7f37; }
+.am-log-row time { flex: none; min-width: 3.2em; text-align: right; font-size: 11px; color: var(--navy-3); }
+
+/* Choreography: each mock plays its proof once, when its card reveals, and the three read as one
+   story on a wide screen: the sources join into an answer, a person presses Apply, and the log
+   records it. Every step is transform or opacity, under .4s, ease-out. The one loop is the water
+   in the channels, the same flow as the aqueduct under the hero. Keyframes fill backwards, so
+   nothing is hidden before .in arrives and a visitor without scripts, or with reduced motion,
+   gets the finished frame. */
+@keyframes am-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes am-slide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes am-drop { from { opacity: 0; transform: translateY(-10px) scale(.85); } to { opacity: 1; transform: none; } }
+@keyframes am-pop { 0% { opacity: 0; transform: scale(.5); } 60% { opacity: 1; transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes am-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes am-water { to { stroke-dashoffset: -20; } }
+@keyframes am-show { from { opacity: 0; } to { opacity: 1; } }
+@keyframes am-hide { to { opacity: 0; } }
+@keyframes am-dim { to { opacity: .45; } }
+@keyframes am-ring { from { opacity: .6; transform: scale(1); } to { opacity: 0; transform: scale(1.08, 1.5); } }
+@keyframes am-cursor { from { opacity: 0; transform: translate(40px, 34px); } 30% { opacity: 1; } to { opacity: 1; transform: none; } }
+@keyframes am-press { 50% { transform: scale(.94); } }
+@keyframes am-fresh { from { background: rgba(255,92,0,.12); } to { background: transparent; } }
+@media (prefers-reduced-motion: no-preference) {
+  .agent-tile.in .am-sources img { animation: am-drop .35s ease-out both; }
+  .agent-tile.in .am-sources img:nth-child(1) { animation-delay: .25s; }
+  .agent-tile.in .am-sources img:nth-child(2) { animation-delay: .37s; }
+  .agent-tile.in .am-sources img:nth-child(3) { animation-delay: .49s; }
+  .am-flow-bed path { stroke-dasharray: 1; }
+  .agent-tile.in .am-flow-bed path { animation: am-draw .5s ease-out .65s both; }
+  .agent-tile.in .am-flow-water { animation: am-show .3s ease-out 1.1s both; }
+  .agent-tile.in .am-flow-water path { animation: am-water 1.2s linear 1.1s infinite; }
+  .agent-tile.in .am-result { animation: am-in .35s ease-out 1.2s both; }
+  .agent-tile.in .am-result .ic { animation: am-pop .4s ease-out 1.45s both; }
+
+  .agent-tile.in .am-change { animation: am-in .35s ease-out .3s both; }
+  .agent-tile.in .am-actions { animation: am-in .35s ease-out .45s both; }
+  .agent-tile.in .am-btn-apply::after { animation: am-ring 1.1s ease-out .9s 2; }
+  .agent-tile.in .am-cursor { animation: am-cursor .6s ease-out 2.4s both, am-hide .3s ease-out 4s forwards; }
+  .agent-tile.in .am-btn-apply { animation: am-press .25s ease-out 3.15s; }
+  .agent-tile.in .am-apply-idle { animation: am-hide .2s ease-out 3.25s forwards; }
+  .agent-tile.in .am-apply-done { animation: am-show .25s ease-out 3.25s both; }
+  .agent-tile.in .am-btn-reject { animation: am-dim .3s ease-out 3.25s forwards; }
+
+  .agent-tile.in .am-log-row:nth-child(3) { animation: am-in .35s ease-out .35s both; }
+  .agent-tile.in .am-log-row:nth-child(2) { animation: am-in .35s ease-out .55s both; }
+  .agent-tile.in .am-log-row:nth-child(1) { animation: am-slide .35s ease-out 3.55s both, am-fresh 1.2s ease-out 3.55s both; }
+  /* One column: each card reveals on its own scroll, so the log no longer waits on a click the
+     reader has already scrolled past. */
+  @media (max-width: 1100px) {
+    .agent-tile.in .am-log-row:nth-child(1) { animation-delay: .9s, .9s; }
+  }
+}
 
 /* Three agents, three jobs: the SEO audit has no shot yet, so its card is a CSS mock */
 .job-mock { height: 100%; padding: 22px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
@@ -114,14 +240,26 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 
 /* Responsive */
 @media (max-width: 1100px) {
-  .what-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Three tiles narrower than 300px squeeze the mocks; one wide tile per row, mock beside copy */
+  .agent-grid { grid-template-columns: 1fr; }
+  .agent-tile { display: flex; flex-direction: row; }
+  .agent-mock { width: 44%; border-bottom: 0; border-right: 1px solid var(--border); }
+  .agent-body { flex: 1; justify-content: center; }
 }
 @media (max-width: 860px) {
   /* The rule above wins over duct.css's 24px phone padding, so restore it here: at 52px a
      360px phone gives the headline 256px, one word per line, and the pill clips. */
   .hero { padding: 80px 24px 64px; }
-  .what-grid { grid-template-columns: 1fr; }
-  .what, .tools-teaser { padding-left: 24px; padding-right: 24px; }
+  .agent, .tools-teaser { padding-left: 24px; padding-right: 24px; }
+  .what { padding-top: 64px; padding-bottom: 64px; }
+  .what-inner { padding: 0 24px; }
+  .what-strip { --edge: 24px; gap: 14px; margin-top: 32px; }
+  .what-tile { flex-basis: calc(100% - 28px); }
+  .what-shot { aspect-ratio: 1 / 1; }
+  /* A phone swipes; two round buttons would only crowd the heading. */
+  .what-nav { display: none; }
+  .agent-tile { flex-direction: column; }
+  .agent-mock { width: auto; border-right: 0; border-bottom: 1px solid var(--border); }
   .film { margin-top: 40px; }
   .film-label { display: none; }
   .film-play { width: 64px; height: 64px; }
@@ -132,16 +270,16 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 }
 </style>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","inLanguage":"en","name":"Duct","url":"https://getduct.ai","description":"Open-source AI agent for cross-tool product and growth analytics.","publisher":{"@type":"Organization","name":"Duct","url":"https://getduct.ai","logo":"https://getduct.ai/assets/icon.svg","sameAs":["https://github.com/5hirish/duct","https://youtube.com/@5hirish","https://x.com/5hirish"],"founder":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"contactPoint":{"@type":"ContactPoint","email":"hello@getduct.ai"}}}
+{"@context":"https://schema.org","@type":"WebSite","inLanguage":"en","name":"Duct","alternateName":"Duct AI","url":"https://getduct.ai","description":"Open-source AI marketing agent for product and growth teams.","publisher":{"@type":"Organization","name":"Duct","alternateName":["Duct AI","getduct"],"url":"https://getduct.ai","logo":"https://getduct.ai/assets/icon.svg","sameAs":["https://github.com/5hirish/duct","https://youtube.com/@5hirish","https://x.com/5hirish"],"founder":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"contactPoint":{"@type":"ContactPoint","email":"hello@getduct.ai"}}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What is Duct?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The core is MIT licensed and stays that way. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A hosted team plan comes later; the core stays open."}},{"@type":"Question","name":"Does it change my accounts without asking?","acceptedAnswer":{"@type":"Answer","text":"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. The doctrine page links the file that enforces it."}},{"@type":"Question","name":"Which tools does it connect to?","acceptedAnswer":{"@type":"Answer","text":"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. The four Google tools connect with OAuth; the rest take a read-only key you paste once. Nothing is exported by hand."}},{"@type":"Question","name":"Where do my keys and data live?","acceptedAnswer":{"@type":"Answer","text":"Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine. Why it's called Duct is on the about page."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What is Duct?","acceptedAnswer":{"@type":"Answer","text":"Duct AI is an open-source AI marketing agent. It connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The core is MIT licensed and stays that way. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A hosted team plan comes later; the core stays open."}},{"@type":"Question","name":"Does it change my accounts without asking?","acceptedAnswer":{"@type":"Answer","text":"No. Reporting works with read-only access. A change is proposed with what it touches, and applied only when you press Apply. There is no approve tool in the list the model can call, so it cannot be talked into applying anything. Destructive changes are flagged; anything over a guardrail is blocked until you look. The doctrine page links the file that enforces it."}},{"@type":"Question","name":"Which tools does it connect to?","acceptedAnswer":{"@type":"Answer","text":"Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat, with HubSpot next. The four Google tools connect with OAuth; the rest take a key you paste once. Nothing is exported by hand."}},{"@type":"Question","name":"Where do my keys and data live?","acceptedAnswer":{"@type":"Answer","text":"Model keys stay in your operating system's keychain and travel with a request only while a job runs. Connector authorisations are stored encrypted by the hosted API. The desktop app is a thin shell over that API; a self-host build runs everything on your own machine. Why it's called Duct is on the about page."}}]}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","inLanguage":"en","name":"Duct","alternateName":"Duct — Cross-Tool Intelligence","applicationCategory":"BusinessApplication","applicationSubCategory":"Analytics","operatingSystem":"macOS, Windows, Linux, Web","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"codeRepository":"https://github.com/5hirish/duct","author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"MIT licensed. Self-host or run locally at no cost."},"description":"Open-source AI agent that reads across Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat, and answers questions a single dashboard cannot."}
+{"@context":"https://schema.org","@type":"SoftwareApplication","inLanguage":"en","name":"Duct","alternateName":"Duct AI","applicationCategory":"BusinessApplication","applicationSubCategory":"Analytics","operatingSystem":"macOS, Windows, Linux, Web","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"codeRepository":"https://github.com/5hirish/duct","author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"MIT licensed. Self-host or run locally at no cost."},"description":"Duct AI is an open-source AI marketing agent that reads across Google Ads, GA4, Search Console, Tag Manager, Meta Ads, Apple Search Ads, OpenAI Ads, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat, and answers questions a single dashboard cannot."}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareSourceCode","inLanguage":"en","name":"Duct","codeRepository":"https://github.com/5hirish/duct","url":"https://getduct.ai","license":"https://opensource.org/licenses/MIT","programmingLanguage":["Python","JavaScript","Rust"],"runtimePlatform":["Python 3.12","Node 20","Tauri v2"],"author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"description":"MIT-licensed AI agent for cross-tool product and growth analytics. Runs as a Tauri desktop app with bring-your-own model keys, or self-hosted as a FastAPI backend."}
+{"@context":"https://schema.org","@type":"SoftwareSourceCode","inLanguage":"en","name":"Duct","codeRepository":"https://github.com/5hirish/duct","url":"https://getduct.ai","license":"https://opensource.org/licenses/MIT","programmingLanguage":["Python","JavaScript","Rust"],"runtimePlatform":["Python 3.12","Node 20","Tauri v2"],"author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com","sameAs":["https://github.com/5hirish","https://x.com/5hirish","https://youtube.com/@5hirish"]},"description":"MIT-licensed AI marketing agent for cross-tool product and growth analytics. Runs as a Tauri desktop app with bring-your-own model keys, or self-hosted as a FastAPI backend."}
 </script>
 </head>
 <body>
@@ -167,7 +305,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <section class="hero" id="hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free on the ChatGPT plan you already pay for</div>
 <h1>See the whole picture.<br/><em>Fix it in the same moment.</em></h1>
-<p class="hero-sub">Duct reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it.</p>
+<p class="hero-sub">Duct is the open-source AI marketing agent that reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it.</p>
 <div class="hero-actions">
 <a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download for macOS ↓</a>
 <a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Star on GitHub</a>
@@ -195,32 +333,104 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <!-- WHAT IT DOES -->
 <section class="what" id="what">
 <div class="what-inner">
-<div class="reveal">
+<div class="what-head reveal">
+<div>
 <p class="tag">What it does</p>
 <h2>Reads across. Acts with approval.<br/><em>Remembers.</em></h2>
 </div>
-<div class="what-grid reveal" style="transition-delay:.1s">
-<div class="what-tile">
-<div class="what-shot"><img src="assets/media/connectors.webp" srcset="assets/media/connectors-768.webp 768w, assets/media/connectors-1536.webp 1536w, assets/media/connectors.webp 2208w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2208" height="1134" loading="lazy" alt="The Connections page with twelve tools, five of them connected"//></div>
-<h3>Reads across tools</h3>
-<p>Thirteen connectors. Ads, analytics, revenue and session replays, read together for one question.</p>
+<div class="what-nav" hidden>
+<button class="what-arrow" type="button" data-what-prev aria-controls="what-strip" aria-label="Previous screen"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></button>
+<button class="what-arrow" type="button" data-what-next aria-controls="what-strip" aria-label="Next screen"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></button>
 </div>
-<div class="what-tile">
-<div class="what-shot"><img src="assets/media/review-card.webp" srcset="assets/media/review-card-768.webp 768w, assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="A change-set card: pause one campaign, one change blocked by a guardrail, Reject and Apply buttons"//></div>
+</div>
+</div>
+<div class="what-strip reveal" id="what-strip" role="region" aria-label="Four product screens" tabindex="0" style="transition-delay:.1s">
+<article class="what-tile">
+<div class="what-shot is-wide"><img src="assets/media/connectors.webp" srcset="assets/media/connectors-768.webp 768w, assets/media/connectors-1536.webp 1536w, assets/media/connectors.webp 2208w" sizes="(max-width: 860px) 150vw, 1020px" decoding="async" width="2208" height="1134" loading="lazy" alt="The Connections page with twelve tools, five of them connected"//></div>
+<div class="what-body">
+<h3>Reads across tools</h3>
+<p>Twelve connectors. Ads, analytics, revenue and session replays, read together for one question. <a href="/integrations/">What each one reads</a></p>
+</div>
+</article>
+<article class="what-tile">
+<div class="what-shot"><img src="assets/media/review-card.webp" srcset="assets/media/review-card-768.webp 768w, assets/media/review-card.webp 1088w" sizes="(max-width: 860px) 84vw, 620px" decoding="async" width="1088" height="936" loading="lazy" alt="A change-set card: pause one campaign, one change blocked by a guardrail, Reject and Apply buttons"//></div>
+<div class="what-body">
 <h3>Acts, with your approval</h3>
 <p>It proposes the change, shows what it touches, and applies it only when you press Apply.</p>
 </div>
-<div class="what-tile">
-<div class="what-shot"><img src="assets/media/memory-timeline.webp" srcset="assets/media/memory-timeline-768.webp 768w, assets/media/memory-timeline-1536.webp 1536w, assets/media/memory-timeline.webp 2008w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2008" height="1990" loading="lazy" alt="The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"//></div>
+</article>
+<article class="what-tile">
+<div class="what-shot"><img src="assets/media/memory-timeline.webp" srcset="assets/media/memory-timeline-768.webp 768w, assets/media/memory-timeline-1536.webp 1536w, assets/media/memory-timeline.webp 2008w" sizes="(max-width: 860px) 84vw, 620px" decoding="async" width="2008" height="1990" loading="lazy" alt="The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"//></div>
+<div class="what-body">
 <h3>Remembers</h3>
 <p>Targets, decisions and what it learned, on a timeline you can correct.</p>
 </div>
-<div class="what-tile">
-<div class="what-shot"><img src="assets/media/chatgpt-card.webp" srcset="assets/media/chatgpt-card-768.webp 768w, assets/media/chatgpt-card.webp 1216w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1216" height="1100" loading="lazy" alt="The OpenAI provider card in the desktop app, signed in with a ChatGPT Plus plan"//></div>
+</article>
+<article class="what-tile">
+<div class="what-shot"><img src="assets/media/chatgpt-card.webp" srcset="assets/media/chatgpt-card-768.webp 768w, assets/media/chatgpt-card.webp 1216w" sizes="(max-width: 860px) 84vw, 620px" decoding="async" width="1216" height="1100" loading="lazy" alt="The OpenAI provider card in the desktop app, signed in with a ChatGPT Plus plan"//></div>
+<div class="what-body">
 <h3>Your keys, or your ChatGPT plan</h3>
 <p>Model keys stay in your keychain. Or sign in with ChatGPT and skip the key entirely.</p>
 </div>
+</article>
 </div>
+</section>
+
+<!-- WHAT AN AI MARKETING AGENT IS. The category term buyers search for; the site never said it
+     before 2026-09-28. Three tests in the site's voice, each with a CSS mock that plays its proof once on reveal, and the
+     compare page for the ones weighing alternatives. The log rows follow the summaries that
+     backend/service/execution/service.py writes and the app's Activity page shows. -->
+<section class="agent" id="ai-marketing-agent">
+<div class="agent-inner">
+<div class="reveal">
+<p class="tag">AI marketing agent</p>
+<h2>Every AI marketing agent can read your ads.<br/><em>Few can read them next to revenue.</em></h2>
+<p class="sub">An AI marketing agent should read every tool your growth runs on, name the cause with its sources, and change the thing, with a person in between. Three tests, and how Duct meets them.</p>
+</div>
+<div class="agent-grid">
+<article class="agent-tile reveal" style="transition-delay:.05s">
+<div class="agent-mock" aria-hidden="true">
+<div class="am-sources">
+<img src="assets/icons/google-ads.svg" width="30" height="30" alt=""/>
+<img src="assets/icons/googleanalytics.svg" width="30" height="30" alt=""/>
+<img src="assets/icons/stripe.svg" width="30" height="30" alt=""/>
+</div>
+<svg class="am-flow" viewBox="0 0 154 30" width="154" height="30"><g class="am-flow-bed"><path pathLength="1" d="M15 0C15 16 77 14 77 30"/><path pathLength="1" d="M77 0V30"/><path pathLength="1" d="M139 0C139 16 77 14 77 30"/></g><g class="am-flow-water"><path d="M15 0C15 16 77 14 77 30"/><path d="M77 0V30"/><path d="M139 0C139 16 77 14 77 30"/></g></svg>
+<div class="am-result"><svg class="ic"><use href="/assets/icons.svg#sparkles"/></svg>Signups fell when the brand campaign was paused. Not the landing page.</div>
+</div>
+<div class="agent-body">
+<span class="agent-num">Test one</span>
+<h3>It reads across, not one at a time</h3>
+<p>Ads, analytics and revenue in one question. "Why did signups drop last week" is a join across Google Ads, GA4 and Stripe, not a report from one of them.</p>
+</div>
+</article>
+<article class="agent-tile reveal" style="transition-delay:.1s">
+<div class="agent-mock" aria-hidden="true">
+<div class="am-card am-change"><img src="assets/icons/google-ads.svg" width="22" height="22" alt=""/><span><b>Resume Brand search</b><s>Touches 1 campaign. Rollback ready.</s></span></div>
+<div class="am-actions"><span class="am-btn am-btn-reject">Reject</span><span class="am-btn am-btn-apply"><span class="am-apply-idle">Apply</span><span class="am-apply-done"><svg class="ic"><use href="/assets/icons.svg#check"/></svg>Applied</span><svg class="am-cursor"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<div class="agent-body">
+<span class="agent-num">Test two</span>
+<h3>It proposes, then waits</h3>
+<p>The change arrives as a preview with what it touches. Nothing is applied until you press Apply, and there is no approve tool in the model's list, so it cannot talk itself into one.</p>
+</div>
+</article>
+<article class="agent-tile reveal" style="transition-delay:.15s">
+<div class="agent-mock" aria-hidden="true">
+<div class="am-log">
+<div class="am-log-row"><img src="assets/icons/google-ads.svg" width="16" height="16" alt=""/><span><b>Applied</b> Brand search</span><b class="am-who">you</b><time>9:14</time></div>
+<div class="am-log-row"><img src="assets/icons/google-ads.svg" width="16" height="16" alt=""/><span><b>Proposed</b> Brand search</span><b class="am-who is-agent">agent</b><time>9:02</time></div>
+<div class="am-log-row"><img src="assets/icons/meta.svg" width="16" height="16" alt=""/><span><b>Rolled back</b> Meta bid cap</span><b class="am-who">you</b><time>Mon</time></div>
+</div>
+</div>
+<div class="agent-body">
+<span class="agent-num">Test three</span>
+<h3>It keeps a record you can read</h3>
+<p>Every change lands in the activity log: who proposed it, who approved it, what was applied or rolled back. An agent that acts on your accounts owes you the receipt.</p>
+</div>
+</article>
+</div>
+<p class="agent-note">Weighing the alternatives? <a href="/compare">Compare Duct with Claude Cowork and n8n <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
 </div>
 </section>
 
@@ -311,7 +521,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 <div class="faq-list reveal" style="transition-delay:.08s">
 <details class="faq-item">
 <summary class="faq-q">What is Duct?</summary>
-<p class="faq-a">An open-source AI agent that connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux.</p>
+<p class="faq-a">Duct AI is an open-source AI marketing agent. It connects your product, marketing and revenue tools, answers questions across them, proposes changes and applies them when you approve. It runs as a desktop app on macOS, Windows and Linux.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Is it free?</summary>
@@ -323,7 +533,7 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
 </details>
 <details class="faq-item">
 <summary class="faq-q">Which tools does it connect to?</summary>
-<p class="faq-a">Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, HubSpot, Stripe and RevenueCat. The four Google tools connect with OAuth; the rest take a read-only key you paste once. Nothing is exported by hand.</p>
+<p class="faq-a">Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, Stripe and RevenueCat, with HubSpot next. The four Google tools connect with OAuth; the rest take a key you paste once. Nothing is exported by hand.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Where do my keys and data live?</summary>
@@ -386,6 +596,34 @@ a.chip:hover { color: var(--navy); border-color: var(--navy); }
     btn.textContent = film.muted ? 'Sound off' : 'Sound on';
     if (!film.muted) { var p = film.play(); if (p && p.catch) p.catch(function () {}); }
   });
+})();
+// The What strip scrolls natively: trackpad, touch, and the arrow keys once it has focus. The
+// buttons are for a mouse with no sideways wheel; they stay hidden without scripts, move one
+// card at a time, and go inert at either end.
+(function () {
+  var strip = document.getElementById('what-strip');
+  var nav = document.querySelector('.what-nav');
+  if (!strip || !nav) return;
+  var prev = nav.querySelector('[data-what-prev]'), next = nav.querySelector('[data-what-next]');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  nav.hidden = false;
+  var step = function () {
+    var card = strip.querySelector('.what-tile');
+    var gap = parseFloat(getComputedStyle(strip).columnGap) || 0;
+    return card ? card.getBoundingClientRect().width + gap : strip.clientWidth;
+  };
+  var sync = function () {
+    prev.disabled = strip.scrollLeft <= 2;
+    // Done once the last card is fully in view, not at the last pixel of the trailing gutter.
+    var last = strip.lastElementChild;
+    next.disabled = last.getBoundingClientRect().right <= strip.getBoundingClientRect().right + 1;
+  };
+  var go = function (dir) { strip.scrollBy({ left: dir * step(), behavior: reduce ? 'auto' : 'smooth' }); };
+  prev.addEventListener('click', function () { go(-1); });
+  next.addEventListener('click', function () { go(1); });
+  strip.addEventListener('scroll', sync, { passive: true });
+  window.addEventListener('resize', sync);
+  sync();
 })();
 </script>
 <script src="assets/duct.js" defer></script>

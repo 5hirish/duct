@@ -396,27 +396,49 @@ footer:not(.footer-expanded) { padding: 44px 52px; border-top: 1px solid var(--b
 .footer-col a:hover { color: var(--navy); }
 .footer-bottom-row { max-width: 1160px; margin: 28px auto 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .footer-bottom-row span { font-size: 12px; color: var(--navy-3); }
-.footer-lang { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; }
-.footer-lang a { color: var(--navy-3); text-decoration: none; }
-.footer-lang a:hover, .footer-lang a[aria-current="true"] { color: var(--navy); }
+.footer-lang, .footer-legal { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; }
+.footer-lang a, .footer-legal a { color: var(--navy-3); text-decoration: none; }
+.footer-lang a:hover, .footer-legal a:hover, .footer-lang a[aria-current="true"] { color: var(--navy); }
 
 /* ── LANGUAGE SWITCH ──
-   A native <select> in the bar: five languages do not earn a dropdown of our
-   own, and a native control is the one every screen reader already knows. The
-   English name of each language is never translated (see build_site_i18n.py),
-   so someone who landed in the wrong language can still find theirs. */
-.nav-lang { display: flex; align-items: center; }
-.nav-lang-select {
-  font: inherit; font-size: 13px; color: var(--navy-3); cursor: pointer;
-  background: transparent; border: 1px solid var(--border); border-radius: var(--pill);
-  padding: 5px 26px 5px 10px; appearance: none; -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 9px center;
-  transition: border-color .2s, color .2s;
+   A globe and a two-letter code in the bar, opening the same card as the Free
+   Tools menu. It replaced a native <select> on 2026-09-29: the bordered pill
+   read as the loudest thing in the bar after Download, and its list was the
+   browser's own, in the browser's font. The menu is a disclosure of plain
+   links, not an ARIA menu, so it needs no arrow-key model, and every link is a
+   real address that works with scripts off. Hover opens it on a mouse; a tap,
+   Enter or Space opens it anywhere. A language's own name is never translated
+   (see build_site_i18n.py), so someone who landed in the wrong language can
+   still find theirs. */
+.nav-lang { position: relative; display: flex; align-items: center; }
+.nav-lang-btn {
+  display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: 12px; font-weight: 600;
+  letter-spacing: .04em; color: var(--navy-3); background: transparent; border: 0; border-radius: var(--pill);
+  padding: 6px 8px; cursor: pointer; transition: color .2s, background .2s;
 }
-.nav-lang-select:hover, .nav-lang-select:focus-visible { color: var(--navy); border-color: var(--navy); outline: none; }
-.nav-mobile-lang { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-.nav-mobile-lang .nav-lang-select { width: 100%; }
+.nav-lang-btn .ic { width: 15px; height: 15px; }
+.nav-lang-btn .nav-lang-caret { width: 12px; height: 12px; opacity: .6; transition: transform .2s ease-out; }
+.nav-lang-btn:hover, .nav-lang.is-open .nav-lang-btn { color: var(--navy); background: var(--off); }
+.nav-lang-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.nav-lang.is-open .nav-lang-caret { transform: rotate(180deg); }
+.nav-lang-menu { display: none; position: absolute; top: 100%; right: 0; padding-top: 10px; min-width: 210px; z-index: 20; }
+.nav-lang.is-open .nav-lang-menu { display: block; }
+@media (hover: hover) { .nav-lang:hover .nav-lang-menu { display: block; } }
+.nav-lang-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 12px;
+  border-radius: var(--r); text-decoration: none; font-size: 13px; color: var(--navy-2); transition: background .15s, color .15s;
+}
+/* The code is an attribute, drawn here, so the link's text stays the language's own name: one
+   untranslated string, not a name and a code the translator sees as a phrase. */
+.nav-lang-item::after { content: attr(data-code); font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--navy-3); }
+.nav-lang-item:hover, .nav-lang-item[aria-current="true"] { background: var(--off); color: var(--navy); }
+.nav-lang-item[aria-current="true"]::after { color: var(--navy); }
+.nav-lang-item:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+/* The phone drawer lists the languages as a row of pills: nothing to open */
+.nav-mobile-lang { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 6px; }
+.nav-mobile-lang .nav-lang-item { border: 1px solid var(--border); border-radius: var(--pill); padding: 6px 12px; }
+.nav-mobile-lang .nav-lang-item[aria-current="true"] { border-color: var(--navy); }
+.nav-mobile-lang .nav-lang-item::after { content: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
 /* ── ANIMATIONS ── */
@@ -731,6 +753,231 @@ a.cl-version:hover { background: rgba(255, 92, 0, .14); }
   .cl-rail { position: static; display: flex; align-items: center; gap: 12px; }
   .cl-date { margin-bottom: 0; }
   .cl-permalink { display: none; }
+}
+
+/* ── INTEGRATIONS ── */
+/* Shared by /integrations/ and every connector page. All of them are generated
+   from one template (scripts/build_integrations.py), so the layout lives here
+   once rather than as a copy inline in each page, like the changelog's. */
+
+/* The hub: a count read from the code, then one card per connector */
+.ig-hub-hero { padding-bottom: 32px; }
+.ig-hub-hero h1 { font-size: clamp(40px, 5.6vw, 68px); }
+.ig-hub-hero .hero-sub { max-width: 560px; }
+.ig-logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px 24px; max-width: 720px; margin: 0 auto 36px; animation: fadeUp .5s .24s ease both; }
+.ig-logos img { display: block; width: 30px; height: 30px; }
+.ig-stats { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; max-width: 880px; margin: 0 auto; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); animation: fadeUp .5s .32s ease both; }
+.ig-stats li { padding: 20px 16px; text-align: center; border-right: 1px solid var(--border); }
+.ig-stats li:last-child { border-right: 0; }
+.ig-stats b { display: block; font-family: var(--serif); font-size: 40px; font-weight: 400; line-height: 1; color: var(--navy); font-variant-numeric: lining-nums; }
+.ig-stats li:last-child b { color: var(--orange); }
+.ig-stats span { display: block; margin-top: 8px; font-size: 13px; line-height: 1.4; color: var(--navy-3); }
+
+.ig-hub { max-width: 1160px; margin: 0 auto; padding: 16px 52px 96px; }
+.ig-group { margin-top: 56px; }
+.ig-group-h { font-size: clamp(24px, 2.6vw, 30px); margin-bottom: 18px; }
+.ig-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ig-card { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 22px 22px 20px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); color: var(--navy); text-decoration: none; scroll-margin-top: 90px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.ig-card img { display: block; width: 36px; height: 36px; margin-bottom: 6px; }
+.ig-card-body { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.ig-card-name { font-size: 17px; font-weight: 600; }
+.ig-card-line { flex: 1; font-size: 14px; line-height: 1.6; color: var(--navy-3); }
+.ig-card-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ig-chip { font-size: 11.5px; font-weight: 500; line-height: 1.5; padding: 2px 9px; border-radius: var(--pill); border: 1px solid var(--border); background: var(--off); color: var(--navy-2); }
+.ig-chip.is-write { border-color: #ffd6bf; background: #fff1e8; color: #9a3a00; }
+.ig-chip.is-soon { border-color: #f3dfb0; background: #fff7e6; color: #7a5200; }
+.ig-card-go { position: absolute; top: 24px; right: 22px; font-size: 18px; color: var(--navy-3); transition: transform .2s ease, color .2s ease; }
+.ig-card.is-link:hover { transform: translateY(-3px); border-color: var(--navy); box-shadow: 0 16px 40px rgba(13,15,26,.08); }
+.ig-card.is-link:hover .ig-card-go { transform: translateX(3px); color: var(--navy); }
+.ig-card.is-soon { background: var(--off); }
+.ig-card.is-soon img { filter: grayscale(1); opacity: .55; }
+.ig-card:target { outline: 2px solid var(--orange); outline-offset: 3px; }
+/* The featured card is the hub's one heavier element: full width, navy, the
+   connector's reason to exist in a serif line. Its logo sits on a white tile
+   because a black brand mark disappears on navy. */
+.ig-card.is-featured { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 24px; padding: 28px 64px 28px 28px; border-color: var(--navy); background: var(--navy); color: #fff; }
+.ig-card.is-featured img { flex: none; width: 72px; height: 72px; margin: 0; padding: 14px; border-radius: 18px; background: #fff; }
+.ig-card-feature { max-width: 640px; font-family: var(--serif); font-size: 21px; line-height: 1.4; color: rgba(255,255,255,.86); }
+.ig-card.is-featured .ig-chip { border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.08); color: #fff; }
+.ig-card.is-featured .ig-card-go { top: 50%; right: 28px; margin-top: -11px; color: #fff; }
+.ig-card.is-featured.is-link:hover { border-color: var(--orange); }
+.ig-card.is-featured.is-link:hover .ig-card-go { color: var(--orange); }
+.ig-ask { margin-top: 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 32px 36px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--off); }
+.ig-ask h2 { font-size: clamp(26px, 3vw, 34px); margin-bottom: 8px; }
+.ig-ask p { max-width: 520px; font-size: 15px; line-height: 1.65; color: var(--navy-3); }
+
+/* A connector page: the claim on the left, the join it makes on the right */
+.ig-hero { max-width: 1264px; margin: 0 auto; padding: 116px 52px 64px; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 56px; align-items: center; }
+.ig-hero h1 { font-size: clamp(38px, 4.4vw, 56px); margin-bottom: 20px; }
+.ig-hero .hero-sub { max-width: 520px; margin: 0 0 28px; }
+.ig-crumbs { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; font-size: 13px; color: var(--navy-3); animation: fadeUp .5s ease both; }
+.ig-crumbs a { color: var(--navy-3); text-decoration: none; }
+.ig-crumbs a:hover { color: var(--navy); }
+.ig-crumbs [aria-current] { color: var(--navy); font-weight: 500; }
+.ig-lockup { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; animation: fadeUp .5s .04s ease both; }
+.ig-lockup img { display: block; width: 40px; height: 40px; }
+.ig-plus { font-size: 20px; font-weight: 300; color: var(--navy-3); }
+.ig-lockup .logo { font-size: 26px; }
+.ig-cta { display: flex; flex-wrap: wrap; gap: 10px; animation: fadeUp .5s .24s ease both; }
+.ig-facts { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; max-width: 540px; margin-top: 30px; animation: fadeUp .5s .32s ease both; }
+.ig-facts li { display: flex; align-items: center; gap: 9px; font-size: 13.5px; line-height: 1.4; color: var(--navy-2); }
+.ig-facts .ic { width: 16px; height: 16px; color: var(--orange); }
+.ig-alias { margin-top: 14px; font-size: 12.5px; color: var(--navy-3); animation: fadeUp .5s .32s ease both; }
+
+.ig-mock { margin: 0; }
+.ig-mock-panel { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 36px 30px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--off); box-shadow: 0 24px 64px rgba(13,15,26,.08); font-size: 13px; color: var(--navy); }
+.ig-mock-panel .ic { width: 15px; height: 15px; }
+.ig-sources { display: flex; justify-content: center; gap: 36px; }
+.ig-sources img { display: block; width: 34px; height: 34px; }
+.ig-flow { display: block; margin: -6px auto; overflow: visible; }
+.ig-flow path { fill: none; stroke-width: 2; stroke-linecap: round; }
+.ig-flow-bed path { stroke: var(--navy); opacity: .18; }
+.ig-flow-water path { stroke: var(--orange); stroke-dasharray: 4 6; }
+/* Navy, not the homepage mock's orange: white text on the brand orange is 3:1,
+   under the 4.5:1 body text needs, and this card carries a sentence. */
+.ig-answer { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: var(--r); background: var(--navy); color: #fff; font-size: 14.5px; font-weight: 500; line-height: 1.55; }
+.ig-answer .ic { margin-top: 3px; color: var(--orange); }
+.ig-change { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r); background: var(--white); }
+.ig-change img { display: block; flex: none; }
+.ig-change b { display: block; font-weight: 500; }
+.ig-change s { display: block; font-size: 11.5px; color: var(--navy-3); text-decoration: none; }
+.ig-actions { display: flex; gap: 8px; }
+.ig-btn { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--pill); background: var(--white); color: var(--navy); font-size: 12px; font-weight: 600; text-align: center; }
+.ig-btn-apply { position: relative; border-color: var(--navy); background: var(--navy); color: #fff; }
+.ig-apply-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 5px; opacity: 0; }
+.ig-cursor { position: absolute; left: 56%; top: 46%; width: 22px; height: 22px; opacity: 0; pointer-events: none; fill: #fff; stroke: var(--navy); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 3px rgba(13,15,26,.3)); }
+.ig-mock figcaption { margin-top: 12px; font-size: 12.5px; color: var(--navy-3); text-align: center; }
+
+.ig-sec { padding: 88px 52px; }
+.ig-inner { max-width: 1160px; margin: 0 auto; }
+.ig-sec h2 { max-width: 760px; margin-bottom: 32px; font-size: clamp(30px, 3.4vw, 44px); }
+
+/* Questions: the first one is the page's argument, so it runs the full width */
+.ig-qs { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ig-q { display: flex; flex-direction: column; justify-content: space-between; gap: 22px; padding: 26px 26px 22px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); }
+.ig-q p { font-family: var(--serif); font-size: 20px; line-height: 1.35; color: var(--navy); }
+.ig-q:first-child { grid-column: 1 / -1; background: var(--off); }
+.ig-q:first-child p { max-width: 760px; font-size: clamp(22px, 2.4vw, 28px); }
+.ig-q-joins { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; color: var(--navy-3); }
+.ig-q-joins img { display: block; width: 18px; height: 18px; }
+.ig-q-joins span { margin-left: 4px; }
+
+.ig-access { background: var(--off); }
+.ig-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.ig-col { padding: 28px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); }
+.ig-col h3 { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 17px; font-weight: 600; color: var(--navy); }
+.ig-col h3 .ic { color: var(--orange); }
+.ig-reads, .ig-ops { list-style: none; }
+.ig-reads li { padding: 14px 0; border-top: 1px solid var(--border); }
+.ig-reads b { display: block; margin-bottom: 8px; font-size: 14.5px; font-weight: 600; }
+.ig-fields { display: flex; flex-wrap: wrap; gap: 6px; }
+.ig-fields span { padding: 2px 9px; border: 1px solid var(--border); border-radius: var(--pill); background: var(--off); font-size: 12px; line-height: 1.5; color: var(--navy-2); }
+.ig-ops li { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 10px; padding: 12px 0; border-top: 1px solid var(--border); font-size: 14.5px; line-height: 1.45; }
+.ig-ops li > .ic { margin-top: 2px; color: #1a7f37; }
+.ig-ops li.is-destructive > .ic { color: #8a5a00; }
+.ig-op { flex: 1; min-width: 170px; }
+.ig-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.ig-badge { padding: 2px 8px; border-radius: var(--pill); background: #e6f4ea; color: #1a7f37; font-size: 11px; font-weight: 600; line-height: 1.6; }
+.ig-badge.is-warn { background: #fff4dd; color: #8a5a00; }
+.ig-badge.is-auto { background: #eaf1ff; color: #1d4ed8; }
+.ig-note { margin-top: 16px; font-size: 13px; line-height: 1.65; color: var(--navy-3); }
+.ig-note a { color: var(--navy); text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+.ig-readonly-big { margin: 4px 0 14px; font-family: var(--serif); font-size: 46px; line-height: 1; color: var(--navy); }
+.ig-readonly p:not(.ig-readonly-big) { font-size: 15px; line-height: 1.7; color: var(--navy-3); }
+
+/* What it knows: the knowledge pack is the page's one dark band */
+.ig-knows { background: var(--navy); }
+.ig-knows h2 { color: #fff; }
+.ig-k { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: var(--r-lg); background: rgba(255,255,255,.1); }
+.ig-k li { padding: 30px 30px 32px; background: var(--navy); }
+.ig-k-num { display: block; margin-bottom: 14px; font-size: 12px; font-weight: 600; letter-spacing: .1em; color: var(--orange); }
+.ig-k h3 { margin-bottom: 10px; font-family: var(--serif); font-size: 23px; font-weight: 400; line-height: 1.25; color: #fff; }
+.ig-k p { max-width: 460px; font-size: 15px; line-height: 1.7; color: rgba(255,255,255,.74); }
+.ig-k-src { margin-top: 28px; }
+.ig-k-src a { display: inline-flex; align-items: center; gap: 6px; padding-bottom: 2px; border-bottom: 2px solid var(--orange); color: #fff; font-size: 15px; font-weight: 500; text-decoration: none; }
+
+.ig-pairs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ig-pair { display: flex; flex-direction: column; gap: 18px; padding: 26px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); color: var(--navy); text-decoration: none; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.ig-pair:hover { transform: translateY(-3px); border-color: var(--navy); box-shadow: 0 16px 40px rgba(13,15,26,.08); }
+.ig-pair-logos { display: flex; align-items: center; gap: 10px; }
+.ig-pair-logos img { display: block; width: 28px; height: 28px; }
+.ig-pair-pipe { flex: 0 0 56px; height: 2px; background: repeating-linear-gradient(90deg, var(--orange) 0 6px, transparent 6px 12px); }
+.ig-pair-q { flex: 1; font-family: var(--serif); font-size: 19px; line-height: 1.35; }
+.ig-pair-go { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; }
+.ig-pair-go .ic { transition: transform .2s ease; }
+.ig-pair:hover .ig-pair-go .ic { transform: translateX(3px); }
+
+/* White, because the FAQ under it is off-white and the pairs above are white:
+   its top padding is dropped so the two white sections read as one run. */
+.ig-setup { padding-top: 8px; }
+.ig-steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ig-steps li { display: flex; align-items: flex-start; gap: 14px; padding: 22px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--off); }
+.ig-step-n { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 13px; font-weight: 600; }
+.ig-steps p { font-size: 15px; line-height: 1.65; color: var(--navy-2); }
+.ig-trust { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.ig-trust p { display: flex; gap: 12px; padding: 18px 20px; font-size: 14px; line-height: 1.65; color: var(--navy-3); }
+.ig-trust .ic { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--navy); }
+
+/* The mock plays once when it reveals (DESIGN.md, Motion: mock choreography):
+   the sources drop in, the channels draw and fill, the answer lands, and on a
+   page whose connector can change things, a cursor presses Apply. Keyframes
+   fill backwards off .in, so reduced motion and no scripts get the last frame. */
+@keyframes ig-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ig-drop { from { opacity: 0; transform: translateY(-10px) scale(.85); } to { opacity: 1; transform: none; } }
+@keyframes ig-pop { 0% { opacity: 0; transform: scale(.5); } 60% { opacity: 1; transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes ig-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes ig-water { to { stroke-dashoffset: -20; } }
+@keyframes ig-pipe { to { background-position: 12px 0; } }
+@keyframes ig-show { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ig-hide { to { opacity: 0; } }
+@keyframes ig-dim { to { opacity: .45; } }
+@keyframes ig-cursor { from { opacity: 0; transform: translate(40px, 34px); } 30% { opacity: 1; } to { opacity: 1; transform: none; } }
+@keyframes ig-press { 50% { transform: scale(.94); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ig-mock.in .ig-sources img { animation: ig-drop .35s ease-out both; }
+  .ig-mock.in .ig-sources img:nth-child(1) { animation-delay: .25s; }
+  .ig-mock.in .ig-sources img:nth-child(2) { animation-delay: .37s; }
+  .ig-mock.in .ig-sources img:nth-child(3) { animation-delay: .49s; }
+  .ig-flow-bed path { stroke-dasharray: 1; }
+  .ig-mock.in .ig-flow-bed path { animation: ig-draw .5s ease-out .65s both; }
+  .ig-mock.in .ig-flow-water { animation: ig-show .3s ease-out 1.1s both; }
+  .ig-mock.in .ig-flow-water path { animation: ig-water 1.2s linear 1.1s infinite; }
+  .ig-mock.in .ig-answer { animation: ig-in .35s ease-out 1.2s both; }
+  .ig-mock.in .ig-answer .ic { animation: ig-pop .4s ease-out 1.45s both; }
+  .ig-mock.in .ig-change { animation: ig-in .35s ease-out 1.7s both; }
+  .ig-mock.in .ig-actions { animation: ig-in .35s ease-out 1.85s both; }
+  .ig-mock.in .ig-cursor { animation: ig-cursor .6s ease-out 2.3s both, ig-hide .3s ease-out 3.6s forwards; }
+  .ig-mock.in .ig-btn-apply { animation: ig-press .25s ease-out 2.95s; }
+  .ig-mock.in .ig-apply-idle { animation: ig-hide .2s ease-out 3.05s forwards; }
+  .ig-mock.in .ig-apply-done { animation: ig-show .25s ease-out 3.05s both; }
+  .ig-mock.in .ig-btn-reject { animation: ig-dim .3s ease-out 3.05s forwards; }
+  .ig-pair-pipe { animation: ig-pipe 1.2s linear infinite; }
+}
+
+@media (max-width: 1000px) {
+  .ig-hero { grid-template-columns: 1fr; gap: 44px; }
+  .ig-hero .ig-mock { max-width: 560px; }
+  .ig-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ig-pairs { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  .ig-hero { padding: 96px 24px 48px; }
+  .ig-sec { padding: 64px 24px; }
+  .ig-hub { padding: 8px 24px 64px; }
+  .ig-group { margin-top: 44px; }
+  .ig-qs, .ig-cols, .ig-k, .ig-steps, .ig-trust, .ig-facts { grid-template-columns: 1fr; }
+  .ig-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ig-stats li:nth-child(2) { border-right: 0; }
+  .ig-stats li:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .ig-ask { flex-direction: column; align-items: flex-start; padding: 26px 24px; }
+  .ig-col, .ig-k li { padding: 24px 22px; }
+  .ig-card.is-featured { flex-direction: column; align-items: flex-start; padding: 24px 22px; }
+  .ig-card.is-featured .ig-card-go { top: 32px; margin-top: 0; right: 22px; }
+  .ig-card-feature { font-size: 18px; }
+}
+@media (max-width: 560px) {
+  .ig-grid { grid-template-columns: 1fr; }
+  .ig-mock-panel { padding: 28px 18px; }
 }
 
 /* ── COOKIE CONSENT ──

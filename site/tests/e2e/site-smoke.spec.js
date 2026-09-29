@@ -99,6 +99,20 @@ test("blog index filters posts by category and keeps it in the URL", async ({ pa
   await expect(page.locator('.blog-filter-chip[data-category="growth"]')).toHaveAttribute("aria-pressed", "true");
 });
 
+// A link post shares a post published elsewhere: its card leaves the site and
+// says where it goes, and no copy of it is served here to compete with the original.
+test("a link post's card goes to the original and has no page here", async ({ page, request }) => {
+  await page.goto("/blog/");
+  const card = page.locator('.blog-grid a.blog-card[href^="https://"]').first();
+  await expect(card).toBeAttached();
+  const href = await card.getAttribute("href");
+  expect(new URL(href).hostname).not.toContain("getduct.ai");
+  expect(await card.getAttribute("rel")).toContain("noopener");
+  await expect(card.locator(".blog-card-meta")).toContainText("↗");
+  const slug = new URL(await card.locator("img").getAttribute("src"), page.url()).pathname.match(/blog-(.+)\.jpg$/)[1];
+  expect((await request.get(`/blog/${slug}`)).status()).toBe(404);
+});
+
 test("each post declares its own canonical", async ({ request }) => {
   const canonicals = [];
   for (const slug of ["why-your-seo-metrics-arent-telling-you-the-full-story",

@@ -3691,8 +3691,12 @@ msgid "Include {name}"
 msgstr "{name}を含める"
 
 #: src/components/execution/ChangeSetCard.jsx
-msgid "Includes a pause. It can be rolled back from here."
-msgstr "一時停止が含まれています。ここからロールバックできます。"
+msgid "Includes a change that always waits for you. It can be rolled back from here."
+msgstr "常に承認を待つ変更が含まれています。ここからロールバックできます。"
+
+#: src/components/execution/ChangeSetCard.jsx
+#~ msgid "Includes a pause. It can be rolled back from here."
+#~ msgstr "一時停止が含まれています。ここからロールバックできます。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/content/BrandContextForm.jsx

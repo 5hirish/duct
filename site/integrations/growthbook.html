@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>GrowthBook AI analyst: is the test still running? | Duct</title>
+<link rel="canonical" href="https://getduct.ai/integrations/growthbook"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/growthbook"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/growthbook"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/growthbook"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/growthbook"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/growthbook"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/growthbook"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct reads GrowthBook experiments and results, flags tests that stopped bucketing or never reached their sample, and checks the outcome in Stripe. Read-only."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/integrations/growthbook"/>
+<meta property="og:title" content="GrowthBook AI analyst: is the test still running?"/>
+<meta property="og:description" content="A test can say running for weeks after it stopped bucketing anyone. Duct checks before you call it, and reads the outcome in Stripe."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-growthbook.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="GrowthBook AI analyst: is the test still running?"/>
+<meta name="twitter:description" content="94% chance to win, on 62 users. Duct checks before you call the test."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-growthbook.jpg"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"GrowthBook AI analyst: is the test still running?","url":"https://getduct.ai/integrations/growthbook","description":"Duct reads GrowthBook experiments and results, flags tests that stopped bucketing or never reached their sample, and checks the outcome in Stripe. Read-only.","about":{"@type":"SoftwareApplication","name":"GrowthBook"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"en","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://getduct.ai/"},{"@type":"ListItem","position":2,"name":"Integrations","item":"https://getduct.ai/integrations/"},{"@type":"ListItem","position":3,"name":"GrowthBook","item":"https://getduct.ai/integrations/growthbook"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"Will Duct stop or change an experiment?","acceptedAnswer":{"@type":"Answer","text":"No. Duct never writes to GrowthBook. It reads experiments and results and tells you what it found; stopping or restarting a test is yours."}},{"@type":"Question","name":"How does Duct know a test stopped bucketing?","acceptedAnswer":{"@type":"Answer","text":"It flags a running experiment whose phase is older than 45 days and whose results don't reach the last week: the pattern of a test that looks alive and isn't."}},{"@type":"Question","name":"Our GrowthBook organisation has several products. Will they mix?","acceptedAnswer":{"@type":"Answer","text":"Not if you give Duct the project ID. It filters experiments to that project."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026). Hypothesis: a product team that has shipped a &#x27;winner&#x27; that wasn&#x27;t converts on a page that shows the stale-test check. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/integrations/">Integrations</a><span aria-hidden="true">/</span><span aria-current="page">GrowthBook</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="../assets/icons/growthbook.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>GrowthBook, <em>before you call the test.</em></h1>
+<p class="hero-sub">A test can say running for weeks after it stopped bucketing anyone. Duct reads your experiments and results, checks exposures are still arriving and the sample is big enough, and reads the outcome in Stripe.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/integrations/">All integrations</a>
+</div>
+<ul class="ig-facts" aria-label="At a glance"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>API key</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Reads one datasets</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Read-only</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Fields audited Aug 31, 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="../assets/icons/growthbook.svg" width="34" height="34" alt=""/><img src="../assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 100 30" width="100" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 50 14 50 30"/><path pathLength="1" d="M85 0C85 16 50 14 50 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 50 14 50 30"/><path d="M85 0C85 16 50 14 50 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>It says running, 94% to win. It stopped bucketing on 1 Sep, with 62 users in control.</span></div>
+</div>
+<figcaption>An example answer. Yours is read from your own accounts.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="../assets/media/session-growthbook.webp" srcset="../assets/media/session-growthbook-768.webp 768w, ../assets/media/session-growthbook-1536.webp 1536w, ../assets/media/session-growthbook.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="A Duct session: asked whether a pricing test is ready to call, Duct reads GrowthBook and Stripe and finds the test stopped bucketing with its control arm under the minimum sample"/>
+<figcaption>Ask whether the test is ready to call. Duct finds it stopped bucketing on 1 Sep, under its minimum sample, and reads the real baseline in Stripe.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Ask</p>
+<h2>Questions you can <em>just ask</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Is this experiment ready to call?</p><span class="ig-q-joins"><img src="../assets/icons/growthbook.svg" width="18" height="18" alt=""/><span>GrowthBook</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Which running tests have stopped bucketing?</p><span class="ig-q-joins"><img src="../assets/icons/growthbook.svg" width="18" height="18" alt=""/><span>GrowthBook</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Did the winning variant change revenue?</p><span class="ig-q-joins"><img src="../assets/icons/growthbook.svg" width="18" height="18" alt=""/><img src="../assets/icons/stripe.svg" width="18" height="18" alt=""/><span>GrowthBook + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Does the test&#x27;s metric match the event we track?</p><span class="ig-q-joins"><img src="../assets/icons/growthbook.svg" width="18" height="18" alt=""/><img src="../assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>GrowthBook + Mixpanel</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Access</p>
+<h2>What it reads. <em>What it can change.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>What it reads</h3>
+<ul class="ig-reads">
+<li><b>Growthbook experiments</b><span class="ig-fields"><span>experiments</span><span>results</span><span>status</span><span>stale running</span><span>running</span><span>feature count</span></span></li>
+</ul>
+<p class="ig-note">GrowthBook REST API (growthbook-v1) · fields audited Aug 31, 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/catalog/growthbook.py" rel="noopener">read the source</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>What it can change</h3>
+<p class="ig-readonly-big">Nothing.</p>
+<p>Duct has no GrowthBook change operation, so it cannot edit anything in GrowthBook. It can still recommend a change for you to make there.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Knowledge</p>
+<h2>What Duct already knows <em>about GrowthBook</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Running is a setting, not a signal.</h3><p>An experiment can show running while bucketing nobody. Duct flags a running test whose phase is over 45 days old and whose results stop short of the last week.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Under the minimum sample, it isn&#x27;t a result.</h3><p>A chance to win on an arm under the configured minimum is noise with a percentage sign. Duct says so instead of quoting it.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Both sides need the same identity.</h3><p>If assignment hashes one ID and analysis joins on another, users are misattributed wherever the two differ. Duct asks which ID each side uses.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Duct doesn&#x27;t touch your flags.</h3><p>Flag flips and experiment stops are product decisions. Duct reads GrowthBook and never writes to it.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/growthbook.md" rel="noopener">Read the GrowthBook notes Duct's agent works from <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Better together</p>
+<h2>What GrowthBook answers <em>with a partner</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/integrations/stripe"><span class="ig-pair-logos"><img src="../assets/icons/growthbook.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="../assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Did the winner change revenue?</span><span class="ig-pair-go">GrowthBook + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/integrations/mixpanel"><span class="ig-pair-logos"><img src="../assets/icons/growthbook.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="../assets/icons/mixpanel.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Is the metric the event you think it is?</span><span class="ig-pair-go">GrowthBook + Mixpanel <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/integrations/ga4"><span class="ig-pair-logos"><img src="../assets/icons/growthbook.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="../assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Did the variant change what people do on the site?</span><span class="ig-pair-go">GrowthBook + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Setup</p>
+<h2>Connect GrowthBook <em>in three steps</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>In GrowthBook, open Settings, then API Keys, and create a read-only key.</p></li>
+<li><span class="ig-step-n">2</span><p>Note the project ID if your organisation runs more than one product.</p></li>
+<li><span class="ig-step-n">3</span><p>In Duct, open Connections, choose GrowthBook and paste the key and the project ID.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Read-only: a read-only key is enough, Duct has no GrowthBook change operation, and it filters to your project so another product&#x27;s experiments stay out.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Keys and tokens are stored encrypted by Duct&#x27;s hosted API, never in your browser, and you can remove a connection at any time. A self-host build keeps them on your own machine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>GrowthBook, <em>answered</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Will Duct stop or change an experiment?</summary>
+<p class="faq-a">No. Duct never writes to GrowthBook. It reads experiments and results and tells you what it found; stopping or restarting a test is yours.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">How does Duct know a test stopped bucketing?</summary>
+<p class="faq-a">It flags a running experiment whose phase is older than 45 days and whose results don't reach the last week: the pattern of a test that looks alive and isn't.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Our GrowthBook organisation has several products. Will they mix?</summary>
+<p class="faq-a">Not if you give Duct the project ID. It filters experiments to that project.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Is it free?</summary>
+<p class="faq-a">Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. <a href="/open-source#pricing">What will cost money</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
+
+<script src="../assets/duct-partials.js"></script>
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+</body>
+</html>

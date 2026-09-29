@@ -66,6 +66,18 @@ Required: title, date, author, category, tags, excerpt, readTime.
     hero         an image under the title, relative to site/blog/; needs heroAlt
     audience     which closer ends the post, growth or builders (default: the
                  category's)
+    link         makes this a link post (below): the https address of the post
+                 where it was published
+
+Link posts
+----------
+A post written somewhere else, shared the way a retweet shares a tweet: a card
+on the blog index that goes to the original, and nothing else. No page is made
+here, so there is no second copy for a search engine to weigh against the
+first, and the post is left out of the sitemap, the feed, llms.txt and the
+previous/next links, which all name pages on this site. The file is front
+matter only; a body is an error, because it would never be shown. The card is
+its OG card, drawn from the same front matter like any other post's.
 
 The blog index
 --------------
@@ -97,6 +109,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
@@ -545,6 +558,14 @@ def parse_front_matter(raw: str, slug: str) -> tuple[dict[str, str], str]:
         raise PostError(f"{slug}: tags must be 1-{MAX_TAGS} distinct entries, got {tags}")
     if any(t != t.lower() for t in tags):
         raise PostError(f"{slug}: tags are lowercase (proper nouns included), got {tags}")
+    if fm.get("link"):
+        host = urlparse(fm["link"]).hostname or ""
+        if not fm["link"].startswith("https://") or not host:
+            raise PostError(f"{slug}: link must be an https address, got {fm['link']!r}")
+        if fm["link"].startswith(BASE):
+            raise PostError(f"{slug}: link points at this site; a post published here is a normal post")
+        if body.strip():
+            raise PostError(f"{slug}: a link post is front matter only; its body would never be shown")
     fm.setdefault("audience", CATEGORIES[fm["category"]])
     if fm["audience"] not in BRIDGES:
         raise PostError(f"{slug}: audience must be one of {', '.join(BRIDGES)}")
@@ -991,13 +1012,18 @@ def render_index_block(posts: list[dict]) -> str:
     for i, p in enumerate(newest):
         fm, slug = p["fm"], p["slug"]
         delay = f' style="transition-delay:.{min(i, 5) * 8:02d}s"' if i else ""
+        # A link post's card goes to where it was published, and says so
+        # before the click rather than after it.
+        link = fm.get("link")
+        target = f'href="{esc(link)}" rel="noopener"' if link else f'href="/blog/{slug}"'
+        where = f' on {esc(urlparse(link).hostname.removeprefix("www."))} ↗' if link else ""
         cards.append(
-            f'<li data-category="{fm["category"].lower()}"><a href="/blog/{slug}" class="blog-card reveal"{delay}>\n'
+            f'<li data-category="{fm["category"].lower()}"><a {target} class="blog-card reveal"{delay}>\n'
             f'<img class="blog-card-img" src="../assets/og/blog-{slug}.jpg" width="1200" height="630" loading="lazy" alt=""/>\n'
             f'<div class="blog-card-body">\n<span class="tag">{esc(fm["category"])}</span>\n'
             f'<h2 class="blog-card-title">{esc(fm["title"])}</h2>\n'
             f'<p class="blog-card-excerpt">{esc(fm["excerpt"])}</p>\n'
-            f'<div class="blog-card-meta"><span>{esc(fm["date"])}</span><span>{esc(fm["readTime"])} min read</span></div>\n'
+            f'<div class="blog-card-meta"><span>{esc(fm["date"])}</span><span>{esc(fm["readTime"])} min read{where}</span></div>\n'
             f'</div>\n</a></li>'
         )
     return (f'{INDEX_START}\n<div class="blog-filter" role="group" aria-label="Filter posts by category" hidden>\n'
@@ -1074,7 +1100,7 @@ def load_posts() -> list[dict]:
         slug = path.stem
         fm, body = parse_front_matter(path.read_text(), slug)
         posts.append({"slug": slug, "fm": fm, "body": body, "title": fm["title"],
-                      "iso": to_iso(fm["date"])})
+                      "iso": to_iso(fm["date"]), "link": fm.get("link", "")})
     # Oldest first, so "next article" moves forward in time.
     posts.sort(key=lambda p: p["iso"])
     return posts
@@ -1092,7 +1118,9 @@ def main() -> int:
         posts = load_posts()
         if args.fetch_thumbnails:
             fetch_thumbnails(posts)
-        pages = {f'{p["slug"]}.html': render_page(p["slug"], p["fm"], p["body"], posts) for p in posts}
+        # Link posts are cards on the index only: no page, no neighbours.
+        own = [p for p in posts if not p["link"]]
+        pages = {f'{p["slug"]}.html': render_page(p["slug"], p["fm"], p["body"], own) for p in own}
         pages["index.html"] = render_index(posts)
     except PostError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -1113,11 +1141,13 @@ def main() -> int:
         print("ERROR: generated blog pages are stale: " + ", ".join(stale), file=sys.stderr)
         print("Run: python3 scripts/build_blog.py", file=sys.stderr)
         failed = True
-    for error in listing_errors(posts):
+    for error in listing_errors(own):
         print(f"ERROR: {error}", file=sys.stderr)
         failed = True
     if args.check and not failed:
-        print(f"All {len(posts)} posts and the blog index are up to date and listed.")
+        linked = len(posts) - len(own)
+        print(f"All {len(own)} posts and the blog index are up to date and listed"
+              + (f", with {linked} link post{'s' * (linked != 1)}." if linked else "."))
     return 1 if failed else 0
 
 

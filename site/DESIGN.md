@@ -267,6 +267,14 @@ The vocabulary is small and consistent — keep it that way:
 - Scroll-reveal (`.reveal`, opacity + 24px rise, .55s) for section
   entrances, staggered ≤.32s; hover lift `-2px` buttons / `-3px` cards;
   `fadeUp` in the hero; the marquee; the logo-dot pulse.
+- **Mock choreography**: a CSS product mock may play its proof once, when
+  its card reveals (the homepage `#ai-marketing-agent` cards: sources join
+  into an answer, a cursor presses Apply, the log records it). Each step is
+  transform or opacity, under .4s, ease-out; the whole sequence ends inside
+  4s and never replays. Keyframes fill backwards and hang off `.in`, so a
+  visitor without scripts or with reduced motion gets the finished frame.
+  The only loop allowed is the aqueduct's water (`.channel`, or its dashed
+  stroke inside a mock), because the water is the brand, not decoration.
 - Nothing else. No parallax, no scroll-jacking, no decorative loops.
   Transitions stay ≤.3s, ease-out, transform/opacity (Kowalski).
 - **`prefers-reduced-motion` must cover all of it** — today it covers
@@ -347,7 +355,7 @@ the *landing-page* tells:
 7. Keyboard: skip link present, focus visible on buttons/nav/FAQ (not just
    the UA default on an orange button), email-capture errors have text +
    `role="alert"`, not a color flash.
-8. Motion: reveal-stagger only, reduced-motion covered, page readable with
+8. Motion: reveal-stagger, plus mock choreography as the Motion section allows it, reduced-motion covered, page readable with
    JS off.
 9. Measure: every text block capped in the 45–75ch band.
 10. Weight: no new fonts, no new dependencies, inline `<style>` stays the

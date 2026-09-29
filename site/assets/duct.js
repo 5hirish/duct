@@ -553,7 +553,9 @@ linksHost.querySelectorAll('.nav-dropdown').forEach(function(drop) {
   if (!dropdownLinks.length) return;
   hasDropdownItems = true;
   var firstHref = dropdownLinks[0].getAttribute('href') || '';
-  var groupLabel = firstHref.indexOf('/tools/') === 0 ? ductT('Free Tools') : ductT('Solutions');
+  // /tools/ or /de/tools/: a translated nav prefixes every path, and an
+  // anchored match labelled the German tools group "Solutions".
+  var groupLabel = /^(?:\/[a-z-]+)?\/tools\//.test(firstHref) ? ductT('Free Tools') : ductT('Solutions');
   appendGroupLabel(groupLabel);
   dropdownLinks.forEach(function(anchor) {
     var href = anchor.getAttribute('href');
@@ -569,7 +571,7 @@ linksHost.querySelectorAll('.nav-dropdown').forEach(function(drop) {
 });
 
 linksHost.querySelectorAll('a[href]').forEach(function(anchor) {
-  if (anchor.closest('.dropdown-menu')) return;
+  if (anchor.closest('.dropdown-menu') || anchor.closest('.nav-lang')) return;
   if (hasDropdownItems && anchor.parentElement && anchor.parentElement.classList.contains('nav-dropdown')) return;
   var href = anchor.getAttribute('href');
   var label = anchor.textContent.trim();
@@ -594,16 +596,18 @@ if (!linkList.children.length) return;
 
 drawer.appendChild(header);
 drawer.appendChild(linkList);
-// The bar's language select is hidden with .nav-links on small screens, so
-// the drawer carries a copy; the switch handler binds both.
-var barLang = linksHost.querySelector('select[data-duct-lang]');
+// The bar's language menu is hidden with .nav-links on small screens, so the
+// drawer lists the same links as a row of pills; the switch script rewrites
+// every [data-duct-lang-link] to the same page in that language.
+var barLang = linksHost.querySelector('.nav-lang-menu');
 if (barLang) {
   var mobileLang = document.createElement('div');
   mobileLang.className = 'nav-mobile-lang';
-  var copy = barLang.cloneNode(true);
-  copy.removeAttribute('id');
-  copy.setAttribute('aria-label', ductT('Language'));
-  mobileLang.appendChild(copy);
+  mobileLang.setAttribute('role', 'group');
+  mobileLang.setAttribute('aria-label', ductT('Language'));
+  barLang.querySelectorAll('a[data-duct-lang-link]').forEach(function(a) {
+    mobileLang.appendChild(a.cloneNode(true));
+  });
   drawer.appendChild(mobileLang);
 }
 // What stays in the bar below 860px: the GitHub mark and the Download pill,
@@ -880,8 +884,8 @@ if (window.__DUCT_PARTIALS_READY) {
 // No automatic redirect anywhere — a crawler and a person must get the page
 // the URL names — and the choice is remembered only so the app can read it.
 (function () {
-  // A closed table, never a string built from the select's value or a link's
-  // attribute: the chosen code only ever selects one of these constants, so
+  // A closed table, never a string built from a link's attribute: the chosen
+  // code only ever selects one of these constants, so
   // nothing read from the DOM reaches the href (CodeQL js/xss-through-dom).
   var PATH_PREFIX = { en: '', es: '/es', 'pt-br': '/pt-br', de: '/de', ja: '/ja' };
   var PREFIXES = ['es', 'pt-br', 'de', 'ja'];
@@ -912,28 +916,50 @@ if (window.__DUCT_PARTIALS_READY) {
     url.hash = location.hash;
     return url;
   }
-  function onChange(e) {
-    var code = e.target.value;
-    var url = samePageIn(code);
-    if (!url) return;
+  var CODE = { en: 'EN', es: 'ES', 'pt-br': 'PT', de: 'DE', ja: 'JA' };
+  function remember(e) {
+    var code = e.currentTarget.getAttribute('data-duct-lang-link');
+    if (!Object.prototype.hasOwnProperty.call(PATH_PREFIX, code)) return;
     try { localStorage.setItem('duct_site_lang', code); } catch (err) { /* private mode */ }
-    location.assign(url.href);
+  }
+  function bindMenu(menu) {
+    if (menu.__ductLang) return;
+    menu.__ductLang = true;
+    var btn = menu.querySelector('.nav-lang-btn');
+    var code = menu.querySelector('[data-duct-lang-code]');
+    if (code) code.textContent = CODE[currentPrefix()];
+    if (!btn) return;
+    var setOpen = function (open) {
+      menu.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setOpen(!menu.classList.contains('is-open'));
+    });
+    menu.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && menu.classList.contains('is-open')) { setOpen(false); btn.focus(); }
+    });
+    menu.addEventListener('focusout', function (e) {
+      if (!menu.contains(e.relatedTarget)) setOpen(false);
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.contains(e.target)) setOpen(false);
+    });
   }
   function bind() {
-    var selects = document.querySelectorAll('select[data-duct-lang]');
-    for (var i = 0; i < selects.length; i++) {
-      if (selects[i].__ductLang) continue;
-      selects[i].__ductLang = true;
-      selects[i].value = currentPrefix();
-      selects[i].addEventListener('change', onChange);
-    }
+    var menus = document.querySelectorAll('[data-duct-lang-menu]');
+    for (var i = 0; i < menus.length; i++) bindMenu(menus[i]);
+    var here = currentPrefix();
     var links = document.querySelectorAll('a[data-duct-lang-link]');
     for (var j = 0; j < links.length; j++) {
       var code = links[j].getAttribute('data-duct-lang-link');
       var url = samePageIn(code);
       if (!url) continue;
       links[j].setAttribute('href', url.pathname + url.search + url.hash);
-      if (code === currentPrefix()) links[j].setAttribute('aria-current', 'true');
+      if (code === here) links[j].setAttribute('aria-current', 'true');
+      else links[j].removeAttribute('aria-current');
+      if (!links[j].__ductLang) { links[j].__ductLang = true; links[j].addEventListener('click', remember); }
     }
   }
   document.addEventListener('duct-partials-ready', bind);
