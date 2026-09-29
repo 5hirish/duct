@@ -208,6 +208,16 @@ def _subtotals(fields: dict[str, dict], rows: list[dict], *, sums: list[str]) ->
 
 def _cover(data: dict, rows: list[dict], source_totals: dict) -> str:
     """What the totals are over, in words the model can repeat."""
+    return _rows_covered(data, rows, source_totals) + (
+        # A source's own caveats (GA4's thresholding, sampling, date
+        # truncation) sit beside the rows; the totals are what a brief
+        # quotes, so they point at them.
+        "; the source flags this report as incomplete or estimated (see data_quality)"
+        if data.get("data_quality") else ""
+    )
+
+
+def _rows_covered(data: dict, rows: list[dict], source_totals: dict) -> str:
     listed = len(rows)
     available = _number(source_totals.get("rows_available"))
     if source_totals:

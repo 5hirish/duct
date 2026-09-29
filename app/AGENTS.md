@@ -11,6 +11,7 @@ Next.js App Router report viewer and agent interface.
 - **HTTP:** Native `fetch` wrapped in `lib/api.js`. No type-safe client or OpenAPI generation.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
 - **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
+  Sentry is **not** behind the consent gate, so the client's `dataCollection` block (`instrumentation-client.ts`) is Sentry 10's restrictive baseline written out — no IP, no bodies. Since Sentry 11 an unset `dataCollection` collects every category, so removing that block is a privacy change, not a tidy-up. Streamed spans pass through neither `beforeSend` nor scope tags: a header that must never leave goes in `dataCollection.httpHeaders` (as `sentry.server.config.ts` does for `X-Provider-*`), and a tag performance data is split by is also set with `Sentry.setAttribute`.
 - **Overrides:** `package.json` forces `lodash-es` to ^4.18.1. `mermaid` 12.0.0 depends on `chevrotain` 11.1.2, which pins `lodash-es` 4.17.23 exactly, and that version carries a high advisory (code injection via `_.template`) and a moderate one (prototype pollution in `_.unset`/`_.omit`). Delete the override once `mermaid` moves to `chevrotain` 12 or later, which no longer uses lodash.
 
 ## Deployment
@@ -785,6 +786,18 @@ python3 ../scripts/i18n/fill.py      # translates only what is missing (needs a 
                                      # or --provider manual to hand the entries to an agent)
 npm run check:i18n                   # stale? missing? literal outside Lingui? → red
 ```
+
+Staleness is `lingui check sync`: it compares each catalogue with what
+extract would write, **byte for byte**, and writes nothing. Two consequences:
+
+- `scripts/i18n/po.py` writes an app catalogue back in Lingui's own layout,
+  so `fill.py` output passes the check. If the check fails straight after a
+  fill run with nothing else changed, that writer has drifted; fix it rather
+  than re-running extract to paper over it.
+- Run it on Node 22, the version in `.nvmrc` and CI. Lingui 6.8 starts every
+  subcommand behind `import.meta.main`, which Node 23 does not have, so there
+  `extract`, `compile` and `check` all exit 0 having done nothing: a green
+  gate that ran no check.
 
 **How to write copy so the catalogue sees it.** One import per file:
 `import { Trans, useLingui } from "@lingui/react/macro";`

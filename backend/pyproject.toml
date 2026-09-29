@@ -20,7 +20,7 @@ packages = [
 
 [tool.poetry.dependencies]
 fastapi = "^0.141"
-uvicorn = {version = "^0.53", extras = ["standard"]}
+uvicorn = {version = "^0.54", extras = ["standard"]}
 # Starlette's form parser. FastAPI needs it at *import* time for any route
 # declaring Form()/File() — routes/content.py:/content/uploads does — so an
 # app missing it does not degrade, it fails to boot. It was only ever present
@@ -33,10 +33,10 @@ python-multipart = ">=0.0.32"
 # config keys, the same day Google sunset developer tokens. Access level now
 # follows the Cloud project that owns the OAuth client, so there is no token
 # left to send. Do not float back below this.
-google-ads = "^32.0"
+google-ads = "^33.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.200.0"
-google-genai = "^2.24"
+google-genai = "^2.25"
 python-dotenv = "^1.2"
 pydantic = "^2.13"
 pydantic-settings = "^2.15"
@@ -44,16 +44,16 @@ langchain = "^1.4"
 langchain-openai = "^1.6"
 langchain-google-genai = "^4.4"
 langchain-anthropic = "^1.7"
-langgraph = "^1.1"
-pyjwt = "^2.14"
+langgraph = "^1.2"
+pyjwt = "^2.15"
 httpx = "^0.28"
 # Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
 # when the 'r2' storage backend is active.
 boto3 = "^1.43"
-sqlmodel = "^0.0.42"
+sqlmodel = "^0.0.47"
 alembic = "^1.20"
 psycopg = {version = "^3.3", extras = ["binary"]}
-sentry-sdk = "^2.69.2"
+sentry-sdk = "^2.70.0"
 dlt = "^1.30.0"
 selectolax = ">=0.4.12"
 extruct = ">=0.16"
@@ -64,8 +64,8 @@ trafilatura = ">=2.2.0"
 # change what numbers a brief quotes. Ships an abi3 Rust extension with
 # manylinux_2_28 and macOS wheels, so no toolchain is needed to build it, and
 # agents/core/compaction.py degrades to plain JSON wherever it is absent.
-headroom-ai = "~0.37"
-deepagents = "0.7.17"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
+headroom-ai = "~0.38"
+deepagents = "0.7.19"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
 # OTel GenAI spans for the agents (agents/core/telemetry.py). The API is what
 # the spans are opened with; the SDK and the OTLP/HTTP exporter are what
 # `configure_tracing` installs when OTEL_EXPORTER_OTLP_ENDPOINT is set
@@ -100,7 +100,7 @@ langgraph-checkpoint-sqlite = "^3.1"
 # `Chat.send()` has no such parameters (langchain-ai/langchain#39180, closed
 # `not planned`). Express failover through `openrouter_provider` instead, and
 # do not reach for `route`.
-langchain-openrouter = "^0.2.8"
+langchain-openrouter = "^0.2.9"
 langchain-xai = "^1.3.0"
 
 [tool.poetry.group.dev.dependencies]

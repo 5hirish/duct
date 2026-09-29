@@ -19,7 +19,11 @@
 <meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta property="article:author" content="Shirish Kadam"/>
-<meta property="article:section" content="SEO"/>
+<meta property="article:section" content="Growth"/>
+<meta property="article:tag" content="seo"/>
+<meta property="article:tag" content="search console"/>
+<meta property="article:tag" content="ga4"/>
+<meta property="article:tag" content="organic growth"/>
 <meta property="article:published_time" content="2026-03-15T00:00:00+00:00"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Why Your SEO Metrics Aren&#x27;t Telling You the Full Story — Duct blog"/>
@@ -31,13 +35,14 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "Article",
+  "@type": "BlogPosting",
   "inLanguage": "en",
   "headline": "Why Your SEO Metrics Aren't Telling You the Full Story",
   "description": "Search Console shows impressions up. Ahrefs shows rankings rising. GA4 says signups are flat. How to read all three together, and what the gap usually means.",
   "datePublished": "2026-03-15T00:00:00+00:00",
   "dateModified": "2026-03-15T00:00:00+00:00",
-  "articleSection": "SEO",
+  "articleSection": "Growth",
+  "wordCount": 462,
   "author": {
     "@type": "Person",
     "name": "Shirish Kadam",
@@ -54,7 +59,45 @@
     "url": "https://getduct.ai"
   },
   "image": "https://getduct.ai/assets/og/blog-why-your-seo-metrics-arent-telling-you-the-full-story.jpg",
-  "mainEntityOfPage": "https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story"
+  "mainEntityOfPage": "https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story",
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Duct Blog",
+    "url": "https://getduct.ai/blog/"
+  },
+  "keywords": [
+    "seo",
+    "search console",
+    "ga4",
+    "organic growth"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://getduct.ai/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Why Your SEO Metrics Aren't Telling You the Full Story",
+      "item": "https://getduct.ai/blog/why-your-seo-metrics-arent-telling-you-the-full-story"
+    }
+  ]
 }
 </script>
 <style>
@@ -96,11 +139,62 @@
 .article-nav a:hover { color: var(--navy); }
 .article-nav-next { margin-left: auto; text-align: right; }
 .article-nav-all { font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }
+.prose .post-tags { list-style: none; padding: 0; margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prose .post-tags li { font-size: 13px; font-weight: 500; color: var(--navy-2); background: var(--off); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; margin: 0; }
+.post-hero { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+.post-hero img { width: 100%; height: auto; display: block; border-radius: var(--r-lg); border: 1px solid var(--border); }
+.post-toc { margin: 0 0 40px; padding: 20px 24px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.prose .post-toc-title { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0 0 10px; }
+.post-toc ol { margin: 0; padding-left: 20px; }
+.prose .post-toc li { font-size: 15px; margin-bottom: 4px; }
+.prose .post-toc a { border-bottom: none; }
+.prose h2, .prose h3 { scroll-margin-top: 88px; }
+.post-figure { margin: 36px 0; }
+.prose .post-figure img { height: auto; margin: 0; border: 1px solid var(--border); background: var(--white); }
+.post-figure figcaption, .post-quote figcaption { font-size: 13px; color: var(--navy-3); line-height: 1.6; margin-top: 10px; }
+.post-quote { margin: 36px 0; }
+.post-quote blockquote { margin: 0; }
+.post-quote blockquote p { font-family: var(--serif); font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.post-quote figcaption { padding-left: 27px; }
+.post-table { margin: 28px 0 32px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.post-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; color: var(--navy-3); }
+.post-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--off); }
+.post-table th, .post-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; min-width: 120px; }
+.post-table tr:last-child td { border-bottom: none; }
+.post-table code { font-size: 12px; }
+.prose .post-embed {
+  display: flex; align-items: center; gap: 16px; margin: 28px 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
+  color: var(--navy-3); transition: border-color .15s, background .15s;
+}
+.prose .post-embed:hover { border-color: var(--orange); background: var(--off); }
+.post-embed .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.post-embed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-embed-title { font-size: 16px; color: var(--navy); }
+.post-embed-desc { font-size: 14px; font-weight: 300; line-height: 1.5; }
+.post-embed-host { margin-left: auto; font-size: 12px; color: var(--navy-3); flex-shrink: 0; }
+.post-video { position: relative; margin: 32px 0; aspect-ratio: 16 / 9; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); }
+.prose .post-video-facade { display: block; position: absolute; inset: 0; border: none; color: #fff; }
+.prose .post-video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; }
+.post-video-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,.95) 0%, rgba(13,15,26,.75) 30%, rgba(13,15,26,0) 70%); }
+.post-video-play {
+  position: absolute; z-index: 1; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--orange); font-size: 30px; color: #fff;
+  box-shadow: 0 8px 24px rgba(13,15,26,.35); transition: transform .15s;
+}
+.post-video-facade:hover .post-video-play, .post-video-facade:focus-visible .post-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.post-video-caption { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+.post-video-title { font-family: var(--serif); font-size: 19px; line-height: 1.3; }
+.post-video-note { font-size: 13px; color: #c9ccd8; }
+.post-video iframe { width: 100%; height: 100%; border: 0; display: block; }
 @media (max-width: 640px) {
+  .post-video-title { font-size: 16px; }
+  .post-video-caption { padding: 14px 16px; }
   .post-author { flex-direction: column; gap: 16px; }
   .article-nav { flex-direction: column; gap: 16px; }
   .article-nav a { max-width: 100%; }
   .article-nav-next { text-align: left; margin-left: 0; }
+  .post-embed-host { display: none; }
 }
 </style>
 </head>
@@ -206,7 +300,7 @@
 </nav>
 
 <header class="article-header">
-<p class="tag">SEO</p>
+<p class="tag">Growth</p>
 <h1>Why Your SEO Metrics Aren&#x27;t Telling You the Full Story</h1>
 <div class="article-meta">Mar 15 2026 · 6 min read · By Shirish Kadam</div>
 </header>
@@ -216,13 +310,13 @@
 <p>Every growth marketer has been here: you open Search Console on a Monday and see impressions climbing. You check Ahrefs: rankings are up on your target cluster. You feel good about the quarter.</p>
 <p>Then you open GA4. Trial signups from organic: flat.</p>
 <p>The three tools are telling different parts of the same story. The problem is that no one is connecting them.</p>
-<h2>The three layers of organic growth</h2>
+<h2 id="the-three-layers-of-organic-growth">The three layers of organic growth</h2>
 <p>Think of your SEO stack as three distinct layers:</p>
 <p><strong>Visibility.</strong> Are people seeing you? This is Search Console. Impressions, clicks, average position. It tells you whether Google is surfacing your content.</p>
 <p><strong>Authority.</strong> Are you earning trust? This is Ahrefs. Domain rating, backlink profile, keyword difficulty trends. It tells you whether your content is worth ranking.</p>
 <p><strong>Conversion.</strong> Are you growing? This is GA4. Sessions, engagement rate, goal completions. It tells you whether the visitors who arrive are turning into customers.</p>
 <p>Most teams optimise each layer in isolation. That's the core mistake.</p>
-<h2>Why isolated metrics mislead</h2>
+<h2 id="why-isolated-metrics-mislead">Why isolated metrics mislead</h2>
 <p>Here's a real pattern that plays out at almost every early-stage SaaS:</p>
 <ol>
 <li>You publish a cluster of blog posts targeting mid-funnel keywords</li>
@@ -232,16 +326,17 @@
 </ol>
 <p>The SEO "worked" in the traditional sense. But it didn't move growth.</p>
 <p>The signal that would have caught this: a correlation between <strong>blog traffic source</strong> and <strong>trial conversion rate</strong> in GA4. If your organic sessions are growing but the conversion rate from blog to trial is declining, you're attracting the wrong audience, whatever Search Console or Ahrefs say.</p>
-<h2>What to actually look for</h2>
+<h2 id="what-to-actually-look-for">What to actually look for</h2>
 <p>Instead of checking each tool separately, look for these cross-tool patterns:</p>
 <p><strong>Impressions up, clicks flat.</strong> Your titles and meta descriptions aren't matching search intent. Rewrite the SERP copy, not the content.</p>
 <p><strong>Rankings up, sessions flat.</strong> You're ranking for terms with low search volume or very high bounce rate. Validate the keyword intent before targeting it.</p>
 <p><strong>Sessions up, conversions flat.</strong> Audience mismatch (wrong keywords) or a CTA placement issue. Pull the GA4 page-level conversion data for your top organic landing pages.</p>
 <p><strong>Rankings up, conversions up, but position 8–15.</strong> You're in striking distance. These pages deserve a focused content update and an internal linking push.</p>
-<h2>The connection no one makes</h2>
+<h2 id="the-connection-no-one-makes">The connection no one makes</h2>
 <p>The insight that actually moves organic growth isn't any single metric. It's the narrative that connects all three.</p>
 <p>A rising keyword cluster that has low KD, matches your ICP's search intent, and currently has no content targeting it in your calendar is worth more than any individual metric can tell you.</p>
 <p>That's the gap Duct was built to close: it reads Search Console, Ahrefs, GA4 and your content tools at once, and tells you the story they only tell together.</p>
+<ul class="post-tags" aria-label="Tags"><li>seo</li><li>search console</li><li>ga4</li><li>organic growth</li></ul>
 </article>
 
 <aside class="post-author" aria-label="About the author">
@@ -261,12 +356,13 @@
 <nav class="article-nav" aria-label="More articles">
 <a class="article-nav-prev" href="/blog/keyword-gap-analysis-without-a-spreadsheet">← Keyword Gap Analysis Without a Spreadsheet</a>
 <a class="article-nav-all" href="/blog/">All posts</a>
+<a class="article-nav-next" href="/blog/what-is-harness-engineering">What Is Harness Engineering? Lessons From a Shipping Agent →</a>
 </nav>
 </main>
 
 <!-- The closer is the product, not a pitch: the same bridge the tools pages
-     end on, with a session shot, so a post is not the one page on the site
-     that ends in text alone. -->
+     end on, with a shot, so a post is not the one page on the site that ends
+     in text alone. Which one depends on the post's audience. -->
 <section class="duct-bridge" aria-label="About Duct">
   <div class="duct-bridge-inner">
     <div class="duct-bridge-text">
@@ -275,7 +371,7 @@
       <p class="duct-bridge-actions"><a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a><a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a></p>
     </div>
     <figure class="shot-frame duct-bridge-shot">
-      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"//>
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"/>
       <figcaption>Why are signups down? Asked once, answered from four tools.</figcaption>
     </figure>
   </div>

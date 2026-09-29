@@ -175,8 +175,8 @@ and [Ship with AI](https://youtube.com/@5hirish) on YouTube.
 
 ## 📄 License
 
-MIT, see [LICENSE](LICENSE), including its exceptions for third-party
-documentation under `docs/guides/` and for trademarks.
+MIT, see [LICENSE](LICENSE). [NOTICE](NOTICE) lists what the license does
+not cover: third-party documentation under `docs/guides/`, and trademarks.
 
 ## 🏛️ Why "Duct"?
 

@@ -17,6 +17,7 @@ from __future__ import annotations
 import os
 
 import pytest
+from pydantic import BaseModel
 
 from agents.engines import (
     ENGINE_PROVIDER_ENV_VAR,
@@ -219,6 +220,49 @@ def test_the_dial_survives_construction_as_a_first_class_field():
         )
     assert llm.reasoning == {"effort": "high"}
     assert llm.model_kwargs == {}
+
+
+# ---------------------------------------------------------------------------
+# Structured output: which method each integration is asked for
+# ---------------------------------------------------------------------------
+
+class _Verdict(BaseModel):
+    label: str = ""
+
+
+def _bound(structured) -> dict:
+    """What the structured runnable binds onto the model call."""
+    return dict(structured.first.kwargs)
+
+
+@pytest.mark.parametrize("model", [ModelName.CLAUDE_FABLE, ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU])
+def test_a_structured_call_on_claude_uses_claudes_own_structured_output(model: ModelName):
+    """The integration's default forces a tool call: a 400 on Fable 5.1, and
+    from langchain-anthropic 1.7.4 not forced at all there. Claude's own
+    structured output constrains the reply on every model in the catalogue."""
+    from agents.core.lc import resolve_chat_model, structured_output
+
+    bound = _bound(structured_output(resolve_chat_model(Provider.ANTHROPIC, model, "sk-ant-t"), _Verdict))
+    assert bound["output_config"]["format"]["type"] == "json_schema"
+    assert "tool_choice" not in bound
+
+
+@pytest.mark.parametrize(
+    ("provider", "model"),
+    [
+        (Provider.OPENAI, ModelName.GPT_5_6_LUNA),
+        (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_8_FLASH),
+        (Provider.OPENROUTER, ModelName.OR_DEEPSEEK_V4_PRO),
+        (Provider.XAI, ModelName.GROK_4_6),
+    ],
+)
+def test_every_other_integration_keeps_its_own_default(provider: Provider, model: ModelName):
+    """OpenAI and Gemini default to a JSON schema already; OpenRouter's hosts
+    do not all accept one, so tool calling stays until measured live."""
+    from agents.core.lc import resolve_chat_model, structured_output
+
+    llm = resolve_chat_model(provider, model, "AIza-t" if provider is Provider.GOOGLE_GENAI else "sk-t")
+    assert _bound(structured_output(llm, _Verdict)) == _bound(llm.with_structured_output(_Verdict))
 
 
 # ---------------------------------------------------------------------------

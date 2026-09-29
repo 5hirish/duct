@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>What Is Harness Engineering? Lessons From a Shipping Agent</title>
+<link rel="canonical" href="https://getduct.ai/blog/what-is-harness-engineering"/>
+<meta name="description" content="Harness engineering is everything around the model: loop, tools, context, memory, approvals and evals. What the awesome list teaches, and what it misses."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/blog/what-is-harness-engineering"/>
+<meta property="og:title" content="What Is Harness Engineering? Lessons From a Shipping Agent"/>
+<meta property="og:description" content="We read the most-starred harness engineering list against Duct&#x27;s own agent. A day later: two bugs fixed, an eval gate shipped, and four broken entries found in the list itself."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/blog-what-is-harness-engineering.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="Engineering"/>
+<meta property="article:tag" content="harness engineering"/>
+<meta property="article:tag" content="agent harness"/>
+<meta property="article:tag" content="ai agents"/>
+<meta property="article:tag" content="evals"/>
+<meta property="article:tag" content="agent memory"/>
+<meta property="article:tag" content="human-in-the-loop"/>
+<meta property="article:published_time" content="2026-09-28T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="What Is Harness Engineering? Lessons From a Shipping Agent"/>
+<meta name="twitter:description" content="We read the most-starred harness engineering list against Duct&#x27;s own agent. A day later: two bugs fixed, an eval gate shipped, and four broken entries found in the list itself."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/blog-what-is-harness-engineering.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "inLanguage": "en",
+  "headline": "What Is Harness Engineering? Lessons From a Shipping Agent",
+  "description": "Harness engineering is everything around the model: loop, tools, context, memory, approvals and evals. What the awesome list teaches, and what it misses.",
+  "datePublished": "2026-09-28T00:00:00+00:00",
+  "dateModified": "2026-09-28T00:00:00+00:00",
+  "articleSection": "Engineering",
+  "wordCount": 2814,
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": [
+    "https://getduct.ai/blog/assets/what-is-harness-engineering/hero.webp",
+    "https://getduct.ai/assets/og/blog-what-is-harness-engineering.jpg"
+  ],
+  "mainEntityOfPage": "https://getduct.ai/blog/what-is-harness-engineering",
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Duct Blog",
+    "url": "https://getduct.ai/blog/"
+  },
+  "keywords": [
+    "harness engineering",
+    "agent harness",
+    "ai agents",
+    "evals",
+    "agent memory",
+    "human-in-the-loop"
+  ],
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "name": "ai-boost/awesome-harness-engineering",
+      "url": "https://github.com/ai-boost/awesome-harness-engineering"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Mitchell Hashimoto, My AI Adoption Journey",
+      "url": "https://mitchellh.com/writing/my-ai-adoption-journey"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Harness engineering: leveraging Codex in an agent-first world",
+      "url": "https://openai.com/index/harness-engineering/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Improving Deep Agents with harness engineering",
+      "url": "https://blog.langchain.com/improving-deep-agents-with-harness-engineering/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Agent harness",
+      "url": "https://en.wikipedia.org/wiki/Agent_harness"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "The Anatomy of an Agent Harness",
+      "url": "https://blog.langchain.com/the-anatomy-of-an-agent-harness/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Can Bölük, The Harness Problem",
+      "url": "https://stencil.so/blog/the-harness-problem"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Harness-Bench, arXiv 2605.27922",
+      "url": "https://arxiv.org/abs/2605.27922"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Anthropic, Claude Code postmortem",
+      "url": "https://www.anthropic.com/engineering/april-23-postmortem"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Anthropic, infrastructure noise",
+      "url": "https://www.anthropic.com/engineering/infrastructure-noise"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Demystifying evals for AI agents",
+      "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Why Software Factories Fail",
+      "url": "https://github.com/humanlayer/advanced-context-engineering-for-coding-agents/blob/main/wsff.md"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Effective harnesses for long-running agents",
+      "url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Harness design for long-running application development",
+      "url": "https://www.anthropic.com/engineering/harness-design-long-running-apps"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Harness engineering for coding agent users",
+      "url": "https://martinfowler.com/articles/harness-engineering.html"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Harness engineering for self-improvement",
+      "url": "https://lilianweng.github.io/posts/2026-07-04-harness/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "walkinglabs/awesome-harness-engineering",
+      "url": "https://github.com/walkinglabs/awesome-harness-engineering"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "walkinglabs/learn-harness-engineering",
+      "url": "https://github.com/walkinglabs/learn-harness-engineering"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "lopopolo/harness-engineering",
+      "url": "https://github.com/lopopolo/harness-engineering"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Writing effective tools for agents, with agents",
+      "url": "https://www.anthropic.com/engineering/writing-tools-for-agents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Claude Code sandboxing",
+      "url": "https://www.anthropic.com/engineering/claude-code-sandboxing"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "12-Factor Agents",
+      "url": "https://github.com/humanlayer/12-factor-agents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Context Engineering for AI Agents",
+      "url": "https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "AGENTS.md evaluation",
+      "url": "https://arxiv.org/abs/2602.11988"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "TEPA",
+      "url": "https://arxiv.org/abs/2608.07429"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Nemotron 3 Ultra playbook",
+      "url": "https://blog.langchain.com/tuning-the-harness-not-the-model-a-nemotron-3-ultra-playbook"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "arXiv 2608.23550",
+      "url": "https://arxiv.org/abs/2608.23550"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "OpenTelemetry GenAI conventions",
+      "url": "https://opentelemetry.io/docs/specs/semconv/gen-ai/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Arize Phoenix",
+      "url": "https://github.com/Arize-ai/phoenix"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://getduct.ai/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "What Is Harness Engineering? Lessons From a Shipping Agent",
+      "item": "https://getduct.ai/blog/what-is-harness-engineering"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is an agent harness?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An agent harness is the software around a language model that makes it an agent: the loop that calls the model, the tools and their schemas, context assembly and compaction, memory, permissions and approvals, retries and limits, and the traces and evals around all of it. Claude Code and Codex CLI are harnesses. So is the agent inside Duct."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is harness engineering the same as context engineering?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "They overlap, and people draw the line differently. Context engineering decides what the model sees on each call. Birgitta Böckeler calls engineering a coding agent's user harness \"a specific form of context engineering\". We draw it the other way: context is one layer of the harness, which also holds the loop, tools, permissions, evals and traces."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between harness engineering and loop engineering?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Harness engineering shapes the environment a single agent run happens in. Loop engineering, in Addy Osmani's words, \"is replacing yourself as the person who prompts the agent\": designing the outer system that decides what runs next, when, and on what. A loop is only as reliable as the harness each of its runs uses."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is harness engineering different from spec-driven development?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Spec-driven development means writing a specification before asking an AI to write code, so it is about the input to one task. Harness engineering is about the system that executes every task. They combine well: a good spec is one of the guides a harness gives the agent before it acts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do AGENTS.md files make coding agents better?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not by themselves. An ETH study found repository context files did not generally improve task success and raised inference cost by over 20%. Keep AGENTS.md short, a map rather than a manual, as OpenAI puts it, and move any rule that matters into a test or a tool that enforces it."
+      }
+    }
+  ]
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+.article-nav-all { font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }
+.prose .post-tags { list-style: none; padding: 0; margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prose .post-tags li { font-size: 13px; font-weight: 500; color: var(--navy-2); background: var(--off); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; margin: 0; }
+.post-hero { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+.post-hero img { width: 100%; height: auto; display: block; border-radius: var(--r-lg); border: 1px solid var(--border); }
+.post-toc { margin: 0 0 40px; padding: 20px 24px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.prose .post-toc-title { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0 0 10px; }
+.post-toc ol { margin: 0; padding-left: 20px; }
+.prose .post-toc li { font-size: 15px; margin-bottom: 4px; }
+.prose .post-toc a { border-bottom: none; }
+.prose h2, .prose h3 { scroll-margin-top: 88px; }
+.post-figure { margin: 36px 0; }
+.prose .post-figure img { height: auto; margin: 0; border: 1px solid var(--border); background: var(--white); }
+.post-figure figcaption, .post-quote figcaption { font-size: 13px; color: var(--navy-3); line-height: 1.6; margin-top: 10px; }
+.post-quote { margin: 36px 0; }
+.post-quote blockquote { margin: 0; }
+.post-quote blockquote p { font-family: var(--serif); font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.post-quote figcaption { padding-left: 27px; }
+.post-table { margin: 28px 0 32px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.post-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; color: var(--navy-3); }
+.post-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--off); }
+.post-table th, .post-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; min-width: 120px; }
+.post-table tr:last-child td { border-bottom: none; }
+.post-table code { font-size: 12px; }
+.prose .post-embed {
+  display: flex; align-items: center; gap: 16px; margin: 28px 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
+  color: var(--navy-3); transition: border-color .15s, background .15s;
+}
+.prose .post-embed:hover { border-color: var(--orange); background: var(--off); }
+.post-embed .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.post-embed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-embed-title { font-size: 16px; color: var(--navy); }
+.post-embed-desc { font-size: 14px; font-weight: 300; line-height: 1.5; }
+.post-embed-host { margin-left: auto; font-size: 12px; color: var(--navy-3); flex-shrink: 0; }
+.post-video { position: relative; margin: 32px 0; aspect-ratio: 16 / 9; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); }
+.prose .post-video-facade { display: block; position: absolute; inset: 0; border: none; color: #fff; }
+.prose .post-video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; }
+.post-video-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,.95) 0%, rgba(13,15,26,.75) 30%, rgba(13,15,26,0) 70%); }
+.post-video-play {
+  position: absolute; z-index: 1; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--orange); font-size: 30px; color: #fff;
+  box-shadow: 0 8px 24px rgba(13,15,26,.35); transition: transform .15s;
+}
+.post-video-facade:hover .post-video-play, .post-video-facade:focus-visible .post-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.post-video-caption { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+.post-video-title { font-family: var(--serif); font-size: 19px; line-height: 1.3; }
+.post-video-note { font-size: 13px; color: #c9ccd8; }
+.post-video iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 640px) {
+  .post-video-title { font-size: 16px; }
+  .post-video-caption { padding: 14px 16px; }
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+  .post-embed-host { display: none; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/what-is-harness-engineering.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang">
+<label class="sr-only" for="nav-lang">Language</label>
+<select id="nav-lang" class="nav-lang-select" data-duct-lang>
+<option value="en">English</option>
+<option value="es">Español</option>
+<option value="pt-br">Português (Brasil)</option>
+<option value="de">Deutsch</option>
+<option value="ja">日本語</option>
+</select>
+</div>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">Engineering</p>
+<h1>What Is Harness Engineering? Lessons From a Shipping Agent</h1>
+<div class="article-meta">Sep 28 2026 · 13 min read · By Shirish Kadam</div>
+</header>
+
+<main>
+<figure class="post-hero"><img src="assets/what-is-harness-engineering/hero.webp" srcset="assets/what-is-harness-engineering/hero-768.webp 768w, assets/what-is-harness-engineering/hero.webp 1320w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1320" height="737" fetchpriority="high" alt="A Roman mosaic of a water mill: an aqueduct channel runs through a raised sluice gate onto a wheel that turns a millstone"/></figure>
+<article id="prose" class="prose">
+<p><strong>Harness engineering is the work of building everything around a language model that turns it into a dependable agent:</strong> the loop that runs it, the tools it calls, what goes into its context, what it remembers, who approves what it does, and the evals and traces that tell you whether a change helped. The model is rented. The harness is the part you own, test and version.</p>
+<p>On September 27 we read <a href="https://github.com/ai-boost/awesome-harness-engineering">ai-boost/awesome-harness-engineering</a>, the most-starred awesome list on the subject, against the agent inside Duct. Duct is an open-source agent that reads a team's Search Console, GA4, ads and billing data together and proposes changes a person approves. The reading took a day. What it found took another: two bugs and three design changes, all merged on September 28.</p>
+<p>This post is what is in the list, what to read first, where the list is wrong, and what an agent that acts on live business systems adds to a literature written almost entirely about coding agents.</p>
+<a class="post-embed" href="https://github.com/ai-boost/awesome-harness-engineering" rel="noopener"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg><span class="post-embed-body"><span class="post-embed-title">ai-boost/<strong>awesome-harness-engineering</strong></span><span class="post-embed-desc">Harness engineering by problem: agent loop, context, tools, memory, permissions, evals, observability. About 480 links, CC0.</span></span><span class="post-embed-host">github.com</span></a>
+<nav class="post-toc" aria-label="In this post">
+<p class="post-toc-title">In this post</p>
+<ol>
+<li><a href="#where-did-the-term-harness-engineering-come-from">Where did the term &quot;harness engineering&quot; come from?</a></li>
+<li><a href="#why-does-the-harness-matter-as-much-as-the-model">Why does the harness matter as much as the model?</a></li>
+<li><a href="#what-is-in-awesome-harness-engineering">What is in awesome-harness-engineering?</a></li>
+<li><a href="#what-does-the-list-get-wrong">What does the list get wrong?</a></li>
+<li><a href="#what-did-reading-it-change-in-duct">What did reading it change in Duct?</a></li>
+<li><a href="#what-does-an-agent-that-acts-on-live-systems-add">What does an agent that acts on live systems add?</a></li>
+<li><a href="#how-do-you-start-harness-engineering-on-your-own-agent">How do you start harness engineering on your own agent?</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+</nav>
+<h2 id="where-did-the-term-harness-engineering-come-from">Where did the term "harness engineering" come from?</h2>
+<p>Mitchell Hashimoto named it on February 5, 2026, describing a habit rather than a discipline:</p>
+<figure class="post-quote">
+<blockquote cite="https://mitchellh.com/writing/my-ai-adoption-journey">
+<p>I've grown to calling this "harness engineering." It is the idea that anytime you find an agent makes a mistake, you take the time to engineer a solution such that the agent never makes that mistake again.</p>
+</blockquote>
+<figcaption><a href="https://mitchellh.com/writing/my-ai-adoption-journey">Mitchell Hashimoto, <em>My AI Adoption Journey</em></a></figcaption>
+</figure>
+<p>Six days later OpenAI published <a href="https://openai.com/index/harness-engineering/">Harness engineering: leveraging Codex in an agent-first world</a>, Ryan Lopopolo's account of a team that started with three engineers and shipped about a million lines of code in five months without writing any of it by hand. LangChain followed on February 17 with <a href="https://blog.langchain.com/improving-deep-agents-with-harness-engineering/">Improving Deep Agents with harness engineering</a>. Wikipedia's <a href="https://en.wikipedia.org/wiki/Agent_harness">Agent harness</a> article says attribution of the phrase is contested. What is not contested is that by spring every lab was using it.</p>
+<p>The shortest definition is LangChain's, from <a href="https://blog.langchain.com/the-anatomy-of-an-agent-harness/">The Anatomy of an Agent Harness</a>: <strong>Agent = Model + Harness.</strong> "If you're not the model, you're the harness."</p>
+<h2 id="why-does-the-harness-matter-as-much-as-the-model">Why does the harness matter as much as the model?</h2>
+<p><strong>Because the same model scores very differently in different harnesses</strong>, and the best-documented quality drop of 2026, in Claude Code, came from harness changes rather than the model.</p>
+<figure class="post-figure" data-zoom><img src="assets/what-is-harness-engineering/same-model-different-harness.svg" width="1000" height="470" loading="lazy" decoding="async" alt="A dumbbell chart of three comparisons with the model held fixed: LangChain&#x27;s agent on gpt-5.2-codex went from 52.8 to 66.5 on Terminal-Bench 2.0, Grok Code Fast 1 went from 6.7 to 68.3 when only the edit format changed, and on Harness-Bench one harness scored 76.2 against another&#x27;s 52.4 with the same models."/><figcaption>The gap between the dots is the harness. Nothing else changed.</figcaption></figure>
+<p>The evidence, all measured with the model held fixed:</p>
+<div class="post-table" role="region" aria-label="Table: Source, Model, What changed, Result" tabindex="0">
+<table>
+<thead><tr><th scope="col">Source</th><th scope="col">Model</th><th scope="col">What changed</th><th scope="col">Result</th></tr></thead>
+<tbody>
+<tr><td><a href="https://blog.langchain.com/improving-deep-agents-with-harness-engineering/">LangChain, deepagents-cli on Terminal-Bench 2.0</a></td><td>gpt-5.2-codex</td><td>the harness only</td><td>52.8% to 66.5%</td></tr>
+<tr><td><a href="https://stencil.so/blog/the-harness-problem">Can Bölük, <em>The Harness Problem</em></a></td><td>Grok Code Fast 1</td><td>the edit format only</td><td>6.7% to 68.3%</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2605.27922">Harness-Bench, arXiv 2605.27922</a></td><td>the same model pool and tasks</td><td>NanoBot vs OpenClaw</td><td>76.2 vs 52.4</td></tr>
+<tr><td><a href="https://www.anthropic.com/engineering/april-23-postmortem">Anthropic, Claude Code postmortem</a></td><td>Opus 4.6 and 4.7</td><td>one system-prompt line limiting response length</td><td>a 3% drop on one eval</td></tr>
+<tr><td><a href="https://www.anthropic.com/engineering/infrastructure-noise">Anthropic, infrastructure noise</a></td><td>the same model</td><td>container resources only</td><td>6 points on Terminal-Bench 2.0</td></tr>
+</tbody>
+</table>
+</div>
+<p>Anthropic puts the consequence plainly in <a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Demystifying evals for AI agents</a>: "When we evaluate "an agent," we're evaluating the harness and the model working together." Harness-Bench goes further and asks that capability be reported per model-harness configuration, not per model.</p>
+<p>There is a serious counterpoint. Dex Horthy's <a href="https://github.com/humanlayer/advanced-context-engineering-for-coding-agents/blob/main/wsff.md">Why Software Factories Fail</a>, which reached 394 points on Hacker News in July, argues that "no amount of harness engineering or loopsmaxxing can solve what is fundamentally a model-training issue": models are rewarded for passing tests, not for code a team can maintain. We agree with the conclusion. <strong>A harness raises the floor; it does not replace review.</strong> That is why Duct's harness ends with a person: by default every change waits for approval, and anything destructive or live waits at every autonomy level.</p>
+<figure class="post-figure" data-zoom><img src="assets/what-is-harness-engineering/harness-anatomy.svg" width="1000" height="830" loading="lazy" decoding="async" alt="A diagram of an agent harness: context feeds the model, the model calls tools and reads bounded results, and changes go to an authority step where policy in code and a person decide. A loop with limits wraps it, evals run before merge, and every model call is traced."/><figcaption>Everything except the model is code you write, test and version. The orange step is the only place a person decides.</figcaption></figure>
+<h2 id="what-is-in-awesome-harness-engineering">What is in awesome-harness-engineering?</h2>
+<p><strong>An index of about 480 links, organized by the problem each one solves rather than by vendor.</strong> It was created on March 29, 2026, had 4,560 stars on September 28, is released under CC0, and is maintained almost entirely by its author: the repository has merged two outside pull requests in its history, and new entries mostly arrive through the maintainer's own commits.</p>
+<div class="post-table" role="region" aria-label="Table: Section, Links, Read it for" tabindex="0">
+<table>
+<thead><tr><th scope="col">Section</th><th scope="col">Links</th><th scope="col">Read it for</th></tr></thead>
+<tbody>
+<tr><td>Foundations</td><td>32</td><td>the canonical posts from OpenAI, Anthropic, LangChain and Martin Fowler's site</td></tr>
+<tr><td>Design primitives</td><td>266</td><td>twelve problems: loop, planning, context, tools, skills and MCP, permissions, memory, orchestration, verification, observability, debugging, human-in-the-loop</td></tr>
+<tr><td>Reference implementations</td><td>89</td><td>tutorials, meta-harnesses and open agents whose code you can read</td></tr>
+<tr><td>Security, sandbox and permissions</td><td>45</td><td>isolating what an agent can touch</td></tr>
+<tr><td>Evals and verification</td><td>21</td><td>knowing whether a change helped</td></tr>
+<tr><td>Production infrastructure</td><td>22</td><td>running agents as a service</td></tr>
+<tr><td>Templates</td><td>4</td><td>starting points for <code>AGENTS.md</code>, a plan, an implementation log and a harness checklist</td></tr>
+</tbody>
+</table>
+</div>
+<p>The structure is the list's best feature. When an agent forgets, you open Memory &amp; State; when a regression slips through, Verification. Nobody needs to read all of it.</p>
+<h3 id="what-to-read-first">What to read first</h3>
+<p>If you read nine things, read these, in this order:</p>
+<ol>
+<li><a href="https://openai.com/index/harness-engineering/">Harness engineering: leveraging Codex in an agent-first world</a> (OpenAI). The founding case study, and the most repeated advice in the field: "give Codex a map, not a 1,000-page instruction manual".</li>
+<li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Effective harnesses for long-running agents</a> (Anthropic). An initializer agent, a progress file and a feature list, so each new session picks up where the last one stopped.</li>
+<li><a href="https://www.anthropic.com/engineering/harness-design-long-running-apps">Harness design for long-running application development</a> (Anthropic). Planner, generator and evaluator agents, and the sentence we quote most: "every component in a harness encodes an assumption about what the model can't do on its own".</li>
+<li><a href="https://blog.langchain.com/the-anatomy-of-an-agent-harness/">The Anatomy of an Agent Harness</a> (LangChain). The vocabulary, and a warning that post-training on one harness overfits a model to it.</li>
+<li><a href="https://martinfowler.com/articles/harness-engineering.html">Harness engineering for coding agent users</a> (Birgitta Böckeler). Guides that steer before the agent acts, sensors that check after, and which checks should be code rather than another model.</li>
+<li><a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Demystifying evals for AI agents</a> (Anthropic). Tasks, trials and graders, and why a capability eval should graduate into a regression suite.</li>
+<li><a href="https://www.anthropic.com/engineering/april-23-postmortem">An update on recent Claude Code quality reports</a> (Anthropic). Three harness changes, not a model change, behind a quality drop users noticed.</li>
+<li><a href="https://www.anthropic.com/engineering/infrastructure-noise">Quantifying infrastructure noise in agentic coding evals</a> (Anthropic). Your noise floor, before you believe any delta.</li>
+<li><a href="https://lilianweng.github.io/posts/2026-07-04-harness/">Harness engineering for self-improvement</a> (Lilian Weng). The survey, with a ladder from prompts to context to workflow to harness code to optimizer code.</li>
+</ol>
+<p>If you would rather watch than read, Lopopolo's talk is the OpenAI post in his own words, with the questions a room of engineers asked about it:</p>
+<figure class="post-video"><a class="post-video-facade" href="https://www.youtube.com/watch?v=am_oeAoUhew" rel="noopener" data-youtube="am_oeAoUhew" data-title="Harness Engineering: How to Build Software When Humans Steer, Agents Execute. Ryan Lopopolo, OpenAI, at AI Engineer (46 min)"><img src="assets/what-is-harness-engineering/youtube-am_oeAoUhew.jpg" width="1280" height="720" loading="lazy" decoding="async" alt=""/><span class="post-video-play" aria-hidden="true"><svg class="ic"><use href="/assets/icons.svg#play"/></svg></span><span class="post-video-caption"><span class="post-video-title">Harness Engineering: How to Build Software When Humans Steer, Agents Execute. Ryan Lopopolo, OpenAI, at AI Engineer (46 min)</span><span class="post-video-note">YouTube · plays here when you press play</span></span></a></figure>
+<h3 id="which-harness-engineering-list-should-you-use">Which harness engineering list should you use?</h3>
+<div class="post-table" role="region" aria-label="Table: Resource, Stars, What it is, Use it when" tabindex="0">
+<table>
+<thead><tr><th scope="col">Resource</th><th scope="col">Stars</th><th scope="col">What it is</th><th scope="col">Use it when</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/ai-boost/awesome-harness-engineering">ai-boost/awesome-harness-engineering</a></td><td>4,560</td><td>about 480 links by problem</td><td>you have a specific problem to solve</td></tr>
+<tr><td><a href="https://github.com/walkinglabs/awesome-harness-engineering">walkinglabs/awesome-harness-engineering</a></td><td>4,182</td><td>a shorter list of tools and guides</td><td>you want less to scan</td></tr>
+<tr><td><a href="https://github.com/walkinglabs/learn-harness-engineering">walkinglabs/learn-harness-engineering</a></td><td>16.5k</td><td>a beginner course</td><td>you are starting from zero</td></tr>
+<tr><td><a href="https://github.com/lopopolo/harness-engineering">lopopolo/harness-engineering</a></td><td>2,705</td><td>an anthology by the OpenAI post's author</td><td>you want the OpenAI view in full</td></tr>
+</tbody>
+</table>
+</div>
+<p>Stars as of September 28, 2026.</p>
+<h2 id="what-does-the-list-get-wrong">What does the list get wrong?</h2>
+<p><strong>Little, but its one-line summaries are an editor's, and a few are wrong.</strong> When we indexed it for our own engineering docs, we wrote down the rule that follows: <a href="https://github.com/5hirish/duct/blob/main/docs/engineering/agent-harness-references.md">mine it for sources, then read the primary one</a>, because some summaries run ahead of what the source measured. Four entries, checked on September 28:</p>
+<ul>
+<li><strong>Two Anthropic links return 404.</strong> <em>Writing Effective Tools for Agents</em> has moved to <a href="https://www.anthropic.com/engineering/writing-tools-for-agents">Writing effective tools for agents, with agents</a>. <em>Beyond Permission Prompts</em> is now <a href="https://www.anthropic.com/engineering/claude-code-sandboxing">Claude Code sandboxing</a>, and it is about filesystem and network isolation, not the "structured permission systems" the list describes.</li>
+<li><strong>One claim is not in its source.</strong> The entry for Anthropic's <em>2026 Agentic Coding Trends Report</em> says harness setup alone "can swing benchmarks by 5+ percentage points". The report mentions neither percentages nor benchmarks, and uses "harness" only as a verb. The nearest real figure is the infrastructure-noise post's 6 points, which is about container resources.</li>
+<li><strong>One entry is a duplicate.</strong> The older Fowler URL now redirects to the same article as the newer one.</li>
+</ul>
+<p>Missing entirely, and worth adding: Hashimoto's post, Bölük's <em>The Harness Problem</em>, HumanLayer's <a href="https://github.com/humanlayer/12-factor-agents">12-Factor Agents</a>, Manus's <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">Context Engineering for AI Agents</a>, and two 2026 papers we cite below: the <a href="https://arxiv.org/abs/2602.11988">AGENTS.md evaluation</a> and <a href="https://arxiv.org/abs/2608.07429">TEPA</a>.</p>
+<p>The bigger gap is scope. Nearly every benchmark and case study in the list is a coding agent, where the environment is a repository and the verifier is a test suite. That is not the only kind of agent.</p>
+<h2 id="what-did-reading-it-change-in-duct">What did reading it change in Duct?</h2>
+<p><strong>Two bugs fixed and three design changes, merged the next day, plus a rulebook that ties each harness rule to the test that enforces it.</strong> Reading a list against your own code is an audit with a free checklist. What it found:</p>
+<ul>
+<li><strong>A graph assembled by hand missed the shared middleware.</strong> Our audit agent ran without the run limits, retry reporting and prompt caching every other agent had. Now every session graph is built in one place, and a test fails one built anywhere else (<a href="https://github.com/5hirish/duct/pull/235">#235</a>).</li>
+<li><strong>A process that died left its runs "running" forever.</strong> They are now cancelled at the next boot (<a href="https://github.com/5hirish/duct/pull/236">#236</a>).</li>
+<li><strong>Memory now says how old a remembered state is.</strong> A remembered "campaign enabled" used to render as its start date followed by "present", so a 90-day-old state read like this morning's. Now the model sees <code>seen · 90d · verify</code> and re-reads the source before asserting it (<a href="https://github.com/5hirish/duct/pull/237">#237</a>).</li>
+<li><strong>Duct does the arithmetic, not the model.</strong> Replaying a real brief, the model reasoned correctly and then added wrong: 2,504 sessions where the rows summed to 2,681. Totals, rates and subtotals are now computed on the server and handed to the model (<a href="https://github.com/5hirish/duct/pull/238">#238</a>).</li>
+<li><strong>Harness changes are gated by evals.</strong> A prompt, model default or middleware change now runs k trials against a baseline on synthetic accounts before it merges. Binary checks gate; scores are only logged. A full trial costs $0.03 on DeepSeek V4 Pro through OpenRouter, which is what makes running it on every pull request affordable (<a href="https://github.com/5hirish/duct/pull/239">#239</a>).</li>
+</ul>
+<p>The rules that came out of it live in <a href="https://github.com/5hirish/duct/blob/main/docs/engineering/agent-engineering.md">one rulebook</a>, organized by the list's own sections, and each names what enforces it:</p>
+<div class="post-table" role="region" aria-label="Table: The list&#x27;s section, Duct&#x27;s rule, Enforced by" tabindex="0">
+<table>
+<thead><tr><th scope="col">The list's section</th><th scope="col">Duct's rule</th><th scope="col">Enforced by</th></tr></thead>
+<tbody>
+<tr><td>Agent loop</td><td>Every agent declares limits per run and per thread; retries happen in one layer that reports each attempt</td><td><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_deep_session.py">test_deep_session.py</a></td></tr>
+<tr><td>Context delivery</td><td>Stable blocks first, per-user text in the user turn, so the prompt cache holds</td><td><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_turn.py">test_turn.py</a></td></tr>
+<tr><td>Tool design</td><td>An error is a result with a code and a next step, never a raw exception</td><td><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_agent_errors.py">test_agent_errors.py</a></td></tr>
+<tr><td>Memory and state</td><td>A remembered state is a dated claim: show its age, re-read it before asserting it</td><td><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_memory_retrieval.py">test_memory_retrieval.py</a></td></tr>
+<tr><td>Permissions, human-in-the-loop</td><td>Authority lives in code; no agent has an approve or apply tool</td><td><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_execution_policy.py">test_execution_policy.py</a></td></tr>
+<tr><td>Orchestration</td><td>Every session graph is built in one place, with the same middleware</td><td><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_agent_assembly.py">test_agent_assembly.py</a></td></tr>
+<tr><td>Evals</td><td>A harness change runs k trials against a baseline before merge</td><td><a href="https://github.com/5hirish/duct/blob/main/backend/tests/eval/gate.py">tests/eval/gate.py</a></td></tr>
+<tr><td>Observability</td><td>One span per model call at one choke point; per-tool spans are still an open gap</td><td><a href="https://github.com/5hirish/duct/blob/main/backend/agents/core/lc.py">agents/core/lc.py</a></td></tr>
+</tbody>
+</table>
+</div>
+<p>The last row is deliberate. A rulebook that lists only what works is marketing; ours ranks its <a href="https://github.com/5hirish/duct/blob/main/docs/engineering/agent-engineering.md#open-gaps">open gaps</a> by the failure each would prevent.</p>
+<h2 id="what-does-an-agent-that-acts-on-live-systems-add">What does an agent that acts on live systems add?</h2>
+<p><strong>When the environment is a live ad account instead of a repository, there is no test suite and no sandbox copy.</strong> Four things change, and the list barely covers any of them.</p>
+<h3 id="there-is-no-pytest-for-an-ad-account">There is no pytest for an ad account</h3>
+<p>A coding agent's work is verified by running the tests. Nothing verifies a keyword added to a Google Ads campaign until money has been spent on it. So the verifier becomes three things: a policy in code that sorts changes by risk, a person who approves (every change by default, and anything destructive or live at every level), and a rollback. In Duct every change is a staged change set that moves through propose, approve, apply and roll back, and the rules live in <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py">one policy file</a>, not in the prompt. The list's Human-in-the-Loop section has 12 entries, almost all approval prompts. None is about undo.</p>
+<h3 id="memory-has-to-know-when-it-stopped-being-true">Memory has to know when it stopped being true</h3>
+<p>Business data drifts weekly: budgets change, campaigns pause, pages redirect. The <a href="https://arxiv.org/abs/2608.07429">TEPA paper</a> measured what happens when remembered facts are reversed: append-only memory scored 0.210, no memory at all 0.309, and memory that revokes stale entries 0.950. <strong>An agent that remembers naively is worse than one that remembers nothing.</strong> Duct keeps when each fact held, shows its age, and re-reads the source before stating an old one as current.</p>
+<figure class="post-figure" data-zoom><img src="../assets/media/memory-timeline.webp" srcset="../assets/media/memory-timeline-768.webp 768w, ../assets/media/memory-timeline-1536.webp 1536w, ../assets/media/memory-timeline.webp 2008w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="2008" height="1990" loading="lazy" decoding="async" alt="Duct&#x27;s memory timeline: remembered goals, decisions and watches, each with the dates it held, and a superseded weekly target still visible"/><figcaption>Every remembered fact carries the dates it held. The old signups target is superseded, not deleted.</figcaption></figure>
+<h3 id="harness-quality-matters-most-on-cheap-models">Harness quality matters most on cheap models</h3>
+<p>Three sources point the same way. Harness-Bench found stronger models vary less across harnesses. Bölük's weakest models gained the most from a better edit format. And LangChain's <a href="https://blog.langchain.com/tuning-the-harness-not-the-model-a-nemotron-3-ultra-playbook">Nemotron 3 Ultra playbook</a> tuned an open model's harness to a best run of 0.86 against Opus 4.8's 0.87, at about $4.48 per suite against $43.48. For anyone routing work to cheaper tiers, as Duct does with heavy, standard and light models, <strong>the harness is a unit-economics lever</strong>: the cheaper the model, the more the harness and its evals decide the result.</p>
+<h3 id="a-rule-in-agents-md-is-a-wish-a-test-is-a-rule">A rule in AGENTS.md is a wish; a test is a rule</h3>
+<p>A study of 481 public <code>CLAUDE.md</code> files (<a href="https://arxiv.org/abs/2608.23550">arXiv 2608.23550</a>) found that only about 4 to 16% of the security rules written in them had a matching built-in control. An ETH study of repository context files (<a href="https://arxiv.org/abs/2602.11988">arXiv 2602.11988</a>) found they "do not generally improve task success rates" while raising inference cost by over 20%. Duct's own <code>AGENTS.md</code> names each non-negotiable together with the test that fails when it breaks, and the <a href="/doctrine">doctrine page</a> links every opinion to the file that enforces it.</p>
+<h2 id="how-do-you-start-harness-engineering-on-your-own-agent">How do you start harness engineering on your own agent?</h2>
+<p><strong>Start from your agent's failures, not from a framework.</strong> Seven steps, in the order they paid off for us:</p>
+<ol>
+<li><strong>Keep a failure log, and turn every repeat into code:</strong> a tool, a check or a test. A prompt line is the last resort, not the first.</li>
+<li><strong>Next to each harness component, write the failure it compensates for.</strong> When the model changes, re-test those assumptions and delete what the new model no longer needs.</li>
+<li><strong>Put authority in code.</strong> The agent proposes; a policy decides what needs a person; nothing destructive or live applies on the model's say-so.</li>
+<li><strong>Bound every tool result and make every error actionable.</strong> Fold large results losslessly before cutting them, and return errors that say what to try next.</li>
+<li><strong>Put stable text first and per-user text last.</strong> Manus calls the KV-cache hit rate "the single most important metric for a production-stage AI agent"; ordering is most of it.</li>
+<li><strong>Gate harness changes with evals.</strong> Run k trials against a baseline, gate on binary checks, and ignore deltas smaller than your noise floor.</li>
+<li><strong>Trace every model call and tool call at one choke point.</strong> The <a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/">OpenTelemetry GenAI conventions</a> are the standard; we read ours in <a href="https://github.com/Arize-ai/phoenix">Arize Phoenix</a>.</li>
+</ol>
+<p>The whole of Duct's harness, the rules and the tests that hold them are <a href="/open-source">open source</a>, so every step above has a working example you can read.</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="what-is-an-agent-harness">What is an agent harness?</h3>
+<p>An agent harness is the software around a language model that makes it an agent: the loop that calls the model, the tools and their schemas, context assembly and compaction, memory, permissions and approvals, retries and limits, and the traces and evals around all of it. Claude Code and Codex CLI are harnesses. So is the agent inside Duct.</p>
+<h3 id="is-harness-engineering-the-same-as-context-engineering">Is harness engineering the same as context engineering?</h3>
+<p>They overlap, and people draw the line differently. Context engineering decides what the model sees on each call. Birgitta Böckeler calls engineering a coding agent's user harness "a specific form of context engineering". We draw it the other way: context is one layer of the harness, which also holds the loop, tools, permissions, evals and traces.</p>
+<h3 id="what-is-the-difference-between-harness-engineering-and-loop-engineering">What is the difference between harness engineering and loop engineering?</h3>
+<p>Harness engineering shapes the environment a single agent run happens in. Loop engineering, in Addy Osmani's words, "is replacing yourself as the person who prompts the agent": designing the outer system that decides what runs next, when, and on what. A loop is only as reliable as the harness each of its runs uses.</p>
+<h3 id="how-is-harness-engineering-different-from-spec-driven-development">How is harness engineering different from spec-driven development?</h3>
+<p>Spec-driven development means writing a specification before asking an AI to write code, so it is about the input to one task. Harness engineering is about the system that executes every task. They combine well: a good spec is one of the guides a harness gives the agent before it acts.</p>
+<h3 id="do-agents-md-files-make-coding-agents-better">Do AGENTS.md files make coding agents better?</h3>
+<p>Not by themselves. An ETH study found repository context files did not generally improve task success and raised inference cost by over 20%. Keep <code>AGENTS.md</code> short, a map rather than a manual, as OpenAI puts it, and move any rule that matters into a test or a tool that enforces it.</p>
+<ul class="post-tags" aria-label="Tags"><li>harness engineering</li><li>agent harness</li><li>ai agents</li><li>evals</li><li>agent memory</li><li>human-in-the-loop</li></ul>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-prev" href="/blog/why-your-seo-metrics-arent-telling-you-the-full-story">← Why Your SEO Metrics Aren&#x27;t Telling You the Full Story</a>
+<a class="article-nav-all" href="/blog/">All posts</a>
+</nav>
+</main>
+
+<!-- The closer is the product, not a pitch: the same bridge the tools pages
+     end on, with a shot, so a post is not the one page on the site that ends
+     in text alone. Which one depends on the post's audience. -->
+<section class="duct-bridge" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Every rule in this post is a file you can read.</p>
+      <p class="duct-bridge-body">Duct is an open-source agent for product and growth teams. Its loop, approval policy, eval gate and memory live in one MIT-licensed repository, next to the tests that hold them. Read it, fork it, or run it with your own keys.</p>
+      <p class="duct-bridge-actions"><a href="https://github.com/5hirish/duct" class="btn btn-orange" rel="noopener">Star Duct on GitHub</a><a href="/download" class="duct-bridge-link" data-duct-download>Download Duct&nbsp;↓</a></p>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/review-card.webp" srcset="../assets/media/review-card-768.webp 768w, ../assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="1088" height="936" loading="lazy" alt="A change set waiting for approval: two changes will apply, one is held because it breaks the budget guardrail"/>
+      <figcaption>Authority lives in code: the agent proposes, a person approves.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+<div class="footer-col">
+<h4>Project</h4>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/changelog/">Changelog</a>
+<a href="/blog/">Blog</a>
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</div>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · MIT licensed</span>
+<span>Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+<script>
+(function () {
+  var links = document.querySelectorAll('[data-youtube]');
+  for (var i = 0; i < links.length; i++) {
+    links[i].addEventListener('click', function (e) {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var id = this.getAttribute('data-youtube') || '';
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return;
+      e.preventDefault();
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
+      frame.title = this.getAttribute('data-title');
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      this.parentNode.replaceChild(frame, this);
+    });
+  }
+})();
+</script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>

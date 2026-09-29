@@ -156,5 +156,5 @@ Participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 ## Licensing of contributions
 
 Duct is MIT licensed. By contributing you agree that your contribution is
-licensed under the same terms. See [LICENSE](LICENSE), including its exceptions
-for third-party documentation and trademarks.
+licensed under the same terms. See [LICENSE](LICENSE), and [NOTICE](NOTICE)
+for what it does not cover: third-party documentation and trademarks.

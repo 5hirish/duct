@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 470" width="1000" height="470" role="img" aria-labelledby="t d">
+  <title id="t">Same model, different harness</title>
+  <desc id="d">Three comparisons with the model held fixed. LangChain's deepagents-cli on gpt-5.2-codex went from 52.8 to 66.5 on Terminal-Bench 2.0 by changing only the harness. Grok Code Fast 1 went from 6.7 to 68.3 when only the edit format changed. On Harness-Bench, with the same models and tasks, OpenClaw scored 52.4 and NanoBot 76.2.</desc>
+  <defs>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      .name { font-size: 20px; font-weight: bold; fill: #0d0f1a; }
+      .sub { font-size: 16px; fill: #6b7086; }
+      .val { font-size: 18px; font-weight: bold; }
+      .axis { font-size: 15px; fill: #6b7086; }
+    </style>
+  </defs>
+  <rect width="1000" height="470" fill="#ffffff"/>
+  <text x="20" y="46" class="serif" font-size="32" fill="#0d0f1a">Same model, different harness</text>
+  <text x="20" y="78" class="sans" font-size="18" fill="#4b5068">Score out of 100 with the model held fixed:
+    <tspan fill="#9ea3b8" font-weight="bold">●</tspan> before, or the weaker harness
+    <tspan fill="#ff5c00" font-weight="bold" dx="6">●</tspan> the better harness</text>
+
+  <!-- grid: x = 380 + 5.8 * score -->
+  <g stroke="#eef0f5" stroke-width="2">
+    <line x1="380" y1="110" x2="380" y2="400"/>
+    <line x1="525" y1="110" x2="525" y2="400"/>
+    <line x1="670" y1="110" x2="670" y2="400"/>
+    <line x1="815" y1="110" x2="815" y2="400"/>
+    <line x1="960" y1="110" x2="960" y2="400"/>
+  </g>
+  <g class="sans axis" text-anchor="middle">
+    <text x="380" y="428">0</text><text x="525" y="428">25</text><text x="670" y="428">50</text><text x="815" y="428">75</text><text x="960" y="428">100</text>
+  </g>
+
+  <!-- LangChain: 52.8 -> 66.5 -->
+  <text x="20" y="160" class="sans name">LangChain deepagents-cli</text>
+  <text x="20" y="184" class="sans sub">gpt-5.2-codex · Terminal-Bench 2.0</text>
+  <line x1="686" y1="168" x2="766" y2="168" stroke="#d9dbe3" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="686" cy="168" r="10" fill="#9ea3b8"/>
+  <circle cx="766" cy="168" r="10" fill="#ff5c00"/>
+  <text x="686" y="148" text-anchor="middle" class="sans val" fill="#6b7086">52.8</text>
+  <text x="766" y="148" text-anchor="middle" class="sans val" fill="#c2410c">66.5</text>
+
+  <!-- Bölük: 6.7 -> 68.3 -->
+  <text x="20" y="252" class="sans name">Can Bölük, The Harness Problem</text>
+  <text x="20" y="276" class="sans sub">Grok Code Fast 1 · edit format only</text>
+  <line x1="419" y1="260" x2="776" y2="260" stroke="#d9dbe3" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="419" cy="260" r="10" fill="#9ea3b8"/>
+  <circle cx="776" cy="260" r="10" fill="#ff5c00"/>
+  <text x="419" y="240" text-anchor="middle" class="sans val" fill="#6b7086">6.7</text>
+  <text x="776" y="240" text-anchor="middle" class="sans val" fill="#c2410c">68.3</text>
+
+  <!-- Harness-Bench: 52.4 vs 76.2 -->
+  <text x="20" y="344" class="sans name">Harness-Bench</text>
+  <text x="20" y="368" class="sans sub">OpenClaw vs NanoBot, same models</text>
+  <line x1="684" y1="352" x2="822" y2="352" stroke="#d9dbe3" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="684" cy="352" r="10" fill="#9ea3b8"/>
+  <circle cx="822" cy="352" r="10" fill="#ff5c00"/>
+  <text x="684" y="332" text-anchor="middle" class="sans val" fill="#6b7086">52.4</text>
+  <text x="822" y="332" text-anchor="middle" class="sans val" fill="#c2410c">76.2</text>
+
+  <text x="20" y="458" class="sans" font-size="14" fill="#6b7086">Sources: LangChain, Feb 2026 · stencil.so/blog/the-harness-problem, Feb 2026 · arXiv 2605.27922, May 2026</text>
+</svg>

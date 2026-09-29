@@ -43,6 +43,18 @@ Zed expands nothing, so a server needing a token carries no `env` block there
 and reads it from the shell Zed was launched from. **Never write a real token
 into any of them** — this repository is public.
 
+The `github` server is the one entry that carries a header, and the reason is
+worth knowing before "fixing" it back. GitHub's OAuth server publishes no
+`registration_endpoint`, so every host that relies on dynamic client
+registration fails with `Incompatible auth server: does not support dynamic
+client registration`; the same message from OpenSEO, Figma or Railway is a
+client-side fault (those three do support it), but from GitHub it is real. A
+bearer token replaces the OAuth flow: export `GITHUB_MCP_TOKEN` (a
+fine-grained personal access token with the repo scopes you actually use) in
+the shell that launches the editor. Zed cannot expand a variable, so its copy
+has no header and its GitHub server stays unauthenticated until Zed gets its
+own OAuth for it.
+
 There was previously a root `AGENTS.md` holding auto-accumulated "learned
 preferences" separate from `CLAUDE.md`. Two files describing one repo drift, and
 that one did — it still named modules that had been deleted. One file per
@@ -86,10 +98,12 @@ the first one.
 
 - The live roadmap is the GitHub Project
   ([5hirish/projects/10](https://github.com/users/5hirish/projects/10)), not
-  a document in this repo. Its `Priority` field (`P0`/`P1`/`P2`) and each
-  issue's milestone (the actual dated deadline, not the Project's title) are
-  the source of truth for what's next — check it rather than inferring
-  priority from the conversation alone.
+  a document in this repo. Its `Priority` field (`P0`/`P1`/`P2`), each
+  issue's milestone (the actual dated deadline, not the Project's title) and
+  its `Iteration` (the two-week sprint, refreshed every Wednesday by a
+  scheduled routine) are the source of truth for what's next — check it
+  rather than inferring priority from the conversation alone. Starting work
+  on an issue puts it in the current sprint; the rule is in `prioritize`.
 - Scope proposed on an agent's own initiative — not asked for by name — goes
   through `prioritize` before code, not after. A well-argued feature nobody
   asked for is still scope creep, however clean the diff.
@@ -203,6 +217,11 @@ Codex Desktop worktrees use `.codex/environments/environment.toml`. It runs
 `make setup` once and exposes the same checks, tests, and development commands
 as actions in the app. It contains no credentials; local secrets stay outside
 the repository.
+
+GitHub Copilot's coding agent prepares its environment with
+`.github/workflows/copilot-setup-steps.yml`, which runs `make setup`, and reads
+these `AGENTS.md` files itself. `.github/copilot-instructions.md` only points
+here, so there is nothing to keep in sync.
 
 Two editors are configured, `.vscode/` and `.zed/`, and each holds the same
 material in its own shape because neither format is a superset of the other:

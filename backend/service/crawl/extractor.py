@@ -137,14 +137,17 @@ def extract_signals(
     *response_headers* should be the lowercased HTTP response headers dict
     from FetchResult.headers — used to extract X-Robots-Tag, Vary, etc.
     """
+    # Lexbor, not selectolax's default Modest backend: upstream no longer
+    # maintains Modest and lands parser fixes only in Lexbor, and this parses
+    # whatever HTML a crawled site chooses to send.
     try:
-        from selectolax.parser import HTMLParser as SParser
+        from selectolax.lexbor import LexborHTMLParser
     except ImportError:
         logger.warning("selectolax not installed, falling back to stdlib html.parser")
         return _extract_signals_stdlib(html, url, page_type, response_headers)
 
     try:
-        tree = SParser(html)
+        tree = LexborHTMLParser(html)
     except Exception as exc:
         logger.debug("selectolax parse error for %s: %s", url, exc)
         return PageSignals(url=url, page_type=page_type)  # type: ignore[arg-type]
@@ -165,14 +168,19 @@ def extract_signals(
 
     title = _get_text(tree.css_first("title"))
 
-    meta_desc_node = tree.css_first('meta[name="description"]')
+    # Meta names are case-insensitive in HTML and search engines read them so;
+    # `<meta NAME="ROBOTS">` is common on older sites. Lexbor matches attribute
+    # values the way the selectors spec says (only `rel`, `type` and the like
+    # ignore case), so these selectors carry the `i` flag — without it an
+    # uppercase noindex went unseen and a description read as missing.
+    meta_desc_node = tree.css_first('meta[name="description" i]')
     meta_description = _attr(meta_desc_node, "content")
 
     canonical_node = tree.css_first('link[rel="canonical"]')
     canonical = _attr(canonical_node, "href")
 
     # noindex: <meta name="robots" content="noindex,..."> OR X-Robots-Tag header
-    robots_node = tree.css_first('meta[name="robots"]')
+    robots_node = tree.css_first('meta[name="robots" i]')
     robots_content = _attr(robots_node, "content").lower()
     is_noindex = "noindex" in robots_content or "noindex" in x_robots_tag.lower()
 
@@ -197,11 +205,11 @@ def extract_signals(
     # ------------------------------------------------------------------
 
     def _og(prop: str) -> str:
-        node = tree.css_first(f'meta[property="og:{prop}"]')
+        node = tree.css_first(f'meta[property="og:{prop}" i]')
         return _attr(node, "content")
 
     def _twitter(name: str) -> str:
-        node = tree.css_first(f'meta[name="twitter:{name}"]')
+        node = tree.css_first(f'meta[name="twitter:{name}" i]')
         return _attr(node, "content")
 
     og_title = _og("title")

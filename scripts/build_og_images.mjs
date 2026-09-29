@@ -38,7 +38,7 @@ const PAGES = {
   "terms": { title: "Terms of service.", sub: "The terms for the hosted app and the desktop download." },
   "changelog": { title: "What changed in Duct.", sub: "Release notes, newest first: connectors, agents, desktop builds." },
   "tools": { title: "Free tools for growth teams.", sub: "Calculators and generators that run in your browser. No account." },
-  "blog": { title: "What your tools don't tell you on their own.", sub: "Writing on organic growth, product intelligence and the numbers that only make sense read together." },
+  "blog": { title: "What your tools don't tell you on their own.", sub: "Growth without a data team, and an open-source agent built in the open." },
   "tools/saas-metrics-calculator": { title: "SaaS metrics benchmark calculator.", sub: "Churn, LTV:CAC, payback and trial-to-paid against industry medians.", shot: "insights-session.webp" },
   "tools/cac-ltv-calculator": { title: "CAC and LTV calculator.", sub: "CAC, LTV, the ratio and payback, with benchmark context.", shot: "insights-session.webp" },
   "tools/mrr-growth-calculator": { title: "MRR growth rate calculator.", sub: "Net MRR growth, CMGR, and the rate you need to hit a target.", shot: "insights-session.webp" },
@@ -57,18 +57,22 @@ const PAGES = {
 // entry here: its category is the kicker, the author and read time the line
 // under the title. The same card is the cover on the blog index, which is why
 // the excerpt is left off it: it sits right under the cover there already.
+// A post with a `hero` gets it on the card in place of a product shot, so two
+// covers on the index are not the same beige rectangle with different words.
 function blogCards() {
   const cards = {};
   for (const file of readdirSync(POSTS).filter((f) => f.endsWith(".md")).sort()) {
     const front = readFileSync(join(POSTS, file), "utf8").split(/^---\s*$/m)[1] ?? "";
-    const field = (key) => {
+    const field = (key, optional = false) => {
       const m = front.match(new RegExp(`^${key}:\\s*"?(.*?)"?\\s*$`, "m"));
-      if (!m) throw new Error(`${file}: front matter has no ${key}`);
-      return m[1];
+      if (!m && !optional) throw new Error(`${file}: front matter has no ${key}`);
+      return m?.[1];
     };
+    const hero = field("hero", true);
     cards[`blog/${file.slice(0, -3)}`] = {
       kicker: field("category"), title: field("title"),
       sub: `By ${field("author")} · ${field("readTime")} min read`,
+      ...(hero && { art: join(REPO, "site/blog", hero) }),
     };
   }
   return cards;
@@ -84,8 +88,8 @@ function wrap(text, max) {
   return lines;
 }
 
-async function card(slug, { title, sub, shot, kicker }) {
-  const withShot = Boolean(shot);
+async function card(slug, { title, sub, shot, art, kicker }) {
+  const withShot = Boolean(shot || art);
   const titleLines = wrap(title, withShot ? 18 : 30);
   const size = titleLines.length > 2 ? 54 : 64;
   const x = 72, y = 236;
@@ -104,12 +108,23 @@ async function card(slug, { title, sub, shot, kicker }) {
     <text x="${x}" y="${H - 56}" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#7a7f95">getduct.ai · open source · MIT</text>
   </svg>`;
   const layers = [];
-  if (withShot) {
+  if (shot) {
     const sw = 600, sh = 470, left = W - sw + 70, top = H - sh + 70;
     const crop = await sharp(join(MEDIA, shot)).resize({ width: 1180 }).extract({ left: 0, top: 0, width: sw, height: sh }).toBuffer();
     const mask = Buffer.from(`<svg width="${sw}" height="${sh}"><rect width="${sw}" height="${sh}" rx="18" fill="#fff"/></svg>`);
     const rounded = await sharp(crop).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
     const shadow = Buffer.from(`<svg width="${W}" height="${H}"><defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="18"/></filter></defs><rect x="${left}" y="${top + 20}" width="${sw}" height="${sh}" rx="18" fill="#0d0f1a" opacity=".22" filter="url(#s)"/></svg>`);
+    layers.push({ input: shadow, left: 0, top: 0 }, { input: rounded, left, top });
+  } else if (art) {
+    // An illustration is a composed picture, so it is shown whole in the
+    // bottom-right corner rather than cropped off the edge like a shot.
+    const aw = 520, left = W - aw - 48;
+    const img = await sharp(art).resize({ width: aw }).toBuffer();
+    const { height: ah } = await sharp(img).metadata();
+    const top = Math.round((H - ah) / 2);
+    const mask = Buffer.from(`<svg width="${aw}" height="${ah}"><rect width="${aw}" height="${ah}" rx="14" fill="#fff"/></svg>`);
+    const rounded = await sharp(img).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
+    const shadow = Buffer.from(`<svg width="${W}" height="${H}"><defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="14"/></filter></defs><rect x="${left}" y="${top + 14}" width="${aw}" height="${ah}" rx="14" fill="#0d0f1a" opacity=".18" filter="url(#s)"/></svg>`);
     layers.push({ input: shadow, left: 0, top: 0 }, { input: rounded, left, top });
   }
   const out = join(OUT, slug.replace("/", "-") + ".jpg");

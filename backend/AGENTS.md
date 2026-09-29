@@ -653,12 +653,17 @@ framework. The rules it implies:
   `context_compacted`, and continues from the checkpoint. A second overflow is
   the ordinary failure. deepagents' own summarisation event is cleared in the
   same write: it indexes into the message list the rewrite just replaced.
-  Both paths — the emergency one and the automatic summariser reported by
-  `_dispatch_updates` — put the **summary text** on `context_compacted`
-  (`compaction_summary` finds it by the summariser's own `lc_source` tag,
-  minus its framing sentence) and the recorder writes it as an
+  Both paths — the emergency one and the automatic summariser — put the
+  **summary text** on `context_compacted` and the recorder writes it as an
   `EventKind.COMPACTED` row, so the transcript can show what the thread now
-  opens with, live and after a reload, instead of an unexplained gap.
+  opens with, live and after a reload, instead of an unexplained gap. The
+  automatic one is deepagents', which summarises *inside* the `model` node,
+  so a node name cannot find it: `is_summarization_call` reads the
+  `lc_source: summarization` tag both summarisers put on their model call,
+  and the divider goes out when the reply that runs on the summary starts
+  streaming, not when the node's update lands after it. `compaction_summary`
+  reads the same tag off the summary message, minus either summariser's
+  framing.
 - **A model has a price or it has no cost.** `PRICING` in `agents/models.py`
   mirrors `CONTEXT_WINDOW` (a test holds them equal) and `cost_usd()` prices a
   call from LangChain's usage, taking cached tokens out of the input figure.
@@ -904,11 +909,18 @@ don't fit.
   the `AgentEvent` vocabulary), plus `build_ask_user_tool`, the LangChain half
   of the human-in-the-loop port. Extracted from `agents/audit/v1/runner.py` when
   insights became the second V1 runner. A V1 runner should not talk to
-  `init_chat_model` or drive `astream` itself.
+  `init_chat_model` or drive `astream` itself. A one-shot typed answer goes
+  through `structured_output`, not `with_structured_output`: it asks Claude
+  for its own JSON-schema output, since the integration's default forces a
+  tool call that Fable 5.1 refuses.
 - `agents/insights/totals.py` — **Duct adds up a pull; the model quotes the
   sum.** `fetch_entity` puts `totals`, `rates` and per-dimension `subtotals`
   on every row report, from the catalog's `agg`, `ratio` and `weight`, and
-  says in `totals_cover` whether they are the window's or a floor. A replay
+  says in `totals_cover` whether they are the window's or a floor, and
+  whether the source flagged the report itself: a fetcher puts a source's
+  own caveats in `data_quality` as sentences (GA4's thresholding, sampling,
+  "(other)" roll-up and date truncation, from the response metadata), and
+  the cover points at them. A replay
   of a real brief reasoned right and added wrong (2,504 against 2,681
   sessions); summing is now never the model's job. A ratio metric is total
   over total, never a mean of rates (CPA weighted by conversions would drop

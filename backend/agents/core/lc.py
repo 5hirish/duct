@@ -30,12 +30,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
+import re
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware, SummarizationMiddleware
 from langchain.chat_models import init_chat_model
+from langchain_anthropic import ChatAnthropic
 from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import HumanMessage
@@ -251,6 +253,28 @@ def resolve_chat_model(
     )
 
 
+def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
+    """``llm.with_structured_output(schema)`` on a method that constrains the
+    reply on this provider, for a one-shot structured call.
+
+    Each integration picks its own default, and Anthropic's is the weak one:
+    ``function_calling`` forces a tool call, which Fable 5.1 refuses outright
+    (a 400 through langchain-anthropic 1.7.2; from 1.7.4 the call is simply
+    not forced, a best effort — langchain-ai/langchain#40766), as the API
+    does beside extended thinking. ``json_schema`` is Claude's own structured
+    output, constrained decoding on every Claude in the catalogue.
+
+    Everyone else keeps their default. OpenAI (the ChatGPT plan included)
+    and Gemini already default to ``json_schema``. OpenRouter and xAI default
+    to tool calling, and OpenRouter fronts open-weight models whose hosts do
+    not all accept a JSON-schema response format — moving them is a change
+    to measure live, not to ride along with this one.
+    """
+    if isinstance(llm, ChatAnthropic):
+        kwargs.setdefault("method", "json_schema")
+    return llm.with_structured_output(schema, **kwargs)
+
+
 # The OpenAI request field that pins a conversation to one cache. Not a
 # declared ChatOpenAI field, so it rides in ``model_kwargs`` and lands as a
 # top-level request parameter on both the Responses and Completions shapes.
@@ -327,6 +351,12 @@ def split_chunk(message: Any) -> tuple[str, str]:
 # fetch as a fresh STEP_STARTED after each compaction.
 MIDDLEWARE_NODE_SUFFIXES = (".before_model", ".after_model", ".before_agent", ".after_agent")
 SUMMARIZATION_NODE_MARK = "summarization"
+# What both summarisers stamp on their own model call (``metadata.lc_source``)
+# and on the summary message they write (``additional_kwargs.lc_source``).
+SUMMARIZATION_SOURCE = "summarization"
+# deepagents' summariser leaves the history in place and records the summary
+# and its cutoff under this state key instead.
+SUMMARIZATION_EVENT_KEY = "_summarization_event"
 
 
 def is_middleware_node(node: Any) -> bool:
@@ -337,9 +367,29 @@ def is_summarization_node(node: Any) -> bool:
     return SUMMARIZATION_NODE_MARK in str(node).lower()
 
 
-# LangChain's summariser writes its summary back as a HumanMessage that opens
-# with this sentence; the transcript shows the summary, not the framing.
+def is_summarization_call(meta: dict | None) -> bool:
+    """True for a streamed chunk of a summariser's own model call.
+
+    The node name is not enough. LangChain's `SummarizationMiddleware`
+    summarises in ``before_model`` and so has a node of its own, but
+    deepagents' summariser — the one every deep-rung session mounts — runs
+    inside ``wrap_model_call``, so its call streams from the ordinary
+    ``model`` node beside the reply it precedes. Matched on the node alone,
+    that summary streamed into the chat as the agent's prose, was billed as
+    ``thread`` and drew no compaction divider. Both summarisers tag the call
+    with ``lc_source``, and LangGraph carries it into the chunk's metadata.
+    """
+    meta = meta or {}
+    return meta.get("lc_source") == SUMMARIZATION_SOURCE or is_summarization_node(meta.get("langgraph_node"))
+
+
+# The framing each summariser wraps its summary in: LangChain's (and
+# deepagents' when offloading history failed) opens with this sentence;
+# deepagents' usual one names the offloaded file and puts the summary in
+# <summary> tags. The transcript shows the summary, not the framing. Greedy,
+# so a summary that quotes the tag keeps its tail.
 _SUMMARY_PREFIX = "Here is a summary of the conversation to date:"
+_SUMMARY_TAG = re.compile(r"<summary>(.*)</summary>", re.DOTALL)
 
 
 def compaction_summary(messages: Any) -> str:
@@ -352,11 +402,14 @@ def compaction_summary(messages: Any) -> str:
     """
     for message in messages or []:
         kwargs = getattr(message, "additional_kwargs", None) or {}
-        if kwargs.get("lc_source") != "summarization":
+        if kwargs.get("lc_source") != SUMMARIZATION_SOURCE:
             continue
         text = getattr(message, "content", "")
         if not isinstance(text, str):
             continue
+        tagged = _SUMMARY_TAG.search(text)
+        if tagged:
+            return tagged.group(1).strip()
         return text.removeprefix(_SUMMARY_PREFIX).strip()
     return ""
 
@@ -433,11 +486,17 @@ def _usage_scope(meta: dict | None) -> str:
     model call nested inside one of its tool calls, ``compaction`` for the
     summariser. All three count toward the bill; only the first drives the
     context gauge — the summariser's prompt is the history being replaced,
-    not the context the next turn will run in."""
-    if is_summarization_node((meta or {}).get("langgraph_node")):
-        return "compaction"
-    namespace = str((meta or {}).get("langgraph_checkpoint_ns") or "")
-    return "subagent" if "tools:" in namespace or "|" in namespace else "thread"
+    not the context the next turn will run in.
+
+    Nesting is checked first: deepagents mounts a summariser on every
+    subagent too, and that one compacts the subagent's context, not the
+    thread's. Its state update never reaches this stream, so announcing it
+    as the thread's compaction would leave the chat "compacting" for good."""
+    meta = meta or {}
+    namespace = str(meta.get("langgraph_checkpoint_ns") or "")
+    if "tools:" in namespace or "|" in namespace:
+        return "subagent"
+    return "compaction" if is_summarization_call(meta) else "thread"
 
 
 def usage_from_messages(messages: list, model: Any) -> dict:
@@ -518,6 +577,12 @@ async def _dispatch_updates(
         for state in delta if isinstance(delta, list) else [delta]:
             if not isinstance(state, dict):
                 continue
+            event = state.get(SUMMARIZATION_EVENT_KEY)
+            if on_compacted is not None and isinstance(event, dict):
+                # deepagents' summariser runs inside the model node, so its
+                # summary arrives here, on the model's own update, rather
+                # than from a middleware node of its own.
+                await on_compacted(compaction_summary([event.get("summary_message")]))
             todos = state.get("todos")
             if todos and on_todo is not None:
                 await on_todo(list(todos))
@@ -750,7 +815,7 @@ async def compact_thread(agent: Any, config: dict, model: Any, *, keep_tokens: i
     if not update:
         return None
     await agent.aupdate_state(
-        config, {**update, "_summarization_event": None}, as_node=_RESUME_AS_NODE
+        config, {**update, SUMMARIZATION_EVENT_KEY: None}, as_node=_RESUME_AS_NODE
     )
     return compaction_summary(update.get("messages"))
 
@@ -1038,13 +1103,24 @@ async def stream_agent(
     # `chat` span from ReportedRetryMiddleware and each tool call a span from
     # its binder. See core/telemetry.py for where they go.
     usage = UsageTracker(model)
-    compacting = False
+    # The summariser's text while its call streams; None when none is running.
+    summary_parts: list[str] | None = None
+    # Summaries already announced from the message stream whose state update
+    # has yet to arrive — see where it is incremented.
+    announced = 0
     clock = TurnClock()
 
-    async def _on_compacted(summary: str) -> None:
-        nonlocal compacting
-        compacting = False
+    async def _compacted(summary: str) -> None:
+        nonlocal summary_parts
+        summary_parts = None
         await emit({"event": AgentEvent.CONTEXT_COMPACTED, "summary": summary})
+
+    async def _on_compacted(summary: str) -> None:
+        nonlocal announced
+        if announced:
+            announced -= 1
+            return
+        await _compacted(summary)
 
     async def _timed_tool_use(name: str, tool_input: Any, tool_use_id: str) -> None:
         clock.tool_started(name, tool_use_id)
@@ -1100,17 +1176,30 @@ async def stream_agent(
                 # bubble, as if the agent had said it.
                 continue
             meta = meta if isinstance(meta, dict) else {}
+            scope = _usage_scope(meta)
+            if scope == "compaction" and summary_parts is None:
+                summary_parts = []
+                await emit({"event": AgentEvent.CONTEXT_COMPACTING})
+            elif scope == "thread" and summary_parts is not None:
+                # deepagents summarises inside the model call it is about to
+                # make, so its state update lands only after the reply that
+                # already runs on the summary. Announced from the update, the
+                # divider would sit below that reply and the gauge would mark
+                # the new, smaller context stale. The reply's first chunk is
+                # when the summary took effect; the update is then skipped as
+                # a repeat. (LangChain's summariser has a node of its own,
+                # whose update arrives before any reply and announces it.)
+                announced += 1
+                await _compacted("".join(summary_parts).strip())
             billed = usage.feed(message, meta)
             if billed is not None:
                 await emit(billed)
-            if is_summarization_node(meta.get("langgraph_node")):
+            if scope == "compaction":
                 # The summariser's output is history, not a reply. It used to
                 # stream into the transcript as if the agent had said it.
-                if not compacting:
-                    compacting = True
-                    await emit({"event": AgentEvent.CONTEXT_COMPACTING})
+                summary_parts.append(split_chunk(message)[0])
                 continue
-            if _usage_scope(meta) == "subagent":
+            if scope == "subagent":
                 # A subagent's tokens are its report to the *agent*, which
                 # relays what matters; they are billed above and nothing
                 # else. Streamed as prose they read as the agent talking —

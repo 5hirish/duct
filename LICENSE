@@ -19,28 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
--------------------------------------------------------------------------------
-
-EXCEPTIONS
-
-The MIT grant above covers the code in this repository. Two categories of file
-in this repository are not ours to license, and are excluded from it.
-
-1. Third-party documentation — `docs/guides/`
-
-   Every file in that directory except its README is documentation reproduced
-   from OpenAI or Google or Anthropic. Each carries a provenance header naming its source,
-   retrieval date and license. Rights remain with the original authors; the
-   grant above does not extend to those files. See `docs/guides/README.md`.
-
-2. Trademarks and brand assets
-
-   "Duct" and the Duct logo are the project's name and brand, used by the
-   copyright holder. The wordmarks and logos of third parties (the vendor icons
-   under `site/assets/icons/` and `app/public/icons/`, reproduced for nominative
-   use to identify integrations) belong to their respective owners. MIT is a
-   copyright license and grants no rights in any of these names or marks. A
-   fork may use the code; it may not present itself as Duct.
-
-Dependencies retain their own licenses, which are not affected by this file.

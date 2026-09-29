@@ -217,10 +217,12 @@ async def infer_project_draft(
     """Layer 2. One structured call, no tools; competitors come from the
     research pass that already ran. Returns None when nothing usable came
     back, so the caller emits nothing rather than an empty event."""
+    from agents.core.lc import structured_output
+
     fields: dict[str, dict[str, Any]] = {}
 
     try:
-        structured = llm.with_structured_output(DraftInference)
+        structured = structured_output(llm, DraftInference)
         inferred: DraftInference | None = await structured.ainvoke(_build_inference_prompt(crawl_result))
     except Exception:  # noqa: BLE001 — the audit continues without a draft
         logger.warning("draft: inference call failed", exc_info=True)

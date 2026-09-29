@@ -130,10 +130,15 @@ priority rubric depends on the type:
 
 | Bucket | Milestone | Status | Typical priority |
 |---|---|---|---|
-| **Current iteration** — release blocker | nearest open milestone | — | `P0` |
-| **Next iteration** — not blocking this release, priority right after | the following milestone | — | `P1` |
+| **This release** — release blocker | nearest open milestone | `Ready` | `P0` |
+| **Next release** — not blocking this release, priority right after | the following milestone | `Ready` | `P1` |
 | **Roadmap** — concretely want it, not this quarter | none yet | `Ready` | `P1` |
 | **Backlog** — want it, don't know when | none | `Backlog` | `P1`/`P2` |
+
+The milestone says *which release*; the sprint (below) says *which two
+weeks*. They were once both called "iteration" here, and the board's
+"Current iteration" view sat empty for a month because the skill set
+milestones and the view filtered on the Iteration field.
 
 Auto-add drops every new issue into `Backlog`, milestoned or not. Move a
 milestoned one to `Ready` by hand, or the board shows this quarter's work
@@ -145,6 +150,97 @@ when there's a real target after it — don't invent quarters speculatively.
 
 ```bash
 gh api repos/5hirish/duct/milestones --jq '.[] | "\(.title) — \(.open_issues) open / \(.closed_issues) closed, due \(.due_on)"'
+```
+
+## The sprint
+
+The Project's **Iteration** field is a two-week sprint, starting on a
+Wednesday. The "Current iteration" and "Next iteration" views filter on it
+(`iteration:@current`, `iteration:@next`), so an item with no iteration is
+invisible there however well it is milestoned. The sprint is what stops
+work being put off indefinitely: everything in it is a commitment for the
+next two weeks, and everything outside it is explicitly not.
+
+**What goes in the current sprint**, in this order, until it holds ten
+items. Ten is the cap because build time isn't the constraint — the
+maintainer's review attention is, and ten open PRs in two weeks is already
+more than gets read.
+
+1. Anything `In progress` or `In review` — in-flight work is in the sprint
+   by definition.
+2. Every open issue in the nearest milestone whose due date falls inside
+   or before the sprint. These are `P0` by the rubric above, and `Ready`.
+3. `P1` bugs with status `Ready`.
+4. `Ready` `P1` items in the nearest milestone that share a theme with
+   in-flight work — same area label and the same title prefix (the
+   `Content Studio:` set, the `GA4` set). Finishing a theme beats starting
+   a new one.
+5. Remaining `Ready` `P1` items in the nearest milestone, **lowest issue
+   number first** — the one that has waited longest goes next, which is
+   the rule that keeps "later" from meaning "never".
+
+`Backlog` items never enter a sprint. Moving one in means first deciding it
+is `Ready` (spec complete, milestone set), which is the maintainer's call
+under "What needs the maintainer".
+
+**Refresh at the start of every sprint**, and top up whenever an item
+finishes mid-sprint. The refresh is one pass:
+
+- Unfinished items roll into the new sprint (they still lead the order
+  above). Each roll leaves a comment on the issue — `Rolled into Iteration
+  N (2nd time)` — because the Iteration field holds one value and that
+  comment trail is the only place the count survives. An item rolling for
+  the **second** time is named in the readout as stalled; on the **third**,
+  it leaves the sprint, moves to the following milestone, and the comment
+  says so — a thing that sat through six weeks of sprints was not a
+  commitment, and pretending otherwise hides the real ones.
+- `Ready` items with a milestone whose due date has passed move to the
+  next milestone, with a comment. Closed issues still showing `Backlog` or
+  `Ready` are set to `Done` (the auto-close automation misses issues that
+  were on the board before it was enabled).
+- End with the readout below.
+
+```bash
+# the current iteration id (iterations rotate; the field id is stable)
+gh api graphql -f query='{ user(login:"5hirish"){ projectV2(number:10){
+  field(name:"Iteration"){ ... on ProjectV2IterationField {
+    configuration { iterations { id title startDate duration } } } } } } }' \
+  --jq '.data.user.projectV2.field.configuration.iterations[0] | "\(.id) \(.title) from \(.startDate)"'
+# ^ iterations[] lists only current and future, oldest first, so [0] is @current
+
+gh project item-edit --id <item-id> --project-id PVT_kwHOAGxEyM4Bi8Ot \
+  --field-id PVTIF_lAHOAGxEyM4Bi8OtzhhydDk --iteration-id <iteration-id>
+
+# take an item out of every sprint (item-edit cannot clear a field)
+gh api graphql -f query='mutation($p:ID!,$i:ID!,$f:ID!){
+  clearProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f}){ projectV2Item { id } } }' \
+  -f p=PVT_kwHOAGxEyM4Bi8Ot -f i=<item-id> -f f=PVTIF_lAHOAGxEyM4Bi8OtzhhydDk
+```
+
+A **local** Claude Code Desktop scheduled task (`duct-sprint-refresh`, on
+the maintainer's Mac) runs this refresh every Wednesday morning. Its prompt
+is versioned at `.claude/scheduled-tasks/duct-sprint-refresh/SKILL.md`, and
+Desktop's own copy at `~/.claude/scheduled-tasks/duct-sprint-refresh/SKILL.md`
+is a symlink to it, so edit the repo file and the next run picks it up. The
+schedule, folder, model and permission mode live in Desktop, not in the file.
+The sprint
+boundary is every second Wednesday and the run in between is a top-up, so
+the sprint exists whether or not anyone opened a session that week. It is local on
+purpose: in Anthropic-hosted cloud sessions every GitHub request goes through
+a proxy that serves only a pinned set of pull-request GraphQL operations,
+and Projects v2 is GraphQL-only, so a cloud routine gets a 403 on every
+board edit however its token is supplied. A cloud routine was tried and
+disabled on 2026-09-28 for exactly that reason; don't recreate one. It edits board fields, comments
+and milestones, and nothing else: no commits, no PRs, no new issues, no
+priority changes, and it never promotes `Backlog` into a sprint. It
+posts its readout as a **Project status update** (the "Add status update"
+button on the board; `createProjectV2StatusUpdate` in GraphQL), which is
+where the board's own history lives, and nowhere else:
+
+```bash
+gh api graphql -f query='mutation($p:ID!,$b:String!,$s:ProjectV2StatusUpdateStatus!){
+  createProjectV2StatusUpdate(input:{projectId:$p, body:$b, status:$s}){ statusUpdate { id } } }' \
+  -f p=PVT_kwHOAGxEyM4Bi8Ot -f b="$(cat readout.md)" -f s=ON_TRACK   # AT_RISK / OFF_TRACK
 ```
 
 **A milestone needs exit criteria, not just a date.** If its description
@@ -185,7 +281,8 @@ The project already runs its own automations — **auto-add to project**,
 **item closed → Done**, **PR merged → Done**, **PR linked to issue**. Don't
 duplicate them: a filed issue usually lands on the board by itself, and
 `Done` sets itself when the issue closes or its PR merges. What's left to do
-by hand is `Priority`, and nudging `In progress` when work actually starts.
+by hand is `Priority`, the sprint (`Iteration`), and nudging `In progress`
+when work actually starts.
 
 "PR linked to issue" means a closing keyword — `Closes #N`, `Fixes #N`,
 `Resolves #N` — in the PR body or a commit on it. `Refs #N` links nothing
@@ -214,11 +311,13 @@ gh project item-edit --id <item-id> --project-id PVT_kwHOAGxEyM4Bi8Ot \
 |---|---|---|
 | Priority | `PVTSSF_lAHOAGxEyM4Bi8OtzhhydDY` | P0 `79628723` · P1 `0a877460` · P2 `da944a9c` |
 | Status | `PVTSSF_lAHOAGxEyM4Bi8OtzhhycIY` | Backlog `f75ad846` · Ready `e18bf179` · In progress `47fc9ee4` · In review `aba860b9` · Done `98236657` |
+| Iteration | `PVTIF_lAHOAGxEyM4Bi8OtzhhydDk` | rotates every two weeks — query it, see "The sprint" |
 
 Ids are stable unless the project is recreated; re-derive with `gh project
 field-list 10 --owner 5hirish`. Status moves at the moment the event
 happens, in whichever session is doing the work — first commit → `In
-progress`, PR opened → `In review`, and the rest handles itself. It's
+progress` **and into the current sprint if it wasn't already**, PR opened →
+`In review`, and the rest handles itself. It's
 mechanical: move it and say so, don't ask.
 
 **If it doesn't clear the bar** (features and ideas only — bugs are
@@ -259,6 +358,8 @@ When asked where things stand — and unprompted when a milestone's due date
 is near — answer in this shape, five lines, no preamble:
 
 - **Milestone** — name, days left, open/closed count.
+- **Sprint** — which iteration, items in it, what rolled over and how many
+  times.
 - **Shipped** — what merged since the last readout, in user terms.
 - **In flight** — what's `In progress` or `In review`, and who it waits on.
 - **Blocked** — anything stalled, and the specific thing that would unstall it.
