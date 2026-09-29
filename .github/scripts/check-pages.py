@@ -235,8 +235,10 @@ def main():
         glob.glob(os.path.join(site_root, "blog", "*.html")) +
         glob.glob(os.path.join(site_root, "changelog", "*.html")) +
         glob.glob(os.path.join(site_root, "tools", "*.html")) +
+        glob.glob(os.path.join(site_root, "integrations", "*.html")) +
         [f for d in locale_dirs for f in glob.glob(os.path.join(site_root, d, "*.html"))] +
-        [f for d in locale_dirs for f in glob.glob(os.path.join(site_root, d, "tools", "*.html"))]
+        [f for d in locale_dirs for sub in ("tools", "integrations")
+         for f in glob.glob(os.path.join(site_root, d, sub, "*.html"))]
     )
 
     total_errors = 0

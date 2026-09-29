@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>ChatGPT Ads, gemessen am tatsächlichen Umsatz | Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/integrations/chatgpt-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/chatgpt-ads"/>
+<meta property="og:locale" content="de_DE"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Verbinde ChatGPT Ads (OpenAI Ads) mit Duct und sieh dir die Ausgaben neben Stripe und GA4 an. Die Ads API meldet keine Conversions, daher beurteilt Duct den Kanal nach dem Umsatz."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/integrations/chatgpt-ads"/>
+<meta property="og:title" content="ChatGPT Ads, gemessen am tatsächlichen Umsatz"/>
+<meta property="og:description" content="ChatGPT Ads berichtet Klicks und Ausgaben, nicht Conversions. Duct liest es neben Stripe und GA4, damit du siehst, was die Klicks eingebracht haben."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-chatgpt-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="ChatGPT Ads, gemessen am tatsächlichen Umsatz"/>
+<meta name="twitter:description" content="Die OpenAI Ads API hat keine Conversions. Duct misst ChatGPT Ads am Umsatz, den Stripe abgerechnet hat."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-chatgpt-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"ChatGPT Ads, gemessen am tatsächlichen Umsatz","url":"https://getduct.ai/de/integrations/chatgpt-ads","description":"Verbinde ChatGPT Ads (OpenAI Ads) mit Duct und sieh dir die Ausgaben neben Stripe und GA4 an. Die Ads API meldet keine Conversions, daher beurteilt Duct den Kanal nach dem Umsatz.","about":{"@type":"SoftwareApplication","name":"ChatGPT Ads"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"de","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https://getduct.ai/de/"},{"@type":"ListItem","position":2,"name":"Integrationen","item":"https://getduct.ai/de/integrations/"},{"@type":"ListItem","position":3,"name":"ChatGPT Ads","item":"https://getduct.ai/de/integrations/chatgpt-ads"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Kann Duct ChatGPT Ads-Conversions sehen?","acceptedAnswer":{"@type":"Answer","text":"Nein, weil die OpenAI Ads API sie nicht meldet; Pixel-Conversions werden nur im Ads Manager angezeigt. Duct misst den Kanal an dem, was Stripe abgerechnet und GA4 gesehen hat, was ohnehin die Zahl ist, die das Budget bestimmt."}},{"@type":"Question","name":"Ändert Duct meine ChatGPT Ads Kampagnen?","acceptedAnswer":{"@type":"Answer","text":"Nein. Der Connector ist schreibgeschützt. Duct kann empfehlen, Budget zwischen Kampagnen oder Kanälen zu verschieben; du nimmst die Änderung im Ads Manager vor."}},{"@type":"Question","name":"Sind ChatGPT Ads und OpenAI Ads dasselbe?","acceptedAnswer":{"@type":"Answer","text":"Ja. OpenAI verkauft die Anzeigen, die in ChatGPT laufen, über seinen Ads Manager und die Ads API. Die Duct App listet den Connector als OpenAI Ads."}},{"@type":"Question","name":"Ist es kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. Was Geld kosten wird."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: &#x27;chatgpt ads&#x27; is 14,800 searches a month at KD 12, and its page one is OpenAI, Reddit and news. Hypothesis: advertisers testing the new channel want a way to measure it, and the gap the API leaves (no conversions) is the reason to install. Measured by download clicks per visit and GSC impressions for chatgpt ads queries. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/de/integrations/">Integrationen</a><span aria-hidden="true">/</span><span aria-current="page">ChatGPT Ads</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/openai-ads.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">Duct <span class="logo-mark"></span></span></div>
+<h1>ChatGPT Ads, <em>nach Umsatz beurteilt.</em></h1>
+<p class="hero-sub">Die OpenAI Ads API meldet Impressionen, Klicks und Ausgaben. Keine Conversions. Duct liest sie neben Stripe und GA4, damit du siehst, was die Klicks tatsächlich eingebracht haben.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="/de/integrations/">Alle Integrationen</a>
+</div>
+<ul class="ig-facts" aria-label="Auf einen Blick"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Ads-API-Schlüssel</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Liest vier Datensätze</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schreibgeschützt</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Geprüft 29. Sep 2026</span></li></ul>
+<p class="ig-alias">In der Duct App als OpenAI Ads gelistet.</p>
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/openai-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>312 Klicks von ChatGPT diesen Monat. Neun wurden zahlende Kunden in Stripe: jeweils 204 $.</span></div>
+</div>
+<figcaption>Eine Beispielantwort. Deine wird aus deinen eigenen Konten gelesen.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Fragen</p>
+<h2>Fragen, die du <em>einfach stellen kannst</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Was haben die ChatGPT Ads Ausgaben dieses Monats gekauft, in Geld, das Stripe abgerechnet hat?</p><span class="ig-q-joins"><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>ChatGPT Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Engagieren sich Besucher von ChatGPT auf der Landingpage oder verlassen sie diese?</p><span class="ig-q-joins"><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>ChatGPT Ads + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Kosten pro zahlendem Kunden: ChatGPT Ads oder Google Ads?</p><span class="ig-q-joins"><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>ChatGPT Ads + Google Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Welche ChatGPT-Kampagne hat das Budget der nächsten Woche verdient?</p><span class="ig-q-joins"><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>ChatGPT Ads + Stripe + GA4</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Zugriff</p>
+<h2>Was es liest. <em>Was es ändern kann.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Was es liest</h3>
+<ul class="ig-reads">
+<li><b>Werbekonto</b><span class="ig-fields"><span>Name</span><span>Währung</span></span></li>
+<li><b>Kampagnen</b><span class="ig-fields"><span>Name</span></span></li>
+<li><b>Kampagnenleistung</b><span class="ig-fields"><span>Impressionen</span><span>Klicks</span><span>Ausgaben</span><span>CTR</span><span>CPC</span><span>CPM</span></span></li>
+<li><b>Tägliche Kontosummen</b><span class="ig-fields"><span>Impressionen</span><span>Klicks</span><span>Ausgaben</span></span></li>
+</ul>
+<p class="ig-note">OpenAI Ads API v1 · geprüft anhand des Fetch-Codes 29. Sep 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/openai/ads/fetch.py" rel="noopener">lies den Quellcode</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Was es ändern kann</h3>
+<p class="ig-readonly-big">Nichts.</p>
+<p>Duct hat keine ChatGPT Ads Änderungsoperation, daher kann es nichts in ChatGPT Ads bearbeiten. Es kann dir aber eine Änderung empfehlen, die du dort vornehmen kannst.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Wissen</p>
+<h2>Was Duct bereits weiß <em>über ChatGPT Ads</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Die Ads API kann keine Conversions sehen.</h3><p>Seine Metriken sind Impressionen, Klicks, Ausgaben, CTR, CPC und CPM. Pixel-Conversions werden nur im Ads Manager angezeigt, daher bewertet Duct den Kanal niemals allein nach dem CPC. Es prüft Stripe.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Zwei Einheiten von einem Anbieter.</h3><p>Insights melden Ausgaben als Dezimalzahl (18.42); der Pixel meldet Cents (1499). Das Mischen ist ein 100× Fehler, daher konvertiert Duct, bevor es vergleicht.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Ein Schlüssel, ein Anzeigenkonto.</h3><p>Ein Ads-API-Schlüssel erreicht genau ein Werbekonto. Duct liest zuerst, welches es ist, sodass ein Schlüssel vom falschen Konto dies anzeigt, anstatt leer auszusehen.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Nur der Rechnungssteller weiß es.</h3><p>Jede Anzeigenplattform meldet Conversions, die sie sich selbst zuschreibt. Duct gleicht sie mit Stripe ab, niemals miteinander.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/openai_ads.md" rel="noopener">Lies die ChatGPT Ads Notizen, mit denen Ducts Agent arbeitet <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Gemeinsam besser</p>
+<h2>Was ChatGPT Ads beantwortet <em>mit einem Partner</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/de/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/openai-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Worin haben sich ChatGPT-Klicks in abgerechnetem Umsatz verwandelt?</span><span class="ig-pair-go">ChatGPT Ads + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/de/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/openai-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Verhalten sich ChatGPT-Besucher wie Suchbesucher?</span><span class="ig-pair-go">ChatGPT Ads + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/de/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/openai-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Welcher Kanal kauft einen zahlenden Kunden für weniger?</span><span class="ig-pair-go">ChatGPT Ads + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Einrichtung</p>
+<h2>Verbinde ChatGPT Ads <em>in drei Schritten</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>Im OpenAI Ads Manager erstellst du einen Ads API Schlüssel für das Anzeigenkonto, das du lesen möchtest.</p></li>
+<li><span class="ig-step-n">2</span><p>In Duct öffnest du Verbindungen, wählst OpenAI Ads und fügst den Schlüssel ein.</p></li>
+<li><span class="ig-step-n">3</span><p>Duct zeigt, zu welchem Anzeigenkonto der Schlüssel gehört, und liest dann dessen Kampagnen und tägliche Summen.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Ein Ads-API-Schlüssel ist auf ein Werbekonto beschränkt, und OpenAI gewährt API-Zugriff pro Konto, während die API in der Beta-Phase ist. Duct verwendet den Schlüssel nur zum Lesen; es hat keine ChatGPT Ads-Änderungsoperation.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schlüssel und Tokens werden verschlüsselt von Ducts gehosteter API gespeichert, niemals in deinem Browser, und du kannst eine Verbindung jederzeit entfernen. Ein Self-Host-Build speichert sie auf deiner eigenen Maschine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>ChatGPT Ads, <em>beantwortet</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Kann Duct ChatGPT Ads-Conversions sehen?</summary>
+<p class="faq-a">Nein, weil die OpenAI Ads API sie nicht meldet; Pixel-Conversions werden nur im Ads Manager angezeigt. Duct misst den Kanal an dem, was Stripe abgerechnet und GA4 gesehen hat, was ohnehin die Zahl ist, die das Budget bestimmt.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ändert Duct meine ChatGPT Ads Kampagnen?</summary>
+<p class="faq-a">Nein. Der Connector ist schreibgeschützt. Duct kann empfehlen, Budget zwischen Kampagnen oder Kanälen zu verschieben; du nimmst die Änderung im Ads Manager vor.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Sind ChatGPT Ads und OpenAI Ads dasselbe?</summary>
+<p class="faq-a">Ja. OpenAI verkauft die Anzeigen, die in ChatGPT laufen, über seinen Ads Manager und die Ads API. Die Duct App listet den Connector als OpenAI Ads.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ist es kostenlos?</summary>
+<p class="faq-a">Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. <a href="/de/open-source#pricing">Was Geld kosten wird</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/de/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

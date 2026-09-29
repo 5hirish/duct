@@ -21,6 +21,10 @@ on:
       - 'CHANGELOG.md'
       - 'scripts/check_changelog_sync.py'
       - '.github/workflows/site.yml'
+      # The integrations generator and its copy. A backend change that stales
+      # the pages is caught by the same check in backend.yml instead.
+      - 'scripts/build_integrations.py'
+      - 'scripts/integrations/**'
   push:
     branches:
       - main
@@ -38,6 +42,10 @@ jobs:
 
       - name: "📝 Check generated blog pages are current"
         run: python3 scripts/build_blog.py --check
+
+      # Before the i18n check: the English integrations pages are its input.
+      - name: "🔌 Check the integrations pages match the backend"
+        run: python3 scripts/build_integrations.py --check
 
       # The translated trees under site/<lang>/ are generated from the English
       # pages; a stale tree ships yesterday's copy in four languages, and an

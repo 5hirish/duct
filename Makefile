@@ -78,6 +78,7 @@ check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 
 check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 scripts/build_blog.py --check
+	python3 scripts/build_integrations.py --check
 	python3 scripts/build_site_i18n.py --check
 	python3 .github/scripts/check-pages.py
 	python3 scripts/check_changelog_sync.py
@@ -129,6 +130,7 @@ agent-eval: ## Paid eval gate, k=3 on synthetic accounts (DeepSeek V4 Pro on Ope
 # check-app and check-site fail on whatever this would have produced.
 i18n: ## Extract, translate what is missing, compile and render (app + site)
 	cd app && npm run i18n:extract
+	python3 scripts/build_integrations.py
 	python3 scripts/build_site_i18n.py
 	python3 scripts/i18n/fill.py
 	cd app && npm run i18n:compile

@@ -18,6 +18,7 @@ const REPO = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const req = createRequire(import.meta.url);
 const sharp = req(req.resolve("sharp", { paths: [join(REPO, "app")] }));
 const MEDIA = join(REPO, "site/assets/media");
+const ICONS = join(REPO, "site/assets/icons");
 const POSTS = join(REPO, "site/blog/posts");
 const OUT = join(REPO, "site/assets/og");
 const W = 1200, H = 630, LIMIT = 150 * 1024;
@@ -25,7 +26,8 @@ const W = 1200, H = 630, LIMIT = 150 * 1024;
 // slug → the card. `shot` is a file in site/assets/media; its top-left corner
 // is what shows, so pick shots whose first 620×480 carry the point.
 const PAGES = {
-  "index": { title: "See the whole picture. Fix it in the same moment.", sub: "Open-source AI agent for product and growth teams.", shot: "insights-session.webp" },
+  "index": { title: "See the whole picture. Fix it in the same moment.", sub: "The open-source AI marketing agent for product and growth teams.", shot: "insights-session.webp" },
+  "compare": { title: "Claude Cowork, n8n or Duct?", sub: "Three good tools, three different jobs. Where each one is the right call." },
   "for-product-intelligence": { title: "See why the number moved. Fix it before the standup.", sub: "Your product analytics, read as one.", shot: "product-session.webp" },
   "for-organic-growth": { title: "See which content actually converts. Fix it in the same sitting.", sub: "GSC, GA4 and Clarity, read together.", shot: "content-session.webp" },
   "for-paid-ads": { title: "See what your ad spend bought. Move it in the same moment.", sub: "Ads, GA4 and Stripe, read together.", shot: "paid-session.webp" },
@@ -39,6 +41,14 @@ const PAGES = {
   "changelog": { title: "What changed in Duct.", sub: "Release notes, newest first: connectors, agents, desktop builds." },
   "tools": { title: "Free tools for growth teams.", sub: "Calculators and generators that run in your browser. No account." },
   "blog": { title: "What your tools don't tell you on their own.", sub: "Growth without a data team, and an open-source agent built in the open." },
+  // The integrations pages are generated (scripts/build_integrations.py), which
+  // refuses a connector page whose card is missing; `logo` is a file in
+  // site/assets/icons, drawn on a white tile where a shot would go.
+  "integrations": { title: "Twelve tools. Read as one.", sub: "What Duct reads in each one, what it can change, and how to connect it." },
+  "integrations/google-ads": { kicker: "Integration", title: "Google Ads, read next to your revenue.", sub: "Eight kinds of change, each one waiting for your Apply.", logo: "google-ads.svg" },
+  "integrations/chatgpt-ads": { kicker: "Integration", title: "ChatGPT Ads, judged on revenue.", sub: "The Ads API has no conversions. Duct reads it beside Stripe and GA4.", logo: "openai-ads.svg" },
+  "integrations/ga4": { kicker: "Integration", title: "GA4, with the rest of the story.", sub: "Read beside Search Console, your ads and Stripe.", logo: "googleanalytics.svg" },
+  "integrations/stripe": { kicker: "Integration", title: "Stripe, the number your ads answer to.", sub: "Every platform's conversions, checked against money that settled.", logo: "stripe.svg" },
   "tools/saas-metrics-calculator": { title: "SaaS metrics benchmark calculator.", sub: "Churn, LTV:CAC, payback and trial-to-paid against industry medians.", shot: "insights-session.webp" },
   "tools/cac-ltv-calculator": { title: "CAC and LTV calculator.", sub: "CAC, LTV, the ratio and payback, with benchmark context.", shot: "insights-session.webp" },
   "tools/mrr-growth-calculator": { title: "MRR growth rate calculator.", sub: "Net MRR growth, CMGR, and the rate you need to hit a target.", shot: "insights-session.webp" },
@@ -88,8 +98,8 @@ function wrap(text, max) {
   return lines;
 }
 
-async function card(slug, { title, sub, shot, art, kicker }) {
-  const withShot = Boolean(shot || art);
+async function card(slug, { title, sub, shot, art, kicker, logo }) {
+  const withShot = Boolean(shot || art || logo);
   const titleLines = wrap(title, withShot ? 18 : 30);
   const size = titleLines.length > 2 ? 54 : 64;
   const x = 72, y = 236;
@@ -126,6 +136,13 @@ async function card(slug, { title, sub, shot, art, kicker }) {
     const rounded = await sharp(img).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
     const shadow = Buffer.from(`<svg width="${W}" height="${H}"><defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="14"/></filter></defs><rect x="${left}" y="${top + 14}" width="${aw}" height="${ah}" rx="14" fill="#0d0f1a" opacity=".18" filter="url(#s)"/></svg>`);
     layers.push({ input: shadow, left: 0, top: 0 }, { input: rounded, left, top });
+  } else if (logo) {
+    // A brand mark is not a picture to crop: it sits whole, centred on a tile.
+    const tile = 300, mark = 168, left = W - tile - 110, top = Math.round((H - tile) / 2);
+    const icon = await sharp(join(ICONS, logo), { density: 600 })
+      .resize({ width: mark, height: mark, fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+    const plate = Buffer.from(`<svg width="${W}" height="${H}"><defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="18"/></filter></defs><rect x="${left}" y="${top + 18}" width="${tile}" height="${tile}" rx="40" fill="#0d0f1a" opacity=".16" filter="url(#s)"/><rect x="${left}" y="${top}" width="${tile}" height="${tile}" rx="40" fill="#fff"/></svg>`);
+    layers.push({ input: plate, left: 0, top: 0 }, { input: icon, left: left + (tile - mark) / 2, top: top + (tile - mark) / 2 });
   }
   const out = join(OUT, slug.replace("/", "-") + ".jpg");
   await sharp(Buffer.from(svg)).composite(layers).jpeg({ quality: 84, mozjpeg: true }).toFile(out);

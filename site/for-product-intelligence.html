@@ -41,7 +41,7 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Duct for Product Intelligence","url":"https://getduct.ai/for-product-intelligence","description":"Ask why activation dropped. Duct reads Mixpanel, Clarity, GrowthBook and GA4 together and answers with the cause, the sources and the change it proposes. Open source, MIT.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What is Duct for product intelligence?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that reads Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot together. Ask why activation dropped and it answers with the cause and its sources, proposes a change, applies it when you approve, and remembers the decision for next time."}},{"@type":"Question","name":"What tools does Duct connect to, and how hard is setup?","acceptedAnswer":{"@type":"Answer","text":"GA4 and Google Ads connect with OAuth in one click. Mixpanel, Clarity, GrowthBook, HubSpot, Stripe and RevenueCat take a read-only key you paste once. About ten minutes for the whole stack, then ask why the number moved."}},{"@type":"Question","name":"Is my product data safe with Duct?","acceptedAnswer":{"@type":"Answer","text":"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to answer you and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."}},{"@type":"Question","name":"How is Duct different from using Mixpanel dashboards directly?","acceptedAnswer":{"@type":"Answer","text":"Mixpanel knows the funnel. It does not know what the session looked like, whether the experiment was on, or whether the account paid. Duct reads Mixpanel, Clarity, GrowthBook and Stripe together and names the cause, so what to ship next is a decision, not a hunch."}},{"@type":"Question","name":"Does Duct for product intelligence cost anything?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."}},{"@type":"Question","name":"What does an answer actually look like?","acceptedAnswer":{"@type":"Answer","text":"A short reply in the chat with the finding and the change it proposes, and a brief beside it: the numbers it used, the sources it read, and a checklist of what to do this week. Every number is re-checked by a second agent before it reaches you, and the brief is saved and versioned in the project."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What is Duct for product intelligence?","acceptedAnswer":{"@type":"Answer","text":"An open-source AI agent that reads Mixpanel, Microsoft Clarity, GrowthBook and GA4 together. Ask why activation dropped and it answers with the cause and its sources, proposes a change, applies it when you approve, and remembers the decision for next time."}},{"@type":"Question","name":"What tools does Duct connect to, and how hard is setup?","acceptedAnswer":{"@type":"Answer","text":"GA4 and Google Ads connect with OAuth in one click. Mixpanel, Clarity, GrowthBook, Stripe and RevenueCat take a key you paste once. About ten minutes for the whole stack, then ask why the number moved."}},{"@type":"Question","name":"Is my product data safe with Duct?","acceptedAnswer":{"@type":"Answer","text":"Your data is encrypted in transit via TLS, and OAuth tokens are encrypted at rest and never exposed to the browser. Duct reads your tools to answer you and changes nothing in them unless you approve a specific change first. Access is scoped to the project members you invite, and you can disconnect a source or delete your data at any time."}},{"@type":"Question","name":"How is Duct different from using Mixpanel dashboards directly?","acceptedAnswer":{"@type":"Answer","text":"Mixpanel knows the funnel. It does not know what the session looked like, whether the experiment was on, or whether the account paid. Duct reads Mixpanel, Clarity, GrowthBook and Stripe together and names the cause, so what to ship next is a decision, not a hunch."}},{"@type":"Question","name":"Does Duct for product intelligence cost anything?","acceptedAnswer":{"@type":"Answer","text":"Free with your own keys, always. Duct is MIT licensed: you pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles the models for teams that would rather hold no keys; nothing open today moves behind it. What will cost money is spelled out on the open-source page."}},{"@type":"Question","name":"What does an answer actually look like?","acceptedAnswer":{"@type":"Answer","text":"A short reply in the chat with the finding and the change it proposes, and a brief beside it: the numbers it used, the sources it read, and a checklist of what to do this week. Every number is re-checked by a second agent before it reaches you, and the brief is saved and versioned in the project."}}]}
 </script>
 <style>
   .skip-link {
@@ -98,9 +98,9 @@
 <p class="strip-label">Connects to the tools you already use</p>
 <div class="marquee" aria-hidden="true">
 <span>Mixpanel</span><span>Microsoft Clarity</span><span>GrowthBook</span><span>GA4</span>
-<span>HubSpot</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
+<span>Search Console</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
 <span>Mixpanel</span><span>Microsoft Clarity</span><span>GrowthBook</span><span>GA4</span>
-<span>HubSpot</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
+<span>Search Console</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
 </div>
 </div>
 
@@ -164,7 +164,7 @@ Retention drop → support spike → replay friction → release timing. One sto
 <span class="step-num">01</span>
 <span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
 <p class="step-title">Connect your stack</p>
-<p class="step-body">OAuth for GA4; a pasted read key for Mixpanel, Clarity, GrowthBook and HubSpot. Reporting needs read access only; nothing is exported by hand.</p>
+<p class="step-body">OAuth for GA4; a pasted read key for Mixpanel, Clarity and GrowthBook. Reporting needs read access only; nothing is exported by hand.</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -274,11 +274,11 @@ Retention drop → support spike → replay friction → release timing. One sto
 <div class="faq-list reveal" style="transition-delay:.1s">
 <details class="faq-item">
 <summary class="faq-q">What is Duct for product intelligence?</summary>
-<p class="faq-a">An open-source AI agent that reads Mixpanel, Microsoft Clarity, GrowthBook, GA4 and HubSpot together. Ask why activation dropped and it answers with the cause and its sources, proposes a change, applies it when you approve, and remembers the decision for next time.</p>
+<p class="faq-a">An open-source AI agent that reads Mixpanel, Microsoft Clarity, GrowthBook and GA4 together. Ask why activation dropped and it answers with the cause and its sources, proposes a change, applies it when you approve, and remembers the decision for next time.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">What tools does Duct connect to, and how hard is setup?</summary>
-<p class="faq-a">GA4 and Google Ads connect with OAuth in one click. Mixpanel, Clarity, GrowthBook, HubSpot, Stripe and RevenueCat take a read-only key you paste once. About ten minutes for the whole stack, then ask why the number moved.</p>
+<p class="faq-a">GA4 and Google Ads connect with OAuth in one click. Mixpanel, Clarity, GrowthBook, Stripe and RevenueCat take a key you paste once. About ten minutes for the whole stack, then ask why the number moved.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Is my product data safe with Duct?</summary>

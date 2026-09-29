@@ -6,7 +6,7 @@
 
 **See the whole picture. Fix it in the same moment.**
 
-Duct is an open-source AI agent for product and growth teams. It connects
+Duct is an open-source AI marketing agent for product and growth teams. It connects
 Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more, reads across
 all of them at once, remembers what it learns about your business, and, with
 your approval, changes things in those tools for you. The approve tool does
@@ -100,7 +100,8 @@ correct it, pin what matters, pause it or reset it.
 
 Google Ads · Google Analytics 4 · Search Console · Tag Manager · Meta Ads ·
 Apple Search Ads · OpenAI Ads · Mixpanel · Microsoft Clarity · GrowthBook ·
-Stripe · RevenueCat · HubSpot, with new ones landing as the agents need them.
+Stripe · RevenueCat, with HubSpot next and new ones landing as the agents need
+them. What each one reads and can change: [getduct.ai/integrations](https://getduct.ai/integrations/).
 
 Google connects with OAuth, read-only unless you grant more; the rest take a key you paste. Credentials
 are encrypted at rest, scoped to one project at a time, and Duct tells you

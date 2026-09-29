@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>GA4 AI analyst: why the numbers moved | Duct</title>
+<link rel="canonical" href="https://getduct.ai/integrations/ga4"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/ga4"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/ga4"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/ga4"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/ga4"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/ga4"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/ga4"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct reads GA4 beside Search Console, your ads and Stripe, and answers why the numbers moved. It can add key events and audiences too, with your approval."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/integrations/ga4"/>
+<meta property="og:title" content="GA4 AI analyst: why the numbers moved"/>
+<meta property="og:description" content="Ask GA4 why signups dropped and get an answer that reads Search Console, your ads and Stripe too, with the fix one click away."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-ga4.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="GA4 AI analyst: why the numbers moved"/>
+<meta name="twitter:description" content="GA4 read beside Search Console, ads and Stripe: the cause, not another dashboard."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-ga4.jpg"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"GA4 AI analyst: why the numbers moved","url":"https://getduct.ai/integrations/ga4","description":"Duct reads GA4 beside Search Console, your ads and Stripe, and answers why the numbers moved. It can add key events and audiences too, with your approval.","about":{"@type":"SoftwareApplication","name":"Google Analytics 4"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"en","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://getduct.ai/"},{"@type":"ListItem","position":2,"name":"Integrations","item":"https://getduct.ai/integrations/"},{"@type":"ListItem","position":3,"name":"Google Analytics 4","item":"https://getduct.ai/integrations/ga4"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What can Duct change in GA4?","acceptedAnswer":{"@type":"Answer","text":"Six: register GA4 key event, remove GA4 key event, create GA4 audience, archive GA4 audience, link Google Ads account to GA4 and unlink Google Ads account from GA4. By default each one waits for your Apply, and every one can be rolled back."}},{"@type":"Question","name":"Does Duct need edit access to GA4?","acceptedAnswer":{"@type":"Answer","text":"Only for changes. Answers and briefs use read access. Key events, audiences and the Google Ads link need edit access, which Duct asks for when you sign in; a connection made without it stays read-only."}},{"@type":"Question","name":"Why does Duct compare GA4 with Search Console?","acceptedAnswer":{"@type":"Answer","text":"Because GA4 alone can be fooled. Bot traffic logged as organic search once ran 40 times higher than real Search Console clicks for weeks, then stopped, and any baseline across that window reads as a collapse. Two sources that should agree are the check."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: GA4 has little tool-intent search of its own (&#x27;ga4 ai&#x27; 20/mo), so this page is for the evaluator who reached Duct another way and checks GA4 first. Hypothesis: naming the GA4 traps Duct already handles (internal traffic, bot bursts, renamed events) converts better than a feature list. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/integrations/">Integrations</a><span aria-hidden="true">/</span><span aria-current="page">Google Analytics 4</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="../assets/icons/googleanalytics.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>GA4, <em>with the rest of the story.</em></h1>
+<p class="hero-sub">Duct reads Google Analytics 4 beside Search Console, your ads and Stripe, and answers why a number moved. When the fix is in GA4, it proposes it and waits for you.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/integrations/">All integrations</a>
+</div>
+<ul class="ig-facts" aria-label="At a glance"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Sign in with Google</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Reads two datasets</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Six kinds of change</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Fields audited Sep 24, 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal has-change">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="../assets/icons/googleanalytics.svg" width="34" height="34" alt=""/><img src="../assets/icons/googlesearchconsole.svg" width="34" height="34" alt=""/><img src="../assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Organic sessions up 40%, Search Console clicks flat. A bot burst, not growth.</span></div>
+<div class="ig-change"><img src="../assets/icons/googleanalytics.svg" width="22" height="22" alt=""/><span><b>Register sign_up as a key event</b><s>Touches 1 property. Rollback ready.</s></span></div>
+<div class="ig-actions"><span class="ig-btn ig-btn-reject">Reject</span><span class="ig-btn ig-btn-apply"><span class="ig-apply-idle">Apply</span><span class="ig-apply-done"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>Applied</span><svg class="ig-cursor" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<figcaption>An example answer. Yours is read from your own accounts.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Ask</p>
+<h2>Questions you can <em>just ask</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Why did signups drop last week?</p><span class="ig-q-joins"><img src="../assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="../assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="../assets/icons/googlesearchconsole.svg" width="18" height="18" alt=""/><span>GA4 + Google Ads + Search Console</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Which landing pages convert organic visitors, and which only bounce them?</p><span class="ig-q-joins"><img src="../assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="../assets/icons/googlesearchconsole.svg" width="18" height="18" alt=""/><span>GA4 + Search Console</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Are staff and QA sessions inflating my conversion rate?</p><span class="ig-q-joins"><img src="../assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Do the users GA4 counts as converted show up as revenue?</p><span class="ig-q-joins"><img src="../assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="../assets/icons/stripe.svg" width="18" height="18" alt=""/><span>GA4 + Stripe</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Access</p>
+<h2>What it reads. <em>What it can change.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>What it reads</h3>
+<ul class="ig-reads">
+<li><b>GA4 landing pages</b><span class="ig-fields"><span>page</span><span>channel</span><span>sessions</span><span>bounce rate</span><span>engagement rate</span><span>average session duration</span><span>conversions</span><span>revenue</span></span></li>
+<li><b>GA4 conversion paths</b><span class="ig-fields"><span>source / medium</span><span>channel group</span><span>conversions</span><span>revenue</span><span>sessions</span></span></li>
+</ul>
+<p class="ig-note">Google Analytics Data API (ga4-data-v1beta) · fields audited Sep 24, 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/catalog/ga4.py" rel="noopener">read the source</a></p>
+</div>
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>What it can change</h3>
+<ul class="ig-ops">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Register GA4 key event</span><span class="ig-badges"><span class="ig-badge is-auto">May self-apply in assisted mode</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">Remove GA4 key event</span><span class="ig-badges"><span class="ig-badge is-warn">Always waits for you</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Create GA4 audience</span><span class="ig-badges"><span class="ig-badge is-auto">May self-apply in assisted mode</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">Archive GA4 audience</span><span class="ig-badges"><span class="ig-badge is-warn">Always waits for you</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Link Google Ads account to GA4</span><span class="ig-badges"></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">Unlink Google Ads account from GA4</span><span class="ig-badges"><span class="ig-badge is-warn">Always waits for you</span></span></li>
+</ul>
+<p class="ig-note">Every one rolls back. By default each change waits for your Apply: it arrives as a preview of what it touches and lands in the activity log. <a href="/doctrine">How approval works</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Knowledge</p>
+<h2>What Duct already knows <em>about GA4</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>GA4 counts your team as customers.</h3><p>Out of the box it filters no internal traffic, so staff and QA sessions land in production numbers. Before Duct trusts a conversion count, it looks for clusters of users that look like a QA team.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Organic is checked against Search Console.</h3><p>Bot bursts can log 40 times more organic sessions than Search Console clicks. Duct compares the two before it calls a week a collapse or a win.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Event names are exact.</h3><p>sign_up and signup are two different events, and a rename zeroes the old series without warning. Duct checks for it before comparing periods.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>New audiences start empty.</h3><p>A GA4 audience only collects members from the day it is created. Duct says so when it proposes one.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/ga4.md" rel="noopener">Read the GA4 notes Duct's agent works from <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Better together</p>
+<h2>What GA4 answers <em>with a partner</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/integrations/#google-search-console"><span class="ig-pair-logos"><img src="../assets/icons/googleanalytics.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="../assets/icons/googlesearchconsole.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Is organic growth real, or a bot burst?</span><span class="ig-pair-go">GA4 + Search Console <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/integrations/google-ads"><span class="ig-pair-logos"><img src="../assets/icons/googleanalytics.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="../assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Is paid traffic tagged, and does it convert?</span><span class="ig-pair-go">GA4 + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/integrations/stripe"><span class="ig-pair-logos"><img src="../assets/icons/googleanalytics.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="../assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Do GA4 conversions turn into revenue?</span><span class="ig-pair-go">GA4 + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Setup</p>
+<h2>Connect GA4 <em>in three steps</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>In Duct, open Connections and choose Google Analytics.</p></li>
+<li><span class="ig-step-n">2</span><p>Sign in with Google and allow access.</p></li>
+<li><span class="ig-step-n">3</span><p>Pick the GA4 property this project reads.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Duct asks for read access and edit access when you sign in. Reading uses read access; edit access is only for the changes below, and each of them still waits for your Apply.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Keys and tokens are stored encrypted by Duct&#x27;s hosted API, never in your browser, and you can remove a connection at any time. A self-host build keeps them on your own machine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>GA4, <em>answered</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">What can Duct change in GA4?</summary>
+<p class="faq-a">Six: register GA4 key event, remove GA4 key event, create GA4 audience, archive GA4 audience, link Google Ads account to GA4 and unlink Google Ads account from GA4. By default each one waits for your Apply, and every one can be rolled back.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Does Duct need edit access to GA4?</summary>
+<p class="faq-a">Only for changes. Answers and briefs use read access. Key events, audiences and the Google Ads link need edit access, which Duct asks for when you sign in; a connection made without it stays read-only.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Why does Duct compare GA4 with Search Console?</summary>
+<p class="faq-a">Because GA4 alone can be fooled. Bot traffic logged as organic search once ran 40 times higher than real Search Console clicks for weeks, then stopped, and any baseline across that window reads as a collapse. Two sources that should agree are the check.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Is it free?</summary>
+<p class="faq-a">Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. <a href="/open-source#pricing">What will cost money</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/partials/footer-expanded.html"><div class="legal-fallback"><a href="/">Duct</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div></div>
+
+<script src="../assets/duct-partials.js"></script>
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+</body>
+</html>

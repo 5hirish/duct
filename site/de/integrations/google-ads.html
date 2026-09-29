@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Google Ads KI-Agent, der auf dein Anwenden wartet | Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/integrations/google-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/google-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/google-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/google-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/google-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/google-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/google-ads"/>
+<meta property="og:locale" content="de_DE"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct liest Google Ads neben GA4 und Stripe, findet Ausgaben, die sich nie rentiert haben, und schlägt die Lösung vor: Negative Keywords, Budgets, Gebote. Nichts wird ausgeführt, bis du anwendest."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/integrations/google-ads"/>
+<meta property="og:title" content="Google Ads KI-Agent, der auf dein Anwenden wartet"/>
+<meta property="og:description" content="Google Ads wird neben GA4 und Stripe gelesen. Acht Arten von Änderungen, jede wird mit ihren Auswirkungen vorgeschlagen und auf Anfrage zurückgenommen."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-google-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Google Ads KI-Agent, der auf dein Anwenden wartet"/>
+<meta name="twitter:description" content="Finde die Google Ads-Ausgaben, die nie zu Umsatz wurden, und behebe sie mit einem Klick, den du kontrollierst."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-google-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"Google Ads KI-Agent, der auf dein Anwenden wartet","url":"https://getduct.ai/de/integrations/google-ads","description":"Duct liest Google Ads neben GA4 und Stripe, findet Ausgaben, die sich nie rentiert haben, und schlägt die Lösung vor: Negative Keywords, Budgets, Gebote. Nichts wird ausgeführt, bis du anwendest.","about":{"@type":"SoftwareApplication","name":"Google Ads"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"de","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https://getduct.ai/de/"},{"@type":"ListItem","position":2,"name":"Integrationen","item":"https://getduct.ai/de/integrations/"},{"@type":"ListItem","position":3,"name":"Google Ads","item":"https://getduct.ai/de/integrations/google-ads"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Kann Duct meine Google Ads ändern, ohne zu fragen?","acceptedAnswer":{"@type":"Answer","text":"Nicht standardmäßig. Jede Änderung ist ein Vorschlag, der zeigt, was er betrifft, und er wird ausgeführt, wenn du Anwenden drückst. Wenn du ein Projekt in den unterstützten Modus wechselst, können das Hinzufügen von Keywords und negativen Keywords automatisch angewendet werden; Budgets, Gebote und Status warten immer auf dich."}},{"@type":"Question","name":"Welche Änderungen kann Duct in Google Ads vornehmen?","acceptedAnswer":{"@type":"Answer","text":"Acht: Negative Keywords hinzufügen, Kampagne pausieren, Kampagnenstatus festlegen, Anzeigengruppenstatus festlegen, Keyword-Status festlegen, Keywords hinzufügen, tägliches Kampagnenbudget festlegen und Kampagnengebote festlegen (tCPA/tROAS). Standardmäßig wartet jede auf dein Anwenden, und jede kann zurückgenommen werden."}},{"@type":"Question","name":"Funktioniert es mit einem Manager-Konto (MCC)?","acceptedAnswer":{"@type":"Answer","text":"Ja. Füge die ID des Manager-Kontos beim Verbinden hinzu, und Duct liest die darunterliegenden Kundenkonten."}},{"@type":"Question","name":"Wie unterscheidet sich das von der KI in Google Ads?","acceptedAnswer":{"@type":"Answer","text":"Googles eigene Tools sehen Google Ads. Duct liest Google Ads neben GA4 und Stripe, damit es sagen kann, welche Kampagnen zahlende Kunden bringen, und es liest Meta-, Apple- und ChatGPT-Anzeigen auf dieselbe Weise."}},{"@type":"Question","name":"Ist es kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. Was Geld kosten wird."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: An evaluator from a &#x27;google ads ai&#x27; search (320/mo, KD 35) or from the hub decides faster when the page names the eight real changes and the rule that none runs without them. Measured by download clicks per visit, split by landing page. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/de/integrations/">Integrationen</a><span aria-hidden="true">/</span><span aria-current="page">Google Ads</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/google-ads.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">Duct <span class="logo-mark"></span></span></div>
+<h1>Google Ads, <em>neben deinem Umsatz gelesen.</em></h1>
+<p class="hero-sub">Duct verknüpft deine Kampagnen und Suchbegriffe mit GA4 und Stripe und schlägt dann Änderungen vor. Acht Arten von Änderungen, und jede wartet auf dein Anwenden.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="/de/integrations/">Alle Integrationen</a>
+</div>
+<ul class="ig-facts" aria-label="Auf einen Blick"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Mit Google anmelden</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Liest fünf Datensätze</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Acht Arten von Änderungen</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Geprüfte Felder 29. Aug. 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal has-change">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/google-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Sechs Suchbegriffe haben diesen Monat 2.140 $ ausgegeben. Keiner davon wurde zu einem zahlenden Kunden.</span></div>
+<div class="ig-change"><img src="/assets/icons/google-ads.svg" width="22" height="22" alt=""/><span><b>6 negative Keywords hinzufügen</b><s>Betrifft 2 Kampagnen. Zurücknahme bereit.</s></span></div>
+<div class="ig-actions"><span class="ig-btn ig-btn-reject">Ablehnen</span><span class="ig-btn ig-btn-apply"><span class="ig-apply-idle">Anwenden</span><span class="ig-apply-done"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>Angewendet</span><svg class="ig-cursor" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<figcaption>Eine Beispielantwort. Deine wird aus deinen eigenen Konten gelesen.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Fragen</p>
+<h2>Fragen, die du <em>einfach stellen kannst</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Welche Suchbegriffe geben Geld aus und werden nie zu einem zahlenden Kunden?</p><span class="ig-q-joins"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Google Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Google Ads meldet 120 Conversions. Wie viele davon haben bezahlt?</p><span class="ig-q-joins"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Google Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>GA4 sieht 60 % meiner Ads-Klicks. Ist das Auto-Tagging defekt?</p><span class="ig-q-joins"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Google Ads + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Welche Kampagne kann mehr Budget erhalten, ohne die Kosten pro Kunde zu erhöhen?</p><span class="ig-q-joins"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Google Ads + GA4 + Stripe</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Zugriff</p>
+<h2>Was es liest. <em>Was es ändern kann.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Was es liest</h3>
+<ul class="ig-reads">
+<li><b>Kampagnenleistung</b><span class="ig-fields"><span>Kampagne</span><span>Ausgaben</span><span>Klicks</span><span>Impressionen</span><span>Conversions</span><span>Conversion-Wert</span><span>ROAS</span><span>Kosten pro Conversion</span><span>CTR</span><span>Vorgeschlagene Aktion</span></span></li>
+<li><b>Suchbegriffe</b><span class="ig-fields"><span>Suchbegriff</span><span>Kampagne</span><span>Übereinstimmungstyp</span><span>Ausgaben</span><span>Klicks</span><span>Conversions</span><span>Kosten pro Conversion</span><span>ROAS</span><span>CTR</span></span></li>
+<li><b>Geräteleistung</b><span class="ig-fields"><span>Kampagne</span><span>Gerät</span><span>Ausgaben</span><span>Conversions</span><span>ROAS</span><span>Kosten pro Conversion</span></span></li>
+<li><b>Geografische Leistung</b><span class="ig-fields"><span>Kampagne</span><span>Land</span><span>Ausgaben</span><span>Conversions</span><span>ROAS</span><span>Kosten pro Conversion</span></span></li>
+<li><b>Anzeigengruppen-Performance</b><span class="ig-fields"><span>Kampagne</span><span>Anzeigengruppe</span><span>Ausgaben</span><span>Conversions</span><span>ROAS</span><span>Kosten pro Conversion</span></span></li>
+</ul>
+<p class="ig-note">Google Ads API v23 · geprüfte Felder 29. Aug. 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/catalog/google_ads.py" rel="noopener">Quellcode lesen</a></p>
+</div>
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Was es ändern kann</h3>
+<ul class="ig-ops">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Negative Keywords hinzufügen</span><span class="ig-badges"><span class="ig-badge is-auto">Kann sich im unterstützten Modus selbst anwenden</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Kampagne pausieren</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Kampagnenstatus festlegen</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Anzeigengruppenstatus festlegen</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Keyword-Status festlegen</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Keywords hinzufügen</span><span class="ig-badges"><span class="ig-badge is-auto">Kann sich im unterstützten Modus selbst anwenden</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Tägliches Kampagnenbudget festlegen</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Kampagnengebote festlegen (tCPA/tROAS)</span><span class="ig-badges"></span></li>
+</ul>
+<p class="ig-note">Jede kann zurückgenommen werden. Standardmäßig wartet jede Änderung auf dein Anwenden: Sie kommt als Vorschau dessen, was sie betrifft, und landet im Aktivitätsprotokoll. <a href="/de/doctrine">Wie die Freigabe funktioniert</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Wissen</p>
+<h2>Was Duct bereits <em>über Google Ads</em> weiß</h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Entfernt ist für immer, daher pausiert Duct.</h3><p>Google Ads kann eine entfernte Kampagne, Anzeigengruppe oder ein Keyword nicht wiederherstellen. Duct schlägt nur eine Pause vor, die zurückgenommen werden kann.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Geteilte Budgets bewegen sich zusammen.</h3><p>Änderst du ein geteiltes Budget, ändern sich auch alle Kampagnen, die es nutzen. Die Vorschau zeigt, wie viele Kampagnen betroffen sind, bevor du anwendest.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Deine Freigabe gilt für die Zahl, die du gesehen hast.</h3><p>Wenn jemand Budget, Gebot oder Status ändert, nachdem du freigegeben hast, lehnt Duct es ab, darüber anzuwenden.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Jede Plattform beansprucht denselben Verkauf.</h3><p>Google zählt den letzten Klick, Meta zählt einen Sieben-Tage-Klick und eine Ein-Tages-Ansicht, und beide zählen denselben Kauf. Duct gleicht die Gesamtsumme mit Stripe ab.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/google_ads.md" rel="noopener">Lies die Google Ads-Notizen, aus denen Ducts Agent arbeitet <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Gemeinsam besser</p>
+<h2>Was Google Ads <em>mit einem Partner</em> beantwortet</h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/de/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Welche Kampagnen bringen Kunden, die tatsächlich bezahlen?</span><span class="ig-pair-go">Google Ads + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/de/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Kommen deine Ads-Klicks als getaggte Sitzungen an?</span><span class="ig-pair-go">Google Ads + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/de/integrations/#meta-ads"><span class="ig-pair-logos"><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Welche Plattform kauft einen Kunden günstiger ein?</span><span class="ig-pair-go">Google Ads + Meta Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Einrichtung</p>
+<h2>Google Ads verbinden <em>in drei Schritten</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>Öffne in Duct die Verbindungen und wähle Google Ads.</p></li>
+<li><span class="ig-step-n">2</span><p>Mit Google anmelden und Zugriff erlauben.</p></li>
+<li><span class="ig-step-n">3</span><p>Wähle das Konto aus, das dieses Projekt liest. Bei einem Manager-Konto (MCC) füge dessen ID hinzu, und Duct liest die darunter liegenden Konten.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Google Ads bietet eine API-Berechtigung an, die Änderungen einschließt; es gibt keine schreibgeschützte Option. Ducts Limit liegt stattdessen in seinem Code: Der Agent hat kein Tool, das eine Änderung freigibt, daher kann er höchstens eine vorschlagen.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schlüssel und Tokens werden verschlüsselt von Ducts gehosteter API gespeichert, niemals in deinem Browser, und du kannst eine Verbindung jederzeit entfernen. Ein Self-Host-Build speichert sie auf deiner eigenen Maschine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Google Ads, <em>beantwortet</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Kann Duct meine Google Ads ändern, ohne zu fragen?</summary>
+<p class="faq-a">Nicht standardmäßig. Jede Änderung ist ein Vorschlag, der zeigt, was er betrifft, und er wird ausgeführt, wenn du Anwenden drückst. Wenn du ein Projekt in den unterstützten Modus wechselst, können das Hinzufügen von Keywords und negativen Keywords automatisch angewendet werden; Budgets, Gebote und Status warten immer auf dich.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Welche Änderungen kann Duct in Google Ads vornehmen?</summary>
+<p class="faq-a">Acht: Negative Keywords hinzufügen, Kampagne pausieren, Kampagnenstatus festlegen, Anzeigengruppenstatus festlegen, Keyword-Status festlegen, Keywords hinzufügen, tägliches Kampagnenbudget festlegen und Kampagnengebote festlegen (tCPA/tROAS). Standardmäßig wartet jede auf dein Anwenden, und jede kann zurückgenommen werden.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Funktioniert es mit einem Manager-Konto (MCC)?</summary>
+<p class="faq-a">Ja. Füge die ID des Manager-Kontos beim Verbinden hinzu, und Duct liest die darunterliegenden Kundenkonten.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Wie unterscheidet sich das von der KI in Google Ads?</summary>
+<p class="faq-a">Googles eigene Tools sehen Google Ads. Duct liest Google Ads neben GA4 und Stripe, damit es sagen kann, welche Kampagnen zahlende Kunden bringen, und es liest Meta-, Apple- und ChatGPT-Anzeigen auf dieselbe Weise.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ist es kostenlos?</summary>
+<p class="faq-a">Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. <a href="/de/open-source#pricing">Was Geld kosten wird</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/de/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

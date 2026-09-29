@@ -61,19 +61,22 @@
   </div>
   </div>
 </div>
+<a href="/es/integrations/" class="nav-link">Integraciones</a>
 <a href="/es/open-source" class="nav-link">Código abierto</a>
 <a href="/blog/" class="nav-link">Blog</a>
 <a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct en GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label" data-duct-stars>GitHub</span></a>
 <a href="/es/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Descargar →</a>
-<div class="nav-lang">
-<label class="sr-only" for="nav-lang">Language</label>
-<select id="nav-lang" class="nav-lang-select" data-duct-lang>
-<option value="en">English</option>
-<option value="es" selected>Español</option>
-<option value="pt-br">Português (Brasil)</option>
-<option value="de">Deutsch</option>
-<option value="ja">日本語</option>
-</select>
+<div class="nav-lang" data-duct-lang-menu>
+<button type="button" class="nav-lang-btn" aria-expanded="false" aria-controls="nav-lang-list" aria-label="Language"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#globe"/></svg><span class="nav-lang-code" data-duct-lang-code>ES</span><svg class="ic nav-lang-caret" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></button>
+<div class="nav-lang-menu" id="nav-lang-list">
+<div class="dropdown-menu-inner">
+<a class="nav-lang-item" href="/" hreflang="en" lang="en" data-duct-lang-link="en" data-code="EN">English</a>
+<a class="nav-lang-item" href="/es/" hreflang="es" lang="es" data-duct-lang-link="es" data-code="ES" aria-current="true">Español</a>
+<a class="nav-lang-item" href="/pt-br/" hreflang="pt-BR" lang="pt-BR" data-duct-lang-link="pt-br" data-code="PT">Português (Brasil)</a>
+<a class="nav-lang-item" href="/de/" hreflang="de" lang="de" data-duct-lang-link="de" data-code="DE">Deutsch</a>
+<a class="nav-lang-item" href="/ja/" hreflang="ja" lang="ja" data-duct-lang-link="ja" data-code="JA">日本語</a>
+</div>
+</div>
 </div>
 </div>
 </nav>
