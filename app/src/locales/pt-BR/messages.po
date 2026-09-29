@@ -3569,8 +3569,12 @@ msgid "Include {name}"
 msgstr "Incluir {name}"
 
 #: src/components/execution/ChangeSetCard.jsx
-msgid "Includes a pause. It can be rolled back from here."
-msgstr "Inclui uma pausa. Pode ser revertido daqui."
+msgid "Includes a change that always waits for you. It can be rolled back from here."
+msgstr "Inclui uma alteração que sempre aguarda sua ação. Pode ser revertida daqui."
+
+#: src/components/execution/ChangeSetCard.jsx
+#~ msgid "Includes a pause. It can be rolled back from here."
+#~ msgstr "Inclui uma pausa. Pode ser revertido daqui."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/content/BrandContextForm.jsx
