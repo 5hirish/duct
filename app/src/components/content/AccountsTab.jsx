@@ -17,9 +17,9 @@ import {
 } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import VendorKeyForm from "./VendorKeyForm";
+import { AccountBadges, POSTBRIDGE_DASHBOARD_URL, ReconnectNote } from "./AccountStatus";
 import LoadError from "@/components/LoadError";
 
-const POSTBRIDGE_URL = "https://app.post-bridge.com";
 
 // Resolve a real profile picture from the handle (best-effort, falls back to a
 // monogram on error). PostBridge itself doesn't return avatars.
@@ -94,7 +94,10 @@ export default function AccountsTab({ projectId }) {
   async function persist(nextSet) {
     const payload = accounts
       .filter((a) => nextSet.has(Number(a.id)))
-      .map((a) => ({ account_id: Number(a.id), platform: a.platform, username: a.username }));
+      .map((a) => ({
+        account_id: Number(a.id), platform: a.platform, username: a.username,
+        has_x_premium: Boolean(a.has_x_premium),
+      }));
     setSaving(true);
     try {
       await saveLinkedAccounts(projectId, payload);
@@ -167,7 +170,7 @@ export default function AccountsTab({ projectId }) {
     return (
       <VendorKeyForm
         vendor="PostBridge"
-        homeUrl={POSTBRIDGE_URL}
+        homeUrl={POSTBRIDGE_DASHBOARD_URL}
         isOwner={postBridge.is_owner}
         onConnect={connect}
         description={
@@ -196,7 +199,7 @@ export default function AccountsTab({ projectId }) {
           </Trans>
         </p>
         <Button className="mt-4" asChild>
-          <a href={POSTBRIDGE_URL} target="_blank" rel="noreferrer"><Trans>Connect in PostBridge →</Trans></a>
+          <a href={POSTBRIDGE_DASHBOARD_URL} target="_blank" rel="noreferrer"><Trans>Connect in PostBridge →</Trans></a>
         </Button>
         {canDisconnect && (
           <div className="mt-3">
@@ -295,11 +298,13 @@ function AccountCard({ account, linked, busy, onToggle }) {
     >
       <AccountAvatar account={account} linked={linked} />
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 space-y-0.5">
         <p className="truncate text-sm font-semibold">@{account.username}</p>
         <p className="truncate text-xs text-muted-foreground">
           {platformMeta(account.platform).label} · #{account.id}
         </p>
+        <AccountBadges account={account} />
+        <ReconnectNote account={account} />
       </div>
 
       <Button

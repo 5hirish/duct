@@ -121,6 +121,7 @@ def compute_sanity(
     *,
     replies: list | None = None,
     channel: str | None = None,
+    premium: bool = False,
 ) -> list[SanityCheck]:
     """The deterministic checks, against a post's stored fields.
 
@@ -133,7 +134,7 @@ def compute_sanity(
     slides = [s for s in (slides or []) if isinstance(s, dict)]
     caption = (caption or "").strip()
     replies = [r for r in (replies or []) if isinstance(r, str)]
-    ch = resolve_channel(channel)
+    ch = resolve_channel(channel, premium=premium)
     limit = ch.rules.max_chars if ch.text_first else CAPTION_MAX
 
     no_image: list[str] = []
@@ -247,6 +248,7 @@ def assess(
     *,
     replies: list | None = None,
     channel: str | None = None,
+    premium: bool = False,
     notes: str = "",
     scored_at: str = "",
     scored_fingerprint: str = "",
@@ -254,7 +256,7 @@ def assess(
     """The review of a post as it is now: fresh checks, and — when there are
     scores — the overall they add up to. ``scored_fingerprint`` is the digest
     the scores were given against; omitted, the scores are about now."""
-    checks = compute_sanity(slides, caption, hashtags, replies=replies, channel=channel)
+    checks = compute_sanity(slides, caption, hashtags, replies=replies, channel=channel, premium=premium)
     markers = weigh_markers(scores)
     current = fingerprint(slides, caption, hashtags, replies)
     overall = content_score = band = None
@@ -281,6 +283,7 @@ def reassess(
     *,
     replies: list | None = None,
     channel: str | None = None,
+    premium: bool = False,
 ) -> PublishAssessment:
     """A stored review read against the post now. The checks are recomputed
     and the stored scores re-weighed, so neither can be out of date; only the
@@ -299,6 +302,7 @@ def reassess(
         scores,
         replies=replies,
         channel=channel,
+        premium=premium,
         notes=str(stored.get("notes") or ""),
         scored_at=str(stored.get("scored_at") or ""),
         scored_fingerprint=str(stored.get("fingerprint") or ""),
@@ -322,10 +326,11 @@ __all__ = [
 ]
 
 
-def reassess_post(row) -> PublishAssessment:
+def reassess_post(row, *, premium: bool = False) -> PublishAssessment:
     """``reassess`` over a stored post row — the one call every reader makes,
-    so none of them can forget the replies or the channel."""
+    so none of them can forget the replies or the channel. ``premium``: the
+    project's X account is on Premium (``service.social_accounts``)."""
     return reassess(
         row.slides or [], row.caption or "", row.hashtags or [], row.last_assessment,
-        replies=row.replies or [], channel=primary_channel(row.platforms),
+        replies=row.replies or [], channel=primary_channel(row.platforms), premium=premium,
     )

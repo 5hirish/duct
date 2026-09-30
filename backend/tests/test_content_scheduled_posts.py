@@ -45,12 +45,17 @@ class PostBridgeQueue:
         self.requests: list[tuple[str, str, dict | None]] = []
         self.create_status = "scheduled"
         self.down = False
+        # The accounts a publish checks first: 101 is the X account every
+        # test posts to.
+        self.accounts: list[dict] = [{"id": 101, "platform": "twitter", "username": "duct"}]
 
     def __call__(self, req: httpx.Request) -> httpx.Response:
         body = json.loads(req.read()) if req.content else None
         self.requests.append((req.method, req.url.path, body))
         if self.down:
             return httpx.Response(503, json={"message": "maintenance"})
+        if req.method == "GET" and req.url.path == "/v1/social-accounts":
+            return httpx.Response(200, json={"data": self.accounts})
         if req.method == "POST" and req.url.path == "/v1/posts":
             post = {"id": PB_ID, "caption": body["caption"], "status": self.create_status,
                     "scheduled_at": body.get("scheduled_at"), "social_accounts": body["social_accounts"]}

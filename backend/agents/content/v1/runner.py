@@ -225,6 +225,7 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
 
     from db.session import get_engine
     from models.project import Project
+    from service.social_accounts import project_x_premium
 
     engine = get_engine()
     if engine is None:
@@ -280,6 +281,7 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             pillars=pillars,
             visual=visual,
             active_channels=brand_platforms(channels_blob.get("active_channels")),
+            x_premium=project_x_premium(db, proj.id),
         )
 
 

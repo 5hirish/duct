@@ -177,8 +177,10 @@ Built-ins:
 _X_PLAYBOOK = f"""\
 ## X PLAYBOOK
 
-- A post is at most {_X.max_chars} characters. The writer counts them, and X
-  counts emoji and CJK characters double, so leave headroom when you use them.
+- A post is at most {_X.max_chars} characters on a standard account, and
+  {_X.premium_max_chars:,} on X Premium; the kickoff says when the account
+  has it. The writer counts them, and X counts emoji and CJK characters
+  double, so leave headroom when you use them.
 - Format: a single post, or a post plus ONE reply. That is what publishes —
   the reply goes out as the post's first reply. Put the source, the link or
   the "why it matters" there. Never a link in the post itself: it is stripped
@@ -248,7 +250,23 @@ def text_system_prompt(playbook: str) -> str:
     return f"{TEXT_ORCHESTRATOR_BASE_PROMPT}\n\n{PLAYBOOKS[playbook]}\n\n{TEXT_POSTDRAFT_SHAPE}"
 
 
-def text_post_user_prompt(*, brand_stanza: str, project_name: str, channel, target: str, recent_lines: str) -> str:
+def _premium_line(channel, x_premium: bool) -> str:
+    """The account's X Premium, in the user turn rather than the playbook, so
+    the cached system prompt stays the same for every project."""
+    if not (x_premium and channel.id == Platform.TWITTER):
+        return ""
+    return (
+        f"\nThis project's X account is on X Premium: a post may run to "
+        f"{_X.premium_max_chars:,} characters. Length is a choice, not a budget: go "
+        "long only when the idea needs the room, and the first line is still the "
+        "whole hook.\n"
+    )
+
+
+def text_post_user_prompt(
+    *, brand_stanza: str, project_name: str, channel, target: str, recent_lines: str,
+    x_premium: bool = False,
+) -> str:
     """Kickoff for a text draft. Words only: no layout, no image prompts."""
     return f"""\
 {brand_stanza}
@@ -256,7 +274,7 @@ def text_post_user_prompt(*, brand_stanza: str, project_name: str, channel, targ
 Draft one {channel.label} post for {project_name}.
 
 TARGET CHANNEL: {channel.label} — apply the {channel.label} playbook.
-
+{_premium_line(channel, x_premium)}
 Target: {target}
 
 Recent posts (last 5):

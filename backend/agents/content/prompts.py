@@ -1584,6 +1584,7 @@ def build_post_user_prompt(
         return text_post_user_prompt(
             brand_stanza=_brand_stanza(brand), project_name=brand.project_name,
             channel=channel, target=target, recent_lines=recent_lines,
+            x_premium=brand.x_premium,
         )
     avatar_summary = (
         json.dumps(avatar, default=str)

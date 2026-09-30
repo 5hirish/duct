@@ -3868,6 +3868,10 @@ msgstr "Está registrado de nuestro lado. Intenta de nuevo y envíanos los detal
 msgid "Italiano"
 msgstr "Italiano"
 
+#: src/components/content/AccountStatus.jsx
+msgid "Its login stopped working, so posts to it are skipped. <0>Reconnect it in PostBridge</0>"
+msgstr "Su inicio de sesión dejó de funcionar, así que las publicaciones en esta cuenta se omiten. <0>Vuelve a conectarla en PostBridge</0>"
+
 #: src/components/workspace/ContextRing.jsx
 msgid "Just compacted — recounted on the next call"
 msgstr "Recién compactado — recontado en la próxima llamada"
@@ -4519,6 +4523,10 @@ msgstr "Nederlands"
 #: src/app/(app)/connections/page.jsx
 msgid "Needed only if the token lacks business_management (no account discovery)."
 msgstr "Necesario solo si el token carece de business_management (sin descubrimiento de cuentas)."
+
+#: src/components/content/AccountStatus.jsx
+msgid "Needs reconnecting"
+msgstr "Hay que reconectar"
 
 #: src/lib/contentReview.js
 msgid "Needs work"
@@ -8664,6 +8672,10 @@ msgstr "escribiendo…"
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Writing…"
 msgstr "Escribiendo…"
+
+#: src/components/content/AccountStatus.jsx
+msgid "X Premium"
+msgstr "X Premium"
 
 #: src/components/connections/logos.jsx
 msgid "xAI"

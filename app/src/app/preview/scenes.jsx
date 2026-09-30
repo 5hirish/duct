@@ -69,6 +69,7 @@ import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
 import VendorKeyForm from "@/components/content/VendorKeyForm";
+import { AccountBadges, ReconnectNote } from "@/components/content/AccountStatus";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import TextPostEditor from "@/components/content/TextPostEditor";
@@ -2315,6 +2316,28 @@ export const SCENES = [
     render: () => (
       <div className="p-5">
         <NoPlanYet onStart={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "account-status",
+    state: "X Premium, a paused login, and a healthy account",
+    group: "AccountStatus",
+    title: "What PostBridge says about an account",
+    note: "The badges the Accounts tab and the publish dialog show under each account. X Premium lifts X's limit to 25,000 characters. A paused login means PostBridge skips every post to the account without failing it, so the row says so and links to PostBridge, where the reconnect happens. A healthy standard account shows nothing.",
+    render: () => (
+      <div className="max-w-md space-y-3 p-5">
+        {[
+          { id: 101, username: "shirishkadam", platform: "twitter", has_x_premium: true },
+          { id: 102, username: "getduct", platform: "instagram", needs_reconnect: true },
+          { id: 103, username: "shirish-kadam", platform: "linkedin" },
+        ].map((a) => (
+          <div key={a.id} className="space-y-1 rounded-xl border p-3">
+            <p className="text-sm font-semibold">@{a.username}</p>
+            <AccountBadges account={a} />
+            <ReconnectNote account={a} />
+          </div>
+        ))}
       </div>
     ),
   },

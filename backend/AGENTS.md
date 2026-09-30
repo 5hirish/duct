@@ -567,7 +567,12 @@ agents/
     │                     drifting apart); and while PostBridge holds a scheduled post,
     │                     push_edit / cancel, which every edit, unschedule, delete and
     │                     agent rewrite goes through so the queue never publishes stale
-    │                     words or a deleted post
+    │                     words or a deleted post. Both publish paths re-read the
+    │                     accounts first: a paused one (`needs_reconnect`) is refused,
+    │                     since PostBridge skips it silently, and X Premium lifts X to
+    │                     25,000 only when every chosen X account has it. The project's
+    │                     last-seen Premium flag lives on `content_social_links`
+    │                     (service/social_accounts.py) for drafting and the review
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
     ├── performance.py  — the account's own history for a plan: type ranking (completion,

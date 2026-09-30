@@ -59,9 +59,11 @@ from agents.content.publishing import (
     is_text_only,
     metrics_sync,
     no_sync_message,
+    premium_for,
     publish_blockers,
     publish_failure,
     push_edit,
+    reconnect_blockers,
     record_published,
     went_out,
     words_changed,
@@ -113,6 +115,7 @@ from service.auth import get_current_user, get_user_provider_keys
 from service.content_metrics import merge_manual_metrics, merge_synced_metrics
 from service.membership import get_project_for_user, get_project_row_for_user
 from service.provider_keys import stored_keys_for
+from service.social_accounts import project_x_premium, remember_account_state
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
@@ -1165,12 +1168,14 @@ def _post_out(
     active_conversation_id: UUID | None = None,
     with_assessment: bool = False,
     video_takes: list | None = None,
+    premium: bool = False,
 ) -> PostOut:
-    """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
+    """Serialize a post. `fmt` is an optional (slug, name) for the linked format;
+    `premium` is the project's X Premium (service/social_accounts.py)."""
     return PostOut(
         active_conversation_id=active_conversation_id,
         assessment=(
-            reassess_post(p) if with_assessment else None
+            reassess_post(p, premium=premium) if with_assessment else None
         ),
         id=p.id,
         project_id=p.project_id,
@@ -1206,7 +1211,7 @@ def _post_out(
         emotional_arc=p.emotional_arc,
         camera_ref_pool=p.camera_ref_pool,
         platforms=p.platforms or [],
-        channel=channel_payload(primary_channel(p.platforms)),
+        channel=channel_payload(primary_channel(p.platforms), premium=premium),
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
         scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
         published_url=p.published_url,
@@ -1279,7 +1284,7 @@ def _enrich_one(db: Session, post: ContentPost) -> PostOut:
     thumb = _thumb_map(db, [post.id]).get(post.id, "")
     return _post_out(
         post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb, with_assessment=True,
-        video_takes=video_takes(db, post),
+        video_takes=video_takes(db, post), premium=project_x_premium(db, post.project_id),
     )
 
 
@@ -1320,8 +1325,9 @@ def list_posts(
     rows = db.execute(stmt).scalars().all()
     by_id = _format_map(db, project_id)
     thumbs = _thumb_map(db, [r.id for r in rows])
+    premium = project_x_premium(db, project_id)
     return [
-        _post_out(r, fmt=_fmt_for(r, by_id), thumbnail_url=thumbs.get(r.id, ""))
+        _post_out(r, fmt=_fmt_for(r, by_id), thumbnail_url=thumbs.get(r.id, ""), premium=premium)
         for r in rows
     ]
 
@@ -1353,6 +1359,7 @@ def get_post(
         active_conversation_id=active_conversation_id,
         with_assessment=True,
         video_takes=video_takes(db, post),
+        premium=project_x_premium(db, post.project_id),
     )
 
 
@@ -1972,6 +1979,11 @@ class SocialAccountOut(BaseModel):
     id:       int
     platform: str
     username: str
+    # PostBridge paused the account after its login died, and skips posts to
+    # it until it is reconnected in PostBridge's dashboard.
+    needs_reconnect: bool = False
+    # X only: the account is on X Premium, 25,000 characters instead of 280.
+    has_x_premium:   bool = False
 
 
 class PublishRequest(BaseModel):
@@ -2007,8 +2019,12 @@ async def list_social_accounts(
             accounts = await pb.list_social_accounts(platform=platform)
     except PostBridgeAPIError as exc:
         raise _pb_http_error(exc) from exc
+    remember_account_state(db, project_id, accounts)
     return [
-        SocialAccountOut(id=a.id, platform=a.platform.value, username=a.username)
+        SocialAccountOut(
+            id=a.id, platform=a.platform.value, username=a.username,
+            needs_reconnect=a.needs_reconnect, has_x_premium=bool(a.has_x_premium),
+        )
         for a in accounts
     ]
 
@@ -2103,15 +2119,17 @@ def disconnect_vendor_key(
 # ---------------------------------------------------------------------------
 
 class LinkedAccountOut(BaseModel):
-    account_id: int
-    platform:   str
-    username:   str
+    account_id:    int
+    platform:      str
+    username:      str
+    has_x_premium: bool = False
 
 
 class LinkedAccountIn(BaseModel):
-    account_id: int
-    platform:   str = ""
-    username:   str = ""
+    account_id:    int
+    platform:      str = ""
+    username:      str = ""
+    has_x_premium: bool = False
 
 
 class LinkedAccountsIn(BaseModel):
@@ -2126,6 +2144,7 @@ def _link_out(row: ContentSocialLink) -> LinkedAccountOut:
         account_id=int(row.external_account_id),
         platform=row.platform,
         username=row.username,
+        has_x_premium=row.has_x_premium,
     )
 
 
@@ -2164,6 +2183,7 @@ def save_linked_accounts(
             external_account_id=str(acc.account_id),
             platform=acc.platform,
             username=acc.username,
+            has_x_premium=acc.has_x_premium,
         ))
     db.commit()
     # Analytics output is filtered by the linked platform set — drop its cache.
@@ -2325,7 +2345,7 @@ async def publish_post_route(
     alone."""
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
     proj = _project_for_user(db, user, post.project_id)
-    blockers = publish_blockers(post)
+    blockers = publish_blockers(post, premium=project_x_premium(db, post.project_id))
     if blockers:
         raise HTTPException(400, " ".join(blockers))
 
@@ -2384,6 +2404,18 @@ async def _publish_media(
 
     try:
         async with client as pb:
+            # The accounts as they are now, not as the project last saw them:
+            # PostBridge skips a paused account without failing the post, and
+            # X Premium is per account, so both are checked against the ones
+            # this post goes to before anything is uploaded.
+            accounts = await pb.list_social_accounts()
+            remember_account_state(db, post.project_id, accounts)
+            chosen = body.social_account_ids
+            blockers = reconnect_blockers(accounts, chosen) + publish_blockers(
+                post, premium=premium_for(accounts, chosen),
+            )
+            if blockers:
+                raise HTTPException(400, " ".join(blockers))
             media_ids: list[str] = []
             for data, name, mime in media:
                 upload = await pb.create_upload_url(name=name, mime_type=mime, size_bytes=len(data))

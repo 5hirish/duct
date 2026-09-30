@@ -87,9 +87,11 @@ from agents.content.publishing import (
     is_text_only,
     metrics_sync,
     no_sync_message,
+    premium_for,
     publish_blockers,
     publish_failure,
     push_edit,
+    reconnect_blockers,
     record_published,
     unpublished_replies,
     went_out,
@@ -112,6 +114,7 @@ from agents.content.templates import derive_image_prompts, render_slides_html
 from agents.content.video import VIDEO_POST_TYPE, cut_of, publish_asset, video_takes
 from service import storage
 from service.content_metrics import merge_synced_metrics
+from service.social_accounts import project_x_premium, remember_account_state
 from db.session import get_engine
 from models.content import (
     ContentAsset,
@@ -481,12 +484,12 @@ def _build_post_payload(row: ContentPost, db: Session) -> dict:
         "emotional_arc":   row.emotional_arc,
         "camera_ref_pool": row.camera_ref_pool,
         "platforms":       row.platforms,
-        "channel":         channel_payload(primary_channel(row.platforms)),
+        "channel":         channel_payload(primary_channel(row.platforms), premium=project_x_premium(db, row.project_id)),
         "status":          row.status,
         "clone_source":    row.clone_source,
         # Recomputed on every emit, so the panel's checks follow each edit and
         # a score from before the edit says it is stale.
-        "assessment":      reassess_post(row).model_dump(mode="json"),
+        "assessment":      reassess_post(row, premium=project_x_premium(db, row.project_id)).model_dump(mode="json"),
     }
 
 
@@ -992,7 +995,9 @@ def build_content_tools_lc(
             replies = [r for r in draft.replies if r.strip()]
             # The platform's own limits, checked here rather than trusted to
             # the model: an over-length tweet does not publish.
-            problems = copy_problems(ch.id, draft.caption, replies)
+            with _open_db() as db:
+                premium = project_x_premium(db, project_id)
+            problems = copy_problems(ch.id, draft.caption, replies, premium=premium)
             if problems:
                 return _err("Nothing saved. " + " ".join(problems) + " Tighten it and submit again.")
             # Serialize against concurrent image-attach / edit_slide on this post.
@@ -1888,7 +1893,7 @@ def build_content_tools_lc(
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
-                blockers = publish_blockers(post)
+                blockers = publish_blockers(post, premium=project_x_premium(db, project_id))
                 if blockers:
                     return _err(" ".join(blockers))
 
@@ -1971,6 +1976,17 @@ def build_content_tools_lc(
                 media_ids: list[str] = []
                 try:
                     async with client as pb:
+                        # Checked against the accounts as they are now: a
+                        # paused one is skipped by PostBridge without failing
+                        # the post, and Premium is per account (the route does
+                        # the same).
+                        accounts = await pb.list_social_accounts()
+                        remember_account_state(db, project_id, accounts)
+                        blockers = reconnect_blockers(accounts, social_account_ids) + publish_blockers(
+                            post, premium=premium_for(accounts, social_account_ids),
+                        )
+                        if blockers:
+                            return _err(" ".join(blockers))
                         for asset in asset_rows:
                             data = _load_asset_bytes(asset)
                             if not data:
@@ -2129,6 +2145,7 @@ def build_content_tools_lc(
                 result = assess(
                     row.slides or [], row.caption or "", row.hashtags or [], scores,
                     replies=row.replies or [], channel=primary_channel(row.platforms),
+                    premium=project_x_premium(db, project_id),
                     notes=(notes or "").strip(), scored_at=now_iso(),
                 )
                 # Only this column is written, so an image attach racing the

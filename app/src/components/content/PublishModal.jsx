@@ -19,6 +19,7 @@ import {
 import { PLATFORM_LABELS, Platform, PostType } from "@/lib/contentEnums";
 import { friendlyErrorMessage } from "@/lib/agentSession";
 import PublishReviewPanel from "./PublishReviewPanel";
+import { AccountBadges, ReconnectNote } from "./AccountStatus";
 
 /**
  * Publish flow:
@@ -73,7 +74,9 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
         if (cancelled) return;
         setAccounts(list || []);
         setAssessment(fresh?.assessment || null);
-        const availableIds = new Set((list || []).map(a => a.id));
+        // A paused account is never picked for the person: PostBridge would
+        // skip it and the post would look published there.
+        const availableIds = new Set((list || []).filter(a => !a.needs_reconnect).map(a => a.id));
         const linkedIds = (linked || [])
           .map(a => Number(a.account_id))
           .filter(id => availableIds.has(id));
@@ -82,7 +85,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
           setSelected(new Set(linkedIds));
         } else if (primary) {
           // Fall back to the accounts on the post's own platform.
-          const ids = (list || []).filter(a => a.platform === primary).map(a => a.id);
+          const ids = (list || []).filter(a => a.platform === primary && !a.needs_reconnect).map(a => a.id);
           setSelected(new Set(ids));
         }
       } catch (e) {
@@ -192,21 +195,24 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                         </p>
                         <div className="grid grid-cols-1 gap-1.5">
                           {list.map(a => (
-                            <label
-                              key={a.id}
-                              className="flex items-center gap-2 rounded border border-border bg-background hover:bg-muted/40 px-2 py-1.5 text-xs cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selected.has(a.id)}
-                                onChange={() => toggle(a.id)}
-                                className="accent-primary"
-                              />
-                              <span className="font-medium">@{a.username}</span>
-                              <span className="text-2xs text-muted-foreground ml-auto">
-                                #{a.id}
-                              </span>
-                            </label>
+                            <div key={a.id} className="space-y-1">
+                              <label
+                                className="flex items-center gap-2 rounded border border-border bg-background hover:bg-muted/40 px-2 py-1.5 text-xs cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selected.has(a.id)}
+                                  onChange={() => toggle(a.id)}
+                                  className="accent-primary"
+                                />
+                                <span className="font-medium">@{a.username}</span>
+                                <AccountBadges account={a} />
+                                <span className="text-2xs text-muted-foreground ml-auto">
+                                  #{a.id}
+                                </span>
+                              </label>
+                              <ReconnectNote account={a} />
+                            </div>
                           ))}
                         </div>
                       </div>

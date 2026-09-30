@@ -128,13 +128,20 @@ class PaginatedMeta(BaseModel):
 
 
 class PostBridgeSocialAccount(BaseModel):
-    """SocialAccountDto — note `id` is NUMERIC."""
+    """SocialAccountDto — note `id` is NUMERIC.
+
+    ``needs_reconnect``: repeated dead-token failures paused the account, and
+    PostBridge skips posts to it until it is reconnected in its dashboard.
+    ``has_x_premium``: X only, true on X Premium (25,000 characters, not 280);
+    null on every other platform and refreshed only when the account is."""
 
     model_config = ConfigDict(extra="ignore")
 
-    id:       int
-    platform: PostBridgePlatform
-    username: str
+    id:              int
+    platform:        PostBridgePlatform
+    username:        str
+    needs_reconnect: bool = False
+    has_x_premium:   bool | None = None
 
 
 # ---------------------------------------------------------------------------

@@ -24,18 +24,19 @@ import routes.content as content_routes
 import service.auth as auth_service
 import service.post_bridge as post_bridge
 from agents.content.assessment import compute_sanity
-from agents.content.channels import brand_platforms
+from agents.content.channels import brand_platforms, copy_problems, rules_for
 from agents.content.performance import rank_types
 from agents.content.publishing import PUBLISHED_VIA_DUCT, publish_blockers
 from agents.content.schema import SanityCheckId, TEXT_POST_TYPE
 from agents.content.v1.runner import make_session
 from db.session import get_session as get_session_dep
 from models.auth import User
-from models.content import ContentPost
+from models.content import ContentPost, ContentSocialLink
 from models.membership import ProjectMember
 from models.project import Project
 from service.membership import ROLE_OWNER
 from service.post_bridge import PostBridgeClient
+from service.social_accounts import project_x_premium
 from tests.conftest import make_sqlite_engine
 
 WHEN = datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc)
@@ -99,9 +100,13 @@ class PostBridgeWire:
 
     def __init__(self) -> None:
         self.requests: list[httpx.Request] = []
+        # What a publish checks before it posts: account 101, on X.
+        self.accounts: list[dict] = [{"id": 101, "platform": "twitter", "username": "duct"}]
 
     def __call__(self, req: httpx.Request) -> httpx.Response:
         self.requests.append(req)
+        if req.url.path == "/v1/social-accounts":
+            return httpx.Response(200, json={"data": self.accounts})
         if req.url.path == "/v1/posts":
             body = json.loads(req.read())
             return httpx.Response(200, json={
@@ -113,6 +118,10 @@ class PostBridgeWire:
 
     def client(self, *_args) -> PostBridgeClient:
         return PostBridgeClient("sk-fake", client=httpx.AsyncClient(transport=httpx.MockTransport(self)))
+
+    def writes(self) -> list[str]:
+        """Every path but the account check a publish always makes first."""
+        return [r.url.path for r in self.requests if r.url.path != "/v1/social-accounts"]
 
     def created(self) -> dict:
         (create,) = [r for r in self.requests if r.url.path == "/v1/posts"]
@@ -219,7 +228,7 @@ def test_the_publish_route_sends_a_text_post_as_words_with_its_first_reply(db, p
     )
 
     assert res.status_code == 200, res.text
-    assert [r.url.path for r in wire.requests] == ["/v1/posts"]   # nothing uploaded
+    assert wire.writes() == ["/v1/posts"]   # nothing uploaded
     body = wire.created()
     assert "media" not in body
     assert body["caption"] == post.caption
@@ -304,7 +313,7 @@ def test_the_publish_route_holds_a_typed_link_back_from_x_but_not_linkedin(db, p
 
     assert refused.status_code == 400 and "https://getduct.ai/blog/evals" in refused.json()["detail"]
     assert sent.status_code == 200, sent.text
-    assert [r.url.path for r in wire.requests] == ["/v1/posts"]   # only LinkedIn's went out
+    assert wire.writes() == ["/v1/posts"]   # only LinkedIn's went out
 
 
 def test_a_text_post_cannot_go_to_a_channel_that_needs_media():
@@ -372,3 +381,74 @@ def test_the_apps_draft_channels_are_the_backends_playbooks():
         for name, flag in re.findall(r"\{\s*id:\s*Platform\.(\w+),\s*textFirst:\s*(true|false)\s*\}", block)
     }
     assert app == {str(p): PLAYBOOKS[p] in TEXT_PLAYBOOKS for p in PLAYBOOKS}
+
+
+# ---------------------------------------------------------------------------
+# X Premium and a paused account
+# ---------------------------------------------------------------------------
+
+LONG_TWEET = "Shipped the eval gate. " * 20   # 460 characters: over 280, well under 25,000
+
+
+def _link(db, project, account_id=101, *, platform="twitter", premium=False) -> None:
+    db.add(ContentSocialLink(project_id=project.id, external_account_id=str(account_id),
+                             platform=platform, username="duct", has_x_premium=premium))
+    db.commit()
+
+
+def test_x_premium_lifts_the_limit_on_x_and_nowhere_else():
+    assert copy_problems("twitter", LONG_TWEET)
+    assert copy_problems("twitter", LONG_TWEET, premium=True) == []
+    # LinkedIn has no paid tier that lifts its limit.
+    assert rules_for("linkedin", premium=True).max_chars == rules_for("linkedin").max_chars
+
+
+def test_a_long_tweet_publishes_only_when_every_chosen_x_account_has_premium(db, project, owner, wire):
+    """X Premium is per account, and one post goes to every chosen account:
+    a standard account among them holds the post to 280."""
+    wire.accounts = [
+        {"id": 101, "platform": "twitter", "username": "duct", "has_x_premium": True},
+        {"id": 102, "platform": "twitter", "username": "duct_hq", "has_x_premium": False},
+    ]
+    _link(db, project, 101, premium=True)
+    post = _text_post(db, project, caption=LONG_TWEET)
+
+    held = _api(db, owner).post(f"/api/content/posts/{post.id}/publish", json={"social_account_ids": [101, 102]})
+    sent = _api(db, owner).post(f"/api/content/posts/{post.id}/publish", json={"social_account_ids": [101]})
+
+    assert held.status_code == 400 and "280" in held.json()["detail"]
+    assert sent.status_code == 200, sent.text
+    assert wire.writes() == ["/v1/posts"]
+
+
+def test_a_paused_account_is_refused_before_anything_is_sent(db, project, owner, wire):
+    """PostBridge skips a paused account without failing the post, so a
+    publish there would come back "scheduled" and never appear."""
+    wire.accounts = [{"id": 101, "platform": "twitter", "username": "duct", "needs_reconnect": True}]
+    post = _text_post(db, project)
+
+    res = _api(db, owner).post(f"/api/content/posts/{post.id}/publish", json={"social_account_ids": [101]})
+
+    assert res.status_code == 400
+    assert "@duct on Twitter / X needs reconnecting in PostBridge" in res.json()["detail"]
+    assert wire.writes() == []
+    db.refresh(post)
+    assert post.status == "draft"
+
+
+def test_listing_the_accounts_remembers_premium_and_the_post_counts_against_it(db, project, owner, wire):
+    """The flag is stored on the link so the preview, the review and the
+    drafting prompt know the limit without asking PostBridge."""
+    _link(db, project, 101, premium=False)
+    post = _text_post(db, project, caption=LONG_TWEET)
+    api = _api(db, owner)
+    assert api.get(f"/api/content/posts/{post.id}").json()["channel"]["max_chars"] == 280
+
+    wire.accounts = [{"id": 101, "platform": "twitter", "username": "duct", "has_x_premium": True}]
+    listed = api.get(f"/api/content/social-accounts?project_id={project.id}").json()
+
+    assert listed[0]["has_x_premium"] is True and listed[0]["needs_reconnect"] is False
+    assert project_x_premium(db, project.id)
+    detail = api.get(f"/api/content/posts/{post.id}").json()
+    assert detail["channel"]["max_chars"] == 25_000
+    assert not publish_blockers(post, premium=True)

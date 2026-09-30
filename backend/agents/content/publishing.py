@@ -21,13 +21,14 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from agents.content.channels import RULES, copy_problems, primary_channel, resolve
+from agents.content.channels import RULES, Platform, copy_problems, primary_channel, resolve
 from agents.content.schema import ContentStatus, TEXT_POST_TYPE
 from service.post_bridge.client import PostBridgeAPIError
 from service.post_bridge.schema import (
     PostBridgeCreatePostRequest,
     PostBridgePost,
     PostBridgePostStatus,
+    PostBridgeSocialAccount,
     PostBridgeUpdatePostRequest,
 )
 
@@ -59,21 +60,50 @@ def unpublished_replies(post) -> int:
     return max(0, len(replies) - ch.rules.publishable_replies)
 
 
-def publish_blockers(post) -> list[str]:
+def publish_blockers(post, *, premium: bool = False) -> list[str]:
     """Why this post cannot go out as it stands — sentences for the person or
     the model — or an empty list. Only what the platform itself would refuse:
     the review's softer advice never blocks, and neither do replies the
-    channel does not publish (``unpublished_replies``)."""
+    channel does not publish (``unpublished_replies``). ``premium``: the
+    account it goes out on has the platform's paid tier (``premium_for``)."""
     ch = resolve(primary_channel(post.platforms))
     caption = post.caption or ""
     replies = [r for r in (post.replies or []) if isinstance(r, str)]
     problems: list[str] = []
     if not caption.strip():
         problems.append("The post has no words yet.")
-    problems += copy_problems(ch.id, caption, replies)
+    problems += copy_problems(ch.id, caption, replies, premium=premium)
     if is_text_only(post) and ch.rules.requires_media:
         problems.append(f"{ch.label} doesn't take a post without a picture or video.")
     return problems
+
+
+def premium_for(accounts: list[PostBridgeSocialAccount], chosen: list[int]) -> bool:
+    """Whether the post may use X Premium's length: every chosen X account
+    has it. One standard account among them would have PostBridge refuse the
+    long post for that account alone, so the post is held to 280 for all."""
+    by_id = {a.id: a for a in accounts}
+    x = [by_id[i] for i in chosen if i in by_id and by_id[i].platform == Platform.TWITTER]
+    return bool(x) and all(a.has_x_premium for a in x)
+
+
+def reconnect_blockers(accounts: list[PostBridgeSocialAccount], chosen: list[int]) -> list[str]:
+    """The chosen accounts a post cannot reach, as sentences. PostBridge pauses
+    an account whose login died (``needs_reconnect``) and skips every post to
+    it without failing the post, so publishing there would say "done" and put
+    nothing on the feed. An id PostBridge no longer lists was disconnected."""
+    by_id = {a.id: a for a in accounts}
+    out: list[str] = []
+    for i in chosen:
+        account = by_id.get(i)
+        if account is None:
+            out.append(f"Account {i} isn't connected in PostBridge any more. Pick another, "
+                       "or connect it again in PostBridge.")
+        elif account.needs_reconnect:
+            label = resolve(str(account.platform)).label
+            out.append(f"@{account.username} on {label} needs reconnecting in PostBridge; "
+                       "posts to it are skipped until it is.")
+    return out
 
 
 def _first_reply(replies: list | None) -> str:
@@ -252,9 +282,11 @@ __all__ = [
     "is_text_only",
     "metrics_sync",
     "no_sync_message",
+    "premium_for",
     "publish_blockers",
     "publish_failure",
     "push_edit",
+    "reconnect_blockers",
     "record_published",
     "unpublished_replies",
     "went_out",

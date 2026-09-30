@@ -37,6 +37,7 @@ from models.membership import ProjectMember
 from models.project import Project
 from service import storage
 from service.membership import ROLE_OWNER
+from service.post_bridge.schema import PostBridgeSocialAccount
 from service.videos import GeneratedVideo, VideoAPIError, VideoErrorCode
 from tests.conftest import make_sqlite_engine
 
@@ -351,6 +352,9 @@ class FakePostBridge:
 
     async def upload_media(self, data, url, content_type):
         return None
+
+    async def list_social_accounts(self, **_kw):
+        return [PostBridgeSocialAccount(id=7, platform="tiktok", username="duct")]
 
     async def create_post(self, request):
         self.posts.append(request)

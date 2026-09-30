@@ -153,6 +153,9 @@ class ContentBrandContext(BaseModel):
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
     # Where the brand already posts, as Platform values (channels.brand_platforms).
     active_channels: list[str] = Field(default_factory=list)
+    # Every X account the project posts to is on X Premium: 25,000 characters
+    # a post instead of 280 (service/social_accounts.project_x_premium).
+    x_premium: bool = False
 
 
 # ---------------------------------------------------------------------------

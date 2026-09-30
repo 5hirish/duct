@@ -17,7 +17,7 @@ and the prompt can say no dedicated agent exists yet.
 from __future__ import annotations
 
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from enum import StrEnum
 
 from utils.strings import titleize
@@ -62,7 +62,9 @@ class ChannelRules:
     """What a platform accepts, as far as drafting and publishing care.
 
     ``max_chars`` is the platform's own ceiling on one post's words — X's is
-    for a standard account, the one every account has. Counted as Python
+    for a standard account, the one every account has. ``premium_max_chars``
+    is the ceiling a paid tier lifts it to (X Premium: 25,000), applied only
+    when the project's linked account has that tier (``rules_for(premium=)``). Counted as Python
     ``len`` (code points), which is exact for the Latin text these playbooks
     write; X weighs CJK and most emoji double and every URL as 23, and a post
     that keeps its links in the reply (``strips_links``) never meets the URL
@@ -91,6 +93,7 @@ class ChannelRules:
     hashtags:            bool = True    # does the playbook expect them at all
     synced_metrics:      bool = False   # PostBridge reports this platform's numbers
     strips_links:        bool = False   # PostBridge drops links from the post itself
+    premium_max_chars:   int = 0        # the paid tier's ceiling; 0 when there is none
 
 
 # Keyed by the enum so a Platform without rules is a visible hole (the unit
@@ -102,7 +105,8 @@ RULES: dict[Platform, ChannelRules] = {
     Platform.INSTAGRAM:       ChannelRules("Instagram", 2200, fold_chars=125, requires_media=True, synced_metrics=True),
     Platform.YOUTUBE:         ChannelRules("YouTube", 5000, requires_media=True, synced_metrics=True),
     Platform.LINKEDIN:        ChannelRules("LinkedIn", 3000, fold_chars=210, hashtags=False),
-    Platform.TWITTER:         ChannelRules("Twitter / X", 280, publishable_replies=1, hashtags=False, strips_links=True),
+    Platform.TWITTER:         ChannelRules("Twitter / X", 280, publishable_replies=1, hashtags=False, strips_links=True,
+                                           premium_max_chars=25_000),
     Platform.FACEBOOK:        ChannelRules("Facebook", 63206, synced_metrics=True),
     Platform.THREADS:         ChannelRules("Threads", 500, publishable_replies=1),
     Platform.BLUESKY:         ChannelRules("Bluesky", 300),
@@ -175,19 +179,25 @@ def brand_platforms(active_channels: list | None) -> list[str]:
     return out
 
 
-def rules_for(channel: str | None) -> ChannelRules:
+def rules_for(channel: str | None, *, premium: bool = False) -> ChannelRules:
+    """The channel's rules. ``premium`` is true when the account the post goes
+    out on has the platform's paid tier, which lifts ``max_chars`` where the
+    platform has one (X Premium); it changes nothing anywhere else."""
     cid = _normalise(channel)
-    return RULES.get(cid) or ChannelRules(titleize(cid), _UNKNOWN_MAX_CHARS)
+    rules = RULES.get(cid) or ChannelRules(titleize(cid), _UNKNOWN_MAX_CHARS)
+    if premium and rules.premium_max_chars:
+        return replace(rules, max_chars=rules.premium_max_chars)
+    return rules
 
 
-def resolve(channel: str | None) -> Channel:
+def resolve(channel: str | None, *, premium: bool = False) -> Channel:
     """Resolve a requested channel to its playbook and rules.
 
     Unknown / not-yet-supported channels fall back to the TikTok playbook with
     supported=False (callers surface a "no dedicated agent yet" note).
     """
     cid = _normalise(channel)
-    rules = rules_for(cid)
+    rules = rules_for(cid, premium=premium)
     return Channel(
         id=cid,
         label=rules.label,
@@ -197,11 +207,11 @@ def resolve(channel: str | None) -> Channel:
     )
 
 
-def channel_payload(channel: str | None) -> dict:
+def channel_payload(channel: str | None, *, premium: bool = False) -> dict:
     """The channel as the app reads it: id, playbook, and the rules the
     preview counts against. Sent with every post so the app never keeps its
     own copy of a character limit."""
-    ch = resolve(channel)
+    ch = resolve(channel, premium=premium)
     return {
         "id": ch.id, "supported": ch.supported, "playbook": ch.playbook,
         "text_first": ch.text_first, **asdict(ch.rules),
@@ -228,11 +238,13 @@ def links_in(text: str) -> list[str]:
     return [m.group(0).rstrip(".,;:!?)\"'") for m in _LINK.finditer(text or "")]
 
 
-def copy_problems(channel: str | None, caption: str, replies: list[str] | None = None) -> list[str]:
+def copy_problems(
+    channel: str | None, caption: str, replies: list[str] | None = None, *, premium: bool = False,
+) -> list[str]:
     """What is wrong with a post's words for its channel, as sentences a model
     or a person can act on. Empty when it fits. The limits are the platform's
     own, so an over-length post is not a style note: it does not publish."""
-    rules = rules_for(channel)
+    rules = rules_for(channel, premium=premium)
     out: list[str] = []
     caption = caption or ""
     if len(caption) > rules.max_chars:
