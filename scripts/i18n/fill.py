@@ -10,6 +10,7 @@ translated is touched, so a re-run is a no-op and the diff is the delta.
     python3 scripts/i18n/fill.py app/src/locales/es/messages.po
     python3 scripts/i18n/fill.py --provider manual --export pending.json
     python3 scripts/i18n/fill.py --provider manual --import pending.json
+    python3 scripts/i18n/fill.py --check              # every translation keeps its `keep` terms
 
 Providers: `anthropic` (ANTHROPIC_API_KEY) and `gemini` (GEMINI_API_KEY),
 picked from whichever key is set unless `--provider` says. `manual` writes
@@ -28,7 +29,12 @@ Three rules the prompt enforces and this script verifies:
   the batch is retried once, and a second failure leaves the entry empty and
   says so — `lingui compile --strict` then fails the build, which is the
   point. Never a silent half-translation.
-* Glossary `keep` terms are never translated; `terms` render one way.
+* Glossary `keep` terms come back verbatim. The prompt asking was not
+  enough: every language shipped "Ship with AI", the maker's YouTube channel,
+  translated, and German had "Die Duct-Doktrin". A translation missing a
+  `keep` term its English carries is rejected like a lost placeholder, and
+  `--check` holds every catalogue already written to the same rule in CI.
+  `terms` render one way.
 * Register per language, from the glossary, so "du" and "tú" are a decision
   made once and not per string.
 """
@@ -72,6 +78,25 @@ BATCH = 40
 #: proxy in front of the API has been seen to cut off halfway.
 BATCH_CHARS = 5000
 TAG_RE = re.compile(r"</?\d+/?>")
+
+
+def keep_patterns(glossary: dict) -> dict[str, re.Pattern[str]]:
+    """One matcher per `keep` term: case-sensitive, bounded by ASCII letters.
+
+    The boundary is ASCII on purpose. Japanese runs a brand straight into the
+    particle after it ("Ductについて"), and a Unicode `\\b` would call that a
+    missing "Duct". A trailing possessive is allowed ("Claritys" in German,
+    "Clarity's" in English); anything else glued to the term is a different word.
+    """
+    return {
+        term: re.compile(r"(?<![A-Za-z0-9])" + re.escape(term) + r"(?:'s|’s|s)?(?![A-Za-z0-9])")
+        for term in glossary.get("keep", [])
+    }
+
+
+def missing_keep(source: str, text: str, patterns: dict[str, re.Pattern[str]]) -> list[str]:
+    """`keep` terms the English carries that the translation dropped or translated."""
+    return [term for term, pattern in patterns.items() if pattern.search(source) and not pattern.search(text)]
 
 
 def _placeholders(text: str) -> list[str]:
@@ -226,6 +251,7 @@ def translate_batch(provider: str, model: str, locale: str, glossary: dict, batc
         for idx, entry in batch
     ]
     system, user = build_prompt(locale, glossary, items)
+    keep = keep_patterns(glossary)
     for attempt in (1, 2, 3):
         try:
             raw = PROVIDERS[provider](system, user, model)
@@ -237,16 +263,41 @@ def translate_batch(provider: str, model: str, locale: str, glossary: dict, batc
         good, bad = {}, []
         for idx, entry in batch:
             text = answers.get(idx, "")
-            if text and _placeholders(text) == _placeholders(entry.msgid):
+            if text and _placeholders(text) == _placeholders(entry.msgid) and not missing_keep(entry.msgid, text, keep):
                 good[idx] = text
             else:
                 bad.append(entry.msgid)
         if not bad:
             return good
-        print(f"  attempt {attempt}: {len(bad)} rejected (placeholders): {bad[:3]}", file=sys.stderr)
+        print(f"  attempt {attempt}: {len(bad)} rejected (placeholders or keep terms): {bad[:3]}", file=sys.stderr)
         if attempt == 3:
             return good
     return {}
+
+
+def check_keep(loaded: list[tuple[Path, po.Catalog]], keep: dict[str, re.Pattern[str]]) -> int:
+    """Every translated entry carries each `keep` term its English does.
+
+    Needs no key and changes nothing, so CI runs it. The fix for a failure is
+    the msgstr (or, if the term is a common word that happens to match, the
+    glossary), never an exemption list here.
+    """
+    failures = 0
+    for path, catalog in loaded:
+        if locale_of(path, catalog) in SKIP_LOCALES:
+            continue
+        for entry in catalog.entries:
+            if entry.is_header or entry.obsolete or not entry.msgstr:
+                continue
+            dropped = missing_keep(entry.msgid, entry.msgstr, keep)
+            if dropped:
+                failures += 1
+                print(f"{path.relative_to(ROOT)}: {', '.join(dropped)} not kept\n  en: {entry.msgid}\n  tr: {entry.msgstr}")
+    if failures:
+        print(f"{failures} translation(s) dropped or translated a glossary `keep` term (scripts/i18n/glossary.json)", file=sys.stderr)
+        return 1
+    print(f"keep terms: every translation in {len(loaded)} catalogue(s) keeps them")
+    return 0
 
 
 def main() -> int:
@@ -258,11 +309,16 @@ def main() -> int:
     ap.add_argument("--import", dest="import_", help="manual: read translations from this JSON file")
     ap.add_argument("--limit", type=int, default=0, help="stop after N entries per catalogue")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--check", action="store_true", help="fail if any translation dropped a glossary `keep` term")
     args = ap.parse_args()
 
     glossary = json.loads(GLOSSARY.read_text(encoding="utf-8"))
+    keep = keep_patterns(glossary)
     paths = [Path(p).resolve() for p in args.catalogs] or sorted(p for g in CATALOG_GLOBS for p in ROOT.glob(g))
     loaded = [(p, po.load(p)) for p in paths if p.exists()]
+
+    if args.check:
+        return check_keep(loaded, keep)
 
     provider = args.provider
     if provider is None:
@@ -303,11 +359,13 @@ def main() -> int:
             if imported:
                 for entry in pending:
                     text = imported.get(key, {}).get(entry.msgid) or imported.get(key, {}).get(f"{entry.msgctxt}\x04{entry.msgid}")
-                    if text and _placeholders(text) == _placeholders(entry.msgid):
+                    dropped = missing_keep(entry.msgid, text, keep) if text else []
+                    if text and _placeholders(text) == _placeholders(entry.msgid) and not dropped:
                         entry.msgstr = text
                         total_filled += 1
                     elif text:
-                        print(f"  rejected (placeholders): {entry.msgid!r}", file=sys.stderr)
+                        why = f"keep terms {dropped}" if dropped else "placeholders"
+                        print(f"  rejected ({why}): {entry.msgid!r}", file=sys.stderr)
             else:
                 pending_out[key] = [
                     {"msgid": e.msgid, "msgctxt": e.msgctxt, "context": " · ".join(e.extracted_comments + e.references[:2]), "locale": locale}

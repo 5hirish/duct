@@ -1,12 +1,19 @@
 {
-  "_comment": "Read by fill.py on every run. `keep` terms are never translated; `terms` pin one rendering per language so the same concept never gets two words; `register` is how each language addresses the reader.",
+  "_comment": "Read by fill.py on every run, and by `fill.py --check` in CI. `keep` terms come back verbatim, case-sensitive: product and brand names (Duct's own included: Content Studio, the Duct Doctrine, the maker's Ship with AI channel), vendors, the mosaic inscriptions, acronyms. A common word that only sometimes names a brand (Threads, Make, X) does not belong here, because the check cannot tell the two apart; `terms` pin one rendering per language so the same concept never gets two words; `register` is how each language addresses the reader.",
   "keep": [
     "Duct", "GA4", "GSC", "GTM", "Search Console", "Google Ads", "Stripe", "Mixpanel",
     "Clarity", "GrowthBook", "PostHog", "TikTok", "YouTube", "ChatGPT", "Claude", "Codex",
     "OpenAI", "Anthropic", "Gemini", "Ollama", "GitHub", "MIT", "ROAS", "CPA", "CPC", "CPM",
     "CTR", "LTV", "CAC", "MRR", "SEO", "URL", "API", "JSON", "CSV", "macOS", "Windows", "Linux",
     "Meta Ads", "Apple Search Ads", "ChatGPT Ads", "OpenAI Ads", "Google Analytics", "Tag Manager",
-    "Microsoft Clarity", "RevenueCat", "HubSpot"
+    "Microsoft Clarity", "RevenueCat", "HubSpot",
+    "Duct AI", "getduct.ai", "Duct Doctrine", "Doctrine", "Content Studio", "Ship with AI", "Shirish Kadam",
+    "FONS", "SALVE", "NIHIL", "OTIVM",
+    "OpenRouter", "xAI", "Grok", "PostBridge", "Apify", "Ahrefs", "OpenSEO", "Supermetrics", "Amplitude",
+    "n8n", "Claude Cowork", "Cowork", "OpenClaw", "Adspirer", "PaidSync", "AdLoop",
+    "Instagram", "LinkedIn", "Facebook", "Pinterest", "Bluesky", "Slack", "Notion",
+    "Tauri", "FastAPI", "Next.js", "Cloudflare", "Railway", "Turnstile", "Sentry",
+    "SaaS", "UTM", "CMGR", "ROI", "OAuth"
   ],
   "terms": {
     "brief": { "es": "informe", "pt-BR": "resumo", "de": "Briefing", "ja": "ブリーフ", "note": "The weekly synthesis Duct writes. A noun." },

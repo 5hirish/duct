@@ -785,7 +785,14 @@ npm run i18n:extract                 # catalogues pick up the new/changed string
 python3 ../scripts/i18n/fill.py      # translates only what is missing (needs a key,
                                      # or --provider manual to hand the entries to an agent)
 npm run check:i18n                   # stale? missing? literal outside Lingui? → red
+python3 ../scripts/i18n/fill.py --check src/locales/*/messages.po   # a brand name translated? → red
 ```
+
+Product and brand names (Duct, Content Studio, every connector and vendor)
+stay in English in every language: they are `keep` in
+`scripts/i18n/glossary.json`, `fill.py` rejects a translation that drops one,
+and the `--check` above fails CI on one already in a catalogue. A new product
+name in the UI goes into `keep` in the same change.
 
 Staleness is `lingui check sync`: it compares each catalogue with what
 extract would write, **byte for byte**, and writes nothing. Two consequences:
