@@ -30,10 +30,12 @@ from agents.core.session import close_session, get_session
 from agents.models import run_model_fields
 from agents.engines import (
     Engine,
+    ProviderKey,
     resolve_engine,
     resolve_engine_model,
     resolve_engine_provider,
     resolve_provider_key,
+    web_search_key,
 )
 from models.auth import User
 from service.auth import get_current_user_optional, get_user_provider_keys
@@ -96,7 +98,7 @@ def _resolve_agent_config(request_engine: str = "") -> tuple[Any, Any, Engine]:
     return provider, model, engine
 
 
-def _resolve_run_key(provider: Any, user_keys: dict | None, owner_id: Any) -> str:
+def _resolve_run_key(provider: Any, user_keys: dict | None, owner_id: Any) -> ProviderKey:
     """The key this audit may spend, or ProviderKeyRequired.
 
     See ``agents.engines.resolve_provider_key``: on the hosted deployment an
@@ -108,7 +110,7 @@ def _resolve_run_key(provider: Any, user_keys: dict | None, owner_id: Any) -> st
     )
     if resolved.billed_to_duct:
         logger.info("audit: run billed to Duct (%s/%s)", provider.value, resolved.source)
-    return resolved.key
+    return resolved
 
 
 async def _emit(queue: asyncio.Queue, body: dict[str, Any]) -> None:
@@ -131,16 +133,16 @@ async def _stream_queue(
         pass
 
 
-def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine):
+def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine, search_key: str = ""):
     """The audit runner. One engine now — the parameter stays because the route
     still resolves and reports an engine, and `agents/engines.py` is where that
     would grow again."""
     logger.info("audit: %s/%s", provider.value, model.value)
-    # gemini_api_key backs Duct's own WebSearch in the research pass when the
-    # run's own provider has no usable built-in one.
+    # search_key backs Duct's own WebSearch in the research pass when the run's
+    # own provider has no usable built-in one: the caller's Gemini key, never
+    # Duct's for a run Duct is not paying for (agents/engines.web_search_key).
     return LangChainAuditRunner(
-        api_key=api_key, provider=provider, model=model,
-        gemini_api_key=get_configs().gemini_api_key,
+        api_key=api_key, provider=provider, model=model, gemini_api_key=search_key,
     )
 
 
@@ -157,7 +159,11 @@ async def _run_audit_pipeline(
 ) -> None:
     try:
         provider, model, engine = _resolve_agent_config(req.engine)
-        api_key = _resolve_run_key(provider, user_keys, owner_id)
+        resolved = _resolve_run_key(provider, user_keys, owner_id)
+        api_key = resolved.key
+        search_key = web_search_key(
+            user_keys, stored_keys_for(owner_id), billed_to_duct=resolved.billed_to_duct,
+        )
         # An empty key past this point is the V3 subscription path, which
         # resolve_provider_key has already decided is permitted here.
 
@@ -192,7 +198,7 @@ async def _run_audit_pipeline(
             "status": "success",
         })
 
-        runner = _build_runner(api_key, provider, model, engine)
+        runner = _build_runner(api_key, provider, model, engine, search_key)
         report = await runner.run_pipeline(
             session_id=session_id,
             url=url,

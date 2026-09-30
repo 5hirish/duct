@@ -69,8 +69,9 @@ router.include_router(
     prefix="/api/insights",
     dependencies=APP_AND_USER,
 )
-# Streams from the server's own provider key with a caller-supplied prompt —
-# an open LLM proxy without this gate.
+# Streams a caller-supplied prompt on the caller's own provider key
+# (routes/chat.py). Before that it was the server's key, which made this gate
+# the only thing between a guest and a free model on Duct's account.
 router.include_router(
     chat.router,
     prefix="/api/insights",

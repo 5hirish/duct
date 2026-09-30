@@ -72,7 +72,6 @@ from agents.core.errors import error_payload
 from agents.core.session import CLIENT_MESSAGE_ID
 from db.session import get_session as db_session
 from agents.registry import AgentType, get_spec, list_specs
-from config import get_configs
 from agents.core.prompts import xml_block
 from models.auth import User
 from models.project import Project
@@ -87,7 +86,7 @@ from service.lead_access import lead_token_is_live
 from service.membership import accessible_projects, get_project_for_user, member_role
 from service.memory import build_memory_context, seed_user_preferences
 from service.memory_consolidation import LentKeys, record_remember_choice, schedule_consolidation
-from agents.engines import resolve_job_run
+from agents.engines import resolve_job_run, web_search_key
 from agents.tiers import Job, tier_fields
 from service.model_settings import get_model_settings
 from service.profile import resolve as resolve_profile
@@ -1410,7 +1409,6 @@ async def _start_seo_audit(
     except Exception as exc:
         raise HTTPException(422, f"Invalid seo-audit config: {exc}") from exc
 
-    cfg = get_configs()
     session = get_session(session_id)
     owner_id = getattr(session, "user_id", None) if session else None
     # The tier map decides the provider, over the keys this caller can spend
@@ -1445,7 +1443,12 @@ async def _start_seo_audit(
         api_key=api_key,
         provider=provider,
         model=model,
-        gemini_api_key=cfg.gemini_api_key,
+        # Search on the caller's own Gemini key; Duct's only when Duct is
+        # already paying for this run (agents/engines.web_search_key).
+        gemini_api_key=web_search_key(
+            user_keys, stored_keys_for(owner_id),
+            billed_to_duct=run.source in ("cloud", "subscription"),
+        ),
     )
     # The artifact digest runs on the caller's own provider now, so the key no
     # longer has to be zeroed for anyone. It used to be Anthropic-only (the
