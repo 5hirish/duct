@@ -12,7 +12,7 @@ msgstr "<0/> @5hirish"
 
 #: about.html
 msgid "<0/> Ship with AI"
-msgstr "<0/> AIと共に提供"
+msgstr "<0/> Ship with AI"
 
 #: about.html
 msgid "<0/> shirishkadam.com"
@@ -101,7 +101,7 @@ msgstr "お問い合わせ"
 
 #: about.html index.html
 msgid "Content Studio"
-msgstr "コンテンツスタジオ"
+msgstr "Content Studio"
 
 #: about.html
 msgid ""
@@ -1133,7 +1133,7 @@ msgstr "異議がありますか？"
 
 #: doctrine.html partials/footer-expanded.html partials/nav-simple.html
 msgid "Doctrine"
-msgstr "ドクトリン"
+msgstr "Doctrine"
 
 #: doctrine.html
 msgid ""
@@ -1244,13 +1244,13 @@ msgstr "強い意見、<0/><1>コード</1>で保持"
 
 #: doctrine.html
 msgid "The Duct Doctrine"
-msgstr "Ductの原則"
+msgstr "Duct Doctrine"
 
 #. meta og:title
 #. meta twitter:title
 #: doctrine.html
 msgid "The Duct Doctrine — What This Project Believes, and Why"
-msgstr "Ductの原則 — このプロジェクトが信じるもの、そしてその理由"
+msgstr "Duct Doctrine — このプロジェクトが信じること、そしてその理由"
 
 #: doctrine.html
 msgid "The agent proposes. A human approves."
@@ -2132,7 +2132,7 @@ msgstr ""
 msgid ""
 "An open-source AI agent that reads Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4 and Stripe together. Ask why CPA moved and it answers across platforms with its sources; when the answer is a pause, a negative or a budget change, it proposes the change set and applies it only when you approve."
 msgstr ""
-"Google広告、Meta広告、Apple Search Ads、OpenAI Ads、GA4、Stripeをまとめて読み取るオープンソースAIエージェントです。CPAが変動した理由を尋ねると、その情報源とともにプラットフォームを横断して回答します。回答が一時停止、除外、または予算変更である場合、変更セットを提案し、お客様が承認した場合にのみ適用します。"
+"Google Ads、Meta Ads、Apple Search Ads、OpenAI Ads、GA4、Stripeをまとめて読み取るオープンソースのAIエージェントです。CPAが動いた理由を尋ねると、プラットフォームを横断して出典付きで答えます。答えが一時停止、除外キーワード、予算変更であれば変更セットを提案し、あなたが承認したときにだけ適用します。"
 
 #: for-paid-ads.html
 msgid ""
@@ -2150,7 +2150,7 @@ msgstr "CPAが変動した理由を尋ねる"
 msgid ""
 "Ask why CPA moved. Duct reads Google Ads, Meta, Apple Search Ads, GA4 and Stripe together, proposes the pause or the shift, and applies it when you approve."
 msgstr ""
-"CPAが変動した理由を尋ねてください。DuctはGoogle広告、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止または変更を提案し、お客様が承認した場合に適用します。"
+"CPAが動いた理由を尋ねてください。DuctはGoogle Ads、Meta、Apple Search Ads、GA4、Stripeをまとめて読み取り、一時停止や予算の移動を提案し、あなたが承認すると適用します。"
 
 #: for-paid-ads.html
 msgid ""
@@ -2244,7 +2244,7 @@ msgstr ""
 #: for-paid-ads.html
 msgid ""
 "One question and its answer: where the ads budget is leaking, read from Google Ads, GA4 and Stripe, with the campaign and the search terms named"
-msgstr "1つの質問とその回答：広告予算がどこで漏れているか、Google広告、GA4、Stripeから読み取り、キャンペーン名と検索語句を特定します。"
+msgstr "1つの質問とその答え：広告予算がどこで漏れているかをGoogle Ads、GA4、Stripeから読み取り、キャンペーンと検索語句を特定します"
 
 #: for-paid-ads.html
 msgid ""
@@ -6929,7 +6929,7 @@ msgstr "すべての無料ツールを見る →"
 
 #: partials/footer-expanded.html
 msgid "Ship with AI (YouTube)"
-msgstr "AIで出荷 (YouTube)"
+msgstr "Ship with AI（YouTube）"
 
 #. div aria-label
 #: partials/footer-expanded.html tools/index.html tools/utm-builder.html
@@ -7118,7 +7118,7 @@ msgstr "6か月後、再度確認します"
 
 #: privacy.html
 msgid "6. Content Studio: Uploads and Publishing"
-msgstr "6. コンテンツスタジオ：アップロードと公開"
+msgstr "6. Content Studio：アップロードと公開"
 
 #: privacy.html
 msgid "7 days"
@@ -7605,7 +7605,7 @@ msgstr "Ductのコンテンツ機能を使用する場合："
 
 #: privacy.html
 msgid "Image and video generation in Content Studio"
-msgstr "コンテンツスタジオでの画像および動画生成"
+msgstr "Content Studioでの画像・動画生成"
 
 #: privacy.html
 msgid "In transit"
