@@ -7,7 +7,7 @@
 **See the whole picture. Fix it in the same moment.**
 
 Duct is an open-source AI marketing agent for product and growth teams. It connects
-Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more, reads across
+Google Ads, GA4, Search Console, Mixpanel, Stripe and seven more, reads across
 all of them at once, remembers what it learns about your business, and, with
 your approval, changes things in those tools for you. The approve tool does
 not exist in the list the model can call; you press the button.
@@ -22,6 +22,14 @@ service for you; your model keys never leave your machine. Prefer to run every
 part of it yourself? [Self-host it](#-self-host-it). Same code, MIT either way.
 
 Free during beta · No credit card · About 10 minutes to connect your tools
+
+| Before you install | Straight answer |
+|---|---|
+| **Where do my keys live?** | Model keys: your OS keychain, never stored on our servers. Tool connections: encrypted at rest, one project at a time, and on your own disk if you self-host. |
+| **What can the agent do without me?** | Read, compare and propose. By default nothing in your accounts changes until you press Apply. [How that is enforced](#-it-changes-things-you-approve). |
+| **What does it cost to run?** | Duct is free during beta. The model is yours: your own API key, or your ChatGPT plan in the desktop app. |
+| **Can I run all of it myself?** | Yes. [Self-host it](#-self-host-it): SQLite on your disk, no account, nothing leaving the machine. |
+| **What if Duct goes away?** | It is MIT. The self-host build is the same code and needs nothing from us. |
 
 ---
 
