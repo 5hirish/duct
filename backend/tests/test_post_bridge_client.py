@@ -245,3 +245,75 @@ async def test_bearer_token_attached_to_api_calls_only():
 
 
 # Whose key a request spends is tests/test_post_bridge_key.py.
+
+
+# ---------------------------------------------------------------------------
+# Refusals — the two shapes a 400 comes in, both read as one sentence
+# ---------------------------------------------------------------------------
+
+
+async def _refusal(status: int, body) -> PostBridgeAPIError:
+    def _handler(_req: httpx.Request) -> httpx.Response:
+        return httpx.Response(status, json=body)
+
+    async with httpx.AsyncClient(transport=_transport(_handler)) as ac:
+        client = PostBridgeClient("sk-fake", client=ac)
+        with pytest.raises(PostBridgeAPIError) as ei:
+            await client.list_social_accounts()
+    return ei.value
+
+
+@pytest.mark.asyncio
+async def test_an_invalid_post_reads_its_error_list():
+    """InvalidPostDto: {"error": [...]} and no message at all."""
+    exc = await _refusal(400, {"error": ["caption is too long for twitter", "no media for tiktok"]})
+    assert exc.status_code == 400
+    assert exc.error.message == "caption is too long for twitter; no media for tiktok"
+
+
+@pytest.mark.asyncio
+async def test_a_validation_refusal_with_a_message_list_is_not_our_500():
+    """NestJS answers {"message": [...], "error": "Bad Request",
+    "statusCode": 400}. A list in `message` failed validation, so the
+    refusal became an unhandled error here and the reason was lost."""
+    exc = await _refusal(400, {"message": ["scheduled_at must be a date"], "error": "Bad Request", "statusCode": 400})
+    assert exc.error.message == "scheduled_at must be a date"
+
+
+@pytest.mark.asyncio
+async def test_an_error_body_we_cannot_read_is_still_a_postbridge_error():
+    exc = await _refusal(400, {"code": {"nested": True}, "message": {"odd": "shape"}})
+    assert exc.status_code == 400
+    assert "odd" in exc.error.message
+
+
+# ---------------------------------------------------------------------------
+# A queued post
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_an_update_always_carries_its_time():
+    """PATCH without scheduled_at publishes a scheduled post at once, so the
+    request type cannot be built without one."""
+    from pydantic import ValidationError
+
+    from service.post_bridge import PostBridgeUpdatePostRequest
+
+    with pytest.raises(ValidationError):
+        PostBridgeUpdatePostRequest(caption="new words")
+
+    captured: dict = {}
+
+    def _handler(req: httpx.Request) -> httpx.Response:
+        captured["method"], captured["path"] = req.method, req.url.path
+        captured["body"] = _json.loads(req.read())
+        return httpx.Response(200, json={"id": "p1", "status": "scheduled", "caption": "new words"})
+
+    when = datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc)
+    async with httpx.AsyncClient(transport=_transport(_handler)) as ac:
+        client = PostBridgeClient("sk-fake", client=ac)
+        await client.update_post("p1", PostBridgeUpdatePostRequest(caption="new words", scheduled_at=when))
+
+    assert (captured["method"], captured["path"]) == ("PATCH", "/v1/posts/p1")
+    assert captured["body"] == {"caption": "new words", "scheduled_at": "2026-10-01T09:30:00Z"}

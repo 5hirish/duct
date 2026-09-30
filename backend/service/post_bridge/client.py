@@ -15,6 +15,7 @@ from typing import Any
 from uuid import UUID
 
 import httpx
+from pydantic import ValidationError
 from sqlmodel import Session
 
 from service.vendor_keys import VendorKey, VendorKeyRejected, VendorKeyUnchecked
@@ -27,6 +28,7 @@ from service.post_bridge.schema import (
     PostBridgePost,
     PostBridgePostResult,
     PostBridgeSocialAccount,
+    PostBridgeUpdatePostRequest,
     PostBridgeUploadUrl,
 )
 
@@ -130,11 +132,16 @@ class PostBridgeClient:
                 body = resp.json() if resp.content else {}
             except Exception:
                 body = {"message": resp.text[:400]}
-            err = (
-                PostBridgeError.model_validate(body)
-                if isinstance(body, dict)
-                else PostBridgeError(message=str(body))
-            )
+            # An error body we cannot read must still be an error about
+            # PostBridge, never our own 500.
+            try:
+                err = (
+                    PostBridgeError.model_validate(body)
+                    if isinstance(body, dict)
+                    else PostBridgeError(message=str(body)[:400])
+                )
+            except ValidationError:
+                err = PostBridgeError(message=str(body)[:400])
             logger.warning(
                 "post_bridge: %s %s → %s %s",
                 method, url, resp.status_code, err.message,
@@ -236,6 +243,20 @@ class PostBridgeClient:
     async def get_post(self, post_id: str) -> PostBridgePost:
         body = await self._request("GET", f"/v1/posts/{post_id}")
         return PostBridgePost.model_validate(body)
+
+    async def update_post(
+        self, post_id: str, request: PostBridgeUpdatePostRequest,
+    ) -> PostBridgePost:
+        body = await self._request(
+            "PATCH", f"/v1/posts/{post_id}",
+            json=request.model_dump(mode="json", exclude_none=True),
+        )
+        return PostBridgePost.model_validate(body)
+
+    async def delete_post(self, post_id: str) -> None:
+        """Only a scheduled or draft post can be deleted; PostBridge answers
+        400 for one it has already published."""
+        await self._request("DELETE", f"/v1/posts/{post_id}")
 
     async def list_posts(
         self,

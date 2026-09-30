@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
+import anyio.from_thread
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -49,14 +50,21 @@ from sqlalchemy import delete, select
 from sqlmodel import Session
 
 from agents.content.assessment import reassess_post
-from agents.content.channels import channel_payload, primary_channel
+from agents.content.channels import channel_payload, primary_channel, resolve as resolve_channel
 from agents.content.publishing import (
+    PostAlreadyOut,
+    cancel,
     create_request,
+    is_queued_at_postbridge,
     is_text_only,
     metrics_sync,
     no_sync_message,
     publish_blockers,
+    publish_failure,
+    push_edit,
     record_published,
+    went_out,
+    words_changed,
 )
 from agents.content.events import ContentEvent
 from agents.content.styles import base_css, list_styles
@@ -1353,6 +1361,8 @@ def patch_post(
     db: Session = Depends(db_session),
 ) -> PostOut:
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
+    queued = is_queued_at_postbridge(post)
+    before_caption, before_replies = post.caption, list(post.replies or [])
     patch = body.model_dump(exclude_unset=True)
     if "platforms" in patch and patch["platforms"] is not None:
         patch["platforms"] = [
@@ -1372,11 +1382,64 @@ def patch_post(
             _rerender_slides(post)
         except Exception:
             logger.exception("patch_post: failed to re-render slides for %s", post_id)
+    if queued:
+        # A sync route, so a save that never touches PostBridge stays off the
+        # event loop; only the queued case crosses to it for the one call.
+        anyio.from_thread.run(_keep_queue_in_step, db, user, post, before_caption, before_replies)
     post.updated_at = datetime.now(timezone.utc)
     db.add(post)
     db.commit()
     db.refresh(post)
     return _enrich_one(db, post)
+
+
+def _pb_client_for_project(db: Session, user: User, project_id: UUID):
+    """A PostBridge client on the key of the project's owner, who pays."""
+    from service.post_bridge import client_for_user
+
+    proj = _project_for_user(db, user, project_id)
+    try:
+        return client_for_user(proj.user_id, db)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+async def _keep_queue_in_step(
+    db: Session, user: User, post: ContentPost, before_caption: str, before_replies: list,
+) -> None:
+    """An edit to a post PostBridge is holding reaches PostBridge before it
+    is saved here, or it is not saved at all; otherwise the queue publishes
+    words the person already changed. Moving the post out of Scheduled takes
+    it off the queue. Marking it posted by hand touches nothing there."""
+    from service.post_bridge import PostBridgeAPIError
+
+    if post.status == ContentStatus.POSTED:
+        return
+    unscheduled = post.status != ContentStatus.SCHEDULED
+    if not unscheduled and not words_changed(post, before_caption, before_replies):
+        return
+    client = _pb_client_for_project(db, user, post.project_id)
+    try:
+        async with client as pb:
+            if unscheduled:
+                asked_for = post.status
+                await cancel(pb, post)
+                post.status = asked_for
+            else:
+                await push_edit(pb, post)
+    except PostAlreadyOut:
+        db.rollback()
+        db.refresh(post)
+        went_out(post)
+        db.add(post)
+        db.commit()
+        label = resolve_channel(primary_channel(post.platforms)).label
+        raise HTTPException(
+            409, f"This post already went out on {label}, so the change can't reach it. It's marked posted now.",
+        ) from None
+    except PostBridgeAPIError as exc:
+        db.rollback()
+        raise _pb_http_error(exc) from exc
 
 
 @router.post("/content/posts/{post_id}/mark-posted")
@@ -1452,7 +1515,32 @@ def delete_post(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> dict:
+    """A post PostBridge is holding comes off its queue first; deleting only
+    the row would leave the post to go out with no record of it here."""
+    from service.post_bridge import PostBridgeAPIError
+
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
+    if is_queued_at_postbridge(post):
+        client = _pb_client_for_project(db, user, post.project_id)
+
+        async def _take_off_queue() -> None:
+            async with client as pb:
+                await cancel(pb, post)
+
+        try:
+            anyio.from_thread.run(_take_off_queue)
+        except PostAlreadyOut:
+            went_out(post)
+            db.add(post)
+            db.commit()
+            label = resolve_channel(primary_channel(post.platforms)).label
+            raise HTTPException(
+                409,
+                f"This post already went out on {label}, so deleting it here won't take it down. "
+                f"Delete it on {label}. It's marked posted here now.",
+            ) from None
+        except PostBridgeAPIError as exc:
+            raise _pb_http_error(exc) from exc
     db.delete(post)
     db.commit()
     return {"status": "ok"}
@@ -2212,6 +2300,8 @@ async def publish_post_route(
     except PostBridgeAPIError as exc:
         raise _pb_http_error(exc) from exc
 
+    if why := publish_failure(resp):
+        raise HTTPException(502, why)
     record_published(post, resp, body.scheduled_at)
     db.add(post)
     db.commit()
