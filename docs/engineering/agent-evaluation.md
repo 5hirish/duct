@@ -16,7 +16,7 @@ Three tiers; the first two exist.
 | Tier | Runs | What | Where |
 |---|---|---|---|
 | 0 | every PR, offline, free | what is *sent* to the model: the system prompt and tool schemas byte-stable across calls, the history append-only; the gate's own arithmetic and verdicts; model, tier, effort and run limits rendered in the prompt dump | `tests/test_request_invariants.py`, `tests/test_eval_gate.py`, `make dump-prompts` |
-| 1 | PRs touching `backend/agents/**`, memory, profile or the lock; shadow for now | each case k=3 on a synthetic account, verdict against `tests/eval/baselines.json` | `make agent-eval`, `.github/workflows/agent-eval.yml` |
+| 1 | PRs touching `backend/agents/**` (less the content and audit agents, which no case covers yet), memory, profile or the lock, and every merge to `main` that does; shadow for now | each case on a synthetic account, verdict against `tests/eval/baselines.json`: k=3 and no re-run on a PR, k=6 on `main` | `make agent-eval`, `.github/workflows/agent-eval.yml` |
 | 2 | nightly and weekly | the provider matrix, harder capability cases, private replays | not built |
 
 **A case** (`tests/eval/cases/`) is a question, a synthetic business, and a
@@ -37,7 +37,10 @@ significant digits found in the run's pulls) is reported as a metric first.
 
 **Verdicts per case.** PASS: passed as often as its baseline. INCONCLUSIVE: one
 trial short, or median cost or model calls moved more than 30% either way (an
-effort downgrade shows first as a cost drop); the CLI runs three more once.
+effort downgrade shows first as a cost drop); the CLI runs three more once,
+except on a PR, where CI passes `--no-rerun`: an unchanged agent came back
+INCONCLUSIVE at 3/6 and 4/6 on 2026-09-30, so the re-run doubled the price
+of a read that stays noisy. `main` runs six trials instead.
 FAIL: two or more short. A case's trials run at once, each on its own thread,
 so a run takes about as long as its slowest trial. A per-trial cost, call and
 time cap stops a runaway, a trial that will not stop when cancelled is
