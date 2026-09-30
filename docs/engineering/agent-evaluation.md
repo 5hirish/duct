@@ -64,7 +64,17 @@ self-preference risk of an agent graded by its own kind, and at 2026-09-30 GLM
 against 36) at a fifth of the price. OpenRouter serves it through dozens of
 hosts, some unable to make the verdict's tool call and some at fp4, so the
 judge's request is pinned to hosts that take every parameter at fp8 or better
-(`TEXT_JUDGE_ROUTING` in `tests/eval/client.py`). A baseline records its model,
+(`TEXT_JUDGE_ROUTING` in `tests/eval/client.py`), and asks for low reasoning
+effort (`TEXT_JUDGE_REASONING`): at its default depth GLM thought for 11-20k
+tokens per brief, took three minutes a verdict, and sometimes answered in prose
+with no verdict at all. The judge is also told which sources the project had
+connected, since `invented_source` cannot be judged without it. Re-grading 43
+stored briefs, GLM agreed with V4 Pro's verdicts on 96% of checks, and every
+difference was GLM failing a brief Pro had passed. On the briefs read by hand
+GLM was right: Pro passed briefs that never said the tax guide fell. The Flash
+baseline is 18 trials (14 passed, $0.005 median), because three six-trial
+runs of it came in at 3, 4 and 5 passes, too wide to set a bar with. A
+baseline records its model,
 and a run on another model is INCONCLUSIVE until `--write-baseline` records
 one. `--provider` / `--model` run any other; the text judge follows
 `DUCT_JUDGE_PROVIDER` / `DUCT_JUDGE_MODEL`.

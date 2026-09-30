@@ -261,3 +261,30 @@ def test_the_text_judge_is_glm_and_pinned_to_hosts_that_can_answer(monkeypatch):
     assert llm._default_params["provider"] == TEXT_JUDGE_ROUTING
     assert TEXT_JUDGE_ROUTING["require_parameters"] is True
     assert "fp4" not in TEXT_JUDGE_ROUTING["quantizations"]
+    # At its default depth GLM ran past five minutes and never called the tool.
+    assert llm._default_params["reasoning"] == {"effort": "low"}
+
+
+def test_a_judge_that_answers_in_prose_is_asked_again_then_reported(monkeypatch):
+    """A reply with no tool call parses to None. It is asked for again, and
+    when none ever comes that is an error the gate reports as a skipped
+    verdict, never a scorecard built from nothing."""
+    from tests.eval import judge as judge_mod
+    from tests.eval.judge import JudgeArtifact, NoVerdict, _evaluate_text
+    from tests.eval.rubrics.audit_report import audit_report_rubric
+
+    good = {"dimensions": [{"key": "evidence_grounding", "score": 4, "rationale": "r"}],
+            "markers": [], "summary": "ok"}
+
+    def judge_replying(*replies):
+        queue = list(replies)
+        runnable = SimpleNamespace(invoke=lambda _messages: queue.pop(0))
+        return lambda _model=None: SimpleNamespace(with_structured_output=lambda _schema: runnable)
+
+    monkeypatch.setattr(judge_mod, "text_judge_model", judge_replying(None, good))
+    card = _evaluate_text(audit_report_rubric(), JudgeArtifact(title="t", body="b"))
+    assert card.dimension_scores["evidence_grounding"] == 4
+
+    monkeypatch.setattr(judge_mod, "text_judge_model", judge_replying(None, None, None))
+    with pytest.raises(NoVerdict):
+        _evaluate_text(audit_report_rubric(), JudgeArtifact(title="t", body="b"))

@@ -99,6 +99,14 @@ DEFAULT_TEXT_JUDGE_MODEL = "z-ai/glm-5.3-flash"
 # on whatever a customer's OpenRouter key would reach.
 TEXT_JUDGE_ROUTING = {"require_parameters": True, "quantizations": ["fp8", "bf16", "fp16", "fp32"]}
 
+# At its default depth GLM thinks for 11–20k tokens over one brief, then
+# writes its review as prose instead of the forced tool call: on 2026-09-30
+# four calls on one brief all ran past five minutes and none returned a
+# verdict, and a verdict that never lands counts as no judge at all. At low
+# effort the same brief took 9–32 s and ~1k tokens, and all three calls
+# returned the full verdict.
+TEXT_JUDGE_REASONING = {"effort": "low"}
+
 
 def resolve_text_judge() -> tuple[str, str, str]:
     """``(provider, model, api_key)`` for the text judge; the key is empty when

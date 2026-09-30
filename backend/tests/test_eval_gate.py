@@ -387,3 +387,22 @@ def test_a_verdict_that_leaves_markers_out_is_the_judges_failure(monkeypatch, ca
     gate._judge(ORGANIC, trial)
 
     assert trial.judge == judged and trial.failures == failures
+
+
+def test_the_judge_is_told_what_the_agent_could_read(monkeypatch):
+    """``invented_source`` asks what the analysis evidently did not have. Not
+    told, GLM failed 4 of 43 briefs for quoting the Ads account Solo had
+    connected all along."""
+    import tests.eval.judge as judge_module
+    from tests.eval import gate
+    from tests.eval.cases.solo_world import SoloWorld
+
+    seen: list[str] = []
+    monkeypatch.setattr(judge_module, "evaluate", lambda _rubric, artifact: seen.append(artifact.body))
+    trial = Trial(case_id=ORGANIC.id, n=1, brief="# Google Ads CPA rose to €14")
+
+    gate._judge(ORGANIC, trial, SoloWorld().data_sources())
+
+    assert "Connected when it was written: ga4, gsc, google_ads." in seen[0]
+    assert "Not connected: mixpanel, clarity, growthbook." in seen[0]
+    assert seen[0].endswith("# Google Ads CPA rose to €14")

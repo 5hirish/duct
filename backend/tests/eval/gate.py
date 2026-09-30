@@ -37,6 +37,7 @@ import statistics
 import threading
 import time
 import uuid
+from collections.abc import Sequence
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -303,7 +304,7 @@ async def _run_one(
 
     _check(case, trial, events, pulls)
     if judge and trial.brief:
-        _judge(case, trial)
+        _judge(case, trial, world.data_sources())
     trial.passed = not trial.failures
 
 
@@ -388,7 +389,7 @@ async def _thread_trace(runner: Any, thread_id: str) -> tuple[list[str], list[st
     return tools, sorted(values.get("files") or {})
 
 
-def _judge(case: Case, trial: Trial) -> None:
+def _judge(case: Case, trial: Trial, sources: Sequence[dict] = ()) -> None:
     from tests.eval.judge import evaluate
     from tests.eval.rubrics.insights_brief import insights_brief_rubric, render_brief_artifact
 
@@ -401,7 +402,8 @@ def _judge(case: Case, trial: Trial) -> None:
         try:
             for _ in range(JUDGE_ATTEMPTS):
                 outcome["card"] = evaluate(insights_brief_rubric(case.markers),
-                                           render_brief_artifact(trial.brief, question=case.question))
+                                           render_brief_artifact(trial.brief, question=case.question,
+                                                                 sources=sources))
                 if not any(_MISSING in f for f in outcome["card"].failures):
                     return
             outcome["error"] = IncompleteVerdict()
