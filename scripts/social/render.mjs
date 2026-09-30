@@ -1,78 +1,48 @@
 #!/usr/bin/env node
 /**
- * Render the social preview cards from template.html.
+ * Render the repository's social preview from template.html.
  *
  *   node scripts/social/render.mjs
  *
- * Writes one PNG:
+ * Writes .github/social-preview.png, 1280x640. GitHub cannot read it from the
+ * repo; upload it by hand at Settings -> General -> Social preview. It is kept
+ * here so the next person redraws it from source instead of from scratch.
  *
- *   .github/social-preview.png    1280x640  — GitHub. Cannot be set from a file
- *                                 in the repo; upload it by hand at
- *                                 Settings -> Social preview. Kept in the repo
- *                                 so the next person does not have to redraw it.
+ * Captured at 2x and downscaled, so the type is antialiased like a retina
+ * screenshot but the file stays at the size GitHub asks for and under its
+ * 1 MB limit (the template's grain makes a 2x PNG larger than that).
  *
- * It used to write site/assets/og-image.png as well, the one og:image every
- * page shared. Each page draws its own card now (scripts/build_og_images.mjs),
- * so that output is gone rather than left to drift from them.
- *
- * Uses the Playwright already installed for the site's smoke tests, so this
- * adds no dependency. Fonts are the system serif/sans the brand uses, so run
- * this on macOS to match what the site renders.
+ * Playwright comes from site/ (the smoke tests) and sharp from app/, like
+ * scripts/build_og_images.mjs, so this adds no dependency. The fonts are the
+ * system Georgia and SF the brand uses, so run it on macOS.
  */
 
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
+import { statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { mkdir } from "node:fs/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
-
-// Playwright is a devDependency of site/, installed for the smoke tests. ESM
-// resolves from this file's directory rather than the cwd, so point it at that
-// copy explicitly instead of requiring a second install at the repo root.
 const require = createRequire(import.meta.url);
 // require(), not import(): playwright is CommonJS, and a dynamic import of it
 // hands back a namespace whose named exports are not always detected.
-const { chromium } = require(
-  require.resolve("playwright", { paths: [resolve(REPO, "site"), REPO] }),
-);
-const TEMPLATE = "file://" + resolve(HERE, "template.html");
+const { chromium } = require(require.resolve("playwright", { paths: [resolve(REPO, "site"), REPO] }));
+const sharp = require(require.resolve("sharp", { paths: [resolve(REPO, "app"), REPO] }));
 
-const SOURCES = "Google Ads|GA4|Search Console|Mixpanel|Stripe";
-
-const CARDS = [
-  {
-    out: ".github/social-preview.png",
-    width: 1280,
-    height: 640,
-    params: {
-      w: 1280, h: 640, h1: 60, subsize: 24,
-      headline: "Open-source AI agent for<br>cross-tool <em>growth analytics</em>.",
-      sub: "Ads, analytics, search and revenue — read together, then acted on with your approval. Self-hosted, or a local desktop app.",
-      sources: SOURCES,
-      tag: "MIT licensed",
-    },
-  },
-];
+const W = 1280, H = 640, LIMIT = 1024 * 1024;
+const OUT = resolve(REPO, ".github/social-preview.png");
 
 const browser = await chromium.launch();
 try {
-  for (const card of CARDS) {
-    const page = await browser.newPage({
-      viewport: { width: card.width, height: card.height },
-      deviceScaleFactor: 2, // retina; both destinations downscale, none upscale
-    });
-    const query = new URLSearchParams(card.params).toString();
-    await page.goto(`${TEMPLATE}?${query}`, { waitUntil: "load" });
-    await page.evaluate(() => document.fonts.ready);
-
-    const out = resolve(REPO, card.out);
-    await mkdir(dirname(out), { recursive: true });
-    await page.locator("#card").screenshot({ path: out });
-    await page.close();
-    console.log(`wrote ${card.out}  (${card.width}x${card.height} @2x)`);
-  }
+  const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2 });
+  await page.goto(pathToFileURL(resolve(HERE, "template.html")).href, { waitUntil: "load" });
+  await page.evaluate(() => document.fonts.ready);
+  const shot = await page.screenshot({ type: "png" });
+  await sharp(shot).resize(W, H, { kernel: "lanczos3" }).png({ compressionLevel: 9 }).toFile(OUT);
+  const size = statSync(OUT).size;
+  if (size > LIMIT) throw new Error(`${OUT} is ${size} bytes; GitHub takes at most ${LIMIT}`);
+  console.log(`wrote .github/social-preview.png  (${W}x${H}, ${Math.round(size / 1024)} KB)`);
 } finally {
   await browser.close();
 }
