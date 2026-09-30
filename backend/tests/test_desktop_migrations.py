@@ -104,6 +104,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE content_posts RENAME COLUMN published_url TO tiktok_url"))
         conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN video"))
         conn.execute(sa.text("ALTER TABLE content_social_links DROP COLUMN has_x_premium"))
+        conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN reflection"))
 
     assert "alembic_version" not in set(inspect(engine).get_table_names())
     assert "memory_paused" not in _columns(engine, "projects")
@@ -128,6 +129,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     assert "last_assessment" in _columns(engine, "content_posts")
     assert "video" in _columns(engine, "content_posts")
     assert "has_x_premium" in _columns(engine, "content_social_links")
+    assert "reflection" in _columns(engine, "content_posts")
     # The text-channel renames kept their data's column, under the new name.
     posts = _columns(engine, "content_posts")
     assert {"replies", "title", "published_url"} <= posts

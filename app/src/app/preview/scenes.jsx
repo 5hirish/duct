@@ -69,6 +69,8 @@ import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
 import VendorKeyForm from "@/components/content/VendorKeyForm";
+import ReflectionViewport from "@/components/content/ReflectionViewport";
+import { ReflectionJournal } from "@/components/content/ReflectionsTab";
 import { AccountBadges, ReconnectNote } from "@/components/content/AccountStatus";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
@@ -936,6 +938,50 @@ const DISCOVER_POSTS_SPARSE = [
   { id: "s1", text: "#grwm", hashtags: ["grwm"], is_slideshow: false, play_count: 12_000, digg_count: 300 },
   { id: "s2", text: "", hashtags: ["outfit"], is_slideshow: false, play_count: 8_000, digg_count: 120 },
 ];
+
+
+// A day's reflection as GET /content/reflections/{id} returns it (issue #270).
+const REFLECTION_FIXTURE = {
+  title: "The cheap judge was the honest one",
+  version: 2,
+  label: "Corrected the cause in s1",
+  reflection: {
+    date: "2026-09-30",
+    sections: [
+      {
+        id: "s1",
+        title: "A cheaper eval",
+        happened:
+          "Moved the agent eval to a model a sixth of the price [gh:pr-294], then found the old judge had passed briefs that never named the slip [mem:9c1d2e3f]. A skipped run had been cancelling the real one [gh:c-aeff1d9b].",
+        field: {
+          url: "https://example.com/llm-judges",
+          title: "Judging the judges",
+          quote: "Agreement with a stronger judge is not accuracy; it is a second opinion with the same blind spots.",
+        },
+        lesson: "A cheaper judge is only cheaper if you check it against the one it replaces. The disagreements are where the old number was lying.",
+      },
+      {
+        id: "s2",
+        title: "Budget moved to brand terms",
+        happened: "Approved shifting spend to brand search after it converted at 2.1x the generic terms [cs:3f2a9c1d].",
+        field: null,
+        lesson: "The agent proposed it; the approval was the easy part. Watching the week after is the work.",
+      },
+    ],
+    sources: {
+      "gh:pr-294": { kind: "pull_request", title: "Run the eval on DeepSeek V4 Flash", url: "https://github.com/5hirish/duct/pull/294" },
+      "gh:c-aeff1d9b": { kind: "commit", title: "Keep a skipped run from cancelling the eval", url: "https://github.com/5hirish/duct/commit/aeff1d9b" },
+      "mem:9c1d2e3f": { kind: "memory", title: "V4 Pro judge passed briefs that missed the slip", url: "" },
+      "cs:3f2a9c1d": { kind: "change_set", title: "Shift budget to brand terms (google_ads, applied)", url: "" },
+    },
+  },
+  drafts: [
+    { id: "p1", platforms: ["twitter"], status: "pending", reflection: { section_id: "s1" },
+      caption: "We moved our agent eval to a model a sixth of the price.\n\nThe surprise wasn't the cost. The old judge had been passing briefs it should have failed." },
+    { id: "p2", platforms: ["linkedin"], status: "scheduled", reflection: { section_id: "s1" },
+      caption: "A cheaper judge is only cheaper if you check it against the one it replaces.\n\nThis week we swapped the model that grades our agent's work..." },
+  ],
+};
 
 export const SCENES = [
   {
@@ -2258,6 +2304,60 @@ export const SCENES = [
     render: () => (
       <div className="max-w-2xl p-5">
         <PostMetricsForm post={METRICS_SYNCED_POST} save={previewSaveFails} />
+      </div>
+    ),
+  },
+  {
+    id: "reflection-day",
+    state: "two streams, cited, with drafts",
+    group: "ReflectionViewport",
+    title: "A day's reflection",
+    note: "The right-hand pane of the reflect workspace (issue 270). Each stream: what happened, every claim ending in a chip that opens its source (a PR, a commit, a change Duct applied, a memory); what the field says, quoted; the lesson; then the drafts derived from it. Provenance comes before the drafts. A revised reflection shows its version and what changed.",
+    render: () => (
+      <div className="h-[46rem] @container">
+        <ReflectionViewport reflection={REFLECTION_FIXTURE} />
+      </div>
+    ),
+  },
+  {
+    id: "reflection-reading",
+    state: "the run is reading the day",
+    group: "ReflectionViewport",
+    title: "A day's reflection",
+    note: "Before the first save, while the run reads the repository and Duct's own record.",
+    render: () => (
+      <div className="h-[24rem]">
+        <ReflectionViewport reflection={null} building />
+      </div>
+    ),
+  },
+  {
+    id: "reflection-journal",
+    state: "a week of reflections, today's drafts waiting",
+    group: "ReflectionsTab",
+    title: "The Reflections tab",
+    note: "One row per day, newest first; a day with drafts still waiting says how many. The button opens today's reflection, or starts it when there is none.",
+    render: () => (
+      <div className="p-5">
+        <ReflectionJournal
+          rows={[
+            { group_id: "g3", day: "2026-09-30", title: "The cheap judge was the honest one", drafts: 4, waiting: 3 },
+            { group_id: "g2", day: "2026-09-29", title: "A deploy that failed three ways, one cause", drafts: 2, waiting: 0 },
+            { group_id: "g1", day: "2026-09-28", title: "Connectors are a trust problem before they are a code problem", drafts: 0, waiting: 0 },
+          ]}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "reflection-journal-empty",
+    state: "no reflections yet",
+    group: "ReflectionsTab",
+    title: "The Reflections tab",
+    note: "What a reflection is, and the one button that starts today's.",
+    render: () => (
+      <div className="p-5">
+        <ReflectionJournal rows={[]} />
       </div>
     ),
   },

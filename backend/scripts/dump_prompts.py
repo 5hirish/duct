@@ -268,7 +268,37 @@ def render_content() -> str:
             fenced(system),
         ))
     out.append(render_content_clone())
+    out.append(render_content_reflection())
     return "\n".join(out)
+
+
+def render_content_reflection() -> str:
+    """The Daily Reflection (issue #270): its own system prompt, and the
+    opening turn built from a fixture day of GitHub and Duct sources."""
+    from agents.content.prompts import build_orchestrator_system_prompt, build_reflection_user_prompt
+    from agents.content.reflection import github_sources
+    from agents.content.schema import ContentBrandContext
+
+    brand = ContentBrandContext(
+        project_id="00000000-0000-0000-0000-000000000000",
+        project_name=FIXTURE_BUSINESS["business_name"],
+        audience=FIXTURE_BUSINESS["audience_segment"],
+    )
+    system = build_orchestrator_system_prompt(brand, "reflect_day", vision=True)
+    github, note = github_sources({"status": "ok", "data": {"rows": [
+        {"kind": "pull_request", "ref": "#41", "title": "Send deposit reminders two days before the job",
+         "body": "Reminders went out the morning of the job; half were too late to act on.",
+         "url": "https://github.com/example/app/pull/41", "state": "merged"},
+        {"kind": "commit", "ref": "9f2c1ab", "title": "Fix the reminder timezone for Pacific accounts",
+         "body": "", "url": "https://github.com/example/app/commit/9f2c1ab", "state": ""},
+    ]}})
+    duct = [{"ref": "cs:3f2a9c1d", "kind": "change_set", "title": "Shift budget to brand terms (google_ads, applied)",
+             "detail": "Brand search converted at 2.1x the generic terms last week.", "url": "", "state": "applied"}]
+    turn = build_reflection_user_prompt(brand, day="2026-09-30", github=github, github_note=note, duct=duct)
+    return "\n".join([
+        section(f"System prompt · mode=reflect_day · ~{approx_tokens(system):,} tokens", fenced(system)),
+        section(f"Reflection: opening user turn · ~{approx_tokens(turn):,} tokens", fenced(turn)),
+    ])
 
 
 def render_content_clone() -> str:

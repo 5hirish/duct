@@ -21,6 +21,7 @@ import StyleGallery from "@/components/content/StyleGallery";
 import PostCard from "@/components/content/PostCard";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import PlanBoard from "@/components/content/PlanBoard";
+import ReflectionsTab from "@/components/content/ReflectionsTab";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import {
   DropdownMenu,
@@ -30,12 +31,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DRAFT_CHANNELS } from "@/lib/contentEnums";
 
-const TABS = ["plan", "posts", "analytics", "discover", "library", "brand", "accounts"];
+const TABS = ["plan", "reflections", "posts", "analytics", "discover", "library", "brand", "accounts"];
 
 // The tab ids double as their labels in English; the catalogue needs a message
 // per id so the other languages can say something else.
 const TAB_LABELS = {
   plan: msg`plan`,
+  reflections: msg`reflections`,
   posts: msg`posts`,
   analytics: msg`analytics`,
   discover: msg`discover`,
@@ -58,6 +60,9 @@ export default function ContentLandingPage() {
       return;
     }
     setProjectId(id);
+    // A link can open a tab (?tab=reflections), e.g. the daily drafts notice.
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    if (TABS.includes(wanted)) setTab(wanted);
     const p = getActiveProject();
     setProjectName(p?.profile?.company?.name || p?.name || t`Project`);
     // `t` follows the locale; this runs once on mount on purpose.
@@ -111,6 +116,7 @@ export default function ContentLandingPage() {
       </nav>
 
       {tab === "plan"      && <PlanTab      projectId={projectId} />}
+      {tab === "reflections" && <ReflectionsTab projectId={projectId} />}
       {tab === "posts"     && <PostsTab     projectId={projectId} />}
       {tab === "analytics" && (
         <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />

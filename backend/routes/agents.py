@@ -36,7 +36,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlmodel import Session
+from sqlmodel import Session, select
 from starlette.status import HTTP_429_TOO_MANY_REQUESTS
 
 from uuid import UUID
@@ -56,8 +56,8 @@ from agents.content.persistence import (
     load_events,
     resolve_or_create_conversation,
 )
-from agents.content.schema import DraftPostRequest, PlanRequest
-from agents.content.v1.runner import create_draft_session, create_plan_session
+from agents.content.schema import DraftPostRequest, PlanRequest, ReflectRequest
+from agents.content.v1.runner import create_draft_session, create_plan_session, create_reflection_session
 from agents.insights.schema import InsightsRequest, create_insights_session
 from agents.insights.setup import (
     InsightsSetupError,
@@ -936,6 +936,35 @@ def _inject_report_context(session: Any, content: str | list, version_id: int | 
     return _prepend_context(content, ctx)
 
 
+def _reflection_context_xml(db: Any, project_id: Any, group_id: Any) -> str:
+    """The reflection as it stands and its drafts, so a follow-up ("that
+    wasn't the cause") revises the saved sections, not the model's memory
+    of them."""
+    from models.artifact import Artifact
+    from models.content import ContentPost
+
+    head = db.exec(
+        select(Artifact).where(Artifact.group_id == group_id, Artifact.project_id == project_id)
+        .order_by(Artifact.version.desc())
+    ).first()
+    if head is None:
+        return ""
+    data = head.structured_json or {}
+    drafts = [
+        {"post_id": str(p.id), "section_id": (p.reflection or {}).get("section_id"),
+         "channel": (p.platforms or [""])[0], "status": p.status, "caption": p.caption}
+        for p in db.exec(select(ContentPost).where(ContentPost.project_id == project_id)).all()
+        if (p.reflection or {}).get("group_id") == str(group_id)
+    ]
+    payload = {"title": head.title, "version": head.version, "date": data.get("date"),
+               "sections": data.get("sections") or [], "drafts": drafts}
+    return (
+        f"<working_reflection version='{head.version}'>\n"
+        f"{json.dumps(payload, default=str)}\n"
+        "</working_reflection>\n\n"
+    )
+
+
 def _content_context_xml(session: Any) -> str:
     """Serialize the tiktok_studio session's current persisted plan or post as an
     XML context block. Returns '' when nothing is persisted yet (the first
@@ -978,6 +1007,9 @@ def _content_context_xml(session: Any) -> str:
                     f"{json.dumps(payload, default=str)}\n"
                     "</working_post>\n\n"
                 )
+            group_id = getattr(session, "reflection_group_id", None)
+            if mode == "reflect_day" and group_id is not None:
+                return _reflection_context_xml(db, session.project_id, group_id)
     except Exception:
         logger.warning("agents: content context injection failed for session %s", session.session_id, exc_info=True)
     return ""
@@ -1256,7 +1288,7 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
             raise HTTPException(422, "tiktok_studio requires a valid project_id") from exc
 
         mode = body.get("mode", "plan_month")
-        if mode not in ("plan_month", "draft_post"):
+        if mode not in ("plan_month", "draft_post", "reflect_day"):
             raise HTTPException(422, f"invalid mode {mode!r}")
 
         # Resolve the conversation inside an open session and read every field we
@@ -1287,8 +1319,16 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
                            "running without history", session_id, exc_info=True)
 
         # The conversation's own mode wins on resume (the body's may be stale).
-        if (conv_mode or mode) == "draft_post":
+        run_mode = conv_mode or mode
+        if run_mode == "draft_post":
             session = create_draft_session(session_id, project_id, plan_id=_as_uuid(body.get("plan_id")))
+        elif run_mode == "reflect_day":
+            # A resumed reflection revises its own group: the day and the
+            # sources come back from the saved version.
+            session = create_reflection_session(
+                session_id, project_id,
+                group_id=conv_artifact_id if conv_artifact_type == "reflection" else None,
+            )
         else:
             session = create_plan_session(session_id, project_id)
 
@@ -1433,7 +1473,7 @@ async def _start_tiktok_studio(
     plan/draft workers so the DB logic (Day resolution, post_id linkback) stays
     in one place."""
     # Imported lazily to avoid a route-module import cycle.
-    from routes.content import _run_draft_worker, _run_plan_worker
+    from routes.content import _run_draft_worker, _run_plan_worker, _run_reflection_worker
 
     mode = body.get("mode", "plan_month")
     # `mode` is a dispatch discriminator, and the conversation/resume fields are
@@ -1460,8 +1500,14 @@ async def _start_tiktok_studio(
         except Exception as exc:
             raise HTTPException(422, f"Invalid plan_month config: {exc}") from exc
         coro = _run_plan_worker(session_id, req.project_id, emit_fn, user_keys)
+    elif mode == "reflect_day":
+        try:
+            req = ReflectRequest.model_validate(config)
+        except Exception as exc:
+            raise HTTPException(422, f"Invalid reflect_day config: {exc}") from exc
+        coro = _run_reflection_worker(session_id, req, emit_fn, user_keys)
     else:
-        raise HTTPException(422, f"mode must be 'plan_month' or 'draft_post', got {mode!r}")
+        raise HTTPException(422, f"mode must be 'plan_month', 'draft_post' or 'reflect_day', got {mode!r}")
 
     task = asyncio.create_task(coro)
     session = get_session(session_id)

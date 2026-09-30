@@ -228,6 +228,8 @@ class AgentStep(StrEnum):
     # reference) with its pictures, then the model reading why it worked.
     READ_REFERENCE = "read_reference"
     DIAGNOSE_REFERENCE = "diagnose_reference"
+    # A Daily Reflection's read of the day: GitHub and Duct's own record.
+    READ_DAY = "read_day"
 
     # Insights
     COLLECT_SOURCE_DATA = "collect_source_data"
@@ -258,6 +260,7 @@ STEP_LABELS: dict[AgentStep, str] = {
     AgentStep.DISPATCH_SUBAGENT: "Sub-agent",
     AgentStep.READ_REFERENCE: "Reading the TikTok",
     AgentStep.DIAGNOSE_REFERENCE: "Working out why it worked",
+    AgentStep.READ_DAY: "Reading the day's work",
     # Insights
     AgentStep.COLLECT_SOURCE_DATA: "Collecting source data",
     AgentStep.NORMALIZE_CONNECTOR_OUTPUTS: "Normalizing connector outputs",

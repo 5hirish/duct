@@ -35,13 +35,17 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  *     onSendMessage(text) sends a chat turn into the live session (used by the
  *     viewport for "approve & generate images" / per-slide regenerate).
  */
+// What each mode's workspace is scoped to, so a reload resumes its own run.
+const ARTIFACT_TYPE = { plan_month: "plan", draft_post: "post", reflect_day: "reflection" };
+const ARTIFACT_ID_KEY = { plan_month: "planId", draft_post: "postId", reflect_day: "groupId" };
+
 export default function ContentWorkspace({ mode, context, renderViewport }) {
   const { t, i18n } = useLingui();
   const [payload, setPayload] = useState(null);
   const [channelNote, setChannelNote] = useState(null);
 
-  const artifactType = mode === "plan_month" ? "plan" : "post";
-  const artifactId = mode === "plan_month" ? context.planId : context.postId;
+  const artifactType = ARTIFACT_TYPE[mode] || "post";
+  const artifactId = context[ARTIFACT_ID_KEY[mode] || "postId"];
   const contextKey = JSON.stringify(context);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const body = useMemo(() => contentSessionBody(mode, context), [mode, contextKey]);
@@ -76,7 +80,26 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         setPayload({ type: "plan", ...event.payload });
         break;
 
+      // A reflection's new version. Its drafts arrive one by one as
+      // POST_DRAFT_UPDATED and are kept beside it, so a revision redraws
+      // the sections without dropping the drafts already made.
+      case ContentEvent.ARTIFACT_VERSION:
+        if (event.payload?.type === "reflection") {
+          setPayload((prev) => ({ ...event.payload, drafts: prev?.drafts || {} }));
+        }
+        break;
+
       case ContentEvent.POST_DRAFT_UPDATED: {
+        if (mode === "reflect_day") {
+          const post = event.payload;
+          if (post?.id) {
+            setPayload((prev) => ({
+              ...(prev || { type: "reflection" }),
+              drafts: { ...(prev?.drafts || {}), [post.id]: post },
+            }));
+          }
+          break;
+        }
         const base = { type: "post", ...event.payload };
         const ip = event.inline_preview;
         if (!ip?.data_uri) {
@@ -157,7 +180,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // The right viewport is mid-build whenever there's no payload yet and the run
   // hasn't failed — including while a question is pending.
   const viewportBuilding = !hasPayload && agent.phase !== Phase.FAILED;
-  const paneLabel = mode === "plan_month" ? t`30-day plan` : t`Post draft`;
+  const paneLabel = i18n._(PANE_LABELS[mode] || PANE_LABELS.draft_post);
   // STEP_LABELS is a module-level table of descriptors; resolve here so the
   // shared StepProgress receives plain strings whatever it does with them.
   const stepLabels = Object.fromEntries(
@@ -228,7 +251,11 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           canStartFresh={Boolean(agent.conversationId) && (agent.phase === Phase.READY || agent.phase === Phase.CHATTING)}
           stepLabels={stepLabels}
           questionsCopy={{ hint: t`A clearer brief produces sharper content. Skip if you'd rather Duct decide.` }}
-          inputPlaceholder={t`Ask Duct to refine the plan or post…`}
+          inputPlaceholder={
+            mode === "reflect_day"
+              ? t`Correct the reading, or ask for a sharper post…`
+              : t`Ask Duct to refine the plan or post…`
+          }
           inputAriaLabel={t`Message the content agent`}
         />
       }
@@ -239,6 +266,13 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 const MODE_LABELS = {
   plan_month: msg`Generating 30-day plan`,
   draft_post: msg`Drafting post`,
+  reflect_day: msg`Reflecting on the day`,
+};
+
+const PANE_LABELS = {
+  plan_month: msg`30-day plan`,
+  draft_post: msg`Post draft`,
+  reflect_day: msg`Reflection`,
 };
 
 /** The real (CDN) image_url for a slide or one of its cells, from a post payload. */

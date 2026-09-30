@@ -198,6 +198,10 @@ msgstr "{done}/{total} カテゴリ"
 msgid "{drafted, plural, one {# drafted field to confirm} other {# drafted fields to confirm}}"
 msgstr "{drafted, plural, other {# 確認が必要な下書きフィールド}}"
 
+#: src/components/content/ReflectionsTab.jsx
+msgid "{drafts, plural, one {# draft} other {# drafts}}"
+msgstr "{drafts, plural, other {下書き #件}}"
+
 #: src/components/models/UsagePanel.jsx
 msgid "{earlierTokens} tokens"
 msgstr "{earlierTokens} トークン"
@@ -586,6 +590,10 @@ msgstr "{videoShare} の投稿 · <0>{videoEng}</0> エンゲージメント"
 #: src/components/content/AnalyticsView.jsx
 msgid "{views, plural, one {# view} other {# views}}"
 msgstr "{views, plural, one {# ビュー} other {# ビュー}}"
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "{waiting, plural, one {# draft waiting} other {# drafts waiting}}"
+msgstr "{waiting, plural, other {下書き #件が待機中}}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
@@ -1376,6 +1384,10 @@ msgstr "Ductに質問"
 #: src/components/content/ContentWorkspace.jsx
 msgid "Ask Duct to refine the plan or post…"
 msgstr "Ductに計画や投稿の改善を依頼する…"
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "Ask in chat for today's reflection."
+msgstr "今日の振り返りはチャットで依頼してください。"
 
 #: src/components/insights/Desk.jsx
 msgid "Ask me anything about your site"
@@ -2272,6 +2284,10 @@ msgstr "プラットフォームの分析からコピーしてください。入
 msgid "Copy this part"
 msgstr "このパートをコピー"
 
+#: src/components/content/ContentWorkspace.jsx
+msgid "Correct the reading, or ask for a sharper post…"
+msgstr "読み取りを訂正するか、より鋭い投稿を依頼してください…"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
 msgstr "変更できませんでした。"
@@ -2693,6 +2709,10 @@ msgstr "下書き"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
 msgstr "クローンを下書き"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drafted a post from the reflection"
+msgstr "振り返りから投稿を下書きしました"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
@@ -4074,6 +4094,7 @@ msgstr "古いアクティビティを読み込む"
 
 #: src/app/(app)/content/page.jsx
 #: src/app/(app)/loading.jsx
+#: src/components/content/ReflectionsTab.jsx
 msgid "Loading"
 msgstr "読み込み中"
 
@@ -4147,6 +4168,7 @@ msgid "Loading project"
 msgstr "プロジェクトを読み込み中"
 
 #: src/app/(app)/content/posts/new/page.jsx
+#: src/app/(app)/content/reflect/page.jsx
 #: src/app/(app)/content/sessions/new/page.jsx
 msgid "Loading session…"
 msgstr "セッションを読み込み中…"
@@ -4811,6 +4833,14 @@ msgstr "まだプロジェクトがありません"
 msgid "No provider recorded."
 msgstr "プロバイダーは記録されていません。"
 
+#: src/components/content/ReflectionViewport.jsx
+msgid "No reflection yet"
+msgstr "振り返りはまだありません"
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "No reflections yet"
+msgstr "振り返りはまだありません"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr "結果が返されませんでした。別のハッシュタグを試すか、より広いニッチを試してください。"
@@ -5134,6 +5164,10 @@ msgstr "このデバイスで"
 msgid "On-page content rewrites"
 msgstr "ページ内コンテンツの書き換え"
 
+#: src/components/content/ReflectionsTab.jsx
+msgid "Once a day, Duct reads what you shipped and what it did on this project, writes what it taught you with every claim cited, and drafts the X and LinkedIn posts worth making from it."
+msgstr "Duct は1日に1回、あなたがリリースしたものとこのプロジェクトで Duct が行ったことを読み取り、そこから得た学びをすべての主張に出典を付けて書き、それをもとに書く価値のある X と LinkedIn の投稿を下書きします。"
+
 #: src/components/content/PostVideo.jsx
 msgid "Once the writing is right, ask Duct to make the clip. It shows up here to watch before it publishes."
 msgstr "記事が完成したら、Duct にクリップの作成を依頼してください。公開前にここで視聴できます。"
@@ -5270,6 +5304,10 @@ msgstr "ドキュメントを開く →"
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
 msgstr "プロジェクトタイムラインを開く"
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "Open today's"
+msgstr "今日の分を開く"
 
 #: src/components/content/PlanCalendar.jsx
 msgid "Open week of {dayLabel}"
@@ -5903,6 +5941,10 @@ msgstr "メモリを読み込みました"
 msgid "Read full screen"
 msgstr "全画面表示で読む"
 
+#: src/components/content/ReflectionViewport.jsx
+msgid "Read it wrong? Say so in chat. The reflection gets a new version and its drafts follow."
+msgstr "読み違いがあればチャットで伝えてください。振り返りは新しいバージョンになり、下書きもそれに合わせて更新されます。"
+
 #: src/app/(start)/start/page.jsx
 msgid "Read my site"
 msgstr "サイトを読み込む"
@@ -5950,6 +5992,14 @@ msgstr "読み込み中"
 #: src/components/audit/AuditReport.jsx
 msgid "Reading and parsing your pages"
 msgstr "ページを読み込み、解析しています"
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "Reading the day…"
+msgstr "1日を読み取り中…"
+
+#: src/lib/contentEvents.js
+msgid "Reading the day's work"
+msgstr "1日の作業を読み取り中"
 
 #: src/app/(start)/start/page.jsx
 msgid "Reading the rest of the site…"
@@ -6052,6 +6102,22 @@ msgstr "繰り返し使われているハッシュタグ"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Redirects"
 msgstr "リダイレクト"
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "Reflect on today"
+msgstr "今日を振り返る"
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Reflecting on the day"
+msgstr "1日を振り返り中"
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Reflection"
+msgstr "振り返り"
+
+#: src/app/(app)/content/page.jsx
+msgid "reflections"
+msgstr "振り返り"
 
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Refresh"
@@ -6561,6 +6627,10 @@ msgstr "保存"
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
 msgstr "保存中…"
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "Say it"
+msgstr "発信する"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Scan couldn't finish"
@@ -7670,6 +7740,10 @@ msgstr "キーは有効ですが、アカウントにクレジットがありま
 msgid "The last turn failed"
 msgstr "前回の実行は失敗しました"
 
+#: src/components/content/ReflectionViewport.jsx
+msgid "The lesson"
+msgstr "学び"
+
 #: src/app/not-found.js
 msgid "The page you are looking for does not exist or has moved."
 msgstr "お探しのページは存在しないか、移動しました。"
@@ -8289,6 +8363,7 @@ msgstr "確認中…"
 msgid "Version"
 msgstr "バージョン"
 
+#: src/components/content/ReflectionViewport.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Version {version}"
 msgstr "バージョン {version}"
@@ -8458,6 +8533,14 @@ msgstr "Ductがこのプロジェクトについて知っていることです�
 msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
 msgstr "Ductがエージェントの実行に費やした費用です。これらはご自身のプロバイダーキーに対する請求であり、Ductが請求することはありません。"
 
+#: src/components/content/ReflectionsTab.jsx
+msgid "What each day taught, cited to the work it came from."
+msgstr "毎日の学びを、その元になった作業を出典に記録します。"
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "What happened"
+msgstr "起きたこと"
+
 #: src/app/(start)/start/page.jsx
 msgid "What happens next"
 msgstr "次に何が起こるか"
@@ -8475,6 +8558,10 @@ msgstr "私のサイトは実際には何についてですか？"
 #~ msgid "What shape the brief takes"
 #~ msgstr "ブリーフの形式"
 
+#: src/components/content/ReflectionViewport.jsx
+msgid "What shipped in the repository, and what Duct wrote, proposed and learned on this project. The reflection appears here as each stream is written."
+msgstr "リポジトリでリリースされたものと、このプロジェクトで Duct が書いたこと、提案したこと、学んだこと。振り返りは各テーマが書き上がるたびにここに表示されます。"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"
 msgstr "Ductはあなたを何と呼ぶべきですか？"
@@ -8482,6 +8569,10 @@ msgstr "Ductはあなたを何と呼ぶべきですか？"
 #: src/components/content/TextPostEditor.jsx
 msgid "What the {label} feed shows before “see more”"
 msgstr "{label}のフィードで「もっと見る」の前に表示される部分"
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "What the field says"
+msgstr "業界の見解"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What was observed, why it matters, how to apply it."
@@ -8892,6 +8983,10 @@ msgstr "あなたのプロジェクト"
 #: src/components/TelemetryCard.jsx
 msgid "Your provider API keys"
 msgstr "プロバイダーAPIキー"
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "your reflections"
+msgstr "振り返り"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Your report is on the right. Ask me to explain a finding, suggest a fix, or update the report."

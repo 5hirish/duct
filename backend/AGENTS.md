@@ -575,6 +575,14 @@ agents/
     │                     (service/social_accounts.py) for drafting and the review
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
+    ├── reflection.py   — the Daily Reflection (#270, mode reflect_day): the day's GitHub
+    │                     events and Duct's own record (artifacts, change sets, memories)
+    │                     as citable refs, read before the model starts; every claim must
+    │                     cite one it was given. Stored as an artifact of kind reflection
+    │                     (sections in structured_json); drafts carry
+    │                     content_posts.reflection and are re-derived in place on a
+    │                     revision. A reflect_day run gets REFLECTION_TOOLS and nothing
+    │                     that draws, plans or publishes (tools.py)
     ├── performance.py  — the account's own history for a plan: type ranking (completion,
     │                     saves, shares; never likes), explore/exploit, graded bets, best
     │                     posting times. An unrecorded metric is unknown, never zero.

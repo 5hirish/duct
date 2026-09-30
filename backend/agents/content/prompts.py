@@ -1296,6 +1296,11 @@ def build_orchestrator_system_prompt(
         return with_confidentiality(
             f"{text_system_prompt(channel.playbook)}\n\n{MEMORY_DISCIPLINE}"
         )
+    # A reflection writes no slides and plans nothing: it has its own base,
+    # with the text playbooks its drafts are held to.
+    if mode == "reflect_day":
+        from agents.content.reflection_prompts import REFLECTION_SYSTEM_PROMPT
+        return with_confidentiality(f"{REFLECTION_SYSTEM_PROMPT}\n\n{MEMORY_DISCIPLINE}")
     tail = f"{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
     if not vision:
         tail = f"{NO_VISION_DIRECTIVE}\n\n{tail}"
@@ -1540,6 +1545,28 @@ def _research_stanza(research: "ContentResearchContext | None") -> str:
             parts.append(f"    - {s}")
     parts.append("</content_research>")
     return "\n".join(parts)
+
+
+def build_reflection_user_prompt(
+    brand: ContentBrandContext,
+    *,
+    day: str,
+    github: list[dict],
+    github_note: str,
+    duct: list[dict],
+    revise_group: str = "",
+) -> str:
+    """Kickoff for a Daily Reflection: the brand, the day's sources with
+    their refs, and the ask (agents/content/reflection_prompts.py)."""
+    from agents.content.reflection import render_sources
+    from agents.content.reflection_prompts import reflection_user_prompt
+
+    return reflection_user_prompt(
+        brand_stanza=_brand_stanza(brand), project_name=brand.project_name, day=day,
+        github=render_sources(github) if github else "", github_note=github_note,
+        duct=render_sources(duct) if duct else "", x_premium=brand.x_premium,
+        revise_group=revise_group,
+    )
 
 
 def build_post_user_prompt(

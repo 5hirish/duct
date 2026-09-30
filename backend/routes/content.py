@@ -78,6 +78,8 @@ from agents.content.schema import (
     DraftPostRequest,
     PlanRequest,
     PublishAssessment,
+    ReflectRequest,
+    TEXT_POST_TYPE,
 )
 from agents.content.v1.runner import (
     ContentRunner,
@@ -97,6 +99,7 @@ from agents.engines import (
 from agents.models import Provider
 from agents.tiers import Job
 from agents.content.channels import Platform
+from agents.content.reflection import REFLECTION_KIND
 from config import get_configs
 from db.session import get_session as db_session
 from service.model_settings import get_model_settings
@@ -108,12 +111,14 @@ from models.content import (
     ContentPost,
     ContentSocialLink,
 )
+from models.artifact import Artifact
 from models.auth import User
 from models.project import Project
 from service import storage
 from service.auth import get_current_user, get_user_provider_keys
 from service.content_metrics import merge_manual_metrics, merge_synced_metrics
 from service.membership import get_project_for_user, get_project_row_for_user
+from service.artifact_store import artifact_text_content
 from service.provider_keys import stored_keys_for
 from service.social_accounts import project_x_premium, remember_account_state
 from utils.dates import now_iso
@@ -535,6 +540,30 @@ async def _run_draft_worker(
         _link_conversation_artifact(session_id, "post")
     except Exception as exc:
         logger.exception("content: draft worker error for session %s", session_id)
+        await emit_fn({
+            "event":      ContentEvent.PIPELINE_FAILED,
+            "session_id": session_id,
+            **error_payload(exc),
+        })
+
+
+async def _run_reflection_worker(
+    session_id: str,
+    req: ReflectRequest,
+    emit_fn: Any,
+    user_keys: dict | None = None,
+) -> None:
+    """A Daily Reflection run (issue #270). The save tool links the
+    conversation to the reflection itself, so there is nothing to link after."""
+    try:
+        runner = _runner_for(session_id, user_keys)
+        sess = get_session(session_id)
+        await runner.run_reflection(
+            session_id, req.project_id, emit_fn,
+            user_id=getattr(sess, "user_id", None), day=req.day,
+        )
+    except Exception as exc:
+        logger.exception("content: reflection worker error for session %s", session_id)
         await emit_fn({
             "event":      ContentEvent.PIPELINE_FAILED,
             "session_id": session_id,
@@ -1149,6 +1178,9 @@ class PostOut(BaseModel):
     # response its takes, newest first. None / [] for any other post.
     video:         dict | None = None
     video_takes:   list = []
+    # The Daily Reflection section this post was derived from (issue #270):
+    # {"group_id", "section_id", "date"}; None for any other post.
+    reflection:    dict | None = None
     created_at:    str
     updated_at:    str
     # The active agent conversation for this post (if any) — drives "click post →
@@ -1212,6 +1244,7 @@ def _post_out(
         camera_ref_pool=p.camera_ref_pool,
         platforms=p.platforms or [],
         channel=channel_payload(primary_channel(p.platforms), premium=premium),
+        reflection=p.reflection,
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
         scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
         published_url=p.published_url,
@@ -1360,6 +1393,129 @@ def get_post(
         with_assessment=True,
         video_takes=video_takes(db, post),
         premium=project_x_premium(db, post.project_id),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Daily Reflections (issue #270) — the journal, and one day's reflection with
+# the drafts derived from it. The reflection itself is an artifact (kind
+# "reflection"); its drafts are posts carrying `reflection`.
+# ---------------------------------------------------------------------------
+
+
+class ReflectionSummaryOut(BaseModel):
+    group_id:     UUID
+    artifact_id:  UUID
+    day:          str
+    title:        str
+    version:      int
+    sections:     int
+    drafts:       int
+    # Drafts still waiting for a yes or no: pending or draft.
+    waiting:      int
+    updated_at:   str
+
+
+class ReflectionOut(BaseModel):
+    group_id:     UUID
+    artifact_id:  UUID
+    day:          str
+    title:        str
+    version:      int
+    label:        str
+    content:      str
+    reflection:   dict
+    versions:     list[dict]
+    drafts:       list[PostOut]
+    # The conversation that wrote it, to resume the chat beside it.
+    conversation_id: UUID | None = None
+
+
+_WAITING = (ContentStatus.PENDING, ContentStatus.DRAFT)
+
+
+def _reflection_heads(db: Session, project_id: UUID) -> list[Artifact]:
+    rows = db.execute(
+        select(Artifact)
+        .where(Artifact.project_id == project_id, Artifact.kind == REFLECTION_KIND)
+        .order_by(Artifact.created_at.desc())
+    ).scalars().all()
+    heads: dict[UUID, Artifact] = {}
+    for row in rows:
+        if row.group_id not in heads or row.version > heads[row.group_id].version:
+            heads[row.group_id] = row
+    return sorted(heads.values(), key=lambda a: (a.structured_json or {}).get("date", ""), reverse=True)
+
+
+def _reflection_drafts(db: Session, project_id: UUID, group_id: UUID) -> list[ContentPost]:
+    rows = db.execute(
+        select(ContentPost)
+        .where(ContentPost.project_id == project_id, ContentPost.post_type == TEXT_POST_TYPE)
+        .order_by(ContentPost.created_at)
+    ).scalars().all()
+    return [p for p in rows if (p.reflection or {}).get("group_id") == str(group_id)]
+
+
+@router.get("/content/reflections")
+def list_reflections(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> list[ReflectionSummaryOut]:
+    """The project's reflections, newest day first: one row per day."""
+    _project_for_user(db, user, project_id)
+    drafts = [
+        p for p in db.execute(
+            select(ContentPost).where(ContentPost.project_id == project_id,
+                                      ContentPost.post_type == TEXT_POST_TYPE)
+        ).scalars().all() if p.reflection
+    ]
+    out: list[ReflectionSummaryOut] = []
+    for head in _reflection_heads(db, project_id):
+        mine = [p for p in drafts if p.reflection.get("group_id") == str(head.group_id)]
+        data = head.structured_json or {}
+        out.append(ReflectionSummaryOut(
+            group_id=head.group_id, artifact_id=head.id, day=str(data.get("date") or ""),
+            title=head.title, version=head.version, sections=len(data.get("sections") or []),
+            drafts=len(mine), waiting=sum(1 for p in mine if p.status in _WAITING),
+            updated_at=head.created_at.isoformat(),
+        ))
+    return out
+
+
+@router.get("/content/reflections/{group_id}")
+def get_reflection(
+    group_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> ReflectionOut:
+    """One day's reflection as it stands, its versions, and its drafts."""
+    versions = db.execute(
+        select(Artifact).where(Artifact.group_id == group_id, Artifact.kind == REFLECTION_KIND)
+        .order_by(Artifact.version.desc())
+    ).scalars().all()
+    if not versions:
+        raise HTTPException(404, "Reflection not found.")
+    head = versions[0]
+    _project_for_user(db, user, head.project_id)
+    conversation_id = None
+    try:
+        from agents.content.persistence import find_active_conversation
+        conv = find_active_conversation(db, artifact_type=REFLECTION_KIND, artifact_id=group_id)
+        conversation_id = conv.id if conv else None
+    except Exception:
+        db.rollback()
+        logger.warning("content: conversation lookup failed for reflection %s", group_id, exc_info=True)
+    premium = project_x_premium(db, head.project_id)
+    data = head.structured_json or {}
+    return ReflectionOut(
+        group_id=group_id, artifact_id=head.id, day=str(data.get("date") or ""),
+        title=head.title, version=head.version, label=str((head.meta or {}).get("label") or ""),
+        content=artifact_text_content(head), reflection=data,
+        versions=[{"artifact_id": str(v.id), "version": v.version,
+                   "label": str((v.meta or {}).get("label") or "")} for v in versions],
+        drafts=[_post_out(p, premium=premium) for p in _reflection_drafts(db, head.project_id, group_id)],
+        conversation_id=conversation_id,
     )
 
 

@@ -27,6 +27,7 @@ from langchain_core.messages import AIMessage
 
 from agents.content.artifacts import parse_artifact_json
 from agents.content.schema import ContentSession, ContentTool
+from agents.content.tools import REFLECTION_WRITERS
 from agents.content.subagents import (
     DRAFT_POST_TOOLS,
     GENERAL_PURPOSE_TOOLS,
@@ -88,7 +89,8 @@ def _plan_payload() -> dict:
 def test_the_orchestrator_gets_every_content_tool_and_the_scaffolding(plan_session, emitted):
     names = tool_names(_agent(plan_session, emitted))
 
-    assert {t.value for t in ContentTool} <= names
+    # The reflection's writers are a reflection run's alone.
+    assert {t.value for t in ContentTool} - REFLECTION_WRITERS <= names
     assert {"task", "write_todos", "AskUserQuestion", "WebFetch"} <= names
 
 

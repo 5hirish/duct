@@ -163,7 +163,7 @@ class ContentBrandContext(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-RunMode = Literal["plan_month", "draft_post"]
+RunMode = Literal["plan_month", "draft_post", "reflect_day"]
 
 
 class PlanRequest(BaseModel):
@@ -195,6 +195,16 @@ class DraftPostRequest(BaseModel):
         from service.clone_reference import parse_tiktok_post_url
 
         return parse_tiktok_post_url(value).url
+
+
+class ReflectRequest(BaseModel):
+    """Body for a Daily Reflection session (issue #270). ``day`` is an ISO
+    date; none means today. A day that already has a reflection revises it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: UUID
+    day: str | None = None
 
 
 class ContentAnswerRequest(BaseModel):
@@ -258,6 +268,12 @@ class ContentSession(BaseAgentSession):
     # writes it onto the post as `clone_source` with the model's verdict, so
     # the model never types an id it could get wrong.
     clone_reference: dict | None = None
+    # A Daily Reflection run (mode reflect_day): the day, the sources its
+    # kickoff listed (save_reflection cites only these and links them), and
+    # the artifact group once one exists, so each save is its next version.
+    reflection_day: str = ""
+    reflection_sources: list[dict] = field(default_factory=list)
+    reflection_group_id: UUID | None = None
     # The channel this draft was asked for (a plan day's platform or the
     # user's pick), set by the runner. submit_post_draft files a post under it
     # when the model leaves `platforms` out — otherwise the schema default
@@ -444,6 +460,8 @@ class ContentTool(StrEnum):
     PUBLISH_POST                = "publish_post"
     MARK_POSTED                 = "mark_posted"
     LOG_METRICS                 = "log_metrics"
+    SAVE_REFLECTION             = "save_reflection"
+    DRAFT_FROM_SECTION          = "draft_from_section"
 
 
 # Per-slide kind — drives which template renders the slide within a layout.
@@ -892,6 +910,7 @@ __all__ = [
     "PillarHistorySignal",
     "PlanDraft",
     "PlanRequest",
+    "ReflectRequest",
     "PlanStrategy",
     "PostDraft",
     "PublishAssessment",

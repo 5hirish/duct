@@ -87,8 +87,9 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
  * /api/agents/tiktok_studio/sessions. The hook owns opening the stream,
  * reconnecting and closing; this only knows the two modes' fields.
  *
- *   plan_month: { projectId, startDate? }
- *   draft_post: { projectId, planId?, dayIndex?, topic?, pillar?, channel? }
+ *   plan_month:  { projectId, startDate? }
+ *   draft_post:  { projectId, planId?, dayIndex?, topic?, pillar?, channel? }
+ *   reflect_day: { projectId, day? }  (an ISO date; none is today)
  * plus the resume fields (conversationId, resume, startFresh, artifactType,
  * artifactId) in either mode.
  */
@@ -103,6 +104,14 @@ export function contentSessionBody(mode, context = {}) {
       mode,
       project_id: projectId,
       ...(startDate ? { start_date: startDate } : {}),
+      ...resumeBody,
+    };
+  }
+  if (mode === "reflect_day") {
+    return {
+      mode,
+      project_id: projectId,
+      ...(context.day ? { day: context.day } : {}),
       ...resumeBody,
     };
   }
@@ -236,6 +245,27 @@ export async function listPosts(projectId, { planId, status } = {}) {
     );
     return jsonOrThrow(res);
   });
+}
+
+/**
+ * The Daily Reflections journal (issue #270): one row per day, newest first,
+ * with how many of its drafts still wait for a yes or no.
+ */
+export async function listReflections(projectId) {
+  const res = await fetch(
+    `${BASE}/api/content/reflections?project_id=${encodeURIComponent(projectId)}`,
+    { headers: backendAuthedHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+/** One day's reflection as it stands: sections, sources, versions, drafts. */
+export async function getReflection(groupId) {
+  const res = await fetch(
+    `${BASE}/api/content/reflections/${encodeURIComponent(groupId)}`,
+    { headers: backendAuthedHeaders() },
+  );
+  return jsonOrThrow(res);
 }
 
 export async function getPost(postId) {

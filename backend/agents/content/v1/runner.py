@@ -52,6 +52,7 @@ import base64
 import logging
 from collections import deque
 from collections.abc import Awaitable, Callable
+from datetime import date
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
@@ -60,6 +61,7 @@ from agents.content.artifacts import (
     ARTIFACT_POST,
     RECOVERY_NUDGE_PLAN,
     RECOVERY_NUDGE_POST,
+    RECOVERY_NUDGE_REFLECTION,
     parse_artifact_json,
 )
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
@@ -72,6 +74,7 @@ from agents.content.prompts import (
     build_plan_user_prompt,
     build_post_user_prompt,
     build_reference_diagnosis_prompt,
+    build_reflection_user_prompt,
 )
 from agents.content.schema import (
     AppFeature,
@@ -210,6 +213,33 @@ def create_draft_session(
     return register_session(session)
 
 
+def create_reflection_session(
+    session_id: str,
+    project_id: UUID,
+    *,
+    group_id: UUID | None = None,
+) -> ContentSession:
+    """A Daily Reflection session (issue #270). ``group_id`` is the reflection
+    a resumed conversation revises; its day and sources are read back from
+    the saved version, so a revision cites what the first session was shown."""
+    session = make_session(session_id, project_id, "reflect_day")
+    if group_id is not None:
+        from agents.content.reflection import restore_sources
+        from db.session import get_session as db_session
+        from models.artifact import Artifact
+        from sqlmodel import select
+
+        with next(db_session()) as db:
+            head = db.exec(
+                select(Artifact).where(Artifact.group_id == group_id, Artifact.project_id == project_id)
+                .order_by(Artifact.version.desc())
+            ).first()
+        if head is not None:
+            session.reflection_group_id = head.group_id
+            session.reflection_day, session.reflection_sources = restore_sources(head.structured_json)
+    return register_session(session)
+
+
 # ---------------------------------------------------------------------------
 # Brand context loader
 # ---------------------------------------------------------------------------
@@ -327,6 +357,14 @@ def _voice_block(user_id) -> str:
         logger.warning("content: profile unavailable", exc_info=True)
         return ""
 
+def _reflection_of_day(project_id: UUID, day: date) -> UUID | None:
+    from agents.content.reflection import group_for_day
+    from db.session import get_session as db_session
+
+    with next(db_session()) as db:
+        return group_for_day(db, project_id, day)
+
+
 async def _account_performance(project_id: UUID) -> AccountPerformance | None:
     """What the account's own posts say, for the plan's opening turn.
 
@@ -387,6 +425,17 @@ async def _memory_block(session: ContentSession, *, query: str = "", emit: EmitF
 # ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
+
+
+# What each mode persists, as the session loop needs it: the key
+# PIPELINE_FINISHED carries, how to read the id off the session, and the one
+# nudge a turn that saved nothing gets. A mode is a row here, not a branch in
+# every hook.
+_DELIVERABLE: dict[str, tuple[str, Callable[[ContentSession], Any], str]] = {
+    "plan_month": ("plan_id", lambda s: s.plan_id, RECOVERY_NUDGE_PLAN),
+    "draft_post": ("post_id", lambda s: s.post_id, RECOVERY_NUDGE_POST),
+    "reflect_day": ("reflection_group_id", lambda s: s.reflection_group_id, RECOVERY_NUDGE_REFLECTION),
+}
 
 
 class ContentRunner:
@@ -669,6 +718,90 @@ class ContentRunner:
             llm=llm,
             chat_idle_timeout=chat_idle_timeout,
         )
+
+    async def run_reflection(
+        self,
+        session_id: str,
+        project_id: UUID,
+        emit: EmitFn,
+        *,
+        user_id: UUID | None,
+        day: str | None = None,
+        chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
+        llm: Any = None,
+    ) -> None:
+        """A Daily Reflection (issue #270): read the day, then reflect and
+        derive drafts, then chat. The day's sources are read here, before the
+        model starts, so it reflects on what happened rather than on what it
+        remembered to fetch, and every ref it may cite is fixed up front."""
+        from agents.content.reflection import parse_day
+
+        session = get_session(session_id) or create_reflection_session(session_id, project_id)
+        if not session.reflection_day:
+            session.reflection_day = parse_day(day).isoformat()
+        if session.reflection_group_id is None:
+            session.reflection_group_id = await asyncio.to_thread(
+                _reflection_of_day, project_id, date.fromisoformat(session.reflection_day),
+            )
+
+        async def _opening(brand: ContentBrandContext) -> str:
+            github, github_note, duct = await self._read_day_step(
+                project_id, user_id, date.fromisoformat(session.reflection_day), emit,
+            )
+            session.reflection_sources = github + duct
+            return build_reflection_user_prompt(
+                brand, day=session.reflection_day, github=github, github_note=github_note, duct=duct,
+                revise_group=str(session.reflection_group_id or ""),
+            )
+
+        await self._run_mode(
+            session, emit,
+            opening=_opening,
+            memory_query="lessons already posted",
+            started={"day": session.reflection_day},
+            llm=llm,
+            chat_idle_timeout=chat_idle_timeout,
+        )
+
+    @staticmethod
+    async def _read_day_step(
+        project_id: UUID, user_id: UUID | None, day: date, emit: EmitFn,
+    ) -> tuple[list[dict], str, list[dict]]:
+        """The day's GitHub events and Duct's own record, as a visible step.
+        Both reads are sync (a connector call, a DB query) and run off the
+        loop so the stream stays live."""
+        from agents.content.reflection import GITHUB_ENTITY, duct_sources, github_sources
+        from agents.insights.fetchers import fetch_entity
+        from db.session import get_session as db_session
+
+        await emit({
+            "event": ContentEvent.STEP_STARTED,
+            "step_id": ContentStep.READ_DAY,
+            "label": STEP_LABELS[ContentStep.READ_DAY],
+            "status": StepStatus.RUNNING,
+        })
+        # A connector read is on someone's credentials; a run with no user
+        # (a legacy stream route) reflects on Duct's own record alone.
+        fetched = await asyncio.to_thread(
+            fetch_entity, GITHUB_ENTITY, user_id=user_id, project_id=project_id,
+            date_from=day.isoformat(), date_to=day.isoformat(),
+        ) if user_id is not None else {"status": "not_connected", "message": "No signed-in user."}
+        github, note = github_sources(fetched)
+
+        def _duct() -> list[dict]:
+            with next(db_session()) as db:
+                return duct_sources(db, project_id, day)
+
+        duct = await asyncio.to_thread(_duct)
+        await emit({
+            "event": ContentEvent.STEP_FINISHED,
+            "step_id": ContentStep.READ_DAY,
+            "label": STEP_LABELS[ContentStep.READ_DAY],
+            "status": StepStatus.SUCCESS,
+            "summary": note[:_STEP_SUMMARY_CHARS],
+            "payload": {"github_events": len(github), "duct_items": len(duct)},
+        })
+        return github, note, duct
 
     async def run_clone(
         self,
@@ -1006,7 +1139,7 @@ class ContentRunner:
             system_prompt=system_prompt,
         )
         recorder = getattr(session, "recorder", None)
-        is_plan = session.mode == "plan_month"
+        finish_key, deliverable_of, recovery_nudge = _DELIVERABLE[session.mode]
         # The CONTEXT row a review replays against, and the reader's notice
         # that the turn was enriched — the same call the other runners make.
         await announce_context(
@@ -1029,7 +1162,7 @@ class ContentRunner:
             # having stashed the id on the session. The <duct_artifact> tag
             # only drives the live preview, so a draft streamed but never
             # written still counts as "not produced".
-            return (session.plan_id if is_plan else session.post_id) is not None
+            return deliverable_of(session) is not None
 
         async def _on_todo(todos: list) -> None:
             session.todos = todos
@@ -1049,11 +1182,11 @@ class ContentRunner:
         def _finish_payload() -> dict:
             """PIPELINE_FINISHED carries the id the workspace opens — None when
             the opening run persisted nothing, never a hollow success."""
-            artifact_id = session.plan_id if is_plan else session.post_id
+            artifact_id = deliverable_of(session)
             return {
                 "session_id": session_id,
                 "mode": session.mode,
-                ("plan_id" if is_plan else "post_id"): str(artifact_id) if artifact_id else None,
+                finish_key: str(artifact_id) if artifact_id else None,
                 **({"resumed": True} if resume else {}),
             }
 
@@ -1069,11 +1202,11 @@ class ContentRunner:
             nudged = True
             logger.warning(
                 "content: turn ended with no %s persisted for session %s — sending one recovery nudge",
-                "plan" if is_plan else "post", session_id,
+                finish_key, session_id,
             )
-            pauses = await loop.turn(RECOVERY_NUDGE_PLAN if is_plan else RECOVERY_NUDGE_POST)
+            pauses = await loop.turn(recovery_nudge)
             if not pauses and not _artifact_produced():
-                logger.error("content: session %s still has no %s after the nudge", session_id, "plan" if is_plan else "post")
+                logger.error("content: session %s still has no %s after the nudge", session_id, finish_key)
             return pauses
 
         async def _reprime_if_no_checkpoint(snapshot: Any) -> None:
@@ -1206,6 +1339,7 @@ __all__ = [
     "ContentTool",
     "close_session",
     "create_draft_session",
+    "create_reflection_session",
     "create_plan_session",
     "get_session",
 ]

@@ -39,8 +39,8 @@ import base64
 import json
 import logging
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
-from typing import Any
+from datetime import date, datetime, timezone
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from langchain_core.tools import StructuredTool
@@ -112,6 +112,15 @@ from agents.content.schema import (
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
 from agents.content.video import VIDEO_POST_TYPE, cut_of, publish_asset, video_takes
+from agents.content.reflection import (
+    REFLECTION_KIND,
+    ReflectionDraft,
+    post_link,
+    reflection_problems,
+    render_markdown,
+    save_version,
+)
+from agents.core.artifact_tools import artifact_card
 from service import storage
 from service.content_metrics import merge_synced_metrics
 from service.social_accounts import project_x_premium, remember_account_state
@@ -123,6 +132,7 @@ from models.content import (
     ContentPlan,
     ContentPost,
 )
+from models.artifact import Artifact
 from models.project import Project
 from utils.dates import now_iso
 
@@ -459,6 +469,7 @@ def _build_post_payload(row: ContentPost, db: Session) -> dict:
     return {
         "id":              str(row.id),
         "post_type":       row.post_type,
+        "reflection":      row.reflection,
         "video":           row.video,
         "video_takes":     video_takes(db, row) if row.video else [],
         "post_dir_slug":   row.post_dir_slug,
@@ -653,6 +664,16 @@ def _load_asset_bytes(asset: ContentAsset) -> bytes | None:
 # ---------------------------------------------------------------------------
 
 
+# The tools a Daily Reflection run gets (issue #270), memory aside. The rest
+# of the content tools write slides, publish or plan; a reflection does none.
+REFLECTION_WRITERS = frozenset({ContentTool.SAVE_REFLECTION, ContentTool.DRAFT_FROM_SECTION})
+REFLECTION_TOOLS = frozenset({
+    ContentTool.REMEMBER_FACT, ContentTool.SEARCH_MEMORY, ContentTool.GET_MEMORY,
+    ContentTool.FETCH_BRAND_CONTEXT, ContentTool.FETCH_CONTENT_HISTORY,
+    *REFLECTION_WRITERS,
+})
+
+
 def build_content_tools_lc(
     project_id: UUID,
     emit: EmitFn,
@@ -817,6 +838,21 @@ def build_content_tools_lc(
 
     class SubmitPostDraftArgs(BaseModel):
         post: PostDraft = Field(description="The post — the same object emitted in <duct_artifact>.")
+
+    class SaveReflectionArgs(BaseModel):
+        reflection: ReflectionDraft = Field(description="The day's reflection, every claim cited to a ref.")
+
+    class DraftFromSectionArgs(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        section_id: str = Field(description='The section this post comes from: "s1", "s2" or "s3".')
+        channel: Literal["twitter", "linkedin"] = Field(description='"twitter" for X, or "linkedin".')
+        caption: str = Field(description="The post, exactly as it will appear. Line breaks are real newlines.")
+        replies: list[str] = Field(
+            default_factory=list,
+            description="Your follow-ups under the post, in order: the source or the link goes here, never in the post.",
+        )
+        hook_text: str = Field(default="", description="The first line of the post.")
+        strategic_note: str = Field(default="", description="One sentence: why this post, from this section.")
 
     class EditSlideArgs(BaseModel):
         slide_id: str = Field(description="The slide to edit, e.g. 'slide-03'.")
@@ -1130,6 +1166,127 @@ def build_content_tools_lc(
         except Exception as exc:
             logger.exception("submit_post_draft failed")
             return _err(f"submit_post_draft failed: {exc}")
+
+    async def save_reflection(reflection: ReflectionDraft | dict) -> str:
+        """Save the day's reflection as the next version of its artifact."""
+        try:
+            draft = reflection if isinstance(reflection, ReflectionDraft) else ReflectionDraft.model_validate(reflection)
+            if session.mode != "reflect_day" or not session.reflection_day:
+                return _err("save_reflection is for a daily reflection session.")
+            sources = list(session.reflection_sources or [])
+            problems = reflection_problems(draft, {s["ref"] for s in sources})
+            if problems:
+                return _err("Nothing saved. " + " ".join(problems))
+            day = date.fromisoformat(session.reflection_day)
+            with _open_db() as db:
+                row = save_version(
+                    db,
+                    project_id=project_id,
+                    user_id=getattr(session, "user_id", None),
+                    conversation_id=session.conversation_id,
+                    group_id=session.reflection_group_id,
+                    draft=draft, day=day, sources=sources,
+                )
+                if session.conversation_id is not None:
+                    from agents.content.persistence import link_artifact
+                    link_artifact(db, session.conversation_id, REFLECTION_KIND, row.group_id)
+                session.reflection_group_id = row.group_id
+                content = (row.structured_json or {})
+                card = artifact_card(row)
+            await emit({
+                "event": ContentEvent.ARTIFACT_VERSION,
+                "session_id": session.session_id,
+                "version_id": card["artifact_id"],
+                "label": card["label"],
+                "payload": {
+                    "type": REFLECTION_KIND, "title": card["title"], "format": "markdown",
+                    "group_id": card["group_id"], "artifact_id": card["artifact_id"],
+                    "version": card["version"], "reflection": content,
+                    "content": render_markdown(draft, day, sources),
+                },
+            })
+            await emit({"event": ContentEvent.ARTIFACT_UPDATED, "artifact": card})
+            return _ok({"status": "ok", **card, "sections": [s.id for s in draft.sections]})
+        except Exception as exc:  # noqa: BLE001 - the model reads the problem and retries
+            logger.exception("save_reflection failed")
+            return _err(f"save_reflection failed: {exc}")
+
+    async def draft_from_section(
+        section_id: str, channel: str, caption: str, replies: list[str] | None = None,
+        hook_text: str = "", strategic_note: str = "",
+    ) -> str:
+        """One X or LinkedIn draft from a reflection section, upserted per
+        (reflection, section, channel) so a revised reflection revises it."""
+        try:
+            if session.reflection_group_id is None:
+                return _err("Save the reflection first; a draft hangs off one of its sections.")
+            group = session.reflection_group_id
+            with _open_db() as db:
+                head = db.exec(
+                    select(Artifact).where(Artifact.group_id == group).order_by(Artifact.version.desc())
+                ).first()
+                sections = {s.get("id"): s for s in ((head.structured_json or {}).get("sections") or [])} if head else {}
+                section = sections.get(section_id)
+                if section is None:
+                    return _err(f"No section {section_id} in the reflection; it has {', '.join(sections) or 'none'}.")
+                replies_clean = [r for r in (replies or []) if isinstance(r, str) and r.strip()]
+                problems = copy_problems(
+                    channel, caption, replies_clean, premium=project_x_premium(db, project_id),
+                )
+                if not caption.strip():
+                    problems.insert(0, "The post is empty.")
+                if problems:
+                    return _err("Nothing saved. " + " ".join(problems) + " Tighten it and submit again.")
+                day = session.reflection_day
+                existing = next(
+                    (p for p in db.exec(
+                        select(ContentPost).where(ContentPost.project_id == project_id,
+                                                  ContentPost.post_type == TEXT_POST_TYPE)
+                    ).all()
+                     if (p.reflection or {}).get("group_id") == str(group)
+                     and (p.reflection or {}).get("section_id") == section_id
+                     and primary_channel(p.platforms) == channel),
+                    None,
+                )
+                if existing is not None and existing.status not in (ContentStatus.PENDING, ContentStatus.DRAFT):
+                    return _err(
+                        f"The {section_id} {channel} post is already {existing.status}; it is left as it is. "
+                        "Say so in chat instead of changing it."
+                    )
+                values = {
+                    "caption": caption, "replies": replies_clean, "hook_text": hook_text,
+                    "strategic_note": strategic_note, "topic": str(section.get("title") or ""),
+                }
+                if existing is not None:
+                    for k, v in values.items():
+                        setattr(existing, k, v)
+                    row = existing
+                else:
+                    row = ContentPost(
+                        project_id=project_id,
+                        post_dir_slug=f"{day}-{str(group)[:6]}-{section_id}-{channel}",
+                        pillar=REFLECTION_KIND,
+                        post_type=TEXT_POST_TYPE,
+                        platforms=[channel],
+                        status=ContentStatus.PENDING,
+                        reflection=post_link(group, section_id, date.fromisoformat(day)),
+                        **values,
+                    )
+                    db.add(row)
+                db.commit()
+                db.refresh(row)
+                await emit({
+                    "event": ContentEvent.POST_DRAFT_UPDATED,
+                    "session_id": session.session_id,
+                    "post_id": str(row.id),
+                    "reflection_section": section_id,
+                    "payload": _build_post_payload(row, db),
+                })
+                return _ok({"status": "ok", "post_id": str(row.id), "section_id": section_id,
+                            "channel": channel, "updated": existing is not None})
+        except Exception as exc:  # noqa: BLE001 - the model reads the problem and retries
+            logger.exception("draft_from_section failed")
+            return _err(f"draft_from_section failed: {exc}")
 
     async def edit_slide(slide_id: str, patch: dict) -> str:
         try:
@@ -2376,7 +2533,7 @@ def build_content_tools_lc(
             args_schema=args_schema,
         )
 
-    return [
+    tools = [
         *memory_tools,
         _bind(
             submit_plan, ContentTool.SUBMIT_PLAN,
@@ -2563,4 +2720,30 @@ def build_content_tools_lc(
             "any other channel it says so and the numbers are typed in by hand.",
             PostIdArgs,
         ),
+        _bind(
+            save_reflection, ContentTool.SAVE_REFLECTION,
+            "Save the day's reflection as the next version of its artifact: at most three "
+            "sections, each with what happened (every claim ending in its ref, e.g. "
+            "[gh:pr-412]), the field's anchor quoted verbatim, and the lesson. Refuses a "
+            "claim with no ref or a ref the day did not contain. A second call revises: "
+            "pass the whole reflection again with a label saying what changed.",
+            SaveReflectionArgs,
+        ),
+        _bind(
+            draft_from_section, ContentTool.DRAFT_FROM_SECTION,
+            "Write one X or LinkedIn post from a saved reflection section. Updates that "
+            "section's post for the channel in place when one exists, so a revised "
+            "reflection revises its drafts. Checks the channel's length and link rules; "
+            "a post already approved is left alone.",
+            DraftFromSectionArgs,
+        ),
+    ]
+    # A reflection reads the day and writes the reflection and its drafts;
+    # nothing it does publishes, draws or plans. Every other mode is the
+    # other way round: its writers stay out of a reflection's reach and the
+    # reflection's out of theirs.
+    names = REFLECTION_TOOLS if session.mode == "reflect_day" else None
+    return [
+        t for t in tools
+        if (t.name in names if names is not None else t.name not in REFLECTION_WRITERS)
     ]

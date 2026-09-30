@@ -26,6 +26,7 @@ export const ContentStep = Object.freeze({
   // A clone's two waits before its first turn (backend run_clone).
   READ_REFERENCE:     "read_reference",
   DIAGNOSE_REFERENCE: "diagnose_reference",
+  READ_DAY:          "read_day",
 });
 
 // Message descriptors, not strings: this table is module-level, so it is
@@ -43,4 +44,5 @@ export const STEP_LABELS = Object.freeze({
   [ContentStep.DISPATCH_SUBAGENT]: msg`Sub-agent`,
   [ContentStep.READ_REFERENCE]:     msg`Reading the TikTok`,
   [ContentStep.DIAGNOSE_REFERENCE]: msg`Working out why it worked`,
+  [ContentStep.READ_DAY]:          msg`Reading the day's work`,
 });

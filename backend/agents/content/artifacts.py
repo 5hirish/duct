@@ -37,6 +37,11 @@ RECOVERY_NUDGE_PLAN = (
     '<duct_artifact>{"type":"plan", …}</duct_artifact> now and then call submit_plan '
     "with the same payload — do not run more research, just produce and save the plan."
 )
+RECOVERY_NUDGE_REFLECTION = (
+    "You read the day but did not save the reflection. Call save_reflection now "
+    "with the sections you have, every claim ending in its ref, then derive the "
+    "drafts with draft_from_section — do not run more research."
+)
 RECOVERY_NUDGE_POST = (
     "You analysed everything but did not persist the post draft. Emit the complete "
     '<duct_artifact>{"type":"post", …}</duct_artifact> now and then call '
@@ -76,5 +81,6 @@ __all__ = [
     "ARTIFACT_POST",
     "RECOVERY_NUDGE_PLAN",
     "RECOVERY_NUDGE_POST",
+    "RECOVERY_NUDGE_REFLECTION",
     "parse_artifact_json",
 ]

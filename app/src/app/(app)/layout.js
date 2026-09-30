@@ -23,6 +23,7 @@ import CommandPaletteTrigger from "../../components/commands/CommandPaletteTrigg
 const FULL_BLEED_PREFIXES = [
   "/audit/seo/",
   "/content/sessions/",
+  "/content/reflect",
   "/content/posts/",
   "/content/plan",
   "/insights/session",

@@ -140,6 +140,12 @@ class ContentPost(SQLModel, table=True):
     # type; this names the chosen one. Not the video_url / video_asset_id
     # columns a June branch left in one database: those names are taken there.
     video: dict | None = Field(default=None, sa_column=Column(json_column(), nullable=True))
+    # The Daily Reflection section a post was derived from (issue #270):
+    # {"group_id", "section_id", "date"}. None for every other post. The
+    # drafts queue reads today's drafts by it, and re-deriving a section's
+    # drafts after the reflection is revised finds them by it, so editing the
+    # reflection revises its posts in place rather than piling up new ones.
+    reflection: dict | None = Field(default=None, sa_column=Column(json_column(), nullable=True))
 
     created_at: datetime = Field(
         default_factory=utcnow,

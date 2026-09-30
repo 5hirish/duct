@@ -470,7 +470,8 @@ def _context_fields(record: dict[str, Any], *_rest: Any) -> dict[str, Any]:
 # What is left out, and why each has somewhere else to show: RememberFact
 # (MEMORY_WRITTEN draws the "Remembered" note, with undo), RequestConnection /
 # SelectAccount / AskUserQuestion (the pause cards), CreateArtifact /
-# UpdateArtifact / RewriteArtifact (the artifact card), write_todos (the todo
+# UpdateArtifact / RewriteArtifact and the content agent's save_reflection
+# (the artifact card), write_todos (the todo
 # strip), the execution proposal (the change-set card), and the audit's
 # report builders — Start / Add / Finalize / SubmitAuditReport — whose
 # progress is the audit's own step ladder. Everything else the model can call
@@ -504,6 +505,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     # … and what it does on the person's behalf.
     "submit_plan": (_action_start, _action_finish),
     "submit_post_draft": (_action_start, _action_finish),
+    "draft_from_section": (_action_start, _action_finish),
     "edit_slide": (_action_start, _action_finish),
     "submit_assessment": (_action_start, _action_finish),
     "publish_post": (_action_start, _action_finish),

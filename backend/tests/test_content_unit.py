@@ -96,8 +96,11 @@ def test_content_tools_bind_and_expose_writer_tools():
     session = make_session("t", uuid4(), "plan_month")
     tools = build_content_tools_lc(session.project_id, _noop, session)
     names = {t.name for t in tools}
+    reflect = make_session("r", uuid4(), "reflect_day")
+    reflecting = {t.name for t in build_content_tools_lc(reflect.project_id, _noop, reflect)}
     assert {"submit_plan", "submit_post_draft", "edit_slide", "generate_image"} <= names
-    assert names == {t.value for t in ContentTool}
+    # Every name the enum knows is bound in one mode or the other.
+    assert names | reflecting == {t.value for t in ContentTool}
 
 
 def test_unremembered_session_binds_no_memory_tools():

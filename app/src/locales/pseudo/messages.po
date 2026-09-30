@@ -198,6 +198,10 @@ msgstr ""
 msgid "{drafted, plural, one {# drafted field to confirm} other {# drafted fields to confirm}}"
 msgstr ""
 
+#: src/components/content/ReflectionsTab.jsx
+msgid "{drafts, plural, one {# draft} other {# drafts}}"
+msgstr ""
+
 #: src/components/models/UsagePanel.jsx
 msgid "{earlierTokens} tokens"
 msgstr ""
@@ -585,6 +589,10 @@ msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{views, plural, one {# view} other {# views}}"
+msgstr ""
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "{waiting, plural, one {# draft waiting} other {# drafts waiting}}"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
@@ -1369,6 +1377,10 @@ msgstr ""
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Ask Duct to refine the plan or post…"
+msgstr ""
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "Ask in chat for today's reflection."
 msgstr ""
 
 #: src/components/insights/Desk.jsx
@@ -2266,6 +2278,10 @@ msgstr ""
 msgid "Copy this part"
 msgstr ""
 
+#: src/components/content/ContentWorkspace.jsx
+msgid "Correct the reading, or ask for a sharper post…"
+msgstr ""
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
 msgstr ""
@@ -2686,6 +2702,10 @@ msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drafted a post from the reflection"
 msgstr ""
 
 #: src/components/content/ContentWorkspace.jsx
@@ -4068,6 +4088,7 @@ msgstr ""
 
 #: src/app/(app)/content/page.jsx
 #: src/app/(app)/loading.jsx
+#: src/components/content/ReflectionsTab.jsx
 msgid "Loading"
 msgstr ""
 
@@ -4141,6 +4162,7 @@ msgid "Loading project"
 msgstr ""
 
 #: src/app/(app)/content/posts/new/page.jsx
+#: src/app/(app)/content/reflect/page.jsx
 #: src/app/(app)/content/sessions/new/page.jsx
 msgid "Loading session…"
 msgstr ""
@@ -4805,6 +4827,14 @@ msgstr ""
 msgid "No provider recorded."
 msgstr ""
 
+#: src/components/content/ReflectionViewport.jsx
+msgid "No reflection yet"
+msgstr ""
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "No reflections yet"
+msgstr ""
+
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr ""
@@ -5128,6 +5158,10 @@ msgstr ""
 msgid "On-page content rewrites"
 msgstr ""
 
+#: src/components/content/ReflectionsTab.jsx
+msgid "Once a day, Duct reads what you shipped and what it did on this project, writes what it taught you with every claim cited, and drafts the X and LinkedIn posts worth making from it."
+msgstr ""
+
 #: src/components/content/PostVideo.jsx
 msgid "Once the writing is right, ask Duct to make the clip. It shows up here to watch before it publishes."
 msgstr ""
@@ -5263,6 +5297,10 @@ msgstr ""
 
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
+msgstr ""
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "Open today's"
 msgstr ""
 
 #: src/components/content/PlanCalendar.jsx
@@ -5897,6 +5935,10 @@ msgstr ""
 msgid "Read full screen"
 msgstr ""
 
+#: src/components/content/ReflectionViewport.jsx
+msgid "Read it wrong? Say so in chat. The reflection gets a new version and its drafts follow."
+msgstr ""
+
 #: src/app/(start)/start/page.jsx
 msgid "Read my site"
 msgstr ""
@@ -5943,6 +5985,14 @@ msgstr ""
 
 #: src/components/audit/AuditReport.jsx
 msgid "Reading and parsing your pages"
+msgstr ""
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "Reading the day…"
+msgstr ""
+
+#: src/lib/contentEvents.js
+msgid "Reading the day's work"
 msgstr ""
 
 #: src/app/(start)/start/page.jsx
@@ -6045,6 +6095,22 @@ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Redirects"
+msgstr ""
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "Reflect on today"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Reflecting on the day"
+msgstr ""
+
+#: src/components/content/ContentWorkspace.jsx
+msgid "Reflection"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "reflections"
 msgstr ""
 
 #: src/components/connections/ProjectEntitySelect.jsx
@@ -6554,6 +6620,10 @@ msgstr ""
 #: src/components/content/PostMetricsForm.jsx
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
+msgstr ""
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "Say it"
 msgstr ""
 
 #: src/components/audit/AuditReport.jsx
@@ -7664,6 +7734,10 @@ msgstr ""
 msgid "The last turn failed"
 msgstr ""
 
+#: src/components/content/ReflectionViewport.jsx
+msgid "The lesson"
+msgstr ""
+
 #: src/app/not-found.js
 msgid "The page you are looking for does not exist or has moved."
 msgstr ""
@@ -8283,6 +8357,7 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
+#: src/components/content/ReflectionViewport.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Version {version}"
 msgstr ""
@@ -8452,6 +8527,14 @@ msgstr ""
 msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
 msgstr ""
 
+#: src/components/content/ReflectionsTab.jsx
+msgid "What each day taught, cited to the work it came from."
+msgstr ""
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "What happened"
+msgstr ""
+
 #: src/app/(start)/start/page.jsx
 msgid "What happens next"
 msgstr ""
@@ -8469,12 +8552,20 @@ msgstr ""
 #~ msgid "What shape the brief takes"
 #~ msgstr ""
 
+#: src/components/content/ReflectionViewport.jsx
+msgid "What shipped in the repository, and what Duct wrote, proposed and learned on this project. The reflection appears here as each stream is written."
+msgstr ""
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"
 msgstr ""
 
 #: src/components/content/TextPostEditor.jsx
 msgid "What the {label} feed shows before “see more”"
+msgstr ""
+
+#: src/components/content/ReflectionViewport.jsx
+msgid "What the field says"
 msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
@@ -8885,6 +8976,10 @@ msgstr ""
 
 #: src/components/TelemetryCard.jsx
 msgid "Your provider API keys"
+msgstr ""
+
+#: src/components/content/ReflectionsTab.jsx
+msgid "your reflections"
 msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
