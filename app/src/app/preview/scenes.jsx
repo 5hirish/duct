@@ -64,6 +64,7 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
+import { NoPlanYet } from "@/components/content/PlanBoard";
 import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
@@ -2302,6 +2303,18 @@ export const SCENES = [
     render: () => (
       <div className="p-5">
         <VendorKeyForm vendor="PostBridge" homeUrl="https://app.post-bridge.com" isOwner={false} onConnect={() => Promise.resolve()} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-board-empty",
+    state: "a project with no plan yet",
+    group: "PlanBoard",
+    title: "The Plan tab, before the first plan",
+    note: "The Plan tab used to say \"No plan yet\" and stop there: the session that makes a plan was linked from nowhere (issue 274). Now the empty state says what a plan is and starts one; a board with plans carries the same action as \"New plan\" in its toolbar.",
+    render: () => (
+      <div className="p-5">
+        <NoPlanYet onStart={() => {}} />
       </div>
     ),
   },

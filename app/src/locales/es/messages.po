@@ -4560,6 +4560,10 @@ msgstr "Nuevo formato"
 msgid "New invitation sent to {invitee}."
 msgstr "Nueva invitación enviada a {invitee}."
 
+#: src/components/content/PlanBoard.jsx
+msgid "New plan"
+msgstr "Nuevo plan"
+
 #: src/app/(app)/content/page.jsx
 msgid "New post"
 msgstr "Nueva publicación"
@@ -4760,8 +4764,12 @@ msgid "No pillar-attributed posts yet."
 msgstr "Ninguna publicación atribuida a pilares todavía."
 
 #: src/components/content/PlanBoard.jsx
-msgid "No plan yet for this project."
-msgstr "Ningún plan todavía para este proyecto."
+msgid "No plan yet"
+msgstr "Aún no hay plan"
+
+#: src/components/content/PlanBoard.jsx
+#~ msgid "No plan yet for this project."
+#~ msgstr "Ningún plan todavía para este proyecto."
 
 #: src/app/(app)/content/page.jsx
 #~ msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
@@ -5560,6 +5568,10 @@ msgstr "Plan {shortId}"
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
 msgstr "Estrategia del plan"
+
+#: src/components/content/PlanBoard.jsx
+msgid "Plan the next 30 days"
+msgstr "Planifica los próximos 30 días"
 
 #: src/lib/contentSchedule.js
 msgid "Planned"
@@ -7568,6 +7580,10 @@ msgstr "Ese es un enlace para compartir. Ábrelo, luego copia la dirección comp
 #: src/app/(start)/start/page.jsx
 msgid "That's us — continue"
 msgstr "Somos nosotros — continuar"
+
+#: src/components/content/PlanBoard.jsx
+msgid "The agent reads your brand, your pillars and what has worked, then lays out a month of posts you can draft one at a time."
+msgstr "El agente lee tu marca, tus pilares y lo que ha funcionado, y arma un mes de publicaciones que puedes redactar de una en una."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."

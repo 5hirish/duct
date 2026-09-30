@@ -4554,6 +4554,10 @@ msgstr ""
 msgid "New invitation sent to {invitee}."
 msgstr ""
 
+#: src/components/content/PlanBoard.jsx
+msgid "New plan"
+msgstr ""
+
 #: src/app/(app)/content/page.jsx
 msgid "New post"
 msgstr ""
@@ -4754,8 +4758,12 @@ msgid "No pillar-attributed posts yet."
 msgstr ""
 
 #: src/components/content/PlanBoard.jsx
-msgid "No plan yet for this project."
+msgid "No plan yet"
 msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+#~ msgid "No plan yet for this project."
+#~ msgstr ""
 
 #: src/app/(app)/content/page.jsx
 #~ msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
@@ -5554,6 +5562,10 @@ msgstr ""
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Plan the next 30 days"
 msgstr ""
 
 #: src/lib/contentSchedule.js
@@ -7562,6 +7574,10 @@ msgstr ""
 
 #: src/app/(start)/start/page.jsx
 msgid "That's us — continue"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "The agent reads your brand, your pillars and what has worked, then lays out a month of posts you can draft one at a time."
 msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx

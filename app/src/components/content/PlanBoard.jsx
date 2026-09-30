@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, CalendarDays } from "lucide-react";
+import { LayoutGrid, CalendarDays, Plus } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import {
   Select,
@@ -13,9 +13,38 @@ import {
 } from "@/components/ui/select";
 import { getPlan, listPlans, listPosts } from "@/lib/contentApi";
 import LoadError from "@/components/LoadError";
+import { Button } from "@/components/ui/button";
+import EmptyState from "@/components/ui/empty-state";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanCalendar from "@/components/content/PlanCalendar";
 import PlanStrategy from "@/components/content/PlanStrategy";
+
+// Where a monthly plan starts: a plan_month session in the split workspace.
+// Nothing linked here before #274, so a new project had no way in but the URL.
+export const NEW_PLAN_HREF = "/content/sessions/new";
+
+/**
+ * The Plan tab before a project has a plan: what one is, and the one button
+ * that starts it.
+ */
+export function NoPlanYet({ onStart }) {
+  return (
+    <EmptyState
+      icon={CalendarDays}
+      title={<Trans>No plan yet</Trans>}
+      actions={
+        <Button size="sm" onClick={onStart}>
+          <Plus className="size-3.5" /> <Trans>Plan the next 30 days</Trans>
+        </Button>
+      }
+    >
+      <Trans>
+        The agent reads your brand, your pillars and what has worked, then lays out a
+        month of posts you can draft one at a time.
+      </Trans>
+    </EmptyState>
+  );
+}
 
 /**
  * Inline plan board — plan selector + Kanban/Calendar toggle. Renders directly
@@ -108,11 +137,7 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
     return <p className="text-sm text-muted-foreground"><Trans>Loading plan…</Trans></p>;
   }
   if (plans.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center">
-        <p className="text-sm text-muted-foreground"><Trans>No plan yet for this project.</Trans></p>
-      </div>
-    );
+    return <NoPlanYet onStart={() => router.push(NEW_PLAN_HREF)} />;
   }
 
   return (
@@ -156,6 +181,9 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
             />
           )}
           <ViewToggle view={view} onChange={setView} />
+          <Button size="sm" variant="outline" className="h-8" onClick={() => router.push(NEW_PLAN_HREF)}>
+            <Plus className="size-3.5" /> <Trans>New plan</Trans>
+          </Button>
         </div>
       </div>
 
