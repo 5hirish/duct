@@ -399,11 +399,8 @@ already touches the line, and shrink this list in the same PR.
   (there is not one naive datetime in the tree — keep it that way), but the
   helper is the named home; use it in new code and switch touched lines.
 - **A handful of bare `except Exception: pass` with no reason** —
-  `service/crawl/extractor.py`, `agents/core/session.py`,
-  `utils/helpers.py`. Broad catches are fine; unexplained ones are not.
-- **`utils/helpers.py` misses three conventions at once** (no module
-  docstring, no `from __future__`, an unexplained bare except). Do not copy
-  it; fix it when touched.
+  `service/crawl/extractor.py`, `agents/core/session.py`. Broad catches are
+  fine; unexplained ones are not.
 - **`lib/api.js` predates the error convention** — it throws from raw
   response text and never attaches `.status`. New code follows the
   `authFetch.js` shape; migrate `api.js` call paths as they are touched.
