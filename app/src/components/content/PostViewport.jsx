@@ -19,9 +19,10 @@ import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { patchPost } from "../../lib/contentApi";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
-import { PostStatus, PostType, isTextChannel } from "../../lib/contentEnums";
+import { POST_TYPE_LABELS, PostStatus, PostType, isTextChannel } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import SlidesCarousel from "./SlidesCarousel";
+import PostVideo from "./PostVideo";
 import TextPostEditor from "./TextPostEditor";
 import CloneSourceNote from "./CloneSourceNote";
 import PublishReviewPanel from "./PublishReviewPanel";
@@ -174,6 +175,8 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
   const status = post.status || "pending";
   const meta = statusMeta(status);
   const TypeIcon = TYPE_ICON[post.post_type] || Images;
+  const isVideo = post.post_type === PostType.VIDEO;
+  const typeLabel = i18n._(POST_TYPE_LABELS[post.post_type] || POST_TYPE_LABELS[PostType.SLIDESHOW]);
   const platforms = Array.isArray(post.platforms) ? post.platforms : [];
   const slideCount = post.slide_count;
   const postedOn = post.posted_at
@@ -207,8 +210,8 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
               {post.format_name && (
                 <span className="rounded-full border border-border/70 px-2 py-0.5">{post.format_name}</span>
               )}
-              <span className="inline-flex items-center gap-1"><TypeIcon className="size-3" /> {post.post_type || "slideshow"}</span>
-              {typeof slideCount === "number" && slideCount > 0 && <span>· <Plural value={slideCount} one="# slide" other="# slides" /></span>}
+              <span className="inline-flex items-center gap-1"><TypeIcon className="size-3" aria-hidden="true" /> {typeLabel}</span>
+              {!isVideo && typeof slideCount === "number" && slideCount > 0 && <span>· <Plural value={slideCount} one="# slide" other="# slides" /></span>}
               <span>· {dateLabel}</span>
               {platforms.length > 0 && (
                 <span className="flex items-center gap-1">
@@ -276,9 +279,22 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
             <TextPostEditor post={post} patch={patch} />
           ) : (
             <>
-              <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
+              {isVideo ? (
+                <PostVideo
+                  postId={post.id}
+                  video={post.video}
+                  takes={Array.isArray(post.video_takes) ? post.video_takes : []}
+                  onChange={(updated) =>
+                    setDraft((prev) => ({ ...(prev || payload), video: updated.video, video_takes: updated.video_takes }))
+                  }
+                />
+              ) : (
+                <>
+                  <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
 
-              <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+                  <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+                </>
+              )}
 
               <CloneSourceNote source={post.clone_source} />
 

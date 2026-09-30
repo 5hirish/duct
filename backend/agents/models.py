@@ -276,6 +276,78 @@ def image_model_for(provider: Provider, requested: "ImageModel | str | None" = N
     return DEFAULT_IMAGE_MODELS[provider]
 
 
+class VideoModel(str, Enum):
+    """Video generation model IDs: Veo on a Gemini key, Seedance on OpenRouter.
+
+    A modality like images, not a connector: both are reachable with keys users
+    already bring, which reversed the 2026-09-01 routing design's "video is a
+    Higgsfield connection" (issue #284). ``provider_of`` places each by shape,
+    ``service/videos/client.py`` turns the provider into a backend, and
+    ``service/videos/caps.py`` holds what each one serves, which is the table
+    to update with a new row.
+
+    Google. All three are still ``-preview`` ids on the Gemini API (Vertex has
+    ``-001``). Lite is the default: $0.05/s at 720p against Veo 3.1's $0.40,
+    and a TikTok clip is a draft far more often than a final cut.
+
+    OpenRouter. Seedance, which no first-party key here reaches. 2.0 Mini is
+    newer and cheaper than 2.0 Fast with the same resolutions, lengths and
+    frame control, so Fast is not listed; 2.5 is the long-clip premium rung
+    (to 30 s). The same Pydantic-enum argument as ``ImageModel`` keeps this a
+    short list rather than a passthrough: the tool schema names these, and a
+    free-form slug would let a run invent one.
+    """
+    VEO_3_1              = "veo-3.1-generate-preview"
+    VEO_3_1_FAST         = "veo-3.1-fast-generate-preview"
+    VEO_3_1_LITE         = "veo-3.1-lite-generate-preview"
+    OR_SEEDANCE_2_5      = "bytedance/seedance-2.5"
+    OR_SEEDANCE_2_0_MINI = "bytedance/seedance-2.0-mini"
+
+
+# The model a run uses on each video-capable provider when nobody picked one.
+DEFAULT_VIDEO_MODELS: dict[Provider, VideoModel] = {
+    Provider.GOOGLE_GENAI: VideoModel.VEO_3_1_LITE,
+    Provider.OPENROUTER:   VideoModel.OR_SEEDANCE_2_0_MINI,
+}
+
+# Which key a run spends on video, when the user brought more than one. Gemini
+# first for the same reason as images: a first-party key is one hop fewer.
+VIDEO_PROVIDER_ORDER: tuple[Provider, ...] = (Provider.GOOGLE_GENAI, Provider.OPENROUTER)
+
+
+def video_model_for(provider: Provider, requested: "VideoModel | str | None" = None) -> VideoModel:
+    """The video model a run on ``provider`` should use: the requested one when
+    that provider serves it, else the provider's default. Same correction as
+    ``image_model_for`` — a Seedance id on a Gemini run means "a clip"."""
+    if requested is not None:
+        name = str(getattr(requested, "value", requested) or "").strip()
+        if name and provider_of(name) is provider:
+            return VideoModel(name)
+    return DEFAULT_VIDEO_MODELS[provider]
+
+
+# What a Veo clip costs per second, by resolution, from Google's pricing page on
+# 2026-09-29. Audio is always on for Veo on the Gemini API, so there is one
+# rate per resolution (4K is not offered; see VideoResolution). Seedance has no row on purpose: OpenRouter bills it in
+# video tokens and reports each job's cost, and that figure is exact where a
+# table here would be an estimate.
+VIDEO_PRICE_PER_SECOND: dict[VideoModel, dict[str, float]] = {
+    VideoModel.VEO_3_1:      {"720p": 0.40, "1080p": 0.40},
+    VideoModel.VEO_3_1_FAST: {"720p": 0.10, "1080p": 0.12},
+    VideoModel.VEO_3_1_LITE: {"720p": 0.05, "1080p": 0.08},
+}
+
+
+def video_cost_usd(model: "VideoModel | str", resolution: str, seconds: int) -> float | None:
+    """A clip's price from the table, or None for a model it has no row for."""
+    try:
+        rates = VIDEO_PRICE_PER_SECOND.get(VideoModel(str(getattr(model, "value", model))))
+    except ValueError:
+        return None
+    rate = (rates or {}).get(str(resolution).lower())
+    return round(rate * seconds, 4) if rate is not None else None
+
+
 class AspectRatio(StrEnum):
     """Image aspect ratios accepted by the Gemini image models."""
 
@@ -663,6 +735,7 @@ _PROVIDER_PREFIXES: tuple[tuple[str, Provider], ...] = (
     # listed grok-4.6 under xAI: provider_of returned None and the endpoint
     # skipped it.
     ("grok-", Provider.XAI),
+    ("veo-", Provider.GOOGLE_GENAI),
 )
 
 
@@ -770,7 +843,8 @@ class Modality(StrEnum):
 # writing it now means the day a chat model gains image output the settings
 # page re-resolves itself instead of needing a UI change.
 MODEL_EMITS: dict[str, frozenset[Modality]] = {
-    model.value: frozenset({Modality.TEXT, Modality.IMAGE}) for model in ImageModel
+    **{model.value: frozenset({Modality.TEXT, Modality.IMAGE}) for model in ImageModel},
+    **{model.value: frozenset({Modality.VIDEO}) for model in VideoModel},
 }
 
 
@@ -829,6 +903,11 @@ MODEL_LABELS: dict[str, str] = {
     ImageModel.OR_SEEDREAM_5_PRO.value: "Seedream 5 Pro",
     ImageModel.OR_FLUX_2_PRO.value: "FLUX.2 Pro",
     ImageModel.OR_RECRAFT_V4_VECTOR.value: "Recraft V4 Vector (SVG)",
+    VideoModel.VEO_3_1.value: "Veo 3.1",
+    VideoModel.VEO_3_1_FAST.value: "Veo 3.1 Fast",
+    VideoModel.VEO_3_1_LITE.value: "Veo 3.1 Lite",
+    VideoModel.OR_SEEDANCE_2_5.value: "Seedance 2.5",
+    VideoModel.OR_SEEDANCE_2_0_MINI.value: "Seedance 2.0 Mini",
 }
 
 

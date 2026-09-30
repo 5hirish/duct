@@ -241,7 +241,7 @@ export function modelPayload(map = loadModelMap()) {
 // ---------------------------------------------------------------------------
 
 /** What `fetchProviderStatus` answers when the server cannot be asked. */
-const NO_PROVIDER_STATUS = Object.freeze({ providers: [], images: null, chatgptAuthEnabled: false });
+const NO_PROVIDER_STATUS = Object.freeze({ providers: [], images: null, videos: null, chatgptAuthEnabled: false });
 
 /**
  * Which providers this browser can actually reach, and which one would draw.
@@ -265,6 +265,8 @@ export async function fetchProviderStatus() {
     return {
       providers: payload.providers ?? [],
       images: payload.images ?? null,
+      // The same pick for the video tool, by the same rule.
+      videos: payload.videos ?? null,
       // The backend's kill switch for "Continue with ChatGPT". Absent on an
       // older backend, which never offered the path, so absent means off.
       chatgptAuthEnabled: payload.chatgpt_auth_enabled === true,

@@ -260,6 +260,21 @@ export async function patchPost(postId, patch) {
   return out;
 }
 
+/** Make one of a video post's takes the clip it publishes. Returns the post. */
+export async function selectPostVideo(postId, assetId) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/video/select`,
+    {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ asset_id: assetId }),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
 export async function markPostPosted(postId, { publishedUrl } = {}) {
   const url = new URL(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/mark-posted`,

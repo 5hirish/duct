@@ -30,6 +30,7 @@ import {
   ChevronRight,
   Database,
   FileText,
+  Film,
   Globe,
   Image as ImageIcon,
   Layers,
@@ -45,6 +46,7 @@ import { Lightbox } from "@/components/ui/lightbox";
 import { CONNECTOR_NAMES, LOGOS } from "@/components/connections/logos";
 import { faviconUrl, safeHostname } from "@/lib/favicon";
 import { formatDate } from "@/lib/format";
+import { formatCost } from "@/lib/usageApi";
 
 // A pull that failed for one of these is fixed on the Connections page, and
 // nowhere else. Any other failure is the agent's problem to route around, so
@@ -56,6 +58,7 @@ const KIND_ICONS = {
   [ActivityKind.WEB_SEARCH]: Globe,
   [ActivityKind.WEB_FETCH]: LinkIcon,
   [ActivityKind.IMAGE]: ImageIcon,
+  [ActivityKind.VIDEO]: Film,
   [ActivityKind.SLIDE]: Layers,
   [ActivityKind.SUBAGENT]: Sparkles,
   [ActivityKind.MEMORY]: Brain,
@@ -175,6 +178,14 @@ function useSummary(activity, named) {
     }
     case ActivityKind.IMAGE:
       return { lead: t`Drew an image`, detail: activity.title, aside: "" };
+    case ActivityKind.VIDEO: {
+      // Minutes, not seconds: the running row says it is still making it.
+      const lead =
+        activity.status === StepStatus.RUNNING ? t`Making a video clip`
+        : activity.status === StepStatus.ERROR ? t`Couldn't make a video clip`
+        : t`Made a video clip`;
+      return { lead, detail: activity.title, aside: formatCost(meta.cost_usd) || "" };
+    }
     case ActivityKind.SLIDE:
       return { lead: t`Rendered a slide`, detail: activity.title, aside: "" };
     case ActivityKind.MEMORY:
@@ -267,6 +278,9 @@ function ActivityDetail({ activity }) {
   const meta = activity.meta || {};
   const failed = activity.status === StepStatus.ERROR;
   const images = Array.isArray(meta.images) ? meta.images.filter(Boolean) : [];
+  const videos = Array.isArray(meta.videos) ? meta.videos.filter(Boolean) : [];
+  const seconds = Number.isInteger(meta.duration_seconds) ? meta.duration_seconds : null;
+  const model = meta.model || "";
   const sources = Array.isArray(meta.sources) ? meta.sources.filter((s) => s?.url) : [];
 
   return (
@@ -312,6 +326,23 @@ function ActivityDetail({ activity }) {
       )}
 
       {images.length > 0 && <ImageStrip images={images} alt={activity.title} />}
+      {videos.map((url) => (
+        <video
+          key={url}
+          src={url}
+          controls
+          playsInline
+          preload="metadata"
+          aria-label={t`Video clip`}
+          className="block h-40 w-auto max-w-[12rem] rounded-lg border border-border/60 bg-black"
+        />
+      ))}
+      {activity.kind === ActivityKind.VIDEO && !failed && (seconds !== null || model) && (
+        <p className="flex flex-wrap gap-x-3 text-2xs">
+          {seconds !== null && <span>{t`${seconds} s`}</span>}
+          {model && <span>{t`Made by ${model}`}</span>}
+        </p>
+      )}
 
       {activity.kind === ActivityKind.SUBAGENT && meta.summary && (
         // What it came back with. The brief is already on the line above, so
@@ -355,6 +386,8 @@ function hasDetail(activity) {
     case ActivityKind.IMAGE:
     case ActivityKind.SLIDE:
       return Array.isArray(meta.images) && meta.images.length > 0;
+    case ActivityKind.VIDEO:
+      return Array.isArray(meta.videos) && meta.videos.length > 0;
     case ActivityKind.SUBAGENT:
       return Boolean(meta.summary);
     case ActivityKind.CONTEXT:

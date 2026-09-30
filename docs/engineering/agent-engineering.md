@@ -110,7 +110,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 | Middleware | Mounted | Verdict |
 |---|---|---|
 | `ContextEditingMiddleware` + `ClearToolUsesEdit` | `session_middleware` | keep; add `clear_at_least` |
-| `ModelCallLimitMiddleware`, `ToolCallLimitMiddleware` | `session_middleware` | keep; add per-tool caps for `ProposeChanges` and `task` |
+| `ModelCallLimitMiddleware`, `ToolCallLimitMiddleware` | `session_middleware` | keep; per-tool caps are `RunLimits.per_tool_run_limits` (content caps `generate_video` at 3 a turn) — still to add for `ProposeChanges` and `task` |
 | `ModelFallbackMiddleware` | `session_middleware` | keep, classified (gap 4) |
 | `ReportedRetryMiddleware` (ours) | `session_middleware` | keep: `ModelRetryMiddleware` has no per-attempt hook and ignores `Retry-After` |
 | `SteerMiddleware`, `SeenImagePruneMiddleware` (ours) | `session_middleware` | keep; no prebuilt equivalent |

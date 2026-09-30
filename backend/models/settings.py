@@ -72,6 +72,12 @@ class UserModelSettings(SQLModel, table=True):
         default="", sa_column=Column(String, nullable=False, server_default="")
     )
 
+    # Which model makes video clips, the same kind of preference as
+    # image_model: empty is "whichever of my keys can", in VIDEO_PROVIDER_ORDER.
+    video_model: str = Field(
+        default="", sa_column=Column(String, nullable=False, server_default="")
+    )
+
     updated_at: datetime = Field(
         default_factory=utcnow, sa_column=Column(utc_datetime(), nullable=False)
     )

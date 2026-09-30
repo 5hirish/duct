@@ -7,6 +7,7 @@ import { mediaUrl } from "@/lib/contentApi";
 import { firstImageSrc, statusMeta } from "@/lib/contentStatus";
 import { KIND_LABEL } from "@/lib/contentSchedule";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
+import { ClipStill } from "@/components/content/PostVideo";
 import { titleCase } from "@/lib/format";
 
 // Shared with PlanStrategy, so a post type has one icon wherever it appears.
@@ -103,6 +104,8 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
               {thumb ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={thumb} alt="" className="size-full object-cover" />
+              ) : post?.video?.url ? (
+                <ClipStill url={post.video.url} className="size-full object-cover" />
               ) : postType === "text" && post?.caption ? (
                 // A text post's preview is its opening words.
                 <p className="line-clamp-4 size-full whitespace-pre-line px-3 py-2 text-2xs leading-snug">{post.caption}</p>

@@ -76,6 +76,7 @@ export const ActivityKind = Object.freeze({
   WEB_SEARCH: "web_search",
   WEB_FETCH:  "web_fetch",
   IMAGE:      "image",
+  VIDEO:      "video",
   SLIDE:      "slide",
   SUBAGENT:   "subagent",
   MEMORY:     "memory",

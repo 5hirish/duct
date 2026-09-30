@@ -66,6 +66,7 @@ import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
 import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
+import PostVideo from "@/components/content/PostVideo";
 import VendorKeyForm from "@/components/content/VendorKeyForm";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
@@ -627,6 +628,14 @@ const MODEL_CATALOGUE = {
     { id: "gpt-image-2.5-flare", label: "GPT Image 2.5 Flare", provider: "openai" },
   ],
   image_provider_order: ["google_genai", "openai", "xai"],
+  video_models: [
+    { id: "veo-3.1-lite-generate-preview", label: "Veo 3.1 Lite", provider: "google_genai", default: true },
+    { id: "veo-3.1-fast-generate-preview", label: "Veo 3.1 Fast", provider: "google_genai" },
+    { id: "veo-3.1-generate-preview", label: "Veo 3.1", provider: "google_genai" },
+    { id: "bytedance/seedance-2.0-mini", label: "Seedance 2.0 Mini", provider: "openrouter", default: true },
+    { id: "bytedance/seedance-2.5", label: "Seedance 2.5", provider: "openrouter" },
+  ],
+  video_provider_order: ["google_genai", "openrouter"],
   provider_triples: {
     anthropic: { heavy: "claude-opus-5-5", standard: "claude-sonnet-5-5", light: "claude-haiku-4-5" },
     google_genai: { heavy: "gemini-3.1-pro-preview", standard: "gemini-3.8-flash", light: "gemini-3.5-flash-lite" },
@@ -684,10 +693,13 @@ function TierSummaryScene({
   expanded = false,
   imagePick = "",
   images = { provider: "google_genai", model: "gemini-3.1-flash-image", source: "env" },
+  videoPick = "",
+  videos = { provider: "google_genai", model: "veo-3.1-lite-generate-preview", source: "env" },
   providersById = MODEL_PROVIDERS,
 }) {
   const [open, setOpen] = useState(expanded);
   const [image, setImage] = useState(imagePick);
+  const [video, setVideo] = useState(videoPick);
   return (
     <TierSummary
       picks={picks}
@@ -704,9 +716,40 @@ function TierSummaryScene({
       imageModels={MODEL_CATALOGUE.image_models}
       imagePick={image}
       onImageChange={setImage}
+      videos={videos}
+      videoModels={MODEL_CATALOGUE.video_models}
+      videoPick={video}
+      onVideoChange={setVideo}
     />
   );
 }
+
+// A video post's takes, newest first. The clip is the app's own mosaic art,
+// panned, so the scenes play without a backend or a generated file.
+// Absolute, because PostVideo resolves a relative path against the API
+// origin (mediaUrl), and /preview runs with no API behind it.
+const here = (path) => (typeof window === "undefined" ? path : new URL(path, window.location.origin).href);
+const CLIP = "/art/preview-clip.mp4";
+// Built after mount: the frame is rendered on the server first, where there is
+// no origin to resolve against, and hydration keeps the server's attributes.
+function PostVideoScene() {
+  const [takes, setTakes] = useState(null);
+  useEffect(() => setTakes(videoTakes()), []);
+  if (!takes) return null;
+  return (
+    <div style={{ display: "grid", gap: 24, gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))" }}>
+      <PostVideo postId="p0" video={null} takes={[]} />
+      <PostVideo postId="p1" video={takes[0]} takes={[{ ...takes[0], is_cut: true }]} />
+      <PostVideo postId="p3" video={takes[1]} takes={takes} />
+    </div>
+  );
+}
+
+const videoTakes = () => [
+  { asset_id: "t3", url: here(CLIP), first_frame_url: here("/art/mosaic/fons.webp"), duration_seconds: 8, aspect_ratio: "9:16", cost_usd: 0.4, is_cut: false },
+  { asset_id: "t2", url: here(CLIP), first_frame_url: "", duration_seconds: 6, aspect_ratio: "9:16", cost_usd: 0.3, is_cut: true },
+  { asset_id: "t1", url: here(CLIP), first_frame_url: here("/art/mosaic/salve.webp"), duration_seconds: 8, aspect_ratio: "9:16", cost_usd: 0.4, is_cut: false },
+];
 
 // Two change sets for the review card: one waiting on a person with a blocked
 // row in it, one that auto-applied and can still be rolled back.
@@ -1637,6 +1680,33 @@ export const SCENES = [
     ),
   },
   {
+    id: "activity-video",
+    state: "making · made · refused",
+    group: "AgentChat",
+    title: "A clip the agent made",
+    note: "A clip takes from ten seconds to several minutes, so the running row says it is still making it rather than borrowing the image row's past tense. Done, the row carries what it cost at the right edge — a clip is dollars, not tokens — and the chevron opens the clip itself with its length and model. Refused, the provider's own sentence sits under it, the same as any other tool.",
+    render: () => (
+      <div className="max-w-xl">
+        <ActivityGroup
+          defaultOpen
+          activities={[
+            { id: "v1", kind: "video", status: "running", title: "A kettle comes to the boil on a stone counter, slow push-in, morning light", meta: {} },
+            { id: "v2", kind: "video", status: "success", title: "Steam curls off a mug held in two hands, handheld, eye level", meta: { videos: [CLIP], model: "veo-3.1-lite-generate-preview", duration_seconds: 8, cost_usd: 0.4 } },
+            { id: "v3", kind: "video", status: "error", title: "A founder speaks to camera in a sunlit studio", meta: {}, error: "This model won't animate a first frame that shows a realistic person." },
+          ]}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "post-video",
+    state: "no clip · one take · three takes, an older one publishing",
+    group: "PostViewport",
+    title: "A video post's clip and its takes",
+    note: "What a video post shows where a slideshow shows its slides. Before the first clip, an empty state that says what to do. With takes, the player shows one and the strip under it switches between them; watching a take and choosing it are two separate acts, so comparing never changes what publishes. The tick marks the take that goes out.",
+    render: () => <PostVideoScene />,
+  },
+  {
     id: "brief-loading",
     state: "a document on its way in",
     group: "InsightsWorkspace",
@@ -1945,6 +2015,36 @@ export const SCENES = [
           previewByTier={MODEL_PREVIEW_OK}
           providersById={MODEL_PROVIDERS_ON_PLAN}
           images={{ provider: null, model: null, source: "none" }}
+        />
+      </div>
+    ),
+  },
+
+  {
+    id: "model-videos",
+    state: "auto · picked · picked but unreachable · nothing can make video",
+    group: "TierSummary",
+    title: "The Videos row, in its four states",
+    note: "Videos sits under Images, a peer of the tiers rather than a rung, under the one rule the two share. The four states are the Images row's: Auto names what it resolves to; a pick says nothing more; a pick whose key is missing admits what will make the clip instead; and with no Gemini or OpenRouter key the note names the two keys that would work.",
+    render: () => (
+      <div style={{ display: "grid", gap: 16 }}>
+        <TierSummaryScene picks={MODEL_PICKS} previewByTier={MODEL_PREVIEW_OK} />
+        <TierSummaryScene
+          picks={MODEL_PICKS}
+          previewByTier={MODEL_PREVIEW_OK}
+          videoPick="veo-3.1-generate-preview"
+          videos={{ provider: "google_genai", model: "veo-3.1-generate-preview", source: "env" }}
+        />
+        <TierSummaryScene
+          picks={MODEL_PICKS}
+          previewByTier={MODEL_PREVIEW_OK}
+          videoPick="bytedance/seedance-2.5"
+          videos={{ provider: "google_genai", model: "veo-3.1-lite-generate-preview", source: "env" }}
+        />
+        <TierSummaryScene
+          picks={MODEL_PICKS}
+          previewByTier={MODEL_PREVIEW_OK}
+          videos={{ provider: null, model: null, source: "none" }}
         />
       </div>
     ),

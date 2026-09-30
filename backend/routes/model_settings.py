@@ -36,6 +36,7 @@ class ModelSettingsBody(BaseModel):
     auto_fallback: bool | None = None
     engine: str | None = None
     image_model: str | None = None
+    video_model: str | None = None
 
 
 def _payload(settings) -> dict:
@@ -44,6 +45,7 @@ def _payload(settings) -> dict:
         "auto_fallback": settings.auto_fallback,
         "engine": settings.engine,
         "image_model": settings.image_model,
+        "video_model": settings.video_model,
     }
 
 
@@ -63,5 +65,6 @@ def write_model_settings(
             auto_fallback=body.auto_fallback,
             engine=body.engine,
             image_model=body.image_model,
+            video_model=body.video_model,
         )
     )

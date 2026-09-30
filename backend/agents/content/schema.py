@@ -244,6 +244,12 @@ class ContentSession(BaseAgentSession):
     # other image provider, so a run on an OpenAI key gets OpenAI pictures and
     # no Gemini-grounded search — the same as before images went multi-provider.
     gemini_api_key: str = ""
+    # What this run may spend on video clips, resolved the same way and just as
+    # absent-able (routes/content.py::_attach_video_run). ``video_model`` is the
+    # resolved run's model — the user's saved pick when their key reaches it.
+    video_provider: Provider | None = None
+    video_api_key: str = ""
+    video_model: str = ""
     # A clone run's link to its reference — asset id, URL, author, why it
     # worked — set by the runner before the opening turn. submit_post_draft
     # writes it onto the post as `clone_source` with the model's verdict, so
@@ -430,6 +436,7 @@ class ContentTool(StrEnum):
     RENDER_SLIDE                = "render_slide"
     GENERATE_IMAGE              = "generate_image"
     EDIT_IMAGE                  = "edit_image"
+    GENERATE_VIDEO              = "generate_video"
     SUBMIT_ASSESSMENT           = "submit_assessment"
     PUBLISH_POST                = "publish_post"
     MARK_POSTED                 = "mark_posted"

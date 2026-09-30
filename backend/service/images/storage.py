@@ -5,13 +5,12 @@ pointing at the public URL. See service/storage.py for the backend selection."""
 from __future__ import annotations
 
 import logging
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlmodel import Session
 
-from models.content import ContentAsset
-from service import storage
 from agents.models import Provider
+from service.generated_media import persist_generated_media
 from service.images.schema import GeneratedImage, ImageAsset
 
 logger = logging.getLogger(__name__)
@@ -26,13 +25,6 @@ _ASSET_SOURCE: dict[Provider, str] = {Provider.GOOGLE_GENAI: "gemini"}
 
 def asset_source_for(provider: Provider) -> str:
     return _ASSET_SOURCE.get(provider, provider.value)
-
-
-_MIME_TO_EXT = {
-    "image/png":  "png",
-    "image/jpeg": "jpg",
-    "image/webp": "webp",
-}
 
 
 def persist_generated_image(
@@ -55,32 +47,14 @@ def persist_generated_image(
     `source` is recorded on the row: ``asset_source_for(provider)`` for a
     generated image, ``"upload"`` from the upload route.
     """
-    ext = _MIME_TO_EXT.get(image.mime_type, "png")
-    asset_id = uuid4()
-    filename = f"{asset_id}.{ext}"
-    key = f"projects/{project_id}/generated/{filename}"
-    public_url = storage.put_image(key, image.data, image.mime_type)
-
-    row = ContentAsset(
-        id=asset_id,
-        project_id=project_id,
-        post_id=post_id,
-        asset_type="generated",
-        source=source,
-        url=public_url,
-        filename=filename,
-        mime_type=image.mime_type,
-        prompt=prompt,
-        model=model,
-        params=params,
+    row = persist_generated_media(
+        project_id, image.data, image.mime_type,
+        db=db, prompt=prompt, model=model, params=params, post_id=post_id, source=source,
     )
-    db.add(row)
-    db.commit()
-    db.refresh(row)
 
     return ImageAsset(
         asset_id=row.id,
-        url=public_url,
+        url=row.url,
         mime_type=image.mime_type,
         prompt=prompt,
         model=model,

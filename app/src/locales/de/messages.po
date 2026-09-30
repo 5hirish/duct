@@ -146,6 +146,10 @@ msgstr "{connectorName} verbunden"
 msgid "{contentGaps, plural, one {# gap} other {# gaps}}"
 msgstr "{contentGaps, plural, one {# Lücke} other {# Lücken}}"
 
+#: src/components/content/PostVideo.jsx
+msgid "{cost} to make"
+msgstr "{cost} zum Erstellen"
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
 msgstr "{count, plural, one {# Änderung zur Freigabe} other {# Änderungen zur Freigabe}}"
@@ -493,6 +497,11 @@ msgstr "{robotsLines} Zeilen"
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
 msgstr "{score}/100 — {label}. Gewichteter Durchschnitt über alle 9 SEO-Kategorien."
+
+#: src/components/content/PostVideo.jsx
+#: src/components/workspace/ActivityRow.jsx
+msgid "{seconds} s"
+msgstr "{seconds} s"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "{share}% from cache"
@@ -1464,8 +1473,16 @@ msgid "Auto — whichever key can draw"
 msgstr "Auto — welcher Schlüssel auch immer ziehen kann"
 
 #: src/components/models/TierSummary.jsx
+msgid "Auto — whichever key can make video"
+msgstr "Auto — welcher Schlüssel Videos erstellen kann"
+
+#: src/components/models/TierSummary.jsx
 msgid "Auto · {drawn}"
 msgstr "Auto · {drawn}"
+
+#: src/components/models/TierSummary.jsx
+msgid "Auto · {made}"
+msgstr "Auto · {made}"
 
 #: src/app/(app)/execute/page.jsx
 msgid "auto-applied"
@@ -2290,6 +2307,10 @@ msgstr "Konnte Markenkontext nicht laden."
 #: src/app/(app)/execute/page.jsx
 msgid "Couldn't load your guardrails. The queue above is unaffected."
 msgstr "Konnte deine Leitplanken nicht laden. Die obige Warteschlange ist davon unberührt."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't make a video clip"
+msgstr "Video-Clip konnte nicht erstellt werden"
 
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
@@ -4217,6 +4238,18 @@ msgstr "Geringere Auswirkung · Mehr Aufwand"
 msgid "Lowercase, numbers, hyphens only"
 msgstr "Nur Kleinbuchstaben, Zahlen, Bindestriche"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Made a video clip"
+msgstr "Videoclip erstellt"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Made by {model}"
+msgstr "Erstellt von {model}"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Making a video clip"
+msgstr "Erstellt einen Videoclip"
+
 #: src/app/(app)/projects/page.jsx
 #: src/components/AppSidebar.jsx
 #: src/components/commands/AppCommands.jsx
@@ -4392,6 +4425,10 @@ msgstr "Modellaufrufe"
 #: src/components/models/TierSummary.jsx
 msgid "Model for generating images"
 msgstr "Modell zur Bilderzeugung"
+
+#: src/components/models/TierSummary.jsx
+msgid "Model for generating videos"
+msgstr "Modell für Videoerstellung"
 
 #: src/components/models/TierCard.jsx
 msgid "Model for the {tierName} tier"
@@ -4610,6 +4647,10 @@ msgstr "kein kanonisch"
 msgid "No caption"
 msgstr "Keine Bildunterschrift"
 
+#: src/components/content/PostVideo.jsx
+msgid "No clip yet"
+msgstr "Noch kein Clip"
+
 #: src/components/commands/CommandPalette.jsx
 msgid "No commands match “{query}”."
 msgstr "Keine Befehle passen zu „{query}“."
@@ -4667,12 +4708,20 @@ msgid "No key"
 msgstr "Kein Schlüssel"
 
 #: src/components/models/TierSummary.jsx
+msgid "No key for {picked}, so clips are made with {made}."
+msgstr "Kein Schlüssel für {picked} vorhanden, daher werden Clips mit {made} erstellt."
+
+#: src/components/models/TierSummary.jsx
 msgid "No key for {picked}, so images are drawn with {drawn}."
 msgstr "Kein Schlüssel für {picked}, daher werden Bilder mit {drawn} gezeichnet."
 
 #: src/components/models/TierSummary.jsx
 msgid "No key of yours can generate images yet — add one on the Providers tab."
 msgstr "Kein Schlüssel von dir kann bisher Bilder generieren — füge einen auf dem Reiter „Anbieter“ hinzu."
+
+#: src/components/models/TierSummary.jsx
+msgid "No key of yours can make video yet — add a Gemini or OpenRouter key on the Providers tab."
+msgstr "Noch kein Schlüssel von dir kann Videos erstellen — füge einen Gemini- oder OpenRouter-Schlüssel auf dem Tab „Anbieter“ hinzu."
 
 #: src/lib/modelTiers.js
 msgid "No key set"
@@ -5067,6 +5116,10 @@ msgstr "Auf diesem Gerät"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On-page content rewrites"
 msgstr "On-Page-Inhaltsumschreibungen"
+
+#: src/components/content/PostVideo.jsx
+msgid "Once the writing is right, ask Duct to make the clip. It shows up here to watch before it publishes."
+msgstr "Sobald der Text stimmt, bitte Duct, den Clip zu erstellen. Er erscheint hier zur Ansicht, bevor er veröffentlicht wird."
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Once you connect a source:"
@@ -5776,6 +5829,10 @@ msgstr "Wird als erste Antwort auf den Beitrag veröffentlicht."
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Publishing isn't set up yet"
 #~ msgstr "Veröffentlichen ist noch nicht eingerichtet"
+
+#: src/components/content/PostVideo.jsx
+msgid "Publishing this take"
+msgstr "Dieser Take wird veröffentlicht"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Putting it together"
@@ -7371,6 +7428,18 @@ msgstr "Slogan und Beschreibung, die in allen Beiträgen verwendet werden."
 msgid "Tags, variables and container versions — staged, with rollback."
 msgstr "Tags, Variablen und Container-Versionen — bereitgestellt, mit Zurücknahme."
 
+#: src/components/content/PostVideo.jsx
+msgid "Take {number}"
+msgstr "Take {number}"
+
+#: src/components/content/PostVideo.jsx
+msgid "Take {number}, publishing"
+msgstr "Take {number}, wird veröffentlicht"
+
+#: src/components/content/PostVideo.jsx
+msgid "Takes"
+msgstr "Takes"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Target contains"
 msgstr "Ziel enthält"
@@ -7483,6 +7552,10 @@ msgstr "Dieser Link ist kein einzelner Beitrag. Er sollte wie tiktok.com/@creato
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "That link isn't on tiktok.com."
 msgstr "Dieser Link ist nicht von tiktok.com."
+
+#: src/components/content/PostVideo.jsx
+msgid "That take couldn't be chosen. Try again."
+msgstr "Dieser Take konnte nicht ausgewählt werden. Versuche es erneut."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "That turn failed"
@@ -8090,6 +8163,10 @@ msgstr "Dieses Konto nutzen →"
 msgid "Use this plan"
 msgstr "Diesen Plan nutzen"
 
+#: src/components/content/PostVideo.jsx
+msgid "Use this take"
+msgstr "Diesen Take verwenden"
+
 #: src/lib/modelTiers.js
 msgid "Using a key already on the machine running Duct, not one you added here"
 msgstr "Einen Schlüssel nutzen, der bereits auf der Maschine vorhanden ist, auf der Duct läuft, nicht einen, den du hier hinzugefügt hast"
@@ -8201,7 +8278,13 @@ msgstr "via Duct"
 msgid "Video"
 msgstr "Video"
 
+#: src/components/content/PostVideo.jsx
+#: src/components/workspace/ActivityRow.jsx
+msgid "Video clip"
+msgstr "Videoclip"
+
 #: src/components/content/SynthesisPanel.jsx
+#: src/components/models/TierSummary.jsx
 msgid "Videos"
 msgstr "Videos"
 

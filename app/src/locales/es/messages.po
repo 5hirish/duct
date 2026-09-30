@@ -146,6 +146,10 @@ msgstr "{connectorName} conectado"
 msgid "{contentGaps, plural, one {# gap} other {# gaps}}"
 msgstr "{contentGaps, plural, one {# brecha} other {# brechas}}"
 
+#: src/components/content/PostVideo.jsx
+msgid "{cost} to make"
+msgstr "{cost} para hacer"
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
 msgstr "{count, plural, one {# cambio para aprobar} other {# cambios para aprobar}}"
@@ -493,6 +497,11 @@ msgstr "{robotsLines} líneas"
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
 msgstr "{score}/100 — {label}. Promedio ponderado en las 9 categorías SEO."
+
+#: src/components/content/PostVideo.jsx
+#: src/components/workspace/ActivityRow.jsx
+msgid "{seconds} s"
+msgstr "{seconds} s"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "{share}% from cache"
@@ -1464,8 +1473,16 @@ msgid "Auto — whichever key can draw"
 msgstr "Automático — la clave que pueda dibujar"
 
 #: src/components/models/TierSummary.jsx
+msgid "Auto — whichever key can make video"
+msgstr "Automático — cualquier clave que pueda crear video"
+
+#: src/components/models/TierSummary.jsx
 msgid "Auto · {drawn}"
 msgstr "Automático · {drawn}"
+
+#: src/components/models/TierSummary.jsx
+msgid "Auto · {made}"
+msgstr "Automático · {made}"
 
 #: src/app/(app)/execute/page.jsx
 msgid "auto-applied"
@@ -2290,6 +2307,10 @@ msgstr "No se pudo cargar el contexto de marca."
 #: src/app/(app)/execute/page.jsx
 msgid "Couldn't load your guardrails. The queue above is unaffected."
 msgstr "No se pudieron cargar tus límites. La cola de arriba no se ve afectada."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't make a video clip"
+msgstr "No se pudo crear un videoclip"
 
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
@@ -4217,6 +4238,18 @@ msgstr "Menor impacto · Mayor esfuerzo"
 msgid "Lowercase, numbers, hyphens only"
 msgstr "Solo minúsculas, números, guiones"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Made a video clip"
+msgstr "Se creó un clip de video"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Made by {model}"
+msgstr "Hecho por {model}"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Making a video clip"
+msgstr "Creando un clip de video"
+
 #: src/app/(app)/projects/page.jsx
 #: src/components/AppSidebar.jsx
 #: src/components/commands/AppCommands.jsx
@@ -4392,6 +4425,10 @@ msgstr "Llamadas al modelo"
 #: src/components/models/TierSummary.jsx
 msgid "Model for generating images"
 msgstr "Modelo para generar imágenes"
+
+#: src/components/models/TierSummary.jsx
+msgid "Model for generating videos"
+msgstr "Modelo para generar videos"
 
 #: src/components/models/TierCard.jsx
 msgid "Model for the {tierName} tier"
@@ -4610,6 +4647,10 @@ msgstr "sin canónica"
 msgid "No caption"
 msgstr "Sin título"
 
+#: src/components/content/PostVideo.jsx
+msgid "No clip yet"
+msgstr "Aún no hay clip"
+
 #: src/components/commands/CommandPalette.jsx
 msgid "No commands match “{query}”."
 msgstr "Ningún comando coincide con “{query}”."
@@ -4667,12 +4708,20 @@ msgid "No key"
 msgstr "Sin clave"
 
 #: src/components/models/TierSummary.jsx
+msgid "No key for {picked}, so clips are made with {made}."
+msgstr "No hay clave para {picked}, así que los clips se hacen con {made}."
+
+#: src/components/models/TierSummary.jsx
 msgid "No key for {picked}, so images are drawn with {drawn}."
 msgstr "No hay clave para {picked}, así que las imágenes se dibujan con {drawn}."
 
 #: src/components/models/TierSummary.jsx
 msgid "No key of yours can generate images yet — add one on the Providers tab."
 msgstr "Ninguna de tus claves puede generar imágenes todavía; añade una en la pestaña Proveedores."
+
+#: src/components/models/TierSummary.jsx
+msgid "No key of yours can make video yet — add a Gemini or OpenRouter key on the Providers tab."
+msgstr "Ninguna de tus claves puede crear videos todavía — añade una clave de Gemini o OpenRouter en la pestaña Proveedores."
 
 #: src/lib/modelTiers.js
 msgid "No key set"
@@ -5067,6 +5116,10 @@ msgstr "En este dispositivo"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On-page content rewrites"
 msgstr "Reescrituras de contenido en la página"
+
+#: src/components/content/PostVideo.jsx
+msgid "Once the writing is right, ask Duct to make the clip. It shows up here to watch before it publishes."
+msgstr "Una vez que la redacción sea correcta, pídele a Duct que cree el clip. Aparecerá aquí para que lo veas antes de que se publique."
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Once you connect a source:"
@@ -5776,6 +5829,10 @@ msgstr "Se publica como la primera respuesta de la publicación."
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Publishing isn't set up yet"
 #~ msgstr "La publicación aún no está configurada"
+
+#: src/components/content/PostVideo.jsx
+msgid "Publishing this take"
+msgstr "Publicando esta toma"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Putting it together"
@@ -7371,6 +7428,18 @@ msgstr "Eslogan y descripción usados en todas las publicaciones."
 msgid "Tags, variables and container versions — staged, with rollback."
 msgstr "Etiquetas, variables y versiones de contenedores — en preparación, con revertir."
 
+#: src/components/content/PostVideo.jsx
+msgid "Take {number}"
+msgstr "Toma {number}"
+
+#: src/components/content/PostVideo.jsx
+msgid "Take {number}, publishing"
+msgstr "Toma {number}, publicando"
+
+#: src/components/content/PostVideo.jsx
+msgid "Takes"
+msgstr "Tomas"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Target contains"
 msgstr "El objetivo contiene"
@@ -7483,6 +7552,10 @@ msgstr "Ese enlace no es una sola publicación. Debería verse como tiktok.com/@
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "That link isn't on tiktok.com."
 msgstr "Ese enlace no es de tiktok.com."
+
+#: src/components/content/PostVideo.jsx
+msgid "That take couldn't be chosen. Try again."
+msgstr "Esa toma no pudo ser elegida. Intenta de nuevo."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "That turn failed"
@@ -8090,6 +8163,10 @@ msgstr "Usar esta cuenta →"
 msgid "Use this plan"
 msgstr "Usar este plan"
 
+#: src/components/content/PostVideo.jsx
+msgid "Use this take"
+msgstr "Usar esta toma"
+
 #: src/lib/modelTiers.js
 msgid "Using a key already on the machine running Duct, not one you added here"
 msgstr "Usando una clave ya en la máquina que ejecuta Duct, no una que hayas añadido aquí"
@@ -8201,7 +8278,13 @@ msgstr "vía Duct"
 msgid "Video"
 msgstr "Video"
 
+#: src/components/content/PostVideo.jsx
+#: src/components/workspace/ActivityRow.jsx
+msgid "Video clip"
+msgstr "Clip de video"
+
 #: src/components/content/SynthesisPanel.jsx
+#: src/components/models/TierSummary.jsx
 msgid "Videos"
 msgstr "Videos"
 

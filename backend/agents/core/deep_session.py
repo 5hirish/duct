@@ -134,6 +134,11 @@ class RunLimits:
     tool_calls_per_thread: int
     tool_result_prune_trigger: int
     tool_results_kept: int
+    #: ``(tool name, calls per run)`` for a tool that costs real money per call
+    #: — a video clip is dollars, not tokens — so a runaway loop meets its own
+    #: ceiling long before the general tool guard. Refused calls come back to
+    #: the model as errors it can read, and the turn goes on.
+    per_tool_run_limits: tuple[tuple[str, int], ...] = ()
 
     def __post_init__(self) -> None:
         # Ordering here is by threshold, not by position: deepagents mounts
@@ -342,6 +347,10 @@ def session_middleware(
             thread_limit=limits.tool_calls_per_thread,
             run_limit=limits.tool_calls_per_run,
             exit_behavior="continue",
+        ),
+        *(
+            ToolCallLimitMiddleware(tool_name=name, run_limit=cap, exit_behavior="continue")
+            for name, cap in limits.per_tool_run_limits
         ),
         # Last of the guards, so it sits closest to the model call and the
         # limits above still count a fallback attempt as the call it is.

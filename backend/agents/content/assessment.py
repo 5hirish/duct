@@ -18,8 +18,10 @@ stamps each marker from this table on the way in — including when a stored
 review is read back, so a change to the table re-weighs old reviews too.
 
 Ported from the unmerged June Content Studio branch minus two things: its
-video checks (video is not on main) and its English labels — the app words
-every check and marker from its id, so the panel is translated.
+video checks and its English labels — the app words every check and marker
+from its id, so the panel is translated. A video post (issue #284) has no
+slides, so its review is the caption and hashtag checks; publishing is what
+refuses a video post with no clip (agents/content/video.publish_asset).
 """
 
 from __future__ import annotations

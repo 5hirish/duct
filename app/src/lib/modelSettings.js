@@ -32,6 +32,8 @@ export const SETTINGS_DEFAULTS = Object.freeze({
   // Empty means "whichever of my keys can draw", which is what every install
   // did before the picker existed — not a missing setting.
   image_model: "",
+  // The same for clips: empty is "whichever of my keys can make video".
+  video_model: "",
 });
 
 /**
@@ -52,6 +54,7 @@ export async function fetchModelSettings() {
       auto_fallback: body?.auto_fallback !== false,
       engine: String(body?.engine || ""),
       image_model: String(body?.image_model || ""),
+      video_model: String(body?.video_model || ""),
     };
   } catch {
     return { ...SETTINGS_DEFAULTS };

@@ -107,6 +107,24 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   per-minute-quota'd, and unofficial — the wrong thing to put a customer's slide
   deck on.
 
+  **Video is the same seam, with one rule images do not need** (issue #284).
+  `service/videos/` mirrors `service/images/`: one request shape, one
+  `VideoAPIError` carrying a *code* (a filter refusal, a refused realistic face,
+  a timeout, no credit — each asks the agent for something different), one
+  factory, two backends — Veo on a Gemini key (`service/google/gemini/veo.py`)
+  and Seedance through OpenRouter (`service/openrouter/videos.py`), resolved by
+  `agents/engines.resolve_video_run` on the image rules and a `video_model`
+  saved pick. `service/videos/caps.py` fits every request to what its model
+  makes (lengths, ratios, 1080p only on an 8 s Veo clip) and says so in
+  sentences the agent relays. The rule images do not need: **a clip takes
+  minutes and costs dollars**, so `generate_video` holds no DB connection while
+  it waits, bills each clip as a `media`-scope `TOKEN_USAGE` (Veo from
+  `VIDEO_PRICE_PER_SECOND`, Seedance from the cost OpenRouter reports), and the
+  content runner caps it at three a turn (`RunLimits.per_tool_run_limits`).
+  A clip is a `content_assets` row with a `video/*` type; `content_posts.video`
+  names the take that publishes (`agents/content/video.py`), and publishing a
+  video post sends that file alone.
+
   Two consequences, stated rather than discovered later. **Content on Claude now
   needs an API key** — `routes/content.py` refuses the subscription credential with
   the same 402 the browser already handles. And **the model only sees the images it

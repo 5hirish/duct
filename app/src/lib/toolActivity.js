@@ -40,6 +40,7 @@ export const ACTIVITY_TOOLS = Object.freeze({
   FetchPages: ActivityKind.WEB_FETCH,
   generate_image: ActivityKind.IMAGE,
   edit_image: ActivityKind.IMAGE,
+  generate_video: ActivityKind.VIDEO,
   render_slide: ActivityKind.SLIDE,
   task: ActivityKind.SUBAGENT,
   SearchMemory: ActivityKind.MEMORY,
@@ -93,6 +94,15 @@ export function contextActivity(data, id = "") {
   };
 }
 
+/** Resolve the media paths a card carries (`images`, `videos`) against the
+ *  API origin, the way every other client of the media routes does. */
+function withMediaUrls(meta) {
+  const out = { ...meta };
+  if (Array.isArray(meta.images)) out.images = meta.images.map(mediaUrl);
+  if (Array.isArray(meta.videos)) out.videos = meta.videos.map(mediaUrl);
+  return out;
+}
+
 /** A live event as the transcript row. Unknown kinds are dropped, not guessed
  *  at: an app deployed behind the backend should stay quiet about a card it
  *  cannot draw, the way it does for an unknown step id. */
@@ -113,7 +123,7 @@ export function activityFromEvent(event) {
     // (`/uploads/…`), and the API that serves it is not the origin the app is
     // on. A component that took the raw path would render a broken image on
     // the desktop shell, whose API is a loopback port.
-    meta: Array.isArray(meta.images) ? { ...meta, images: meta.images.map(mediaUrl) } : meta,
+    meta: withMediaUrls(meta),
     error: event.error || "",
     reason: event.reason || "",
   };
@@ -281,6 +291,21 @@ function replayRow({ tool, id, args, env, raw, isError }) {
       status: images.length && !isError ? StepStatus.SUCCESS : StepStatus.ERROR,
       title: args.prompt || "",
       meta: { images, model: env?.model || "", attached_to: env?.attached_to || "" },
+    };
+  }
+  if (kind === ActivityKind.VIDEO) {
+    const url = env?.url || "";
+    return {
+      ...base,
+      status: url && !isError ? StepStatus.SUCCESS : StepStatus.ERROR,
+      title: args.prompt || "",
+      meta: {
+        videos: url ? [mediaUrl(url)] : [],
+        model: env?.model || "",
+        duration_seconds: Number.isInteger(env?.duration_seconds) ? env.duration_seconds : null,
+        cost_usd: typeof env?.cost_usd === "number" ? env.cost_usd : null,
+      },
+      error: url && !isError ? "" : String(env?.message || ""),
     };
   }
   if (kind === ActivityKind.SLIDE) {

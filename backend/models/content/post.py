@@ -134,6 +134,12 @@ class ContentPost(SQLModel, table=True):
     # clone's FIT × PROOF call. None for a post that was not cloned. Written
     # by submit_post_draft only; see agents/content/schema.clone_source.
     clone_source: dict | None = Field(default=None, sa_column=Column(json_column(), nullable=True))
+    # The clip a video post publishes (issue #284): which asset, where it
+    # lives, and how it was made — agents/content/video.cut_of. None until the
+    # agent makes one. Every take stays a content_assets row with a video/*
+    # type; this names the chosen one. Not the video_url / video_asset_id
+    # columns a June branch left in one database: those names are taken there.
+    video: dict | None = Field(default=None, sa_column=Column(json_column(), nullable=True))
 
     created_at: datetime = Field(
         default_factory=utcnow,
