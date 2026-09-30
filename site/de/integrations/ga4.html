@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>GA4 KI-Analyst: warum sich die Zahlen bewegten | Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/integrations/ga4"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/ga4"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/ga4"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/ga4"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/ga4"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/ga4"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/ga4"/>
+<meta property="og:locale" content="de_DE"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct liest GA4 neben Search Console, deinen Anzeigen und Stripe und beantwortet, warum sich die Zahlen bewegten. Es kann auch Schlüsselereignisse und Zielgruppen hinzufügen, mit deiner Freigabe."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/integrations/ga4"/>
+<meta property="og:title" content="GA4 KI-Analyst: warum sich die Zahlen bewegten"/>
+<meta property="og:description" content="Frage GA4, warum Anmeldungen zurückgingen, und erhalte eine Antwort, die auch Search Console, deine Anzeigen und Stripe liest, mit der Lösung nur einen Klick entfernt."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-ga4.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="GA4 KI-Analyst: warum sich die Zahlen bewegten"/>
+<meta name="twitter:description" content="GA4 gelesen neben Search Console, Anzeigen und Stripe: die Ursache, nicht ein weiteres Dashboard."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-ga4.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"GA4 KI-Analyst: warum sich die Zahlen bewegten","url":"https://getduct.ai/de/integrations/ga4","description":"Duct liest GA4 neben Search Console, deinen Anzeigen und Stripe und beantwortet, warum sich die Zahlen bewegten. Es kann auch Schlüsselereignisse und Zielgruppen hinzufügen, mit deiner Freigabe.","about":{"@type":"SoftwareApplication","name":"Google Analytics 4"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"de","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https://getduct.ai/de/"},{"@type":"ListItem","position":2,"name":"Integrationen","item":"https://getduct.ai/de/integrations/"},{"@type":"ListItem","position":3,"name":"Google Analytics 4","item":"https://getduct.ai/de/integrations/ga4"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Was kann Duct in GA4 ändern?","acceptedAnswer":{"@type":"Answer","text":"Sechs: GA4 Schlüsselereignis registrieren, GA4 Schlüsselereignis entfernen, GA4 Zielgruppe erstellen, GA4 Zielgruppe archivieren, Google Ads Konto mit GA4 verknüpfen und Google Ads Konto von GA4 entknüpfen. Standardmäßig wartet jede auf dein Anwenden, und jede kann zurückgenommen werden."}},{"@type":"Question","name":"Benötigt Duct Bearbeitungszugriff auf GA4?","acceptedAnswer":{"@type":"Answer","text":"Nur für Änderungen. Antworten und Briefings nutzen Lesezugriff. Schlüsselereignisse, Zielgruppen und die Google Ads Verknüpfung benötigen Bearbeitungszugriff, den Duct beim Anmelden anfordert; eine Verbindung, die ohne ihn hergestellt wird, bleibt schreibgeschützt."}},{"@type":"Question","name":"Warum vergleicht Duct GA4 mit der Search Console?","acceptedAnswer":{"@type":"Answer","text":"Weil GA4 allein getäuscht werden kann. Bot-Traffic, der als organische Suche protokolliert wurde, war einmal wochenlang 40-mal höher als echte Search Console-Klicks, dann stoppte er, und jede Baseline in diesem Zeitraum liest sich als Einbruch. Zwei Quellen, die übereinstimmen sollten, sind die Kontrolle."}},{"@type":"Question","name":"Ist es kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. Was Geld kosten wird."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: GA4 has little tool-intent search of its own (&#x27;ga4 ai&#x27; 20/mo), so this page is for the evaluator who reached Duct another way and checks GA4 first. Hypothesis: naming the GA4 traps Duct already handles (internal traffic, bot bursts, renamed events) converts better than a feature list. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/de/integrations/">Integrationen</a><span aria-hidden="true">/</span><span aria-current="page">Google Analytics 4</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/googleanalytics.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>GA4, <em>mit dem Rest der Geschichte.</em></h1>
+<p class="hero-sub">Duct liest Google Analytics 4 neben Search Console, deinen Anzeigen und Stripe und beantwortet, warum sich eine Zahl bewegte. Wenn die Lösung in GA4 liegt, schlägt es sie vor und wartet auf dich.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="/de/integrations/">Alle Integrationen</a>
+</div>
+<ul class="ig-facts" aria-label="Auf einen Blick"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Mit Google anmelden</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Liest zwei Datensätze</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Sechs Arten von Änderungen</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Felder geprüft 24. Sep 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal has-change">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/><img src="/assets/icons/googlesearchconsole.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Organische Sitzungen um 40 % gestiegen, Search Console Klicks unverändert. Ein Bot-Ansturm, kein Wachstum.</span></div>
+<div class="ig-change"><img src="/assets/icons/googleanalytics.svg" width="22" height="22" alt=""/><span><b>sign_up als Schlüsselereignis registrieren</b><s>Betrifft 1 Property. Zurücknahme bereit.</s></span></div>
+<div class="ig-actions"><span class="ig-btn ig-btn-reject">Ablehnen</span><span class="ig-btn ig-btn-apply"><span class="ig-apply-idle">Anwenden</span><span class="ig-apply-done"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>Angewendet</span><svg class="ig-cursor" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<figcaption>Eine Beispielantwort. Deine wird aus deinen eigenen Konten gelesen.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/product-session.webp" srcset="/assets/media/product-session-768.webp 768w, /assets/media/product-session-1536.webp 1536w, /assets/media/product-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Ein Duct Lauf: Gefragt, warum die Aktivierung nach einem Android-Release sank, liest Duct GA4, Clarity und Stripe, findet die Sackgasse der Berechtigungen und schlägt zwei GA4-Schlüsselereignisse vor"/>
+<figcaption>Frage, warum die Aktivierung sank. Duct teilt GA4 auf beiden Seiten des Releases auf, findet die Sackgasse und schlägt die zwei Schlüsselereignisse vor, die die Lösung beweisen werden.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Fragen</p>
+<h2>Fragen, die du <em>einfach stellen kannst</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Warum sind die Anmeldungen letzte Woche gesunken?</p><span class="ig-q-joins"><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/googlesearchconsole.svg" width="18" height="18" alt=""/><span>GA4 + Google Ads + Search Console</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Welche Landingpages konvertieren organische Besucher, und welche lassen sie nur abspringen?</p><span class="ig-q-joins"><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="/assets/icons/googlesearchconsole.svg" width="18" height="18" alt=""/><span>GA4 + Search Console</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Blähen Mitarbeiter- und QA-Sitzungen meine Conversion-Rate auf?</p><span class="ig-q-joins"><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Werden die Nutzer, die GA4 als konvertiert zählt, als Umsatz ausgewiesen?</p><span class="ig-q-joins"><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>GA4 + Stripe</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Zugriff</p>
+<h2>Was es liest. <em>Was es ändern kann.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Was es liest</h3>
+<ul class="ig-reads">
+<li><b>GA4-Landingpages</b><span class="ig-fields"><span>Seite</span><span>Kanal</span><span>Sitzungen</span><span>Absprungrate</span><span>Engagement-Rate</span><span>durchschnittliche Sitzungsdauer</span><span>Conversions</span><span>Umsatz</span></span></li>
+<li><b>GA4-Conversion-Pfade</b><span class="ig-fields"><span>Quelle / Medium</span><span>Kanalgruppe</span><span>Conversions</span><span>Umsatz</span><span>Sitzungen</span></span></li>
+</ul>
+<p class="ig-note">Google Analytics Data API (ga4-data-v1beta) · geprüfte Felder 24. Sep 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/catalog/ga4.py" rel="noopener">Quelle lesen</a></p>
+</div>
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Was es ändern kann</h3>
+<ul class="ig-ops">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">GA4 Schlüsselereignis registrieren</span><span class="ig-badges"><span class="ig-badge is-auto">Kann sich im unterstützten Modus selbst anwenden</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">GA4 Schlüsselereignis entfernen</span><span class="ig-badges"><span class="ig-badge is-warn">Wartet immer auf dich</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">GA4-Zielgruppe erstellen</span><span class="ig-badges"><span class="ig-badge is-auto">Kann sich im unterstützten Modus selbst anwenden</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">GA4-Zielgruppe archivieren</span><span class="ig-badges"><span class="ig-badge is-warn">Wartet immer auf dich</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Google Ads Konto mit GA4 verknüpfen</span><span class="ig-badges"></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">Google Ads Konto von GA4 entknüpfen</span><span class="ig-badges"><span class="ig-badge is-warn">Wartet immer auf dich</span></span></li>
+</ul>
+<p class="ig-note">Jede kann zurückgenommen werden. Standardmäßig wartet jede Änderung auf dein Anwenden: Sie kommt als Vorschau dessen, was sie betrifft, und landet im Aktivitätsprotokoll. <a href="/de/doctrine">Wie die Freigabe funktioniert</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Wissen</p>
+<h2>Was Duct bereits weiß <em>über GA4</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>GA4 zählt dein Team als Kunden.</h3><p>Standardmäßig filtert es keinen internen Traffic, sodass Mitarbeiter- und QA-Sitzungen in den Produktionszahlen landen. Bevor Duct einer Conversion-Anzahl vertraut, sucht es nach Nutzergruppen, die wie ein QA-Team aussehen.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Organisch wird mit der Search Console abgeglichen.</h3><p>Bot-Anstürme können 40-mal mehr organische Sitzungen protokollieren als Search Console-Klicks. Duct vergleicht die beiden, bevor es eine Woche als Einbruch oder Gewinn bezeichnet.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Ereignisnamen sind exakt.</h3><p>sign_up und signup sind zwei verschiedene Ereignisse, und eine Umbenennung setzt die alte Serie ohne Warnung auf Null. Duct prüft dies, bevor es Zeiträume vergleicht.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Neue Zielgruppen starten leer.</h3><p>Eine GA4-Zielgruppe sammelt Mitglieder nur ab dem Tag ihrer Erstellung. Duct sagt dies, wenn es eine vorschlägt.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/ga4.md" rel="noopener">Lies die GA4 Notizen, von denen Ducts Agent arbeitet <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Gemeinsam besser</p>
+<h2>Was GA4 antwortet <em>mit einem Partner</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/de/integrations/google-search-console"><span class="ig-pair-logos"><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googlesearchconsole.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Ist organisches Wachstum echt oder ein Bot-Ansturm?</span><span class="ig-pair-go">GA4 + Search Console <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/de/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Ist bezahlter Traffic getaggt und konvertiert er?</span><span class="ig-pair-go">GA4 + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/de/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Werden GA4-Conversions zu Umsatz?</span><span class="ig-pair-go">GA4 + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Einrichtung</p>
+<h2>GA4 verbinden <em>in drei Schritten</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>Öffne in Duct Verbindungen und wähle Google Analytics.</p></li>
+<li><span class="ig-step-n">2</span><p>Mit Google anmelden und Zugriff erlauben.</p></li>
+<li><span class="ig-step-n">3</span><p>Wähle die GA4 Property, die dieses Projekt liest.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Duct fragt nach Lesezugriff und Bearbeitungszugriff, wenn du dich anmeldest. Lesen nutzt Lesezugriff; Bearbeitungszugriff ist nur für die untenstehenden Änderungen, und jede davon wartet noch auf dein Anwenden.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schlüssel und Tokens werden verschlüsselt von Ducts gehosteter API gespeichert, niemals in deinem Browser, und du kannst eine Verbindung jederzeit entfernen. Ein Self-Host-Build speichert sie auf deiner eigenen Maschine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>GA4, <em>beantwortet</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Was kann Duct in GA4 ändern?</summary>
+<p class="faq-a">Sechs: GA4 Schlüsselereignis registrieren, GA4 Schlüsselereignis entfernen, GA4 Zielgruppe erstellen, GA4 Zielgruppe archivieren, Google Ads Konto mit GA4 verknüpfen und Google Ads Konto von GA4 entknüpfen. Standardmäßig wartet jede auf dein Anwenden, und jede kann zurückgenommen werden.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Benötigt Duct Bearbeitungszugriff auf GA4?</summary>
+<p class="faq-a">Nur für Änderungen. Antworten und Briefings nutzen Lesezugriff. Schlüsselereignisse, Zielgruppen und die Google Ads Verknüpfung benötigen Bearbeitungszugriff, den Duct beim Anmelden anfordert; eine Verbindung, die ohne ihn hergestellt wird, bleibt schreibgeschützt.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Warum vergleicht Duct GA4 mit der Search Console?</summary>
+<p class="faq-a">Weil GA4 allein getäuscht werden kann. Bot-Traffic, der als organische Suche protokolliert wurde, war einmal wochenlang 40-mal höher als echte Search Console-Klicks, dann stoppte er, und jede Baseline in diesem Zeitraum liest sich als Einbruch. Zwei Quellen, die übereinstimmen sollten, sind die Kontrolle.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ist es kostenlos?</summary>
+<p class="faq-a">Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. <a href="/de/open-source#pricing">Was Geld kosten wird</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/de/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

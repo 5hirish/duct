@@ -38,6 +38,7 @@ FETCHER_SOURCES = {
     "mixpanel": ["service/mixpanel/fetch.py"],
     "clarity": ["service/clarity/fetch.py"],
     "growthbook": ["service/growthbook/fetch.py"],
+    "github": ["service/github/fetch.py"],
 }
 
 CONNECTORS = sorted(FETCHER_SOURCES)

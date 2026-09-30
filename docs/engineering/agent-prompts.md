@@ -313,7 +313,7 @@ Fact: trial-to-paid sits at 11% and has not moved in three months.
 
 ## Growth Insights (`insights`)
 
-### System prompt · ~6,088 tokens
+### System prompt · ~6,381 tokens
 
 Cache-stable: identical for every account, so it is the shared prefix.
 
@@ -383,6 +383,11 @@ Read each entity's description before you use it. If its scope is narrower than 
   description="Source/channel path context for assisted-conversion analysis."
   fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
   sortable_by: conversions, total_revenue, sessions
+## Connector "github" (schema=1.0.0, api=github-rest-2022-11-28, last_audited=2026-09-28)
+- entity_id="github_work_events" label="GitHub Work Events"
+  description="What the project's repository shipped in the window, one row per event: releases, merged pull requests, closed issues, changed docs, then commits. Line a metric change up against merged_at and release times, not commit times, and a merge is not a deploy. File stats cover the newest commits only (all of them in a window of two days or less); the summary says how many."
+  fields: kind (dimension, values=['commit', 'pull_request', 'issue', 'release', 'docs_change']), at (dimension), ref (dimension), title (dimension), body (dimension), author (dimension), url (dimension), state (dimension), trailers (dimension), files_changed (metric, unit=count, agg=sum), additions (metric, unit=count, agg=sum), deletions (metric, unit=count, agg=sum)
+  sortable_by: at, additions, deletions
 ## Connector "google_ads" (schema=1.0.0, api=v23, last_audited=2026-08-29)
 - entity_id="campaign_performance" label="Campaign Performance"
   description="Per-campaign spend, clicks, impressions, conversions, conversion value, ROAS, CPA, and period comparison."
@@ -431,6 +436,7 @@ Read each entity's description before you use it. If its scope is narrower than 
 - `apple_ads` — Apple Search Ads — org-scoped endpoints, string money fields, v5 field renames.
 - `clarity` — Clarity — rage/dead clicks after the click, 10 API calls a day, 3-day window.
 - `ga4` — GA4 — key events vs conversions, internal traffic, and what the UI silently samples.
+- `github` — GitHub — merged is not deployed, commit dates are author-supplied, bots and squash merges.
 - `google_ads` — Google Ads — attribution windows, conversion double-counting, shared-account contamination.
 - `growthbook` — GrowthBook — 'running' is a setting not a signal; identity mismatch; sample minimums.
 - `gsc` — Search Console — anonymised queries, position averaging, and the 16-month limit.

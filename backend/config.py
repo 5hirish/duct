@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from functools import lru_cache
 from pathlib import Path
@@ -167,6 +168,20 @@ class Configs(BaseSettings):
     google_ads_login_customer_id: str = ""
     ga4_property_id: str = ""
     gsc_site_url: str = ""
+
+    # GitHub App — the one-click GitHub connection (service/github/app.py).
+    # All four or none: with any one missing the Connections page offers only
+    # the pasted fine-grained token, which is what a self-hosted install runs,
+    # because an App's private key cannot ship inside a public binary. The
+    # callback and setup URLs derive from api_public_url, so registering the
+    # App on GitHub is the only step outside this file.
+    github_app_slug: str = ""
+    github_app_client_id: str = ""
+    github_app_client_secret: str = ""
+    # PEM, with real newlines or literal "\n" escapes: a dotenv line and some
+    # dashboards cannot hold a multi-line value. A cut-short one is dropped
+    # (see the validator).
+    github_app_private_key: str = ""
 
     # Google Sign-In (user identity, separate from connector OAuth). If unset/empty, derived as
     # {api_public_url}/auth/signin/google/callback.
@@ -353,6 +368,22 @@ class Configs(BaseSettings):
     def _jwt_secret_strength(cls, v: str) -> str:
         if v and len(v) < 32:
             raise ValueError("JWT_SECRET must be at least 32 characters.")
+        return v
+
+    @field_validator("github_app_private_key", mode="after")
+    @classmethod
+    def _github_app_key_whole(cls, v: str) -> str:
+        # A PEM pasted across lines into a dotenv file keeps only its first line,
+        # and python-dotenv merely warns. Kept, that key lets people connect and
+        # then fails every pull; dropped, the App is off, GitHub falls back to the
+        # pasted token, and this line says why. Not a raise like JWT_SECRET's: an
+        # optional connector's typo should not take the whole API down.
+        if v and "-----END" not in v:
+            logging.getLogger(__name__).error(
+                "GITHUB_APP_PRIVATE_KEY is cut short, so the GitHub App is off. "
+                "Write the PEM on one line with \\n in place of each line break."
+            )
+            return ""
         return v
 
     @model_validator(mode="before")

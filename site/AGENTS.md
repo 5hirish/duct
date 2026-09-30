@@ -71,6 +71,9 @@ another port (the tests assume 8090).
 | `https://getduct.ai/for-organic-growth` | `site/for-organic-growth.html` |
 | `https://getduct.ai/for-paid-ads` | `site/for-paid-ads.html` |
 | `https://getduct.ai/doctrine` | `site/doctrine.html` |
+| `https://getduct.ai/compare` | `site/compare.html` (Duct beside Claude Cowork and n8n: a three-question finder, a job chart where each tool wins rows, and the full table folded; every cell dated and sourced) |
+| `https://getduct.ai/integrations/` | `site/integrations/index.html` (**generated**: every connector, grouped) |
+| `https://getduct.ai/integrations/<slug>` | `site/integrations/<slug>.html` (**generated** from the backend, see below) |
 | `https://getduct.ai/blog/` | `site/blog/index.html` |
 | `https://getduct.ai/blog/<slug>` | `site/blog/<slug>.html` (**generated**) |
 | `https://getduct.ai/blog/post?slug=SLUG` | `site/blog/post.html` (redirect shim, noindex) |
@@ -195,11 +198,17 @@ under 860px (`index.html` swaps the source before anything is fetched);
 | `site/blog/feed.xml` | RSS. Hand-maintained: add an `<item>` with every new post. CI fails if it is missing, empty, or carries an off-domain `<link>`. |
 | `site/changelog/feed.xml` | RSS for releases. Same hand-maintained rule: an `<item>` per release, `pubDate` in RFC 822. |
 | `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. Names the five languages and the prefix each lives under, and repeats the home page's FAQ word for word: a model answering "what is Duct" lifts a direct answer over prose, and one asked in German has no other signal that `/de/` exists. Edit its FAQ and the page's `<details>` together. |
-| `site/_headers` | `Link:` discovery headers, the RSS content type Cloudflare would otherwise get wrong, and a one-week `Cache-Control` for shots, art, cards, icons and post images (Pages revalidates everything on every view by default; `duct.css`/`duct.js` are deliberately left on that default because nothing versions their URLs). |
+| `site/_headers` | `Link:` discovery headers, the security headers (HSTS, CSP, framing and the rest, all on `/*`; the comment above that block says what the CSP leaves out and why), the RSS content type Cloudflare would otherwise get wrong, and a one-week `Cache-Control` for shots, art, cards, icons and post images (Pages revalidates everything on every view by default; `duct.css`/`duct.js` are deliberately left on that default because nothing versions their URLs). |
 
 JSON-LD is validated by `check-pages.py`: every `application/ld+json` block must
 parse and carry an `@type`. A malformed block is dropped silently by every
 consumer, so the page keeps rendering while its structured data is simply gone.
+Every top-level object carries `inLanguage` (a `Person` or `Organization` has
+no language; nested objects share their container's), and every page carries
+a `BreadcrumbList` except the five home pages (`index.html`, `<lang>/index.html`),
+`404.html` and the `blog/post.html` redirect shim. The entity types and the
+language list are read from `scripts/build_site_i18n.py`, so the check and the
+generator agree on both.
 
 The home page carries `SoftwareApplication` **and** `SoftwareSourceCode`. The
 second is what tells an answer engine the project is open source; the first
@@ -230,7 +239,9 @@ Every HTML page must have:
 - canonical
 - description, 140–160 characters; `<title>` at most 60. Google cuts both, and
   the German rendering runs a third longer than the English, so an English
-  description at the limit ships truncated in four languages.
+  description at the limit ships truncated in four languages. `check-pages.py`
+  warns on an English description outside the range but does not fail, since
+  the fix is a copy change and so a `make i18n` run.
 - robots
 - OG tags and Twitter tags, pointing at the page's own card in `assets/og/`
   (`node scripts/build_og_images.mjs` draws them all from its table; a new
@@ -241,11 +252,12 @@ Every HTML page must have:
   the other four; a page outside the generator's reach (blog, changelog)
   writes `en_US` by hand.
 - JSON-LD with `inLanguage` on every top-level object, and a `BreadcrumbList`
-  on every page below the root (`Home → page`, or `Home → Free tools → tool`).
-  Keep a block's strings identical to the page's visible text: the FAQPage
-  is rebuilt from the page's own `<details>`, and the generator translates
-  the block through the same catalogue entries, so a paraphrase in the JSON
-  is a second string to translate and a claim the page does not make.
+  on every page below the root (`Home → page`, or `Home → Free tools → tool`);
+  `check-pages.py` fails a page missing either. Keep a block's strings
+  identical to the page's visible text: the FAQPage is rebuilt from the
+  page's own `<details>`, and the generator translates the block through the
+  same catalogue entries, so a paraphrase in the JSON is a second string to
+  translate and a claim the page does not make.
 - shared stylesheet
 - `config.js` then `duct.js`
 - GTM noscript iframe immediately after `<body>`
@@ -336,6 +348,56 @@ clears it. A new calculator gets the call at the end of its script and
 placeholders that make a sensible example. Outputs carry no currency symbol
 (the inputs say "in your currency"). The results grid auto-fits, so any
 number of cards lays out. `check-pages.py` covers this folder.
+
+## Integrations (`integrations/`)
+
+A hub listing every connector and one page per connector, **generated** by
+`scripts/build_integrations.py` and never edited by hand. A connector page
+answers what an evaluator checks before installing (what Duct reads, what it
+can change, when a change waits for a person), and all three are read from
+the backend rather than restated, because the site once said thirteen
+connectors while HubSpot was still "Coming soon" in the app:
+
+| On the page | Read from |
+|---|---|
+| What it reads | the entity catalogue in `backend/agents/insights/catalog/`, or `reads` in the copy file for a connector without one |
+| What it can change | every `ExecutorSpec` in `backend/service/execution/*_exec.py`, with its rollback and destructive flags |
+| May self-apply in assisted mode | `AUTO_APPLY_ALLOWLIST` in `backend/service/execution/policy.py` |
+| How you sign in | `ConnectorMeta.oauth_scope` (a scope, or `None` for a pasted key) |
+| What Duct already knows | the connector's knowledge pack in `backend/agents/knowledge/`, in plain words, linked |
+| The session under the hero | `CONNECTOR_SESSIONS` in `app/src/lib/__fixtures__/solo-story.mjs`, shot by `scripts/shots/shoot.mjs` |
+
+Everything else (questions, the knowledge rules in plain words, setup, FAQ)
+is hand-written in `scripts/integrations/connectors.py`, whose docstring holds
+the editing rules: a claim about behaviour names the code that does it.
+
+Each page shows one mid-run session: the question that connector is the one
+to answer, its sources as logo rows, the brief, and the change set where Duct
+can act. The session is told from what the connector really reads (its
+fetcher and knowledge pack), so a page never shows an answer from data Duct
+cannot see; the generator fails on a page without its shot and variants.
+
+```bash
+node scripts/shots/shoot.mjs session-<slug>   # the session, into docs/assets/readme/
+cp docs/assets/readme/session-<slug>.webp site/assets/media/ && node scripts/build_media_variants.mjs
+node scripts/build_og_images.mjs              # a new page first gets its card (a row with `logo`)
+python3 scripts/build_integrations.py         # writes site/integrations/*.html
+python3 scripts/build_integrations.py --check # CI: stale page, unlisted connector, missing card or listing
+```
+
+`--check` also fails when the backend registers a connector the hub does not
+list, and when a page is missing from `sitemap.xml` or `llms.txt`.
+`backend.yml` runs the same check, so a backend PR that adds a field, an
+operation or a connector finds out on its own diff. The pages are
+translated like any English page (`integrations/*.html` is in the i18n
+generator's sources), and their layout is the `── INTEGRATIONS ──` block of
+`assets/duct.css`: one template makes every page, so, like the changelog, the
+rules live once rather than inline in each copy.
+
+A connector gets a page only when its copy is written; until then it is a card
+on the hub. No pair pages ("Stripe + Google Ads"): pair searches are near zero
+and a page per pair is the thin, scaled content search engines discount. No
+"{tool} MCP" wording until Duct ships an MCP server (#197).
 
 ## New changelog entry
 
@@ -430,6 +492,14 @@ JavaScript off the chips stay hidden and every post shows.
 an `<item>` in `site/blog/feed.xml`, and a line in `site/llms.txt`.
 `build_blog.py` fails, in both modes, until all three have it.
 
+**A post published somewhere else is shared, not copied**: a *link post* is a
+`posts/<slug>.md` with front matter only and `link:` set to the original's
+https address. It becomes a card on the index that goes there, marked with the
+other site's name, and nothing else: no page on getduct.ai (so no second copy
+for search engines to weigh against the first), no listings, no place in the
+previous/next links. It still needs its card from `build_og_images.mjs`, which
+is its cover on the index.
+
 A `[!youtube]` embed shows the video's thumbnail from a copy committed beside
 the post (`python3 scripts/build_blog.py --fetch-thumbnails` saves it once;
 the only network step, never run by `--check`), so a page view still sends
@@ -449,7 +519,17 @@ python3 scripts/build_site_i18n.py          # extract → site/i18n/<lang>.po, r
 python3 scripts/i18n/fill.py site/i18n/*.po # translate what is missing (model + glossary)
 python3 scripts/build_site_i18n.py          # render again with the new translations
 python3 scripts/build_site_i18n.py --check  # what CI runs: current and complete, or red
+python3 scripts/i18n/fill.py --check site/i18n/*.po  # CI too: every brand term kept
 ```
+
+**Brand and product names are never translated.** Duct, Content Studio, the
+Duct Doctrine, the maker's Ship with AI channel, every vendor and connector
+name: they stay in English, in Latin script, in all four languages. The list
+is `keep` in `scripts/i18n/glossary.json`; `fill.py` rejects a translation that
+drops one and `fill.py --check` fails CI on one already written. A new brand or
+product name on a page goes into `keep` in the same change. The rule exists
+because asking the model was not enough: "Ship with AI" shipped as "Envía con
+IA", "Mit KI liefern" and "AIで出荷".
 
 What the generator does to each page: translates every run of text and the
 attributes people read (`alt`, `title`, `placeholder`, the meta descriptions,
@@ -490,17 +570,17 @@ Rules that follow:
   choice is remembered in `localStorage` only.
 - **Not translated:** the blog and the changelog (content decisions, not
   chrome), `404.html` (Pages serves one 404 for every miss, so a localised
-  copy is unreachable), JSON-LD (English structured data on every language,
-  a known gap), and OG cards (the English image on every language).
+  copy is unreachable), and OG cards (the English image on every language).
 - The catalogue format is gettext PO, one file per language under
   `site/i18n/`, shared with the app's tooling in `scripts/i18n/`. A string
   that leaves the pages keeps its translation marked obsolete (`#~`) so it
   is not paid for twice when it comes back.
 
 `check-pages.py` runs on the generated trees too, so a localised page is held
-to the same `<head>` checklist as an English one. `tests/e2e/site-i18n.spec.js`
-checks the URLs, `lang`, the alternates in both directions, the translated
-partials, and that the switcher keeps the page.
+to the same `<head>` checklist and JSON-LD rules as an English one; only the
+description length warning is left to the English source.
+`tests/e2e/site-i18n.spec.js` checks the URLs, `lang`, the alternates in both
+directions, the translated partials, and that the switcher keeps the page.
 
 ## Deploy
 
@@ -537,3 +617,8 @@ empty project and exits 0.
   `tests/e2e/consent.spec.js` covers this; it runs against `localtest.me`
   because the gate deliberately does nothing on localhost.
 - Do not put page-specific styles into `site/assets/duct.css`; use an inline `<style>` block when needed.
+- **Do not add a `<form>` that posts off-site, an `<object>` or `<embed>`, a
+  `<base>`, or a page meant to be framed elsewhere without changing the CSP in
+  `_headers` in the same change.** The policy blocks all four. Neither
+  `dev_server.py` nor the e2e suite applies `_headers`, and only `main`
+  deploys, so nothing before production would show you the violation.

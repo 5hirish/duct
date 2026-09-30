@@ -130,6 +130,18 @@ def register_session(session: BaseAgentSession) -> BaseAgentSession:
     return session
 
 
+def live_session_count(user_id: Any) -> int:
+    """How many registered sessions belong to ``user_id``.
+
+    Ownership is the ``user_id`` routes/agents.py stamps at creation. A session
+    without one — the legacy content streams, the anonymous teaser — belongs to
+    nobody and is never counted, and neither is anything for a None user.
+    """
+    if user_id is None:
+        return 0
+    return sum(1 for s in list(_sessions.values()) if getattr(s, "user_id", None) == user_id)
+
+
 def touch_session(session: BaseAgentSession | None) -> None:
     """Mark a session as active *now*. Called whenever a live SSE consumer reads
     a frame (data or keep-alive ping) or the user sends a message, so the stale

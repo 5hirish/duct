@@ -41,6 +41,7 @@ from db.session import init_db
 import models  # noqa: F401 - registers SQLModel metadata
 from routes.namespace import router as api_router
 from utils.openapi_docs_auth import OpenapiDocsBasicAuthMiddleware
+from utils.security_headers import SecurityHeadersMiddleware
 
 _cfg = get_configs()
 
@@ -361,6 +362,9 @@ app = FastAPI(
 
 app.add_middleware(CORSMiddleware, **cors_kwargs(get_configs()))
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
+# Outside CORS and the docs gate, so a preflight answer and a docs 401 carry
+# the headers too; inside the access log, which stays outermost for timing.
+app.add_middleware(SecurityHeadersMiddleware)
 # Added last → outermost, so the timing spans CORS + auth + handler.
 app.add_middleware(AccessLogMiddleware)
 

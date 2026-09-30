@@ -47,6 +47,7 @@ import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
+import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
 import ProviderCard from "@/components/connections/ProviderCard";
 import { LOGOS } from "@/components/connections/logos";
 import { PROVIDERS } from "@/lib/providerKeys";
@@ -1144,6 +1145,52 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "tile-monochrome-marks",
+    state: "one-colour marks, connected and not",
+    group: "ConnectorTile",
+    title: "Marks drawn in currentColor",
+    note: "GitHub and OpenAI Ads ship no logo file: each mark is one colour, and an <img> of it would sit black on the dark tile. Open this dark and check both follow the tile's ink at the same weight as the file logos beside them.",
+    render: () => (
+      <div className="conn-grid">
+        <ConnectorTile
+          logo={LOGOS.github}
+          title="GitHub"
+          description="Merged pull requests, releases, closed issues and doc changes, by date."
+          tone="on"
+          status="Connected — acme/app"
+          storage={STORAGE_CLOUD}
+          onClick={() => {}}
+        />
+        <ConnectorTile
+          logo={LOGOS.openai_ads}
+          title="OpenAI Ads"
+          description="Impressions, clicks and spend. Conversions stay in Ads Manager."
+          tone="off"
+          status="Not connected"
+          storage={STORAGE_NONE}
+          onClick={() => {}}
+        />
+        <ConnectorTile
+          logo={LOGOS.stripe}
+          title="Stripe"
+          description="Settled revenue, subscriptions, refunds and payment outcomes."
+          tone="off"
+          status="Not connected"
+          storage={STORAGE_NONE}
+          onClick={() => {}}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "manual-card-one-click",
+    state: "GitHub App available, not connected and connected",
+    group: "ManualConnectorCard",
+    title: "A sign-in above the token form",
+    note: "Open each tile. With a GitHub App on the server the dialog leads with Connect GitHub and folds the token form behind \u201cUse a token instead\u201d. Connected, the button becomes Refresh from GitHub with the repository link beside it, and \u201cAdd another account\u201d is gone: more repositories come from GitHub\u2019s own page, not a second token. Press Connect: the preview answers the way the desktop hand-off does, so the waiting line appears under the button.",
+    render: () => <OneClickCardScene />,
   },
   {
     id: "provider-key-dialog",
@@ -2325,6 +2372,62 @@ function StoryMemoryScene() {
   return (
     <div style={{ maxWidth: 880, padding: 24 }}>
       <MemoryTimeline api={api} kinds={MEMORY_KINDS} defaultKind="goal" />
+    </div>
+  );
+}
+
+// The GitHub card as the Connections page builds it when the server has a
+// GitHub App. onStart resolves "browser", which is what the desktop shell's
+// hand-off to the system browser returns, so the waiting copy is visible.
+function OneClickCardScene() {
+  const oneClick = {
+    label: "Connect GitHub",
+    againLabel: "Refresh from GitHub",
+    blurb: "Choose the repositories on GitHub. Duct gets read-only access to those and nothing else.",
+    waiting: "Finish on GitHub in your browser. Your repositories appear here when you come back.",
+    onStart: () => new Promise((resolve) => setTimeout(() => resolve("browser"), 400)),
+    manageUrl: "https://github.com/apps/duct/installations/select_target",
+    manageLabel: "Choose repositories on GitHub",
+    tokenLabel: "Use a token instead",
+  };
+  const fields = [
+    {
+      key: "token",
+      label: "Fine-grained personal access token",
+      placeholder: "github_pat_…",
+      secret: true,
+      hint: "Choose \u201cOnly select repositories\u201d, then read-only access to Contents, Pull requests, Issues and Metadata.",
+    },
+  ];
+  const row = (id, name) => ({
+    id,
+    connector_type: "github",
+    account_id: name,
+    account_name: name,
+    storage: "cloud",
+    residency: "server",
+  });
+  const common = {
+    type: "github",
+    title: "GitHub",
+    description: "Merged pull requests, releases, closed issues and doc changes, by date.",
+    logo: LOGOS.github,
+    fields,
+    accountField: "repo",
+    docsUrl: "https://github.com/settings/personal-access-tokens/new",
+    docsLabel: "Create a fine-grained token (GitHub settings)",
+    signedIn: true,
+    oneClick,
+    onSaved: async () => {},
+    onRemoveRow: async () => {},
+  };
+  return (
+    <div className="conn-grid">
+      <ManualConnectorCard {...common} serverRowList={[]} />
+      <ManualConnectorCard
+        {...common}
+        serverRowList={[row("r1", "acme/app"), row("r2", "acme/site")]}
+      />
     </div>
   );
 }

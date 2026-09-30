@@ -347,14 +347,16 @@ JSX, or a dependency into `site/`.
 
 Most of what governs a page here is invariants enforced by
 `.github/scripts/check-pages.py` in CI — the `<head>` checklist, canonical
-form, asset order, GTM placement — and they live in
-[`site/AGENTS.md`](site/AGENTS.md). Read that first. What CI cannot check:
+form, asset order, GTM placement, `inLanguage` on every top-level JSON-LD
+object and a `BreadcrumbList` on every page below a home page — and they live
+in [`site/AGENTS.md`](site/AGENTS.md). Read that first. The same script warns,
+without failing, when an English `<meta name="description">` falls outside
+140–160 characters. What CI cannot check:
 
-- `<meta name="description">` is 140–160 characters; `og:description` and
-  `twitter:description` 120–140.
-- Every page carries JSON-LD — `WebPage` for a landing page, `CollectionPage`
-  for the blog index, `BlogPosting` for a post (written by `build_blog.py`) — with `inLanguage` on each
-  top-level object, and a `BreadcrumbList` on every page below the root.
+- `og:description` and `twitter:description` are 120–140 characters.
+- Every page carries the JSON-LD type that fits it — `WebPage` for a landing
+  page, `CollectionPage` for the blog index, `BlogPosting` for a post
+  (written by `build_blog.py`).
 - Page-specific CSS goes in an inline `<style>` at the end of `<head>`, never
   into `assets/duct.css` — that file is shared by every page.
 - JavaScript stays vanilla and conservative. `config.js` loads before
@@ -386,23 +388,19 @@ already touches the line, and shrink this list in the same PR.
 - **`block_type` is a `Literal[...]` on the backend and a bare `switch` in
   `InsightBlock.jsx`** — neither side has a named constant, so the ten-way
   contract exists only as spelling.
-- **`"audit_seo"` appears as a bare literal in five frontend files** while
+- **`"audit_seo"` appears as a bare literal in three frontend files** while
   its siblings have constants (`AGENT_TYPE`, `INSIGHTS_AGENT`) and the
   backend has `AgentType.SEO_AUDIT`.
-- **Three `lib/*Api.js` modules re-implement `authedRequest`** —
-  `executionApi.js`, `memoryApi.js`, `membersApi.js` are near-byte-identical
-  copies of the helper that `deskApi.js` / `connectorsApi.js` /
-  `artifactsApi.js` correctly import.
+- **`lib/membersApi.js` re-implements `authedRequest`** — its own `fetch`
+  wrapper, kept for per-route error wording, where every other `lib/*Api.js`
+  imports the helper (`executionApi.js` only prefixes the path).
 - **`utils/dates.utcnow()` is only ~54% adopted** — `routes/content.py` alone
   has 12 direct `datetime.now(timezone.utc)` calls. The substance holds
   (there is not one naive datetime in the tree — keep it that way), but the
   helper is the named home; use it in new code and switch touched lines.
 - **A handful of bare `except Exception: pass` with no reason** —
-  `service/crawl/extractor.py`, `agents/core/session.py`,
-  `utils/helpers.py`. Broad catches are fine; unexplained ones are not.
-- **`utils/helpers.py` misses three conventions at once** (no module
-  docstring, no `from __future__`, an unexplained bare except). Do not copy
-  it; fix it when touched.
+  `service/crawl/extractor.py`, `agents/core/session.py`. Broad catches are
+  fine; unexplained ones are not.
 - **`lib/api.js` predates the error convention** — it throws from raw
   response text and never attaches `.status`. New code follows the
   `authFetch.js` shape; migrate `api.js` call paths as they are touched.

@@ -109,6 +109,7 @@ After the memo, add a **short** section for implementers: **what layers exist**,
 | Generate pipeline | Fetch, normalize, `UnifiedReport.briefs` | `backend/routes/generate.py`; pattern under `backend/service/google/` |
 | Typed brief contract | JSON shape consumed by the app | e.g. `backend/service/google/schema.py` for Ads |
 | App surfaces | Connections UI, generate flow, report icons | `app/src/app/(app)/connections/page.jsx`, `app/src/app/(app)/generate/page.jsx`, `app/src/lib/api.js`, `app/src/components/ReportsList.jsx` |
+| Site listing | Hub card on getduct.ai/integrations, and a page once its copy is written | `scripts/integrations/connectors.py`; `scripts/build_integrations.py --check` fails in CI until the connector is listed |
 
 **Template rule:** The research memo drives whether you reuse a Google-family OAuth stack, implement `list_accounts`, add a new `briefs.<connector_id>` shape, and extend `/api/generate`. **No code changes** are implied until Phase A is approved.
 

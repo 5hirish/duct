@@ -101,8 +101,24 @@ def test_root_and_openapi_when_expose_docs_enabled():
         "openapi": "/openapi.json",
         "docs": "/docs",
     }
-    assert client.get("/docs").status_code == 200
+    docs = client.get("/docs")
+    assert docs.status_code == 200
+    # Swagger UI loads from a CDN, so the docs page must not get default-src 'none'.
+    assert docs.headers["content-security-policy"] == "frame-ancestors 'none'"
     assert client.get("/openapi.json").status_code == 200
+
+
+def test_security_headers_are_wired_into_the_app(server_client):
+    """On a JSON route and an OAuth redirect, beside the request id."""
+    for res in (
+        server_client.get("/health"),
+        server_client.get("/auth/connectors/ga4/oauth/authorize", follow_redirects=False),
+    ):
+        assert res.headers["x-content-type-options"] == "nosniff"
+        assert res.headers["x-frame-options"] == "DENY"
+        assert res.headers["referrer-policy"] == "no-referrer"
+        assert res.headers["content-security-policy"] == "default-src 'none'; frame-ancestors 'none'"
+        assert res.headers["x-request-id"]
 
 
 def test_duct_prefixed_openapi_basic_auth_env_names():

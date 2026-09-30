@@ -162,6 +162,10 @@ msgstr "{count, plural, one {# solución} other {# soluciones}}"
 msgid "{count, plural, one {# post} other {# posts}}"
 msgstr "{count, plural, one {# publicación} other {# publicaciones}}"
 
+#: src/app/(app)/connections/page.jsx
+msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
+msgstr "{count, plural, one {GitHub conectado: # repositorio.} other {GitHub conectado: # repositorios.}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, one {# página} other {# páginas}}"
@@ -377,6 +381,10 @@ msgstr "{newCount} nuevos, {resolvedCount} resueltos"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "{notesLeft, plural, one {# character left} other {# characters left}}"
 msgstr "{notesLeft, plural, one {# carácter restante} other {# caracteres restantes}}"
+
+#: src/app/(app)/connections/page.jsx
+msgid "{omitted, plural, one {# more was left out; choose specific repositories on GitHub to reach it.} other {# more were left out; choose specific repositories on GitHub to reach them.}}"
+msgstr "{omitted, plural, one {# más quedó fuera; elige repositorios concretos en GitHub para incluirlo.} other {# más quedaron fuera; elige repositorios concretos en GitHub para incluirlos.}}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{oppCount} Opp"
@@ -1815,6 +1823,10 @@ msgstr "Comprobando tu invitación…"
 msgid "Checking…"
 msgstr "Comprobando…"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Choose \"Only select repositories\", then read-only access to Contents, Pull requests, Issues and Metadata. Duct only ever reads."
+msgstr "Elige \"Only select repositories\" y después acceso de solo lectura a Contents, Pull requests, Issues y Metadata. Duct solo lee."
+
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Choose {entity}"
 msgstr "Elige {entity}"
@@ -1826,6 +1838,14 @@ msgstr "Elige {entity} para {projectName}"
 #: src/components/models/ModelPicker.jsx
 msgid "Choose a model"
 msgstr "Elige un modelo"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Choose repositories on GitHub"
+msgstr "Elegir repositorios en GitHub"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Choose the repositories on GitHub. Duct gets read-only access to those and nothing else."
+msgstr "Elige los repositorios en GitHub. Duct obtiene acceso de solo lectura a ellos y a nada más."
 
 #: src/components/content/AccountsTab.jsx
 msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
@@ -2014,6 +2034,10 @@ msgstr "Conecta una cuenta de TikTok, Instagram o YouTube en PostBridge, luego a
 msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
 msgstr "Conecta una cuenta una vez; se guarda para toda tu cuenta. Abre una tarjeta para configurarla y elegir de cuáles de tus cuentas <0>{projectName}</0> leerá."
 
+#: src/app/(app)/connections/page.jsx
+msgid "Connect GitHub"
+msgstr "Conectar GitHub"
+
 #: src/components/content/AccountsTab.jsx
 msgid "Connect in PostBridge →"
 msgstr "Conectar en PostBridge →"
@@ -2112,7 +2136,7 @@ msgstr "Pilares de contenido"
 #: src/lib/navigation.js
 #: src/lib/usageApi.js
 msgid "Content Studio"
-msgstr "Estudio de Contenido"
+msgstr "Content Studio"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Context"
@@ -2298,6 +2322,10 @@ msgstr "Rastrea tu sitio, detecta problemas y obtén un informe generado por IA 
 #: src/lib/auditEvents.js
 msgid "Crawling pages"
 msgstr "Rastreo de páginas"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Create a fine-grained token (GitHub settings)"
+msgstr "Crear un token fine-grained (ajustes de GitHub)"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Create a restricted key (Stripe dashboard)"
@@ -3099,6 +3127,10 @@ msgstr "Buscando una fuente…"
 msgid "Findings by Category"
 msgstr "Hallazgos por categoría"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Fine-grained personal access token"
+msgstr "Token de acceso personal (fine-grained)"
+
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Finish in your browser — Google won’t sign you in inside an app window. This card updates on its own when you’re done. <0>Open it again</0>"
 msgstr "Termina en tu navegador — Google no te iniciará sesión dentro de una ventana de la app. Esta tarjeta se actualiza sola cuando termines. <0>Ábrela de nuevo</0>"
@@ -3106,6 +3138,10 @@ msgstr "Termina en tu navegador — Google no te iniciará sesión dentro de una
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Finish in your browser…"
 msgstr "Termina en tu navegador…"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Finish on GitHub in your browser. Your repositories appear here when you come back."
+msgstr "Termina en GitHub desde tu navegador. Tus repositorios aparecerán aquí cuando vuelvas."
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Finish signing in in your browser, then come back and press “I’ve connected it”."
@@ -3289,6 +3325,34 @@ msgstr "Obtén la app de escritorio →"
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Get the full audit →"
 msgstr "Obtén la auditoría completa →"
+
+#: src/components/connections/logos.jsx
+msgid "GitHub"
+msgstr "GitHub"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub app installed. Finishing the connection…"
+msgstr "App de GitHub instalada. Terminando la conexión…"
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub declined the exchange, which is almost always temporary. Try again from the app."
+msgstr "GitHub rechazó el intercambio, lo cual es casi siempre temporal. Intenta de nuevo desde la app."
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub didn't complete the connection"
+msgstr "GitHub no completó la conexión"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub is connected, but it granted no repositories you can read. Open the GitHub card and choose repositories on GitHub."
+msgstr "GitHub está conectado, pero no concedió acceso a ningún repositorio que puedas leer. Abre la tarjeta de GitHub y elige repositorios en GitHub."
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub is installed, but finishing the connection failed. Open the GitHub card and connect again."
+msgstr "GitHub está instalado, pero no se pudo terminar la conexión. Abre la tarjeta de GitHub y vuelve a conectar."
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub isn't set up on this server"
+msgstr "GitHub no está configurado en este servidor"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
@@ -3513,6 +3577,10 @@ msgstr "Ocultar clave"
 msgid "Hide superseded"
 msgstr "Ocultar reemplazados"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Hide the token form"
+msgstr "Ocultar el formulario del token"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "High"
 msgstr "Alto"
@@ -3681,8 +3749,12 @@ msgid "Include {name}"
 msgstr "Incluir {name}"
 
 #: src/components/execution/ChangeSetCard.jsx
-msgid "Includes a pause. It can be rolled back from here."
-msgstr "Incluye una pausa. Se puede revertir desde aquí."
+msgid "Includes a change that always waits for you. It can be rolled back from here."
+msgstr "Incluye un cambio que siempre te espera. Se puede revertir desde aquí."
+
+#: src/components/execution/ChangeSetCard.jsx
+#~ msgid "Includes a pause. It can be rolled back from here."
+#~ msgstr "Incluye una pausa. Se puede revertir desde aquí."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -4238,6 +4310,10 @@ msgstr "Tipo de memoria"
 #: src/app/(app)/projects/page.jsx
 msgid "Memory of {name}"
 msgstr "Memoria de {name}"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Merged pull requests, releases, closed issues and doc changes, by date."
+msgstr "Pull requests fusionados, versiones, issues cerrados y cambios en la documentación, por fecha."
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Mermaid render failed."
@@ -5899,6 +5975,10 @@ msgstr "Redirecciones"
 msgid "Refresh"
 msgstr "Actualizar"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Refresh from GitHub"
+msgstr "Actualizar desde GitHub"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "Refresh from PostBridge"
 msgstr "Actualizar desde PostBridge"
@@ -6843,6 +6923,14 @@ msgstr "Inicia sesión como <0>{invitedEmail}</0> para aceptar. Crearemos tu cue
 msgid "Sign in first — credentials are stored encrypted server-side."
 msgstr "Inicia sesión primero: las credenciales se almacenan cifradas en el servidor."
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Sign in first — the connection is saved to your account."
+msgstr "Inicia sesión primero: la conexión se guarda en tu cuenta."
+
+#: src/app/(app)/connections/page.jsx
+msgid "Sign in to finish connecting GitHub."
+msgstr "Inicia sesión para terminar de conectar GitHub."
+
 #: src/components/AppSidebar.jsx
 msgid "Sign in to keep this"
 msgstr "Inicia sesión para guardar esto"
@@ -7364,6 +7452,10 @@ msgstr "Eso no parece un enlace."
 msgid "That format could not be deleted — it is still in the library."
 msgstr "Ese formato no pudo ser eliminado — todavía está en la biblioteca."
 
+#: src/app/(app)/connections/page.jsx
+msgid "That GitHub connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again."
+msgstr "Esa conexión con GitHub no se completó. El enlace dura dos minutos y solo sirve para la cuenta que la inició. Vuelve a conectar."
+
 #: src/app/(app)/execute/page.jsx
 msgid "That guardrail is still in place — removing it didn't go through."
 msgstr "Esa barrera de seguridad sigue en su lugar — no se pudo eliminar."
@@ -7850,6 +7942,10 @@ msgstr "Intentarlo de nuevo no ayudará: esta versión se lanzó sin sus credenc
 msgid "Trying again won't help — this build shipped without that connector's credentials."
 msgstr "Intentarlo de nuevo no ayudará: esta versión se lanzó sin las credenciales de ese conector."
 
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Trying again won't help. Connect GitHub with a fine-grained token from the GitHub card instead."
+msgstr "Volver a intentarlo no servirá. Conecta GitHub con un token fine-grained desde la tarjeta de GitHub."
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Turn off to audit a different business or competitor — only the fields below are used."
 msgstr "Desactiva para auditar un negocio o competidor diferente; solo se usan los campos siguientes."
@@ -7961,6 +8057,10 @@ msgstr "Usar el contexto de negocio de {projectName}"
 #: src/components/content/AccountsTab.jsx
 msgid "Use a different PostBridge key"
 msgstr "Usar otra clave de PostBridge"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Use a token instead"
+msgstr "Usar un token en su lugar"
 
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"

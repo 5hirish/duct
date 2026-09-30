@@ -1,6 +1,45 @@
 import { withSentryConfig } from "@sentry/nextjs/config";
 import { linguiMacroSwcPlugin } from "@lingui/swc-plugin/options";
 
+const DEV = process.env.NODE_ENV === "development";
+
+/**
+ * Security headers on every response the worker renders.
+ *
+ * The session JWT lives in localStorage and the desktop shell lets this origin
+ * read keychain-held provider keys, so script injection here is the expensive
+ * failure. This set is the part that cannot break a page. The part that would
+ * stop injection, a script-src, is not here: App Router hydrates with inline
+ * scripts, so a strict policy needs a per-request nonce from middleware, and a
+ * nonce makes every page render dynamically. That is its own change.
+ *
+ * Before tightening it, know that every srcDoc iframe (briefs, the audit
+ * report, slides) inherits this policy, so a directive added here also governs
+ * model-authored HTML. That is half of why object-src and base-uri are set.
+ * `/_next/static` and `public/` never reach the worker (Workers Static Assets
+ * serves them), so `public/_headers` carries their nosniff instead.
+ */
+const SECURITY_HEADERS = [
+  // HSTS is per host, not per port, and outlives the header. Browsers ignore it
+  // over http, but a dev server run over https would pin every localhost port
+  // to https for a year, the API and the site included.
+  ...(DEV ? [] : [{ key: "Strict-Transport-Security", value: "max-age=31536000" }]),
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), display-capture=()",
+  },
+  // `/preview` frames `/preview/frame` on this origin and exists only in dev
+  // (it 404s in a build). Nothing frames the app in production; the desktop
+  // shell loads it as a top-level window.
+  { key: "X-Frame-Options", value: DEV ? "SAMEORIGIN" : "DENY" },
+  {
+    key: "Content-Security-Policy",
+    value: `object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors ${DEV ? "'self'" : "'none'"}`,
+  },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -30,6 +69,7 @@ const nextConfig = {
    */
   async headers() {
     return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
       {
         source: "/:path*",
         missing: [{ type: "header", key: "next-router-prefetch" }],
@@ -40,7 +80,7 @@ const nextConfig = {
 };
 
 // Skip the Sentry build plugin in dev — it only matters for prod releases.
-export default process.env.NODE_ENV === "development"
+export default DEV
   ? nextConfig
   : withSentryConfig(nextConfig, {
       org: "alleviate-lab",
