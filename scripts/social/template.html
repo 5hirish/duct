@@ -1,184 +1,199 @@
 <!doctype html>
+<!--
+  The repository's social preview (Settings → Social preview), 1280×640.
+  Render with `node scripts/social/render.mjs`. Each site that unfurls the
+  link trims the edges its own way, so every word sits inside the 80px safe
+  frame GitHub's template asks for; only decoration (the tabs, the aqueduct)
+  runs past it. Numbers and names come from the story fixture the README shots and
+  the film use: the same week, the same campaign, the same €19.40.
+-->
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Duct social card</title>
+<meta charset="utf-8">
+<title>Duct social preview</title>
 <style>
-  /* Brand tokens, copied from site/assets/duct.css. Kept literal rather than
-     imported: this file is rendered by a headless browser from disk, and a
-     relative import that silently fails would produce an unstyled card that
-     still screenshots successfully. */
-  :root {
-    --orange: #FF5C00;
-    --navy: #0D0F1A;
-    --white: #ffffff;
-    --serif: Georgia, "Times New Roman", Times, serif;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  }
+:root {
+  --orange: #ff5c00;
+  --navy: #0d0f1a;
+  --ink: #0b111f;
+  --muted: #4d535f;
+  --border: #e6e4e1;
+  --primary: #3d53e5;
+  --success: #10883c;
+  --destructive: #c9000c;
+  --warning: #9a6500;
+  --serif: Georgia, "Times New Roman", Times, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1280px; height: 640px; overflow: hidden; background: var(--navy); }
+body { font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; position: relative; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+/* Light: one warm source behind the card, a cool rim top-left, grain over all. */
+.glow { position: absolute; inset: 0; background:
+  radial-gradient(520px 420px at 930px 330px, rgba(255, 92, 0, .30), transparent 70%),
+  radial-gradient(700px 500px at 1100px 700px, rgba(255, 92, 0, .16), transparent 70%),
+  radial-gradient(600px 400px at 0 0, rgba(61, 83, 229, .14), transparent 70%); }
+.grain { position: absolute; inset: 0; opacity: .07; mix-blend-mode: overlay; }
 
-  html, body { background: var(--navy); }
+/* ── The aqueduct: the site's .channel, scaled up, carrying the water home ── */
+.aqueduct { position: absolute; left: 0; right: 0; bottom: -6px; height: 96px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
 
-  .card {
-    position: relative;
-    width: var(--w);
-    height: var(--h);
-    background: var(--navy);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 40px;
-    padding: 68px 80px 64px;
-    font-family: var(--sans);
-    color: var(--white);
-  }
+/* ── Left column: what it is ── */
+.brand { position: absolute; left: 80px; top: 74px; display: flex; align-items: center; gap: 9px;
+  font-family: var(--serif); font-size: 38px; letter-spacing: -.01em; }
+.brand i { width: 15px; height: 15px; border-radius: 50%; background: var(--orange); display: block;
+  margin-top: 6px; box-shadow: 0 0 18px rgba(255, 92, 0, .8); }
+.tag { position: absolute; left: 80px; top: 170px; display: flex; align-items: center; gap: 12px;
+  font-size: 14px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.62); }
+.tag::before { content: ""; width: 26px; height: 3px; background: var(--orange); border-radius: 2px; }
+h1 { position: absolute; left: 78px; top: 200px; width: 600px; font-family: var(--serif); font-weight: 400;
+  font-size: 70px; line-height: 1.04; letter-spacing: -2px; }
+h1 em { display: block; color: var(--orange); letter-spacing: -1.5px; }
+.sub { position: absolute; left: 80px; top: 374px; width: 520px; font-size: 21px; line-height: 1.5;
+  color: rgba(255,255,255,.74); }
+.sub b { color: #fff; font-weight: 600; }
+.meta { position: absolute; left: 80px; top: 518px; display: flex; align-items: center; gap: 14px;
+  font-size: 17px; color: rgba(255,255,255,.62); }
+.meta .repo { display: inline-flex; align-items: center; gap: 9px; color: #fff; font-weight: 600; }
+.meta .repo svg { width: 22px; height: 22px; fill: #fff; }
+.meta .dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,.35); }
 
-  /* Warm bloom from the lower right, so the dense text at the left stays on
-     flat navy and keeps its contrast. */
-  .card::before {
-    content: "";
-    position: absolute;
-    right: -18%;
-    bottom: -46%;
-    width: 78%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 92, 0, .30) 0%, rgba(255, 92, 0, .10) 42%, transparent 68%);
-  }
+/* ── Right: five tabs that each say one thing, fanned behind the one answer ── */
+.tab { position: absolute; width: 236px; background: #fff; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 24px 50px rgba(0,0,0,.45); color: var(--ink); filter: brightness(.34) saturate(.7) blur(.6px); }
+.tab .bar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--border);
+  font-size: 11.5px; color: #6b6f82; white-space: nowrap; }
+.tab .bar img { width: 14px; height: 14px; }
+.tab .val { padding: 12px 14px 2px; font-size: 32px; font-weight: 650; letter-spacing: -.02em; }
+.tab .lbl { padding: 0 14px 13px; font-size: 11.5px; color: #6b6f82; white-space: nowrap; }
 
-  /* The pipe: three concentric arcs reading as flow converging on a point —
-     the product's actual claim, many sources into one answer. */
-  .arcs {
-    position: absolute;
-    right: -170px;
-    bottom: -170px;
-    width: 620px;
-    height: 620px;
-    opacity: .5;
-  }
-  .arcs circle { fill: none; stroke: var(--orange); }
+/* ── The answer ── */
+.say { position: absolute; left: 706px; top: 110px; width: 470px; padding: 14px 18px 15px;
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16); border-radius: 16px;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  font-size: 15.5px; line-height: 1.5; color: rgba(255,255,255,.92); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
+.say .who { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; font-family: var(--serif);
+  font-size: 15px; color: #fff; }
+.say .who i { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); display: block; margin-top: 2px; }
+.say .who span { font-family: var(--sans); font-size: 12px; color: rgba(255,255,255,.5); margin-left: 4px; }
+.say b { color: #fff; font-weight: 600; }
 
-  .row { position: relative; display: flex; align-items: center; gap: 16px; }
-
-  .mark {
-    width: 56px; height: 56px;
-    border-radius: 14px;
-    background: var(--white);
-    position: relative;
-    flex: none;
-  }
-  .mark span {
-    position: absolute;
-    left: 13px; top: 50%;
-    transform: translateY(-52%);
-    font-family: var(--serif);
-    font-size: 38px;
-    color: var(--navy);
-    line-height: 1;
-  }
-  .mark i {
-    position: absolute;
-    right: 9px; top: 50%;
-    transform: translateY(-50%);
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--orange);
-  }
-  .wordmark { font-family: var(--serif); font-size: 34px; letter-spacing: -.3px; }
-
-  .body { position: relative; }
-
-  h1 {
-    font-family: var(--serif);
-    font-size: var(--h1);
-    line-height: 1.06;
-    letter-spacing: -1.2px;
-    font-weight: 500;
-    /* No max-width: the copy carries its own <br>, and a ch-based cap silently
-       re-wraps on top of it — which orphaned "for" onto its own line. */
-    text-wrap: balance;
-  }
-  h1 em { font-style: normal; color: var(--orange); }
-
-  p {
-    margin-top: 24px;
-    font-size: var(--sub);
-    line-height: 1.45;
-    color: rgba(255, 255, 255, .68);
-    max-width: 52ch;
-    text-wrap: pretty;
-  }
-
-  .foot {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-  }
-
-  .sources { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .sources b {
-    font-weight: 500;
-    font-size: 17px;
-    color: rgba(255, 255, 255, .58);
-    border: 1px solid rgba(255, 255, 255, .17);
-    border-radius: 100px;
-    padding: 7px 16px;
-    white-space: nowrap;
-  }
-
-  .tag {
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--navy);
-    background: var(--orange);
-    border-radius: 100px;
-    padding: 9px 20px;
-    white-space: nowrap;
-  }
+.card { position: absolute; left: 706px; top: 246px; width: 494px; background: #fff; border-radius: 16px;
+  color: var(--ink); overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255,92,0,.55), 0 0 70px rgba(255,92,0,.35), 0 40px 80px rgba(0,0,0,.55); }
+.head { display: flex; gap: 12px; padding: 17px 18px 15px; align-items: flex-start; }
+.bolt { width: 36px; height: 36px; border-radius: 50%; background: #eef0fd; display: grid; place-items: center; flex-shrink: 0; }
+.bolt svg { width: 18px; height: 18px; stroke: var(--primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.head .t { flex: 1; min-width: 0; }
+.head h2 { font-size: 17px; font-weight: 650; letter-spacing: -.01em; line-height: 1.3; }
+.head p { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+.head p img { width: 13px; height: 13px; }
+.wait { padding: 4px 10px; border-radius: 99px; background: #fdf1dc; color: var(--warning); font-size: 11.5px;
+  font-weight: 600; white-space: nowrap; margin-left: auto; }
+.row { display: flex; gap: 12px; align-items: flex-start; padding: 13px 18px; border-top: 1px solid #efedea; }
+.row .b { width: 7px; height: 7px; border-radius: 50%; background: #c5c1bb; margin: 7px 0 0 3px; flex-shrink: 0; }
+.row .t { flex: 1; }
+.row h3 { font-size: 14.5px; font-weight: 500; }
+.row p { font-size: 12.5px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+.row p.warn { color: var(--warning); }
+.row p.warn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.out { padding: 3px 9px; border: 1px solid var(--border); border-radius: 99px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.foot { display: flex; align-items: center; gap: 16px; padding: 13px 18px; border-top: 1px solid #efedea; background: #fbfaf8; }
+.foot p { flex: 1; font-size: 12.5px; color: var(--muted); }
+.foot .rej { font-size: 14px; font-weight: 500; }
+.apply { position: relative; padding: 8px 18px; border-radius: 9px; background: var(--primary); color: #fff;
+  font-size: 14px; font-weight: 600; box-shadow: 0 0 0 4px rgba(61,83,229,.22); }
+.cursor { position: absolute; left: 44px; top: 18px; width: 22px; height: 22px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
 </style>
 </head>
 <body>
-  <div class="card" id="card">
-    <svg class="arcs" viewBox="0 0 620 620" aria-hidden="true">
-      <circle cx="310" cy="310" r="150" stroke-width="1.5" />
-      <circle cx="310" cy="310" r="228" stroke-width="1.5" opacity=".62" />
-      <circle cx="310" cy="310" r="306" stroke-width="1.5" opacity=".34" />
-    </svg>
+<div class="glow"></div>
+<svg class="grain" width="1280" height="640" aria-hidden="true">
+  <filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/></filter>
+  <rect width="100%" height="100%" filter="url(#n)"/>
+</svg>
 
-    <div class="row">
-      <div class="mark"><span>d</span><i></i></div>
-      <div class="wordmark">Duct</div>
-    </div>
+<svg class="aqueduct" viewBox="0 0 1280 96" preserveAspectRatio="none" aria-hidden="true">
+  <defs>
+    <pattern id="arch" width="100" height="96" patternUnits="userSpaceOnUse">
+      <path d="M0 8h100M0 20h100" stroke="rgba(255,255,255,.13)" stroke-width="2" fill="none"/>
+      <path d="M15 96V64a35 35 0 0 1 70 0V96" stroke="rgba(255,255,255,.08)" stroke-width="2" fill="none"/>
+    </pattern>
+    <linearGradient id="water" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1280" y2="0"><stop offset="0" stop-color="#ff5c00" stop-opacity=".35"/><stop offset=".7" stop-color="#ff5c00"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient>
+    <filter id="wg" x="-10%" y="-400%" width="120%" height="900%"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+  <rect width="1280" height="96" fill="url(#arch)"/>
+  <path d="M0 14h1280" stroke="url(#water)" stroke-width="5" stroke-dasharray="16 14" filter="url(#wg)"/>
+  <path d="M0 14h1280" stroke="url(#water)" stroke-width="2.5" stroke-dasharray="16 14"/>
+</svg>
 
-    <div class="body">
-      <h1 id="headline"></h1>
-      <p id="sub"></p>
-    </div>
+<!-- The tabs, each true and each useless alone (film scene 1). -->
+<div class="tab" style="left: 1010px; top: -40px; transform: rotate(6deg);">
+  <div class="bar"><img src="../../site/assets/icons/google-ads.svg" alt="">Google Ads · ROAS</div>
+  <div class="val" style="color: var(--success)">+14%</div>
+  <div class="lbl">vs last week · looks great</div>
+</div>
+<div class="tab" style="left: 1040px; top: 520px; transform: rotate(5deg);">
+  <div class="bar"><img src="../../site/assets/icons/stripe.svg" alt="">Stripe · MRR</div>
+  <div class="val">€18,400</div>
+  <div class="lbl">▲ 3.1% · says nothing yet</div>
+</div>
+<div class="tab" style="left: 640px; top: 548px; transform: rotate(-5deg);">
+  <div class="bar"><img src="../../site/assets/icons/clarity.svg" alt="">Clarity · Rage clicks</div>
+  <div class="val" style="color: var(--warning)">3 clusters</div>
+  <div class="lbl">all Android · why?</div>
+</div>
+<div class="tab" style="left: 600px; top: -46px; transform: rotate(-4deg);">
+  <div class="bar"><img src="../../site/assets/icons/googlesearchconsole.svg" alt="">Search Console · Impressions</div>
+  <div class="val" style="color: var(--success)">+23%</div>
+  <div class="lbl">organic is fine</div>
+</div>
 
-    <div class="foot">
-      <div class="sources" id="sources"></div>
-      <div class="tag" id="tag"></div>
+
+<div class="brand">duct<i></i></div>
+<div class="tag">Open-source AI marketing agent</div>
+<h1>ROAS is up 14%.<em>That’s the problem.</em></h1>
+<p class="sub">Duct reads <b>Google Ads, GA4, Stripe</b> and nine more tools at once, finds why the number moved, and hands you the fix to approve.</p>
+<div class="meta">
+  <span class="repo"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>5hirish/duct</span>
+  <i class="dot"></i><span>MIT</span>
+  <i class="dot"></i><span>Bring your own keys</span>
+</div>
+
+<div class="say">
+  <div class="who">duct<i></i><span>Insights · week of 8 Sep</span></div>
+  Performance Max is buying signups at <b>€19.40</b> who leave within a week. I’d pause it and keep brand search on.
+</div>
+
+<div class="card">
+  <div class="head">
+    <div class="bolt"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+    <div class="t">
+      <h2>Pause Performance Max, keep brand search</h2>
+      <p><img src="../../site/assets/icons/google-ads.svg" alt="">Google Ads · Solo · EU<span class="wait">Waiting for you</span></p>
     </div>
   </div>
-
-<script>
-  // Rendered by scripts/social/render.mjs, which sets these from the URL.
-  const q = new URLSearchParams(location.search);
-  const card = document.getElementById("card");
-  card.style.setProperty("--w", (q.get("w") || 1200) + "px");
-  card.style.setProperty("--h", (q.get("h") || 630) + "px");
-  card.style.setProperty("--h1", (q.get("h1") || 68) + "px");
-  card.style.setProperty("--sub", (q.get("subsize") || 25) + "px");
-
-  document.getElementById("headline").innerHTML = q.get("headline") || "";
-  document.getElementById("sub").textContent = q.get("sub") || "";
-  document.getElementById("tag").textContent = q.get("tag") || "";
-  document.getElementById("sources").innerHTML = (q.get("sources") || "")
-    .split("|").filter(Boolean).map((s) => "<b>" + s + "</b>").join("");
-</script>
+  <div class="row">
+    <i class="b"></i>
+    <div class="t"><h3>Pause PMax · Freelancers</h3>
+      <p class="warn"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>Spent €2,140 in the last 7 days</p></div>
+    <span class="out">Destructive</span>
+  </div>
+  <div class="row">
+    <i class="b"></i>
+    <div class="t"><h3>Raise Brand EU budget €40 → €60 a day</h3>
+      <p>Over the 25% guardrail · needs you</p></div>
+    <span class="out">Blocked</span>
+  </div>
+  <div class="foot">
+    <p>1 destructive, 1 blocked · both wait for you</p>
+    <span class="rej">Reject</span>
+    <span class="apply">Apply
+      <svg class="cursor" viewBox="0 0 24 24"><path d="M4 2.5v17.2l4.6-4.3 2.9 6.7 3-1.3-2.9-6.6h6.3z" fill="#0b111f" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </span>
+  </div>
+</div>
 </body>
 </html>
