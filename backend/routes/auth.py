@@ -11,9 +11,17 @@ from fastapi.responses import RedirectResponse
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
 from config import get_configs
-from service.auth_exchange import consume_connector_code, store_connector_code
+from service.auth_exchange import (
+    consume_connect_link_code,
+    consume_connector_code,
+    store_connector_code,
+    store_github_grant,
+)
 from service.connector_scopes import join_scopes, parse_scopes
 from service.connectors import get_connector, normalize_connector_id
+from service.github import GITHUB_CONNECTOR_ID
+from service.github import app as gh_app
+from service.github import client as gh
 from service.google.constants import (
     GA4_CONNECTOR_ID,
     GOOGLE_ADS_CONNECTOR_ID,
@@ -24,6 +32,7 @@ from service.google.oauth import create_google_oauth_flow
 from service.oauthstate import (
     cleanup_expired_states,
     consume_state_for_flows,
+    consume_state_full,
     save_state,
 )
 
@@ -56,6 +65,21 @@ CONNECTOR_TO_FLOW = {connector_id: flow for flow, (connector_id, _) in FLOW_TO_C
 GOOGLE_CONNECTOR_FLOWS = tuple(
     flow for base in FLOW_TO_CALLBACK for flow in (base, base + DESKTOP_FLOW_SUFFIX)
 )
+
+# GitHub App (service/github/app.py has the whole flow). Three legs, each with
+# a `_desktop` twin, and the user who started the connect riding in the
+# state's `link_user_id`:
+#   CONNECT - GitHub's OAuth screen. Its callback claims the grant, or goes on
+#             to the install screen when the App is installed nowhere yet.
+#   INSTALL - GitHub's install screen, which returns through the setup URL.
+#   RETURN  - the OAuth screen again after an install. It never goes back to
+#             the install screen, so an install granting nothing this user
+#             can read ends the connect instead of looping.
+CONNECTOR_FLOW_GITHUB = "connector_github"
+CONNECTOR_FLOW_GITHUB_INSTALL = "connector_github_install"
+CONNECTOR_FLOW_GITHUB_RETURN = "connector_github_return"
+# Choosing repositories on GitHub's page takes longer than approving a screen.
+GITHUB_INSTALL_STATE_TTL_SECONDS = 900
 
 # Reason codes the /desktop-auth relay page knows how to explain. Deliberately
 # coarse and non-identifying: they end up in a URL the user can see and paste.
@@ -147,6 +171,99 @@ def _connector_success(
         f"&granted_scopes={quote(granted_scopes, safe='')}"
     )
     return _no_store_redirect(redirect_url, status_code=307)
+
+
+def _with_desktop(flow: str, desktop: bool) -> str:
+    return flow + DESKTOP_FLOW_SUFFIX if desktop else flow
+
+
+def _both(flow: str) -> tuple[str, str]:
+    return flow, flow + DESKTOP_FLOW_SUFFIX
+
+
+def _github_authorize(*, link: str, desktop: bool) -> RedirectResponse:
+    fail = _github_failure_for(desktop)
+    if not gh_app.is_configured():
+        return fail(
+            CONNECT_ERROR_CONFIG,
+            HTTP_501_NOT_IMPLEMENTED,
+            "The GitHub App is not configured on this server. Connect with a token instead.",
+        )
+    user_id = consume_connect_link_code(link) if link else None
+    if not user_id:
+        return fail(
+            CONNECT_ERROR_EXPIRED,
+            400,
+            "The connect link is missing or expired. Start again from the Connections page.",
+        )
+    return _github_to_oauth(user_id, flow=CONNECTOR_FLOW_GITHUB, desktop=desktop)
+
+
+def _github_to_oauth(user_id: str, *, flow: str, desktop: bool) -> RedirectResponse:
+    verifier, challenge = gh_app.pkce_pair()
+    state = secrets.token_urlsafe(32)
+    cleanup_expired_states()
+    save_state(
+        state, verifier, _with_desktop(flow, desktop), OAUTH_STATE_TTL_SECONDS, link_user_id=user_id
+    )
+    return _no_store_redirect(gh_app.authorize_url(state=state, code_challenge=challenge))
+
+
+def _github_failure_for(desktop: bool):
+    def fail(reason: str, status_code: int, detail: str) -> RedirectResponse:
+        return _connector_failure(
+            reason, status_code, detail, desktop=desktop, connector_id=GITHUB_CONNECTOR_ID
+        )
+
+    return fail
+
+
+def _github_callback(*, code: str, state: str) -> RedirectResponse:
+    """Trade the code for what GitHub grants this user, and park it for their claim."""
+    early = _github_failure_for(get_configs().duct_local)
+    if not code or not state:
+        return early(CONNECT_ERROR_EXPIRED, 400, "Missing OAuth code or state.")
+    consumed = consume_state_full(
+        state,
+        _both(CONNECTOR_FLOW_GITHUB) + _both(CONNECTOR_FLOW_GITHUB_RETURN),
+        OAUTH_STATE_TTL_SECONDS,
+    )
+    if consumed.flow is None or not consumed.link_user_id:
+        return early(CONNECT_ERROR_EXPIRED, 400, "Invalid or expired OAuth state.")
+    base_flow, desktop = _split_flow(consumed.flow)
+    fail = _github_failure_for(desktop)
+
+    try:
+        user_token = gh_app.exchange_code(code, consumed.code_verifier or "")
+        repos, omitted = gh_app.granted_repositories(user_token)
+    except (gh.ApiError, ValueError) as exc:
+        logger.warning("GitHub App connect failed: %s", exc)
+        return fail(CONNECT_ERROR_EXCHANGE, 502, f"GitHub did not complete the connection: {exc}")
+
+    if not repos and base_flow == CONNECTOR_FLOW_GITHUB:
+        # Signed in, but the App is installed nowhere this user can read:
+        # on to GitHub's install screen, which returns through the setup route.
+        install_state = secrets.token_urlsafe(32)
+        save_state(
+            install_state,
+            None,
+            _with_desktop(CONNECTOR_FLOW_GITHUB_INSTALL, desktop),
+            GITHUB_INSTALL_STATE_TTL_SECONDS,
+            link_user_id=consumed.link_user_id,
+        )
+        return _no_store_redirect(gh_app.install_url(install_state))
+
+    grant_code = store_github_grant(
+        user_id=consumed.link_user_id,
+        grant={"repos": [r.as_dict() for r in repos], "omitted": omitted},
+    )
+    # Both clients end on /connections?connector=github&auth_code=…: the
+    # browser directly, the desktop shell by the relay page and its deep link,
+    # exactly as a Google connect does. There the signed-in page claims it.
+    cfg = get_configs()
+    query = f"connector={GITHUB_CONNECTOR_ID}&auth_code={quote(grant_code, safe='')}"
+    page = "desktop-auth" if desktop else "connections"
+    return _no_store_redirect(f"{cfg.frontend_origin}/{page}?{query}")
 
 
 def _google_connector_authorize(connector_id: str, *, desktop: bool) -> RedirectResponse:
@@ -306,10 +423,53 @@ def _google_connector_callback(*, connector_id: str, code: str, state: str) -> R
     )
 
 
+@router.get(gh_app.SETUP_PATH)
+def github_app_setup(state: str = Query(default="")) -> RedirectResponse:
+    """Where GitHub sends the browser after its install or configure screen.
+
+    The ``installation_id`` GitHub appends is ignored on purpose: its docs
+    warn it can be spoofed. With our state, the connect resumes at GitHub's
+    OAuth screen (which answers at once for a user who has approved it) and
+    the callback learns what was installed from GitHub itself.
+
+    Without one — GitHub dropped it, or this is "Redirect on update" after
+    the user changed repositories on GitHub directly — nothing here says
+    whose install it was. The Connections page, which does know, restarts
+    the connect on seeing ``installed=1``.
+    """
+    try:
+        consumed = (
+            consume_state_full(
+                state, _both(CONNECTOR_FLOW_GITHUB_INSTALL), GITHUB_INSTALL_STATE_TTL_SECONDS
+            )
+            if state
+            else None
+        )
+        if consumed is not None and consumed.flow and consumed.link_user_id:
+            _, desktop = _split_flow(consumed.flow)
+            return _github_to_oauth(
+                consumed.link_user_id, flow=CONNECTOR_FLOW_GITHUB_RETURN, desktop=desktop
+            )
+        cfg = get_configs()
+        return _no_store_redirect(
+            f"{cfg.frontend_origin}/connections?connector={GITHUB_CONNECTOR_ID}&installed=1"
+        )
+    except Exception:
+        logger.exception("Unhandled error in the GitHub App setup redirect")
+        return _connector_failure(
+            CONNECT_ERROR_SERVER,
+            500,
+            "Connecting failed.",
+            desktop=get_configs().duct_local,
+            connector_id=GITHUB_CONNECTOR_ID,
+        )
+
+
 @router.get("/auth/connectors/{connector_id}/oauth/authorize")
 def connector_oauth_authorize(
     connector_id: str,
     client: str = Query(default=""),
+    link: str = Query(default=""),
 ) -> RedirectResponse:
     """Start OAuth for a connector that supports it (e.g. ``google_ads``).
 
@@ -321,6 +481,9 @@ def connector_oauth_authorize(
     Unlike `signin.py`'s Turnstile gate, keying on this caller-supplied value is
     safe: it decides only where a user's *own* freshly granted token is handed
     back to, never what is granted or who is trusted.
+
+    ``link`` is GitHub's alone: the single-use code naming the signed-in user
+    the connect belongs to (service/github/app.py, step 1).
     """
     cid = normalize_connector_id(connector_id)
     try:
@@ -330,6 +493,9 @@ def connector_oauth_authorize(
             status_code=HTTP_404_NOT_FOUND,
             detail="Unknown connector",
         ) from exc
+
+    if cid == GITHUB_CONNECTOR_ID:
+        return _github_authorize(link=link, desktop=client == "desktop")
 
     if cid in CONNECTOR_TO_FLOW:
         return _google_connector_authorize(cid, desktop=client == "desktop")
@@ -351,7 +517,7 @@ def connector_oauth_callback(
     code: str = Query(default=""),
     state: str = Query(default=""),
 ) -> RedirectResponse:
-    """OAuth redirect target registered in the Google Cloud console."""
+    """OAuth redirect target registered in the Google Cloud console, and on the GitHub App."""
     cid = normalize_connector_id(connector_id)
     try:
         get_connector(cid)
@@ -361,12 +527,14 @@ def connector_oauth_callback(
             detail="Unknown connector",
         ) from exc
 
-    if cid not in CONNECTOR_TO_FLOW:
+    if cid != GITHUB_CONNECTOR_ID and cid not in CONNECTOR_TO_FLOW:
         raise HTTPException(
             status_code=HTTP_501_NOT_IMPLEMENTED,
             detail=f"Connector {cid!r} does not support OAuth yet.",
         )
     try:
+        if cid == GITHUB_CONNECTOR_ID:
+            return _github_callback(code=code, state=state)
         return _google_connector_callback(connector_id=cid, code=code, state=state)
     except HTTPException:
         raise

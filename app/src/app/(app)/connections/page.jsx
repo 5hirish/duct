@@ -9,12 +9,15 @@ import { BASE } from "../../../lib/api";
 import { getAdsLoginCustomerId, setAdsLoginCustomerId } from "../../../lib/adsCredentials";
 import {
   bindProjectConnector,
+  claimGitHubGrant,
   deleteServerConnector,
+  getGitHubApp,
   hasAuthToken,
   listProjectConnectors,
   listServerConnectors,
   notifyConnectorsChanged,
   saveServerConnector,
+  startGitHubConnect,
   unbindProjectConnector,
 } from "../../../lib/connectorsApi";
 import {
@@ -22,6 +25,7 @@ import {
   consumeConnectorReturn,
   exchangeConnectorCode,
   markConnectorConnected,
+  startConnectorOAuth,
 } from "../../../lib/connectorAuth";
 import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
 import { getActiveProject } from "../../../lib/projects";
@@ -51,6 +55,10 @@ export default function ConnectionsPage() {
   const [mccInput, setMccInput] = useState("");
   const [signedIn, setSignedIn] = useState(false);
   const [connectError, setConnectError] = useState("");
+  const [connectNotice, setConnectNotice] = useState("");
+  // Whether this server connects GitHub in one click. null until asked, and
+  // for a signed-out visitor, who gets the token form the card always had.
+  const [githubApp, setGithubApp] = useState(null);
   const [serverRows, setServerRows] = useState({}); // connector_type -> first stored row
   const [serverRowsAll, setServerRowsAll] = useState({}); // connector_type -> [rows]
 
@@ -214,6 +222,51 @@ export default function ConnectionsPage() {
     router.replace(back);
   }
 
+  // GitHub App (backend/service/github/app.py). A single-use link names this
+  // session's user, then the same navigation every OAuth card makes.
+  async function connectGitHub() {
+    const link = await startGitHubConnect();
+    return startConnectorOAuth(
+      `${BASE}/auth/connectors/github/oauth/authorize?link=${encodeURIComponent(link)}`,
+    );
+  }
+
+  // GitHub came back with a grant. Claimed by this signed-in session, which is
+  // the only way an App grant is ever saved: the backend honours the code for
+  // the account whose link started the connect and for nobody else.
+  async function adoptGitHubGrant(code) {
+    setConnectNotice("");
+    try {
+      const { connectors = [], omitted = 0 } = await claimGitHubGrant(code);
+      await refreshServerRows();
+      const count = connectors.length;
+      if (!count) {
+        setConnectNotice(
+          t`GitHub is connected, but it granted no repositories you can read. Open the GitHub card and choose repositories on GitHub.`,
+        );
+        return;
+      }
+      trackEvent(AnalyticsEvent.ConnectorConnected, { provider: "github" });
+      const connected = plural(count, {
+        one: "GitHub connected: # repository.",
+        other: "GitHub connected: # repositories.",
+      });
+      const more = omitted
+        ? " " +
+          plural(omitted, {
+            one: "# more was left out; choose specific repositories on GitHub to reach it.",
+            other: "# more were left out; choose specific repositories on GitHub to reach them.",
+          })
+        : "";
+      setConnectNotice(connected + more);
+      await returnToRequester("github", Promise.resolve());
+    } catch {
+      setConnectError(
+        t`That GitHub connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again.`,
+      );
+    }
+  }
+
   async function removeServerRow(connectorType) {
     const row = serverRows[connectorType];
     if (!row) return;
@@ -287,7 +340,25 @@ export default function ConnectionsPage() {
     const query = new URLSearchParams(window.location.search);
     const connectorParam = query.get("connector") || "";
     const codeParam = query.get("auth_code") || "";
-    if (connectorParam && codeParam) {
+    if (connectorParam === "github" && codeParam) {
+      window.history.replaceState(null, "", window.location.pathname);
+      setConnectError("");
+      if (authed) adoptGitHubGrant(codeParam);
+      else setConnectError(t`Sign in to finish connecting GitHub.`);
+    } else if (connectorParam === "github" && query.get("installed")) {
+      // Back from GitHub's install or configure page without our state, so
+      // the backend could not tell whose it was. This page can: start the
+      // connect again, which GitHub now answers without asking.
+      window.history.replaceState(null, "", window.location.pathname);
+      if (authed) {
+        setConnectNotice(t`GitHub app installed. Finishing the connection…`);
+        connectGitHub().catch(() =>
+          setConnectError(t`GitHub is installed, but finishing the connection failed. Open the GitHub card and connect again.`),
+        );
+      } else {
+        setConnectError(t`Sign in to finish connecting GitHub.`);
+      }
+    } else if (connectorParam && codeParam) {
       // Single-use and 60-second, but there is no reason to leave it in the
       // address bar or in history either.
       window.history.replaceState(null, "", window.location.pathname);
@@ -306,6 +377,19 @@ export default function ConnectionsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    let alive = true;
+    getGitHubApp()
+      .then((info) => alive && setGithubApp(info))
+      .catch(() => {
+        /* the token form still works */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [signedIn]);
 
   // Track the header's project picker, so switching projects re-reads the
   // mappings without a reload.
@@ -530,6 +614,15 @@ export default function ConnectionsPage() {
               style={{ marginTop: -8, marginBottom: 18, maxWidth: 720 }}
             >
               {connectError}
+            </p>
+          )}
+          {connectNotice && !connectError && (
+            <p
+              role="status"
+              className="text-sm text-muted-foreground"
+              style={{ marginTop: -8, marginBottom: 18, maxWidth: 720 }}
+            >
+              {connectNotice}
             </p>
           )}
 
@@ -853,6 +946,44 @@ export default function ConnectionsPage() {
               onSaved={refreshServerRows}
               onRemoveRow={removeServerRowById}
               {...mappingProps("growthbook")}
+            />
+
+            <ManualConnectorCard
+              type="github"
+              title="GitHub"
+              description={t`Merged pull requests, releases, closed issues and doc changes, by date.`}
+              logo={LOGOS.github}
+              fields={[
+                {
+                  key: "token",
+                  label: t`Fine-grained personal access token`,
+                  placeholder: "github_pat_…",
+                  secret: true,
+                  hint: t`Choose "Only select repositories", then read-only access to Contents, Pull requests, Issues and Metadata. Duct only ever reads.`,
+                },
+              ]}
+              accountField="repo"
+              docsUrl="https://github.com/settings/personal-access-tokens/new"
+              docsLabel={t`Create a fine-grained token (GitHub settings)`}
+              oneClick={
+                githubApp?.available
+                  ? {
+                      label: t`Connect GitHub`,
+                      againLabel: t`Refresh from GitHub`,
+                      blurb: t`Choose the repositories on GitHub. Duct gets read-only access to those and nothing else.`,
+                      waiting: t`Finish on GitHub in your browser. Your repositories appear here when you come back.`,
+                      onStart: connectGitHub,
+                      manageUrl: githubApp.manage_url,
+                      manageLabel: t`Choose repositories on GitHub`,
+                      tokenLabel: t`Use a token instead`,
+                    }
+                  : null
+              }
+              signedIn={signedIn}
+              serverRowList={serverRowsAll.github || []}
+              onSaved={refreshServerRows}
+              onRemoveRow={removeServerRowById}
+              {...mappingProps("github")}
             />
 
             <ConnectorTile

@@ -658,6 +658,14 @@ CONNECTORS = [
             ],
         },
     },
+    {
+        # No page yet: listed on the hub until its copy is written.
+        "id": "github", "slug": "github", "name": "GitHub", "group": "product",
+        "logo": "github.svg", "meta": "backend/service/github/fetch.py", "label": "GitHub",
+        "card": "What shipped and when: merged pull requests, releases, closed issues.",
+        "auth": "GitHub App", "pack": "backend/agents/knowledge/github.md",
+        "api": "GitHub REST API ({api_version})",
+    },
     # ── Revenue ────────────────────────────────────────────────────────────
     {
         "id": "stripe", "slug": "stripe", "name": "Stripe", "group": "revenue",

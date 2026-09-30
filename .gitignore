@@ -77,6 +77,10 @@ pnpm-debug.log*
 **/.env.*
 !**/.env.example
 client_secret_*.json
+# A GitHub App's private key, as GitHub names the download
+# (<slug>.<date>.private-key.pem). It mints a token for every installation of
+# the App, so it goes in GITHUB_APP_PRIVATE_KEY and never into this public tree.
+*.private-key.pem
 
 backend/tests/outputs/
 

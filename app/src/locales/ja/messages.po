@@ -162,6 +162,10 @@ msgstr "{count, plural, other {# 修正}}"
 msgid "{count, plural, one {# post} other {# posts}}"
 msgstr "{count, plural, other {# 投稿}}"
 
+#: src/app/(app)/connections/page.jsx
+msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
+msgstr "{count, plural, one {GitHubに接続しました: リポジトリ # 件。} other {GitHubに接続しました: リポジトリ # 件。}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, other {# ページ}}"
@@ -341,6 +345,10 @@ msgstr "{newCount} 新規、{resolvedCount} 解決済み"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "{notesLeft, plural, one {# character left} other {# characters left}}"
 msgstr "{notesLeft, plural, other {# 文字が残っています}}"
+
+#: src/app/(app)/connections/page.jsx
+msgid "{omitted, plural, one {# more was left out; choose specific repositories on GitHub to reach it.} other {# more were left out; choose specific repositories on GitHub to reach them.}}"
+msgstr "{omitted, plural, one {ほかに # 件は含まれていません。含めるには、GitHubで対象のリポジトリを選択してください。} other {ほかに # 件は含まれていません。含めるには、GitHubで対象のリポジトリを選択してください。}}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{oppCount} Opp"
@@ -1771,6 +1779,10 @@ msgstr "招待を確認中…"
 msgid "Checking…"
 msgstr "確認中…"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Choose \"Only select repositories\", then read-only access to Contents, Pull requests, Issues and Metadata. Duct only ever reads."
+msgstr "「Only select repositories」を選び、Contents、Pull requests、Issues、Metadata に読み取り専用のアクセス権を付与してください。Ductは常に読み取りのみを行います。"
+
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Choose {entity}"
 msgstr "{entity}を選択"
@@ -1782,6 +1794,14 @@ msgstr "{projectName}の{entity}を選択"
 #: src/components/models/ModelPicker.jsx
 msgid "Choose a model"
 msgstr "モデルを選択"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Choose repositories on GitHub"
+msgstr "GitHubでリポジトリを選択"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Choose the repositories on GitHub. Duct gets read-only access to those and nothing else."
+msgstr "GitHubでリポジトリを選択してください。Ductには、選択したリポジトリへの読み取り専用アクセスだけが付与されます。"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
@@ -1969,6 +1989,10 @@ msgstr "PostBridgeでTikTok、Instagram、またはYouTubeアカウントを接�
 #: src/app/(app)/connections/page.jsx
 msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
 msgstr "アカウントは一度接続すれば、アカウント全体で保存されます。カードを開いて設定し、<0>{projectName}</0>が読み込むアカウントを選択してください。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Connect GitHub"
+msgstr "GitHubを接続"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Connect in PostBridge →"
@@ -2248,6 +2272,10 @@ msgstr "サイトをクロールし、問題点を抽出し、実用的な推奨
 #: src/lib/auditEvents.js
 msgid "Crawling pages"
 msgstr "ページをクロール中"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Create a fine-grained token (GitHub settings)"
+msgstr "Fine-grainedトークンを作成 (GitHubの設定)"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Create a restricted key (Stripe dashboard)"
@@ -3045,6 +3073,10 @@ msgstr "レポートを最終処理中"
 msgid "Findings by Category"
 msgstr "カテゴリ別指摘事項"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Fine-grained personal access token"
+msgstr "Fine-grainedパーソナルアクセストークン"
+
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Finish in your browser — Google won’t sign you in inside an app window. This card updates on its own when you’re done. <0>Open it again</0>"
 msgstr "ブラウザで完了してください — Googleはアプリウィンドウ内ではサインインできません。完了すると、このカードは自動的に更新されます。<0>もう一度開く</0>"
@@ -3052,6 +3084,10 @@ msgstr "ブラウザで完了してください — Googleはアプリウィン�
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Finish in your browser…"
 msgstr "ブラウザで完了してください…"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Finish on GitHub in your browser. Your repositories appear here when you come back."
+msgstr "ブラウザでGitHubの手続きを完了してください。戻ると、ここにリポジトリが表示されます。"
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Finish signing in in your browser, then come back and press “I’ve connected it”."
@@ -3231,6 +3267,34 @@ msgstr "デスクトップアプリを取得 →"
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Get the full audit →"
 msgstr "完全な監査を取得 →"
+
+#: src/components/connections/logos.jsx
+msgid "GitHub"
+msgstr "GitHub"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub app installed. Finishing the connection…"
+msgstr "GitHubアプリをインストールしました。接続を完了しています…"
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub declined the exchange, which is almost always temporary. Try again from the app."
+msgstr "GitHubが交換を拒否しました。これはほとんどの場合一時的なものです。アプリからもう一度お試しください。"
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub didn't complete the connection"
+msgstr "GitHubで接続が完了しませんでした"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub is connected, but it granted no repositories you can read. Open the GitHub card and choose repositories on GitHub."
+msgstr "GitHubに接続しましたが、読み取り可能なリポジトリへのアクセスが付与されていません。GitHubカードを開き、GitHubでリポジトリを選択してください。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub is installed, but finishing the connection failed. Open the GitHub card and connect again."
+msgstr "GitHubはインストールされましたが、接続を完了できませんでした。GitHubカードを開いて、もう一度接続してください。"
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub isn't set up on this server"
+msgstr "このサーバーではGitHubが設定されていません"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
@@ -3454,6 +3518,10 @@ msgstr "キーを非表示にする"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Hide superseded"
 msgstr "置き換えられたものを非表示にする"
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Hide the token form"
+msgstr "トークン入力欄を隠す"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "High"
@@ -4180,6 +4248,10 @@ msgstr "メモリの種類"
 #: src/app/(app)/projects/page.jsx
 msgid "Memory of {name}"
 msgstr "{name}のメモリ"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Merged pull requests, releases, closed issues and doc changes, by date."
+msgstr "マージされたプルリクエスト、リリース、クローズされたIssue、ドキュメントの変更（日付別）。"
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Mermaid render failed."
@@ -5821,6 +5893,10 @@ msgstr "リダイレクト"
 msgid "Refresh"
 msgstr "更新"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Refresh from GitHub"
+msgstr "GitHubから更新"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "Refresh from PostBridge"
 msgstr "PostBridgeから更新"
@@ -6749,6 +6825,14 @@ msgstr "<0>{invitedEmail}</0>としてサインインして承認してくださ
 msgid "Sign in first — credentials are stored encrypted server-side."
 msgstr "まずサインインしてください。認証情報はサーバー側で暗号化されて保存されます。"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Sign in first — the connection is saved to your account."
+msgstr "まずサインインしてください。接続はアカウントに保存されます。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Sign in to finish connecting GitHub."
+msgstr "GitHubの接続を完了するには、サインインしてください。"
+
 #: src/components/AppSidebar.jsx
 msgid "Sign in to keep this"
 msgstr "サインインしてこれを保持"
@@ -7266,6 +7350,10 @@ msgstr "リンクのようには見えません。"
 msgid "That format could not be deleted — it is still in the library."
 msgstr "その形式は削除できませんでした。ライブラリに残っています。"
 
+#: src/app/(app)/connections/page.jsx
+msgid "That GitHub connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again."
+msgstr "GitHubの接続が完了しませんでした。リンクの有効期間は2分間で、接続を開始したアカウントでのみ使用できます。もう一度接続してください。"
+
 #: src/app/(app)/execute/page.jsx
 msgid "That guardrail is still in place — removing it didn't go through."
 msgstr "そのガードレールはまだ有効です。削除できませんでした。"
@@ -7736,6 +7824,10 @@ msgstr "再試行しても解決しません — このビルドはGoogleサイ�
 msgid "Trying again won't help — this build shipped without that connector's credentials."
 msgstr "再試行しても解決しません — このビルドはそのコネクタの認証情報なしで出荷されました。"
 
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Trying again won't help. Connect GitHub with a fine-grained token from the GitHub card instead."
+msgstr "もう一度試しても解決しません。代わりにGitHubカードからFine-grainedトークンで接続してください。"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Turn off to audit a different business or competitor — only the fields below are used."
 msgstr "別のビジネスや競合他社を監査するにはオフにしてください — 以下のフィールドのみが使用されます。"
@@ -7847,6 +7939,10 @@ msgstr "{projectName}のビジネスコンテキストを使用"
 #: src/components/content/AccountsTab.jsx
 msgid "Use a different PostBridge key"
 msgstr "別のPostBridgeキーを使う"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Use a token instead"
+msgstr "代わりにトークンを使う"
 
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"
