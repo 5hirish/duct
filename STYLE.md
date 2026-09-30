@@ -347,14 +347,16 @@ JSX, or a dependency into `site/`.
 
 Most of what governs a page here is invariants enforced by
 `.github/scripts/check-pages.py` in CI — the `<head>` checklist, canonical
-form, asset order, GTM placement — and they live in
-[`site/AGENTS.md`](site/AGENTS.md). Read that first. What CI cannot check:
+form, asset order, GTM placement, `inLanguage` on every top-level JSON-LD
+object and a `BreadcrumbList` on every page below a home page — and they live
+in [`site/AGENTS.md`](site/AGENTS.md). Read that first. The same script warns,
+without failing, when an English `<meta name="description">` falls outside
+140–160 characters. What CI cannot check:
 
-- `<meta name="description">` is 140–160 characters; `og:description` and
-  `twitter:description` 120–140.
-- Every page carries JSON-LD — `WebPage` for a landing page, `CollectionPage`
-  for the blog index, `BlogPosting` for a post (written by `build_blog.py`) — with `inLanguage` on each
-  top-level object, and a `BreadcrumbList` on every page below the root.
+- `og:description` and `twitter:description` are 120–140 characters.
+- Every page carries the JSON-LD type that fits it — `WebPage` for a landing
+  page, `CollectionPage` for the blog index, `BlogPosting` for a post
+  (written by `build_blog.py`).
 - Page-specific CSS goes in an inline `<style>` at the end of `<head>`, never
   into `assets/duct.css` — that file is shared by every page.
 - JavaScript stays vanilla and conservative. `config.js` loads before
