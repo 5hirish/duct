@@ -235,7 +235,6 @@ it is a claim about the code, not a way to quiet the check.
   server: the per-run dials the composer writes (`thinking`, `tier`,
   `preferred_artifact_format`, `context_compression`), plus the three fields an agent request still carries
   for signed-out runs, mirrored from the profile rather than edited here
-- `lib/analytics-client.js` — how to load GTM and push events (never whether)
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
 - `lib/analytics/` — the seam. `index.js` selects a provider from
   `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `gtm` when a container is
@@ -414,8 +413,10 @@ places and nowhere else:
   by `interrupt_id`, and the per-tab reload handle (`lib/agentSessionHandle.js`)
   that lets a reloaded tab reattach instead of re-running the prompt. Its
   `onHydrate` hands a workspace the stored rows verbatim, for a pane the
-  transcript does not cover — insights rebuilds its Data pane from the tool
-  traffic with `lib/insightsHistory.js` rather than fetching the thread twice.
+  transcript does not cover. No workspace needs it today: insights derives its
+  Data pane from the transcript's own activity rows (`dataSourceRollup` in
+  `lib/toolActivity.js`), so a reload rebuilds it without fetching the thread
+  twice.
 
 A workspace composes `useAgentSession` + `workspace/AgentChat` +
 `workspace/SplitWorkspace` and keeps only what its agent owns: the right pane,
