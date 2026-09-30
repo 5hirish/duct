@@ -3,15 +3,15 @@
 Two judges, chosen by what the deliverable is:
 
 * **Text** (every rubric without images: the insights brief, the audit
-  report) runs through Duct's own model transport on OpenRouter, DeepSeek V4
-  Pro by default: capable enough for binary markers, and a fraction of a
+  report) runs through Duct's own model transport on OpenRouter, GLM 5.3
+  Flash by default: capable enough for binary markers, and a fraction of a
   frontier model's price per verdict, which is what lets a gate run on every
   harness PR. ``DUCT_JUDGE_PROVIDER`` / ``DUCT_JUDGE_MODEL`` override it.
-  When the agent under test is the same family as the judge, only the binary
-  markers gate (``tests/eval/gate.py``): self-preference moves a 1–5 score,
-  and it is the scores that are logged, not gated.
-* **Vision** (the content post's slides) stays on Gemini, below: DeepSeek does
-  not read pixels, and a slide's legibility is graded by looking at it.
+  It is a different family from the agent (DeepSeek), and only the binary
+  markers gate anyway (``tests/eval/gate.py``): self-preference moves a 1–5
+  score, and it is the scores that are logged, not gated.
+* **Vision** (the content post's slides) stays on Gemini, below: a slide's
+  legibility is graded by looking at it, in one call that returns JSON.
 
 The vision judge is one Gemini call that scores the deliverable. Gemini — a different stack from the one
 on — is used here instead of Claude because (a) the grading call must inspect
@@ -86,7 +86,18 @@ def build_judge_client():
 # --- the text judge -----------------------------------------------------------
 
 TEXT_JUDGE_PROVIDER = "openrouter"
-DEFAULT_TEXT_JUDGE_MODEL = "deepseek/deepseek-v4-pro"
+# A different family from the agent (DeepSeek), so the judge is not grading
+# its own kind, and at 2026-09-30 above DeepSeek V4 Pro on Artificial
+# Analysis's Intelligence Index (42 against 36) at a fifth of its price.
+DEFAULT_TEXT_JUDGE_MODEL = "z-ai/glm-5.3-flash"
+
+# OpenRouter serves GLM 5.3 Flash through 33 hosts. Seven cannot do the tool
+# call a structured verdict is sent as, and five run it at fp4, which blunts
+# the close reading a verdict is. Unpinned, a verdict lands on one of those at
+# random, so the judge asks only for hosts that take every parameter it sends,
+# at fp8 or better. The agent under test keeps default routing: it is graded
+# on whatever a customer's OpenRouter key would reach.
+TEXT_JUDGE_ROUTING = {"require_parameters": True, "quantizations": ["fp8", "bf16", "fp16", "fp32"]}
 
 
 def resolve_text_judge() -> tuple[str, str, str]:

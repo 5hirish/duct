@@ -498,10 +498,25 @@ def numbers_in(pulls: list[dict]) -> set[float]:
 # Verdicts
 # ---------------------------------------------------------------------------
 
-def decide(case_id: str, trials: list[Trial], baseline: dict | None) -> tuple[str, str]:
+def baseline_mismatch(baseline: dict | None, model: str) -> str | None:
+    """Why ``baseline`` cannot judge a run on ``model``, or None.
+
+    A pass rate and a cost measured on one model say nothing about another.
+    When the gate moved from DeepSeek V4 Pro to V4 Flash, about a sixth of the
+    cost, every run would have been INCONCLUSIVE on cost drift alone, and each
+    would have paid for three more trials to reach the same answer."""
+    recorded = (baseline or {}).get("model")
+    if recorded and model and recorded != model:
+        return f"the baseline was measured on {recorded}; record one on {model} with --write-baseline"
+    return None
+
+
+def decide(case_id: str, trials: list[Trial], baseline: dict | None, *, model: str = "") -> tuple[str, str]:
     """The case's verdict from its trials and its baseline, with the reason."""
     if not trials:
         return INCONCLUSIVE, "no trials ran (budget)"
+    if why := baseline_mismatch(baseline, model):
+        return INCONCLUSIVE, why
     k = len(trials)
     passes = sum(t.passed for t in trials)
     expected = float((baseline or {}).get("pass_rate", 1.0))

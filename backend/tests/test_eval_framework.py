@@ -241,3 +241,23 @@ def test_a_verdict_cut_off_mid_string_is_retried_once_with_a_doubled_budget():
 
     assert calls == [1000, 2000]
     assert scorecard.dimension_scores["evidence_grounding"] == 4
+
+
+def test_the_text_judge_is_glm_and_pinned_to_hosts_that_can_answer(monkeypatch):
+    """GLM 5.3 Flash is served by 33 OpenRouter hosts; some cannot make the
+    tool call a verdict is sent as and some run it at fp4. The judge's request
+    asks only for hosts that take every parameter, at fp8 or better."""
+    from tests.eval.client import DEFAULT_TEXT_JUDGE_MODEL, TEXT_JUDGE_ROUTING
+    from tests.eval.judge import text_judge_model
+
+    monkeypatch.delenv("DUCT_JUDGE_PROVIDER", raising=False)
+    monkeypatch.delenv("DUCT_JUDGE_MODEL", raising=False)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+
+    llm = text_judge_model()
+
+    assert DEFAULT_TEXT_JUDGE_MODEL == "z-ai/glm-5.3-flash"
+    assert llm.model_name == DEFAULT_TEXT_JUDGE_MODEL
+    assert llm._default_params["provider"] == TEXT_JUDGE_ROUTING
+    assert TEXT_JUDGE_ROUTING["require_parameters"] is True
+    assert "fp4" not in TEXT_JUDGE_ROUTING["quantizations"]

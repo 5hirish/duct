@@ -120,7 +120,7 @@ session-bundle: ## Pull one agent session for review: make session-bundle ID=<co
 session-replay: ## Re-run a bundled session on its own data with today's prompt/model: make session-replay BUNDLE=<dir> [ARGS="--model ... --tier heavy"]
 	cd backend && poetry run python scripts/session_replay.py "$(BUNDLE)" $(ARGS)
 
-agent-eval: ## Paid eval gate, k=3 on synthetic accounts (DeepSeek V4 Pro on OpenRouter): make agent-eval [ARGS="-k 1 --agent insights"]
+agent-eval: ## Paid eval gate, k=3 on synthetic accounts (DeepSeek V4 Flash on OpenRouter, GLM 5.3 Flash judging): make agent-eval [ARGS="-k 1 --agent insights"]
 	cd backend && poetry run python scripts/agent_eval.py $(ARGS)
 
 # Run after ANY change to user-facing copy in app/ or site/, before `make check`.

@@ -31,6 +31,8 @@ from pydantic import ValidationError
 
 from tests.eval.client import (
     DEFAULT_JUDGE_MODEL,
+    TEXT_JUDGE_PROVIDER,
+    TEXT_JUDGE_ROUTING,
     build_judge_client,
     resolve_text_judge,
     text_judge_available,
@@ -107,21 +109,30 @@ def evaluate(
     raise AssertionError("unreachable")  # pragma: no cover
 
 
-def _evaluate_text(rubric: Rubric, artifact: JudgeArtifact, *, model: str | None = None) -> Scorecard:
-    """The text judge: one structured call through Duct's own model transport.
+def text_judge_model(model: str | None = None):
+    """The text judge's chat model, through Duct's own model transport.
 
     The same transport the agents run on (``resolve_chat_model``), so an
     OpenRouter slug, its reasoning parameter and its retries behave here as
-    they do in a session. A verdict that fails validation is retried once.
+    they do in a session. On OpenRouter it carries ``TEXT_JUDGE_ROUTING``,
+    set here rather than in the transport so no agent run is pinned.
     """
-    from langchain_core.messages import HumanMessage, SystemMessage
-
     from agents.core.lc import resolve_chat_model
     from agents.models import Provider
 
     provider, default_model, key = resolve_text_judge()
     llm = resolve_chat_model(Provider(provider), model or default_model, key, temperature=0.2)
-    judge = llm.with_structured_output(JudgeVerdict)
+    if provider == TEXT_JUDGE_PROVIDER and hasattr(llm, "openrouter_provider"):
+        llm = llm.model_copy(update={"openrouter_provider": TEXT_JUDGE_ROUTING})
+    return llm
+
+
+def _evaluate_text(rubric: Rubric, artifact: JudgeArtifact, *, model: str | None = None) -> Scorecard:
+    """The text judge: one structured call (``text_judge_model``). A verdict
+    that fails validation is retried once."""
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    judge = text_judge_model(model).with_structured_output(JudgeVerdict)
     messages = [
         SystemMessage(content=build_judge_system_prompt(rubric.persona)),
         HumanMessage(content=(

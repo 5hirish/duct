@@ -6,8 +6,11 @@ name: Agent Eval
 # tier (request invariants, the gate's own plumbing) runs in backend.yml with
 # every other offline test.
 #
-# DeepSeek V4 Pro on OpenRouter for the agent and the judge: a full run is a
-# few US cents, which is what makes it affordable on every harness PR. No
+# DeepSeek V4 Flash on OpenRouter for the agent and GLM 5.3 Flash for the
+# judge, a different family so it is not grading its own kind. On V4 Pro alone
+# a trial measured $0.03-0.11 and a PR run 3-6 trials, about $0.25; the pair
+# brings a run to about $0.05. A draft PR runs only
+# with the run-evals label, so iterate as a draft and mark it ready once. No
 # database: scripts/agent_eval.py points DATABASE_URL at a throwaway SQLite.
 #
 # SHADOW until an A/A window shows no false FAILs on an unchanged main: the job
