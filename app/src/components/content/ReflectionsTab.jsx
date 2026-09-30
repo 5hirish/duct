@@ -10,6 +10,8 @@ import EmptyState from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import LoadError from "@/components/LoadError";
 import { dayLabel } from "@/components/content/ReflectionViewport";
+import DraftsQueue from "@/components/content/DraftsQueue";
+import ReminderSetting from "@/components/content/ReminderSetting";
 import { listReflections } from "@/lib/contentApi";
 import { dayKey } from "@/lib/format";
 
@@ -51,11 +53,16 @@ export default function ReflectionsTab({ projectId, load = listReflections }) {
       </div>
     );
   }
-  return <ReflectionJournal rows={rows} />;
+  return (
+    <div className="space-y-8">
+      <DraftsQueue projectId={projectId} onChange={() => setReloadKey((k) => k + 1)} />
+      <ReflectionJournal rows={rows} aside={<ReminderSetting />} />
+    </div>
+  );
 }
 
 /** The journal itself, from rows already loaded. */
-export function ReflectionJournal({ rows }) {
+export function ReflectionJournal({ rows, aside = null }) {
   const { i18n } = useLingui();
   const today = dayKey(new Date());
   const hasToday = rows.some((r) => r.day === today);
@@ -85,11 +92,14 @@ export function ReflectionJournal({ rows }) {
         <p className="text-sm text-muted-foreground">
           <Trans>What each day taught, cited to the work it came from.</Trans>
         </p>
+        <div className="flex flex-wrap items-center gap-2">
+        {aside}
         <Button asChild size="sm" variant={hasToday ? "outline" : "default"}>
           <Link href={REFLECT_HREF}>
             {hasToday ? <Trans>Open today&apos;s</Trans> : <><Plus className="size-3.5" /> <Trans>Reflect on today</Trans></>}
           </Link>
         </Button>
+        </div>
       </div>
 
       <ul className="divide-y rounded-xl border">

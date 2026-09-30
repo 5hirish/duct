@@ -71,6 +71,8 @@ import PostVideo from "@/components/content/PostVideo";
 import VendorKeyForm from "@/components/content/VendorKeyForm";
 import ReflectionViewport from "@/components/content/ReflectionViewport";
 import { ReflectionJournal } from "@/components/content/ReflectionsTab";
+import DraftsQueue from "@/components/content/DraftsQueue";
+import ReminderSetting from "@/components/content/ReminderSetting";
 import { AccountBadges, ReconnectNote } from "@/components/content/AccountStatus";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
@@ -981,6 +983,26 @@ const REFLECTION_FIXTURE = {
     { id: "p2", platforms: ["linkedin"], status: "scheduled", reflection: { section_id: "s1" },
       caption: "A cheaper judge is only cheaper if you check it against the one it replaces.\n\nThis week we swapped the model that grades our agent's work..." },
   ],
+};
+
+
+// The drafts queue (issue 266): a day with two proposals still waiting.
+const QUEUE_FIXTURE = [{
+  day: "2026-09-30",
+  group_id: "g3",
+  title: "The cheap judge was the honest one",
+  drafts: [
+    { id: "q1", project_id: "p", platforms: ["twitter"], post_type: "text", status: "pending", replies: [],
+      channel: { id: "twitter", max_chars: 280, publishable_replies: 1 },
+      caption: "We moved our agent eval to a model a sixth of the price.\n\nThe surprise wasn't the cost. The old judge had been passing briefs it should have failed." },
+    { id: "q2", project_id: "p", platforms: ["linkedin"], post_type: "text", status: "pending", replies: [],
+      channel: { id: "linkedin", max_chars: 3000, fold_chars: 210 },
+      caption: "A cheaper judge is only cheaper if you check it against the one it replaces.\n\nThis week we swapped the model that grades our agent's work, and the disagreements were where the old number had been lying." },
+  ],
+}];
+const QUEUE_SLOTS = {
+  twitter: { at: "2026-10-01T07:00:00Z", reason: "default", posts: 0, hour: 9 },
+  linkedin: { at: "2026-10-06T06:00:00Z", reason: "history", posts: 7, hour: 8 },
 };
 
 export const SCENES = [
@@ -2328,6 +2350,35 @@ export const SCENES = [
     render: () => (
       <div className="h-[24rem]">
         <ReflectionViewport reflection={null} building />
+      </div>
+    ),
+  },
+  {
+    id: "drafts-queue",
+    state: "two drafts waiting, one slot from history",
+    group: "DraftsQueue",
+    title: "The drafts queue",
+    note: "What the day's reflection proposed and nobody has answered, at the top of the Reflections tab (issue 266). Each card says when it would go out and why: the account's own best hour once five posts have numbers, else a default for the channel. Approve opens the publish dialog on that time; Skip asks one reason, which the next reflection reads.",
+    render: () => (
+      <div className="p-5 @container">
+        <DraftsQueue
+          projectId="p"
+          load={() => Promise.resolve(QUEUE_FIXTURE)}
+          loadSlot={(_p, channel) => Promise.resolve(QUEUE_SLOTS[channel])}
+          skip={() => new Promise((resolve) => setTimeout(resolve, 400))}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "reminder-setting",
+    state: "the daily notice's time",
+    group: "ReminderSetting",
+    title: "When the daily notice arrives",
+    note: "Per device, beside the journal. Hidden where nothing can notify.",
+    render: () => (
+      <div className="p-5">
+        <ReminderSetting surface="shell" />
       </div>
     ),
   },

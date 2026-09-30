@@ -154,6 +154,10 @@ msgstr "{cost} で作成"
 msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
 msgstr "{count, plural, other {# 承認が必要な変更}}"
 
+#: src/components/content/DailyReflectionReminder.jsx
+msgid "{count, plural, one {# draft ready} other {# drafts ready}}"
+msgstr "{count, plural, other {下書き #件の準備ができました}}"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "{count, plural, one {# fix we can generate} other {# fixes we can generate}}"
 msgstr "{count, plural, other {# 生成可能な修正}}"
@@ -591,6 +595,10 @@ msgstr "{videoShare} の投稿 · <0>{videoEng}</0> エンゲージメント"
 msgid "{views, plural, one {# view} other {# views}}"
 msgstr "{views, plural, one {# ビュー} other {# ビュー}}"
 
+#: src/components/content/DraftsQueue.jsx
+msgid "{waiting, plural, one {# draft waiting for you} other {# drafts waiting for you}}"
+msgstr "{waiting, plural, other {あなたの確認を待つ下書きが #件あります}}"
+
 #: src/components/content/ReflectionsTab.jsx
 msgid "{waiting, plural, one {# draft waiting} other {# drafts waiting}}"
 msgstr "{waiting, plural, other {下書き #件が待機中}}"
@@ -803,6 +811,10 @@ msgstr "エージェントがビジュアルに適用するいくつかのキー
 #: src/components/profile/VoiceSample.jsx
 msgid "A finding, written for you"
 msgstr "あなたのために書かれた指摘事項"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "A good default for {channelLabel} until five posts have numbers."
+msgstr "5件の投稿に数値が入るまでは、{channelLabel} の標準的な時間です。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "A key is scoped to ONE ad account — make sure it's the right one."
@@ -1124,6 +1136,10 @@ msgstr "すべてのソース"
 msgid "All statuses"
 msgstr "すべてのステータス"
 
+#: src/components/content/DraftsQueue.jsx
+msgid "Already said"
+msgstr "すでに発信済み"
+
 #: src/app/(auth)/page.js
 #~ msgid "Already using Duct?"
 #~ msgstr "すでにDuctをご利用ですか？"
@@ -1271,6 +1287,10 @@ msgstr "今すぐ適用中"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Applying…"
 msgstr "適用中…"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Approve"
+msgstr "承認"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Approve {selectedCount} selected"
@@ -2420,6 +2440,10 @@ msgstr "{foreignName}（チームメイトのコネクタ）に現在マッピ�
 msgid "Customise"
 msgstr "カスタマイズ"
 
+#: src/components/content/ReminderSetting.jsx
+msgid "Daily reminder"
+msgstr "毎日のリマインダー"
+
 #: src/components/AppSidebar.jsx
 msgid "Dark mode"
 msgstr "ダークモード"
@@ -2792,6 +2816,10 @@ msgstr "Ductから簡単な質問があります"
 msgid "duct home"
 msgstr "Ductホーム"
 
+#: src/components/content/DailyReflectionReminder.jsx
+msgid "Duct is ready to read today's work and draft what's worth posting."
+msgstr "Duct は今日の作業を読み取り、投稿する価値のあるものを下書きする準備ができています。"
+
 #: src/components/ConnectionBanner.jsx
 msgid "Duct needs a connection. Your work is saved and will still be here."
 msgstr "Ductには接続が必要です。あなたの作業は保存されており、ここに残っています。"
@@ -2932,6 +2960,10 @@ msgstr "編集"
 #: src/components/content/FormatLibrary.jsx
 msgid "Edit format"
 msgstr "フォーマットを編集"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Edit in chat"
+msgstr "チャットで編集"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Edit project context"
@@ -3297,6 +3329,10 @@ msgstr "開始日"
 msgid "From project context"
 msgstr "プロジェクトのコンテキストから"
 
+#: src/components/content/DailyReflectionReminder.jsx
+msgid "From your daily reflection. Approve, edit or skip them in Content Studio."
+msgstr "毎日の振り返りから生まれた下書きです。Content Studio で承認、編集、スキップできます。"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr "あなたのサイトから"
@@ -3398,6 +3434,10 @@ msgstr "このサーバーではGitHubが設定されていません"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
 msgstr "まず数値を、次に理由を教えてください。ロールバックできない変更は推奨しないでください。"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Gives too much away"
+msgstr "手の内を明かしすぎ"
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Go back to the Duct desktop app and start again — it usually works second time."
@@ -4697,6 +4737,10 @@ msgstr "コミットメントなし — 範囲を定め、フォローアップ�
 msgid "No competitor research was returned for this audit."
 msgstr "この監査では競合調査は返されませんでした。"
 
+#: src/components/content/ReminderSetting.jsx
+msgid "No daily reminder"
+msgstr "毎日のリマインダーなし"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "No earlier version to compare."
 msgstr "比較する以前のバージョンはありません。"
@@ -4934,9 +4978,17 @@ msgstr "見つかりません"
 msgid "Not granted"
 msgstr "許可されていません"
 
+#: src/components/content/DraftsQueue.jsx
+msgid "Not interesting"
+msgstr "面白くない"
+
 #: src/app/(start)/start/page.jsx
 msgid "Not it — try another"
 msgstr "違います — 別のものを試してください"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Not my voice"
+msgstr "自分らしくない"
 
 #: src/components/models/ModelPicker.jsx
 msgid "not on {engine}"
@@ -5002,6 +5054,10 @@ msgstr "未開始"
 #: src/lib/credentialStorage.js
 msgid "Not stored"
 msgstr "未保存"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Not true"
+msgstr "事実と違う"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Note"
@@ -6103,6 +6159,7 @@ msgstr "繰り返し使われているハッシュタグ"
 msgid "Redirects"
 msgstr "リダイレクト"
 
+#: src/components/content/DailyReflectionReminder.jsx
 #: src/components/content/ReflectionsTab.jsx
 msgid "Reflect on today"
 msgstr "今日を振り返る"
@@ -6200,6 +6257,10 @@ msgstr "記憶済み:"
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Remembering…"
 msgstr "記憶中…"
+
+#: src/components/content/ReminderSetting.jsx
+msgid "Remind me at {at}"
+msgstr "{at} に通知"
 
 #: src/app/(app)/execute/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
@@ -7182,6 +7243,7 @@ msgstr "サイトマップ"
 msgid "Sketching image prompts…"
 msgstr "画像プロンプトをスケッチ中…"
 
+#: src/components/content/DraftsQueue.jsx
 #: src/components/insights/AccountSelect.jsx
 msgid "Skip"
 msgstr "スキップ"
@@ -8674,6 +8736,10 @@ msgstr "それが重要な理由と、エージェントがどのように適用
 msgid "Why it worked:"
 msgstr "成功理由:"
 
+#: src/components/content/DraftsQueue.jsx
+msgid "Why not? The next reflection learns from it."
+msgstr "理由を選んでください。次の振り返りに反映されます。"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Will be encrypted and stored on Duct, so scheduled runs use your key too."
 msgstr "暗号化されDuctに保存されるため、スケジュールされた実行でもあなたのキーが使用されます。"
@@ -8877,6 +8943,10 @@ msgstr "アーティファクト"
 #: src/components/workspace/ActivityRow.jsx
 msgid "your ask"
 msgstr "あなたの依頼"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Your best hour on {channelLabel}, from {posts} posts with numbers."
+msgstr "数値のある {posts} 件の投稿から見た、{channelLabel} で最も反応の良い時間です。"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "your ChatGPT account"

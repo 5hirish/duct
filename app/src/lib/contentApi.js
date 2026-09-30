@@ -268,6 +268,55 @@ export async function getReflection(groupId) {
   return jsonOrThrow(res);
 }
 
+/**
+ * The drafts queue (issue #266): the drafts still waiting for a yes or no,
+ * by the reflection day they came from, newest first.
+ */
+export async function getReflectionQueue(projectId) {
+  const res = await fetch(
+    `${BASE}/api/content/reflection-queue?project_id=${encodeURIComponent(projectId)}`,
+    { headers: backendAuthedHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+/**
+ * The next good time for a post on `channel`, as `{ at, reason, posts, hour }`:
+ * `reason` is "history" once the account's own posts with numbers decide it,
+ * else "default". `tz` is the reader's zone, so the hour is theirs.
+ */
+export async function getBestSlot(projectId, channel, tz = browserTimeZone()) {
+  const params = new URLSearchParams({ project_id: projectId, channel, tz });
+  const res = await fetch(
+    `${BASE}/api/content/best-slot?${params.toString()}`,
+    { headers: backendAuthedHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+/** No to a proposed draft, with the reason that shapes the next one. */
+export async function skipPost(postId, reason) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/skip`,
+    {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ reason }),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
+function browserTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    return "";
+  }
+}
+
 export async function getPost(postId) {
   const res = await fetch(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}`,
@@ -328,6 +377,30 @@ export async function markPostPosted(postId, { publishedUrl } = {}) {
  * @param scheduledAt     ISO 8601 string (optional; omit to post now)
  * @param tiktokDraft     true → land as a TikTok draft, false → schedule/post
  */
+/**
+ * A schedule time as an absolute instant. The picker's value
+ * ("2026-10-02T09:00") has no zone, and the server read it as UTC, so a
+ * post set for 9:00 in Madrid went out at 11:00. JavaScript reads that
+ * shape as the reader's own local time, which is what they picked.
+ */
+export function absoluteTime(value) {
+  if (!value) return value;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toISOString();
+}
+
+/**
+ * A moment as the `datetime-local` picker's value, in the reader's zone:
+ * "2026-10-02T09:00". `toISOString` would give UTC, and the picker would show
+ * a time hours off from the one meant.
+ */
+export function localPickerValue(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export async function publishPost(postId, { socialAccountIds, scheduledAt, tiktokDraft = false } = {}) {
   const res = await fetch(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/publish`,
@@ -336,7 +409,7 @@ export async function publishPost(postId, { socialAccountIds, scheduledAt, tikto
       headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         social_account_ids: socialAccountIds,
-        ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
+        ...(scheduledAt ? { scheduled_at: absoluteTime(scheduledAt) } : {}),
         tiktok_draft: tiktokDraft,
       }),
     },

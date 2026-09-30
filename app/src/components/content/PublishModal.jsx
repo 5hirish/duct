@@ -14,6 +14,7 @@ import {
   getPost,
   listLinkedAccounts,
   listSocialAccounts,
+  localPickerValue,
   publishPost,
 } from "@/lib/contentApi";
 import { PLATFORM_LABELS, Platform, PostType } from "@/lib/contentEnums";
@@ -36,8 +37,11 @@ import { AccountBadges, ReconnectNote } from "./AccountStatus";
  *   - onClose     : () => void
  *   - post        : { id, project_id, topic, caption, platforms[], post_type, replies[], channel }
  *   - onPublished : (updatedPost) => void  — fired after successful publish
+ *   - suggestedAt : ISO time to preselect as the schedule (the drafts queue's
+ *                   best slot); absent, the dialog opens on "Post now"
+ *   - suggestion  : a line saying why that time, shown under the picker
  */
-export default function PublishModal({ open, onClose, post, onPublished }) {
+export default function PublishModal({ open, onClose, post, onPublished, suggestedAt, suggestion }) {
   const { t } = useLingui();
   const [accounts, setAccounts]     = useState([]);
   const [selected, setSelected]     = useState(new Set());
@@ -61,6 +65,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   useEffect(() => {
     if (!open || !post?.project_id) return;
     setStage("loading"); setError("");
+    setScheduledAt(suggestedAt ? localPickerValue(suggestedAt) : "");
     let cancelled = false;
     (async () => {
       try {
@@ -130,7 +135,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   }
 
   const hasAccounts = accounts.length > 0;
-  const minDateTime = new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16);
+  const minDateTime = localPickerValue(new Date(Date.now() + 5 * 60_000));
 
   // A publish in flight must not be dismissable — hence the guards on
   // onOpenChange, outside-click and Escape rather than a bare onClose.
@@ -254,6 +259,9 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                       className="rounded border border-input bg-background px-2 py-0.5 text-xs"
                     />
                   </label>
+                  {suggestion && scheduledAt && (
+                    <p className="pl-5 text-2xs text-muted-foreground">{suggestion}</p>
+                  )}
                   {offersTiktokDraft && (
                     <label className="flex items-center gap-2 text-xs">
                       <input

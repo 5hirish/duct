@@ -37,9 +37,9 @@ import logging
 import time
 import uuid
 from collections.abc import AsyncGenerator
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 import anyio.from_thread
@@ -1517,6 +1517,146 @@ def get_reflection(
         drafts=[_post_out(p, premium=premium) for p in _reflection_drafts(db, head.project_id, group_id)],
         conversation_id=conversation_id,
     )
+
+
+# ---------------------------------------------------------------------------
+# The drafts queue (issue #266): what a reflection proposed and nobody has
+# answered, when each should go out, and a skip that teaches.
+# ---------------------------------------------------------------------------
+
+# How far back the queue looks. A draft older than this is stale news, and
+# the journal still holds it.
+QUEUE_DAYS = 7
+_SKIP_WORDS = {
+    "not_true": "it was not true",
+    "too_revealing": "it gave too much away",
+    "not_interesting": "it was not interesting enough to post",
+    "already_said": "it had already been said",
+    "wrong_voice": "it did not sound like them",
+}
+
+
+class QueueDayOut(BaseModel):
+    day:      str
+    group_id: UUID
+    title:    str
+    drafts:   list[PostOut]
+
+
+class BestSlotOut(BaseModel):
+    at:     str
+    reason: str
+    posts:  int
+    hour:   int
+
+
+class SkipRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: Literal["not_true", "too_revealing", "not_interesting", "already_said", "wrong_voice"]
+
+
+# Not under /content/reflections/: that prefix takes a group id, and FastAPI
+# would read "queue" as one and refuse it before trying this route.
+@router.get("/content/reflection-queue")
+def reflection_queue(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> list[QueueDayOut]:
+    """The drafts still waiting for a yes or no, by the day they came from,
+    newest first. A day whose drafts are all answered is not in it."""
+    _project_for_user(db, user, project_id)
+    since = (datetime.now(timezone.utc) - timedelta(days=QUEUE_DAYS)).date().isoformat()
+    waiting: dict[str, list[ContentPost]] = {}
+    for p in db.execute(
+        select(ContentPost)
+        .where(ContentPost.project_id == project_id, ContentPost.post_type == TEXT_POST_TYPE,
+               ContentPost.status.in_([s.value for s in _WAITING]))
+        .order_by(ContentPost.created_at)
+    ).scalars().all():
+        link = p.reflection or {}
+        if link.get("group_id") and str(link.get("date") or "") >= since:
+            waiting.setdefault(link["group_id"], []).append(p)
+    if not waiting:
+        return []
+    premium = project_x_premium(db, project_id)
+    heads = {str(h.group_id): h for h in _reflection_heads(db, project_id)}
+    out = [
+        QueueDayOut(
+            day=str((heads[g].structured_json or {}).get("date") or ""), group_id=UUID(g),
+            title=heads[g].title, drafts=[_post_out(p, premium=premium) for p in posts],
+        )
+        for g, posts in waiting.items() if g in heads
+    ]
+    return sorted(out, key=lambda d: d.day, reverse=True)
+
+
+@router.get("/content/best-slot")
+def best_slot(
+    project_id: UUID,
+    channel: str,
+    tz: str = "",
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> BestSlotOut:
+    """The next good time for a post on ``channel``, in the reader's ``tz``:
+    the account's own best hour once enough posts have numbers, else the
+    channel's default; never on top of a post already scheduled there."""
+    from agents.content.best_time import next_slot
+
+    _project_for_user(db, user, project_id)
+    rows = [
+        p for p in db.execute(
+            select(ContentPost).where(ContentPost.project_id == project_id,
+                                      ContentPost.post_type == TEXT_POST_TYPE)
+        ).scalars().all()
+        if primary_channel(p.platforms) == channel
+    ]
+    posted = [p for p in rows if p.status == ContentStatus.POSTED]
+    taken = [
+        (p.scheduled_at if p.scheduled_at.tzinfo else p.scheduled_at.replace(tzinfo=timezone.utc))
+        for p in rows if p.status == ContentStatus.SCHEDULED and p.scheduled_at
+    ]
+    slot = next_slot(channel, posts=posted, taken=taken, now=datetime.now(timezone.utc), tz_name=tz)
+    return BestSlotOut(at=slot.at.isoformat(), reason=slot.reason, posts=slot.posts, hour=slot.hour)
+
+
+@router.post("/content/posts/{post_id}/skip")
+def skip_post(
+    post_id: UUID,
+    body: SkipRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """No to a proposed draft, with the one reason that decides what the
+    next one looks like. The draft is discarded, and the reason is a memory
+    the next reflection reads, so the same miss is not proposed twice."""
+    from models.memory import SOURCE_USER
+    from service.memory import remember
+
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
+    if post.status not in _WAITING:
+        raise HTTPException(409, "Only a draft still waiting can be skipped.")
+    channel = resolve_channel(primary_channel(post.platforms)).label
+    day = (post.reflection or {}).get("date") or ""
+    post.status = ContentStatus.DISCARDED.value
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    remember(
+        db,
+        kind="decision",
+        title=f"Skipped a {channel} draft because {_SKIP_WORDS[body.reason]}",
+        body=f"From the {day} reflection. The draft read: {(post.caption or '')[:400]}",
+        project_id=post.project_id,
+        user_id=user.id,
+        source_type=SOURCE_USER,
+        confidence="high",
+        agent_type="tiktok_studio",
+        meta={"skip_reason": body.reason, "post_id": str(post.id)},
+    )
+    return _post_out(post, premium=project_x_premium(db, post.project_id))
 
 
 class SelectVideoRequest(BaseModel):

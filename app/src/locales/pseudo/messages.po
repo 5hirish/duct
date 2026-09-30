@@ -154,6 +154,10 @@ msgstr ""
 msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
 msgstr ""
 
+#: src/components/content/DailyReflectionReminder.jsx
+msgid "{count, plural, one {# draft ready} other {# drafts ready}}"
+msgstr ""
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "{count, plural, one {# fix we can generate} other {# fixes we can generate}}"
 msgstr ""
@@ -591,6 +595,10 @@ msgstr ""
 msgid "{views, plural, one {# view} other {# views}}"
 msgstr ""
 
+#: src/components/content/DraftsQueue.jsx
+msgid "{waiting, plural, one {# draft waiting for you} other {# drafts waiting for you}}"
+msgstr ""
+
 #: src/components/content/ReflectionsTab.jsx
 msgid "{waiting, plural, one {# draft waiting} other {# drafts waiting}}"
 msgstr ""
@@ -796,6 +804,10 @@ msgstr ""
 
 #: src/components/profile/VoiceSample.jsx
 msgid "A finding, written for you"
+msgstr ""
+
+#: src/components/content/DraftsQueue.jsx
+msgid "A good default for {channelLabel} until five posts have numbers."
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
@@ -1118,6 +1130,10 @@ msgstr ""
 msgid "All statuses"
 msgstr ""
 
+#: src/components/content/DraftsQueue.jsx
+msgid "Already said"
+msgstr ""
+
 #: src/app/(auth)/page.js
 #~ msgid "Already using Duct?"
 #~ msgstr ""
@@ -1264,6 +1280,10 @@ msgstr ""
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Applying…"
+msgstr ""
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Approve"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -2414,6 +2434,10 @@ msgstr ""
 msgid "Customise"
 msgstr ""
 
+#: src/components/content/ReminderSetting.jsx
+msgid "Daily reminder"
+msgstr ""
+
 #: src/components/AppSidebar.jsx
 msgid "Dark mode"
 msgstr ""
@@ -2786,6 +2810,10 @@ msgstr ""
 msgid "duct home"
 msgstr ""
 
+#: src/components/content/DailyReflectionReminder.jsx
+msgid "Duct is ready to read today's work and draft what's worth posting."
+msgstr ""
+
 #: src/components/ConnectionBanner.jsx
 msgid "Duct needs a connection. Your work is saved and will still be here."
 msgstr ""
@@ -2925,6 +2953,10 @@ msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Edit format"
+msgstr ""
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Edit in chat"
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
@@ -3291,6 +3323,10 @@ msgstr ""
 msgid "From project context"
 msgstr ""
 
+#: src/components/content/DailyReflectionReminder.jsx
+msgid "From your daily reflection. Approve, edit or skip them in Content Studio."
+msgstr ""
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr ""
@@ -3391,6 +3427,10 @@ msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
+msgstr ""
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Gives too much away"
 msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js
@@ -4691,6 +4731,10 @@ msgstr ""
 msgid "No competitor research was returned for this audit."
 msgstr ""
 
+#: src/components/content/ReminderSetting.jsx
+msgid "No daily reminder"
+msgstr ""
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "No earlier version to compare."
 msgstr ""
@@ -4928,8 +4972,16 @@ msgstr ""
 msgid "Not granted"
 msgstr ""
 
+#: src/components/content/DraftsQueue.jsx
+msgid "Not interesting"
+msgstr ""
+
 #: src/app/(start)/start/page.jsx
 msgid "Not it — try another"
+msgstr ""
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Not my voice"
 msgstr ""
 
 #: src/components/models/ModelPicker.jsx
@@ -4995,6 +5047,10 @@ msgstr ""
 
 #: src/lib/credentialStorage.js
 msgid "Not stored"
+msgstr ""
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Not true"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
@@ -6097,6 +6153,7 @@ msgstr ""
 msgid "Redirects"
 msgstr ""
 
+#: src/components/content/DailyReflectionReminder.jsx
 #: src/components/content/ReflectionsTab.jsx
 msgid "Reflect on today"
 msgstr ""
@@ -6193,6 +6250,10 @@ msgstr ""
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Remembering…"
+msgstr ""
+
+#: src/components/content/ReminderSetting.jsx
+msgid "Remind me at {at}"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -7176,6 +7237,7 @@ msgstr ""
 msgid "Sketching image prompts…"
 msgstr ""
 
+#: src/components/content/DraftsQueue.jsx
 #: src/components/insights/AccountSelect.jsx
 msgid "Skip"
 msgstr ""
@@ -8668,6 +8730,10 @@ msgstr ""
 msgid "Why it worked:"
 msgstr ""
 
+#: src/components/content/DraftsQueue.jsx
+msgid "Why not? The next reflection learns from it."
+msgstr ""
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Will be encrypted and stored on Duct, so scheduled runs use your key too."
 msgstr ""
@@ -8870,6 +8936,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "your ask"
+msgstr ""
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Your best hour on {channelLabel}, from {posts} posts with numbers."
 msgstr ""
 
 #: src/components/connections/ProviderCard.jsx

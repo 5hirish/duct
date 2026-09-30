@@ -14,6 +14,7 @@ import LocalBackendGate from "../../components/LocalBackendGate.jsx";
 import UpdateToast from "../../components/UpdateToast.jsx";
 import ReloadToast from "../../components/ReloadToast.jsx";
 import ConnectionBanner from "../../components/ConnectionBanner.jsx";
+import DailyReflectionReminder from "../../components/content/DailyReflectionReminder.jsx";
 import { CommandProvider } from "../../components/commands/CommandRegistry";
 import CommandPalette from "../../components/commands/CommandPalette";
 import AppCommands from "../../components/commands/AppCommands";
@@ -46,6 +47,8 @@ export default function AppLayout({ children }) {
           ReloadToast browser-only. */}
       <ReloadToast />
       <ConnectionBanner />
+      {/* The drafts queue's one notice a day, from wherever the app is open. */}
+      <DailyReflectionReminder />
     </LocalBackendGate>
   );
 }

@@ -583,6 +583,10 @@ agents/
     │                     content_posts.reflection and are re-derived in place on a
     │                     revision. A reflect_day run gets REFLECTION_TOOLS and nothing
     │                     that draws, plans or publishes (tools.py)
+    ├── best_time.py    — when a text post goes out (#266): the account's own best
+    │                     hour once five X or LinkedIn posts have numbers, else the
+    │                     channel's default, in the reader's zone, never on top of a
+    │                     post already scheduled there. performance.py is the visual half
     ├── performance.py  — the account's own history for a plan: type ranking (completion,
     │                     saves, shares; never likes), explore/exploit, graded bets, best
     │                     posting times. An unrecorded metric is unknown, never zero.

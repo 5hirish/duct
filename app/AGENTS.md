@@ -94,7 +94,11 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit hub and live workspace
   - `content/` — Content Studio hub; `content/plan/` the planner board;
     `content/posts/[postId]`, `posts/new`, `sessions/new` — the content agent
-    workspace over a post or a plan
+    workspace over a post or a plan; `content/reflect?day=` — the Daily
+    Reflection workspace (#270), whose drafts wait in the Reflections tab's
+    queue (#266). That queue's one notice a day is
+    `components/content/DailyReflectionReminder.jsx`, mounted once in the
+    app layout; its time and switch are per device (`lib/dailyReminder.js`)
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
   - `connections/` — connector/integration management
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
