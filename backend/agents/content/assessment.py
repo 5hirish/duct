@@ -2,9 +2,11 @@
 
 Two halves, joined by one rule: **the agent scores, the server weighs.**
 
-  compute_sanity(slides, caption, hashtags) -> list[SanityCheck]
+  compute_sanity(slides, caption, hashtags, replies=, channel=) -> list[SanityCheck]
       Deterministic "would this ship broken?" checks. Advisory: a failure is
-      shown and costs points, it never disables Publish.
+      shown and costs points, it never disables Publish. The channel decides
+      the length limit and whether hashtags are expected at all — an X post
+      is not short of hashtags, it is right not to have them.
 
   compute_overall(markers, checks) -> (overall, content_score, band)
       The six markers the reviewer scored, blended at MARKER_WEIGHTS, less a
@@ -29,6 +31,7 @@ from collections.abc import Iterable
 
 from pydantic import ValidationError
 
+from agents.content.channels import primary_channel, resolve as resolve_channel
 from agents.content.schema import (
     CheckSeverity,
     ContentMarker,
@@ -62,8 +65,10 @@ BANDS: tuple[tuple[int, ReviewBand], ...] = (
     (0, ReviewBand.NOT_READY),
 )
 
-# The stricter platform ceiling (Instagram 2,200; TikTok ~4,000), so a post
-# bound for both is safe on both.
+# A visual post's ceiling: the stricter of Instagram (2,200) and TikTok
+# (4,000), so a carousel bound for both is safe on both. A text channel's post
+# goes out on that channel alone and is held to its own limit
+# (agents/content/channels.RULES).
 CAPTION_MAX = 2200
 
 _PLACEHOLDER_RE = re.compile(
@@ -101,15 +106,33 @@ def _check(check_id: SanityCheckId, offenders: list[str], *, failed: bool | None
     return SanityCheck(id=check_id, passed=passed, severity=severity, offenders=offenders)
 
 
-def compute_sanity(slides: list, caption: str, hashtags: list) -> list[SanityCheck]:
+def reply_id(index: int) -> str:
+    """How a reply is named in a check's offenders: ``reply-1`` for the first.
+    The app words it ("reply 1") the way it words ``slide-01``."""
+    return f"reply-{index}"
+
+
+def compute_sanity(
+    slides: list,
+    caption: str,
+    hashtags: list,
+    *,
+    replies: list | None = None,
+    channel: str | None = None,
+) -> list[SanityCheck]:
     """The deterministic checks, against a post's stored fields.
 
     ``slides`` is the stored JSON list: dicts, multi-image slides carrying
     ``items``. Offenders are slide ids — a cell's failure names its slide,
-    because the slide is what the owner navigates to.
+    because the slide is what the owner navigates to — or ``caption`` and
+    ``reply-N`` for the words. A text post has no slides, so the slide checks
+    pass by having nothing to fail on.
     """
     slides = [s for s in (slides or []) if isinstance(s, dict)]
     caption = (caption or "").strip()
+    replies = [r for r in (replies or []) if isinstance(r, str)]
+    ch = resolve_channel(channel)
+    limit = ch.rules.max_chars if ch.text_first else CAPTION_MAX
 
     no_image: list[str] = []
     stale: list[str] = []
@@ -135,21 +158,34 @@ def compute_sanity(slides: list, caption: str, hashtags: list) -> list[SanityChe
             placeholder.append(sid)
     if _has_placeholder(caption):
         placeholder.append("caption")
+    too_long = ["caption"] if len(caption) > limit else []
+    for i, reply in enumerate(replies, start=1):
+        if _has_placeholder(reply):
+            placeholder.append(reply_id(i))
+        if len(reply) > limit:
+            too_long.append(reply_id(i))
 
     tags = [t.strip().lower().lstrip("#") for t in (hashtags or []) if isinstance(t, str) and t.strip()]
     repeated = sorted({f"#{t}" for t in tags if tags.count(t) > 1})
 
-    return [
+    checks = [
         _check(SanityCheckId.SLIDES_HAVE_IMAGES, no_image),
         _check(SanityCheckId.IMAGES_FRESH, stale),
         _check(SanityCheckId.SLIDES_HAVE_HEADLINES, no_copy),
         _check(SanityCheckId.CAPTION_PRESENT, [], failed=not caption),
-        _check(SanityCheckId.CAPTION_LENGTH, [], failed=len(caption) > CAPTION_MAX,
-               severity=CheckSeverity.SOFT),
+        # Hard on a text channel: past the limit, X and LinkedIn refuse the
+        # post outright. Soft for a carousel, whose ceiling is a cross-post.
+        _check(SanityCheckId.CAPTION_LENGTH, too_long,
+               severity=CheckSeverity.HARD if ch.text_first else CheckSeverity.SOFT),
         _check(SanityCheckId.NO_PLACEHOLDER_TEXT, placeholder),
-        _check(SanityCheckId.HASHTAGS_PRESENT, [], failed=not tags, severity=CheckSeverity.SOFT),
-        _check(SanityCheckId.HASHTAGS_UNIQUE, repeated, severity=CheckSeverity.SOFT),
     ]
+    # A channel whose playbook writes no hashtags is not short of them.
+    if ch.rules.hashtags:
+        checks += [
+            _check(SanityCheckId.HASHTAGS_PRESENT, [], failed=not tags, severity=CheckSeverity.SOFT),
+            _check(SanityCheckId.HASHTAGS_UNIQUE, repeated, severity=CheckSeverity.SOFT),
+        ]
+    return checks
 
 
 # ---------------------------------------------------------------------------
@@ -189,10 +225,15 @@ def compute_overall(markers: list[ContentMarker], checks: list[SanityCheck]) -> 
     return overall, content_score, band_for(overall)
 
 
-def fingerprint(slides: list, caption: str, hashtags: list) -> str:
+def fingerprint(slides: list, caption: str, hashtags: list, replies: list | None = None) -> str:
     """A digest of what a reviewer reads. When it moves, the score is from
-    before the change — a new image counts, since the visuals were judged."""
-    body = json.dumps([slides or [], (caption or "").strip(), hashtags or []], sort_keys=True, default=str)
+    before the change — a new image counts, since the visuals were judged.
+    Replies join the digest only when there are some, so every review stored
+    before replies existed keeps the digest it was given."""
+    parts: list = [slides or [], (caption or "").strip(), hashtags or []]
+    if replies:
+        parts.append(list(replies))
+    body = json.dumps(parts, sort_keys=True, default=str)
     return hashlib.sha256(body.encode()).hexdigest()[:16]
 
 
@@ -202,6 +243,8 @@ def assess(
     hashtags: list,
     scores: Iterable[MarkerScore] = (),
     *,
+    replies: list | None = None,
+    channel: str | None = None,
     notes: str = "",
     scored_at: str = "",
     scored_fingerprint: str = "",
@@ -209,9 +252,9 @@ def assess(
     """The review of a post as it is now: fresh checks, and — when there are
     scores — the overall they add up to. ``scored_fingerprint`` is the digest
     the scores were given against; omitted, the scores are about now."""
-    checks = compute_sanity(slides, caption, hashtags)
+    checks = compute_sanity(slides, caption, hashtags, replies=replies, channel=channel)
     markers = weigh_markers(scores)
-    current = fingerprint(slides, caption, hashtags)
+    current = fingerprint(slides, caption, hashtags, replies)
     overall = content_score = band = None
     if markers:
         overall, content_score, band = compute_overall(markers, checks)
@@ -228,7 +271,15 @@ def assess(
     )
 
 
-def reassess(slides: list, caption: str, hashtags: list, stored: dict | None) -> PublishAssessment:
+def reassess(
+    slides: list,
+    caption: str,
+    hashtags: list,
+    stored: dict | None,
+    *,
+    replies: list | None = None,
+    channel: str | None = None,
+) -> PublishAssessment:
     """A stored review read against the post now. The checks are recomputed
     and the stored scores re-weighed, so neither can be out of date; only the
     reviewer's judgement can, and ``stale`` says when it is."""
@@ -244,6 +295,8 @@ def reassess(slides: list, caption: str, hashtags: list, stored: dict | None) ->
         caption,
         hashtags,
         scores,
+        replies=replies,
+        channel=channel,
         notes=str(stored.get("notes") or ""),
         scored_at=str(stored.get("scored_at") or ""),
         scored_fingerprint=str(stored.get("fingerprint") or ""),
@@ -261,5 +314,16 @@ __all__ = [
     "compute_sanity",
     "fingerprint",
     "reassess",
+    "reassess_post",
+    "reply_id",
     "weigh_markers",
 ]
+
+
+def reassess_post(row) -> PublishAssessment:
+    """``reassess`` over a stored post row — the one call every reader makes,
+    so none of them can forget the replies or the channel."""
+    return reassess(
+        row.slides or [], row.caption or "", row.hashtags or [], row.last_assessment,
+        replies=row.replies or [], channel=primary_channel(row.platforms),
+    )

@@ -177,7 +177,7 @@ def build_content_post_artifact(
         f"VISUAL BRIEF: {post.visual_brief}",
         f"CAPTION: {post.caption}",
         f"HASHTAGS: {' '.join(post.hashtags or [])}",
-        f"TIKTOK TITLE: {post.tiktok_title}",
+        f"TITLE: {post.title}",
         "",
         "SLIDES (in order):",
     ]

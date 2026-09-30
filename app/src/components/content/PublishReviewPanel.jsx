@@ -12,6 +12,7 @@ import {
   SanityCheckId,
   failedChecks,
   isScored,
+  replyNumber,
   slideNumber,
   weakestMarkers,
 } from "@/lib/contentReview";
@@ -56,6 +57,8 @@ export default function PublishReviewPanel({ assessment, compact = false, onRevi
       (offenders || []).map((id) => {
         const n = slideNumber(id);
         if (n != null) return t`slide ${n}`;
+        const r = replyNumber(id);
+        if (r != null) return t`reply ${r}`;
         return id === "caption" ? t`the caption` : id;
       }),
     );
@@ -67,7 +70,7 @@ export default function PublishReviewPanel({ assessment, compact = false, onRevi
       case SanityCheckId.IMAGES_FRESH: return t`Image older than its prompt on ${at}`;
       case SanityCheckId.SLIDES_HAVE_HEADLINES: return t`No headline on ${at}`;
       case SanityCheckId.CAPTION_PRESENT: return t`No caption`;
-      case SanityCheckId.CAPTION_LENGTH: return t`Caption is longer than Instagram allows`;
+      case SanityCheckId.CAPTION_LENGTH: return t`Longer than the platform allows: ${at}`;
       case SanityCheckId.NO_PLACEHOLDER_TEXT: return t`Placeholder text on ${at}`;
       case SanityCheckId.HASHTAGS_PRESENT: return t`No hashtags`;
       case SanityCheckId.HASHTAGS_UNIQUE: return t`Repeated hashtags: ${at}`;

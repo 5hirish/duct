@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Trans, useLingui } from "@lingui/react/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +16,7 @@ import {
   listSocialAccounts,
   publishPost,
 } from "@/lib/contentApi";
-import { PLATFORM_LABELS } from "@/lib/contentEnums";
+import { PLATFORM_LABELS, Platform, PostType } from "@/lib/contentEnums";
 import { friendlyErrorMessage } from "@/lib/agentSession";
 import PublishReviewPanel from "./PublishReviewPanel";
 
@@ -26,12 +26,14 @@ import PublishReviewPanel from "./PublishReviewPanel";
  *      the agent's last score. Advice — nothing below waits on it.
  *   1. Pick one or more connected accounts
  *   2. (Optional) pick a schedule time
- *   3. Submit → backend uploads images to PostBridge + creates the post
+ *   3. Submit → backend uploads images to PostBridge + creates the post; a
+ *      text post goes as words alone, and the dialog says which of its
+ *      replies go with it (the channel's rule, from `post.channel`)
  *
  * Props:
  *   - open        : boolean
  *   - onClose     : () => void
- *   - post        : { id, project_id, topic, caption, platforms[] }
+ *   - post        : { id, project_id, topic, caption, platforms[], post_type, replies[], channel }
  *   - onPublished : (updatedPost) => void  — fired after successful publish
  */
 export default function PublishModal({ open, onClose, post, onPublished }) {
@@ -44,6 +46,9 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   const [error,   setError]         = useState("");
   const [stage,   setStage]         = useState("");  // "" | "loading" | "publishing" | "done"
   const [assessment, setAssessment] = useState(null);
+  const primary = Array.isArray(post?.platforms) ? post.platforms[0] : undefined;
+  // A TikTok draft is TikTok's own feature; nowhere else has it.
+  const offersTiktokDraft = primary === Platform.TIKTOK;
 
   // Group accounts by platform for the select grid
   const grouped = useMemo(() => {
@@ -75,10 +80,10 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
         if (linkedIds.length > 0) {
           // Prefer the project's linked accounts.
           setSelected(new Set(linkedIds));
-        } else if (Array.isArray(post.platforms) && post.platforms.includes("tiktok")) {
-          // Fall back to TikTok accounts when the post targets TikTok.
-          const ttIds = (list || []).filter(a => a.platform === "tiktok").map(a => a.id);
-          setSelected(new Set(ttIds));
+        } else if (primary) {
+          // Fall back to the accounts on the post's own platform.
+          const ids = (list || []).filter(a => a.platform === primary).map(a => a.id);
+          setSelected(new Set(ids));
         }
       } catch (e) {
         if (!cancelled) setError(friendlyError(e));
@@ -163,11 +168,13 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
             <>
               <PublishReviewPanel assessment={assessment} compact />
 
+              <WhatPublishes post={post} />
+
               {!hasAccounts && (
                 <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs">
                   <Trans>
-                    You don't have any social accounts connected yet. Ask your admin to
-                    connect a TikTok / Instagram / YouTube account.
+                    You don't have any social accounts connected yet. Connect the
+                    account you want to post from in the Accounts tab.
                   </Trans>
                 </div>
               )}
@@ -241,16 +248,18 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                       className="rounded border border-input bg-background px-2 py-0.5 text-xs"
                     />
                   </label>
-                  <label className="flex items-center gap-2 text-xs">
-                    <input
-                      type="radio"
-                      name="when"
-                      checked={tiktokDraft}
-                      onChange={() => { setTiktokDraft(true); setScheduledAt(""); }}
-                      className="accent-primary"
-                    />
-                    <span><Trans>Save as TikTok draft (post manually from the app)</Trans></span>
-                  </label>
+                  {offersTiktokDraft && (
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="radio"
+                        name="when"
+                        checked={tiktokDraft}
+                        onChange={() => { setTiktokDraft(true); setScheduledAt(""); }}
+                        className="accent-primary"
+                      />
+                      <span><Trans>Save as TikTok draft (post manually from the app)</Trans></span>
+                    </label>
+                  )}
                 </div>
               </section>
 
@@ -282,6 +291,33 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+// What a text post takes with it. PostBridge posts one reply on X (as the
+// post's first reply) and none on LinkedIn; the rest are the author's to
+// paste. Said before Publish, rather than learned from a refusal after it.
+function WhatPublishes({ post }) {
+  const channel = post?.channel;
+  if (post?.post_type !== PostType.TEXT || !channel) return null;
+  const replies = (post.replies || []).filter((r) => r && r.trim());
+  if (replies.length === 0) return null;
+  const label = channel.label;
+  const publishable = channel.publishable_replies || 0;
+  const extra = replies.length - publishable;
+  if (extra <= 0) {
+    return (
+      <p className="rounded-md border border-border bg-muted/40 p-3 text-xs">
+        <Trans>The post and its first reply go out together.</Trans>
+      </p>
+    );
+  }
+  return (
+    <p className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs">
+      {publishable > 0
+        ? <><Trans>{label} publishes the post and its first reply.</Trans>{" "}<Plural value={extra} one="Post the other reply yourself once it's live: each part has a copy button." other="Post the other # replies yourself once it's live: each part has a copy button." /></>
+        : <Trans>{label} doesn't publish comments. The post goes out alone; paste your first comment under it once it's live.</Trans>}
+    </p>
   );
 }
 

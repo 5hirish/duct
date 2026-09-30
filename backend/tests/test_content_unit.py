@@ -693,29 +693,55 @@ def test_image_tool_schemas_constrain_model_and_required_params():
 
 
 # ---------------------------------------------------------------------------
-# Channel labels — _LABELS used to be a hand-kept mirror of a Platform enum
-# that lived in another module, so the two could drift silently. They now sit
-# together; this keeps the map total so a new channel can't ship label-less
-# and fall back to titleize() ("Google_business").
+# Channel rules — one table per platform (label, limits, what publishes), so
+# the writer, the publish path and the app count against the same numbers.
+# Kept total so a new channel can't ship rule-less and fall back to titleize()
+# ("Google_business") and a guessed limit.
 # ---------------------------------------------------------------------------
 
 
-def test_every_platform_has_a_display_label():
-    from agents.content.channels import Platform, _LABELS, resolve
+def test_every_platform_has_rules():
+    from agents.content.channels import RULES, Platform, resolve
 
-    assert set(_LABELS) == set(Platform), (
-        "every Platform needs a label in agents/content/channels._LABELS — "
-        f"missing: {set(Platform) - set(_LABELS)}"
+    assert set(RULES) == set(Platform), (
+        "every Platform needs a row in agents/content/channels.RULES — "
+        f"missing: {set(Platform) - set(RULES)}"
     )
-    # resolve() indexes the map with a bare string, which only works because
+    # rules_for() indexes the map with a bare string, which only works because
     # Platform is a StrEnum. Guard that, not just the key set.
     for p in Platform:
-        assert resolve(p.value).label == _LABELS[p]
+        assert resolve(p.value).label == RULES[p].label
     # Unknown channels still degrade to the TikTok playbook, not an error.
     unknown = resolve("mastodon")
     assert unknown.label == "Mastodon"
     assert unknown.supported is False
     assert unknown.playbook == "tiktok"
+    assert unknown.rules.max_chars > 0
+
+
+def test_text_channels_have_their_own_playbook():
+    from agents.content.channels import resolve
+
+    for cid in ("twitter", "linkedin"):
+        ch = resolve(cid)
+        assert ch.supported and ch.playbook == cid and ch.text_first
+    tiktok = resolve("tiktok")
+    assert tiktok.supported and not tiktok.text_first
+    # A channel with rules but no playbook drafts on TikTok's, visually.
+    assert not resolve("threads").text_first
+
+
+def test_copy_problems_counts_against_the_platform_limit():
+    from agents.content.channels import copy_problems
+
+    assert copy_problems("twitter", "x" * 280, ["y" * 280]) == []
+    over = copy_problems("twitter", "x" * 281, ["fine", "  "])
+    assert over == [
+        "The post is 281 characters; Twitter / X allows 280.",
+        "Reply 2 is empty.",
+    ]
+    # The same words are fine where the ceiling is higher.
+    assert copy_problems("linkedin", "x" * 281) == []
 
 
 def test_the_writer_schemas_carry_nothing_gemini_refuses():

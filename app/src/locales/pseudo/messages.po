@@ -214,6 +214,14 @@ msgstr ""
 msgid "{extra, plural, one {+# more} other {+# more}}"
 msgstr ""
 
+#: src/components/content/PublishModal.jsx
+msgid "{extra, plural, one {Post the other reply yourself once it's live: each part has a copy button.} other {Post the other # replies yourself once it's live: each part has a copy button.}}"
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{extra} over the limit"
+msgstr ""
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{failCount, plural, one {# Error} other {# Errors}}"
 msgstr ""
@@ -232,6 +240,10 @@ msgstr ""
 
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "{granted} of {total} granted"
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{hidden, plural, one {# character sits behind the fold.} other {# characters sit behind the fold.}}"
 msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
@@ -282,8 +294,28 @@ msgstr ""
 msgid "{label} API key"
 msgstr ""
 
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} doesn't publish comments. Paste this under the post once it's live."
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "{label} doesn't publish comments. The post goes out alone; paste your first comment under it once it's live."
+msgstr ""
+
 #: src/components/insights/ConnectionRequest.jsx
 msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} only publishes the first reply. Post this one yourself."
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} post"
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "{label} publishes the post and its first reply."
 msgstr ""
 
 #: src/components/content/PublishReviewPanel.jsx
@@ -296,6 +328,10 @@ msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{landingPages, plural, one {# page} other {# pages}}"
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{left} left"
 msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
@@ -877,6 +913,10 @@ msgstr ""
 msgid "Adaptive thinking"
 msgstr ""
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Add a first comment"
+msgstr ""
+
 #: src/app/(app)/execute/page.jsx
 msgid "Add a guardrail"
 msgstr ""
@@ -887,6 +927,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Add a reply"
 msgstr ""
 
 #: src/components/content/DiscoverPage.jsx
@@ -1683,8 +1727,8 @@ msgid "Caption"
 msgstr ""
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Caption is longer than Instagram allows"
-msgstr ""
+#~ msgid "Caption is longer than Instagram allows"
+#~ msgstr ""
 
 #: src/components/content/StyleGallery.jsx
 msgid "Captions"
@@ -2159,6 +2203,7 @@ msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/audit/ShareReport.jsx
+#: src/components/content/TextPostEditor.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr ""
@@ -2176,6 +2221,7 @@ msgid "copy"
 msgstr ""
 
 #: src/components/audit/ShareReport.jsx
+#: src/components/content/TextPostEditor.jsx
 msgid "Copy"
 msgstr ""
 
@@ -2197,6 +2243,10 @@ msgstr ""
 
 #: src/components/content/PostMetricsForm.jsx
 msgid "Copy these from the platform’s analytics. They stay as you enter them."
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Copy this part"
 msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
@@ -3063,6 +3113,10 @@ msgstr ""
 msgid "Finalizing report"
 msgstr ""
 
+#: src/components/content/PostViewport.jsx
+msgid "Finding a source…"
+msgstr ""
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Findings by Category"
 msgstr ""
@@ -3093,6 +3147,10 @@ msgstr ""
 
 #: src/app/(auth)/page.js
 msgid "Finish the security check above, then try again."
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "First comment"
 msgstr ""
 
 #: src/components/content/PostViewport.jsx
@@ -4109,6 +4167,10 @@ msgstr ""
 msgid "Logged metrics"
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Longer than the platform allows: {at}"
+msgstr ""
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Looking up where {providerName}'s key comes from."
 msgstr ""
@@ -4451,6 +4513,10 @@ msgstr ""
 msgid "New invitation sent to {invitee}."
 msgstr ""
 
+#: src/app/(app)/content/page.jsx
+msgid "New post"
+msgstr ""
+
 #: src/components/AppSidebar.jsx
 msgid "New project"
 msgstr ""
@@ -4639,12 +4705,16 @@ msgid "No plan yet for this project."
 msgstr ""
 
 #: src/app/(app)/content/page.jsx
-msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
-msgstr ""
+#~ msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
+#~ msgstr ""
 
 #: src/app/(app)/content/page.jsx
 #~ msgid "No posts yet. Generate a plan and draft posts from the board."
 #~ msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "No posts yet. Write one for TikTok, LinkedIn or X, draft them from a plan, or clone a TikTok that worked."
+msgstr ""
 
 #: src/components/content/PostCard.jsx
 msgid "No preview yet"
@@ -5382,6 +5452,10 @@ msgid "Pick what you’d like done. We’ll scope it and follow up."
 msgstr ""
 
 #: src/components/content/PostViewport.jsx
+msgid "Picking the angle…"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
 msgid "Picking the hook…"
 msgstr ""
 
@@ -5446,6 +5520,7 @@ msgid "Português"
 msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr ""
 
@@ -5685,6 +5760,10 @@ msgstr ""
 msgid "Published the post"
 msgstr ""
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Publishes as the post's first reply."
+msgstr ""
+
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Publishing isn't set up yet"
 #~ msgstr ""
@@ -5791,6 +5870,10 @@ msgstr ""
 
 #: src/lib/contentEvents.js
 msgid "Reading the TikTok"
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "Reading what you've already said…"
 msgstr ""
 
 #: src/app/(start)/start/page.jsx
@@ -5991,6 +6074,10 @@ msgstr ""
 msgid "Remove key"
 msgstr ""
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Remove reply {n}"
+msgstr ""
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Remove this pillar"
 msgstr ""
@@ -6009,6 +6096,14 @@ msgstr ""
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Reply {n}"
+msgstr ""
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "reply {r}"
 msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
@@ -6516,6 +6611,10 @@ msgstr ""
 
 #: src/app/(auth)/page.js
 msgid "Security verification"
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "see more"
 msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx
@@ -7304,6 +7403,10 @@ msgstr ""
 msgid "Testing"
 msgstr ""
 
+#: src/lib/contentEnums.js
+msgid "Text"
+msgstr ""
+
 #: src/components/content/StyleGallery.jsx
 msgid "Text cards"
 msgstr ""
@@ -7444,6 +7547,10 @@ msgstr ""
 msgid "The fact in one line — with its number or date if it has one."
 msgstr ""
 
+#: src/components/content/TextPostEditor.jsx
+msgid "The first line is the hook."
+msgstr ""
+
 #: src/components/content/FormatLibrary.jsx
 msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
 msgstr ""
@@ -7466,6 +7573,14 @@ msgstr ""
 
 #: src/components/audit/AuditReport.jsx
 msgid "The pipeline stopped early — your partial results are still visible above."
+msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "The post and its first reply go out together."
+msgstr ""
+
+#: src/components/content/PostViewport.jsx
+msgid "The post appears here as soon as the draft is ready, with its character count."
 msgstr ""
 
 #: src/components/content/PublishReviewPanel.jsx
@@ -7498,6 +7613,10 @@ msgstr ""
 
 #: src/components/content/StyleGallery.jsx
 msgid "the slide styles"
+msgstr ""
+
+#: src/components/content/TextPostEditor.jsx
+msgid "The source, the link, or the why."
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
@@ -8243,6 +8362,10 @@ msgstr ""
 msgid "What should Duct call you?"
 msgstr ""
 
+#: src/components/content/TextPostEditor.jsx
+msgid "What the {label} feed shows before “see more”"
+msgstr ""
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What was observed, why it matters, how to apply it."
 msgstr ""
@@ -8417,6 +8540,10 @@ msgstr ""
 msgid "Writing the caption…"
 msgstr ""
 
+#: src/components/content/PostViewport.jsx
+msgid "Writing the hook…"
+msgstr ""
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Writing your report…"
@@ -8455,7 +8582,11 @@ msgid "You can close this tab."
 msgstr ""
 
 #: src/components/content/PublishModal.jsx
-msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
+#~ msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
+#~ msgstr ""
+
+#: src/components/content/PublishModal.jsx
+msgid "You don't have any social accounts connected yet. Connect the account you want to post from in the Accounts tab."
 msgstr ""
 
 #: src/app/(start)/start/page.jsx

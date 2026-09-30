@@ -260,11 +260,11 @@ export async function patchPost(postId, patch) {
   return out;
 }
 
-export async function markPostPosted(postId, { tiktokUrl } = {}) {
+export async function markPostPosted(postId, { publishedUrl } = {}) {
   const url = new URL(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/mark-posted`,
   );
-  if (tiktokUrl) url.searchParams.set("tiktok_url", tiktokUrl);
+  if (publishedUrl) url.searchParams.set("published_url", publishedUrl);
   const res = await fetch(url.toString(), {
     method: "POST",
     headers: backendAuthedHeaders(),

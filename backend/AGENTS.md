@@ -521,9 +521,20 @@ agents/
     ├── v1/             — deepagents runner (the only content engine)
     ├── assessment.py   — the pre-publish review's checks and scoring; the agent
     │                     scores six markers, the weights stay here
+    ├── channels.py     — one post row serves every platform; what differs is rules,
+    │                     not columns. RULES holds each platform's limit, fold,
+    │                     replies that publish, media and metrics support; the
+    │                     writer, both publish paths, the review and the app (via
+    │                     `post.channel`) all read it. A new channel is a row there
+    ├── publishing.py   — the PostBridge request and its bookkeeping, shared by the
+    │                     agent's publish_post and the publish route (#272 was the two
+    │                     drifting apart)
+    ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
+    │                     visual playbook applies to a post that is words
     ├── performance.py  — the account's own history for a plan: type ranking (completion,
     │                     saves, shares; never likes), explore/exploit, graded bets, best
-    │                     posting times. An unrecorded metric is unknown, never zero
+    │                     posting times. An unrecorded metric is unknown, never zero.
+    │                     Visual posts only: a tweet's numbers never steer a TikTok plan
     └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py
 ```
 

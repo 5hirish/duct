@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { failedChecks, isScored, slideNumber, weakestMarkers } from "../contentReview";
+import { failedChecks, isScored, replyNumber, slideNumber, weakestMarkers } from "../contentReview";
 
 const assessment = {
   overall: 64,
@@ -38,5 +38,8 @@ describe("contentReview", () => {
     expect(slideNumber("slide-04")).toBe(4);
     expect(slideNumber("caption")).toBeNull();
     expect(slideNumber("#slide-1")).toBeNull();
+    expect(replyNumber("reply-2")).toBe(2);
+    expect(replyNumber("slide-02")).toBeNull();
+    expect(replyNumber("caption")).toBeNull();
   });
 });
