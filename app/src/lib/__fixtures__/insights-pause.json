@@ -101,7 +101,7 @@
     "cache_read_tokens": 0,
     "cache_creation_tokens": 0,
     "total_tokens": 38700,
-    "model": "claude-sonnet-5",
+    "model": "claude-sonnet-5-5",
     "context_window": 200000,
     "scope": "thread"
   },
@@ -185,7 +185,7 @@
     "cache_read_tokens": 0,
     "cache_creation_tokens": 0,
     "total_tokens": 71900,
-    "model": "claude-sonnet-5",
+    "model": "claude-sonnet-5-5",
     "context_window": 200000,
     "scope": "thread"
   },
@@ -210,7 +210,7 @@
     "cache_read_tokens": 0,
     "cache_creation_tokens": 0,
     "total_tokens": 83900,
-    "model": "claude-sonnet-5",
+    "model": "claude-sonnet-5-5",
     "context_window": 200000,
     "scope": "thread"
   }

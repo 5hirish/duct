@@ -32,19 +32,21 @@ from agents.thinking import (
     "model, expected",
     [
         # Anthropic's ladder is the widest, so every rung is distinct.
-        ("claude-opus-5", ["low", "medium", "high", "xhigh"]),
-        ("claude-sonnet-5", ["low", "medium", "high", "xhigh"]),
+        ("claude-opus-5-5", ["low", "medium", "high", "xhigh"]),
+        ("claude-sonnet-5-5", ["low", "medium", "high", "xhigh"]),
         # 4.6 has max but no xhigh — Exhaustive lands on max, not on high.
         ("claude-sonnet-4-6", ["low", "medium", "high", "max"]),
         # OpenAI names the dial differently and defaults lower.
-        ("gpt-5.6-sol", ["low", "medium", "high", "xhigh"]),
+        ("gpt-6.1-sol", ["low", "medium", "high", "xhigh"]),
+        # Astra has no `none` rung, which Quick never asks for anyway.
+        ("gpt-6-astra", ["low", "medium", "high", "xhigh"]),
         # Gemini stops at high, so the top two rungs collapse.
         ("gemini-3.8-flash", ["low", "medium", "high", "high"]),
         # …and the lite model has a rung below low.
         ("gemini-3.5-flash-lite", ["minimal", "medium", "high", "high"]),
         # xAI publishes the full ladder and cannot turn reasoning off, so all
         # four rungs are distinct and none of them is an "off".
-        ("grok-4.6", ["low", "medium", "high", "xhigh"]),
+        ("grok-4.7", ["low", "medium", "high", "xhigh"]),
     ],
 )
 def test_each_rung_lands_on_a_value_that_model_accepts(model, expected):
@@ -60,8 +62,8 @@ def test_high_means_different_things_to_different_providers():
     `high` is Anthropic's default and Gemini's ceiling. A user picking "Deep"
     should get the same *intent* on both without knowing that.
     """
-    assert describe_model("claude-opus-5")["default_native"] == "high"
-    assert describe_model("gpt-5.6-sol")["default_native"] == "medium"
+    assert describe_model("claude-sonnet-5-5")["default_native"] == "high"
+    assert describe_model("gpt-6.1-sol")["default_native"] == "medium"
     assert resolve_native("gemini-3.8-flash", ThinkingLevel.EXHAUSTIVE) == "high"
 
 
@@ -70,13 +72,20 @@ def test_a_collapsed_rung_says_so_rather_than_offering_a_dead_choice():
     assert levels["exhaustive"]["same_as"] == "deep"
     assert levels["deep"]["same_as"] == "", "the first rung to claim a value owns it"
     # Anthropic has room for all four, so nothing collapses.
-    assert all(row["same_as"] == "" for row in describe_model("claude-opus-5")["levels"])
+    assert all(row["same_as"] == "" for row in describe_model("claude-opus-5-5")["levels"])
 
 
 def test_the_default_rung_is_marked_so_the_ui_can_say_which_is_free():
-    marked = [row["level"] for row in describe_model("claude-opus-5")["levels"] if row["is_default"]]
+    marked = [row["level"] for row in describe_model("claude-sonnet-5-5")["levels"] if row["is_default"]]
     assert marked == ["deep"]
-    marked = [row["level"] for row in describe_model("gpt-5.6-sol")["levels"] if row["is_default"]]
+    marked = [row["level"] for row in describe_model("gpt-6.1-sol")["levels"] if row["is_default"]]
+    assert marked == ["balanced"]
+
+
+def test_opus_5_5_defaults_a_rung_below_the_rest_of_its_family():
+    """Same ladder as Sonnet 5.5, but Anthropic's default is medium, not high —
+    a picker marking Deep as the free rung on Opus 5.5 would be wrong."""
+    marked = [row["level"] for row in describe_model("claude-opus-5-5")["levels"] if row["is_default"]]
     assert marked == ["balanced"]
 
 
@@ -86,15 +95,30 @@ def test_the_default_rung_is_marked_so_the_ui_can_say_which_is_free():
 
 def test_an_openrouter_slug_resolves_to_the_model_it_fronts():
     assert support_for("anthropic/claude-opus-5") is support_for("claude-opus-5")
-    assert support_for("openai/gpt-5-mini") is support_for("gpt-5-mini")
+    assert support_for("openai/gpt-6-luna") is support_for("gpt-6-luna")
+    # OpenRouter writes Anthropic's versions with a dot.
+    assert support_for("anthropic/claude-opus-5.5") is support_for("claude-opus-5-5")
+
+
+def test_a_retired_catalogue_id_answers_for_the_model_it_now_runs_on():
+    """A saved pick of Opus 5 runs on Opus 5.5 (agents/models.RETIRED_MODELS),
+    so its dial is Opus 5.5's — medium by default, not Opus 5's high."""
+    assert support_for("claude-opus-5") is support_for("claude-opus-5-5")
+    assert describe_model("claude-opus-5")["default_native"] == "medium"
+    assert support_for("gpt-5.6-terra") is support_for("gpt-6.1-sol")
+    # An OpenRouter pick that moved answers for its successor too; one kept
+    # as picked (no successor) keeps a ladder of its own.
+    assert support_for("openai/gpt-5-mini") is support_for("gpt-6-luna")
+    assert support_for("deepseek/deepseek-v4-flash") is not None
 
 
 def test_the_1m_context_variant_is_the_same_model():
-    """`claude-opus-5[1m]` is a context-window selector, not a different model."""
+    """`claude-opus-5-5[1m]` is a context-window selector, not a different model."""
+    assert support_for("claude-opus-5-5[1m]") is support_for("claude-opus-5-5")
 
 
 def test_a_modelname_enum_resolves_like_its_string():
-    assert support_for(ModelName.CLAUDE_OPUS) is support_for("claude-opus-5")
+    assert support_for(ModelName.CLAUDE_OPUS) is support_for("claude-opus-5-5")
 
 
 # ---------------------------------------------------------------------------
@@ -116,14 +140,14 @@ def test_a_model_with_no_dial_contributes_nothing(model):
 def test_an_unset_level_leaves_the_model_on_its_own_default():
     """Normalising four different provider defaults into one would change the
     cost and quality of every project that never touched the setting."""
-    assert thinking_kwargs("claude-opus-5", "") == {}
-    assert thinking_kwargs("claude-opus-5", None) == {}
+    assert thinking_kwargs("claude-opus-5-5", "") == {}
+    assert thinking_kwargs("claude-opus-5-5", None) == {}
 
 
 def test_a_typo_never_buys_the_expensive_rung():
     assert normalize_level("ULTRA") is None
     assert normalize_level("xhigh") is None, "provider words are not Duct words"
-    assert thinking_kwargs("claude-opus-5", "ultra") == {}
+    assert thinking_kwargs("claude-opus-5-5", "ultra") == {}
 
 
 def test_duct_levels_are_case_and_whitespace_forgiving():
@@ -175,7 +199,7 @@ def test_the_model_factory_sends_langchains_standard_parameter(monkeypatch):
     `reasoning_effort` and translate it themselves — so one kwarg covers every
     provider and no call site special-cases one."""
     seen = _captured(monkeypatch)
-    resolve_chat_model(Provider.ANTHROPIC, "claude-opus-5", "k", thinking="exhaustive")
+    resolve_chat_model(Provider.ANTHROPIC, "claude-opus-5-5", "k", thinking="exhaustive")
     assert seen["reasoning_effort"] == "xhigh"
 
 
@@ -244,6 +268,6 @@ def test_catalogue_models_are_keyed_by_the_enum_not_by_a_loose_string():
 def test_the_1m_variant_and_vendor_slugs_need_no_row_of_their_own():
     """They resolve through _strip_variant / _strip_vendor, so duplicating them
     would mean two rows to keep in step instead of one."""
-    for alias in ("claude-opus-5[1m]", "anthropic/claude-opus-5", "openai/gpt-5-mini"):
+    for alias in ("claude-opus-5-5[1m]", "anthropic/claude-opus-5.5", "openai/gpt-6-luna"):
         assert alias not in MODEL_THINKING
         assert support_for(alias) is not None

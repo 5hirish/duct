@@ -953,7 +953,7 @@ def test_the_verifier_resolves_through_its_own_job(monkeypatch):
 
     def _job_run(job, **_kwargs):
         seen.append(job)
-        model = ModelName.GPT_5_6_SOL if job is Job.ANALYSIS else ModelName.GPT_5_6_TERRA
+        model = ModelName.GPT_6_1_SOL if job is Job.ANALYSIS else ModelName.GPT_6_LUNA
         return JobRun(provider=Provider.OPENAI, model=model, api_key="sk-proj-x", source="header")
 
     monkeypatch.setattr(setup, "resolve_job_run", _job_run)
@@ -963,8 +963,8 @@ def test_the_verifier_resolves_through_its_own_job(monkeypatch):
     run = setup.resolve_run(user_id=None, project_id=None, user_keys={Provider.OPENAI: "sk-proj-x"})
 
     assert seen == [Job.ANALYSIS, Job.VERIFICATION]
-    assert run.model is ModelName.GPT_5_6_SOL
-    assert run.verify_model is ModelName.GPT_5_6_TERRA and run.verify_provider is Provider.OPENAI
+    assert run.model is ModelName.GPT_6_1_SOL
+    assert run.verify_model is ModelName.GPT_6_LUNA and run.verify_provider is Provider.OPENAI
 
     runner = AutonomousInsightsRunner(
         api_key=run.api_key, provider=run.provider, model=run.model,
@@ -976,7 +976,7 @@ def test_the_verifier_resolves_through_its_own_job(monkeypatch):
         lambda tools, model=None: built.append(model) or {"name": "verify", "description": "", "system_prompt": "", "tools": tools},
     )
     runner.build_agent(remember=False, execute=False, interactive=False)
-    assert built and getattr(built[0], "model_name", "") == ModelName.GPT_5_6_TERRA.value
+    assert built and getattr(built[0], "model_name", "") == ModelName.GPT_6_LUNA.value
 
 
 def test_a_hand_built_run_keeps_the_verifier_on_the_analysis_model():

@@ -130,31 +130,22 @@ Be concise. Each field should be a short string or short list item, not a paragr
 async def _research(prompt: str, llm: Any, web_tools: list[Any]) -> EnrichmentOutput | None:
     """One bounded agent loop: search, fetch, then the structured answer.
 
-    ``ToolStrategy`` makes ``create_agent`` force ``tool_choice``, which is why
-    this pass can only carry tools it fully controls — see the note in
-    ``agents/content/enrichment.py`` for the two providers that push back on
-    that and degrade to local signals through the caller's except.
+    This pass runs on the audit's own model, the Heavy rung, which on Claude
+    is Opus 5.5 — a model that refuses the forced ``tool_choice`` a
+    ``ToolStrategy`` answer needs, so without ``research_answer`` every Claude
+    audit would have lost its competitor research to local signals. See the
+    note in ``agents/content/enrichment.py`` for why this pass carries only
+    tools it fully controls.
     """
-    from langchain.agents import create_agent
-    from langchain.agents.structured_output import ToolStrategy
+    from agents.core.research import research_answer
 
-    from agents.core.lc import prompt_caching_middleware
-
-    agent = create_agent(
-        model=llm,
-        # No session, no keys, no writers: the open web is attacker-authored by
-        # construction, and the only thing an injected instruction can reach
-        # from here is another page.
-        tools=list(web_tools),
-        response_format=ToolStrategy(EnrichmentOutput),
-        # Every call re-sends the pages already fetched; cached on Anthropic.
-        middleware=prompt_caching_middleware(),
+    # No session, no keys, no writers: the open web is attacker-authored by
+    # construction, and the only thing an injected instruction can reach
+    # from here is another page.
+    found = await research_answer(
+        prompt, llm, list(web_tools), EnrichmentOutput,
+        recursion_limit=_RESEARCH_RECURSION_LIMIT,
     )
-    result = await agent.ainvoke(
-        {"messages": [{"role": "user", "content": prompt}]},
-        {"recursion_limit": _RESEARCH_RECURSION_LIMIT},
-    )
-    found = result.get("structured_response") if isinstance(result, dict) else None
     return found if isinstance(found, EnrichmentOutput) else None
 
 

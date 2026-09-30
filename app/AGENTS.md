@@ -558,7 +558,7 @@ Rules that follow:
   - `Notice` dividers (`lib/agentSession.js`): a compaction is a rule across
     the transcript that learns what it freed from the next thread-scoped
     `TOKEN_USAGE`; a run starting on a different model draws "Switched to
-    Claude Sonnet 5" from the `model_label` every `PIPELINE_STARTED` now
+    Claude Sonnet 5.5" from the `model_label` every `PIPELINE_STARTED` now
     carries (`agents/models.run_model_fields`), and replay draws it from the
     stored CONTEXT rows. The compaction rule folds the summary the backend
     sent (`summary` on `CONTEXT_COMPACTED`, an `EventKind.COMPACTED` row on

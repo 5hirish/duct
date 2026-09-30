@@ -41,6 +41,7 @@ from agents.models import (
     ImageModel,
     ModelName,
     Provider,
+    current_model_id,
     provider_of,
 )
 
@@ -72,7 +73,7 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
     (Engine.V1, Provider.GOOGLE_GENAI): ModelName.GEMINI_3_8_FLASH,
     (Engine.V1, Provider.ANTHROPIC):    ModelName.CLAUDE_SONNET,
     (Engine.V1, Provider.OPENAI):       ModelName.GPT_5_MINI,
-    (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_V4_FLASH,
+    (Engine.V1, Provider.OPENROUTER):   ModelName.OR_DEEPSEEK_V4_1_FLASH,
 }
 
 # Which providers each engine supports
@@ -188,6 +189,9 @@ def resolve_engine_model(
     it exists. The slug shape is required so a typo'd bare name still falls back
     instead of becoming a guaranteed upstream 404.
 
+    A retired catalogue id resolves to its successor before any of that
+    (``RETIRED_MODELS``): a saved Heavy pick of Opus 5 means "Opus", and the
+    provider default would have quietly moved it to Sonnet.
     """
     default = ENGINE_DEFAULT_MODEL.get(
         (engine, provider),
@@ -195,7 +199,7 @@ def resolve_engine_model(
     )
     if not override:
         return default
-    candidate = override.strip()
+    candidate = current_model_id(override)
     try:
         resolved = ModelName(candidate)
     except ValueError:

@@ -116,7 +116,7 @@ def test_the_auth_dependency_packs_token_and_account_together():
 
 def test_a_subscription_credential_builds_the_codex_client_with_its_headers():
     packed = codex.pack_subscription_credential(ACCESS_TOKEN, ACCOUNT_ID)
-    llm = lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_5_6_LUNA, packed)
+    llm = lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_6_LUNA, packed)
     assert type(llm).__name__ == "_ChatOpenAICodex"
     token = llm.token_provider.get_token()
     assert token.access_token == ACCESS_TOKEN
@@ -125,7 +125,7 @@ def test_a_subscription_credential_builds_the_codex_client_with_its_headers():
 
 
 def test_an_api_key_still_builds_the_public_api_client():
-    assert type(lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_5_6_LUNA, "sk-proj-x")).__name__ == "ChatOpenAI"
+    assert type(lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_6_LUNA, "sk-proj-x")).__name__ == "ChatOpenAI"
 
 
 def test_the_credential_never_refreshes_on_the_backend():

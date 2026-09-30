@@ -27,9 +27,10 @@ import sys
 
 import anthropic
 
-# The triage is a summary, not a review, so it runs below the default effort.
-# Raise this before reaching for a different model — effort is the cheaper lever.
-MODEL = "claude-opus-5"
+# The triage is a summary, not a review, so it runs at medium — Opus 5.5's own
+# default, and a rung below where Opus 5 defaulted. Raise this before reaching
+# for a different model — effort is the cheaper lever.
+MODEL = "claude-opus-5-5"
 EFFORT = "medium"
 MAX_TOKENS = 8000
 

@@ -57,7 +57,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   the running model may not have is a Duct tool, not a provider feature every
   model must support.** The one exception is a built-in that survives a real
   tool-calling loop, and Anthropic's is the only one that does, so it is bound
-  there (versioned per model — Opus 5 and Sonnet 5 take `web_search_20260209`,
+  there (versioned per model — Opus 5.5 and Sonnet 5.5 take `web_search_20260209`,
   the rest the basic variant). Every other provider gets Duct's own `WebSearch`,
   an ordinary function tool over an isolated grounded Gemini call
   (`service/google/gemini/search.py`), because Gemini refuses `google_search`
@@ -698,6 +698,28 @@ framework. The rules it implies:
   call from LangChain's usage, taking cached tokens out of the input figure.
   `TOKEN_USAGE` and the state route carry `cost_usd`, `None` when unpriced —
   never a guess, because on BYO keys the figure is what the user pays.
+- **A model that leaves the catalogue leaves a row behind.** Replacing a
+  `ModelName` value (Opus 5 → Opus 5.5, 2026-09-29) orphans every saved tier
+  pick, `GENERATE_MODEL` and stored thread that names the old id, and
+  `resolve_engine_model` sends an id it does not know to the *provider
+  default*: a Heavy pick of Opus 5 would have run on Sonnet without a word.
+  `RETIRED_MODELS` in `agents/models.py` maps the old id to its successor —
+  never a step up in price — and keeps the old model's own price and window,
+  so a thread it served still reads what it cost. An OpenRouter slug whose
+  only successor costs more gets no successor and keeps running as picked
+  (OpenRouter passes it through). `tests/test_model_transport.py` holds all
+  three. An OpenRouter slug names a *build*, so check the vendor's changelog
+  as well as the catalogue: `deepseek/deepseek-v4-flash` still served, and
+  looked current, after DeepSeek retired the build.
+- **A model's request contract is data, not a check at a call site.**
+  `CLAUDE_BOUND_THINKING` (Fable 5.1, Opus 5.5, Sonnet 5.5) answers two
+  questions: a forced `tool_choice` is a 400, so a typed answer at the end of a
+  tool loop goes through `agents/core/research.research_answer`, never a bare
+  `ToolStrategy`; and a thinking block replayed after an earlier turn changed
+  is a 400 for accounts opened on or after 2026-08-31, so `resolve_chat_model`
+  asks the API to drop it instead. `takes_temperature` drops the sampling
+  temperature the Claude 5 family and GPT-6 refuse while they reason. A new
+  model is classified in those tables when it joins the catalogue.
 - **Before adding an agent or changing one — a prompt, a tool, a model
   default, a middleware, a LangChain bump — read
   [`docs/engineering/agent-engineering.md`](../docs/engineering/agent-engineering.md).**

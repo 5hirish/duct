@@ -46,11 +46,11 @@ ANTHROPIC_MAP = {
     [
         (ModelName.CLAUDE_OPUS, Provider.ANTHROPIC),
         (ModelName.GEMINI_3_8_FLASH, Provider.GOOGLE_GENAI),
-        (ModelName.GPT_5_6_SOL, Provider.OPENAI),
-        ("deepseek/deepseek-v4-flash", Provider.OPENROUTER),
+        (ModelName.GPT_6_1_SOL, Provider.OPENAI),
+        ("deepseek/deepseek-v4.1-flash", Provider.OPENROUTER),
         # The one that would spend the wrong key if the prefix test ran first:
         # a vendor-prefixed slug bills through OpenRouter, not through Anthropic.
-        ("anthropic/claude-opus-5", Provider.OPENROUTER),
+        ("anthropic/claude-opus-5.5", Provider.OPENROUTER),
     ],
 )
 def test_provider_of_reads_the_id_shape(model, expected):
@@ -88,7 +88,7 @@ def test_happy_path_uses_the_assigned_tier():
 
 def test_unreachable_tier_is_skipped_not_attempted():
     """The credential half of MODEL_FALLBACK's rule survives the tier ladder."""
-    mixed = {**ANTHROPIC_MAP, "heavy": ModelName.GPT_5_6_SOL.value}
+    mixed = {**ANTHROPIC_MAP, "heavy": ModelName.GPT_6_1_SOL.value}
     got = resolve_tier_model(Job.ANALYSIS, Engine.V1, tier_map=mixed, reachable=ANTHROPIC_ONLY)
     assert got.tier is Tier.STANDARD
     assert got.model is ModelName.CLAUDE_SONNET
@@ -98,7 +98,7 @@ def test_unreachable_tier_is_skipped_not_attempted():
 
 def test_ladder_descends_more_than_one_rung():
     two_missing = {
-        "heavy": ModelName.GPT_5_6_SOL.value,
+        "heavy": ModelName.GPT_6_1_SOL.value,
         "standard": ModelName.GEMINI_3_8_FLASH.value,
         "light": ModelName.CLAUDE_HAIKU.value,
     }
@@ -152,7 +152,7 @@ def test_override_tier_lifts_the_starting_rung():
 
 
 def test_override_still_descends_when_it_cannot_run():
-    mixed = {**ANTHROPIC_MAP, "heavy": ModelName.GPT_5_6_SOL.value}
+    mixed = {**ANTHROPIC_MAP, "heavy": ModelName.GPT_6_1_SOL.value}
     got = resolve_tier_model(
         Job.RECAP, Engine.V1, tier_map=mixed, reachable=ANTHROPIC_ONLY, override_tier=Tier.HEAVY
     )
@@ -322,7 +322,7 @@ def test_a_cooled_tier_is_skipped_and_says_so():
     minutes" call for different actions from the user, so they cannot collapse
     into one reason.
     """
-    mixed = {**ANTHROPIC_MAP, "standard": ModelName.GPT_5_6_TERRA.value}
+    mixed = {**ANTHROPIC_MAP, "standard": ModelName.GPT_6_1_SOL.value}
     got = resolve_tier_model(
         Job.ANALYSIS,
         Engine.V1,
@@ -332,7 +332,7 @@ def test_a_cooled_tier_is_skipped_and_says_so():
     )
     # Heavy is Anthropic and cooled; Standard is OpenAI and fine.
     assert got.tier is Tier.STANDARD
-    assert got.model is ModelName.GPT_5_6_TERRA
+    assert got.model is ModelName.GPT_6_1_SOL
     assert got.skipped == ((Tier.HEAVY, SKIP_COOLED_DOWN),)
 
 
@@ -340,7 +340,7 @@ def test_a_cooled_tier_is_not_a_missing_credential():
     got = resolve_tier_model(
         Job.ANALYSIS,
         Engine.V1,
-        tier_map={**ANTHROPIC_MAP, "standard": ModelName.GPT_5_6_TERRA.value},
+        tier_map={**ANTHROPIC_MAP, "standard": ModelName.GPT_6_1_SOL.value},
         reachable=ALL_PROVIDERS,
         cooling=frozenset({Provider.ANTHROPIC}),
     )

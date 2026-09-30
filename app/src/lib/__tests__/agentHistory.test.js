@@ -36,11 +36,11 @@ describe("mapEventsToMessages", () => {
 describe("memory and context rows come back on a reopened thread", () => {
   it("rebuilds Recalled, Remembered (collapsed per turn) and the context notice", () => {
     const rows = mapEventsToMessages([
-      { seq: 1, kind: "context", data: { model: "claude-sonnet-5", resume: false, blocks: { business_context: "Acme…", memory: "", data_sources: "ga4" } } },
+      { seq: 1, kind: "context", data: { model: "claude-sonnet-5-5", resume: false, blocks: { business_context: "Acme…", memory: "", data_sources: "ga4" } } },
       { seq: 2, kind: "memory_recalled", data: { memories: [{ id: "m1", title: "Pricing changed" }] } },
       { seq: 3, kind: "memory_written", data: { memory: { id: "m2", title: "Mobile is the channel" } } },
       { seq: 4, kind: "memory_written", data: { memory: { id: "m3", title: "Ads paused on the 4th" } } },
-      { seq: 5, kind: "context", data: { model: "claude-sonnet-5", resume: true, blocks: { resume_primer: "…" } } },
+      { seq: 5, kind: "context", data: { model: "claude-sonnet-5-5", resume: true, blocks: { resume_primer: "…" } } },
     ]);
     expect(rows.map((r) => r.role)).toEqual(["activity", "memory_recall", "memory_note"]);
     expect(rows[0].activity).toMatchObject({ id: "context-1", tool: "ProjectContext", meta: { blocks: ["business_context", "data_sources"] } });

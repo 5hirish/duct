@@ -114,7 +114,7 @@ with the change in place and read what comes out:
 ```bash
 make session-replay BUNDLE=<audit home>/bundles/<short id>                 # today's prompt, the user's model
 make session-replay BUNDLE=... ARGS="--tier heavy"                         # same, one tier up
-make session-replay BUNDLE=... ARGS="--provider anthropic --model claude-opus-5"
+make session-replay BUNDLE=... ARGS="--provider anthropic --model claude-opus-5-5"
 make session-replay BUNDLE=... ARGS="--prompt 'the question, asked better'"
 ```
 

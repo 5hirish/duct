@@ -38,8 +38,7 @@ ASSEMBLY = "agents/core/deep_session.py"
 # least). A durable, multi-turn agent never belongs on this list: it goes
 # through build_session_agent or build_deep_session_agent.
 ONE_SHOT: dict[str, str] = {
-    "agents/audit/enrichment.py": "competitor research pass",
-    "agents/content/enrichment.py": "trending research pass",
+    "agents/core/research.py": "the competitor and trending research passes",
 }
 
 

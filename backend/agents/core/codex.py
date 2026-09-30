@@ -36,8 +36,11 @@ request, and why ``PUT /providers/openai/key`` refuses to store one.
 account a narrower set than an API key: every ``*-pro`` variant is refused
 outright with "The '<model>' model is not supported when using Codex with a
 ChatGPT account". Duct's catalogue (``agents/models.py``) lists no OpenAI
-``-pro`` id at all, so the tier map's three rungs — sol, terra, luna — and the
-``GPT_5_MINI`` fallback beneath them are all reachable on a plan. Adding a
+``-pro`` id at all, so the tier map's rungs — GPT-6.1 Sol and GPT-6 Luna,
+with Astra offered above them — and the ``GPT_5_MINI`` fallback beneath them
+are all reachable on a plan. (OpenAI lists 6.1 Sol in Codex for Plus and up;
+the rest of GPT-6 on a plan is assumed from that rule, not yet seen live; the
+verify step reports ``model_access`` if it is wrong.) Adding a
 ``-pro`` id to that catalogue would make the Heavy tier fail for every
 subscription user and nobody else, which is exactly the kind of break a
 verify step reports as ``model_access`` long after the change.
@@ -313,7 +316,7 @@ def build_codex_chat(
     model: str,
     *,
     api_key: str = "",
-    temperature: float = 1.0,
+    temperature: float | None = 1.0,
     **kwargs: Any,
 ):
     """A LangChain chat model backed by a ChatGPT subscription.

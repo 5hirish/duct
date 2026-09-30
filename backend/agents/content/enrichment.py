@@ -249,34 +249,24 @@ def _merge(base: ContentResearchContext, found: _RawTrendingResult) -> ContentRe
 async def _research(prompt: str, llm: Any, web_tools: list[Any]) -> _RawTrendingResult | None:
     """One bounded agent loop: search, fetch, then the structured answer.
 
-    ``ToolStrategy`` makes ``create_agent`` force ``tool_choice``, which is
-    why this pass can only carry tools it fully controls. Two providers push
-    back on that and both degrade to local signals through the caller's
-    except: Gemini's built-in search is dropped by langchain-google-genai
-    whenever tool_choice is set, and claude-fable-5-1 rejects a forced
-    tool_choice outright. Duct's own WebSearch has neither problem, which is
+    The answer is usually a ``ToolStrategy`` tool, which makes ``create_agent``
+    force ``tool_choice`` — why this pass can only carry tools it fully
+    controls. Gemini's built-in search is dropped by langchain-google-genai
+    whenever tool_choice is set, so Gemini gets Duct's own WebSearch, which is
     what ``build_web_tools_lc`` hands back for every non-Anthropic provider.
+    Fable 5.1 and the 5.5 Claude models refuse a forced tool_choice outright;
+    ``research_answer`` runs the loop free for them and asks for the answer
+    after, rather than degrading this pass to local signals as it once did.
     """
-    from langchain.agents import create_agent
-    from langchain.agents.structured_output import ToolStrategy
+    from agents.core.research import research_answer
 
-    from agents.core.lc import prompt_caching_middleware
-
-    agent = create_agent(
-        model=llm,
-        # No session, no keys, no writers: the open web is attacker-authored
-        # by construction, and the only thing an injected instruction can
-        # reach here is another page.
-        tools=list(web_tools),
-        response_format=ToolStrategy(_RawTrendingResult),
-        # Every call re-sends the pages already fetched; cached on Anthropic.
-        middleware=prompt_caching_middleware(),
+    # No session, no keys, no writers: the open web is attacker-authored by
+    # construction, and the only thing an injected instruction can reach here
+    # is another page.
+    found = await research_answer(
+        prompt, llm, list(web_tools), _RawTrendingResult,
+        recursion_limit=_RESEARCH_RECURSION_LIMIT,
     )
-    result = await agent.ainvoke(
-        {"messages": [{"role": "user", "content": prompt}]},
-        {"recursion_limit": _RESEARCH_RECURSION_LIMIT},
-    )
-    found = result.get("structured_response") if isinstance(result, dict) else None
     return found if isinstance(found, _RawTrendingResult) else None
 
 

@@ -37,6 +37,7 @@ from agents.models import (
     Provider,
     get_api_key_kwargs,
     langchain_provider,
+    provider_of,
 )
 
 
@@ -104,6 +105,144 @@ def test_known_openrouter_slug_resolves_to_the_enum():
     assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, "z-ai/glm-5.3-flash") is ModelName.OR_GLM_5_3_FLASH
 
 
+@pytest.mark.parametrize(
+    ("provider", "saved", "runs_on"),
+    [
+        (Provider.ANTHROPIC, "claude-opus-5", ModelName.CLAUDE_OPUS),
+        (Provider.ANTHROPIC, "claude-sonnet-5", ModelName.CLAUDE_SONNET),
+        (Provider.OPENAI, "gpt-5.6-sol", ModelName.GPT_6_1_SOL),
+        (Provider.OPENAI, "gpt-5.6-terra", ModelName.GPT_6_1_SOL),
+        (Provider.OPENAI, "gpt-5.6-luna", ModelName.GPT_6_LUNA),
+        (Provider.XAI, "grok-4.6", ModelName.GROK_4_7),
+        (Provider.OPENROUTER, "anthropic/claude-opus-5", ModelName.OR_CLAUDE_OPUS),
+        (Provider.OPENROUTER, "deepseek/deepseek-v4-pro", ModelName.OR_DEEPSEEK_V4_PRO),
+        (Provider.OPENROUTER, "openai/gpt-5-mini", ModelName.OR_GPT_6_LUNA),
+    ],
+)
+def test_a_saved_pick_of_a_retired_model_runs_on_its_successor(provider, saved, runs_on):
+    """Not on the provider default: a Heavy pick of Opus 5 falling to Sonnet,
+    or of GPT-5.6 Sol falling to gpt-5-mini, is a quiet downgrade of a choice
+    the user made on purpose."""
+    assert resolve_engine_model(Engine.V1, provider, saved) is runs_on
+
+
+def _blended(price) -> float:
+    """Three input tokens to one output, the usual way to rank model prices."""
+    return (3 * price.input + price.output) / 4
+
+
+def test_a_retired_model_never_moves_up_a_price_class():
+    """GPT-5.6 Sol was the flagship, and GPT-6's flagship is Astra at $10/$50.
+    A saved pick moves to Sol instead — an upgrade is a cost surprise.
+
+    Blended, not output alone: an agent loop re-sends the thread every turn, so
+    input is most of the bill. DeepSeek V4 Pro 0813 costs 6% more per output
+    token than the preview and 30% less per input one; output alone called
+    that a step up."""
+    from agents.models import PRICING, RETIRED_MODELS
+
+    for old_id, retired in RETIRED_MODELS.items():
+        if retired.successor is not None:
+            assert _blended(PRICING[retired.successor]) <= _blended(retired.price), old_id
+
+
+def test_only_an_openrouter_slug_may_retire_without_a_successor():
+    """OpenRouter passes an unknown slug through, so the pick still runs.
+    Anywhere else an id with no successor falls to the provider default."""
+    from agents.models import RETIRED_MODELS
+
+    orphans = [old_id for old_id, retired in RETIRED_MODELS.items() if retired.successor is None]
+    assert orphans, "the DeepSeek V4 Flash preview is one"
+    assert all(provider_of(old_id) is Provider.OPENROUTER for old_id in orphans), orphans
+
+
+def test_a_pick_whose_successor_costs_more_keeps_running_as_picked():
+    """V4.1 Flash is the only Flash DeepSeek still serves and costs more per
+    uncached token than the preview did, so a saved preview pick is not moved
+    onto it: it runs on the preview, priced and windowed as the preview."""
+    from agents.models import context_window_for, current_model_id, price_for
+
+    slug = "deepseek/deepseek-v4-flash"
+    assert current_model_id(slug) == slug
+    assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, slug) == slug
+    assert price_for(slug).output == 0.1526
+    assert context_window_for(slug) == 1_000_000
+
+
+def test_every_retired_id_left_the_catalogue():
+    """An id still in ModelName is not retired; listing it would shadow it."""
+    from agents.models import RETIRED_MODELS
+
+    assert not set(RETIRED_MODELS) & {m.value for m in ModelName}
+
+
+def test_a_saved_tier_map_reads_back_with_successors():
+    """The settings page shows what will run, not an id it no longer lists."""
+    from service.model_settings import _clean
+
+    assert _clean({"heavy": "claude-opus-5", "light": "claude-haiku-4-5"}) == {
+        "heavy": ModelName.CLAUDE_OPUS.value,
+        "light": ModelName.CLAUDE_HAIKU.value,
+    }
+
+
+def _anthropic_payload(model, *, thinking: str = "", temperature: float = 1.0) -> dict:
+    from langchain_core.messages import HumanMessage
+
+    from agents.core.lc import resolve_chat_model
+
+    llm = resolve_chat_model(Provider.ANTHROPIC, model, "sk-ant-t", temperature, thinking=thinking)
+    return llm._get_request_payload([HumanMessage("hi")])
+
+
+@pytest.mark.parametrize("model", [ModelName.CLAUDE_FABLE, ModelName.CLAUDE_OPUS, ModelName.CLAUDE_SONNET])
+def test_a_bound_thinking_model_drops_a_stale_block_instead_of_failing(model):
+    """Pruning, the seen-image swap and compaction all edit earlier turns. On
+    these models that is a 400 for any account opened after 2026-08-31 unless
+    the request says to drop the stale block instead."""
+    from agents.core.lc import THINKING_BINDING_BETA
+
+    payload = _anthropic_payload(model)
+    assert payload["thinking"]["block_binding"] == {"prefix_mismatch_behavior": "drop_block"}
+    assert payload["thinking"]["type"] == "adaptive"
+    assert THINKING_BINDING_BETA in payload["betas"]
+
+
+def test_the_reasoning_summary_shows_exactly_when_it_did_before():
+    """langchain-anthropic asks for a summarised display only when an effort
+    is set, and setting `thinking` ourselves switches that off — so it is
+    restated, and no more often."""
+    assert _anthropic_payload(ModelName.CLAUDE_SONNET, thinking="deep")["thinking"]["display"] == "summarized"
+    assert "display" not in _anthropic_payload(ModelName.CLAUDE_SONNET)["thinking"]
+
+
+def test_a_model_without_bound_thinking_is_sent_nothing_new():
+    payload = _anthropic_payload(ModelName.CLAUDE_HAIKU, thinking="deep")
+    assert payload.get("thinking") is None
+    assert not payload.get("betas")
+
+
+@pytest.mark.parametrize(
+    ("provider", "model", "kept"),
+    [
+        (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, False),
+        (Provider.ANTHROPIC, ModelName.CLAUDE_OPUS, False),
+        (Provider.OPENAI, ModelName.GPT_6_LUNA, False),
+        (Provider.OPENROUTER, ModelName.OR_CLAUDE_OPUS, False),
+        (Provider.ANTHROPIC, ModelName.CLAUDE_HAIKU, True),
+        (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_5_FLASH_LITE, True),
+    ],
+)
+def test_a_temperature_reaches_only_a_model_that_takes_one(provider, model, kept):
+    """The verify call asks for 0 on each provider's Light model. GPT-6 and
+    the Claude 5 family refuse any temperature while they reason — a 400, or
+    for Sonnet 5.5 a ValueError before the request leaves."""
+    from agents.core.lc import resolve_chat_model
+
+    llm = resolve_chat_model(provider, model, "k", temperature=0.0)
+    assert (llm.temperature == 0.0) is kept
+
+
 def test_unknown_openrouter_slug_passes_through_verbatim():
     """OpenRouter fronts 400+ models. Substituting a default would discard the
     model a bring-your-own-key customer explicitly chose — which is the feature."""
@@ -113,7 +252,7 @@ def test_unknown_openrouter_slug_passes_through_verbatim():
 def test_openrouter_model_without_slug_shape_still_falls_back():
     """A bare name is a typo, not a model id — fall back rather than guarantee
     an upstream 404."""
-    assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, "gpt5mini") is ModelName.OR_DEEPSEEK_V4_FLASH
+    assert resolve_engine_model(Engine.V1, Provider.OPENROUTER, "gpt5mini") is ModelName.OR_DEEPSEEK_V4_1_FLASH
 
 
 def test_native_providers_do_not_pass_unknown_models_through():
@@ -190,13 +329,15 @@ def test_openrouter_gets_the_unified_reasoning_object():
         (Provider.OPENAI, ModelName.GPT_5_MINI),
         # ChatXAI carries reasoning_effort as a real field, so xAI needs no
         # translation at the transport boundary the way OpenRouter does.
-        (Provider.XAI, ModelName.GROK_4_6),
+        (Provider.XAI, ModelName.GROK_4_7),
     ],
 )
 def test_direct_vendors_keep_the_standard_kwarg(provider: Provider, model: ModelName):
     from agents.core.lc import _thinking_kwargs_for
 
-    assert _thinking_kwargs_for(provider, model, "deep") == {"reasoning_effort": "high"}
+    kwargs = _thinking_kwargs_for(provider, model, "deep")
+    assert kwargs["reasoning_effort"] == "high"
+    assert "reasoning" not in kwargs, "OpenRouter's object, not a direct vendor's"
 
 
 def test_a_model_with_no_dial_says_nothing_on_either_transport():
@@ -250,10 +391,10 @@ def test_a_structured_call_on_claude_uses_claudes_own_structured_output(model: M
 @pytest.mark.parametrize(
     ("provider", "model"),
     [
-        (Provider.OPENAI, ModelName.GPT_5_6_LUNA),
+        (Provider.OPENAI, ModelName.GPT_6_LUNA),
         (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_8_FLASH),
         (Provider.OPENROUTER, ModelName.OR_DEEPSEEK_V4_PRO),
-        (Provider.XAI, ModelName.GROK_4_6),
+        (Provider.XAI, ModelName.GROK_4_7),
     ],
 )
 def test_every_other_integration_keeps_its_own_default(provider: Provider, model: ModelName):
@@ -349,7 +490,7 @@ def test_live_grok_accepts_the_top_rung_of_the_ladder_we_publish():
     from agents.core.lc import resolve_chat_model
 
     llm = resolve_chat_model(
-        Provider.XAI, ModelName.GROK_4_6, os.environ["XAI_API_KEY"], thinking="exhaustive"
+        Provider.XAI, ModelName.GROK_4_7, os.environ["XAI_API_KEY"], thinking="exhaustive"
     )
     reply = llm.invoke("Reply with the single word: ok")
     assert (reply.text or "").strip()
@@ -394,3 +535,34 @@ def test_live_every_catalogue_id_still_answers(provider: Provider):
         except Exception as exc:  # noqa: BLE001 - collected, then reported together
             dead[model.value] = str(exc)[:160]
     assert not dead, f"{provider.value} ids the provider no longer serves: {dead}"
+
+
+@pytest.mark.live
+@pytest.mark.parametrize("provider", [Provider.ANTHROPIC, Provider.OPENAI, Provider.XAI])
+def test_live_a_tier_default_calls_a_tool_while_it_reasons(provider: Provider):
+    """Every Duct agent is a tool-calling agent, and the 2026-09-29 defaults
+    each changed the request that carries a tool: GPT-6 moves function calling
+    to the Responses API once reasoning is on, and the Claude 5.5 models carry
+    the thinking-binding beta and a summarised display. A plain "reply ok"
+    exercises neither, so this makes one reasoning turn with one tool per rung."""
+    from langchain_core.tools import tool
+
+    from agents.core.lc import resolve_chat_model
+    from agents.tiers import PROVIDER_TRIPLES, Tier
+
+    key = _catalogue_key(provider)
+    if not key:
+        pytest.skip(f"no {provider.value} key — tool-call liveness skipped")
+
+    @tool
+    def lookup_weather(city: str) -> str:
+        """The current weather in a city."""
+        return "sunny"
+
+    silent: list[str] = []
+    for model in {PROVIDER_TRIPLES[provider][tier] for tier in (Tier.HEAVY, Tier.LIGHT)}:
+        llm = resolve_chat_model(provider, model, key, thinking="balanced").bind_tools([lookup_weather])
+        reply = llm.invoke("What is the weather in Valencia right now? Use the tool.")
+        if not reply.tool_calls:
+            silent.append(model.value)
+    assert not silent, f"answered without calling the tool: {silent}"

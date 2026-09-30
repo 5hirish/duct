@@ -80,9 +80,9 @@ ADAPTERS: dict[str, str] = {
 
     # -- Named harness shims.
 
-    # -- Enrichment + persistence run their own bounded model calls.
-    "agents/audit/enrichment.py":           "one-shot SDK call",
-    "agents/content/enrichment.py":         "create_agent research pass with structured output",
+    # -- The enrichment passes' bounded research loop: web tools, then one
+    #    typed answer. Both passes call it, so neither imports a framework.
+    "agents/core/research.py":              "create_agent research loop with a structured answer",
 
     # -- Boundary debt. Allowed today, but these are the wrong layer: a route is
     #    transport and a service is domain, so neither should know a harness.

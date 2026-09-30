@@ -123,22 +123,28 @@ PROVIDER_TRIPLES: dict[Provider, dict[Tier, ModelName]] = {
         Tier.STANDARD: ModelName.CLAUDE_SONNET,
         Tier.LIGHT: ModelName.CLAUDE_HAIKU,
     },
+    # OpenAI — GPT-6.1 Sol on both upper rungs, not Astra on Heavy. Astra is
+    # $10/$50, Fable's price class, and Fable is not Anthropic's Heavy default
+    # either: offered, not defaulted. OpenAI puts 6.1 Sol near Astra on agentic
+    # work at a fifth of the price, which is the Heavy rung's whole case. Sol
+    # costs what 5.6 Terra did on input and less on output, so neither rung got
+    # more expensive in the move to GPT-6.
     Provider.OPENAI: {
-        Tier.HEAVY: ModelName.GPT_5_6_SOL,
-        Tier.STANDARD: ModelName.GPT_5_6_TERRA,
-        Tier.LIGHT: ModelName.GPT_5_6_LUNA,
+        Tier.HEAVY: ModelName.GPT_6_1_SOL,
+        Tier.STANDARD: ModelName.GPT_6_1_SOL,
+        Tier.LIGHT: ModelName.GPT_6_LUNA,
     },
     # OpenRouter — the open-weight ladder, which is what someone reaching for
     # OpenRouter is usually reaching for; the frontier models it also proxies
     # are cheaper bought direct. The rungs are the ones ``agents/models.py``
     # already argues for: kimi-k3 is "the capable end of the open-weight list,
-    # not a volume model", and deepseek v4 pro/flash are "two rungs of one
-    # family". All three carry ``tools``, which is non-negotiable here — every
-    # Duct agent is a tool-calling agent.
+    # not a volume model", and DeepSeek V4 Pro and V4.1 Flash are the reasoning
+    # and volume rungs of one vendor. All three carry ``tools``, which is
+    # non-negotiable here — every Duct agent is a tool-calling agent.
     Provider.OPENROUTER: {
         Tier.HEAVY: ModelName.OR_KIMI_K3,
         Tier.STANDARD: ModelName.OR_DEEPSEEK_V4_PRO,
-        Tier.LIGHT: ModelName.OR_DEEPSEEK_V4_FLASH,
+        Tier.LIGHT: ModelName.OR_DEEPSEEK_V4_1_FLASH,
     },
     # xAI ships one model, so all three rungs are it. That reads odd next to
     # the ladders above and it is still the honest answer: on an xAI key alone
@@ -146,9 +152,9 @@ PROVIDER_TRIPLES: dict[Provider, dict[Tier, ModelName]] = {
     # out of "use one provider for all three", which is what a user with only
     # this key would have read as "Duct cannot use my key".
     Provider.XAI: {
-        Tier.HEAVY: ModelName.GROK_4_6,
-        Tier.STANDARD: ModelName.GROK_4_6,
-        Tier.LIGHT: ModelName.GROK_4_6,
+        Tier.HEAVY: ModelName.GROK_4_7,
+        Tier.STANDARD: ModelName.GROK_4_7,
+        Tier.LIGHT: ModelName.GROK_4_7,
     },
 }
 

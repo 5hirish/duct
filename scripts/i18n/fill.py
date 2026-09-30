@@ -69,7 +69,7 @@ LOCALE_NAMES = {
 }
 
 DEFAULT_MODELS = {
-    "anthropic": "claude-sonnet-5",
+    "anthropic": "claude-sonnet-5-5",
     "gemini": "gemini-2.5-flash",
 }
 

@@ -3456,8 +3456,12 @@ msgid "Google will also ask to share Search Console and Analytics with Duct — 
 msgstr "Google will also ask to share Search Console and Analytics with Duct — read-only, and either box can be left unticked."
 
 #: src/components/onboarding/ProviderStep.jsx
-msgid "GPT-5.6 · about a cent per audit"
-msgstr "GPT-5.6 · about a cent per audit"
+msgid "GPT · about a cent per audit"
+msgstr "GPT · about a cent per audit"
+
+#: src/components/onboarding/ProviderStep.jsx
+#~ msgid "GPT-5.6 · about a cent per audit"
+#~ msgstr "GPT-5.6 · about a cent per audit"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Grok · a few cents per audit"

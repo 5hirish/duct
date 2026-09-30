@@ -37,14 +37,27 @@ class Provider(str, Enum):
 
 class ModelName(str, Enum):
     
-    # OpenAI. Verified against the live /v1/models response. Unlike the Gemini
-    # list nothing here was retired — every previous entry still serves and none
-    # has an announced API shutdown — so this trim is curation, not repair.
-    # The 5.6 family renamed the tiers: sol/terra/luna, no "mini" rung, which is
-    # why GPT_5_MINI is the one older id kept (it is the engine default).
-    GPT_5_6_SOL   = "gpt-5.6-sol"      # flagship — complex professional work
-    GPT_5_6_TERRA = "gpt-5.6-terra"    # balances intelligence and cost
-    GPT_5_6_LUNA  = "gpt-5.6-luna"     # cost-sensitive workloads
+    # OpenAI. GPT-6 replaced 5.6 in this catalogue on 2026-09-29, and the
+    # names moved down a rung with it: 5.6 was sol/terra/luna with sol the flagship, 6 is
+    # astra/sol/luna with astra the flagship and sol the cost-efficient high
+    # end. So Sol is 5.6 Terra's job at 5.6 Terra's input price, not 5.6
+    # Sol's. 5.6 Terra has no successor of its own; RETIRED_MODELS sends it,
+    # and a saved 5.6 Sol, to Sol. GPT_5_MINI is the one older id kept (it
+    # is the engine default and the ChatGPT-plan floor).
+    #
+    # Sol is 6.1 Sol (2026-09-29), not 6 Sol: same $2/$10, half the cached
+    # input price, and OpenAI puts it near Astra on agentic work. 6 Sol never
+    # shipped in a Duct release, so it leaves no RETIRED_MODELS row. 6.1 Sol
+    # also has no `none` reasoning rung, which 6 Sol had.
+    #
+    # Two request-shape facts ride with the family, both handled below the
+    # catalogue: tool calling needs the Responses API once reasoning is on
+    # (langchain-openai switches to it for any gpt-6 request carrying tools),
+    # and a temperature is rejected unless reasoning is off
+    # (``takes_temperature``).
+    GPT_6_ASTRA   = "gpt-6-astra"      # flagship — offered, not a tier default
+    GPT_6_1_SOL   = "gpt-6.1-sol"      # near-Astra on agentic work at a fifth of its price
+    GPT_6_LUNA    = "gpt-6-luna"       # efficient, repeatable work at scale
     GPT_5_MINI    = "gpt-5-mini"
     # Kept on purpose, not by omission — do not curate these away. They are
     # generations behind and the catalog lists the GPT-4 line as deprecated,
@@ -65,61 +78,72 @@ class ModelName(str, Enum):
     GEMINI_3_5_FLASH_LITE = "gemini-3.5-flash-lite"
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     
-    # Anthropic
-    # Anthropic's most capable widely released model, above the Opus tier and
-    # priced accordingly ($10/$50 against Opus 5's $5/$25) — offered, not
-    # defaulted to. Two behaviours differ from the rest of the family and both
-    # are load-bearing here: thinking is always on (a `budget_tokens` config is
-    # a 400, which is why it maps to the effort ladder like the other 5s), and
-    # forced tool choice is rejected — `tool_choice: any` returns a 400. The
-    # content enrichment pass forces exactly that through LangChain's
-    # ToolStrategy, so on this model that pass degrades to local signals
-    # instead of returning trends. See agents/content/enrichment.py.
+    # Anthropic. Fable 5.1 is the most capable widely released model, above the
+    # Opus tier and priced accordingly ($10/$50 against Opus 5.5's $4/$20) —
+    # offered, not defaulted to. Opus 5.5 (2026-09-22) and Sonnet 5.5
+    # (2026-09-28) replaced Opus 5 and Sonnet 5 on 2026-09-29; Haiku 4.5 has no
+    # successor yet. Fable 5.1 and both 5.5s share a request contract the older
+    # models do not, and both halves are load-bearing here — see
+    # ``CLAUDE_BOUND_THINKING`` below.
     CLAUDE_FABLE = "claude-fable-5-1"
-    CLAUDE_OPUS = "claude-opus-5"
-    CLAUDE_SONNET = "claude-sonnet-5"
+    CLAUDE_OPUS = "claude-opus-5-5"
+    CLAUDE_SONNET = "claude-sonnet-5-5"
     CLAUDE_HAIKU = "claude-haiku-4-5"
     # xAI. Verified against docs.x.ai: 500k context, $2/$6, and
-    # `reasoning_effort` low/medium/high/xhigh — "Reasoning cannot be
-    # disabled", so there is no off rung to offer. No fallback pair below:
-    # it is the only Grok in the catalogue, and MODEL_FALLBACK never guesses
-    # a target it was not given.
-    GROK_4_6 = "grok-4.6"
+    # `reasoning_effort` low/medium/high/xhigh with high the default —
+    # "Reasoning cannot be disabled", so there is no off rung to offer. No
+    # fallback pair below: it is the only Grok in the catalogue, and
+    # MODEL_FALLBACK never guesses a target it was not given.
+    GROK_4_7 = "grok-4.7"
 
     # OpenRouter — vendor/slug form. A *curated default list*, not a whitelist:
     # OpenRouter fronts 400+ models, so resolve_engine_model passes an unknown
     # slug through verbatim rather than silently substituting a default. These
     # are the open-weight / long-tail models worth naming.
     #
-    # Refreshed against the live /api/v1/models catalogue. The previous
-    # generation (deepseek-chat, qwen3-235b-a22b, kimi-k2, glm-4.6) all still
-    # serve, so nothing here is repair — but each had been superseded by a
-    # successor that is both cheaper and longer-context by roughly an order of
-    # magnitude, which on this list is the entire point:
+    # Refreshed 2026-09-29 against the live /api/v1/models catalogue *and each
+    # vendor's own changelog*, because an OpenRouter slug names a build and
+    # goes stale without looking stale. deepseek/deepseek-v4-flash is pinned
+    # to the April preview: third parties still host its weights, so it
+    # serves, but DeepSeek retired it on 2026-09-10 and its own API has
+    # answered to that name with V4.1 Flash since. deepseek-v4-pro was the
+    # preview too; DeepSeek's API has served the 0813 GA build under it since
+    # 2026-08-13. Qwen3.8 Flash, Kimi K3 and GLM-5.3 Flash are each their
+    # vendor's current release.
     #
-    #   deepseek-chat      $0.26/$1.03  164k  →  v4-flash    $0.08/$0.16  1.0M
+    #   deepseek-chat      $0.26/$1.03  164k  →  v4.1-flash  $0.15/$0.60  1.0M
     #   qwen3-235b-a22b    $0.45/$1.82  131k  →  qwen3.8-flash $0.15/$0.47 1.0M
-    #   glm-4.6            $0.43/$1.75  205k  →  glm-5.3-flash $0.07/$0.25 1.3M
+    #   glm-4.6            $0.43/$1.75  205k  →  glm-5.3-flash $0.15/$0.50 1.3M
     #   kimi-k2            $0.57/$2.30  131k  →  kimi-k3     $3.00/$15.00 1.0M
+    #
+    # V4.1 Flash costs more per uncached token than the retired preview's
+    # cheapest hosts ($0.08/$0.15) and a fifth as much per cached one, which
+    # is most of what an agent loop sends. It is the only Flash DeepSeek
+    # still serves, so the Light rung takes it; a saved pick of the preview
+    # keeps running as picked (see RETIRED_MODELS).
     #
     # kimi-k3 is the exception to the "cheaper and longer" pattern above: it is
     # ~6x the price of the k2.5 it replaces, bought with 4x the context. It is
     # here as the capable end of the open-weight list, not as a volume model.
     #
-    # deepseek-v4-pro sits beside v4-flash rather than replacing it — same
-    # vendor, same 1.0M context, ~10x the price for the reasoning tier. Two
-    # rungs of one family is the point.
+    # V4 Pro sits beside V4.1 Flash rather than replacing it — same vendor,
+    # same 1.0M context, ~4x the price for the reasoning tier.
+    #
+    # GPT-6 Luna replaced gpt-5-mini as OpenAI's entry here: the same small
+    # rung at 40% of its input and 25% of its output price.
     #
     # All carry `tools` in supported_parameters; a slug that cannot tool-call
     # has no business here, since every Duct agent is a tool-calling agent.
-    OR_DEEPSEEK_V4_FLASH = "deepseek/deepseek-v4-flash"
-    OR_DEEPSEEK_V4_PRO = "deepseek/deepseek-v4-pro"
+    OR_DEEPSEEK_V4_1_FLASH = "deepseek/deepseek-v4.1-flash"
+    OR_DEEPSEEK_V4_PRO = "deepseek/deepseek-v4-pro-0813"
     OR_QWEN3_8_FLASH = "qwen/qwen3.8-flash"
     OR_KIMI_K3 = "moonshotai/kimi-k3"
     OR_GLM_5_3_FLASH = "z-ai/glm-5.3-flash"
-    OR_CLAUDE_OPUS = "anthropic/claude-opus-5"
-    OR_CLAUDE_SONNET = "anthropic/claude-sonnet-5"
-    OR_GPT_5_MINI = "openai/gpt-5-mini"
+    # OpenRouter spells Anthropic's versions with a dot where the Messages API
+    # uses a dash: this is claude-opus-5-5, not a different model.
+    OR_CLAUDE_OPUS = "anthropic/claude-opus-5.5"
+    OR_CLAUDE_SONNET = "anthropic/claude-sonnet-5.5"
+    OR_GPT_6_LUNA = "openai/gpt-6-luna"
 
 
 class AgentEffort(StrEnum):
@@ -134,8 +158,8 @@ class AgentEffort(StrEnum):
     MEDIUM — balanced default
     HIGH   — deeper reasoning; recommended for complex analysis (e.g. SEO audit)
     XHIGH  — between HIGH and MAX; the sweet spot for coding/agentic work on
-             Opus 5, Opus 4.8/4.7, Sonnet 5 and Fable 5. Falls back to HIGH on
-             models that predate it (Opus 4.6, Sonnet 4.6 and earlier).
+             Opus 5.5, Sonnet 5.5, Fable 5.1 and Opus 4.7 onward. Falls back to
+             HIGH on models that predate it (Opus 4.6, Sonnet 4.6 and earlier).
     MAX    — maximum effort; most expensive
     """
 
@@ -275,8 +299,8 @@ DEFAULT_MODELS = {
     Provider.OPENAI: ModelName.GPT_5_MINI,
     Provider.GOOGLE_GENAI: ModelName.GEMINI_3_8_FLASH,
     Provider.ANTHROPIC: ModelName.CLAUDE_SONNET,
-    Provider.OPENROUTER: ModelName.OR_DEEPSEEK_V4_FLASH,
-    Provider.XAI: ModelName.GROK_4_6,
+    Provider.OPENROUTER: ModelName.OR_DEEPSEEK_V4_1_FLASH,
+    Provider.XAI: ModelName.GROK_4_7,
 }
 
 # Where a run goes when its model will not answer — model data, so it lives
@@ -315,9 +339,9 @@ MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
     ModelName.GEMINI_3_8_FLASH:      (ModelName.GEMINI_3_5_FLASH_LITE,),
     ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_3_5_FLASH_LITE,),
     # OpenAI
-    ModelName.GPT_5_6_SOL:           (ModelName.GPT_5_6_TERRA,),
-    ModelName.GPT_5_6_TERRA:         (ModelName.GPT_5_6_LUNA,),
-    ModelName.GPT_5_6_LUNA:          (ModelName.GPT_5_MINI,),
+    ModelName.GPT_6_ASTRA:           (ModelName.GPT_6_1_SOL,),
+    ModelName.GPT_6_1_SOL:             (ModelName.GPT_6_LUNA,),
+    ModelName.GPT_6_LUNA:            (ModelName.GPT_5_MINI,),
     ModelName.GPT_5_MINI:            (ModelName.GPT_4O_MINI,),
     ModelName.GPT_4O:                (ModelName.GPT_4O_MINI,),
 }
@@ -326,16 +350,21 @@ MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
 # therefore a config value rather than a fixed vendor URL. Overridable per
 # install (config.openrouter_base_url) so the same code path reaches a
 # self-hosted router or a local model server.
-# Context windows, in tokens, as the providers publish them. This feeds the
-# context gauge in the chat shell and nothing else: a stale number here makes
-# the ring slightly wrong, never a request wrong, so it is a table rather than
-# a live lookup. The default is the Claude window, the most common case; a
-# model missing from the table still gets a gauge.
+# Context windows, in tokens: the window Duct budgets a thread against, which
+# is not always the one the provider publishes. Claude Opus/Sonnet and GPT-6
+# all publish 1M or more; Duct budgets them at 200k and 400k, because every
+# turn re-sends the whole thread and the long end of a 1M window is where a
+# run's cost goes (docs/engineering/agent-engineering.md, gap 3, will derive
+# the summarisation trigger from this table for the same reason). Today it
+# feeds the context gauge in the chat shell: a stale number makes the ring
+# slightly wrong, never a request wrong, so it is a table rather than a live
+# lookup. The default is the Claude budget, the most common case; a model
+# missing from the table still gets a gauge.
 DEFAULT_CONTEXT_WINDOW = 200_000
 CONTEXT_WINDOW: dict[ModelName, int] = {
-    ModelName.GPT_5_6_SOL: 400_000,
-    ModelName.GPT_5_6_TERRA: 400_000,
-    ModelName.GPT_5_6_LUNA: 400_000,
+    ModelName.GPT_6_ASTRA: 400_000,
+    ModelName.GPT_6_1_SOL: 400_000,
+    ModelName.GPT_6_LUNA: 400_000,
     ModelName.GPT_5_MINI: 400_000,
     ModelName.GPT_4O: 128_000,
     ModelName.GPT_4O_MINI: 128_000,
@@ -347,15 +376,15 @@ CONTEXT_WINDOW: dict[ModelName, int] = {
     ModelName.CLAUDE_OPUS: 200_000,
     ModelName.CLAUDE_SONNET: 200_000,
     ModelName.CLAUDE_HAIKU: 200_000,
-    ModelName.GROK_4_6: 500_000,
-    ModelName.OR_DEEPSEEK_V4_FLASH: 1_000_000,
+    ModelName.GROK_4_7: 500_000,
+    ModelName.OR_DEEPSEEK_V4_1_FLASH: 1_000_000,
     ModelName.OR_DEEPSEEK_V4_PRO: 1_000_000,
     ModelName.OR_QWEN3_8_FLASH: 1_000_000,
     ModelName.OR_KIMI_K3: 1_000_000,
     ModelName.OR_GLM_5_3_FLASH: 1_300_000,
     ModelName.OR_CLAUDE_OPUS: 200_000,
     ModelName.OR_CLAUDE_SONNET: 200_000,
-    ModelName.OR_GPT_5_MINI: 400_000,
+    ModelName.OR_GPT_6_LUNA: 400_000,
 }
 
 
@@ -368,17 +397,25 @@ class ModelPrice(NamedTuple):
     cache_write: float = 0.0
 
 
-# List prices, USD per million tokens, from the providers' pricing pages via
-# models.dev on 2026-09-05. This feeds the cost figure beside the context
-# gauge and nothing else: a stale price makes the figure slightly wrong, never
-# a request wrong, so a table is right and a live lookup is not. A model that
-# is missing here shows tokens without a dollar figure rather than a made-up
-# one — on BYO keys the number is what the user actually pays, so a guess is
-# worse than a blank.
+# List prices, USD per million tokens, from the providers' pricing pages on
+# 2026-09-29. This feeds the cost figure beside the context gauge and nothing
+# else: a stale price makes the figure slightly wrong, never a request wrong,
+# so a table is right and a live lookup is not. A model that is missing here
+# shows tokens without a dollar figure rather than a made-up one — on BYO keys
+# the number is what the user actually pays, so a guess is worse than a blank.
+#
+# An OpenRouter slug carries its *model vendor's* rate, read off the vendor's
+# own endpoint in /api/v1/models/<slug>/endpoints. OpenRouter bills whichever
+# host served the call, and Duct sets no provider preference, so its default
+# routing (weighted toward cheaper hosts) decides. The single price
+# /api/v1/models shows per model is one host's, not a list price: for the
+# retired V4 Flash preview it was a host at 0% uptime.
 PRICING: dict[ModelName, ModelPrice] = {
-    ModelName.GPT_5_6_SOL: ModelPrice(4.0, 20.0, 0.4, 5.0),
-    ModelName.GPT_5_6_TERRA: ModelPrice(2.0, 12.0, 0.2, 2.5),
-    ModelName.GPT_5_6_LUNA: ModelPrice(0.2, 1.2, 0.02, 0.25),
+    # Short-context rates. GPT-6 doubles input above a 272k-token prompt and
+    # Duct budgets it at 400k, so a turn in between under-reports.
+    ModelName.GPT_6_ASTRA: ModelPrice(10.0, 50.0, 1.0, 12.5),
+    ModelName.GPT_6_1_SOL: ModelPrice(2.0, 10.0, 0.1, 2.5),
+    ModelName.GPT_6_LUNA: ModelPrice(0.1, 0.5, 0.01, 0.125),
     ModelName.GPT_5_MINI: ModelPrice(0.25, 2.0, 0.025),
     ModelName.GPT_4O: ModelPrice(2.5, 10.0, 1.25),
     ModelName.GPT_4O_MINI: ModelPrice(0.15, 0.6, 0.075),
@@ -387,21 +424,80 @@ PRICING: dict[ModelName, ModelPrice] = {
     ModelName.GEMINI_3_5_FLASH_LITE: ModelPrice(0.3, 2.5, 0.03),
     ModelName.GEMINI_2_5_FLASH: ModelPrice(0.3, 2.5, 0.03),
     ModelName.CLAUDE_FABLE: ModelPrice(10.0, 50.0, 0.25, 12.5),
-    ModelName.CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
+    # Opus 5.5's cache read is 5% of input, not the family's 10%.
+    ModelName.CLAUDE_OPUS: ModelPrice(4.0, 20.0, 0.2, 5.0),
     ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
     ModelName.CLAUDE_HAIKU: ModelPrice(1.0, 5.0, 0.1, 1.25),
     # Base rates. xAI doubles both above a 200k-token prompt; ModelPrice has
     # no tier for that, so a very long Grok run under-reports.
-    ModelName.GROK_4_6: ModelPrice(2.0, 6.0, 0.5),
-    ModelName.OR_DEEPSEEK_V4_FLASH: ModelPrice(0.08722, 0.17444, 0.017444),
-    ModelName.OR_DEEPSEEK_V4_PRO: ModelPrice(0.9309, 1.8618, 0.077575),
-    ModelName.OR_QWEN3_8_FLASH: ModelPrice(0.15, 0.47, 0.03),
+    ModelName.GROK_4_7: ModelPrice(2.0, 6.0, 0.5),
+    # DeepSeek's off-peak rates. It doubles them 01:00-04:00 and 06:00-10:00
+    # UTC on weekdays; ModelPrice has no clock, so a call then under-reports.
+    ModelName.OR_DEEPSEEK_V4_1_FLASH: ModelPrice(0.15, 0.6, 0.003),
+    ModelName.OR_DEEPSEEK_V4_PRO: ModelPrice(0.66, 1.98, 0.022),
+    ModelName.OR_QWEN3_8_FLASH: ModelPrice(0.15, 0.47, 0.016),
     ModelName.OR_KIMI_K3: ModelPrice(3.0, 15.0, 0.3),
-    ModelName.OR_GLM_5_3_FLASH: ModelPrice(0.075, 0.25, 0.015),
-    ModelName.OR_CLAUDE_OPUS: ModelPrice(5.0, 25.0, 0.5, 6.25),
+    ModelName.OR_GLM_5_3_FLASH: ModelPrice(0.15, 0.5, 0.03),
+    ModelName.OR_CLAUDE_OPUS: ModelPrice(4.0, 20.0, 0.2, 5.0),
     ModelName.OR_CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
-    ModelName.OR_GPT_5_MINI: ModelPrice(0.25, 2.0, 0.025),
+    ModelName.OR_GPT_6_LUNA: ModelPrice(0.1, 0.5, 0.01, 0.125),
 }
+
+
+class RetiredModel(NamedTuple):
+    """A catalogue id that left for a successor, and what outlives it.
+
+    ``successor`` is ``None`` only for an OpenRouter slug whose one successor
+    costs more: OpenRouter passes an unknown slug through, so the pick keeps
+    running as chosen rather than being moved up a price class.
+    """
+
+    successor: ModelName | None
+    context_window: int
+    price: ModelPrice
+
+
+# Ids the catalogue offered until a successor replaced them. They outlive the
+# enum member in three places, and each needs something different:
+#
+# * **A saved tier pick** (``user_model_settings.tiers``) or ``GENERATE_MODEL``
+#   still names the old id. Without this table ``resolve_engine_model`` finds
+#   no ``ModelName`` and falls to the *provider default*, so a Heavy pick of
+#   Opus 5 would have run on Sonnet without a word. The successor keeps the
+#   user on the line they chose.
+# * **A stored thread** was served by the old model, and its gauge and cost
+#   are read back per message. The old model's own price and window keep
+#   those figures true rather than repriced at the successor's rate.
+# * **The thinking dial** for a saved pick describes the model that will
+#   actually run, which is the successor.
+#
+# A successor is never a price step up the user did not choose: a saved
+# GPT-5.6 Sol moves to 6.1 Sol ($2/$10), not to 6 Astra ($10/$50), the same
+# rule ``agents/tiers.tier_chain`` keeps for a tier that cannot run. The
+# DeepSeek V4 Flash preview has no successor that passes it, so it has none.
+RETIRED_MODELS: dict[str, RetiredModel] = {
+    "claude-opus-5": RetiredModel(ModelName.CLAUDE_OPUS, 200_000, ModelPrice(5.0, 25.0, 0.5, 6.25)),
+    "claude-sonnet-5": RetiredModel(ModelName.CLAUDE_SONNET, 200_000, ModelPrice(2.0, 10.0, 0.2, 2.5)),
+    "anthropic/claude-opus-5": RetiredModel(ModelName.OR_CLAUDE_OPUS, 200_000, ModelPrice(5.0, 25.0, 0.5, 6.25)),
+    "anthropic/claude-sonnet-5": RetiredModel(ModelName.OR_CLAUDE_SONNET, 200_000, ModelPrice(2.0, 10.0, 0.2, 2.5)),
+    "gpt-5.6-sol": RetiredModel(ModelName.GPT_6_1_SOL, 400_000, ModelPrice(4.0, 20.0, 0.4, 5.0)),
+    "gpt-5.6-terra": RetiredModel(ModelName.GPT_6_1_SOL, 400_000, ModelPrice(2.0, 12.0, 0.2, 2.5)),
+    "gpt-5.6-luna": RetiredModel(ModelName.GPT_6_LUNA, 400_000, ModelPrice(0.2, 1.2, 0.02, 0.25)),
+    "grok-4.6": RetiredModel(ModelName.GROK_4_7, 500_000, ModelPrice(2.0, 6.0, 0.5)),
+    # Also the agent-eval model: scripts/agent_eval.py names the slug and hands
+    # it to the runner directly, so the eval stays on the build its baseline
+    # was recorded on, and this row keeps that run priced.
+    "deepseek/deepseek-v4-flash": RetiredModel(None, 1_000_000, ModelPrice(0.0763, 0.1526, 0.0153)),
+    "deepseek/deepseek-v4-pro": RetiredModel(ModelName.OR_DEEPSEEK_V4_PRO, 1_000_000, ModelPrice(0.9363, 1.8726, 0.078)),
+    "openai/gpt-5-mini": RetiredModel(ModelName.OR_GPT_6_LUNA, 400_000, ModelPrice(0.25, 2.0, 0.025)),
+}
+
+
+def current_model_id(model_id: str) -> str:
+    """``model_id``, or its successor's id when it has left the catalogue."""
+    model_id = str(model_id or "").strip()
+    retired = RETIRED_MODELS.get(model_id)
+    return retired.successor.value if retired is not None and retired.successor else model_id
 
 
 def _model_key(model: "ModelName | str | None") -> "ModelName | None":
@@ -415,9 +511,13 @@ def _model_key(model: "ModelName | str | None") -> "ModelName | None":
 
 def price_for(model: "ModelName | str | None") -> ModelPrice | None:
     """The price list for a model id, by enum member or raw string; ``None``
-    for a model the table does not know."""
+    for a model the table does not know. A retired id is priced as itself,
+    since a thread it served was billed at its own rate."""
     key = _model_key(model)
-    return PRICING.get(key) if key is not None else None
+    if key is not None:
+        return PRICING.get(key)
+    retired = RETIRED_MODELS.get(str(model or ""))
+    return retired.price if retired is not None else None
 
 
 def cost_usd(
@@ -454,12 +554,11 @@ def context_window_for(model: "ModelName | str | None") -> int:
     alias) rather than the one asked for; a string it does not know falls
     through to the default rather than failing the gauge.
     """
-    if isinstance(model, ModelName):
-        return CONTEXT_WINDOW.get(model, DEFAULT_CONTEXT_WINDOW)
-    try:
-        return CONTEXT_WINDOW.get(ModelName(str(model)), DEFAULT_CONTEXT_WINDOW)
-    except ValueError:
-        return DEFAULT_CONTEXT_WINDOW
+    key = _model_key(model)
+    if key is not None:
+        return CONTEXT_WINDOW.get(key, DEFAULT_CONTEXT_WINDOW)
+    retired = RETIRED_MODELS.get(str(model or ""))
+    return retired.context_window if retired is not None else DEFAULT_CONTEXT_WINDOW
 
 
 GATEWAY_BASE_URL: dict[Provider, str] = {
@@ -537,7 +636,7 @@ def resolve_model(name: str | None, provider: Provider) -> ModelName:
     if not name:
         return DEFAULT_MODELS.get(provider, ModelName.GEMINI_3_8_FLASH)
     try:
-        return ModelName(name.strip())
+        return ModelName(current_model_id(name))
     except ValueError:
         return DEFAULT_MODELS.get(provider, ModelName.GEMINI_3_8_FLASH)
 
@@ -584,6 +683,66 @@ def provider_of(model: "ModelName | str") -> Provider | None:
         if name.startswith(prefix):
             return provider
     return None
+
+
+def _model_id(model: "ModelName | str | None") -> str:
+    return str(getattr(model, "value", model) or "").strip().lower()
+
+
+# Claude models on Anthropic's newer request contract, which Fable 5.1
+# introduced and Opus 5.5 and Sonnet 5.5 kept. Two facts, and they have
+# arrived together on every model so far, so one table answers both — split it
+# the day a model ships with only one:
+#
+# * **A forced tool call is a 400.** ``tool_choice`` of ``any`` or a named tool
+#   is refused on the Messages API and through OpenRouter alike. LangChain's
+#   ``ToolStrategy`` forces exactly that, so a typed answer at the end of a
+#   tool loop has to be asked for another way (``agents/core/research.py``).
+# * **A thinking block is bound to the conversation before it.** Replaying one
+#   after an earlier turn changed is a 400 on accounts created on or after
+#   2026-08-31, which is every new customer's own key, and Duct's harness does
+#   change earlier turns: tool-result pruning, the seen-image swap and
+#   compaction all rewrite history. ``agents/core/lc.resolve_chat_model`` asks
+#   the API to drop a stale block instead of refusing the request.
+CLAUDE_BOUND_THINKING: frozenset[str] = frozenset({
+    ModelName.CLAUDE_FABLE.value,
+    ModelName.CLAUDE_OPUS.value,
+    ModelName.CLAUDE_SONNET.value,
+    ModelName.OR_CLAUDE_OPUS.value,
+    ModelName.OR_CLAUDE_SONNET.value,
+})
+
+
+def accepts_forced_tool_choice(model: "ModelName | str | None") -> bool:
+    """False for a model that refuses ``tool_choice`` of ``any`` or a named tool."""
+    return _model_id(model) not in CLAUDE_BOUND_THINKING
+
+
+def binds_thinking_to_conversation(model: "ModelName | str | None") -> bool:
+    """True for a model whose thinking blocks fail on an edited history."""
+    return _model_id(model) in CLAUDE_BOUND_THINKING
+
+
+# Reasoning models that fix their own sampling. A temperature other than the
+# default is refused while they reason: a 400 from GPT-6 and the Claude 5
+# family, and for Fable 5.1 and Sonnet 5.5 a ValueError langchain-anthropic
+# raises before the request leaves. Callers pass one anyway — 0 for the
+# key-verify call and the memory pass — so the transport drops it for these
+# rather than every caller carrying the list. GPT-6 takes a temperature back
+# only at reasoning effort `none`, which Duct never sends.
+_FIXED_SAMPLING_PREFIXES: tuple[str, ...] = (
+    "claude-fable-",
+    "claude-opus-5",
+    "claude-sonnet-5",
+    "gpt-6",
+)
+
+
+def takes_temperature(model: "ModelName | str | None") -> bool:
+    """False for a model that refuses a sampling temperature while it reasons."""
+    name = _model_id(model)
+    name = name.split("/", 1)[1] if "/" in name else name
+    return not name.startswith(_FIXED_SAMPLING_PREFIXES)
 
 
 class Modality(StrEnum):
@@ -633,9 +792,9 @@ def model_emits(model: "ModelName | str", modality: Modality) -> bool:
 # regression, and making this map mandatory would mean a failing test every
 # time the catalogue gained a row.
 MODEL_LABELS: dict[str, str] = {
-    ModelName.GPT_5_6_SOL.value: "GPT-5.6 Sol",
-    ModelName.GPT_5_6_TERRA.value: "GPT-5.6 Terra",
-    ModelName.GPT_5_6_LUNA.value: "GPT-5.6 Luna",
+    ModelName.GPT_6_ASTRA.value: "GPT-6 Astra",
+    ModelName.GPT_6_1_SOL.value: "GPT-6.1 Sol",
+    ModelName.GPT_6_LUNA.value: "GPT-6 Luna",
     ModelName.GPT_5_MINI.value: "GPT-5 mini",
     ModelName.GPT_4O.value: "GPT-4o",
     ModelName.GPT_4O_MINI.value: "GPT-4o mini",
@@ -644,26 +803,24 @@ MODEL_LABELS: dict[str, str] = {
     ModelName.GEMINI_3_5_FLASH_LITE.value: "Gemini 3.5 Flash-Lite",
     ModelName.GEMINI_2_5_FLASH.value: "Gemini 2.5 Flash",
     ModelName.CLAUDE_FABLE.value: "Claude Fable 5.1",
-    ModelName.CLAUDE_OPUS.value: "Claude Opus 5",
-    ModelName.CLAUDE_SONNET.value: "Claude Sonnet 5",
+    ModelName.CLAUDE_OPUS.value: "Claude Opus 5.5",
+    ModelName.CLAUDE_SONNET.value: "Claude Sonnet 5.5",
     ModelName.CLAUDE_HAIKU.value: "Claude Haiku 4.5",
-    ModelName.GROK_4_6.value: "Grok 4.6",
-    ModelName.OR_DEEPSEEK_V4_FLASH.value: "DeepSeek V4 Flash",
+    ModelName.GROK_4_7.value: "Grok 4.7",
+    ModelName.OR_DEEPSEEK_V4_1_FLASH.value: "DeepSeek V4.1 Flash",
     ModelName.OR_DEEPSEEK_V4_PRO.value: "DeepSeek V4 Pro",
     ModelName.OR_QWEN3_8_FLASH.value: "Qwen3.8 Flash",
     ModelName.OR_KIMI_K3.value: "Kimi K3",
     ModelName.OR_GLM_5_3_FLASH.value: "GLM-5.3 Flash",
-    ModelName.OR_CLAUDE_OPUS.value: "Claude Opus 5",
-    ModelName.OR_CLAUDE_SONNET.value: "Claude Sonnet 5",
-    ModelName.OR_GPT_5_MINI.value: "GPT-5 mini",
+    ModelName.OR_CLAUDE_OPUS.value: "Claude Opus 5.5",
+    ModelName.OR_CLAUDE_SONNET.value: "Claude Sonnet 5.5",
+    ModelName.OR_GPT_6_LUNA.value: "GPT-6 Luna",
     # The image models are not tier picks, but they are rendered in the same
     # sentence as one, and a raw id beside a name reads as a different kind
     # of thing.
     ImageModel.GEMINI_3_1_FLASH_IMAGE.value: "Gemini 3.1 Flash Image",
     ImageModel.GEMINI_3_1_FLASH_LITE_IMAGE.value: "Gemini 3.1 Flash-Lite Image",
     ImageModel.GEMINI_3_PRO_IMAGE.value: "Gemini 3 Pro Image",
-    ImageModel.GPT_IMAGE_2_5_FLARE.value: "GPT Image 2.5 Flare",
-    ImageModel.GPT_IMAGE_2_5_SUNBURST.value: "GPT Image 2.5 Sunburst",
     ImageModel.GPT_IMAGE_2_5_FLARE.value: "GPT Image 2.5 Flare",
     ImageModel.GPT_IMAGE_2_5_SUNBURST.value: "GPT Image 2.5 Sunburst",
     ImageModel.GPT_IMAGE_2.value: "GPT Image 2",
@@ -685,7 +842,7 @@ def run_model_fields(provider: Any, model: Any) -> dict[str, str]:
     """What a run-start event says about the model it runs on.
 
     On every PIPELINE_STARTED, from one helper, so the transcript can say
-    "Switched to Claude Sonnet 5" when a resumed thread comes back on a
+    "Switched to Claude Sonnet 5.5" when a resumed thread comes back on a
     different model — a fact the reader could not otherwise learn, and one
     that explains a change of voice or a different verdict on the same data.
     """

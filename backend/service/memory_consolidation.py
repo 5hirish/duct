@@ -45,7 +45,7 @@ from sqlalchemy import select
 
 from agents.core.events import EventKind
 from agents.engines import ProviderKeyRequired, resolve_job_run
-from agents.models import get_api_key_kwargs
+from agents.models import get_api_key_kwargs, takes_temperature
 from db.session import get_session as db_session
 from models.content.conversation import AgentConversation
 from models.content.conversation import AgentEvent as AgentEventRow
@@ -314,7 +314,10 @@ def _memory_model(owner_id: UUID | None, schema: type[BaseModel], *, user_keys: 
     llm = init_chat_model(
         model=getattr(run.model, "value", run.model),
         model_provider=run.provider.value,
-        temperature=0,
+        # 0 where a model takes one; a reasoning model that fixes its own
+        # sampling refuses any (``takes_temperature``), and the Light pick
+        # this runs on may be one.
+        temperature=0 if takes_temperature(run.model) else None,
         **get_api_key_kwargs(run.provider, run.api_key),
     )
     return llm.with_structured_output(schema, method="json_schema", strict=True)

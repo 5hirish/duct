@@ -84,7 +84,7 @@ def test_anthropic_gets_fetch_plus_the_built_in():
     [
         (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_8_FLASH),
         (Provider.GOOGLE_GENAI, ModelName.GEMINI_2_5_FLASH),
-        (Provider.OPENAI, ModelName.GPT_5_6_TERRA),
+        (Provider.OPENAI, ModelName.GPT_6_1_SOL),
         (Provider.OPENROUTER, ModelName.OR_KIMI_K3),
     ],
 )
@@ -98,7 +98,7 @@ def test_every_other_provider_gets_ducts_own_search(provider, model):
 def test_without_a_gemini_key_a_non_anthropic_run_gets_fetch_only():
     """Better than a tool that can only apologise: an agent told it has search
     and handed an error every time burns turns rediscovering that."""
-    tools = build_web_tools_lc(Provider.OPENAI, ModelName.GPT_5_6_TERRA, "")
+    tools = build_web_tools_lc(Provider.OPENAI, ModelName.GPT_6_1_SOL, "")
     assert _names(tools) == [WEB_FETCH_TOOL]
     assert build_web_search_tool_lc("") is None
 
