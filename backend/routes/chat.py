@@ -1,4 +1,9 @@
-"""Streaming chat endpoint for insight discussion."""
+"""Streaming chat endpoint for insight discussion.
+
+Every reply is a model call on the instance's own key, not the caller's, and
+a guest is a user anyone can mint — so the route is limited per user and per
+address on top of the router's sign-in gate.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +12,7 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -17,9 +22,18 @@ from models.auth import User
 from service.auth import get_current_user, get_user_provider_keys
 from service.model_settings import get_model_settings
 from service.provider_keys import stored_keys_for
+from service.ratelimit import RateLimit, client_address
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["insights"])
+
+# A person talking through a brief sends a message every few seconds at most,
+# and not for ten minutes straight.
+_CHAT_PER_USER = RateLimit(limit=30, window_seconds=600.0)
+# The same per address, looser for a shared office line; per user alone
+# multiplies by the guests one address can mint.
+_CHAT_PER_ADDRESS = RateLimit(limit=60, window_seconds=600.0)
+_CHAT_LIMIT_DETAIL = "That is a lot of questions in a row. Try again in a few minutes."
 
 
 class ChatMessage(BaseModel):
@@ -36,6 +50,7 @@ class InsightChatRequest(BaseModel):
 @router.post("/chat")
 async def insight_chat(
     req: InsightChatRequest,
+    request: Request,
     user: User = Depends(get_current_user),
     user_keys: dict = Depends(get_user_provider_keys),
 ) -> StreamingResponse:
@@ -47,6 +62,8 @@ async def insight_chat(
     (``resolve_job_run``): the caller's keys, this instance's only where
     ``allow_server_provider_keys()`` holds, else the 402 the browser handles.
     """
+    _CHAT_PER_ADDRESS.enforce(client_address(request), _CHAT_LIMIT_DETAIL)
+    _CHAT_PER_USER.enforce(str(user.id), _CHAT_LIMIT_DETAIL)
     settings = get_model_settings(user.id)
     run = resolve_job_run(
         Job.CHAT,

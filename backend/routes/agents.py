@@ -37,6 +37,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlmodel import Session
+from starlette.status import HTTP_429_TOO_MANY_REQUESTS
 
 from uuid import UUID
 
@@ -44,7 +45,7 @@ from agents.audit.events import AuditEvent
 from agents.audit.schema import AuditRequest
 from agents.audit.crawl import create_audit_session
 from agents.audit.v1.runner import LangChainAuditRunner
-from agents.core.session import close_session, get_session
+from agents.core.session import close_session, get_session, live_session_count
 from agents.content.persistence import (
     ConversationRecorder,
     archive_conversation,
@@ -82,7 +83,7 @@ from service.artifact_store import (
 )
 from service.auth import get_current_user, get_current_user_optional, get_user_provider_keys
 from service.crawl.fetcher import SSRFError, validate_public_url
-from service.lead_access import lead_token_is_live
+from service.lead_access import TOKEN_TTL_HOURS, lead_token_is_live
 from service.membership import accessible_projects, get_project_for_user, member_role
 from service.memory import build_memory_context, seed_user_preferences
 from service.memory_consolidation import LentKeys, record_remember_choice, schedule_consolidation
@@ -92,6 +93,7 @@ from service.model_settings import get_model_settings
 from service.profile import resolve as resolve_profile
 from agents.core.voice import user_context_block
 from service.provider_keys import stored_keys_for
+from service.ratelimit import RateLimit, client_address
 from utils.dates import now_iso, utcnow
 
 logger = logging.getLogger(__name__)
@@ -115,6 +117,28 @@ _SESSION_TTL = 1800  # 30 minutes
 # and re-attach to the SAME live session (transient network blips, tab refresh).
 # The inactivity pruner (_SESSION_TTL) is the longer backstop.
 _RECONNECT_GRACE = 60  # seconds
+
+# Starting a run can crawl a site and holds the run in this process's memory,
+# on a container with a gigabyte of it. Opening conversations and reloading
+# stays far below these; a loop does not.
+_SESSION_STARTS_PER_USER = RateLimit(limit=30, window_seconds=600.0)
+# The same per address, looser for a shared office line, because a guest is a
+# user anyone can mint and a per-user limit alone multiplies by the guests.
+_SESSION_STARTS_PER_ADDRESS = RateLimit(limit=60, window_seconds=600.0)
+# Runs one user may hold open at once. A few tabs, plus a reload's session
+# still inside its reconnect grace, fit under it.
+_MAX_LIVE_SESSIONS_PER_USER = 5
+
+# The teaser audit runs on Duct's key, so it is held to the lead token and the
+# address rather than to a payer. The page runs one audit per token; the rest
+# of this is room for a retry.
+_TEASER_RUNS_PER_TOKEN = RateLimit(limit=3, window_seconds=TOKEN_TTL_HOURS * 3600.0)
+# Each token costs a Turnstile solve; this stops one address spending tokens
+# as fast as it can solve them.
+_TEASER_RUNS_PER_ADDRESS = RateLimit(limit=5, window_seconds=3600.0)
+# Follow-up questions in one teaser session, each a model call on Duct's key
+# with the whole report in context. Keyed by session, over any session's life.
+_TEASER_FOLLOWUPS_PER_SESSION = RateLimit(limit=10, window_seconds=TOKEN_TTL_HOURS * 3600.0)
 
 
 def _close_and_consolidate(session_id: str) -> None:
@@ -283,7 +307,7 @@ def _owned_session(session_id: str, agent_type: str, user: User | None):
     return session
 
 
-def _require_caller(agent_type: str, body: dict, user: User | None) -> None:
+def _require_caller(agent_type: str, body: dict, user: User | None) -> str | None:
     """Every agent run needs someone it can be charged to. Mutates ``body``.
 
     Starting a session spends model tokens — a full crawl, enrichment and
@@ -303,15 +327,49 @@ def _require_caller(agent_type: str, body: dict, user: User | None) -> None:
     needs it, ``AuditRequest`` forbids unknown fields, and a credential that
     stops travelling is one fewer thing to keep out of a log or a Sentry
     breadcrumb.
+
+    Returns the token when the run is the teaser, because the teaser runs on
+    Duct's key (``duct_pays=req.lead_magnet``) and the token is what its limits
+    are keyed on; None when the caller pays. A signed-in caller who sends the
+    flag without a live token loses the flag rather than the run: a guest is a
+    user anyone can mint, so the flag alone must never be what moves the bill.
     """
     token = str(body.pop("lead_token", "") or "")
-    if user is not None:
+    teaser = agent_type == AgentType.SEO_AUDIT and bool(body.get("lead_magnet"))
+    if teaser and lead_token_is_live(token):
+        return token
+    if user is None:
+        if teaser:
+            raise HTTPException(401, "This audit link has expired — request a new one.")
+        raise HTTPException(401, "Sign in to run an agent.")
+    if teaser:
+        body["lead_magnet"] = False
+    return None
+
+
+def _enforce_start_limits(request: Request, user: User | None, lead_token: str | None) -> None:
+    """The rate and concurrency limits on starting a run. Raises 429.
+
+    Called once the caller is known and before anything is built, so a refused
+    start costs a counter and nothing more.
+    """
+    address = client_address(request)
+    if lead_token is not None:
+        _TEASER_RUNS_PER_ADDRESS.enforce(address, "Too many free audits from this address. Try again later.")
+        _TEASER_RUNS_PER_TOKEN.enforce(lead_token, "This audit link has been used up — request a new one.")
+    if user is None:
         return
-    if agent_type == AgentType.SEO_AUDIT and body.get("lead_magnet"):
-        if lead_token_is_live(token):
-            return
-        raise HTTPException(401, "This audit link has expired — request a new one.")
-    raise HTTPException(401, "Sign in to run an agent.")
+    live = live_session_count(user.id)
+    if live >= _MAX_LIVE_SESSIONS_PER_USER:
+        # Not a window, so no window's retry time: the likely cause is a closed
+        # tab whose run is still inside its reconnect grace.
+        raise HTTPException(
+            status_code=HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"You have {live} agents running already. Close one, or try again in a minute.",
+            headers={"Retry-After": str(_RECONNECT_GRACE + 1)},
+        )
+    _SESSION_STARTS_PER_ADDRESS.enforce(address, "Too many runs started from this address. Try again in a few minutes.")
+    _SESSION_STARTS_PER_USER.enforce(str(user.id), "That is a lot of runs in a row. Try again in a few minutes.")
 
 
 def _scope_body_to_authorized_project(agent_type: str, body: dict, user: User | None) -> None:
@@ -393,17 +451,22 @@ async def create_session(
         raise HTTPException(422, f"Agent {agent_type!r} is not yet available.")
 
     body = await request.json()
-    # Two gates, in this order. First: is there anyone to charge this run to?
-    # Then: may they use the project scope they asked for? Both run before
-    # anything reads the body — the session builder, the conversation resolver
-    # and every tool downstream all trust it.
-    _require_caller(agent_type, body, user)
+    # Three gates, in this order. First: is there anyone to charge this run to?
+    # Then: may they use the project scope they asked for? Then: are they
+    # within their limits? All run before anything reads the body — the
+    # session builder, the conversation resolver and every tool downstream all
+    # trust it.
+    lead_token = _require_caller(agent_type, body, user)
     _scope_body_to_authorized_project(agent_type, body, user)
+    _enforce_start_limits(request, user, lead_token)
     session_id = str(uuid.uuid4())
     session = _create_session_for(agent_type, session_id, body)
     # Signed-in creator (optional — API-key-only callers get None). Downstream
-    # features (artifact persistence, execution proposals) key off this.
+    # features (artifact persistence, execution proposals) key off this, and so
+    # does the live-session cap.
     session.user_id = user.id if user else None
+    if lead_token is not None:
+        session.duct_funded = True
     # The caller's header keys, in memory for the session's life and never
     # stored — the runner holds them anyway. Closing the session lends them to
     # the consolidation pass, which otherwise sees only saved keys: a desktop
@@ -426,8 +489,14 @@ async def create_session(
         event_body["session_id"] = session_id
         await _emit_to_queue(session.event_queue, event_body)  # type: ignore[arg-type]
 
-    # Dispatch to the correct pipeline
-    await _dispatch_start(agent_type, session_id, body, emit_fn, user_keys=user_keys)
+    try:
+        await _dispatch_start(agent_type, session_id, body, emit_fn, user_keys=user_keys)
+    except BaseException:
+        # A start that failed (a 402 for a missing key, a 422 for a bad body)
+        # has nothing running. Left registered it would hold memory and count
+        # against the caller's live-session cap until the stale pruner's TTL.
+        close_session(session_id)
+        raise
 
     stream_url = f"/api/agents/{agent_type}/sessions/{session_id}/stream"
     conversation_id = getattr(session, "conversation_id", None)
@@ -574,6 +643,10 @@ async def send_message(
     # type == "chat"
     if msg.content is None:
         raise HTTPException(422, "content field required for type='chat'")
+    if getattr(session, "duct_funded", False):
+        _TEASER_FOLLOWUPS_PER_SESSION.enforce(
+            session_id, "That is all the free follow-ups for this audit. Sign up to keep asking."
+        )
 
     # Read before this message is recorded: "since the last thing they said".
     # Off the event loop: this runs on every message of every agent, and two

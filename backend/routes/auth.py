@@ -6,7 +6,7 @@ import logging
 import secrets
 from urllib.parse import quote
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
@@ -35,6 +35,7 @@ from service.oauthstate import (
     consume_state_full,
     save_state,
 )
+from service.ratelimit import RateLimit, client_address
 
 logger = logging.getLogger(__name__)
 
@@ -465,7 +466,18 @@ def github_app_setup(state: str = Query(default="")) -> RedirectResponse:
         )
 
 
-@router.get("/auth/connectors/{connector_id}/oauth/authorize")
+# Per source address. Each start writes an OAuth state row with no user behind
+# it; connecting every Google source, with a retry or two, is well under this.
+_CONNECT_START_LIMIT = RateLimit(limit=20, window_seconds=600.0)
+
+
+def _limit_connect_starts(request: Request) -> None:
+    _CONNECT_START_LIMIT.enforce(
+        client_address(request), "Too many connection attempts from this address. Try again in a few minutes."
+    )
+
+
+@router.get("/auth/connectors/{connector_id}/oauth/authorize", dependencies=[Depends(_limit_connect_starts)])
 def connector_oauth_authorize(
     connector_id: str,
     client: str = Query(default=""),

@@ -424,6 +424,16 @@ Postgres `DATABASE_URL` names.
   validates (`agents/audit/prefetch.py`): root page now, the rest in the
   background, handed to `run_pipeline` by `crawl_id`. Duct's bandwidth only;
   inference never runs here.
+- `service/ratelimit.py` — the in-process fixed window every route goes
+  through that spends before its caller has proven much: `RateLimit.enforce`
+  is the 429 with `Retry-After`. Key an address with `client_address(request)`,
+  never `request.client.host`, which on the hosted API is the proxy in front of
+  it; keyed on that, a per-address limit is one bucket for everyone. A guest is
+  a user anyone can mint, so a route that spends on a per-user limit carries a
+  per-address one beside it. Session starts also cap live sessions per user
+  (`agents/core/session.live_session_count`), and the teaser — the one run on
+  Duct's key — is held to its lead token, its address and a follow-up budget.
+  `tests/conftest.py::fresh_rate_limits` empties every window between tests.
 - `service/clone_reference.py` — a pasted TikTok link becomes a saved
   reference for a clone (issue #222). The link is reduced to a handle and a
   post id and everything after uses the URL rebuilt from them; the Apify input

@@ -522,3 +522,6 @@ class AuditSession(BaseAgentSession):
     report_versions: list[VersionedReport] = field(default_factory=list)
     report_mode: str = "freehand"
     template_id: str = ""
+    # True for the lead-magnet teaser, which runs on Duct's key. Stamped by
+    # routes/agents.py at creation; the messages route caps follow-ups on it.
+    duct_funded: bool = False
