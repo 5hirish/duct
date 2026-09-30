@@ -484,10 +484,10 @@ RETIRED_MODELS: dict[str, RetiredModel] = {
     "gpt-5.6-terra": RetiredModel(ModelName.GPT_6_1_SOL, 400_000, ModelPrice(2.0, 12.0, 0.2, 2.5)),
     "gpt-5.6-luna": RetiredModel(ModelName.GPT_6_LUNA, 400_000, ModelPrice(0.2, 1.2, 0.02, 0.25)),
     "grok-4.6": RetiredModel(ModelName.GROK_4_7, 500_000, ModelPrice(2.0, 6.0, 0.5)),
-    "deepseek/deepseek-v4-flash": RetiredModel(None, 1_000_000, ModelPrice(0.0763, 0.1526, 0.0153)),
     # Also the agent-eval model: scripts/agent_eval.py names the slug and hands
     # it to the runner directly, so the eval stays on the build its baseline
     # was recorded on, and this row keeps that run priced.
+    "deepseek/deepseek-v4-flash": RetiredModel(None, 1_000_000, ModelPrice(0.0763, 0.1526, 0.0153)),
     "deepseek/deepseek-v4-pro": RetiredModel(ModelName.OR_DEEPSEEK_V4_PRO, 1_000_000, ModelPrice(0.9363, 1.8726, 0.078)),
     "openai/gpt-5-mini": RetiredModel(ModelName.OR_GPT_6_LUNA, 400_000, ModelPrice(0.25, 2.0, 0.025)),
 }
