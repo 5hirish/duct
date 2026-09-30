@@ -2136,7 +2136,7 @@ msgstr "Pilares de contenido"
 #: src/lib/navigation.js
 #: src/lib/usageApi.js
 msgid "Content Studio"
-msgstr "Estudio de Contenido"
+msgstr "Content Studio"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Context"

@@ -2136,7 +2136,7 @@ msgstr "コンテンツピラー"
 #: src/lib/navigation.js
 #: src/lib/usageApi.js
 msgid "Content Studio"
-msgstr "コンテンツスタジオ"
+msgstr "Content Studio"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Context"
@@ -4338,7 +4338,7 @@ msgstr "インサイトエージェントにメッセージを送る"
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
 msgid "Meta Ads"
-msgstr "Meta広告"
+msgstr "Meta Ads"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Meta desc"

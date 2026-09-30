@@ -12,7 +12,7 @@ msgstr "<0/> @5hirish"
 
 #: about.html
 msgid "<0/> Ship with AI"
-msgstr "<0/> Envie com IA"
+msgstr "<0/> Ship with AI"
 
 #: about.html
 msgid "<0/> shirishkadam.com"
@@ -104,7 +104,7 @@ msgstr "Contato"
 
 #: about.html index.html
 msgid "Content Studio"
-msgstr "Estúdio de Conteúdo"
+msgstr "Content Studio"
 
 #: about.html
 msgid ""
@@ -1164,7 +1164,7 @@ msgstr "Discorda?"
 
 #: doctrine.html partials/footer-expanded.html partials/nav-simple.html
 msgid "Doctrine"
-msgstr "Doutrina"
+msgstr "Doctrine"
 
 #: doctrine.html
 msgid ""
@@ -1277,13 +1277,13 @@ msgstr "Opiniões fortes,<0/>mantidas em <1>código</1>"
 
 #: doctrine.html
 msgid "The Duct Doctrine"
-msgstr "A Doutrina Duct"
+msgstr "A Duct Doctrine"
 
 #. meta og:title
 #. meta twitter:title
 #: doctrine.html
 msgid "The Duct Doctrine — What This Project Believes, and Why"
-msgstr "A Doutrina Duct — O Que Este Projeto Acredita e Por Quê"
+msgstr "A Duct Doctrine: em que este projeto acredita, e por quê"
 
 #: doctrine.html
 msgid "The agent proposes. A human approves."
@@ -7155,7 +7155,7 @@ msgstr "Ver todas as ferramentas gratuitas →"
 
 #: partials/footer-expanded.html
 msgid "Ship with AI (YouTube)"
-msgstr "Lançar com IA (YouTube)"
+msgstr "Ship with AI (YouTube)"
 
 #. div aria-label
 #: partials/footer-expanded.html tools/index.html tools/utm-builder.html
@@ -7356,7 +7356,7 @@ msgstr "6 meses, depois perguntamos novamente"
 
 #: privacy.html
 msgid "6. Content Studio: Uploads and Publishing"
-msgstr "6. Estúdio de Conteúdo: Uploads e Publicação"
+msgstr "6. Content Studio: uploads e publicação"
 
 #: privacy.html
 msgid "7 days"
@@ -10724,7 +10724,7 @@ msgstr ""
 msgid ""
 "Free ROAS calculator for paid media teams. Compute return on ad spend from revenue and ad spend, plus target ROAS scenarios for Google Ads, Meta, and ecommerce."
 msgstr ""
-"Calculadora gratuita de ROAS para equipes de mídia paga. Calcule o retorno sobre anúncios a partir de receita e gasto, mais cenários de ROAS alvo."
+"Calculadora de ROAS gratuita para equipes de mídia paga. Calcule o retorno sobre o investimento em anúncios a partir da receita e do gasto, com cenários de ROAS-alvo para Google Ads, Meta e e-commerce."
 
 #. meta twitter:description
 #: tools/roas-calculator.html

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
-<title>La Doctrina Duct — Lo que este proyecto cree, y por qué</title>
+<title>La Duct Doctrine — qué cree este proyecto y por qué</title>
 <link rel="canonical" href="https://getduct.ai/es/doctrine"/>
 <!-- hreflang:start -->
 <link rel="alternate" hreflang="x-default" href="https://getduct.ai/doctrine"/>
@@ -24,14 +24,14 @@
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="article"/>
 <meta property="og:url" content="https://getduct.ai/es/doctrine"/>
-<meta property="og:title" content="La Doctrina Duct — Lo que este proyecto cree, y por qué"/>
+<meta property="og:title" content="La Duct Doctrine — qué cree este proyecto y por qué"/>
 <meta property="og:description" content="Siete principios en los que se basa Duct, cada uno con el archivo que lo aplica. Un agente que puede proponer cambios a producción pero no puede aprobarlos, y otras seis posturas."/>
 <meta property="og:image" content="https://getduct.ai/assets/og/doctrine.jpg"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="La Doctrina Duct — Lo que este proyecto cree, y por qué"/>
+<meta name="twitter:title" content="La Duct Doctrine — qué cree este proyecto y por qué"/>
 <meta name="twitter:description" content="Siete principios en los que se basa Duct, cada uno con el archivo que lo aplica."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og/doctrine.jpg"/>
 <link rel="alternate" type="application/rss+xml" title="Blog de Duct" href="/blog/feed.xml"/>
@@ -43,7 +43,7 @@
   "@context": "https://schema.org",
   "@type": "Article",
   "inLanguage": "es",
-  "headline": "La doctrina de Duct",
+  "headline": "La Duct Doctrine",
   "url": "https://getduct.ai/es/doctrine",
   "description": "Siete principios en los que se basa Duct, cada uno con el archivo que lo aplica.",
   "author": {
@@ -129,7 +129,7 @@
 }
 </style>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"es","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://getduct.ai/es/"},{"@type":"ListItem","position":2,"name":"Doctrina","item":"https://getduct.ai/es/doctrine"}]}
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"es","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://getduct.ai/es/"},{"@type":"ListItem","position":2,"name":"Doctrine","item":"https://getduct.ai/es/doctrine"}]}
 </script>
 </head>
 <body>
@@ -147,12 +147,12 @@
 
 <section class="doc-hero">
   <h1>Opiniones firmes,<br/>plasmadas en <em>código</em></h1>
-  <p class="doc-hero-sub">Cada proyecto tiene creencias. La mayoría viven en la cabeza de alguien y se filtran una revisión de código a la vez. Estas son las de Duct, escritas, cada una con el archivo que la aplica.</p>
+  <p class="doc-hero-sub">Todo proyecto tiene creencias. La mayoría viven en la cabeza de alguien y se filtran de revisión en revisión. Estas son las de Duct, por escrito, cada una con el archivo que la aplica.</p>
 </section>
 
 <section class="doc-preamble">
-  <p>Duct es un agente de IA que lee tu pila de producto y crecimiento, y que puede cambiar cosas en ella. Eso es mucha confianza para pedir de una herramienta que no escribiste. Así que el razonamiento es público, y también lo es el código que lo sustenta.</p>
-  <p><strong>Nada de lo que sigue es aspiracional.</strong> Cada principio enlaza con el archivo que lo hace cierto. Si encuentras uno donde el código no concuerda con la página, es un error y me gustaría que lo reportaras.</p>
+  <p>Duct es un agente de IA que lee todo tu stack de producto y crecimiento, y que puede cambiar cosas en ella. Es mucha confianza para pedírsela a una herramienta que no has escrito tú. Así que el razonamiento es público, y también lo es el código que lo sustenta.</p>
+  <p><strong>Nada de lo que sigue es aspiracional.</strong> Cada principio enlaza con el archivo que lo hace cierto. Si encuentras uno donde el código no concuerda con la página, es un error y me gustaría que abrieras una incidencia.</p>
 </section>
 
 <div class="tenets">
@@ -161,7 +161,7 @@
     <span class="tenet-num">01</span>
     <h2 class="tenet-title">El agente propone. Un humano aprueba.</h2>
     <p class="tenet-body">Duct puede preparar un cambio en tus sistemas en vivo: pausar una campaña, añadir palabras clave negativas, marcar un evento clave de GA4. Te muestra una vista previa y una verificación de seguridad. Luego se detiene.</p>
-    <p class="tenet-body">No hay una herramienta de aprobación o aplicación orientada al agente. Ni una deshabilitada, ni una detrás de una bandera. No existe en el registro de herramientas que ve el modelo, por lo que el modelo no puede llamarla, no se le puede convencer de llamarla, y no se le puede inyectar un prompt para que la llame. La puerta destructiva es absoluta: ninguna configuración permite que una operación destructiva se autoaplique. Revertir es parte del contrato de cada ejecutor, no una ocurrencia tardía.</p>
+    <p class="tenet-body">No hay una herramienta de aprobación o aplicación orientada al agente. Ni una deshabilitada, ni una oculta tras un flag. No existe en el registro de herramientas que ve el modelo, por lo que el modelo no puede llamarla, no se le puede convencer de llamarla, ni se le puede obligar a llamarla con una inyección de prompt. El bloqueo de lo destructivo es absoluto: ninguna configuración permite que una operación destructiva se autoaplique. Revertir es parte del contrato de cada ejecutor, no un añadido de última hora.</p>
     <p class="tenet-body">Mayor autonomía es una postura, no una lista de permitidos más amplia. Cambia la frecuencia con la que el agente te interrumpe. Nunca cambia lo que se puede aplicar sin un clic.</p>
     <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py" rel="noopener">backend/service/execution/policy.py</a>
   </article>
@@ -169,25 +169,25 @@
   <article class="tenet reveal">
     <span class="tenet-num">02</span>
     <h2 class="tenet-title">Duct alquila un arnés de agente. No se casa con uno.</h2>
-    <p class="tenet-body">Los frameworks de agentes son la capa de mayor rotación y menos diferenciada en esta pila. Son 0.x, se lanzan semanalmente, y cada uno de ellos ha forzado una migración disruptiva a alguien. Construir tu producto sobre uno es alquilar una base.</p>
+    <p class="tenet-body">Los frameworks de agentes son la capa que más cambia y menos diferencia de este stack. Están en 0.x, publican versiones cada semana y todos han obligado a alguien a una migración con cambios incompatibles. Construir tu producto sobre uno es construir sobre cimientos alquilados.</p>
     <p class="tenet-body">Así que el código de dominio aquí no importa ningún framework de agente. Prompts, herramientas, esquemas, objetivos, puntuación y el contrato de artefacto son Python puro. Las importaciones del framework solo residen en ejecutores y enlazadores, y una prueba aplica el límite con una lista de permitidos explícita. Añadir un archivo a esa lista de permitidos es un acto deliberado, no la forma de arreglar una prueba fallida.</p>
-    <p class="tenet-quote">Deliberadamente no hay interfaz <code>AgentHarness</code>, y nunca debería haberla. Toma la intersección y pierdes subagentes, sistema de archivos, habilidades, granularidad HITL y compactación, que es la razón principal para alquilar un arnés. Toma la unión y estás escribiendo un framework.</p>
+    <p class="tenet-quote">Deliberadamente no hay interfaz <code>AgentHarness</code>, y nunca debería haberla. Toma la intersección y pierdes subagentes, sistema de archivos, habilidades, granularidad HITL y compactación, que son justo la razón para alquilar un arnés. Toma la unión y estás escribiendo un framework.</p>
     <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/agents/core/ports/__init__.py" rel="noopener">backend/agents/core/ports/__init__.py</a>
   </article>
 
   <article class="tenet reveal">
     <span class="tenet-num">03</span>
-    <h2 class="tenet-title">Escribe el adaptador en la segunda implementación, no en la primera.</h2>
+    <h2 class="tenet-title">Escribe el adaptador con la segunda implementación, no con la primera.</h2>
     <p class="tenet-body">Un puerto con una implementación es una suposición. Un puerto con dos es un hecho. Las abstracciones construidas antes de que exista el segundo caso codifican lo que el primer caso necesitó, y luego todo lo demás lucha contra esa forma.</p>
-    <p class="tenet-body">Cada puerto en la capa de agente tiene dos adaptadores, excepto uno, y ese lo indica en su propio docstring y nombra la implementación que lo merecería. Nombrar la brecha es lo que evita que se llene silenciosamente con una suposición.</p>
+    <p class="tenet-body">Cada puerto en la capa de agente tiene dos adaptadores, excepto uno, y ese lo indica en su propio docstring y nombra la implementación que lo merecería. Dejar el hueco a la vista es lo que evita que se rellene en silencio con una suposición.</p>
     <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/STYLE.md" rel="noopener">STYLE.md</a>
   </article>
 
   <article class="tenet reveal">
     <span class="tenet-num">04</span>
     <h2 class="tenet-title">La autorización es membresía, y una clave API no es un límite.</h2>
-    <p class="tenet-body">La clave API de la app se envía al navegador. Prueba que “esta solicitud provino de la app de Duct”. Nunca ha probado que “este llamador posee esa fila”, y tratarlo como si lo hiciera es cómo se filtran los datos multi-inquilino.</p>
-    <p class="tenet-body">Así que cada ruta que afecta a una fila con alcance de proyecto resuelve un usuario con sesión iniciada <em>y</em> comprueba la membresía. Un no miembro recibe 404, no 403, porque 403 les dice que la fila existe. Una prueba recorre cada ruta en el árbol y falla la compilación si una no está protegida sin una razón escrita.</p>
+    <p class="tenet-body">La clave API de la app se envía al navegador. Prueba que “esta solicitud provino de la app de Duct”. Nunca ha probado que “quien llama es dueño de esa fila”, y tratarla como si lo hiciera es la forma en que se filtran datos en un sistema multiinquilino.</p>
+    <p class="tenet-body">Así que cada ruta que afecta a una fila con alcance de proyecto resuelve un usuario con sesión iniciada <em>y</em> comprueba la membresía. Un no miembro recibe 404, no 403, porque 403 le dice que la fila existe. Una prueba recorre cada ruta en el árbol y falla la compilación si alguna queda sin protección sin una razón por escrito.</p>
     <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/tests/test_route_auth_boundaries.py" rel="noopener">backend/tests/test_route_auth_boundaries.py</a>
   </article>
 
@@ -195,7 +195,7 @@
     <span class="tenet-num">05</span>
     <h2 class="tenet-title">Tu máquina, tus claves, tus datos.</h2>
     <p class="tenet-body">Duct se ejecuta como una app de escritorio que incluye el backend como un sidecar local: SQLite en disco, solo loopback, claves de proveedor en el llavero del SO. Sin cuenta, sin servidor, nada sale de la máquina. O autoaloja el backend. O usa la versión alojada en getduct.ai, que ejecuta el mismo código que puedes leer.</p>
-    <p class="tenet-body">Trae tu propio modelo también. Anthropic, OpenAI, Gemini, o cualquier cosa en OpenRouter, asignado por trabajo en tres niveles para que el trabajo que requiere mucho razonamiento y la summarización barata no paguen el mismo precio. Una herramienta que lee todo tu negocio no debería decidir también quién es tu proveedor.</p>
+    <p class="tenet-body">Trae también tu propio modelo. Anthropic, OpenAI, Gemini o cualquier modelo de OpenRouter, asignado por tarea en tres niveles para que el razonamiento pesado y los resúmenes baratos no paguen el mismo precio. Una herramienta que lee todo tu negocio no debería decidir también quién es tu proveedor.</p>
     <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/desktop/README.md" rel="noopener">desktop/README.md</a>
   </article>
 
@@ -203,15 +203,15 @@
     <span class="tenet-num">06</span>
     <h2 class="tenet-title">Los comentarios llevan el porqué. El diff ya muestra el qué.</h2>
     <p class="tenet-body">Un comentario que repite la línea de abajo es peor que ningún comentario, porque enseña a los lectores a saltarse los comentarios. Los que vale la pena escribir llevan lo que el código no puede: la restricción, el contrato, el fallo que motivó la línea, la alternativa que fue rechazada y por qué.</p>
-    <p class="tenet-body">Esto importa más, no menos, en una base de código escrita parcialmente por agentes. Un conjunto de cambios individualmente defendibles que juntos disuelven una arquitectura es la forma específica en que fallan las bases de código aceleradas por agentes: cada cambio argumenta por sí mismo y nada argumenta por el conjunto. El razonamiento dejado en el archivo es lo que permite a la siguiente persona, o al siguiente modelo, notar la diferencia.</p>
+    <p class="tenet-body">Esto importa más, no menos, en una base de código escrita parcialmente por agentes. Un conjunto de cambios individualmente defendibles que juntos disuelven una arquitectura es la forma específica en que fallan las bases de código aceleradas por agentes: cada cambio se justifica a sí mismo y nada defiende el conjunto. El razonamiento que queda en el archivo es lo que permite a la siguiente persona, o al siguiente modelo, notar la diferencia.</p>
     <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/STYLE.md" rel="noopener">STYLE.md</a>
   </article>
 
   <article class="tenet reveal">
     <span class="tenet-num">07</span>
     <h2 class="tenet-title">Las contribuciones escritas por agentes son bienvenidas. Se revisan con más rigor, no menos.</h2>
-    <p class="tenet-body">Muchos proyectos están prohibiendo silenciosamente las solicitudes de extracción asistidas por IA. Duct pide lo contrario: la plantilla de PR pregunta dónde ayudó un agente, para que un revisor sepa dónde mirar con más atención. Eso no es una zona de penalización. Es la misma razón por la que dices de qué parte de un cambio estabas menos seguro.</p>
-    <p class="tenet-body">Duct es un producto de agente construido con agentes. Pretender lo contrario en el proceso de contribución sería deshonesto, y desecharía la señal más útil que un revisor puede obtener.</p>
+    <p class="tenet-body">Muchos proyectos están prohibiendo silenciosamente las pull requests asistidas por IA. Duct hace lo contrario: la plantilla de PR pregunta dónde ayudó un agente, para que un revisor sepa dónde mirar con más atención. No es un castigo. Es la misma razón por la que dices de qué parte de un cambio estabas menos seguro.</p>
+    <p class="tenet-body">Duct es un producto de agente construido con agentes. Fingir lo contrario en el proceso de contribución sería deshonesto, y desecharía la señal más útil que un revisor puede obtener.</p>
     <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>
   </article>
 
@@ -221,7 +221,7 @@
   <div class="doc-cta-inner">
     <p class="tag" style="justify-content:center;display:flex">¿No estás de acuerdo?</p>
     <h2>Bien. <em>Abre una incidencia.</em></h2>
-    <p class="sub">Cada uno de estos es un valor predeterminado con una razón, no una ley. Si la razón es incorrecta, la razón es lo que debería cambiar. Esa conversación pertenece al ámbito público.</p>
+    <p class="sub">Cada uno es una opción por defecto con su razón, no una ley. Si la razón es errónea, lo que debe cambiar es la razón. Esa conversación tiene que ser pública.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px">
       <a class="btn btn-orange btn-lg" href="https://github.com/5hirish/duct/discussions" rel="noopener">Iniciar una discusión →</a>
       <a class="btn btn-lg" href="https://github.com/5hirish/duct" rel="noopener" style="border:1px solid var(--border);color:var(--navy);background:var(--white)">Lee el código →</a>

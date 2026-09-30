@@ -519,7 +519,17 @@ python3 scripts/build_site_i18n.py          # extract → site/i18n/<lang>.po, r
 python3 scripts/i18n/fill.py site/i18n/*.po # translate what is missing (model + glossary)
 python3 scripts/build_site_i18n.py          # render again with the new translations
 python3 scripts/build_site_i18n.py --check  # what CI runs: current and complete, or red
+python3 scripts/i18n/fill.py --check site/i18n/*.po  # CI too: every brand term kept
 ```
+
+**Brand and product names are never translated.** Duct, Content Studio, the
+Duct Doctrine, the maker's Ship with AI channel, every vendor and connector
+name: they stay in English, in Latin script, in all four languages. The list
+is `keep` in `scripts/i18n/glossary.json`; `fill.py` rejects a translation that
+drops one and `fill.py --check` fails CI on one already written. A new brand or
+product name on a page goes into `keep` in the same change. The rule exists
+because asking the model was not enough: "Ship with AI" shipped as "Envía con
+IA", "Mit KI liefern" and "AIで出荷".
 
 What the generator does to each page: translates every run of text and the
 attributes people read (`alt`, `title`, `placeholder`, the meta descriptions,

@@ -72,6 +72,7 @@ check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 	cd app && npm run lint --if-present
 	cd app && npm run typecheck
 	cd app && npm run check:i18n
+	python3 scripts/i18n/fill.py --check app/src/locales/*/messages.po
 	cd app && npm test
 	cd app && npm run check:parity
 	cd app && npm run build
@@ -80,6 +81,7 @@ check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 scripts/build_blog.py --check
 	python3 scripts/build_integrations.py --check
 	python3 scripts/build_site_i18n.py --check
+	python3 scripts/i18n/fill.py --check site/i18n/*.po
 	python3 .github/scripts/check-pages.py
 	python3 scripts/check_changelog_sync.py
 	# Local only: a variant older than its shot means a reshoot was copied in
