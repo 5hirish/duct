@@ -198,7 +198,7 @@ under 860px (`index.html` swaps the source before anything is fetched);
 | `site/blog/feed.xml` | RSS. Hand-maintained: add an `<item>` with every new post. CI fails if it is missing, empty, or carries an off-domain `<link>`. |
 | `site/changelog/feed.xml` | RSS for releases. Same hand-maintained rule: an `<item>` per release, `pubDate` in RFC 822. |
 | `site/llms.txt` | Plain-text site map for models. Low crawler uptake in practice, cheap to keep correct, and the place the open-source framing has to be right. Names the five languages and the prefix each lives under, and repeats the home page's FAQ word for word: a model answering "what is Duct" lifts a direct answer over prose, and one asked in German has no other signal that `/de/` exists. Edit its FAQ and the page's `<details>` together. |
-| `site/_headers` | `Link:` discovery headers, the RSS content type Cloudflare would otherwise get wrong, and a one-week `Cache-Control` for shots, art, cards, icons and post images (Pages revalidates everything on every view by default; `duct.css`/`duct.js` are deliberately left on that default because nothing versions their URLs). |
+| `site/_headers` | `Link:` discovery headers, the security headers (HSTS, CSP, framing and the rest, all on `/*`; the comment above that block says what the CSP leaves out and why), the RSS content type Cloudflare would otherwise get wrong, and a one-week `Cache-Control` for shots, art, cards, icons and post images (Pages revalidates everything on every view by default; `duct.css`/`duct.js` are deliberately left on that default because nothing versions their URLs). |
 
 JSON-LD is validated by `check-pages.py`: every `application/ld+json` block must
 parse and carry an `@type`. A malformed block is dropped silently by every
@@ -607,3 +607,8 @@ empty project and exits 0.
   `tests/e2e/consent.spec.js` covers this; it runs against `localtest.me`
   because the gate deliberately does nothing on localhost.
 - Do not put page-specific styles into `site/assets/duct.css`; use an inline `<style>` block when needed.
+- **Do not add a `<form>` that posts off-site, an `<object>` or `<embed>`, a
+  `<base>`, or a page meant to be framed elsewhere without changing the CSP in
+  `_headers` in the same change.** The policy blocks all four. Neither
+  `dev_server.py` nor the e2e suite applies `_headers`, and only `main`
+  deploys, so nothing before production would show you the violation.

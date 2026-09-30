@@ -19,6 +19,7 @@ Next.js App Router report viewer and agent interface.
 - **Host:** Cloudflare Workers via `@opennextjs/cloudflare` adapter + wrangler CLI.
 - `npm run deploy:cf` → OpenNext build + `wrangler deploy` (do not run directly — all deploys go through CI/CD on merge to main).
 - **CI/CD:** GitHub Actions (`app.yml`) — lint, typecheck, `next build` on every PR; on push to `main` the `deploy` job runs `opennextjs-cloudflare build` + `wrangler deploy`. (Replaced the Cloudflare "Workers Builds" git integration, which failed on its Node 20 builder — wrangler@4.99 needs ≥22.)
+- **Security headers** are `SECURITY_HEADERS` in `next.config.mjs`, applied by OpenNext's routing layer to every response the worker renders. `/_next/static` and `public/` never reach the worker, so their `nosniff` is in `public/_headers`. The CSP has no `script-src` yet: a strict one needs a per-request nonce from middleware, which makes every page dynamic, and is its own change. Every `srcDoc` iframe (briefs, the audit report, slides) inherits the policy, so a directive added there also governs model-authored HTML. Dev allows same-origin framing only because `/preview` frames `/preview/frame`.
 
 ## Route structure
 

@@ -211,6 +211,14 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   request that created its session, so one grep follows one press of Send.
   Each turn ends with a `turn 198.0s: 4 tool calls …` line naming the slowest
   three, which answers "where did the time go" without a SQL script.
+- **Response headers:** `utils/security_headers.py` gives every response
+  `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` and
+  `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, the
+  last because nothing here is a page. An HTML response gets
+  `frame-ancestors 'none'` alone, for FastAPI's `/docs`, which loads Swagger
+  UI from a CDN. A route that needs a different value sets the header itself
+  and the middleware leaves it. Pure ASGI like `AccessLogMiddleware`, so SSE streams
+  pass through unbuffered; `tests/test_security_headers.py` holds both.
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
   `railpack.json` sits beside it and configures the **builder**, where
   `railway.json` configures **Railway**. It exists for one line —
