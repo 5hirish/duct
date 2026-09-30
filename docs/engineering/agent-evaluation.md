@@ -1,6 +1,6 @@
 # Agent output QA — the LLM-as-judge eval harness
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-28
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-30
 
 How we test agents whose output is **subjective** (a TikTok post, an SEO audit, a
 brief), why we do it this way, and where to take it next. The harness lives in
@@ -54,11 +54,30 @@ scratch files, pulls and judge card. A judge verdict that leaves markers out
 is asked for again, then counted as a judge outage (the trial is judged on
 its deterministic checks alone), never as the brief's failure.
 
-**Models.** Agent and judge default to DeepSeek V4 Pro on OpenRouter: a full
-trial measured $0.03 (2026-09-28), which is what makes a gate on every harness
-PR affordable. `--provider` / `--model` run any other; the text judge follows
-`DUCT_JUDGE_PROVIDER` / `DUCT_JUDGE_MODEL`. Same family for agent and judge is
-a known self-preference risk, contained by gating on binary markers only.
+**Models.** The agent defaults to DeepSeek V4 Flash on OpenRouter and the text
+judge to GLM 5.3 Flash. Both started on DeepSeek V4 Pro, where a trial measured
+$0.03-0.11 and a PR run of 3-6 trials about $0.25; on every push to a busy PR
+that emptied the CI key's credits in two days (2026-09-29). Flash is about a
+sixth of that per trial. The judge moved to another family, which ends the
+self-preference risk of an agent graded by its own kind, and at 2026-09-30 GLM
+5.3 Flash scored above V4 Pro on Artificial Analysis's Intelligence Index (42
+against 36) at a fifth of the price. OpenRouter serves it through dozens of
+hosts, some unable to make the verdict's tool call and some at fp4, so the
+judge's request is pinned to hosts that take every parameter at fp8 or better
+(`TEXT_JUDGE_ROUTING` in `tests/eval/client.py`), and asks for low reasoning
+effort (`TEXT_JUDGE_REASONING`): at its default depth GLM thought for 11-20k
+tokens per brief, took three minutes a verdict, and sometimes answered in prose
+with no verdict at all. The judge is also told which sources the project had
+connected, since `invented_source` cannot be judged without it. Re-grading 43
+stored briefs, GLM agreed with V4 Pro's verdicts on 96% of checks, and every
+difference was GLM failing a brief Pro had passed. On the briefs read by hand
+GLM was right: Pro passed briefs that never said the tax guide fell. The Flash
+baseline is 18 trials (14 passed, $0.005 median), because three six-trial
+runs of it came in at 3, 4 and 5 passes, too wide to set a bar with. A
+baseline records its model,
+and a run on another model is INCONCLUSIVE until `--write-baseline` records
+one. `--provider` / `--model` run any other; the text judge follows
+`DUCT_JUDGE_PROVIDER` / `DUCT_JUDGE_MODEL`.
 
 
 ## Why a critique agent, not assertions

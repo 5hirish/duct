@@ -6,8 +6,11 @@ name: Agent Eval
 # tier (request invariants, the gate's own plumbing) runs in backend.yml with
 # every other offline test.
 #
-# DeepSeek V4 Pro on OpenRouter for the agent and the judge: a full run is a
-# few US cents, which is what makes it affordable on every harness PR. No
+# DeepSeek V4 Flash on OpenRouter for the agent and GLM 5.3 Flash for the
+# judge, a different family so it is not grading its own kind. On V4 Pro alone
+# a trial measured $0.03-0.11 and a PR run 3-6 trials, about $0.25; the pair
+# brings a run to about $0.05. A draft PR runs only
+# with the run-evals label, so iterate as a draft and mark it ready once. No
 # database: scripts/agent_eval.py points DATABASE_URL at a throwaway SQLite.
 #
 # SHADOW until an A/A window shows no false FAILs on an unchanged main: the job
@@ -34,10 +37,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: agent-eval-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   eval:
     name: Agent eval (shadow)
@@ -46,6 +45,15 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       !github.event.pull_request.draft ||
       contains(github.event.pull_request.labels.*.name, 'run-evals')
+    # On the job, not the workflow: a workflow-level group is joined before
+    # the `if` above is read, so a run that is about to skip still cancels
+    # the one in progress. On 2026-09-30 a push and "ready for review" landed
+    # a second apart, the push's synchronize event arrived last with the PR
+    # still a draft, and it cancelled the ready run and then skipped itself:
+    # no eval at all. A skipped job never joins a job-level group.
+    concurrency:
+      group: agent-eval-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 60
     continue-on-error: true

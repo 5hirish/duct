@@ -241,3 +241,50 @@ def test_a_verdict_cut_off_mid_string_is_retried_once_with_a_doubled_budget():
 
     assert calls == [1000, 2000]
     assert scorecard.dimension_scores["evidence_grounding"] == 4
+
+
+def test_the_text_judge_is_glm_and_pinned_to_hosts_that_can_answer(monkeypatch):
+    """GLM 5.3 Flash is served by 33 OpenRouter hosts; some cannot make the
+    tool call a verdict is sent as and some run it at fp4. The judge's request
+    asks only for hosts that take every parameter, at fp8 or better."""
+    from tests.eval.client import DEFAULT_TEXT_JUDGE_MODEL, TEXT_JUDGE_ROUTING
+    from tests.eval.judge import text_judge_model
+
+    monkeypatch.delenv("DUCT_JUDGE_PROVIDER", raising=False)
+    monkeypatch.delenv("DUCT_JUDGE_MODEL", raising=False)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+
+    llm = text_judge_model()
+
+    assert DEFAULT_TEXT_JUDGE_MODEL == "z-ai/glm-5.3-flash"
+    assert llm.model_name == DEFAULT_TEXT_JUDGE_MODEL
+    assert llm._default_params["provider"] == TEXT_JUDGE_ROUTING
+    assert TEXT_JUDGE_ROUTING["require_parameters"] is True
+    assert "fp4" not in TEXT_JUDGE_ROUTING["quantizations"]
+    # At its default depth GLM ran past five minutes and never called the tool.
+    assert llm._default_params["reasoning"] == {"effort": "low"}
+
+
+def test_a_judge_that_answers_in_prose_is_asked_again_then_reported(monkeypatch):
+    """A reply with no tool call parses to None. It is asked for again, and
+    when none ever comes that is an error the gate reports as a skipped
+    verdict, never a scorecard built from nothing."""
+    from tests.eval import judge as judge_mod
+    from tests.eval.judge import JudgeArtifact, NoVerdict, _evaluate_text
+    from tests.eval.rubrics.audit_report import audit_report_rubric
+
+    good = {"dimensions": [{"key": "evidence_grounding", "score": 4, "rationale": "r"}],
+            "markers": [], "summary": "ok"}
+
+    def judge_replying(*replies):
+        queue = list(replies)
+        runnable = SimpleNamespace(invoke=lambda _messages: queue.pop(0))
+        return lambda _model=None: SimpleNamespace(with_structured_output=lambda _schema: runnable)
+
+    monkeypatch.setattr(judge_mod, "text_judge_model", judge_replying(None, good))
+    card = _evaluate_text(audit_report_rubric(), JudgeArtifact(title="t", body="b"))
+    assert card.dimension_scores["evidence_grounding"] == 4
+
+    monkeypatch.setattr(judge_mod, "text_judge_model", judge_replying(None, None, None))
+    with pytest.raises(NoVerdict):
+        _evaluate_text(audit_report_rubric(), JudgeArtifact(title="t", body="b"))

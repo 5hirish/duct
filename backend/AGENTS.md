@@ -679,8 +679,11 @@ framework. The rules it implies:
 - **A change to an agent runs the eval gate.** `agent-eval.yml` runs
   `scripts/agent_eval.py` on any PR touching `agents/`, `service/memory.py`,
   `service/profile.py` or the lock: each case in `tests/eval/cases/` three
-  times on a synthetic account, DeepSeek V4 Pro on OpenRouter, a verdict
-  against `tests/eval/baselines.json` (`make agent-eval` locally, a few cents).
+  times on a synthetic account, DeepSeek V4 Flash on OpenRouter with GLM 5.3
+  Flash judging, a verdict against `tests/eval/baselines.json` (`make agent-eval`
+  locally, a few cents). A baseline is per model: a run on another model is
+  INCONCLUSIVE until `--write-baseline` records one for it. The eval runs on
+  every push to a ready PR, so open agent PRs as drafts while iterating.
   It is in shadow until an A/A window on unchanged `main` shows no false
   FAIL; from then on FAIL does not merge, and INCONCLUSIVE needs one line in
   the PR saying why it is acceptable. A harness change also adds an offline
