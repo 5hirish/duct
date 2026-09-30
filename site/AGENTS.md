@@ -203,6 +203,12 @@ under 860px (`index.html` swaps the source before anything is fetched);
 JSON-LD is validated by `check-pages.py`: every `application/ld+json` block must
 parse and carry an `@type`. A malformed block is dropped silently by every
 consumer, so the page keeps rendering while its structured data is simply gone.
+Every top-level object carries `inLanguage` (a `Person` or `Organization` has
+no language; nested objects share their container's), and every page carries
+a `BreadcrumbList` except the five home pages (`index.html`, `<lang>/index.html`),
+`404.html` and the `blog/post.html` redirect shim. The entity types and the
+language list are read from `scripts/build_site_i18n.py`, so the check and the
+generator agree on both.
 
 The home page carries `SoftwareApplication` **and** `SoftwareSourceCode`. The
 second is what tells an answer engine the project is open source; the first
@@ -233,7 +239,9 @@ Every HTML page must have:
 - canonical
 - description, 140–160 characters; `<title>` at most 60. Google cuts both, and
   the German rendering runs a third longer than the English, so an English
-  description at the limit ships truncated in four languages.
+  description at the limit ships truncated in four languages. `check-pages.py`
+  warns on an English description outside the range but does not fail, since
+  the fix is a copy change and so a `make i18n` run.
 - robots
 - OG tags and Twitter tags, pointing at the page's own card in `assets/og/`
   (`node scripts/build_og_images.mjs` draws them all from its table; a new
@@ -244,11 +252,12 @@ Every HTML page must have:
   the other four; a page outside the generator's reach (blog, changelog)
   writes `en_US` by hand.
 - JSON-LD with `inLanguage` on every top-level object, and a `BreadcrumbList`
-  on every page below the root (`Home → page`, or `Home → Free tools → tool`).
-  Keep a block's strings identical to the page's visible text: the FAQPage
-  is rebuilt from the page's own `<details>`, and the generator translates
-  the block through the same catalogue entries, so a paraphrase in the JSON
-  is a second string to translate and a claim the page does not make.
+  on every page below the root (`Home → page`, or `Home → Free tools → tool`);
+  `check-pages.py` fails a page missing either. Keep a block's strings
+  identical to the page's visible text: the FAQPage is rebuilt from the
+  page's own `<details>`, and the generator translates the block through the
+  same catalogue entries, so a paraphrase in the JSON is a second string to
+  translate and a claim the page does not make.
 - shared stylesheet
 - `config.js` then `duct.js`
 - GTM noscript iframe immediately after `<body>`
@@ -551,17 +560,17 @@ Rules that follow:
   choice is remembered in `localStorage` only.
 - **Not translated:** the blog and the changelog (content decisions, not
   chrome), `404.html` (Pages serves one 404 for every miss, so a localised
-  copy is unreachable), JSON-LD (English structured data on every language,
-  a known gap), and OG cards (the English image on every language).
+  copy is unreachable), and OG cards (the English image on every language).
 - The catalogue format is gettext PO, one file per language under
   `site/i18n/`, shared with the app's tooling in `scripts/i18n/`. A string
   that leaves the pages keeps its translation marked obsolete (`#~`) so it
   is not paid for twice when it comes back.
 
 `check-pages.py` runs on the generated trees too, so a localised page is held
-to the same `<head>` checklist as an English one. `tests/e2e/site-i18n.spec.js`
-checks the URLs, `lang`, the alternates in both directions, the translated
-partials, and that the switcher keeps the page.
+to the same `<head>` checklist and JSON-LD rules as an English one; only the
+description length warning is left to the English source.
+`tests/e2e/site-i18n.spec.js` checks the URLs, `lang`, the alternates in both
+directions, the translated partials, and that the switcher keeps the page.
 
 ## Deploy
 
