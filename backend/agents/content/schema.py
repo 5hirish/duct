@@ -60,7 +60,7 @@ class Day(BaseModel):
     topic: str = ""
     pillar: str = ""
     status: Literal["pending", "draft", "posted", "discarded"] = "pending"
-    post_type: Literal["slideshow", "video", "image"] = "slideshow"
+    post_type: Literal["slideshow", "video", "image", "text"] = "slideshow"
     post_id: UUID | None = None
     format_slug: str = ""   # which library format to build with (e.g. "format-d")
     avatar_id: UUID | None = None
@@ -76,6 +76,10 @@ class Day(BaseModel):
 
 # The post types a plan allocates across, read off Day so there is one list.
 POST_TYPES: tuple[str, ...] = get_args(Day.model_fields["post_type"].annotation)
+# A text post is words first — X, LinkedIn — and is bound to a text channel,
+# so it is never a type a visual plan "explores" on TikTok.
+TEXT_POST_TYPE = "text"
+VISUAL_POST_TYPES: tuple[str, ...] = tuple(t for t in POST_TYPES if t != TEXT_POST_TYPE)
 
 
 class AvatarRefCell(BaseModel):
@@ -147,6 +151,8 @@ class ContentBrandContext(BaseModel):
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
+    # Where the brand already posts, as Platform values (channels.brand_platforms).
+    active_channels: list[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -243,6 +249,11 @@ class ContentSession(BaseAgentSession):
     # writes it onto the post as `clone_source` with the model's verdict, so
     # the model never types an id it could get wrong.
     clone_reference: dict | None = None
+    # The channel this draft was asked for (a plan day's platform or the
+    # user's pick), set by the runner. submit_post_draft files a post under it
+    # when the model leaves `platforms` out — otherwise the schema default
+    # would quietly make a LinkedIn draft a TikTok post.
+    channel: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -618,20 +629,29 @@ class PostDraft(BaseModel):
     pillar: str
     topic: str
     topic_id: str | None = None
-    post_type: Literal["slideshow", "video", "image"] = "slideshow"
+    post_type: Literal["slideshow", "video", "image", "text"] = "slideshow"
     format_slug: str = ""   # which library format to build with (e.g. "format-d")
     layout: SlideLayout = SlideLayout.FULL_BLEED
     avatar_id: UUID | None = None
     slide_count: int = Field(default=7, ge=1, le=20)
     slides: list[Slide] = Field(default_factory=list)   # source of truth for content + images
     slides_html: str = ""                               # DERIVED by submit_post_draft (do not author)
+    # The post's words on every platform: a TikTok caption, the tweet, the
+    # LinkedIn post. A text post is this and nothing else required.
     caption: str = ""
+    replies: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Text posts only: your own follow-ups under the post, in order — "
+            "an X reply or thread, a LinkedIn first comment. Empty otherwise."
+        ),
+    )
     hashtags: list[str] = Field(default_factory=list)
     hook_type: str = ""
     hook_text: str = ""
     hook_emotion: str = ""              # frustration | shock | disbelief | anger | sadness
     save_cta: str = ""                  # slide-1 parenthetical naming a specific payoff slide
-    tiktok_title: str = ""
+    title: str = ""                     # a platform's title field: TikTok photo post, YouTube, LinkedIn document
     image_prompts: list[ImagePrompt] = Field(default_factory=list)
     audio_note: str | None = None
     bridge_text: str = ""               # slide-6 personal discovery bridge (first-person, "free app")
@@ -857,6 +877,8 @@ __all__ = [
     "ImagePrompt",
     "MarkerScore",
     "POST_TYPES",
+    "TEXT_POST_TYPE",
+    "VISUAL_POST_TYPES",
     "PillarHistorySignal",
     "PlanDraft",
     "PlanRequest",

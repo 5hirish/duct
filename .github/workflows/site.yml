@@ -21,6 +21,11 @@ on:
       - 'CHANGELOG.md'
       - 'scripts/check_changelog_sync.py'
       - '.github/workflows/site.yml'
+      - 'scripts/i18n/**'
+      # The integrations generator and its copy. A backend change that stales
+      # the pages is caught by the same check in backend.yml instead.
+      - 'scripts/build_integrations.py'
+      - 'scripts/integrations/**'
   push:
     branches:
       - main
@@ -39,11 +44,20 @@ jobs:
       - name: "📝 Check generated blog pages are current"
         run: python3 scripts/build_blog.py --check
 
+      # Before the i18n check: the English integrations pages are its input.
+      - name: "🔌 Check the integrations pages match the backend"
+        run: python3 scripts/build_integrations.py --check
+
       # The translated trees under site/<lang>/ are generated from the English
       # pages; a stale tree ships yesterday's copy in four languages, and an
       # untranslated string ships English under a Spanish URL.
       - name: "🌐 Check translated pages are current and complete"
         run: python3 scripts/build_site_i18n.py --check
+
+      # Brand and product names stay in English in every language. Asking the
+      # model was not enough: "Ship with AI" shipped translated four ways.
+      - name: "🏷️ Check translations keep the glossary's brand terms"
+        run: python3 scripts/i18n/fill.py --check site/i18n/*.po
 
       - name: "🔎 Check HTML page requirements"
         run: python3 .github/scripts/check-pages.py

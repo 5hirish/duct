@@ -47,6 +47,7 @@ import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
+import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
 import ProviderCard from "@/components/connections/ProviderCard";
 import { LOGOS } from "@/components/connections/logos";
 import { PROVIDERS } from "@/lib/providerKeys";
@@ -65,8 +66,11 @@ import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
 import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
+import VendorKeyForm from "@/components/content/VendorKeyForm";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
+import TextPostEditor from "@/components/content/TextPostEditor";
+import PostCard from "@/components/content/PostCard";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
@@ -803,6 +807,48 @@ const METRICS_SYNCED_POST = {
 };
 const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, post_bridge_post_id: "", perf: {} };
 
+// Text posts (X, LinkedIn). `channel` is what the backend sends with every
+// post (agents/content/channels.channel_payload); the editor counts against it.
+const X_CHANNEL = {
+  id: "twitter", supported: true, playbook: "twitter", text_first: true, label: "Twitter / X",
+  max_chars: 280, fold_chars: 0, publishable_replies: 1, requires_media: false, hashtags: false, synced_metrics: false,
+};
+const LINKEDIN_CHANNEL = {
+  id: "linkedin", supported: true, playbook: "linkedin", text_first: true, label: "LinkedIn",
+  max_chars: 3000, fold_chars: 210, publishable_replies: 0, requires_media: false, hashtags: false, synced_metrics: false,
+};
+const X_THREAD_POST = {
+  id: "text-x-1", type: "post", post_type: "text", status: "draft", platforms: ["twitter"], channel: X_CHANNEL,
+  topic: "Set aside tax money the day an invoice is paid",
+  caption: "I kept 12% of every invoice for tax for two years.\n\nThe rate was never the problem. The day I moved it was: I waited for month end, and by month end it was rent.\n\nNow it moves the hour the invoice clears. Same 12%. No more April panic.",
+  replies: [
+    "The rule is directional on purpose: your rate depends on your country and bracket. The habit is the part that transfers.",
+    "What changed the numbers: I stopped seeing the tax money at all. It lives in an account my card is not attached to.",
+    "Next week: the one invoice clause that got me paid in 7 days instead of 45.",
+  ],
+};
+const LINKEDIN_POST = {
+  id: "text-li-1", type: "post", post_type: "text", status: "draft", platforms: ["linkedin"], channel: LINKEDIN_CHANNEL,
+  topic: "Why the 12% rule failed until it was automatic",
+  caption: "Two years of freelancing, and every April the same panic: the tax money had been spent.\n\nI already had a rule. 12% of every invoice, set aside. The rule was fine. The timing was not.\n\nI moved the money at month end, which meant it sat in my current account for up to four weeks, looking like spending money. By month end some of it was rent.\n\nThe fix was not a better rule. It was taking the decision away: the transfer now runs the hour an invoice is paid, into an account with no card attached.\n\nWhat is the one money habit you only kept once you stopped having to remember it?",
+  replies: ["The account setup, step by step, is in the Kestrel guide: kestrel.example/tax-pot"],
+};
+const X_OVER_POST = {
+  ...X_THREAD_POST, id: "text-x-2", replies: [],
+  caption: "Most freelancers who ask me about tax want a better percentage. The percentage is almost never the problem. The problem is that the money sits in the same account as everything else for weeks, and money that looks spendable gets spent. Move it the hour the invoice clears, into an account with no card.",
+};
+const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", post_bridge_post_id: "pb_story_x", perf: {} };
+
+/** TextPostEditor is controlled by the post pane; this is that pane's state. */
+function TextPostScene({ initial }) {
+  const [post, setPost] = useState(initial);
+  return (
+    <div className="max-w-2xl p-5">
+      <TextPostEditor post={post} patch={(field, value) => setPost((prev) => ({ ...prev, [field]: value }))} />
+    </div>
+  );
+}
+
 // Stands in for POST /metrics on one post: enough of the backend's merge to
 // show the saved state, without its alias clean-up or manual_keys.
 const previewSaveMetrics = (post) => async (_id, changes) => {
@@ -1099,6 +1145,52 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "tile-monochrome-marks",
+    state: "one-colour marks, connected and not",
+    group: "ConnectorTile",
+    title: "Marks drawn in currentColor",
+    note: "GitHub and OpenAI Ads ship no logo file: each mark is one colour, and an <img> of it would sit black on the dark tile. Open this dark and check both follow the tile's ink at the same weight as the file logos beside them.",
+    render: () => (
+      <div className="conn-grid">
+        <ConnectorTile
+          logo={LOGOS.github}
+          title="GitHub"
+          description="Merged pull requests, releases, closed issues and doc changes, by date."
+          tone="on"
+          status="Connected — acme/app"
+          storage={STORAGE_CLOUD}
+          onClick={() => {}}
+        />
+        <ConnectorTile
+          logo={LOGOS.openai_ads}
+          title="OpenAI Ads"
+          description="Impressions, clicks and spend. Conversions stay in Ads Manager."
+          tone="off"
+          status="Not connected"
+          storage={STORAGE_NONE}
+          onClick={() => {}}
+        />
+        <ConnectorTile
+          logo={LOGOS.stripe}
+          title="Stripe"
+          description="Settled revenue, subscriptions, refunds and payment outcomes."
+          tone="off"
+          status="Not connected"
+          storage={STORAGE_NONE}
+          onClick={() => {}}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "manual-card-one-click",
+    state: "GitHub App available, not connected and connected",
+    group: "ManualConnectorCard",
+    title: "A sign-in above the token form",
+    note: "Open each tile. With a GitHub App on the server the dialog leads with Connect GitHub and folds the token form behind \u201cUse a token instead\u201d. Connected, the button becomes Refresh from GitHub with the repository link beside it, and \u201cAdd another account\u201d is gone: more repositories come from GitHub\u2019s own page, not a second token. Press Connect: the preview answers the way the desktop hand-off does, so the waiting line appears under the button.",
+    render: () => <OneClickCardScene />,
   },
   {
     id: "provider-key-dialog",
@@ -1983,6 +2075,55 @@ export const SCENES = [
     ),
   },
   {
+    id: "text-post-x-thread",
+    state: "X · a post near the limit and three replies · one publishes, two by hand",
+    group: "TextPostEditor",
+    title: "An X post, edited where it will be read",
+    note: "The post and its replies as the feed threads them, each with its count against X's 280 (amber past 90%, red over) and a copy button. Only the first reply publishes — PostBridge posts it as the first reply — so the other two say so in amber: the author posts them. Type into any part; the counter follows. Add a reply, remove one, and check the thread line joins exactly the parts that follow each other.",
+    render: () => <TextPostScene initial={X_THREAD_POST} />,
+  },
+  {
+    id: "text-post-linkedin-fold",
+    state: "LinkedIn · past the fold · a first comment that does not publish",
+    group: "TextPostEditor",
+    title: "A LinkedIn post and what the feed shows before “see more”",
+    note: "LinkedIn cuts a post at about 210 characters behind “see more”, so the dashed box shows the reader's first screen: the hook has to work there alone. The first comment is for the author to paste once the post is live, and says so. Shorten the post under 210 and the box disappears.",
+    render: () => <TextPostScene initial={LINKEDIN_POST} />,
+  },
+  {
+    id: "text-post-over-limit",
+    state: "X · over 280 · no replies",
+    group: "TextPostEditor",
+    title: "Over the platform's limit",
+    note: "The counter turns red and the review marks it a hard failure: X refuses the post, so this is not a style note. The agent's writer refuses the same draft before saving it.",
+    render: () => <TextPostScene initial={X_OVER_POST} />,
+  },
+  {
+    id: "post-card-text",
+    state: "a text post on the Posts tab · no picture",
+    group: "PostCard",
+    title: "A text post's card",
+    note: "A text post has no thumbnail, so the card shows its opening words, faded at the bottom, where a carousel shows its cover. The status pill and the platform badge sit on a plain card here, with no dark gradient behind them.",
+    render: () => (
+      <div className="grid max-w-md grid-cols-2 gap-4 p-5">
+        <PostCard post={X_THREAD_POST} />
+        <PostCard post={LINKEDIN_POST} />
+      </div>
+    ),
+  },
+  {
+    id: "post-metrics-x",
+    state: "X post published through PostBridge · nothing syncs",
+    group: "PostMetricsForm",
+    title: "An X post's numbers",
+    note: "PostBridge published it but does not report X numbers, so every metric is an input, as for a post made outside Duct. Compare A posted post's numbers, where four counts sync.",
+    render: () => (
+      <div className="max-w-2xl p-5">
+        <PostMetricsForm post={X_METRICS_POST} save={previewSaveMetrics(X_METRICS_POST)} />
+      </div>
+    ),
+  },
+  {
     id: "post-metrics-synced",
     state: "published through PostBridge · four counts synced, saves typed in",
     group: "PostMetricsForm",
@@ -2015,6 +2156,52 @@ export const SCENES = [
     render: () => (
       <div className="max-w-2xl p-5">
         <PostMetricsForm post={METRICS_SYNCED_POST} save={previewSaveFails} />
+      </div>
+    ),
+  },
+  {
+    id: "vendor-key-postbridge",
+    state: "owner · PostBridge not connected yet",
+    group: "VendorKeyForm",
+    title: "Connecting a vendor account",
+    note: "The Accounts tab before a PostBridge key is saved; Discover shows the same card for Apify. The field is a password input and Connect stays off until something is typed. Paste anything and press Enter: the preview accepts the key after a beat, the way the real save waits for the vendor to answer. In a narrow pane the button drops under the field.",
+    render: () => (
+      <div className="p-5">
+        <VendorKeyForm
+          vendor="PostBridge"
+          homeUrl="https://app.post-bridge.com"
+          description="Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
+          onConnect={() => new Promise((resolve) => setTimeout(resolve, 900))}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "vendor-key-refused",
+    state: "owner · Apify refused the key",
+    group: "VendorKeyForm",
+    title: "Connecting a vendor account",
+    note: "Submit any key: the save fails the way a wrong key does, and the server's sentence appears under the field, announced, with the field marked invalid and what was typed kept.",
+    render: () => (
+      <div className="p-5">
+        <VendorKeyForm
+          vendor="Apify"
+          homeUrl="https://console.apify.com"
+          description="Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
+          onConnect={() => Promise.reject(new Error("Apify didn't accept that key. Copy it again from your Apify account."))}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "vendor-key-collaborator",
+    state: "collaborator · the owner hasn't connected PostBridge",
+    group: "VendorKeyForm",
+    title: "Connecting a vendor account",
+    note: "A project uses its owner's key, so a collaborator gets no form, only who to ask.",
+    render: () => (
+      <div className="p-5">
+        <VendorKeyForm vendor="PostBridge" homeUrl="https://app.post-bridge.com" isOwner={false} onConnect={() => Promise.resolve()} />
       </div>
     ),
   },
@@ -2185,6 +2372,62 @@ function StoryMemoryScene() {
   return (
     <div style={{ maxWidth: 880, padding: 24 }}>
       <MemoryTimeline api={api} kinds={MEMORY_KINDS} defaultKind="goal" />
+    </div>
+  );
+}
+
+// The GitHub card as the Connections page builds it when the server has a
+// GitHub App. onStart resolves "browser", which is what the desktop shell's
+// hand-off to the system browser returns, so the waiting copy is visible.
+function OneClickCardScene() {
+  const oneClick = {
+    label: "Connect GitHub",
+    againLabel: "Refresh from GitHub",
+    blurb: "Choose the repositories on GitHub. Duct gets read-only access to those and nothing else.",
+    waiting: "Finish on GitHub in your browser. Your repositories appear here when you come back.",
+    onStart: () => new Promise((resolve) => setTimeout(() => resolve("browser"), 400)),
+    manageUrl: "https://github.com/apps/duct/installations/select_target",
+    manageLabel: "Choose repositories on GitHub",
+    tokenLabel: "Use a token instead",
+  };
+  const fields = [
+    {
+      key: "token",
+      label: "Fine-grained personal access token",
+      placeholder: "github_pat_…",
+      secret: true,
+      hint: "Choose \u201cOnly select repositories\u201d, then read-only access to Contents, Pull requests, Issues and Metadata.",
+    },
+  ];
+  const row = (id, name) => ({
+    id,
+    connector_type: "github",
+    account_id: name,
+    account_name: name,
+    storage: "cloud",
+    residency: "server",
+  });
+  const common = {
+    type: "github",
+    title: "GitHub",
+    description: "Merged pull requests, releases, closed issues and doc changes, by date.",
+    logo: LOGOS.github,
+    fields,
+    accountField: "repo",
+    docsUrl: "https://github.com/settings/personal-access-tokens/new",
+    docsLabel: "Create a fine-grained token (GitHub settings)",
+    signedIn: true,
+    oneClick,
+    onSaved: async () => {},
+    onRemoveRow: async () => {},
+  };
+  return (
+    <div className="conn-grid">
+      <ManualConnectorCard {...common} serverRowList={[]} />
+      <ManualConnectorCard
+        {...common}
+        serverRowList={[row("r1", "acme/app"), row("r2", "acme/site")]}
+      />
     </div>
   );
 }

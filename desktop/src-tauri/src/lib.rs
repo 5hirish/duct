@@ -1080,13 +1080,13 @@ pub fn run() {
         });
 }
 
+/// Helpers that more than one module's tests need. The crate takes no test
+/// dependencies, so a scratch directory is built from `std` rather than a crate.
 #[cfg(test)]
-mod tests {
-    use super::*;
-
+pub(crate) mod test_support {
     /// A directory that does not exist yet, so the test exercises the same
     /// path a real first launch takes on a machine with no data directory.
-    fn scratch_dir(name: &str) -> std::path::PathBuf {
+    pub(crate) fn scratch_dir(name: &str) -> std::path::PathBuf {
         let dir = std::env::temp_dir().join(format!(
             "duct-test-{name}-{}-{:?}",
             std::process::id(),
@@ -1095,6 +1095,12 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         dir
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::scratch_dir;
 
     #[test]
     fn the_greeting_is_claimed_once_and_never_again() {

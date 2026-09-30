@@ -38,6 +38,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # The site's integrations pages are generated from this directory's
+      # connector metadata, catalogues, executors and knowledge packs, so a PR
+      # that adds a field, an operation or a connector learns here, on its own
+      # diff, that the pages fell behind. Standard library only; no setup needed.
+      - name: Check the integrations pages still match the backend
+        working-directory: .
+        run: python3 scripts/build_integrations.py --check
+
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:

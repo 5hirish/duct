@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Images, Video, Image as ImageIcon, Clock } from "lucide-react";
+import { Images, Video, Image as ImageIcon, Clock, Type } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { mediaUrl } from "@/lib/contentApi";
 import { firstImageSrc, statusMeta } from "@/lib/contentStatus";
@@ -10,7 +10,7 @@ import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs
 import { titleCase } from "@/lib/format";
 
 // Shared with PlanStrategy, so a post type has one icon wherever it appears.
-export const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
+export const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon, text: Type };
 
 const KIND_BADGE = {
   published: "bg-success/15 text-success",
@@ -103,6 +103,9 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
               {thumb ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={thumb} alt="" className="size-full object-cover" />
+              ) : postType === "text" && post?.caption ? (
+                // A text post's preview is its opening words.
+                <p className="line-clamp-4 size-full whitespace-pre-line px-3 py-2 text-2xs leading-snug">{post.caption}</p>
               ) : (
                 <div className="flex size-full items-center justify-center text-muted-foreground">
                   <ImageIcon className="size-7" />

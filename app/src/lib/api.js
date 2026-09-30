@@ -195,7 +195,9 @@ export async function streamInsightChat({
 }) {
   const res = await fetch(`${BASE}/api/insights/chat`, {
     method: "POST",
-    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    // The chat runs on the caller's own model key (routes/chat.py), so it
+    // carries the keys this browser or the desktop keychain holds.
+    headers: { ...backendAuthedHeaders({ "Content-Type": "application/json" }), ...(await providerKeyHeaders()) },
     body: JSON.stringify({
       chat_payload: chatPayload,
       messages,
@@ -204,8 +206,15 @@ export async function streamInsightChat({
   });
 
   if (!res.ok) {
+    // A 402 names the key to add; show its sentence, never the raw JSON.
     const text = await res.text();
-    onError?.(text || `Chat error ${res.status}`);
+    let detail = "";
+    try {
+      detail = JSON.parse(text)?.detail;
+    } catch {
+      /* not JSON */
+    }
+    onError?.(typeof detail === "string" && detail ? detail : text || `Chat error ${res.status}`);
     return;
   }
 

@@ -76,14 +76,14 @@ UNGATED: dict[str, str] = {
     # Invitation preview. The recipient has not signed in yet, and the token in
     # the URL is the secret. Accepting an invitation (POST) does require a JWT.
     "GET /api/invitations/{token}": "pre-sign-in preview; the token is the credential",
-    # Lead magnet capture. Deliberately public and Turnstile-gated rather than
-    # API-key gated: these are hit from the marketing site by people with no
-    # account at all.
-    "GET /api/lead-magnet/check-url": "public; Turnstile-gated",
-    "POST /api/lead-magnet/execution-interest": "public; Turnstile-gated",
-    "POST /api/lead-magnet/report": "public; Turnstile-gated",
+    # Lead magnet capture. Deliberately public rather than API-key gated: these
+    # are hit from the marketing site by people with no account at all. Every
+    # one sits behind the router's per-address limit.
+    "GET /api/lead-magnet/check-url": "public; SSRF-checked, per-address limit",
+    "POST /api/lead-magnet/execution-interest": "public; the lead token is the credential",
+    "POST /api/lead-magnet/report": "public; the lead token is the credential",
     "POST /api/lead-magnet/submit": "public; Turnstile-gated",
-    "POST /api/lead-magnet/validate": "public; Turnstile-gated",
+    "POST /api/lead-magnet/validate": "public; the lead token is the credential",
 }
 
 

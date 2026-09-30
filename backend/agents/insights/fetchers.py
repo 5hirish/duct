@@ -108,16 +108,35 @@ def _google_oauth(fn: Callable) -> Callable[[str, str, str, dict], dict]:
     return _call
 
 
+def _manual_blob(creds: dict, account_id: str, account_key: str) -> dict:
+    """The stored blob, with the picked account on ``account_key`` when it lacks one."""
+    blob = dict(creds)
+    if account_key and account_id and not blob.get(account_key):
+        blob[account_key] = account_id
+    return blob
+
+
 def _manual(fn: Callable, account_key: str = "") -> Callable[[str, str, str, dict], dict]:
-    """Manual-credential connectors take the stored blob whole plus a window in
-    days; the picked account rides on ``account_key`` when the blob lacks it."""
+    """Manual-credential connectors take the stored blob whole plus a window in days."""
 
     def _call(account_id: str, date_from: str, date_to: str, creds: dict) -> dict:
-        blob = dict(creds)
-        if account_key and account_id and not blob.get(account_key):
-            blob[account_key] = account_id
         days = max(1, (date.fromisoformat(date_to) - date.fromisoformat(date_from)).days + 1)
-        return fn(blob, days)
+        return fn(_manual_blob(creds, account_id, account_key), days)
+
+    return _call
+
+
+def _manual_dated(fn: Callable, account_key: str) -> Callable[[str, str, str, dict], dict]:
+    """A manual connector whose fetcher takes the exact dates, not a day count.
+
+    ``_manual`` hands its fetchers a length, and they each count back from
+    yesterday, which is right for a metric that only settles once the day is
+    over and wrong for "what shipped today": a window of today alone would
+    come back as yesterday. GitHub's events are final the moment they happen.
+    """
+
+    def _call(account_id: str, date_from: str, date_to: str, creds: dict) -> dict:
+        return fn(_manual_blob(creds, account_id, account_key), date_from, date_to)
 
     return _call
 
@@ -156,6 +175,7 @@ def _build_specs() -> dict[str, FetchSpec]:
         fetch_gsc_query_performance,
     )
     from service.clarity.fetch import fetch_clarity
+    from service.github.fetch import fetch_github
     from service.growthbook.fetch import fetch_growthbook
     from service.mixpanel.fetch import fetch_mixpanel
 
@@ -173,6 +193,7 @@ def _build_specs() -> dict[str, FetchSpec]:
         "fetch_mixpanel": _manual(fetch_mixpanel, "project_id"),
         "fetch_clarity": _manual(fetch_clarity),
         "fetch_growthbook": _manual(fetch_growthbook, "project_id"),
+        "fetch_github": _manual_dated(fetch_github, "repo"),
     }
 
     specs: dict[str, FetchSpec] = {}

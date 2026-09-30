@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Agente de IA do Tag Manager: correções de rastreamento com reversão | Duct</title>
+<link rel="canonical" href="https://getduct.ai/pt-br/integrations/google-tag-manager"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/google-tag-manager"/>
+<meta property="og:locale" content="pt_BR"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="O Duct encontra rastreamento quebrado lendo GA4 ao lado do Mixpanel, prepara a correção do Tag Manager em um espaço de trabalho e publica apenas quando você aprova, pronto para reverter."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/pt-br/integrations/google-tag-manager"/>
+<meta property="og:title" content="Agente de IA do Tag Manager: correções de rastreamento com reversão"/>
+<meta property="og:description" content="Uma tag pode disparar em todas as páginas e ainda enviar o evento errado. O Duct a encontra, prepara a correção no Tag Manager e espera por você antes de publicar."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-google-tag-manager.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Agente de IA do Tag Manager: correções de rastreamento com reversão"/>
+<meta name="twitter:description" content="O rastreamento quebrou na terça-feira. O Duct encontra a tag, prepara a correção e espera pela sua publicação."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-google-tag-manager.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, honestamente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos o Google Analytics para ver quais páginas geram um cadastro. Esse é o único uso — sem segmentação de anúncios, sem perfis, nada vendido. Recuse e o site se comporta exatamente da mesma forma.","Privacy Policy":"Política de Privacidade","Decline":"Recusar","Accept":"Aceitar","{n} stars on GitHub":"{n} estrelas no GitHub","UTM Builder":"Construtor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de Benchmark de Métricas SaaS","Weekly Marketing Brief Generator":"Gerador de Resumo Semanal de Marketing","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de Taxa de Crescimento de MRR","Engagement Rate Calculator":"Calculadora de Taxa de Engajamento","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de Marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Menu":"Menu","Free Tools":"Ferramentas gratuitas","Solutions":"Soluções","Download Duct ↓":"Baixar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de tela ampliada","Close":"Fechar","Fit to screen":"Ajustar à tela","Zoom in":"Ampliar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 e posterior","Runs on any distribution":"Funciona em qualquer distribuição","Debian and Ubuntu":"Debian e Ubuntu","Download ↓":"Baixar ↓","Download for {label} ↓":"Baixar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de exemplo. Altere qualquer campo e calcule novamente para os seus."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"pt-BR","name":"Agente de IA do Tag Manager: correções de rastreamento com reversão","url":"https://getduct.ai/pt-br/integrations/google-tag-manager","description":"O Duct encontra rastreamento quebrado lendo GA4 ao lado do Mixpanel, prepara a correção do Tag Manager em um espaço de trabalho e publica apenas quando você aprova, pronto para reverter.","about":{"@type":"SoftwareApplication","name":"Google Tag Manager"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"pt-BR","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://getduct.ai/pt-br/"},{"@type":"ListItem","position":2,"name":"Integrações","item":"https://getduct.ai/pt-br/integrations/"},{"@type":"ListItem","position":3,"name":"Google Tag Manager","item":"https://getduct.ai/pt-br/integrations/google-tag-manager"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"O que o Duct pode mudar no Tag Manager?","acceptedAnswer":{"@type":"Answer","text":"Quatro: criar/atualizar tag GTM (espaço de trabalho), criar/atualizar variável GTM (espaço de trabalho), publicar versão do contêiner GTM e republicar uma versão GTM mais antiga. Por padrão, cada um espera pela sua Aplicação, e cada um pode ser revertido."}},{"@type":"Question","name":"O Duct publicará no meu site ativo por conta própria?","acceptedAnswer":{"@type":"Answer","text":"Não. Uma publicação substitui o contêiner ativo para cada visitante, então ela sempre espera por você, qualquer que seja a autonomia do projeto. Edições do espaço de trabalho podem ser aplicadas por conta própria no modo assistido, e elas não mudam nada ao vivo até uma publicação."}},{"@type":"Question","name":"Como funciona a reversão?","acceptedAnswer":{"@type":"Answer","text":"Antes de publicar, o Duct registra a versão ativa. Reverter republica essa versão, e o registro de atividades mostra ambos."}},{"@type":"Question","name":"É gratuito?","acceptedAnswer":{"@type":"Answer","text":"Sim. Duct é gratuito com suas próprias chaves de modelo ou o plano ChatGPT que você já tem, e o núcleo tem licença MIT. Um plano pago posteriormente agrupará os modelos; nada que é aberto hoje passará a ser pago. O que vai custar dinheiro."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Pular para o conteúdo</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026). Hypothesis: the growth lead whose funnel went to zero overnight converts on a page that shows the fix staged with a rollback target, because the publish is the part that scares people. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/pt-br/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Navegação"><a href="/pt-br/integrations/">Integrações</a><span aria-hidden="true">/</span><span aria-current="page">Google Tag Manager</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/google-tag-manager.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Tag Manager, <em>com a reversão nomeada primeiro.</em></h1>
+<p class="hero-sub">O Duct percebe quando uma contagem vai a zero, encontra a tag por trás disso e prepara a correção em um espaço de trabalho. Uma publicação substitui seu contêiner ativo, então esse passo sempre espera por você, com a versão para reverter nomeada.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/pt-br/download" data-duct-download>Baixar Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/pt-br/integrations/">Todas as integrações</a>
+</div>
+<ul class="ig-facts" aria-label="Visão geral"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Entrar com o Google</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Lê três conjuntos de dados</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Quatro tipos de alteração</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Verificado em 29 de Set de 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal has-change">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/google-tag-manager.svg" width="34" height="34" alt=""/><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/><img src="/assets/icons/mixpanel.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>A versão 14 renomeou o evento que a tag Connect bank envia. O GA4 tem contado zero desde 9 de setembro.</span></div>
+<div class="ig-change"><img src="/assets/icons/google-tag-manager.svg" width="22" height="22" alt=""/><span><b>Publicar versão 15 do contêiner</b><s>Substitui a versão 14 para cada visitante. Reversão pronta.</s></span></div>
+<div class="ig-actions"><span class="ig-btn ig-btn-reject">Rejeitar</span><span class="ig-btn ig-btn-apply"><span class="ig-apply-idle">Aplicar</span><span class="ig-apply-done"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>Aplicado</span><svg class="ig-cursor" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<figcaption>Uma resposta de exemplo. A sua é lida das suas próprias contas.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-tag-manager.webp" srcset="/assets/media/session-tag-manager-768.webp 768w, /assets/media/session-tag-manager-1536.webp 1536w, /assets/media/session-tag-manager.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Uma execução do Duct: perguntado por que o GA4 parou de contar um evento na web, o Duct encontra a tag que uma versão do contêiner renomeou e propõe uma correção no workspace e uma publicação que aguarda aprovação"/>
+<figcaption>Pergunte por que um evento parou de ser contado. O Duct encontra a tag que a versão 14 alterou, prepara a correção em um workspace e mantém a publicação para você com a versão 14 como reversão.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Perguntar</p>
+<h2>Perguntas que você pode <em>simplesmente fazer</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Por que um evento parou de contar no GA4 da noite para o dia?</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>Tag Manager + GA4 + Mixpanel</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>A tag está disparando, ou disparando a coisa errada?</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Tag Manager + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Web e app ainda enviam os mesmos nomes de evento?</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>Tag Manager + Mixpanel</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Você pode corrigir a tag e me deixar aprovar a publicação?</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><span>Tag Manager</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Acesso</p>
+<h2>O que ele lê. <em>O que ele pode mudar.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>O que ele lê</h3>
+<ul class="ig-reads">
+<li><b>Contas e contêineres</b><span class="ig-fields"><span>conta</span><span>contêiner</span><span>ID público</span></span></li>
+<li><b>Tags e variáveis do espaço de trabalho</b><span class="ig-fields"><span>nome</span><span>tipo</span><span>parâmetros</span></span></li>
+<li><b>Versão do contêiner ativa</b><span class="ig-fields"><span>ID da versão</span></span></li>
+</ul>
+<p class="ig-note">Tag Manager API v2 · verificado contra o código de busca 29 de setembro de 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/gtm_exec.py" rel="noopener">leia o código-fonte</a></p>
+</div>
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>O que ele pode alterar</h3>
+<ul class="ig-ops">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Criar/atualizar tag GTM (espaço de trabalho)</span><span class="ig-badges"><span class="ig-badge is-auto">Pode se aplicar automaticamente no modo assistido</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">Criar/atualizar variável GTM (espaço de trabalho)</span><span class="ig-badges"><span class="ig-badge is-auto">Pode se aplicar automaticamente no modo assistido</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">Publicar versão do contêiner GTM</span><span class="ig-badges"><span class="ig-badge is-warn">Sempre espera por você</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">Republicar uma versão GTM mais antiga</span><span class="ig-badges"><span class="ig-badge is-warn">Sempre espera por você</span></span></li>
+</ul>
+<p class="ig-note">Cada um pode ser revertido. Por padrão, cada alteração espera sua aplicação: ela chega como uma prévia do que afeta e aparece no registro de atividades. <a href="/pt-br/doctrine">Como funciona a aprovação</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Conhecimento</p>
+<h2>O que o Duct já sabe <em>sobre o Tag Manager</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Nada está ativo até ser publicado.</h3><p>Edições em um espaço de trabalho não mudam nada no seu site. O Duct prepara suas alterações lá, e a publicação, que substitui o contêiner ativo para cada visitante, sempre espera por você.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>O alvo da reversão é lido primeiro.</h3><p>Antes de uma publicação, o Duct registra a versão que está ativa, para que uma reversão republique exatamente o que estava lá.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Uma tag que dispara ainda pode estar quebrada.</h3><p>Uma tag pode disparar em todas as páginas e não enviar nada útil. O Duct verifica o que chegou no GA4 ou Mixpanel, não o status de disparo.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Renomeações não seguem referências.</h3><p>Renomear uma variável pela API deixa cada tag apontando para o nome antigo. O Duct corrige as tags na mesma alteração, ou não renomeia.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/gtm.md" rel="noopener">Leia as notas do Tag Manager das quais o agente do Duct trabalha <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Melhor juntos</p>
+<h2>O que o Tag Manager responde <em>com um parceiro</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/pt-br/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Qual tag quebrou o evento chave?</span><span class="ig-pair-go">Tag Manager + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/pt-br/integrations/mixpanel"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Web e app, um nome de evento.</span><span class="ig-pair-go">Tag Manager + Mixpanel <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/pt-br/integrations/microsoft-clarity"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/clarity.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">A nova tag quebrou a página?</span><span class="ig-pair-go">Tag Manager + Clarity <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Configuração</p>
+<h2>Conecte o Tag Manager <em>em três passos</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>No Duct, abra Conexões e escolha Google Tag Manager.</p></li>
+<li><span class="ig-step-n">2</span><p>Entrar com o Google e permitir acesso para editar e publicar contêineres.</p></li>
+<li><span class="ig-step-n">3</span><p>Escolha o contêiner que este projeto usa.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>O Duct solicita acesso de edição e publicação quando você entra, porque ambos são necessários para corrigir uma tag. Edições ficam em um espaço de trabalho, e uma publicação sempre espera pela sua Aplicação.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Chaves e tokens são armazenados criptografados pela API hospedada do Duct, nunca no seu navegador, e você pode remover uma conexão a qualquer momento. Uma versão auto-hospedada os mantém na sua própria máquina.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Tag Manager, <em>respondido</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">O que o Duct pode mudar no Tag Manager?</summary>
+<p class="faq-a">Quatro: criar/atualizar tag GTM (espaço de trabalho), criar/atualizar variável GTM (espaço de trabalho), publicar versão do contêiner GTM e republicar uma versão GTM mais antiga. Por padrão, cada um espera pela sua Aplicação, e cada um pode ser revertido.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">O Duct publicará no meu site ativo por conta própria?</summary>
+<p class="faq-a">Não. Uma publicação substitui o contêiner ativo para cada visitante, então ela sempre espera por você, qualquer que seja a autonomia do projeto. Edições do espaço de trabalho podem ser aplicadas por conta própria no modo assistido, e elas não mudam nada ao vivo até uma publicação.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Como funciona a reversão?</summary>
+<p class="faq-a">Antes de publicar, o Duct registra a versão ativa. Reverter republica essa versão, e o registro de atividades mostra ambos.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">É gratuito?</summary>
+<p class="faq-a">Sim. Duct é gratuito com suas próprias chaves de modelo ou o plano ChatGPT que você já tem, e o núcleo tem licença MIT. Um plano pago posteriormente agrupará os modelos; nada que é aberto hoje passará a ser pago. <a href="/pt-br/open-source#pricing">O que vai custar dinheiro</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/pt-br/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/pt-br/partials/footer-expanded.html"><div class="legal-fallback"><a href="/pt-br/">Duct</a><a href="/pt-br/about">Sobre</a><a href="/pt-br/privacy">Política de privacidade</a><a href="/pt-br/terms">Termos de serviço</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

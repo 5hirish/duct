@@ -1,6 +1,6 @@
 """Each REST connector's pull, run end to end with only ``httpx.request`` faked.
 
-Every one of these (Meta, Apple Ads, Stripe, RevenueCat) reaches the network
+Every one of these (Meta, Apple Ads, Stripe, RevenueCat, GitHub) reaches the network
 through ``service.rest.Endpoint``, which is one ``httpx.request`` call. Faking
 that single seam lets the vendor's own request code run for real: URL
 assembly, query encoding (Stripe's ``created[gte]``, Meta's JSON-in-query),
@@ -389,3 +389,199 @@ def test_revenuecat_pull_isolates_a_failed_section_but_not_a_rejected_key(wire):
     wire.on("GET", "/v2/projects/proj1/apps", {"type": "unauthorized", "message": "bad key"}, status=401)
     with pytest.raises(ValueError, match="rejected the key"):
         fetch_revenuecat({"api_key": "sk_x", "project_id": "proj1"}, days=30)
+
+
+# ---------------------------------------------------------------------------
+# GitHub
+# ---------------------------------------------------------------------------
+
+_GH_CREDS = {"token": "github_pat_test", "repo": "acme/app"}
+_GH_BASE_SHA = "b" * 40
+
+
+def _gh_commit(sha: str, at: str, message: str = "feat: a thing", login: str = "ana") -> dict:
+    return {
+        "sha": sha,
+        "html_url": f"https://github.com/acme/app/commit/{sha}",
+        "author": {"login": login},
+        "commit": {"message": message, "author": {"name": "Ana", "date": at}, "committer": {"date": at}},
+    }
+
+
+def _gh_pages(rows) -> object:
+    """A list endpoint that pages by number, the way GitHub's do."""
+
+    def answer(call):
+        page, size = int(call.query["page"]), int(call.query["per_page"])
+        return list(rows)[(page - 1) * size:page * size]
+
+    return answer
+
+
+def _github_wire(wire: FakeWire, *, commits, pulls=(), issues=(), releases=(), files=()) -> FakeWire:
+    def commits_route(call):
+        if "/commits/" in call.url:  # one commit's detail
+            return {"sha": call.url.rsplit("/", 1)[1], "stats": {"additions": 10, "deletions": 2},
+                    "files": [{"filename": "src/a.py"}, {"filename": "src/b.py"}]}
+        if "since" in call.query:  # the window's commits
+            return _gh_pages(commits)(call)
+        return [{"sha": _GH_BASE_SHA}]  # the last commit before the window
+
+    return (
+        wire
+        .on("GET", "/repos/acme/app/commits", commits_route)
+        .on("GET", "/repos/acme/app/compare/", {"files": list(files)})
+        .on("GET", "/repos/acme/app/pulls", _gh_pages(pulls))
+        .on("GET", "/repos/acme/app/issues", _gh_pages(issues))
+        .on("GET", "/repos/acme/app/releases", _gh_pages(releases))
+    )
+
+
+def test_github_pull_pins_the_version_and_asks_for_exactly_the_window(wire):
+    from service.github import client as gh
+    from service.github.fetch import MAX_PATCH_CHARS, fetch_github
+
+    head = "c" * 40
+    commits = [
+        _gh_commit(head, "2026-09-12T09:00:00Z",
+                   "fix: checkout total (#41)\n\nRounding was off.\n\nCo-authored-by: Bo <bo@acme.dev>\nRefs: #40"),
+        _gh_commit("d" * 40, "2026-09-10T12:00:00Z", "chore: bump deps", login="dependabot[bot]"),
+    ]
+    pulls = [
+        {"number": 41, "title": "Fix checkout total", "merged_at": "2026-09-12T09:00:00Z",
+         "updated_at": "2026-09-12T09:00:00Z", "user": {"login": "ana"}, "body": "Rounding."},
+        # Closed without merging: shipped nothing.
+        {"number": 39, "title": "Abandoned", "merged_at": None, "updated_at": "2026-09-11T00:00:00Z"},
+        # Touched inside the window, merged before it.
+        {"number": 30, "title": "Old", "merged_at": "2026-08-20T00:00:00Z", "updated_at": "2026-09-02T00:00:00Z"},
+    ]
+    issues = [
+        {"number": 40, "title": "Checkout total is wrong", "closed_at": "2026-09-12T10:00:00Z",
+         "state_reason": "completed", "user": {"login": "cy"}},
+        # The issues endpoint returns pull requests too.
+        {"number": 41, "title": "Fix checkout total", "closed_at": "2026-09-12T09:00:00Z", "pull_request": {}},
+    ]
+    releases = [
+        {"tag_name": "v1.4.0", "name": "1.4.0", "published_at": "2026-09-13T08:00:00Z",
+         "created_at": "2026-09-13T08:00:00Z", "draft": False, "prerelease": False, "author": {"login": "ana"}},
+    ]
+    files = [
+        {"filename": "docs/guide.md", "status": "modified", "additions": 3, "deletions": 1,
+         "patch": "+" + "x" * (MAX_PATCH_CHARS + 99)},
+        {"filename": "src/checkout.py", "status": "modified", "additions": 5, "deletions": 5, "patch": "-a\n+b"},
+        {"filename": "README.md", "status": "modified", "additions": 1, "deletions": 0, "patch": "+Checkout."},
+    ]
+    _github_wire(wire, commits=commits, pulls=pulls, issues=issues, releases=releases, files=files)
+
+    payload = fetch_github(_GH_CREDS, "2026-09-01", "2026-09-30")
+
+    assert payload["errors"] == {}
+    assert payload["api"] == f"github-rest-{gh.API_VERSION}"
+    for call in wire.calls:
+        assert call.url.startswith(gh.API_BASE + "/repos/acme/app/")
+        assert call.headers["Authorization"] == "Bearer github_pat_test"
+        assert call.headers["X-GitHub-Api-Version"] == "2022-11-28"
+        assert call.headers["Accept"] == "application/vnd.github+json"
+
+    (listing,) = [c for c in wire.sent("GET", "/commits?") if "since" in c.query]
+    assert listing.query == {"since": "2026-09-01T00:00:00Z", "until": "2026-09-30T23:59:59Z",
+                             "per_page": "100", "page": "1"}
+    # Docs text is one compare, from the last commit before the window to the newest in it.
+    (before,) = [c for c in wire.sent("GET", "/commits?") if "since" not in c.query]
+    assert before.query == {"until": "2026-09-01T00:00:00Z", "per_page": "1"}
+    (compare,) = wire.sent("GET", "/compare/")
+    assert compare.url.endswith(f"/compare/{_GH_BASE_SHA}...{head}")
+    (pulls_call,) = wire.sent("GET", "/pulls")
+    assert pulls_call.query == {"state": "closed", "sort": "updated", "direction": "desc",
+                                "per_page": "100", "page": "1"}
+    (issues_call,) = wire.sent("GET", "/issues")
+    assert issues_call.query == {"state": "closed", "since": "2026-09-01T00:00:00Z", "per_page": "100", "page": "1"}
+    assert len(wire.sent("GET", "/commits/")) == 2  # under the detail cap, so every commit
+
+    rows = payload["rows"]
+    # Most telling first, so a cut response loses commits, not the merges.
+    assert [r["kind"] for r in rows] == [
+        "release", "pull_request", "issue", "docs_change", "docs_change", "commit", "commit"]
+    release, pull, issue, guide, readme, fix, bump = rows
+    assert (release["ref"], release["state"]) == ("v1.4.0", "release")
+    assert (pull["ref"], pull["at"], pull["state"]) == ("#41", "2026-09-12T09:00:00Z", "merged")
+    assert (issue["ref"], issue["state"]) == ("#40", "completed")
+    assert guide["ref"] == "docs/guide.md" and guide["title"] == "docs/guide.md (+3 −1)"
+    assert len(guide["body"]) < MAX_PATCH_CHARS + 50 and guide["body"].endswith("100 more characters cut]")
+    assert readme["body"] == "+Checkout."
+    assert (fix["ref"], fix["title"], fix["body"]) == ("ccccccc", "fix: checkout total (#41)", "Rounding was off.")
+    assert fix["trailers"] == "Co-authored-by: Bo <bo@acme.dev>; Refs: #40"
+    assert (fix["files_changed"], fix["additions"], fix["deletions"]) == (2, 10, 2)
+    assert bump["author"] == "dependabot[bot]"
+
+    assert payload["summary"] == {
+        "commits": 2, "commits_with_file_stats": 2, "pull_requests_merged": 1, "issues_closed": 1,
+        "releases": 1, "docs_changed": 2, "docs_compared": "bbbbbbb...ccccccc",
+    }
+    assert payload["truncated"] is False
+
+
+def test_github_pull_pages_by_number_and_stops_at_the_window_edge(wire):
+    from service.github.fetch import MAX_COMMIT_DETAILS, fetch_github
+
+    commits = [_gh_commit(f"{i:040x}", "2026-09-20T00:00:00Z") for i in range(103)]
+    # A full first page whose oldest row predates the window: the list has
+    # gone past it, so the second page is never asked for.
+    pulls = [{"number": n, "merged_at": None, "updated_at": "2026-09-15T00:00:00Z"} for n in range(99)]
+    pulls += [{"number": 99, "merged_at": None, "updated_at": "2026-08-01T00:00:00Z"}]
+    pulls += [{"number": 100, "merged_at": "2026-09-15T00:00:00Z", "updated_at": "2026-09-15T00:00:00Z"}]
+    _github_wire(wire, commits=commits, pulls=pulls)
+
+    payload = fetch_github(_GH_CREDS, "2026-09-01", "2026-09-30")
+
+    listing = [c for c in wire.sent("GET", "/commits?") if "since" in c.query]
+    assert [c.query["page"] for c in listing] == ["1", "2"]  # the short second page ends it
+    assert [c.query["page"] for c in wire.sent("GET", "/pulls")] == ["1"]
+    # File stats cost a call per commit, so a 30-day window gets the newest 30.
+    assert len(wire.sent("GET", "/commits/")) == MAX_COMMIT_DETAILS
+    assert payload["summary"]["commits"] == 103
+    assert payload["summary"]["commits_with_file_stats"] == MAX_COMMIT_DETAILS
+    assert "floor" in payload["summary"]["note"]
+    assert payload["truncated"] is True
+
+
+def test_github_pull_details_every_commit_in_a_short_window(wire):
+    from service.github.fetch import fetch_github
+
+    _github_wire(wire, commits=[_gh_commit(f"{i:040x}", "2026-09-28T08:00:00Z") for i in range(35)])
+
+    payload = fetch_github(_GH_CREDS, "2026-09-28", "2026-09-28")
+
+    # Today alone is today, not "the last day ending yesterday".
+    assert payload["window"]["since"] == "2026-09-28T00:00:00Z"
+    assert payload["window"]["until"] == "2026-09-28T23:59:59Z"
+    assert len(wire.sent("GET", "/commits/")) == 35
+    assert payload["truncated"] is False and "note" not in payload["summary"]
+
+
+def test_github_pull_isolates_a_failed_section_but_not_a_rejected_token(wire):
+    from service.github.fetch import fetch_github
+
+    denied = {"message": "Resource not accessible by personal access token"}
+    wire.on("GET", "/repos/acme/app/pulls", denied, status=403)  # first match wins
+    _github_wire(wire, commits=[_gh_commit("a" * 40, "2026-09-10T00:00:00Z")])
+
+    payload = fetch_github(_GH_CREDS, "2026-09-01", "2026-09-30")
+
+    assert payload["errors"].keys() == {"pull_requests"}
+    assert "Pull requests" in payload["errors"]["pull_requests"]  # the hint names the permission
+    assert [r["kind"] for r in payload["rows"]] == ["commit"]
+
+    # A dead token, a moved or ungranted repository, or a spent rate limit fails
+    # every section the same way: so once, with the fix.
+    for status, body, says in (
+        (401, {"message": "Bad credentials"}, "expired or been revoked"),
+        (301, {"message": "Moved Permanently"}, "renamed or transferred"),
+        (404, {"message": "Not Found"}, "not among those granted to Duct"),
+        (403, {"message": "API rate limit exceeded for user ID 1."}, "rate limit"),
+    ):
+        wire.routes.clear()
+        wire.on("GET", "/repos/acme/app/commits", body, status=status)
+        with pytest.raises(ValueError, match=says):
+            fetch_github(_GH_CREDS, "2026-09-01", "2026-09-30")
+

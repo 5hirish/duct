@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Meta Ads AIアナリスト：購入は1回のみカウント | Duct</title>
+<link rel="canonical" href="https://getduct.ai/ja/integrations/meta-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/meta-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/meta-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/meta-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/meta-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/meta-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/meta-ads"/>
+<meta property="og:locale" content="ja_JP"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<!-- hreflang:end -->
+<meta name="description" content="Ductはシステムユーザートークンを使用してMeta Adsを読み取り、選択したアトリビューションウィンドウで各購入を1回カウントし、Stripeと照合します。読み取り専用。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/integrations/meta-ads"/>
+<meta property="og:title" content="Meta Ads AIアナリスト：購入は1回のみカウント"/>
+<meta property="og:description" content="MetaのROASはGoogleの3倍良く見えます。DuctはGoogleがカウントする方法で再計算し、Stripeと照合し、どちらが正しいかを伝えます。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-meta-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Meta Ads AIアナリスト：購入は1回のみカウント"/>
+<meta name="twitter:description" content="Metaは1回の購入を3回カウントすることがあります。Ductはそれを1回のみカウントし、Stripeと照合します。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-meta-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"Meta Ads AIアナリスト：購入は1回のみカウント","url":"https://getduct.ai/ja/integrations/meta-ads","description":"Ductはシステムユーザートークンを使用してMeta Adsを読み取り、選択したアトリビューションウィンドウで各購入を1回カウントし、Stripeと照合します。読み取り専用。","about":{"@type":"SoftwareApplication","name":"Meta Ads"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"連携機能","item":"https://getduct.ai/ja/integrations/"},{"@type":"ListItem","position":3,"name":"Meta Ads","item":"https://getduct.ai/ja/integrations/meta-ads"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"Ductは私のMetaキャンペーンを変更できますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。DuctにはMetaの変更操作はありません。キャンペーン、広告セット、広告、ピクセル、結果を読み込み、Ads Managerで行う変更を推奨できます。"}},{"@type":"Question","name":"なぜMetaの購入カウントがStripeと一致しないのでしょうか？","acceptedAnswer":{"@type":"Answer","text":"Metaはクリック後最大7日間、ビュー後1日間の購入を自己評価し、1つの注文を3つのアクションタイプで報告することがあります。Stripeは決済された金額をカウントします。Ductは、選択した期間で各購入を1回のみカウントし、Stripeと照合します。"}},{"@type":"Question","name":"なぜシステムユーザートークンなのか、自分のログインではないのか？","acceptedAnswer":{"@type":"Answer","text":"個人のログインから作成されたトークンは約60日で期限切れになり、接続は警告なしに停止します。システムユーザートークンは期限切れにならないため、週次ブリーフは機能し続けます。"}},{"@type":"Question","name":"私のアド広告アカウントは2つの製品の広告を運用しています。Ductはそれらを区別できますか？","acceptedAnswer":{"@type":"Answer","text":"はい。この製品を示すキャンペーン名の一部を指定してください。そうすれば、Metaが合計する前にDuctがそれらのキャンペーンに絞り込みます。これにより、他の製品が合計に含まれることはありません。"}},{"@type":"Question","name":"無料ですか？","acceptedAnswer":{"@type":"Answer","text":"はい。Ductは、お客様ご自身のモデルキーまたは既存のChatGPTプランで無料でご利用いただけ、コアはMITライセンスです。有料プランでは後日モデルがバンドルされますが、現在オープンなものが有料になることはありません。費用がかかるもの。"}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Meta Ads has open search around AI tooling (&#x27;meta ads mcp&#x27; 880 a month, KD 8, OpenSEO Sep 2026), though Duct has no MCP server yet. Hypothesis: a buyer who already distrusts Meta&#x27;s attribution converts on the recount, not on a feature list. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/ja/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="パンくずリスト"><a href="/ja/integrations/">連携機能</a><span aria-hidden="true">/</span><span aria-current="page">Meta Ads</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/meta.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">Duct <span class="logo-mark"></span></span></div>
+<h1>Meta Ads、<em>1回のみカウント。</em></h1>
+<p class="hero-sub">Metaは1週間のクリックと1日のビューを自己評価し、1回の購入を3回報告することがあります。DuctはMeta Adsを読み込み、選択した期間で再カウントし、結果をStripeと照合します。</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
+<a class="btn btn-ghost btn-lg" href="/ja/integrations/">全ての連携</a>
+</div>
+<ul class="ig-facts" aria-label="概要"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>システムユーザートークン</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>4つのデータセットを読み取ります</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>読み取り専用</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>2026年9月29日確認済み</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/meta.svg" width="34" height="34" alt=""/><img src="/assets/icons/google-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Metaは41件の購入を€34と主張しています。1日クリックでは14件で€100です。Googleは€105です。</span></div>
+</div>
+<figcaption>回答例です。あなたのデータはご自身のアカウントから読み取られます。</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-meta-ads.webp" srcset="/assets/media/session-meta-ads-768.webp 768w, /assets/media/session-meta-ads-1536.webp 1536w, /assets/media/session-meta-ads.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Ductセッション: MetaがGoogleよりも安く見える理由を尋ねられ、DuctはGoogle Adsと並行して3つのアトリビューションウィンドウでMetaの広告セットとインサイトを読み込み、1日クリックでの購入数を再集計します。"/>
+<figcaption>Metaが3倍安く見える理由を尋ねます。DuctはGoogleがカウントする方法（1つのアクションタイプと1日クリック）で購入数を再集計し、両者を並べて表示します。</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">質問する</p>
+<h2><em>質問するだけ</em>でわかること</h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>MetaはGoogleと同じ方法でカウントした場合、本当に安いのでしょうか？</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><span>Meta Ads + Google Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>どの広告セットが支払いをする顧客を連れてくるのでしょうか？</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Meta Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Metaのクレジットのどれくらいが、クリックではなく表示から来ていますか？</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><span>Meta Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>なぜキャンペーンが結果を出さなくなったのでしょうか？</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><span>Meta Ads</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">アクセス</p>
+<h2>読み取るもの。<em>変更できるもの。</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>読み取るもの</h3>
+<ul class="ig-reads">
+<li><b>キャンペーン、すべてのステータス</b><span class="ig-fields"><span>名前</span><span>ステータス</span><span>目的</span><span>入札戦略</span><span>日予算</span><span>ライフタイム予算</span><span>費用上限</span></span></li>
+<li><b>広告セットと広告</b><span class="ig-fields"><span>名前</span><span>ステータス</span><span>日予算</span><span>最適化目標</span><span>入札額</span><span>アトリビューション設定</span></span></li>
+<li><b>パフォーマンス</b><span class="ig-fields"><span>費用</span><span>表示回数</span><span>クリック数</span><span>CTR</span><span>CPC</span><span>CPM</span><span>購入数</span><span>購入額</span><span>ROAS</span></span></li>
+<li><b>ピクセルとカスタムコンバージョン</b><span class="ig-fields"><span>名前</span><span>最終発火</span><span>イベントタイプ</span><span>デフォルト値</span></span></li>
+</ul>
+<p class="ig-note">Meta Marketing API v26.0 · 2026年9月29日フェッチコードと照合済み · <a href="https://github.com/5hirish/duct/blob/main/backend/service/meta/ads/fetch.py" rel="noopener">ソースを読む</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>変更可能なもの</h3>
+<p class="ig-readonly-big">なし。</p>
+<p>DuctはMeta Adsの変更操作を行わないため、Meta Adsで何も編集できません。ただし、そこで行うべき変更を推奨することはできます。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">知識</p>
+<h2>Ductがすでに知っていること <em>Meta Adsについて</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>1回の購入、3つのアクションタイプ。</h3><p>同じ注文が、ピクセル購入、購入、オムニ購入として届くことがあります。これらを合計するとカウントが3倍になるため、Ductは1つを選択します。</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>アトリビューションは選択であり、事実ではありません。</h3><p>Metaはデフォルトで7日間クリックと1日間ビューを設定しています。Googleはラストクリックをカウントします。DuctはMetaに対し、1日間クリック、7日間クリック、1日間ビューを個別に要求します。これにより、プラットフォームを同じ条件で比較できます。</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>一時停止された履歴はデフォルトで非表示です。</h3><p>ステータスリストがない場合、Metaはアクティブなキャンペーンのみを返します。Ductはすべてのステータスを要求するため、先月停止されたものも監査に含まれます。</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>予算はセント単位で返されます。</h3><p>Metaは予算を最小単位で、支出を全通貨単位で報告します。ユーロとして読むと、€25の1日予算が€2,500になります。</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/meta.md" rel="noopener">Ductのエージェントが作業するMeta Adsのノートを読む <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">一緒に使うとより良い</p>
+<h2>Meta Adsが回答すること <em>パートナーと連携して</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/ja/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Metaの購入数はStripeで維持されますか？</span><span class="ig-pair-go">Meta Ads + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/ja/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">MetaとGoogle、同じ方法でカウント。</span><span class="ig-pair-go">Meta Ads + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/ja/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Metaのクリックは定着するセッションになりますか？</span><span class="ig-pair-go">Meta Ads + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">設定</p>
+<h2>Meta Adsを接続<em>3つのステップで</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>Metaビジネス設定で、ユーザーを開き、次にシステムユーザーを開き、広告アカウントへのアクセスを付与します。</p></li>
+<li><span class="ig-step-n">2</span><p>ads_read権限でトークンを生成します（Ductがアカウントをリストできるようにbusiness_managementも）。</p></li>
+<li><span class="ig-step-n">3</span><p>Ductで、接続を開き、Meta Adsを選択し、トークンを貼り付けます。</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>読み取り専用：トークンにはads_readが必要で、DuctにはMetaの変更操作はありません。システムユーザートークンは、個人のログインのように期限切れになりません。</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>キーとトークンはDuctのホスト型APIによって暗号化されて保存され、ブラウザには保存されません。接続はいつでも削除できます。セルフホストビルドでは、それらはご自身のマシンに保持されます。</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Meta Ads、<em>回答済み</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Ductは私のMetaキャンペーンを変更できますか？</summary>
+<p class="faq-a">いいえ。DuctにはMetaの変更操作はありません。キャンペーン、広告セット、広告、ピクセル、結果を読み込み、Ads Managerで行う変更を推奨できます。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">なぜMetaの購入カウントがStripeと一致しないのでしょうか？</summary>
+<p class="faq-a">Metaはクリック後最大7日間、ビュー後1日間の購入を自己評価し、1つの注文を3つのアクションタイプで報告することがあります。Stripeは決済された金額をカウントします。Ductは、選択した期間で各購入を1回のみカウントし、Stripeと照合します。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">なぜシステムユーザートークンなのか、自分のログインではないのか？</summary>
+<p class="faq-a">個人のログインから作成されたトークンは約60日で期限切れになり、接続は警告なしに停止します。システムユーザートークンは期限切れにならないため、週次ブリーフは機能し続けます。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">私のアド広告アカウントは2つの製品の広告を運用しています。Ductはそれらを区別できますか？</summary>
+<p class="faq-a">はい。この製品を示すキャンペーン名の一部を指定してください。そうすれば、Metaが合計する前にDuctがそれらのキャンペーンに絞り込みます。これにより、他の製品が合計に含まれることはありません。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">無料ですか？</summary>
+<p class="faq-a">はい。Ductは、お客様ご自身のモデルキーまたは既存のChatGPTプランで無料でご利用いただけ、コアはMITライセンスです。有料プランでは後日モデルがバンドルされますが、現在オープンなものが有料になることはありません。<a href="/ja/open-source#pricing">費用がかかるもの</a>。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/ja/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/ja/partials/footer-expanded.html"><div class="legal-fallback"><a href="/ja/">Duct</a><a href="/ja/about">について</a><a href="/ja/privacy">プライバシーポリシー</a><a href="/ja/terms">利用規約</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

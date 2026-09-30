@@ -89,7 +89,7 @@ export function useScraperRun() {
             return;
           }
           try {
-            const status = await getDiscoverRunStatus(run.run_id);
+            const status = await getDiscoverRunStatus(run.run_id, projectId);
             if (status.status === "SUCCEEDED") {
               clearInterval(pollRef.current); pollRef.current = null;
               resolve();
@@ -111,7 +111,7 @@ export function useScraperRun() {
 
       if (cancelled.current) return;
       setPhase("fetching");
-      const out = await getDiscoverResults(run.dataset_id, 500);
+      const out = await getDiscoverResults(run.dataset_id, projectId, 500);
       if (cancelled.current) return;
       setResults(out.items || []);
       setPhase("done");

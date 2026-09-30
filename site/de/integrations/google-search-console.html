@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Search Console KI-Analyst: Suchanfragen, die konvertieren | Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/integrations/google-search-console"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/google-search-console"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/google-search-console"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/google-search-console"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/google-search-console"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/google-search-console"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/google-search-console"/>
+<meta property="og:locale" content="de_DE"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct liest Search Console Suchanfragen nach Seite, bis zu 50.000 Zeilen, und verknüpft sie mit GA4, sodass es sagen kann, welche Suchen Testversionen bringen und welche nur Impressionen."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/integrations/google-search-console"/>
+<meta property="og:title" content="Search Console KI-Analyst: Suchanfragen, die konvertieren"/>
+<meta property="og:description" content="Impressionen gestiegen, Testversionen stagnieren? Duct liest Search Console Suchanfragen nach Seite neben GA4 und findet die Suchanfragen, für die du rankst und die nicht konvertieren."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-google-search-console.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Search Console KI-Analyst: Suchanfragen, die konvertieren"/>
+<meta name="twitter:description" content="Search Console, bis zum Long Tail gelesen und mit GA4 verbunden."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-google-search-console.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"Search Console KI-Analyst: Suchanfragen, die konvertieren","url":"https://getduct.ai/de/integrations/google-search-console","description":"Duct liest Search Console Suchanfragen nach Seite, bis zu 50.000 Zeilen, und verknüpft sie mit GA4, sodass es sagen kann, welche Suchen Testversionen bringen und welche nur Impressionen.","about":{"@type":"SoftwareApplication","name":"Google Search Console"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"de","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https://getduct.ai/de/"},{"@type":"ListItem","position":2,"name":"Integrationen","item":"https://getduct.ai/de/integrations/"},{"@type":"ListItem","position":3,"name":"Google Search Console","item":"https://getduct.ai/de/integrations/google-search-console"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Kann Duct etwas in der Search Console ändern?","acceptedAnswer":{"@type":"Answer","text":"Nein. Es fragt nur Lesezugriff an und hat keine Search Console Änderungsoperation. Es liest Suchanfragen, Seiten und Positionen und kann dir sagen, was du auf deiner Website ändern sollst."}},{"@type":"Question","name":"Warum unterscheidet sich Ducts organische Zahl von der von GA4?","acceptedAnswer":{"@type":"Answer","text":"Search Console zählt Klicks von Google; GA4 zählt Sitzungen von jeder Suchmaschine. Ein GA4-Wert, der ein- bis dreieinhalbmal so hoch ist wie der von Search Console, ist normal. Weit außerhalb davon vermutet Duct Bots oder einen Tagging-Fehler, bevor eine der Zahlen gemeldet wird."}},{"@type":"Question","name":"Wie viel meiner Property liest es?","acceptedAnswer":{"@type":"Answer","text":"Bis zu 50.000 Zeilen pro Fenster, zwei Seiten der Search Console. Danach sind die Zeilen zu klein, um eine Antwort zu ändern."}},{"@type":"Question","name":"Ist es kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. Was Geld kosten wird."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: &#x27;google search console mcp&#x27; has search demand, but Duct has no MCP server yet (#197). Hypothesis: an SEO lead who has watched impressions rise without trials converts on a page that shows query-by-page cannibalisation. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/de/integrations/">Integrationen</a><span aria-hidden="true">/</span><span aria-current="page">Google Search Console</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/googlesearchconsole.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Search Console, <em>bis zur Suchanfrage, die konvertiert.</em></h1>
+<p class="hero-sub">Duct liest die Suchanfragen und Seiten in der Search Console und welche Suchanfrage auf welcher Seite landet, dann verknüpft es sie mit GA4. So kann es sagen, was die organische Suche wert ist, nicht nur, wie viel davon existiert.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="/de/integrations/">Alle Integrationen</a>
+</div>
+<ul class="ig-facts" aria-label="Auf einen Blick"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Mit Google anmelden</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Liest drei Datensätze</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schreibgeschützt</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Felder geprüft 24. Sep 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/googlesearchconsole.svg" width="34" height="34" alt=""/><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 100 30" width="100" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 50 14 50 30"/><path pathLength="1" d="M85 0C85 16 50 14 50 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 50 14 50 30"/><path d="M85 0C85 16 50 14 50 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Impressionen um 23% gestiegen, bei Rechnungs-Suchanfragen auf Position 11. Die Steuerseiten erzielen immer noch 61% der Testversionen.</span></div>
+</div>
+<figcaption>Eine Beispielantwort. Deine wird aus deinen eigenen Konten gelesen.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-search-console.webp" srcset="/assets/media/session-search-console-768.webp 768w, /assets/media/session-search-console-1536.webp 1536w, /assets/media/session-search-console.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Ein Duct Lauf: Gefragt, warum organische Testversionen stagnieren, während Impressionen steigen, liest Duct Search Console Suchanfragen und Suchanfragen nach Seite neben GA4 und findet zwei Seiten, die dieselben Suchanfragen aufteilen"/>
+<figcaption>Frage, warum Impressionen stiegen und Testversionen nicht. Duct liest Suchanfragen nach Seite, findet zwei deiner Seiten, die eine Suchanfrage aufteilen, und verknüpft sie mit Testversionen in GA4.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Fragen</p>
+<h2>Fragen, die du <em>einfach stellen kannst</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Impressionen sind gestiegen. Warum stagnieren die Testversionen?</p><span class="ig-q-joins"><img src="/assets/icons/googlesearchconsole.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Search Console + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Welche meiner Seiten konkurrieren um dieselbe Suchanfrage?</p><span class="ig-q-joins"><img src="/assets/icons/googlesearchconsole.svg" width="18" height="18" alt=""/><span>Search Console</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Welche Seiten, die gerade nicht auf Seite eins sind, sind es wert, gepusht zu werden?</p><span class="ig-q-joins"><img src="/assets/icons/googlesearchconsole.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Search Console + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Ist organisches Wachstum echt oder sind es Bots?</p><span class="ig-q-joins"><img src="/assets/icons/googlesearchconsole.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Search Console + GA4</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Zugriff</p>
+<h2>Was es liest. <em>Was es ändern kann.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Was es liest</h3>
+<ul class="ig-reads">
+<li><b>GSC Suchanfragenleistung</b><span class="ig-fields"><span>Suchanfrage</span><span>Klicks</span><span>Impressionen</span><span>CTR</span><span>durchschn. Position</span></span></li>
+<li><b>GSC Seitenleistung</b><span class="ig-fields"><span>Seite</span><span>Klicks</span><span>Impressionen</span><span>CTR</span><span>durchschn. Position</span></span></li>
+<li><b>GSC Suchanfrage × Seite</b><span class="ig-fields"><span>Suchanfrage</span><span>Seite</span><span>Klicks</span><span>Impressionen</span><span>CTR</span><span>durchschn. Position</span></span></li>
+</ul>
+<p class="ig-note">Search Console API (searchconsole-v1) · Felder geprüft 24. Sep 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/catalog/gsc.py" rel="noopener">lies den Quellcode</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Was es ändern kann</h3>
+<p class="ig-readonly-big">Nichts.</p>
+<p>Duct hat keinen Search Console Änderungsvorgang, daher kann es nichts in der Search Console bearbeiten. Es kann dir aber weiterhin eine Änderung empfehlen, die du dort vornehmen kannst.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Wissen</p>
+<h2>Was Duct bereits weiß <em>über Search Console</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Der Long Tail ist, wo die Arbeit ist.</h3><p>Search Console sortiert nach Klicks und gibt jeweils 25.000 Zeilen zurück. Kurz gelesen, und die Zero-Click-Impressionen, die Liste dessen, was als Nächstes zu schreiben ist, verschwinden. Duct liest zwei Seiten, bis zu 50.000 Zeilen.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Die meisten Klicks erfolgen ohne Suchanfrage.</h3><p>Google verbirgt seltene Suchanfragen, daher zeigt die Seitentabelle ein Vielfaches der Klicks der Suchanfragetabelle. Duct verwendet Seiten für die Menge und Suchanfragen für die Begriffe.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Die letzten drei Tage sind nicht final.</h3><p>Endgültige Daten setzen die neuesten Tage auf Null, was wie ein Absturz aussieht. Duct fragt nach allen Daten, damit die Woche dort endet, wo sie wirklich endet.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Suchanfrage nach Seite ist die einzige Ansicht von Kannibalisierung.</h3><p>Zwei deiner Seiten, die eine Suchanfrage aufteilen, tauchen nirgendwo sonst auf. Duct liest Suchanfrage und Seite zusammen.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/gsc.md" rel="noopener">Lies die Search Console Notizen, aus denen Ducts Agent arbeitet <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Gemeinsam besser</p>
+<h2>Was Search Console beantwortet <em>mit einem Partner</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/de/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/googlesearchconsole.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Welche Suchen bringen Besucher, die bleiben?</span><span class="ig-pair-go">Search Console + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/de/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/googlesearchconsole.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Zahlst du für Klicks, für die du bereits rankst?</span><span class="ig-pair-go">Search Console + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/de/integrations/microsoft-clarity"><span class="ig-pair-logos"><img src="/assets/icons/googlesearchconsole.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/clarity.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Seiten, die ranken, aber Besucher bei der Ankunft verlieren.</span><span class="ig-pair-go">Search Console + Clarity <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Einrichtung</p>
+<h2>Search Console <em>in drei Schritten</em> verbinden</h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>Öffne in Duct die Verbindungen und wähle Google Search Console.</p></li>
+<li><span class="ig-step-n">2</span><p>Mit Google anmelden und Lesezugriff erlauben.</p></li>
+<li><span class="ig-step-n">3</span><p>Wähle die Property, die dieses Projekt liest.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Nur Lesezugriff: Duct fragt Google nach Search Console Lesezugriff und hat keine Search Console Änderungsoperation.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schlüssel und Tokens werden verschlüsselt von Ducts gehosteter API gespeichert, niemals in deinem Browser, und du kannst eine Verbindung jederzeit entfernen. Ein Self-Host-Build speichert sie auf deiner eigenen Maschine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Search Console, <em>beantwortet</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Kann Duct etwas in der Search Console ändern?</summary>
+<p class="faq-a">Nein. Es fragt nur Lesezugriff an und hat keine Search Console Änderungsoperation. Es liest Suchanfragen, Seiten und Positionen und kann dir sagen, was du auf deiner Website ändern sollst.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Warum unterscheidet sich Ducts organische Zahl von der von GA4?</summary>
+<p class="faq-a">Search Console zählt Klicks von Google; GA4 zählt Sitzungen von jeder Suchmaschine. Ein GA4-Wert, der ein- bis dreieinhalbmal so hoch ist wie der von Search Console, ist normal. Weit außerhalb davon vermutet Duct Bots oder einen Tagging-Fehler, bevor eine der Zahlen gemeldet wird.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Wie viel meiner Property liest es?</summary>
+<p class="faq-a">Bis zu 50.000 Zeilen pro Fenster, zwei Seiten der Search Console. Danach sind die Zeilen zu klein, um eine Antwort zu ändern.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ist es kostenlos?</summary>
+<p class="faq-a">Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. <a href="/de/open-source#pricing">Was Geld kosten wird</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/de/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

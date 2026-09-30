@@ -13,6 +13,8 @@ ones below hold for every brief.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from tests.eval.judge import JudgeArtifact
 from tests.eval.rubric import Dimension, Marker, Rubric
 
@@ -75,5 +77,15 @@ def insights_brief_rubric(extra: tuple[Marker, ...] = ()) -> Rubric:
     )
 
 
-def render_brief_artifact(brief: str, *, question: str) -> JudgeArtifact:
-    return JudgeArtifact(title=f"Insights brief — {question}", body=brief)
+def render_brief_artifact(brief: str, *, question: str, sources: Sequence[dict] = ()) -> JudgeArtifact:
+    """``sources`` are the ListDataSources rows the agent saw. Without them
+    ``invented_source`` is a guess: on 2026-09-30 GLM, reading a brief built on
+    GA4 and Search Console, failed 4 of 43 for quoting Google Ads spend from
+    the Ads account the project had connected all along."""
+    body = brief
+    if sources:
+        connected = ", ".join(s["connector_id"] for s in sources if s.get("status") == "bound") or "none"
+        missing = ", ".join(s["connector_id"] for s in sources if s.get("status") != "bound") or "none"
+        body = (f"(Context for the judge, not part of the brief. Connected when it was written: "
+                f"{connected}. Not connected: {missing}.)\n\n{brief}")
+    return JudgeArtifact(title=f"Insights brief — {question}", body=body)

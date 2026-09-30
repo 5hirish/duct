@@ -23,6 +23,7 @@ exactly when, not an exemption here.
 from __future__ import annotations
 
 import json
+from uuid import uuid4
 
 import pytest
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
@@ -80,7 +81,10 @@ def assert_append_only(requests: list[dict]) -> None:
 
 
 async def _three_turns(agent) -> None:
-    config = {"configurable": {"thread_id": f"invariants-{id(agent)}"}}
+    # Not id(agent): the checkpointer is process-wide, and CPython reuses a
+    # freed object's id, so the second rung could inherit the first rung's
+    # thread and send its history. It did, depending on what ran before.
+    config = {"configurable": {"thread_id": f"invariants-{uuid4()}"}}
     for n in range(3):
         await agent.ainvoke({"messages": [HumanMessage(content=f"Question {n}")]}, config=config)
 

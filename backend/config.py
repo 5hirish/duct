@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from functools import lru_cache
 from pathlib import Path
@@ -168,6 +169,20 @@ class Configs(BaseSettings):
     ga4_property_id: str = ""
     gsc_site_url: str = ""
 
+    # GitHub App — the one-click GitHub connection (service/github/app.py).
+    # All four or none: with any one missing the Connections page offers only
+    # the pasted fine-grained token, which is what a self-hosted install runs,
+    # because an App's private key cannot ship inside a public binary. The
+    # callback and setup URLs derive from api_public_url, so registering the
+    # App on GitHub is the only step outside this file.
+    github_app_slug: str = ""
+    github_app_client_id: str = ""
+    github_app_client_secret: str = ""
+    # PEM, with real newlines or literal "\n" escapes: a dotenv line and some
+    # dashboards cannot hold a multi-line value. A cut-short one is dropped
+    # (see the validator).
+    github_app_private_key: str = ""
+
     # Google Sign-In (user identity, separate from connector OAuth). If unset/empty, derived as
     # {api_public_url}/auth/signin/google/callback.
     google_signin_redirect_uri: str = Field(default="")
@@ -222,15 +237,16 @@ class Configs(BaseSettings):
     # /api/user/artifacts endpoints (service/storage.py put_private).
     r2_artifacts_bucket:  str = ""
 
-    # PostBridge — server-wide API key (MVP). Used as fallback when no
-    # ConnectorCredential row exists for the calling user. Future: drop
-    # this once a per-user "connect PostBridge" UI lands.
+    # PostBridge — a fallback for local dev and the desktop sidecar only
+    # (service/vendor_keys.py). Each user saves their own key in Content →
+    # Accounts; a hosted instance never spends this one, because it is the
+    # operator's account and every signup would be publishing through it.
     postbridge_api_key: str = ""
 
-    # Apify API token — used by service/apify/ for TikTok content
-    # discovery (trending posts / hashtags / sounds). Server-side key for
-    # MVP, same shape as gemini_api_key. Future: per-user when billing
-    # demands it.
+    # Apify API token, for TikTok discovery (service/apify/). Like PostBridge's:
+    # users save their own in Content → Discover, and this one is spent only
+    # in local dev and the desktop sidecar (service/vendor_keys.py), never on
+    # a hosted instance, where it would pay for every signup's scraping.
     apify_api_key: str = ""
 
     # Which email provider delivers everything: "cloudflare", "resend" or
@@ -352,6 +368,22 @@ class Configs(BaseSettings):
     def _jwt_secret_strength(cls, v: str) -> str:
         if v and len(v) < 32:
             raise ValueError("JWT_SECRET must be at least 32 characters.")
+        return v
+
+    @field_validator("github_app_private_key", mode="after")
+    @classmethod
+    def _github_app_key_whole(cls, v: str) -> str:
+        # A PEM pasted across lines into a dotenv file keeps only its first line,
+        # and python-dotenv merely warns. Kept, that key lets people connect and
+        # then fails every pull; dropped, the App is off, GitHub falls back to the
+        # pasted token, and this line says why. Not a raise like JWT_SECRET's: an
+        # optional connector's typo should not take the whole API down.
+        if v and "-----END" not in v:
+            logging.getLogger(__name__).error(
+                "GITHUB_APP_PRIVATE_KEY is cut short, so the GitHub App is off. "
+                "Write the PEM on one line with \\n in place of each line break."
+            )
+            return ""
         return v
 
     @model_validator(mode="before")

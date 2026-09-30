@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Analista de IA de Meta Ads: compras contadas una vez | Duct</title>
+<link rel="canonical" href="https://getduct.ai/es/integrations/meta-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/meta-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/meta-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/meta-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/meta-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/meta-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/meta-ads"/>
+<meta property="og:locale" content="es_ES"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct lee Meta Ads con un token de usuario del sistema, cuenta cada compra una vez en la ventana de atribución que elijas y lo compara con Stripe. Solo lectura."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/es/integrations/meta-ads"/>
+<meta property="og:title" content="Analista de IA de Meta Ads: compras contadas una vez"/>
+<meta property="og:description" content="El ROAS de Meta parece tres veces mejor que el de Google. Duct lo recuenta de la forma en que Google lo hace, lo verifica con Stripe y dice cuál es el correcto."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-meta-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Analista de IA de Meta Ads: compras contadas una vez"/>
+<meta name="twitter:description" content="Meta puede contar una compra tres veces. Duct la cuenta una vez y luego verifica con Stripe."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-meta-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, sinceramente","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Rechaza y el sitio se comportará exactamente igual.","Privacy Policy":"Política de privacidad","Decline":"Rechazar","Accept":"Aceptar","{n} stars on GitHub":"{n} estrellas en GitHub","UTM Builder":"Constructor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de comparativa de métricas SaaS","Weekly Marketing Brief Generator":"Generador de informes de marketing semanales","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de tasa de crecimiento de MRR","Engagement Rate Calculator":"Calculadora de tasa de interacción","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menú de navegación","Close navigation menu":"Cerrar menú de navegación","Menu":"Menú","Free Tools":"Herramientas gratuitas","Solutions":"Soluciones","Download Duct ↓":"Descargar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de pantalla ampliada","Close":"Cerrar","Fit to screen":"Ajustar a la pantalla","Zoom in":"Acercar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 y posteriores","Runs on any distribution":"Funciona en cualquier distribución","Debian and Ubuntu":"Debian y Ubuntu","Download ↓":"Descargar ↓","Download for {label} ↓":"Descargar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de ejemplo. Cambia cualquier campo y calcula de nuevo para los tuyos."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"es","name":"Analista de IA de Meta Ads: compras contadas una vez","url":"https://getduct.ai/es/integrations/meta-ads","description":"Duct lee Meta Ads con un token de usuario del sistema, cuenta cada compra una vez en la ventana de atribución que elijas y lo compara con Stripe. Solo lectura.","about":{"@type":"SoftwareApplication","name":"Meta Ads"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"es","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://getduct.ai/es/"},{"@type":"ListItem","position":2,"name":"Integraciones","item":"https://getduct.ai/es/integrations/"},{"@type":"ListItem","position":3,"name":"Meta Ads","item":"https://getduct.ai/es/integrations/meta-ads"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"es","mainEntity":[{"@type":"Question","name":"¿Duct puede cambiar mis campañas de Meta?","acceptedAnswer":{"@type":"Answer","text":"No. Duct no tiene operación de cambio en Meta. Lee campañas, conjuntos de anuncios, anuncios, píxeles y resultados, y puede recomendarte un cambio para que lo hagas en Ads Manager."}},{"@type":"Question","name":"¿Por qué el recuento de compras de Meta no coincide con Stripe?","acceptedAnswer":{"@type":"Answer","text":"Meta se atribuye compras hasta siete días después de un clic y un día después de una visualización, y puede informar un pedido bajo tres tipos de acción. Stripe cuenta el dinero liquidado. Duct cuenta cada compra una vez, en la ventana que elijas, y la concilia con Stripe."}},{"@type":"Question","name":"¿Por qué un token de usuario del sistema y no mi propio inicio de sesión?","acceptedAnswer":{"@type":"Answer","text":"Un token creado a partir del inicio de sesión de una persona caduca después de unos 60 días, y la conexión se detiene sin previo aviso. Un token de usuario del sistema no caduca, por lo que el informe semanal sigue funcionando."}},{"@type":"Question","name":"Mi cuenta de anuncios publica anuncios para dos productos. ¿Puede Duct mantenerlos separados?","acceptedAnswer":{"@type":"Answer","text":"Sí. Dale la parte de los nombres de las campañas que marca este producto, y Duct filtra esas campañas antes de que Meta sume nada, para que el otro producto nunca llegue a los totales."}},{"@type":"Question","name":"¿Es gratis?","acceptedAnswer":{"@type":"Answer","text":"Sí. Duct es gratis con tus propias claves de modelo o el plan de ChatGPT que ya tienes, y el núcleo tiene licencia MIT. Un plan de pago posterior agrupará los modelos; nada de lo que es abierto hoy pasará a ser de pago. Qué costará dinero."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Meta Ads has open search around AI tooling (&#x27;meta ads mcp&#x27; 880 a month, KD 8, OpenSEO Sep 2026), though Duct has no MCP server yet. Hypothesis: a buyer who already distrusts Meta&#x27;s attribution converts on the recount, not on a feature list. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/es/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Ruta de navegación"><a href="/es/integrations/">Integraciones</a><span aria-hidden="true">/</span><span aria-current="page">Meta Ads</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/meta.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Meta Ads, <em>contado una vez.</em></h1>
+<p class="hero-sub">Meta se atribuye una semana de clics y un día de visualizaciones, y puede informar una compra tres veces. Duct lee Meta Ads, recuenta en la ventana que elijas y verifica el resultado con Stripe.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/es/download" data-duct-download>Descargar Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/es/integrations/">Todas las integraciones</a>
+</div>
+<ul class="ig-facts" aria-label="De un vistazo"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Token de usuario del sistema</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Lee cuatro conjuntos de datos</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Solo lectura</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Comprobado 29 de septiembre de 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/meta.svg" width="34" height="34" alt=""/><img src="/assets/icons/google-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Meta afirma 41 compras a 34 €. Con un clic de un día son 14, a 100 €. Google está en 105 €.</span></div>
+</div>
+<figcaption>Una respuesta de ejemplo. La tuya se lee de tus propias cuentas.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-meta-ads.webp" srcset="/assets/media/session-meta-ads-768.webp 768w, /assets/media/session-meta-ads-1536.webp 1536w, /assets/media/session-meta-ads.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Una sesión de Duct: al preguntarle por qué Meta parece más barato que Google, Duct lee los conjuntos de anuncios y hallazgos de Meta en tres ventanas de atribución junto a Google Ads, y vuelve a contar las compras con atribución de clic de un día."/>
+<figcaption>Pregunta por qué Meta parece tres veces más barato. Duct vuelve a contar sus compras de la misma manera que Google, un tipo de acción y un clic de un día, y los compara.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Preguntar</p>
+<h2>Preguntas que puedes <em>simplemente hacer</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>¿Es Meta realmente más barato que Google, contado de la misma manera?</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><span>Meta Ads + Google Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>¿Qué conjuntos de anuncios atraen a clientes que pagan?</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Meta Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>¿Cuánto del crédito de Meta proviene de vistas, no de clics?</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><span>Meta Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>¿Por qué una campaña dejó de obtener resultados?</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><span>Meta Ads</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Acceso</p>
+<h2>Lo que lee. <em>Lo que puede cambiar.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Qué lee</h3>
+<ul class="ig-reads">
+<li><b>Campañas, todos los estados</b><span class="ig-fields"><span>nombre</span><span>estado</span><span>objetivo</span><span>estrategia de puja</span><span>presupuesto diario</span><span>presupuesto total</span><span>límite de gasto</span></span></li>
+<li><b>Conjuntos de anuncios y anuncios</b><span class="ig-fields"><span>nombre</span><span>estado</span><span>presupuesto diario</span><span>objetivo de optimización</span><span>importe de la puja</span><span>configuración de atribución</span></span></li>
+<li><b>Rendimiento</b><span class="ig-fields"><span>gasto</span><span>impresiones</span><span>clics</span><span>CTR</span><span>CPC</span><span>CPM</span><span>compras</span><span>valor de compra</span><span>ROAS</span></span></li>
+<li><b>Píxeles y conversiones personalizadas</b><span class="ig-fields"><span>nombre</span><span>último disparo</span><span>tipo de evento</span><span>valor predeterminado</span></span></li>
+</ul>
+<p class="ig-note">Meta Marketing API v26.0 · verificado con el código de obtención 29 sep 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/meta/ads/fetch.py" rel="noopener">leer el código fuente</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Qué puede cambiar</h3>
+<p class="ig-readonly-big">Nada.</p>
+<p>Duct no tiene operaciones de cambio en Meta Ads, por lo que no puede editar nada en Meta Ads. Aún puede recomendarte un cambio para que lo hagas allí.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Conocimiento</p>
+<h2>Lo que Duct ya sabe <em>sobre Meta Ads</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Una compra, tres tipos de acción.</h3><p>El mismo pedido puede llegar como una compra de píxel, una compra y una compra omnicanal. Sumarlos triplica el recuento, así que Duct elige uno.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>La atribución es una elección, no un hecho.</h3><p>Meta usa por defecto el clic de siete días y la visualización de un día; Google cuenta el último clic. Duct pide a Meta el clic de un día, el clic de siete días y la visualización de un día por separado, para que las plataformas puedan compararse en los mismos términos.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>El historial pausado está oculto por defecto.</h3><p>Sin una lista de estados, Meta devuelve solo campañas activas. Duct pide todos los estados, para que lo que se desactivó el mes pasado siga en la auditoría.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Los presupuestos se devuelven en céntimos.</h3><p>Meta informa los presupuestos en unidades menores y el gasto en moneda completa. Leído en euros, un presupuesto diario de 25 € se convierte en 2.500 €.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/meta.md" rel="noopener">Lee las notas de Meta Ads con las que trabaja el agente de Duct <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Mejor juntos</p>
+<h2>Lo que Meta Ads responde <em>con un socio</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/es/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">¿El recuento de compras de Meta sobrevive a Stripe?</span><span class="ig-pair-go">Meta Ads + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/es/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Meta y Google, contados de la misma manera.</span><span class="ig-pair-go">Meta Ads + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/es/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">¿Los clics de Meta se convierten en sesiones que permanecen?</span><span class="ig-pair-go">Meta Ads + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Configuración</p>
+<h2>Conecta Meta Ads <em>en tres pasos</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>En Meta Business Settings, abre Usuarios, luego Usuarios del sistema, y dale acceso a la cuenta publicitaria.</p></li>
+<li><span class="ig-step-n">2</span><p>Genera un token con ads_read (y business_management, para que Duct pueda listar tus cuentas).</p></li>
+<li><span class="ig-step-n">3</span><p>En Duct, abre Conexiones, elige Meta Ads y pega el token.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Solo lectura: el token necesita ads_read, y Duct no tiene operación de cambio en Meta. Un token de usuario del sistema no caduca como lo hace el inicio de sesión de una persona.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Las claves y tokens se almacenan cifrados por la API alojada de Duct, nunca en tu navegador, y puedes eliminar una conexión en cualquier momento. Una versión autoalojada los mantiene en tu propia máquina.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Meta Ads, <em>respondido</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">¿Duct puede cambiar mis campañas de Meta?</summary>
+<p class="faq-a">No. Duct no tiene operación de cambio en Meta. Lee campañas, conjuntos de anuncios, anuncios, píxeles y resultados, y puede recomendarte un cambio para que lo hagas en Ads Manager.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">¿Por qué el recuento de compras de Meta no coincide con Stripe?</summary>
+<p class="faq-a">Meta se atribuye compras hasta siete días después de un clic y un día después de una visualización, y puede informar un pedido bajo tres tipos de acción. Stripe cuenta el dinero liquidado. Duct cuenta cada compra una vez, en la ventana que elijas, y la concilia con Stripe.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">¿Por qué un token de usuario del sistema y no mi propio inicio de sesión?</summary>
+<p class="faq-a">Un token creado a partir del inicio de sesión de una persona caduca después de unos 60 días, y la conexión se detiene sin previo aviso. Un token de usuario del sistema no caduca, por lo que el informe semanal sigue funcionando.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Mi cuenta de anuncios publica anuncios para dos productos. ¿Puede Duct mantenerlos separados?</summary>
+<p class="faq-a">Sí. Dale la parte de los nombres de las campañas que marca este producto, y Duct filtra esas campañas antes de que Meta sume nada, para que el otro producto nunca llegue a los totales.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">¿Es gratis?</summary>
+<p class="faq-a">Sí. Duct es gratis con tus propias claves de modelo o el plan de ChatGPT que ya tienes, y el núcleo tiene licencia MIT. Un plan de pago posterior agrupará los modelos; nada de lo que es abierto hoy pasará a ser de pago. <a href="/es/open-source#pricing">Qué costará dinero</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/es/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/es/partials/footer-expanded.html"><div class="legal-fallback"><a href="/es/">Duct</a><a href="/es/about">Acerca de</a><a href="/es/privacy">Política de privacidad</a><a href="/es/terms">Términos de servicio</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

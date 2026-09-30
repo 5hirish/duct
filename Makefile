@@ -72,13 +72,16 @@ check-app: ## Typecheck, unit tests, parity, build (mirrors app.yml)
 	cd app && npm run lint --if-present
 	cd app && npm run typecheck
 	cd app && npm run check:i18n
+	python3 scripts/i18n/fill.py --check app/src/locales/*/messages.po
 	cd app && npm test
 	cd app && npm run check:parity
 	cd app && npm run build
 
 check-site: ## Page requirements, sitemap, smoke tests (mirrors site.yml)
 	python3 scripts/build_blog.py --check
+	python3 scripts/build_integrations.py --check
 	python3 scripts/build_site_i18n.py --check
+	python3 scripts/i18n/fill.py --check site/i18n/*.po
 	python3 .github/scripts/check-pages.py
 	python3 scripts/check_changelog_sync.py
 	# Local only: a variant older than its shot means a reshoot was copied in
@@ -119,7 +122,7 @@ session-bundle: ## Pull one agent session for review: make session-bundle ID=<co
 session-replay: ## Re-run a bundled session on its own data with today's prompt/model: make session-replay BUNDLE=<dir> [ARGS="--model ... --tier heavy"]
 	cd backend && poetry run python scripts/session_replay.py "$(BUNDLE)" $(ARGS)
 
-agent-eval: ## Paid eval gate, k=3 on synthetic accounts (DeepSeek V4 Pro on OpenRouter): make agent-eval [ARGS="-k 1 --agent insights"]
+agent-eval: ## Paid eval gate, k=3 on synthetic accounts (DeepSeek V4 Flash on OpenRouter, GLM 5.3 Flash judging): make agent-eval [ARGS="-k 1 --agent insights"]
 	cd backend && poetry run python scripts/agent_eval.py $(ARGS)
 
 # Run after ANY change to user-facing copy in app/ or site/, before `make check`.
@@ -129,6 +132,7 @@ agent-eval: ## Paid eval gate, k=3 on synthetic accounts (DeepSeek V4 Pro on Ope
 # check-app and check-site fail on whatever this would have produced.
 i18n: ## Extract, translate what is missing, compile and render (app + site)
 	cd app && npm run i18n:extract
+	python3 scripts/build_integrations.py
 	python3 scripts/build_site_i18n.py
 	python3 scripts/i18n/fill.py
 	cd app && npm run i18n:compile

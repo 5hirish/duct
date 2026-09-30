@@ -162,6 +162,10 @@ msgstr "{count, plural, one {# correção} other {# correções}}"
 msgid "{count, plural, one {# post} other {# posts}}"
 msgstr "{count, plural, one {# post} other {# posts}}"
 
+#: src/app/(app)/connections/page.jsx
+msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
+msgstr "{count, plural, one {GitHub conectado: # repositório.} other {GitHub conectado: # repositórios.}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, one {# página} other {# páginas}}"
@@ -210,6 +214,14 @@ msgstr "{eventCount, plural, one {# evento} other {# eventos}}"
 msgid "{extra, plural, one {+# more} other {+# more}}"
 msgstr "{extra, plural, one {+# mais} other {+# mais}}"
 
+#: src/components/content/PublishModal.jsx
+msgid "{extra, plural, one {Post the other reply yourself once it's live: each part has a copy button.} other {Post the other # replies yourself once it's live: each part has a copy button.}}"
+msgstr "{extra, plural, one {Publique você mesmo a outra resposta quando o post estiver no ar: cada parte tem um botão de copiar.} other {Publique você mesmo as outras # respostas quando o post estiver no ar: cada parte tem um botão de copiar.}}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{extra} over the limit"
+msgstr "{extra} acima do limite"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{failCount, plural, one {# Error} other {# Errors}}"
 msgstr "{failCount, plural, one {# Erro} other {# Erros}}"
@@ -229,6 +241,10 @@ msgstr "{from} – {to}"
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "{granted} of {total} granted"
 msgstr "{granted} de {total} concedidas"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{hidden, plural, one {# character sits behind the fold.} other {# characters sit behind the fold.}}"
+msgstr "{hidden, plural, one {# caractere fica escondido atrás do “ver mais”.} other {# caracteres ficam escondidos atrás do “ver mais”.}}"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{hreflangCount, plural, one {# lang} other {# langs}}"
@@ -278,9 +294,29 @@ msgstr "{label} — em breve"
 msgid "{label} API key"
 msgstr "{label} API key"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} doesn't publish comments. Paste this under the post once it's live."
+msgstr "O {label} não publica comentários. Cole isto abaixo do post quando ele estiver no ar."
+
+#: src/components/content/PublishModal.jsx
+msgid "{label} doesn't publish comments. The post goes out alone; paste your first comment under it once it's live."
+msgstr "O {label} não publica comentários. O post sai sozinho; cole seu primeiro comentário abaixo dele quando estiver no ar."
+
 #: src/components/insights/ConnectionRequest.jsx
 msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
 msgstr "{label} precisa de uma API key em vez de um login. Adicione-a na <0>página Conexões</0>, depois diga ao Duct para continuar."
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} only publishes the first reply. Post this one yourself."
+msgstr "O {label} só publica a primeira resposta. Publique esta você mesmo."
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} post"
+msgstr "Post do {label}"
+
+#: src/components/content/PublishModal.jsx
+msgid "{label} publishes the post and its first reply."
+msgstr "O {label} publica o post e a primeira resposta."
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "{label} score"
@@ -293,6 +329,10 @@ msgstr "{landingPages, plural, one {# página de destino} other {# páginas de d
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{landingPages, plural, one {# page} other {# pages}}"
 msgstr "{landingPages, plural, one {# página} other {# páginas}}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{left} left"
+msgstr "Restam {left}"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
@@ -341,6 +381,10 @@ msgstr "{newCount} novos, {resolvedCount} resolvidos"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "{notesLeft, plural, one {# character left} other {# characters left}}"
 msgstr "{notesLeft, plural, one {# caractere restante} other {# caracteres restantes}}"
+
+#: src/app/(app)/connections/page.jsx
+msgid "{omitted, plural, one {# more was left out; choose specific repositories on GitHub to reach it.} other {# more were left out; choose specific repositories on GitHub to reach them.}}"
+msgstr "{omitted, plural, one {Mais # ficou de fora; escolha repositórios específicos no GitHub para incluí-lo.} other {Mais # ficaram de fora; escolha repositórios específicos no GitHub para incluí-los.}}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{oppCount} Opp"
@@ -517,6 +561,14 @@ msgstr "{unconfirmed, plural, one {# não confirmado} other {# não confirmados}
 #: src/components/workspace/ContextRing.jsx
 msgid "{used} of {window} tokens"
 msgstr "{used} de {window} tokens"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "{vendor} API key"
+msgstr "Chave de API do {vendor}"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "{vendor} isn't set up yet"
+msgstr "O {vendor} ainda não está configurado"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "{videoShare} of posts · <0>{videoEng}</0> eng."
@@ -867,6 +919,10 @@ msgstr "Adaptado"
 msgid "Adaptive thinking"
 msgstr "Pensamento adaptativo"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Add a first comment"
+msgstr "Adicionar um primeiro comentário"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Add a guardrail"
 msgstr "Adicionar um guardrail"
@@ -878,6 +934,10 @@ msgstr "Adicionar uma hashtag"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
 msgstr "Adicionar um projeto"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Add a reply"
+msgstr "Adicionar uma resposta"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Add a tag"
@@ -1673,8 +1733,8 @@ msgid "Caption"
 msgstr "Legenda"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Caption is longer than Instagram allows"
-msgstr "A legenda é mais longa do que o Instagram permite"
+#~ msgid "Caption is longer than Instagram allows"
+#~ msgstr "A legenda é mais longa do que o Instagram permite"
 
 #: src/components/content/StyleGallery.jsx
 msgid "Captions"
@@ -1763,6 +1823,10 @@ msgstr "Verificando seu convite…"
 msgid "Checking…"
 msgstr "Verificando…"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Choose \"Only select repositories\", then read-only access to Contents, Pull requests, Issues and Metadata. Duct only ever reads."
+msgstr "Escolha \"Only select repositories\" e depois acesso somente leitura a Contents, Pull requests, Issues e Metadata. Duct apenas lê."
+
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Choose {entity}"
 msgstr "Escolha {entity}"
@@ -1774,6 +1838,14 @@ msgstr "Escolha {entity} para {projectName}"
 #: src/components/models/ModelPicker.jsx
 msgid "Choose a model"
 msgstr "Escolha um modelo"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Choose repositories on GitHub"
+msgstr "Escolher repositórios no GitHub"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Choose the repositories on GitHub. Duct gets read-only access to those and nothing else."
+msgstr "Escolha os repositórios no GitHub. O Duct recebe acesso somente leitura a eles e a nada mais."
 
 #: src/components/content/AccountsTab.jsx
 msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
@@ -1933,6 +2005,10 @@ msgstr "Configurar {title}"
 msgid "Confirm"
 msgstr "Confirmar"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Connect"
+msgstr "Conectar"
+
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Connect {label}"
 msgstr "Conectar {label}"
@@ -1958,6 +2034,10 @@ msgstr "Conecte uma conta TikTok, Instagram ou YouTube no PostBridge, depois atu
 msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
 msgstr "Conecte uma conta uma vez — ela é salva para toda a sua conta. Abra um cartão para configurá-la e para escolher de quais de suas contas <0>{projectName}</0> lê."
 
+#: src/app/(app)/connections/page.jsx
+msgid "Connect GitHub"
+msgstr "Conectar GitHub"
+
 #: src/components/content/AccountsTab.jsx
 msgid "Connect in PostBridge →"
 msgstr "Conectar no PostBridge →"
@@ -1965,6 +2045,14 @@ msgstr "Conectar no PostBridge →"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Connect one data source"
 msgstr "Conectar uma fonte de dados"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "Connect your {vendor} account"
+msgstr "Conecte sua conta do {vendor}"
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Connect your PostBridge account"
+#~ msgstr "Conecte sua conta do PostBridge"
 
 #: src/app/(app)/connections/page.jsx
 #: src/app/(auth)/desktop-auth/page.js
@@ -2048,7 +2136,7 @@ msgstr "Pilares de conteúdo"
 #: src/lib/navigation.js
 #: src/lib/usageApi.js
 msgid "Content Studio"
-msgstr "Estúdio de Conteúdo"
+msgstr "Content Studio"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Context"
@@ -2121,6 +2209,7 @@ msgstr "Cookies, sinceramente"
 
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/audit/ShareReport.jsx
+#: src/components/content/TextPostEditor.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "Copiado"
@@ -2138,6 +2227,7 @@ msgid "copy"
 msgstr "copiar"
 
 #: src/components/audit/ShareReport.jsx
+#: src/components/content/TextPostEditor.jsx
 msgid "Copy"
 msgstr "Copiar"
 
@@ -2160,6 +2250,10 @@ msgstr "Copiar resposta"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Copy these from the platform’s analytics. They stay as you enter them."
 msgstr "Copie estes dos analytics da plataforma. Eles permanecem como você os insere."
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Copy this part"
+msgstr "Copiar esta parte"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
@@ -2228,6 +2322,10 @@ msgstr "Rastreie seu site, identifique problemas e obtenha um relatório gerado 
 #: src/lib/auditEvents.js
 msgid "Crawling pages"
 msgstr "Rastreando páginas"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Create a fine-grained token (GitHub settings)"
+msgstr "Crie um token fine-grained (configurações do GitHub)"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Create a restricted key (Stripe dashboard)"
@@ -2463,12 +2561,30 @@ msgstr "Descartado"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/AccountsTab.jsx
+#: src/components/content/DiscoverPage.jsx
 msgid "Disconnect"
 msgstr "Desconectar"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
 msgstr "Desconectar “{title}”?"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Disconnect Apify"
+msgstr "Desconectar o Apify"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Disconnect Apify?"
+msgstr "Desconectar o Apify?"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Disconnect PostBridge"
+msgstr "Desconectar o PostBridge"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Disconnect PostBridge?"
+msgstr "Desconectar o PostBridge?"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Disconnect your ChatGPT plan?"
@@ -2477,6 +2593,10 @@ msgstr "Desconectar seu plano ChatGPT?"
 #: src/app/(app)/content/page.jsx
 msgid "discover"
 msgstr "descobrir"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
+msgstr "O Discover pesquisa o TikTok pelo Apify, usando sua própria conta, então o scraping é cobrado de você. Entre no Apify, copie seu token de API e cole aqui."
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Discover what's working"
@@ -2615,6 +2735,14 @@ msgstr "Duct esquece o entrar mantido no chaveiro desta máquina e para de execu
 msgid "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
 msgstr "Duct esquece essas credenciais. Relatórios e execuções agendadas que leem de {title} param de funcionar até que você o conecte novamente, e reconectar significa entrar com o Google mais uma vez."
 
+#: src/components/content/AccountsTab.jsx
+msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
+msgstr "O Duct esquece sua chave de API e para de publicar pela sua conta do PostBridge. Suas contas continuam conectadas no PostBridge."
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
+msgstr "O Duct esquece seu token do Apify e para de pesquisar pela sua conta. As referências que você salvou continuam salvas."
+
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Duct has a quick question"
 msgstr "Duct tem uma pergunta rápida"
@@ -2630,6 +2758,10 @@ msgstr "Duct precisa de uma conexão. Seu trabalho está salvo e ainda estará a
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
 #~ msgstr "Duct escolhe por resumo: markdown para uma leitura rápida, uma página quando o layout ou um gráfico justifica"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
+msgstr "O Duct publica pelo PostBridge, usando sua própria conta. Entre no PostBridge, copie sua chave de API e cole aqui."
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
@@ -2987,9 +3119,17 @@ msgstr "Filtrado para uma conversa · <0>mostrar tudo</0>"
 msgid "Finalizing report"
 msgstr "Finalizando relatório"
 
+#: src/components/content/PostViewport.jsx
+msgid "Finding a source…"
+msgstr "Procurando uma fonte…"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Findings by Category"
 msgstr "Constatações por Categoria"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Fine-grained personal access token"
+msgstr "Token de acesso pessoal (fine-grained)"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Finish in your browser — Google won’t sign you in inside an app window. This card updates on its own when you’re done. <0>Open it again</0>"
@@ -2998,6 +3138,10 @@ msgstr "Finalize no seu navegador — o Google não vai te conectar dentro de um
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Finish in your browser…"
 msgstr "Finalize no seu navegador…"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Finish on GitHub in your browser. Your repositories appear here when you come back."
+msgstr "Conclua no GitHub pelo navegador. Seus repositórios aparecem aqui quando você voltar."
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Finish signing in in your browser, then come back and press “I’ve connected it”."
@@ -3010,6 +3154,10 @@ msgstr "Finalize o login com o Google no seu navegador — esta janela continuar
 #: src/app/(auth)/page.js
 msgid "Finish the security check above, then try again."
 msgstr "Conclua a verificação de segurança acima e tente novamente."
+
+#: src/components/content/TextPostEditor.jsx
+msgid "First comment"
+msgstr "Primeiro comentário"
 
 #: src/components/content/PostViewport.jsx
 msgid "first line is the hook — 2–3 sentences"
@@ -3177,6 +3325,34 @@ msgstr "Obter o app para desktop →"
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Get the full audit →"
 msgstr "Obter a auditoria completa →"
+
+#: src/components/connections/logos.jsx
+msgid "GitHub"
+msgstr "GitHub"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub app installed. Finishing the connection…"
+msgstr "App do GitHub instalado. Concluindo a conexão…"
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub declined the exchange, which is almost always temporary. Try again from the app."
+msgstr "O GitHub recusou a troca, o que é quase sempre temporário. Tente novamente pelo app."
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub didn't complete the connection"
+msgstr "O GitHub não concluiu a conexão"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub is connected, but it granted no repositories you can read. Open the GitHub card and choose repositories on GitHub."
+msgstr "O GitHub está conectado, mas não concedeu acesso a nenhum repositório que você possa ler. Abra o card do GitHub e escolha repositórios no GitHub."
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub is installed, but finishing the connection failed. Open the GitHub card and connect again."
+msgstr "O GitHub está instalado, mas não foi possível concluir a conexão. Abra o card do GitHub e conecte de novo."
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub isn't set up on this server"
+msgstr "O GitHub não está configurado neste servidor"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
@@ -3405,6 +3581,10 @@ msgstr "Ocultar chave"
 msgid "Hide superseded"
 msgstr "Ocultar substituídos"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Hide the token form"
+msgstr "Ocultar o formulário do token"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "High"
 msgstr "Alto"
@@ -3573,8 +3753,12 @@ msgid "Include {name}"
 msgstr "Incluir {name}"
 
 #: src/components/execution/ChangeSetCard.jsx
-msgid "Includes a pause. It can be rolled back from here."
-msgstr "Inclui uma pausa. Pode ser revertido daqui."
+msgid "Includes a change that always waits for you. It can be rolled back from here."
+msgstr "Inclui uma alteração que sempre aguarda sua ação. Pode ser revertida daqui."
+
+#: src/components/execution/ChangeSetCard.jsx
+#~ msgid "Includes a pause. It can be rolled back from here."
+#~ msgstr "Inclui uma pausa. Pode ser revertido daqui."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -3993,6 +4177,10 @@ msgstr "Sair"
 msgid "Logged metrics"
 msgstr "Registrou métricas"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Longer than the platform allows: {at}"
+msgstr "Mais longo do que a plataforma permite: {at}"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Looking up where {providerName}'s key comes from."
 msgstr "Procurando de onde vem a chave de {providerName}."
@@ -4126,6 +4314,10 @@ msgstr "Tipo de memória"
 #: src/app/(app)/projects/page.jsx
 msgid "Memory of {name}"
 msgstr "Memória de {name}"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Merged pull requests, releases, closed issues and doc changes, by date."
+msgstr "Pull requests mesclados, releases, issues fechadas e mudanças na documentação, por data."
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Mermaid render failed."
@@ -4331,6 +4523,10 @@ msgstr "Novo formato"
 msgid "New invitation sent to {invitee}."
 msgstr "Novo convite enviado para {invitee}."
 
+#: src/app/(app)/content/page.jsx
+msgid "New post"
+msgstr "Novo post"
+
 #: src/components/AppSidebar.jsx
 msgid "New project"
 msgstr "Novo projeto"
@@ -4519,12 +4715,16 @@ msgid "No plan yet for this project."
 msgstr "Nenhum plano ainda para este projeto."
 
 #: src/app/(app)/content/page.jsx
-msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
-msgstr "Nenhum post ainda. Gere um plano e rascunhe posts do painel, ou clone um TikTok que funcionou."
+#~ msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
+#~ msgstr "Nenhum post ainda. Gere um plano e rascunhe posts do painel, ou clone um TikTok que funcionou."
 
 #: src/app/(app)/content/page.jsx
 #~ msgid "No posts yet. Generate a plan and draft posts from the board."
 #~ msgstr "Nenhum post ainda. Gere um plano e rascunhe posts do quadro."
+
+#: src/app/(app)/content/page.jsx
+msgid "No posts yet. Write one for TikTok, LinkedIn or X, draft them from a plan, or clone a TikTok that worked."
+msgstr "Ainda não há posts. Escreva um para TikTok, LinkedIn ou X, crie rascunhos a partir de um plano ou clone um TikTok que funcionou."
 
 #: src/components/content/PostCard.jsx
 msgid "No preview yet"
@@ -4937,6 +5137,10 @@ msgstr "Tipos de operação a bloquear, separados por vírgulas (opcional)"
 msgid "Open"
 msgstr "Abrir"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Open {vendor}"
+msgstr "Abrir o {vendor}"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Open <0>Settings → Models & providers → OpenAI</0> and choose <1>Continue with ChatGPT</1>."
 msgstr "Abra <0>Configurações → Modelos e provedores → OpenAI</0> e escolha <1>Continuar com ChatGPT</1>."
@@ -4977,6 +5181,10 @@ msgstr "Abrir painel de planejamento →"
 #: src/components/content/AnalyticsView.jsx
 msgid "Open post"
 msgstr "Abrir post"
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Open PostBridge"
+#~ msgstr "Abrir o PostBridge"
 
 #: src/components/commands/CommandPaletteTrigger.jsx
 msgid "Open the command palette"
@@ -5189,6 +5397,10 @@ msgstr "Cole um post que funcionou. O Duct lê por que funcionou, então rascunh
 msgid "Paste the link to one TikTok post."
 msgstr "Cole o link de um post do TikTok."
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Paste your API key"
+msgstr "Cole sua chave de API"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr "Cole sua chave"
@@ -5248,6 +5460,10 @@ msgstr "Continue de onde parou"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Pick what you’d like done. We’ll scope it and follow up."
 msgstr "Escolha o que você gostaria que fosse feito. Vamos definir o escopo e fazer o acompanhamento."
+
+#: src/components/content/PostViewport.jsx
+msgid "Picking the angle…"
+msgstr "Escolhendo o ângulo…"
 
 #: src/components/content/PostViewport.jsx
 msgid "Picking the hook…"
@@ -5314,6 +5530,7 @@ msgid "Português"
 msgstr "Português"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr "Post"
 
@@ -5336,6 +5553,10 @@ msgstr "Post publicado"
 #: src/components/content/PublishModal.jsx
 msgid "Post scheduled"
 msgstr "Post agendado"
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "PostBridge API key"
+#~ msgstr "Chave de API do PostBridge"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"
@@ -5549,6 +5770,14 @@ msgstr "Publicado em {publishedOn}"
 msgid "Published the post"
 msgstr "Publicou o post"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Publishes as the post's first reply."
+msgstr "Publicada como a primeira resposta do post."
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Publishing isn't set up yet"
+#~ msgstr "A publicação ainda não está configurada"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Putting it together"
 msgstr "Montando"
@@ -5653,6 +5882,10 @@ msgstr "Lendo o resto do site…"
 msgid "Reading the TikTok"
 msgstr "Lendo o TikTok"
 
+#: src/components/content/PostViewport.jsx
+msgid "Reading what you've already said…"
+msgstr "Lendo o que você já disse…"
+
 #: src/app/(start)/start/page.jsx
 msgid "Reading…"
 msgstr "Lendo…"
@@ -5746,6 +5979,10 @@ msgstr "Redirecionamentos"
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Refresh"
 msgstr "Atualizar"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Refresh from GitHub"
+msgstr "Atualizar do GitHub"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Refresh from PostBridge"
@@ -5847,6 +6084,10 @@ msgstr "Remover {removalTarget}?"
 msgid "Remove key"
 msgstr "Remover chave"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Remove reply {n}"
+msgstr "Remover a resposta {n}"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Remove this pillar"
 msgstr "Remover este pilar"
@@ -5866,6 +6107,14 @@ msgstr "Renderizando diagrama..."
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
 msgstr "Hashtags repetidas: {at}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Reply {n}"
+msgstr "Resposta {n}"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "reply {r}"
+msgstr "a resposta {r}"
 
 #: src/components/audit/AuditWorkspace.jsx
 #: src/components/insights/desk/DeskLists.jsx
@@ -6374,6 +6623,10 @@ msgstr "Falha ao carregar a verificação de segurança. Atualize e tente novame
 msgid "Security verification"
 msgstr "Verificação de segurança"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "see more"
+msgstr "ver mais"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "See what we’d do"
 msgstr "Veja o que faríamos"
@@ -6674,6 +6927,14 @@ msgstr "Entre como <0>{invitedEmail}</0> para aceitar. Criaremos sua conta se vo
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Sign in first — credentials are stored encrypted server-side."
 msgstr "Entre primeiro — as credenciais são armazenadas criptografadas no servidor."
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Sign in first — the connection is saved to your account."
+msgstr "Entre primeiro — a conexão fica salva na sua conta."
+
+#: src/app/(app)/connections/page.jsx
+msgid "Sign in to finish connecting GitHub."
+msgstr "Entre para concluir a conexão com o GitHub."
 
 #: src/components/AppSidebar.jsx
 msgid "Sign in to keep this"
@@ -6985,6 +7246,10 @@ msgstr "Parado"
 msgid "Stopped — pick up where it left off"
 msgstr "Parado — continue de onde parou"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Stored encrypted, and used only for projects you own."
+msgstr "Armazenada com criptografia e usada só nos projetos que são seus."
+
 #: src/components/connections/ProviderCard.jsx
 msgid "stored for this provider"
 msgstr "armazenado para este provedor"
@@ -7148,6 +7413,10 @@ msgstr "Diga-nos quem você é e o que faz. Isso serve de base para cada auditor
 msgid "Testing"
 msgstr "Testando"
 
+#: src/lib/contentEnums.js
+msgid "Text"
+msgstr "Texto"
+
 #: src/components/content/StyleGallery.jsx
 msgid "Text cards"
 msgstr "Cartões de texto"
@@ -7164,6 +7433,14 @@ msgstr "Essa conexão voltou incompleta — por favor, tente novamente."
 msgid "That connection didn't finish — the link expires after a minute. Please try again."
 msgstr "Essa conexão não foi concluída — o link expira após um minuto. Por favor, tente novamente."
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "That didn't connect. Check the key and try again."
+msgstr "Não deu para conectar. Confira a chave e tente de novo."
+
+#: src/components/content/AccountsTab.jsx
+msgid "That didn't disconnect. Try again."
+msgstr "Não deu para desconectar. Tente de novo."
+
 #: src/components/content/AccountsTab.jsx
 msgid "That didn't save — your selection has been put back. Try again."
 msgstr "Isso não foi salvo — sua seleção foi restaurada. Tente novamente."
@@ -7179,6 +7456,10 @@ msgstr "Isso não parece um link."
 #: src/components/content/FormatLibrary.jsx
 msgid "That format could not be deleted — it is still in the library."
 msgstr "Esse formato não pôde ser excluído — ele ainda está na biblioteca."
+
+#: src/app/(app)/connections/page.jsx
+msgid "That GitHub connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again."
+msgstr "Essa conexão com o GitHub não foi concluída. O link vale por dois minutos e só funciona para a conta que a iniciou. Conecte de novo."
 
 #: src/app/(app)/execute/page.jsx
 msgid "That guardrail is still in place — removing it didn't go through."
@@ -7276,6 +7557,10 @@ msgstr "a fila de execução"
 msgid "The fact in one line — with its number or date if it has one."
 msgstr "O fato em uma linha — com seu número ou data, se tiver."
 
+#: src/components/content/TextPostEditor.jsx
+msgid "The first line is the hook."
+msgstr "A primeira linha é o gancho."
+
 #: src/components/content/FormatLibrary.jsx
 msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
 msgstr "A receita completa — estrutura do slide, regras de prompt de imagem, modos de falha. Tabelas GFM suportadas."
@@ -7299,6 +7584,14 @@ msgstr "O pipeline terminou inesperadamente. Seu relatório parcial ainda está 
 #: src/components/audit/AuditReport.jsx
 msgid "The pipeline stopped early — your partial results are still visible above."
 msgstr "O pipeline parou antes do tempo — seus resultados parciais ainda estão visíveis acima."
+
+#: src/components/content/PublishModal.jsx
+msgid "The post and its first reply go out together."
+msgstr "O post e a primeira resposta saem juntos."
+
+#: src/components/content/PostViewport.jsx
+msgid "The post appears here as soon as the draft is ready, with its character count."
+msgstr "O post aparece aqui assim que o rascunho estiver pronto, com a contagem de caracteres."
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "The post changed after this score."
@@ -7331,6 +7624,10 @@ msgstr "O site respondeu <0>{httpStatus}</0> ao nosso rastreador, então esta au
 #: src/components/content/StyleGallery.jsx
 msgid "the slide styles"
 msgstr "os estilos de slide"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "The source, the link, or the why."
+msgstr "A fonte, o link ou o porquê."
 
 #: src/app/(app)/connections/page.jsx
 msgid "The token IS the project. Clarity allows 10 API requests per project per day; verifying spends 1 and each Duct pull spends 2."
@@ -7492,6 +7789,14 @@ msgstr "este projeto"
 msgid "This project"
 msgstr "Este projeto"
 
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "This project posts through its owner's PostBridge account. Ask them to connect it here, and the accounts will show up for you too."
+#~ msgstr "Este projeto publica pela conta do PostBridge da pessoa proprietária. Peça a ela para conectar aqui, e as contas vão aparecer para você também."
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."
+msgstr "Este projeto usa a conta do {vendor} da pessoa proprietária. Peça a ela para conectar aqui, e vai funcionar para você também."
+
 #: src/app/(app)/activity/page.jsx
 msgid "this project's activity"
 msgstr "atividade deste projeto"
@@ -7642,6 +7947,10 @@ msgstr "Tentar novamente não vai ajudar — esta versão foi lançada sem as cr
 msgid "Trying again won't help — this build shipped without that connector's credentials."
 msgstr "Tentar novamente não vai ajudar — esta versão foi lançada sem as credenciais desse conector."
 
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Trying again won't help. Connect GitHub with a fine-grained token from the GitHub card instead."
+msgstr "Tentar novamente não vai resolver. Conecte o GitHub com um token fine-grained pelo card do GitHub."
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Turn off to audit a different business or competitor — only the fields below are used."
 msgstr "Desative para auditar um negócio ou concorrente diferente — apenas os campos abaixo são usados."
@@ -7749,6 +8058,14 @@ msgstr "Uso"
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Use {projectName}'s business context"
 msgstr "Usar o contexto de negócios de {projectName}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Use a different PostBridge key"
+msgstr "Usar outra chave do PostBridge"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Use a token instead"
+msgstr "Usar um token"
 
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"
@@ -8055,6 +8372,10 @@ msgstr "Sobre o que é meu site, de fato?"
 msgid "What should Duct call you?"
 msgstr "Como o Duct deve te chamar?"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "What the {label} feed shows before “see more”"
+msgstr "O que o feed do {label} mostra antes do “ver mais”"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What was observed, why it matters, how to apply it."
 msgstr "O que foi observado, por que é importante, como aplicar."
@@ -8229,6 +8550,10 @@ msgstr "Escrevendo texto do slide"
 msgid "Writing the caption…"
 msgstr "Escrevendo a legenda…"
 
+#: src/components/content/PostViewport.jsx
+msgid "Writing the hook…"
+msgstr "Escrevendo o gancho…"
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Writing your report…"
@@ -8267,8 +8592,12 @@ msgid "You can close this tab."
 msgstr "Você pode fechar esta aba."
 
 #: src/components/content/PublishModal.jsx
-msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
-msgstr "Você ainda não tem nenhuma conta social conectada. Peça ao seu administrador para conectar uma conta TikTok / Instagram / YouTube."
+#~ msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
+#~ msgstr "Você ainda não tem nenhuma conta social conectada. Peça ao seu administrador para conectar uma conta TikTok / Instagram / YouTube."
+
+#: src/components/content/PublishModal.jsx
+msgid "You don't have any social accounts connected yet. Connect the account you want to post from in the Accounts tab."
+msgstr "Você ainda não tem contas sociais conectadas. Conecte a conta de onde quer publicar na aba Contas."
 
 #: src/app/(start)/start/page.jsx
 msgid "You have more than one project for this site. Which should this audit update?"

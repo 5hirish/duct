@@ -12,12 +12,14 @@ Next.js App Router report viewer and agent interface.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
 - **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
   Sentry is **not** behind the consent gate, so the client's `dataCollection` block (`instrumentation-client.ts`) is Sentry 10's restrictive baseline written out — no IP, no bodies. Since Sentry 11 an unset `dataCollection` collects every category, so removing that block is a privacy change, not a tidy-up. Streamed spans pass through neither `beforeSend` nor scope tags: a header that must never leave goes in `dataCollection.httpHeaders` (as `sentry.server.config.ts` does for `X-Provider-*`), and a tag performance data is split by is also set with `Sentry.setAttribute`.
+- **Overrides:** `package.json` forces `lodash-es` to ^4.18.1. `mermaid` 12.0.0 depends on `chevrotain` 11.1.2, which pins `lodash-es` 4.17.23 exactly, and that version carries a high advisory (code injection via `_.template`) and a moderate one (prototype pollution in `_.unset`/`_.omit`). Delete the override once `mermaid` moves to `chevrotain` 12 or later, which no longer uses lodash.
 
 ## Deployment
 
 - **Host:** Cloudflare Workers via `@opennextjs/cloudflare` adapter + wrangler CLI.
 - `npm run deploy:cf` → OpenNext build + `wrangler deploy` (do not run directly — all deploys go through CI/CD on merge to main).
 - **CI/CD:** GitHub Actions (`app.yml`) — lint, typecheck, `next build` on every PR; on push to `main` the `deploy` job runs `opennextjs-cloudflare build` + `wrangler deploy`. (Replaced the Cloudflare "Workers Builds" git integration, which failed on its Node 20 builder — wrangler@4.99 needs ≥22.)
+- **Security headers** are `SECURITY_HEADERS` in `next.config.mjs`, applied by OpenNext's routing layer to every response the worker renders. `/_next/static` and `public/` never reach the worker, so their `nosniff` is in `public/_headers`. The CSP has no `script-src` yet: a strict one needs a per-request nonce from middleware, which makes every page dynamic, and is its own change. Every `srcDoc` iframe (briefs, the audit report, slides) inherits the policy, so a directive added there also governs model-authored HTML. Dev allows same-origin framing only because `/preview` frames `/preview/frame`.
 
 ## Route structure
 
@@ -234,7 +236,6 @@ it is a claim about the code, not a way to quiet the check.
   server: the per-run dials the composer writes (`thinking`, `tier`,
   `preferred_artifact_format`, `context_compression`), plus the three fields an agent request still carries
   for signed-out runs, mirrored from the profile rather than edited here
-- `lib/analytics-client.js` — how to load GTM and push events (never whether)
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
 - `lib/analytics/` — the seam. `index.js` selects a provider from
   `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `gtm` when a container is
@@ -413,8 +414,10 @@ places and nowhere else:
   by `interrupt_id`, and the per-tab reload handle (`lib/agentSessionHandle.js`)
   that lets a reloaded tab reattach instead of re-running the prompt. Its
   `onHydrate` hands a workspace the stored rows verbatim, for a pane the
-  transcript does not cover — insights rebuilds its Data pane from the tool
-  traffic with `lib/insightsHistory.js` rather than fetching the thread twice.
+  transcript does not cover. No workspace needs it today: insights derives its
+  Data pane from the transcript's own activity rows (`dataSourceRollup` in
+  `lib/toolActivity.js`), so a reload rebuilds it without fetching the thread
+  twice.
 
 A workspace composes `useAgentSession` + `workspace/AgentChat` +
 `workspace/SplitWorkspace` and keeps only what its agent owns: the right pane,
@@ -784,7 +787,14 @@ npm run i18n:extract                 # catalogues pick up the new/changed string
 python3 ../scripts/i18n/fill.py      # translates only what is missing (needs a key,
                                      # or --provider manual to hand the entries to an agent)
 npm run check:i18n                   # stale? missing? literal outside Lingui? → red
+python3 ../scripts/i18n/fill.py --check src/locales/*/messages.po   # a brand name translated? → red
 ```
+
+Product and brand names (Duct, Content Studio, every connector and vendor)
+stay in English in every language: they are `keep` in
+`scripts/i18n/glossary.json`, `fill.py` rejects a translation that drops one,
+and the `--check` above fails CI on one already in a catalogue. A new product
+name in the UI goes into `keep` in the same change.
 
 Staleness is `lingui check sync`: it compares each catalogue with what
 extract would write, **byte for byte**, and writes nothing. Two consequences:

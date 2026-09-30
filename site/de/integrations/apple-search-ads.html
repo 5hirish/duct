@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Apple Search Ads KI-Analyst: Installs zu Abonnenten | Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/integrations/apple-search-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/apple-search-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/apple-search-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/apple-search-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/apple-search-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/apple-search-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/apple-search-ads"/>
+<meta property="og:locale" content="de_DE"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct liest Apple Search Ads Kampagnenberichte, zugeschnitten auf die Kampagnen deiner App, und prüft die Installs gegen RevenueCat und Stripe. Nur-Lesezugriff, Schlüsselpaar."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/integrations/apple-search-ads"/>
+<meta property="og:title" content="Apple Search Ads KI-Analyst: Installs zu Abonnenten"/>
+<meta property="og:description" content="Apple berichtet Installs, nie Abonnenten. Duct liest Apple Search Ads neben RevenueCat und sagt, welche Kampagnen zahlende Personen bringen."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-apple-search-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Apple Search Ads KI-Analyst: Installs zu Abonnenten"/>
+<meta name="twitter:description" content="Installs sind Apples Zahl. Abonnenten sind deine. Duct liest beide."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-apple-search-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"Apple Search Ads KI-Analyst: Installs zu Abonnenten","url":"https://getduct.ai/de/integrations/apple-search-ads","description":"Duct liest Apple Search Ads Kampagnenberichte, zugeschnitten auf die Kampagnen deiner App, und prüft die Installs gegen RevenueCat und Stripe. Nur-Lesezugriff, Schlüsselpaar.","about":{"@type":"SoftwareApplication","name":"Apple Search Ads"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"de","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https://getduct.ai/de/"},{"@type":"ListItem","position":2,"name":"Integrationen","item":"https://getduct.ai/de/integrations/"},{"@type":"ListItem","position":3,"name":"Apple Search Ads","item":"https://getduct.ai/de/integrations/apple-search-ads"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Kann Duct Gebote oder Budgets in Apple Search Ads ändern?","acceptedAnswer":{"@type":"Answer","text":"Nein. Duct hat keine Apple Search Ads Änderungsoperation. Es liest Kampagnen und deren Berichte und kann dir eine Änderung empfehlen, die du in Apples Konsole vornehmen kannst."}},{"@type":"Question","name":"Warum braucht Duct RevenueCat oder Stripe für Apple?","acceptedAnswer":{"@type":"Answer","text":"Weil Apple beim Install aufhört. Ob diese Installs eine Testversion gestartet oder bezahlt haben, steht in deiner Abrechnung, also liest Duct sie neben Apple, bevor es eine Kampagne als gut oder schlecht bezeichnet."}},{"@type":"Question","name":"Unsere Apple Ads Organisation betreibt mehr als eine App. Werden sich die Zahlen mischen?","acceptedAnswer":{"@type":"Answer","text":"Nein. Duct konditioniert jeden Bericht auf die Kampagnen, die es für dich auflistet, damit die Ausgaben einer anderen App niemals diese Gesamtsummen erreichen."}},{"@type":"Question","name":"Ist es kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. Was Geld kosten wird."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026), so this page is for the app marketer who reached Duct another way. Hypothesis: showing installs joined to subscribers converts better than a feature list. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/de/integrations/">Integrationen</a><span aria-hidden="true">/</span><span aria-current="page">Apple Search Ads</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/apple-search-ads.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Apple Search Ads, <em>über den Install hinaus.</em></h1>
+<p class="hero-sub">Apple berichtet Installs und hört dort auf. Duct liest deine Kampagnen neben RevenueCat und Stripe und sagt, welche Abonnenten bringen, nicht nur Downloads.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="/de/integrations/">Alle Integrationen</a>
+</div>
+<ul class="ig-facts" aria-label="Auf einen Blick"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>API-Schlüsselpaar</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Liest drei Datensätze</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schreibgeschützt</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Geprüft 29. Sep 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/apple-search-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/revenuecat.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 100 30" width="100" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 50 14 50 30"/><path pathLength="1" d="M85 0C85 16 50 14 50 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 50 14 50 30"/><path d="M85 0C85 16 50 14 50 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Discoverys Installs verdoppelten sich nach der Gebotserhöhung. Aktive Testversionen in RevenueCat bewegten sich nicht.</span></div>
+</div>
+<figcaption>Eine Beispielantwort. Deine wird aus deinen eigenen Konten gelesen.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-apple-search-ads.webp" srcset="/assets/media/session-apple-search-ads-768.webp 768w, /assets/media/session-apple-search-ads-1536.webp 1536w, /assets/media/session-apple-search-ads.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Eine Duct-Sitzung: Auf die Frage, ob sich eine Gebotserhöhung ausgezahlt hat, liest Duct Solos Apple Search Ads Kampagnen Tag für Tag neben RevenueCat und stellt fest, dass sich die Installs verdoppelten, während die Testversionen sich nicht bewegten."/>
+<figcaption>Frage, ob sich die Gebotserhöhung ausgezahlt hat. Apple berichtet Installs, also prüft Duct sie gegen RevenueCat-Testversionen, zugeschnitten auf die Kampagnen deiner App.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Fragen</p>
+<h2>Fragen, die du <em>einfach stellen kannst</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Hat die Gebotserhöhung Abonnenten gekauft, oder nur Installs?</p><span class="ig-q-joins"><img src="/assets/icons/apple-search-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><span>Apple Search Ads + RevenueCat</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Welche Kampagnen sollten das Budget des nächsten Monats erhalten?</p><span class="ig-q-joins"><img src="/assets/icons/apple-search-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><span>Apple Search Ads + RevenueCat</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Was kostet eine Installation diesen Monat im Vergleich zum letzten?</p><span class="ig-q-joins"><img src="/assets/icons/apple-search-ads.svg" width="18" height="18" alt=""/><span>Apple Search Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Wie viele Installs kamen von einem Tap und wie viele von einer Ansicht?</p><span class="ig-q-joins"><img src="/assets/icons/apple-search-ads.svg" width="18" height="18" alt=""/><span>Apple Search Ads</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Zugriff</p>
+<h2>Was es liest. <em>Was es ändern kann.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Was es liest</h3>
+<ul class="ig-reads">
+<li><b>Kampagnen</b><span class="ig-fields"><span>Name</span><span>Status</span></span></li>
+<li><b>Kampagnenbericht, dieser und der letzten Periode</b><span class="ig-fields"><span>Impressionen</span><span>Taps</span><span>Tap-through Installs</span><span>Gesamte Installs</span><span>Ausgaben</span><span>Durchschnittliche Kosten pro Tap</span></span></li>
+<li><b>Täglicher Kampagnenbericht</b><span class="ig-fields"><span>Impressionen</span><span>Taps</span><span>Installs</span><span>Ausgaben</span></span></li>
+</ul>
+<p class="ig-note">Apple Search Ads Campaign Management API v5 · geprüft gegen den Fetch-Code 29. Sep 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/apple/ads/fetch.py" rel="noopener">Quellcode lesen</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Was es ändern kann</h3>
+<p class="ig-readonly-big">Nichts.</p>
+<p>Duct hat keine Apple Search Ads Änderungsoperation, daher kann es nichts in Apple Search Ads bearbeiten. Es kann dir aber eine Änderung empfehlen, die du dort vornehmen kannst.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Wissen</p>
+<h2>Was Duct bereits <em>über Apple Search Ads</em> weiß</h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Apple zählt Installs, nie Geld.</h3><p>Es gibt keine Umsatz- oder Abonnentenmetrik in Apple Search Ads. Duct bewertet eine Kampagne anhand von RevenueCat oder Stripe, nicht anhand ihrer Installationen.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Berichte decken die gesamte Organisation ab.</h3><p>Apples Kampagnenberichte mischen jede App in der Organisation. Duct filtert sie zuerst auf deine Kampagnen, damit die Ausgaben einer anderen App deine Gesamtsummen nicht erreichen können.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Installs wurden umbenannt.</h3><p>Version 5 der API teilte Installationen in Tap-Through und Gesamt auf, was View-Through einschließt. Das alte Feld liest sich als Null, daher liest Duct beide neuen.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Geld kommt als Text an.</h3><p>Apple gibt jeden Betrag als String mit seiner Währung zurück. Duct parst jeden, bevor es etwas addiert.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/apple_ads.md" rel="noopener">Lies die Apple Search Ads Notizen, von denen Ducts Agent arbeitet <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Gemeinsam besser</p>
+<h2>Was Apple Search Ads <em>mit einem Partner</em> beantwortet</h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/de/integrations/revenuecat"><span class="ig-pair-logos"><img src="/assets/icons/apple-search-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/revenuecat.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Installs rein, Abonnenten raus.</span><span class="ig-pair-go">Apple Search Ads + RevenueCat <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/de/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/apple-search-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Welche Kampagnen bringen zahlende Kunden?</span><span class="ig-pair-go">Apple Search Ads + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/de/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/apple-search-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Ein Suchbudget, aufgeteilt zwischen Google und Apple.</span><span class="ig-pair-go">Apple Search Ads + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Einrichtung</p>
+<h2>Verbinde Apple Search Ads <em>in drei Schritten</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>Generiere ein EC P-256 Schlüsselpaar und lade den öffentlichen Schlüssel in Apple Search Ads unter Kontoeinstellungen, dann API hoch.</p></li>
+<li><span class="ig-step-n">2</span><p>Notiere die Client-ID, Team-ID und Schlüssel-ID, die Apple dafür anzeigt.</p></li>
+<li><span class="ig-step-n">3</span><p>Öffne in Duct Verbindungen, wähle Apple Search Ads und füge die drei IDs und den privaten Schlüssel ein.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Schreibgeschützt: Duct hat keinen Apple Search Ads Änderungsvorgang und gib dem API-Nutzer eine schreibgeschützte Rolle, damit der Schlüssel keine Kampagne ändern kann.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schlüssel und Tokens werden verschlüsselt von Ducts gehosteter API gespeichert, niemals in deinem Browser, und du kannst eine Verbindung jederzeit entfernen. Ein Self-Host-Build speichert sie auf deiner eigenen Maschine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Apple Search Ads, <em>beantwortet</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Kann Duct Gebote oder Budgets in Apple Search Ads ändern?</summary>
+<p class="faq-a">Nein. Duct hat keine Apple Search Ads Änderungsoperation. Es liest Kampagnen und deren Berichte und kann dir eine Änderung empfehlen, die du in Apples Konsole vornehmen kannst.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Warum braucht Duct RevenueCat oder Stripe für Apple?</summary>
+<p class="faq-a">Weil Apple beim Install aufhört. Ob diese Installs eine Testversion gestartet oder bezahlt haben, steht in deiner Abrechnung, also liest Duct sie neben Apple, bevor es eine Kampagne als gut oder schlecht bezeichnet.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Unsere Apple Ads Organisation betreibt mehr als eine App. Werden sich die Zahlen mischen?</summary>
+<p class="faq-a">Nein. Duct konditioniert jeden Bericht auf die Kampagnen, die es für dich auflistet, damit die Ausgaben einer anderen App niemals diese Gesamtsummen erreichen.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ist es kostenlos?</summary>
+<p class="faq-a">Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. <a href="/de/open-source#pricing">Was Geld kosten wird</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/de/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

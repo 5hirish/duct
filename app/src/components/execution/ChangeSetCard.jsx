@@ -37,6 +37,7 @@ import {
   rollbackChangeSet,
 } from "@/lib/executionApi";
 import { relativeTime, titleCase } from "@/lib/format";
+import { CONNECTOR_NAMES } from "@/components/connections/logos";
 
 /**
  * The per-change mark. Four states, four lucide glyphs — it was ✓ ✕ ↺ •, which
@@ -159,7 +160,11 @@ export default function ChangeSetCard({ changeSet: initial }) {
       : cs.applied_by === "user"
         ? { icon: UserCheck, text: t`You approved this`, at: cs.applied_at || cs.approved_at }
         : null;
-  const where = [cs.connector_type ? titleCase(cs.connector_type) : "", cs.account_name || cs.account_id]
+  // The product's own name where there is one: titleCase made "gtm" into "Gtm".
+  const connectorName = CONNECTOR_NAMES[cs.connector_type]
+    ? i18n._(CONNECTOR_NAMES[cs.connector_type])
+    : cs.connector_type ? titleCase(cs.connector_type) : "";
+  const where = [connectorName, cs.account_name || cs.account_id]
     .filter(Boolean)
     .join(" · ");
 
@@ -264,7 +269,7 @@ export default function ChangeSetCard({ changeSet: initial }) {
                 <Plural value={blocked} one="# needs a person" other="# need a person" />
               </Trans>
             ) : canReview && changes.some((c) => c.destructive) ? (
-              <Trans>Includes a pause. It can be rolled back from here.</Trans>
+              <Trans>Includes a change that always waits for you. It can be rolled back from here.</Trans>
             ) : (
               ""
             )}

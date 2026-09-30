@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CopyPlus } from "lucide-react";
+import { ChevronDown, CopyPlus, Plus } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,14 @@ import StyleGallery from "@/components/content/StyleGallery";
 import PostCard from "@/components/content/PostCard";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import PlanBoard from "@/components/content/PlanBoard";
+import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DRAFT_CHANNELS } from "@/lib/contentEnums";
 
 const TABS = ["plan", "posts", "analytics", "discover", "library", "brand", "accounts"];
 
@@ -201,8 +209,29 @@ function PostsTab({ projectId }) {
   const [filter, setFilter] = useState("all");
   const [cloneOpen, setCloneOpen] = useState(false);
 
-  // The one way into a post that no plan asked for: model it on a TikTok
-  // that already worked (issue #222). The workspace does the rest.
+  // The two ways into a post no plan asked for: write one for a channel the
+  // agent has a playbook for, or model one on a TikTok that already worked
+  // (issue #222). The workspace does the rest.
+  const newPostMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm">
+          <Plus aria-hidden="true" /> <Trans>New post</Trans> <ChevronDown aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {DRAFT_CHANNELS.map(({ id }) => (
+          <DropdownMenuItem
+            key={id}
+            onClick={() => router.push(`/content/posts/new?${new URLSearchParams({ channel: id })}`)}
+          >
+            <PlatformGlyph platform={id} className="size-4" />
+            <span>{platformMeta(id).label}</span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
   const cloneButton = (
     <Button size="sm" variant="outline" onClick={() => setCloneOpen(true)}>
       <CopyPlus aria-hidden="true" /> <Trans>Clone a TikTok</Trans>
@@ -260,9 +289,10 @@ function PostsTab({ projectId }) {
   if (posts.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border/70 p-10 text-center">
-        <p className="mb-3 text-sm text-muted-foreground"><Trans>No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked.</Trans></p>
+        <p className="mb-3 text-sm text-muted-foreground"><Trans>No posts yet. Write one for TikTok, LinkedIn or X, draft them from a plan, or clone a TikTok that worked.</Trans></p>
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <Button asChild><Link href="/content/plan"><Trans>Open plan board →</Trans></Link></Button>
+          {newPostMenu}
+          <Button asChild variant="outline" size="sm"><Link href="/content/plan"><Trans>Open plan board →</Trans></Link></Button>
           {cloneButton}
         </div>
         {cloneDialog}
@@ -274,7 +304,7 @@ function PostsTab({ projectId }) {
     <div className="space-y-4">
       {cloneDialog}
       <div className="flex flex-wrap items-center gap-1.5">
-        <div className="order-last ml-auto">{cloneButton}</div>
+        <div className="order-last ml-auto flex items-center gap-2">{cloneButton}{newPostMenu}</div>
         {POST_FILTERS.map((f) => {
           const n = counts[f] || 0;
           if (f !== "all" && n === 0) return null;

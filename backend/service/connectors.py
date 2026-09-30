@@ -42,6 +42,13 @@ class ConnectorMeta:
     #: connector with nothing to pick never shows the picker at all.
     entity_noun: str = "account"
     entity_noun_plural: str = "accounts"
+    #: Credential keys only Duct itself may write. A connector whose server
+    #: holds signing authority — the GitHub App's private key mints a token
+    #: for any installation id it is handed — stores the grant it verified
+    #: under one of these, and a browser that could write the same key could
+    #: name someone else's grant. Every route that accepts credentials from a
+    #: request refuses them (:func:`server_only_keys_in`).
+    server_only_keys: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -125,6 +132,7 @@ _ADAPTER_MODULES: tuple[str, ...] = (
     "service.mixpanel.fetch",
     "service.clarity.fetch",
     "service.growthbook.fetch",
+    "service.github.fetch",
 )
 
 _loaded = False
@@ -164,6 +172,17 @@ def get_connector(connector_id: str) -> tuple[ConnectorMeta, ConnectorAdapter]:
     """Return metadata and adapter, or raise KeyError if unknown."""
     load_connectors()
     return CONNECTOR_REGISTRY[connector_id]
+
+
+def server_only_keys_in(connector_id: str, credentials: Mapping[str, Any]) -> list[str]:
+    """Keys in a request's ``credentials`` that only Duct may write, sorted.
+
+    Empty for an unknown connector: the caller's own allow-list refuses those.
+    """
+    entry = registry().get(connector_id)
+    if entry is None:
+        return []
+    return sorted(entry[0].server_only_keys & set(credentials or {}))
 
 
 def normalize_connector_id(connector_id: str) -> str:

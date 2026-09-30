@@ -254,6 +254,19 @@ def render_content() -> str:
             f"System prompt · mode={mode} · ~{approx_tokens(system):,} tokens",
             fenced(system),
         ))
+    # A draft for a text channel runs on its own base (agents/content/text_prompts.py).
+    from agents.content.channels import TEXT_PLAYBOOKS, resolve
+    for playbook in sorted(TEXT_PLAYBOOKS):
+        system = build_orchestrator_system_prompt(
+            ContentBrandContext(project_id="00000000-0000-0000-0000-000000000000"),
+            "draft_post",
+            channel=resolve(playbook),
+            vision=True,
+        )
+        out.append(section(
+            f"System prompt · mode=draft_post · channel={playbook} · ~{approx_tokens(system):,} tokens",
+            fenced(system),
+        ))
     out.append(render_content_clone())
     return "\n".join(out)
 

@@ -49,9 +49,13 @@ export function metricsOf(perf) {
   return Object.fromEntries(METRIC_NAMES.map((name) => [name, metricValue(perf, name)]));
 }
 
-/** PostBridge published it, so its counts sync. */
+/** PostBridge published it and reports its platform, so its counts sync.
+ *  PostBridge reports TikTok, YouTube, Instagram and Facebook only
+ *  (`post.channel.synced_metrics`, from the backend's channel rules); an X or
+ *  LinkedIn post it published still has every number typed in. A post from a
+ *  backend that predates the channel rules keeps the old answer. */
 export function isSyncedPost(post) {
-  return Boolean(post?.post_bridge_post_id);
+  return Boolean(post?.post_bridge_post_id) && post?.channel?.synced_metrics !== false;
 }
 
 /** The metrics a person may type in on this post. */

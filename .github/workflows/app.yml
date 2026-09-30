@@ -19,6 +19,7 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/app.yml'
+      - 'scripts/i18n/**'
   push:
     branches:
       - main
@@ -76,6 +77,11 @@ jobs:
       # literal written outside Lingui, so the full gate runs by name here.
       - name: Interface language (catalogues current, complete, nothing outside Lingui)
         run: npm run check:i18n
+
+      # Brand and product names stay in English in every language, and the
+      # glossary (scripts/i18n/glossary.json) is the list. Lingui cannot see it.
+      - name: Interface language (translations keep the glossary's brand terms)
+        run: python3 ../scripts/i18n/fill.py --check src/locales/*/messages.po
 
       # The session reducer replayed against recorded agent streams — the
       # lifecycle every workspace runs on, checked without a browser.

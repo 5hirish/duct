@@ -6,7 +6,7 @@
 // Every scenario returns what to capture: a locator, `{ element, radius }`
 // for a floating surface, or nothing for the whole viewport. Add an image by
 // adding an entry; the runner does the rest.
-import { ANSWERS, AUDIT_REPORT_HTML, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import { ANSWERS, AUDIT_REPORT_HTML, CONNECTOR_SESSIONS, PLAN, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 // Every window shot is taken with the app's sidebar closed: the page is the
 // product, and at a third of its size the sidebar is a column of grey text
@@ -43,9 +43,15 @@ export const SCENARIOS = [
   // The same workspace asked from the product side and the paid side: a
   // question, one clarifying answer, the brief on the right, the change set
   // below. Same shape as the signups session, different week's worth of copy.
+  // The connector pages on the site get one each, from CONNECTOR_SESSIONS;
+  // only the ones where Duct can act on the tool wait for a change set.
   ...[
     { id: "product-session", q: ANSWERS.product.question, answer: /^Connect bank/, brief: "Android activation halved", proposed: "Track the permission dead end", last: "ask for the permission after the first budget" },
     { id: "paid-session", q: ANSWERS.paid.question, answer: /^The €12 CPA/, brief: "Performance Max buys signups", proposed: "Pause Performance Max, keep brand search", last: "The Legacy brand campaign stays untouched" },
+    ...CONNECTOR_SESSIONS.map((c) => ({
+      id: c.shot, q: c.question, answer: new RegExp(`^${c.ask.pick.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
+      brief: c.brief.h1, proposed: c.change_set?.title, last: c.close.slice(0, 48),
+    })),
   ].map((s) => ({
     id: s.id,
     kind: "page",
@@ -58,10 +64,10 @@ export const SCENARIOS = [
       await page.getByRole("button", { name: s.answer }).waitFor({ timeout: 60000 });
       await page.getByRole("button", { name: s.answer }).click();
       await page.getByRole("button", { name: /Continue/ }).click();
-      await page.getByText(s.proposed).waitFor({ timeout: 60000 });
+      await page.getByText(s.proposed || s.last).first().waitFor({ timeout: 60000 });
       await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 30000 });
       await page.frameLocator("iframe[title]").getByText(s.brief).waitFor({ timeout: 30000 });
-      await page.getByText(s.last).scrollIntoViewIfNeeded();
+      await page.getByText(s.last).first().scrollIntoViewIfNeeded();
       await page.waitForTimeout(600);
       return null;
     },

@@ -27,7 +27,7 @@ from service.oauthstate import (
     consume_state_full,
     save_state,
 )
-from service.ratelimit import RateLimit
+from service.ratelimit import RateLimit, client_address
 from service.signin_sources import bundle_scopes, is_bundle, store_granted_sources
 from service.turnstile import verify_turnstile
 from service.user_store import get_or_create_guest, is_guest_user, upsert_google_user
@@ -163,14 +163,9 @@ def create_guest(body: GuestRequest, request: Request) -> dict:
     the project they drafted is still theirs. See ``service/user_store.py``
     for why a guest is a real user row rather than a nullable owner.
     """
-    client_ip = request.client.host if request.client else "unknown"
-    allowed, retry_after = _GUEST_LIMIT.allow(client_ip)
-    if not allowed:
-        raise HTTPException(
-            status_code=429,
-            detail="Too many new sessions from this address. Try again in a minute.",
-            headers={"Retry-After": str(int(retry_after) + 1)},
-        )
+    _GUEST_LIMIT.enforce(
+        client_address(request), "Too many new sessions from this address. Try again in a minute."
+    )
     try:
         guest = get_or_create_guest(body.install_id)
     except ValueError as exc:
@@ -230,7 +225,18 @@ def _store_signin_sources(flow, *, user_id: str) -> list[str]:
     return store_granted_sources(user_id, refresh_token=refresh_token, granted_scopes=granted)
 
 
-@router.get("/auth/signin/google/authorize")
+# Per source address. Each start costs a Turnstile check and an OAuth state
+# row, and nobody signs in more than a few times in ten minutes.
+_SIGNIN_START_LIMIT = RateLimit(limit=20, window_seconds=600.0)
+
+
+def _limit_signin_starts(request: Request) -> None:
+    _SIGNIN_START_LIMIT.enforce(
+        client_address(request), "Too many sign-in attempts from this address. Try again in a few minutes."
+    )
+
+
+@router.get("/auth/signin/google/authorize", dependencies=[Depends(_limit_signin_starts)])
 async def signin_google_authorize(
     request: Request,
     turnstile_token: str = Query(default=""),
@@ -264,8 +270,7 @@ async def signin_google_authorize(
     """
     cfg = get_configs()
     if turnstile_token:
-        client_ip = request.client.host if request.client else ""
-        valid = await verify_turnstile(turnstile_token, client_ip)
+        valid = await verify_turnstile(turnstile_token, client_address(request))
         if not valid:
             raise HTTPException(status_code=403, detail="Turnstile verification failed.")
     elif cfg.turnstile_secret_key and not cfg.duct_local:

@@ -168,7 +168,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Ingestion:** Direct Google API clients (`google-ads`, `google-analytics-data`, `google-api-python-client`). Async concurrent fetching in `service/pipeline.py`.
 - **Normalization:** Lightweight Python pipeline — raw API response → typed Pydantic/SQLModel brief models. No query layer or transforms yet.
 - **Database:** PostgreSQL on Railway — SQLModel ORM, Alembic migrations, `psycopg` driver.
-- **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In). Project access is by membership (`project_members`), not by `projects.user_id` — always go through `service/membership.py`.
+- **Auth:** JWT for users; Google OAuth for connector linking (Ads, GA4, GSC, Sign-In), and a GitHub App for GitHub, with a pasted fine-grained token where no App is configured (self-host). Project access is by membership (`project_members`), not by `projects.user_id` — always go through `service/membership.py`.
 
   **`validate_api_key` is not an authorization boundary.** `DUCT_API_KEY` ships to
   the browser as `NEXT_PUBLIC_DUCT_API_KEY`, so it proves "this is the Duct app"
@@ -211,6 +211,14 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   request that created its session, so one grep follows one press of Send.
   Each turn ends with a `turn 198.0s: 4 tool calls …` line naming the slowest
   three, which answers "where did the time go" without a SQL script.
+- **Response headers:** `utils/security_headers.py` gives every response
+  `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` and
+  `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, the
+  last because nothing here is a page. An HTML response gets
+  `frame-ancestors 'none'` alone, for FastAPI's `/docs`, which loads Swagger
+  UI from a CDN. A route that needs a different value sets the header itself
+  and the middleware leaves it. Pure ASGI like `AccessLogMiddleware`, so SSE streams
+  pass through unbuffered; `tests/test_security_headers.py` holds both.
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
   `railpack.json` sits beside it and configures the **builder**, where
   `railway.json` configures **Railway**. It exists for one line —
@@ -291,8 +299,8 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   where GA4 landing pages were broken for six weeks (`StringFilter` imported
   from the wrong module) with every test green. So each read fetcher has a
   request-shape test one layer down: `FakeWire` replaces `httpx.request`
-  beneath `service/rest.py` so a whole Meta, Apple, Stripe or RevenueCat pull
-  runs with the vendor's own encoding, headers and pagination real
+  beneath `service/rest.py` so a whole Meta, Apple, Stripe, RevenueCat or
+  GitHub pull runs with the vendor's own encoding, headers and pagination real
   (`test_rest_connector_requests.py`); `RecordingHttp` plus
   `discovery_build_offline` let `googleapiclient` build Search Console and the
   GA4 admin API from the discovery document it ships, so method names and
@@ -393,7 +401,7 @@ Postgres `DATABASE_URL` names.
 
 - `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
 - `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
-- `agents/insights/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly insight brief)
+- `agents/insights/prompts/` — synthesis prompts: `autonomous.py` builds the system and user prompt, `paid_ads.py` and `organic_growth.py` hold the vertical modes `get_system_prompt()` dispatches to
 - `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
 - `routes/signin.py` — Google sign-in, and the **guest**: `POST /auth/guest`
   mints a real `users` row keyed on an install id so an audit can run before
@@ -416,6 +424,16 @@ Postgres `DATABASE_URL` names.
   validates (`agents/audit/prefetch.py`): root page now, the rest in the
   background, handed to `run_pipeline` by `crawl_id`. Duct's bandwidth only;
   inference never runs here.
+- `service/ratelimit.py` — the in-process fixed window every route goes
+  through that spends before its caller has proven much: `RateLimit.enforce`
+  is the 429 with `Retry-After`. Key an address with `client_address(request)`,
+  never `request.client.host`, which on the hosted API is the proxy in front of
+  it; keyed on that, a per-address limit is one bucket for everyone. A guest is
+  a user anyone can mint, so a route that spends on a per-user limit carries a
+  per-address one beside it. Session starts also cap live sessions per user
+  (`agents/core/session.live_session_count`), and the teaser — the one run on
+  Duct's key — is held to its lead token, its address and a follow-up budget.
+  `tests/conftest.py::fresh_rate_limits` empties every window between tests.
 - `service/clone_reference.py` — a pasted TikTok link becomes a saved
   reference for a clone (issue #222). The link is reduced to a handle and a
   post id and everything after uses the URL rebuilt from them; the Apify input
@@ -521,9 +539,20 @@ agents/
     ├── v1/             — deepagents runner (the only content engine)
     ├── assessment.py   — the pre-publish review's checks and scoring; the agent
     │                     scores six markers, the weights stay here
+    ├── channels.py     — one post row serves every platform; what differs is rules,
+    │                     not columns. RULES holds each platform's limit, fold,
+    │                     replies that publish, media and metrics support; the
+    │                     writer, both publish paths, the review and the app (via
+    │                     `post.channel`) all read it. A new channel is a row there
+    ├── publishing.py   — the PostBridge request and its bookkeeping, shared by the
+    │                     agent's publish_post and the publish route (#272 was the two
+    │                     drifting apart)
+    ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
+    │                     visual playbook applies to a post that is words
     ├── performance.py  — the account's own history for a plan: type ranking (completion,
     │                     saves, shares; never likes), explore/exploit, graded bets, best
-    │                     posting times. An unrecorded metric is unknown, never zero
+    │                     posting times. An unrecorded metric is unknown, never zero.
+    │                     Visual posts only: a tweet's numbers never steer a TikTok plan
     └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py
 ```
 
@@ -701,8 +730,11 @@ framework. The rules it implies:
 - **A change to an agent runs the eval gate.** `agent-eval.yml` runs
   `scripts/agent_eval.py` on any PR touching `agents/`, `service/memory.py`,
   `service/profile.py` or the lock: each case in `tests/eval/cases/` three
-  times on a synthetic account, DeepSeek V4 Pro on OpenRouter, a verdict
-  against `tests/eval/baselines.json` (`make agent-eval` locally, a few cents).
+  times on a synthetic account, DeepSeek V4 Flash on OpenRouter with GLM 5.3
+  Flash judging, a verdict against `tests/eval/baselines.json` (`make agent-eval`
+  locally, a few cents). A baseline is per model: a run on another model is
+  INCONCLUSIVE until `--write-baseline` records one for it. The eval runs on
+  every push to a ready PR, so open agent PRs as drafts while iterating.
   It is in shadow until an A/A window on unchanged `main` shows no false
   FAIL; from then on FAIL does not merge, and INCONCLUSIVE needs one line in
   the PR saying why it is acceptable. A harness change also adds an offline
@@ -982,6 +1014,12 @@ don't fit.
   disambiguating line and short chips. Vocabulary is server-side too
   (`ConnectorMeta.entity_noun`), so adding a connector stays one registration
   rather than a registration plus an edit to a table in the frontend.
+  `ConnectorMeta.server_only_keys` names credential keys **no request may
+  write**, and both routes that take credentials from a body refuse them.
+  It exists for the GitHub App (`service/github/app.py`): Duct's private key
+  mints a token for any installation id it is handed, so an id a browser
+  could store is someone else's repository. The only writer is the claim
+  route, bound to the user whose signed-in session started the connect.
 - `service/content_metrics.py` — a content post's `perf`, read and written one
   way. `METRIC_ALIASES` reconciles the three key conventions in the column
   (PostBridge's `view_count`, migrated `avgWatchTime`, hand-entered `saves`);
@@ -997,6 +1035,16 @@ don't fit.
   auth headers, query encoding and pagination stay vendor-side. Not for
   `service/apify` or `service/post_bridge` — those are async, hold a
   long-lived client, and need no retry.
+- `service/vendor_keys.py` — a third-party key each user brings for
+  themselves (PostBridge, Apify). A request spends the key its project's
+  owner saved; the instance's env key only where `allow_server_provider_keys()`
+  holds, because on a hosted instance it is Duct's account and every signup
+  would be spending it. A new user-facing vendor declares one `VendorKey`
+  beside its client (with a `check`: the cheapest read that proves a pasted
+  key works) and joins `_vendor_key` in `routes/content.py`; the routes, the
+  app's `VendorKeyForm` and the tests are already generic. Never read the
+  vendor's `Configs` key directly. A vendor's 401 is about that key, so it
+  never reaches the browser as a 401: the app signs the user out on one.
 
 ## Sequencing rules from the plans
 

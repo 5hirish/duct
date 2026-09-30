@@ -6,11 +6,13 @@ from datetime import date
 from typing import Any
 
 from agents.insights.catalog.ga4 import ENTITY_CATALOG as GA4_CATALOG
+from agents.insights.catalog.github import ENTITY_CATALOG as GITHUB_CATALOG
 from agents.insights.catalog.google_ads import ENTITY_CATALOG as GOOGLE_ADS_CATALOG
 from agents.insights.catalog.clarity import ENTITY_CATALOG as CLARITY_CATALOG
 from agents.insights.catalog.growthbook import ENTITY_CATALOG as GROWTHBOOK_CATALOG
 from agents.insights.catalog.gsc import ENTITY_CATALOG as GSC_CATALOG
 from agents.insights.catalog.mixpanel import ENTITY_CATALOG as MIXPANEL_CATALOG
+from service.github import GITHUB_CONNECTOR_ID
 
 _CATALOGS: dict[str, dict[str, Any]] = {
     "google_ads": GOOGLE_ADS_CATALOG,
@@ -19,6 +21,7 @@ _CATALOGS: dict[str, dict[str, Any]] = {
     "mixpanel": MIXPANEL_CATALOG,
     "clarity": CLARITY_CATALOG,
     "growthbook": GROWTHBOOK_CATALOG,
+    GITHUB_CONNECTOR_ID: GITHUB_CATALOG,
 }
 
 
