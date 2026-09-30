@@ -386,13 +386,12 @@ already touches the line, and shrink this list in the same PR.
 - **`block_type` is a `Literal[...]` on the backend and a bare `switch` in
   `InsightBlock.jsx`** — neither side has a named constant, so the ten-way
   contract exists only as spelling.
-- **`"audit_seo"` appears as a bare literal in five frontend files** while
+- **`"audit_seo"` appears as a bare literal in three frontend files** while
   its siblings have constants (`AGENT_TYPE`, `INSIGHTS_AGENT`) and the
   backend has `AgentType.SEO_AUDIT`.
-- **Three `lib/*Api.js` modules re-implement `authedRequest`** —
-  `executionApi.js`, `memoryApi.js`, `membersApi.js` are near-byte-identical
-  copies of the helper that `deskApi.js` / `connectorsApi.js` /
-  `artifactsApi.js` correctly import.
+- **`lib/membersApi.js` re-implements `authedRequest`** — its own `fetch`
+  wrapper, kept for per-route error wording, where every other `lib/*Api.js`
+  imports the helper (`executionApi.js` only prefixes the path).
 - **`utils/dates.utcnow()` is only ~54% adopted** — `routes/content.py` alone
   has 12 direct `datetime.now(timezone.utc)` calls. The substance holds
   (there is not one naive datetime in the tree — keep it that way), but the

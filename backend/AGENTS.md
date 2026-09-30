@@ -393,7 +393,7 @@ Postgres `DATABASE_URL` names.
 
 - `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
 - `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
-- `agents/insights/prompts.py` — synthesis system + user prompts (e.g. Google Ads weekly insight brief)
+- `agents/insights/prompts/` — synthesis prompts: `autonomous.py` builds the system and user prompt, `paid_ads.py` and `organic_growth.py` hold the vertical modes `get_system_prompt()` dispatches to
 - `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
 - `routes/signin.py` — Google sign-in, and the **guest**: `POST /auth/guest`
   mints a real `users` row keyed on an install id so an audit can run before
