@@ -204,3 +204,31 @@ def no_network(request, monkeypatch):
     monkeypatch.setattr(socket.socket, "connect", guard)
     monkeypatch.setattr(socket.socket, "connect_ex", guard)
     yield
+
+
+# ---------------------------------------------------------------------------
+# Rate limits start every test with an empty window
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limits(monkeypatch):
+    """A new window for every module-level ``RateLimit`` in ``routes``.
+
+    Each limiter is process state keyed on an address or a user, and a
+    TestClient is always the same address. Without this, the suite's total
+    traffic through a route is what trips its limit, so a test fails for what
+    its neighbours did and a new test elsewhere turns an old one red. The
+    thresholds stay the production ones; only the counts are reset. A test
+    that wants a limit it can reach swaps in its own, after this has run.
+    """
+    import sys
+
+    from service.ratelimit import RateLimit
+
+    for name, module in list(sys.modules.items()):
+        if not name.startswith("routes.") or module is None:
+            continue
+        for attr, value in list(vars(module).items()):
+            if isinstance(value, RateLimit):
+                monkeypatch.setattr(module, attr, RateLimit(value.limit, value.window_seconds))

@@ -27,7 +27,9 @@ router = APIRouter()
 # server's own credentials, or touches a user's data therefore lists both.
 # The exceptions are deliberate and marked at their include: health, the OAuth
 # entry points (a browser redirect carries no headers), the lead-magnet capture
-# (Turnstile-gated by design), and invitation preview (the token is the secret).
+# (Turnstile on submit, the lead token after it), and invitation preview (the
+# token is the secret). The ones that spend — a row, a crawl, an outbound
+# request — carry a per-address limit from `service/ratelimit.py` instead.
 APP_AND_USER = [Depends(validate_api_key), Depends(get_current_user)]
 
 router.include_router(health.router)
@@ -100,7 +102,8 @@ router.include_router(
     prefix="/api/agents",
     dependencies=[Depends(validate_api_key)],
 )
-# Lead magnet capture — public endpoints; rely on Cloudflare Turnstile, not API key
+# Lead magnet capture — public endpoints: Turnstile and the lead token, plus a
+# per-address limit on the router itself; no API key.
 router.include_router(lead_magnet.router, prefix="/api/lead-magnet")
 # User-scoped endpoints — authenticated via Bearer JWT
 router.include_router(execution.router, prefix="/api/execute")

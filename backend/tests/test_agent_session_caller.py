@@ -81,7 +81,22 @@ def test_a_signed_in_caller_may_start_any_agent(db):
 
 def test_a_signed_in_caller_needs_no_lead_token(db):
     body = {"prompt": "hi", "lead_magnet": True}
+    assert agent_routes._require_caller(AUDIT, body, _User()) is None
+
+
+def test_without_a_token_the_teaser_flag_does_not_move_the_bill(db):
+    """The flag is what puts a run on Duct's key, and a guest is a signed-in
+    user anyone can mint. Without a live token the run stays the caller's."""
+    body = {"url": "https://example.com", "lead_magnet": True}
     agent_routes._require_caller(AUDIT, body, _User())
+    assert body["lead_magnet"] is False
+
+
+def test_a_signed_in_caller_with_a_live_token_still_gets_the_teaser(db):
+    token = _lead(db)
+    body = {"url": "https://example.com", "lead_magnet": True, "lead_token": token}
+    assert agent_routes._require_caller(AUDIT, body, _User()) == token
+    assert body["lead_magnet"] is True
 
 
 # ---------------------------------------------------------------------------
