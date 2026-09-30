@@ -749,9 +749,11 @@ framework. The rules it implies:
   checklists, and the ranked open gaps. Fixing a gap means adding its test and
   striking it from that list in the same change.
 - **A change to an agent runs the eval gate.** `agent-eval.yml` runs
-  `scripts/agent_eval.py` on any PR touching `agents/`, `service/memory.py`,
-  `service/profile.py` or the lock: each case in `tests/eval/cases/` three
-  times on a synthetic account, DeepSeek V4 Flash on OpenRouter with GLM 5.3
+  `scripts/agent_eval.py` on any PR touching `agents/` (not `agents/content/`
+  or `agents/audit/`, which no case covers yet: take the exclusion off when
+  one does), `service/memory.py`, `service/profile.py` or the lock: each case
+  in `tests/eval/cases/` three times on a PR with no re-run, six times on the
+  merge to `main`, on a synthetic account, DeepSeek V4 Flash on OpenRouter with GLM 5.3
   Flash judging, a verdict against `tests/eval/baselines.json` (`make agent-eval`
   locally, a few cents). A baseline is per model: a run on another model is
   INCONCLUSIVE until `--write-baseline` records one for it. The eval runs on
