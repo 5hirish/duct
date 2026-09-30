@@ -546,7 +546,10 @@ agents/
     │                     `post.channel`) all read it. A new channel is a row there
     ├── publishing.py   — the PostBridge request and its bookkeeping, shared by the
     │                     agent's publish_post and the publish route (#272 was the two
-    │                     drifting apart)
+    │                     drifting apart); and while PostBridge holds a scheduled post,
+    │                     push_edit / cancel, which every edit, unschedule, delete and
+    │                     agent rewrite goes through so the queue never publishes stale
+    │                     words or a deleted post
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
     ├── performance.py  — the account's own history for a plan: type ranking (completion,

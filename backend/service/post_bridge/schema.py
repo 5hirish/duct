@@ -20,7 +20,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +81,31 @@ class PostBridgeError(BaseModel):
     code:    str  = ""
     message: str  = ""
     details: dict | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _one_sentence(cls, body: Any) -> Any:
+        """PostBridge refuses a post in two shapes, and neither carries a
+        string ``message``: its own InvalidPostDto (``{"error": [...]}``) and
+        the NestJS validation pipe (``{"message": [...], "error": "Bad
+        Request", "statusCode": 400}``). The list in ``message`` failed
+        validation outright, so the refusal surfaced as our own 500 and the
+        reason was lost."""
+        if not isinstance(body, dict):
+            return body
+        body = dict(body)
+        message, error = body.get("message"), body.get("error")
+        if isinstance(message, list):
+            body["message"] = "; ".join(str(m) for m in message if m)
+        if not body.get("message") and isinstance(error, list):
+            body["message"] = "; ".join(str(e) for e in error if e)
+        elif not body.get("message") and isinstance(error, str):
+            body["message"] = error
+        if "code" in body and not isinstance(body["code"], str):
+            body["code"] = str(body["code"])
+        if "details" in body and not isinstance(body["details"], dict):
+            body.pop("details")
+        return body
 
 
 # ---------------------------------------------------------------------------
@@ -180,6 +205,21 @@ class PostBridgeCreatePostRequest(BaseModel):
     account_configurations:   dict[str, Any] | None = None
     is_draft:                 bool | None = None
     processing_enabled:       bool | None = None
+
+
+class PostBridgeUpdatePostRequest(BaseModel):
+    """UpdatePostDto, for a post still waiting on PostBridge's queue.
+
+    ``scheduled_at`` is required here although the API makes it optional:
+    PostBridge publishes a scheduled post *at once* when an update leaves it
+    out, so a request without it is one Duct never sends.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    caption:                  str
+    scheduled_at:             datetime
+    platform_configurations:  dict[str, Any] | None = None
 
 
 class PostBridgePost(BaseModel):
