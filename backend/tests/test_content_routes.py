@@ -84,6 +84,7 @@ def test_content_routes_registered():
         "/api/content/assets/{asset_id}",
         # PostBridge
         "/api/content/social-accounts",
+        "/api/content/vendor-keys/{vendor}",
         "/api/content/posts/{post_id}/publish",
         "/api/content/posts/{post_id}/sync-metrics",
         "/api/content/posts/{post_id}/sync-daily",
@@ -106,6 +107,10 @@ def test_content_routes_registered():
         ("GET",    "/api/content/posts?project_id={uuid}",                   None),
         ("GET",    "/api/content/assets?project_id={uuid}",                  None),
         ("GET",    "/api/content/social-accounts?project_id={uuid}",         None),
+        ("GET",    "/api/content/vendor-keys/apify?project_id={uuid}",       None),
+        ("PUT",    "/api/content/vendor-keys/apify",                         {"api_key": "x" * 12}),
+        ("DELETE", "/api/content/vendor-keys/apify",                         None),
+        ("GET",    "/api/content/discover/status/r1?project_id={uuid}",      None),
         ("DELETE", "/api/content/session/{uuid}",                            None),
         ("DELETE", "/api/content/assets/{uuid}",                             None),
         # Mutating endpoints

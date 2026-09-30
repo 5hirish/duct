@@ -63,6 +63,7 @@ from agents.content.artifacts import (
     parse_artifact_json,
 )
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
+from agents.content.channels import brand_platforms
 from agents.content.performance import AccountPerformance, load_account_performance
 from agents.core.events import run_context
 from agents.content.prompts import (
@@ -278,6 +279,7 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             features=features,
             pillars=pillars,
             visual=visual,
+            active_channels=brand_platforms(channels_blob.get("active_channels")),
         )
 
 
@@ -646,6 +648,7 @@ class ContentRunner:
 
         session = get_session(session_id) or create_draft_session(session_id, project_id)
         ch = resolve_channel(channel)  # sync, no DB — safe before the first emit
+        session.channel = ch.id
 
         async def _opening(brand: ContentBrandContext) -> str:
             return build_post_user_prompt(
@@ -690,6 +693,10 @@ class ContentRunner:
 
         session = get_session(session_id) or create_draft_session(session_id, project_id)
         ch = resolve_channel(channel)
+        # A clone is a photo carousel by definition (CLONE_DISCIPLINE), so it
+        # drafts on the visual playbook whatever slot it fills.
+        if ch.text_first:
+            ch = resolve_channel(None)
         post_ref = parse_tiktok_post_url(clone_url)  # canonical already; parsed again, never trusted
 
         async def _opening(brand: ContentBrandContext) -> str:

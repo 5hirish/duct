@@ -31,6 +31,9 @@ from pydantic import ValidationError
 
 from tests.eval.client import (
     DEFAULT_JUDGE_MODEL,
+    TEXT_JUDGE_PROVIDER,
+    TEXT_JUDGE_REASONING,
+    TEXT_JUDGE_ROUTING,
     build_judge_client,
     resolve_text_judge,
     text_judge_available,
@@ -47,7 +50,16 @@ _MAX_IMAGES = 12
 # "EOF while parsing a string" from pydantic.
 DEFAULT_MAX_OUTPUT_TOKENS = 8192
 _VERDICT_ATTEMPTS = 2
+# About one GLM verdict call in twelve leaves a required field out or never
+# calls the tool, and a verdict that never lands leaves the trial judged on
+# its deterministic checks alone. With two attempts 1 of 43 briefs went
+# unjudged on 2026-09-30; a third costs twenty seconds and a tenth of a cent.
+_TEXT_VERDICT_ATTEMPTS = 3
 _MAX_IMAGE_WIDTH = 768  # downscale heavy 9:16 renders to keep the request light
+
+
+class NoVerdict(RuntimeError):
+    """The text judge answered, but not with a verdict."""
 
 
 @dataclass
@@ -107,34 +119,53 @@ def evaluate(
     raise AssertionError("unreachable")  # pragma: no cover
 
 
-def _evaluate_text(rubric: Rubric, artifact: JudgeArtifact, *, model: str | None = None) -> Scorecard:
-    """The text judge: one structured call through Duct's own model transport.
+def text_judge_model(model: str | None = None):
+    """The text judge's chat model, through Duct's own model transport.
 
     The same transport the agents run on (``resolve_chat_model``), so an
     OpenRouter slug, its reasoning parameter and its retries behave here as
-    they do in a session. A verdict that fails validation is retried once.
+    they do in a session. On OpenRouter it carries ``TEXT_JUDGE_ROUTING`` and
+    ``TEXT_JUDGE_REASONING``, set here rather than in the transport so no
+    agent run is pinned or made to think less.
     """
-    from langchain_core.messages import HumanMessage, SystemMessage
-
     from agents.core.lc import resolve_chat_model
     from agents.models import Provider
 
     provider, default_model, key = resolve_text_judge()
     llm = resolve_chat_model(Provider(provider), model or default_model, key, temperature=0.2)
-    judge = llm.with_structured_output(JudgeVerdict)
+    if provider == TEXT_JUDGE_PROVIDER and hasattr(llm, "openrouter_provider"):
+        llm = llm.model_copy(update={
+            "openrouter_provider": TEXT_JUDGE_ROUTING, "reasoning": TEXT_JUDGE_REASONING,
+        })
+    return llm
+
+
+def _evaluate_text(rubric: Rubric, artifact: JudgeArtifact, *, model: str | None = None) -> Scorecard:
+    """The text judge: one structured call (``text_judge_model``). A verdict
+    that fails validation, or never comes, is asked for again."""
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    judge = text_judge_model(model).with_structured_output(JudgeVerdict)
     messages = [
         SystemMessage(content=build_judge_system_prompt(rubric.persona)),
         HumanMessage(content=(
             f"{render_rubric(rubric)}\n\n# Artifact under review: {artifact.title}\n\n{artifact.body}"
         )),
     ]
-    for attempt in range(1, _VERDICT_ATTEMPTS + 1):
+    for attempt in range(1, _TEXT_VERDICT_ATTEMPTS + 1):
         try:
             verdict = judge.invoke(messages)
         except ValidationError:
-            if attempt == _VERDICT_ATTEMPTS:
+            if attempt == _TEXT_VERDICT_ATTEMPTS:
                 raise
-            logger.warning("judge: text verdict did not parse; retrying once")
+            logger.warning("judge: text verdict did not parse; asking again")
+            continue
+        # A model that answers in prose instead of the forced tool call
+        # parses to None, which is no verdict rather than an empty one.
+        if verdict is None:
+            if attempt == _TEXT_VERDICT_ATTEMPTS:
+                raise NoVerdict("the text judge answered without calling the verdict tool")
+            logger.warning("judge: text judge answered without a verdict; asking again")
             continue
         if isinstance(verdict, dict):
             verdict = JudgeVerdict.model_validate(verdict)

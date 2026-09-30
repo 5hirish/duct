@@ -367,6 +367,32 @@ class ImageRun:
     source: str
 
 
+def web_search_key(
+    user_keys: Mapping[Provider, str] | None,
+    stored_keys: Mapping[Provider, str] | None,
+    *,
+    billed_to_duct: bool = False,
+) -> str:
+    """The Gemini key behind Duct's own WebSearch, for a run whose model has no
+    built-in search (``agents/core/web_tools.py``), or "" for no search.
+
+    The caller's own Gemini key, header before saved. This instance's only for
+    a run Duct already pays for (the lead-magnet audit) or where the env file is
+    the user's own (``allow_server_provider_keys``). Grounded search is billed
+    per query, and every audit on the hosted deployment used to search on
+    Duct's key whatever key the caller brought.
+    """
+    from config import allow_server_provider_keys, get_configs
+
+    for keys in (user_keys, stored_keys):
+        key = ((keys or {}).get(Provider.GOOGLE_GENAI) or "").strip()
+        if key:
+            return key
+    if billed_to_duct or allow_server_provider_keys():
+        return get_configs().gemini_api_key or ""
+    return ""
+
+
 def resolve_image_run(
     user_keys: Mapping[Provider, str] | None = None,
     stored_keys: Mapping[Provider, str] | None = None,

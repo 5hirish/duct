@@ -15,8 +15,15 @@
 //
 // The paste form lives in the tile's dialog — a five-field Apple Search Ads
 // form inline would set the height of every card in the grid.
+//
+// `oneClick` is for a provider that does have a sign-in flow, but not on
+// every server: GitHub connects through Duct's GitHub App where one is
+// registered, and a self-hosted install has none. When present it leads the
+// dialog and the paste form folds behind "use a token instead", so the card
+// is one component in both deployments rather than two that drift.
 
 import { useState } from "react";
+import { ExternalLink } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +53,11 @@ export default function ManualConnectorCard({
   serverRowList = [], // ALL stored rows for this connector_type (one per account)
   onSaved,         // async () => void — refresh the stored-rows map
   onRemoveRow,     // async (rowId) => void — remove one stored account row
+  // Optional provider sign-in, offered above the paste form:
+  // { label, againLabel, blurb, waiting, onStart, manageUrl, manageLabel, tokenLabel }
+  // onStart resolves "browser" when the desktop shell handed off to the system
+  // browser (show `waiting`), or navigates this window away.
+  oneClick = null,
   // Per-project account mapping
   projectName,
   binding,
@@ -64,6 +76,7 @@ export default function ManualConnectorCard({
   // Several projects can use several accounts (per-project mappings), so a
   // connected card can still open the paste form to add another one.
   const [adding, setAdding] = useState(false);
+  const [tokenOpen, setTokenOpen] = useState(false);
 
   const connected = serverRowList.length > 0;
   // There is no session-only mode here: saving requires being signed in and
@@ -71,7 +84,7 @@ export default function ManualConnectorCard({
   const storage = connected
     ? rowStorage(serverRowList[0], { localSidecar: isLocalBackendActive() })
     : STORAGE_NONE;
-  const formOpen = !connected || adding;
+  const formOpen = oneClick ? tokenOpen : !connected || adding;
 
   function setValue(key, v) {
     setValues((prev) => ({ ...prev, [key]: v }));
@@ -101,7 +114,12 @@ export default function ManualConnectorCard({
       const creds = credentialDict();
       const rows = await listConnectorAccounts(type, creds);
       setAccounts(rows);
+      // A warning about the key itself (Stripe's full secret key, GitHub's
+      // classic token) rides on every row. It is said whether or not a pick
+      // follows: a GitHub token usually reaches several repositories, and the
+      // one-row path was the only place it used to show.
       const warning = rows.find((r) => r.warning)?.warning || "";
+      const caution = warning ? ` ⚠ ${warning}` : "";
 
       // One reachable account → save immediately; several → wait for a pick.
       if (rows.length === 1 || pickedAccount) {
@@ -111,10 +129,10 @@ export default function ManualConnectorCard({
         const verified = accountName
           ? t`Verified — ${accountName}. Credentials saved (encrypted).`
           : t`Verified. Credentials saved (encrypted).`;
-        setNotice(verified + (warning ? ` ⚠ ${warning}` : ""));
+        setNotice(verified + caution);
       } else if (rows.length > 1) {
         const count = rows.length;
-        setNotice(t`Verified — ${count} accounts reachable. Pick one below to finish.`);
+        setNotice(t`Verified — ${count} accounts reachable. Pick one below to finish.` + caution);
       } else {
         setNotice(t`Credentials verified, but no accounts are reachable with them.`);
       }
@@ -142,10 +160,25 @@ export default function ManualConnectorCard({
     setAccounts(null);
     setPickedAccount("");
     setAdding(false);
+    setTokenOpen(false);
     // After saveServerConnector resolved — a credential the server rejected is
     // not a connection.
     trackEvent(AnalyticsEvent.ConnectorConnected, { provider: type });
     await onSaved?.();
+  }
+
+  async function startOneClick() {
+    setError("");
+    setNotice("");
+    setBusy(true);
+    try {
+      const mode = await oneClick.onStart();
+      if (mode === "browser") setNotice(oneClick.waiting);
+    } catch (err) {
+      setError(err.message || String(err));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function pickAccount(accountId) {
@@ -156,7 +189,7 @@ export default function ManualConnectorCard({
       const chosen = (accounts || []).find((r) => r.account_id === accountId);
       await persist(credentialDict(), chosen);
       const accountName = chosen?.account_name || accountId;
-      setNotice(t`Saved — ${accountName}.`);
+      setNotice(t`Saved — ${accountName}.` + (chosen?.warning ? ` ⚠ ${chosen.warning}` : ""));
     } catch (err) {
       setError(err.message || String(err));
     } finally {
@@ -219,14 +252,60 @@ export default function ManualConnectorCard({
                 </Button>
               </div>
             ))}
+            {/* With a provider sign-in, more accounts come from the provider's
+                own picker below, not from pasting another key. */}
+            {!oneClick && (
+              <div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setAdding((isOpen) => !isOpen)}
+                >
+                  {adding ? <Trans>Cancel</Trans> : <Trans>Add another account</Trans>}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {oneClick && (
+          <div className="conn-dialog-section">
+            <p className="conn-hint">{oneClick.blurb}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <Button
+                type="button"
+                size="sm"
+                variant={connected ? "secondary" : "default"}
+                disabled={busy || !signedIn}
+                onClick={startOneClick}
+              >
+                {connected ? oneClick.againLabel : oneClick.label}
+              </Button>
+              {connected && oneClick.manageUrl && (
+                <Button asChild variant="link" size="sm" className="px-0">
+                  <a href={oneClick.manageUrl} target="_blank" rel="noreferrer">
+                    {oneClick.manageLabel}
+                    <ExternalLink aria-hidden="true" />
+                  </a>
+                </Button>
+              )}
+            </div>
+            {!signedIn && (
+              <p className="conn-hint">
+                <Trans>Sign in first — the connection is saved to your account.</Trans>
+              </p>
+            )}
             <div>
               <Button
                 type="button"
-                variant="secondary"
+                variant="link"
                 size="sm"
-                onClick={() => setAdding((isOpen) => !isOpen)}
+                className="px-0"
+                aria-expanded={tokenOpen}
+                onClick={() => setTokenOpen((isOpen) => !isOpen)}
               >
-                {adding ? <Trans>Cancel</Trans> : <Trans>Add another account</Trans>}
+                {tokenOpen ? <Trans>Hide the token form</Trans> : oneClick.tokenLabel}
               </Button>
             </div>
           </div>

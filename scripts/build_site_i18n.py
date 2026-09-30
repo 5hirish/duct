@@ -60,8 +60,9 @@ LOCALES: dict[str, str] = {"es": "es", "pt-br": "pt-BR", "de": "de", "ja": "ja"}
 
 #: What gets translated. Blog and changelog are deliberately out: the blog is
 #: long-form content whose translation is a content decision, and the
-#: changelog is a record.
-SOURCE_GLOBS = ("*.html", "tools/*.html", "partials/*.html")
+#: changelog is a record. The integrations pages are generated in English by
+#: scripts/build_integrations.py and translated here like any other page.
+SOURCE_GLOBS = ("*.html", "tools/*.html", "integrations/*.html", "partials/*.html")
 EXCLUDE = {"404.html"}  # Pages serves one 404 for every miss, so a localised copy is unreachable
 JS_SOURCES = ("assets/duct.js", "assets/duct-download.js", "assets/tool-validation.js")
 
@@ -98,9 +99,15 @@ OG_LOCALES = {"en": "en_US", "es": "es_ES", "pt-BR": "pt_BR", "de": "de_DE", "ja
 NAMES = {
     "Duct", "GitHub", "Google", "Stripe", "MIT", "OK", "GA4", "GSC", "GTM", "SEO", "ROAS", "CPA",
     "CPC", "CPM", "CTR", "LTV", "CAC", "MRR", "macOS", "Windows", "Linux", "X", "→", "↓", "·", "—",
+    # Connector names, which the integrations pages print on their own (cards,
+    # breadcrumbs). A product's name is the vendor's to translate, and none of them do.
+    "Google Ads", "Meta Ads", "Apple Search Ads", "ChatGPT Ads", "OpenAI Ads", "Google Analytics 4",
+    "Google Search Console", "Search Console", "Google Tag Manager", "Tag Manager", "Mixpanel",
+    "Microsoft Clarity", "Clarity", "GrowthBook", "RevenueCat", "HubSpot",
     # A language's own name is never translated: someone who landed in the
     # wrong language has to be able to find theirs in the list.
     "English", "Español", "Português", "Português (Brasil)", "Deutsch", "日本語", "Language",
+    "EN", "ES", "PT", "DE", "JA",
 }
 LETTERS = re.compile(r"\p{L}" if False else r"[^\W\d_]{2,}")
 HREFLANG_START = "<!-- hreflang:start -->"
@@ -547,7 +554,9 @@ def _render_tok(t: Tok, tr: Translator, ctx: PageContext) -> str:
                 if got is not None and got != v:
                     attrs[i] = (k, got)
                     changed = True
-        if k in URL_ATTRS or k == "srcset":
+        # A language link already names its language's address; localising it
+        # sent English on /es/ pages to /es/, the Spanish home.
+        if (k in URL_ATTRS or k == "srcset") and not (t.tag == "a" and "data-duct-lang-link" in dict(attrs)):
             new = rewrite_url(v, k, ctx)
             if new != v:
                 attrs[i] = (k, new)
@@ -702,13 +711,25 @@ def with_js_dictionary(text: str, strings: dict[str, str]) -> str:
     return text[: m.start()] + tag + text[m.start():]
 
 
+#: The two-letter code the language menu's button shows, per path prefix.
+LANG_CODES = {"es": "ES", "pt-br": "PT", "de": "DE", "ja": "JA"}
+
+
 def select_current(text: str, prefix: str) -> str:
-    """Mark the current language in every [data-duct-lang] select."""
+    """Mark the current language in every language menu: the button's code and the link's aria-current."""
+    text = re.sub(
+        r'(<span class="nav-lang-code" data-duct-lang-code>)[^<]*(</span>)',
+        lambda m: m.group(1) + LANG_CODES[prefix] + m.group(2),
+        text,
+    )
+
     def fix(m: re.Match) -> str:
-        block = m.group(0)
-        block = re.sub(r'(<option value="[^"]*")\s+selected', r"\1", block)
-        return re.sub(rf'(<option value="{re.escape(prefix)}")', r"\1 selected", block)
-    return re.sub(r"<select[^>]*data-duct-lang[^>]*>.*?</select>", fix, text, flags=re.S)
+        tag = re.sub(r'\s+aria-current="true"', "", m.group(0))
+        if f'data-duct-lang-link="{prefix}"' in tag:
+            tag = tag[:-1] + ' aria-current="true">'
+        return tag
+
+    return re.sub(r'<a class="nav-lang-item"[^>]*>', fix, text)
 
 
 # ---------------------------------------------------------------------------

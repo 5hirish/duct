@@ -39,25 +39,31 @@ test("a translated page loads its translated partials and assets", async ({ page
   await page.goto("/es/about");
   await page.waitForFunction(() => window.__DUCT_PARTIALS_READY === true);
   expect(missing).toEqual([]);
-  // The nav came from /es/partials/, so its language select is set to Spanish.
-  await expect(page.locator("select[data-duct-lang]").first()).toHaveValue("es");
+  // The nav came from /es/partials/, so its language menu names Spanish.
+  await expect(page.locator(".nav-links [data-duct-lang-code]")).toHaveText("ES");
+  await expect(page.locator('.nav-lang-menu a[data-duct-lang-link="es"]')).toHaveAttribute("aria-current", "true");
 });
+
+// The bar's menu is hidden with .nav-links on a phone, where the drawer lists
+// the same links; open whichever the viewport shows and pick the language.
+async function pickLanguage(page, code) {
+  const button = page.locator(".nav-links .nav-lang-btn");
+  if (await button.isVisible()) {
+    await button.click();
+    await page.locator(`.nav-lang-menu a[data-duct-lang-link="${code}"]`).click();
+  } else {
+    await page.locator(".nav-toggle").click();
+    await page.locator(`.nav-mobile-lang a[data-duct-lang-link="${code}"]`).click();
+  }
+}
 
 test("the switcher keeps the page and changes the language", async ({ page }) => {
   await page.goto("/es/tools/cpa-calculator");
   await page.waitForFunction(() => window.__DUCT_PARTIALS_READY === true);
-  // The bar's select is hidden with .nav-links on a phone; the drawer carries
-  // a copy, so open the drawer there and use whichever select is visible.
-  const visibleSelect = async () => {
-    if (!(await page.locator("select[data-duct-lang]").first().isVisible())) {
-      await page.locator(".nav-toggle").click();
-    }
-    return page.locator("select[data-duct-lang]:visible").first();
-  };
-  await (await visibleSelect()).selectOption("de");
+  await pickLanguage(page, "de");
   await expect(page).toHaveURL(/\/de\/tools\/cpa-calculator$/);
   await page.waitForFunction(() => window.__DUCT_PARTIALS_READY === true);
-  await (await visibleSelect()).selectOption("en");
+  await pickLanguage(page, "en");
   await expect(page).toHaveURL(/\/tools\/cpa-calculator$/);
 });
 
@@ -69,11 +75,8 @@ test("on an English-only page the switcher goes to the language's home", async (
   // partials-ready event here; the rewritten footer link is the ready signal.
   await page.goto("/blog/keyword-gap-analysis-without-a-spreadsheet");
   await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0);
-  await expect(page.locator('a[data-duct-lang-link="de"]')).toHaveAttribute("href", "/de/");
-  if (!(await page.locator("select[data-duct-lang]").first().isVisible())) {
-    await page.locator(".nav-toggle").click();
-  }
-  await page.locator("select[data-duct-lang]:visible").first().selectOption("es");
+  await expect(page.locator('.footer-lang a[data-duct-lang-link="de"]')).toHaveAttribute("href", "/de/");
+  await pickLanguage(page, "es");
   await expect(page).toHaveURL(/\/es\/$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "es");
 });

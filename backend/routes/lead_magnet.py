@@ -1,9 +1,18 @@
 """Lead magnet capture routes.
 
-Endpoints (no API key required — Turnstile provides abuse prevention):
-  POST /api/lead-magnet/submit   — validate Turnstile, store lead, return access token
-  POST /api/lead-magnet/validate — validate access token in POST body (not query param)
-  POST /api/lead-magnet/report   — persist completed audit report against a lead (first write wins)
+Public: hit from the marketing site by people with no account and no API key.
+
+  GET  /api/lead-magnet/check-url           — reachability pre-flight for the URL form
+  POST /api/lead-magnet/submit              — verify Turnstile, store lead, return access token
+  POST /api/lead-magnet/validate            — validate access token in POST body (not query param)
+  POST /api/lead-magnet/report              — persist completed audit report against a lead (first write wins)
+  POST /api/lead-magnet/execution-interest  — record interest in paid execution, notify the team
+
+Turnstile gates only ``submit``; the token it issues is the credential for the
+three that follow. Every endpoint shares one per-address limit, declared on
+the router so a new endpoint cannot be added without it: ``check-url`` makes an
+outbound request to a site the caller names, and ``execution-interest`` sends
+an email on every call.
 """
 
 from __future__ import annotations
@@ -22,11 +31,24 @@ from db.session import get_session
 from models.lead_magnet import ExecutionInterest, LeadMagnet
 from service.crawl.fetcher import SSRFError, assert_public_url, validate_public_url
 from service.lead_access import find_live_lead
+from service.ratelimit import RateLimit, client_address
 from service.turnstile import verify_turnstile
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["lead-magnet"])
+# Across all five endpoints, per source address. One audit is a check, a
+# submit, a validate or two, a report and maybe an interest click; this is room
+# for a few sites in a row and nothing like a script's pace.
+_LEAD_MAGNET_LIMIT = RateLimit(limit=30, window_seconds=600.0)
+
+
+def _limit_by_address(request: Request) -> None:
+    _LEAD_MAGNET_LIMIT.enforce(
+        client_address(request), "Too many requests from this address. Try again in a few minutes."
+    )
+
+
+router = APIRouter(tags=["lead-magnet"], dependencies=[Depends(_limit_by_address)])
 
 # Token TTL lives in service/lead_access.py — imported above so the three
 # endpoints here and agent session creation cannot drift apart.
@@ -98,9 +120,7 @@ async def submit_lead(
     body: SubmitLeadRequest,
     session: Session = Depends(get_session),
 ) -> SubmitLeadResponse:
-    client_ip = req.client.host if req.client else ""
-
-    valid = await verify_turnstile(body.turnstile_token, client_ip)
+    valid = await verify_turnstile(body.turnstile_token, client_address(req))
     if not valid:
         raise HTTPException(status_code=400, detail="Security check failed. Please try again.")
 
@@ -300,8 +320,8 @@ async def check_url(url: str) -> dict:
 
     Validates the URL is public, then attempts a HEAD (falling back to GET) with
     a short timeout. Returns {ok: true} or {ok: false, reason: "..."}.
-    No auth required — abuse is mitigated by rate limits and the cheap cost of a
-    HEAD request.
+    No auth: what bounds it is the router's per-address limit, so nobody gets
+    to point our requests at a third party faster than a person fills a form.
     """
     import httpx
 

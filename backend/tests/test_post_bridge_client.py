@@ -244,28 +244,76 @@ async def test_bearer_token_attached_to_api_calls_only():
         assert captured["ua"].startswith("DuctContentAgent/")
 
 
+# Whose key a request spends is tests/test_post_bridge_key.py.
+
+
 # ---------------------------------------------------------------------------
-# Credential resolver — MVP .env fallback behaviour
+# Refusals — the two shapes a 400 comes in, both read as one sentence
 # ---------------------------------------------------------------------------
 
 
-def test_client_for_user_falls_back_to_env_then_raises_when_missing():
-    """MVP: no ConnectorCredential row → use POSTBRIDGE_API_KEY env. If
-    that's also empty, raise with an actionable message the route layer
-    can pass through to the user."""
-    from unittest.mock import MagicMock, patch
-    from service.post_bridge import client_for_user
+async def _refusal(status: int, body) -> PostBridgeAPIError:
+    def _handler(_req: httpx.Request) -> httpx.Response:
+        return httpx.Response(status, json=body)
 
-    db = MagicMock()
-    db.execute.return_value.scalars.return_value.first.return_value = None
+    async with httpx.AsyncClient(transport=_transport(_handler)) as ac:
+        client = PostBridgeClient("sk-fake", client=ac)
+        with pytest.raises(PostBridgeAPIError) as ei:
+            await client.list_social_accounts()
+    return ei.value
 
-    fake_cfg = MagicMock()
-    fake_cfg.postbridge_api_key = "env-fallback-key"
-    with patch("service.post_bridge.client.get_configs", return_value=fake_cfg):
-        client = client_for_user(__import__("uuid").uuid4(), db)
-        assert client._api_key == "env-fallback-key"
 
-    fake_cfg.postbridge_api_key = ""
-    with patch("service.post_bridge.client.get_configs", return_value=fake_cfg):
-        with pytest.raises(ValueError, match="PostBridge isn't connected"):
-            client_for_user(__import__("uuid").uuid4(), db)
+@pytest.mark.asyncio
+async def test_an_invalid_post_reads_its_error_list():
+    """InvalidPostDto: {"error": [...]} and no message at all."""
+    exc = await _refusal(400, {"error": ["caption is too long for twitter", "no media for tiktok"]})
+    assert exc.status_code == 400
+    assert exc.error.message == "caption is too long for twitter; no media for tiktok"
+
+
+@pytest.mark.asyncio
+async def test_a_validation_refusal_with_a_message_list_is_not_our_500():
+    """NestJS answers {"message": [...], "error": "Bad Request",
+    "statusCode": 400}. A list in `message` failed validation, so the
+    refusal became an unhandled error here and the reason was lost."""
+    exc = await _refusal(400, {"message": ["scheduled_at must be a date"], "error": "Bad Request", "statusCode": 400})
+    assert exc.error.message == "scheduled_at must be a date"
+
+
+@pytest.mark.asyncio
+async def test_an_error_body_we_cannot_read_is_still_a_postbridge_error():
+    exc = await _refusal(400, {"code": {"nested": True}, "message": {"odd": "shape"}})
+    assert exc.status_code == 400
+    assert "odd" in exc.error.message
+
+
+# ---------------------------------------------------------------------------
+# A queued post
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_an_update_always_carries_its_time():
+    """PATCH without scheduled_at publishes a scheduled post at once, so the
+    request type cannot be built without one."""
+    from pydantic import ValidationError
+
+    from service.post_bridge import PostBridgeUpdatePostRequest
+
+    with pytest.raises(ValidationError):
+        PostBridgeUpdatePostRequest(caption="new words")
+
+    captured: dict = {}
+
+    def _handler(req: httpx.Request) -> httpx.Response:
+        captured["method"], captured["path"] = req.method, req.url.path
+        captured["body"] = _json.loads(req.read())
+        return httpx.Response(200, json={"id": "p1", "status": "scheduled", "caption": "new words"})
+
+    when = datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc)
+    async with httpx.AsyncClient(transport=_transport(_handler)) as ac:
+        client = PostBridgeClient("sk-fake", client=ac)
+        await client.update_post("p1", PostBridgeUpdatePostRequest(caption="new words", scheduled_at=when))
+
+    assert (captured["method"], captured["path"]) == ("PATCH", "/v1/posts/p1")
+    assert captured["body"] == {"caption": "new words", "scheduled_at": "2026-10-01T09:30:00Z"}

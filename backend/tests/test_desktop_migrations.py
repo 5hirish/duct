@@ -99,6 +99,9 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE content_plans DROP COLUMN strategy"))
         conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN clone_source"))
         conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN last_assessment"))
+        conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN replies"))
+        conn.execute(sa.text("ALTER TABLE content_posts RENAME COLUMN title TO tiktok_title"))
+        conn.execute(sa.text("ALTER TABLE content_posts RENAME COLUMN published_url TO tiktok_url"))
         conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN video"))
 
     assert "alembic_version" not in set(inspect(engine).get_table_names())
@@ -123,6 +126,10 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     assert "clone_source" in _columns(engine, "content_posts")
     assert "last_assessment" in _columns(engine, "content_posts")
     assert "video" in _columns(engine, "content_posts")
+    # The text-channel renames kept their data's column, under the new name.
+    posts = _columns(engine, "content_posts")
+    assert {"replies", "title", "published_url"} <= posts
+    assert not {"tiktok_title", "tiktok_url"} & posts
     assert _stamped_revision(engine) is not None
 
 

@@ -1,8 +1,22 @@
+# Security headers ride on every path with the discovery links. The CSP holds
+# only what every page already satisfies: nothing frames the site, no page has
+# a <form>, <base> or <object>. script-src is deliberately absent: every page
+# runs inline scripts, and GTM injects tags whose origins live in the container
+# rather than this repository, so an allowlist written here would be a guess
+# that fails silently as lost measurement. HSTS leaves out includeSubDomains
+# until every record in the zone is known to answer over HTTPS: browsers keep
+# an HSTS max-age for its full year, even after the header is removed.
 /*
   Link: </blog/>; rel="alternate"; type="text/html"; title="Blog"
   Link: <https://getduct.ai/sitemap.xml>; rel="sitemap"
   Link: <https://getduct.ai/blog/feed.xml>; rel="alternate"; type="application/rss+xml"; title="Duct Blog"
   Link: <https://getduct.ai/changelog/feed.xml>; rel="alternate"; type="application/rss+xml"; title="Duct Changelog"
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), display-capture=()
+  X-Frame-Options: DENY
+  Content-Security-Policy: object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 # Cloudflare serves .xml as application/xml; readers want the RSS type.
 /blog/feed.xml

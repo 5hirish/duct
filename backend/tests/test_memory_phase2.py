@@ -6,6 +6,7 @@ Phase 1 routes are exercised in tests/test_memory.py and are not repeated here.
 
 from __future__ import annotations
 
+import threading
 from uuid import uuid4
 
 import pytest
@@ -45,9 +46,15 @@ from service.memory_consolidation import (
 
 
 @pytest.fixture
-def engine():
-    engine = make_sqlite_engine()
-    return engine
+def engine(request, tmp_path):
+    # ``"file"`` gives each thread its own connection, for a test that runs two
+    # consolidations at once. It costs ~3x per test, so it is opt-in.
+    if getattr(request, "param", None) == "file":
+        engine = make_sqlite_engine(path=tmp_path / "memory.db")
+        yield engine
+        engine.dispose()
+    else:
+        yield make_sqlite_engine()
 
 
 @pytest.fixture
@@ -76,11 +83,36 @@ def project(db, owner):
     return row
 
 
+class _OneAtATime(Session):
+    """A session that holds the engine's one connection for as long as it is open.
+
+    The test engine is StaticPool: every session shares a single SQLite
+    connection. Consolidation reads the conversation on a worker thread before
+    it takes the project lock, so two concurrent triggers ran two queries on
+    that one connection at once, and SQLite handed one of them the other's
+    cursor: "tuple index out of range", about one run in six (main, 2026-09-28).
+    Postgres gives each session its own connection, so the service is fine; the
+    harness has to take turns instead.
+    """
+
+    _turn = threading.RLock()  # re-entrant: a nested session on the same thread must not wait on itself
+
+    def __enter__(self):
+        self._turn.acquire()
+        return super().__enter__()
+
+    def __exit__(self, *exc):
+        try:
+            return super().__exit__(*exc)
+        finally:
+            self._turn.release()
+
+
 @pytest.fixture
 def service_db(engine, monkeypatch):
     """Point the consolidation service's own sessions at the test engine."""
     def _fake_db():
-        yield Session(engine)
+        yield _OneAtATime(engine)
 
     monkeypatch.setattr(consolidation, "db_session", _fake_db)
     return engine
@@ -528,6 +560,7 @@ def test_turning_memory_back_on_does_not_read_what_was_said_while_it_was_off(
     assert meta["memory_through_seq"] == 8
 
 
+@pytest.mark.parametrize("engine", ["file"], indirect=True)
 def test_a_closed_and_a_swept_trigger_pay_for_one_model_call(db, project, service_db, monkeypatch):
     """The watermark is read inside the lock, so the second of two concurrent
     triggers finds the turns already read instead of paying for them again."""

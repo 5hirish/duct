@@ -80,3 +80,10 @@ export function slideNumber(id) {
   const match = /^slide-(\d+)$/.exec(String(id || ""));
   return match ? Number(match[1]) : null;
 }
+
+/** "reply-2" → 2: a text post's reply, as agents/content/assessment.reply_id
+ *  names it. Null for anything else. */
+export function replyNumber(id) {
+  const match = /^reply-(\d+)$/.exec(String(id || ""));
+  return match ? Number(match[1]) : null;
+}

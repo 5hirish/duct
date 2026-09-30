@@ -239,3 +239,40 @@ export async function listConnectorAccounts(connectorId, credentials) {
   });
   return res?.accounts || [];
 }
+
+// --- GitHub App: the one-click GitHub connection ----------------------------
+//
+// The flow lives in backend/service/github/app.py. What the browser does:
+// ask whether this server has an App (self-hosted ones do not, and keep the
+// token form), mint a single-use link naming the signed-in user, open the
+// authorize route with it, and — when GitHub hands back — claim the grant
+// with the same session. The claim is the only way an App grant is saved;
+// saveServerConnector refuses one.
+
+/** `{ available, manage_url }` — whether GitHub connects in one click here. */
+export function getGitHubApp() {
+  return authedRequest("/api/user/connectors/github/app");
+}
+
+/** A five-minute, single-use code for `/auth/connectors/github/oauth/authorize?link=`. */
+export async function startGitHubConnect() {
+  const res = await authedRequest("/api/user/connectors/github/connect", { method: "POST" });
+  return res?.link || "";
+}
+
+/**
+ * Save what GitHub granted: one row per repository. Resolves to
+ * `{ connectors, omitted }`; rejects when the code expired or belongs to a
+ * connect another account started.
+ */
+export async function claimGitHubGrant(code) {
+  const res = await authedRequest("/api/user/connectors/github/claim", {
+    method: "POST",
+    // Same reason as saveServerConnector: this lands the instant the user
+    // returns from GitHub, and a sign-in bounce would discard the connect.
+    retireSession: false,
+    body: { code },
+  });
+  notifyConnectorsChanged();
+  return res;
+}

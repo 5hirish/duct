@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-29
+**Author:** Shirish Kadam · **Updated:** 2026-09-30
 
 How an agent is built and maintained here, on LangChain 1.x, LangGraph and
 `deepagents`. Read it before adding an agent or changing one: a prompt, a tool,
@@ -94,7 +94,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 |---|---|---|
 | Offline tests drive the real harness with a canned model and assert events, tool names and payloads, never prompt prose. | `ToolCallingFake`, `emitted` | `make test` |
 | What is *sent* to the model is tested too: byte-stable prefix across calls, history and reasoning kept, effort passed. The Claude Code regressions of April 2026 were exactly these. | `RecordingFake` (`tests/fakes.py`); the "Model defaults" section of `make dump-prompts` | `tests/test_request_invariants.py` (both rungs and the insights runner); `prompts.yml` fails a default changed without the dump |
-| A prompt, model default, effort or harness change is judged k times against a baseline, on synthetic accounts, before it merges. Binary markers gate; 1–5 scores are logged. | `tests/eval/gate.py`, `tests/eval/cases/`, `make agent-eval` (DeepSeek V4 Pro on OpenRouter) | `agent-eval.yml` on harness PRs, in shadow until an A/A window; `tests/test_eval_gate.py` holds the gate's own logic. One provider today; the per-provider matrix is tier 2 |
+| A prompt, model default, effort or harness change is judged k times against a baseline, on synthetic accounts, before it merges. Binary markers gate; 1–5 scores are logged. | `tests/eval/gate.py`, `tests/eval/cases/`, `make agent-eval` (DeepSeek V4 Flash on OpenRouter, GLM 5.3 Flash judging) | `agent-eval.yml` on harness PRs, in shadow until an A/A window; `tests/test_eval_gate.py` holds the gate's own logic. One provider today; the per-provider matrix is tier 2 |
 | One span per model call and one per tool call, at one choke point. | `ReportedRetryMiddleware` (model); `awrap_tool_call` middleware (tool) | four binders span tools today (gap, runner-up) |
 
 ### Maintenance

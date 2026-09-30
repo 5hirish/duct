@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Tag Manager KI-Agent: Tracking-Korrekturen mit Zurücknehmen | Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/integrations/google-tag-manager"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/google-tag-manager"/>
+<meta property="og:locale" content="de_DE"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct findet fehlerhaftes Tracking, indem es GA4 neben Mixpanel liest, bereitet die Tag Manager-Reparatur in einem Arbeitsbereich vor und veröffentlicht nur, wenn du freigibst, bereit zur Zurücknahme."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/integrations/google-tag-manager"/>
+<meta property="og:title" content="Tag Manager KI-Agent: Tracking-Korrekturen mit Zurücknehmen"/>
+<meta property="og:description" content="Ein Tag kann auf jeder Seite ausgelöst werden und trotzdem das falsche Event senden. Duct findet es, inszeniert die Korrektur im Tag Manager und wartet auf dich, bevor es veröffentlicht."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-google-tag-manager.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Tag Manager KI-Agent: Tracking-Korrekturen mit Zurücknehmen"/>
+<meta name="twitter:description" content="Tracking ist am Dienstag kaputtgegangen. Duct findet den Tag, bereitet die Reparatur vor und wartet auf deine Veröffentlichung."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-google-tag-manager.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"Tag Manager KI-Agent: Tracking-Korrekturen mit Zurücknehmen","url":"https://getduct.ai/de/integrations/google-tag-manager","description":"Duct findet fehlerhaftes Tracking, indem es GA4 neben Mixpanel liest, bereitet die Tag Manager-Reparatur in einem Arbeitsbereich vor und veröffentlicht nur, wenn du freigibst, bereit zur Zurücknahme.","about":{"@type":"SoftwareApplication","name":"Google Tag Manager"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"de","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https://getduct.ai/de/"},{"@type":"ListItem","position":2,"name":"Integrationen","item":"https://getduct.ai/de/integrations/"},{"@type":"ListItem","position":3,"name":"Google Tag Manager","item":"https://getduct.ai/de/integrations/google-tag-manager"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Was kann Duct im Tag Manager ändern?","acceptedAnswer":{"@type":"Answer","text":"Vier: GTM-Tag erstellen/aktualisieren (Arbeitsbereich), GTM-Variable erstellen/aktualisieren (Arbeitsbereich), GTM-Container-Version veröffentlichen und eine ältere GTM-Version erneut veröffentlichen. Standardmäßig wartet jede auf dein Anwenden, und jede kann zurückgenommen werden."}},{"@type":"Question","name":"Wird Duct eigenständig auf meiner Live-Website veröffentlichen?","acceptedAnswer":{"@type":"Answer","text":"Nein. Eine Veröffentlichung ersetzt den Live-Container für jeden Besucher, daher wartet sie immer auf dich, unabhängig von der Autonomie des Projekts. Arbeitsbereich-Bearbeitungen können im unterstützten Modus eigenständig angewendet werden, und sie ändern nichts live, bis eine Veröffentlichung erfolgt."}},{"@type":"Question","name":"Wie funktioniert Zurücknehmen?","acceptedAnswer":{"@type":"Answer","text":"Bevor es veröffentlicht, speichert Duct die aktuelle Version. Zurücknehmen veröffentlicht diese Version erneut, und das Aktivitätsprotokoll zeigt beides."}},{"@type":"Question","name":"Ist es kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. Was Geld kosten wird."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026). Hypothesis: the growth lead whose funnel went to zero overnight converts on a page that shows the fix staged with a rollback target, because the publish is the part that scares people. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/de/integrations/">Integrationen</a><span aria-hidden="true">/</span><span aria-current="page">Google Tag Manager</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/google-tag-manager.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Tag Manager, <em>mit dem zuerst benannten Zurücknehmen.</em></h1>
+<p class="hero-sub">Duct bemerkt, wenn ein Zähler auf Null geht, findet den dahinterliegenden Tag und bereitet die Reparatur in einem Arbeitsbereich vor. Eine Veröffentlichung ersetzt deinen Live-Container, daher wartet dieser Schritt immer auf dich, mit der benannten Version zum Zurücknehmen.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="/de/integrations/">Alle Integrationen</a>
+</div>
+<ul class="ig-facts" aria-label="Auf einen Blick"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Mit Google anmelden</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Liest drei Datensätze</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Vier Arten von Änderungen</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Geprüft 29. Sep 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal has-change">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/google-tag-manager.svg" width="34" height="34" alt=""/><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/><img src="/assets/icons/mixpanel.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Version 14 benannte das Ereignis um, das der Connect-Bank-Tag sendet. GA4 zählt seit dem 9. Sep. null.</span></div>
+<div class="ig-change"><img src="/assets/icons/google-tag-manager.svg" width="22" height="22" alt=""/><span><b>Container-Version 15 veröffentlichen</b><s>Ersetzt Version 14 für jeden Besucher. Rollback bereit.</s></span></div>
+<div class="ig-actions"><span class="ig-btn ig-btn-reject">Ablehnen</span><span class="ig-btn ig-btn-apply"><span class="ig-apply-idle">Anwenden</span><span class="ig-apply-done"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>Angewendet</span><svg class="ig-cursor" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<figcaption>Eine Beispielantwort. Deine wird aus deinen eigenen Konten gelesen.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-tag-manager.webp" srcset="/assets/media/session-tag-manager-768.webp 768w, /assets/media/session-tag-manager-1536.webp 1536w, /assets/media/session-tag-manager.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Eine Duct-Sitzung: gefragt, warum GA4 ein Event im Web nicht mehr zählt, findet Duct den Tag, den eine Container-Version umbenannt hat, und schlägt eine Workspace-Korrektur und eine Veröffentlichung vor, die auf Freigabe wartet"/>
+<figcaption>Frage, warum ein Event nicht mehr gezählt wird. Duct findet den Tag, den Version 14 geändert hat, inszeniert die Korrektur in einem Workspace und hält die Veröffentlichung für dich mit Version 14 als Rollback zurück.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Fragen</p>
+<h2>Fragen, die du <em>einfach stellen kannst</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Warum hat ein Ereignis in GA4 über Nacht aufgehört zu zählen?</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>Tag Manager + GA4 + Mixpanel</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Wird der Tag ausgelöst oder löst er das Falsche aus?</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Tag Manager + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Senden Web und App immer noch dieselben Ereignisnamen?</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>Tag Manager + Mixpanel</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Kannst du den Tag reparieren und mich die Veröffentlichung freigeben lassen?</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><span>Tag Manager</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Zugriff</p>
+<h2>Was es liest. <em>Was es ändern kann.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Was es liest</h3>
+<ul class="ig-reads">
+<li><b>Konten und Container</b><span class="ig-fields"><span>Konto</span><span>Container</span><span>öffentliche ID</span></span></li>
+<li><b>Arbeitsbereich-Tags und -Variablen</b><span class="ig-fields"><span>Name</span><span>Typ</span><span>Parameter</span></span></li>
+<li><b>Live-Container-Version</b><span class="ig-fields"><span>Versions-ID</span></span></li>
+</ul>
+<p class="ig-note">Tag Manager API v2 · geprüft gegen den Fetch-Code 29. Sep. 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/gtm_exec.py" rel="noopener">lies den Quellcode</a></p>
+</div>
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Was es ändern kann</h3>
+<ul class="ig-ops">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">GTM-Tag erstellen/aktualisieren (Arbeitsbereich)</span><span class="ig-badges"><span class="ig-badge is-auto">Kann sich im unterstützten Modus selbst anwenden</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">GTM-Variable erstellen/aktualisieren (Arbeitsbereich)</span><span class="ig-badges"><span class="ig-badge is-auto">Kann sich im unterstützten Modus selbst anwenden</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">GTM-Container-Version veröffentlichen</span><span class="ig-badges"><span class="ig-badge is-warn">Wartet immer auf dich</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">Eine ältere GTM-Version erneut veröffentlichen</span><span class="ig-badges"><span class="ig-badge is-warn">Wartet immer auf dich</span></span></li>
+</ul>
+<p class="ig-note">Jede kann zurückgenommen werden. Standardmäßig wartet jede Änderung auf dein Anwenden: Sie kommt als Vorschau dessen, was sie betrifft, und landet im Aktivitätsprotokoll. <a href="/de/doctrine">Wie die Freigabe funktioniert</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Wissen</p>
+<h2>Was Duct bereits weiß <em>über Tag Manager</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Nichts ist live, bis es veröffentlicht wird.</h3><p>Bearbeitungen in einem Arbeitsbereich ändern nichts auf deiner Website. Duct bereitet seine Änderungen dort vor, und die Veröffentlichung, die den Live-Container für jeden Besucher ersetzt, wartet immer auf dich.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Das Zurücknahme-Ziel wird zuerst gelesen.</h3><p>Vor einer Veröffentlichung zeichnet Duct die Live-Version auf, sodass ein Rollback genau das wieder veröffentlicht, was da war.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Ein Tag, der ausgelöst wird, kann trotzdem kaputt sein.</h3><p>Ein Tag kann auf jeder Seite ausgelöst werden und nichts Nützliches senden. Duct prüft, was in GA4 oder Mixpanel angekommen ist, nicht den Auslösestatus.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Umbenennungen folgen keinen Referenzen.</h3><p>Das Umbenennen einer Variable über die API lässt jeden Tag auf den alten Namen zeigen. Duct patcht die Tags in derselben Änderung oder benennt nicht um.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/gtm.md" rel="noopener">Lies die Tag Manager-Notizen, aus denen Ducts Agent arbeitet <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Gemeinsam besser</p>
+<h2>Was Tag Manager antwortet <em>mit einem Partner</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/de/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Welcher Tag hat das Schlüssel-Event kaputt gemacht?</span><span class="ig-pair-go">Tag Manager + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/de/integrations/mixpanel"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Web und App, ein Event-Name.</span><span class="ig-pair-go">Tag Manager + Mixpanel <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/de/integrations/microsoft-clarity"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/clarity.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Hat der neue Tag die Seite kaputt gemacht?</span><span class="ig-pair-go">Tag Manager + Clarity <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Einrichtung</p>
+<h2>Tag Manager <em>in drei Schritten</em> verbinden</h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>In Duct, öffne Verbindungen und wähle Google Tag Manager.</p></li>
+<li><span class="ig-step-n">2</span><p>Mit Google anmelden und Zugriff zum Bearbeiten und Veröffentlichen von Containern erlauben.</p></li>
+<li><span class="ig-step-n">3</span><p>Wähle den Container, den dieses Projekt verwendet.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Duct fragt nach Bearbeitungs- und Veröffentlichungszugriff, wenn du dich anmeldest, da beides zur Reparatur eines Tags benötigt wird. Bearbeitungen bleiben in einem Arbeitsbereich, und eine Veröffentlichung wartet immer auf dein Anwenden.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schlüssel und Tokens werden verschlüsselt von Ducts gehosteter API gespeichert, niemals in deinem Browser, und du kannst eine Verbindung jederzeit entfernen. Ein Self-Host-Build speichert sie auf deiner eigenen Maschine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>Tag Manager, <em>beantwortet</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Was kann Duct im Tag Manager ändern?</summary>
+<p class="faq-a">Vier: GTM-Tag erstellen/aktualisieren (Arbeitsbereich), GTM-Variable erstellen/aktualisieren (Arbeitsbereich), GTM-Container-Version veröffentlichen und eine ältere GTM-Version erneut veröffentlichen. Standardmäßig wartet jede auf dein Anwenden, und jede kann zurückgenommen werden.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Wird Duct eigenständig auf meiner Live-Website veröffentlichen?</summary>
+<p class="faq-a">Nein. Eine Veröffentlichung ersetzt den Live-Container für jeden Besucher, daher wartet sie immer auf dich, unabhängig von der Autonomie des Projekts. Arbeitsbereich-Bearbeitungen können im unterstützten Modus eigenständig angewendet werden, und sie ändern nichts live, bis eine Veröffentlichung erfolgt.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Wie funktioniert Zurücknehmen?</summary>
+<p class="faq-a">Bevor es veröffentlicht, speichert Duct die aktuelle Version. Zurücknehmen veröffentlicht diese Version erneut, und das Aktivitätsprotokoll zeigt beides.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ist es kostenlos?</summary>
+<p class="faq-a">Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. <a href="/de/open-source#pricing">Was Geld kosten wird</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/de/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

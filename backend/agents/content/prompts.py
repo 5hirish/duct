@@ -31,6 +31,8 @@ from typing import TYPE_CHECKING
 
 from utils.formatting import number, percent
 
+from agents.content.text_prompts import text_post_user_prompt, text_system_prompt
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
@@ -1064,6 +1066,7 @@ def _brand_stanza(brand: ContentBrandContext) -> str:
 - Always say:   {brand.do_say or '(none specified)'}
 - Never say:    {brand.do_not_say or '(none specified)'}
 - Visual style: {brand.visual.style or '(unspecified)'}, primary {brand.visual.primary_color or '—'}, secondary {brand.visual.secondary_color or '—'}
+- Posts on:     {', '.join(brand.active_channels) or '(unknown — TikTok unless the user says otherwise)'}
 
 Features:
 {features}
@@ -1177,8 +1180,13 @@ FIELD RULES:
 - `days` is ordered — one object per post, no day numbers; the calendar lays
   them on sequential dates. Every day needs a non-empty `topic` AND `pillar`
   (a pillar id from the brand context); a plan with an empty day is rejected.
-- `post_type` ∈ {slideshow, video, image}; `platforms` from the brand's
-  channels; `format_slug` from the format library or "".
+- `post_type` ∈ {slideshow, video, image, text}; `platforms` from the
+  brand's channels ("Posts on" in the brand context; TikTok when it is
+  unknown); `format_slug` from the format library or "".
+- A day bound for X ("twitter") or LinkedIn ("linkedin") is `post_type`
+  "text" with `format_slug` "": those channels are words first, and the
+  person drafts it with a writer for that channel. Every other day is visual.
+  Text days sit outside EXPLORE / EXPLOIT, which ranks the visual types.
 - `hook_type`, `funnel_stage` (awareness / consideration / conversion) and
   `objective` are the bets each post makes. Fill all three: the next plan
   grades them against what the posts earned.
@@ -1281,6 +1289,13 @@ def build_orchestrator_system_prompt(
     """
     from agents.core.persona import with_confidentiality
     from agents.core.prompts import MEMORY_DISCIPLINE
+    # A text channel drafts on its own base: nothing in the visual playbook
+    # (slides, image discipline) applies to a post that is words. A plan stays
+    # on the visual base, which knows a day can be bound for a text channel.
+    if mode == "draft_post" and getattr(channel, "text_first", False):
+        return with_confidentiality(
+            f"{text_system_prompt(channel.playbook)}\n\n{MEMORY_DISCIPLINE}"
+        )
     tail = f"{_channel_directive(channel)}\n\n{_mode_tail(mode)}"
     if not vision:
         tail = f"{NO_VISION_DIRECTIVE}\n\n{tail}"
@@ -1538,7 +1553,8 @@ def build_post_user_prompt(
     recent_posts: list[dict] | None = None,
     channel=None,
 ) -> str:
-    """Kickoff prompt for draft_post mode."""
+    """Kickoff prompt for draft_post mode — a text channel's own, or the
+    visual write phase."""
     recent_lines = (
         "\n".join(
             f"  - {p.get('topic', '?')} [{p.get('pillar', '?')}, hook={p.get('hook_type', '?')}]"
@@ -1563,6 +1579,11 @@ def build_post_user_prompt(
         target = (
             f"Standalone draft · topic={topic or '(unspecified)'} · "
             f"pillar={pillar or '(unspecified)'} · format_slug={format_slug}"
+        )
+    if getattr(channel, "text_first", False):
+        return text_post_user_prompt(
+            brand_stanza=_brand_stanza(brand), project_name=brand.project_name,
+            channel=channel, target=target, recent_lines=recent_lines,
         )
     avatar_summary = (
         json.dumps(avatar, default=str)

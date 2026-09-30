@@ -30,6 +30,8 @@ describe("the form", () => {
       "saves", "reach", "avg_watch_time", "completion_rate",
     ]);
     expect(editableMetrics({ post_bridge_post_id: "" })).toHaveLength(8);
+    // Published through PostBridge to a platform it does not report: typed in.
+    expect(editableMetrics({ post_bridge_post_id: "pb_1", channel: { synced_metrics: false } })).toHaveLength(8);
   });
 
   it("sends only what changed, and null for a cleared value", () => {

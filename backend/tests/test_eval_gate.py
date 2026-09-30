@@ -153,6 +153,19 @@ def test_no_trials_is_inconclusive_not_a_pass():
     assert decide("c", [], None)[0] == INCONCLUSIVE
 
 
+def test_a_baseline_from_another_model_judges_nothing():
+    """Measured on V4 Pro, a V4 Flash run would read as a cost collapse; the
+    verdict says which baseline is missing instead of passing or failing."""
+    base = {"pass_rate": 0.667, "median_cost_usd": 0.0675, "median_model_calls": 4.5,
+            "model": "deepseek/deepseek-v4-pro"}
+    verdict, reason = decide("c", _trials(True, True, True, cost=0.007), base, model="deepseek/deepseek-v4-flash")
+
+    assert verdict == INCONCLUSIVE
+    assert "deepseek/deepseek-v4-pro" in reason and "--write-baseline" in reason
+    assert decide("c", _trials(True, True, False, cost=0.0675, calls=4.5), base,
+                  model="deepseek/deepseek-v4-pro")[0] == PASS
+
+
 def test_every_case_is_synthetic_and_registered():
     assert cases_for("insights") and all(c.agent == "insights" for c in cases_for("insights"))
     assert set(CASES) == {c.id for c in cases_for()}
@@ -374,3 +387,22 @@ def test_a_verdict_that_leaves_markers_out_is_the_judges_failure(monkeypatch, ca
     gate._judge(ORGANIC, trial)
 
     assert trial.judge == judged and trial.failures == failures
+
+
+def test_the_judge_is_told_what_the_agent_could_read(monkeypatch):
+    """``invented_source`` asks what the analysis evidently did not have. Not
+    told, GLM failed 4 of 43 briefs for quoting the Ads account Solo had
+    connected all along."""
+    import tests.eval.judge as judge_module
+    from tests.eval import gate
+    from tests.eval.cases.solo_world import SoloWorld
+
+    seen: list[str] = []
+    monkeypatch.setattr(judge_module, "evaluate", lambda _rubric, artifact: seen.append(artifact.body))
+    trial = Trial(case_id=ORGANIC.id, n=1, brief="# Google Ads CPA rose to €14")
+
+    gate._judge(ORGANIC, trial, SoloWorld().data_sources())
+
+    assert "Connected when it was written: ga4, gsc, google_ads." in seen[0]
+    assert "Not connected: mixpanel, clarity, growthbook." in seen[0]
+    assert seen[0].endswith("# Google Ads CPA rose to €14")

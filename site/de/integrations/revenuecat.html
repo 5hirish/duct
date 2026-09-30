@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>RevenueCat KI-Analyst: App-Umsatz neben dem Web | Duct</title>
+<link rel="canonical" href="https://getduct.ai/de/integrations/revenuecat"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/revenuecat"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/revenuecat"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/revenuecat"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/revenuecat"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/revenuecat"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/revenuecat"/>
+<meta property="og:locale" content="de_DE"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct liest die Abonnements, Testphasen und den MRR von RevenueCat neben Stripe und deinen App-Anzeigen, sodass Web- und App-Umsatz als eine Zahl gelesen werden. Nur lesend, Kunden-IDs gehasht."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/de/integrations/revenuecat"/>
+<meta property="og:title" content="RevenueCat KI-Analyst: App-Umsatz neben dem Web"/>
+<meta property="og:description" content="Stripe sieht das Web. RevenueCat sieht den App Store und Google Play. Duct liest beide, damit der MRR eine Zahl ist und App-Anzeigen sich daran messen lassen."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-revenuecat.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="RevenueCat KI-Analyst: App-Umsatz neben dem Web"/>
+<meta name="twitter:description" content="Web-MRR plus App-MRR, als eine Zahl gelesen. Dann die App-Anzeigen, dagegen geprüft."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-revenuecat.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, ehrlich gesagt","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Wir verwenden Google Analytics, um zu sehen, welche Seiten zu einer Anmeldung führen. Das ist der gesamte Verwendungszweck – kein Ad-Targeting, keine Profile, nichts wird verkauft. Ablehnen und die Website verhält sich genau gleich.","Privacy Policy":"Datenschutzrichtlinie","Decline":"Ablehnen","Accept":"Akzeptieren","{n} stars on GitHub":"{n} Sterne auf GitHub","UTM Builder":"UTM Builder","SaaS Metrics Benchmark Calculator":"SaaS-Metriken-Benchmark-Rechner","Weekly Marketing Brief Generator":"Wöchentlicher Marketing-Briefing-Generator","CAC / LTV Calculator":"CAC / LTV Rechner","MRR Growth Rate Calculator":"MRR-Wachstumsraten-Rechner","Engagement Rate Calculator":"Engagement-Rate-Rechner","CTR Calculator":"CTR Rechner","CPM Calculator":"CPM Rechner","CPC Calculator":"CPC Rechner","CPA Calculator":"CPA Rechner","Marketing ROI Calculator":"Marketing-ROI-Rechner","ROAS Calculator":"ROAS-Rechner","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Menu":"Menü","Free Tools":"kostenlose Tools","Solutions":"Lösungen","Download Duct ↓":"Duct herunterladen ↓","Language":"Sprache","Enlarged screenshot":"Vergrößerter Screenshot","Close":"Schließen","Fit to screen":"An Bildschirm anpassen","Zoom in":"Vergrößern","Enlarge":"Vergrößern","Universal · Apple silicon and Intel":"Universal · Apple Silicon und Intel","Windows 10 and later":"Windows 10 und neuer","Runs on any distribution":"Läuft auf jeder Distribution","Debian and Ubuntu":"Debian und Ubuntu","Download ↓":"Herunterladen ↓","Download for {label} ↓":"Für {label} herunterladen ↓","Example numbers. Change any field and calculate again for yours.":"Beispielzahlen. Ändere ein beliebiges Feld und berechne deine eigenen Werte."};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"RevenueCat KI-Analyst: App-Umsatz neben dem Web","url":"https://getduct.ai/de/integrations/revenuecat","description":"Duct liest die Abonnements, Testphasen und den MRR von RevenueCat neben Stripe und deinen App-Anzeigen, sodass Web- und App-Umsatz als eine Zahl gelesen werden. Nur lesend, Kunden-IDs gehasht.","about":{"@type":"SoftwareApplication","name":"RevenueCat"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"de","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https://getduct.ai/de/"},{"@type":"ListItem","position":2,"name":"Integrationen","item":"https://getduct.ai/de/integrations/"},{"@type":"ListItem","position":3,"name":"RevenueCat","item":"https://getduct.ai/de/integrations/revenuecat"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Kann Duct Produkte, Angebote oder Abonnements ändern?","acceptedAnswer":{"@type":"Answer","text":"Nein. Duct hat keine RevenueCat-Änderungsoperation. Es liest Metriken, Konfiguration und eine Kundenstichprobe."}},{"@type":"Question","name":"Welche Kundendaten speichert Duct?","acceptedAnswer":{"@type":"Answer","text":"Aus einer Stichprobe von 500 Kunden: wann jeder erstmals und zuletzt gesehen wurde, ihr Land und ihre Plattform sowie ihre aktiven Berechtigungen, mit gehashter Nutzer-ID."}},{"@type":"Question","name":"Warum ein geheimer Schlüssel und nicht der in meiner App?","acceptedAnswer":{"@type":"Answer","text":"Die Schlüssel in deiner App sind öffentliche SDK-Schlüssel, und sie können RevenueCats REST API nicht lesen. Ein geheimer V2-Schlüssel mit Leseberechtigungen kann dies."}},{"@type":"Question","name":"Ist es kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. Was Geld kosten wird."}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026). Hypothesis: a subscription app whose dashboards each show half the revenue converts on a page that adds the halves up. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/de/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="Breadcrumb"><a href="/de/integrations/">Integrationen</a><span aria-hidden="true">/</span><span aria-current="page">RevenueCat</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/revenuecat.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>RevenueCat, <em>die Hälfte des Umsatzes der App.</em></h1>
+<p class="hero-sub">Stripe sieht das Web. RevenueCat sieht den App Store und Google Play. Duct liest beide, damit der MRR eine Zahl ist, und prüft App-Anzeigeninstallationen gegen die Abonnements, zu denen sie wurden.</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+<a class="btn btn-ghost btn-lg" href="/de/integrations/">Alle Integrationen</a>
+</div>
+<ul class="ig-facts" aria-label="Auf einen Blick"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Geheimer Schlüssel (V2)</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>Liest drei Datensätze</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schreibgeschützt</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Geprüft 29. Sep 2026</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/revenuecat.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/><img src="/assets/icons/apple-search-ads.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Die App erzielt 6.900 € MRR zusätzlich zu Stripes 18.400 €. Android zahlt zum halben iOS-Satz.</span></div>
+</div>
+<figcaption>Eine Beispielantwort. Deine wird aus deinen eigenen Konten gelesen.</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-revenuecat.webp" srcset="/assets/media/session-revenuecat-768.webp 768w, /assets/media/session-revenuecat-1536.webp 1536w, /assets/media/session-revenuecat.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="Ein Duct-Lauf: Gefragt, was die App neben dem Web verdient, liest Duct RevenueCat-Metriken und eine gehashte Kundenstichprobe neben Stripe und addiert den App-MRR zum Web-MRR"/>
+<figcaption>Frage, was die App verdient. Duct addiert den App-MRR von RevenueCat zum Web-MRR von Stripe und zeigt, welche Plattform zahlt.</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Fragen</p>
+<h2>Fragen, die du <em>einfach stellen kannst</em></h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>Wie hoch ist unser MRR über Web und App zusammen?</p><span class="ig-q-joins"><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>RevenueCat + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Haben die Apple Search Ads-Installationen Testphasen gestartet?</p><span class="ig-q-joins"><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><img src="/assets/icons/apple-search-ads.svg" width="18" height="18" alt=""/><span>RevenueCat + Apple Search Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Zahlen Android-Nutzer wie iOS-Nutzer?</p><span class="ig-q-joins"><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><span>RevenueCat</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>Wie viele Testphasen sind gerade aktiv?</p><span class="ig-q-joins"><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><span>RevenueCat</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Zugriff</p>
+<h2>Was es liest. <em>Was es ändern kann.</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>Was es liest</h3>
+<ul class="ig-reads">
+<li><b>Übersichtsmetriken</b><span class="ig-fields"><span>aktive Testphasen</span><span>aktive Abonnements</span><span>MRR</span><span>Umsatz</span><span>neue Kunden</span><span>aktive Nutzer</span></span></li>
+<li><b>Apps, Produkte, Berechtigungen und Angebote</b><span class="ig-fields"><span>Name</span><span>Store</span><span>Identifikator</span></span></li>
+<li><b>Kunden, eine Stichprobe von 500</b><span class="ig-fields"><span>erstmals gesehen</span><span>zuletzt gesehen</span><span>Land</span><span>Plattform</span><span>aktive Berechtigungen</span></span></li>
+</ul>
+<p class="ig-note">RevenueCat API v2 · geprüft anhand des Fetch-Codes 29. Sep 2026 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/revenuecat/fetch.py" rel="noopener">Quellcode lesen</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Was es ändern kann</h3>
+<p class="ig-readonly-big">Nichts.</p>
+<p>Duct hat keine RevenueCat-Änderungsoperation, daher kann es nichts in RevenueCat bearbeiten. Es kann dir aber trotzdem eine Änderung empfehlen, die du dort vornehmen kannst.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Wissen</p>
+<h2>Was Duct bereits weiß <em>über RevenueCat</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>RevenueCat ist die Wahrheit über die App-Einnahmen.</h3><p>Installationen und In-App-Events sind Signale. RevenueCat sieht Rückerstattungen, fehlgeschlagene Abrechnungsversuche und Kündigungen, daher prüft Duct App-Anzeigenkonversionen dagegen, niemals umgekehrt.</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>Ein SDK-Schlüssel kann die API nicht lesen.</h3><p>Schlüssel, die mit appl_ oder goog_ beginnen, sind für die App. Zum Lesen wird ein geheimer V2-Schlüssel benötigt, und Duct sagt dir, wenn du den falschen Typ eingefügt hast.</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>Kunden-IDs sind gehasht.</h3><p>Duct speichert einen SHA-256 jeder App-Nutzer-ID: genug, um einen Pull mit dem nächsten zu verbinden, nutzlos zur Identifizierung einer Person.</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Metriken sind stark ratenbegrenzt.</h3><p>RevenueCats Metrik-API erlaubt 25 Anfragen pro Minute. Duct dosiert seine Lesevorgänge, anstatt das Limit durch Fehlschläge zu finden.</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/revenuecat.md" rel="noopener">Lies die RevenueCat-Notizen, von denen der Duct-Agent arbeitet <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Gemeinsam besser</p>
+<h2>Was RevenueCat antwortet <em>mit einem Partner</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/de/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/revenuecat.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Web- und App-Umsatz, als eine Zahl gelesen.</span><span class="ig-pair-go">RevenueCat + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/de/integrations/apple-search-ads"><span class="ig-pair-logos"><img src="/assets/icons/revenuecat.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/apple-search-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Installationen rein, Abonnenten raus.</span><span class="ig-pair-go">RevenueCat + Apple Search Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/de/integrations/mixpanel"><span class="ig-pair-logos"><img src="/assets/icons/revenuecat.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Upgrades gezählt, Upgrades bezahlt.</span><span class="ig-pair-go">RevenueCat + Mixpanel <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">Einrichtung</p>
+<h2>RevenueCat <em>in drei Schritten</em> verbinden</h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>Öffne in RevenueCat die Projekteinstellungen, dann API-Schlüssel und erstelle einen geheimen API-Schlüssel (V2).</p></li>
+<li><span class="ig-step-n">2</span><p>Gib ihm Lesezugriff auf Projektkonfiguration, Kundeninformationen und Diagramm-Metriken.</p></li>
+<li><span class="ig-step-n">3</span><p>Öffne in Duct die Verbindungen, wähle RevenueCat und füge den Schlüssel ein.</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Nur lesend: Ein Schlüssel mit Leseberechtigungen kann kein Produkt oder Abonnement ändern, und Duct hat keine RevenueCat-Änderungsoperation.</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Schlüssel und Tokens werden verschlüsselt von Ducts gehosteter API gespeichert, niemals in deinem Browser, und du kannst eine Verbindung jederzeit entfernen. Ein Self-Host-Build speichert sie auf deiner eigenen Maschine.</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2>RevenueCat, <em>beantwortet</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Kann Duct Produkte, Angebote oder Abonnements ändern?</summary>
+<p class="faq-a">Nein. Duct hat keine RevenueCat-Änderungsoperation. Es liest Metriken, Konfiguration und eine Kundenstichprobe.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Welche Kundendaten speichert Duct?</summary>
+<p class="faq-a">Aus einer Stichprobe von 500 Kunden: wann jeder erstmals und zuletzt gesehen wurde, ihr Land und ihre Plattform sowie ihre aktiven Berechtigungen, mit gehashter Nutzer-ID.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Warum ein geheimer Schlüssel und nicht der in meiner App?</summary>
+<p class="faq-a">Die Schlüssel in deiner App sind öffentliche SDK-Schlüssel, und sie können RevenueCats REST API nicht lesen. Ein geheimer V2-Schlüssel mit Leseberechtigungen kann dies.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ist es kostenlos?</summary>
+<p class="faq-a">Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. <a href="/de/open-source#pricing">Was Geld kosten wird</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/de/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/de/partials/footer-expanded.html"><div class="legal-fallback"><a href="/de/">Duct</a><a href="/de/about">Über uns</a><a href="/de/privacy">Datenschutzrichtlinie</a><a href="/de/terms">Nutzungsbedingungen</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

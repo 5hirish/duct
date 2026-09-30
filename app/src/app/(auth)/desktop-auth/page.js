@@ -105,6 +105,21 @@ const CONNECTOR_ERRORS = {
   },
 };
 
+// GitHub connects through Duct's GitHub App, not Google, so the three reasons
+// whose copy names Google read wrong for it. The rest are provider-neutral.
+const GITHUB_ERRORS = {
+  exchange: {
+    title: msg`GitHub didn't complete the connection`,
+    body: msg`GitHub declined the exchange, which is almost always temporary. Try again from the app.`,
+    retryable: true,
+  },
+  config: {
+    title: msg`GitHub isn't set up on this server`,
+    body: msg`Trying again won't help. Connect GitHub with a fine-grained token from the GitHub card instead.`,
+    retryable: false,
+  },
+};
+
 // Only for display. An unrecognised id falls back to the generic wording rather
 // than being echoed back into the page.
 const CONNECTOR_NAMES = {
@@ -112,6 +127,7 @@ const CONNECTOR_NAMES = {
   ga4: "Google Analytics",
   gsc: "Google Search Console",
   gtm: "Google Tag Manager",
+  github: "GitHub",
 };
 
 function DesktopAuthContent() {
@@ -149,7 +165,11 @@ function DesktopAuthContent() {
 
     const reason = searchParams.get("error") || "";
     if (reason) {
-      const table = isConnectorFlow ? CONNECTOR_ERRORS : ERRORS;
+      const table = !isConnectorFlow
+        ? ERRORS
+        : connector === "github"
+          ? { ...CONNECTOR_ERRORS, ...GITHUB_ERRORS }
+          : CONNECTOR_ERRORS;
       setError(table[reason] || table.server || FALLBACK);
       setReason(reason);
       return;

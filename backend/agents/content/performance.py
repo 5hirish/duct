@@ -36,7 +36,7 @@ from statistics import median
 from uuid import UUID
 
 # Read off the plan schema, so a new type is "untested" the moment Day accepts it.
-from agents.content.schema import POST_TYPES
+from agents.content.schema import POST_TYPES, TEXT_POST_TYPE, VISUAL_POST_TYPES
 from service.content_metrics import METRIC_ALIASES, metric_value
 
 # How many recent posts inform a plan. Recent, because an account's audience
@@ -233,7 +233,7 @@ def rank_types(samples: list[PostSample], signal: str | None) -> tuple[list[Grou
     for post_type, group in by_type.items():
         enough = signal is not None and _measure(group, signal).measured >= MIN_MEASURED_POSTS
         (proven if enough else unproven).append(_group(post_type, group, PROVEN if enough else UNPROVEN))
-    untested = [_group(t, [], UNTESTED) for t in POST_TYPES if t not in by_type]
+    untested = [_group(t, [], UNTESTED) for t in VISUAL_POST_TYPES if t not in by_type]
 
     proven = _ranked(proven, signal)
     unproven = _ranked(unproven, signal)
@@ -303,7 +303,7 @@ def best_posting_times(samples: list[PostSample]) -> tuple[list[Window], list[Wi
 def summarise(samples: list[PostSample]) -> AccountPerformance:
     """All four signals from a list of published posts (newest first)."""
     if not samples:
-        return AccountPerformance(posts=0, explore=list(POST_TYPES))
+        return AccountPerformance(posts=0, explore=list(VISUAL_POST_TYPES))
     signal = ranking_signal(samples)
     types, exploit, explore = rank_types(samples, signal)
     hours, weekdays, timed = best_posting_times(samples)
@@ -361,6 +361,10 @@ def load_account_performance(project_id: UUID) -> AccountPerformance:
             select(ContentPost)
             .where(ContentPost.project_id == project_id)
             .where(ContentPost.posted_at.is_not(None))  # type: ignore[union-attr]
+            # The visual plan's history only. A text post's numbers come from
+            # another platform's feed (X views are not TikTok views), and
+            # ranking them together would steer a TikTok plan with a tweet.
+            .where(ContentPost.post_type != TEXT_POST_TYPE)
             .order_by(ContentPost.posted_at.desc())  # type: ignore[union-attr]
             .limit(LOOKBACK_POSTS)
         ).all()

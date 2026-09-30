@@ -27,9 +27,18 @@ from service.connector_scopes import (
     scope_rows,
     scope_status,
 )
+from service.auth_exchange import consume_github_grant, store_connect_link_code
 from service.connector_store import upsert_credential
-from service.connectors import CAP_ACCOUNTS, ConnectorAuthContext, get_connector, registry
+from service.connectors import (
+    CAP_ACCOUNTS,
+    ConnectorAuthContext,
+    get_connector,
+    registry,
+    server_only_keys_in,
+)
 from service.credentials import decrypt_credentials
+from service.github import GITHUB_CONNECTOR_ID
+from service.github import app as gh_app
 from service.provider_keys import CONNECTOR_TYPE as PROVIDER_KEY_TYPE
 
 router = APIRouter(tags=["user-connectors"])
@@ -40,6 +49,9 @@ ALLOWED_CONNECTOR_TYPES = {
     "apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads",
     # Gads wave 2 — the cross-check + behaviour sources.
     "mixpanel", "clarity", "growthbook",
+    # What shipped, and when (issue #268). Opens project binding too:
+    # routes/project_connectors.py checks this same set.
+    GITHUB_CONNECTOR_ID,
 }
 
 
@@ -253,6 +265,19 @@ def _check_residency(residency: str) -> str:
     return value
 
 
+def _refuse_server_only_keys(connector_type: str, credentials: dict) -> None:
+    """A grant Duct verified itself is never taken from a request (service/github/app.py)."""
+    reserved = server_only_keys_in(connector_type, credentials)
+    if reserved:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"{', '.join(reserved)} is set by Duct's own connect flow, never by a "
+                "request. Use Connect on the Connections page."
+            ),
+        )
+
+
 @router.post("", status_code=201)
 def save_connector(
     body: ConnectorIn,
@@ -261,6 +286,7 @@ def save_connector(
 ) -> ConnectorOut:
     if body.connector_type not in ALLOWED_CONNECTOR_TYPES:
         raise HTTPException(status_code=422, detail=f"Unknown connector type: {body.connector_type!r}")
+    _refuse_server_only_keys(body.connector_type, body.credentials)
 
     residency = _check_residency(body.residency)
     # The same upsert the onboarding sign-in bundle writes through, so what a
@@ -296,3 +322,107 @@ def delete_connector(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Connector not found")
     session.delete(row)
     session.commit()
+
+
+# ---------------------------------------------------------------------------
+# GitHub App: the one-click connection (service/github/app.py has the flow)
+# ---------------------------------------------------------------------------
+
+class GitHubClaimIn(BaseModel):
+    code: str
+
+
+@router.get("/github/app")
+def github_app_status(user: User = Depends(get_current_user)) -> dict:
+    """Whether this server can connect GitHub in one click, or only by token.
+
+    Self-hosted installs have no App to offer, so the page asks before it
+    draws a button that could only fail.
+    """
+    available = gh_app.is_configured()
+    return {"available": available, "manage_url": gh_app.manage_url() if available else ""}
+
+
+@router.post("/github/connect")
+def start_github_connect(user: User = Depends(get_current_user)) -> dict:
+    """A five-minute, single-use code naming the signed-in user.
+
+    The authorize route is a browser navigation, which carries no bearer
+    token, so this is how it learns whose connect it is — the guest-link
+    pattern from sign-in, in its own namespace.
+    """
+    if not gh_app.is_configured():
+        raise HTTPException(
+            status_code=501,
+            detail="The GitHub App is not configured on this server. Connect with a fine-grained token instead.",
+        )
+    return {"link": store_connect_link_code(str(user.id))}
+
+
+@router.post("/github/claim")
+def claim_github_grant(
+    body: GitHubClaimIn,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Store what GitHub granted, as one row per repository, for the user who started it.
+
+    The only writer of an App grant. The code came back through a redirect
+    any browser could be sent to, so it is honoured for the user whose link
+    code began the connect and for no one else. Someone else's code answers
+    exactly as an unknown one does, and is spent either way.
+    """
+    payload = consume_github_grant(body.code.strip())
+    if payload is None or payload.get("user_id") != str(user.id):
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail="That GitHub connection expired or was started from another account. Connect again.",
+        )
+    grant = payload.get("grant") or {}
+    rows = _store_github_grant(session, user.id, grant.get("repos") or [])
+    session.commit()
+    for row in rows:
+        session.refresh(row)
+    return {"connectors": [_to_out(r) for r in rows], "omitted": int(grant.get("omitted") or 0)}
+
+
+def _store_github_grant(session: Session, user_id: UUID, repos: list[dict]) -> list[ConnectorCredential]:
+    """Upsert a row per granted repository; drop App rows GitHub no longer grants.
+
+    Rows the same shape a pasted token writes (``account_id`` = ``owner/name``),
+    so the card, the project picker and FetchData need nothing new. A pasted
+    token's row for a repository the App now covers is replaced by the App's;
+    one for any other repository is the user's own and is left alone.
+    """
+    granted = {str(r.get("full_name") or "") for r in repos} - {""}
+    existing = session.execute(
+        select(ConnectorCredential).where(
+            ConnectorCredential.user_id == user_id,
+            ConnectorCredential.connector_type == GITHUB_CONNECTOR_ID,
+        )
+    ).scalars().all()
+    for row in existing:
+        if row.account_id in granted:
+            continue
+        try:
+            stored = decrypt_credentials(row.credentials_enc)
+        except Exception:  # noqa: BLE001 — an unreadable row is not provably an App grant
+            continue
+        if stored.get(gh_app.INSTALLATION_ID_KEY):
+            session.delete(row)
+
+    rows = []
+    for repo in repos:
+        full_name = str(repo.get("full_name") or "")
+        installation_id = str(repo.get("installation_id") or "")
+        if not full_name or not installation_id:
+            continue
+        rows.append(upsert_credential(
+            session,
+            user_id=user_id,
+            connector_type=GITHUB_CONNECTOR_ID,
+            credentials={gh_app.INSTALLATION_ID_KEY: installation_id, "repo": full_name},
+            account_id=full_name,
+            account_name=full_name,
+        ))
+    return rows

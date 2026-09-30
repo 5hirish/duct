@@ -1,7 +1,7 @@
 """content post video and video model setting
 
 Revision ID: e1ebd2525648
-Revises: 5e7128ddc249
+Revises: 290f4a3b4827
 Create Date: 2026-09-29 22:26:22.203353
 
 Video posts (issue #284). ``content_posts.video`` names the clip a video post
@@ -23,7 +23,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'e1ebd2525648'
-down_revision = '5e7128ddc249'
+down_revision = '290f4a3b4827'
 branch_labels = None
 depends_on = None
 

@@ -1,5 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Google Ads">
-  <path fill="#FBBC04" d="M2.99 14.9 9.4 3.8a3.05 3.05 0 0 1 5.29 3.05L8.28 17.95A3.05 3.05 0 0 1 2.99 14.9Z"/>
-  <path fill="#4285F4" d="M21.01 14.9 14.6 3.8a3.05 3.05 0 0 0-5.29 3.05l6.41 11.1a3.05 3.05 0 0 0 5.29-3.05Z"/>
-  <circle cx="5.63" cy="17.42" r="3.05" fill="#34A853"/>
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	 x="0px" y="0px" width="48px" height="48px" viewBox="0 0 192 192" enable-background="new 0 0 192 192" xml:space="preserve">
+<g>
+	<g>
+		<rect x="8" y="62.52" transform="matrix(0.5 -0.866 0.866 0.5 -46.2127 103.666)" fill="#FBBC04" width="117.33" height="58.67"/>
+		<path fill="#4285F4" d="M180.07,127.99L121.4,26.38c-8.1-14.03-26.04-18.84-40.07-10.74c-14.03,8.1-18.84,26.04-10.74,40.07
+			l58.67,101.61c8.1,14.03,26.04,18.83,40.07,10.74C183.36,159.96,188.16,142.02,180.07,127.99z"/>
+		<circle fill="#34A853" cx="37.34" cy="142.66" r="29.33"/>
+	</g>
+	<rect fill="none" width="192" height="192"/>
+</g>
 </svg>

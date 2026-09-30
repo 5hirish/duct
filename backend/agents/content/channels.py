@@ -1,18 +1,23 @@
 """Channel seam for the Content agent.
 
-The content agent is currently a TikTok specialist — its prompts, hooks, slide
-architecture and visual rules are all TikTok-native. This module makes that
-identity explicit and selectable by a post's *primary channel* (platforms[0]),
-so other channel agents can be added later without touching call sites.
+A post is one row whatever it is bound for: ``caption`` is its words,
+``slides`` its pictures (optional for a text post), ``replies`` the author's
+own follow-ups under it. What differs between platforms is rules, not shape,
+and the rules live here, in one table, so the agent's writer, the publish path
+and the app read the same numbers: how long the words may be, where the feed
+folds them, whether the platform takes a post with no media, and how many of
+the replies go out with it.
 
-For now only "tiktok" is a fully supported channel. Any other channel resolves
-to the TikTok playbook with `supported=False` so the UI/prompt can note that no
-dedicated agent exists yet.
+A post's *primary channel* (platforms[0]) picks the playbook the agent drafts
+with. Three have one: TikTok (visual), and X and LinkedIn (text). Any other
+channel falls back to the TikTok playbook with ``supported=False`` so the UI
+and the prompt can say no dedicated agent exists yet.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import re
+from dataclasses import asdict, dataclass
 from enum import StrEnum
 
 from utils.strings import titleize
@@ -43,38 +48,103 @@ class Platform(StrEnum):
     GOOGLE_BUSINESS = "google_business"
 
 
-# Channels with a dedicated, tuned playbook today.
-SUPPORTED: set[str] = {"tiktok"}
+class Playbook(StrEnum):
+    """The prompt families the agent can draft with. Each supported channel
+    maps to one; a channel without one borrows TikTok's."""
 
-# Display labels. Keyed by the enum, so adding a Platform without a label is a
-# visible hole rather than a silent titleize() fallback (test_content_unit
-# asserts the map is total). Spelled out because "TikTok" and "Twitter / X"
-# don't fall out of titleize. StrEnum keys match plain-string lookups, so
-# resolve() below can still index it with a bare channel id.
-_LABELS: dict[Platform, str] = {
-    Platform.TIKTOK: "TikTok",
-    Platform.INSTAGRAM: "Instagram",
-    Platform.YOUTUBE: "YouTube",
-    Platform.LINKEDIN: "LinkedIn",
-    Platform.TWITTER: "Twitter / X",
-    Platform.FACEBOOK: "Facebook",
-    Platform.THREADS: "Threads",
-    Platform.BLUESKY: "Bluesky",
-    Platform.PINTEREST: "Pinterest",
-    Platform.GOOGLE_BUSINESS: "Google Business",
+    TIKTOK   = "tiktok"
+    TWITTER  = "twitter"
+    LINKEDIN = "linkedin"
+
+
+@dataclass(frozen=True)
+class ChannelRules:
+    """What a platform accepts, as far as drafting and publishing care.
+
+    ``max_chars`` is the platform's own ceiling on one post's words — X's is
+    for a standard account, the one every account has. Counted as Python
+    ``len`` (code points), which is exact for the Latin text these playbooks
+    write; X weighs CJK and most emoji double and every URL as 23, and a post
+    that keeps its links in the reply (``strips_links``) never meets the URL
+    case.
+
+    ``strips_links``: PostBridge deletes every link from the post itself on
+    X, bare domains included, because X charges more for a post with one. It
+    says nothing when it does, so a link there is a copy problem, and the
+    reply, which keeps its links, is where one goes.
+
+    ``fold_chars`` is where the feed cuts to "see more" (0: it does not), so
+    the preview can show the reader's first screen. ``publishable_replies`` is
+    how many of ``replies`` PostBridge posts with it: one on X and Threads,
+    as a ``first_comment``; none elsewhere, where a reply is for the author
+    to paste. ``requires_media`` is PostBridge's own list of platforms that
+    reject a post without a picture or video, and ``synced_metrics`` its list
+    of those it reports views and likes for (TikTok, YouTube, Instagram,
+    Facebook); anywhere else the numbers are typed in from the platform.
+    """
+
+    label:               str
+    max_chars:           int
+    fold_chars:          int = 0
+    publishable_replies: int = 0
+    requires_media:      bool = False
+    hashtags:            bool = True    # does the playbook expect them at all
+    synced_metrics:      bool = False   # PostBridge reports this platform's numbers
+    strips_links:        bool = False   # PostBridge drops links from the post itself
+
+
+# Keyed by the enum so a Platform without rules is a visible hole (the unit
+# test asserts the table is total). Labels are spelled out because "TikTok"
+# and "Twitter / X" don't fall out of titleize. StrEnum keys match plain
+# strings, so rules_for() can index it with a bare channel id.
+RULES: dict[Platform, ChannelRules] = {
+    Platform.TIKTOK:          ChannelRules("TikTok", 4000, requires_media=True, synced_metrics=True),
+    Platform.INSTAGRAM:       ChannelRules("Instagram", 2200, fold_chars=125, requires_media=True, synced_metrics=True),
+    Platform.YOUTUBE:         ChannelRules("YouTube", 5000, requires_media=True, synced_metrics=True),
+    Platform.LINKEDIN:        ChannelRules("LinkedIn", 3000, fold_chars=210, hashtags=False),
+    Platform.TWITTER:         ChannelRules("Twitter / X", 280, publishable_replies=1, hashtags=False, strips_links=True),
+    Platform.FACEBOOK:        ChannelRules("Facebook", 63206, synced_metrics=True),
+    Platform.THREADS:         ChannelRules("Threads", 500, publishable_replies=1),
+    Platform.BLUESKY:         ChannelRules("Bluesky", 300),
+    Platform.PINTEREST:       ChannelRules("Pinterest", 500, requires_media=True),
+    Platform.GOOGLE_BUSINESS: ChannelRules("Google Business", 1500),
 }
 
+# Channels with a dedicated, tuned playbook today, and which one each uses.
+PLAYBOOKS: dict[str, Playbook] = {
+    Platform.TIKTOK:   Playbook.TIKTOK,
+    Platform.TWITTER:  Playbook.TWITTER,
+    Platform.LINKEDIN: Playbook.LINKEDIN,
+}
+SUPPORTED: set[str] = {str(p) for p in PLAYBOOKS}
+
+# The playbooks whose deliverable is words first: a text post, no slides.
+TEXT_PLAYBOOKS: frozenset[str] = frozenset({Playbook.TWITTER, Playbook.LINKEDIN})
+
 DEFAULT_CHANNEL = "tiktok"
+
+# The ceiling for a channel id the table does not know — a stored row from a
+# vendor that added a platform first reads, rather than crashing.
+_UNKNOWN_MAX_CHARS = 2200
 
 
 @dataclass(frozen=True)
 class Channel:
     """Resolved channel for a drafting session."""
 
-    id: str            # requested channel, e.g. "youtube"
-    label: str         # display label, e.g. "YouTube"
-    supported: bool    # True only when a dedicated playbook exists
-    playbook: str      # the channel whose prompt rules we actually apply
+    id: str                # requested channel, e.g. "youtube"
+    label: str             # display label, e.g. "YouTube"
+    supported: bool        # True only when a dedicated playbook exists
+    playbook: str          # the playbook whose prompt rules we actually apply
+    rules: ChannelRules
+
+    @property
+    def text_first(self) -> bool:
+        return self.playbook in TEXT_PLAYBOOKS
+
+
+def _normalise(channel: str | None) -> str:
+    return (str(channel or "") or DEFAULT_CHANNEL).strip().lower() or DEFAULT_CHANNEL
 
 
 def primary_channel(platforms: list | None) -> str:
@@ -85,17 +155,98 @@ def primary_channel(platforms: list | None) -> str:
     return DEFAULT_CHANNEL
 
 
+# The site crawl names channels by the host it found a profile on
+# (agents/audit/draft._SOCIAL_HOSTS), which calls X "x"; posts use
+# PostBridge's wire names, which call it "twitter".
+_ALIASES: dict[str, str] = {"x": Platform.TWITTER}
+
+
+def brand_platforms(active_channels: list | None) -> list[str]:
+    """The brand's active channels as Platform values, in their order, minus
+    anything Duct cannot post to. Where a plan or a draft looks for "the
+    brand's channels" — the crawl found the profiles, so start from those."""
+    out: list[str] = []
+    for raw in active_channels or []:
+        if not isinstance(raw, str):
+            continue
+        cid = _ALIASES.get(raw.strip().lower(), raw.strip().lower())
+        if cid in RULES and cid not in out:
+            out.append(str(Platform(cid)))
+    return out
+
+
+def rules_for(channel: str | None) -> ChannelRules:
+    cid = _normalise(channel)
+    return RULES.get(cid) or ChannelRules(titleize(cid), _UNKNOWN_MAX_CHARS)
+
+
 def resolve(channel: str | None) -> Channel:
-    """Resolve a requested channel to its playbook.
+    """Resolve a requested channel to its playbook and rules.
 
     Unknown / not-yet-supported channels fall back to the TikTok playbook with
     supported=False (callers surface a "no dedicated agent yet" note).
     """
-    cid = (channel or DEFAULT_CHANNEL).strip().lower() or DEFAULT_CHANNEL
-    supported = cid in SUPPORTED
+    cid = _normalise(channel)
+    rules = rules_for(cid)
     return Channel(
         id=cid,
-        label=_LABELS.get(cid, titleize(cid)),
-        supported=supported,
-        playbook=cid if supported else DEFAULT_CHANNEL,
+        label=rules.label,
+        supported=cid in SUPPORTED,
+        playbook=str(PLAYBOOKS.get(cid, Playbook.TIKTOK)),
+        rules=rules,
     )
+
+
+def channel_payload(channel: str | None) -> dict:
+    """The channel as the app reads it: id, playbook, and the rules the
+    preview counts against. Sent with every post so the app never keeps its
+    own copy of a character limit."""
+    ch = resolve(channel)
+    return {
+        "id": ch.id, "supported": ch.supported, "playbook": ch.playbook,
+        "text_first": ch.text_first, **asdict(ch.rules),
+    }
+
+
+# What PostBridge strips from a tweet: full URLs, www. hosts, and bare domains
+# like foo.com or foo.io/path (its own docs). Its exact pattern is not
+# published, so the bare-domain half names the endings people actually link
+# to, and a word such as "Node.js" or "e.g." is never taken for a link.
+_LINK_TLDS = (
+    "com", "net", "org", "io", "ai", "co", "app", "dev", "xyz", "me", "so", "sh",
+    "gg", "ly", "tv", "fm", "to", "us", "uk", "eu", "de", "fr", "es", "in", "ca",
+    "au", "info", "biz", "tech", "site", "online", "store", "blog", "page", "link",
+)
+_LINK = re.compile(
+    r"(?i)(?:https?://|\bwww\.)\S+"
+    r"|\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*"
+    r"\.(?:" + "|".join(_LINK_TLDS) + r")\b(?:/\S*)?"
+)
+
+
+def links_in(text: str) -> list[str]:
+    return [m.group(0).rstrip(".,;:!?)\"'") for m in _LINK.finditer(text or "")]
+
+
+def copy_problems(channel: str | None, caption: str, replies: list[str] | None = None) -> list[str]:
+    """What is wrong with a post's words for its channel, as sentences a model
+    or a person can act on. Empty when it fits. The limits are the platform's
+    own, so an over-length post is not a style note: it does not publish."""
+    rules = rules_for(channel)
+    out: list[str] = []
+    caption = caption or ""
+    if len(caption) > rules.max_chars:
+        out.append(f"The post is {len(caption)} characters; {rules.label} allows {rules.max_chars}.")
+    if rules.strips_links and (found := links_in(caption)):
+        out.append(
+            f"{rules.label} loses every link in the post itself on the way out "
+            f"({', '.join(found)}), bare domains included. Put the link in the reply, "
+            "where it is kept."
+        )
+    for i, reply in enumerate(replies or [], start=1):
+        reply = reply or ""
+        if not reply.strip():
+            out.append(f"Reply {i} is empty.")
+        elif len(reply) > rules.max_chars:
+            out.append(f"Reply {i} is {len(reply)} characters; {rules.label} allows {rules.max_chars}.")
+    return out

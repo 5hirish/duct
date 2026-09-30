@@ -62,12 +62,25 @@ class ContentPost(SQLModel, table=True):
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     slides_html: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    # The post's words on every platform: a TikTok caption, the tweet, the
+    # LinkedIn post. A text post (post_type "text") is this, with no slides.
+    # Its limit is the channel's, in agents/content/channels.RULES.
     caption: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    # The author's own follow-ups under the post, in order: an X reply or
+    # thread, a LinkedIn or Threads first comment. How many publish with the
+    # post is the channel's rule (PostBridge posts one, as first_comment, on X
+    # and Threads); the rest are for the author to paste.
+    replies: list = Field(
+        default_factory=list,
+        sa_column=Column(json_column(), nullable=False, server_default="[]"),
+    )
     hashtags: list = Field(
         default_factory=list,
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
-    tiktok_title: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    # A platform's title field where it has one: a TikTok photo post, a
+    # YouTube video, a LinkedIn document. Was tiktok_title.
+    title: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     hook_type: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     hook_text: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
     hook_emotion: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
@@ -91,7 +104,8 @@ class ContentPost(SQLModel, table=True):
     # When the post is scheduled to publish (set via the publish flow). Drives
     # the calendar/week placement and the "scheduled" date badge.
     scheduled_at: datetime | None = Field(default=None, sa_column=Column(utc_datetime(), nullable=True))
-    tiktok_url: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    # Where the published post lives, on whichever platform. Was tiktok_url.
+    published_url: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     # Provenance: "duct" when the post went out through our system (Duct publish
     # flow or a migrated MaxAura plan); "" / "external" when it appeared on the
     # account from elsewhere (TikTok Studio, PostBridge dashboard).

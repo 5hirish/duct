@@ -5,8 +5,12 @@
     poetry run python scripts/agent_eval.py --agent insights -k 1  # one trial, a quick look
     poetry run python scripts/agent_eval.py --write-baseline       # a ratchet PR, nothing else
 
-Defaults to DeepSeek V4 Pro on OpenRouter for the agent and the judge alike
-(``--provider`` / ``--model``, ``DUCT_JUDGE_PROVIDER`` / ``DUCT_JUDGE_MODEL``).
+Defaults to DeepSeek V4 Flash on OpenRouter for the agent, about a sixth of
+V4 Pro's cost per trial, and GLM 5.3 Flash for the judge, a different family
+pinned to hosts that can answer (tests/eval/client.py). Override with
+``--provider`` / ``--model`` and ``DUCT_JUDGE_PROVIDER`` / ``DUCT_JUDGE_MODEL``.
+A baseline records the model it was measured on, and a run on another model
+is INCONCLUSIVE until one is written for it.
 The key is ``OPENROUTER_API_KEY`` from the environment, else this instance's
 settings: the eval is a run Duct pays for itself.
 
@@ -44,7 +48,7 @@ import json  # noqa: E402
 from datetime import date  # noqa: E402
 
 DEFAULT_PROVIDER = "openrouter"
-DEFAULT_MODEL = "deepseek/deepseek-v4-pro"
+DEFAULT_MODEL = "deepseek/deepseek-v4-flash"
 DEFAULT_BUDGET_USD = 3.0
 
 
@@ -72,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
     from tests.eval.cases import CASES, cases_for
     from tests.eval.gate import (
         BASELINES, DEFAULT_TRIALS, FAIL, INCONCLUSIVE, CaseResult, baseline_entry,
-        decide, load_baselines, report, run_trials, trial_record,
+        baseline_mismatch, decide, load_baselines, report, run_trials, trial_record,
     )
 
     provider = Provider(args.provider)
@@ -110,12 +114,16 @@ def main(argv: list[str] | None = None) -> int:
 
     for case in cases:
         print(f"{case.id} ({k} trials)", flush=True)
+        base = baselines.get(case.id)
         trials = trials_for(case, 1, k)
-        verdict, reason = decide(case.id, trials, baselines.get(case.id))
-        if verdict == INCONCLUSIVE and trials and not args.no_rerun and not args.write_baseline:
+        verdict, reason = decide(case.id, trials, base, model=args.model)
+        # A baseline from another model stays inconclusive however many more
+        # trials run, so it never earns the re-run.
+        rerun = not (args.no_rerun or args.write_baseline or baseline_mismatch(base, args.model))
+        if verdict == INCONCLUSIVE and trials and rerun:
             print("  inconclusive; three more", flush=True)
             trials += trials_for(case, len(trials) + 1, DEFAULT_TRIALS)
-            verdict, reason = decide(case.id, trials, baselines.get(case.id))
+            verdict, reason = decide(case.id, trials, base, model=args.model)
         results.append(CaseResult(case.id, verdict, reason, trials))
 
     text = report(results, provider=provider.value, model=args.model, spent=spent)

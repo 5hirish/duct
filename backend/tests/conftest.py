@@ -14,7 +14,7 @@ from sqlmodel import SQLModel
 from agents.audit.schema import AuditBusinessContext
 
 
-def make_sqlite_engine(*, drop_partial_indexes: bool = False):
+def make_sqlite_engine(*, drop_partial_indexes: bool = False, path=None):
     """An in-memory SQLite engine with every registered SQLModel table created.
 
     Eleven test modules were each hand-rolling this same four-line incantation.
@@ -30,12 +30,21 @@ def make_sqlite_engine(*, drop_partial_indexes: bool = False):
     UNIQUE constraints that reject legitimate rows. Dropping them lets these
     tests exercise the application logic; Postgres keeps them as the real
     backstop, and the migration is what enforces them in production.
+
+    ``path`` trades the shared connection for a file, so each thread gets its
+    own. A test that runs two sessions *at the same time* needs that: two
+    threads interleaving on one ``sqlite3`` connection read each other's rows
+    half-finished, which surfaced in CI as ``Invalid isoformat string: ''``
+    from the memory consolidation race test.
     """
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+    if path is not None:
+        engine = create_engine(f"sqlite:///{path}", connect_args={"check_same_thread": False})
+    else:
+        engine = create_engine(
+            "sqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
     SQLModel.metadata.create_all(engine)
     if drop_partial_indexes:
         with engine.begin() as conn:
@@ -195,3 +204,31 @@ def no_network(request, monkeypatch):
     monkeypatch.setattr(socket.socket, "connect", guard)
     monkeypatch.setattr(socket.socket, "connect_ex", guard)
     yield
+
+
+# ---------------------------------------------------------------------------
+# Rate limits start every test with an empty window
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limits(monkeypatch):
+    """A new window for every module-level ``RateLimit`` in ``routes``.
+
+    Each limiter is process state keyed on an address or a user, and a
+    TestClient is always the same address. Without this, the suite's total
+    traffic through a route is what trips its limit, so a test fails for what
+    its neighbours did and a new test elsewhere turns an old one red. The
+    thresholds stay the production ones; only the counts are reset. A test
+    that wants a limit it can reach swaps in its own, after this has run.
+    """
+    import sys
+
+    from service.ratelimit import RateLimit
+
+    for name, module in list(sys.modules.items()):
+        if not name.startswith("routes.") or module is None:
+            continue
+        for attr, value in list(vars(module).items()):
+            if isinstance(value, RateLimit):
+                monkeypatch.setattr(module, attr, RateLimit(value.limit, value.window_seconds))

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Product screenshots from the real app, fed one story.
 //
-//   npm --prefix app run dev                 # the app on :3003 (once)
+//   npm --prefix app run dev                 # the app on :3003 (once), or a build:
+//   NEXT_PUBLIC_API_BASE=http://localhost:8002 npm --prefix app run build && npm --prefix app run start -- -p 3003
 //   node scripts/shots/shoot.mjs [id ...]    # all scenarios, or the named ones
 //
 // What it does: builds the story's agent streams and canned responses into a
@@ -27,7 +28,7 @@ const { chromium } = req(req.resolve("playwright", { paths: [join(REPO, "site")]
 const sharp = req(req.resolve("sharp", { paths: [join(REPO, "app")] }));
 const { SCENARIOS } = await import("./scenarios.mjs");
 const fixtures = await import("./fixtures.mjs");
-const { STORY } = await import("../../app/src/lib/__fixtures__/solo-story.mjs");
+const { CONNECTOR_SESSIONS, STORY } = await import("../../app/src/lib/__fixtures__/solo-story.mjs");
 
 const APP = process.env.APP || "http://localhost:3003";
 const MOCK_PORT = Number(process.env.MOCK_PORT || 8012);
@@ -42,10 +43,11 @@ mkdirSync(OUT, { recursive: true });
 // --- story → mock backend inputs -------------------------------------------
 const build = mkdtempSync(join(tmpdir(), "duct-shots-"));
 writeFileSync(join(build, "insights-pause.json"), JSON.stringify(fixtures.insightsFrames()));
-// One agent, three sessions: the mock serves `<agent>@<scenario>.json` to the
+// One agent, many sessions: the mock serves `<agent>@<scenario>.json` to the
 // scenario named in the x-duct-shot header, the default file to everyone else.
 writeFileSync(join(build, "insights@product-session.json"), JSON.stringify(fixtures.productFrames()));
 writeFileSync(join(build, "insights@paid-session.json"), JSON.stringify(fixtures.paidFrames()));
+CONNECTOR_SESSIONS.forEach((c, i) => writeFileSync(join(build, `insights@${c.shot}.json`), JSON.stringify(fixtures.connectorFrames(c, i))));
 writeFileSync(join(build, "content-plan.json"), JSON.stringify(fixtures.contentFrames()));
 writeFileSync(join(build, "audit-run.json"), JSON.stringify(fixtures.auditFrames()));
 writeFileSync(join(build, "routes.json"), JSON.stringify(fixtures.routes()));

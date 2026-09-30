@@ -166,6 +166,10 @@ msgstr "{count, plural, other {# 修正}}"
 msgid "{count, plural, one {# post} other {# posts}}"
 msgstr "{count, plural, other {# 投稿}}"
 
+#: src/app/(app)/connections/page.jsx
+msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
+msgstr "{count, plural, one {GitHubに接続しました: リポジトリ # 件。} other {GitHubに接続しました: リポジトリ # 件。}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, other {# ページ}}"
@@ -214,6 +218,14 @@ msgstr "{eventCount, plural, other {# イベント}}"
 msgid "{extra, plural, one {+# more} other {+# more}}"
 msgstr "{extra, plural, other {+# その他}}"
 
+#: src/components/content/PublishModal.jsx
+msgid "{extra, plural, one {Post the other reply yourself once it's live: each part has a copy button.} other {Post the other # replies yourself once it's live: each part has a copy button.}}"
+msgstr "{extra, plural, one {残りの返信は投稿の公開後にご自身で投稿してください。各パートにコピーボタンがあります。} other {残りの#件の返信は投稿の公開後にご自身で投稿してください。各パートにコピーボタンがあります。}}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{extra} over the limit"
+msgstr "上限を{extra}文字超過"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{failCount, plural, one {# Error} other {# Errors}}"
 msgstr "{failCount, plural, other {# エラー}}"
@@ -233,6 +245,10 @@ msgstr "{from} ～ {to}"
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "{granted} of {total} granted"
 msgstr "{granted} / {total} 許可済み"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{hidden, plural, one {# character sits behind the fold.} other {# characters sit behind the fold.}}"
+msgstr "{hidden, plural, other {#文字が「もっと見る」の後ろに隠れます。}}"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{hreflangCount, plural, one {# lang} other {# langs}}"
@@ -282,9 +298,29 @@ msgstr "{label} — 近日公開"
 msgid "{label} API key"
 msgstr "{label} APIキー"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} doesn't publish comments. Paste this under the post once it's live."
+msgstr "{label}ではコメントは公開されません。投稿の公開後に、その下に貼り付けてください。"
+
+#: src/components/content/PublishModal.jsx
+msgid "{label} doesn't publish comments. The post goes out alone; paste your first comment under it once it's live."
+msgstr "{label}ではコメントは公開されません。投稿は単独で公開されるので、公開後に最初のコメントをその下に貼り付けてください。"
+
 #: src/components/insights/ConnectionRequest.jsx
 msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
 msgstr "{label} はサインインではなくAPIキーが必要です。<0>接続ページ</0>で追加し、Ductに続行を指示してください。"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} only publishes the first reply. Post this one yourself."
+msgstr "{label}で公開されるのは最初の返信のみです。この返信はご自身で投稿してください。"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{label} post"
+msgstr "{label}の投稿"
+
+#: src/components/content/PublishModal.jsx
+msgid "{label} publishes the post and its first reply."
+msgstr "{label}では投稿と最初の返信が公開されます。"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "{label} score"
@@ -297,6 +333,10 @@ msgstr "{landingPages, plural, other {# ランディングページ}}"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{landingPages, plural, one {# page} other {# pages}}"
 msgstr "{landingPages, plural, other {# ページ}}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "{left} left"
+msgstr "残り{left}文字"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
@@ -345,6 +385,10 @@ msgstr "{newCount} 新規、{resolvedCount} 解決済み"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "{notesLeft, plural, one {# character left} other {# characters left}}"
 msgstr "{notesLeft, plural, other {# 文字が残っています}}"
+
+#: src/app/(app)/connections/page.jsx
+msgid "{omitted, plural, one {# more was left out; choose specific repositories on GitHub to reach it.} other {# more were left out; choose specific repositories on GitHub to reach them.}}"
+msgstr "{omitted, plural, one {ほかに # 件は含まれていません。含めるには、GitHubで対象のリポジトリを選択してください。} other {ほかに # 件は含まれていません。含めるには、GitHubで対象のリポジトリを選択してください。}}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{oppCount} Opp"
@@ -526,6 +570,14 @@ msgstr "{unconfirmed, plural, one {# 未確認} other {# 未確認}}"
 #: src/components/workspace/ContextRing.jsx
 msgid "{used} of {window} tokens"
 msgstr "{window}トークンのうち{used}"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "{vendor} API key"
+msgstr "{vendor}のAPIキー"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "{vendor} isn't set up yet"
+msgstr "{vendor}はまだ設定されていません"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "{videoShare} of posts · <0>{videoEng}</0> eng."
@@ -876,6 +928,10 @@ msgstr "調整済み"
 msgid "Adaptive thinking"
 msgstr "適応思考"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Add a first comment"
+msgstr "最初のコメントを追加"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Add a guardrail"
 msgstr "ガードレールを追加"
@@ -887,6 +943,10 @@ msgstr "ハッシュタグを追加"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
 msgstr "プロジェクトを追加"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Add a reply"
+msgstr "返信を追加"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Add a tag"
@@ -1690,8 +1750,8 @@ msgid "Caption"
 msgstr "キャプション"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Caption is longer than Instagram allows"
-msgstr "キャプションがInstagramの許容文字数を超えています"
+#~ msgid "Caption is longer than Instagram allows"
+#~ msgstr "キャプションがInstagramの許容文字数を超えています"
 
 #: src/components/content/StyleGallery.jsx
 msgid "Captions"
@@ -1780,6 +1840,10 @@ msgstr "招待を確認中…"
 msgid "Checking…"
 msgstr "確認中…"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Choose \"Only select repositories\", then read-only access to Contents, Pull requests, Issues and Metadata. Duct only ever reads."
+msgstr "「Only select repositories」を選び、Contents、Pull requests、Issues、Metadata に読み取り専用のアクセス権を付与してください。Ductは常に読み取りのみを行います。"
+
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Choose {entity}"
 msgstr "{entity}を選択"
@@ -1791,6 +1855,14 @@ msgstr "{projectName}の{entity}を選択"
 #: src/components/models/ModelPicker.jsx
 msgid "Choose a model"
 msgstr "モデルを選択"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Choose repositories on GitHub"
+msgstr "GitHubでリポジトリを選択"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Choose the repositories on GitHub. Duct gets read-only access to those and nothing else."
+msgstr "GitHubでリポジトリを選択してください。Ductには、選択したリポジトリへの読み取り専用アクセスだけが付与されます。"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
@@ -1950,6 +2022,10 @@ msgstr "{title}を設定"
 msgid "Confirm"
 msgstr "確認"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Connect"
+msgstr "接続"
+
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Connect {label}"
 msgstr "{label}を接続"
@@ -1975,6 +2051,10 @@ msgstr "PostBridgeでTikTok、Instagram、またはYouTubeアカウントを接�
 msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
 msgstr "アカウントは一度接続すれば、アカウント全体で保存されます。カードを開いて設定し、<0>{projectName}</0>が読み込むアカウントを選択してください。"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Connect GitHub"
+msgstr "GitHubを接続"
+
 #: src/components/content/AccountsTab.jsx
 msgid "Connect in PostBridge →"
 msgstr "PostBridgeで接続 →"
@@ -1982,6 +2062,14 @@ msgstr "PostBridgeで接続 →"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Connect one data source"
 msgstr "データソースを1つ接続"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "Connect your {vendor} account"
+msgstr "{vendor}アカウントを接続"
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Connect your PostBridge account"
+#~ msgstr "PostBridgeアカウントを接続"
 
 #: src/app/(app)/connections/page.jsx
 #: src/app/(auth)/desktop-auth/page.js
@@ -2065,7 +2153,7 @@ msgstr "コンテンツピラー"
 #: src/lib/navigation.js
 #: src/lib/usageApi.js
 msgid "Content Studio"
-msgstr "コンテンツスタジオ"
+msgstr "Content Studio"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Context"
@@ -2138,6 +2226,7 @@ msgstr "Cookieについて"
 
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/audit/ShareReport.jsx
+#: src/components/content/TextPostEditor.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "コピーしました"
@@ -2155,6 +2244,7 @@ msgid "copy"
 msgstr "コピー"
 
 #: src/components/audit/ShareReport.jsx
+#: src/components/content/TextPostEditor.jsx
 msgid "Copy"
 msgstr "コピー"
 
@@ -2177,6 +2267,10 @@ msgstr "応答をコピー"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Copy these from the platform’s analytics. They stay as you enter them."
 msgstr "プラットフォームの分析からコピーしてください。入力値はそのまま保持されます。"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Copy this part"
+msgstr "このパートをコピー"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
@@ -2249,6 +2343,10 @@ msgstr "サイトをクロールし、問題点を抽出し、実用的な推奨
 #: src/lib/auditEvents.js
 msgid "Crawling pages"
 msgstr "ページをクロール中"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Create a fine-grained token (GitHub settings)"
+msgstr "Fine-grainedトークンを作成 (GitHubの設定)"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Create a restricted key (Stripe dashboard)"
@@ -2484,12 +2582,30 @@ msgstr "破棄済み"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/AccountsTab.jsx
+#: src/components/content/DiscoverPage.jsx
 msgid "Disconnect"
 msgstr "接続解除"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
 msgstr "「{title}」の接続を解除しますか？"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Disconnect Apify"
+msgstr "Apifyの接続を解除"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Disconnect Apify?"
+msgstr "Apifyの接続を解除しますか？"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Disconnect PostBridge"
+msgstr "PostBridgeの接続を解除"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Disconnect PostBridge?"
+msgstr "PostBridgeの接続を解除しますか？"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Disconnect your ChatGPT plan?"
@@ -2498,6 +2614,10 @@ msgstr "ChatGPTプランの接続を解除しますか？"
 #: src/app/(app)/content/page.jsx
 msgid "discover"
 msgstr "発見"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
+msgstr "DiscoverはあなたのApifyアカウントを通じてTikTokを検索するため、スクレイピング費用はあなたに請求されます。Apifyにログインし、APIトークンをコピーしてここに貼り付けてください。"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Discover what's working"
@@ -2636,6 +2756,14 @@ msgstr "Ductはこのマシンのキーチェーンに保持されているサ�
 msgid "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
 msgstr "Ductはこれらの認証情報を忘れます。{title}から読み取るレポートとスケジュールされた実行は、再度接続するまで動作を停止し、再接続するにはもう一度Googleでサインインする必要があります。"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
+msgstr "DuctはAPIキーを削除し、PostBridgeアカウント経由での公開を停止します。アカウントはPostBridgeに接続されたままです。"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
+msgstr "DuctはApifyトークンを削除し、あなたのアカウント経由での検索を停止します。保存した参考投稿はそのまま残ります。"
+
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Duct has a quick question"
 msgstr "Ductから簡単な質問があります"
@@ -2651,6 +2779,10 @@ msgstr "Ductには接続が必要です。あなたの作業は保存されて�
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "Duct picks per brief: markdown for a short read, a page when layout or a chart earns it"
 #~ msgstr "Ductがブリーフごとに選択: 短い読み物にはMarkdown、レイアウトやグラフが適している場合はページ"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
+msgstr "DuctはPostBridgeを通じて、あなた自身のアカウントで投稿します。PostBridgeにログインしてAPIキーをコピーし、ここに貼り付けてください。"
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
@@ -3008,9 +3140,17 @@ msgstr "1つの会話に絞り込みました · <0>すべて表示</0>"
 msgid "Finalizing report"
 msgstr "レポートを最終処理中"
 
+#: src/components/content/PostViewport.jsx
+msgid "Finding a source…"
+msgstr "情報源を探しています…"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Findings by Category"
 msgstr "カテゴリ別指摘事項"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Fine-grained personal access token"
+msgstr "Fine-grainedパーソナルアクセストークン"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Finish in your browser — Google won’t sign you in inside an app window. This card updates on its own when you’re done. <0>Open it again</0>"
@@ -3019,6 +3159,10 @@ msgstr "ブラウザで完了してください — Googleはアプリウィン�
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Finish in your browser…"
 msgstr "ブラウザで完了してください…"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Finish on GitHub in your browser. Your repositories appear here when you come back."
+msgstr "ブラウザでGitHubの手続きを完了してください。戻ると、ここにリポジトリが表示されます。"
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Finish signing in in your browser, then come back and press “I’ve connected it”."
@@ -3031,6 +3175,10 @@ msgstr "ブラウザでGoogleへのサインインを完了してください �
 #: src/app/(auth)/page.js
 msgid "Finish the security check above, then try again."
 msgstr "上記のセキュリティチェックを完了してから、もう一度お試しください。"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "First comment"
+msgstr "最初のコメント"
 
 #: src/components/content/PostViewport.jsx
 msgid "first line is the hook — 2–3 sentences"
@@ -3198,6 +3346,34 @@ msgstr "デスクトップアプリを取得 →"
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Get the full audit →"
 msgstr "完全な監査を取得 →"
+
+#: src/components/connections/logos.jsx
+msgid "GitHub"
+msgstr "GitHub"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub app installed. Finishing the connection…"
+msgstr "GitHubアプリをインストールしました。接続を完了しています…"
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub declined the exchange, which is almost always temporary. Try again from the app."
+msgstr "GitHubが交換を拒否しました。これはほとんどの場合一時的なものです。アプリからもう一度お試しください。"
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub didn't complete the connection"
+msgstr "GitHubで接続が完了しませんでした"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub is connected, but it granted no repositories you can read. Open the GitHub card and choose repositories on GitHub."
+msgstr "GitHubに接続しましたが、読み取り可能なリポジトリへのアクセスが付与されていません。GitHubカードを開き、GitHubでリポジトリを選択してください。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "GitHub is installed, but finishing the connection failed. Open the GitHub card and connect again."
+msgstr "GitHubはインストールされましたが、接続を完了できませんでした。GitHubカードを開いて、もう一度接続してください。"
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "GitHub isn't set up on this server"
+msgstr "このサーバーではGitHubが設定されていません"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
@@ -3426,6 +3602,10 @@ msgstr "キーを非表示にする"
 msgid "Hide superseded"
 msgstr "置き換えられたものを非表示にする"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Hide the token form"
+msgstr "トークン入力欄を隠す"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "High"
 msgstr "高"
@@ -3594,8 +3774,12 @@ msgid "Include {name}"
 msgstr "{name}を含める"
 
 #: src/components/execution/ChangeSetCard.jsx
-msgid "Includes a pause. It can be rolled back from here."
-msgstr "一時停止が含まれています。ここからロールバックできます。"
+msgid "Includes a change that always waits for you. It can be rolled back from here."
+msgstr "常に承認を待つ変更が含まれています。ここからロールバックできます。"
+
+#: src/components/execution/ChangeSetCard.jsx
+#~ msgid "Includes a pause. It can be rolled back from here."
+#~ msgstr "一時停止が含まれています。ここからロールバックできます。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -4014,6 +4198,10 @@ msgstr "ログアウト"
 msgid "Logged metrics"
 msgstr "メトリクスを記録しました"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Longer than the platform allows: {at}"
+msgstr "プラットフォームの上限を超えています：{at}"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Looking up where {providerName}'s key comes from."
 msgstr "{providerName}のキーの取得元を検索中。"
@@ -4160,6 +4348,10 @@ msgstr "メモリの種類"
 msgid "Memory of {name}"
 msgstr "{name}のメモリ"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Merged pull requests, releases, closed issues and doc changes, by date."
+msgstr "マージされたプルリクエスト、リリース、クローズされたIssue、ドキュメントの変更（日付別）。"
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Mermaid render failed."
 msgstr "Mermaidのレンダリングに失敗しました。"
@@ -4183,7 +4375,7 @@ msgstr "インサイトエージェントにメッセージを送る"
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
 msgid "Meta Ads"
-msgstr "Meta広告"
+msgstr "Meta Ads"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Meta desc"
@@ -4367,6 +4559,10 @@ msgstr "新しいフォーマット"
 #: src/components/ProjectMembers.jsx
 msgid "New invitation sent to {invitee}."
 msgstr "{invitee}に新しい招待状を送信しました。"
+
+#: src/app/(app)/content/page.jsx
+msgid "New post"
+msgstr "新規投稿"
 
 #: src/components/AppSidebar.jsx
 msgid "New project"
@@ -4568,12 +4764,16 @@ msgid "No plan yet for this project."
 msgstr "このプロジェクトにはまだプランがありません。"
 
 #: src/app/(app)/content/page.jsx
-msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
-msgstr "まだ投稿がありません。ボードからプランを生成して投稿を下書きするか、成功したTikTokをクローンしてください。"
+#~ msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
+#~ msgstr "まだ投稿がありません。ボードからプランを生成して投稿を下書きするか、成功したTikTokをクローンしてください。"
 
 #: src/app/(app)/content/page.jsx
 #~ msgid "No posts yet. Generate a plan and draft posts from the board."
 #~ msgstr "まだ投稿がありません。ボードからプランを生成し、投稿を下書きしてください。"
+
+#: src/app/(app)/content/page.jsx
+msgid "No posts yet. Write one for TikTok, LinkedIn or X, draft them from a plan, or clone a TikTok that worked."
+msgstr "まだ投稿がありません。TikTok、LinkedIn、X向けに書くか、プランから下書きするか、うまくいったTikTokを複製してください。"
 
 #: src/components/content/PostCard.jsx
 msgid "No preview yet"
@@ -4990,6 +5190,10 @@ msgstr "ブロックする操作タイプ、カンマ区切り（オプション
 msgid "Open"
 msgstr "開く"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Open {vendor}"
+msgstr "{vendor}を開く"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Open <0>Settings → Models & providers → OpenAI</0> and choose <1>Continue with ChatGPT</1>."
 msgstr "<0>設定 → モデルとプロバイダー → OpenAI</0>を開き、<1>ChatGPTで続行</1>を選択してください。"
@@ -5030,6 +5234,10 @@ msgstr "計画ボードを開く →"
 #: src/components/content/AnalyticsView.jsx
 msgid "Open post"
 msgstr "投稿を開く"
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Open PostBridge"
+#~ msgstr "PostBridgeを開く"
 
 #: src/components/commands/CommandPaletteTrigger.jsx
 msgid "Open the command palette"
@@ -5242,6 +5450,10 @@ msgstr "成功した投稿を貼り付けてください。Ductがその成功�
 msgid "Paste the link to one TikTok post."
 msgstr "TikTokの投稿リンクを貼り付けてください。"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Paste your API key"
+msgstr "APIキーを貼り付け"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste your key"
 msgstr "キーを貼り付けてください"
@@ -5301,6 +5513,10 @@ msgstr "中断したところから再開"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Pick what you’d like done. We’ll scope it and follow up."
 msgstr "ご希望の作業を選択してください。内容を検討し、後ほどご連絡いたします。"
+
+#: src/components/content/PostViewport.jsx
+msgid "Picking the angle…"
+msgstr "切り口を選んでいます…"
 
 #: src/components/content/PostViewport.jsx
 msgid "Picking the hook…"
@@ -5367,6 +5583,7 @@ msgid "Português"
 msgstr "ポルトガル語"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr "投稿"
 
@@ -5389,6 +5606,10 @@ msgstr "投稿済み"
 #: src/components/content/PublishModal.jsx
 msgid "Post scheduled"
 msgstr "投稿スケジュール済み"
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "PostBridge API key"
+#~ msgstr "PostBridgeのAPIキー"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"
@@ -5602,6 +5823,14 @@ msgstr "公開済み {publishedOn}"
 msgid "Published the post"
 msgstr "投稿を公開しました"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Publishes as the post's first reply."
+msgstr "投稿への最初の返信として公開されます。"
+
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "Publishing isn't set up yet"
+#~ msgstr "公開はまだ設定されていません"
+
 #: src/components/content/PostVideo.jsx
 msgid "Publishing this take"
 msgstr "このテイクを公開中"
@@ -5710,6 +5939,10 @@ msgstr "サイトの残りを読み込み中…"
 msgid "Reading the TikTok"
 msgstr "TikTokを読み込み中"
 
+#: src/components/content/PostViewport.jsx
+msgid "Reading what you've already said…"
+msgstr "これまでの発信内容を確認しています…"
+
 #: src/app/(start)/start/page.jsx
 msgid "Reading…"
 msgstr "読み込み中…"
@@ -5803,6 +6036,10 @@ msgstr "リダイレクト"
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Refresh"
 msgstr "更新"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Refresh from GitHub"
+msgstr "GitHubから更新"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Refresh from PostBridge"
@@ -5904,6 +6141,10 @@ msgstr "{removalTarget}を削除しますか？"
 msgid "Remove key"
 msgstr "キーを削除"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "Remove reply {n}"
+msgstr "返信{n}を削除"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Remove this pillar"
 msgstr "この柱を削除"
@@ -5923,6 +6164,14 @@ msgstr "図をレンダリング中…"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
 msgstr "重複するハッシュタグ: {at}"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "Reply {n}"
+msgstr "返信{n}"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "reply {r}"
+msgstr "返信{r}"
 
 #: src/components/audit/AuditWorkspace.jsx
 #: src/components/insights/desk/DeskLists.jsx
@@ -6431,6 +6680,10 @@ msgstr "セキュリティチェックの読み込みに失敗しました。更
 msgid "Security verification"
 msgstr "セキュリティ認証"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "see more"
+msgstr "もっと見る"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "See what we’d do"
 msgstr "提案を見る"
@@ -6731,6 +6984,14 @@ msgstr "<0>{invitedEmail}</0>としてサインインして承認してくださ
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Sign in first — credentials are stored encrypted server-side."
 msgstr "まずサインインしてください。認証情報はサーバー側で暗号化されて保存されます。"
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Sign in first — the connection is saved to your account."
+msgstr "まずサインインしてください。接続はアカウントに保存されます。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Sign in to finish connecting GitHub."
+msgstr "GitHubの接続を完了するには、サインインしてください。"
 
 #: src/components/AppSidebar.jsx
 msgid "Sign in to keep this"
@@ -7042,6 +7303,10 @@ msgstr "停止済み"
 msgid "Stopped — pick up where it left off"
 msgstr "停止済み — 中断したところから再開"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Stored encrypted, and used only for projects you own."
+msgstr "暗号化して保存され、あなたが所有するプロジェクトでのみ使用されます。"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "stored for this provider"
 msgstr "このプロバイダーに保存済み"
@@ -7217,6 +7482,10 @@ msgstr "お客様がどのような方で、何をされているか教えてく
 msgid "Testing"
 msgstr "テスト"
 
+#: src/lib/contentEnums.js
+msgid "Text"
+msgstr "テキスト"
+
 #: src/components/content/StyleGallery.jsx
 msgid "Text cards"
 msgstr "テキストカード"
@@ -7233,6 +7502,14 @@ msgstr "接続が不完全でした。もう一度お試しください。"
 msgid "That connection didn't finish — the link expires after a minute. Please try again."
 msgstr "接続が完了しませんでした。リンクは1分後に期限切れになります。もう一度お試しください。"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "That didn't connect. Check the key and try again."
+msgstr "接続できませんでした。キーを確認して、もう一度お試しください。"
+
+#: src/components/content/AccountsTab.jsx
+msgid "That didn't disconnect. Try again."
+msgstr "接続を解除できませんでした。もう一度お試しください。"
+
 #: src/components/content/AccountsTab.jsx
 msgid "That didn't save — your selection has been put back. Try again."
 msgstr "保存されませんでした。選択内容は元に戻されました。もう一度お試しください。"
@@ -7248,6 +7525,10 @@ msgstr "リンクのようには見えません。"
 #: src/components/content/FormatLibrary.jsx
 msgid "That format could not be deleted — it is still in the library."
 msgstr "その形式は削除できませんでした。ライブラリに残っています。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "That GitHub connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again."
+msgstr "GitHubの接続が完了しませんでした。リンクの有効期間は2分間で、接続を開始したアカウントでのみ使用できます。もう一度接続してください。"
 
 #: src/app/(app)/execute/page.jsx
 msgid "That guardrail is still in place — removing it didn't go through."
@@ -7349,6 +7630,10 @@ msgstr "実行キュー"
 msgid "The fact in one line — with its number or date if it has one."
 msgstr "事実を1行で表示 — 番号または日付がある場合はそれらも表示。"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "The first line is the hook."
+msgstr "最初の1行がフックです。"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
 msgstr "完全なレシピ — スライド構造、画像プロンプトルール、失敗モード。GFMテーブルに対応しています。"
@@ -7372,6 +7657,14 @@ msgstr "パイプラインが予期せず終了しました。部分的なレポ
 #: src/components/audit/AuditReport.jsx
 msgid "The pipeline stopped early — your partial results are still visible above."
 msgstr "パイプラインが途中で停止しました — 部分的な結果は上記で引き続き表示されます。"
+
+#: src/components/content/PublishModal.jsx
+msgid "The post and its first reply go out together."
+msgstr "投稿と最初の返信は一緒に公開されます。"
+
+#: src/components/content/PostViewport.jsx
+msgid "The post appears here as soon as the draft is ready, with its character count."
+msgstr "下書きができ次第、文字数とあわせてここに投稿が表示されます。"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "The post changed after this score."
@@ -7404,6 +7697,10 @@ msgstr "サイトがクローラーに<0>{httpStatus}</0>と応答したため�
 #: src/components/content/StyleGallery.jsx
 msgid "the slide styles"
 msgstr "スライドスタイル"
+
+#: src/components/content/TextPostEditor.jsx
+msgid "The source, the link, or the why."
+msgstr "情報源、リンク、または理由。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "The token IS the project. Clarity allows 10 API requests per project per day; verifying spends 1 and each Duct pull spends 2."
@@ -7565,6 +7862,14 @@ msgstr "このプロジェクト"
 msgid "This project"
 msgstr "このプロジェクト"
 
+#: src/components/content/PostBridgeKeyForm.jsx
+#~ msgid "This project posts through its owner's PostBridge account. Ask them to connect it here, and the accounts will show up for you too."
+#~ msgstr "このプロジェクトはオーナーのPostBridgeアカウントで投稿します。オーナーにここで接続してもらうと、あなたにもアカウントが表示されます。"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."
+msgstr "このプロジェクトはオーナーの{vendor}アカウントを使用します。オーナーにここで接続してもらうと、あなたも利用できるようになります。"
+
 #: src/app/(app)/activity/page.jsx
 msgid "this project's activity"
 msgstr "このプロジェクトのアクティビティ"
@@ -7715,6 +8020,10 @@ msgstr "再試行しても解決しません — このビルドはGoogleサイ�
 msgid "Trying again won't help — this build shipped without that connector's credentials."
 msgstr "再試行しても解決しません — このビルドはそのコネクタの認証情報なしで出荷されました。"
 
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Trying again won't help. Connect GitHub with a fine-grained token from the GitHub card instead."
+msgstr "もう一度試しても解決しません。代わりにGitHubカードからFine-grainedトークンで接続してください。"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Turn off to audit a different business or competitor — only the fields below are used."
 msgstr "別のビジネスや競合他社を監査するにはオフにしてください — 以下のフィールドのみが使用されます。"
@@ -7822,6 +8131,14 @@ msgstr "使用状況"
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Use {projectName}'s business context"
 msgstr "{projectName}のビジネスコンテキストを使用"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Use a different PostBridge key"
+msgstr "別のPostBridgeキーを使う"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Use a token instead"
+msgstr "代わりにトークンを使う"
 
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"
@@ -8138,6 +8455,10 @@ msgstr "私のサイトは実際には何についてですか？"
 msgid "What should Duct call you?"
 msgstr "Ductはあなたを何と呼ぶべきですか？"
 
+#: src/components/content/TextPostEditor.jsx
+msgid "What the {label} feed shows before “see more”"
+msgstr "{label}のフィードで「もっと見る」の前に表示される部分"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What was observed, why it matters, how to apply it."
 msgstr "観察されたこと、それが重要な理由、適用方法。"
@@ -8312,6 +8633,10 @@ msgstr "スライドコピーを書き込み中"
 msgid "Writing the caption…"
 msgstr "キャプションを書き込み中…"
 
+#: src/components/content/PostViewport.jsx
+msgid "Writing the hook…"
+msgstr "フックを書いています…"
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Writing your report…"
@@ -8350,8 +8675,12 @@ msgid "You can close this tab."
 msgstr "このタブを閉じることができます。"
 
 #: src/components/content/PublishModal.jsx
-msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
-msgstr "ソーシャルアカウントがまだ接続されていません。管理者にご依頼いただき、TikTok / Instagram / YouTube アカウントを接続してください。"
+#~ msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
+#~ msgstr "ソーシャルアカウントがまだ接続されていません。管理者にご依頼いただき、TikTok / Instagram / YouTube アカウントを接続してください。"
+
+#: src/components/content/PublishModal.jsx
+msgid "You don't have any social accounts connected yet. Connect the account you want to post from in the Accounts tab."
+msgstr "まだソーシャルアカウントが接続されていません。［アカウント］タブで、投稿に使うアカウントを接続してください。"
 
 #: src/app/(start)/start/page.jsx
 msgid "You have more than one project for this site. Which should this audit update?"

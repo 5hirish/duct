@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>マーケティングチーム向け Duct vs Claude Cowork vs n8n</title>
+<link rel="canonical" href="https://getduct.ai/ja/compare"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/compare"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/compare"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/compare"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/compare"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/compare"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/compare"/>
+<meta property="og:locale" content="ja_JP"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<!-- hreflang:end -->
+<meta name="description" content="マーケティングにはClaude Cowork、n8n、それともDuct？それぞれが最適な選択となる点：コネクタ、ツール横断的な質問、変更の承認者、ライセンスと価格。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/compare"/>
+<meta property="og:title" content="マーケティングチーム向け Duct vs Claude Cowork vs n8n"/>
+<meta property="og:description" content="3つの優れたツール、3つの異なるジョブ。各ベンダーのサイトと照合した、ジョブごとの正直な比較。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/compare.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="マーケティングチーム向け Duct vs Claude Cowork vs n8n"/>
+<meta name="twitter:description" content="Coworkは汎用型、n8nは自動化ツール、Ductは「適用」を待つグロースアナリストです。それぞれが優れている点。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/compare.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Ductブログ" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"Duct vs Claude Cowork vs n8n","url":"https://getduct.ai/ja/compare","description":"マーケティングにはClaude Cowork、n8n、それともDuct？それぞれが最適な選択となる点：コネクタ、ツール横断的な質問、変更の承認者、ライセンスと価格。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai/ja/"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"比較","item":"https://getduct.ai/ja/compare"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"DuctはClaude Coworkの代替ですか？","acceptedAnswer":{"@type":"Answer","text":"一つのタスクであれば、はい。グロース数値が変動した理由を見つけ、ガードレール内で変更を行い、ロールバックも可能です。Coworkができるその他のこと（ドキュメントからウェブ閲覧まで）については、いいえ、Ductはそれを目指していません。両方を実行するのは合理的です。"}},{"@type":"Question","name":"n8nはDuctができることをできますか？","acceptedAnswer":{"@type":"Answer","text":"構築すれば、その多くが可能です。n8nはGoogle Ads、GA4、Stripeのデータを取得し、AIエージェントを適用し、Slackでの承認のためにツール呼び出しを保留できます。Ductは、コネクタ、結合、変更プレビュー、ガードレール、ロールバックを製品として提供し、配線は不要です。"}},{"@type":"Question","name":"n8nはオープンソースですか？","acceptedAnswer":{"@type":"Answer","text":"n8nは、Sustainable Use Licenseの下でフェアコードです。ソースは公開されており、自社でのセルフホスティングは無料ですが、商用再販は制限されているため、OSIの意味でのオープンソースではありません。DuctはMITライセンスです。"}},{"@type":"Question","name":"どれが一番安いですか？","acceptedAnswer":{"@type":"Answer","text":"Ductは独自のモデルキーまたはChatGPTプランがあれば無料です。使用量に応じてモデルプロバイダーに支払います。n8nはセルフホストは無料で、クラウド版は年間契約で月額20ユーロから利用できます。Coworkは有料のClaudeプランとセットで、月額20ドルから利用できます。"}},{"@type":"Question","name":"このページはどのくらい最新ですか？","acceptedAnswer":{"@type":"Answer","text":"各項目は、2026年9月29日にベンダーの公式サイト、料金ページ、またはドキュメントと照合して確認されました。プランと機能は予告なく変更される場合があります。誤りがある場合は、Ductリポジトリでissueを開いてください。日付とともに修正されます。"}}]}
+</script>
+<style>
+/* ── COMPARE-ONLY STYLES ── */
+.cmp-hero { padding: 112px 52px 88px; min-height: 0; }
+.cmp-hero h1 { font-size: clamp(38px, 5.4vw, 66px); max-width: 980px; }
+.cmp-hero .hero-sub { max-width: 600px; }
+
+/* The finder: three questions, three taps, one answer. Radios in fieldsets, so it is a real
+   control for a keyboard and a screen reader, and with scripts off it still reads as a quiz. */
+.finder { width: 100%; max-width: 1160px; margin: 48px auto 0; display: grid; grid-template-columns: 1.35fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); box-shadow: 0 24px 64px rgba(13,15,26,.08); overflow: hidden; text-align: left; animation: fadeUp .6s .3s ease both; }
+.finder-qs { padding: 28px 30px 30px; display: flex; flex-direction: column; gap: 22px; }
+.fq { border: 0; margin: 0; padding: 0; min-width: 0; }
+.fq legend { display: flex; align-items: center; gap: 10px; padding: 0; margin-bottom: 12px; font-family: var(--serif); font-size: 19px; color: var(--navy); }
+.fq-n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--navy); color: #fff; font-family: var(--sans); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; transition: background .2s ease-out; }
+.fq.is-done .fq-n { background: var(--orange); }
+.fq-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fo { position: relative; display: flex; align-items: center; gap: 9px; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: var(--r); cursor: pointer; font-size: 13.5px; line-height: 1.35; color: var(--navy-2); background: var(--white); transition: border-color .2s ease-out, background .2s ease-out, transform .2s ease-out; }
+.fo:hover { border-color: var(--navy-3); transform: translateY(-2px); }
+.fo input { position: absolute; opacity: 0; pointer-events: none; }
+.fo .ic { flex: none; width: 18px; height: 18px; color: var(--navy-3); transition: color .2s ease-out; }
+.fo:has(input:checked) { border-color: var(--navy); background: var(--off); color: var(--navy); }
+.fo:has(input:checked) .ic { color: var(--orange); }
+.fo:has(input:focus-visible) { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.finder-out { background: var(--off); border-left: 1px solid var(--border); padding: 28px 30px 30px; display: flex; flex-direction: column; gap: 22px; }
+.meter { display: flex; flex-direction: column; gap: 10px; }
+.meter-row { display: grid; grid-template-columns: 110px 1fr 18px; align-items: center; gap: 12px; font-size: 13px; color: var(--navy-2); }
+.meter-track { height: 8px; border-radius: var(--pill); background: #e7e7e4; overflow: hidden; }
+.meter-bar { display: block; height: 100%; border-radius: inherit; background: var(--navy); transform-origin: left center; transform: scaleX(0); transition: transform .3s ease-out; }
+.meter-row.is-duct .meter-bar { background: var(--orange); }
+.meter-row b { font-weight: 600; color: var(--navy); text-align: right; font-variant-numeric: tabular-nums; }
+.verdict-card { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; border-top: 1px dashed var(--border); padding-top: 22px; }
+.verdict-card[hidden] { display: none; }
+.verdict-title { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1.12; letter-spacing: -.5px; color: var(--navy); margin: 0; }
+.verdict-title em { color: var(--orange); }
+.verdict-card p:not(.verdict-title) { font-size: 15px; line-height: 1.6; color: var(--navy-3); margin: 0; max-width: 42ch; }
+.verdict-card .facts { display: flex; flex-wrap: wrap; gap: 6px; }
+.verdict-card .facts span { font-size: 12px; font-weight: 500; color: var(--navy-2); background: var(--white); border: 1px solid var(--border); border-radius: var(--pill); padding: 4px 10px; }
+.verdict-card .btn { align-self: flex-start; margin-top: 4px; }
+.verdict-card .alt { font-size: 14px; font-weight: 600; color: var(--navy); text-decoration: none; border-bottom: 2px solid var(--orange); padding-bottom: 2px; align-self: flex-start; }
+.verdict-card.is-empty p { color: var(--navy-3); }
+@keyframes verdict-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) { .verdict-card.is-new { animation: verdict-in .3s ease-out both; } }
+
+/* The chart: where each one wins. A real table, so it reads job, tool, verdict. */
+.jobs-sec { padding: 96px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.jobs-inner { max-width: 1160px; margin: 0 auto; }
+.jm-legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 26px; font-size: 13px; color: var(--navy-3); }
+.jm-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.jm-wrap { margin-top: 18px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); overflow: hidden; }
+.jm { width: 100%; border-collapse: collapse; font-size: 15px; }
+.jm th, .jm td { padding: 14px 18px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.jm tbody tr:last-child th, .jm tbody tr:last-child td { border-bottom: 0; }
+.jm thead th { font-family: var(--serif); font-size: 18px; color: var(--navy); background: var(--off); font-weight: 700; }
+.jm thead th:first-child { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.jm tbody th { font-weight: 500; color: var(--navy); line-height: 1.45; width: 46%; }
+.jm td { width: 18%; color: var(--navy-3); font-size: 13.5px; }
+.jm .is-duct { background: #fff8f3; }
+.jm thead .is-duct { background: #ffefe3; }
+.jm-cell { display: inline-flex; align-items: center; gap: 9px; }
+/* Three states, never colour alone: a full dot, a half dot and an empty ring, each with its word */
+.dot { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--navy); }
+.dot.best { background: var(--navy); }
+.dot.can { background: linear-gradient(90deg, var(--navy) 50%, transparent 50%); }
+.dot.no { border-color: #c9cad2; }
+.is-duct .dot { border-color: var(--orange); }
+.is-duct .dot.best { background: var(--orange); }
+.is-duct .dot.can { background: linear-gradient(90deg, var(--orange) 50%, transparent 50%); }
+.is-duct .dot.no { border-color: #f3c7aa; }
+.jm-cell .best + span { color: var(--navy); font-weight: 600; }
+
+/* Better together: three roles joined by the aqueduct's own water */
+.together { padding: 96px 52px; }
+.together-inner { max-width: 1160px; margin: 0 auto; }
+.flow { display: grid; grid-template-columns: 1fr 72px 1fr 72px 1fr; align-items: center; margin-top: 44px; }
+.flow-node { border: 1.5px solid var(--border); border-radius: var(--r-lg); background: var(--white); padding: 22px 22px 24px; text-align: center; }
+.flow-node .ic { width: 26px; height: 26px; color: var(--navy); margin-bottom: 10px; }
+.flow-node b { display: block; font-family: var(--serif); font-size: 22px; color: var(--navy); }
+.flow-node span { display: block; font-size: 14px; color: var(--navy-3); margin-top: 4px; }
+.flow-node.is-duct { border-color: var(--orange); box-shadow: 0 18px 44px rgba(255,92,0,.12); }
+.flow-node.is-duct .ic { color: var(--orange); }
+.pipe { position: relative; height: 12px; overflow: hidden; border-top: 2px solid rgba(13,15,26,.18); border-bottom: 2px solid rgba(13,15,26,.18); }
+.pipe::after { content: ''; position: absolute; top: 50%; left: -16px; right: 0; height: 2px; margin-top: -1px; background: repeating-linear-gradient(90deg, var(--orange) 0 8px, transparent 8px 16px); }
+@keyframes pipe-flow { to { transform: translateX(16px); } }
+@media (prefers-reduced-motion: no-preference) { .pipe::after { animation: pipe-flow 1.1s linear infinite; } }
+.ads-note { margin-top: 32px; font-size: 14px; line-height: 1.7; color: var(--navy-3); max-width: 78ch; }
+.ads-note a, .cmp-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+
+/* The long version, folded: every row is in the page for search and for the careful reader */
+.cmp { padding: 0 52px 96px; }
+.cmp-inner { max-width: 1160px; margin: 0 auto; }
+.cmp-more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); font-family: var(--serif); font-size: 20px; color: var(--navy); transition: border-color .2s ease-out; }
+.cmp-more > summary::-webkit-details-marker { display: none; }
+.cmp-more > summary:hover { border-color: var(--navy-3); }
+.cmp-more > summary:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.cmp-more > summary small { font-family: var(--sans); font-size: 13px; color: var(--navy-3); }
+.cmp-more > summary .ic { flex: none; width: 20px; height: 20px; transition: transform .25s ease-out; }
+.cmp-more[open] > summary .ic { transform: rotate(180deg); }
+.cmp-more[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.cmp-scroll { overflow-x: auto; border: 1px solid var(--border); border-top: 0; border-radius: 0 0 var(--r-lg) var(--r-lg); background: var(--white); }
+.cmp table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 820px; font-size: 14.5px; line-height: 1.6; }
+.cmp th, .cmp td { text-align: left; vertical-align: top; padding: 16px 18px; border-bottom: 1px solid var(--border); color: var(--navy-3); }
+.cmp thead th { font-family: var(--serif); font-size: 18px; color: var(--navy); letter-spacing: -.2px; background: var(--off); }
+.cmp tbody th { font-weight: 600; color: var(--navy); font-size: 14px; width: 17%; background: var(--white); position: sticky; left: 0; z-index: 1; box-shadow: 1px 0 0 var(--border); }
+.cmp tr:last-child th, .cmp tr:last-child td { border-bottom: 0; }
+.cmp .pick { background: #fff8f3; }
+.cmp thead th.pick { background: #ffefe3; }
+.cmp .lead { color: var(--navy); font-weight: 500; }
+.cmp-note { margin-top: 16px; font-size: 13px; font-weight: 300; color: var(--navy-3); max-width: 80ch; line-height: 1.7; }
+
+/* The chart's dots pop in row by row when it reveals: one pass, transform and opacity only */
+@keyframes jm-pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .jm-wrap.in .dot { animation: jm-pop .3s ease-out both; }
+  .jm-wrap.in tbody tr:nth-child(1) .dot { animation-delay: .20s; }
+  .jm-wrap.in tbody tr:nth-child(2) .dot { animation-delay: .26s; }
+  .jm-wrap.in tbody tr:nth-child(3) .dot { animation-delay: .32s; }
+  .jm-wrap.in tbody tr:nth-child(4) .dot { animation-delay: .38s; }
+  .jm-wrap.in tbody tr:nth-child(5) .dot { animation-delay: .44s; }
+  .jm-wrap.in tbody tr:nth-child(6) .dot { animation-delay: .50s; }
+  .jm-wrap.in tbody tr:nth-child(7) .dot { animation-delay: .56s; }
+  .jm-wrap.in tbody tr:nth-child(8) .dot { animation-delay: .62s; }
+  .jm-wrap.in tbody tr:nth-child(9) .dot { animation-delay: .68s; }
+  .jm-wrap.in tbody tr:nth-child(10) .dot { animation-delay: .74s; }
+}
+@media (prefers-reduced-motion: reduce) { .finder { animation: none; } }
+/* Without scripts nothing can tally the answers, so the panel that would show the verdict goes. */
+@media (scripting: none) { .finder { grid-template-columns: 1fr; } .finder-out { display: none; } }
+
+@media (max-width: 1100px) {
+  .finder { grid-template-columns: 1fr; }
+  .finder-out { border-left: 0; border-top: 1px solid var(--border); }
+}
+@media (max-width: 860px) {
+  .cmp-hero { padding: 100px 24px 56px; }
+  /* The pill is nowrap site-wide; this date line is longer than a phone is wide. */
+  .cmp-hero .hero-pill { white-space: normal; text-align: left; line-height: 1.45; }
+  .finder-qs, .finder-out { padding: 22px 18px 24px; }
+  .fq-opts { grid-template-columns: 1fr; }
+  .jobs-sec, .together { padding: 64px 24px; }
+  .cmp { padding: 0 24px 64px; }
+  .cmp table { font-size: 13.5px; }
+  .cmp th, .cmp td { padding: 13px 14px; }
+  .cmp-more > summary { font-size: 17px; padding: 16px 18px; }
+  .cmp-more > summary small { display: none; }
+  /* On a phone the chart's words go to screen readers only; the dots and the legend carry it */
+  .jm th, .jm td { padding: 13px 6px; }
+  .jm th:first-child { padding-left: 14px; }
+  .jm thead th { font-size: 13px; text-align: center; }
+  .jm thead th:first-child { text-align: left; }
+  .jm tbody th { font-size: 14px; width: auto; }
+  .jm td { width: 50px; text-align: center; }
+  .jm-cell { justify-content: center; }
+  .jm-cell > span:not(.dot) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+  .flow { grid-template-columns: 1fr; justify-items: center; }
+  .flow-node { width: 100%; }
+  .pipe { width: 12px; height: 34px; border: 0; border-left: 2px solid rgba(13,15,26,.18); border-right: 2px solid rgba(13,15,26,.18); }
+  .pipe::after { top: -16px; bottom: 0; left: 50%; right: auto; width: 2px; height: auto; margin: 0 0 0 -1px; background: repeating-linear-gradient(180deg, var(--orange) 0 8px, transparent 8px 16px); }
+  @keyframes pipe-flow-down { to { transform: translateY(16px); } }
+  .pipe::after { animation-name: pipe-flow-down; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EXPERIMENT: the comparison a growth buyer actually makes. The 2026-09-29 research showed the
+     alternatives people weigh are general agent tools, not the ads plugins Duct launched beside:
+     "claude cowork" 135,000 searches a month, "n8n alternative" 1,000 and "claude cowork
+     alternative" 210, both near zero difficulty. Hypothesis: a visitor from those searches
+     downloads at a higher rate than one from the home page, because a three-tap finder gives the
+     answer at once and the page concedes what Cowork and n8n do better, so it is believed on the
+     jobs where Duct wins. The finder writes data-finder-result for a GTM trigger. Measured by download clicks
+     per visit (GTM), split by landing page. Every cell is checked against the vendor's own pages and
+     dated; each tool wins rows in the job chart, because a page where Duct wins everything is a
+     page nobody weighing Cowork will trust. -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/ja/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO + FINDER -->
+<section class="hero cmp-hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 2026年9月29日時点で各ベンダーの公式サイトで確認済み</div>
+<h1>Claude Cowork、n8n、それともDuct？<br/><em>3つのタップで答えが見つかります。</em></h1>
+<p class="hero-sub">855のコネクタ、1,000以上の連携、または成長のために構築された12のコネクタ。数が重要なのではなく、機能が重要です。</p>
+<div class="finder" id="finder">
+<div class="finder-qs">
+<fieldset class="fq">
+<legend><span class="fq-n" aria-hidden="true">1</span>AIは何をすべきですか？</legend>
+<div class="fq-opts">
+<label class="fo"><input type="radio" name="q1" value="c"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><span>作成、リサーチ、ファイルの整理</span></label>
+<label class="fo"><input type="radio" name="q1" value="n"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#git-branch"/></svg><span>固定プロセスを実行</span></label>
+<label class="fo"><input type="radio" name="q1" value="d"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg><span>数値が変動した理由を説明</span></label>
+</div>
+</fieldset>
+<fieldset class="fq">
+<legend><span class="fq-n" aria-hidden="true">2</span>何に到達する必要がありますか？</legend>
+<div class="fq-opts">
+<label class="fo"><input type="radio" name="q2" value="d"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>広告、分析、収益</span></label>
+<label class="fo"><input type="radio" name="q2" value="c"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mail"/></svg><span>ドキュメント、メール、ウェブ</span></label>
+<label class="fo"><input type="radio" name="q2" value="n"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>多くのアプリをチェーンで連携</span></label>
+</div>
+</fieldset>
+<fieldset class="fq">
+<legend><span class="fq-n" aria-hidden="true">3</span>誰が変更を承認しますか？</legend>
+<div class="fq-opts">
+<label class="fo"><input type="radio" name="q3" value="n"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#settings-2"/></svg><span>一度設定したルール</span></label>
+<label class="fo"><input type="radio" name="q3" value="d"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>プレビュー後の私</span></label>
+<label class="fo"><input type="radio" name="q3" value="c"/><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>私が操縦するAI</span></label>
+</div>
+</fieldset>
+</div>
+<div class="finder-out" aria-live="polite">
+<div class="meter" aria-hidden="true">
+<div class="meter-row" data-meter="c"><span>Claude Cowork</span><span class="meter-track"><span class="meter-bar"></span></span><b>0</b></div>
+<div class="meter-row" data-meter="n"><span>n8n</span><span class="meter-track"><span class="meter-bar"></span></span><b>0</b></div>
+<div class="meter-row is-duct" data-meter="d"><span>Duct</span><span class="meter-track"><span class="meter-bar"></span></span><b>0</b></div>
+</div>
+<div class="verdict-card is-empty" data-verdict="none">
+<p class="verdict-title">あなたの選択はここにあります。</p>
+<p>各行に一つの回答。正直な回答は、たとえ自社のものでなくても正直に選ばれます。</p>
+</div>
+<div class="verdict-card" data-verdict="d" hidden>
+<p class="verdict-title"><em>Duct</em>はあなたのツールです。</p>
+<p>広告、アナリティクス、収益をまとめて読み取り、数値が変動した理由を伝え、「適用」を待ちます。</p>
+<div class="facts"><span>独自のキーがあれば無料</span><span>MIT</span><span>macOS、Windows、Linux</span></div>
+<a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
+</div>
+<div class="verdict-card" data-verdict="c" hidden>
+<p class="verdict-title">Claude Coworkはあなたのツールです。</p>
+<p>ドキュメント、リサーチ、ウェブに最適なジェネラリスト。サインアップが減少した日のためにDuctを覚えておいてください。</p>
+<div class="facts"><span>Claude Proで月額20ドルから</span></div>
+<a class="alt" href="#jobs">Ductが優れている点を見る</a>
+</div>
+<div class="verdict-card" data-verdict="n" hidden>
+<p class="verdict-title">n8nはあなたのツールです。</p>
+<p>プロセスを一度作成すれば毎回同じように実行されます。理由が必要な場合はDuctを追加してください。</p>
+<div class="facts"><span>セルフホストは無料</span></div>
+<a class="alt" href="#jobs">Ductが優れている点を見る</a>
+</div>
+<div class="verdict-card" data-verdict="mix" hidden>
+<p class="verdict-title">そのうち2つが必要です。</p>
+<p>あなたの回答は複数のジョブにわたります。それぞれのツールが得意なジョブを担当させましょう。</p>
+<a class="alt" href="#together">それらがどのように連携するかを見る</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHERE EACH ONE WINS -->
+<section class="jobs-sec" id="jobs" aria-labelledby="jobs-heading">
+<div class="jobs-inner">
+<div class="reveal">
+<p class="tag">それぞれが優れている点</p>
+<h2 id="jobs-heading">それぞれに強みがあります。<br/><em>それがどこかはこちらです。</em></h2>
+</div>
+<div class="jm-legend" aria-hidden="true">
+<span><span class="dot best"></span>そのために構築</span>
+<span><span class="dot can"></span>設定すれば可能</span>
+<span><span class="dot no"></span>その仕事ではない</span>
+</div>
+<div class="jm-wrap reveal">
+<table class="jm">
+<thead>
+<tr>
+<th scope="col">ジョブ</th>
+<th scope="col">Cowork</th>
+<th scope="col">n8n</th>
+<th scope="col" class="is-duct">Duct</th>
+</tr>
+</thead>
+<tbody>
+<tr><th scope="row">ファイルからドキュメントを作成する</th><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td></tr>
+<tr><th scope="row">ウェブを調査、資料を作成</th><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td></tr>
+<tr><th scope="row">スマートフォンからタスクを渡す</th><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td></tr>
+<tr><th scope="row">CRMへのフォームリード</th><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td></tr>
+<tr><th scope="row">複数のアプリにわたる固定されたプロセス</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td></tr>
+<tr><th scope="row">ツール全体でサインアップが減少した理由</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td></tr>
+<tr><th scope="row">ロールバック付きでキャンペーンを変更</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td></tr>
+<tr><th scope="row">CPA目標を達成できませんでしたか？理由を説明してください</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td></tr>
+<tr><th scope="row">アカウントなしのSEO監査</th><td><span class="jm-cell"><span class="dot can" aria-hidden="true"></span><span>実行可能</span></span></td><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td></tr>
+<tr><th scope="row">セルフホスト、ライセンス料なし</th><td><span class="jm-cell"><span class="dot no" aria-hidden="true"></span><span>その仕事ではない</span></span></td><td><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td><td class="is-duct"><span class="jm-cell"><span class="dot best" aria-hidden="true"></span><span>そのために構築</span></span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- BETTER TOGETHER -->
+<section class="together" id="together">
+<div class="together-inner">
+<div class="reveal">
+<p class="tag">一緒に使うとより良い</p>
+<h2>1つを選ぶ必要はありません。<br/><em>それぞれが得意なジョブを与えてください。</em></h2>
+</div>
+<div class="flow reveal" style="transition-delay:.1s">
+<div class="flow-node"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#git-branch"/></svg><b>n8n</b><span>データを移動する</span></div>
+<div class="pipe" aria-hidden="true"></div>
+<div class="flow-node is-duct"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg><b>Duct</b><span>理由を見つけ、あなたを待つ</span></div>
+<div class="pipe" aria-hidden="true"></div>
+<div class="flow-node"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><b>Claude Cowork</b><span>それを書き上げる</span></div>
+</div>
+<p class="ads-note">既に使用しているチャット用の広告プラグインだけが必要ですか？<a href="https://www.adspirer.com/" rel="nofollow noopener">Adspirer</a>と<a href="https://paidsync.ai/compare" rel="nofollow noopener">PaidSync</a>は、ClaudeとChatGPTに広告作成ツールを追加し、<a href="https://github.com/kLOsk/adloop" rel="nofollow noopener">AdLoop</a>はGoogle Ads用のMITコンソールです。これらは各広告ネットワークをより深く掘り下げます。Ductは広告を収益と並行して読み取ります。</p>
+</div>
+</section>
+
+<!-- THE LONG VERSION, FOLDED -->
+<section class="cmp" id="table" aria-labelledby="cmp-heading">
+<div class="cmp-inner">
+<details class="cmp-more reveal">
+<summary><span id="cmp-heading">全ての行を並べて比較 <small>10の基準、情報源付き</small></span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></summary>
+<div class="cmp-scroll">
+<table>
+<thead>
+<tr>
+<th scope="col"><span class="sr-only">基準</span></th>
+<th scope="col">Claude Cowork</th>
+<th scope="col">n8n</th>
+<th scope="col" class="pick">Duct</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">それは何ですか</th>
+<td>Claudeのナレッジワーク用エージェント。目標を与えると、ファイル、アプリ、内蔵ブラウザを横断して作業し、各ステップを表示します。</td>
+<td>AIエージェントステップを備えたワークフロー自動化プラットフォーム。ワークフローを描画すると、毎回同じように実行されます。</td>
+<td class="pick"><span class="lead">成長データのためのAIマーケティングエージェント。</span>ツールをまとめて読み込み、引用元付きのブリーフを作成し、変更を提案します。</td>
+</tr>
+<tr>
+<th scope="row">マーケティングデータへのアクセス</th>
+<td>Claudeのディレクトリには855のコネクタがあり、HubSpotやAmplitudeなどが含まれます。SupermetricsはGoogle Ads、Meta、GA4、その他200以上のプラットフォームに対応しています。Google独自のGoogle Adsサーバーは読み取り専用です。</td>
+<td>1,000以上の連携があり、Google Ads、Google Analytics、HubSpot、Stripe用のノード、およびその他のAPI用のHTTPノードがあります。</td>
+<td class="pick">12個の組み込みコネクタ: Google Ads, Meta Ads, Apple Search Ads, OpenAI Ads, GA4, Search Console, Tag Manager, Mixpanel, Clarity, GrowthBook, Stripe, RevenueCat。<a href="/ja/integrations/">各コネクタが読み取るもの</a>。</td>
+</tr>
+<tr>
+<th scope="row">「なぜこれが移動したのですか？」</th>
+<td>はい、コネクタが設定されていれば。Claudeは会話内で結合を行います。</td>
+<td>ワークフローとして結合を設計し、その後、スケジュール通りに同じように実行されます。</td>
+<td class="pick"><span class="lead">中核となる仕事。</span>連携は組み込まれており、ブリーフは各数値の出典を引用します。</td>
+</tr>
+<tr>
+<th scope="row">変更点と承認者</th>
+<td>デフォルトの手動モードでは、各アクションの前に確認します。自動モードとスキップモードでは、確認が少ないか、まったくありません。変更できる内容はコネクタによって異なります。</td>
+<td>ヒューマン・イン・ザ・ループは、Slack、メール、Teams、またはn8n ChatでAIツール呼び出しの承認を保留できます。Google Adsノードは読み取り専用です。</td>
+<td class="pick"><span class="lead">変更セットは影響範囲をプレビューします。</span>アカウントごとのガードレールは、それらを破る変更をブロックし、適用を押すまで何も適用されず、適用された変更はロールバックできます。モデルには承認ツールがありません。</td>
+</tr>
+<tr>
+<th scope="row">メモリと記録</th>
+<td>Claudeチャットと共有されるメモリ、および各ステップは実行中に表示されます。</td>
+<td>すべての実行の実行ログ。その他に記憶しているのは、あなたが保存したものです。</td>
+<td class="pick">修正可能な目標と決定のメモリタイムライン、および各変更を誰が提案、承認、適用、またはロールバックしたかのアクティビティログ。</td>
+</tr>
+<tr>
+<th scope="row">スケジュールに基づいて</th>
+<td>コネクタと連携して、毎日、毎週、または毎月実行されるスケジュールされたタスク。</td>
+<td><span class="lead">得意分野：</span>スケジュール、Webhook、アプリトリガー。</td>
+<td class="pick">スケジュールされたブリーフは、保存されたモデルキーで実行されます。</td>
+</tr>
+<tr>
+<th scope="row">モデル</th>
+<td>Claude。</td>
+<td>各AIステップで選択するプロバイダー。</td>
+<td class="pick">あなたのOpenAI、Anthropic、またはGoogleのキー、またはChatGPTプラン。</td>
+</tr>
+<tr>
+<th scope="row">ライセンスと実行場所</th>
+<td>独自開発。デスクトップ、ウェブ、モバイル対応。ベータ版のクラウドセッションはAnthropicのサーバーで実行されます。</td>
+<td>Sustainable Use Licenseに基づくフェアコード：ソースは公開されており、社内利用およびセルフホスティングは無料、商用再販は制限されています。またはn8n Cloud。</td>
+<td class="pick"><span class="lead">MITライセンス、製品全体。</span>macOS、Windows、Linux向けのデスクトップアプリ、またはセルフホストビルド。</td>
+</tr>
+<tr>
+<th scope="row">価格</th>
+<td>有料のClaudeプランの場合：Proは月額20ドル（年間請求で17ドル）、Maxは100ドルから、Teamは年間請求で1シートあたり20ドルから。</td>
+<td>Community Editionはセルフホストで無料です。Cloud Starterは月額€20、Proは月額€50で、年間請求され、ワークフロー実行数に応じて課金されます。</td>
+<td class="pick"><span class="lead">独自のキーまたはChatGPTプランで無料です。</span>使用量に応じてモデルプロバイダーに支払います。</td>
+</tr>
+<tr>
+<th scope="row">その他</th>
+<td>Claudeができるその他のこと：ドキュメント、調査、コード、フォーム入力ブラウザ。</td>
+<td>206,000のGitHubスターと数千のマーケティングワークフローテンプレートを持つコミュニティ。</td>
+<td class="pick">アカウント不要で、任意のURLの無料SEO監査、そして9つのネットワークに企画、下書き、公開できるコンテンツスタジオがあります。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="cmp-note">情報源（2026年9月29日時点）：Anthropicの<a href="https://claude.com/product/cowork" rel="nofollow noopener">Coworkページ</a>、<a href="https://claude.com/pricing" rel="nofollow noopener">価格</a>、<a href="https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork" rel="nofollow noopener">Coworkガイド</a>、<a href="https://claude.com/connectors/supermetrics" rel="nofollow noopener">Supermetricsコネクタ</a>；Googleの<a href="https://developers.google.com/google-ads/api/docs/developer-toolkit/mcp-server" rel="nofollow noopener">Google Ads MCPサーバー</a>；n8nの<a href="https://n8n.io/pricing/" rel="nofollow noopener">価格</a>、<a href="https://docs.n8n.io/privacy-and-security/sustainable-use-license" rel="nofollow noopener">ライセンス</a>、<a href="https://docs.n8n.io/advanced-ai/human-in-the-loop-tools/" rel="nofollow noopener">ヒューマン・イン・ザ・ループのドキュメント</a>、<a href="https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googleads/" rel="nofollow noopener">Google Adsノード</a>、<a href="https://github.com/n8n-io/n8n" rel="nofollow noopener">リポジトリ</a>。もし情報が間違っている場合は、<a href="https://github.com/5hirish/duct/issues" rel="noopener">課題をオープン</a>してください。日付とともに修正されます。</p>
+</details>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">FAQ</p>
+<h2><em>選択</em>する前に</h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">DuctはClaude Coworkの代替ですか？</summary>
+<p class="faq-a">一つのタスクであれば、はい。グロース数値が変動した理由を見つけ、ガードレール内で変更を行い、ロールバックも可能です。Coworkができるその他のこと（ドキュメントからウェブ閲覧まで）については、いいえ、Ductはそれを目指していません。両方を実行するのは合理的です。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">n8nはDuctができることをできますか？</summary>
+<p class="faq-a">構築すれば、その多くが可能です。n8nはGoogle Ads、GA4、Stripeのデータを取得し、AIエージェントを適用し、Slackでの承認のためにツール呼び出しを保留できます。Ductは、コネクタ、結合、変更プレビュー、ガードレール、ロールバックを製品として提供し、配線は不要です。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">n8nはオープンソースですか？</summary>
+<p class="faq-a">n8nは、Sustainable Use Licenseの下でフェアコードです。ソースは公開されており、自社でのセルフホスティングは無料ですが、商用再販は制限されているため、OSIの意味でのオープンソースではありません。DuctはMITライセンスです。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">どれが一番安いですか？</summary>
+<p class="faq-a">Ductは独自のモデルキーまたはChatGPTプランがあれば無料です。使用量に応じてモデルプロバイダーに支払います。n8nはセルフホストは無料で、クラウド版は年間契約で月額20ユーロから利用できます。Coworkは有料のClaudeプランとセットで、月額20ドルから利用できます。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">このページはどのくらい最新ですか？</summary>
+<p class="faq-a">各項目は、2026年9月29日にベンダーの公式サイト、料金ページ、またはドキュメントと照合して確認されました。プランと機能は予告なく変更される場合があります。誤りがある場合は、Ductリポジトリでissueを開いてください。日付とともに修正されます。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/ja/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/ja/partials/footer-expanded.html"><div class="legal-fallback"><a href="/ja/">Duct</a><a href="/ja/about">について</a><a href="/ja/privacy">プライバシーポリシー</a><a href="/ja/terms">利用規約</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script>
+// The finder: three answers, one pick. Every tap moves the meter; the verdict waits for all
+// three, then names the tool with two or more votes, or says the answers span jobs. The verdict
+// copy lives in the page (hidden cards), so translation stays with the HTML.
+(function () {
+  var finder = document.getElementById('finder');
+  if (!finder) return;
+  var sets = finder.querySelectorAll('.fq');
+  var cards = finder.querySelectorAll('[data-verdict]');
+  var show = function (key) {
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i], on = card.getAttribute('data-verdict') === key;
+      if (on && card.hidden) { card.hidden = false; card.classList.remove('is-new'); void card.offsetWidth; card.classList.add('is-new'); }
+      else if (!on) card.hidden = true;
+    }
+  };
+  var update = function () {
+    var count = { c: 0, n: 0, d: 0 }, answered = 0;
+    for (var i = 0; i < sets.length; i++) {
+      var picked = sets[i].querySelector('input:checked');
+      sets[i].classList.toggle('is-done', !!picked);
+      if (picked) { count[picked.value]++; answered++; }
+    }
+    ['c', 'n', 'd'].forEach(function (k) {
+      var row = finder.querySelector('[data-meter="' + k + '"]');
+      row.querySelector('.meter-bar').style.transform = 'scaleX(' + (count[k] / 3) + ')';
+      row.querySelector('b').textContent = count[k];
+    });
+    if (answered < sets.length) { show('none'); return; }
+    var key = count.d >= 2 ? 'd' : count.c >= 2 ? 'c' : count.n >= 2 ? 'n' : 'mix';
+    var changed = finder.getAttribute('data-finder-result') !== key;
+    finder.setAttribute('data-finder-result', key);
+    show(key);
+    // Stacked on a phone, the verdict sits under the questions: bring it up when it changes,
+    // unless it is already on screen.
+    var card = finder.querySelector('[data-verdict="' + key + '"]');
+    var box = card.getBoundingClientRect();
+    if (changed && (box.bottom > window.innerHeight || box.top < 0)) {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    }
+  };
+  finder.addEventListener('change', update);
+  update();
+})();
+</script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

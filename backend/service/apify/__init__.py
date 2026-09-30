@@ -8,12 +8,13 @@ cite real-world signal instead of inventing topics from web search alone.
 
 Public surface:
   - ApifyClient            async client; start_run / poll / fetch_dataset
+  - APIFY_KEY              each user's own key (service/vendor_keys.py)
   - ApifyAPIError          raised on non-2xx
   - ScrapedPost / DiscoveredReferenceRecord (schema)
   - get_default_actor_ids  helper for the two MVP actors
 """
 
-from service.apify.client import ApifyAPIError, ApifyClient, get_default_actor_ids
+from service.apify.client import APIFY_KEY, ApifyAPIError, ApifyClient, get_default_actor_ids
 from service.apify.schema import (
     ApifyRun,
     ApifyRunStatus,
@@ -24,6 +25,7 @@ from service.apify.schema import (
 )
 
 __all__ = [
+    "APIFY_KEY",
     "ApifyAPIError",
     "ApifyClient",
     "ApifyRun",

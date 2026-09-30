@@ -3,7 +3,8 @@
 Validates every marketing HTML page under site/ against the Duct <head> checklist
 (see CLAUDE.md).
 
-Exits non-zero if any required element is missing or out of spec.
+Exits non-zero if any required element is missing or out of spec. Warnings
+(a meta description outside 140–160 characters) print but do not fail.
 """
 
 import sys
@@ -11,6 +12,15 @@ import os
 import glob
 import json
 from html.parser import HTMLParser
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# The i18n generator owns the list of language trees and the JSON-LD types it
+# leaves without a language. Reading both from it means a language added there
+# is checked here without a second edit, and the two scripts cannot disagree
+# about which objects need `inLanguage`.
+sys.path.insert(0, os.path.join(REPO_ROOT, "scripts"))
+from build_site_i18n import LD_ENTITY_TYPES, LOCALES  # noqa: E402
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -21,6 +31,22 @@ DYNAMIC_META = set()
 
 # Error/utility pages — skip all SEO checks (no canonical, OG, Twitter needed).
 ERROR_PAGES = {"404.html"}
+
+# The home page in each language is the first crumb of every trail, so it is
+# the one page that carries no BreadcrumbList.
+HOME_PAGES = {"index.html"} | {f"{prefix}/index.html" for prefix in LOCALES}
+
+# Noindex pages kept only so old links keep working. No search result shows
+# them, so they carry no structured data and their description is never a
+# snippet. blog/post.html forwards ?slug= links from before posts were
+# pre-rendered.
+REDIRECT_SHIMS = {"blog/post.html"}
+
+# Google cuts a snippet at about 160 characters, and a much shorter one leaves
+# room in the result unused. A warning, not a failure: bringing a page into
+# range is a copy change, and a copy change means a `make i18n` run that has
+# no place in an unrelated PR.
+DESCRIPTION_MIN, DESCRIPTION_MAX = 140, 160
 
 # Width and height let Facebook and LinkedIn draw the card on the first share
 # instead of leaving it blank until their crawler has fetched the image once.
@@ -128,6 +154,8 @@ class PageChecker(HTMLParser):
     def run_checks(self, rel_path):
         is_dynamic = rel_path in DYNAMIC_META
         is_error = rel_path in ERROR_PAGES
+        is_shim = rel_path in REDIRECT_SHIMS
+        is_translated = rel_path.split("/")[0] in LOCALES
 
         # Error pages only need CSS/JS; skip all SEO checks.
         if is_error:
@@ -147,10 +175,20 @@ class PageChecker(HTMLParser):
             elif self.canonical_href and self.canonical_href.endswith(".html"):
                 self.errors.append(f"Canonical should use clean URL (no .html): {self.canonical_href!r}")
 
-        # Description (dynamic pages set this via JS)
+        # Description (dynamic pages set this via JS). Length is held on the
+        # English source only: a translation's length is the catalogue's
+        # outcome (German runs a third longer, Japanese far shorter), not
+        # something to fix on the generated page.
         if not is_dynamic:
             if self.description is None:
                 self.errors.append("Missing <meta name='description'>")
+            elif not (is_translated or is_shim) and not (
+                DESCRIPTION_MIN <= len(self.description) <= DESCRIPTION_MAX
+            ):
+                self.warnings.append(
+                    f"Meta description is {len(self.description)} characters; "
+                    f"keep it {DESCRIPTION_MIN}–{DESCRIPTION_MAX}"
+                )
 
         # Robots
         if not self.has_robots:
@@ -159,6 +197,14 @@ class PageChecker(HTMLParser):
         # JSON-LD. A malformed block is silently dropped by every consumer, so a
         # page keeps rendering while its structured data is simply gone — which
         # is exactly the failure an answer engine punishes and nobody notices.
+        #
+        # `inLanguage` is required on each top-level object, the unit the i18n
+        # generator stamps per language; a nested Question or ListItem is in
+        # its container's language, and a Person or Organization has none.
+        # Without it a crawler guesses the language of the block's claims from
+        # their text. An @graph wrapper has no @type and fails on that first,
+        # so no object escapes the rule by being nested one level down.
+        ld_types = set()
         for i, block in enumerate(self.ld_blocks):
             try:
                 parsed = json.loads(block)
@@ -168,8 +214,20 @@ class PageChecker(HTMLParser):
             for obj in parsed if isinstance(parsed, list) else [parsed]:
                 if not isinstance(obj, dict):
                     self.errors.append(f"JSON-LD block {i + 1} is not an object")
-                elif "@type" not in obj:
+                    continue
+                if "@type" not in obj:
                     self.errors.append(f"JSON-LD block {i + 1} has no @type")
+                    continue
+                types = obj["@type"] if isinstance(obj["@type"], list) else [obj["@type"]]
+                ld_types.update(types)
+                if not obj.get("inLanguage") and not LD_ENTITY_TYPES.issuperset(types):
+                    self.errors.append(
+                        f"JSON-LD block {i + 1} ({', '.join(types)}) has no inLanguage"
+                    )
+
+        # A malformed block counts as absent here, which is what it is to Google.
+        if rel_path not in HOME_PAGES and not is_shim and "BreadcrumbList" not in ld_types:
+            self.errors.append("Missing JSON-LD BreadcrumbList (every page below a home page needs one)")
 
         # OG tags
         missing_og = REQUIRED_OG - self.og_props
@@ -224,19 +282,19 @@ def check_file(filepath, site_root):
 
 
 def main():
-    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    site_root = os.path.join(repo_root, "site")
+    site_root = os.path.join(REPO_ROOT, "site")
     # The generated language trees (scripts/build_site_i18n.py) hold the same
     # pages under /es/, /de/ … and must pass the same checks: a localised page
     # with an .html canonical or a broken OG card is still a broken page.
-    locale_dirs = ["es", "pt-br", "de", "ja"]
     html_files = sorted(
         glob.glob(os.path.join(site_root, "*.html")) +
         glob.glob(os.path.join(site_root, "blog", "*.html")) +
         glob.glob(os.path.join(site_root, "changelog", "*.html")) +
         glob.glob(os.path.join(site_root, "tools", "*.html")) +
-        [f for d in locale_dirs for f in glob.glob(os.path.join(site_root, d, "*.html"))] +
-        [f for d in locale_dirs for f in glob.glob(os.path.join(site_root, d, "tools", "*.html"))]
+        glob.glob(os.path.join(site_root, "integrations", "*.html")) +
+        [f for d in LOCALES for f in glob.glob(os.path.join(site_root, d, "*.html"))] +
+        [f for d in LOCALES for sub in ("tools", "integrations")
+         for f in glob.glob(os.path.join(site_root, d, sub, "*.html"))]
     )
 
     total_errors = 0

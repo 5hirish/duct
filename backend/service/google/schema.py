@@ -11,10 +11,8 @@ schemas share one reporting vocabulary while JSON values stay unchanged.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from enum import StrEnum
+from enum import Enum, StrEnum
 from typing import Any
-
-from utils.helpers import json_safe
 
 
 class EvidenceDataSource(StrEnum):
@@ -222,6 +220,23 @@ class BriefNarrative:
     operator_takeaway: str
 
 
+def _json_safe(value: Any) -> Any:
+    """Swap enum members in ``asdict`` output for their ``.value``.
+
+    Walks dicts and lists only: keys, tuples and every non-enum leaf (a
+    ``datetime`` included) come back untouched. Private because
+    ``GoogleAdsBrief.to_dict`` is its only caller; a second caller moves it to
+    ``utils/`` (STYLE.md: extract on the second copy, not the first).
+    """
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, dict):
+        return {key: _json_safe(val) for key, val in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    return value
+
+
 @dataclass
 class GoogleAdsBrief:
     source_metadata: SourceMetadata
@@ -234,4 +249,4 @@ class GoogleAdsBrief:
     narrative: BriefNarrative
 
     def to_dict(self) -> dict[str, Any]:
-        return json_safe(asdict(self))
+        return _json_safe(asdict(self))

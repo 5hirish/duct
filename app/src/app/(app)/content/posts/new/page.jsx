@@ -14,10 +14,12 @@ import { getActiveProjectId } from "@/lib/projects";
  *   - plan_id      (optional)  — anchor the draft to a specific plan
  *   - day          (optional)  — which Day in the plan we're drafting
  *   - topic, pillar (optional) — for standalone (no-plan) drafts
+ *   - channel      (optional)  — the platform to write for (tiktok, linkedin,
+ *                                twitter); picks the agent's playbook
  *   - clone_url    (optional)  — a TikTok post to model the draft on
  *
  * Reached from PlanViewport's "Draft this post →" button on a day card, and
- * from "Clone a TikTok" on the Posts tab.
+ * from "New post" and "Clone a TikTok" on the Posts tab.
  */
 export default function NewPostDraftPage() {
   const router = useRouter();
@@ -59,7 +61,7 @@ export default function NewPostDraftPage() {
           cloneUrl,
         }}
         renderViewport={({ payload, onSendMessage }) => (
-          <PostViewport payload={payload} onSendMessage={onSendMessage} />
+          <PostViewport payload={payload} onSendMessage={onSendMessage} channel={channel} />
         )}
       />
     </div>

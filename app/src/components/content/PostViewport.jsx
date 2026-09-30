@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Send,
   Sparkles,
+  Type,
   Video,
   Wand2,
 } from "lucide-react";
@@ -18,10 +19,11 @@ import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { patchPost } from "../../lib/contentApi";
 import { extractStyleHead } from "../../lib/slideDoc";
 import { statusMeta } from "../../lib/contentStatus";
-import { POST_TYPE_LABELS, PostStatus, PostType } from "../../lib/contentEnums";
+import { POST_TYPE_LABELS, PostStatus, PostType, isTextChannel } from "../../lib/contentEnums";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import SlidesCarousel from "./SlidesCarousel";
 import PostVideo from "./PostVideo";
+import TextPostEditor from "./TextPostEditor";
 import CloneSourceNote from "./CloneSourceNote";
 import PublishReviewPanel from "./PublishReviewPanel";
 import { SanityCheckId, isScored } from "@/lib/contentReview";
@@ -35,8 +37,14 @@ const STREAMING_HINTS = [
   msg`Choosing hashtags…`,
   msg`Sketching image prompts…`,
 ];
+const TEXT_STREAMING_HINTS = [
+  msg`Reading what you've already said…`,
+  msg`Picking the angle…`,
+  msg`Finding a source…`,
+  msg`Writing the hook…`,
+];
 
-const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
+const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon, text: Type };
 
 /**
  * Post viewport — preview-first. The right pane shows what actually ships: the
@@ -55,6 +63,9 @@ const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon };
  *   - onSendMessage(text) — when present (active session), enables the
  *     "approve & generate images" action, which sends a chat turn to the agent.
  *     Absent on the read-only detail page.
+ *   - channel — the channel a new draft is for, before its first payload
+ *     arrives; picks the waiting copy. A text post (X, LinkedIn) swaps the
+ *     slides and caption for TextPostEditor: same shell, same save.
  */
 // Drop transient client-only fields (e.g. _preview_uri, the instant-paint inline
 // data URI) from slides + cells before persisting — the DB stores only real urls.
@@ -68,7 +79,7 @@ function stripTransient(slides) {
   }));
 }
 
-export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage, children }) {
+export default function PostViewport({ payload, canPublish = false, onPublish, onRevise, onSendMessage, channel, children }) {
   const { t, i18n } = useLingui();
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
@@ -95,11 +106,14 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
   // we never send slides_html (the backend re-renders it from slides + layout).
   // Caption + hashtags are edited here; the rest are edited via chat but still
   // round-trip so an agent edit + a manual caption tweak persist together.
+  // `replies` and `title` are left out when the payload never had them, so a
+  // save against a backend that predates them is not refused for an unknown
+  // field (JSON drops an undefined key).
   function editedFields() {
     return {
-      caption: post.caption, hashtags: post.hashtags,
+      caption: post.caption, replies: post.replies, hashtags: post.hashtags,
       hook_type: post.hook_type, hook_text: post.hook_text, hook_emotion: post.hook_emotion,
-      save_cta: post.save_cta, tiktok_title: post.tiktok_title, audio_note: post.audio_note,
+      save_cta: post.save_cta, title: post.title, audio_note: post.audio_note,
       bridge_text: post.bridge_text, strategic_note: post.strategic_note,
       visual_brief: post.visual_brief, emotional_arc: post.emotional_arc,
       camera_ref_pool: post.camera_ref_pool,
@@ -151,10 +165,11 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
     : undefined;
 
   if (!post || (post.type && post.type !== "post" && !post.id)) {
-    return <DraftingPulse />;
+    return <DraftingPulse text={isTextChannel(channel)} />;
   }
 
   const slides = Array.isArray(post.slides) ? post.slides : [];
+  const isText = post.post_type === PostType.TEXT;
   const slideIdx = Math.min(currentIndex, Math.max(0, slides.length - 1));
 
   const status = post.status || "pending";
@@ -254,31 +269,38 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
         {saveError && <p className="mt-2 text-xs text-destructive">{saveError}</p>}
       </header>
 
-      {/* Body — the slides preview + the publishable copy (caption + hashtags).
-          Slide layout, image prompts, hook and creative-brief edits all happen
-          through the agent chat, so the pane stays focused on what ships. */}
+      {/* Body — what ships. A text post is its words, edited in a feed-shaped
+          card; a visual post is the slides preview plus its caption and
+          hashtags. Slide layout, image prompts, hook and creative-brief edits
+          all happen through the agent chat, so the pane stays on what ships. */}
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="mx-auto max-w-2xl space-y-4 p-5">
-          {isVideo ? (
-            <PostVideo
-              postId={post.id}
-              video={post.video}
-              takes={Array.isArray(post.video_takes) ? post.video_takes : []}
-              onChange={(updated) =>
-                setDraft((prev) => ({ ...(prev || payload), video: updated.video, video_takes: updated.video_takes }))
-              }
-            />
+          {isText ? (
+            <TextPostEditor post={post} patch={patch} />
           ) : (
             <>
-              <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
+              {isVideo ? (
+                <PostVideo
+                  postId={post.id}
+                  video={post.video}
+                  takes={Array.isArray(post.video_takes) ? post.video_takes : []}
+                  onChange={(updated) =>
+                    setDraft((prev) => ({ ...(prev || payload), video: updated.video, video_takes: updated.video_takes }))
+                  }
+                />
+              ) : (
+                <>
+                  <SlidesCarousel slides={slides} headHtml={headHtml} index={slideIdx} onIndexChange={setCurrentIndex} />
 
-              <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+                  <BulkImageBar slides={slides} onSendMessage={onSendMessage} commitIfDirty={commitIfDirty} currentIndex={slideIdx} />
+                </>
+              )}
+
+              <CloneSourceNote source={post.clone_source} />
+
+              <PostCopy post={post} patch={patch} />
             </>
           )}
-
-          <CloneSourceNote source={post.clone_source} />
-
-          <PostCopy post={post} patch={patch} />
 
           {children}
 
@@ -455,20 +477,23 @@ function BulkImageBar({ slides, onSendMessage, commitIfDirty, currentIndex = 0 }
 // Drafting state
 // ---------------------------------------------------------------------------
 
-function DraftingPulse() {
+function DraftingPulse({ text = false }) {
   const { i18n } = useLingui();
   const [idx, setIdx] = useState(0);
+  const hints = text ? TEXT_STREAMING_HINTS : STREAMING_HINTS;
   useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % STREAMING_HINTS.length), 1800);
+    const t = setInterval(() => setIdx((i) => (i + 1) % hints.length), 1800);
     return () => clearInterval(t);
-  }, []);
+  }, [hints.length]);
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
       <Spinner className="size-10 border-primary/30 border-t-primary" />
       <p className="text-sm font-medium"><Trans>Drafting the post…</Trans></p>
-      <p className="text-xs text-muted-foreground transition-opacity duration-500">{i18n._(STREAMING_HINTS[idx])}</p>
+      <p className="text-xs text-muted-foreground transition-opacity duration-500">{i18n._(hints[idx % hints.length])}</p>
       <p className="max-w-xs text-2xs text-muted-foreground">
-        <Trans>Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds.</Trans>
+        {text
+          ? <Trans>The post appears here as soon as the draft is ready, with its character count.</Trans>
+          : <Trans>Slides, caption, and hashtags appear here as soon as the draft is ready. Usually 20–40 seconds.</Trans>}
       </p>
     </div>
   );
