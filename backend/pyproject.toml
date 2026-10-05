@@ -19,7 +19,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-fastapi = "^0.141"
+fastapi = "^0.142"
 uvicorn = {version = "^0.54", extras = ["standard"]}
 # Starlette's form parser. FastAPI needs it at *import* time for any route
 # declaring Form()/File() — routes/content.py:/content/uploads does — so an
@@ -35,8 +35,8 @@ python-multipart = ">=0.0.32"
 # left to send. Do not float back below this.
 google-ads = "^33.0"
 google-analytics-data = "^0.23"
-google-api-python-client = "^2.200.0"
-google-genai = "^2.25"
+google-api-python-client = "^2.201.0"
+google-genai = "^2.27"
 python-dotenv = "^1.2"
 pydantic = "^2.13"
 pydantic-settings = "^2.15"
@@ -53,9 +53,9 @@ boto3 = "^1.43"
 sqlmodel = "^0.0.47"
 alembic = "^1.20"
 psycopg = {version = "^3.3", extras = ["binary"]}
-sentry-sdk = "^2.70.0"
+sentry-sdk = "^2.71.0"
 dlt = "^1.30.0"
-selectolax = ">=0.4.12"
+selectolax = ">=0.4.13"
 extruct = ">=0.16"
 trafilatura = ">=2.2.0"
 # Lossless payload compaction before a connector result reaches the model
@@ -64,7 +64,7 @@ trafilatura = ">=2.2.0"
 # change what numbers a brief quotes. Ships an abi3 Rust extension with
 # manylinux_2_28 and macOS wheels, so no toolchain is needed to build it, and
 # agents/core/compaction.py degrades to plain JSON wherever it is absent.
-headroom-ai = "~0.38"
+headroom-ai = "~0.39"
 deepagents = "0.7.19"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
 # OTel GenAI spans for the agents (agents/core/telemetry.py). The API is what
 # the spans are opened with; the SDK and the OTLP/HTTP exporter are what
@@ -75,7 +75,7 @@ opentelemetry-api = "^1.44"
 opentelemetry-sdk = "^1.44"
 opentelemetry-exporter-otlp-proto-http = "^1.44"
 reportlab = ">=4.2"
-cloudflare = ">=5.7.0"
+cloudflare = ">=5.8.0"
 # Durable conversation state (agents/core/checkpoint.py). Both, not one: the
 # same app serves Postgres on Railway and SQLite in the desktop sidecar, and the
 # checkpointer follows DATABASE_URL rather than forcing a database of its own.
