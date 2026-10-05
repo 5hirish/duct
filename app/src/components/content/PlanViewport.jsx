@@ -2,7 +2,7 @@
 
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import PlanKanban from "./PlanKanban";
+import PlanList from "./PlanList";
 import PlanStrategy from "./PlanStrategy";
 import PipelineProgress from "../PipelineProgress";
 import { ContentStep } from "../../lib/contentEvents";
@@ -31,7 +31,9 @@ const PLAN_LINES = [
  * Right-pane viewport for plan_month sessions.
  * Re-renders on every PLAN_GENERATED event from the workspace.
  *
- * MVP: Kanban only. PlanCalendar lands in a follow-up phase.
+ * The plan reads as a list, not a status board: while a plan is being
+ * written every post is pending, and a Kanban of that is one full lane and
+ * three empty ones. The Plan tab keeps the board for when posts move.
  *
  * Props:
  *   - payload: { type: "plan", id, name, days[], character, strategy, ... }
@@ -79,7 +81,7 @@ export default function PlanViewport({ payload, steps = [], building = false, on
       </div>
 
       <PlanStrategy strategy={payload.strategy} />
-      <PlanKanban plan={payload} onReviseDay={onReviseDay} />
+      <PlanList plan={payload} onReviseDay={onReviseDay} />
     </div>
   );
 }

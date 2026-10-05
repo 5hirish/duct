@@ -454,6 +454,10 @@ msgstr "{percent}% 使用済みです"
 msgid "{phase}… {elapsed}s"
 msgstr "{phase}… {elapsed}秒"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "{pillarCount, plural, one {# content pillar} other {# content pillars}}"
+msgstr "{pillarCount, plural, one {# コンテンツピラー} other {# コンテンツピラー}}"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount} — APIキー不要、追加料金なし。"
@@ -477,6 +481,10 @@ msgstr "{projectName} · メモリ"
 #: src/components/workspace/AgentChat.jsx
 msgid "{ranTier} · {requestedTier} is rate limited"
 msgstr "{ranTier} · {requestedTier} はレート制限されています"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "{ready} of {total} ready"
+msgstr "{total}件中{ready}件準備完了"
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "{ready} of {total} will apply · {blocked, plural, one {# needs a person} other {# need a person}}"
@@ -996,6 +1004,10 @@ msgstr "1つ以上の名前をコンマで区切って追加してください�
 msgid "Add pillar"
 msgstr "ピラーを追加"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Add pillars"
+msgstr "ピラーを追加"
+
 #: src/app/(app)/memory/page.jsx
 msgid "Add something about how you work"
 msgstr "働き方について追加する"
@@ -1089,6 +1101,7 @@ msgstr "すべて"
 
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/artifacts/page.jsx
+#: src/components/content/PlanList.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "All"
 msgstr "すべて"
@@ -1577,6 +1590,10 @@ msgstr "基本スタイル"
 msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
 msgstr "このフォーマットのためにスライドビルダーがインライン化する基本スタイルです。ライブラリ → スタイルで閲覧できます。"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Behind the app"
+msgstr "アプリの裏側"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "being written"
 msgstr "作成中"
@@ -1640,6 +1657,7 @@ msgstr "ブランドコンテキスト"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "Brand voice"
 msgstr "ブランドボイス"
 
@@ -1917,6 +1935,10 @@ msgstr "Claude · 監査あたり数セント"
 msgid "Clear"
 msgstr "クリア"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Clicks"
+msgstr "クリック数"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Client ID"
 msgstr "クライアントID"
@@ -2176,6 +2198,7 @@ msgid "Content goal"
 msgstr "コンテンツ目標"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "Content pillars"
 msgstr "コンテンツピラー"
 
@@ -2567,6 +2590,10 @@ msgstr "このフォーマットを削除しますか？"
 msgid "Deleting…"
 msgstr "削除中…"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Describe your brand"
+msgstr "ブランドを説明"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Deselect all ({selectedCount}/{approvableCount} selected)"
 msgstr "すべて選択解除（{selectedCount}/{approvableCount}件選択済み）"
@@ -2734,6 +2761,10 @@ msgstr "下書き"
 msgid "Draft a clone"
 msgstr "クローンを下書き"
 
+#: src/components/content/PostMiniCard.jsx
+msgid "Draft post"
+msgstr "下書きを作成"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Drafted a post from the reflection"
 msgstr "振り返りから投稿を下書きしました"
@@ -2843,6 +2874,10 @@ msgstr "Ductは{chosenZone}{offsetSuffix}で「先週」と「昨日」を読み
 #: src/components/onboarding/FrontDoor.jsx
 msgid "Duct reads it the way a search engine does."
 msgstr "Ductは検索エンジンと同じように読み込みます。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Duct reads your brand, your pillars and what has already worked, then lays out a month of posts with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
+msgstr "Ductはあなたのブランド、ピラー、そしてこれまでの成功事例を読み込み、それぞれの理由を添えて1ヶ月分の投稿を提案します。あなたは一つずつ下書きを作成し、あなたの承認なしに公開されることはありません。"
 
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Duct reads your site the way a search engine does, then tells you what to fix first."
@@ -3062,6 +3097,14 @@ msgstr "すべてのエントリには実行者が記載されるため、アカ
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr "すべての測定値、方法、修正を構築する人へのメモ"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Every post dated, with its pillar and what it is for. Open one and Duct drafts it with you."
+msgstr "このプランのすべての投稿には日付、ピラー、目的が記載されています。一つ開くと、Ductがあなたと一緒に下書きを作成します。"
+
+#: src/components/content/PlanList.jsx
+msgid "Every post in this plan has a draft."
+msgstr "このプランのすべての投稿には下書きがあります。"
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Every type has results"
 msgstr "すべてのタイプに結果があります"
@@ -3086,6 +3129,7 @@ msgstr "エージェントが<0>{projectName}</0>のために作成したすべ�
 msgid "Evidence: {evidence}"
 msgstr "証拠: {evidence}"
 
+#: src/components/content/PlanDayOne.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Example"
 msgstr "例"
@@ -3243,6 +3287,10 @@ msgstr "最初の行はフックです。2〜3文にしてください。"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fix These First"
 msgstr "まずこれらを修正"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Follows"
+msgstr "フォロワー数"
 
 #: src/components/workspace/MemoryRows.jsx
 msgid "Forget"
@@ -3470,6 +3518,10 @@ msgstr "メモリへ移動"
 #: src/app/not-found.js
 msgid "Go to Sign In"
 msgstr "サインインへ移動"
+
+#: src/components/content/PostMiniCard.jsx
+msgid "Goal:"
+msgstr "目標:"
 
 #: src/components/audit/AuditReportV1.jsx
 #: src/lib/contentReview.js
@@ -3912,6 +3964,10 @@ msgstr "招待済み"
 msgid "Invited · expires {when}"
 msgstr "招待済み · {when}に期限切れ"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Invoicing"
+msgstr "請求書発行"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Issue distribution across all findings"
 msgstr "すべての指摘事項における問題の分布"
@@ -4013,6 +4069,10 @@ msgstr "最終確認"
 msgid "Last checked {lastChecked}. {sourceCount, plural, one {# source connected.} other {# sources connected.}}"
 msgstr "最終確認 {lastChecked}。{sourceCount, plural, one {# ソースが接続済みです} other {# ソースが接続済みです}}"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Late-paying client? Say this, word for word."
+msgstr "支払い遅延のクライアント？この言葉をそのまま伝えてください。"
+
 #: src/components/audit/AuditReportV1.jsx
 #: src/components/ReloadToast.jsx
 #: src/components/UpdateToast.jsx
@@ -4085,6 +4145,7 @@ msgid "Link all"
 msgstr "すべてリンク"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "Link an account"
 msgstr "アカウントをリンク"
 
@@ -4522,6 +4583,10 @@ msgstr "モデルとプロバイダー"
 msgid "Momentum"
 msgstr "モメンタム"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Money habits"
+msgstr "お金の習慣"
+
 #: src/components/content/PlanBoard.jsx
 msgid "Month"
 msgstr "月"
@@ -4604,6 +4669,10 @@ msgstr "要改善"
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Needs you"
 msgstr "あなたが必要です"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Net 30 is a choice, not a law"
+msgstr "Net 30は選択であり、法律ではない"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Never say"
@@ -4741,6 +4810,10 @@ msgstr "この監査では競合調査は返されませんでした。"
 msgid "No daily reminder"
 msgstr "毎日のリマインダーなし"
 
+#: src/components/content/PlanList.jsx
+msgid "No drafts yet. Pick a pending post to start one."
+msgstr "まだ下書きはありません。保留中の投稿を選んで開始してください。"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "No earlier version to compare."
 msgstr "比較する以前のバージョンはありません。"
@@ -4838,8 +4911,8 @@ msgid "No pillar-attributed posts yet."
 msgstr "まだピラーに紐付けられた投稿はありません。"
 
 #: src/components/content/PlanBoard.jsx
-msgid "No plan yet"
-msgstr "プランはまだありません"
+#~ msgid "No plan yet"
+#~ msgstr "プランはまだありません"
 
 #: src/components/content/PlanBoard.jsx
 #~ msgid "No plan yet for this project."
@@ -4949,6 +5022,10 @@ msgstr "なし"
 msgid "None of these — start a new one"
 msgstr "これら以外 — 新しいものを開始する"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "None yet. Duct asks what you want to be known for."
+msgstr "まだ設定されていません。Ductは計画を立てる前にいくつか質問をします。"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "North Star metric"
 msgstr "ノーススターメトリック"
@@ -5043,9 +5120,14 @@ msgid "Not scored yet. Revise with Duct and ask for a review to get one."
 msgstr "まだスコアがありません。Ductで修正し、レビューを依頼してスコアを取得してください。"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanDayOne.jsx
 #: src/lib/modelTiers.js
 msgid "Not set"
 msgstr "未設定"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Not set. Duct asks you a question or two before it plans."
+msgstr "未設定です。Ductは計画を立てる前にいくつか質問をします。"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Not started"
@@ -5075,9 +5157,17 @@ msgstr "このティアより下も実行できません — {tierName}を使用
 msgid "Nothing checked yet."
 msgstr "まだ何もチェックされていません。"
 
+#: src/components/content/PlanList.jsx
+msgid "Nothing discarded."
+msgstr "何も破棄されていません。"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Nothing from project memory is read into this session, and nothing it concludes is written back."
 msgstr "プロジェクトメモリから何もこのセッションに読み込まれず、結論も書き戻されません。"
+
+#: src/components/content/PlanList.jsx
+msgid "Nothing from this plan has gone out yet."
+msgstr "このプランからまだ何も公開されていません。"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing has run on your key yet"
@@ -5446,6 +5536,10 @@ msgstr "オプション — レポートの品質を向上させます"
 msgid "Optional — the agent will ask if you leave this unset."
 msgstr "オプション — これを設定しない場合、エージェントが尋ねます。"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Optional. Link one and the plan learns from your own results and posting times."
+msgstr "任意です。一つ連携すると、あなたの実績や投稿時間からプランが学習します。"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "or paste an API key"
 msgstr "またはAPIキーを貼り付ける"
@@ -5672,7 +5766,7 @@ msgstr "プラン {shortId}"
 msgid "Plan strategy"
 msgstr "プランの戦略"
 
-#: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "Plan the next 30 days"
 msgstr "今後30日間を計画する"
 
@@ -6077,6 +6171,7 @@ msgstr "読み込み中…"
 msgid "Reads what a search engine sees"
 msgstr "検索エンジンが見るものを読み込みます"
 
+#: src/components/content/PlanDayOne.jsx
 #: src/components/models/TierCard.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Ready"
@@ -6676,6 +6771,7 @@ msgstr "アカウントに保存済み"
 msgid "saved to your Duct account"
 msgstr "Ductアカウントに保存済み"
 
+#: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
 msgid "Saves"
 msgstr "保存"
@@ -7043,6 +7139,7 @@ msgid "Shared by {owner}"
 msgstr "{owner}が共有"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
 msgid "Shares"
 msgstr "共有"
@@ -7613,6 +7710,10 @@ msgstr "ターゲットキーワード"
 msgid "Targets"
 msgstr "ターゲット"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Tax without fear"
+msgstr "恐れを知らない税金"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Team ID"
 msgstr "チームID"
@@ -7722,9 +7823,13 @@ msgstr "それはシェアリンクです。開いてから、ブラウザから
 msgid "That's us — continue"
 msgstr "私たちです — 続行"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "The 12% rule for tax money"
+msgstr "税金のための12%ルール"
+
 #: src/components/content/PlanBoard.jsx
-msgid "The agent reads your brand, your pillars and what has worked, then lays out a month of posts you can draft one at a time."
-msgstr "エージェントがブランド、柱となるテーマ、これまでに効果があった内容を読み取り、1件ずつ下書きできる1か月分の投稿を組み立てます。"
+#~ msgid "The agent reads your brand, your pillars and what has worked, then lays out a month of posts you can draft one at a time."
+#~ msgstr "エージェントがブランド、柱となるテーマ、これまでに効果があった内容を読み取り、1件ずつ下書きできる1か月分の投稿を組み立てます。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."
@@ -8571,6 +8676,14 @@ msgstr "ウェブサイトURLは必須です。"
 msgid "Week"
 msgstr "週"
 
+#: src/components/content/PlanList.jsx
+msgid "Week {number}"
+msgstr "{number}週目"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "What a freelancer's September actually costs"
+msgstr "フリーランサーの9月にかかる実際の費用"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
 msgstr "現在、この指標を最も制限しているものは何ですか？ <0>(任意)</0>"
@@ -8590,6 +8703,10 @@ msgstr "成功はどのようなものですか？"
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 msgid "What Duct knows about this project. Agents read it before every run — confirm, correct, or pin a fact so it stays in view."
 msgstr "Ductがこのプロジェクトについて知っていることです。エージェントはすべての実行前にこれを読み込み、事実を確認、修正、または固定して表示し続けます。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "What Duct plans from"
+msgstr "Ductが計画する元"
 
 #: src/components/models/UsagePanel.jsx
 msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
@@ -8639,6 +8756,10 @@ msgstr "業界の見解"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What was observed, why it matters, how to apply it."
 msgstr "観察されたこと、それが重要な理由、適用方法。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "What you get"
+msgstr "得られるもの"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "What you uniquely offer."
@@ -8739,6 +8860,10 @@ msgstr "成功理由:"
 #: src/components/content/DraftsQueue.jsx
 msgid "Why not? The next reflection learns from it."
 msgstr "理由を選んでください。次の振り返りに反映されます。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Why we rebuilt onboarding from scratch"
+msgstr "オンボーディングをゼロから再構築した理由"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Will be encrypted and stored on Duct, so scheduled runs use your key too."
@@ -8855,6 +8980,10 @@ msgstr "あなた"
 msgid "You approved this"
 msgstr "これを承認しました"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "You can change or drop any day after."
+msgstr "翌日以降はいつでも変更または削除できます。"
+
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
 msgstr "このタブを閉じることができます。"
@@ -8919,6 +9048,10 @@ msgstr "<0>{projectName}</0> に招待されました"
 #: src/components/ChatSidebar.jsx
 msgid "your account"
 msgstr "アカウント"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Your accounts"
+msgstr "あなたのアカウント"
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Your answer"
@@ -9033,6 +9166,10 @@ msgstr "メモリ"
 #: src/app/(start)/start/page.jsx
 msgid "Your model"
 msgstr "モデル"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Your next 30 days of posts, planned in about three minutes."
+msgstr "次の30日間の投稿を、約3分で計画します。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Your one-line pitch"

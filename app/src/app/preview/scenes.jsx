@@ -64,7 +64,8 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
-import { NoPlanYet } from "@/components/content/PlanBoard";
+import PlanDayOne from "@/components/content/PlanDayOne";
+import PlanList from "@/components/content/PlanList";
 import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
@@ -839,6 +840,40 @@ const PLAN_STRATEGY_ALL_PROVEN = {
   explore: "",
   explore_evidence: "Every type has at least three measured posts, so the test slot goes to identity_challenge hooks instead.",
 };
+
+// A whole month as the plan agent hands it over: thirty pending posts, the
+// story's five topics cycled with the bets each slot makes. What the plan
+// workspace's list shows the moment submit_plan runs.
+const MONTH_OBJECTIVES = ["saves", "follows", "shares", "clicks", "saves"];
+const PLAN_MONTH = {
+  id: "plan_preview_month",
+  name: "October content plan",
+  start_date: "2026-10-01T00:00:00",
+  days: Array.from({ length: 30 }, (_, i) => {
+    const d = STORY_PLAN.days[i % STORY_PLAN.days.length];
+    return { ...d, status: "pending", post_id: null, objective: MONTH_OBJECTIVES[i % MONTH_OBJECTIVES.length] };
+  }),
+};
+
+// The brand context the first-run Plan tab reads back. A project that came
+// through the audit usually has a voice and pillars and no linked account.
+const PLAN_BRAND_READY = {
+  description: "Budgeting for freelancers who invoice in euros.",
+  content_brand: { tone: "Practical, warm, a little dry. Numbers over adjectives." },
+  content_pillars: {
+    items: [
+      { id: "money_habits", name: "Money habits" },
+      { id: "invoicing", name: "Invoicing" },
+      { id: "tax_without_fear", name: "Tax without fear" },
+      { id: "behind_the_app", name: "Behind the app" },
+    ],
+  },
+};
+const PLAN_BRAND_EMPTY = { description: "", content_brand: {}, content_pillars: {} };
+const PLAN_ACCOUNTS = [
+  { account_id: 1, platform: "tiktok", username: "solo.money" },
+  { account_id: 2, platform: "instagram", username: "solomoney.app" },
+];
 
 // A posted post's numbers, as the metrics form receives them. The published
 // one carries what a PostBridge sync writes plus a typed saves count; the
@@ -2460,13 +2495,73 @@ export const SCENES = [
   },
   {
     id: "plan-board-empty",
-    state: "a project with no plan yet",
-    group: "PlanBoard",
+    state: "voice and pillars set, no account linked",
+    group: "PlanDayOne",
     title: "The Plan tab, before the first plan",
-    note: "The Plan tab used to say \"No plan yet\" and stop there: the session that makes a plan was linked from nowhere (issue 274). Now the empty state says what a plan is and starts one; a board with plans carries the same action as \"New plan\" in its toolbar.",
+    note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, no account yet. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, and shows a sample week in the same list the plan workspace uses. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
     render: () => (
       <div className="p-5">
-        <NoPlanYet onStart={() => {}} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} onStart={() => {}} onOpenTab={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-fresh",
+    state: "nothing set yet",
+    group: "PlanDayOne",
+    title: "A project with no brand context",
+    note: "Every source missing. Each row says what Duct does about it (asks, for voice and pillars) and offers the tab that fixes it; the button still works, because the agent asks for what is missing before it plans.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} onStart={() => {}} onOpenTab={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-ready",
+    state: "everything set",
+    group: "PlanDayOne",
+    title: "All three sources ready",
+    note: "Voice, four pillars and two linked accounts. The plan will learn from those accounts' own results, which is what the strategy band on a finished plan reports.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} onStart={() => {}} onOpenTab={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-unknown",
+    state: "brand context failed to load",
+    group: "PlanDayOne",
+    title: "When the sources cannot be read",
+    note: "The checklist is left out rather than reporting every source as missing: a failed read and an empty brand are different facts.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={null} accounts={null} onStart={() => {}} onOpenTab={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-list-month",
+    state: "a fresh 30-day plan, every post pending",
+    group: "PlanList",
+    title: "The plan as an agenda",
+    note: "What the plan workspace shows once submit_plan runs: thirty posts in date order, grouped by week from the plan's first day, filterable by status. Pending rows carry no badge (thirty identical pills is noise); hovering one says Draft. What to check: the week header sticks while the list scrolls; platforms drop out of the row in a narrow pane before the title loses room.",
+    render: () => (
+      <div style={{ height: 640, display: "flex" }} className="bg-background">
+        <PlanList plan={PLAN_MONTH} onReviseDay={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-list-story",
+    state: "one week: two posted, one drafted, two pending",
+    group: "PlanList",
+    title: "A plan with posts moving",
+    note: "The story week. Posted and drafted rows carry their status and time; a scheduled post would say Scheduled. The filter counts follow, and Discarded appears only once something is in it.",
+    render: () => (
+      <div style={{ height: 420, display: "flex" }} className="bg-background">
+        <PlanList plan={STORY_PLAN} postsById={STORY_POSTS} onReviseDay={() => {}} />
       </div>
     ),
   },
@@ -2521,11 +2616,11 @@ export const SCENES = [
     state: "a live plan with its strategy",
     group: "PlanViewport",
     title: "The plan pane in the workspace",
-    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the board. A plan made before strategies were recorded shows no strategy band at all.",
+    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the list. A plan made before strategies were recorded shows no strategy band at all.",
     render: () => (
       <div style={{ height: 720, display: "flex" }} className="bg-background">
         <div className="flex-1 min-w-0">
-          <PlanViewport payload={{ type: "plan", ...STORY_PLAN, strategy: PLAN_STRATEGY }} />
+          <PlanViewport payload={{ type: "plan", ...PLAN_MONTH, strategy: PLAN_STRATEGY }} onReviseDay={() => {}} />
         </div>
       </div>
     ),

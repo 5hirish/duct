@@ -11,47 +11,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getPlan, listPlans, listPosts } from "@/lib/contentApi";
+import { getBrandContext, getPlan, listLinkedAccounts, listPlans, listPosts } from "@/lib/contentApi";
 import LoadError from "@/components/LoadError";
 import { Button } from "@/components/ui/button";
-import EmptyState from "@/components/ui/empty-state";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanCalendar from "@/components/content/PlanCalendar";
 import PlanStrategy from "@/components/content/PlanStrategy";
+import PlanDayOne from "@/components/content/PlanDayOne";
 
 // Where a monthly plan starts: a plan_month session in the split workspace.
 // Nothing linked here before #274, so a new project had no way in but the URL.
 export const NEW_PLAN_HREF = "/content/sessions/new";
 
 /**
- * The Plan tab before a project has a plan: what one is, and the one button
- * that starts it.
- */
-export function NoPlanYet({ onStart }) {
-  return (
-    <EmptyState
-      icon={CalendarDays}
-      title={<Trans>No plan yet</Trans>}
-      actions={
-        <Button size="sm" onClick={onStart}>
-          <Plus className="size-3.5" /> <Trans>Plan the next 30 days</Trans>
-        </Button>
-      }
-    >
-      <Trans>
-        The agent reads your brand, your pillars and what has worked, then lays out a
-        month of posts you can draft one at a time.
-      </Trans>
-    </EmptyState>
-  );
-}
-
-/**
  * Inline plan board — plan selector + Kanban/Calendar toggle. Renders directly
  * inside the Content "Plan" tab (no separate route hop). Pass `initialPlanId`
- * to preselect (e.g. from a query param).
+ * to preselect (e.g. from a query param). Before the first plan it is
+ * `PlanDayOne`, whose "fix this" links call `onOpenTab(tab)`; a caller
+ * outside Content Studio's tabs leaves it out and the links navigate there.
  */
-export default function PlanBoard({ projectId, initialPlanId = "" }) {
+export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab }) {
   const { t } = useLingui();
   const router = useRouter();
   const [plans, setPlans] = useState([]);
@@ -62,6 +41,9 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   const [calView, setCalView] = useState("month"); // "month" | "week"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // What the first-run screen shows back: null is "could not tell", which
+  // it renders differently from "nothing set".
+  const [sources, setSources] = useState({ brand: null, accounts: null });
   // Bumped by the retry button. Both loads below key off it, because a
   // failure in either leaves the same empty board.
   const [reloadKey, setReloadKey] = useState(0);
@@ -74,6 +56,16 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
       try {
         const list = await listPlans(projectId);
         if (cancelled) return;
+        // Only a project with no plan shows its sources, so only it waits
+        // for them. Either failing leaves its part of the screen out.
+        if (list.length === 0) {
+          const [brand, accounts] = await Promise.all([
+            getBrandContext(projectId).catch(() => null),
+            listLinkedAccounts(projectId).catch(() => null),
+          ]);
+          if (cancelled) return;
+          setSources({ brand, accounts });
+        }
         setPlans(list);
         setActiveId((prev) => prev || initialPlanId || list[0]?.id || "");
       } catch (e) {
@@ -137,7 +129,14 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
     return <p className="text-sm text-muted-foreground"><Trans>Loading plan…</Trans></p>;
   }
   if (plans.length === 0) {
-    return <NoPlanYet onStart={() => router.push(NEW_PLAN_HREF)} />;
+    return (
+      <PlanDayOne
+        brand={sources.brand}
+        accounts={sources.accounts}
+        onStart={() => router.push(NEW_PLAN_HREF)}
+        onOpenTab={onOpenTab || ((tab) => router.push(`/content?tab=${tab}`))}
+      />
+    );
   }
 
   return (

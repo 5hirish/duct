@@ -115,7 +115,7 @@ export default function ContentLandingPage() {
         </div>
       </nav>
 
-      {tab === "plan"      && <PlanTab      projectId={projectId} />}
+      {tab === "plan"      && <PlanTab      projectId={projectId} onOpenTab={setTab} />}
       {tab === "reflections" && <ReflectionsTab projectId={projectId} />}
       {tab === "posts"     && <PostsTab     projectId={projectId} />}
       {tab === "analytics" && (
@@ -133,13 +133,13 @@ export default function ContentLandingPage() {
 // Plan tab
 // ---------------------------------------------------------------------------
 
-function PlanTab({ projectId }) {
+function PlanTab({ projectId, onOpenTab }) {
   // This tab scrolls inside .app-main-wide, so nothing above gives the board a
   // height — it is the one caller that has to state one. svh, not vh, to match
   // the rest of the app's full-height surfaces.
   return (
     <div className="h-[calc(100svh-15rem)] min-h-[28rem]">
-      <PlanBoard projectId={projectId} />
+      <PlanBoard projectId={projectId} onOpenTab={onOpenTab} />
     </div>
   );
 }
