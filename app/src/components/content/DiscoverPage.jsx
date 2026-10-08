@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   VENDOR,
+  VENDOR_HOME,
   connectVendorKey,
   disconnectVendorKey,
   getVendorKeyStatus,
@@ -78,7 +79,7 @@ const RUNNING = new Set(["running", "polling", "fetching"]);
 // and a sweep on every tab switch (or twice under StrictMode) buys nothing.
 const backfilled = new Set();
 
-const APIFY_URL = "https://console.apify.com";
+const APIFY_URL = VENDOR_HOME[VENDOR.APIFY];
 
 function DiscoverHeader({ aside }) {
   return (

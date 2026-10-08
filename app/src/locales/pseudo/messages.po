@@ -182,6 +182,10 @@ msgstr ""
 msgid "{dayCount, plural, one {# day} other {# days}}"
 msgstr ""
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "{days, plural, one {# day} other {# days}}"
+msgstr ""
+
 #: src/app/(app)/execute/page.jsx
 msgid "{destructiveCount, plural, one {# destructive change} other {# destructive changes}} — {destructiveNames}."
 msgstr ""
@@ -761,12 +765,20 @@ msgstr ""
 msgid "✦ Reasoned"
 msgstr ""
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "1 week"
+msgstr ""
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "1–2 wks"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "1–3 days"
+msgstr ""
+
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "2 weeks"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
@@ -777,14 +789,15 @@ msgstr ""
 msgid "23 came from your own team"
 msgstr ""
 
+#: src/components/content/PlanPeriodPicker.jsx
 #: src/lib/usageApi.js
 msgid "30 days"
 msgstr ""
 
 #: src/components/content/ContentWorkspace.jsx
 #: src/components/content/PlanViewport.jsx
-msgid "30-day plan"
-msgstr ""
+#~ msgid "30-day plan"
+#~ msgstr ""
 
 #: src/lib/usageApi.js
 msgid "7 days"
@@ -820,6 +833,10 @@ msgstr ""
 
 #: src/app/(app)/connections/page.jsx
 msgid "A key is scoped to ONE ad account — make sure it's the right one."
+msgstr ""
+
+#: src/components/content/PlanDayOne.jsx
+msgid "A month of posts, planned in about three minutes."
 msgstr ""
 
 #: src/components/ReloadToast.jsx
@@ -1226,6 +1243,10 @@ msgstr ""
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
+msgstr ""
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
@@ -2196,6 +2217,11 @@ msgstr ""
 msgid "Content pillars"
 msgstr ""
 
+#: src/components/content/ContentWorkspace.jsx
+#: src/components/content/PlanViewport.jsx
+msgid "Content plan"
+msgstr ""
+
 #: src/app/(app)/content/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/content/ContentWorkspace.jsx
@@ -2375,6 +2401,10 @@ msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
+msgstr ""
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Covers {range}, one post a day. You can revise any day after."
 msgstr ""
 
 #: src/components/TelemetryCard.jsx
@@ -2870,7 +2900,11 @@ msgid "Duct reads it the way a search engine does."
 msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
-msgid "Duct reads your brand, your pillars and what has already worked, then lays out a month of posts with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
+#~ msgid "Duct reads your brand, your pillars and what has already worked, then lays out a month of posts with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
+#~ msgstr ""
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Duct reads your brand, your pillars and what has already worked, then lays out the weeks ahead, a post a day, with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
 msgstr ""
 
 #: src/components/onboarding/FrontDoor.jsx
@@ -3413,8 +3447,8 @@ msgid "Generated: {generatedAt}"
 msgstr ""
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Generating 30-day plan"
-msgstr ""
+#~ msgid "Generating 30-day plan"
+#~ msgstr ""
 
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
@@ -3443,6 +3477,10 @@ msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Get the full audit →"
+msgstr ""
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "Get your key from {vendor}"
 msgstr ""
 
 #: src/components/connections/logos.jsx
@@ -3750,6 +3788,10 @@ msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "How Duct writes"
+msgstr ""
+
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "How far ahead?"
 msgstr ""
 
 #: src/components/workspace/ComposerDials.jsx
@@ -4386,7 +4428,11 @@ msgid "Manual"
 msgstr ""
 
 #: src/components/content/PlanViewport.jsx
-msgid "Mapping topics across 30 days…"
+#~ msgid "Mapping topics across 30 days…"
+#~ msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Mapping topics across your dates…"
 msgstr ""
 
 #: src/components/audit/AuditReport.jsx
@@ -4694,6 +4740,7 @@ msgid "New invitation sent to {invitee}."
 msgstr ""
 
 #: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "New plan"
 msgstr ""
 
@@ -5404,6 +5451,10 @@ msgstr ""
 msgid "Open connections →"
 msgstr ""
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Open Discover"
+msgstr ""
+
 #: src/app/(auth)/desktop-auth/page.js
 #: src/app/(start)/start/page.jsx
 msgid "Open Duct"
@@ -5528,6 +5579,14 @@ msgstr ""
 
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Optional — the agent will ask if you leave this unset."
+msgstr ""
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Optional. Connect Apify to search TikTok in Discover; the posts you save there shape the plan's topics."
+msgstr ""
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Optional. Connect PostBridge and link an account, and the plan learns from your own results and posting times."
 msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
@@ -5756,13 +5815,17 @@ msgstr ""
 msgid "Plan {shortId}"
 msgstr ""
 
+#: src/components/content/PlanBoard.jsx
+msgid "Plan ahead"
+msgstr ""
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
 msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
-msgid "Plan the next 30 days"
-msgstr ""
+#~ msgid "Plan the next 30 days"
+#~ msgstr ""
 
 #: src/lib/contentSchedule.js
 msgid "Planned"
@@ -6498,6 +6561,10 @@ msgstr ""
 msgid "Resolving website"
 msgstr ""
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "Rest of {month}"
+msgstr ""
+
 #: src/components/UpdateToast.jsx
 msgid "Restart to update"
 msgstr ""
@@ -6562,6 +6629,10 @@ msgstr ""
 
 #: src/components/content/PlanViewport.jsx
 msgid "Reviewing your content pillars…"
+msgstr ""
+
+#: src/components/content/PlanBoard.jsx
+msgid "Revise plan"
 msgstr ""
 
 #: src/components/content/PostViewport.jsx
@@ -7550,6 +7621,10 @@ msgstr ""
 msgid "Stored encrypted, and used only for projects you own."
 msgstr ""
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Stored encrypted."
+msgstr ""
+
 #: src/components/connections/ProviderCard.jsx
 msgid "stored for this provider"
 msgstr ""
@@ -7640,11 +7715,19 @@ msgid "Synthesizing 30-day plan"
 msgstr ""
 
 #: src/components/content/PlanViewport.jsx
-msgid "Synthesizing your 30-day plan"
+#~ msgid "Synthesizing your 30-day plan"
+#~ msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+#~ msgid "Synthesizing your 30-day plan…"
+#~ msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Synthesizing your plan"
 msgstr ""
 
 #: src/components/content/PlanViewport.jsx
-msgid "Synthesizing your 30-day plan…"
+msgid "Synthesizing your plan…"
 msgstr ""
 
 #: src/components/AppSidebar.jsx
@@ -8129,6 +8212,10 @@ msgstr ""
 msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."
 msgstr ""
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "This project uses its owner's {vendor} account. Ask them to connect it."
+msgstr ""
+
 #: src/app/(app)/activity/page.jsx
 msgid "this project's activity"
 msgstr ""
@@ -8195,6 +8282,10 @@ msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "TikTok link"
+msgstr ""
+
+#: src/components/content/PlanDayOne.jsx
+msgid "TikTok research"
 msgstr ""
 
 #: src/components/insight-blocks/TimeSeriesBlock.jsx
@@ -8974,10 +9065,6 @@ msgstr ""
 msgid "You approved this"
 msgstr ""
 
-#: src/components/content/PlanDayOne.jsx
-msgid "You can change or drop any day after."
-msgstr ""
-
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
 msgstr ""
@@ -9159,10 +9246,6 @@ msgstr ""
 
 #: src/app/(start)/start/page.jsx
 msgid "Your model"
-msgstr ""
-
-#: src/components/content/PlanDayOne.jsx
-msgid "Your next 30 days of posts, planned in about three minutes."
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx

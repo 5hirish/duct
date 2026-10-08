@@ -2,10 +2,11 @@
 
 import { Trans } from "@lingui/react/macro";
 import { Badge } from "@/components/ui/badge";
+import { VENDOR, VENDOR_HOME } from "@/lib/contentApi";
 
 // Where an account's owner fixes a paused login. PostBridge has no deep link
 // to one account, so this opens its dashboard.
-export const POSTBRIDGE_DASHBOARD_URL = "https://app.post-bridge.com";
+export const POSTBRIDGE_DASHBOARD_URL = VENDOR_HOME[VENDOR.POSTBRIDGE];
 
 /**
  * What PostBridge says about one social account, as badges: X Premium (the

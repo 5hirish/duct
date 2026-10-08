@@ -182,6 +182,10 @@ msgstr "{crawledPages, plural, other {# ページ}}"
 msgid "{dayCount, plural, one {# day} other {# days}}"
 msgstr "{dayCount, plural, other {# 日}}"
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "{days, plural, one {# day} other {# days}}"
+msgstr "{days, plural, other {#日間}}"
+
 #: src/app/(app)/execute/page.jsx
 msgid "{destructiveCount, plural, one {# destructive change} other {# destructive changes}} — {destructiveNames}."
 msgstr "{destructiveCount, plural, other {# 破壊的な変更}} — {destructiveNames}."
@@ -767,6 +771,10 @@ msgstr "✓ レポート準備完了 — 指摘事項について何でもお尋
 msgid "✦ Reasoned"
 msgstr "✦ 推論済み"
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "1 week"
+msgstr "1週間"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "1–2 wks"
 msgstr "1～2週間"
@@ -774,6 +782,10 @@ msgstr "1～2週間"
 #: src/components/audit/AuditReportV1.jsx
 msgid "1–3 days"
 msgstr "1～3日"
+
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "2 weeks"
+msgstr "2週間"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "2–4 hrs"
@@ -783,14 +795,15 @@ msgstr "2～4時間"
 msgid "23 came from your own team"
 msgstr "23件はあなたのチームからのものです"
 
+#: src/components/content/PlanPeriodPicker.jsx
 #: src/lib/usageApi.js
 msgid "30 days"
 msgstr "30日間"
 
 #: src/components/content/ContentWorkspace.jsx
 #: src/components/content/PlanViewport.jsx
-msgid "30-day plan"
-msgstr "30日間プラン"
+#~ msgid "30-day plan"
+#~ msgstr "30日間プラン"
 
 #: src/lib/usageApi.js
 msgid "7 days"
@@ -827,6 +840,10 @@ msgstr "5件の投稿に数値が入るまでは、{channelLabel} の標準的�
 #: src/app/(app)/connections/page.jsx
 msgid "A key is scoped to ONE ad account — make sure it's the right one."
 msgstr "キーは1つの広告アカウントにスコープされます — 正しいアカウントであることを確認してください。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "A month of posts, planned in about three minutes."
+msgstr "1ヶ月分の投稿を約3分で計画できます。"
 
 #: src/components/ReloadToast.jsx
 msgid "A new version of Duct is ready"
@@ -1233,6 +1250,10 @@ msgstr "具体的な内容はありますか？（任意）"
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr "APIキー"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
+msgstr "Apifyは接続済みです。Discoverで保存した投稿が、プランのトピックを形成します。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "App secret"
@@ -2202,6 +2223,11 @@ msgstr "コンテンツ目標"
 msgid "Content pillars"
 msgstr "コンテンツピラー"
 
+#: src/components/content/ContentWorkspace.jsx
+#: src/components/content/PlanViewport.jsx
+msgid "Content plan"
+msgstr "コンテンツプラン"
+
 #: src/app/(app)/content/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/content/ContentWorkspace.jsx
@@ -2382,6 +2408,10 @@ msgstr "Googleアカウントを読み取れませんでした"
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
 msgstr "保存できませんでした。もう一度お試しください。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Covers {range}, one post a day. You can revise any day after."
+msgstr "{range}を対象に、1日1投稿です。後からいつでも修正できます。"
 
 #: src/components/TelemetryCard.jsx
 msgid "Crash reports & usage"
@@ -2876,8 +2906,12 @@ msgid "Duct reads it the way a search engine does."
 msgstr "Ductは検索エンジンと同じように読み込みます。"
 
 #: src/components/content/PlanDayOne.jsx
-msgid "Duct reads your brand, your pillars and what has already worked, then lays out a month of posts with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
-msgstr "Ductはあなたのブランド、ピラー、そしてこれまでの成功事例を読み込み、それぞれの理由を添えて1ヶ月分の投稿を提案します。あなたは一つずつ下書きを作成し、あなたの承認なしに公開されることはありません。"
+#~ msgid "Duct reads your brand, your pillars and what has already worked, then lays out a month of posts with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
+#~ msgstr "Ductはあなたのブランド、ピラー、そしてこれまでの成功事例を読み込み、それぞれの理由を添えて1ヶ月分の投稿を提案します。あなたは一つずつ下書きを作成し、あなたの承認なしに公開されることはありません。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Duct reads your brand, your pillars and what has already worked, then lays out the weeks ahead, a post a day, with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
+msgstr "Ductは、ブランド、主要な柱、成功事例を読み込み、数週間先の投稿計画を1日1投稿、それぞれの理由を添えて作成します。あなたは投稿を一つずつ下書きし、承認なしに公開されることはありません。"
 
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Duct reads your site the way a search engine does, then tells you what to fix first."
@@ -3419,8 +3453,8 @@ msgid "Generated: {generatedAt}"
 msgstr "生成日時: {generatedAt}"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Generating 30-day plan"
-msgstr "30日プランを生成中"
+#~ msgid "Generating 30-day plan"
+#~ msgstr "30日プランを生成中"
 
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
@@ -3450,6 +3484,10 @@ msgstr "デスクトップアプリを取得 →"
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Get the full audit →"
 msgstr "完全な監査を取得 →"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "Get your key from {vendor}"
+msgstr "{vendor}からキーを取得してください"
 
 #: src/components/connections/logos.jsx
 msgid "GitHub"
@@ -3757,6 +3795,10 @@ msgstr "ハウスルール、実際に重視する指標、議論の仕方。こ
 #: src/app/(app)/settings/profile/page.jsx
 msgid "How Duct writes"
 msgstr "Ductの書き方"
+
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "How far ahead?"
+msgstr "どれくらい先まで計画しますか？"
 
 #: src/components/workspace/ComposerDials.jsx
 msgid "How freely Duct may act"
@@ -4392,8 +4434,12 @@ msgid "Manual"
 msgstr "手動"
 
 #: src/components/content/PlanViewport.jsx
-msgid "Mapping topics across 30 days…"
-msgstr "30日間のトピックをマッピング中…"
+#~ msgid "Mapping topics across 30 days…"
+#~ msgstr "30日間のトピックをマッピング中…"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Mapping topics across your dates…"
+msgstr "日付にトピックをマッピング中…"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Mapping your site structure"
@@ -4700,6 +4746,7 @@ msgid "New invitation sent to {invitee}."
 msgstr "{invitee}に新しい招待状を送信しました。"
 
 #: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "New plan"
 msgstr "新しいプラン"
 
@@ -5410,6 +5457,10 @@ msgstr "接続を開く"
 msgid "Open connections →"
 msgstr "接続を開く →"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Open Discover"
+msgstr "Discoverを開く"
+
 #: src/app/(auth)/desktop-auth/page.js
 #: src/app/(start)/start/page.jsx
 msgid "Open Duct"
@@ -5535,6 +5586,14 @@ msgstr "オプション — レポートの品質を向上させます"
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Optional — the agent will ask if you leave this unset."
 msgstr "オプション — これを設定しない場合、エージェントが尋ねます。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Optional. Connect Apify to search TikTok in Discover; the posts you save there shape the plan's topics."
+msgstr "任意。Apifyを接続してDiscoverでTikTokを検索すると、そこで保存した投稿が、プランのトピックを形成します。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Optional. Connect PostBridge and link an account, and the plan learns from your own results and posting times."
+msgstr "任意。PostBridgeを接続してアカウントをリンクすると、プランがあなたの結果と投稿時間から学習します。"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Optional. Link one and the plan learns from your own results and posting times."
@@ -5762,13 +5821,17 @@ msgstr "プラン"
 msgid "Plan {shortId}"
 msgstr "プラン {shortId}"
 
+#: src/components/content/PlanBoard.jsx
+msgid "Plan ahead"
+msgstr "次を計画"
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
 msgstr "プランの戦略"
 
 #: src/components/content/PlanDayOne.jsx
-msgid "Plan the next 30 days"
-msgstr "今後30日間を計画する"
+#~ msgid "Plan the next 30 days"
+#~ msgstr "今後30日間を計画する"
 
 #: src/lib/contentSchedule.js
 msgid "Planned"
@@ -6504,6 +6567,10 @@ msgstr "解決済み: {resolvedFindings}"
 msgid "Resolving website"
 msgstr "ウェブサイトを解決中"
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "Rest of {month}"
+msgstr "{month}の残り"
+
 #: src/components/UpdateToast.jsx
 msgid "Restart to update"
 msgstr "更新するには再起動"
@@ -6569,6 +6636,10 @@ msgstr "Open Graphの完全性を確認中…"
 #: src/components/content/PlanViewport.jsx
 msgid "Reviewing your content pillars…"
 msgstr "コンテンツピラーを確認中…"
+
+#: src/components/content/PlanBoard.jsx
+msgid "Revise plan"
+msgstr "プランを修正"
 
 #: src/components/content/PostViewport.jsx
 msgid "Revise with Duct"
@@ -7556,6 +7627,10 @@ msgstr "停止済み — 中断したところから再開"
 msgid "Stored encrypted, and used only for projects you own."
 msgstr "暗号化して保存され、あなたが所有するプロジェクトでのみ使用されます。"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Stored encrypted."
+msgstr "暗号化して保存されます。"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "stored for this provider"
 msgstr "このプロバイダーに保存済み"
@@ -7646,12 +7721,20 @@ msgid "Synthesizing 30-day plan"
 msgstr "30日間のプランを生成中"
 
 #: src/components/content/PlanViewport.jsx
-msgid "Synthesizing your 30-day plan"
-msgstr "30日間のプランを生成中"
+#~ msgid "Synthesizing your 30-day plan"
+#~ msgstr "30日間のプランを生成中"
 
 #: src/components/content/PlanViewport.jsx
-msgid "Synthesizing your 30-day plan…"
-msgstr "30日間のプランを生成中…"
+#~ msgid "Synthesizing your 30-day plan…"
+#~ msgstr "30日間のプランを生成中…"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Synthesizing your plan"
+msgstr "プランを統合中"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Synthesizing your plan…"
+msgstr "プランを統合中…"
 
 #: src/components/AppSidebar.jsx
 #: src/components/memory/MemoryTimeline.jsx
@@ -8135,6 +8218,10 @@ msgstr "このプロジェクト"
 msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."
 msgstr "このプロジェクトはオーナーの{vendor}アカウントを使用します。オーナーにここで接続してもらうと、あなたも利用できるようになります。"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "This project uses its owner's {vendor} account. Ask them to connect it."
+msgstr "このプロジェクトは、オーナーの{vendor}アカウントを使用しています。接続するよう依頼してください。"
+
 #: src/app/(app)/activity/page.jsx
 msgid "this project's activity"
 msgstr "このプロジェクトのアクティビティ"
@@ -8202,6 +8289,10 @@ msgstr "ティア"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "TikTok link"
 msgstr "TikTokリンク"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "TikTok research"
+msgstr "TikTokリサーチ"
 
 #: src/components/insight-blocks/TimeSeriesBlock.jsx
 msgid "Time series"
@@ -8980,10 +9071,6 @@ msgstr "あなた"
 msgid "You approved this"
 msgstr "これを承認しました"
 
-#: src/components/content/PlanDayOne.jsx
-msgid "You can change or drop any day after."
-msgstr "翌日以降はいつでも変更または削除できます。"
-
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
 msgstr "このタブを閉じることができます。"
@@ -9166,10 +9253,6 @@ msgstr "メモリ"
 #: src/app/(start)/start/page.jsx
 msgid "Your model"
 msgstr "モデル"
-
-#: src/components/content/PlanDayOne.jsx
-msgid "Your next 30 days of posts, planned in about three minutes."
-msgstr "次の30日間の投稿を、約3分で計画します。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Your one-line pitch"

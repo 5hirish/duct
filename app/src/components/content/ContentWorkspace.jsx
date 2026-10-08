@@ -57,8 +57,9 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
     // Scoped to the artifact so a reload of this post's workspace resumes
     // this post's run and never a different one's. A clone has no artifact
     // yet, so its link scopes it: cloning a second post in the same tab must
-    // start a second run, not reattach to the first.
-    handleKey: `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || context.projectId || ""}`,
+    // start a second run, not reattach to the first. A new plan is scoped
+    // by its period for the same reason.
+    handleKey: `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || (context.startDate && `from:${context.startDate}+${context.days || ""}`) || context.projectId || ""}`,
     onEvent: handleEvent,
   });
 
@@ -264,13 +265,13 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 }
 
 const MODE_LABELS = {
-  plan_month: msg`Generating 30-day plan`,
+  plan_month: msg`Content plan`,
   draft_post: msg`Drafting post`,
   reflect_day: msg`Reflecting on the day`,
 };
 
 const PANE_LABELS = {
-  plan_month: msg`30-day plan`,
+  plan_month: msg`Content plan`,
   draft_post: msg`Post draft`,
   reflect_day: msg`Reflection`,
 };

@@ -28,7 +28,7 @@ import ChatInput from "@/components/workspace/ChatInput";
 import { DropHint } from "@/components/workspace/Attachments";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
-import { FolderOpen, RefreshCw } from "lucide-react";
+import { CalendarPlus, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
@@ -66,6 +66,8 @@ import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
 import PlanDayOne from "@/components/content/PlanDayOne";
 import PlanList from "@/components/content/PlanList";
+import { PlanPeriodMenu, PlanPeriodToggle } from "@/components/content/PlanPeriodPicker";
+import { planPeriodOptions } from "@/lib/contentSchedule";
 import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
@@ -874,6 +876,48 @@ const PLAN_ACCOUNTS = [
   { account_id: 1, platform: "tiktok", username: "solo.money" },
   { account_id: 2, platform: "instagram", username: "solomoney.app" },
 ];
+// The two keys a user brings, as GET /content/vendor-keys/{vendor} answers.
+// Keyed by the API's vendor ids ("post-bridge", "apify").
+const PLAN_VENDORS_MISSING = {
+  "post-bridge": { connected: false, own_key: false, is_owner: true },
+  apify: { connected: false, own_key: false, is_owner: true },
+};
+const PLAN_VENDORS_CONNECTED = {
+  "post-bridge": { connected: true, own_key: true, is_owner: true },
+  apify: { connected: true, own_key: true, is_owner: true },
+};
+const PLAN_VENDORS_COLLABORATOR = {
+  "post-bridge": { connected: false, own_key: false, is_owner: false },
+  apify: { connected: false, own_key: false, is_owner: false },
+};
+// What the preview does with a pasted key: accept it after a beat, the way
+// the real save waits for the vendor, or refuse it the way a wrong key is.
+const acceptKey = () => new Promise((resolve) => setTimeout(resolve, 900));
+const refuseKey = (vendor) => Promise.reject(new Error(vendor === "apify"
+  ? "Apify didn't accept that key. Copy it again from your Apify account."
+  : "PostBridge didn't accept that key. Copy it again from your PostBridge dashboard."));
+
+// The period choices on fixed dates, so the scene reads the same any day:
+// a new plan on Oct 7, planning ahead from Nov 1 with a week already planned
+// from Nov 10, and a new plan on Oct 28, when the month rolls over.
+const planOn = (start, n) => ({ start_date: start, days: Array.from({ length: n }, () => ({})) });
+function PlanPeriodScene() {
+  const rollover = useMemo(() => planPeriodOptions(new Date(2026, 9, 28)), []);
+  const [length, setLength] = useState(rollover[0].length);
+  return (
+    <div className="flex flex-col gap-6 p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <PlanPeriodMenu options={planPeriodOptions(new Date(2026, 10, 1), [planOn("2026-11-10", 7)])} onPick={() => {}} icon={CalendarPlus} variant="outline">
+          Plan ahead
+        </PlanPeriodMenu>
+        <PlanPeriodMenu options={planPeriodOptions(new Date(2026, 9, 7))} onPick={() => {}} icon={Plus}>
+          New plan
+        </PlanPeriodMenu>
+      </div>
+      <PlanPeriodToggle options={rollover} value={length} onChange={setLength} />
+    </div>
+  );
+}
 
 // A posted post's numbers, as the metrics form receives them. The published
 // one carries what a PostBridge sync writes plus a typed saves count; the
@@ -2482,6 +2526,18 @@ export const SCENES = [
     ),
   },
   {
+    id: "vendor-key-inline",
+    state: "inline · Apify refused the key",
+    group: "VendorKeyForm",
+    title: "The key field inside a row",
+    note: "The same field with no card around it, for a row that already says what the vendor is for (the Plan tab's checklist). Submit any key: the refusal appears under the field the same way it does in the card.",
+    render: () => (
+      <div className="max-w-sm p-5">
+        <VendorKeyForm layout="inline" vendor="Apify" homeUrl="https://console.apify.com" onConnect={() => refuseKey("apify")} />
+      </div>
+    ),
+  },
+  {
     id: "vendor-key-collaborator",
     state: "collaborator · the owner hasn't connected PostBridge",
     group: "VendorKeyForm",
@@ -2495,13 +2551,13 @@ export const SCENES = [
   },
   {
     id: "plan-board-empty",
-    state: "voice and pillars set, no account linked",
+    state: "voice and pillars set, no connector yet",
     group: "PlanDayOne",
     title: "The Plan tab, before the first plan",
-    note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, no account yet. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, and shows a sample week in the same list the plan workspace uses. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
+    note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, neither connector's key saved. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, takes the PostBridge and Apify keys right in their rows, asks how far ahead to plan (the month in progress, or 1 week, 2 weeks, 30 days, each naming its dates), and shows a sample week in the same list the plan workspace uses. Paste anything into a key field and press Enter: the preview refuses it the way a wrong key is refused. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} onStart={() => {}} onOpenTab={() => {}} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={refuseKey} />
       </div>
     ),
   },
@@ -2510,10 +2566,10 @@ export const SCENES = [
     state: "nothing set yet",
     group: "PlanDayOne",
     title: "A project with no brand context",
-    note: "Every source missing. Each row says what Duct does about it (asks, for voice and pillars) and offers the tab that fixes it; the button still works, because the agent asks for what is missing before it plans.",
+    note: "Every source missing. Voice and pillars say what Duct does about them (it asks) and offer the tab that fixes them; the two connectors take their key in place. The button still works: the agent asks for what is missing before it plans. A pasted key is accepted after a beat here and the field stays busy, since the preview has no state to turn the row over with.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} onStart={() => {}} onOpenTab={() => {}} />
+        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
       </div>
     ),
   },
@@ -2521,11 +2577,23 @@ export const SCENES = [
     id: "plan-day-one-ready",
     state: "everything set",
     group: "PlanDayOne",
-    title: "All three sources ready",
-    note: "Voice, four pillars and two linked accounts. The plan will learn from those accounts' own results, which is what the strategy band on a finished plan reports.",
+    title: "All four sources ready",
+    note: "Voice, four pillars, two linked accounts and Apify connected. The plan learns from those accounts' own results, which is what the strategy band on a finished plan reports; the research row points at Discover, because only posts saved there reach the plan.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} onStart={() => {}} onOpenTab={() => {}} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} vendors={PLAN_VENDORS_CONNECTED} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-collaborator",
+    state: "a collaborator, owner hasn't connected either key",
+    group: "PlanDayOne",
+    title: "When the keys are someone else's",
+    note: "A project spends its owner's PostBridge and Apify keys, so a collaborator gets no field, only who to ask.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
       </div>
     ),
   },
@@ -2534,12 +2602,20 @@ export const SCENES = [
     state: "brand context failed to load",
     group: "PlanDayOne",
     title: "When the sources cannot be read",
-    note: "The checklist is left out rather than reporting every source as missing: a failed read and an empty brand are different facts.",
+    note: "The checklist is left out rather than reporting every source as missing: a failed read and an empty brand are different facts. The same goes for one connector whose status could not be read: its row and its share of the count drop out.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={null} accounts={null} onStart={() => {}} onOpenTab={() => {}} />
+        <PlanDayOne brand={null} accounts={null} vendors={{}} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
       </div>
     ),
+  },
+  {
+    id: "plan-period-picker",
+    state: "Oct 7, Nov 1 with a plan from Nov 10, and Oct 28",
+    group: "PlanPeriodPicker",
+    title: "How far ahead a new plan looks",
+    note: "The Plan tab's \"Plan ahead\" and \"New plan\" menus, and the toggles the first-run screen uses for the same choice. Every option names the dates it will plan, by the run's own rules: the month in progress, or 1 week, 2 weeks, 30 days, never more than 30. What to check: \"Plan ahead\" starts on Nov 1 and stops the day before the plan already made from Nov 10, so the month is offered as \"9 days\" and the longer lengths, which come to the same dates, are not offered twice; the toggles are for Oct 28, so the month is November, not the four days left of October.",
+    render: () => <PlanPeriodScene />,
   },
   {
     id: "plan-list-month",

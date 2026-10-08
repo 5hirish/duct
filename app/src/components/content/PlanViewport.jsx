@@ -6,6 +6,8 @@ import PlanList from "./PlanList";
 import PlanStrategy from "./PlanStrategy";
 import PipelineProgress from "../PipelineProgress";
 import { ContentStep } from "../../lib/contentEvents";
+import { planEndOf, planStartOf } from "../../lib/contentSchedule";
+import { formatDateRange } from "../../lib/format";
 
 // Loading ladder mirrors the audit report: the two fixed backend steps
 // (LOAD_PROJECT, ENRICHING) plus a virtual synthesis stage the backend doesn't
@@ -14,14 +16,14 @@ import { ContentStep } from "../../lib/contentEvents";
 const PLAN_STAGES = [
   { id: ContentStep.LOAD_PROJECT,    label: msg`Loading your brand & pillars` },
   { id: ContentStep.ENRICHING,       label: msg`Researching trends & history` },
-  { id: ContentStep.SYNTHESIZE_PLAN, label: msg`Synthesizing your 30-day plan`, virtual: true },
+  { id: ContentStep.SYNTHESIZE_PLAN, label: msg`Synthesizing your plan`, virtual: true },
 ];
 
 const PLAN_LINES = [
   msg`Reviewing your content pillars…`,
   msg`Studying what's worked before…`,
   msg`Scanning trending sounds & hooks…`,
-  msg`Mapping topics across 30 days…`,
+  msg`Mapping topics across your dates…`,
   msg`Balancing pillars and formats…`,
   msg`Casting your narrator…`,
   msg`Sequencing the posting cadence…`,
@@ -54,7 +56,7 @@ export default function PlanViewport({ payload, steps = [], building = false, on
         lines={PLAN_LINES.map((m) => i18n._(m))}
         estimate={t`~3 min`}
         buildingLabel={t`Building your plan`}
-        streamingSubtitle={t`Synthesizing your 30-day plan…`}
+        streamingSubtitle={t`Synthesizing your plan…`}
         idleSubtitle={t`Researching pillars and synthesizing the plan…`}
       />
     );
@@ -63,19 +65,22 @@ export default function PlanViewport({ payload, steps = [], building = false, on
   const narrator = payload.character?.name;
   const voice = payload.character?.voice;
   const dayCount = Array.isArray(payload.days) ? payload.days.length : 0;
+  // The period this plan manages, so a revision reads as "this plan", not "a plan".
+  const period = formatDateRange(planStartOf(payload), planEndOf(payload), { locale: i18n.locale });
 
   return (
     <div className="flex flex-col h-full">
       <div className="border-b border-border/60 px-4 py-2 flex items-center justify-between shrink-0">
         <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{payload.name || <Trans>30-day plan</Trans>}</p>
+          <p className="text-sm font-medium truncate">{payload.name || <Trans>Content plan</Trans>}</p>
           {narrator && (
             <p className="text-xs text-muted-foreground truncate">
               {voice ? <Trans>Narrator: {narrator} · {voice}</Trans> : <Trans>Narrator: {narrator}</Trans>}
             </p>
           )}
         </div>
-        <span className="text-xs text-muted-foreground tabular-nums">
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          {period && <>{period} · </>}
           <Plural value={dayCount} one="# day" other="# days" />
         </span>
       </div>
