@@ -67,10 +67,12 @@ from agents.content.artifacts import (
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
 from agents.content.channels import brand_platforms
 from agents.content.performance import AccountPerformance, load_account_performance
+from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, default_period, plan_end
 from agents.core.events import run_context
 from agents.content.prompts import (
     build_clone_user_prompt,
     build_orchestrator_system_prompt,
+    build_plan_revise_prompt,
     build_plan_user_prompt,
     build_post_user_prompt,
     build_reference_diagnosis_prompt,
@@ -127,6 +129,7 @@ from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
 from agents.engines import Engine, resolve_fallback_models
 from agents.models import ModelName, Provider, run_model_fields
 from agents.registry import AgentType
+from utils.dates import utcnow
 
 if TYPE_CHECKING:
     from service.clone_reference import CloneReference, TikTokPost
@@ -363,6 +366,60 @@ def _reflection_of_day(project_id: UUID, day: date) -> UUID | None:
 
     with next(db_session()) as db:
         return group_for_day(db, project_id, day)
+
+
+def _resolve_plan_period(
+    session: ContentSession, requested: PlanPeriod | None, today: date,
+) -> list[dict] | None:
+    """Decide which plan this run manages and fix its dates on the session.
+    Returns the plan's days when the run manages a plan that already exists,
+    None when it is about to make one.
+
+    One plan per period: a run is bound to the plan it was opened on, else to
+    the plan already covering the first date of its period (the month in
+    progress, or the period the person picked), and only makes a new plan
+    when none does. A bound run keeps that plan's own dates; revising never
+    moves them. A new plan stops short of the next plan already made, so two
+    plans never claim the same date. The app resolves the same plan before it
+    opens the session (content/sessions/new), so the pane shows the plan the
+    agent is managing.
+    """
+    from sqlmodel import Session, select
+
+    from db.session import get_engine
+    from models.content import ContentPlan
+
+    engine = get_engine()
+    if engine is None:
+        raise RuntimeError("DATABASE_URL is not configured.")
+    with Session(engine) as db:
+        row = db.get(ContentPlan, session.plan_id) if session.plan_id else None
+        if row is not None and row.project_id == session.project_id and row.days:
+            plans = []
+        else:
+            plans = [
+                p for p in db.execute(
+                    select(ContentPlan)
+                    .where(ContentPlan.project_id == session.project_id)
+                    .order_by(ContentPlan.created_at.desc())
+                ).scalars().all()
+                if p.start_date and p.days
+            ]
+            period = requested or default_period(today)
+            row = next(
+                (p for p in plans if p.start_date <= period.start <= plan_end(p.start_date, len(p.days))),
+                None,
+            )
+        if row is not None:
+            session.plan_id = row.id
+            session.period_start = row.start_date or today
+            session.period_days = min(len(row.days), MAX_PLAN_DAYS)
+            return list(row.days)
+        later = [p.start_date for p in plans if p.start_date > period.start]
+        period = period.stopping_before(min(later, default=None))
+        session.plan_id = None
+        session.period_start, session.period_days = period.start, period.days
+        return None
 
 
 async def _account_performance(project_id: UUID) -> AccountPerformance | None:
@@ -659,17 +716,36 @@ class ContentRunner:
         project_id: UUID,
         emit: EmitFn,
         *,
+        period: PlanPeriod | None = None,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
         llm: Any = None,
     ) -> None:
-        """Run a plan_month session end-to-end: load, enrich, plan, then chat."""
+        """Run a plan_month session end-to-end: load, enrich, plan, then chat.
+
+        A session bound to an existing plan (opened from "Revise plan") is the
+        plan manager for that plan: it keeps the plan's dates, and on a fresh
+        conversation it opens by asking what to change instead of researching
+        and writing a whole new month."""
         session = get_session(session_id) or create_plan_session(session_id, project_id)
+        try:
+            bound_days = await asyncio.to_thread(_resolve_plan_period, session, period, utcnow().date())
+        except Exception:  # noqa: BLE001 — without a period the plan is still made, just unchecked
+            logger.warning("content: plan period unavailable for session %s", session_id, exc_info=True)
+            bound_days = None
+        managed = (
+            PlanPeriod(session.period_start, session.period_days)
+            if session.period_start and session.period_days
+            else None
+        )
 
         async def _opening(brand: ContentBrandContext) -> str:
+            if bound_days is not None:
+                return build_plan_revise_prompt(brand, days=bound_days, period=managed)
             research = await self._enrich_step(brand, emit, llm, session)
             performance = await _account_performance(project_id)
             return build_plan_user_prompt(
                 brand, history=[], formats=[], avatars=[], research=research, performance=performance,
+                period=managed,
             )
 
         await self._run_mode(

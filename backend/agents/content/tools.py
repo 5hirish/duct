@@ -80,6 +80,7 @@ from agents.content.channels import (
     primary_channel,
     resolve as resolve_channel,
 )
+from agents.content.plan_period import PlanPeriod, default_period, keep_drafted_days, plan_end
 from agents.content.publishing import (
     PostAlreadyOut,
     create_request,
@@ -134,7 +135,7 @@ from models.content import (
 )
 from models.artifact import Artifact
 from models.project import Project
-from utils.dates import now_iso
+from utils.dates import now_iso, utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -930,27 +931,50 @@ def build_content_tools_lc(
                     f"project_id mismatch: payload has {draft.project_id}, "
                     f"session is scoped to {project_id}."
                 )
-            # Monthly model: anchor the plan to the first of the current month;
-            # the calendar lays items on sequential dates from there.
-            from datetime import date as _date
-            today = _date.today()
-            month_start = today.replace(day=1)
-            month_label = today.strftime("%B %Y")
-            with _open_db() as db:
-                row = ContentPlan(
-                    project_id=project_id,
-                    name=draft.name or f"{month_label} plan",
-                    start_date=month_start,
-                    character=draft.character.model_dump(mode="json"),
-                    strategy=draft.strategy.model_dump(mode="json"),
-                    days=[d.model_dump(mode="json") for d in draft.days],
-                    status="draft",
+            # The plan manages a period: one post per date in it, no more, no
+            # fewer. A run sets the period before its opening turn.
+            if session.period_days and len(draft.days) != session.period_days:
+                end = plan_end(session.period_start, session.period_days)
+                return _err(
+                    f"This plan covers {session.period_days} days, {session.period_start} to {end}: "
+                    f"send exactly {session.period_days} days, one per date. You sent {len(draft.days)}."
                 )
+            with _open_db() as db:
+                # A session bound to a plan (opened to revise it, or one that
+                # already submitted) changes that plan. Inserting here is how
+                # every "make week two more video-heavy" used to leave a second
+                # plan beside the first, with the drafts on the old one.
+                row = db.get(ContentPlan, session.plan_id) if session.plan_id else None
+                if row is not None and row.project_id != project_id:
+                    row = None
+                new_days = [d.model_dump(mode="json") for d in draft.days]
+                kept: list[int] = []
+                if row is None:
+                    period = (
+                        PlanPeriod(session.period_start, session.period_days)
+                        if session.period_start and session.period_days
+                        else default_period(utcnow().date())
+                    )
+                    row = ContentPlan(
+                        project_id=project_id,
+                        name=draft.name or f"{period.label()} plan",
+                        start_date=period.start,
+                        status="draft",
+                    )
+                else:
+                    new_days, kept = keep_drafted_days(list(row.days or []), new_days)
+                    if draft.name:
+                        row.name = draft.name
+                    row.updated_at = utcnow()
+                row.character = draft.character.model_dump(mode="json")
+                row.strategy = draft.strategy.model_dump(mode="json")
+                row.days = new_days
                 db.add(row)
                 db.commit()
                 db.refresh(row)
                 session.plan_id = row.id
-                logger.info("content: plan %s persisted (%d days)", row.id, len(draft.days))
+                logger.info("content: plan %s saved (%d days, %d kept for their drafts)",
+                            row.id, len(new_days), len(kept))
                 await emit({
                     "event": ContentEvent.PLAN_GENERATED,
                     "session_id": session.session_id,
@@ -964,7 +988,7 @@ def build_content_tools_lc(
                         "strategy": row.strategy,
                     },
                 })
-                return _ok_model(SubmitPlanResult(plan_id=str(row.id), days=len(draft.days)))
+                return _ok_model(SubmitPlanResult(plan_id=str(row.id), days=len(new_days), kept_days=kept))
         except Exception as exc:
             logger.exception("submit_plan failed")
             return _err(f"submit_plan failed: {exc}")
@@ -2537,10 +2561,14 @@ def build_content_tools_lc(
         *memory_tools,
         _bind(
             submit_plan, ContentTool.SUBMIT_PLAN,
-            "Persist the monthly content plan. The argument schema is the contract: "
-            "an ordered list of days, each with a topic and a pillar. Inserts a "
-            "content_plans row scoped to this project and emits PLAN_GENERATED so the "
-            "workspace renders it. Call this AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>.",
+            "Save the content plan for the period this session manages. The argument schema "
+            "is the contract: an ordered list of days, one per date in the period, each with "
+            "a topic and a pillar. The first call creates the plan; every later call, and "
+            "any call in a session opened on an existing plan, replaces that same plan's "
+            "days. A day that already has a drafted post is kept as it is (the result lists "
+            "them as kept_days). Emits PLAN_GENERATED so the workspace renders it. Call this "
+            "AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>, and send the whole "
+            "plan each time, not just the changed days.",
             SubmitPlanArgs,
         ),
         _bind(

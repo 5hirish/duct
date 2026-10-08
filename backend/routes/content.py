@@ -51,6 +51,7 @@ from sqlmodel import Session
 
 from agents.content.assessment import reassess_post
 from agents.content.channels import channel_payload, primary_channel, resolve as resolve_channel
+from agents.content.plan_period import PlanPeriod, requested_period
 from agents.content.publishing import (
     PostAlreadyOut,
     cancel,
@@ -121,7 +122,7 @@ from service.membership import get_project_for_user, get_project_row_for_user
 from service.artifact_store import artifact_text_content
 from service.provider_keys import stored_keys_for
 from service.social_accounts import project_x_premium, remember_account_state
-from utils.dates import now_iso
+from utils.dates import now_iso, utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -397,15 +398,27 @@ def _runner_for(session_id: str, user_keys: dict | None) -> ContentRunner:
     return ContentRunner(api_key=run.api_key, provider=run.provider, model=run.model)
 
 
+def _requested_period(req: PlanRequest) -> PlanPeriod | None:
+    """The period a plan request picked, or None for the default (the month
+    in progress). A length without a start counts from today."""
+    if req.start_date is None and req.days is None:
+        return None
+    try:
+        return requested_period(req.start_date or utcnow().date(), req.days)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
 async def _run_plan_worker(
     session_id: str,
     project_id: UUID,
     emit_fn: Any,
     user_keys: dict | None = None,
+    period: PlanPeriod | None = None,
 ) -> None:
     try:
         runner = _runner_for(session_id, user_keys)
-        await runner.run_plan(session_id, project_id, emit_fn)
+        await runner.run_plan(session_id, project_id, emit_fn, period=period)
         _link_conversation_artifact(session_id, "plan")
     except Exception as exc:
         # A code before a message: the client picks the copy from the code
@@ -429,6 +442,7 @@ async def run_plan_stream(
     the full session lifetime (continues after PIPELINE_FINISHED so the user
     can chat with the agent to refine the plan)."""
     _project_for_user(db, user, req.project_id)
+    period = _requested_period(req)
     session_id = str(uuid.uuid4())
     _session_created_at[session_id] = time.monotonic()
     create_plan_session(session_id, req.project_id)
@@ -441,7 +455,7 @@ async def run_plan_stream(
 
     async def worker() -> None:
         try:
-            await _run_plan_worker(session_id, req.project_id, emit_fn, user_keys)
+            await _run_plan_worker(session_id, req.project_id, emit_fn, user_keys, period=period)
         except Exception as exc:
             logger.exception("content: plan worker outer error")
             await emit_fn({
@@ -920,6 +934,9 @@ class PlanOut(BaseModel):
     created_at: str
     updated_at: str
     posts:      list[dict] | None = None
+    # The conversation managing this plan, so "Revise plan" reopens it with
+    # its history instead of a blank chat. GET /plans/{id} only, like posts.
+    active_conversation_id: UUID | None = None
 
 
 def _plan_out(p: ContentPlan, posts: list[ContentPost] | None = None) -> PlanOut:
@@ -977,7 +994,16 @@ def get_plan(
     posts = db.execute(
         select(ContentPost).where(ContentPost.plan_id == plan_id).order_by(ContentPost.created_at)
     ).scalars().all()
-    return _plan_out(plan, posts=list(posts))
+    out = _plan_out(plan, posts=list(posts))
+    # Best-effort, as for a post: viewing a plan must not fail on the lookup.
+    try:
+        from agents.content.persistence import find_active_conversation
+        conv = find_active_conversation(db, artifact_type="plan", artifact_id=plan.id)
+        out.active_conversation_id = conv.id if conv else None
+    except Exception:
+        db.rollback()
+        logger.warning("content: active-conversation lookup failed for plan %s", plan_id, exc_info=True)
+    return out
 
 
 @router.post("/content/plans", status_code=201)

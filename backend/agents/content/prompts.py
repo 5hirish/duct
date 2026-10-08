@@ -31,12 +31,14 @@ from typing import TYPE_CHECKING
 
 from utils.formatting import number, percent
 
+from agents.content.plan_period import MAX_PLAN_DAYS
 from agents.content.text_prompts import text_post_user_prompt, text_system_prompt
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from agents.content.performance import AccountPerformance, Measure
+    from agents.content.plan_period import PlanPeriod
     from agents.content.schema import (
         Avatar,
         ContentBrandContext,
@@ -1043,6 +1045,62 @@ OUTPUT: strict JSON, no prose, no markdown fences — exactly:
 # ---------------------------------------------------------------------------
 
 
+def _period_line(period: "PlanPeriod | None", project_name: str) -> str:
+    """What the plan covers, as dates the model can count. A plan is one post
+    per date; submit_plan refuses any other count."""
+    if period is None:
+        return f"Plan a content calendar for the current month for {project_name}."
+    return (
+        f"Plan {project_name}'s content for {period.start.isoformat()} to {period.end.isoformat()}: "
+        f"exactly {period.days} days, one post per date, in date order."
+    )
+
+
+def build_plan_revise_prompt(
+    brand: ContentBrandContext,
+    days: list[dict],
+    period: "PlanPeriod | None" = None,
+) -> str:
+    """Opening turn of a session opened on a plan that already exists, with no
+    conversation behind it to resume: the plan manager, asked to change a plan
+    rather than to write one. No research pass and no plan this turn; the
+    person says what to change first."""
+    lines = []
+    for i, d in enumerate(days):
+        d = d if isinstance(d, dict) else {}
+        drafted = " [drafted: keep]" if d.get("post_id") else ""
+        lines.append(
+            f"  {i}. {d.get('post_type', 'slideshow')} · {d.get('pillar', '')} · {d.get('topic', '')}{drafted}"
+        )
+    span = (
+        f"{period.start.isoformat()} to {period.end.isoformat()} ({period.days} days)"
+        if period else f"{len(days)} days"
+    )
+    plan_lines = "\n".join(lines) or "  (empty)"
+    return f"""\
+{_brand_stanza(brand)}
+
+<current_plan period="{span}">
+{plan_lines}
+</current_plan>
+
+You manage {brand.project_name}'s content plan for {span}. The person opened
+it to change it, not to start over.
+
+Now:
+
+1. In two sentences, say what the plan covers, then ask what they want to
+   change. Do not rewrite it yet and do not call submit_plan this turn.
+2. When they answer, change what they asked for and keep the rest. Days
+   marked [drafted: keep] already have a post and stay exactly as they are.
+3. Emit the whole plan, all {len(days)} days in date order, inside
+   <duct_artifact>{{ "type": "plan", ... }}</duct_artifact>, then call
+   submit_plan with the same payload. It updates this plan; it never makes
+   a second one.
+4. If they ask to start over, rewrite every day that is not drafted.
+"""
+
+
 def _brand_stanza(brand: ContentBrandContext) -> str:
     """Render brand snapshot — used in the FIRST USER MESSAGE (not the
     system prompt) so the cached prefix stays stable across sessions."""
@@ -1224,10 +1282,12 @@ you test and why.
 def _mode_tail(mode: RunMode) -> str:
     return {
         "plan_month": (
-            "MODE: plan_month — your deliverable this turn is a full monthly "
-            "content plan (an ordered list of posts for the current month, no "
-            "day numbers) as a PlanDraft wrapped in <duct_artifact>. Call "
-            "submit_plan once after emitting the tag.\n\n"
+            "MODE: plan_month — your deliverable is the content plan for the "
+            "period the opening message names (an ordered list of posts, one per "
+            f"date, no day numbers, at most {MAX_PLAN_DAYS}) as a PlanDraft wrapped in "
+            "<duct_artifact>. Call submit_plan once after emitting the tag. A "
+            "revision later in the chat sends the whole plan again and updates "
+            "the same plan.\n\n"
             + _EXPLORE_EXPLOIT_BRIEF
             + "\n"
             + _PLANDRAFT_SHAPE
@@ -1316,9 +1376,12 @@ def build_plan_user_prompt(
     avatars: list["Avatar | dict"],
     research: "ContentResearchContext | None" = None,
     performance: "AccountPerformance | None" = None,
+    period: "PlanPeriod | None" = None,
 ) -> str:
-    """Kickoff prompt for plan_month — brand, research, and the account's own
-    posting history (``performance``; None when it could not be read)."""
+    """Kickoff prompt for plan_month — brand, research, the account's own
+    posting history (``performance``; None when it could not be read), and
+    the dates the plan covers (``period``; None plans the current month, as
+    a run with no database does)."""
     history_lines = (
         "\n".join(
             f"  - day {h.get('day_index', '?')}: {h.get('topic', '')} "
@@ -1344,7 +1407,7 @@ def build_plan_user_prompt(
 
 {_performance_stanza(performance)}
 
-Plan a content calendar for the current month for {brand.project_name}.
+{_period_line(period, brand.project_name)}
 
 Recent history (last 30):
 {history_lines}

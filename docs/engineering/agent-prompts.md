@@ -580,7 +580,7 @@ Why did CPA jump last week?
 
 ## Content Studio (`tiktok_studio`)
 
-### System prompt · mode=plan_month · ~7,211 tokens
+### System prompt · mode=plan_month · ~7,240 tokens
 
 ```text
 You are Duct's in-house short-form content strategist — a world-class TikTok,
@@ -912,7 +912,7 @@ Call **RememberFact** when you establish something that will still matter next s
 
 TARGET CHANNEL: TikTok — apply the TikTok playbook below.
 
-MODE: plan_month — your deliverable this turn is a full monthly content plan (an ordered list of posts for the current month, no day numbers) as a PlanDraft wrapped in <duct_artifact>. Call submit_plan once after emitting the tag.
+MODE: plan_month — your deliverable is the content plan for the period the opening message names (an ordered list of posts, one per date, no day numbers, at most 30) as a PlanDraft wrapped in <duct_artifact>. Call submit_plan once after emitting the tag. A revision later in the chat sends the whole plan again and updates the same plan.
 
 EXPLORE / EXPLOIT — the post-type mix comes from the account's own history,
 never a fixed ratio. The <account_performance> block in the opening turn has

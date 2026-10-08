@@ -58,6 +58,9 @@ class EditSlideResult(BaseModel):
 class SubmitPlanResult(BaseModel):
     plan_id: str
     days: int
+    # Day indexes left as they were because a post was already drafted for
+    # them; the plan's chat says so rather than claiming the change landed.
+    kept_days: list[int] = []
 
 
 class SubmitPostResult(BaseModel):

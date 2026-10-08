@@ -583,6 +583,15 @@ agents/
     │                     content_posts.reflection and are re-derived in place on a
     │                     revision. A reflect_day run gets REFLECTION_TOOLS and nothing
     │                     that draws, plans or publishes (tools.py)
+    ├── plan_period.py  — the period a plan manages: one post per date, at most 30. The
+    │                     person picks the month in progress (default; under a week left
+    │                     rolls over to the next month) or 7, 14, 30 days (PlanRequest
+    │                     start_date + days). One plan per period: a run opened on a plan,
+    │                     or while a plan covers its start date, manages that plan; a new
+    │                     plan stops short of the next one; submit_plan updates in place
+    │                     (days with a drafted post are kept). It used to insert every
+    │                     time, so each refinement in chat left a second plan beside the
+    │                     first. app/src/lib/contentSchedule.js mirrors these rules
     ├── best_time.py    — when a text post goes out (#266): the account's own best
     │                     hour once five X or LinkedIn posts have numbers, else the
     │                     channel's default, in the reader's zone, never on top of a
