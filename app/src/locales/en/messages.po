@@ -482,6 +482,10 @@ msgstr "{posts, plural, one {# post} other {# posts}}"
 msgid "{projectName} · Memory"
 msgstr "{projectName} · Memory"
 
+#: src/components/connections/VendorKeyCard.jsx
+msgid "{projectName} uses its owner's {title} account, so a key you save here is used for the projects you own."
+msgstr "{projectName} uses its owner's {title} account, so a key you save here is used for the projects you own."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "{ranTier} · {requestedTier} is rate limited"
 msgstr "{ranTier} · {requestedTier} is rate limited"
@@ -562,6 +566,10 @@ msgstr "{tierName} jobs run on <0>{servesName}</0> — this engine's default."
 #: src/components/models/TierCard.jsx
 msgid "{tierName} jobs run on <0>{servesName}</0> until you add a key."
 msgstr "{tierName} jobs run on <0>{servesName}</0> until you add a key."
+
+#: src/components/connections/VendorKeyCard.jsx
+msgid "{title} accepted the key, and it is saved. Every project you own uses it."
+msgstr "{title} accepted the key, and it is saved. Every project you own uses it."
 
 #: src/components/models/UsagePanel.jsx
 msgid "{tokens} tokens · {calls, plural, one {# call} other {# calls}}"
@@ -1251,6 +1259,10 @@ msgstr "Anything specific? (optional)"
 msgid "API key"
 msgstr "API key"
 
+#: src/components/connections/logos.jsx
+msgid "Apify"
+msgstr "Apify"
+
 #: src/components/content/PlanDayOne.jsx
 msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
 msgstr "Apify is connected. Posts you save in Discover shape the plan's topics."
@@ -1897,6 +1909,10 @@ msgstr "Checked connected sources"
 msgid "Checking structured data coverage…"
 msgstr "Checking structured data coverage…"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Checking the key with {vendor}. Nothing is saved until {vendor} accepts it."
+msgstr "Checking the key with {vendor}. Nothing is saved until {vendor} accepts it."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Checking the numbers"
 msgstr "Checking the numbers"
@@ -2098,8 +2114,8 @@ msgid "Confirm"
 msgstr "Confirm"
 
 #: src/components/content/VendorKeyForm.jsx
-msgid "Connect"
-msgstr "Connect"
+#~ msgid "Connect"
+#~ msgstr "Connect"
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Connect {label}"
@@ -2149,6 +2165,7 @@ msgstr "Connect your {vendor} account"
 #: src/app/(app)/connections/page.jsx
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/VendorKeyCard.jsx
 msgid "Connected"
 msgstr "Connected"
 
@@ -2679,6 +2696,7 @@ msgstr "Discarded"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect"
@@ -2692,6 +2710,7 @@ msgstr "Disconnect “{title}”?"
 msgid "Disconnect Apify"
 msgstr "Disconnect Apify"
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect Apify?"
 msgstr "Disconnect Apify?"
@@ -2700,6 +2719,7 @@ msgstr "Disconnect Apify?"
 msgid "Disconnect PostBridge"
 msgstr "Disconnect PostBridge"
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/AccountsTab.jsx
 msgid "Disconnect PostBridge?"
 msgstr "Disconnect PostBridge?"
@@ -2861,10 +2881,12 @@ msgstr "Duct forgets the sign-in held in this machine’s keychain, and stops ru
 msgid "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
 msgstr "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/AccountsTab.jsx
 msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
 msgstr "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/DiscoverPage.jsx
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 msgstr "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
@@ -5087,6 +5109,7 @@ msgstr "Not confirmed"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/VendorKeyCard.jsx
 msgid "Not connected"
 msgstr "Not connected"
 
@@ -5878,6 +5901,10 @@ msgstr "Post published"
 msgid "Post scheduled"
 msgstr "Post scheduled"
 
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
+msgstr "PostBridge"
+
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "PostBridge API key"
@@ -6097,6 +6124,10 @@ msgstr "Published the post"
 #: src/components/content/TextPostEditor.jsx
 msgid "Publishes as the post's first reply."
 msgstr "Publishes as the post's first reply."
+
+#: src/app/(app)/connections/page.jsx
+msgid "Publishes Content Studio posts to your social accounts and brings back their results."
+msgstr "Publishes Content Studio posts to your social accounts and brings back their results."
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Publishing isn't set up yet"
@@ -6469,6 +6500,10 @@ msgstr "Rendering diagram…"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
 msgstr "Repeated hashtags: {at}"
+
+#: src/components/connections/VendorKeyCard.jsx
+msgid "Replace key"
+msgstr "Replace key"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Reply {n}"
@@ -6978,6 +7013,10 @@ msgstr "Searched memory"
 msgid "Searched the web"
 msgstr "Searched the web"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Searches TikTok for Content Studio's Discover, billed to your own Apify account."
+msgstr "Searches TikTok for Content Studio's Discover, billed to your own Apify account."
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"
 msgstr "Secondary color"
@@ -7305,6 +7344,7 @@ msgid "Sign in first — credentials are stored encrypted server-side."
 msgstr "Sign in first — credentials are stored encrypted server-side."
 
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/VendorKeyCard.jsx
 msgid "Sign in first — the connection is saved to your account."
 msgstr "Sign in first — the connection is saved to your account."
 
@@ -7842,6 +7882,7 @@ msgstr "That connection didn't finish — the link expires after a minute. Pleas
 msgid "That didn't connect. Check the key and try again."
 msgstr "That didn't connect. Check the key and try again."
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/AccountsTab.jsx
 msgid "That didn't disconnect. Try again."
 msgstr "That didn't disconnect. Try again."
@@ -8606,6 +8647,7 @@ msgid "Verify & continue"
 msgstr "Verify & continue"
 
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/content/VendorKeyForm.jsx
 msgid "Verify & save"
 msgstr "Verify & save"
 
@@ -8614,6 +8656,7 @@ msgid "Verifying your access…"
 msgstr "Verifying your access…"
 
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/content/VendorKeyForm.jsx
 msgid "Verifying…"
 msgstr "Verifying…"
 
@@ -9228,6 +9271,10 @@ msgstr "your formats"
 #: src/lib/modelTiers.js
 msgid "Your key"
 msgstr "Your key"
+
+#: src/components/connections/VendorKeyCard.jsx
+msgid "Your key is saved. Every project you own uses it."
+msgstr "Your key is saved. Every project you own uses it."
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Your key is used before the plan. Scheduled runs happen with no app open, so they always need a key."

@@ -15,6 +15,7 @@ import {
   listSocialAccounts,
   saveLinkedAccounts,
 } from "@/lib/contentApi";
+import { notifyConnectorsChanged } from "@/lib/connectorsApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import VendorKeyForm from "./VendorKeyForm";
 import { AccountBadges, POSTBRIDGE_DASHBOARD_URL, ReconnectNote } from "./AccountStatus";
@@ -130,6 +131,7 @@ export default function AccountsTab({ projectId }) {
 
   async function connect(apiKey) {
     await connectVendorKey(VENDOR.POSTBRIDGE, apiKey);
+    notifyConnectorsChanged();
     setReloadKey((k) => k + 1);
   }
 
@@ -143,6 +145,7 @@ export default function AccountsTab({ projectId }) {
     if (!ok) return;
     try {
       await disconnectVendorKey(VENDOR.POSTBRIDGE);
+      notifyConnectorsChanged();
       setReloadKey((k) => k + 1);
     } catch (e) {
       setError(e.message || t`That didn't disconnect. Try again.`);

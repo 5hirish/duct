@@ -108,6 +108,16 @@
   display: block;
 }
 
+/* logos.jsx's MaskMark: the mark's own shape, in the tile's ink. */
+.conn-mark-mask {
+  width: 24px;
+  height: 24px;
+  display: block;
+  background-color: currentColor;
+  -webkit-mask: var(--mark) center / contain no-repeat;
+  mask: var(--mark) center / contain no-repeat;
+}
+
 .conn-tile-body {
   min-width: 0;
   display: grid;

@@ -7,8 +7,9 @@
 //
 // Every mark is the owner's own, never a redrawing: Google's product icons
 // from its gstatic CDN, Microsoft's Clarity logo from its own static host,
-// GrowthBook's logomark from its repository, and the rest from Simple Icons,
-// which traces each brand from its owner's assets. A hand-drawn stand-in for a
+// GrowthBook's logomark from its repository, Apify's and PostBridge's from
+// their own sites, and the rest from Simple Icons, which traces each brand
+// from its owner's assets. A hand-drawn stand-in for a
 // brand is a trademark problem, however close it looks. The OpenAI and
 // OpenRouter marks are inline rather than files because they draw in
 // `currentColor` — an `<img>` has no CSS context to inherit the theme from, so
@@ -41,6 +42,8 @@ export const CONNECTOR_NAMES = {
   clarity: msg`Microsoft Clarity`,
   growthbook: msg`GrowthBook`,
   github: msg`GitHub`,
+  post_bridge: msg`PostBridge`,
+  apify: msg`Apify`,
   anthropic: msg`Anthropic`,
   openai: msg`OpenAI`,
   gemini: msg`Google Gemini`,
@@ -51,6 +54,14 @@ export const CONNECTOR_NAMES = {
 function Img({ src, alt }) {
   const { i18n } = useLingui();
   return <img src={src} alt={i18n._(alt)} width="24" height="24" loading="lazy" decoding="async" />;
+}
+
+// A one-colour mark that only ships as a black PNG (PostBridge's), drawn as a
+// mask in `currentColor`: the owner's own shape, which an <img> would leave
+// black on the dark theme's dark tile.
+function MaskMark({ src, alt }) {
+  const { i18n } = useLingui();
+  return <span className="conn-mark-mask" role="img" aria-label={i18n._(alt)} style={{ "--mark": `url(${src})` }} />;
 }
 
 export function OpenAiMark() {
@@ -114,6 +125,8 @@ export const LOGOS = {
   clarity: <Img src="/icons/clarity.svg" alt={CONNECTOR_NAMES.clarity} />,
   growthbook: <Img src="/icons/growthbook.svg" alt={CONNECTOR_NAMES.growthbook} />,
   github: <GitHubMark />,
+  post_bridge: <MaskMark src="/icons/post-bridge.png" alt={CONNECTOR_NAMES.post_bridge} />,
+  apify: <Img src="/icons/apify.svg" alt={CONNECTOR_NAMES.apify} />,
 
   // Model providers
   anthropic: <Img src="/icons/anthropic.svg" alt={CONNECTOR_NAMES.anthropic} />,

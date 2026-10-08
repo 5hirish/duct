@@ -34,6 +34,7 @@ import {
   recaptureReferenceMedia,
   saveDiscoveredReference,
 } from "../../lib/contentApi";
+import { notifyConnectorsChanged } from "../../lib/connectorsApi";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import VendorKeyForm from "./VendorKeyForm";
 import { useScraperRun } from "../../hooks/useScraperRun";
@@ -139,6 +140,7 @@ export default function DiscoverPage({ projectId }) {
 
   async function connectApify(apiKey) {
     await connectVendorKey(VENDOR.APIFY, apiKey);
+    notifyConnectorsChanged();
     setApifyCheck((n) => n + 1);
   }
 
@@ -152,6 +154,7 @@ export default function DiscoverPage({ projectId }) {
     if (!ok) return;
     try {
       await disconnectVendorKey(VENDOR.APIFY);
+      notifyConnectorsChanged();
       reset();
     } finally {
       setApifyCheck((n) => n + 1); // re-read either way: the status says what is true now

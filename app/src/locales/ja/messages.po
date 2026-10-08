@@ -482,6 +482,10 @@ msgstr "{posts, plural, other {# 投稿}}"
 msgid "{projectName} · Memory"
 msgstr "{projectName} · メモリ"
 
+#: src/components/connections/VendorKeyCard.jsx
+msgid "{projectName} uses its owner's {title} account, so a key you save here is used for the projects you own."
+msgstr "{projectName} はオーナーの {title} アカウントを使います。ここで保存したキーは、あなたが所有するプロジェクトで使われます。"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "{ranTier} · {requestedTier} is rate limited"
 msgstr "{ranTier} · {requestedTier} はレート制限されています"
@@ -562,6 +566,10 @@ msgstr "{tierName} のジョブは <0>{servesName}</0> で実行されます —
 #: src/components/models/TierCard.jsx
 msgid "{tierName} jobs run on <0>{servesName}</0> until you add a key."
 msgstr "{tierName} のジョブは、キーを追加するまで <0>{servesName}</0> で実行されます。"
+
+#: src/components/connections/VendorKeyCard.jsx
+msgid "{title} accepted the key, and it is saved. Every project you own uses it."
+msgstr "{title} がキーを承認し、保存されました。お客様が所有するすべてのプロジェクトでこれを使用します。"
 
 #: src/components/models/UsagePanel.jsx
 msgid "{tokens} tokens · {calls, plural, one {# call} other {# calls}}"
@@ -1251,6 +1259,10 @@ msgstr "具体的な内容はありますか？（任意）"
 msgid "API key"
 msgstr "APIキー"
 
+#: src/components/connections/logos.jsx
+msgid "Apify"
+msgstr "Apify"
+
 #: src/components/content/PlanDayOne.jsx
 msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
 msgstr "Apifyは接続済みです。Discoverで保存した投稿が、プランのトピックを形成します。"
@@ -1897,6 +1909,10 @@ msgstr "接続ソースを確認しました"
 msgid "Checking structured data coverage…"
 msgstr "構造化データのカバレッジを確認中…"
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Checking the key with {vendor}. Nothing is saved until {vendor} accepts it."
+msgstr "{vendor} でキーを確認しています。{vendor} が承認するまで、何も保存されません。"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Checking the numbers"
 msgstr "数字を確認中"
@@ -2098,8 +2114,8 @@ msgid "Confirm"
 msgstr "確認"
 
 #: src/components/content/VendorKeyForm.jsx
-msgid "Connect"
-msgstr "接続"
+#~ msgid "Connect"
+#~ msgstr "接続"
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Connect {label}"
@@ -2149,6 +2165,7 @@ msgstr "{vendor}アカウントを接続"
 #: src/app/(app)/connections/page.jsx
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/VendorKeyCard.jsx
 msgid "Connected"
 msgstr "接続済み"
 
@@ -2679,6 +2696,7 @@ msgstr "破棄済み"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect"
@@ -2692,6 +2710,7 @@ msgstr "「{title}」の接続を解除しますか？"
 msgid "Disconnect Apify"
 msgstr "Apifyの接続を解除"
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect Apify?"
 msgstr "Apifyの接続を解除しますか？"
@@ -2700,6 +2719,7 @@ msgstr "Apifyの接続を解除しますか？"
 msgid "Disconnect PostBridge"
 msgstr "PostBridgeの接続を解除"
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/AccountsTab.jsx
 msgid "Disconnect PostBridge?"
 msgstr "PostBridgeの接続を解除しますか？"
@@ -2861,10 +2881,12 @@ msgstr "Ductはこのマシンのキーチェーンに保持されているサ�
 msgid "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
 msgstr "Ductはこれらの認証情報を忘れます。{title}から読み取るレポートとスケジュールされた実行は、再度接続するまで動作を停止し、再接続するにはもう一度Googleでサインインする必要があります。"
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/AccountsTab.jsx
 msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
 msgstr "DuctはAPIキーを削除し、PostBridgeアカウント経由での公開を停止します。アカウントはPostBridgeに接続されたままです。"
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/DiscoverPage.jsx
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 msgstr "DuctはApifyトークンを削除し、あなたのアカウント経由での検索を停止します。保存した参考投稿はそのまま残ります。"
@@ -5087,6 +5109,7 @@ msgstr "未確認"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/VendorKeyCard.jsx
 msgid "Not connected"
 msgstr "未接続"
 
@@ -5878,6 +5901,10 @@ msgstr "投稿済み"
 msgid "Post scheduled"
 msgstr "投稿スケジュール済み"
 
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
+msgstr "PostBridge"
+
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "PostBridgeのAPIキー"
@@ -6097,6 +6124,10 @@ msgstr "投稿を公開しました"
 #: src/components/content/TextPostEditor.jsx
 msgid "Publishes as the post's first reply."
 msgstr "投稿への最初の返信として公開されます。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Publishes Content Studio posts to your social accounts and brings back their results."
+msgstr "Content Studio の投稿をソーシャルアカウントに公開し、その結果を取得します。"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Publishing isn't set up yet"
@@ -6469,6 +6500,10 @@ msgstr "図をレンダリング中…"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
 msgstr "重複するハッシュタグ: {at}"
+
+#: src/components/connections/VendorKeyCard.jsx
+msgid "Replace key"
+msgstr "キーを置き換える"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Reply {n}"
@@ -6978,6 +7013,10 @@ msgstr "メモリを検索しました"
 msgid "Searched the web"
 msgstr "ウェブを検索"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Searches TikTok for Content Studio's Discover, billed to your own Apify account."
+msgstr "Content Studio の Discover のために TikTok を検索し、Apify アカウントに請求されます。"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"
 msgstr "サブカラー"
@@ -7305,6 +7344,7 @@ msgid "Sign in first — credentials are stored encrypted server-side."
 msgstr "まずサインインしてください。認証情報はサーバー側で暗号化されて保存されます。"
 
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/VendorKeyCard.jsx
 msgid "Sign in first — the connection is saved to your account."
 msgstr "まずサインインしてください。接続はアカウントに保存されます。"
 
@@ -7842,6 +7882,7 @@ msgstr "接続が完了しませんでした。リンクは1分後に期限切�
 msgid "That didn't connect. Check the key and try again."
 msgstr "接続できませんでした。キーを確認して、もう一度お試しください。"
 
+#: src/components/connections/VendorKeyCard.jsx
 #: src/components/content/AccountsTab.jsx
 msgid "That didn't disconnect. Try again."
 msgstr "接続を解除できませんでした。もう一度お試しください。"
@@ -8606,6 +8647,7 @@ msgid "Verify & continue"
 msgstr "確認して続行"
 
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/content/VendorKeyForm.jsx
 msgid "Verify & save"
 msgstr "確認して保存"
 
@@ -8614,6 +8656,7 @@ msgid "Verifying your access…"
 msgstr "アクセスを確認中…"
 
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/content/VendorKeyForm.jsx
 msgid "Verifying…"
 msgstr "確認中…"
 
@@ -9228,6 +9271,10 @@ msgstr "フォーマット"
 #: src/lib/modelTiers.js
 msgid "Your key"
 msgstr "キー"
+
+#: src/components/connections/VendorKeyCard.jsx
+msgid "Your key is saved. Every project you own uses it."
+msgstr "キーは保存済みです。あなたが所有するすべてのプロジェクトで使われます。"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Your key is used before the plan. Scheduled runs happen with no app open, so they always need a key."

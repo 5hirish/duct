@@ -54,6 +54,7 @@ import { PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
+import VendorKeyCard from "@/components/connections/VendorKeyCard";
 import ContextRing from "@/components/workspace/ContextRing";
 import TierSummary from "@/components/models/TierSummary";
 import TierCard from "@/components/models/TierCard";
@@ -897,6 +898,44 @@ const refuseKey = (vendor) => Promise.reject(new Error(vendor === "apify"
   ? "Apify didn't accept that key. Copy it again from your Apify account."
   : "PostBridge didn't accept that key. Copy it again from your PostBridge dashboard."));
 
+// The vendor-key routes as each Connections scene needs them answered: the
+// project's status, and a pasted key either accepted after the vendor's
+// beat or refused the way a wrong one is.
+const vendorKeyApi = (status, { accepts = false } = {}) => ({
+  status: () => Promise.resolve(status),
+  connect: (vendor) => (accepts ? acceptKey() : refuseKey(vendor)),
+  disconnect: () => Promise.resolve(null),
+});
+const VENDOR_KEY_YOURS = vendorKeyApi({ connected: true, own_key: true, is_owner: true });
+const VENDOR_KEY_NONE = vendorKeyApi({ connected: false, own_key: false, is_owner: true }, { accepts: true });
+const VENDOR_KEY_MACHINE = vendorKeyApi({ connected: true, own_key: false, is_owner: true });
+const VENDOR_KEY_OWNERS = vendorKeyApi({ connected: true, own_key: false, is_owner: false });
+const VENDOR_CARD = {
+  "post-bridge": { title: "PostBridge", logo: LOGOS.post_bridge, description: "Publishes Content Studio posts to your social accounts and brings back their results." },
+  apify: { title: "Apify", logo: LOGOS.apify, description: "Searches TikTok for Content Studio's Discover, billed to your own Apify account." },
+};
+// Holds the saved row the page would re-read, so a key accepted or a
+// disconnect turns the card over as it does on the real page.
+function VendorCard({ vendor, saved: initiallySaved = false, api }) {
+  const [saved, setSaved] = useState(initiallySaved);
+  const live = useMemo(() => ({
+    ...api,
+    connect: (v, key) => api.connect(v, key).then(() => setSaved(true)),
+    disconnect: (v) => api.disconnect(v).then(() => setSaved(false)),
+  }), [api]);
+  return (
+    <VendorKeyCard
+      vendor={vendor}
+      {...VENDOR_CARD[vendor]}
+      signedIn
+      rows={saved ? [{ id: `${vendor}-row`, connector_type: vendor, storage: "cloud" }] : []}
+      projectId="preview-project"
+      projectName="Solo"
+      api={live}
+    />
+  );
+}
+
 // The period choices on fixed dates, so the scene reads the same any day:
 // a new plan on Oct 7, planning ahead from Nov 1 with a week already planned
 // from Nov 10, and a new plan on Oct 28, when the month rolls over.
@@ -1383,6 +1422,32 @@ export const SCENES = [
     title: "A sign-in above the token form",
     note: "Open each tile. With a GitHub App on the server the dialog leads with Connect GitHub and folds the token form behind \u201cUse a token instead\u201d. Connected, the button becomes Refresh from GitHub with the repository link beside it, and \u201cAdd another account\u201d is gone: more repositories come from GitHub\u2019s own page, not a second token. Press Connect: the preview answers the way the desktop hand-off does, so the waiting line appears under the button.",
     render: () => <OneClickCardScene />,
+  },
+  {
+    id: "vendor-key-cards",
+    state: "PostBridge saved, Apify missing, Apify on this computer's key",
+    group: "VendorKeyCard",
+    title: "PostBridge and Apify among the connections",
+    note: "The two keys Content Studio spends, as tiles like every other connection. Open each. Nothing is saved until the vendor accepts the key: while it asks, the button reads Verifying…, the field locks and a line says who is being asked. Apify (the middle card) accepts any key after a beat, so paste anything to watch it turn over to Connected with the vendor's yes said in the dialog. PostBridge is saved: Replace key, then any key, shows a refusal under the field; Disconnect sits in the footer and asks first. The third is local dev or the desktop sidecar, where the machine's own key works: blue, \"This computer's key\", and the field to add yours.",
+    render: () => (
+      <div className="conn-grid">
+        <VendorCard vendor="post-bridge" saved api={VENDOR_KEY_YOURS} />
+        <VendorCard vendor="apify" api={VENDOR_KEY_NONE} />
+        <VendorCard vendor="apify" api={VENDOR_KEY_MACHINE} />
+      </div>
+    ),
+  },
+  {
+    id: "vendor-key-someone-elses",
+    state: "the project in the header belongs to someone else",
+    group: "VendorKeyCard",
+    title: "When the project spends its owner's key",
+    note: "A key is the user's, but a project spends its owner's. Open it: the field is still there, because a key saved here works for the projects this person owns, and one line says why it will not change Solo.",
+    render: () => (
+      <div className="conn-grid">
+        <VendorCard vendor="post-bridge" api={VENDOR_KEY_OWNERS} />
+      </div>
+    ),
   },
   {
     id: "provider-key-dialog",

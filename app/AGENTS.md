@@ -107,7 +107,10 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     `components/content/DailyReflectionReminder.jsx`, mounted once in the
     app layout; its time and switch are per device (`lib/dailyReminder.js`)
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
-  - `connections/` — connector/integration management
+  - `connections/` — connector/integration management, including the two
+    keys Content Studio spends (PostBridge, Apify: `VendorKeyCard`), which
+    are connections like the rest even though only a project's owner's key
+    is used
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
     library, the cross-agent feed, usage, and user-level memory
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile

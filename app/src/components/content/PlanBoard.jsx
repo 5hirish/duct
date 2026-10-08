@@ -21,6 +21,7 @@ import {
   listPlans,
   listPosts,
 } from "@/lib/contentApi";
+import { notifyConnectorsChanged } from "@/lib/connectorsApi";
 import LoadError from "@/components/LoadError";
 import { Button } from "@/components/ui/button";
 import PlanKanban from "@/components/content/PlanKanban";
@@ -161,6 +162,7 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab }) 
   // and the field shows the vendor's reason.
   const connectVendor = useCallback(async (vendor, apiKey) => {
     const status = await connectVendorKey(vendor, apiKey);
+    notifyConnectorsChanged();
     setSources((prev) => ({ ...prev, vendors: { ...prev.vendors, [vendor]: status } }));
   }, []);
 

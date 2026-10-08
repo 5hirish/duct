@@ -87,14 +87,21 @@ export default function VendorKeyForm({ vendor, homeUrl, description, isOwner = 
   );
 }
 
-// The field, the button and the vendor's refusal: the part both layouts
+// The field, the button and the vendor's answer: the part both layouts
 // share, so a key is checked and an error is announced the same way in each.
+//
+// The server asks the vendor before it stores anything (PUT
+// /content/vendor-keys), and the form says so while it waits: the button
+// reads "Verifying…", the field locks, and a line under it names who is
+// being asked. A plain "Connect" with a spinner read as "saved", and a
+// refusal a second later looked like the save had failed.
 function KeyField({ vendor, onConnect, compact = false }) {
   const { t } = useLingui();
   const [key, setKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const errorId = useId();
+  const statusId = useId();
 
   async function submit(e) {
     e.preventDefault();
@@ -122,16 +129,20 @@ function KeyField({ vendor, onConnect, compact = false }) {
           placeholder={t`Paste your API key`}
           aria-label={t`${vendor} API key`}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? errorId : undefined}
+          aria-describedby={error ? errorId : saving ? statusId : undefined}
+          readOnly={saving}
           className={cn("min-w-0 flex-1", compact && "h-8")}
         />
         {/* Inline, the field sits under the page's own primary action, so it
             stays a secondary button rather than a second call to act. */}
         <Button type="submit" size={compact ? "sm" : "default"} variant={compact ? "secondary" : "default"} disabled={!key.trim() || saving}>
           {saving && <Spinner className="size-4" />}
-          <Trans>Connect</Trans>
+          {saving ? <Trans>Verifying…</Trans> : <Trans>Verify & save</Trans>}
         </Button>
       </form>
+      <p id={statusId} role="status" className={cn("mt-2 text-left text-xs text-muted-foreground", !saving && "sr-only")}>
+        {saving && <Trans>Checking the key with {vendor}. Nothing is saved until {vendor} accepts it.</Trans>}
+      </p>
       {error && (
         <p id={errorId} role="alert" className="mt-2 text-left text-xs text-destructive">
           {error}

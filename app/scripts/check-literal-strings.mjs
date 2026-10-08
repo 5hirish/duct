@@ -48,7 +48,7 @@ const COPY_ATTRIBUTES = new Set([
  */
 const NAMES = new Set([
   "Duct", "duct", "GA4", "GSC", "GTM", "GitHub", "Google", "Stripe", "Mixpanel",
-  "Clarity", "GrowthBook", "PostHog", "TikTok", "YouTube", "ChatGPT", "Claude",
+  "Clarity", "GrowthBook", "PostHog", "PostBridge", "Apify", "TikTok", "YouTube", "ChatGPT", "Claude",
   "Codex", "OpenAI", "Anthropic", "Gemini", "Ollama", "MIT", "OK", "URL", "API",
   "JSON", "CSV", "SEO", "ROAS", "CPA", "CPC", "CPM", "CTR", "LTV", "CAC", "MRR",
   "macOS", "Windows", "Linux", "iOS", "Android", "Safari", "Chrome", "Firefox",

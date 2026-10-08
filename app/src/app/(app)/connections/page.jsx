@@ -42,6 +42,8 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ConnectorTile from "../../../components/connections/ConnectorTile";
 import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
 import OAuthConnectorCard from "../../../components/connections/OAuthConnectorCard";
+import VendorKeyCard from "../../../components/connections/VendorKeyCard";
+import { VENDOR, VENDOR_CONNECTOR_TYPE } from "../../../lib/contentApi";
 import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSelect";
 import { LOGOS } from "../../../components/connections/logos";
 
@@ -984,6 +986,30 @@ export default function ConnectionsPage() {
               onSaved={refreshServerRows}
               onRemoveRow={removeServerRowById}
               {...mappingProps("github")}
+            />
+
+            <VendorKeyCard
+              vendor={VENDOR.POSTBRIDGE}
+              title="PostBridge"
+              description={t`Publishes Content Studio posts to your social accounts and brings back their results.`}
+              logo={LOGOS.post_bridge}
+              signedIn={signedIn}
+              rows={serverRowsAll[VENDOR_CONNECTOR_TYPE[VENDOR.POSTBRIDGE]] || []}
+              projectId={project?.id}
+              projectName={projectName}
+              onChanged={refreshServerRows}
+            />
+
+            <VendorKeyCard
+              vendor={VENDOR.APIFY}
+              title="Apify"
+              description={t`Searches TikTok for Content Studio's Discover, billed to your own Apify account.`}
+              logo={LOGOS.apify}
+              signedIn={signedIn}
+              rows={serverRowsAll[VENDOR_CONNECTOR_TYPE[VENDOR.APIFY]] || []}
+              projectId={project?.id}
+              projectName={projectName}
+              onChanged={refreshServerRows}
             />
 
             <ConnectorTile

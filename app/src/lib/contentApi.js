@@ -481,6 +481,17 @@ export const VENDOR_HOME = Object.freeze({
   [VENDOR.APIFY]: "https://console.apify.com",
 });
 
+// The saved key is a connector row like any other (service/vendor_keys.py),
+// under this connector_type: how the Connections page finds it among the
+// user's rows, and how the sidebar's count already did. So a caller that
+// saves or forgets one calls notifyConnectorsChanged() (lib/connectorsApi),
+// which this module cannot import: lib/slideDoc.js pulls it into plain Node
+// for check-slide-parity, and connectorsApi's imports do not resolve there.
+export const VENDOR_CONNECTOR_TYPE = Object.freeze({
+  [VENDOR.POSTBRIDGE]: "post_bridge",
+  [VENDOR.APIFY]: "apify",
+});
+
 export async function getVendorKeyStatus(vendor, projectId) {
   const url = new URL(`${BASE}/api/content/vendor-keys/${vendor}`);
   url.searchParams.set("project_id", projectId);

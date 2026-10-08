@@ -1091,7 +1091,10 @@ don't fit.
   would be spending it. A new user-facing vendor declares one `VendorKey`
   beside its client (with a `check`: the cheapest read that proves a pasted
   key works) and joins `_vendor_key` in `routes/content.py`; the routes, the
-  app's `VendorKeyForm` and the tests are already generic. Never read the
+  app's `VendorKeyForm` and the tests are already generic. The key is checked
+  with the vendor before it is stored, and it is a connection: the app lists
+  it on the Connections page (`VendorKeyCard`, keyed by `connector_type`), so
+  a new vendor also gets a tile there and a logo. Never read the
   vendor's `Configs` key directly. A vendor's 401 is about that key, so it
   never reaches the browser as a 401: the app signs the user out on one.
 
