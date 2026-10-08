@@ -1141,6 +1141,31 @@ Tauri shell via `option_env!`; `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` likewise.
 One value in `.env.local` serves all of them — do not invent a `DUCT_`-prefixed
 variant for the desktop half.
 
+### Credentials at rest
+
+Every stored credential (connector tokens, vendor keys, saved provider keys)
+is one `connector_credentials.credentials_enc` token, written and read only
+through `service/credentials.py`. Two ways to hold the key, readable side by
+side, each token saying which it is under:
+
+- **Fernet** (`CREDENTIALS_ENCRYPTION_KEY`, comma-separated, newest first) for
+  self-host, the desktop sidecar, dev and tests. New tokens use the first key;
+  any listed key decrypts.
+- **Cloud KMS envelopes** (`CREDENTIALS_KMS_KEY`) for hosted Duct. A data key
+  per credential, wrapped by a KMS key that never leaves KMS
+  (`service/credential_kms.py`), so a copy of the database plus this
+  environment decrypts nothing offline; every unwrap is a logged request that
+  revoking the service account stops. Unwrapped data keys are cached in
+  process, so a read is not a KMS round trip.
+
+Rotating, or moving onto KMS: change the configuration (a new Fernet key in
+front, or the KMS settings), deploy, then run
+`poetry run python scripts/rotate_credentials.py` with the database's
+environment. The dry run counts rows per key; `--apply` rewrites the ones not
+under the current key, one commit each, so it can stop and resume. Drop an old
+Fernet key only after a dry run shows none left on it: a dropped key's rows are
+unreadable, and the script reports those by id rather than deleting them.
+
 ### Creating a migration
 
 Always create Alembic revisions with autogenerate — `alembic revision

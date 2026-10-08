@@ -126,7 +126,8 @@ class ConnectorCredential(SQLModel, table=True):
     )
     account_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     account_name: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
-    # AES-encrypted JSON blob — encryption key lives in CREDENTIALS_ENCRYPTION_KEY env var
+    # The encrypted JSON blob: a Fernet token, or a KMS envelope. Written and
+    # read only through service/credentials.py, which says which key it is under.
     credentials_enc: str = Field(sa_column=Column(String, nullable=False))
     # Space-separated scopes the provider ACTUALLY granted, as OAuth itself
     # writes them. Its own column rather than a field inside credentials_enc

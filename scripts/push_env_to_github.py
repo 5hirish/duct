@@ -79,6 +79,8 @@ GITHUB_SECRETS = frozenset(
         # unprefixed pair as a fallback and a given env file may use either.
         "DATABASE_URL",
         "CREDENTIALS_ENCRYPTION_KEY",
+        "CREDENTIALS_KMS_KEY",
+        "CREDENTIALS_KMS_SERVICE_ACCOUNT",
         "GOOGLE_WEB_OAUTH_CLIENT_ID",
         "GOOGLE_WEB_OAUTH_CLIENT_SECRET",
         "GOOGLE_OAUTH_CLIENT_ID",

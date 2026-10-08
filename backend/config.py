@@ -210,9 +210,20 @@ class Configs(BaseSettings):
     # Protects /api/* routes (header X-API-Key). Same value the Next app sends as X-API-Key.
     duct_api_key: str = ""
 
-    # Fernet key for encrypting connector refresh tokens at rest.
+    # Fernet keys for credentials at rest, comma-separated, newest first: new
+    # tokens use the first, any of them decrypts (service/credentials.py). To
+    # rotate, put a new key in front, run scripts/rotate_credentials.py, drop
+    # the old one.
     # Generate: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     credentials_encryption_key: str = ""
+    # Hosted: a Cloud KMS key that wraps a data key per credential, so this
+    # environment and the database together still cannot decrypt offline.
+    # projects/<p>/locations/<l>/keyRings/<r>/cryptoKeys/<k>. Empty: Fernet only.
+    credentials_kms_key: str = ""
+    # The JSON key of a service account holding only
+    # roles/cloudkms.cryptoKeyEncrypterDecrypter on that key. Empty: Application
+    # Default Credentials.
+    credentials_kms_service_account: str = ""
 
     # Image storage backend: "local" (disk + /uploads StaticFiles, the dev
     # default) or "r2" (Cloudflare R2 over the S3 API, served from R2's CDN).

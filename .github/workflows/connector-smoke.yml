@@ -12,6 +12,9 @@ name: Connector Smoke
 # a gitignored backend/.env.test):
 #   DATABASE_URL                    — the staging Postgres (proxy URL)
 #   CREDENTIALS_ENCRYPTION_KEY      — decrypts connector_credentials rows
+#   CREDENTIALS_KMS_KEY,            — and, once the database is on KMS
+#   CREDENTIALS_KMS_SERVICE_ACCOUNT   envelopes (service/credentials.py), the
+#                                     key and the account allowed to use it
 #   GOOGLE_WEB_OAUTH_CLIENT_ID      — the hosted OAuth client; a token minted
 #   GOOGLE_WEB_OAUTH_CLIENT_SECRET    by the desktop client fails here, which
 #                                     is a finding, not a misconfiguration
@@ -66,6 +69,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CREDENTIALS_ENCRYPTION_KEY: ${{ secrets.CREDENTIALS_ENCRYPTION_KEY }}
+          CREDENTIALS_KMS_KEY: ${{ secrets.CREDENTIALS_KMS_KEY }}
+          CREDENTIALS_KMS_SERVICE_ACCOUNT: ${{ secrets.CREDENTIALS_KMS_SERVICE_ACCOUNT }}
           GOOGLE_WEB_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_WEB_OAUTH_CLIENT_ID }}
           GOOGLE_WEB_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_WEB_OAUTH_CLIENT_SECRET }}
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
