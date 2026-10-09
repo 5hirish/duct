@@ -3,7 +3,7 @@
   "//": "The stop tasks are one line each because the kill list lives in scripts/dev_stop.sh. It was inline here until Zed joined VS Code as an editor of this repo: Zed merges this file into its own task list but implements neither dependsOn nor dependsOrder, so a stop task written as a fan-out over five others silently stopped nothing there. One script, two editors, no second list to forget.",
   "tasks": [
     {
-      "label": "Serve site on :8090",
+      "label": "Site: dev server (:8090)",
       "type": "shell",
       "command": "python3 dev_server.py --port 8090",
       "options": { "cwd": "${workspaceFolder}/site" },
@@ -24,7 +24,7 @@
       }
     },
     {
-      "label": "App: stop dev server (3003)",
+      "label": "Web: stop dev server (3003)",
       "type": "shell",
       "command": "./scripts/dev_stop.sh app",
       "options": { "cwd": "${workspaceFolder}" },
