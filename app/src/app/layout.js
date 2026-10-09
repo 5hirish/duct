@@ -92,6 +92,10 @@ export default async function RootLayout({ children }) {
     <html
       lang={i18n.locale}
       className={`${dmSans.variable} ${jetbrainsMono.variable}`}
+      // theme.css sets smooth scrolling for in-page anchors. Next 16 stopped
+      // switching it off during route changes unless asked, so without this
+      // every navigation animated its way back to the top.
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
