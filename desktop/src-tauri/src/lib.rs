@@ -360,9 +360,9 @@ async fn install_update(app: AppHandle) -> Result<(), String> {
 
 /// Build without the `updater` feature: the commands still exist so the
 /// capability files and `build.rs` manifest stay identical across builds, but
-/// they report the feature as unavailable. No shipping channel takes this path
-/// since the App Store one was retired — see the `updater` feature in
-/// `Cargo.toml` before assuming it is exercised.
+/// they report the feature as unavailable. Every dev build takes this path
+/// (`dev`, `dev:local`, `build:dev`), so a dev bundle never offers itself the
+/// production release — see the `updater` feature in `Cargo.toml` for why.
 #[cfg(not(feature = "updater"))]
 #[tauri::command]
 async fn check_for_update(_app: AppHandle) -> Result<Option<serde_json::Value>, String> {

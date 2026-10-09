@@ -310,9 +310,11 @@ carries all the code.
   `.github/scripts/build-updater-manifest.mjs`. `--no-default-features` removes
   the plugin and flips `get_shell_info`'s `autoUpdate` to false; the two commands
   stay compiled as inert stubs so the capability files are identical across
-  builds. That escape hatch existed for the App Store and now **has no
-  consumer** — either delete the `updater` feature or give it a real one, since
-  a configuration nothing builds is one that silently rots. **The minisign
+  builds. **Every dev script uses it** (`dev`, `dev:local`, `build:dev`): a dev
+  build inherits the production updater config, and with the plugin compiled
+  in it offers the latest release and installs it over itself. That replaced
+  Duct Dev.app with the production app on 2026-10-01. A new dev script gets
+  `-- --no-default-features` too. **The minisign
   private key is not recoverable** — losing it means no installed copy will ever
   accept another update.
 - **macOS distribution** is Developer ID + a notarized DMG, and nothing else.

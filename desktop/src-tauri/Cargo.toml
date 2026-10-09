@@ -19,11 +19,13 @@ default = ["updater"]
 # Self-update. `--no-default-features` drops the plugin AND the `autoUpdate`
 # capability the web app gates its update UI on, so the two can never disagree.
 #
-# NO BUILD USES THAT ESCAPE HATCH ANY MORE. It existed for the Mac App Store,
-# where shipping a self-updater is grounds for rejection; that channel was
-# retired 2026-09-06. A feature flag nothing exercises stops compiling without
-# anyone noticing — delete this and its `#[cfg]` gates in `src/lib.rs`, or give
-# it a consumer (a distro-packaged .deb would be a real one).
+# Every dev build passes `--no-default-features` (`dev`, `dev:local`, `build:dev`
+# in package.json). A dev build inherits `plugins.updater` from tauri.conf.json,
+# so with the plugin compiled in it reads the production release feed, finds a
+# newer Duct, and installs it over itself. On 2026-10-01 that turned
+# /Applications/Duct Dev.app into the production app mid-session. It first
+# existed for the Mac App Store (retired 2026-09-06), where a self-updater is
+# grounds for rejection.
 updater = ["dep:tauri-plugin-updater"]
 # Crash reporting. Deliberately NOT a default feature: the builds we distribute
 # pass `--features crash-reporting` (see .github/workflows/desktop-release.yml),

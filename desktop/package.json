@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "build": "tauri build",
-    "build:dev": "tauri build --debug --bundles app --config src-tauri/tauri.dev.conf.json",
+    "build:dev": "tauri build --debug --bundles app --config src-tauri/tauri.dev.conf.json -- --no-default-features",
     "build:selfhost": "tauri build --config src-tauri/tauri.selfhost.conf.json",
-    "dev": "tauri dev",
-    "dev:local": "tauri dev --config src-tauri/tauri.local.conf.json",
+    "dev": "tauri dev -- --no-default-features",
+    "dev:local": "tauri dev --config src-tauri/tauri.local.conf.json -- --no-default-features",
     "install:dev-app": "node scripts/install-dev-app.mjs",
     "sidecar": "node scripts/ensure-sidecar-fresh.mjs --force",
     "postbuild:dev": "node scripts/install-dev-app.mjs",
