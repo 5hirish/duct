@@ -213,7 +213,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 - **Observability:** Sentry error tracking; OpenTelemetry tracing of every
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
-  it is unset. Locally that is Phoenix: the "Duct: App + API + Phoenix" and
+  it is unset. Locally that is Phoenix: the "Duct: Web + API + Phoenix" and
   "Duct: Desktop + API + Phoenix" launch compounds start it and point the
   API (and, for the desktop one, the sidecar via a second `open --env`) at
   `http://localhost:6006`, and every FetchData and verifier dispatch is a span

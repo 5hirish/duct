@@ -29,14 +29,14 @@ make serve-backend
 '''
 
 [[actions]]
-name = "App (local)"
+name = "Web (local)"
 icon = "run"
 command = '''
 make serve-app
 '''
 
 [[actions]]
-name = "App + API (local)"
+name = "Web + API (local)"
 icon = "run"
 command = '''
 make serve-app-api

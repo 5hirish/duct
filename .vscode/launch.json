@@ -2,20 +2,20 @@
   "version": "0.2.0",
   "compounds": [
     {
-      "name": "Duct: App + API + Phoenix (verbose)",
+      "name": "Duct: Web + API + Phoenix (verbose)",
       "configurations": [
         "Backend: FastAPI (uvicorn verbose)",
-        "App: dev server",
+        "Web: dev server",
         "Phoenix: OTEL traces UI (:6006)"
       ],
       "stopAll": true
     },
     {
       "//": "Cleanup lives on each configuration, not here: VS Code ignores postDebugTask on a compound (the compound schema accepts only name, presentation, configurations, stopAll, preLaunchTask). stopAll is session-level and fires only on a *manual* stop.",
-      "name": "Duct: App + API",
+      "name": "Duct: Web + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
-        "App: dev server"
+        "Web: dev server"
       ],
       "stopAll": true
     },
@@ -25,7 +25,7 @@
       "configurations": [
         "Phoenix: OTEL traces UI (:6006)",
         "Backend: FastAPI (uvicorn verbose)",
-        "App: dev server",
+        "Web: dev server",
         "Desktop: Duct Dev app (local env, traced)"
       ],
       "stopAll": true
@@ -35,7 +35,7 @@
       "name": "Duct: Desktop + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
-        "App: dev server",
+        "Web: dev server",
         "Desktop: Duct Dev app (local env)"
       ],
       "stopAll": true
@@ -49,10 +49,10 @@
       "stopAll": true
     },
     {
-      "name": "Duct: Site + App + API",
+      "name": "Duct: Site + Web + API",
       "configurations": [
         "Backend: FastAPI (uvicorn)",
-        "App: dev server",
+        "Web: dev server",
         "Site: dev server"
       ],
       "stopAll": true
@@ -93,12 +93,12 @@
       "postDebugTask": "Phoenix: stop (6006)"
     },
     {
-      "name": "App: dev server",
+      "name": "Web: dev server",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev",
       "cwd": "${workspaceFolder}/app",
-      "postDebugTask": "App: stop dev server (3003)"
+      "postDebugTask": "Web: stop dev server (3003)"
     },
     {
       "//": "Freezes the backend into backend/dist/duct-sidecar. Run this once, before the first desktop launch: a missing build ships a broken app. After that the desktop configurations refreeze it themselves when the backend has moved ahead (the npm pre* hooks), so this is for the first freeze and for forcing one. NOT plain `pyinstaller`: that deletes its output directory before rebuilding, which strips the binary and dylibs from under a sidecar the running app is executing. The script stages the freeze and swaps it in instead. Takes ~3 min.",
