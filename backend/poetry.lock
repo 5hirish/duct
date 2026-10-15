@@ -1228,28 +1228,28 @@ langdetect = ["langdetect (>=1.0.0)"]
 
 [[package]]
 name = "deepagents"
-version = "0.7.19"
+version = "0.7.23"
 description = "Production-ready, extensible agent harness with a built-in filesystem and context management, sub-agent delegation, skills, and long-term memory."
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main"]
 files = [
-    {file = "deepagents-0.7.19-py3-none-any.whl", hash = "sha256:e09026cc1f392fad1bf601b0a2c590e28e5c8aaca021eced15a6cf022fc8200b"},
-    {file = "deepagents-0.7.19.tar.gz", hash = "sha256:5cd493dbfb5b3d2877a20782a2c232857c44febdeb513aca82c2e0bea03379e7"},
+    {file = "deepagents-0.7.23-py3-none-any.whl", hash = "sha256:ccba4ca32e82f422e08c04b2321d135f1be321fc44ae5891b9b37a7c8bde5ca7"},
+    {file = "deepagents-0.7.23.tar.gz", hash = "sha256:03fbffec1691f72e412eb9251516a799ac3f5d3851defb4a98a49fece5675c10"},
 ]
 
 [package.dependencies]
-langchain = ">=1.4.2,<2.0.0"
-langchain-anthropic = ">=1.7.4,<2.0.0"
-langchain-core = ">=1.6.4,<2.0.0"
+langchain = ">=1.4.3,<2.0.0"
+langchain-anthropic = ">=1.7.5,<2.0.0"
+langchain-core = ">=1.6.7,<2.0.0"
 langchain-google-genai = ">=4.4.0,<5.0.0"
-langsmith = ">=0.14.0"
+langsmith = ">=0.14.4"
 packaging = ">=23.2"
 wcmatch = ">=11.0"
 
 [package.extras]
-aws = ["langchain-aws (>=1.7.9,<2.0.0)"]
-quickjs = ["langchain-quickjs (>=0.3.7)"]
+aws = ["langchain-aws (>=1.8.1,<2.0.0)"]
+quickjs = ["langchain-quickjs (>=0.3.8)"]
 video = ["av (>=18.0.0,<19.0.0)", "pillow (>=12.3.0,<13.0.0)"]
 
 [[package]]
@@ -3294,14 +3294,14 @@ pydantic = ">=2.7.4,<3.0.0"
 
 [[package]]
 name = "langchain-core"
-version = "1.6.6"
+version = "1.6.10"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_core-1.6.6-py3-none-any.whl", hash = "sha256:d9a71e312ab7443701238750e04a57aefc037c4f1ec82837c8a1609d9a14a9b1"},
-    {file = "langchain_core-1.6.6.tar.gz", hash = "sha256:67616d984c085009be2c381c2efd330d32429a58aebab295b4f51b6573964511"},
+    {file = "langchain_core-1.6.10-py3-none-any.whl", hash = "sha256:14341bdd8b42d0dd9a53dbbcd8b0599ab47b0c718c7caa12e3eb5c50b32cffcb"},
+    {file = "langchain_core-1.6.10.tar.gz", hash = "sha256:3ad7a64eab150c1fea9f8a748b1c076aa1a960c5cf7c28d81a841a2f2dbffad1"},
 ]
 
 [package.dependencies]
@@ -3512,14 +3512,14 @@ websockets = ">=14,<17"
 
 [[package]]
 name = "langsmith"
-version = "0.14.0"
+version = "0.14.7"
 description = "Client library to connect to the LangSmith Observability and Evaluation Platform."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "langsmith-0.14.0-py3-none-any.whl", hash = "sha256:1a89e52c24edd6f4c24d8cfb32857814ceb5b9bec344a2850e86ab38475de362"},
-    {file = "langsmith-0.14.0.tar.gz", hash = "sha256:294a02addc2358fab390156b74fa942e2dd40b711f6507c5f26b5c208cc89e15"},
+    {file = "langsmith-0.14.7-py3-none-any.whl", hash = "sha256:748538d163cd073879106837d7f0892f34849655ba43cbb5aa5e21509e24423d"},
+    {file = "langsmith-0.14.7.tar.gz", hash = "sha256:10ead0e0134ae2ee49371091e9d996e7f32a6103bc35860d55c26ee42d975bee"},
 ]
 
 [package.dependencies]
@@ -3550,6 +3550,7 @@ openai-realtime = ["openai (>=1.50)", "openai-agents (>=0.0.3)"]
 otel = ["opentelemetry-api (>=1.30.0)", "opentelemetry-exporter-otlp-proto-http (>=1.30.0)", "opentelemetry-sdk (>=1.30.0)"]
 pipecat = ["cachetools (>=5.0.0)", "opentelemetry-api (>=1.30.0)", "opentelemetry-exporter-otlp-proto-http (>=1.30.0)", "opentelemetry-sdk (>=1.30.0)", "pipecat-ai (>=1.0) ; python_version >= \"3.11\""]
 pytest = ["pytest (>=7.0.0)", "rich (>=13.9.4)", "vcrpy (>=7.0.0)"]
+sandbox-auth = ["pyjwt[crypto] (>=2.8.0)"]
 strands-agents = ["opentelemetry-api (>=1.30.0)", "opentelemetry-exporter-otlp-proto-http (>=1.30.0)", "opentelemetry-sdk (>=1.30.0)", "strands-agents (>=0.1.0)", "strands-agents-tools (>=0.2.0)"]
 vcr = ["vcrpy (>=7.0.0)"]
 
@@ -8792,4 +8793,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "3daa4ba7271779e009deac63f78873351ee0a44b90e0e72006e173e3119f25d1"
+content-hash = "2250c2a11b120f5dd91f431240d5042367e9173802020187d6a4c2388ab0e1d3"
