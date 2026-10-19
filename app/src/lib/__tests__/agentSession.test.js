@@ -9,6 +9,7 @@ import {
   errorAction,
   friendlyErrorMessage,
   initialAgentState,
+  isPauseEvent,
   reduceAgentSession,
   replayEvents,
 } from "../agentSession";
@@ -293,6 +294,20 @@ describe("answering a pause", () => {
     const s = reduceAgentSession(two, { type: Action.ANSWER_SENT, pause });
     expect(s.pauses).toEqual([second]);
     expect(s.phase).toBe(Phase.QUESTIONS);
+  });
+
+  it("parks on a connected tool's approval like any other pause", () => {
+    const approval = {
+      event: AgentEvent.TOOL_APPROVAL_REQUIRED,
+      interrupt_id: "i3",
+      server: "notion",
+      tool: "create_page",
+      arguments: "{}",
+    };
+    const s = replayEvents([{ event: AgentEvent.PIPELINE_STARTED }, approval]);
+    expect(s.phase).toBe(Phase.QUESTIONS);
+    expect(s.pauses).toEqual([approval]);
+    expect(isPauseEvent(approval)).toBe(true);
   });
 
   it("puts the card back when the answer could not be sent", () => {

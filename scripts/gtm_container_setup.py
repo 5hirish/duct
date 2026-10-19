@@ -56,6 +56,7 @@ EVENTS = [
     "execution_approved",
     "team_member_invited",
     "execution_interest_submitted",
+    "mcp_server_connected",
     # Attribution, pushed by site/assets/duct.js on every page.
     "utm_data",
 ]

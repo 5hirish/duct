@@ -15,6 +15,7 @@ import {
   hasAuthToken,
   listProjectConnectors,
   listServerConnectors,
+  MCP_CONNECTOR,
   notifyConnectorsChanged,
   saveServerConnector,
   startGitHubConnect,
@@ -41,6 +42,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ConnectorTile from "../../../components/connections/ConnectorTile";
 import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
+import McpServers from "../../../components/connections/McpServers";
 import OAuthConnectorCard from "../../../components/connections/OAuthConnectorCard";
 import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSelect";
 import { LOGOS } from "../../../components/connections/logos";
@@ -358,6 +360,9 @@ export default function ConnectionsPage() {
       } else {
         setConnectError(t`Sign in to finish connecting GitHub.`);
       }
+    } else if (connectorParam === MCP_CONNECTOR) {
+      // An MCP server's sign-in. McpServers claims it: a grant, not a token,
+      // and not one /auth/connectors/exchange would recognise.
     } else if (connectorParam && codeParam) {
       // Single-use and 60-second, but there is no reason to leave it in the
       // address bar or in history either.
@@ -995,6 +1000,8 @@ export default function ConnectionsPage() {
               disabled
             />
           </div>
+
+          <McpServers signedIn={signedIn} />
         </TabsContent>
 
       </Tabs>
