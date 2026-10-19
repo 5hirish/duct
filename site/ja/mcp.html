@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>DuctのエージェントにMCPサーバーを接続：セットアップガイド</title>
+<link rel="canonical" href="https://getduct.ai/ja/mcp"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/mcp"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/mcp"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/mcp"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/mcp"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/mcp"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/mcp"/>
+<meta property="og:locale" content="ja_JP"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<!-- hreflang:end -->
+<meta name="description" content="OpenSEO、Notion、Linear、PostHog、または任意の公開MCPサーバーをDuctに接続します。一度サインインしたら、質問してください。読み取り専用ツールは実行されます。それ以外はあなたの承認を待ちます。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/mcp"/>
+<meta property="og:title" content="DuctのエージェントにMCPサーバーを接続：セットアップガイド"/>
+<meta property="og:description" content="既存のMCPサーバーをDuctのエージェントに接続してください。読み取り専用ツールはすぐに実行されます。それ以外は、まず承認を待ちます。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/mcp.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="DuctのエージェントにMCPサーバーを接続：セットアップガイド"/>
+<meta name="twitter:description" content="OpenSEO、Notion、Linear、PostHogはDuctでワンクリックで接続できます。その他の公開MCPサーバーは、そのアドレスで接続します。手順は次のとおりです。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/mcp.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Ductブログ" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.":"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js" defer></script>
+<!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
+     the i18n generator translates these strings through the page's own catalogue entries. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"DuctのエージェントにMCPサーバーを接続：セットアップガイド","url":"https://getduct.ai/ja/mcp","description":"OpenSEO、Notion、Linear、PostHog、または任意の公開MCPサーバーをDuctに接続します。一度サインインしたら、質問してください。読み取り専用ツールは実行されます。それ以外はあなたの承認を待ちます。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"サーバーの接続方法","step":[{"@type":"HowToStep","position":1,"name":"接続を開く","text":"Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"},{"@type":"HowToStep","position":2,"name":"サーバーを選択するか、アドレスを貼り付けてください","text":"OpenSEO、Notion、Linear、またはPostHogを選択してください。それ以外の場合は、サーバーのHTTPSアドレスを貼り付けてください。"},{"@type":"HowToStep","position":3,"name":"一度サインイン","text":"サーバーがサインインをサポートしている場合はワンクリックです。サポートしていない場合は、ベンダーからAPIキーを貼り付けてください。Ductはそれを暗号化して保持します。"}]}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"「このサーバーにはAPIキーが必要です」と表示されます","acceptedAnswer":{"@type":"Answer","text":"サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"}},{"@type":"Question","name":"「再接続が必要です」と表示されます","acceptedAnswer":{"@type":"Answer","text":"サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"}},{"@type":"Question","name":"「Ductはパブリックインターネット上のサーバーにのみ接続します」と表示されます","acceptedAnswer":{"@type":"Answer","text":"アドレスがご自身のコンピューターまたはプライベートネットワークを指している場合、ホスト型サービスは公開インターネットアドレスのみを呼び出すため、ローカルまたは内部サーバーには到達できません。"}},{"@type":"Question","name":"FigmaまたはSlackに接続できないのはなぜですか？","acceptedAnswer":{"@type":"Answer","text":"どちらも事前に承認したクライアントのみを受け入れるため、サーバーアドレスだけでは不十分です。これらはまだDuctでは動作しません。"}},{"@type":"Question","name":"ツール呼び出しに費用はかかりますか？","acceptedAnswer":{"@type":"Answer","text":"ベンダー側で発生するものもあります。OpenSEOのリサーチなど、そこでクレジットを消費する呼び出しは、他のクライアントと同様に、そのベンダーのクレジットを消費します。"}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"MCPサーバー","item":"https://getduct.ai/ja/mcp"}]}
+</script>
+<style>
+/* ── MCP-ONLY STYLES ── */
+.mcp-hero { padding-bottom: 48px; }
+/* Two lines at desktop: at the default 76px the first beat broke into three. */
+.mcp-hero h1 { font-size: clamp(40px, 5.2vw, 68px); max-width: 1040px; }
+.mcp-hero .hero-sub { max-width: 580px; }
+
+/* The flow: the page's one heavy element. No shot of the app's MCP screens exists yet, so this
+   is a diagram of the rule rather than a copy of a screen: the servers you connect, the question,
+   and the two things a tool call can do. The read-only lane names no vendor on purpose, because
+   whether a tool is read-only is the server's own marking, not something this page can promise. */
+.flow { padding: 0 52px 96px; }
+.flow-fig { max-width: 1000px; margin: 0 auto; }
+.flow-frame { display: grid; grid-template-columns: minmax(0, 4fr) 64px minmax(0, 7fr); column-gap: 16px; align-items: center; padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.08); }
+.flow-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
+.flow-servers ul { list-style: none; display: grid; gap: 8px; }
+.flow-servers li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); font-size: 14px; font-weight: 500; color: var(--navy); }
+.flow-servers li img { display: block; width: 20px; height: 20px; flex: none; }
+.flow-servers li .ic { font-size: 18px; color: var(--navy-3); }
+.flow-servers li.is-any { background: transparent; border-style: dashed; font-weight: 400; color: var(--navy-3); }
+.logo-tile { border-radius: 5px; }
+.flow-pipe { display: block; width: 64px; height: 20px; overflow: visible; }
+.flow-pipe path { fill: none; stroke-width: 2; stroke-linecap: round; }
+.flow-pipe .bed { stroke: var(--navy); opacity: .18; }
+.flow-pipe .water { stroke: var(--orange); stroke-dasharray: 4 6; }
+.flow-agent > .flow-label:first-child { text-align: right; }
+.flow-ask { margin: 0 0 18px auto; max-width: 46ch; padding: 12px 16px; background: var(--navy); color: #fff; border-radius: 16px 16px 4px 16px; font-size: 15px; line-height: 1.5; }
+.flow-calls { display: grid; gap: 10px; }
+.flow-call { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 14px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); }
+.flow-call.is-write { border-color: #f3dfb0; box-shadow: 0 10px 28px rgba(122,82,0,.08); }
+.flow-call-ic { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: var(--off); font-size: 16px; color: var(--navy-2); }
+.flow-call-ic img { display: block; width: 20px; height: 20px; }
+.flow-call-text { flex: 1; min-width: 0; }
+.flow-call-text b { display: block; font-size: 14px; font-weight: 500; color: var(--navy); }
+.flow-call-text small { display: block; font-size: 12px; color: var(--navy-3); margin-top: 1px; }
+.flow-state { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--pill); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.flow-state.is-ok { background: #e6f4ea; color: #1a7f37; }
+.flow-state.is-wait { background: #fff7e6; color: #7a5200; }
+.flow-args { flex-basis: 100%; margin: 2px 0 0 40px; padding: 8px 12px; background: var(--off); border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.6; color: var(--navy-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.flow-actions { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 8px; }
+.flow-btn { font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: var(--pill); border: 1px solid var(--border); background: var(--white); color: var(--navy); }
+.flow-btn.is-go { background: var(--orange); border-color: var(--orange); color: #fff; }
+.flow-fig figcaption { margin-top: 16px; font-size: 13px; color: var(--navy-3); text-align: center; line-height: 1.6; }
+@keyframes mcp-water { to { stroke-dashoffset: -20; } }
+@media (prefers-reduced-motion: no-preference) { .flow-pipe .water { animation: mcp-water 1.2s linear infinite; } }
+
+/* Steps: the shared navy .how band, with the step titles promoted to real headings */
+.how .step-title { font-weight: 400; }
+.ask-line { display: flex; align-items: flex-start; gap: 14px; margin-top: 40px; padding: 20px 24px; border: 1px solid rgba(255,255,255,.12); border-radius: var(--r-lg); color: rgba(255,255,255,.72); font-size: 15px; font-weight: 300; line-height: 1.7; }
+.ask-line .ic { flex: none; font-size: 22px; color: var(--orange); margin-top: 2px; }
+.ask-line strong { color: #fff; font-weight: 500; }
+
+/* Section shells */
+.mcp-sec { padding: 96px 52px; }
+.mcp-sec.is-off { background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.mcp-inner { max-width: 1160px; margin: 0 auto; }
+.mcp-head { max-width: 780px; }
+.mcp-head h2 { margin-bottom: 14px; }
+.mcp-head .sub { max-width: 60ch; }
+
+/* Ready-made servers: hairline-free cards, the address shown so nothing is hidden */
+.srv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 44px; }
+.srv { display: flex; flex-direction: column; gap: 16px; padding: 26px 26px 22px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); }
+.srv-head { display: flex; align-items: center; gap: 14px; }
+.srv-head img { display: block; width: 36px; height: 36px; flex: none; }
+.srv-head .logo-tile { border-radius: 8px; }
+.srv-head h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.2; letter-spacing: -.2px; color: var(--navy); }
+.srv-head p { font-size: 14px; color: var(--navy-3); line-height: 1.5; margin-top: 2px; }
+.srv-addr span { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 6px; }
+.srv-addr code { display: block; padding: 9px 12px; background: var(--off); border: 1px solid var(--border); border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; color: var(--navy); overflow-wrap: anywhere; -webkit-user-select: all; user-select: all; }
+.srv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.srv-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--pill); border: 1px solid var(--border); background: var(--off); font-size: 12px; font-weight: 500; line-height: 1.5; color: var(--navy-2); }
+.srv-chip .ic { font-size: 13px; }
+.srv-chip.is-credit { border-color: #f3dfb0; background: #fff7e6; color: #7a5200; }
+.srv-try { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); line-height: 1.6; }
+.srv-try q { font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--navy); quotes: "\201C" "\201D"; }
+
+/* Any other server: copy left, the requirements card right */
+.byo-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
+.req { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.req-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
+.req-list { list-style: none; display: grid; gap: 12px; }
+.req-list + .req-label { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); }
+.req-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.6; color: var(--navy); }
+.req-list .ic { flex: none; font-size: 18px; margin-top: 3px; color: var(--success, #10883c); }
+.req-list.is-no li { color: var(--navy-3); }
+.req-list.is-no .ic { color: var(--navy-3); }
+.req-list code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; padding: 1px 6px; background: var(--off); border: 1px solid var(--border); border-radius: 6px; }
+
+/* Trust: six rules on a hairline grid */
+.rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 44px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.rule { padding: 30px 28px 32px; background: var(--white); }
+.rule > .ic { display: block; font-size: 24px; color: var(--orange); margin-bottom: 18px; }
+.rule h3 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.25; letter-spacing: -.2px; color: var(--navy); margin-bottom: 10px; }
+.rule p { font-size: 15px; color: var(--navy-3); line-height: 1.7; max-width: 40ch; }
+
+/* Troubleshooting: the questions left, the Claude and ChatGPT note right */
+.trouble-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 56px; align-items: start; margin-top: 40px; }
+.trouble-grid .faq-a { max-width: 62ch; }
+.aside { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.aside > .ic { display: block; font-size: 22px; color: var(--orange); margin-bottom: 14px; }
+.aside h3 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.25; color: var(--navy); margin-bottom: 10px; }
+.aside p { font-size: 15px; color: var(--navy-3); line-height: 1.7; }
+
+@media (max-width: 1100px) {
+  .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .flow { padding: 0 24px 64px; }
+  .flow-frame { grid-template-columns: 1fr; padding: 20px; gap: 4px; }
+  .flow-servers ul { display: flex; flex-wrap: wrap; }
+  .flow-servers li { padding: 8px 10px; font-size: 13px; }
+  .flow-pipe { transform: rotate(90deg); margin: 18px auto; }
+  .flow-agent > .flow-label:first-child { text-align: left; }
+  .flow-ask { margin-left: 0; }
+  /* The status drops under the title on a phone, so the title keeps its line */
+  .flow-call-text { flex-basis: calc(100% - 40px); }
+  .flow-state { margin-left: 40px; }
+  .flow-args { margin-left: 0; }
+  .mcp-sec { padding: 64px 24px; }
+  .srv-grid { grid-template-columns: 1fr; }
+  .byo-grid, .trouble-grid { grid-template-columns: 1fr; gap: 32px; }
+  .rules { grid-template-columns: 1fr; }
+  .req, .aside { padding: 22px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EXPERIMENT: the setup guide for MCP servers, the reverse of a vendor's "add our server to Claude"
+     page. Hypothesis: a founder who already lives in OpenSEO, Notion, Linear or PostHog downloads
+     Duct at a higher rate once they see their tool plugs straight into the agent and that anything
+     that writes waits for them. Measured by download clicks per visit (GTM). -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/ja/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="hero mcp-hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Model Context Protocol · 持ち込みモデル</div>
+<h1>独自のMCPサーバーを持ち込みましょう。<br/><em>エージェントに呼び出させましょう。</em></h1>
+<p class="hero-sub">Ductのエージェントは、あなたが接続する任意のMCPサーバーを使用できます。4つはワンクリックで接続できます（OpenSEO、Notion、Linear、PostHog）。その他の公開サーバーはアドレスで接続します。</p>
+<div class="hero-form">
+<a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
+<a class="btn btn-ghost btn-lg" href="#steps">3つのステップで設定</a>
+</div>
+<p class="hero-footnote">独自のキーで無料 · クレジットカード不要 · macOS、Windows、Linux</p>
+</section>
+
+<!-- FLOW: the servers, the question, the two outcomes of a tool call -->
+<section class="flow">
+<figure class="flow-fig reveal">
+<div class="flow-frame" aria-hidden="true">
+<div class="flow-servers">
+<p class="flow-label">あなたのサーバー</p>
+<ul>
+<li><img class="logo-tile" src="/assets/icons/openseo.webp" width="20" height="20" alt=""/>OpenSEO</li>
+<li><img src="/assets/icons/notion.svg" width="20" height="20" alt=""/>Notion</li>
+<li><img src="/assets/icons/linear.svg" width="20" height="20" alt=""/>Linear</li>
+<li><img src="/assets/icons/posthog.svg" width="20" height="20" alt=""/>PostHog</li>
+<li class="is-any"><svg class="ic"><use href="/assets/icons.svg#link"/></svg>任意のHTTPSアドレス</li>
+</ul>
+</div>
+<svg class="flow-pipe" viewBox="0 0 64 20" width="64" height="20"><path class="bed" d="M0 6H64M0 14H64"/><path class="water" d="M0 10H64"/></svg>
+<div class="flow-agent">
+<p class="flow-label">あなたが尋ねる</p>
+<p class="flow-ask">これら5つのトピックのうち、執筆する価値のある検索ボリュームがあるのはどれですか？</p>
+<p class="flow-label">エージェントが呼び出します</p>
+<div class="flow-calls">
+<div class="flow-call">
+<span class="flow-call-ic"><svg class="ic"><use href="/assets/icons.svg#eye"/></svg></span>
+<span class="flow-call-text"><b>キーワードボリュームを検索</b><small>サーバーによって読み取り専用とマークされています</small></span>
+<span class="flow-state is-ok"><svg class="ic"><use href="/assets/icons.svg#check"/></svg>実行済み</span>
+</div>
+<div class="flow-call is-write">
+<span class="flow-call-ic"><img src="/assets/icons/linear.svg" width="20" height="20" alt=""/></span>
+<span class="flow-call-text"><b>Linearで課題を作成</b><small>読み取り専用ではありません</small></span>
+<span class="flow-state is-wait">あなたを待機中</span>
+<pre class="flow-args">title  "Write the post on topic 2"
+team   "Content"</pre>
+<span class="flow-actions"><span class="flow-btn">スキップ</span><span class="flow-btn is-go">承認する</span></span>
+</div>
+</div>
+</div>
+</div>
+<figcaption>既製のサーバーでは、読み取り専用とマークされたツールはすぐに実行されます。それ以外は、送信する引数を表示し、承認を待ちます。</figcaption>
+</figure>
+</section>
+
+<!-- STEPS -->
+<section class="how" id="steps">
+<div class="how-inner">
+<p class="tag">サーバーの接続方法</p>
+<h2>3つのステップ。 <em>その後、質問してください。</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
+<h3 class="step-title">接続を開く</h3>
+<p class="step-body">Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
+<h3 class="step-title">サーバーを選択するか、アドレスを貼り付けてください</h3>
+<p class="step-body">OpenSEO、Notion、Linear、またはPostHogを選択してください。それ以外の場合は、サーバーのHTTPSアドレスを貼り付けてください。</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg></span>
+<h3 class="step-title">一度サインイン</h3>
+<p class="step-body">サーバーがサインインをサポートしている場合はワンクリックです。サポートしていない場合は、ベンダーからAPIキーを貼り付けてください。Ductはそれを暗号化して保持します。</p>
+</div>
+</div>
+<p class="ask-line reveal"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg><span><strong>その後、チャットで質問してください。</strong> エージェントは接続したサーバー上のツールを検索し、適切なものを呼び出し、返された情報に基づいて回答します。</span></p>
+</div>
+</section>
+
+<!-- READY-MADE SERVERS -->
+<section class="mcp-sec" id="servers">
+<div class="mcp-inner">
+<div class="mcp-head reveal">
+<p class="tag">既製</p>
+<h2>4つのサーバー。<em>それぞれワンクリック。</em></h2>
+<p class="sub">接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。</p>
+</div>
+<div class="srv-grid">
+<article class="srv reveal">
+<div class="srv-head"><img class="logo-tile" src="/assets/icons/openseo.webp" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>OpenSEO</h3><p>キーワードボリューム、難易度、および被リンク。</p></div></div>
+<div class="srv-addr"><span>サーバーアドレス</span><code>https://app.openseo.so/mcp</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>APIキーも使用できます</span><span class="srv-chip is-credit"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#coins"/></svg>リサーチにはOpenSEOクレジットが消費されます</span></div>
+<p class="srv-try">例： <q>このリストのどのキーワードが、ランキングを上げる努力をする価値がありますか？</q></p>
+</article>
+<article class="srv reveal" style="transition-delay:.08s">
+<div class="srv-head"><img src="/assets/icons/notion.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Notion</h3><p>ワークスペース内のページとデータベース。</p></div></div>
+<div class="srv-addr"><span>サーバーアドレス</span><code>https://mcp.notion.com/mcp</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span></div>
+<p class="srv-try">例： <q>ローンチプランで何を決定しましたか？</q></p>
+</article>
+<article class="srv reveal">
+<div class="srv-head"><img src="/assets/icons/linear.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Linear</h3><p>あなたの課題とプロジェクト。</p></div></div>
+<div class="srv-addr"><span>サーバーアドレス</span><code>https://mcp.linear.app/mcp</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span></div>
+<p class="srv-try">例： <q>オンボーディングプロジェクトのどの課題がまだ未解決ですか？</q></p>
+</article>
+<article class="srv reveal" style="transition-delay:.08s">
+<div class="srv-head"><img src="/assets/icons/posthog.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>PostHog</h3><p>あなたのプロダクトアナリティクス。</p></div></div>
+<div class="srv-addr"><span>サーバーアドレス</span><code>https://mcp.posthog.com/mcp</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>APIキーも使用できます</span></div>
+<p class="srv-try">例： <q>どのオンボーディングステップで最も多くの人が離脱していますか？</q></p>
+</article>
+</div>
+</div>
+</section>
+
+<!-- ANY OTHER SERVER -->
+<section class="mcp-sec is-off" id="any-server">
+<div class="mcp-inner byo-grid">
+<div class="mcp-head reveal">
+<p class="tag">その他のサーバー</p>
+<h2>リストにありませんか？ <em>アドレスを貼り付けてください。</em></h2>
+<p class="sub">Ductは、パブリックインターネット経由で到達可能な任意のMCPサーバーに接続します。そのために必要なことと、動作しないことについて説明します。</p>
+</div>
+<div class="req reveal" style="transition-delay:.08s">
+<span class="req-label">接続</span>
+<ul class="req-list">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Streamable HTTP経由でMCPを提供する、公開の<code>https://</code>アドレス。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>サーバーがOAuthディスカバリーを公開し、クライアントメタデータドキュメントを受け入れるか、動的クライアント登録を許可する場合に、ワンクリックでサインインできます。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>それ以外の場合は、貼り付けたAPIキーがベアラートークンとしてサーバーに送信されます。</span></li>
+</ul>
+<span class="req-label">サポートされていません</span>
+<ul class="req-list is-no">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>ご自身のコンピューターでstdio経由で実行されるローカルサーバー。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>プライベートネットワーク上のサーバー。ホスト型サービスは公開インターネットアドレスのみを呼び出します。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>事前に承認されたクライアントのみを受け入れるベンダー。FigmaとSlackは現在そのように機能します。</span></li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- WHAT THE AGENT WILL AND WON'T DO -->
+<section class="mcp-sec" id="trust">
+<div class="mcp-inner">
+<div class="mcp-head reveal">
+<p class="tag">エージェントができること、できないこと</p>
+<h2>読み取り専用は実行されます。 <em>それ以外はまず確認します。</em></h2>
+<p class="sub">接続するすべてのサーバーに同じルールが適用されますが、1つだけ違いがあります。アドレスで追加したサーバーは、すべての呼び出し前に確認を求めます。</p>
+</div>
+<div class="rules reveal" style="transition-delay:.08s">
+<div class="rule">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#eye"/></svg>
+<h3>読み取り専用ツールはすぐに実行されます</h3>
+<p>既製のサーバーのいずれかがツールを読み取り専用とマークした場合、エージェントは確認せずにそれを呼び出します。アドレスで追加したサーバーは、そのような信頼を得られません。Ductがチェックしていないため、すべての呼び出しで最初に確認します。</p>
+</div>
+<div class="rule">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
+<h3>その他はあなたの承認を待ちます</h3>
+<p>その他の呼び出しは一時停止し、送信されるすべての内容が表示されます。承認するか、スキップしてください。</p>
+</div>
+<div class="rule">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg>
+<h3>応答はデータであり、命令ではありません</h3>
+<p>サーバーが返すものは読み取り用のデータとして扱われ、決して従うべき指示としては扱われません。</p>
+</div>
+<div class="rule">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
+<h3>あなたのトークンはモデルに到達しません</h3>
+<p>サインイン情報とAPIキーはDuct側で暗号化されて保持され、モデルに表示されることはありません。</p>
+</div>
+<div class="rule">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg>
+<h3>あなたのサーバー、あなたのチャット</h3>
+<p>サーバーは接続したユーザーに属し、どのプロジェクトでもそのユーザー自身のチャットのみが使用します。プロジェクトを共有している人が自身のサーバーを接続した場合、あなたのサーバーの内容を読み取ることはありません。</p>
+</div>
+<div class="rule">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg>
+<h3>今のところ、インサイトチャット</h3>
+<p>現在、接続されたサーバーはインサイトチャットで使用されます。スケジュールされたブリーフとContent Studioはまだそれらを呼び出しません。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TROUBLESHOOTING -->
+<section class="mcp-sec is-off" id="troubleshooting">
+<div class="mcp-inner">
+<div class="mcp-head reveal">
+<p class="tag">トラブルシューティング</p>
+<h2>サーバーが<em>拒否した場合。</em></h2>
+</div>
+<div class="trouble-grid">
+<div class="faq-list reveal">
+<details class="faq-item">
+<summary class="faq-q">「このサーバーにはAPIキーが必要です」と表示されます</summary>
+<p class="faq-a">サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">「再接続が必要です」と表示されます</summary>
+<p class="faq-a">サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">「Ductはパブリックインターネット上のサーバーにのみ接続します」と表示されます</summary>
+<p class="faq-a">アドレスがご自身のコンピューターまたはプライベートネットワークを指している場合、ホスト型サービスは公開インターネットアドレスのみを呼び出すため、ローカルまたは内部サーバーには到達できません。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">FigmaまたはSlackに接続できないのはなぜですか？</summary>
+<p class="faq-a">どちらも事前に承認したクライアントのみを受け入れるため、サーバーアドレスだけでは不十分です。これらはまだDuctでは動作しません。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">ツール呼び出しに費用はかかりますか？</summary>
+<p class="faq-a">ベンダー側で発生するものもあります。OpenSEOのリサーチなど、そこでクレジットを消費する呼び出しは、他のクライアントと同様に、そのベンダーのクレジットを消費します。</p>
+</details>
+</div>
+<aside class="aside reveal" style="transition-delay:.08s">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#compass"/></svg>
+<h3>これがClaudeおよびChatGPTコネクタとどのように関連するか</h3>
+<p>それらのディレクトリには、ほとんど同じベンダーのMCPサーバーがリストされています。Ductはそれらのサーバーに直接接続し、お持ちのどのモデルでも利用できます。</p>
+</aside>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/ja/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/ja/partials/footer-expanded.html"><div class="legal-fallback"><a href="/ja/">Duct</a><a href="/ja/about">について</a><a href="/ja/privacy">プライバシーポリシー</a><a href="/ja/terms">利用規約</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

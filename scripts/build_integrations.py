@@ -777,7 +777,7 @@ def hub_page(copy, by_id: dict) -> str:
 <aside class="ig-ask reveal">
 <div>
 <h2>Missing <em>yours?</em></h2>
-<p>Name the tool and the question you want it to answer. Connectors get built when a question needs one.</p>
+<p>Name the tool and the question you want it to answer. Connectors get built when a question needs one. If it runs an MCP server, <a href="/mcp">connect that yourself</a> today.</p>
 </div>
 <a class="btn btn-dark" href="{DISCUSSIONS}" rel="noopener">Ask on GitHub {icon('arrow-right')}</a>
 </aside>
