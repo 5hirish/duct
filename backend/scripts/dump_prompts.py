@@ -186,7 +186,7 @@ def render_insights() -> str:
         "Cache-stable: identical for every account, so it is the shared prefix.\n\n"
         + fenced(system),
     ))
-    # Added before memory discipline only when the project's owner connected
+    # Added before memory discipline only when the session's user connected
     # an MCP server (agents/core/mcp_tools.py mounts the two tools then).
     out.append(section(
         f"Connected MCP servers addition · ~{approx_tokens(CONNECTED_TOOLS_CAPABILITY):,} tokens",

@@ -516,16 +516,22 @@ Postgres `DATABASE_URL` names.
   identical across every other audit.
 - `service/mcp/` + `routes/mcp_servers.py` + `agents/core/mcp_tools.py` —
   MCP servers a user connects (issue #345). Duct is the *client* here; Duct as
-  a server is #197. Five rules, each held by `tests/test_mcp_*.py`:
+  a server is #197. Six rules, each held by `tests/test_mcp_*.py`:
   - **Our runtime, not the provider's.** Anthropic's `mcp_servers` and
     OpenAI's Responses `mcp` tool serve only their own models, so the client
     is the reference `mcp` SDK in-process, the capability rule above. Not
     fastmcp: 4.x needs arize-phoenix 20.10+, which drags anthropic 1.x and
     openai 3.x into this environment.
   - **A server is a credential row.** `connector_type = "mcp"`, `account_id` the
-    canonical URL; no table of its own. A project's agent uses its **owner's**
-    servers, the vendor-key rule, and only the owner may approve a call that
-    is not read-only: a collaborator's session gets `owner_only`, no card.
+    canonical URL; no table of its own. A chat reaches only **its own user's**
+    servers, in any project, never the project owner's: unlike a vendor key, a
+    token reads the whole account behind it. Sessions are their creator's
+    alone, so whoever sees a server's data and answers its card owns it.
+  - **Only a preset's `readOnlyHint` is believed.** On a server added by
+    address every call shows the approval card: a stranger's "read-only" still
+    carries the agent's arguments to the stranger. The card gets the arguments
+    whole; a call too long to show (`APPROVAL_ARGUMENT_CHARS`) is refused,
+    never cut.
   - **Sign-in is GitHub's shape.** Start (signed in) parks the flow under the
     OAuth `state`; the callback parks the tokens as a grant; only the user who
     started may claim it. A client metadata document where the server takes one
@@ -536,10 +542,10 @@ Postgres `DATABASE_URL` names.
     `service/mcp/http.guarded_client` runs the crawl fetcher's resolved-address
     check. No stdio servers on the hosted API.
   - **Two fixed agent tools, never one per server tool.** `ListConnectedTools`
-    (a menu, then one tool's schema on request) and `CallConnectedTool`. A tool
-    its server annotates `readOnlyHint` runs; anything else pauses on
-    `TOOL_APPROVAL_REQUIRED`. Insights interactive sessions only, and only when
-    the owner has a server, so every other prompt keeps its cached prefix.
+    (a menu, then one tool's schema on request) and `CallConnectedTool`; a
+    call that asks first pauses on `TOOL_APPROVAL_REQUIRED`. Insights
+    interactive sessions only, and only when the user has a server, so every
+    other prompt keeps its cached prefix.
 - `service/discovery.py` — saved TikTok references. `ingest_reference(db,
   project_id, post)` is the one way a `ScrapedPost` becomes a
   `discovered_reference` row (one per post per project); `capture_reference_media`

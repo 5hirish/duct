@@ -6,10 +6,13 @@ like a PostBridge key is (``service/vendor_keys.py``): ``connector_type`` is
 user), ``account_name`` what to call it, and the encrypted blob holds the
 tokens plus what refreshing them needs.
 
-Servers belong to the user who connected them, and **a project's agent uses
-its owner's servers**, the rule vendor keys already follow: the owner chose
-what their projects may reach, and a collaborator's run reads through the
-owner's connections the way it reads the owner's Google Ads.
+Servers belong to the user who connected them, and **a chat reaches only its
+own user's servers**, in whichever project it runs. Not the project owner's,
+the rule vendor keys follow: a key spends money on the project's behalf, but
+an MCP token reads the whole account behind it (every Notion page, not the
+project's), and nothing binds a server to one project. Sessions are their
+creator's alone (``routes/agents.py``, ``_owned_session``), so the person who
+sees a server's data and answers its approval card is always its owner.
 """
 
 from __future__ import annotations
@@ -23,7 +26,6 @@ from sqlalchemy import select
 from sqlmodel import Session
 
 from models.connector import ConnectorCredential
-from models.project import Project
 from service.connector_store import upsert_credential
 from service.credentials import decrypt_credentials, encrypt_credentials
 from service.mcp.oauth import AUTH_KEY, AUTH_NONE, AUTH_OAUTH, ClientRegistration, Tokens
@@ -66,9 +68,14 @@ class ServerAccess:
     url: str
     name: str
     credentials: dict
-    # Whose account this is. A collaborator's run may read through it; only
-    # this user may approve a call that changes something in it.
-    owner_id: UUID | None = None
+
+    @property
+    def vetted(self) -> bool:
+        """One of the presets, whose vendors Duct has looked at. Only their
+        ``readOnlyHint`` is believed: on a server added by address it is the
+        stranger's own claim, and a tool that says it only reads can still
+        carry whatever the agent puts in its arguments to that stranger."""
+        return preset_for_url(self.url) is not None
 
     @property
     def auth(self) -> str:
@@ -234,21 +241,9 @@ def delete_server(db: Session, user_id: UUID, row_id: UUID) -> bool:
     return True
 
 
-def project_owner(db: Session, project_id: UUID) -> UUID | None:
-    project = db.get(Project, project_id)
-    return project.user_id if project else None
-
-
-def servers_for_project(db: Session, project_id: UUID) -> list[ServerAccess]:
-    """The servers a run on ``project_id`` may use: its owner's.
-
-    ``project_id`` must already be membership-checked; this answers for the
-    project, not for the caller.
-    """
-    owner = project_owner(db, project_id)
-    if owner is None:
-        return []
-    rows = _rows(db, owner)
+def servers_for_user(db: Session, user_id: UUID) -> list[ServerAccess]:
+    """The servers a chat run by ``user_id`` may use: their own, oldest first."""
+    rows = _rows(db, user_id)
     keys = server_keys(rows)
     return [
         ServerAccess(
@@ -257,20 +252,16 @@ def servers_for_project(db: Session, project_id: UUID) -> list[ServerAccess]:
             url=row.account_id,
             name=row.account_name,
             credentials=_readable(row),
-            owner_id=owner,
         )
         for row in sorted(rows, key=lambda r: (r.created_at, str(r.id)))
     ]
 
 
-def has_servers(db: Session, project_id: UUID) -> bool:
-    owner = project_owner(db, project_id)
-    if owner is None:
-        return False
+def has_servers(db: Session, user_id: UUID) -> bool:
     return (
         db.execute(
             select(ConnectorCredential.id).where(
-                ConnectorCredential.user_id == owner,
+                ConnectorCredential.user_id == user_id,
                 ConnectorCredential.connector_type == MCP_CONNECTOR_TYPE,
             ).limit(1)
         ).first()

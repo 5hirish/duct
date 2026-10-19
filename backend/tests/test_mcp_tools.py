@@ -19,10 +19,14 @@ from agents.core.events import AgentEvent
 from agents.insights.v1.runner import AutonomousInsightsRunner
 from agents.insights.schema import create_insights_session
 from service.mcp import client as mcp_client
+from service.mcp.presets import preset
 from service.mcp.store import ServerAccess, no_credentials
 from tests.fakes import FakeMcpServer, fake_llm, tool_names
 
-URL = "https://mcp.vendor.test/mcp"
+# A preset's address, so its read-only annotations are believed; one added by
+# address is OTHER_URL.
+URL = preset("openseo").url
+OTHER_URL = "https://mcp.vendor.test/mcp"
 
 
 def _server() -> FakeMcpServer:
@@ -58,20 +62,15 @@ class Pause:
         return self.answer
 
 
-OWNER = uuid.uuid4()
-
-
 @pytest.fixture
 def servers(monkeypatch):
-    access = [ServerAccess(
-        row_id=None, key="openseo", url=URL, name="OpenSEO", credentials=no_credentials(), owner_id=OWNER,
-    )]
-    monkeypatch.setattr(mcp_tools, "_servers_sync", lambda project_id: list(access))
+    access = [ServerAccess(row_id=None, key="openseo", url=URL, name="OpenSEO", credentials=no_credentials())]
+    monkeypatch.setattr(mcp_tools, "_servers_sync", lambda user_id: list(access))
     return access
 
 
-def _toolbox(pause=None, *, user_id=OWNER):
-    return mcp_tools.ConnectedTools(uuid.uuid4(), user_id=user_id, pause=pause)
+def _toolbox(pause=None):
+    return mcp_tools.ConnectedTools(uuid.uuid4(), pause=pause)
 
 
 async def test_the_listing_is_a_menu_and_the_schema_comes_on_request(monkeypatch, servers):
@@ -86,10 +85,10 @@ async def test_the_listing_is_a_menu_and_the_schema_comes_on_request(monkeypatch
     assert by_name["keyword_volume"] == {
         "name": "keyword_volume",
         "summary": "Monthly search volume for one keyword.",
-        "read_only": True,
+        "asks_first": False,
     }
     assert "input_schema" not in by_name["keyword_volume"]
-    assert detail["input_schema"]["required"] == ["keyword"] and detail["read_only"] is True
+    assert detail["input_schema"]["required"] == ["keyword"] and detail["asks_first"] is False
     assert "note" in menu and "note" in detail
 
 
@@ -116,6 +115,7 @@ async def test_anything_else_waits_for_approval_and_runs_once_approved(monkeypat
     assert event == AgentEvent.TOOL_APPROVAL_REQUIRED
     assert payload["server"] == "openseo" and payload["tool"] == "create_page"
     assert payload["reason"] == "to save the brief where the team reads"
+    assert payload["why"] == mcp_tools.WHY_NOT_READ_ONLY
     assert json.loads(payload["arguments"]) == {"title": "Q4 brief"}
     assert result["status"] == "ok"
     assert server.calls == [("create_page", "Q4 brief")]
@@ -139,28 +139,38 @@ async def test_with_nobody_to_ask_a_write_does_not_run(monkeypatch, servers):
     assert server.calls == []
 
 
-async def test_a_collaborator_reads_through_the_owners_server_but_cannot_approve_a_write(monkeypatch, servers):
-    """The owner's Notion is not the collaborator's to change, whoever is at
-    the keyboard: no card, no call."""
+async def test_a_server_added_by_address_asks_even_for_a_read(monkeypatch, servers):
+    """Its "read-only" is a stranger's claim, and a read still carries the
+    agent's arguments to the stranger."""
+    servers[0] = ServerAccess(row_id=None, key="acme", url=OTHER_URL, name="Acme", credentials=no_credentials())
+    pause = Pause({"approved": False})
+    server = _server()
+    async with server.running(monkeypatch):
+        box = _toolbox(pause)
+        menu = await box.list()
+        result = await box.call("acme", "keyword_volume", '{"keyword": "seo"}')
+
+    assert all(t["asks_first"] for t in menu["servers"][0]["tools"])
+    ((_, payload),) = pause.events
+    assert payload["why"] == mcp_tools.WHY_ADDED_BY_ADDRESS
+    assert result["status"] == "skipped"
+    assert server.calls == []
+
+
+async def test_what_is_approved_is_what_was_shown(monkeypatch, servers):
     pause = Pause({"approved": True})
     server = _server()
+    title = "x" * (mcp_tools.APPROVAL_ARGUMENT_CHARS - 100)
     async with server.running(monkeypatch):
-        box = _toolbox(pause, user_id=uuid.uuid4())
-        read = await box.call("openseo", "keyword_volume", '{"keyword": "seo"}')
-        write = await box.call("openseo", "create_page", '{"title": "x"}')
+        box = _toolbox(pause)
+        shown = await box.call("openseo", "create_page", json.dumps({"title": title}))
+        too_long = await box.call("openseo", "create_page", json.dumps({"title": title * 2}))
 
-    assert read["status"] == "ok"
-    assert write["status"] == "owner_only"
-    assert pause.events == []
-    assert server.calls == [("keyword_volume", "seo")]
-
-
-async def test_without_a_known_user_only_reads_run(monkeypatch, servers):
-    server = _server()
-    async with server.running(monkeypatch):
-        result = await _toolbox(Pause({"approved": True}), user_id=None).call("openseo", "create_page", "{}")
-    assert result["status"] == "owner_only"
-    assert server.calls == []
+    ((_, payload),) = pause.events
+    assert json.loads(payload["arguments"]) == {"title": title}
+    assert shown["status"] == "ok"
+    assert too_long["status"] == "arguments_too_long"
+    assert server.calls == [("create_page", title)]
 
 
 async def test_the_tool_list_is_read_once_per_run(monkeypatch, servers):
@@ -223,7 +233,7 @@ RUNNER = AutonomousInsightsRunner(api_key="unused-no-network")
 
 
 def _built(monkeypatch, *, connected: bool, interactive: bool = True):
-    monkeypatch.setattr(mcp_tools, "project_has_servers", lambda project_id: connected)
+    monkeypatch.setattr(mcp_tools, "user_has_servers", lambda user_id: connected)
     prompts: list[str] = []
     session = create_insights_session(str(uuid.uuid4()))
     agent = RUNNER.build_agent(

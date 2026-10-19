@@ -27,7 +27,7 @@ from models.auth import User
 from models.connector import ConnectorCredential
 from service.mcp import oauth
 from service.mcp.client import CODE_REAUTH, CODE_UNREACHABLE, McpCallError
-from service.mcp.store import ACCESS_TOKEN, API_KEY, AUTH, MCP_CONNECTOR_TYPE
+from service.mcp.store import ACCESS_TOKEN, API_KEY, AUTH, MCP_CONNECTOR_TYPE, servers_for_user
 from tests.conftest import make_sqlite_engine
 
 API = "https://api.duct.test"
@@ -285,6 +285,16 @@ def test_servers_are_the_owners_alone(browser, db, alice, mallory, vendor):
     assert len(_rows(db)) == 1
     assert browser.as_(alice).delete(f"/api/user/mcp/servers/{server_id}").status_code == 204
     assert _rows(db) == []
+
+
+def test_a_chat_reaches_only_its_own_users_servers(browser, db, alice, mallory, vendor):
+    """Not the project owner's: a token reads the whole account behind it, so
+    a collaborator in alice's project gets mallory's servers, never alice's."""
+    browser.as_(alice).post("/api/user/mcp/servers", json={"url": SERVER, "api_key": "k-alice"})
+
+    assert servers_for_user(db, mallory.id) == []
+    (mine,) = servers_for_user(db, alice.id)
+    assert mine.credentials[API_KEY] == "k-alice"
 
 
 def test_no_secret_reaches_the_listing(browser, alice, vendor):

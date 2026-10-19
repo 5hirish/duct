@@ -448,11 +448,13 @@ def _action_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[st
     }
 
 
-# Outcomes whose message stays off the card. A skip's message is an
-# instruction to the model, not news for the person; a protocol or tool error
+# Outcomes whose message stays off the card. A skip's or a refusal's message
+# is an instruction to the model, not news for the person; a protocol or tool error
 # carries the server's own words, and a card never holds bytes a third party
 # wrote. The reason alone tells the app which sentence to show.
-_CONNECTED_QUIET = frozenset({"skipped", "needs_approval", "owner_only", "protocol_error", "tool_error"})
+_CONNECTED_QUIET = frozenset(
+    {"skipped", "needs_approval", "arguments_too_long", "protocol_error", "tool_error"}
+)
 
 
 def _connected(args: dict[str, Any], *, listing: bool) -> dict[str, Any]:

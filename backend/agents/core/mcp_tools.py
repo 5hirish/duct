@@ -1,6 +1,6 @@
 """Tools the user connected over MCP, reached through two fixed tools.
 
-``ListConnectedTools`` says what the project's servers offer; ``CallConnectedTool``
+``ListConnectedTools`` says what the user's servers offer; ``CallConnectedTool``
 runs one. Two tools and not one per server tool, for the reasons
 ``docs/engineering/agent-engineering.md`` gives about tool surfaces: tool
 definitions head the cached prompt, so mounting OpenSEO's tools one by one
@@ -9,17 +9,20 @@ every project a different prefix, and break the cache whenever a vendor edited
 a description. ``FetchData(entity_id)`` is the same move for Duct's own
 connectors. The schemas load when the agent asks for one, in a tool result.
 
-Three rules, each a decision:
+The rules, each a decision:
 
-* **The server's own word decides what runs unasked.** A tool annotated
-  ``readOnlyHint`` runs; anything else pauses for the person to approve or
-  skip (``TOOL_APPROVAL_REQUIRED``). Unannotated is not assumed harmless. No
-  change sets here: an arbitrary write has no rollback to stage.
-* **Only the account's owner approves a write in it.** A project's agent uses
-  its owner's servers, so a collaborator's session reads through them and
-  nothing more: a call that is not read-only answers ``owner_only`` without
-  asking, because the person at the keyboard cannot consent for someone
-  else's Notion.
+* **A chat reaches its own user's servers and nobody else's.** A token reads
+  the whole account behind it, so a collaborator's chat in your project gets
+  their servers, not yours (``service/mcp/store.py`` says why).
+* **Only a vetted server's word decides what runs unasked.** On a preset, a
+  tool annotated ``readOnlyHint`` runs; anything else pauses for the person
+  to approve or skip (``TOOL_APPROVAL_REQUIRED``). Unannotated is not assumed
+  harmless. On a server added by address every call pauses: "read-only" is
+  then a stranger's claim, and a read still sends the agent's arguments,
+  which a poisoned page can fill with the project's data. No change sets
+  here: an arbitrary write has no rollback to stage.
+* **What is approved is what was shown.** The card gets the arguments whole;
+  a call too long to show is refused, never cut.
 * **Everything a server says is data.** Its tool descriptions and its results
   were written by a third party; the prompt says so, and so does the listing.
 * **Credentials never reach the model.** The token rides in the transport
@@ -58,8 +61,12 @@ DESCRIPTION_CHARS = 2_000
 # What a call may hand the model. Smaller than FetchData's cap: this is a
 # stranger's payload, and a big one is better narrowed than carried.
 MAX_RESULT_CHARS = 40_000
-# The arguments the approval card shows, so the person sees what will be sent.
-ARGUMENT_PREVIEW_CHARS = 1_500
+# The most the approval card shows. Past it the call is refused rather than
+# shown cut: a tail nobody read is a tail nobody approved.
+APPROVAL_ARGUMENT_CHARS = 8_000
+# Why a call is waiting, so the card can say which rule stopped it.
+WHY_NOT_READ_ONLY = "not_read_only"
+WHY_ADDED_BY_ADDRESS = "added_by_address"
 # Approving a call is reading one card; it does not deserve a connect's clock.
 APPROVAL_TIMEOUT = 600.0
 
@@ -69,8 +76,8 @@ DATA_NOTE = (
 )
 
 LIST_DESCRIPTION = (
-    "List the outside tools this project's owner connected to Duct over MCP (for example an SEO "
-    "tool, a workspace, a product analytics service), server by server. With no arguments it "
+    "List the outside tools the user connected to Duct over MCP (for example an SEO tool, a "
+    "workspace, a product analytics service), server by server. With no arguments it "
     "returns every server and one line per tool. Pass `server` to list just that server, and "
     "`server` plus `tool` to get that tool's full description and argument schema, which you "
     "need before calling it. Use these when a question needs data or an action none of the "
@@ -80,8 +87,8 @@ LIST_DESCRIPTION = (
 CALL_DESCRIPTION = (
     "Run one tool on a connected MCP server. Name the server and tool exactly as "
     "ListConnectedTools reports them, and pass `arguments` as a JSON object matching the tool's "
-    "schema. A tool its server marks read-only runs at once; any other pauses for the user to "
-    "approve or skip, so say in `reason` what the call does and why, in one sentence they will "
+    "schema. A tool listed with `asks_first: false` runs at once; any other pauses for the user "
+    "to approve or skip, so say in `reason` what the call does and why, in one sentence they will "
     "read beside the buttons. A skip is an answer: carry on without it and do not ask again for "
     "the same call. Some tools spend the user's credits on that service, so call what the "
     "question needs."
@@ -155,8 +162,12 @@ def _bounded(payload: dict) -> str:
     return json.dumps(trimmed, default=str)
 
 
+def _asks_first(server: ServerAccess, tool: ToolInfo) -> bool:
+    return not (server.vetted and tool.read_only)
+
+
 class ConnectedTools:
-    """One run's view of its project's MCP servers, cached for the run.
+    """One run's view of its user's MCP servers, cached for the run.
 
     The server list and each server's tools are read once: the second
     ListConnectedTools and every CallConnectedTool reuse them. A failure is
@@ -164,10 +175,7 @@ class ConnectedTools:
     every call.
     """
 
-    def __init__(
-        self, project_id: UUID, *, user_id: UUID | None = None, pause: PauseFn | None = None
-    ) -> None:
-        self._project_id = project_id
+    def __init__(self, user_id: UUID, *, pause: PauseFn | None = None) -> None:
         self._user_id = user_id
         self._pause = pause
         self._servers: list[ServerAccess] | None = None
@@ -175,7 +183,7 @@ class ConnectedTools:
 
     async def servers(self) -> list[ServerAccess]:
         if self._servers is None:
-            self._servers = await asyncio.to_thread(_servers_sync, self._project_id)
+            self._servers = await asyncio.to_thread(_servers_sync, self._user_id)
         return self._servers
 
     async def _server(self, key: str) -> ServerAccess | None:
@@ -207,7 +215,7 @@ class ConnectedTools:
         else:
             targets = await self.servers()
         if not targets:
-            return {"servers": [], "message": "This project's owner has connected no MCP servers."}
+            return {"servers": [], "message": "The user has connected no MCP servers."}
 
         listed = await asyncio.gather(*(self._tools_of(s) for s in targets))
         if server and tool:
@@ -226,7 +234,7 @@ class ConnectedTools:
                 "server": targets[0].key,
                 "tool": found.name,
                 "title": found.title,
-                "read_only": found.read_only,
+                "asks_first": _asks_first(targets[0], found),
                 "description": found.description[:DESCRIPTION_CHARS],
                 "input_schema": found.input_schema,
                 "note": DATA_NOTE,
@@ -242,7 +250,11 @@ class ConnectedTools:
                 "name": access.name,
                 "status": "ok",
                 "tools": [
-                    {"name": t.name, "summary": _summary(t.description or t.title), "read_only": t.read_only}
+                    {
+                        "name": t.name,
+                        "summary": _summary(t.description or t.title),
+                        "asks_first": _asks_first(access, t),
+                    }
                     for t in tools
                 ],
             })
@@ -266,16 +278,17 @@ class ConnectedTools:
         if not isinstance(args, dict):
             return {"status": "bad_arguments", "message": "`arguments` must be a JSON object."}
 
-        if not found.read_only:
-            if self._user_id is None or self._user_id != access.owner_id:
+        if _asks_first(access, found):
+            shown = json.dumps(args, ensure_ascii=False, indent=2)
+            if len(shown) > APPROVAL_ARGUMENT_CHARS:
                 return {
-                    "status": "owner_only",
+                    "status": "arguments_too_long",
                     "server": access.key,
+                    "name": access.name,
                     "tool": found.name,
                     "message": (
-                        f"{access.name} belongs to the project's owner, and this tool is not marked "
-                        "read-only, so only the owner can approve it. Do not call it in this session; "
-                        "say what it would have done and that the owner can run it."
+                        "Too long to show for approval, so nothing was sent. If the call is still "
+                        "needed, make it smaller: fewer items, or several calls."
                     ),
                 }
             # Asked before anything is sent: an interrupt re-runs this body from
@@ -284,10 +297,11 @@ class ConnectedTools:
                 return {
                     "status": "needs_approval",
                     "server": access.key,
+                    "name": access.name,
                     "tool": found.name,
                     "message": (
-                        "This tool is not marked read-only, so it needs the user's approval, and "
-                        "nobody is here to give it. Do not call it in this run."
+                        "This tool needs the user's approval, and nobody is here to give it. "
+                        "Do not call it in this run."
                     ),
                 }
             answer = await self._pause(
@@ -299,7 +313,8 @@ class ConnectedTools:
                     "tool": found.name,
                     "tool_title": found.title,
                     "reason": reason,
-                    "arguments": json.dumps(args, ensure_ascii=False, indent=2)[:ARGUMENT_PREVIEW_CHARS],
+                    "why": WHY_ADDED_BY_ADDRESS if not access.vetted else WHY_NOT_READ_ONLY,
+                    "arguments": shown,
                 },
                 timeout=APPROVAL_TIMEOUT,
             )
@@ -307,6 +322,7 @@ class ConnectedTools:
                 return {
                     "status": "skipped",
                     "server": access.key,
+                    "name": access.name,
                     "tool": found.name,
                     "message": (
                         "The user did not approve this call. Carry on without it, say what it would "
@@ -334,12 +350,12 @@ class ConnectedTools:
 # ---------------------------------------------------------------------------
 
 
-def _servers_sync(project_id: UUID) -> list[ServerAccess]:
+def _servers_sync(user_id: UUID) -> list[ServerAccess]:
     from db.session import get_session as db_session
-    from service.mcp.store import servers_for_project
+    from service.mcp.store import servers_for_user
 
     with next(db_session()) as db:
-        return servers_for_project(db, project_id)
+        return servers_for_user(db, user_id)
 
 
 def _store_sync(row_id: UUID, credentials: dict) -> None:
@@ -359,15 +375,15 @@ def _sink(server: ServerAccess):
     return save
 
 
-def project_has_servers(project_id: UUID | None) -> bool:
-    if project_id is None:
+def user_has_servers(user_id: UUID | None) -> bool:
+    if user_id is None:
         return False
     from db.session import get_session as db_session
     from service.mcp.store import has_servers
 
     try:
         with next(db_session()) as db:
-            return has_servers(db, project_id)
+            return has_servers(db, user_id)
     except Exception:  # noqa: BLE001 — no servers is the safe answer for a run that must start
         logger.warning("mcp_tools: could not check for connected servers", exc_info=True)
         return False
@@ -379,24 +395,22 @@ def project_has_servers(project_id: UUID | None) -> bool:
 
 
 def build_mcp_tools_lc(
-    project_id: UUID | None,
+    user_id: UUID | None,
     *,
-    user_id: UUID | None = None,
     pause: PauseFn | None = None,
     log_prefix: str = "agent",
 ) -> list:
-    """ListConnectedTools / CallConnectedTool, or nothing when the project's
-    owner has connected no server: tools that could only say "none" are
-    definitions every call pays for.
+    """ListConnectedTools / CallConnectedTool over ``user_id``'s servers, or
+    nothing when they have connected none (or nobody is signed in): tools
+    that could only say "none" are definitions every call pays for.
 
-    ``user_id`` is who is running the session. Without it, or when it is not
-    the owner, only read-only tools run."""
+    ``user_id`` is the session's creator, the only person who can drive it."""
     from langchain_core.tools import StructuredTool
     from langgraph.errors import GraphBubbleUp
 
-    if not project_has_servers(project_id):
+    if user_id is None or not user_has_servers(user_id):
         return []
-    toolbox = ConnectedTools(project_id, user_id=user_id, pause=pause)
+    toolbox = ConnectedTools(user_id, pause=pause)
 
     async def _safely(work) -> dict:
         """Never raise into the agent loop: a raised exception ends the run, a
