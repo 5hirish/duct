@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-30
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-19
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -53,7 +53,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 
 | Table | Holds |
 |---|---|
-| `connector_credentials` | a user's connection to one provider account (OAuth refresh token or key), with `residency` (server or device) |
+| `connector_credentials` | a user's connection to one provider account (OAuth refresh token or key), with `residency` (server or device); also each connected MCP server (`connector_type = "mcp"`, `account_id` = its URL) |
 | `project_connectors` | which credential a project uses, and which entity inside it (GA4 property, GSC site, GTM container) |
 
 ### Agents and conversations

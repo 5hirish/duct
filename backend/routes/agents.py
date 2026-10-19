@@ -567,13 +567,14 @@ class AgentMessage(BaseModel):
     context_version_id: int | None = None   # which report version to use as context
 
     # For type="answer" — the reply to whatever the session is parked on.
-    # One channel for all three pause kinds (AskUserQuestion, connection
-    # required, account selection); the event told the client which card to
-    # render, and the shape of the answer follows from that:
+    # One channel for every pause kind (AskUserQuestion, connection required,
+    # account selection, an MCP tool waiting for approval); the event told the
+    # client which card to render, and the shape of the answer follows from that:
     #   questions_required          -> {"<question>": "<answer>", ...}
     #   connection_required         -> {"connected": true} | {"skipped": true}
     #   account_selection_required  -> {"account_id": "...", "account_name": "..."}
-    # Values are Any rather than str because two of those carry booleans.
+    #   tool_approval_required      -> {"approved": true} | {"approved": false}
+    # Values are Any rather than str because three of those carry booleans.
     answers: dict[str, Any] | None = None
     # Which pause this answers, when the run is parked on a checkpointed
     # interrupt (the event carried it). Two tools can pause in the same turn —

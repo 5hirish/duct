@@ -514,6 +514,32 @@ Postgres `DATABASE_URL` names.
   the rule (Search Console only, after the report, once); the onboarding
   audit's user turn (`draft_project`) is the trigger, so the cached prefix is
   identical across every other audit.
+- `service/mcp/` + `routes/mcp_servers.py` + `agents/core/mcp_tools.py` —
+  MCP servers a user connects (issue #345). Duct is the *client* here; Duct as
+  a server is #197. Five rules, each held by `tests/test_mcp_*.py`:
+  - **Our runtime, not the provider's.** Anthropic's `mcp_servers` and
+    OpenAI's Responses `mcp` tool serve only their own models, so the client
+    is the reference `mcp` SDK in-process, the capability rule above. Not
+    fastmcp: 4.x needs arize-phoenix 20.10+, which drags anthropic 1.x and
+    openai 3.x into this environment.
+  - **A server is a credential row.** `connector_type = "mcp"`, `account_id` the
+    canonical URL; no table of its own. A project's agent uses its **owner's**
+    servers, the vendor-key rule, and only the owner may approve a call that
+    is not read-only: a collaborator's session gets `owner_only`, no card.
+  - **Sign-in is GitHub's shape.** Start (signed in) parks the flow under the
+    OAuth `state`; the callback parks the tokens as a grant; only the user who
+    started may claim it. A client metadata document where the server takes one
+    (its URL *is* the client id, served at `/auth/mcp/client-metadata.json`),
+    dynamic registration otherwise, a pasted key when neither works. PKCE and
+    the RFC 8707 `resource` on both legs.
+  - **Every request goes to a public https address**, redirects included:
+    `service/mcp/http.guarded_client` runs the crawl fetcher's resolved-address
+    check. No stdio servers on the hosted API.
+  - **Two fixed agent tools, never one per server tool.** `ListConnectedTools`
+    (a menu, then one tool's schema on request) and `CallConnectedTool`. A tool
+    its server annotates `readOnlyHint` runs; anything else pauses on
+    `TOOL_APPROVAL_REQUIRED`. Insights interactive sessions only, and only when
+    the owner has a server, so every other prompt keeps its cached prefix.
 - `service/discovery.py` — saved TikTok references. `ingest_reference(db,
   project_id, post)` is the one way a `ScrapedPost` becomes a
   `discovered_reference` row (one per post per project); `capture_reference_media`

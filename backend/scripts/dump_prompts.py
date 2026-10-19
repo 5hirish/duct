@@ -174,6 +174,7 @@ def render_insights() -> str:
     from agents.core.voice import user_context_block
     from agents.core.context import format_business_context
     from agents.insights.prompts.autonomous import (
+        CONNECTED_TOOLS_CAPABILITY,
         build_insights_system_prompt,
         build_insights_user_prompt,
     )
@@ -184,6 +185,12 @@ def render_insights() -> str:
         f"System prompt · ~{approx_tokens(system):,} tokens",
         "Cache-stable: identical for every account, so it is the shared prefix.\n\n"
         + fenced(system),
+    ))
+    # Added before memory discipline only when the project's owner connected
+    # an MCP server (agents/core/mcp_tools.py mounts the two tools then).
+    out.append(section(
+        f"Connected MCP servers addition · ~{approx_tokens(CONNECTED_TOOLS_CAPABILITY):,} tokens",
+        fenced(CONNECTED_TOOLS_CAPABILITY),
     ))
     turn = build_insights_user_prompt(
         prompt=FIXTURE_REQUEST,

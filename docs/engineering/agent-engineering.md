@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-30
+**Author:** Shirish Kadam · **Updated:** 2026-10-19
 
 How an agent is built and maintained here, on LangChain 1.x, LangGraph and
 `deepagents`. Read it before adding an agent or changing one: a prompt, a tool,
@@ -43,7 +43,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 
 | Rule | Primitive | Enforced by |
 |---|---|---|
-| Few, workflow-level tools with meaningful ids. Insights reaches every connector entity through one `FetchData(entity_id)`. | `StructuredTool` + Pydantic `args_schema` | review |
+| Few, workflow-level tools with meaningful ids. Insights reaches every connector entity through one `FetchData(entity_id)`, and every tool on a connected MCP server through `ListConnectedTools` / `CallConnectedTool`, never one definition per server tool. | `StructuredTool` + Pydantic `args_schema` | review; `tests/test_mcp_tools.py` (mounted only when a server is connected) |
 | Bound every result, and never cut mid-structure: fold losslessly first. | `agents/core/compaction.py`; `FilesystemMiddleware` eviction on the deep rung | per-binder oversized-fixture tests |
 | An error is a result that says what to do next, with a code. Never `str(exc)` to a client. | `classify_error`; `ToolErrorMiddleware` (LangChain 1.4, not yet mounted: gap 5) | `tests/test_agent_errors.py` |
 | Tool definitions are prompt: they head the cached prefix, so review them like prompt and keep their order deterministic. | — | gap 7 (`make dump-prompts` renders no tools yet) |
