@@ -19,7 +19,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-fastapi = "^0.142"
+fastapi = "^0.143"
 uvicorn = {version = "^0.54", extras = ["standard"]}
 # Starlette's form parser. FastAPI needs it at *import* time for any route
 # declaring Form()/File() — routes/content.py:/content/uploads does — so an
@@ -36,12 +36,12 @@ python-multipart = ">=0.0.32"
 google-ads = "^33.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.201.0"
-google-genai = "^2.27"
+google-genai = "^2.31"
 python-dotenv = "^1.2"
-pydantic = "^2.13"
-pydantic-settings = "^2.15"
+pydantic = "^2.14"
+pydantic-settings = "^2.16"
 langchain = "^1.4"
-langchain-openai = "^1.6"
+langchain-openai = "^1.7"
 langchain-google-genai = "^4.4"
 langchain-anthropic = "^1.7"
 langgraph = "^1.2"
@@ -50,22 +50,22 @@ httpx = "^0.28"
 # Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
 # when the 'r2' storage backend is active.
 boto3 = "^1.43"
-sqlmodel = "^0.0.47"
+sqlmodel = "^0.0.48"
 alembic = "^1.20"
 psycopg = {version = "^3.3", extras = ["binary"]}
-sentry-sdk = "^2.71.0"
-dlt = "^1.30.0"
+sentry-sdk = "^2.72.0"
+dlt = "^1.31.0"
 selectolax = ">=1.0.0"
 extruct = ">=0.16"
-trafilatura = ">=2.2.0"
+trafilatura = ">=2.3.1"
 # Lossless payload compaction before a connector result reaches the model
 # (agents/core/compaction.py). Pinned to a minor: 0.x, and the knob this
 # depends on is `lossless_only` — a release that changed its meaning would
 # change what numbers a brief quotes. Ships an abi3 Rust extension with
 # manylinux_2_28 and macOS wheels, so no toolchain is needed to build it, and
 # agents/core/compaction.py degrades to plain JSON wherever it is absent.
-headroom-ai = "~0.39"
-deepagents = "0.7.23"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
+headroom-ai = "~0.41"
+deepagents = "0.7.28"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
 # OTel GenAI spans for the agents (agents/core/telemetry.py). The API is what
 # the spans are opened with; the SDK and the OTLP/HTTP exporter are what
 # `configure_tracing` installs when OTEL_EXPORTER_OTLP_ENDPOINT is set
@@ -75,14 +75,14 @@ opentelemetry-api = "^1.44"
 opentelemetry-sdk = "^1.44"
 opentelemetry-exporter-otlp-proto-http = "^1.44"
 reportlab = ">=4.2"
-cloudflare = ">=5.8.0"
+cloudflare = ">=5.9.0"
 # Durable conversation state (agents/core/checkpoint.py). Both, not one: the
 # same app serves Postgres on Railway and SQLite in the desktop sidecar, and the
 # checkpointer follows DATABASE_URL rather than forcing a database of its own.
 # Separate distributions from `langgraph` itself, and MIT like it — unlike
 # `langgraph-api` (the Platform server, Elastic-2.0), which Duct does not use:
 # the library runs in-process inside FastAPI, with our own SSE transport.
-langgraph-checkpoint-postgres = "^3.1"
+langgraph-checkpoint-postgres = "^3.2"
 langgraph-checkpoint-sqlite = "^3.1"
 # OpenRouter's first-party LangChain integration — `init_chat_model(
 # model_provider="openrouter")` resolves to it. Duct never imports it directly;
