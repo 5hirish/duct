@@ -23,6 +23,14 @@ Closes #
 - [ ] `site/` — static marketing site
 - [ ] CI / tooling / docs
 
+## Launch
+
+<!-- User-facing features only; delete for fixes, refactors and tooling. The
+     working-backwards skill (.agents/skills/working-backwards/) decides the
+     outlet: most features get the changelog line alone, and "because" is
+     what stops the question being re-asked. -->
+Launch: changelog only | post #<n> | integration page | for-<page> section, because …
+
 ## Verification
 
 <!-- What you ran, and what it said. "CI will tell us" is not verification. -->

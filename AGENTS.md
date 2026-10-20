@@ -104,6 +104,10 @@ the first one.
   scheduled routine) are the source of truth for what's next — check it
   rather than inferring priority from the conversation alone. Starting work
   on an issue puts it in the current sprint; the rule is in `prioritize`.
+- A user-facing feature gets a PR/FAQ (customer press release and FAQ) on
+  its issue before code, and a launch decision at merge: the
+  **`working-backwards`** skill. Most features launch as a changelog line;
+  a blog post is one outlet among several and has to earn its slot.
 - Scope proposed on an agent's own initiative — not asked for by name — goes
   through `prioritize` before code, not after. A well-argued feature nobody
   asked for is still scope creep, however clean the diff.
