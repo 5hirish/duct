@@ -1,7 +1,7 @@
 ---
 name: working-backwards
-description: Amazon-style PR/FAQ for a user-facing Duct feature. A customer press release and FAQ written on the issue before any code, revised against what actually shipped at merge, then a launch triage that picks the outlet (a changelog line, a blog post through add-blog-post, an integration page, a landing page section) or records why there is none. Use for "write the PR/FAQ", "working backwards on #N", "launch this feature", "should this feature get a blog post".
-argument-hint: "<issue number> | ship <issue or PR number>"
+description: Amazon-style PR/FAQ for a user-facing Duct feature. A customer press release and FAQ written on the issue before any code, revised against what actually shipped at merge, then a launch triage that picks the outlet (a changelog line, a blog post through add-blog-post, an integration page, a landing page section) or records why there is none. A backfill mode runs the same triage over a window of merged work. Use for "write the PR/FAQ", "working backwards on #N", "launch this feature", "should this feature get a blog post", "what should the last four weeks become".
+argument-hint: "<issue number> | ship <issue or PR number> | backfill [since YYYY-MM-DD]"
 ---
 
 Every user-facing feature gets a **PR/FAQ**: a one-page press release and a
@@ -160,7 +160,28 @@ Post the revised press release and FAQ as a comment on the issue, headed
 distance between what was promised and what shipped is worth seeing later,
 and an edited draft hides it.
 
-### 2b. Pick the outlet
+### 2b. Before choosing: can the outcome be measured, and what is the quarter for?
+
+Two reads, both free, before any outlet is picked. Skipping them is how
+the first backfill run nearly planned four posts nobody could have measured.
+
+- **The conversion is counted.** The site's one action is the desktop
+  download, which pushes `download_started` to the dataLayer from the
+  `/download` page (`site/assets/duct-download.js`). Through the OpenSEO connector
+  (`get_google_analytics_measurement_health`, then `get_google_analytics_key_events`),
+  confirm GA4 counts it as a key event. If it does not, that is the first
+  finding of the run and goes to the maintainer before any post: an outlet
+  whose result cannot be read is a guess, however good its keyword.
+- **The quarter's goals.** `get_project_context` for the getduct.ai project
+  holds the current goal, the seeded and parked keyword clusters, and a
+  research log of numbers already bought. Read it first, and reuse any
+  number logged in the last 30 days rather than buying it again. An outlet
+  that serves a stated goal outranks one that does not, and a feature
+  shipped *before* the window counts when it serves one: the first backfill
+  found its best post (the ChatGPT Ads measurement guide) in a connector
+  older than the window it was reviewing.
+
+### 2c. Pick the outlet
 
 Every user-visible change gets its changelog line through
 `add-changelog-entry`, at the next release; the shipped headline is usually
@@ -185,7 +206,12 @@ A post is chosen only when all three hold:
 3. It fits the calendar. It is filed as a `post: <working title>` issue and
    takes the next slot for its cluster under `add-blog-post`'s cadence. Several
    features in one milestone share **one** Announcement post; the
-   changelog's release name is usually its theme.
+   changelog's release name is usually its theme. The calendar is shared
+   with Engineering posts, which this skill does not write but which take
+   the alternate slots: a builders post is often the better use of a slot
+   (on 2026-10-20 the harness post was the only blog page with search
+   impressions), so file it beside the feature posts rather than letting
+   feature posts fill every slot.
 
 Record the decision on the issue in one line, so nobody re-asks:
 
@@ -197,7 +223,7 @@ Launch: changelog only | post #<n> | integration page | for-<page> section, beca
 its job yet" is a finished outcome, the same kind of artifact as a published
 post.
 
-### 2c. Hand a post to add-blog-post
+### 2d. Hand a post to add-blog-post
 
 The PR/FAQ is the brief's first draft, not a replacement for the research.
 Open the `post:` issue with these fields filled, then run `add-blog-post`
@@ -223,6 +249,36 @@ which changes a few of `add-blog-post`'s defaults:
   rule still holds as no superlatives and no "excited to announce": say what
   the reader can now do, show it, and say what it cannot do yet.
 
+## Mode 3: backfill (a window of merged work)
+
+Run it when features shipped without Mode 2, or on a regular review
+("what did the last four weeks ship, and what should it become?"). It is
+Mode 2 over a range, with one entry and one plan at the end instead of a
+decision per merge.
+
+1. **The range.** From the newest `<article>` date in
+   `site/changelog/index.html`, `git log origin/main --since=<date>
+   --no-merges`, minus dependency bumps. Read the bodies of the
+   non-merge commits: a squash's merge commit often has none.
+2. **Changelog debt first.** Everything user-visible in the range and in
+   neither `site/changelog/` nor `CHANGELOG.md`'s `[Unreleased]` becomes
+   one entry through `add-changelog-entry`, dated when the last of it
+   merged. That entry is the launch for most of the range.
+3. **2b once, for the whole window**, then the outlet table per feature,
+   in one table: feature, outlet, and the reason with its number (search
+   volume and difficulty from `get_keyword_metrics`, one batched call; the
+   live results page from `get_serp_results` only for the candidates that
+   survive).
+4. **The plan.** The surviving posts, in cadence order, alternating
+   clusters, each filed as a `post:` issue with the brief filled per 2d
+   (`prioritize`'s mechanics). Propose the table and the order to the
+   maintainer once; approval on the table is approval to file the set.
+
+A PR/FAQ is not written retroactively for a feature already shipped:
+there is no build decision left for it to test. The issue comment from 2a
+is written only for the features that get a post, where the post needs
+the verified claims.
+
 ## Done means
 
 **Draft**
@@ -235,4 +291,9 @@ which changes a few of `add-blog-post`'s defaults:
 **Ship**
 - [ ] Every sentence checked against the merged code; `## Launch: what shipped` posted; draft left as written
 - [ ] Outlet chosen from the table, at most one beyond the changelog, and the `Launch:` line recorded on the issue and the PR
+- [ ] The download is a counted key event, and the project context's goals and research log were read
 - [ ] For a post: the three tests pass, the `post:` issue is filed with the brief filled, and `add-blog-post` takes it from 1b
+
+**Backfill**
+- [ ] Every user-visible change in the range is in one changelog entry, or already was
+- [ ] One table of feature, outlet and reason with its number; the posts filed in cadence order after one approval
