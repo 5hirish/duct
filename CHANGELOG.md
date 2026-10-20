@@ -24,6 +24,53 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+### Added
+
+- **GitHub connector, through a GitHub App.** Commits, merged pull requests,
+  closed issues, releases and changed docs for the window asked, so Insights
+  can test "did the drop start with a change we shipped?". Each pull mints a
+  one-hour token narrowed to one repository and four read permissions; an
+  installation id is never read from a request. A self-hosted install falls
+  back to a fine-grained token on the same card.
+- **Content Studio makes video** with Veo 3.1 (Gemini API) and Seedance
+  (OpenRouter) on the user's key, Lite and Mini by default because a clip
+  costs dollars. Every render is kept as a take, billed as media usage,
+  capped at three a turn, and shown with its cost.
+- **X and LinkedIn text posts** in Content Studio, drafted on their own
+  prompt and edited in a feed-shaped editor (per-part limits, LinkedIn's
+  fold, threaded replies). One rules table per channel serves the writer,
+  both publish paths, the review and the app.
+
+### Changed
+
+- **Default models move a generation:** Claude Opus 5.5 and Sonnet 5.5,
+  GPT-6.1 Sol, Grok 4.7, DeepSeek V4.1 Flash and V4 Pro 0813 on OpenRouter.
+  A retired id moves a saved pick to its successor, never up a price class.
+- **GA4 data quality reaches the agent.** Thresholding, sampling, the
+  "(other)" row and truncated dates become `data_quality` sentences ahead
+  of the rows, so a brief no longer quotes a partial report as the window.
+- **A change set names its connector** from the connections table, and the
+  destructive footer says the step always waits for a person and can be
+  rolled back.
+- Brand and product names stay in English in every language, enforced by
+  `fill.py`; a native review fixed about 230 Spanish and German strings.
+
+### Fixed
+
+- A scheduled PostBridge post follows edits and deletes made in Duct, links
+  on X move to the reply PostBridge keeps them in, and its validation
+  errors read as one sentence.
+- A ChatGPT plan's mid-stream failures are classified by payload code, so a
+  spent usage window says so and transient ones retry.
+
+### Security
+
+- The insight chat and audit web search spend the caller's model keys, and
+  PostBridge and Apify run on each user's saved key, not the operator's.
+- Routes that run before sign-in or for a guest are rate limited on the real
+  client address, with live runs capped per user.
+- Security headers on every site page, app response and API response.
+
 ## [0.7.1] — 2026-09-28
 
 The app in five languages, briefs that quote numbers Duct computed rather than
