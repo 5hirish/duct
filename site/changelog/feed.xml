@@ -6,8 +6,15 @@
     <atom:link href="https://getduct.ai/changelog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>What shipped in Duct — new connectors, agent and model upgrades, execution controls, and desktop builds.</description>
     <language>en</language>
-    <lastBuildDate>Mon, 28 Sep 2026 09:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 30 Sep 2026 09:00:00 GMT</lastBuildDate>
 
+    <item>
+      <title>See what you shipped</title>
+      <link>https://getduct.ai/changelog/#2026-09-30</link>
+      <guid isPermaLink="false">duct-changelog-2026-09-30</guid>
+      <pubDate>Wed, 30 Sep 2026 09:00:00 GMT</pubDate>
+      <description>Duct reads GitHub through a GitHub App, so when a number moves it can check whether a pull request or release you shipped moved it, and a brief now says when Google Analytics withheld, sampled or folded rows. Content Studio renders video with Veo 3.1 and Seedance and writes posts for X and LinkedIn, on your own keys. The default models move to Claude Opus 5.5, Sonnet 5.5, GPT-6.1 Sol and Grok 4.7, and the chat runs on your model keys like every other job.</description>
+    </item>
     <item>
       <title>Duct in five languages</title>
       <link>https://getduct.ai/changelog/#2026-09-28</link>
