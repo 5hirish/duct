@@ -19,6 +19,13 @@ Referer headers.
   Google, and between minting it and clicking the button the user may read
   the page.
 
+* **MCP server connect** — the same shape as GitHub's, for a server the user
+  named. What the callback needs (the PKCE verifier, the client Duct
+  registered, the token endpoint, the user) is parked under the OAuth
+  ``state`` itself, ten minutes because a first sign-in at a vendor can mean
+  creating an account; the tokens come back as a grant for the claim route,
+  honoured only for the same user (``routes/mcp.py``).
+
 * **GitHub App connect** — both directions at once. The authorize route is a
   bare navigation again, so the signed-in app first mints a *connect link*
   naming its user (five minutes, like the guest link). What comes back is a
@@ -42,6 +49,8 @@ _NS_CONNECTOR = "connector"
 _NS_LINK = "link"
 _NS_CONNECT_LINK = "connect_link"
 _NS_GITHUB_GRANT = "github_grant"
+_NS_MCP_FLOW = "mcp_flow"
+_NS_MCP_GRANT = "mcp_grant"
 
 _store: dict[str, tuple[str, Any, float]] = {}  # code → (namespace, payload, issued_at)
 _TTL = 60  # seconds
@@ -50,12 +59,15 @@ _LINK_TTL = 300  # seconds
 # have to wake the app first; a minute has been enough for the connector
 # refresh token on the same route, and two leave room for a slow wake.
 _GRANT_TTL = 120  # seconds
+_MCP_FLOW_TTL = 600  # seconds
 _TTL_BY_NAMESPACE = {
     _NS_SIGNIN: _TTL,
     _NS_CONNECTOR: _TTL,
     _NS_LINK: _LINK_TTL,
     _NS_CONNECT_LINK: _LINK_TTL,
     _NS_GITHUB_GRANT: _GRANT_TTL,
+    _NS_MCP_FLOW: _MCP_FLOW_TTL,
+    _NS_MCP_GRANT: _GRANT_TTL,
 }
 
 
@@ -158,6 +170,26 @@ def consume_github_grant(code: str) -> dict[str, Any] | None:
     """
     payload = _consume_code(_NS_GITHUB_GRANT, code)
     return payload if isinstance(payload, dict) else None
+
+def store_mcp_flow(flow: dict[str, Any]) -> str:
+    """Park an MCP sign-in in progress; the returned code is its OAuth ``state`` (10 min)."""
+    return _store_code(_NS_MCP_FLOW, dict(flow))
+
+
+def consume_mcp_flow(state: str) -> dict[str, Any] | None:
+    payload = _consume_code(_NS_MCP_FLOW, state)
+    return payload if isinstance(payload, dict) else None
+
+
+def store_mcp_grant(*, user_id: str, grant: dict[str, Any]) -> str:
+    """Park what an MCP sign-in produced for ``user_id`` to claim (2 min)."""
+    return _store_code(_NS_MCP_GRANT, {"user_id": str(user_id), "grant": grant})
+
+
+def consume_mcp_grant(code: str) -> dict[str, Any] | None:
+    payload = _consume_code(_NS_MCP_GRANT, code)
+    return payload if isinstance(payload, dict) else None
+
 
 
 def _purge_expired() -> None:

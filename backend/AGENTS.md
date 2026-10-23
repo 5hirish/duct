@@ -514,6 +514,40 @@ Postgres `DATABASE_URL` names.
   the rule (Search Console only, after the report, once); the onboarding
   audit's user turn (`draft_project`) is the trigger, so the cached prefix is
   identical across every other audit.
+- `service/mcp/` + `routes/mcp_servers.py` + `agents/core/mcp_tools.py` —
+  MCP servers a user connects (issue #345). Duct is the *client* here; Duct as
+  a server is #197. Six rules, each held by `tests/test_mcp_*.py`:
+  - **Our runtime, not the provider's.** Anthropic's `mcp_servers` and
+    OpenAI's Responses `mcp` tool serve only their own models, so the client
+    is the reference `mcp` SDK (2.x) in-process, the capability rule above,
+    not fastmcp's heavier stack. Its transport takes only an `httpx2` client,
+    so everything under `service/mcp/` speaks httpx2, and it turns a 401 into
+    a generic JSON-RPC error: `client._session` watches responses for the
+    status instead.
+  - **A server is a credential row.** `connector_type = "mcp"`, `account_id` the
+    canonical URL; no table of its own. A chat reaches only **its own user's**
+    servers, in any project, never the project owner's: unlike a vendor key, a
+    token reads the whole account behind it. Sessions are their creator's
+    alone, so whoever sees a server's data and answers its card owns it.
+  - **Only a preset's `readOnlyHint` is believed.** On a server added by
+    address every call shows the approval card: a stranger's "read-only" still
+    carries the agent's arguments to the stranger. The card gets the arguments
+    whole; a call too long to show (`APPROVAL_ARGUMENT_CHARS`) is refused,
+    never cut.
+  - **Sign-in is GitHub's shape.** Start (signed in) parks the flow under the
+    OAuth `state`; the callback parks the tokens as a grant; only the user who
+    started may claim it. A client metadata document where the server takes one
+    (its URL *is* the client id, served at `/auth/mcp/client-metadata.json`),
+    dynamic registration otherwise, a pasted key when neither works. PKCE and
+    the RFC 8707 `resource` on both legs.
+  - **Every request goes to a public https address**, redirects included:
+    `service/mcp/http.guarded_client` runs the crawl fetcher's resolved-address
+    check. No stdio servers on the hosted API.
+  - **Two fixed agent tools, never one per server tool.** `ListConnectedTools`
+    (a menu, then one tool's schema on request) and `CallConnectedTool`; a
+    call that asks first pauses on `TOOL_APPROVAL_REQUIRED`. Insights
+    interactive sessions only, and only when the user has a server, so every
+    other prompt keeps its cached prefix.
 - `service/discovery.py` — saved TikTok references. `ingest_reference(db,
   project_id, post)` is the one way a `ScrapedPost` becomes a
   `discovered_reference` row (one per post per project); `capture_reference_media`

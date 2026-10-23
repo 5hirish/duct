@@ -88,6 +88,12 @@ export const AnalyticsEvent = {
   // before Google; whether the scopes were granted shows up as
   // connector_connected rows on the account, not here.
   SignInToConnect: "signin_to_connect",
+  // An MCP server saved to the account, by sign-in, key or neither. Its own
+  // event rather than connector_connected, which counts Duct's connectors:
+  // `provider` is the preset id or "custom" for one added by URL, `method`
+  // how it signs in (oauth | key | none). Fired once the server is saved,
+  // never at the click — a sign-in abandoned at the vendor is not a connect.
+  McpServerConnected: "mcp_server_connected",
 };
 
 /**
@@ -96,7 +102,7 @@ export const AnalyticsEvent = {
  * dropped on arrival. Adding one means adding it here and in the setup script.
  */
 export const AnalyticsParam = {
-  Method: "method",       // how they signed up: "google"
+  Method: "method",       // how they signed up: "google"; how an MCP server signs in: "oauth" | "key" | "none"
   Provider: "provider",   // connector id: "ga4" | "google_ads" | "meta_ads" | ...
   Agent: "agent",         // agent_type that produced an artifact
   Kind: "kind",           // artifact kind, or change-set kind

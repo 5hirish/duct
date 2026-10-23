@@ -73,6 +73,7 @@ ADAPTERS: dict[str, str] = {
     "agents/core/memory_tools.py":          "binder pair: build_memory_tools_lc / _sdk",
     "agents/core/artifact_tools.py":        "binder: build_artifact_tools_lc (the SDK half is agents/audit/tools.py)",
     "agents/core/web_tools.py":             "LangChain binder: WebFetch + the provider's native web search spec",
+    "agents/core/mcp_tools.py":             "LangChain binder: ListConnectedTools / CallConnectedTool over service/mcp",
     "agents/audit/v1/tools.py":             "LangChain tool binder",
     "agents/content/tools.py":              "LangChain tool binder (content tools)",
     "agents/insights/data_tools.py":        "LangChain binder: FetchData + connector notes",

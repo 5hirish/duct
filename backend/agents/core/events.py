@@ -58,6 +58,11 @@ class AgentEvent(StrEnum):
     # The connector is connected but the project has not chosen WHICH account,
     # property or site. Payload carries the candidates.
     ACCOUNT_SELECTION_REQUIRED = "account_selection_required"
+    # A tool on a connected MCP server that its server does not mark read-only.
+    # Payload carries the server, the tool, the agent's reason and a preview of
+    # the arguments; the answer is {"approved": true} or anything else, which
+    # is a skip (agents/core/mcp_tools.py).
+    TOOL_APPROVAL_REQUIRED = "tool_approval_required"
     SLIDE_RENDER_REQUESTED = "slide_render_requested"  # agent asks the browser to rasterize a slide
 
     # Progress / todos
@@ -319,6 +324,7 @@ AG_UI_EVENT: dict[AgentEvent, str] = {
     AgentEvent.QUESTIONS_REQUIRED:    "Custom",
     AgentEvent.CONNECTION_REQUIRED:   "Custom",
     AgentEvent.ACCOUNT_SELECTION_REQUIRED: "Custom",
+    AgentEvent.TOOL_APPROVAL_REQUIRED: "Custom",
     AgentEvent.SLIDE_RENDER_REQUESTED: "Custom",
     AgentEvent.ARTIFACT_CHUNK:        "Custom",
     AgentEvent.ARTIFACT_VERSION:      "Custom",

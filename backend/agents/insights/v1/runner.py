@@ -77,6 +77,7 @@ from agents.core.lc import (
     resolve_chat_model,
     stream_agent,
 )
+from agents.core.mcp_tools import build_mcp_tools_lc
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
@@ -296,6 +297,16 @@ class AutonomousInsightsRunner:
             log_prefix="insights-v1",
             pause=interrupt_pause if interactive and session is not None else None,
         )
+        # Tools the session's user connected over MCP (agents/core/mcp_tools.py),
+        # theirs and never the project owner's. Interactive sessions only: a scheduled brief has nobody to approve a
+        # call that writes, and should not spend anyone's vendor credits
+        # unattended. A replay keeps every outside connection closed. The
+        # binder mounts nothing when no server is connected, so most sessions
+        # keep the prefix they had.
+        mcp_tools: list[Any] = []
+        if interactive and session is not None and replay is None:
+            mcp_tools = build_mcp_tools_lc(user_id, pause=interrupt_pause, log_prefix="insights-v1")
+            tools += mcp_tools
         # Data reach. The verifier gets the SAME tool objects, so it inherits
         # the parent's project scoping and credential closure rather than
         # resolving its own — there is one place credentials are resolved.
@@ -361,6 +372,7 @@ class AutonomousInsightsRunner:
                 CAPABILITIES_PHASE_3 if interactive else CAPABILITIES_UNATTENDED
             ),
             can_execute=bool(execution_tools),
+            can_use_connected_tools=bool(mcp_tools),
         )
         if on_system_prompt is not None:
             on_system_prompt(prompt_text)

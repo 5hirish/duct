@@ -56,7 +56,7 @@ msgid ""
 msgstr ""
 "Un plan en un tablero, una publicación por tarjeta, diapositivas e imágenes generadas para cada una, un clic para publicar en nueve redes. Los resultados vuelven a la tarjeta, para que el siguiente plan aprenda del anterior."
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "About"
 msgstr "Acerca de"
 
@@ -114,7 +114,7 @@ msgstr ""
 "Las decisiones de diseño se debaten abiertamente. GitHub es el mejor lugar para encontrarme."
 
 #. link title
-#: about.html compare.html doctrine.html index.html open-source.html
+#: about.html compare.html doctrine.html index.html mcp.html open-source.html
 msgid "Duct Blog"
 msgstr "Blog de Duct"
 
@@ -172,7 +172,7 @@ msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr ""
 "FONS. El manantial, antes de que nada se ponga en marcha. La puerta de entrada de la app."
 
-#: about.html compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: about.html compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Home"
 msgstr "Inicio"
 
@@ -254,7 +254,7 @@ msgstr ""
 msgid "Principles, not <0>platitudes</0>"
 msgstr "Principios, no <0>lugares comunes</0>"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Privacy Policy"
 msgstr "Política de privacidad"
 
@@ -307,7 +307,7 @@ msgstr "Estrella en GitHub →"
 msgid "Substance over ceremony"
 msgstr "Fondo antes que forma"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Terms of Service"
 msgstr "Términos de servicio"
 
@@ -769,7 +769,7 @@ msgstr "Criterio"
 msgid "Docs, email and the web"
 msgstr "Documentos, correo electrónico y la web"
 
-#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Download Duct ↓"
 msgstr "Descargar Duct ↓"
 
@@ -980,7 +980,7 @@ msgstr "Mira dónde gana Duct"
 msgid "Self-host, no licence fee"
 msgstr "Autoalojar, sin tarifa de licencia"
 
-#: compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
 msgstr "Saltar al contenido"
 
@@ -5266,9 +5266,9 @@ msgstr "¿Falta <0>el tuyo?</0>"
 
 #: integrations/index.html
 msgid ""
-"Name the tool and the question you want it to answer. Connectors get built when a question needs one."
+"Name the tool and the question you want it to answer. Connectors get built when a question needs one. If it runs an MCP server, <0>connect that yourself</0> today."
 msgstr ""
-"Nombra la herramienta y la pregunta que quieres que responda. Los conectores se crean cuando una pregunta los necesita."
+"Nombra la herramienta y la pregunta que quieres que responda. Los conectores se crean cuando una pregunta los necesita. Si ejecuta un servidor MCP, <0>conéctalo tú mismo</0> hoy."
 
 #: integrations/index.html
 msgid ""
@@ -6643,6 +6643,459 @@ msgid ""
 "Your ads claimed 64 purchases in September. Stripe settled 23 new subscriptions."
 msgstr ""
 "Tus anuncios reclamaron 64 compras en septiembre. Stripe liquidó 23 nuevas suscripciones."
+
+#: mcp.html
+msgid "<0/>API key works too"
+msgstr "<0/>La clave API también funciona"
+
+#: mcp.html
+msgid "<0/>Any https address"
+msgstr "<0/>Cualquier dirección HTTPS"
+
+#: mcp.html
+msgid "<0/>Linear"
+msgstr "<0/>Linear"
+
+#: mcp.html
+msgid "<0/>Notion"
+msgstr "<0/>Notion"
+
+#: mcp.html
+msgid "<0/>One-click sign-in"
+msgstr "<0/>Inicio de sesión con un clic"
+
+#: mcp.html
+msgid "<0/>OpenSEO"
+msgstr "<0/>OpenSEO"
+
+#: mcp.html
+msgid "<0/>PostHog"
+msgstr "<0/>PostHog"
+
+#: mcp.html
+msgid "<0/>Ran"
+msgstr "<0/>Ejecutado"
+
+#: mcp.html
+msgid "<0/>Research spends your OpenSEO credits"
+msgstr "<0/>La investigación consume tus créditos de OpenSEO"
+
+#: mcp.html
+msgid "<0></0> Model Context Protocol · Any model you bring"
+msgstr "<0></0> Model Context Protocol · Cualquier modelo que traigas"
+
+#: mcp.html
+msgid "<0>Create issue in Linear</0><1>Not marked read-only</1>"
+msgstr "<0>Crear incidencia en Linear</0><1>No marcado como solo lectura</1>"
+
+#: mcp.html
+msgid "<0>Look up keyword volume</0><1>Marked read-only by its server</1>"
+msgstr ""
+"<0>Buscar volumen de palabras clave</0><1>Marcado como solo lectura por su servidor</1>"
+
+#: mcp.html
+msgid "<0>Skip</0><1>Approve</1>"
+msgstr "<0>Omitir</0><1>Aprobar</1>"
+
+#: mcp.html
+msgid ""
+"<0>Then ask in the chat.</0> The agent looks through the tools on the servers you connected, calls the one that fits, and answers from what comes back."
+msgstr ""
+"<0>Luego pregunta en el chat.</0> El agente revisa las herramientas en los servidores que conectaste, llama a la que encaja y responde con lo que recibe."
+
+#: mcp.html
+msgid "A public <0>https://</0> address serving MCP over Streamable HTTP."
+msgstr "Una dirección pública <0>https://</0> que sirve MCP sobre Streamable HTTP."
+
+#: mcp.html
+msgid ""
+"A server belongs to the person who connected it, and only their own chats use it, in any project. Someone you share a project with connects their own and never reads through yours."
+msgstr ""
+"Un servidor pertenece a la persona que lo conectó, y solo sus propios chats lo usan, en cualquier proyecto. Alguien con quien compartes un proyecto conecta el suyo propio y nunca lee los tuyos."
+
+#: mcp.html
+msgid ""
+"Any other call pauses and shows you everything it will send. Approve it or skip it."
+msgstr ""
+"Cualquier otra llamada se pausa y te muestra todo lo que enviará. Apruébala u omítela."
+
+#: mcp.html
+msgid "Any other server"
+msgstr "Cualquier otro servidor"
+
+#: mcp.html
+msgid ""
+"Both only admit clients they have approved in advance, so their server address alone is not enough. They do not work with Duct yet."
+msgstr ""
+"Ambos solo admiten clientes que han aprobado de antemano, por lo que su dirección de servidor por sí sola no es suficiente. Todavía no funcionan con Duct."
+
+#: mcp.html
+msgid "Bring your own MCP servers.<0/><1>Let the agent call them.</1>"
+msgstr "Trae tus propios servidores MCP.<0/><1>Deja que el agente los llame.</1>"
+
+#: mcp.html
+msgid ""
+"Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address."
+msgstr ""
+"Elige OpenSEO, Notion, Linear o PostHog. Para cualquier otra cosa, pega la dirección HTTPS del servidor."
+
+#. meta og:title
+#. meta twitter:title
+#: mcp.html
+msgid "Connect MCP servers to Duct's agent: setup guide"
+msgstr "Conecta servidores MCP al agente de Duct: guía de configuración"
+
+#. meta description
+#: mcp.html
+msgid ""
+"Connect OpenSEO, Notion, Linear, PostHog or any public MCP server to Duct. Sign in once, then ask. Read-only tools run; anything else waits for your OK."
+msgstr ""
+"Conecta OpenSEO, Notion, Linear, PostHog o cualquier servidor MCP público a Duct. Inicia sesión una vez, luego pregunta. Las herramientas de solo lectura se ejecutan; cualquier otra cosa espera tu aprobación."
+
+#: mcp.html
+msgid "Connects"
+msgstr "Conexiones"
+
+#: mcp.html
+msgid "Does a tool call cost anything?"
+msgstr "¿Cuesta algo una llamada a una herramienta?"
+
+#: mcp.html
+msgid ""
+"Duct connects to any MCP server it can reach over the public internet. Here is what that takes, and what does not work."
+msgstr ""
+"Duct se conecta a cualquier servidor MCP al que pueda acceder a través de internet público. Esto es lo que se necesita y lo que no funciona."
+
+#: mcp.html
+msgid ""
+"Duct's agent can use any MCP server you connect. Four are one click away (OpenSEO, Notion, Linear and PostHog), and any other public server connects by its address."
+msgstr ""
+"El agente de Duct puede usar cualquier servidor MCP que conectes. Cuatro están a un clic (OpenSEO, Notion, Linear y PostHog), y cualquier otro servidor público se conecta por su dirección."
+
+#: mcp.html
+msgid "Everything else waits for you"
+msgstr "Todo lo demás te espera"
+
+#: mcp.html
+msgid "Four servers. <0>One click each.</0>"
+msgstr "Cuatro servidores. <0>Un clic cada uno.</0>"
+
+#: mcp.html
+msgid "Free with your own keys · No credit card · macOS, Windows and Linux"
+msgstr ""
+"Gratis con tus propias claves · Sin tarjeta de crédito · macOS, Windows y Linux"
+
+#: mcp.html
+msgid "How this relates to Claude and ChatGPT connectors"
+msgstr "Cómo se relaciona esto con los conectores de Claude y ChatGPT"
+
+#: mcp.html
+msgid "How to connect a server"
+msgstr "Cómo conectar un servidor"
+
+#: mcp.html
+msgid ""
+"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
+msgstr ""
+"En la app de Duct, abre Conexiones. Los servidores preconfigurados están listados allí, y cualquier otro se conecta por su dirección."
+
+#: mcp.html
+msgid "It says “Duct only connects to servers on the public internet”"
+msgstr "Dice “Duct solo se conecta a servidores en internet público”"
+
+#: mcp.html
+msgid "It says “Needs reconnecting”"
+msgstr "Dice “Necesita reconexión”"
+
+#: mcp.html
+msgid "It says “This server needs an API key”"
+msgstr "Dice “Este servidor necesita una clave API”"
+
+#: mcp.html
+msgid "Keyword volume, difficulty and backlinks."
+msgstr "Volumen de palabras clave, dificultad y backlinks."
+
+#: mcp.html
+msgid "Linear"
+msgstr "Linear"
+
+#: mcp.html
+msgid "Local servers that run over stdio on your own computer."
+msgstr "Servidores locales que se ejecutan sobre stdio en tu propio ordenador."
+
+#: mcp.html partials/footer-expanded.html
+msgid "MCP servers"
+msgstr "Servidores MCP"
+
+#: mcp.html
+msgid "Not on the list? <0>Paste its address.</0>"
+msgstr "¿No está en la lista? <0>Pega su dirección.</0>"
+
+#: mcp.html
+msgid "Not supported"
+msgstr "No compatible"
+
+#: mcp.html
+msgid "Notion"
+msgstr "Notion"
+
+#: mcp.html
+msgid ""
+"On a ready-made server, a tool marked read-only runs straight away. Anything else shows you the arguments it will send, and waits for you."
+msgstr ""
+"En un servidor preconfigurado, una herramienta marcada como de solo lectura se ejecuta de inmediato. Cualquier otra te muestra los argumentos que enviará y espera por ti."
+
+#: mcp.html
+msgid ""
+"One click where the server supports sign-in. Where it does not, paste an API key from the vendor. Duct keeps it encrypted."
+msgstr ""
+"Un clic donde el servidor admite el inicio de sesión. Donde no lo hace, pega una clave API del proveedor. Duct la mantiene cifrada."
+
+#: mcp.html
+msgid ""
+"One-click sign-in when the server publishes OAuth discovery and either accepts a client metadata document or allows dynamic client registration."
+msgstr ""
+"Inicio de sesión con un clic cuando el servidor publica el descubrimiento de OAuth y acepta un documento de metadatos del cliente o permite el registro dinámico de clientes."
+
+#: mcp.html
+msgid "Open Connections"
+msgstr "Abrir Conexiones"
+
+#: mcp.html
+msgid "OpenSEO"
+msgstr "OpenSEO"
+
+#. meta twitter:description
+#: mcp.html
+msgid ""
+"OpenSEO, Notion, Linear and PostHog are one click away in Duct. Any other public MCP server connects by its address. Here is how."
+msgstr ""
+"OpenSEO, Notion, Linear y PostHog están a un clic en Duct. Cualquier otro servidor MCP público se conecta por su dirección. Así es como funciona."
+
+#: mcp.html
+msgid "Otherwise, an API key you paste, sent to the server as a bearer token."
+msgstr ""
+"De lo contrario, una clave API que pegas, enviada al servidor como un token de portador."
+
+#: mcp.html
+msgid "Pick a server or paste its address"
+msgstr "Elige un servidor o pega su dirección"
+
+#: mcp.html
+msgid ""
+"Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
+msgstr ""
+"Elige uno en Conexiones e inicia sesión con la cuenta que ya tienes. Cada dirección está aquí para referencia; nunca tienes que escribirla."
+
+#. meta og:description
+#: mcp.html
+msgid ""
+"Plug the MCP servers you already use into Duct's agent. Read-only tools run straight away; anything else waits for your approval first."
+msgstr ""
+"Conecta los servidores MCP que ya usas al agente de Duct. Las herramientas de solo lectura se ejecutan de inmediato; cualquier otra espera tu aprobación primero."
+
+#: mcp.html
+msgid "PostHog"
+msgstr "PostHog"
+
+#: mcp.html
+msgid "Read-only runs. <0>Everything else asks first.</0>"
+msgstr "Ejecuciones de solo lectura. <0>Todo lo demás pregunta primero.</0>"
+
+#: mcp.html
+msgid "Read-only tools run straight away"
+msgstr "Las herramientas de solo lectura se ejecutan de inmediato"
+
+#: mcp.html
+msgid "Ready-made"
+msgstr "Preconfigurado"
+
+#: mcp.html
+msgid "Replies are data, not orders"
+msgstr "Las respuestas son datos, no órdenes"
+
+#: mcp.html
+msgid "Server address"
+msgstr "Dirección del servidor"
+
+#: mcp.html
+msgid ""
+"Servers on a private network. The hosted service only calls public internet addresses."
+msgstr ""
+"Servidores en una red privada. El servicio alojado solo llama a direcciones de internet públicas."
+
+#: mcp.html
+msgid "Set it up in three steps"
+msgstr "Configúralo en tres pasos"
+
+#: mcp.html
+msgid "Sign in once"
+msgstr "Inicia sesión una vez"
+
+#: mcp.html
+msgid ""
+"Sign-ins and API keys stay on Duct's side, encrypted, and are never shown to the model."
+msgstr ""
+"Los inicios de sesión y las claves API permanecen en el lado de Duct, cifrados, y nunca se muestran al modelo."
+
+#: mcp.html
+msgid ""
+"Some do, on the vendor's side. A call that costs credits there, such as OpenSEO research, spends your credits with that vendor, the same as it would from any other client."
+msgstr ""
+"Algunos sí, por parte del proveedor. Una llamada que cuesta créditos allí, como la investigación de OpenSEO, gasta tus créditos con ese proveedor, igual que lo haría desde cualquier otro cliente."
+
+#: mcp.html
+msgid ""
+"The address points at your own computer or a private network. The hosted service only calls public internet addresses, so a local or internal server cannot be reached."
+msgstr ""
+"La dirección apunta a tu propio ordenador o a una red privada. El servicio alojado solo llama a direcciones de internet públicas, por lo que no se puede acceder a un servidor local o interno."
+
+#: mcp.html
+msgid "The agent calls"
+msgstr "El agente llama"
+
+#: mcp.html
+msgid "The insights chat, for now"
+msgstr "El chat de hallazgos, por ahora"
+
+#: mcp.html
+msgid "The pages and databases in your workspace."
+msgstr "Las páginas y bases de datos en tu espacio de trabajo."
+
+#: mcp.html
+msgid ""
+"The same rules hold for every server you connect, with one difference: a server you add by its address asks before every call."
+msgstr ""
+"Las mismas reglas se aplican a cada servidor que conectas, con una diferencia: un servidor que añades por su dirección pregunta antes de cada llamada."
+
+#: mcp.html
+msgid ""
+"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
+msgstr ""
+"El servidor no ofrece un inicio de sesión que Duct pueda usar. Crea una clave API en la configuración del proveedor y pégala en Conexiones."
+
+#: mcp.html
+msgid ""
+"The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
+msgstr ""
+"El inicio de sesión caducó o fue revocado por parte del proveedor. Pulsa Volver a conectar en Conexiones e inicia sesión de nuevo."
+
+#: mcp.html
+msgid ""
+"Their directories list mostly the same vendor MCP servers. Duct connects to those servers directly, with any model you bring."
+msgstr ""
+"Sus directorios listan en su mayoría los mismos servidores MCP de proveedores. Duct se conecta a esos servidores directamente, con cualquier modelo que traigas."
+
+#: mcp.html
+msgid "Three steps. <0>Then ask.</0>"
+msgstr "Tres pasos. <0>Luego pregunta.</0>"
+
+#: mcp.html
+msgid ""
+"Today, connected servers are used in the insights chat. Scheduled briefs and Content Studio do not call them yet."
+msgstr ""
+"Hoy, los servidores conectados se usan en el chat de hallazgos. Los informes programados y Content Studio aún no los llaman."
+
+#: mcp.html
+msgid "Troubleshooting"
+msgstr "Solución de problemas"
+
+#: mcp.html
+msgid "Try: <0>What did we decide in the launch plan?</0>"
+msgstr "Prueba: <0>¿Qué decidimos en el plan de lanzamiento?</0>"
+
+#: mcp.html
+msgid "Try: <0>Which issues in the onboarding project are still open?</0>"
+msgstr ""
+"Prueba: <0>¿Qué problemas en el proyecto de incorporación siguen abiertos?</0>"
+
+#: mcp.html
+msgid "Try: <0>Which keywords on this list are worth the effort to rank for?</0>"
+msgstr ""
+"Prueba: <0>¿Qué palabras clave de esta lista valen la pena el esfuerzo para posicionar?</0>"
+
+#: mcp.html
+msgid "Try: <0>Which onboarding step loses the most people?</0>"
+msgstr "Prueba: <0>¿Qué paso de incorporación pierde a más personas?</0>"
+
+#: mcp.html
+msgid ""
+"Vendors that only admit pre-approved clients. Figma and Slack work that way today."
+msgstr ""
+"Proveedores que solo admiten clientes preaprobados. Figma y Slack funcionan así hoy."
+
+#: mcp.html
+msgid "Waiting for you"
+msgstr "Esperando por ti"
+
+#: mcp.html
+msgid ""
+"What a server sends back is treated as data to read, never as instructions to follow."
+msgstr ""
+"Lo que un servidor devuelve se trata como datos para leer, nunca como instrucciones a seguir."
+
+#: mcp.html
+msgid "What the agent will and won't do"
+msgstr "Lo que el agente hará y no hará"
+
+#: mcp.html
+msgid "When a server <0>says no.</0>"
+msgstr "Cuando un servidor <0>dice no.</0>"
+
+#: mcp.html
+msgid ""
+"When one of the ready-made servers marks a tool read-only, the agent calls it without stopping to ask. A server you add by address gets no such trust: Duct hasn't checked it, so every call asks first."
+msgstr ""
+"Cuando uno de los servidores predefinidos marca una herramienta como de solo lectura, el agente la llama sin preguntar. Un servidor que añades por dirección no recibe tal confianza: Duct no lo ha verificado, así que cada llamada pregunta primero."
+
+#: mcp.html
+msgid "Which of these five topics has search volume worth writing for?"
+msgstr ""
+"¿Cuál de estos cinco temas tiene un volumen de búsqueda que valga la pena escribir?"
+
+#: mcp.html
+msgid "Why can't I connect Figma or Slack?"
+msgstr "¿Por qué no puedo conectar Figma o Slack?"
+
+#: mcp.html
+msgid "You ask"
+msgstr "Tú preguntas"
+
+#: mcp.html
+msgid "Your issues and projects."
+msgstr "Tus incidencias y proyectos."
+
+#: mcp.html
+msgid "Your product analytics."
+msgstr "Tus analíticas de producto."
+
+#: mcp.html
+msgid "Your servers"
+msgstr "Tus servidores"
+
+#: mcp.html
+msgid "Your servers, your chats"
+msgstr "Tus servidores, tus chats"
+
+#: mcp.html
+msgid "Your tokens never reach the model"
+msgstr "Tus tokens nunca llegan al modelo"
+
+#: mcp.html
+msgid "https://app.openseo.so/mcp"
+msgstr "https://app.openseo.so/mcp"
+
+#: mcp.html
+msgid "https://mcp.linear.app/mcp"
+msgstr "https://mcp.linear.app/mcp"
+
+#: mcp.html
+msgid "https://mcp.notion.com/mcp"
+msgstr "https://mcp.notion.com/mcp"
+
+#: mcp.html
+msgid "https://mcp.posthog.com/mcp"
+msgstr "https://mcp.posthog.com/mcp"
 
 #: open-source.html
 msgid "<0/> Backups and upgrades"
@@ -11646,6 +12099,11 @@ msgstr "← Volver"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Empezar de nuevo"
+
+#~ msgid ""
+#~ "Name the tool and the question you want it to answer. Connectors get built when a question needs one."
+#~ msgstr ""
+#~ "Nombra la herramienta y la pregunta que quieres que responda. Los conectores se crean cuando una pregunta los necesita."
 
 #. meta og:title
 #. meta twitter:title

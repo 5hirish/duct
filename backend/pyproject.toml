@@ -47,6 +47,11 @@ langchain-anthropic = "^1.7"
 langgraph = "^1.2"
 pyjwt = "^2.15"
 httpx = "^0.28"
+# The client for MCP servers a user connects (service/mcp/). The reference SDK
+# rather than fastmcp: its client covers discovery, client metadata documents
+# and registration without fastmcp's server stack in production. Phoenix's
+# fastmcp 4 (dev) pins it to 2.x; move both together.
+mcp = "^2.3"
 # Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
 # when the 'r2' storage backend is active.
 boto3 = "^1.43"

@@ -537,8 +537,9 @@ Rules that follow:
     The backend sends fields, never a sentence: a tool whose card has no
     sentence of its own (a read of the brand context, a post published) gets
     its verb from `TOOL_WORDS` in `ActivityRow`, so it is translated with the
-    rest. Eleven kinds now — the seven tool families (a video clip since
-    #284) plus memory, context, artifact and action — and the run's own
+    rest. Twelve kinds now — the seven tool families (a video clip since
+    #284) plus memory, context, artifact, action and a tool on an MCP
+    server the user connected (#345) — and the run's own
     "Read project context" row (`contextActivity`, from the stored CONTEXT
     row on replay) says which
     blocks the opening turn was enriched with. Memory's "Recalled" and

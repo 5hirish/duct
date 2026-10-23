@@ -35,11 +35,13 @@ import {
   Image as ImageIcon,
   Layers,
   Link as LinkIcon,
+  Plug,
   Sparkles,
 } from "lucide-react";
 import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { ActivityKind } from "@/lib/agentEvents";
+import { CONNECTED_DECISIONS } from "@/lib/toolActivity";
 import { StepStatus } from "@/lib/agentSteps";
 import { Spinner } from "@/components/ui/spinner";
 import { Lightbox } from "@/components/ui/lightbox";
@@ -65,6 +67,7 @@ const KIND_ICONS = {
   [ActivityKind.CONTEXT]: BookOpen,
   [ActivityKind.ARTIFACT]: FileText,
   [ActivityKind.ACTION]: CheckCircle2,
+  [ActivityKind.CONNECTED_TOOL]: Plug,
 };
 
 // The verb for each tool whose card carries no sentence of its own — the
@@ -122,6 +125,18 @@ function entityWords(title, source) {
   const words = String(title || "").replace(/_/g, " ");
   const prefix = String(source || "").replace(/_/g, " ");
   return prefix && words.startsWith(`${prefix} `) ? words.slice(prefix.length + 1) : words;
+}
+
+/** `get_keyword_metrics` → `get keyword metrics`. A connected tool's name is
+ *  the vendor's identifier; the line reads it as words and the exact name
+ *  waits behind the chevron, the way a pull's entity id does. */
+function toolWords(name) {
+  return String(name || "").replace(/[_-]+/g, " ").trim();
+}
+
+/** A skip, or a run with nobody to ask: an answer, not a failure. */
+function isDecision(activity) {
+  return activity.kind === ActivityKind.CONNECTED_TOOL && CONNECTED_DECISIONS.has(activity.reason);
 }
 
 /**
@@ -207,6 +222,48 @@ function useSummary(activity, named) {
       const word = TOOL_WORDS[activity.tool] ? i18n._(TOOL_WORDS[activity.tool]) : t`Did something`;
       // When it goes out is the one fact a publish has that the verb does not.
       return { lead: word, detail: activity.title, aside: meta.scheduled_at ? formatDate(meta.scheduled_at, { locale: i18n.locale }) : "" };
+    }
+    case ActivityKind.CONNECTED_TOOL: {
+      const tool = toolWords(activity.title);
+      // The display name arrives with the verdict; until then the key the
+      // agent addressed the server by is all there is.
+      const server = activity.subtitle || activity.source;
+      const name = tool || server;
+      // The reason picks the sentence, because the person needs to know
+      // which of these it was: their own skip, a sign-in to redo, a server
+      // that did not answer, or the server's own error.
+      // A failure the harness flagged without a status still gets words.
+      const reason = activity.reason || (activity.status === StepStatus.ERROR ? "error" : "");
+      switch (reason) {
+        case "":
+          break;
+        case "skipped":
+          return { lead: t`Skipped ${name}`, detail: tool ? server : "", aside: "" };
+        case "needs_approval":
+          // A run with nobody to ask (a scheduled brief): the call waits for
+          // a person, and the sentence leads with that, not the tool's name.
+          return { lead: t`Held ${name} for your approval`, detail: tool ? server : "", aside: "" };
+        case "arguments_too_long":
+          // Refused rather than shown cut, so nothing went to the server; the
+          // agent usually retries smaller.
+          return { lead: t`Held back ${name}: too long to show you first`, detail: tool ? server : "", aside: "" };
+        case "reauth_required":
+          return { lead: t`${server} needs reconnecting`, detail: tool, aside: "" };
+        case "unreachable":
+          return { lead: t`Couldn't reach ${server}`, detail: tool, aside: "" };
+        // The server's own error text is kept off the row on purpose (it is
+        // a third party's words), so these get a sentence of ours.
+        case "protocol_error":
+        case "tool_error":
+          return { lead: t`${server} returned an error`, detail: tool, aside: "" };
+        default:
+          return { lead: t`Couldn't use ${name}`, detail: activity.error, aside: "" };
+      }
+      if (meta.listing) {
+        return { lead: t`Checked connected tools`, detail: [server, tool].filter(Boolean).join(" · "), aside: "" };
+      }
+      const lead = activity.status === StepStatus.RUNNING ? t`Using ${tool}` : t`Used ${tool}`;
+      return { lead, detail: server, aside: "" };
     }
     default:
       return { lead: t`Asked ${activity.title}`, detail: meta.brief || "", aside: "" };
@@ -319,6 +376,10 @@ function ActivityDetail({ activity }) {
       {activity.kind === ActivityKind.CONTEXT && activity.tool === "ProjectContext" && (
         <p><Trans>The turn the model read was composed from these, on top of your message — the same way every run on this project starts.</Trans></p>
       )}
+      {activity.kind === ActivityKind.CONNECTED_TOOL && !failed && activity.title && (
+        // The exact names, to quote when asking the vendor about a result.
+        <p className="font-mono text-2xs">{[activity.source, activity.title].filter(Boolean).join(" / ")}</p>
+      )}
       {activity.kind === ActivityKind.ARTIFACT && meta.artifact_id && !meta.listing && (
         <Link href={`/artifacts/${meta.artifact_id}`} className="inline-block underline underline-offset-2 hover:text-foreground">
           <Trans>Open the document →</Trans>
@@ -394,6 +455,8 @@ function hasDetail(activity) {
       return activity.tool === "ProjectContext";
     case ActivityKind.ARTIFACT:
       return Boolean(meta.artifact_id) && !meta.listing;
+    case ActivityKind.CONNECTED_TOOL:
+      return Boolean(activity.title);
     default:
       return false;
   }
@@ -403,7 +466,10 @@ export function ActivityRow({ activity, defaultOpen = false, named = true }) {
   const [open, setOpen] = useState(defaultOpen);
   const { lead, detail, aside } = useSummary(activity, named);
   const expandable = hasDetail(activity);
-  const failed = activity.status === StepStatus.ERROR;
+  // A skipped call ends in the error status on the wire, and is still not a
+  // failure to paint red: the person chose it.
+  const decided = isDecision(activity);
+  const failed = activity.status === StepStatus.ERROR && !decided;
 
   const line = (
     <>
@@ -413,7 +479,7 @@ export function ActivityRow({ activity, defaultOpen = false, named = true }) {
           window bunch against the label instead of holding the right edge. */}
       <span className="min-w-0 flex-1 truncate text-muted-foreground">{detail}</span>
       {aside && <span className="shrink-0 text-2xs text-muted-foreground">{aside}</span>}
-      <StatusMark status={activity.status} />
+      <StatusMark status={decided ? "" : activity.status} />
     </>
   );
 

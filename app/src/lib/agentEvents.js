@@ -17,11 +17,14 @@ export const AgentEvent = Object.freeze({
   STEP_FINISHED:       "step_finished",
   STEP_FAILED:         "step_failed",
 
-  // Pauses. All three park the run until the user answers through the same
+  // Pauses. Each parks the run until the user answers through the same
   // endpoint; they differ only in the card the UI renders.
   QUESTIONS_REQUIRED:         "questions_required",
   CONNECTION_REQUIRED:        "connection_required",
   ACCOUNT_SELECTION_REQUIRED: "account_selection_required",
+  // A tool on an MCP server the user connected that its server does not mark
+  // read-only. Answered `{ approved: true }` to run it, anything else skips.
+  TOOL_APPROVAL_REQUIRED:     "tool_approval_required",
   SLIDE_RENDER_REQUESTED:     "slide_render_requested",
 
   TODO_UPDATE:         "todo_update",
@@ -83,6 +86,8 @@ export const ActivityKind = Object.freeze({
   CONTEXT:    "context",
   ARTIFACT:   "artifact",
   ACTION:     "action",
+  // A tool on an MCP server the user connected, or the listing of them.
+  CONNECTED_TOOL: "connected_tool",
 });
 
 /** The events that park a run. `pending` in the session state is one of these. */
@@ -90,6 +95,7 @@ export const PAUSE_EVENTS = Object.freeze([
   AgentEvent.QUESTIONS_REQUIRED,
   AgentEvent.CONNECTION_REQUIRED,
   AgentEvent.ACCOUNT_SELECTION_REQUIRED,
+  AgentEvent.TOOL_APPROVAL_REQUIRED,
 ]);
 
 /**

@@ -120,6 +120,25 @@ const GITHUB_ERRORS = {
   },
 };
 
+// An MCP server signs in at its own vendor, not Google, and its callback
+// (backend/routes/mcp_servers.py) uses `consent` for a sign-in that came back
+// without a code — cancelled or declined — rather than Google's missing
+// refresh token. `expired` reads right as it is.
+const MCP_ERRORS = {
+  consent: {
+    title: msg`The sign-in didn't finish`,
+    body: msg`The server's sign-in was cancelled or declined, so nothing was connected. Start again from the app if you meant to connect it.`,
+    retryable: true,
+  },
+  exchange: {
+    title: msg`The server didn't complete the connection`,
+    body: msg`Its sign-in finished, but it wouldn't hand over access. That's usually temporary. Try again from the app.`,
+    retryable: true,
+  },
+};
+
+const CONNECTOR_OVERRIDES = { github: GITHUB_ERRORS, mcp: MCP_ERRORS };
+
 // Only for display. An unrecognised id falls back to the generic wording rather
 // than being echoed back into the page.
 const CONNECTOR_NAMES = {
@@ -165,11 +184,7 @@ function DesktopAuthContent() {
 
     const reason = searchParams.get("error") || "";
     if (reason) {
-      const table = !isConnectorFlow
-        ? ERRORS
-        : connector === "github"
-          ? { ...CONNECTOR_ERRORS, ...GITHUB_ERRORS }
-          : CONNECTOR_ERRORS;
+      const table = !isConnectorFlow ? ERRORS : { ...CONNECTOR_ERRORS, ...CONNECTOR_OVERRIDES[connector] };
       setError(table[reason] || table.server || FALLBACK);
       setReason(reason);
       return;
