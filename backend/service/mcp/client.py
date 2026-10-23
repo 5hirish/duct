@@ -20,14 +20,13 @@ import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import timedelta
 from typing import Any
 
-import httpx
+import httpx2
 from mcp import ClientSession
 from mcp import types as mt
 from mcp.client.streamable_http import streamable_http_client
-from mcp.shared.exceptions import McpError
+from mcp.shared.exceptions import MCPError
 
 from service.crawl.fetcher import SSRFError
 from service.mcp import http as mcp_http
@@ -136,41 +135,61 @@ def _leaves(exc: BaseException) -> list[BaseException]:
     return chain
 
 
+class _Refused(Exception):
+    """The server answered 401 or 403 somewhere in the session."""
+
+
 def _classify(exc: BaseException, name: str) -> McpCallError:
     leaves = _leaves(exc)
     for leaf in leaves:
         if isinstance(leaf, McpCallError):
             return leaf
-        if isinstance(leaf, httpx.HTTPStatusError) and leaf.response.status_code in (401, 403):
+        refused = isinstance(leaf, httpx2.HTTPStatusError) and leaf.response.status_code in (401, 403)
+        if refused or isinstance(leaf, _Refused):
             return McpCallError(CODE_REAUTH, f"{name} refused Duct's credentials; it needs signing in again.")
     for leaf in leaves:
         if isinstance(leaf, SSRFError):
             return McpCallError(CODE_UNREACHABLE, f"{name} is not on the public internet.")
-        if isinstance(leaf, httpx.TimeoutException):
+        if isinstance(leaf, httpx2.TimeoutException):
             return McpCallError(CODE_UNREACHABLE, f"{name} did not answer in time.")
-        if isinstance(leaf, httpx.HTTPStatusError):
+        if isinstance(leaf, httpx2.HTTPStatusError):
             return McpCallError(CODE_UNREACHABLE, f"{name} answered HTTP {leaf.response.status_code}.")
-        if isinstance(leaf, httpx.HTTPError):
+        if isinstance(leaf, httpx2.HTTPError):
             return McpCallError(CODE_UNREACHABLE, f"{name} could not be reached ({type(leaf).__name__}).")
-        if isinstance(leaf, McpError):
-            return McpCallError(CODE_PROTOCOL, f"{name} returned an error: {leaf.error.message}")
+        if isinstance(leaf, MCPError):
+            return McpCallError(CODE_PROTOCOL, f"{name} returned an error: {leaf.message}")
     logger.warning("mcp: unclassified failure talking to %s", name, exc_info=exc)
     return McpCallError(CODE_PROTOCOL, f"Talking to {name} failed ({type(exc).__name__}).")
 
 
 @asynccontextmanager
 async def _session(url: str, token: str | None) -> AsyncIterator[ClientSession]:
+    """A session on ``url``. A refused credential raises ``_Refused``: the SDK
+    turns a 401 into the same JSON-RPC error as a 500, so the status is
+    watched here, on the way past, where it still exists."""
     headers = {"Authorization": f"Bearer {token}"} if token else None
-    async with mcp_http.guarded_client(headers=headers) as http:
-        async with streamable_http_client(url, http_client=http) as (read, write, _session_id):
-            async with ClientSession(
-                read,
-                write,
-                read_timeout_seconds=timedelta(seconds=mcp_http.READ_TIMEOUT_SECONDS),
-                client_info=CLIENT_INFO,
-            ) as session:
-                await session.initialize()
-                yield session
+    refusals: list[int] = []
+
+    async def watch(response: httpx2.Response) -> None:
+        if response.status_code in (401, 403):
+            refusals.append(response.status_code)
+
+    try:
+        async with mcp_http.guarded_client(headers=headers) as http:
+            http.event_hooks["response"].append(watch)
+            async with streamable_http_client(url, http_client=http) as (read, write):
+                async with ClientSession(
+                    read,
+                    write,
+                    read_timeout_seconds=mcp_http.READ_TIMEOUT_SECONDS,
+                    client_info=CLIENT_INFO,
+                ) as session:
+                    await session.initialize()
+                    yield session
+    except Exception as exc:
+        if refusals:
+            raise _Refused(refusals[-1]) from exc
+        raise
 
 
 async def _with_session(
@@ -208,8 +227,8 @@ def _tool_info(tool: mt.Tool) -> ToolInfo:
         name=tool.name,
         title=(tool.title or (annotations.title if annotations else None) or ""),
         description=tool.description or "",
-        input_schema=dict(tool.inputSchema or {}),
-        read_only=bool(annotations and annotations.readOnlyHint is True),
+        input_schema=dict(tool.input_schema or {}),
+        read_only=bool(annotations and annotations.read_only_hint is True),
     )
 
 
@@ -218,9 +237,10 @@ async def list_tools(access: ServerAccess, sink: CredentialSink | None = None) -
         tools: list[ToolInfo] = []
         cursor: str | None = None
         for _ in range(MAX_TOOL_PAGES):
-            page = await session.list_tools(cursor=cursor) if cursor else await session.list_tools()
+            params = mt.PaginatedRequestParams(cursor=cursor) if cursor else None
+            page = await session.list_tools(params=params)
             tools += [_tool_info(t) for t in page.tools]
-            cursor = page.nextCursor
+            cursor = page.next_cursor
             if not cursor:
                 break
         return tools
@@ -251,8 +271,12 @@ async def call_tool(
 ) -> ToolResult:
     async def work(session: ClientSession) -> ToolResult:
         result = await session.call_tool(name, arguments or {})
+        if not isinstance(result, mt.CallToolResult):
+            # The 2026 protocol lets a tool stop and ask the client for more
+            # input mid-call. Nobody is on the other end of this one to answer.
+            raise McpCallError(CODE_PROTOCOL, f"{access.name} asked for input Duct cannot give mid-call.")
         text = "\n\n".join(t for t in (_text_of(b) for b in result.content) if t)
-        return ToolResult(is_error=bool(result.isError), text=text, structured=result.structuredContent)
+        return ToolResult(is_error=bool(result.is_error), text=text, structured=result.structured_content)
 
     return await _with_session(access, sink, work)
 

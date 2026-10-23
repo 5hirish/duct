@@ -524,10 +524,10 @@ class FakeWire:
 
 
 class FakeMcpServer:
-    """A real MCP server (the reference SDK's FastMCP) reached in process.
+    """A real MCP server (the reference SDK's MCPServer) reached in process.
 
     Faked at the seam ``service/mcp/http.py`` gives: ``guarded_client`` is
-    swapped for an httpx client whose transport is the server's own ASGI app,
+    swapped for an httpx2 client whose transport is the server's own ASGI app,
     so the real SDK client speaks real Streamable HTTP to a real server and no
     socket opens. ``token`` makes the server refuse any other bearer with a
     401, which is how a revoked or expired grant looks from the client.
@@ -542,22 +542,22 @@ class FakeMcpServer:
     """
 
     def __init__(self, *, token: str | None = None) -> None:
-        from mcp.server.fastmcp import FastMCP
-        from mcp.server.transport_security import TransportSecuritySettings
+        from mcp.server import MCPServer
 
         self.token = token
         self.authorizations: list[str] = []
-        self.mcp = FastMCP(
-            "fake",
+        self.mcp = MCPServer("fake")
+
+    def _app(self):
+        from mcp.server.transport_security import TransportSecuritySettings
+
+        inner = self.mcp.streamable_http_app(
             stateless_http=True,
             json_response=True,
             # The test host is not a real one; the client's own guard is what
             # is under test, not the server's.
             transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
         )
-
-    def _app(self):
-        inner = self.mcp.streamable_http_app()
         fake = self
 
         async def app(scope, receive, send):
@@ -578,7 +578,7 @@ class FakeMcpServer:
     def running(self, monkeypatch):
         import contextlib
 
-        import httpx
+        import httpx2
 
         import service.mcp.http as mcp_http
 
@@ -586,8 +586,8 @@ class FakeMcpServer:
         monkeypatch.setattr(
             mcp_http,
             "guarded_client",
-            lambda headers=None: httpx.AsyncClient(
-                transport=httpx.ASGITransport(app=app), headers=headers or {}, timeout=10
+            lambda headers=None: httpx2.AsyncClient(
+                transport=httpx2.ASGITransport(app=app), headers=headers or {}, timeout=10
             ),
         )
 

@@ -519,9 +519,11 @@ Postgres `DATABASE_URL` names.
   a server is #197. Six rules, each held by `tests/test_mcp_*.py`:
   - **Our runtime, not the provider's.** Anthropic's `mcp_servers` and
     OpenAI's Responses `mcp` tool serve only their own models, so the client
-    is the reference `mcp` SDK in-process, the capability rule above. Not
-    fastmcp: 4.x needs arize-phoenix 20.10+, which drags anthropic 1.x and
-    openai 3.x into this environment.
+    is the reference `mcp` SDK (2.x) in-process, the capability rule above,
+    not fastmcp's heavier stack. Its transport takes only an `httpx2` client,
+    so everything under `service/mcp/` speaks httpx2, and it turns a 401 into
+    a generic JSON-RPC error: `client._session` watches responses for the
+    status instead.
   - **A server is a credential row.** `connector_type = "mcp"`, `account_id` the
     canonical URL; no table of its own. A chat reaches only **its own user's**
     servers, in any project, never the project owner's: unlike a vendor key, a

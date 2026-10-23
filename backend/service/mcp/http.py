@@ -9,6 +9,10 @@ only: a token has no business crossing the network in clear.
 
 Callers reach the factory as ``mcp_http.guarded_client`` rather than importing
 the name, so a test can swap the transport underneath every caller at once.
+
+httpx2, not the httpx the rest of the backend uses: the SDK's transport
+accepts only its own client, and discovery and token requests share this one
+factory so the guard exists once. It comes with ``mcp``.
 """
 
 from __future__ import annotations
@@ -16,7 +20,7 @@ from __future__ import annotations
 import logging
 from urllib.parse import urlsplit, urlunsplit
 
-import httpx
+import httpx2
 
 from service.crawl.fetcher import SSRFError, assert_public_url, validate_public_url
 
@@ -27,7 +31,7 @@ logger = logging.getLogger(__name__)
 # do not.
 CONNECT_TIMEOUT_SECONDS = 10.0
 READ_TIMEOUT_SECONDS = 120.0
-TIMEOUT = httpx.Timeout(30.0, connect=CONNECT_TIMEOUT_SECONDS, read=READ_TIMEOUT_SECONDS)
+TIMEOUT = httpx2.Timeout(30.0, connect=CONNECT_TIMEOUT_SECONDS, read=READ_TIMEOUT_SECONDS)
 MAX_REDIRECTS = 5
 
 
@@ -64,7 +68,7 @@ def canonical_url(raw: str) -> str:
     return urlunsplit(("https", netloc, parts.path, parts.query, ""))
 
 
-async def _guard(request: httpx.Request) -> None:
+async def _guard(request: httpx2.Request) -> None:
     if request.url.scheme != "https":
         raise SSRFError(f"MCP requests are https only, not {request.url.scheme}")
     try:
@@ -74,14 +78,14 @@ async def _guard(request: httpx.Request) -> None:
         raise
 
 
-def guarded_client(*, headers: dict[str, str] | None = None) -> httpx.AsyncClient:
+def guarded_client(*, headers: dict[str, str] | None = None) -> httpx2.AsyncClient:
     """An async client for one server conversation. The caller closes it.
 
     ``trust_env=False`` so an ambient proxy setting cannot route a user's
-    token somewhere nobody chose. httpx drops ``Authorization`` itself when a
+    token somewhere nobody chose. httpx2 drops ``Authorization`` itself when a
     redirect changes origin.
     """
-    return httpx.AsyncClient(
+    return httpx2.AsyncClient(
         headers=headers or {},
         timeout=TIMEOUT,
         follow_redirects=True,

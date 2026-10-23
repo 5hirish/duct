@@ -30,7 +30,7 @@ import time
 from dataclasses import asdict, dataclass
 from urllib.parse import urlencode, urlsplit
 
-import httpx
+import httpx2
 from mcp.client.auth import PKCEParameters
 from mcp.client.auth.utils import (
     build_oauth_authorization_server_metadata_discovery_urls,
@@ -172,16 +172,16 @@ def _initialize_probe() -> dict:
     }
 
 
-async def _first_json(client: httpx.AsyncClient, urls: list[str], model: type) -> object | None:
+async def _first_json(client: httpx2.AsyncClient, urls: list[str], model: type) -> object | None:
     """The first candidate URL that answers with a document ``model`` accepts."""
     for url in urls:
         try:
             resp = await client.get(url, headers={"MCP-Protocol-Version": LATEST_PROTOCOL_VERSION})
-        except httpx.HTTPError:
+        except httpx2.HTTPError:
             # One candidate down is why there is a list. A refused address
             # (SSRFError) is not an HTTPError and ends the discovery instead.
             continue
-        if resp.status_code != httpx.codes.OK:
+        if resp.status_code != httpx2.codes.OK:
             continue
         try:
             return model.model_validate_json(resp.content)
@@ -206,11 +206,11 @@ async def discover(url: str) -> AuthPlan:
                     "MCP-Protocol-Version": LATEST_PROTOCOL_VERSION,
                 },
             )
-            if probe.status_code == httpx.codes.FORBIDDEN:
+            if probe.status_code == httpx2.codes.FORBIDDEN:
                 raise OAuthUnavailable("The server refused an unauthenticated client.")
             if probe.status_code >= 500:
                 raise OAuthFailed(f"The server answered {probe.status_code}.")
-            if probe.status_code != httpx.codes.UNAUTHORIZED:
+            if probe.status_code != httpx2.codes.UNAUTHORIZED:
                 return AuthPlan(kind=AUTH_NONE)
 
             resource_meta = await _first_json(
@@ -232,7 +232,7 @@ async def discover(url: str) -> AuthPlan:
             )
     except SSRFError as exc:
         raise OAuthFailed("The server, or the sign-in it points to, is not on the public internet.") from exc
-    except httpx.HTTPError as exc:
+    except httpx2.HTTPError as exc:
         raise OAuthFailed(f"The server could not be reached ({type(exc).__name__}).") from exc
 
     if server_meta is None:
@@ -294,9 +294,9 @@ async def register(plan: AuthPlan) -> ClientRegistration:
     try:
         async with mcp_http.guarded_client() as client:
             resp = await client.post(plan.registration_endpoint, json=body)
-    except (SSRFError, httpx.HTTPError) as exc:
+    except (SSRFError, httpx2.HTTPError) as exc:
         raise OAuthFailed(f"Registering with the server's sign-in failed ({type(exc).__name__}).") from exc
-    if resp.status_code not in (httpx.codes.OK, httpx.codes.CREATED):
+    if resp.status_code not in (httpx2.codes.OK, httpx2.codes.CREATED):
         raise OAuthUnavailable(f"The server's sign-in refused to register Duct ({resp.status_code}).")
     try:
         info = OAuthClientInformationFull.model_validate_json(resp.content)
@@ -342,18 +342,18 @@ async def _token_request(
     data: dict[str, str],
 ) -> Tokens:
     form = {**data, "client_id": registration.client_id}
-    auth: httpx.Auth | None = None
+    auth: httpx2.Auth | None = None
     if registration.client_secret:
         if registration.auth_method == "client_secret_post":
             form["client_secret"] = registration.client_secret
         else:
-            auth = httpx.BasicAuth(registration.client_id, registration.client_secret)
+            auth = httpx2.BasicAuth(registration.client_id, registration.client_secret)
     try:
         async with mcp_http.guarded_client() as client:
             resp = await client.post(token_endpoint, data=form, auth=auth)
-    except (SSRFError, httpx.HTTPError) as exc:
+    except (SSRFError, httpx2.HTTPError) as exc:
         raise OAuthFailed(f"The server's sign-in could not be reached ({type(exc).__name__}).") from exc
-    if resp.status_code != httpx.codes.OK:
+    if resp.status_code != httpx2.codes.OK:
         # The body may echo the code or a token back; log the status only.
         logger.warning("mcp oauth: token endpoint answered %s", resp.status_code)
         raise OAuthFailed(f"The server's sign-in refused the request ({resp.status_code}).")
