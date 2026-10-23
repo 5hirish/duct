@@ -49,6 +49,11 @@ its category (below); `audience` in the front matter overrides it.
 | `growth` | the founder, marketer or PM running growth without a data team | a manual job they want to stop doing (read three tools, find the gap, explain the drop) | the product: Download |
 | `builders` | engineers building agents | how a shipping agent actually solves a problem, with the code | the repo: Star on GitHub |
 
+A post that starts from a shipped feature comes through the
+[`working-backwards`](../working-backwards/SKILL.md) skill: its launch triage
+decides whether the feature earns a post at all (most earn a changelog line),
+and its PR/FAQ is the brief's first draft. Research still starts at 1b.
+
 The builders cluster is Duct building in public. `docs/engineering/` holds
 dated research records written for our own decisions (evals, memory freshness,
 approvals, code execution); each one is a post waiting to be written for

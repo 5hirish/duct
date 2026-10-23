@@ -260,7 +260,11 @@ scope creeps in; a feature without stated non-goals absorbs whatever gets
 requested next) · smallest shippable version (cheapest thing that's
 customer-observable, not code-complete) · done-means (the observable signal
 it worked — if there isn't one, reconsider the shippable version rather than
-skipping the line).
+skipping the line). A user-facing feature also gets its PR/FAQ before the
+first commit — the customer press release and FAQ around this spec, from the
+[`working-backwards`](../working-backwards/SKILL.md) skill. A press release
+that can't name who has the problem today is this bar's first question
+failing, caught before any code.
 
 **Question:** the question and the context that makes it answerable. No
 spec, no priority. Closed when answered.
