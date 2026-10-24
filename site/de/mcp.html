@@ -32,7 +32,7 @@
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Verbinde MCP-Server mit Ducts Agent: Einrichtungsanleitung"/>
-<meta name="twitter:description" content="OpenSEO, Notion, Linear und PostHog sind in Duct nur einen Klick entfernt. Jeder andere öffentliche MCP-Server verbindet sich über seine Adresse. So geht&#x27;s."/>
+<meta name="twitter:description" content="OpenSEO, PostHog, Notion, Linear, Railway und Cloudflare sind in Duct nur einen Klick entfernt. Jeder andere öffentliche MCP-Server verbindet sich über seine Adresse."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og/mcp.jpg"/>
 <link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
@@ -41,7 +41,7 @@
 <!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"Verbinde MCP-Server mit Ducts Agent: Einrichtungsanleitung","url":"https://getduct.ai/de/mcp","description":"Verbinde OpenSEO, Notion, Linear, PostHog oder jeden öffentlichen MCP-Server mit Duct. Melde dich einmal an, dann frage. Schreibgeschützte Tools laufen; alles andere wartet auf dein OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"So verbindest du einen Server","step":[{"@type":"HowToStep","position":1,"name":"Verbindungen öffnen","text":"Öffne in der Duct-App die Verbindungen. Die vorgefertigten Server sind dort aufgelistet, und jeder andere verbindet sich über seine Adresse."},{"@type":"HowToStep","position":2,"name":"Server auswählen oder Adresse einfügen","text":"Wähle OpenSEO, Notion, Linear oder PostHog. Für alles andere füge die HTTPS-Adresse des Servers ein."},{"@type":"HowToStep","position":3,"name":"Einmal anmelden","text":"Ein Klick, wo der Server die Anmeldung unterstützt. Wo nicht, füge einen API-Schlüssel des Anbieters ein. Duct hält ihn verschlüsselt."}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"Verbinde MCP-Server mit Ducts Agent: Einrichtungsanleitung","url":"https://getduct.ai/de/mcp","description":"Verbinde OpenSEO, Notion, Linear, PostHog oder jeden öffentlichen MCP-Server mit Duct. Melde dich einmal an, dann frage. Schreibgeschützte Tools laufen; alles andere wartet auf dein OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"So verbindest du einen Server","step":[{"@type":"HowToStep","position":1,"name":"Verbindungen öffnen","text":"Öffne in der Duct-App die Verbindungen. Die vorgefertigten Server sind dort aufgelistet, und jeder andere verbindet sich über seine Adresse."},{"@type":"HowToStep","position":2,"name":"Server auswählen oder Adresse einfügen","text":"Wähle OpenSEO, PostHog, Notion, Linear, Railway oder Cloudflare. Für alles andere füge die HTTPS-Adresse des Servers ein."},{"@type":"HowToStep","position":3,"name":"Einmal anmelden","text":"Ein Klick, wo der Server die Anmeldung unterstützt. Wo nicht, füge einen API-Schlüssel des Anbieters ein. Duct hält ihn verschlüsselt."}]}}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Es steht „Dieser Server benötigt einen API-Schlüssel“","acceptedAnswer":{"@type":"Answer","text":"Der Server bietet keine Anmeldung, die Duct nutzen kann. Erstelle einen API-Schlüssel in den Einstellungen des Anbieters und füge ihn unter Verbindungen ein."}},{"@type":"Question","name":"Es steht „Muss neu verbunden werden“","acceptedAnswer":{"@type":"Answer","text":"Die Anmeldung ist abgelaufen oder wurde auf Seiten des Anbieters widerrufen. Drücke auf Verbindungen auf Neu verbinden und melde dich erneut an."}},{"@type":"Question","name":"Es steht „Duct verbindet sich nur mit Servern im öffentlichen Internet“","acceptedAnswer":{"@type":"Answer","text":"Die Adresse zeigt auf deinen eigenen Computer oder ein privates Netzwerk. Der gehostete Dienst ruft nur öffentliche Internetadressen auf, daher kann ein lokaler oder interner Server nicht erreicht werden."}},{"@type":"Question","name":"Warum kann ich Figma oder Slack nicht verbinden?","acceptedAnswer":{"@type":"Answer","text":"Beide lassen nur Clients zu, die sie im Voraus genehmigt haben, daher reicht ihre Serveradresse allein nicht aus. Sie funktionieren noch nicht mit Duct."}},{"@type":"Question","name":"Kostet ein Tool-Aufruf etwas?","acceptedAnswer":{"@type":"Answer","text":"Manche tun das, auf Seiten des Anbieters. Ein Aufruf, der dort Credits kostet, wie OpenSEO-Recherche, verbraucht deine Credits bei diesem Anbieter, genau wie von jedem anderen Client."}}]}
@@ -198,7 +198,7 @@
 <section class="hero mcp-hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Model Context Protocol · Jedes Modell, das du mitbringst</div>
 <h1>Bringe deine eigenen MCP-Server mit.<br/><em>Lass den Agenten sie aufrufen.</em></h1>
-<p class="hero-sub">Ducts Agent kann jeden MCP-Server nutzen, den du verbindest. Vier sind nur einen Klick entfernt (OpenSEO, Notion, Linear und PostHog), und jeder andere öffentliche Server verbindet sich über seine Adresse.</p>
+<p class="hero-sub">Ducts Agent kann jeden MCP-Server nutzen, den du verbindest. Sechs sind nur einen Klick entfernt (OpenSEO, PostHog, Notion, Linear, Railway und Cloudflare), und jeder andere öffentliche Server verbindet sich über seine Adresse.</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
 <a class="btn btn-ghost btn-lg" href="#steps">In drei Schritten einrichten</a>
@@ -263,7 +263,7 @@ team   "Content"</pre>
 <span class="step-num">02</span>
 <span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
 <h3 class="step-title">Server auswählen oder Adresse einfügen</h3>
-<p class="step-body">Wähle OpenSEO, Notion, Linear oder PostHog. Für alles andere füge die HTTPS-Adresse des Servers ein.</p>
+<p class="step-body">Wähle OpenSEO, PostHog, Notion, Linear, Railway oder Cloudflare. Für alles andere füge die HTTPS-Adresse des Servers ein.</p>
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
@@ -281,7 +281,7 @@ team   "Content"</pre>
 <div class="mcp-inner">
 <div class="mcp-head reveal">
 <p class="tag">Vorgefertigt</p>
-<h2>Vier Server. <em>Jeder ein Klick.</em></h2>
+<h2>Sechs Server. <em>Jeder ein Klick.</em></h2>
 <p class="sub">Wähle einen unter Verbindungen und melde dich mit deinem bestehenden Konto an. Jede Adresse ist hier als Referenz; du musst sie nie eingeben.</p>
 </div>
 <div class="srv-grid">
@@ -308,6 +308,18 @@ team   "Content"</pre>
 <div class="srv-addr"><span>Serveradresse</span><code>https://mcp.posthog.com/mcp</code></div>
 <div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>API-Schlüssel funktioniert auch</span></div>
 <p class="srv-try">Versuche: <q>Welcher Onboarding-Schritt verliert die meisten Leute?</q></p>
+</article>
+<article class="srv reveal">
+<div class="srv-head"><img src="/assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>Deine Dienste, Deployments, Logs und Variablen.</p></div></div>
+<div class="srv-addr"><span>Serveradresse</span><code>https://mcp.railway.com</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Die meisten Tools fragen zuerst</span></div>
+<p class="srv-try">Versuch: <q>Ist der gestrige Deploy sauber durchgelaufen?</q></p>
+</article>
+<article class="srv reveal" style="transition-delay:.08s">
+<div class="srv-head"><img src="/assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>Dein Konto über seine API: Workers, DNS und Analysen.</p></div></div>
+<div class="srv-addr"><span>Serveradresse</span><code>https://mcp.cloudflare.com/mcp</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Die meisten Tools fragen zuerst</span></div>
+<p class="srv-try">Versuch: <q>Wie viel des Traffics der letzten Woche waren Bots?</q></p>
 </article>
 </div>
 </div>

@@ -32,7 +32,7 @@
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Connect MCP servers to Duct's agent: setup guide"/>
-<meta name="twitter:description" content="OpenSEO, Notion, Linear and PostHog are one click away in Duct. Any other public MCP server connects by its address. Here is how."/>
+<meta name="twitter:description" content="OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare are one click away in Duct. Any other public MCP server connects by its address."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og/mcp.jpg"/>
 <link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
 <link rel="stylesheet" href="assets/duct.css"/>
@@ -40,7 +40,7 @@
 <!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Connect MCP servers to Duct's agent: setup guide","url":"https://getduct.ai/mcp","description":"Connect OpenSEO, Notion, Linear, PostHog or any public MCP server to Duct. Sign in once, then ask. Read-only tools run; anything else waits for your OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"How to connect a server","step":[{"@type":"HowToStep","position":1,"name":"Open Connections","text":"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."},{"@type":"HowToStep","position":2,"name":"Pick a server or paste its address","text":"Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address."},{"@type":"HowToStep","position":3,"name":"Sign in once","text":"One click where the server supports sign-in. Where it does not, paste an API key from the vendor. Duct keeps it encrypted."}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Connect MCP servers to Duct's agent: setup guide","url":"https://getduct.ai/mcp","description":"Connect OpenSEO, Notion, Linear, PostHog or any public MCP server to Duct. Sign in once, then ask. Read-only tools run; anything else waits for your OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"How to connect a server","step":[{"@type":"HowToStep","position":1,"name":"Open Connections","text":"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."},{"@type":"HowToStep","position":2,"name":"Pick a server or paste its address","text":"Choose OpenSEO, PostHog, Notion, Linear, Railway or Cloudflare. For anything else, paste the server's https address."},{"@type":"HowToStep","position":3,"name":"Sign in once","text":"One click where the server supports sign-in. Where it does not, paste an API key from the vendor. Duct keeps it encrypted."}]}}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"It says “This server needs an API key”","acceptedAnswer":{"@type":"Answer","text":"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."}},{"@type":"Question","name":"It says “Needs reconnecting”","acceptedAnswer":{"@type":"Answer","text":"The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."}},{"@type":"Question","name":"It says “Duct only connects to servers on the public internet”","acceptedAnswer":{"@type":"Answer","text":"The address points at your own computer or a private network. The hosted service only calls public internet addresses, so a local or internal server cannot be reached."}},{"@type":"Question","name":"Why can't I connect Figma or Slack?","acceptedAnswer":{"@type":"Answer","text":"Both only admit clients they have approved in advance, so their server address alone is not enough. They do not work with Duct yet."}},{"@type":"Question","name":"Does a tool call cost anything?","acceptedAnswer":{"@type":"Answer","text":"Some do, on the vendor's side. A call that costs credits there, such as OpenSEO research, spends your credits with that vendor, the same as it would from any other client."}}]}
@@ -197,7 +197,7 @@
 <section class="hero mcp-hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Model Context Protocol · Any model you bring</div>
 <h1>Bring your own MCP servers.<br/><em>Let the agent call them.</em></h1>
-<p class="hero-sub">Duct's agent can use any MCP server you connect. Four are one click away (OpenSEO, Notion, Linear and PostHog), and any other public server connects by its address.</p>
+<p class="hero-sub">Duct's agent can use any MCP server you connect. Six are one click away (OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare), and any other public server connects by its address.</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
 <a class="btn btn-ghost btn-lg" href="#steps">Set it up in three steps</a>
@@ -262,7 +262,7 @@ team   "Content"</pre>
 <span class="step-num">02</span>
 <span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
 <h3 class="step-title">Pick a server or paste its address</h3>
-<p class="step-body">Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address.</p>
+<p class="step-body">Choose OpenSEO, PostHog, Notion, Linear, Railway or Cloudflare. For anything else, paste the server's https address.</p>
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
@@ -280,7 +280,7 @@ team   "Content"</pre>
 <div class="mcp-inner">
 <div class="mcp-head reveal">
 <p class="tag">Ready-made</p>
-<h2>Four servers. <em>One click each.</em></h2>
+<h2>Six servers. <em>One click each.</em></h2>
 <p class="sub">Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it.</p>
 </div>
 <div class="srv-grid">
@@ -307,6 +307,18 @@ team   "Content"</pre>
 <div class="srv-addr"><span>Server address</span><code>https://mcp.posthog.com/mcp</code></div>
 <div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>One-click sign-in</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>API key works too</span></div>
 <p class="srv-try">Try: <q>Which onboarding step loses the most people?</q></p>
+</article>
+<article class="srv reveal">
+<div class="srv-head"><img src="assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>Your services, deployments, logs and variables.</p></div></div>
+<div class="srv-addr"><span>Server address</span><code>https://mcp.railway.com</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>One-click sign-in</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Most tools ask first</span></div>
+<p class="srv-try">Try: <q>Did yesterday's deploy go out cleanly?</q></p>
+</article>
+<article class="srv reveal" style="transition-delay:.08s">
+<div class="srv-head"><img src="assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>Your account through its API: Workers, DNS and analytics.</p></div></div>
+<div class="srv-addr"><span>Server address</span><code>https://mcp.cloudflare.com/mcp</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>One-click sign-in</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Most tools ask first</span></div>
+<p class="srv-try">Try: <q>How much of last week's traffic was bots?</q></p>
 </article>
 </div>
 </div>

@@ -6644,6 +6644,10 @@ msgid "<0/>Linear"
 msgstr "<0/>Linear"
 
 #: mcp.html
+msgid "<0/>Most tools ask first"
+msgstr "<0/>A maioria das ferramentas pergunta primeiro"
+
+#: mcp.html
 msgid "<0/>Notion"
 msgstr "<0/>Notion"
 
@@ -6722,9 +6726,13 @@ msgstr "Traga seus próprios servidores MCP.<0/><1>Deixe o agente chamá-los.</1
 
 #: mcp.html
 msgid ""
-"Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address."
+"Choose OpenSEO, PostHog, Notion, Linear, Railway or Cloudflare. For anything else, paste the server's https address."
 msgstr ""
-"Escolha OpenSEO, Notion, Linear ou PostHog. Para qualquer outra coisa, cole o endereço HTTPS do servidor."
+"Escolha OpenSEO, PostHog, Notion, Linear, Railway ou Cloudflare. Para qualquer outro, cole o endereço https do servidor."
+
+#: mcp.html privacy.html
+msgid "Cloudflare"
+msgstr "Cloudflare"
 
 #. meta og:title
 #. meta twitter:title
@@ -6755,17 +6763,13 @@ msgstr ""
 
 #: mcp.html
 msgid ""
-"Duct's agent can use any MCP server you connect. Four are one click away (OpenSEO, Notion, Linear and PostHog), and any other public server connects by its address."
+"Duct's agent can use any MCP server you connect. Six are one click away (OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare), and any other public server connects by its address."
 msgstr ""
-"O agente do Duct pode usar qualquer servidor MCP que você conectar. Quatro estão a um clique de distância (OpenSEO, Notion, Linear e PostHog), e qualquer outro servidor público se conecta pelo seu endereço."
+"O agente do Duct pode usar qualquer servidor MCP que você conectar. Seis estão a um clique de distância (OpenSEO, PostHog, Notion, Linear, Railway e Cloudflare), e qualquer outro servidor público se conecta pelo seu endereço."
 
 #: mcp.html
 msgid "Everything else waits for you"
 msgstr "Tudo o mais espera por você"
-
-#: mcp.html
-msgid "Four servers. <0>One click each.</0>"
-msgstr "Quatro servidores. <0>Um clique cada.</0>"
 
 #: mcp.html
 msgid "Free with your own keys · No credit card · macOS, Windows and Linux"
@@ -6855,9 +6859,9 @@ msgstr "OpenSEO"
 #. meta twitter:description
 #: mcp.html
 msgid ""
-"OpenSEO, Notion, Linear and PostHog are one click away in Duct. Any other public MCP server connects by its address. Here is how."
+"OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare are one click away in Duct. Any other public MCP server connects by its address."
 msgstr ""
-"OpenSEO, Notion, Linear e PostHog estão a um clique de distância no Duct. Qualquer outro servidor MCP público se conecta pelo seu endereço. Veja como."
+"OpenSEO, PostHog, Notion, Linear, Railway e Cloudflare estão a um clique de distância no Duct. Qualquer outro servidor MCP público se conecta pelo seu endereço."
 
 #: mcp.html
 msgid "Otherwise, an API key you paste, sent to the server as a bearer token."
@@ -6884,6 +6888,10 @@ msgstr ""
 #: mcp.html
 msgid "PostHog"
 msgstr "PostHog"
+
+#: mcp.html privacy.html
+msgid "Railway"
+msgstr "Railway"
 
 #: mcp.html
 msgid "Read-only runs. <0>Everything else asks first.</0>"
@@ -6924,6 +6932,10 @@ msgid ""
 "Sign-ins and API keys stay on Duct's side, encrypted, and are never shown to the model."
 msgstr ""
 "Entradas e chaves de API permanecem no lado do Duct, criptografadas, e nunca são mostradas ao modelo."
+
+#: mcp.html
+msgid "Six servers. <0>One click each.</0>"
+msgstr "Seis servidores. <0>Um clique cada.</0>"
 
 #: mcp.html
 msgid ""
@@ -6988,6 +7000,14 @@ msgid "Troubleshooting"
 msgstr "Solução de problemas"
 
 #: mcp.html
+msgid "Try: <0>Did yesterday's deploy go out cleanly?</0>"
+msgstr "Experimente: <0>A implantação de ontem foi limpa?</0>"
+
+#: mcp.html
+msgid "Try: <0>How much of last week's traffic was bots?</0>"
+msgstr "Experimente: <0>Quanto do tráfego da semana passada eram bots?</0>"
+
+#: mcp.html
 msgid "Try: <0>What did we decide in the launch plan?</0>"
 msgstr "Experimente: <0>O que decidimos no plano de lançamento?</0>"
 
@@ -7048,6 +7068,10 @@ msgid "You ask"
 msgstr "Você pergunta"
 
 #: mcp.html
+msgid "Your account through its API: Workers, DNS and analytics."
+msgstr "Sua conta através da sua API: Workers, DNS e analytics."
+
+#: mcp.html
 msgid "Your issues and projects."
 msgstr "Seus problemas e projetos."
 
@@ -7064,12 +7088,20 @@ msgid "Your servers, your chats"
 msgstr "Seus servidores, seus chats"
 
 #: mcp.html
+msgid "Your services, deployments, logs and variables."
+msgstr "Seus serviços, implantações, logs e variáveis."
+
+#: mcp.html
 msgid "Your tokens never reach the model"
 msgstr "Seus tokens nunca chegam ao modelo"
 
 #: mcp.html
 msgid "https://app.openseo.so/mcp"
 msgstr "https://app.openseo.so/mcp"
+
+#: mcp.html
+msgid "https://mcp.cloudflare.com/mcp"
+msgstr "https://mcp.cloudflare.com/mcp"
 
 #: mcp.html
 msgid "https://mcp.linear.app/mcp"
@@ -7082,6 +7114,10 @@ msgstr "https://mcp.notion.com/mcp"
 #: mcp.html
 msgid "https://mcp.posthog.com/mcp"
 msgstr "https://mcp.posthog.com/mcp"
+
+#: mcp.html
+msgid "https://mcp.railway.com"
+msgstr "https://mcp.railway.com"
 
 #: open-source.html
 msgid "<0/> Backups and upgrades"
@@ -8104,10 +8140,6 @@ msgstr ""
 "Armazena em cache o país de onde sua solicitação veio, para que façamos a pergunta certa sem repetir a busca. Estritamente necessário"
 
 #: privacy.html
-msgid "Cloudflare"
-msgstr "Cloudflare"
-
-#: privacy.html
 msgid "Connected data sources"
 msgstr "Fontes de dados conectadas"
 
@@ -8388,10 +8420,6 @@ msgstr "Publicar em, e ler análises de, suas contas sociais"
 #: privacy.html
 msgid "Purpose"
 msgstr "Finalidade"
-
-#: privacy.html
-msgid "Railway"
-msgstr "Railway"
 
 #: privacy.html
 msgid "Receives connected-source data?"
@@ -12068,6 +12096,25 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#~ msgid ""
+#~ "Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address."
+#~ msgstr ""
+#~ "Escolha OpenSEO, Notion, Linear ou PostHog. Para qualquer outra coisa, cole o endereço HTTPS do servidor."
+
+#~ msgid ""
+#~ "Duct's agent can use any MCP server you connect. Four are one click away (OpenSEO, Notion, Linear and PostHog), and any other public server connects by its address."
+#~ msgstr ""
+#~ "O agente do Duct pode usar qualquer servidor MCP que você conectar. Quatro estão a um clique de distância (OpenSEO, Notion, Linear e PostHog), e qualquer outro servidor público se conecta pelo seu endereço."
+
+#~ msgid "Four servers. <0>One click each.</0>"
+#~ msgstr "Quatro servidores. <0>Um clique cada.</0>"
+
+#. meta twitter:description
+#~ msgid ""
+#~ "OpenSEO, Notion, Linear and PostHog are one click away in Duct. Any other public MCP server connects by its address. Here is how."
+#~ msgstr ""
+#~ "OpenSEO, Notion, Linear e PostHog estão a um clique de distância no Duct. Qualquer outro servidor MCP público se conecta pelo seu endereço. Veja como."
 
 #~ msgid ""
 #~ "Name the tool and the question you want it to answer. Connectors get built when a question needs one."

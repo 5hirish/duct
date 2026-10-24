@@ -6430,6 +6430,10 @@ msgid "<0/>Linear"
 msgstr "<0/>Linear"
 
 #: mcp.html
+msgid "<0/>Most tools ask first"
+msgstr "<0/>ほとんどのツールが最初に尋ねます"
+
+#: mcp.html
 msgid "<0/>Notion"
 msgstr "<0/>Notion"
 
@@ -6505,8 +6509,13 @@ msgstr "独自のMCPサーバーを持ち込みましょう。<0/><1>エージ�
 
 #: mcp.html
 msgid ""
-"Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address."
-msgstr "OpenSEO、Notion、Linear、またはPostHogを選択してください。それ以外の場合は、サーバーのHTTPSアドレスを貼り付けてください。"
+"Choose OpenSEO, PostHog, Notion, Linear, Railway or Cloudflare. For anything else, paste the server's https address."
+msgstr ""
+"OpenSEO、PostHog、Notion、Linear、Railway、またはCloudflareを選択してください。その他は、サーバーのHTTPSアドレスを貼り付けてください。"
+
+#: mcp.html privacy.html
+msgid "Cloudflare"
+msgstr "Cloudflare"
 
 #. meta og:title
 #. meta twitter:title
@@ -6536,17 +6545,13 @@ msgstr "Ductは、パブリックインターネット経由で到達可能な�
 
 #: mcp.html
 msgid ""
-"Duct's agent can use any MCP server you connect. Four are one click away (OpenSEO, Notion, Linear and PostHog), and any other public server connects by its address."
+"Duct's agent can use any MCP server you connect. Six are one click away (OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare), and any other public server connects by its address."
 msgstr ""
-"Ductのエージェントは、あなたが接続する任意のMCPサーバーを使用できます。4つはワンクリックで接続できます（OpenSEO、Notion、Linear、PostHog）。その他の公開サーバーはアドレスで接続します。"
+"Ductのエージェントは、接続した任意のMCPサーバーを使用できます。6つはワンクリックで利用でき（OpenSEO、PostHog、Notion、Linear、Railway、Cloudflare）、その他の公開サーバーは、そのアドレスで接続します。"
 
 #: mcp.html
 msgid "Everything else waits for you"
 msgstr "その他はあなたの承認を待ちます"
-
-#: mcp.html
-msgid "Four servers. <0>One click each.</0>"
-msgstr "4つのサーバー。<0>それぞれワンクリック。</0>"
 
 #: mcp.html
 msgid "Free with your own keys · No credit card · macOS, Windows and Linux"
@@ -6633,9 +6638,9 @@ msgstr "OpenSEO"
 #. meta twitter:description
 #: mcp.html
 msgid ""
-"OpenSEO, Notion, Linear and PostHog are one click away in Duct. Any other public MCP server connects by its address. Here is how."
+"OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare are one click away in Duct. Any other public MCP server connects by its address."
 msgstr ""
-"OpenSEO、Notion、Linear、PostHogはDuctでワンクリックで接続できます。その他の公開MCPサーバーは、そのアドレスで接続します。手順は次のとおりです。"
+"Ductでは、OpenSEO、PostHog、Notion、Linear、Railway、Cloudflareがワンクリックで利用できます。その他の公開MCPサーバーは、そのアドレスで接続します。"
 
 #: mcp.html
 msgid "Otherwise, an API key you paste, sent to the server as a bearer token."
@@ -6659,6 +6664,10 @@ msgstr "既存のMCPサーバーをDuctのエージェントに接続してく�
 #: mcp.html
 msgid "PostHog"
 msgstr "PostHog"
+
+#: mcp.html privacy.html
+msgid "Railway"
+msgstr "Railway"
 
 #: mcp.html
 msgid "Read-only runs. <0>Everything else asks first.</0>"
@@ -6697,6 +6706,10 @@ msgstr "一度サインイン"
 msgid ""
 "Sign-ins and API keys stay on Duct's side, encrypted, and are never shown to the model."
 msgstr "サインイン情報とAPIキーはDuct側で暗号化されて保持され、モデルに表示されることはありません。"
+
+#: mcp.html
+msgid "Six servers. <0>One click each.</0>"
+msgstr "6つのサーバー。<0>それぞれワンクリック。</0>"
 
 #: mcp.html
 msgid ""
@@ -6757,6 +6770,14 @@ msgid "Troubleshooting"
 msgstr "トラブルシューティング"
 
 #: mcp.html
+msgid "Try: <0>Did yesterday's deploy go out cleanly?</0>"
+msgstr "例: <0>昨日のデプロイは問題なく完了しましたか？</0>"
+
+#: mcp.html
+msgid "Try: <0>How much of last week's traffic was bots?</0>"
+msgstr "例: <0>先週のトラフィックのうち、ボットはどれくらいでしたか？</0>"
+
+#: mcp.html
 msgid "Try: <0>What did we decide in the launch plan?</0>"
 msgstr "例： <0>ローンチプランで何を決定しましたか？</0>"
 
@@ -6813,6 +6834,10 @@ msgid "You ask"
 msgstr "あなたが尋ねる"
 
 #: mcp.html
+msgid "Your account through its API: Workers, DNS and analytics."
+msgstr "APIを介したあなたのアカウント: Workers、DNS、アナリティクス。"
+
+#: mcp.html
 msgid "Your issues and projects."
 msgstr "あなたの課題とプロジェクト。"
 
@@ -6829,12 +6854,20 @@ msgid "Your servers, your chats"
 msgstr "あなたのサーバー、あなたのチャット"
 
 #: mcp.html
+msgid "Your services, deployments, logs and variables."
+msgstr "あなたのサービス、デプロイ、ログ、変数。"
+
+#: mcp.html
 msgid "Your tokens never reach the model"
 msgstr "あなたのトークンはモデルに到達しません"
 
 #: mcp.html
 msgid "https://app.openseo.so/mcp"
 msgstr "https://app.openseo.so/mcp"
+
+#: mcp.html
+msgid "https://mcp.cloudflare.com/mcp"
+msgstr "https://mcp.cloudflare.com/mcp"
 
 #: mcp.html
 msgid "https://mcp.linear.app/mcp"
@@ -6847,6 +6880,10 @@ msgstr "https://mcp.notion.com/mcp"
 #: mcp.html
 msgid "https://mcp.posthog.com/mcp"
 msgstr "https://mcp.posthog.com/mcp"
+
+#: mcp.html
+msgid "https://mcp.railway.com"
+msgstr "https://mcp.railway.com"
 
 #: open-source.html
 msgid "<0/> Backups and upgrades"
@@ -7837,10 +7874,6 @@ msgid ""
 msgstr "リクエストが到着した国をキャッシュし、検索を繰り返すことなく適切な質問をします。厳密に必要"
 
 #: privacy.html
-msgid "Cloudflare"
-msgstr "Cloudflare"
-
-#: privacy.html
 msgid "Connected data sources"
 msgstr "接続されたデータソース"
 
@@ -8114,10 +8147,6 @@ msgstr "ソーシャルアカウントへの投稿と、そこからの分析の
 #: privacy.html
 msgid "Purpose"
 msgstr "目的"
-
-#: privacy.html
-msgid "Railway"
-msgstr "Railway"
 
 #: privacy.html
 msgid "Receives connected-source data?"
@@ -11603,6 +11632,24 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid ""
+#~ "Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address."
+#~ msgstr "OpenSEO、Notion、Linear、またはPostHogを選択してください。それ以外の場合は、サーバーのHTTPSアドレスを貼り付けてください。"
+
+#~ msgid ""
+#~ "Duct's agent can use any MCP server you connect. Four are one click away (OpenSEO, Notion, Linear and PostHog), and any other public server connects by its address."
+#~ msgstr ""
+#~ "Ductのエージェントは、あなたが接続する任意のMCPサーバーを使用できます。4つはワンクリックで接続できます（OpenSEO、Notion、Linear、PostHog）。その他の公開サーバーはアドレスで接続します。"
+
+#~ msgid "Four servers. <0>One click each.</0>"
+#~ msgstr "4つのサーバー。<0>それぞれワンクリック。</0>"
+
+#. meta twitter:description
+#~ msgid ""
+#~ "OpenSEO, Notion, Linear and PostHog are one click away in Duct. Any other public MCP server connects by its address. Here is how."
+#~ msgstr ""
+#~ "OpenSEO、Notion、Linear、PostHogはDuctでワンクリックで接続できます。その他の公開MCPサーバーは、そのアドレスで接続します。手順は次のとおりです。"
 
 #~ msgid ""
 #~ "Name the tool and the question you want it to answer. Connectors get built when a question needs one."

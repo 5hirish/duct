@@ -32,7 +32,7 @@
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="DuctのエージェントにMCPサーバーを接続：セットアップガイド"/>
-<meta name="twitter:description" content="OpenSEO、Notion、Linear、PostHogはDuctでワンクリックで接続できます。その他の公開MCPサーバーは、そのアドレスで接続します。手順は次のとおりです。"/>
+<meta name="twitter:description" content="Ductでは、OpenSEO、PostHog、Notion、Linear、Railway、Cloudflareがワンクリックで利用できます。その他の公開MCPサーバーは、そのアドレスで接続します。"/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og/mcp.jpg"/>
 <link rel="alternate" type="application/rss+xml" title="Ductブログ" href="/blog/feed.xml"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
@@ -41,7 +41,7 @@
 <!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"DuctのエージェントにMCPサーバーを接続：セットアップガイド","url":"https://getduct.ai/ja/mcp","description":"OpenSEO、Notion、Linear、PostHog、または任意の公開MCPサーバーをDuctに接続します。一度サインインしたら、質問してください。読み取り専用ツールは実行されます。それ以外はあなたの承認を待ちます。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"サーバーの接続方法","step":[{"@type":"HowToStep","position":1,"name":"接続を開く","text":"Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"},{"@type":"HowToStep","position":2,"name":"サーバーを選択するか、アドレスを貼り付けてください","text":"OpenSEO、Notion、Linear、またはPostHogを選択してください。それ以外の場合は、サーバーのHTTPSアドレスを貼り付けてください。"},{"@type":"HowToStep","position":3,"name":"一度サインイン","text":"サーバーがサインインをサポートしている場合はワンクリックです。サポートしていない場合は、ベンダーからAPIキーを貼り付けてください。Ductはそれを暗号化して保持します。"}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"DuctのエージェントにMCPサーバーを接続：セットアップガイド","url":"https://getduct.ai/ja/mcp","description":"OpenSEO、Notion、Linear、PostHog、または任意の公開MCPサーバーをDuctに接続します。一度サインインしたら、質問してください。読み取り専用ツールは実行されます。それ以外はあなたの承認を待ちます。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"サーバーの接続方法","step":[{"@type":"HowToStep","position":1,"name":"接続を開く","text":"Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"},{"@type":"HowToStep","position":2,"name":"サーバーを選択するか、アドレスを貼り付けてください","text":"OpenSEO、PostHog、Notion、Linear、Railway、またはCloudflareを選択してください。その他は、サーバーのHTTPSアドレスを貼り付けてください。"},{"@type":"HowToStep","position":3,"name":"一度サインイン","text":"サーバーがサインインをサポートしている場合はワンクリックです。サポートしていない場合は、ベンダーからAPIキーを貼り付けてください。Ductはそれを暗号化して保持します。"}]}}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"「このサーバーにはAPIキーが必要です」と表示されます","acceptedAnswer":{"@type":"Answer","text":"サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"}},{"@type":"Question","name":"「再接続が必要です」と表示されます","acceptedAnswer":{"@type":"Answer","text":"サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"}},{"@type":"Question","name":"「Ductはパブリックインターネット上のサーバーにのみ接続します」と表示されます","acceptedAnswer":{"@type":"Answer","text":"アドレスがご自身のコンピューターまたはプライベートネットワークを指している場合、ホスト型サービスは公開インターネットアドレスのみを呼び出すため、ローカルまたは内部サーバーには到達できません。"}},{"@type":"Question","name":"FigmaまたはSlackに接続できないのはなぜですか？","acceptedAnswer":{"@type":"Answer","text":"どちらも事前に承認したクライアントのみを受け入れるため、サーバーアドレスだけでは不十分です。これらはまだDuctでは動作しません。"}},{"@type":"Question","name":"ツール呼び出しに費用はかかりますか？","acceptedAnswer":{"@type":"Answer","text":"ベンダー側で発生するものもあります。OpenSEOのリサーチなど、そこでクレジットを消費する呼び出しは、他のクライアントと同様に、そのベンダーのクレジットを消費します。"}}]}
@@ -198,7 +198,7 @@
 <section class="hero mcp-hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Model Context Protocol · 持ち込みモデル</div>
 <h1>独自のMCPサーバーを持ち込みましょう。<br/><em>エージェントに呼び出させましょう。</em></h1>
-<p class="hero-sub">Ductのエージェントは、あなたが接続する任意のMCPサーバーを使用できます。4つはワンクリックで接続できます（OpenSEO、Notion、Linear、PostHog）。その他の公開サーバーはアドレスで接続します。</p>
+<p class="hero-sub">Ductのエージェントは、接続した任意のMCPサーバーを使用できます。6つはワンクリックで利用でき（OpenSEO、PostHog、Notion、Linear、Railway、Cloudflare）、その他の公開サーバーは、そのアドレスで接続します。</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
 <a class="btn btn-ghost btn-lg" href="#steps">3つのステップで設定</a>
@@ -263,7 +263,7 @@ team   "Content"</pre>
 <span class="step-num">02</span>
 <span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
 <h3 class="step-title">サーバーを選択するか、アドレスを貼り付けてください</h3>
-<p class="step-body">OpenSEO、Notion、Linear、またはPostHogを選択してください。それ以外の場合は、サーバーのHTTPSアドレスを貼り付けてください。</p>
+<p class="step-body">OpenSEO、PostHog、Notion、Linear、Railway、またはCloudflareを選択してください。その他は、サーバーのHTTPSアドレスを貼り付けてください。</p>
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
@@ -281,7 +281,7 @@ team   "Content"</pre>
 <div class="mcp-inner">
 <div class="mcp-head reveal">
 <p class="tag">既製</p>
-<h2>4つのサーバー。<em>それぞれワンクリック。</em></h2>
+<h2>6つのサーバー。<em>それぞれワンクリック。</em></h2>
 <p class="sub">接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。</p>
 </div>
 <div class="srv-grid">
@@ -308,6 +308,18 @@ team   "Content"</pre>
 <div class="srv-addr"><span>サーバーアドレス</span><code>https://mcp.posthog.com/mcp</code></div>
 <div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>APIキーも使用できます</span></div>
 <p class="srv-try">例： <q>どのオンボーディングステップで最も多くの人が離脱していますか？</q></p>
+</article>
+<article class="srv reveal">
+<div class="srv-head"><img src="/assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>あなたのサービス、デプロイ、ログ、変数。</p></div></div>
+<div class="srv-addr"><span>サーバーアドレス</span><code>https://mcp.railway.com</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>ほとんどのツールが最初に尋ねます</span></div>
+<p class="srv-try">例: <q>昨日のデプロイは問題なく完了しましたか？</q></p>
+</article>
+<article class="srv reveal" style="transition-delay:.08s">
+<div class="srv-head"><img src="/assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>APIを介したあなたのアカウント: Workers、DNS、アナリティクス。</p></div></div>
+<div class="srv-addr"><span>サーバーアドレス</span><code>https://mcp.cloudflare.com/mcp</code></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>ほとんどのツールが最初に尋ねます</span></div>
+<p class="srv-try">例: <q>先週のトラフィックのうち、ボットはどれくらいでしたか？</q></p>
 </article>
 </div>
 </div>
