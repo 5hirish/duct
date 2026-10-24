@@ -128,4 +128,13 @@ describe("mergeDraft", () => {
     const out = mergeDraft(empty, { fields: { secret_sauce: { value: "x", provenance: PROVENANCE_CRAWL } } });
     expect(out.secret_sauce).toBeUndefined();
   });
+
+  it("fills over the settings page's empty persona row", () => {
+    // The page seeds one row to type into and saves it with the project; with
+    // no recorded provenance, rule 3 used to read it as the user's persona.
+    const seeded = { ...empty, audience: { personas: [{ name: "", description: "", priority: "primary" }] } };
+    const personas = [{ name: "Working parent", description: "", priority: "primary" }];
+    const out = mergeDraft(seeded, { fields: { personas: { value: personas, provenance: PROVENANCE_INFERRED } } });
+    expect(out.audience.personas).toEqual(personas);
+  });
 });

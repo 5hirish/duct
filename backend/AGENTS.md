@@ -482,6 +482,19 @@ Postgres `DATABASE_URL` names.
   rest of the run only as the business context they seed: their text never
   rides in the audit's own turn. Never infers the North Star; the agent asks
   for it in chat.
+- `service/project_draft.py` — where each project field came from
+  (`projects.provenance`) and what may overwrite what, the server's copy of
+  the rules `app/src/lib/projectDraft.js` runs for an instant answer (a test
+  holds the ranks and field names equal). Two writers, two rule sets: a
+  draft (`POST /api/user/projects/{id}/draft`, `merge_draft`) is a machine
+  and lands only on a blank, a drafted field of equal or lower rank, never
+  on the person's; a save (the PUT, `reconcile_save`) is the person and wins
+  where they changed something, but a drafted value the client only carried
+  along cannot replace an equal one or blank a field, because that is an
+  older copy of a draft the server has since refreshed. **Every new writer
+  of project fields goes through `merge_draft`** (the MCP server, a GitHub
+  re-sync), never a direct column write; a writer the rules do not know is
+  how a guess overwrites what someone typed. A draft cannot claim `user`.
 - `agents/engines.resolve_job_run` — provider and model over the keys *this
   caller* can spend, so a user holding only an OpenAI key runs on OpenAI
   instead of a 402 for the instance default. All three agents route through

@@ -5,6 +5,7 @@ import {
   deleteProjectRemote,
   fetchProjectsRemote,
   hasAuthToken,
+  postProjectDraftRemote,
   upsertProjectRemote,
 } from "./projectsApi";
 import { randomId as createId } from "./randomId";
@@ -111,9 +112,10 @@ function withProjectDefaults(projectInput) {
     // owned by whoever created it locally, so "owner" is the right default.
     role: project.role === "collaborator" ? "collaborator" : "owner",
     ownerEmail: isNonEmptyString(project.ownerEmail) ? project.ownerEmail : "",
-    // Where each drafted field came from — "crawl", "inferred", or "user"
-    // once confirmed — so the project-context surface can show a chip and
-    // a draft never overwrites what a person typed (lib/projectDraft.js).
+    // Where each drafted field came from: "crawl", "document", "inferred", or
+    // "user" once confirmed or typed. The project-context surface shows a chip
+    // from it, and both this device and the server merge by it, so a draft
+    // never overwrites what a person typed (lib/projectDraft.js).
     provenance: toObject(project.provenance),
   };
 }
@@ -183,6 +185,22 @@ function notifyProjectsChanged() {
  */
 export function pushProjectToBackend(project) {
   return upsertProjectRemote(project);
+}
+
+// The last draft sent for each project, so the next one waits for it.
+const draftsInFlight = new Map();
+
+/**
+ * Send a draft to be merged on the server. Best-effort like the upsert; the
+ * local copy already holds the merge. Drafts for one project go one after
+ * another, in the order they were made: at equal rank the later draft is
+ * meant to win, and two in flight at once could arrive the other way round.
+ */
+export function pushDraftToBackend(projectId, draft) {
+  const previous = draftsInFlight.get(projectId) || Promise.resolve();
+  const next = previous.then(() => postProjectDraftRemote(projectId, draft)).catch(() => null);
+  draftsInFlight.set(projectId, next);
+  return next;
 }
 
 export function getProjects() {
@@ -447,9 +465,9 @@ export async function hydrateProjectsFromBackend() {
       byId.set(lp.id, { ...lp, role: rp.role, ownerEmail: rp.ownerEmail });
       toPushUp.push(lp);
     } else if (Object.keys(lp.provenance || {}).length && !Object.keys(rp.provenance || {}).length) {
-      // The server wins the values but knows nothing of where they came
-      // from — `toApi` does not send provenance — so a hydrate would strip
-      // the chips off a project drafted a minute ago on this very device.
+      // A project drafted here before the server kept provenance: the server
+      // wins the values but has no labels yet, and taking its empty map would
+      // strip the chips. The next save sends these labels up.
       byId.set(lp.id, { ...rp, provenance: lp.provenance });
     }
   }

@@ -171,8 +171,14 @@ it is a claim about the code, not a way to quiet the check.
   that rule the first draft to reach one replaced a human's name, pitch and
   industry with guesses. Which project a draft lands on is the caller's
   `projectId`; without one it resolves by the drafted site and creates,
-  never "whatever is active". `AuditWorkspace` applies them; nothing else
-  writes drafts.
+  never "whatever is active". `/start` and `AuditWorkspace` apply them;
+  nothing else writes drafts. Each draft is merged here for an instant
+  answer and sent as a draft (`pushDraftToBackend`, one at a time per
+  project, in order) to be merged again on the server, which keeps the
+  labels and holds the same rules (`backend/service/project_draft.py`). A
+  save sends the labels too, and the server settles it by them, so **an
+  edit has to mark its field `user`** (`own()` on the project page): an
+  unmarked empty field reads as a copy that never had the value.
 - `lib/projects.js` — `siteKey()` / `projectsForSite()` are how a site
   address finds its project: lowercase host, no leading `www.`, subdomains
   kept distinct. `projectsForSite` returns every match, because two is a

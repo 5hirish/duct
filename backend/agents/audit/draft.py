@@ -22,8 +22,10 @@ Never inferred: the North Star, the goal window, the growth stage. Those are
 the user's to say, and the agent asks for them in chat when a finding needs
 them.
 
-The event shape is ``{"layer": ..., "fields": {name: {"value", "provenance"}}}``
-and the app's ``lib/projectDraft.js`` merges it into the active project.
+The event shape is ``{"layer": ..., "fields": {name: {"value", "provenance"}}}``.
+The app merges it into the project at once (``lib/projectDraft.js``) and sends
+it to ``POST /api/user/projects/{id}/draft``, where the same rules run against
+what the server holds (``service/project_draft.py``).
 """
 
 from __future__ import annotations
@@ -49,15 +51,17 @@ from service.project_config import (
     BUSINESS_MODEL_OPTIONS,
     INDUSTRY_OPTIONS,
 )
+from service.project_draft import (
+    PROVENANCE_CRAWL,
+    PROVENANCE_DOCUMENT,
+    PROVENANCE_INFERRED,
+)
 
 logger = logging.getLogger(__name__)
 
 LAYER_CRAWL = "crawl"
 LAYER_DOCUMENTS = "documents"
 LAYER_INFERRED = "inferred"
-PROVENANCE_CRAWL = "crawl"
-PROVENANCE_DOCUMENT = "document"
-PROVENANCE_INFERRED = "inferred"
 
 # Across every document the user added: about 15k tokens on their key, which
 # is plenty for a deck and a positioning doc and is a bound on the bill.
