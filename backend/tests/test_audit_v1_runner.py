@@ -361,6 +361,80 @@ async def test_a_drafting_run_uses_the_prefetched_crawl_and_emits_two_draft_laye
     assert order.index(AgentEvent.PROJECT_DRAFT) < order.index(AgentEvent.ARTIFACT_VERSION)
 
 
+class _ReadsDocumentsFake(_DraftingFake):
+    """The drafting fake, answering the documents call with its own schema."""
+
+    def with_structured_output(self, schema, **kwargs):
+        from agents.audit.draft import DocumentCompetitor, DocumentInference
+
+        if schema is not DocumentInference:
+            return super().with_structured_output(schema, **kwargs)
+
+        class _Once:
+            async def ainvoke(self, _prompt):
+                return DocumentInference(
+                    name="Duct", industry="Marketing & Advertising",
+                    competitors=[DocumentCompetitor(name="Supermetrics", differentiator="checks the numbers")],
+                )
+
+        return _Once()
+
+
+async def test_documents_are_read_before_research_and_draft_between_the_site_and_the_guess(
+    emitted, monkeypatch
+):
+    """The files the user added beside the site become their own draft layer,
+    after the crawl's and before the classifier's, and the step that reads
+    them runs before competitor research so the research hears the names."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.documents as documents
+    import agents.audit.prefetch as prefetch
+    import agents.audit.v1.runner as v1
+    from agents.audit.schema import PageSignals
+    from agents.core.context import BusinessContext
+    from service.documents import DocumentKind, Extracted
+
+    session = audit_crawl.create_audit_session(str(uuid.uuid4()))
+    root = PageSignals(url="https://getduct.ai", page_type="landing_page", title="Duct")
+    crawled = CrawlResult(plan=CrawlPlan(root_url="https://getduct.ai", landing_pages=[root.url]), pages=[root])
+
+    async def prefetched(_crawl_id, **_kwargs):
+        return crawled
+
+    asked: list[list[str]] = []
+
+    def take(ids, **_kwargs):
+        asked.append(ids)
+        return [Extracted(name="deck.pdf", kind=DocumentKind.PDF, text="Duct vs Supermetrics", pages=8, truncated=False)]
+
+    monkeypatch.setattr(prefetch, "take_crawl", prefetched)
+    monkeypatch.setattr(documents, "take_documents", take)
+    monkeypatch.setattr(
+        v1, "resolve_chat_model",
+        lambda *_a, **_k: _ReadsDocumentsFake(responses=_model_that_builds_a_template_report().responses),
+    )
+
+    await v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
+        session_id=session.session_id, url="https://getduct.ai",
+        business_context=BusinessContext(), emit=emitted, report_mode="template",
+        crawl_id="prefetched-1", draft_project=True, document_ids=["doc-1"],
+        chat_idle_timeout=0.1,
+    )
+
+    assert asked == [["doc-1"]]
+    drafts = [e for e in emitted.events if e["event"] == AgentEvent.PROJECT_DRAFT]
+    assert [d["layer"] for d in drafts] == ["crawl", "documents", "inferred"]
+    from_documents = drafts[1]["fields"]
+    assert from_documents["industry"] == {"value": "Marketing & Advertising", "provenance": "document"}
+    assert from_documents["competitors"]["value"][0]["name"] == "Supermetrics"
+
+    finished = [e for e in emitted.events if e["event"] == AgentEvent.STEP_FINISHED]
+    steps = [e["step_id"] for e in finished]
+    assert steps.index(AuditStep.READ_DOCUMENTS) < steps.index(AuditStep.ENRICHING)
+    read = next(e for e in finished if e["step_id"] == AuditStep.READ_DOCUMENTS)
+    assert read["payload"] == {"documents": 1, "drafted": True}
+
+
 # ---------------------------------------------------------------------------
 # Provider content shapes
 # ---------------------------------------------------------------------------

@@ -63,6 +63,11 @@ msgstr "{0, plural, one {# call} other {# calls}}"
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, one {# match} other {# matches}}"
 
+#. placeholder {0}: doc.pages
+#: src/components/onboarding/DocumentPicker.jsx
+#~ msgid "{0, plural, one {# page} other {# pages}}"
+#~ msgstr "{0, plural, one {# page} other {# pages}}"
+
 #. placeholder {0}: group.ok
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "{0, plural, one {# pull} other {# pulls}}"
@@ -403,6 +408,7 @@ msgstr "{opportunities, plural, one {# opportunity} other {# opportunities}}"
 #~ msgstr "{output} out"
 
 #: src/components/audit/AuditReport.jsx
+#: src/components/onboarding/DocumentPicker.jsx
 msgid "{pages, plural, one {# page} other {# pages}}"
 msgstr "{pages, plural, one {# page} other {# pages}}"
 
@@ -469,6 +475,14 @@ msgstr "{projectName} · Memory"
 #: src/components/workspace/AgentChat.jsx
 msgid "{ranTier} · {requestedTier} is rate limited"
 msgstr "{ranTier} · {requestedTier} is rate limited"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "{read}, partly read"
+msgstr "{read}, partly read"
+
+#: src/components/onboarding/DocumentPicker.jsx
+#~ msgid "{read}, read the first part"
+#~ msgstr "{read}, read the first part"
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "{ready} of {total} will apply · {blocked, plural, one {# needs a person} other {# need a person}}"
@@ -940,6 +954,10 @@ msgstr "Add a guardrail"
 msgid "Add a hashtag"
 msgstr "Add a hashtag"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Add a pitch deck, a positioning doc or a brief, and Duct drafts your project from those too."
+msgstr "Add a pitch deck, a positioning doc or a brief, and Duct drafts your project from those too."
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
 msgstr "Add a project"
@@ -963,6 +981,10 @@ msgstr "Add a thought — it goes in at the next step"
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Add another account"
 msgstr "Add another account"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Add documents"
+msgstr "Add documents"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Add guardrail"
@@ -2312,6 +2334,10 @@ msgstr "Couldn't load your guardrails. The queue above is unaffected."
 msgid "Couldn't make a video clip"
 msgstr "Couldn't make a video clip"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Couldn't open it"
+msgstr "Couldn't open it"
+
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
 msgstr "Couldn't read that site."
@@ -2572,6 +2598,10 @@ msgstr "Did something"
 msgid "Did the revenue actually arrive?"
 msgstr "Did the revenue actually arrive?"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Didn't upload. Remove it and add it again"
+msgstr "Didn't upload. Remove it and add it again"
+
 #: src/components/content/PostViewport.jsx
 msgid "Discard"
 msgstr "Discard"
@@ -2726,6 +2756,10 @@ msgstr "Drop to attach"
 #: src/components/UpdateToast.jsx
 msgid "Duct {version} is available"
 msgstr "Duct {version} is available"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Duct can't read this type yet"
+msgstr "Duct can't read this type yet"
 
 #: src/app/(start)/start/page.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -3278,6 +3312,10 @@ msgid "From project context"
 msgstr "From project context"
 
 #: src/app/(app)/project/[projectId]/page.jsx
+msgid "From your files"
+msgstr "From your files"
+
+#: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr "From your site"
 
@@ -3475,6 +3513,10 @@ msgstr "Google Tag Manager"
 #: src/app/(auth)/page.js
 msgid "Google will also ask to share Search Console and Analytics with Duct — read-only, and either box can be left unticked."
 msgstr "Google will also ask to share Search Console and Analytics with Duct — read-only, and either box can be left unticked."
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Got a deck or a doc that says more?"
+msgstr "Got a deck or a doc that says more?"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "GPT · about a cent per audit"
@@ -4811,6 +4853,10 @@ msgstr "No slides yet"
 msgid "No sources pulled yet"
 msgstr "No sources pulled yet"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "No text in it. A scan?"
+msgstr "No text in it. A scan?"
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "No textual changes between these versions."
 msgstr "No textual changes between these versions."
@@ -5382,6 +5428,10 @@ msgstr "Out of quota, the run stops and shows you the limit. Nothing switches mo
 msgid "over {windowDays} days"
 msgstr "over {windowDays} days"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Over 10 MB"
+msgstr "Over 10 MB"
+
 #: src/components/ProjectMembers.jsx
 msgid "Owner"
 msgstr "Owner"
@@ -5430,6 +5480,10 @@ msgstr "Partially applied"
 msgid "Partly applied"
 msgstr "Partly applied"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Partly read"
+msgstr "Partly read"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Partnerships"
 msgstr "Partnerships"
@@ -5437,6 +5491,10 @@ msgstr "Partnerships"
 #: src/components/audit/AuditReportV1.jsx
 msgid "PASS"
 msgstr "PASS"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Password-protected. Save a copy without one"
+msgstr "Password-protected. Save a copy without one"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste a key first"
@@ -5465,6 +5523,10 @@ msgstr "pasted image"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pause remembering"
 msgstr "Pause remembering"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "PDF, Word, PowerPoint, Markdown or text. Up to five."
+msgstr "PDF, Word, PowerPoint, Markdown or text. Up to five."
 
 #: src/lib/contentEnums.js
 msgid "Pending"
@@ -5867,6 +5929,7 @@ msgstr "ran on its own"
 msgid "Reach"
 msgstr "Reach"
 
+#: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
 msgstr "Read"
@@ -5907,6 +5970,10 @@ msgstr "Read the brand context"
 msgid "Read the discovered references"
 msgstr "Read the discovered references"
 
+#: src/components/onboarding/DocumentPicker.jsx
+#~ msgid "Read the first part"
+#~ msgstr "Read the first part"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read the format library"
 msgstr "Read the format library"
@@ -5943,7 +6010,12 @@ msgstr "Reading the TikTok"
 msgid "Reading what you've already said…"
 msgstr "Reading what you've already said…"
 
+#: src/lib/auditEvents.js
+msgid "Reading your documents"
+msgstr "Reading your documents"
+
 #: src/app/(start)/start/page.jsx
+#: src/components/onboarding/DocumentPicker.jsx
 msgid "Reading…"
 msgstr "Reading…"
 
@@ -6121,6 +6193,11 @@ msgstr "Remembering…"
 msgid "Remove"
 msgstr "Remove"
 
+#. placeholder {0}: doc.name
+#: src/components/onboarding/DocumentPicker.jsx
+#~ msgid "Remove {0}"
+#~ msgstr "Remove {0}"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Remove {item}"
 msgstr "Remove {item}"
@@ -6129,6 +6206,7 @@ msgstr "Remove {item}"
 msgid "Remove {memberEmail}"
 msgstr "Remove {memberEmail}"
 
+#: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/Attachments.jsx
 msgid "Remove {name}"
 msgstr "Remove {name}"
