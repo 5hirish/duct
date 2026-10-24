@@ -30,6 +30,8 @@ import {
 } from "../../../lib/connectorAuth";
 import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
 import { getActiveProject } from "../../../lib/projects";
+import { MCP_GUIDE_URL } from "../../../lib/mcpServers";
+import { NATIVE_SOURCE } from "../../../lib/connectorSource";
 
 /** Storage key back to the connector it belongs to. */
 function connectorTypeForStorageKey(storageKey) {
@@ -42,7 +44,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ConnectorTile from "../../../components/connections/ConnectorTile";
 import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
-import McpServers from "../../../components/connections/McpServers";
+import McpConnectors from "../../../components/connections/McpConnectors";
 import OAuthConnectorCard from "../../../components/connections/OAuthConnectorCard";
 import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSelect";
 import { LOGOS } from "../../../components/connections/logos";
@@ -361,7 +363,7 @@ export default function ConnectionsPage() {
         setConnectError(t`Sign in to finish connecting GitHub.`);
       }
     } else if (connectorParam === MCP_CONNECTOR) {
-      // An MCP server's sign-in. McpServers claims it: a grant, not a token,
+      // An MCP server's sign-in. McpConnectors claims it: a grant, not a token,
       // and not one /auth/connectors/exchange would recognise.
     } else if (connectorParam && codeParam) {
       // Single-use and 60-second, but there is no reason to leave it in the
@@ -576,6 +578,12 @@ export default function ConnectionsPage() {
 
   const projectName = project?.name || t`this project`;
 
+  // The MCP tiles report into the same two lines as every other connector.
+  const showMcpMessage = useCallback(({ error = "", notice = "" }) => {
+    setConnectError(error);
+    setConnectNotice(notice);
+  }, []);
+
   return (
     <section>
       <div className="page-toolbar-back">
@@ -603,12 +611,22 @@ export default function ConnectionsPage() {
 
       <Tabs defaultValue="connections">
         <TabsContent value="connections">
-          <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18, maxWidth: 720 }}>
+          <p className="app-subtle" style={{ marginTop: 0, marginBottom: 8, maxWidth: 720 }}>
             <Trans>
               Connect an account once — it&rsquo;s saved for your whole account. Open a card
               to set it up and to pick which of your accounts{" "}
               <strong className="font-medium text-foreground">{projectName}</strong>{" "}
               reads from.
+            </Trans>
+          </p>
+          <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18, maxWidth: 720 }}>
+            <Trans>
+              <strong className="font-medium text-foreground">Native</strong> connectors are built by Duct and feed
+              briefs, alerts and the chat. <strong className="font-medium text-foreground">MCP</strong> connectors
+              are each company&rsquo;s own server; the insights chat calls their tools.{" "}
+              <a className="app-link underline underline-offset-2" href={MCP_GUIDE_URL} target="_blank" rel="noreferrer">
+                How MCP works
+              </a>
             </Trans>
           </p>
 
@@ -994,14 +1012,15 @@ export default function ConnectionsPage() {
             <ConnectorTile
               logo={LOGOS.hubspot}
               title="HubSpot"
+              source={NATIVE_SOURCE}
               description={t`CRM lifecycle stages, pipeline and closed revenue.`}
               tone="off"
               status={t`Coming soon`}
               disabled
             />
-          </div>
 
-          <McpServers signedIn={signedIn} />
+            <McpConnectors signedIn={signedIn} onMessage={showMcpMessage} />
+          </div>
         </TabsContent>
 
       </Tabs>

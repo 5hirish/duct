@@ -4,6 +4,9 @@
  * page, the approval card and a test all read a server address one way.
  */
 
+/** The public page that walks through each preset and the by-address path. */
+export const MCP_GUIDE_URL = "https://getduct.ai/mcp";
+
 /** The host a server lives at — `mcp.notion.com` — or "" for a bad address. */
 export function serverHost(url) {
   try {

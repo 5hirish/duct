@@ -10,14 +10,15 @@
 // place for that last one, with the reason, so the person learns why they are
 // pasting something rather than meeting a form they did not ask for.
 
-import { useEffect, useId, useRef, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { useId, useState } from "react";
+import { ExternalLink, MessageSquare, ShieldCheck } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { McpServerStatus } from "@/lib/connectorsApi";
+import { MCP_GUIDE_URL } from "@/lib/mcpServers";
 import ConnectorDialog from "./ConnectorDialog";
 import ConnectorDot from "./ConnectorDot";
 
@@ -36,8 +37,8 @@ const EXAMPLE_SERVER_URL = "https://mcp.example.com/mcp";
  * @param onConnect  `(target) => Promise<{ done } | { waiting } | { needsKey }>`,
  *   where `target` is `{ preset, apiKey }` or `{ url, name, apiKey }`; a
  *   rejection's message is shown as the reason it did not connect.
- * @param autoStart  Run Connect as the dialog opens — a row's Reconnect, which
- *   already said what it wants.
+ * @param source  `{ kind, publisher }` for the line under the title: MCP, and
+ *   who runs the server.
  * @param initialNeedsKey  Open as though the server had just asked for a key,
  *   reason and all. `/preview` uses it to reach the state with no server.
  * @param initialKeyOpen  Open with the key field showing and no reason given:
@@ -48,13 +49,13 @@ export default function McpConnectDialog({
   onOpenChange,
   logo,
   description,
+  source,
   preset = null,
   server = null,
   initialUrl = "",
   initialName = "",
   initialNeedsKey = false,
   initialKeyOpen = false,
-  autoStart = false,
   onConnect,
   onDisconnect,
 }) {
@@ -67,7 +68,6 @@ export default function McpConnectDialog({
   const [keyOpen, setKeyOpen] = useState(initialNeedsKey || initialKeyOpen);
   const [phase, setPhase] = useState("");
   const [error, setError] = useState("");
-  const started = useRef(false);
 
   const label = preset?.label || server?.name || initialName || "";
   const title = preset ? label : server ? label : t`Add an MCP server`;
@@ -121,14 +121,6 @@ export default function McpConnectDialog({
     }
   }
 
-  useEffect(() => {
-    if (!open || !autoStart || started.current) return;
-    started.current = true;
-    submit();
-    // Once per opening, on purpose: the dialog is keyed per opening.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, autoStart]);
-
   const primaryLabel =
     phase === PHASE_STARTING ? (
       <Trans>Connecting…</Trans>
@@ -147,6 +139,7 @@ export default function McpConnectDialog({
       logo={logo}
       title={title}
       description={description}
+      source={source}
       status={
         <span className="conn-state">
           <span className="conn-state-glyph" title={statusWords}>
@@ -284,6 +277,35 @@ export default function McpConnectDialog({
             {error}
           </p>
         )}
+
+        {/* What an MCP connector is, here rather than on the page: it is the
+            moment someone decides whether to connect one. */}
+        <ul className="mcp-notes">
+          <li>
+            <ShieldCheck className="mcp-note-icon" aria-hidden="true" />
+            <span>
+              {preset ? (
+                <Trans>
+                  A tool {label} marks read-only runs straight away. Anything else asks you first, every time.
+                </Trans>
+              ) : (
+                <Trans>Duct asks you before every call to a server added by address.</Trans>
+              )}
+            </span>
+          </li>
+          <li>
+            <MessageSquare className="mcp-note-icon" aria-hidden="true" />
+            <span>
+              <Trans>
+                Only your own insights chats use it, in any project. Scheduled briefs don&rsquo;t call MCP
+                connectors yet.
+              </Trans>{" "}
+              <a className="app-link underline underline-offset-2" href={MCP_GUIDE_URL} target="_blank" rel="noreferrer">
+                <Trans>How MCP connectors work</Trans>
+              </a>
+            </span>
+          </li>
+        </ul>
       </form>
     </ConnectorDialog>
   );

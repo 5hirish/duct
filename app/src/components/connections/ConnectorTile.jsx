@@ -19,6 +19,7 @@
 import { ChevronRight } from "lucide-react";
 import { useLingui } from "@lingui/react/macro";
 import ConnectorDot from "./ConnectorDot";
+import ConnectorSource from "./ConnectorSource";
 import StorageBadge from "./StorageBadge";
 
 /**
@@ -26,6 +27,9 @@ import StorageBadge from "./StorageBadge";
  *   ChatGPT"). A fact about what the tile accepts, not a state — states go in
  *   the foot. One tile has one today; it is a prop so the second does not
  *   need a second markup path.
+ * @param source  `{ kind, publisher }` (lib/connectorSource.js): native and by
+ *   Duct, or MCP and by the vendor. Connectors pass one, model providers do
+ *   not, since the grid that mixes kinds is the connectors one.
  * @param tone  "on" | "info" | "partial" | "off" — drives the status dot's
  *   colour. "info" is reachable-but-not-yours (Duct's key, or this machine's);
  *   "partial" is reachable-but-degraded. They are different claims.
@@ -40,6 +44,7 @@ export default function ConnectorTile({
   title,
   description,
   tag,
+  source,
   tone = "off",
   status,
   storage,
@@ -74,6 +79,7 @@ export default function ConnectorTile({
             <ChevronRight className="conn-tile-chevron" size={16} aria-hidden="true" />
           )}
         </div>
+        <ConnectorSource source={source} />
         <p className="conn-tile-desc">{description}</p>
         <div className={`conn-tile-foot${tone === "on" ? " conn-tile-foot--on" : ""}`}>
           <ConnectorDot tone={tone} />

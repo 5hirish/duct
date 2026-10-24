@@ -39,6 +39,7 @@ import ConnectorTile from "./ConnectorTile";
 import StorageBadge from "./StorageBadge";
 import ProjectBinding from "./ProjectBinding";
 import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
+import { NATIVE_SOURCE } from "../../lib/connectorSource";
 
 export default function ManualConnectorCard({
   type,            // connector id: "apple_ads" | "meta_ads" | ...
@@ -213,6 +214,7 @@ export default function ManualConnectorCard({
         logo={logo}
         title={title}
         description={description}
+        source={NATIVE_SOURCE}
         tone={connected ? "on" : "off"}
         status={status}
         storage={storage}
@@ -225,6 +227,7 @@ export default function ManualConnectorCard({
         logo={logo}
         title={title}
         description={description}
+        source={NATIVE_SOURCE}
         // The same status row the OAuth dialogs carry. It was missing here —
         // the import for it had been sitting unused — so a pasted credential
         // gave no answer to "is this live, and where does it live?" once the

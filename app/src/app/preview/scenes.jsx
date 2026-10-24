@@ -49,7 +49,8 @@ import ConnectorPermissions from "@/components/connections/ConnectorPermissions"
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
-import McpServers from "@/components/connections/McpServers";
+import McpConnectors from "@/components/connections/McpConnectors";
+import { NATIVE_SOURCE } from "@/lib/connectorSource";
 import PauseCard from "@/components/workspace/PauseCard";
 import { AgentEvent } from "@/lib/agentEvents";
 import ProviderCard from "@/components/connections/ProviderCard";
@@ -516,10 +517,12 @@ const ACTIVITIES = [
 // MCP servers, shaped exactly as /api/user/mcp/presets and /servers return
 // them (backend/service/mcp/presets.py, store.list_servers).
 const MCP_PRESETS = [
-  { id: "openseo", label: "OpenSEO", url: "https://app.openseo.so/mcp", home: "https://openseo.so", key_url: "https://app.openseo.so/settings" },
-  { id: "notion", label: "Notion", url: "https://mcp.notion.com/mcp", home: "https://www.notion.so", key_url: "" },
-  { id: "linear", label: "Linear", url: "https://mcp.linear.app/mcp", home: "https://linear.app", key_url: "" },
-  { id: "posthog", label: "PostHog", url: "https://mcp.posthog.com/mcp", home: "https://posthog.com", key_url: "https://app.posthog.com/settings/user-api-keys" },
+  { id: "openseo", label: "OpenSEO", url: "https://app.openseo.so/mcp", home: "https://openseo.so", publisher: "OpenSEO", key_url: "https://app.openseo.so/settings" },
+  { id: "notion", label: "Notion", url: "https://mcp.notion.com/mcp", home: "https://www.notion.so", publisher: "Notion", key_url: "" },
+  { id: "linear", label: "Linear", url: "https://mcp.linear.app/mcp", home: "https://linear.app", publisher: "Linear", key_url: "" },
+  { id: "posthog", label: "PostHog", url: "https://mcp.posthog.com/mcp", home: "https://posthog.com", publisher: "PostHog", key_url: "https://app.posthog.com/settings/user-api-keys" },
+  { id: "railway", label: "Railway", url: "https://mcp.railway.com", home: "https://railway.com", publisher: "Railway", key_url: "" },
+  { id: "cloudflare", label: "Cloudflare", url: "https://mcp.cloudflare.com/mcp", home: "https://www.cloudflare.com", publisher: "Cloudflare", key_url: "" },
 ];
 
 const mcpServer = (id, fields) => ({
@@ -1511,23 +1514,23 @@ export const SCENES = [
   {
     id: "mcp-servers",
     state: "nothing connected yet",
-    group: "McpServers",
-    title: "MCP servers, before the first connect",
-    note: "The section under the connector grid on Connections. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. The two notes at the bottom are the facts worth knowing before connecting anything.",
+    group: "McpConnectors",
+    title: "MCP connectors, before the first connect",
+    note: "The MCP tiles join the native ones in Connections' one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
     render: () => <McpScene servers={MCP_NONE} answer="authorize" />,
   },
   {
     id: "mcp-servers-connected",
     state: "three connected: an API key, a lapsed sign-in, a long name with no sign-in",
-    group: "McpServers",
-    title: "MCP servers, connected",
-    note: "Connected servers come first, as rows, with Add a server under them. Notion's sign-in lapsed: its row says Needs reconnecting with Reconnect beside Disconnect, and its tile goes amber. The third is a server added by address with a name long enough to truncate: the buttons must stay on the row and the host must stay readable. Disconnect asks first, then the row goes.",
+    group: "McpConnectors",
+    title: "MCP connectors, connected",
+    note: "OpenSEO is connected with a key. Notion's sign-in lapsed: its tile goes amber and says Needs reconnecting, and its dialog opens on Reconnect. The third is a server added by address, now a tile of its own: MCP with no publisher (Duct can't know who runs it), its host underneath, and a name long enough to wrap. Disconnect, in the dialog, asks first, then the tile goes.",
     render: () => <McpScene servers={MCP_SERVERS} answer="needs_key" />,
   },
   {
     id: "mcp-servers-needs-key",
     state: "the server asks for a key",
-    group: "McpServers",
+    group: "McpConnectors",
     title: "When a server has no one-click sign-in",
     note: "Open either dialog: each starts where a connect lands when the server answers needs_key. The key field appears in place with the reason above it, and OpenSEO's links to where OpenSEO issues keys. In the section above, any tile's Connect gets the same answer; paste anything and press Connect again to see it save.",
     render: () => <McpKeyScene />,
@@ -1535,9 +1538,9 @@ export const SCENES = [
   {
     id: "mcp-servers-edges",
     state: "signed out · loading · failed to load",
-    group: "McpServers",
-    title: "MCP servers, before there is anything to show",
-    note: "Signed out there is no list to fetch, so the section says where the connection would live and stops. Loading holds the grid's shape. A failed load says so with the server's sentence and a Retry.",
+    group: "McpConnectors",
+    title: "MCP connectors, before there is anything to show",
+    note: "Signed out there is no list to fetch, so one disabled tile says what would be here. Loading holds tile shapes in the grid. A failed load is one amber tile with the server's sentence; opening it tries again.",
     render: () => <McpEdgesScene />,
   },
   {
@@ -2706,13 +2709,47 @@ function OneClickCardScene() {
   );
 }
 
+/** The grid the MCP tiles join on Connections, with two native tiles ahead of
+ *  them so the source lines can be compared, and the page's message line. */
+function ConnectorGrid({ children }) {
+  return (
+    <div className="conn-grid">
+      <ConnectorTile
+        logo={LOGOS.ga4}
+        title="Google Analytics"
+        source={NATIVE_SOURCE}
+        description="Traffic, sessions, engagement and conversions."
+        tone="on"
+        status="Connected"
+        onClick={() => {}}
+      />
+      <ConnectorTile
+        logo={LOGOS.stripe}
+        title="Stripe"
+        source={NATIVE_SOURCE}
+        description="Settled revenue, subscriptions, refunds and payment outcomes."
+        status="Not connected"
+        onClick={() => {}}
+      />
+      {children}
+    </div>
+  );
+}
+
+function McpMessage({ message }) {
+  if (message.error) return <p role="alert" className="mb-3 text-sm text-destructive">{message.error}</p>;
+  if (message.notice) return <p role="status" className="mb-3 text-sm text-muted-foreground">{message.notice}</p>;
+  return null;
+}
+
 /**
- * The MCP section over a stub that behaves like the backend: connecting adds
- * a row, Disconnect removes it. `answer` is what a connect without a key gets
- * back — "authorize" (the desktop shell's browser hand-off, so the dialog
- * waits instead of navigating the preview away) or "needs_key".
+ * The MCP tiles over a stub that behaves like the backend: connecting adds a
+ * server, Disconnect removes it. `answer` is what a connect without a key
+ * gets back — "authorize" (the desktop shell's browser hand-off, so the
+ * dialog waits instead of navigating the preview away) or "needs_key".
  */
 function McpScene({ servers, answer, signedIn = true }) {
+  const [message, setMessage] = useState({});
   const api = useMemo(() => {
     let rows = [...servers];
     return {
@@ -2740,7 +2777,14 @@ function McpScene({ servers, answer, signedIn = true }) {
       },
     };
   }, [servers, answer]);
-  return <McpServers signedIn={signedIn} api={api} />;
+  return (
+    <div>
+      <McpMessage message={message} />
+      <ConnectorGrid>
+        <McpConnectors signedIn={signedIn} api={api} onMessage={setMessage} />
+      </ConnectorGrid>
+    </div>
+  );
 }
 
 /** The key-asked state is the far side of a server round trip, so these open
@@ -2760,6 +2804,7 @@ function McpKeyScene() {
         onOpenChange={close}
         logo={<EntityAvatar url="https://openseo.so" name="OpenSEO" className="conn-favicon" />}
         description="Keyword volume, difficulty and backlinks for the topics you ask about."
+        source={{ kind: "mcp", publisher: "OpenSEO" }}
         preset={MCP_PRESETS[0]}
         initialNeedsKey
         onConnect={connect}
@@ -2769,6 +2814,7 @@ function McpKeyScene() {
         onOpenChange={close}
         logo={LOGO}
         description="Paste the address of any remote MCP server."
+        source={{ kind: "mcp", publisher: "" }}
         initialUrl="https://tools.example.com/mcp"
         initialNeedsKey
         onConnect={connect}
@@ -2792,9 +2838,15 @@ const MCP_FAILING = {
 function McpEdgesScene() {
   return (
     <div className="space-y-10">
-      <McpServers signedIn={false} api={MCP_PENDING} />
-      <McpServers signedIn api={MCP_PENDING} />
-      <McpServers signedIn api={MCP_FAILING} />
+      <ConnectorGrid>
+        <McpConnectors signedIn={false} api={MCP_PENDING} />
+      </ConnectorGrid>
+      <ConnectorGrid>
+        <McpConnectors signedIn api={MCP_PENDING} />
+      </ConnectorGrid>
+      <ConnectorGrid>
+        <McpConnectors signedIn api={MCP_FAILING} />
+      </ConnectorGrid>
     </div>
   );
 }
