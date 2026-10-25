@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-30
+**Author:** Shirish Kadam · **Updated:** 2026-10-25
 
 How an agent is built and maintained here, on LangChain 1.x, LangGraph and
 `deepagents`. Read it before adding an agent or changing one: a prompt, a tool,
@@ -158,7 +158,7 @@ land.
 | # | Gap | Change | Effort |
 |---|---|---|---|
 | 1 | Insights' auto-added `general-purpose` sub-agent carries every tool, `ProposeChanges`, `RollbackChangeSet` and `RememberFact` included, with no retry or limits | supply a read-only one, as content does; generalise content's test into `test_agent_assembly.py` | S |
-| 2 | SDK retries stack under `ReportedRetryMiddleware`, invisible to the UI and the quota cooldown | `max_retries=0` (Gemini: `retries=1`) and a timeout in `resolve_chat_model`; a test per provider | S |
+| 2 | ~~SDK retries stack under `ReportedRetryMiddleware`, invisible to the UI and the quota cooldown~~ | done 2026-10-25: `max_retries=0` (Gemini `1`) in `resolve_chat_model`, a test per provider. A per-request timeout is still open: the SDK defaults are ten minutes and a thinking call can legitimately run long, so it needs a measurement first | S |
 | 3 | Deep-rung summarisation fires at ~850k on the current Claude models | trigger from `context_window_for(model)`; test across the catalogue | S–M |
 | 4 | Fallback fires on auth, bad-request and overflow errors | classified fallback subclass | S |
 | 5 | Sub-agents run without retry or limits; a sub-agent exception ends the parent turn | `subagent_middleware(limits)`; `ToolErrorMiddleware` in `session_middleware` | S–M |

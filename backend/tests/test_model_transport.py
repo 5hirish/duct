@@ -566,3 +566,27 @@ def test_live_a_tier_default_calls_a_tool_while_it_reasons(provider: Provider):
         if not reply.tool_calls:
             silent.append(model.value)
     assert not silent, f"answered without calling the tool: {silent}"
+
+
+@pytest.mark.parametrize(
+    ("provider", "model", "api_key", "expected"),
+    [
+        (Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, "sk-ant-x", 0),
+        (Provider.OPENAI, ModelName.GPT_5_MINI, "sk-proj-x", 0),
+        # A ChatGPT plan credential takes the Codex route and the same rule.
+        (Provider.OPENAI, ModelName.GPT_5_MINI, "eyJhbGciOiJSUzI1NiJ9.e30.EXAMPLE|acct-1", 0),
+        (Provider.XAI, "grok-4", "xai-x", 0),
+        (Provider.OPENROUTER, "vendor/some-model", "sk-or-x", 0),
+        # Gemini's SDK reads 0 as "use the default (6)"; 1 is its "once".
+        (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_8_FLASH, "AIza-x", 1),
+    ],
+)
+def test_the_sdk_retries_nothing_underneath_the_reported_retry(provider, model, api_key, expected):
+    """Rulebook gap 2. Four reported attempts over two silent SDK retries
+    each was a minute of "retrying" the UI could not explain, and a dead
+    provider took that long to fall back. `ReportedRetryMiddleware` is the
+    one retry layer: it reports each attempt and honours Retry-After."""
+    from agents.core.lc import resolve_chat_model
+
+    llm = resolve_chat_model(provider, model, api_key)
+    assert llm.max_retries == expected, provider
