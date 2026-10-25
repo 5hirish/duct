@@ -353,7 +353,8 @@ class AutonomousInsightsRunner:
         fallbacks: list[Any] = []
         if not injected_llm:
             fallbacks = fallback_chain(
-                self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
+                self.provider, self.model, self._api_key, self._temperature,
+                thinking=self._thinking, cache_key=cache_key,
             )
 
         prompt_text = system_prompt or build_insights_system_prompt(

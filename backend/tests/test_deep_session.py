@@ -22,7 +22,9 @@ from agents.core.deep_session import (
     DeepSession,
     RunLimits,
     build_deep_session_agent,
+    PRUNE_BATCH_DIVISOR,
     fallback_chain,
+    session_middleware,
     recorder_tool_hooks,
 )
 from agents.core.events import AgentEvent
@@ -70,6 +72,36 @@ def test_the_assembled_agent_has_planning_a_virtual_filesystem_and_no_shell():
     assert "write_todos" in names
     assert {"ls", "read_file", "write_file", "edit_file", "glob", "grep"} <= names
     assert "execute" not in names
+
+
+def test_a_prune_clears_a_batch_so_the_prefix_holds_between_prunes():
+    """With no `clear_at_least`, LangChain clears every result older than
+    `keep` on every call past the trigger — one more each call, so the cached
+    prefix diverged at that result and the provider re-prefilled the tail at
+    write price for the rest of the run. A batch drops the count back under
+    the trigger and the prefix holds until that much context accumulates."""
+    from langchain.agents.middleware import ContextEditingMiddleware
+
+    limits = _limits()
+    assert limits.tool_results_clear_at_least == limits.tool_result_prune_trigger // PRUNE_BATCH_DIVISOR
+    assert _limits(tool_results_clear_at_least=300).tool_results_clear_at_least == 300
+    with pytest.raises(ValueError, match="clear_at_least"):
+        _limits(tool_results_clear_at_least=1_000)
+
+    pruning = next(m for m in session_middleware(limits) if isinstance(m, ContextEditingMiddleware))
+    (edit,) = pruning.edits
+    assert edit.clear_at_least == limits.tool_results_clear_at_least
+
+
+def test_the_fallback_model_carries_the_threads_cache_key():
+    """OpenAI routes a request by `prompt_cache_key`; a fallen-back loop
+    without it landed on a machine with no prefix and rebuilt it per call."""
+    from langchain_core.messages import HumanMessage
+
+    from agents.core.lc import PROMPT_CACHE_KEY_FIELD
+
+    (fallback,) = fallback_chain(Provider.OPENAI, ModelName.GPT_6_1_SOL, "sk-proj-x", cache_key="thread-1")
+    assert fallback._get_request_payload([HumanMessage("hi")])[PROMPT_CACHE_KEY_FIELD] == "thread-1"
 
 
 def test_fallback_chain_is_one_same_provider_step_or_nothing():

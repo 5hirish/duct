@@ -81,6 +81,16 @@ Pauses = list[dict]
 # tests/test_insights_middleware.py for the threshold relationship.
 SUMMARIZATION_FLOOR_TOKENS = 170_000
 
+# How much a prune clears at once, as a share of the trigger. LangChain's
+# `ClearToolUsesEdit` with no `clear_at_least` clears every result older than
+# `keep` on every call past the trigger: the one result that just aged out of
+# the keep window is rewritten each call, so the cached prefix diverges there
+# and the provider re-prefills the last `keep` results at write price on
+# every call for the rest of the run. Clearing a quarter of the trigger at a
+# time drops the count back under the trigger, and the prefix then holds
+# until that much new context has accumulated.
+PRUNE_BATCH_DIVISOR = 4
+
 # The scratch-space verbs an agent gets, and the one it does not.
 #
 # `deepagents` mounts an `execute` tool alongside these — a shell. It is inert
@@ -139,8 +149,22 @@ class RunLimits:
     #: ceiling long before the general tool guard. Refused calls come back to
     #: the model as errors it can read, and the turn goes on.
     per_tool_run_limits: tuple[tuple[str, int], ...] = ()
+    #: Tokens one prune clears before it stops, so a prune buys several calls
+    #: of a stable prefix (PRUNE_BATCH_DIVISOR). Derived from the trigger
+    #: when left at 0.
+    tool_results_clear_at_least: int = 0
 
     def __post_init__(self) -> None:
+        if self.tool_results_clear_at_least == 0:
+            object.__setattr__(
+                self, "tool_results_clear_at_least",
+                self.tool_result_prune_trigger // PRUNE_BATCH_DIVISOR,
+            )
+        if self.tool_results_clear_at_least >= self.tool_result_prune_trigger:
+            raise ValueError(
+                f"tool_results_clear_at_least ({self.tool_results_clear_at_least}) must stay "
+                f"below tool_result_prune_trigger ({self.tool_result_prune_trigger})"
+            )
         # Ordering here is by threshold, not by position: deepagents mounts
         # SummarizationMiddleware in its base stack and user middleware lands
         # after it, so summarization gets the request first and delegates
@@ -174,6 +198,7 @@ def fallback_chain(
     temperature: float = 1.0,
     *,
     thinking: str = "",
+    cache_key: str = "",
 ) -> list[Any]:
     """The models to fall back to when ``model`` errors, as chat models.
 
@@ -182,10 +207,12 @@ def fallback_chain(
     on the key the caller supplied — see MODEL_FALLBACK in agents/models.py
     for why the chain is one step and never crosses a provider. Empty for a
     model at the bottom of its family or a raw OpenRouter slug, so the caller
-    mounts no middleware at all rather than an empty one.
+    mounts no middleware at all rather than an empty one. ``cache_key`` is the
+    thread's, the same one the primary carries: a fallen-back OpenAI loop
+    without it rebuilt its prefix on every call.
     """
     return [
-        resolve_chat_model(provider, name, api_key, temperature, thinking=thinking)
+        resolve_chat_model(provider, name, api_key, temperature, thinking=thinking, cache_key=cache_key)
         for name in resolve_fallback_models(Engine.V1, provider, model)
     ]
 
@@ -332,6 +359,7 @@ def session_middleware(
                 ClearToolUsesEdit(
                     trigger=limits.tool_result_prune_trigger,
                     keep=limits.tool_results_kept,
+                    clear_at_least=limits.tool_results_clear_at_least,
                     clear_tool_inputs=False,
                     exclude_tools=NEVER_PRUNED,
                 )

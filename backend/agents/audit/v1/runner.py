@@ -249,17 +249,19 @@ class LangChainAuditRunner:
         # built-in one; without it the research pass degrades to local signals.
         self._gemini_api_key = gemini_api_key
 
-    def _resilience(self) -> dict:
+    def _resilience(self, *, cache_key: str = "") -> dict:
         """What the shared middleware needs from this run's credential.
 
         The same one-step fallback and quota attribution insights and content
         get, so a provider outage nine categories into an audit falls back
         instead of ending the report, and a final 429 cools this key down for
-        the next run rather than every customer's.
+        the next run rather than every customer's. ``cache_key`` is the one
+        the primary model carries, so the fallback stays on the same prefix.
         """
         return {
             "fallbacks": fallback_chain(
                 self.provider, self.model, self._api_key, self._temperature,
+                cache_key=cache_key,
             ),
             "identity": credential_identity(self._api_key),
             "provider": self.provider,
@@ -501,7 +503,7 @@ class LangChainAuditRunner:
             on_submit_report=_on_submit,
             with_data=with_data,
             **wiring,
-            **self._resilience(),
+            **self._resilience(cache_key=session_id),
         )
 
         await emit({
@@ -759,7 +761,7 @@ class LangChainAuditRunner:
             on_submit_report=_on_submit,
             with_data=with_data,
             **wiring,
-            **self._resilience(),
+            **self._resilience(cache_key=session_id),
         )
         loop = self._session_loop(
             agent, llm, session, emit, session_id,
