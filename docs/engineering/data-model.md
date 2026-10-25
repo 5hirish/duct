@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-25
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-26
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -22,11 +22,13 @@ to be "X is already in one of these, and nothing reads it yet."
 | What does the agent know that it cannot re-derive? | `project_memories` | memory tools and consolidation, `service/memory.py` | bi-temporal, typed, sourced; a later value for the same key supersedes the earlier one |
 
 How they relate: `agent_events`, `activity_logs` and `artifacts` are the raw
-evidence and stay append-only; `project_memories` is the layer distilled from
+evidence and stay append-only. `project_memories` is the layer distilled from
 them, the only one written to be put in front of a model
 ([`backend/models/memory.py`](../../backend/models/memory.py), "Layer 1 of
-four"). A human decision on a change set (approve, reject, apply, rollback) is
-an `activity_logs` row and a status on `execution_change_sets`, never a third
+four").
+
+A human decision on a change set (approve, reject, apply, rollback) is an
+`activity_logs` row and a status on `execution_change_sets`, never a third
 record.
 
 Conversation state the model resumes from (LangGraph checkpoints) is not in

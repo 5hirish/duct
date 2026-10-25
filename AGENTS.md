@@ -405,4 +405,10 @@ before writing in an area you have not written in before.
   still one file.
 - Update the docs next to the code you changed, including the area `AGENTS.md`
   if you changed a convention.
+- A document a person reads (anything in `docs/`, a README, the playbook)
+  follows the writing rules in [`docs/README.md`](docs/README.md): the point
+  in the first line, a figure or table before prose, headings that state
+  their point, under five minutes, specs linked rather than walked through.
+  `AGENTS.md`, `STYLE.md` and `DESIGN.md` are for agents and engineers and
+  keep their density.
 - Deployment happens through CI on merge to `main`. Do not deploy from a CLI.
