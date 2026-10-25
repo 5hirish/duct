@@ -36,7 +36,7 @@ import { Button } from "@/components/ui/button";
 import { SkeletonDocument } from "@/components/ui/skeleton";
 import ComposerDials, { TierDial } from "@/components/workspace/ComposerDials";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
-import { AUTONOMY_ASK } from "@/lib/projectsApi";
+import { AUTONOMY_ASK, AUTONOMY_OPTIONS } from "@/lib/projectsApi";
 import { getProjectById } from "@/lib/projects";
 import { MarkdownView } from "@/components/artifacts/ArtifactRenderer";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
@@ -433,12 +433,20 @@ function AutonomyBadge({ autonomy, level: current = "" }) {
   // The composer chip is the live value once the person touches it; the
   // event is what the run opened with.
   const level = current || autonomy?.autonomy || "";
-  const configured = autonomy?.autonomy_configured || "";
+  const configuredLevel = autonomy?.autonomy_configured || "";
   if (!level) return null;
-  const steppedDown = configured && configured !== level && current === (autonomy?.autonomy || "");
+  const steppedDown = configuredLevel && configuredLevel !== level && current === (autonomy?.autonomy || "");
+  // The enum is the API's; the word is the composer dial's own label for it,
+  // so the badge and the dial never disagree and a Spanish reader does not
+  // see "ASSISTED". A value the table does not know shows as itself.
+  const word = (value) => {
+    const option = AUTONOMY_OPTIONS.find((o) => o.value === value);
+    return option ? i18n._(option.label) : value;
+  };
+  const configured = word(configuredLevel);
   return (
     <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs">
-      <span className="rounded-full bg-muted px-2 py-0.5 font-medium uppercase tracking-wide">{level}</span>
+      <span className="rounded-full bg-muted px-2 py-0.5 font-medium uppercase tracking-wide">{word(level)}</span>
       <span className="hidden text-muted-foreground @md:inline">
         {AUTONOMY_LABELS[level] ? i18n._(AUTONOMY_LABELS[level]) : ""}
       </span>

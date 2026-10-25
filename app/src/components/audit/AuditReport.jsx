@@ -6,6 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { Phase } from "../workspace/agentPhase";
 import { AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
+import { errorText } from "../../lib/agentSession";
 import { saveText } from "../../lib/download";
 import PipelineProgress from "../PipelineProgress";
 import AuditReportV1 from "./AuditReportV1";
@@ -187,6 +188,7 @@ function InterruptedReport() {
 }
 
 function FailedOverlay({ errorMsg, onRetry, hasReport }) {
+  const { i18n } = useLingui();
   return (
     <div
       className={[
@@ -209,7 +211,7 @@ function FailedOverlay({ errorMsg, onRetry, hasReport }) {
               {hasReport
                 ? <Trans>The pipeline stopped early — your partial results are still visible above.</Trans>
                 : errorMsg
-                ? errorMsg
+                ? errorText(i18n, errorMsg)
                 : <Trans>Something interrupted the audit. Your site is fine — this was on our end.</Trans>}
             </p>
           </div>
