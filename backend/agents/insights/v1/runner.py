@@ -59,6 +59,7 @@ from uuid import UUID, uuid4
 from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.activity import activity_hooks, announce_context
 from agents.core.deep_session import (
+    subagent_middleware,
     FILESYSTEM_TOOLS,
     SUMMARIZATION_FLOOR_TOKENS,
     DeepSession,
@@ -356,6 +357,14 @@ class AutonomousInsightsRunner:
                 self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
             )
 
+        # Every sub-agent gets the loop's guards: run limits and the reporting
+        # retry, on the same credential identity as the parent.
+        guards = subagent_middleware(
+            LIMITS,
+            identity="" if injected_llm else credential_identity(self._api_key),
+            provider=None if injected_llm else self.provider,
+        )
+
         prompt_text = system_prompt or build_insights_system_prompt(
             capabilities=(
                 CAPABILITIES_PHASE_3 if interactive else CAPABILITIES_UNATTENDED
@@ -372,7 +381,7 @@ class AutonomousInsightsRunner:
             # for what matters, the verifier for what is wrong with the data, and
             # mixing the two costs the analyst its whole window before it writes
             # a word. See agents/insights/subagents/verify.py.
-            subagents=[build_verify_subagent(data_tools, model=verify_llm)],
+            subagents=[build_verify_subagent(data_tools, model=verify_llm, middleware=guards)],
             system_prompt=prompt_text,
             limits=LIMITS,
             session=session,

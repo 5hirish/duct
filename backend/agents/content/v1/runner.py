@@ -101,6 +101,7 @@ from agents.content.tools import build_content_tools_lc
 from agents.core import session as _core_session
 from agents.core.activity import activity_hooks, announce_context
 from agents.core.deep_session import (
+    subagent_middleware,
     DeepSession,
     RunLimits,
     build_deep_session_agent,
@@ -489,17 +490,24 @@ class ContentRunner:
             # the same step the fallback chain takes — because topic discovery
             # is volume work. Drafting stays on the run's model: creative
             # quality is the point.
+            # Every sub-agent gets the loop's guards: run limits and the
+            # reporting retry, on the same credential identity as the parent.
+            guards = subagent_middleware(
+                LIMITS,
+                identity="" if injected_llm else credential_identity(self._api_key),
+                provider=None if injected_llm else self.provider,
+            )
             subagents = [
                 build_research_pillar_subagent(
-                    _pick(RESEARCH_PILLAR_TOOLS), self._sibling_model(llm, injected_llm)
+                    _pick(RESEARCH_PILLAR_TOOLS), self._sibling_model(llm, injected_llm), middleware=guards
                 ),
-                build_draft_post_subagent(_pick(DRAFT_POST_TOOLS), llm),
+                build_draft_post_subagent(_pick(DRAFT_POST_TOOLS), llm, middleware=guards),
                 # Judging, like drafting, stays on the run's model.
-                build_review_post_subagent(_pick(REVIEW_POST_TOOLS), llm),
+                build_review_post_subagent(_pick(REVIEW_POST_TOOLS), llm, middleware=guards),
                 # deepagents adds a "general-purpose" sub-agent carrying EVERY
                 # tool of the parent unless one by that name is supplied. That
                 # would hand the writers to a sub-agent; this one reads only.
-                build_general_purpose_subagent(_pick(GENERAL_PURPOSE_TOOLS), llm),
+                build_general_purpose_subagent(_pick(GENERAL_PURPOSE_TOOLS), llm, middleware=guards),
             ]
         tools += web_tools
 

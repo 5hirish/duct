@@ -76,7 +76,7 @@ checks out, say so plainly and briefly.
 """
 
 
-def build_verify_subagent(tools: list[Any], model: Any = None) -> dict:
+def build_verify_subagent(tools: list[Any], model: Any = None, middleware: list[Any] | None = None) -> dict:
     """The verifier as a ``deepagents`` SubAgent.
 
     ``tools`` is the data-tool list the parent already built, passed through so
@@ -92,4 +92,8 @@ def build_verify_subagent(tools: list[Any], model: Any = None) -> dict:
     }
     if model is not None:
         subagent["model"] = model
+    # The loop's guards, from deep_session.subagent_middleware; a spec with
+    # none is a sub-agent with no limits and no retry.
+    if middleware:
+        subagent["middleware"] = list(middleware)
     return subagent

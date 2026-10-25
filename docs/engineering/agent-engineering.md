@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-30
+**Author:** Shirish Kadam · **Updated:** 2026-10-25
 
 How an agent is built and maintained here, on LangChain 1.x, LangGraph and
 `deepagents`. Read it before adding an agent or changing one: a prompt, a tool,
@@ -45,7 +45,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 |---|---|---|
 | Few, workflow-level tools with meaningful ids. Insights reaches every connector entity through one `FetchData(entity_id)`. | `StructuredTool` + Pydantic `args_schema` | review |
 | Bound every result, and never cut mid-structure: fold losslessly first. | `agents/core/compaction.py`; `FilesystemMiddleware` eviction on the deep rung | per-binder oversized-fixture tests |
-| An error is a result that says what to do next, with a code. Never `str(exc)` to a client. | `classify_error`; `ToolErrorMiddleware` (LangChain 1.4, not yet mounted: gap 5) | `tests/test_agent_errors.py` |
+| An error is a result that says what to do next, with a code. Never `str(exc)` to a client. | `classify_error`; `ToolErrorMiddleware` with `tool_error_message` (a raise becomes an error result the model reads on) | `tests/test_agent_errors.py`; `test_deep_session.py` |
 | Tool definitions are prompt: they head the cached prefix, so review them like prompt and keep their order deterministic. | — | gap 7 (`make dump-prompts` renders no tools yet) |
 | Anything a tool returns from outside Duct (a search query, a page, an ad) is data, never instructions. Label it in the prompt. | — | each agent's system prompt (insights: `BOUNDARIES`) |
 | Arithmetic over rows is Duct's, not the model's. A row report carries `totals`, `rates` (ratios of totals, or weighted means, never a mean of rates) and per-dimension `subtotals`, computed from the catalog's `agg`, `ratio` and `weight`, and says what they cover. | `agents/insights/totals.py`, called by `fetch_entity` | `tests/test_insights_totals.py`, the catalog contract test; the eval gate's `must_quote` check |
@@ -120,7 +120,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 | `SubAgentMiddleware` | deep rung | keep; always supply `general-purpose` yourself |
 | `SummarizationMiddleware` (deepagents) | deep rung | keep; set the trigger (gap 3) |
 | `PatchToolCallsMiddleware` | deep rung | keep |
-| `ToolErrorMiddleware` | — | **adopt** (gap 5) |
+| `ToolErrorMiddleware` | `session_middleware` and every sub-agent | keep; mounted 2026-10-25 |
 | `HumanInTheLoopMiddleware` | — | skip: change-set cards and `policy.py` do this |
 | `PIIMiddleware` | — | skip; `remember()` redacts. Revisit for traces |
 | `LLMToolSelectorMiddleware`, `ProviderToolSearchMiddleware` | — | skip: changing tools per call breaks the cache; tool tokens are small |
@@ -161,7 +161,7 @@ land.
 | 2 | SDK retries stack under `ReportedRetryMiddleware`, invisible to the UI and the quota cooldown | `max_retries=0` (Gemini: `retries=1`) and a timeout in `resolve_chat_model`; a test per provider | S |
 | 3 | Deep-rung summarisation fires at ~850k on the current Claude models | trigger from `context_window_for(model)`; test across the catalogue | S–M |
 | 4 | Fallback fires on auth, bad-request and overflow errors | classified fallback subclass | S |
-| 5 | Sub-agents run without retry or limits; a sub-agent exception ends the parent turn | `subagent_middleware(limits)`; `ToolErrorMiddleware` in `session_middleware` | S–M |
+| 5 | ~~Sub-agents run without retry or limits; a sub-agent exception ends the parent turn~~ | done 2026-10-25: `subagent_middleware(limits)` on every spec of both runners (run limits, the reporting retry, the tool-error middleware), `ToolErrorMiddleware` in `session_middleware`; `test_agent_assembly.py` and `test_deep_session.py` hold both | S–M |
 | 6 | `deepagents` can append to Duct's system prompt per model | test the final prompt per model; render it in `make dump-prompts` | S |
 | 7 | Tool definitions are unreviewed prompt | render tools in `make dump-prompts`; widen `prompts.yml` paths | S–M |
 | 8 | Execution policy hardening: the auto-apply allowlist, agent-initiated rollback, a drift check on rollback | G1–G2 of the execution-approvals record | S |

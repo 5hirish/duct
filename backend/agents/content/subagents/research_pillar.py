@@ -29,7 +29,7 @@ RESEARCH_PILLAR_TOOLS: tuple[str, ...] = (
 )
 
 
-def build_research_pillar_subagent(tools: list[Any], model: Any) -> dict[str, Any]:
+def build_research_pillar_subagent(tools: list[Any], model: Any, middleware: list[Any] | None = None) -> dict[str, Any]:
     """The ``SubAgent`` spec, with the tool objects and model the runner chose."""
     return {
         "name": RESEARCH_PILLAR_SUBAGENT,
@@ -41,4 +41,7 @@ def build_research_pillar_subagent(tools: list[Any], model: Any) -> dict[str, An
         "system_prompt": RESEARCH_PILLAR_PROMPT,
         "tools": list(tools),
         "model": model,
+        # The loop's guards, from deep_session.subagent_middleware; a spec
+        # with none is a sub-agent with no limits and no retry.
+        **({"middleware": list(middleware)} if middleware else {}),
     }

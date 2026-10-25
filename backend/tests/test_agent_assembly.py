@@ -118,3 +118,54 @@ def test_the_audit_graph_carries_the_shared_stack(monkeypatch):
     # fallback model actually sends.
     assert isinstance(middleware[-1], AnthropicPromptCachingMiddleware)
     assert captured["checkpointer"] is not None
+
+
+def test_every_sub_agent_carries_the_loops_guards(monkeypatch, emitted):
+    """Rulebook gap 5. A sub-agent ran with no guard at all: no call limits,
+    so a looping verifier fetched until the parent's recursion ceiling, and
+    no retry, so one 429 inside it ended the analyst's turn as a tool
+    error. Each spec now mounts the loop's run limits, its reporting retry
+    and the tool-error middleware."""
+    from langchain.agents.middleware import (
+        ModelCallLimitMiddleware,
+        ToolCallLimitMiddleware,
+        ToolErrorMiddleware,
+    )
+
+    import uuid
+
+    from agents.content.v1.runner import ContentRunner, create_draft_session
+    from agents.core.session import close_session
+    from agents.insights.v1.runner import AutonomousInsightsRunner
+
+    specs: list[dict] = []
+    original = deep_session.build_deep_session_agent
+
+    def _capture(**kwargs):
+        specs.extend(kwargs.get("subagents") or [])
+        return original(**kwargs)
+
+    monkeypatch.setattr("agents.insights.v1.runner.build_deep_session_agent", _capture)
+    monkeypatch.setattr("agents.content.v1.runner.build_deep_session_agent", _capture)
+    AutonomousInsightsRunner(api_key="unused-no-network").build_agent(llm=fake_llm("ok"))
+    # Content mounts its sub-agents only for a real session with a project.
+    session = create_draft_session(str(uuid.uuid4()), uuid.uuid4())
+    try:
+        ContentRunner(api_key="unused").build_agent(
+            llm=fake_llm("ok"), session=session, session_id=session.session_id,
+            emit=emitted, project_id=session.project_id, mode=session.mode,
+        )
+    finally:
+        close_session(session.session_id)
+
+    assert {s["name"] for s in specs} >= {"verify", "general-purpose", "research_pillar", "draft_post", "review_post"}
+    for spec in specs:
+        kinds = {type(m) for m in spec.get("middleware", [])}
+        assert {ModelCallLimitMiddleware, ToolCallLimitMiddleware, ToolErrorMiddleware, ReportedRetryMiddleware} <= kinds, spec["name"]
+
+
+def test_the_loop_mounts_the_tool_error_middleware():
+    from langchain.agents.middleware import ToolErrorMiddleware
+
+    mounted = [m for m in deep_session.session_middleware(LIMITS) if isinstance(m, ToolErrorMiddleware)]
+    assert len(mounted) == 1

@@ -31,7 +31,7 @@ DRAFT_POST_TOOLS: tuple[str, ...] = (
 )
 
 
-def build_draft_post_subagent(tools: list[Any], model: Any) -> dict[str, Any]:
+def build_draft_post_subagent(tools: list[Any], model: Any, middleware: list[Any] | None = None) -> dict[str, Any]:
     """The ``SubAgent`` spec, with the tool objects and model the runner chose."""
     return {
         "name": DRAFT_POST_SUBAGENT,
@@ -44,4 +44,7 @@ def build_draft_post_subagent(tools: list[Any], model: Any) -> dict[str, Any]:
         "system_prompt": DRAFT_POST_PROMPT,
         "tools": list(tools),
         "model": model,
+        # The loop's guards, from deep_session.subagent_middleware; a spec
+        # with none is a sub-agent with no limits and no retry.
+        **({"middleware": list(middleware)} if middleware else {}),
     }
