@@ -65,9 +65,18 @@ published without one. The same script, with no arguments, holds
   rolled back.
 - Brand and product names stay in English in every language, enforced by
   `fill.py`; a native review fixed about 230 Spanish and German strings.
+- **The working panel tells the time, not a story.** The "~3 min" and the
+  bar that filled over three minutes on a timer are gone from the audit and
+  content viewports and the audit's step ladder. The panel counts the run's
+  seconds on the same clock as the chat header, and the audit's synthesis
+  row says how many categories are done once it knows.
 
 ### Fixed
 
+- The desktop app keeps painting while it reads the keychain, a reload no
+  longer pulls the window back in front of whatever you switched to, a
+  sign-in link that launched the app on Windows or Linux is followed, and
+  a self-host build's local backend ends with the app however the app ends.
 - **Where a drafted field came from follows the project to every device.**
   "From your site" and "From your files" used to live in the browser that
   drafted them; the server keeps them now and merges every draft itself, so
@@ -78,9 +87,16 @@ published without one. The same script, with no arguments, holds
   errors read as one sentence.
 - A ChatGPT plan's mid-stream failures are classified by payload code, so a
   spent usage window says so and transient ones retry.
+- **The composer keeps a half-written message through a reload**, Esc in it
+  stops a running turn, and the context ring's tooltip says what the last
+  call and the session cost — a dash where the model has no price.
 
 ### Security
 
+- The desktop window only ever shows Duct: a page that sends it elsewhere
+  opens in your browser instead, a sign-in or connector code returning
+  through a deep link always lands on Duct's own origin, and the page can
+  call nothing in the shell beyond its own commands.
 - The insight chat and audit web search spend the caller's model keys, and
   PostBridge and Apify run on each user's saved key, not the operator's.
 - Routes that run before sign-in or for a guest are rate limited on the real

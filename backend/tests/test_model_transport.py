@@ -448,6 +448,22 @@ def test_the_fallback_chain_is_one_step_everywhere():
         assert len(targets) == 1, f"{source.value} has a {len(targets)}-step chain"
 
 
+def test_a_fallback_never_moves_up_a_price_class():
+    """A fallback is a step down on the key the caller already holds, taken
+    without asking — and content takes the same step on purpose, as its cheap
+    research model. Luna fell back to 5 Mini, 2.5x dearer on input and 4x on
+    output, so a 529 "degraded" a run to a pricier model and every Luna run's
+    research cost more than the run. Blended, for the reason the retired-model
+    test gives."""
+    from agents.models import PRICING
+
+    for source, targets in MODEL_FALLBACK.items():
+        for target in targets:
+            assert _blended(PRICING[target]) <= _blended(PRICING[source]), (
+                f"{source.value} falls back to {target.value}, which costs more"
+            )
+
+
 def test_no_fallback_pair_loops_back():
     """A → B → A would retry the model that just failed."""
     for source, targets in MODEL_FALLBACK.items():
@@ -466,6 +482,8 @@ def test_no_fallback_pair_loops_back():
         (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_8_FLASH, (ModelName.GEMINI_3_5_FLASH_LITE,)),
         # Bottom of the Gemini family since 2.5 Flash-Lite was retired.
         (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_5_FLASH_LITE, ()),
+        # Bottom of the OpenAI family by price: nothing cheaper to step to.
+        (Provider.OPENAI, ModelName.GPT_6_LUNA, ()),
         # A raw OpenRouter slug: 400+ models behind one key, so there is no basis
         # for guessing what the caller would accept instead.
         (Provider.OPENROUTER, "vendor/some-model", ()),

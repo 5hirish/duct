@@ -423,9 +423,10 @@ def _scope_body_to_authorized_project(agent_type: str, body: dict, user: User | 
         "agents: caller %s may not use project %s — %s runs unscoped",
         user.id if user else "anonymous", project_id, agent_type,
     )
-    # The conversation controls only mean anything alongside a project, and a
-    # conversation_id is resolved without a project check of its own — so they
-    # go with it rather than being left to address someone else's transcript.
+    # The conversation controls only mean anything alongside a project: the
+    # resolver answers inside the project it is given, and an unscoped run has
+    # none to give it — so they go with the project rather than being left to
+    # name a conversation the run could not legitimately continue.
     for key in ("project_id", "conversation_id", "resume", "start_fresh",
                 "artifact_type", "artifact_id"):
         body.pop(key, None)
@@ -950,11 +951,16 @@ def _content_context_xml(session: Any) -> str:
     mode = getattr(session, "mode", "")
     plan_id = getattr(session, "plan_id", None)
     post_id = getattr(session, "post_id", None)
+    # The working artifact is derived from the conversation, which the resolver
+    # keeps inside the project; this is the same check at the point of use, so
+    # a row that reaches the model is never one the session's project does not
+    # own, whatever path set the id.
+    project_id = getattr(session, "project_id", None)
     try:
         with next(db_session()) as db:
             if mode == "plan_month" and plan_id is not None:
                 plan = db.get(ContentPlan, plan_id)
-                if plan is None:
+                if plan is None or plan.project_id != project_id:
                     return ""
                 payload = {
                     "id": str(plan.id),
@@ -970,7 +976,7 @@ def _content_context_xml(session: Any) -> str:
                 )
             if mode == "draft_post" and post_id is not None:
                 post = db.get(ContentPost, post_id)
-                if post is None:
+                if post is None or post.project_id != project_id:
                     return ""
                 payload = post.model_dump(exclude={"slides_html"})
                 return (

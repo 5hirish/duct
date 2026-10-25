@@ -1,32 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 import { StepStatus } from "../lib/agentSteps";
+import { formatElapsed } from "../lib/format";
+import { useElapsed } from "../hooks/useElapsed";
 import { Spinner } from "@/components/ui/spinner";
 import { Trans, useLingui } from "@lingui/react/macro";
-
-// CSS, not copy: kept out of the JSX so the literal-string check reads it as
-// what it is.
-const PROGRESS_KEYFRAMES = `
-  @keyframes duct-progress {
-    from { width: 0% }
-    to   { width: 82% }
-  }
-`;
 
 /**
  * Shared "Duct is working" progress panel for the right viewport of every
  * streaming agent (SEO audit, Content Studio, …). Renders the Duct wordmark, a
- * rotating subtitle, a step ladder (✓ done / spinner active / hollow pending),
- * and a slow-filling progress bar. Extracted from the audit report so agents
- * stop re-forking this UI — same philosophy as the shared split shell
- * ([[project_split_workspace_shell]]).
+ * rotating subtitle, a step ladder (check done / spinner active / hollow
+ * pending) and, under it, a caption with a clock. Extracted from the audit
+ * report so agents stop re-forking this UI — same philosophy as the shared
+ * split shell ([[project_split_workspace_shell]]).
+ *
+ * It says about time only what it knows. It used to show "~3 min" and a bar
+ * that filled over 180 s on a CSS timer whatever the run was doing, so a slow
+ * run read as nearly done and a fast one as stuck. The caption now counts the
+ * seconds since this panel saw the work start — the same clock as the chat
+ * header's status row — and there is no bar: the length of the long synthesis
+ * step is not known, and a bar that guesses is what `ui/progress`'s rule
+ * ("only when the fraction is real") exists to prevent.
  *
  * Two orthogonal "working" sub-states drive the visuals:
- *   - synthesising — the long analysis phase (slow-fill bar, rotating lines,
- *     spinner on the `activeId` stage). Defaults to "is the activeId step
- *     RUNNING?"; pass a bool to force it (content has no backend synth step).
- *   - writing — the final output is streaming (85%-pulse bar, "writing…").
+ *   - synthesising — the long analysis phase (rotating lines, spinner on the
+ *     `activeId` stage). Defaults to "is the activeId step RUNNING?"; pass a
+ *     bool to force it (content has no backend synth step).
+ *   - writing — the final output is streaming ("writing…" on the writing
+ *     stage, the streaming caption).
  *
  * Props:
  *   - stages: [{ id, label, virtual?, conditional? }]
@@ -37,12 +40,15 @@ const PROGRESS_KEYFRAMES = `
  *                     enrichment, skipped in some flows).
  *   - steps: live [{ step_id, status, payload }] from the workspace.
  *   - activeId: the focal synthesis stage (real step id, or a virtual id) — its
- *       RUNNING row shows the time estimate and gates the synthesising visuals.
+ *       RUNNING row carries `estimate` and gates the synthesising visuals.
  *   - writingId: a virtual stage that runs during `writing` (e.g. WRITE_REPORT).
  *   - synthesising / writing: see above.
  *   - lines: rotating subtitle strings shown while synthesising.
- *   - estimate: e.g. "~3 min".
- *   - buildingLabel / streamingLabel: progress-bar captions.
+ *   - estimate: a real measure of how far the focal stage has got, when the
+ *       caller has one ("4/9 categories", from the audit synthesiser). Never a
+ *       guess at time: without one the row shows nothing extra and the
+ *       caption's clock is the only figure.
+ *   - buildingLabel / streamingLabel: the caption beside the clock.
  *   - streamingSubtitle / idleSubtitle: subtitle fallbacks.
  *   - virtualWaitsForPrior: a virtual stage only flips to RUNNING once every
  *       preceding visible stage has finished — use for a synthesis stage that
@@ -67,7 +73,6 @@ export default function PipelineProgress({
 }) {
   const { t } = useLingui();
   // Defaults resolved here, not in the parameter list: `t` needs the hook.
-  estimate ??= t`~3 min`;
   buildingLabel ??= t`Building report`;
   streamingLabel ??= t`Generating report`;
   streamingSubtitle ??= t`Writing your report…`;
@@ -79,6 +84,8 @@ export default function PipelineProgress({
     const id = setInterval(() => setTick((t) => t + 1), 3000);
     return () => clearInterval(id);
   }, []);
+  // Counts from mount: the panel exists only while the run does.
+  const elapsed = formatElapsed(useElapsed(true));
 
   // Conditional stages only appear once the backend has emitted them.
   const visibleStages = stages.filter(
@@ -119,20 +126,8 @@ export default function PipelineProgress({
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-8 py-12 text-center select-none">
-      {/* Brand + animation */}
       <div className="mb-8 space-y-3">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl font-bold tracking-tight">Duct</span>
-          <span className="flex gap-1">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="inline-block size-1.5 rounded-full bg-primary animate-bounce"
-                style={{ animationDelay: `${i * 0.18}s` }}
-              />
-            ))}
-          </span>
-        </div>
+        <span className="block text-2xl font-bold tracking-tight">Duct</span>
         {/* Deliberately NOT a live region: this subtitle rotates on a timer,
             so aria-live here would interrupt a screen reader every few seconds
             with copy that carries no new information. Agent state is announced
@@ -162,13 +157,13 @@ export default function PipelineProgress({
               {running ? (
                 <Spinner className="text-primary" />
               ) : status === StepStatus.SUCCESS ? (
-                <span className="text-success text-sm shrink-0">✓</span>
+                <Check className="size-3.5 shrink-0 text-success" aria-hidden="true" />
               ) : (
-                <span className="size-3.5 shrink-0 rounded-full border border-muted-foreground/30" />
+                <span className="size-3.5 shrink-0 rounded-full border border-muted-foreground/30" aria-hidden="true" />
               )}
               <span className="text-sm flex-1">{stage.label}</span>
-              {running && isActive && (
-                <span className="text-xs text-muted-foreground shrink-0">{estimate}</span>
+              {running && isActive && estimate && (
+                <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{estimate}</span>
               )}
               {running && !isActive && stage.virtual && (
                 <span className="text-xs text-muted-foreground shrink-0 animate-pulse"><Trans>writing…</Trans></span>
@@ -182,26 +177,11 @@ export default function PipelineProgress({
         })}
       </div>
 
-      {/* Progress bar — slow fill during analysis, pulse at ~85% during writing */}
-      {inSynthesis && (
-        <div className="mt-6 w-full max-w-xs">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>{writing ? streamingLabel : buildingLabel}</span>
-            {!writing && <span>{estimate}</span>}
-          </div>
-          <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-            {writing ? (
-              <div className="h-full w-[85%] rounded-full bg-primary animate-pulse" />
-            ) : (
-              <div
-                className="h-full rounded-full bg-primary origin-left"
-                style={{ animation: "duct-progress 180s cubic-bezier(0.1, 0, 0.25, 1) forwards" }}
-              />
-            )}
-          </div>
-          <style>{PROGRESS_KEYFRAMES}</style>
-        </div>
-      )}
+      {/* What is being built, and for how long. The clock is the one figure
+          about the run's length this client can state rather than guess. */}
+      <p className="mt-6 text-xs text-muted-foreground tabular-nums">
+        {writing ? streamingLabel : buildingLabel} · {elapsed}
+      </p>
     </div>
   );
 }

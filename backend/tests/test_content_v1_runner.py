@@ -357,3 +357,25 @@ def test_parser_survives_real_model_output_shapes():
     recovered = parse_artifact_json(broken)
     assert recovered is None or (recovered["type"] == "post" and isinstance(recovered["slides_html"], str))
     assert parse_artifact_json("not json at all") is None
+
+
+def test_contents_models_carry_the_conversation_as_the_cache_key(draft_session, emitted, monkeypatch):
+    """Insights keyed its prompt cache on the conversation; content resolved
+    its primary with no key at all, so an OpenAI loop could land each call on
+    a machine holding no prefix. The fallback takes the same key."""
+    import agents.content.v1.runner as runner_module
+
+    seen: list[str] = []
+
+    def _record(provider, model, api_key, temperature=1.0, **kwargs):
+        seen.append(kwargs.get("cache_key", ""))
+        return fake_llm("ok")
+
+    monkeypatch.setattr(runner_module, "resolve_chat_model", _record)
+    monkeypatch.setattr(runner_module, "fallback_chain", lambda *a, **k: seen.append(k.get("cache_key", "")) or [])
+    draft_session.conversation_id = uuid.uuid4()
+
+    _agent(draft_session, emitted, llm=None)
+
+    assert seen, "the primary model was not resolved"
+    assert set(seen) == {str(draft_session.conversation_id)}

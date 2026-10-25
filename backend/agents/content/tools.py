@@ -2029,6 +2029,15 @@ def build_content_tools_lc(
                 post, err = _require_post(db, project_id, post_id)
                 if err:
                     return err
+                # PostBridge still holds a scheduled post and will publish it
+                # at its time whatever this row says; marking it posted by
+                # hand would leave it to go out a second time. The unschedule
+                # path is the one that takes it off the queue.
+                if is_queued_at_postbridge(post):
+                    return _err(
+                        "This post is queued at PostBridge and will go out at its scheduled time. "
+                        "Unschedule it first if it was posted by hand, or wait for it to post."
+                    )
                 post.status    = "posted"
                 post.posted_at = datetime.now(timezone.utc)
                 if url:

@@ -1124,13 +1124,14 @@ export const SCENES = [
     state: "inside a running session — dials deferred, ring beside Send",
     group: "DeskComposer",
     title: "The session composer",
-    note: "The same card as the desk composer, in the chat shell: attach and the folded posture on the left; the tier, the context ring and Send on the right. `deferred` makes the tier panel say the choice lands at the next session and the posture tooltips say next message — check that line is there, that hovering the ring shows the token figures, and that the controls wrap under the text at phone width rather than pushing Send off the card.",
+    note: "The same card as the desk composer, in the chat shell: attach and the folded posture on the left; the tier, the context ring and Send on the right. `deferred` makes the tier panel say the choice lands at the next session and the posture tooltips say next message — check that line is there, that hovering the ring shows the token figures and the cost, and that the controls wrap under the text at phone width rather than pushing Send off the card. Type something and reload the frame: it is still there (`draftKey`). With the box focused the footer names Shift+Enter and Esc; Esc calls `onStop`.",
     render: () => (
       <div className="max-w-[720px]">
         <ChatInput
           onSend={() => {}}
           isStreaming
           onStop={() => {}}
+          draftKey="preview:session-composer"
           placeholder="Ask about your growth data…"
           tools={<DialsScene />}
           status={
@@ -1945,19 +1946,19 @@ export const SCENES = [
     state: "neutral · amber · destructive, each with usage details",
     group: "ContextRing",
     title: "Context ring, the three tones",
-    note: "The gauge beside every agent workspace's status row. Tab or hover each ring for the tooltip's per-call and per-session usage — this is also where a stray local TooltipProvider used to show up as a delay that didn't match the rest of the app.",
+    note: "The gauge beside every agent workspace's status row. Tab or hover each ring for the tooltip's per-call and per-session usage and cost — the third ring's last call is on a model with no price and says so with a dash. The ring is a gauge, not a button: nothing happens on click. This is also where a stray local TooltipProvider used to show up as a delay that didn't match the rest of the app.",
     render: () => (
       <Row>
         {[
-          { used: 0.32, tag: "neutral", cached: 41000 },
-          { used: 0.79, tag: "amber", cached: 9000 },
-          { used: 0.95, tag: "destructive", cached: 0 },
-        ].map(({ used, tag, cached }) => (
+          { used: 0.32, tag: "neutral", cached: 41000, cost: 0.34 },
+          { used: 0.79, tag: "amber", cached: 9000, cost: 0.008 },
+          { used: 0.95, tag: "destructive", cached: 0, cost: null },
+        ].map(({ used, tag, cached, cost }) => (
           <ContextRing
             key={tag}
             used={used}
             details={{
-              last: { window: 200000, input: Math.round(used * 200000 * 0.8), output: Math.round(used * 200000 * 0.2), cached, model: "claude-sonnet-5-5" },
+              last: { window: 200000, input: Math.round(used * 200000 * 0.8), output: Math.round(used * 200000 * 0.2), cached, cost, model: "claude-sonnet-5-5" },
               total: { input: 512000, output: 48000, cached: 180000, calls: 14, cost: 1.86 },
             }}
           />

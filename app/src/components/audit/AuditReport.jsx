@@ -111,14 +111,14 @@ function SynthesisProgress({ steps, isStreamingReport = false }) {
     [i18n],
   );
   const lines = useMemo(() => SYNTHESIS_LINES.map((line) => i18n._(line)), [i18n]);
-  // Once the model starts adding categories, swap the static time estimate for live
-  // "N/9 categories" progress (emitted per AddAuditCategory call by the backend).
+  // Once the model starts adding categories the focal row carries live "N/9
+  // categories" progress (emitted per AddAuditCategory call by the backend).
+  // Until then it carries nothing: there is no honest estimate of how long
+  // synthesis takes, and the panel's clock is the only figure.
   const synthStep = steps?.find((s) => s.step_id === AuditStep.SYNTHESIZE_AUDIT);
   const done = synthStep?.payload?.categories_done;
   const total = synthStep?.payload?.categories_total ?? 9;
-  const estimate = done != null
-    ? t`${done}/${total} categories`
-    : t`~3 min`;
+  const estimate = done != null ? t`${done}/${total} categories` : undefined;
   return (
     <PipelineProgress
       stages={stages}

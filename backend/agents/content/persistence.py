@@ -55,12 +55,38 @@ ARTIFACT_REGISTRY: dict[tuple[str, str], type] = {
 _MAX_TOOL_PAYLOAD = 256_000
 
 
+# What stands in for a picture's bytes in the transcript table. The model saw
+# the picture once (`SeenImagePruneMiddleware` then swaps it for a note in the
+# durable thread, for the same reason); the file itself is at the result's
+# asset_url, so the row keeps the shape and the size, never the bytes.
+_IMAGE_BYTES_PLACEHOLDER = "[image bytes left out of the transcript; the file is at the result's asset_url]"
+
+
+def _without_image_bytes(value: Any) -> Any:
+    """``value`` with every image block's base64 replaced by the placeholder.
+
+    A downscaled 1536 px JPEG is 150–400 KB of base64, under the payload cap,
+    so until this every `generate_image` result went into `agent_events`
+    whole — the one table every reload and every session bundle reads back.
+    """
+    if isinstance(value, dict):
+        if value.get("type") == "image":
+            key = next((k for k in ("base64", "data") if isinstance(value.get(k), str)), None)
+            if key is not None:
+                return {**value, key: _IMAGE_BYTES_PLACEHOLDER, "base64_chars": len(value[key])}
+        return {k: _without_image_bytes(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_without_image_bytes(v) for v in value]
+    return value
+
+
 def _jsonable(value: Any) -> Any:
     """Coerce a tool input/result into a JSONB-safe value.
 
     Round-trips through json so non-JSON types (UUID, datetime, Pydantic) become
     plain strings, and truncates pathologically large payloads to a preview so a
-    single tool call can never bloat the log."""
+    single tool call can never bloat the log. Image bytes are left out first."""
+    value = _without_image_bytes(value)
     try:
         serialized = json.dumps(value, default=str)
     except (TypeError, ValueError):
@@ -185,14 +211,20 @@ def list_conversations(
 
 
 def find_active_conversation(
-    db: Session, *, artifact_type: str, artifact_id: UUID
+    db: Session, *, artifact_type: str, artifact_id: UUID, project_id: UUID | None = None
 ) -> AgentConversation | None:
-    return db.exec(
+    """The one active conversation on an artifact, inside ``project_id`` when
+    the caller has one. An artifact id arrives in request bodies, so a lookup
+    that ignores the project answers for any tenant's post."""
+    query = (
         select(AgentConversation)
         .where(AgentConversation.artifact_type == artifact_type)
         .where(AgentConversation.artifact_id == artifact_id)
         .where(AgentConversation.status == "active")
-    ).first()
+    )
+    if project_id is not None:
+        query = query.where(AgentConversation.project_id == project_id)
+    return db.exec(query).first()
 
 
 def archive_conversation(db: Session, conversation_id: UUID) -> None:
@@ -217,6 +249,28 @@ def link_artifact(
     db.commit()
 
 
+def _belongs_to(conv: AgentConversation, *, agent_type: str, project_id: UUID) -> bool:
+    """Whether a conversation loaded by id is one this session may continue."""
+    return conv.project_id == project_id and conv.agent_type == agent_type
+
+
+def artifact_in_project(
+    db: Session, *, agent_type: str, artifact_type: str, artifact_id: UUID, project_id: UUID
+) -> bool:
+    """Whether the artifact a body names is a row of this project.
+
+    The conversation's artifact becomes the session's working post or plan,
+    which the runner then reads whole into the model's context — so binding
+    is a read, and the id has to be checked like one. An artifact type the
+    registry does not know cannot be checked and is not bound.
+    """
+    table = ARTIFACT_REGISTRY.get((agent_type, artifact_type))
+    if table is None:
+        return False
+    row = db.get(table, artifact_id)
+    return row is not None and getattr(row, "project_id", None) == project_id
+
+
 def resolve_or_create_conversation(
     db: Session,
     *,
@@ -236,9 +290,20 @@ def resolve_or_create_conversation(
     - resume + artifact → find the active conversation for that artifact
     - start_fresh → archive any active conversation for the artifact, create new
     - otherwise → create a fresh active conversation
+
+    Every lookup is inside ``project_id``, the project the route has already
+    checked the caller belongs to. The ids themselves are not evidence: a
+    conversation id sits in app URLs and a former collaborator keeps theirs,
+    so a conversation of another project — or of another agent — is treated
+    exactly like one that does not exist and a fresh one is created. That
+    matters more here than on a read route, because the conversation decides
+    the LangGraph thread the session continues, the transcript it appends to
+    and the artifact group it writes new versions into.
     """
     if start_fresh and artifact_type and artifact_id:
-        existing = find_active_conversation(db, artifact_type=artifact_type, artifact_id=artifact_id)
+        existing = find_active_conversation(
+            db, artifact_type=artifact_type, artifact_id=artifact_id, project_id=project_id
+        )
         if existing:
             archive_conversation(db, existing.id)
 
@@ -246,13 +311,34 @@ def resolve_or_create_conversation(
         conv: AgentConversation | None = None
         if conversation_id is not None:
             conv = get_conversation(db, conversation_id)
+            if conv is not None and not _belongs_to(conv, agent_type=agent_type, project_id=project_id):
+                conv = None
         # Not found (or none given) but we know the artifact → reuse its active
         # conversation. "When we don't find the session, just start a new one":
         # if neither resolves, we fall through and create a fresh one below.
         if conv is None and artifact_type and artifact_id:
-            conv = find_active_conversation(db, artifact_type=artifact_type, artifact_id=artifact_id)
+            conv = find_active_conversation(
+                db, artifact_type=artifact_type, artifact_id=artifact_id, project_id=project_id
+            )
         if conv is not None:
             return conv, conv.last_seq > 0
+
+    # An artifact that is not this project's row is not this caller's to bind:
+    # the binding becomes the session's working post, which the runner reads
+    # whole into the model's context. The run goes on with no artifact, exactly
+    # as if the body had named none. (One active conversation per artifact is
+    # also a database constraint, so a foreign binding would have failed on
+    # insert whenever its owner had a conversation open — and succeeded when
+    # they did not, which was the dangerous case.)
+    if artifact_type and artifact_id and not artifact_in_project(
+        db, agent_type=agent_type, artifact_type=artifact_type,
+        artifact_id=artifact_id, project_id=project_id,
+    ):
+        logger.warning(
+            "persistence: %s %s is not in project %s — conversation created unbound",
+            artifact_type, artifact_id, project_id,
+        )
+        artifact_type = artifact_id = None
 
     conv = AgentConversation(
         agent_type=agent_type,

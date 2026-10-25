@@ -9,8 +9,10 @@ re-asserted:
   * two tools pausing in one turn arrive in one ``updates`` chunk, each with
     the id a resume needs, and the payload is ours verbatim;
   * resuming one pause by id settles that one and re-raises the other;
-  * streaming ``None`` re-raises the live pauses, and ``live_pauses`` tells a
-    pause still waiting from one whose task already finished.
+  * streaming ``None`` re-raises the live pauses, and a settled pause is gone
+    from ``snapshot.interrupts`` and from ``live_pauses`` alike (langgraph
+    1.2.13, #9103 — before it the snapshot kept the settled one and only the
+    helper told them apart).
 
 The ``interrupt_on`` (human-in-the-loop middleware) tests that used to sit
 above these are gone: no runner mounts ``interrupt_on``, and a gate on a
@@ -109,9 +111,10 @@ async def test_resuming_one_pause_by_id_re_raises_the_other():
 
 async def test_streaming_none_re_raises_the_live_pauses():
     """The resume path streams None: an unfinished run continues, a parked one
-    shows its pauses again, an idle one does nothing. `live_pauses` is what
-    tells a pause that is still waiting from one whose task already finished —
-    `snapshot.interrupts` keeps both."""
+    shows its pauses again, an idle one does nothing. Once one pause is
+    answered, the snapshot reports only the other: its task kept a result,
+    ``snapshot.interrupts`` dropped it (langgraph 1.2.13, #9103) and
+    ``live_pauses`` agrees — a settled card must never be re-shown."""
     agent, cfg = _two_pauses()
     first = await _pauses_in(agent, {"messages": [{"role": "user", "content": "go"}]}, cfg)
     by_event = {e: i for i, e in first}
@@ -120,7 +123,10 @@ async def test_streaming_none_re_raises_the_live_pauses():
 
     await _pauses_in(agent, Command(resume={by_event["questions_required"]: {"goal": "demo"}}), cfg)
     state = await agent.aget_state(cfg)
-    assert len(state.interrupts) == 2, "the snapshot keeps the settled one"
+    # The settled task is still in the step, with its result; the live one
+    # has none. Both views must name only the pause still waiting.
+    assert sorted(t.result is not None for t in state.tasks) == [False, True]
+    assert [i.value["event"] for i in state.interrupts] == ["account_selection_required"]
     assert [p["event"] for p in live_pauses(state)] == ["account_selection_required"]
 
     await _pauses_in(agent, Command(resume={by_event["account_selection_required"]: {"account_id": "1"}}), cfg)
