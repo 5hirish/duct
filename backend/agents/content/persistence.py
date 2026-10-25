@@ -55,12 +55,38 @@ ARTIFACT_REGISTRY: dict[tuple[str, str], type] = {
 _MAX_TOOL_PAYLOAD = 256_000
 
 
+# What stands in for a picture's bytes in the transcript table. The model saw
+# the picture once (`SeenImagePruneMiddleware` then swaps it for a note in the
+# durable thread, for the same reason); the file itself is at the result's
+# asset_url, so the row keeps the shape and the size, never the bytes.
+_IMAGE_BYTES_PLACEHOLDER = "[image bytes left out of the transcript; the file is at the result's asset_url]"
+
+
+def _without_image_bytes(value: Any) -> Any:
+    """``value`` with every image block's base64 replaced by the placeholder.
+
+    A downscaled 1536 px JPEG is 150–400 KB of base64, under the payload cap,
+    so until this every `generate_image` result went into `agent_events`
+    whole — the one table every reload and every session bundle reads back.
+    """
+    if isinstance(value, dict):
+        if value.get("type") == "image":
+            key = next((k for k in ("base64", "data") if isinstance(value.get(k), str)), None)
+            if key is not None:
+                return {**value, key: _IMAGE_BYTES_PLACEHOLDER, "base64_chars": len(value[key])}
+        return {k: _without_image_bytes(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_without_image_bytes(v) for v in value]
+    return value
+
+
 def _jsonable(value: Any) -> Any:
     """Coerce a tool input/result into a JSONB-safe value.
 
     Round-trips through json so non-JSON types (UUID, datetime, Pydantic) become
     plain strings, and truncates pathologically large payloads to a preview so a
-    single tool call can never bloat the log."""
+    single tool call can never bloat the log. Image bytes are left out first."""
+    value = _without_image_bytes(value)
     try:
         serialized = json.dumps(value, default=str)
     except (TypeError, ValueError):
