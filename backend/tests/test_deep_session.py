@@ -23,6 +23,7 @@ from agents.core.deep_session import (
     RunLimits,
     build_deep_session_agent,
     PRUNE_BATCH_DIVISOR,
+    build_session_agent,
     fallback_chain,
     session_middleware,
     recorder_tool_hooks,
@@ -375,3 +376,36 @@ def test_the_loop_mounts_the_classified_fallback():
     mounted = [m for m in session_middleware(_limits(), fallbacks=[fake_llm("fallback")])
                if isinstance(m, ClassifiedFallbackMiddleware)]
     assert len(mounted) == 1
+
+
+# A tool that raises is a result the model reads (rulebook gap 5)
+# ---------------------------------------------------------------------------
+
+async def test_a_tool_that_raises_becomes_an_error_the_model_can_read():
+    """Duct's tools return their failures as payloads, so a raise is a bug or
+    a sub-agent that died — and it used to end the turn after minutes of
+    fetching. Now it is an error ToolMessage with the type and a sanitised
+    sentence, and the model carries on."""
+    from langchain_core.messages import ToolMessage
+    from langchain_core.tools import StructuredTool
+
+    def _explode(topic: str) -> str:
+        """Look something up."""
+        raise RuntimeError("vendor said no at https://vendor.example/v1?key=sk-live-ABCDEFGHIJKLMNOPQRSTUV")
+
+    boom = StructuredTool.from_function(func=_explode, name="Lookup", description="Look something up.")
+    llm = ToolCallingFake(responses=[
+        AIMessage(content="", tool_calls=[{"name": "Lookup", "args": {"topic": "x"}, "id": "c1"}]),
+        AIMessage(content="Could not look it up; here is what I know."),
+    ])
+    agent = build_session_agent(llm=llm, tools=[boom], system_prompt="x", limits=_limits())
+    config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": _limits().recursion}
+
+    result = await agent.ainvoke({"messages": [{"role": "user", "content": "go"}]}, config)
+
+    errors = [m for m in result["messages"] if isinstance(m, ToolMessage) and m.status == "error"]
+    assert len(errors) == 1
+    text = errors[0].content if isinstance(errors[0].content, str) else str(errors[0].content)
+    assert "Lookup failed (RuntimeError)" in text and "carry on" in text
+    assert "https://" not in text and "ABCDEFGH" not in text
+    assert result["messages"][-1].content == "Could not look it up; here is what I know."

@@ -973,7 +973,7 @@ def test_the_verifier_resolves_through_its_own_job(monkeypatch):
     built: list = []
     monkeypatch.setattr(
         "agents.insights.v1.runner.build_verify_subagent",
-        lambda tools, model=None: built.append(model) or {"name": "verify", "description": "", "system_prompt": "", "tools": tools},
+        lambda tools, model=None, **_kw: built.append(model) or {"name": "verify", "description": "", "system_prompt": "", "tools": tools},
     )
     runner.build_agent(remember=False, execute=False, interactive=False)
     assert built and getattr(built[0], "model_name", "") == ModelName.GPT_6_LUNA.value

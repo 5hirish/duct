@@ -47,12 +47,13 @@ from langchain.agents.middleware import (
     ModelFallbackMiddleware,
     TodoListMiddleware,
     ToolCallLimitMiddleware,
+    ToolErrorMiddleware,
 )
 from langgraph.types import Command
 from langgraph.errors import GraphBubbleUp
 
 from agents.core.checkpoint import get_checkpointer
-from agents.core.errors import ErrorCode, classify_error, error_payload, is_retryable
+from agents.core.errors import ErrorCode, classify_error, error_payload, is_retryable, safe_excerpt
 from agents.core.events import AgentEvent, AgentStep, StepStatus
 from agents.core.lc import (
     ReportedRetryMiddleware,
@@ -391,6 +392,55 @@ def build_session_agent(
     )
 
 
+def tool_error_message(exc: Exception, request: Any) -> str:
+    """A tool that raised, as a result the model can read and move past.
+
+    Duct's tools return their failures as payloads, so a raise is a bug in a
+    tool or a sub-agent that died, and it used to end the turn with
+    "Something went wrong" — after minutes of fetching. The model gets the
+    tool's name, the exception's type and the sanitised sentence, and the
+    rule every payload already carries: say what you could not do, carry on,
+    do not retry the same call. Never `str(exc)` whole: `safe_excerpt` drops
+    URLs and key-shaped tokens.
+    """
+    name = ""
+    try:
+        name = request.tool_call["name"]
+    except (AttributeError, KeyError, TypeError):
+        pass
+    return (
+        f"{name or 'The tool'} failed ({type(exc).__name__}): {safe_excerpt(exc)}. "
+        "Say what you could not do and carry on; do not retry the same call."
+    )
+
+
+def tool_error_middleware() -> ToolErrorMiddleware:
+    return ToolErrorMiddleware(on_error=tool_error_message)
+
+
+def subagent_middleware(
+    limits: RunLimits,
+    *,
+    identity: str = "",
+    provider: Provider | None = None,
+) -> list[Any]:
+    """What every sub-agent mounts beside deepagents' own stack.
+
+    A sub-agent ran with no guard at all: no call limits, so a verifier that
+    looped fetched until the parent's recursion ceiling, and no retry, so one
+    429 inside the verifier ended the analyst's turn, reported as a tool
+    error. The same run limits and the same reporting retry as the loop
+    (rulebook gap 5); the thread limits are the parent's and are not
+    repeated here.
+    """
+    return [
+        tool_error_middleware(),
+        ModelCallLimitMiddleware(run_limit=limits.model_calls_per_run, exit_behavior="end"),
+        ToolCallLimitMiddleware(run_limit=limits.tool_calls_per_run, exit_behavior="continue"),
+        ReportedRetryMiddleware(identity=identity, provider=provider),
+    ]
+
+
 def session_middleware(
     limits: RunLimits,
     *,
@@ -422,6 +472,9 @@ def session_middleware(
             ],
         ),
         *([SeenImagePruneMiddleware()] if prune_seen_images else []),
+        # A tool that raises is a result the model reads, not the end of the
+        # turn — see tool_error_message.
+        tool_error_middleware(),
         ModelCallLimitMiddleware(
             thread_limit=limits.model_calls_per_thread,
             run_limit=limits.model_calls_per_run,

@@ -43,7 +43,7 @@ def pick_read_tools(tools: list[Any]) -> list[Any]:
     return [t for t in tools if getattr(t, "name", "") in GENERAL_PURPOSE_TOOLS]
 
 
-def build_general_purpose_subagent(tools: list[Any], model: Any) -> dict[str, Any]:
+def build_general_purpose_subagent(tools: list[Any], model: Any, middleware: list[Any] | None = None) -> dict[str, Any]:
     """The ``SubAgent`` spec, with the tool objects and model the runner chose."""
     return {
         "name": GENERAL_PURPOSE_SUBAGENT,
@@ -62,4 +62,7 @@ def build_general_purpose_subagent(tools: list[Any], model: Any) -> dict[str, An
         ),
         "tools": list(tools),
         "model": model,
+        # The loop's guards, from deep_session.subagent_middleware; a spec
+        # with none is a sub-agent with no limits and no retry.
+        **({"middleware": list(middleware)} if middleware else {}),
     }
