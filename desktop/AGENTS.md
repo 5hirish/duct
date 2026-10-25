@@ -90,8 +90,11 @@ carries all the code.
   - **On macOS and Linux the webview asks the guard about frames too** (wry
     passes no frame information), so an `<iframe src>` on another origin
     would be opened in the browser there. Every iframe the app renders is
-    `srcdoc`, which navigates to `about:srcdoc` and passes. Keep it that
-    way, or widen `navigation_policy` deliberately, with the test beside it.
+    `srcdoc`, which navigates to `about:srcdoc` and passes; so do
+    `about:blank` and a `blob:` the app's own origin created, and nothing
+    else (`data:` and a foreign blob are a foreign page without the request).
+    Keep it that way, or widen `navigation_policy` deliberately, with the
+    test beside it.
 - **The first launch is greeted once.** `claim_first_run` looks for a `greeted`
   marker in the app data dir; if it is absent it writes one and returns true,
   and `open_splash` then builds a 380×330 window (instead of 380×150) and

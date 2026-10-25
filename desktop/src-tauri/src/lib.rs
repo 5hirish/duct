@@ -987,17 +987,25 @@ enum Navigation {
 /// OS would launch whatever claims it, which is the rule `open_external`
 /// already enforces for the page's explicit requests.
 ///
-/// `about:`, `blob:` and `data:` pass because the webview produces them
-/// itself: every `<iframe srcdoc>` the app renders navigates to
-/// `about:srcdoc`, and on macOS and Linux the webview asks this function about
-/// frames as well as the top level (wry passes no frame information). That is
-/// the caveat to carry: an `<iframe src="https://elsewhere">` would be opened
-/// in the browser there. Nothing in the app embeds one today.
+/// Two non-web documents pass, and only two: `about:blank` and
+/// `about:srcdoc`, which the webview produces itself for an empty frame and
+/// for every `<iframe srcdoc>` the app renders, plus a `blob:` the app's own
+/// origin created. A `data:` document or someone else's blob at the top
+/// level is the same hole as a foreign web page, just without a request, so
+/// both are dropped. The check matters for frames as much as the top level:
+/// on macOS and Linux the webview asks this function about frame navigations
+/// too (wry passes no frame information). That is the caveat to carry: an
+/// `<iframe src="https://elsewhere">` would be opened in the browser there.
+/// Nothing in the app embeds one today.
 fn navigation_policy(url: &Url, app_url: &Url) -> Navigation {
     match url.scheme() {
         "http" | "https" if url.origin() == app_url.origin() => Navigation::Allow,
         "http" | "https" => Navigation::OpenExternally,
-        "about" | "blob" | "data" => Navigation::Allow,
+        "about" if matches!(url.path(), "blank" | "srcdoc") => Navigation::Allow,
+        // The `url` crate gives a blob the origin of the URL in its path, so
+        // this is "created by the app" and nothing else; a blob whose path is
+        // not a URL has an opaque origin and fails the comparison.
+        "blob" if url.origin() == app_url.origin() => Navigation::Allow,
         _ => Navigation::Block,
     }
 }
@@ -1328,10 +1336,20 @@ mod tests {
         assert_eq!(decide("https://app.getduct.ai.evil.tld/"), Navigation::OpenExternally);
         assert_eq!(decide("https://api.getduct.ai/"), Navigation::OpenExternally);
 
-        // What the page builds for its own frames stays.
+        // What the page builds for its own frames stays: the two `about:`
+        // documents the webview makes, and a blob the app itself created.
         assert_eq!(decide("about:srcdoc"), Navigation::Allow);
         assert_eq!(decide("about:blank"), Navigation::Allow);
         assert_eq!(decide("blob:https://app.getduct.ai/0f3a"), Navigation::Allow);
+
+        // A document the page could write itself, or a blob from elsewhere,
+        // is a foreign page without the request: dropped, not shown.
+        assert_eq!(decide("data:text/html,x"), Navigation::Block);
+        assert_eq!(decide("data:text/html;base64,PGgxPmhpPC9oMT4="), Navigation::Block);
+        assert_eq!(decide("blob:https://evil.tld/abc"), Navigation::Block);
+        assert_eq!(decide("blob:http://app.getduct.ai/abc"), Navigation::Block);
+        assert_eq!(decide("blob:nonsense"), Navigation::Block);
+        assert_eq!(decide("about:config"), Navigation::Block);
 
         // A scheme the OS would route to another app is dropped, not forwarded.
         assert_eq!(decide("mailto:someone@example.com"), Navigation::Block);
