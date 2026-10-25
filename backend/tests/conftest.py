@@ -51,6 +51,7 @@ def make_sqlite_engine(*, drop_partial_indexes: bool = False, path=None):
             for index in (
                 "uq_project_members_single_owner",
                 "uq_project_invitations_pending_email",
+                "uq_agent_conv_active_artifact",
             ):
                 conn.exec_driver_sql(f"DROP INDEX IF EXISTS {index}")
     return engine

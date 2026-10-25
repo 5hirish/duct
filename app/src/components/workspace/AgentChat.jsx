@@ -32,8 +32,9 @@ import { Lightbox } from "@/components/ui/lightbox";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import { Phase } from "../../lib/agentPhase";
 import { StepStatus } from "../../lib/agentSteps";
-import { ErrorAction, Notice, Row, errorAction } from "../../lib/agentSession";
-import { compactNumber, formatDate, formatTime, relativeTime } from "../../lib/format";
+import { ErrorAction, Notice, Row, errorAction, errorText } from "../../lib/agentSession";
+import { compactNumber, formatDate, formatElapsed, formatTime, relativeTime } from "../../lib/format";
+import { useElapsed } from "../../hooks/useElapsed";
 import { groupActivityRows } from "../../lib/toolActivity";
 import { Button } from "@/components/ui/button";
 import { AttachmentStrip } from "./Attachments";
@@ -58,6 +59,7 @@ import Todos from "./Todos";
  *  the same action the terminal failure card offers, so a failure reads the
  *  same live and after a reload. */
 function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }) {
+  const { i18n } = useLingui();
   const action = code ? errorAction(code) : ErrorAction.RETRY;
   const link = "block w-full text-xs text-right text-muted-foreground hover:text-foreground transition-colors pr-1";
   return (
@@ -65,7 +67,7 @@ function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }
       <div className="max-w-[85%] space-y-1">
         <div className="rounded-2xl rounded-br-sm px-3 py-2 text-sm bg-destructive/10 border border-destructive/30 text-destructive">
           <p className="text-xs font-medium mb-0.5">{content ? <Trans>Failed to send</Trans> : <Trans>That turn failed</Trans>}</p>
-          <p className="text-xs text-destructive/80">{text}</p>
+          <p className="text-xs text-destructive/80">{errorText(i18n, text)}</p>
         </div>
         {action === ErrorAction.SETTINGS && <Link href="/settings/models" className={link}><Trans>Open model settings →</Trans></Link>}
         {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}><Trans>Open connections →</Trans></Link>}
@@ -449,39 +451,13 @@ function FailedAction({ action, retryable, onRetry, retryLabel, onStartFresh }) 
 // Header status
 // ---------------------------------------------------------------------------
 
-/** Seconds since `active` last became true; 0 while it is false. A clock in
- *  the status row is what tells a user a four-minute run is alive. */
-function useElapsed(active) {
-  const [seconds, setSeconds] = useState(0);
-  useEffect(() => {
-    if (!active) {
-      setSeconds(0);
-      return undefined;
-    }
-    const startedAt = Date.now();
-    setSeconds(0);
-    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000);
-    return () => clearInterval(timer);
-  }, [active]);
-  return seconds;
-}
-
-export function formatElapsed(seconds) {
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  if (m < 60) return `${m}m ${String(s).padStart(2, "0")}s`;
-  const h = Math.floor(m / 60);
-  return `${h}h ${String(m % 60).padStart(2, "0")}m`;
-}
-
 /**
  * A quiet line across the transcript. A plain notice is a centred sentence;
  * a compaction or a model switch is a divider, because it is a fact about
  * everything after it, not a message in the flow.
  */
 function NoticeRow({ msg: row }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   if (row.kind === Notice.COMPACTED) {
     const freed = row.before != null && row.after != null ? Math.max(0, row.before - row.after) : null;
     return (
@@ -500,7 +476,7 @@ function NoticeRow({ msg: row }) {
   }
   return (
     <p className="my-3 text-center text-2xs text-muted-foreground" role="note">
-      {row.text}
+      {errorText(i18n, row.text)}
     </p>
   );
 }
@@ -597,6 +573,9 @@ export default function AgentChat({
   // produced, so it must not flicker away on the next token the way a retry does.
   tierStepDown = null,
   draft = null,
+  // The shell's session key: where ChatInput keeps the unsent text, so a
+  // reload of this thread finds this thread's draft.
+  draftKey = "",
   // Tokens (lib/agentSession.js `usage`): the ring in the composer, the figures
   // in its tooltip. Null until the first model call has been billed.
   usage = null,
@@ -860,7 +839,7 @@ export default function AgentChat({
                 <span className="mt-0.5 text-destructive text-base leading-none" aria-hidden="true">✕</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-destructive mb-1">{failedText}</p>
-                  <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorMsg}</p>
+                  <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorText(i18n, errorMsg)}</p>
                 </div>
               </div>
               <FailedAction
@@ -897,6 +876,7 @@ export default function AgentChat({
         isStreaming={isStreaming}
         onStop={onStop}
         draft={draft}
+        draftKey={draftKey}
         placeholder={placeholder}
         ariaLabel={inputAriaLabel}
         accept={inputAccept}

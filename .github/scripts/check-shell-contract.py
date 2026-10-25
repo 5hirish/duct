@@ -119,9 +119,11 @@ def command_registrations() -> list[str]:
         if "target" in rs.parts:
             continue
         text = rs.read_text(encoding="utf-8", errors="replace")
+        # `#[tauri::command(async)]` is the same command on a worker thread,
+        # and the keychain commands are spelled that way.
         commands.update(
             re.findall(
-                r"#\[tauri::command\][^\n]*\n(?:\s*(?:pub\s+)?(?:async\s+)?fn\s+(\w+))",
+                r"#\[tauri::command(?:\([^)]*\))?\][^\n]*\n(?:\s*(?:pub\s+)?(?:async\s+)?fn\s+(\w+))",
                 text,
             )
         )

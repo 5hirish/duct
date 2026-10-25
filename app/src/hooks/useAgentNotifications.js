@@ -15,32 +15,47 @@
  */
 
 import { useEffect, useRef } from "react";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { ErrorCode } from "../lib/agentEvents";
 import { Phase } from "../lib/agentPhase";
 import { notifyIfAway } from "../lib/notify";
 
 const BUSY = new Set([Phase.PIPELINE, Phase.CHATTING]);
 
-/** The notice a transition deserves, or null. Exported for the tests. */
+/** The notice a transition deserves — a tag and a fact, no words — or null.
+ *  Exported for the tests. */
 export function noticeFor(previous, next, { errorCode = "", pendingKind = "" } = {}) {
   if (previous === next) return null;
   if (next === Phase.QUESTIONS && BUSY.has(previous)) {
-    return {
-      title: "needs your input",
-      body: pendingKind === "connection" ? "A connection is needed before it can continue." : "It has a question before it can continue.",
-      tag: "input",
-    };
+    return { tag: "input", connection: pendingKind === "connection" };
   }
-  if (next === Phase.READY && BUSY.has(previous)) {
-    return { title: "is done", body: "The reply is ready when you are.", tag: "done" };
-  }
-  if (next === Phase.FAILED && errorCode !== ErrorCode.CANCELLED) {
-    return { title: "ran into a problem", body: "Open the tab to see what happened and what to do.", tag: "failed" };
-  }
+  if (next === Phase.READY && BUSY.has(previous)) return { tag: "done" };
+  if (next === Phase.FAILED && errorCode !== ErrorCode.CANCELLED) return { tag: "failed" };
   return null;
 }
 
+/** The words for a notice. The agent's name sits inside the sentence rather
+ *  than glued in front of a fragment: "Insights is done" is one message a
+ *  translator can reorder; `${name} ${"is done"}` is not. */
+function noticeWords(i18n, name, notice) {
+  switch (notice.tag) {
+    case "input":
+      return {
+        title: i18n._(msg`${name} needs your input`),
+        body: notice.connection
+          ? i18n._(msg`A connection is needed before it can continue.`)
+          : i18n._(msg`It has a question before it can continue.`),
+      };
+    case "done":
+      return { title: i18n._(msg`${name} is done`), body: i18n._(msg`The reply is ready when you are.`) };
+    default:
+      return { title: i18n._(msg`${name} ran into a problem`), body: i18n._(msg`Open the tab to see what happened and what to do.`) };
+  }
+}
+
 export function useAgentNotifications(state, name) {
+  const { i18n } = useLingui();
   const previous = useRef(state.phase);
   useEffect(() => {
     const was = previous.current;
@@ -51,7 +66,10 @@ export function useAgentNotifications(state, name) {
       pendingKind: state.pauses[0]?.event?.replace(/_required$/, "") || "",
     });
     if (!notice) return;
-    notifyIfAway({ title: `${name} ${notice.title}`, body: notice.body, tag: `${name}:${notice.tag}` });
+    const { title, body } = noticeWords(i18n, name, notice);
+    notifyIfAway({ title, body, tag: `${name}:${notice.tag}` });
+    // i18n is stable for a mounted tree; the locale changes with a reload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.errorCode, state.pauses, name]);
 }
 

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { faviconUrl } from "@/lib/favicon";
 import { fetchProviderStatus } from "@/lib/modelTiers";
+import { clearDraft, readDraft, writeDraft } from "@/lib/composerDraft";
 import ComposerDials, { TierDial } from "../../workspace/ComposerDials";
 import ContextRing from "../../workspace/ContextRing";
 
@@ -39,34 +40,21 @@ async function anyProviderReachable() {
 }
 
 // One draft, one project, restored once. A blocked send stashes the text
-// here right before sending the user to Settings — the only reason this
+// right before sending the user to Settings — the only reason this
 // composer's local state wouldn't survive is that route change unmounting
 // it — and the mount effect below claims and clears it the moment the
 // project is known, so returning from Settings picks up mid-sentence
-// instead of asking for it again.
-const DRAFT_KEY_PREFIX = "duct_desk_draft:";
-
+// instead of asking for it again. The store is lib/composerDraft, shared
+// with the session composer, so the storage guards exist once.
 function draftKeyFor(projectId) {
-  return `${DRAFT_KEY_PREFIX}${projectId || "_"}`;
-}
-
-function stashDraft(projectId, text) {
-  try {
-    localStorage.setItem(draftKeyFor(projectId), text);
-  } catch {
-    /* private mode / storage full — the prompt still shows, just won't survive the trip */
-  }
+  return `desk:${projectId || "_"}`;
 }
 
 function claimDraft(projectId) {
-  try {
-    const key = draftKeyFor(projectId);
-    const value = localStorage.getItem(key);
-    if (value) localStorage.removeItem(key);
-    return value || "";
-  } catch {
-    return "";
-  }
+  const key = draftKeyFor(projectId);
+  const value = readDraft(key);
+  if (value) clearDraft(key);
+  return value;
 }
 
 export default function DeskComposer({ project, autonomy, onAutonomyChange, placeholder }) {
@@ -118,7 +106,7 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
       // Stash rather than clear: the box keeps what was typed, and the
       // stash is only so it still has it after the trip to Settings unmounts
       // this component — same text, same place, once they're back.
-      stashDraft(project?.id, q);
+      writeDraft(draftKeyFor(project?.id), q);
       setNeedsProvider(true);
       return;
     }

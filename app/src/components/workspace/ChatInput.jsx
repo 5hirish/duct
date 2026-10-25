@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ArrowUp, Paperclip, Square } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 
@@ -14,6 +14,8 @@ import {
   mediaTypeFor,
   pastedAttachment,
 } from "@/lib/attachments";
+import { clearDraft, readDraft, writeDraft } from "@/lib/composerDraft";
+import { matchesCombo } from "@/lib/shortcuts";
 import { AttachmentStrip, DropHint } from "./Attachments";
 
 /**
@@ -39,6 +41,16 @@ import { AttachmentStrip, DropHint } from "./Attachments";
  * whatever it looks like (lib/attachments.js `sniffPaste`). What goes out is
  * `contentBlocks`: a plain string when nothing is attached, else the text
  * and one block per file.
+ *
+ * What was typed is kept. The text is saved under `draftKey` (the shell's
+ * session key, so this thread's draft comes back on this thread) through
+ * lib/composerDraft on every change, restored on mount and cleared on send;
+ * a reload mid-sentence used to lose it. Per tab (sessionStorage), so it
+ * survives the reload and nothing else: the key names a thread, not a user,
+ * and a shared browser's next sign-in must not find it. Esc in the box
+ * stops a streaming turn — scoped to the box on purpose, since a
+ * window-level Escape would also fire while someone closes a popover — and
+ * the footer names both that and Shift+Enter while the box has focus.
  */
 export default function ChatInput({
   onSend,
@@ -53,6 +65,9 @@ export default function ChatInput({
   // { text, key }: text handed back by the session (a queued message the
   // user stopped before it was read). Applied once per `key`.
   draft = null,
+  // Where the unsent text is kept across a reload. Empty keeps nothing (the
+  // preview gallery, a shell with no thread yet).
+  draftKey = "",
   tools = null,
   status = null,
   // Tiles already on the card when it mounts — the preview gallery's seed.
@@ -73,13 +88,44 @@ export default function ChatInput({
   const dragDepth = useRef(0);
   const fileRef = useRef(null);
   const pasteCount = useRef(0);
+  const textareaRef = useRef(null);
+  const [focused, setFocused] = useState(false);
+  const hintId = useId();
+
+  // Read in an effect, not in the state initialiser: the server render has
+  // no storage, and a textarea whose value differs at hydration is a warning
+  // and a flash. Only an empty box takes the saved text, so a handed-back
+  // queued message that landed first is not overwritten.
+  useEffect(() => {
+    const saved = readDraft(draftKey);
+    if (saved) setText((current) => current || saved);
+  }, [draftKey]);
 
   useEffect(() => {
-    if (draft?.text) setText((current) => (current.trim() ? `${current}\n\n${draft.text}` : draft.text));
+    if (!draft?.text) return;
+    const merged = text.trim() ? `${text}\n\n${draft.text}` : draft.text;
+    setText(merged);
+    writeDraft(draftKey, merged);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft?.key]);
 
+  // The box grows with its text up to a cap, whichever way the text arrived:
+  // typed, restored, or handed back by Stop.
+  useEffect(() => {
+    fitHeight(textareaRef.current);
+  }, [text]);
+
+  function handleChange(e) {
+    setText(e.target.value);
+    writeDraft(draftKey, e.target.value);
+  }
+
   function handleKeyDown(e) {
+    if (isStreaming && onStop && matchesCombo(e, "escape")) {
+      e.preventDefault();
+      onStop();
+      return;
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -90,6 +136,7 @@ export default function ChatInput({
     const trimmed = text.trim();
     if (!trimmed && attachments.length === 0) return;
     onSend(contentBlocks(trimmed, attachments));
+    clearDraft(draftKey);
     setText("");
     setAttachments([]);
     setNotice("");
@@ -202,20 +249,20 @@ export default function ChatInput({
         )}
 
         <textarea
+          ref={textareaRef}
           rows={1}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           aria-label={ariaLabelText}
+          aria-describedby={focused ? hintId : undefined}
           disabled={disabled}
           placeholder={disabled ? t`Waiting for agent…` : placeholderText}
           className="max-h-[160px] min-h-[44px] w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 pb-1 text-base leading-relaxed outline-none placeholder:text-muted-foreground disabled:opacity-50 md:text-sm"
-          style={{ height: "44px" }}
-          onInput={(e) => {
-            e.target.style.height = "44px";
-            e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
-          }}
+          style={{ height: `${MIN_HEIGHT}px` }}
         />
 
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-2.5 pb-2.5">
@@ -242,6 +289,13 @@ export default function ChatInput({
               onChange={handleFileChange}
             />
             {tools}
+            {focused && (
+              <span id={hintId} className="hidden text-2xs text-muted-foreground @md:inline">
+                {isStreaming
+                  ? <Trans>Shift+Enter for a new line · Esc to stop</Trans>
+                  : <Trans>Shift+Enter for a new line</Trans>}
+              </span>
+            )}
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
@@ -272,6 +326,18 @@ export default function ChatInput({
 // picker filters to these; a drop or a paste of something else gets the
 // notice instead.
 const DEFAULT_ACCEPT = "image/*,.pdf,.txt,.md,.csv,.tsv,.json,.html,.xml,.yaml,.yml";
+
+// The box's height band. The classes on the textarea (`min-h-[44px]
+// max-h-[160px]`) say the same numbers for the first paint, before the
+// effect has measured anything.
+const MIN_HEIGHT = 44;
+const MAX_HEIGHT = 160;
+
+function fitHeight(el) {
+  if (!el) return;
+  el.style.height = `${MIN_HEIGHT}px`;
+  el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`;
+}
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
