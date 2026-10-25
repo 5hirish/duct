@@ -49,9 +49,10 @@ from langchain.agents.middleware import (
     ToolCallLimitMiddleware,
 )
 from langgraph.types import Command
+from langgraph.errors import GraphBubbleUp
 
 from agents.core.checkpoint import get_checkpointer
-from agents.core.errors import ErrorCode, classify_error, error_payload
+from agents.core.errors import ErrorCode, classify_error, error_payload, is_retryable
 from agents.core.events import AgentEvent, AgentStep, StepStatus
 from agents.core.lc import (
     ReportedRetryMiddleware,
@@ -165,6 +166,61 @@ class RunLimits:
 # ---------------------------------------------------------------------------
 # Assembly
 # ---------------------------------------------------------------------------
+
+
+class _NoFallback(GraphBubbleUp):
+    """Carries a failure past the fallback loop untouched: LangChain's loop
+    re-raises a GraphBubbleUp without trying the next model."""
+
+    def __init__(self, exc: BaseException) -> None:
+        super().__init__(str(exc))
+        self.exc = exc
+
+
+class ClassifiedFallbackMiddleware(ModelFallbackMiddleware):
+    """Fall back only on a failure another model could survive.
+
+    LangChain's `ModelFallbackMiddleware` falls back on every exception. A
+    rejected key, a malformed request and a request past the context window
+    were each sent again to the cheaper sibling, which failed the same way a
+    minute later and billed for it; a 400 about a thinking block the primary
+    emitted went to a model that never saw one. After `ReportedRetryMiddleware`
+    has given up on a transient failure — a rate limit, an overload, an
+    upstream error, a timeout, a network drop — another model is worth a try;
+    for anything else the first answer is the answer. Rulebook gap 4.
+    """
+
+    def wrap_model_call(self, request, handler):
+        def guarded(req):
+            try:
+                return handler(req)
+            except GraphBubbleUp:
+                raise
+            except Exception as exc:
+                if is_retryable(exc):
+                    raise
+                raise _NoFallback(exc) from exc
+
+        try:
+            return super().wrap_model_call(request, guarded)
+        except _NoFallback as stop:
+            raise stop.exc from None
+
+    async def awrap_model_call(self, request, handler):
+        async def guarded(req):
+            try:
+                return await handler(req)
+            except GraphBubbleUp:
+                raise
+            except Exception as exc:
+                if is_retryable(exc):
+                    raise
+                raise _NoFallback(exc) from exc
+
+        try:
+            return await super().awrap_model_call(request, guarded)
+        except _NoFallback as stop:
+            raise stop.exc from None
 
 
 def fallback_chain(
@@ -354,7 +410,7 @@ def session_middleware(
         ),
         # Last of the guards, so it sits closest to the model call and the
         # limits above still count a fallback attempt as the call it is.
-        *([ModelFallbackMiddleware(*fallbacks)] if fallbacks else []),
+        *([ClassifiedFallbackMiddleware(*fallbacks)] if fallbacks else []),
         # Inside the fallback, so each model in the chain gets its retries
         # before the fallback moves on, and a transient 429 on the primary
         # never costs a downgrade. Reports every attempt to the UI.
