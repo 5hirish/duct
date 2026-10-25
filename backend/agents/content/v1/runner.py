@@ -447,10 +447,13 @@ class ContentRunner:
         fans out into a real provider call.
         """
         injected_llm = llm is not None
+        # One conversation, one prompt cache, as insights does: every call of
+        # this thread carries the same key, the fallback's included.
+        cache_key = str(getattr(session, "conversation_id", None) or session_id or "")
         if llm is None:
             llm = resolve_chat_model(
                 self.provider, self.model, self._api_key, self._temperature,
-                thinking=self._thinking,
+                thinking=self._thinking, cache_key=cache_key,
             )
 
         # Fetch, plus whichever search this provider/model can actually use —
@@ -491,7 +494,7 @@ class ContentRunner:
             # quality is the point.
             subagents = [
                 build_research_pillar_subagent(
-                    _pick(RESEARCH_PILLAR_TOOLS), self._sibling_model(llm, injected_llm)
+                    _pick(RESEARCH_PILLAR_TOOLS), self._sibling_model(llm, injected_llm, cache_key)
                 ),
                 build_draft_post_subagent(_pick(DRAFT_POST_TOOLS), llm),
                 # Judging, like drafting, stays on the run's model.
@@ -522,7 +525,8 @@ class ContentRunner:
         fallbacks: list[Any] = []
         if not injected_llm:
             fallbacks = fallback_chain(
-                self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
+                self.provider, self.model, self._api_key, self._temperature,
+                thinking=self._thinking, cache_key=cache_key,
             )
 
         return build_deep_session_agent(
@@ -545,16 +549,19 @@ class ContentRunner:
             prune_seen_images=self.vision,
         )
 
-    def _sibling_model(self, llm: Any, injected: bool) -> Any:
+    def _sibling_model(self, llm: Any, injected: bool, cache_key: str = "") -> Any:
         """The cheaper model in this family, for volume work; the run's own
-        model when the family has none — or when a test injected one."""
+        model when the family has none — or when a test injected one. Same
+        ``cache_key`` as the run: the sub-agents' calls belong to the same
+        conversation and OpenAI routes by it."""
         if injected:
             return llm
         names = resolve_fallback_models(Engine.V1, self.provider, self.model)
         if not names:
             return llm
         return resolve_chat_model(
-            self.provider, names[0], self._api_key, self._temperature, thinking=self._thinking
+            self.provider, names[0], self._api_key, self._temperature,
+            thinking=self._thinking, cache_key=cache_key,
         )
 
     @staticmethod

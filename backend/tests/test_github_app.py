@@ -373,7 +373,14 @@ def test_without_the_app_or_a_link_nothing_starts(cfg, db, alice, monkeypatch):
     assert browser.http.get("/auth/connectors/github/oauth/authorize").status_code == 400
     assert browser.http.get("/auth/connectors/github/oauth/authorize?link=forged").status_code == 400
 
-    unconfigured = Configs(api_public_url=API, frontend_origin=APP_ORIGIN)
+    # Named empty rather than left out: `Configs` reads the environment and
+    # `backend/.env.local`, so a developer with a dev App configured ran this
+    # test against their own registration and it was red only on their laptop.
+    unconfigured = Configs(
+        api_public_url=API, frontend_origin=APP_ORIGIN,
+        github_app_slug="", github_app_client_id="", github_app_client_secret="",
+        github_app_private_key="",
+    )
     for module in (gh_app, auth_routes):
         monkeypatch.setattr(module, "get_configs", lambda: unconfigured)
     assert browser.as_(alice).get("/api/user/connectors/github/app").json() == {

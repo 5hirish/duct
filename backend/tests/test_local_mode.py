@@ -10,11 +10,13 @@ developer's real ~/Library or ~/.local/share.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import re
 import stat
 import sys
+import threading
 
 import pytest
 from sqlmodel import Session, SQLModel, select
@@ -178,6 +180,46 @@ def test_api_key_file_is_owner_only(clean_env, tmp_path):
     local_server.bootstrap(["--data-dir", str(tmp_path)])
     mode = (tmp_path / local_server._API_KEY_FILE).stat().st_mode
     assert stat.S_IMODE(mode) == 0o600
+
+
+# ---------------------------------------------------------------------------
+# Supervision by the shell
+# ---------------------------------------------------------------------------
+
+def test_the_watchdog_fires_when_the_shell_closes_the_pipe():
+    """EOF on stdin is the only thing a dead shell can still say, so it has to
+    be what ends the sidecar; a live shell with nothing to say must not."""
+    read_fd, write_fd = os.pipe()
+    stream = os.fdopen(read_fd, "rb", buffering=0)
+    fired = threading.Event()
+    try:
+        thread = local_server.watch_stdin(stream, fired.set)
+        os.write(write_fd, b"still here")
+        assert not fired.wait(0.2), "bytes on stdin are not EOF"
+        os.close(write_fd)
+        assert fired.wait(5.0), "EOF on stdin must stop the sidecar"
+        thread.join(5.0)
+        assert not thread.is_alive()
+    finally:
+        with contextlib.suppress(OSError):
+            os.close(write_fd)
+        stream.close()
+
+
+def test_a_torn_down_pipe_counts_as_a_lost_shell():
+    class Broken:
+        def read(self, _size):
+            raise OSError("pipe torn down")
+
+    fired = threading.Event()
+    local_server.watch_stdin(Broken(), fired.set).join(5.0)
+    assert fired.is_set()
+
+
+def test_the_watchdog_is_opt_in():
+    """A sidecar run by hand reads a terminal or /dev/null; neither may stop it."""
+    assert local_server._parse_args([]).exit_on_stdin_eof is False
+    assert local_server._parse_args(["--exit-on-stdin-eof"]).exit_on_stdin_eof is True
 
 
 # ---------------------------------------------------------------------------

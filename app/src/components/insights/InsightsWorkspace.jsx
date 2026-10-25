@@ -147,13 +147,15 @@ export default function InsightsWorkspace({
     }
   }, []);
 
+  // A thread by its id, a fresh question by its text: a different question
+  // in the same tab is a different run, and a reload of this one is this
+  // one — with the draft it had.
+  const handleKey = `${AGENT_TYPE}:${projectId || ""}:${conversationId || `q:${initialPrompt}`}`;
   const agent = useAgentSession({
     agentType: AGENT_TYPE,
     notifyAs: t`Insights`,
     body,
-    // A thread by its id, a fresh question by its text: a different question
-    // in the same tab is a different run, and a reload of this one is this one.
-    handleKey: `${AGENT_TYPE}:${projectId || ""}:${conversationId || `q:${initialPrompt}`}`,
+    handleKey,
     hydrateThreadState: true,
     onEvent,
   });
@@ -316,6 +318,7 @@ export default function InsightsWorkspace({
   const chat = (
     <AgentChat
       title={t`Insights`}
+      draftKey={handleKey}
       phase={agent.phase}
       steps={agent.steps}
       todos={agent.todos}

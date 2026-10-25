@@ -116,6 +116,17 @@ export function compactNumber(value) {
   return String(v);
 }
 
+/** A duration in seconds as a clock reads it: "42s", "1m 05s", "1h 02m". */
+export function formatElapsed(seconds) {
+  const total = Math.max(0, Math.floor(Number(seconds) || 0));
+  if (total < 60) return `${total}s`;
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  if (m < 60) return `${m}m ${String(s).padStart(2, "0")}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${String(m % 60).padStart(2, "0")}m`;
+}
+
 // ---------------------------------------------------------------------------
 // Strings
 // ---------------------------------------------------------------------------

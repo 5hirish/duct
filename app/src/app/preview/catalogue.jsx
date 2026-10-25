@@ -94,7 +94,6 @@ const EXAMPLES = {
         "Reconciling spend against conversions…",
         "Looking for the number that moved…",
       ]}
-      estimate="~3 min"
     />
   ),
 

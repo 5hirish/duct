@@ -13,6 +13,7 @@
 import { plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { cn } from "@/lib/utils";
+import { formatCost } from "@/lib/usageApi";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const R = 8;
@@ -69,15 +70,19 @@ function Stat({ label, headline, detail }) {
 
 // Sentences and a bar, not a table of joined figures: the first cut read
 // "61k in · 7.2k out · 48k cached (79%) · $0.21" in monospace, which is a
-// log line, and nobody hovering a ring wants a log line. No cost here either:
-// the ring is about room left in the window, and money has its own page
-// (/usage) — a dollar figure beside every message made people watch the
-// meter instead of the answer.
+// log line, and nobody hovering a ring wants a log line. The cost is each
+// bucket's headline rather than a figure in the sentence: it is what the
+// person who hovered came for, and it belongs here and not on the ring —
+// money has its own page (/usage), and a dollar figure beside every message
+// made people watch the meter instead of the answer. A model the backend has
+// no price for says "—", so the omission is visible rather than left to be
+// noticed.
 function UsageDetails({ last, total, percent }) {
   const { t } = useLingui();
   const used = formatTokens((last?.input || 0) + (last?.output || 0));
   const window = formatTokens(last?.window);
   const calls = total?.calls ? plural(total.calls, { one: "# call", other: "# calls" }) : "";
+  const cost = (bucket) => formatCost(bucket?.cost ?? null) ?? "—";
 
   // A closure, not a module-level helper: the macro only transforms a t`…`
   // whose `t` is the one useLingui() returned in this scope. Handed to a
@@ -114,8 +119,8 @@ function UsageDetails({ last, total, percent }) {
           </p>
         </div>
       )}
-      {last?.window && <Stat label={t`Last call`} detail={tokenLine(last)} />}
-      {total?.calls > 0 && <Stat label={t`This session`} headline={calls} detail={tokenLine(total)} />}
+      {last?.window && <Stat label={t`Last call`} headline={cost(last)} detail={tokenLine(last)} />}
+      {total?.calls > 0 && <Stat label={t`This session`} headline={`${calls} · ${cost(total)}`} detail={tokenLine(total)} />}
       {last?.model && <p className="text-2xs opacity-70">{last.model}</p>}
     </div>
   );
@@ -138,16 +143,23 @@ export default function ContextRing({ used = 0, label = "", details = null }) {
   // override delayDuration for this tooltip and desync it from the rest of
   // the app, which is exactly what used to happen (it wrapped its own at
   // 150ms).
+  //
+  // A gauge, not a button. It answers hover and Tab with the tooltip and
+  // does nothing on click, and a <button> that does nothing on click is a
+  // promise the shell cannot keep — so no hover fill, and `role="img"` with
+  // the percent as its name, which is how a screen reader reads a donut.
+  // Focusable so the keyboard still reaches the figures.
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={t`Context used: ${percent} percent. Show token usage.`}
-          className="flex size-8 items-center justify-center rounded-md hover:bg-muted transition-colors"
+        <span
+          tabIndex={0}
+          role="img"
+          aria-label={t`Context used: ${percent} percent`}
+          className="flex size-8 items-center justify-center rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
         >
           <Ring pct={pct} />
-        </button>
+        </span>
       </TooltipTrigger>
       <TooltipContent side="top" align="end" className="max-w-xs">
         {details ? (
