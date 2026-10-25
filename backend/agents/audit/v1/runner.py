@@ -622,11 +622,16 @@ class LangChainAuditRunner:
         on_tool_use, on_tool_result = activity_hooks(
             emit, *recorder_tool_hooks(getattr(session, "recorder", None))
         )
+        # The thread is the conversation, as for insights and content: a
+        # session id is minted per open, so keyed on it every resume started
+        # an empty checkpoint beside its own transcript, and a turn cut by a
+        # redeploy could not be continued. The session id is only the key
+        # for a run with nothing persisted (the teaser, a local-only project).
         loop = DeepSession(
             agent,
             session=session,
             emit=emit,
-            thread_id=session_id,
+            thread_id=str(getattr(session, "conversation_id", None) or session_id),
             limits=LIMITS,
             provider=self.provider,
             model=self.model,
