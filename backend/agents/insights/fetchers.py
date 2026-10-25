@@ -27,7 +27,7 @@ LangChain binder over this.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import logging
 from collections.abc import Callable
@@ -35,7 +35,7 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
-from agents.core.errors import ErrorCode, classify_error
+from agents.core.errors import ErrorCode, classify_error, safe_excerpt
 from agents.insights.catalog.base import _CATALOGS
 from utils.dates import last_n_days
 
@@ -116,12 +116,54 @@ def _manual_blob(creds: dict, account_id: str, account_key: str) -> dict:
     return blob
 
 
+class WindowUnsupported(ValueError):
+    """The ask names a window this source cannot read."""
+
+
+# Where a day-count fetcher leaves the window it actually read, for
+# `fetch_entity` to report in place of the one asked for.
+_READ_WINDOW_KEY = "_window_read"
+
+
+def _window_read(window: Any, days: int, yesterday: date) -> tuple[str, str]:
+    """The dates a day-count fetcher covered: its own ``window`` when it says
+    (Clarity clamps the days it was given), else the last ``days`` ending
+    yesterday, the rule every one of them counts by."""
+    if isinstance(window, dict):
+        start, end = window.get("from") or window.get("date_from"), window.get("to") or window.get("date_to")
+        if start and end:
+            return str(start), str(end)
+        try:
+            days = max(1, int(window.get("days") or days))
+        except (TypeError, ValueError):
+            pass
+    return (yesterday - timedelta(days=days - 1)).isoformat(), yesterday.isoformat()
+
+
 def _manual(fn: Callable, account_key: str = "") -> Callable[[str, str, str, dict], dict]:
-    """Manual-credential connectors take the stored blob whole plus a window in days."""
+    """Manual-credential connectors take the stored blob whole plus a window in days.
+
+    They read "the last N days", counted back from yesterday, whatever dates
+    the ask carried. So a window ending earlier is a past period they cannot
+    read, and is refused rather than answered: answering an August ask with
+    the latest 31 days captioned as August was how a period comparison
+    compared September with itself. A recent ask is answered, and the window
+    the fetcher actually read travels back with the data.
+    """
 
     def _call(account_id: str, date_from: str, date_to: str, creds: dict) -> dict:
-        days = max(1, (date.fromisoformat(date_to) - date.fromisoformat(date_from)).days + 1)
-        return fn(_manual_blob(creds, account_id, account_key), days)
+        start, end = date.fromisoformat(date_from), date.fromisoformat(date_to)
+        days = max(1, (end - start).days + 1)
+        yesterday = date.today() - timedelta(days=1)
+        if end < yesterday:
+            raise WindowUnsupported(
+                f"reads only the most recent days, ending {yesterday.isoformat()}; "
+                f"{date_from} to {date_to} is a past period it cannot fetch"
+            )
+        data = fn(_manual_blob(creds, account_id, account_key), days)
+        if isinstance(data, dict):
+            data[_READ_WINDOW_KEY] = _window_read(data.get("window"), days, yesterday)
+        return data
 
     return _call
 
@@ -308,6 +350,19 @@ def fetch_entity(
     window_from, window_to = resolve_window(date_from, date_to)
     try:
         data = spec.call(account_id, window_from, window_to, creds)
+    except WindowUnsupported as exc:
+        return {
+            "status": "window_unsupported",
+            "entity_id": entity_id,
+            "connector_id": spec.connector_id,
+            "account_id": account_id,
+            "date_from": window_from,
+            "date_to": window_to,
+            "message": (
+                f"{spec.connector_id} {exc}. Do not retry this window — compare inside "
+                "the most recent days, or say the comparison is unavailable for this source."
+            ),
+        }
     except Exception as exc:  # noqa: BLE001 — reported to the agent, never raised
         logger.warning("insights: fetch %s failed", entity_id, exc_info=True)
         if classify_error(exc) is ErrorCode.CONNECTOR_EXPIRED:
@@ -335,12 +390,20 @@ def fetch_entity(
             "date_from": window_from,
             "date_to": window_to,
             "message": (
-                f"{spec.connector_id} returned an error: {str(exc)[:300]}. Do not retry the "
+                f"{spec.connector_id} returned an error: {safe_excerpt(exc)}. Do not retry the "
                 "same call — say what you could not fetch and carry on."
             ),
         }
 
     from agents.insights.totals import summarise
+
+    # A day-count fetcher says what it read; that window is the one reported,
+    # because the caption on a number has to be the window the number covers.
+    read = data.pop(_READ_WINDOW_KEY, None) if isinstance(data, dict) else None
+    note: dict[str, str] = {}
+    if read and tuple(read) != (window_from, window_to):
+        window_from, window_to = read
+        note = {"window_note": "This source reads the most recent days; the window is the one it read, not the one asked for."}
 
     return {
         "status": "ok",
@@ -351,6 +414,7 @@ def fetch_entity(
         # window is the single easiest way to state something false.
         "date_from": window_from,
         "date_to": window_to,
+        **note,
         # Before the rows, so a cut payload keeps them: the totals are the
         # numbers a brief quotes, and Duct adds them up, not the model.
         **summarise(entity_id, data),

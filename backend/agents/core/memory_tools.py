@@ -30,6 +30,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from agents.core.telemetry import tool_span
+from agents.core.errors import safe_excerpt
 from models.memory import SCOPE_PROJECT, SCOPE_USER, SOURCE_AGENT, SOURCE_USER
 from utils.dates import parse_iso
 
@@ -296,7 +297,7 @@ async def _run(fn, *args, **kwargs) -> dict:
             return await asyncio.to_thread(fn, *args, **kwargs)
         except Exception as exc:  # noqa: BLE001 — tools report errors, never raise
             logger.warning("memory tool failed", exc_info=True)
-            return {"status": "error", "message": str(exc)}
+            return {"status": "error", "message": safe_excerpt(exc)}
 
 
 async def _notify(on_memory: Callable[[dict], Any] | None, payload: dict) -> None:

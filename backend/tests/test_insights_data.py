@@ -334,3 +334,74 @@ def test_index_is_names_and_summaries_not_bodies():
 
     assert len(block) < 2_000
     assert all(name in block for name in KNOWLEDGE_INDEX)
+
+
+# ---------------------------------------------------------------------------
+# Day-count connectors: the window reported is the window read
+# ---------------------------------------------------------------------------
+#
+# Mixpanel, Clarity and GrowthBook read "the last N days" counted back from
+# yesterday, whatever dates the ask carried. An August ask used to come back
+# as the latest 31 days captioned as August, and the verifier compared
+# September with itself.
+
+def test_a_day_count_connector_refuses_a_past_window():
+    from datetime import date, timedelta
+
+    from agents.insights.fetchers import WindowUnsupported, _manual
+
+    call = _manual(lambda blob, days: {"rows": [], "window": {"days": days}}, "project_id")
+    long_ago = date.today() - timedelta(days=90)
+    with pytest.raises(WindowUnsupported, match="past period"):
+        call("acct", long_ago.isoformat(), (long_ago + timedelta(days=30)).isoformat(), {"project_id": "1"})
+
+
+def test_a_recent_ask_carries_the_window_the_fetcher_read():
+    from datetime import date, timedelta
+
+    from agents.insights.fetchers import _READ_WINDOW_KEY, _manual
+
+    yesterday = date.today() - timedelta(days=1)
+    # The fetcher clamps the days it was given, as Clarity does, and says so.
+    call = _manual(lambda blob, days: {"rows": [], "window": {"days": min(days, 3)}})
+    data = call("acct", (date.today() - timedelta(days=29)).isoformat(), date.today().isoformat(), {"k": "v"})
+    assert data[_READ_WINDOW_KEY] == ((yesterday - timedelta(days=2)).isoformat(), yesterday.isoformat())
+
+
+def test_fetch_entity_reports_a_past_window_as_unsupported(monkeypatch, bound_project):
+    from dataclasses import replace
+
+    from agents.insights.fetchers import WindowUnsupported
+
+    def _past(*_a, **_kw):
+        raise WindowUnsupported("reads only the most recent days; 2026-08-01 to 2026-08-31 is a past period it cannot fetch")
+
+    specs = {**fetch_specs()}
+    specs["search_terms"] = replace(specs["search_terms"], call=_past)
+    monkeypatch.setattr(fetchers, "fetch_specs", lambda: specs)
+
+    result = fetch_entity("search_terms", user_id=uuid.uuid4(), project_id=uuid.uuid4(),
+                          date_from="2026-08-01", date_to="2026-08-31")
+
+    assert result["status"] == "window_unsupported"
+    assert "Do not retry this window" in result["message"]
+
+
+def test_fetch_entity_reports_the_window_read_not_the_one_asked(monkeypatch, bound_project):
+    from dataclasses import replace
+
+    from agents.insights.fetchers import _READ_WINDOW_KEY
+
+    def _recent(*_a, **_kw):
+        return {"rows": [], _READ_WINDOW_KEY: ("2026-10-22", "2026-10-24")}
+
+    specs = {**fetch_specs()}
+    specs["search_terms"] = replace(specs["search_terms"], call=_recent)
+    monkeypatch.setattr(fetchers, "fetch_specs", lambda: specs)
+
+    result = fetch_entity("search_terms", user_id=uuid.uuid4(), project_id=uuid.uuid4(),
+                          date_from="2026-09-25", date_to="2026-10-25")
+
+    assert (result["date_from"], result["date_to"]) == ("2026-10-22", "2026-10-24")
+    assert "window_note" in result
+    assert _READ_WINDOW_KEY not in result["data"]

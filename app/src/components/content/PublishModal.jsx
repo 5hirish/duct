@@ -17,7 +17,7 @@ import {
   publishPost,
 } from "@/lib/contentApi";
 import { PLATFORM_LABELS, Platform, PostType } from "@/lib/contentEnums";
-import { friendlyErrorMessage } from "@/lib/agentSession";
+import { errorText, friendlyErrorMessage } from "@/lib/agentSession";
 import PublishReviewPanel from "./PublishReviewPanel";
 
 /**
@@ -37,7 +37,7 @@ import PublishReviewPanel from "./PublishReviewPanel";
  *   - onPublished : (updatedPost) => void  — fired after successful publish
  */
 export default function PublishModal({ open, onClose, post, onPublished }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const [accounts, setAccounts]     = useState([]);
   const [selected, setSelected]     = useState(new Set());
   const [scheduledAt, setScheduledAt] = useState("");
@@ -265,7 +265,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
 
               {error && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/8 p-3 text-xs text-destructive">
-                  {error}
+                  {errorText(i18n, error)}
                 </div>
               )}
             </>

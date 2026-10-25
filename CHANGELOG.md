@@ -90,6 +90,9 @@ published without one. The same script, with no arguments, holds
 - **The composer keeps a half-written message through a reload**, Esc in it
   stops a running turn, and the context ring's tooltip says what the last
   call and the session cost — a dash where the model has no price.
+- Failure messages, system notifications and the posture badge follow the
+  interface language; they were English in every language, and the badge
+  showed the raw `ask` / `assisted` / `auto` value instead of the dial's word.
 
 ### Security
 

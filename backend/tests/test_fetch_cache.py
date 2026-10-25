@@ -79,3 +79,17 @@ async def test_the_default_window_and_its_dates_written_out_are_one_pull(monkeyp
     await fetch.ainvoke({"entity_id": "ga4_landing_pages"})
     await fetch.ainvoke({"entity_id": "ga4_landing_pages", "date_from": date_from, "date_to": date_to})
     assert calls == ["ga4_landing_pages"]
+
+
+@pytest.mark.asyncio
+async def test_a_pull_takes_one_cache_slot_not_two(monkeypatch):
+    """The cache stored each pull under its typed key and its resolved key,
+    so FETCH_CACHE_MAX admitted half the pulls it named; past that the
+    verifier re-fetched the 45 s report the cache exists to avoid."""
+    monkeypatch.setattr(data_tools, "FETCH_CACHE_MAX", 2)
+    calls: list[str] = []
+    fetch = _fetch_tool(monkeypatch, calls, {"status": "ok", "data": {"rows": [1]}})
+    await fetch.ainvoke({"entity_id": "ga4_landing_pages"})
+    await fetch.ainvoke({"entity_id": "search_terms"})
+    await fetch.ainvoke({"entity_id": "search_terms"})
+    assert calls == ["ga4_landing_pages", "search_terms"]

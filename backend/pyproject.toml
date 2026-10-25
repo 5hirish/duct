@@ -40,10 +40,17 @@ google-genai = "^2.27"
 python-dotenv = "^1.2"
 pydantic = "^2.13"
 pydantic-settings = "^2.15"
-langchain = "^1.4"
-langchain-openai = "^1.6"
-langchain-google-genai = "^4.4"
-langchain-anthropic = "^1.7"
+langchain = "^1.4.7"
+# Declared, not inherited: agents/core imports langchain_core directly
+# (messages, tools, fake chat models), so its floor is Duct's to hold. 1.7.0
+# is where streamed tool-call arguments became `tool-call-delta` events
+# instead of `block-delta` snapshots; nothing in Duct reads either (lc.py's
+# split_chunk takes text and thinking blocks and ignores the rest, and
+# routes/chat.py reads chunk.content), which was checked when this moved.
+langchain-core = "^1.7.0"
+langchain-openai = "^1.7.2"
+langchain-google-genai = "^4.4.2"
+langchain-anthropic = "^1.7.6"
 langgraph = "^1.2.17"
 pyjwt = "^2.15"
 httpx = "^0.28"

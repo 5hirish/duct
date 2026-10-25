@@ -493,7 +493,13 @@ Rules that follow:
   code)` and `errorAction(code)` in `lib/agentSession.js` are the only places
   a failure becomes words or a button. A new failure kind is a new `ErrorCode`
   (mirrored from the backend) with a row in `ERROR_COPY`, never a regex on the
-  message.
+  message. The rows are `msg` descriptors — the reducer has no locale — and
+  the state holds a descriptor or, when a provider's own sentence passes
+  through, a string; a component renders either with `errorText(i18n,
+  value)`, never `i18n._` on the value, because a raw sentence with a brace
+  in it is not an ICU message. The literal-string check cannot see a string
+  in an object literal or a `dispatch`, so a sentence in `lib/` or `hooks/`
+  is translated by this rule, not by the check.
 - **The status row says what is happening, with a clock.** While the agent
   works the header reads `Working · 1m 12s · Collecting source data` — phase,
   elapsed, and the step in progress (or "Reconnecting to the model (2/4)",

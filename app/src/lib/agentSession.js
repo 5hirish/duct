@@ -21,6 +21,7 @@
  * lib/__tests__/agentSession.test.js.
  */
 
+import { msg } from "@lingui/core/macro";
 import { AgentEvent, ErrorCode, PAUSE_EVENTS } from "./agentEvents";
 import { Phase } from "./agentPhase";
 import { StepStatus } from "./agentSteps";
@@ -441,7 +442,7 @@ function reduceEvent(state, event, at = 0) {
           ...closeStreaming(state.messages),
           {
             role: Row.SEND_ERROR,
-            text: friendlyErrorMessage(event.error || "That turn failed. Try again.", event.code),
+            text: friendlyErrorMessage(event.error || TURN_FAILED, event.code),
             content: null,
             code: event.code || "",
             retryable: event.retryable ?? true,
@@ -713,7 +714,10 @@ export function reduceAgentSession(state, action) {
         phase: Phase.QUESTIONS,
         messages: [
           ...state.messages,
-          { role: Row.SEND_ERROR, text: `Your answer didn't go through — ${action.error || "the network dropped it"}.`, content: null },
+          // The reason, when there is one, is already a whole sentence (the
+          // hook's own, or the provider's); prefixing it made two sentences
+          // with two dashes. Without one, the generic line.
+          { role: Row.SEND_ERROR, text: action.error ? friendlyErrorMessage(action.error) : ANSWER_DROPPED, content: null },
         ],
       };
 
@@ -735,7 +739,7 @@ export function reduceAgentSession(state, action) {
         draft,
         retrying: null,
         phase: action.keepReady ? Phase.READY : Phase.FAILED,
-        error: action.keepReady ? state.error : "Stopped.",
+        error: action.keepReady ? state.error : STOPPED,
         errorCode: action.keepReady ? state.errorCode : ErrorCode.CANCELLED,
         errorRetryable: true,
       };
@@ -786,24 +790,36 @@ export const ErrorAction = Object.freeze({
   NONE:        "none",
 });
 
+// Every sentence below is a `msg` descriptor, not a string: this module has
+// no React and no locale, so it hands the words to the component, which
+// renders them with `errorText(i18n, …)`. The literal-string check cannot see
+// a string in an object literal, which is how these shipped in English in
+// every language until the 2026-10-25 harness review.
+const STOPPED = msg`Stopped.`;
+const UNKNOWN_FAILURE = msg`The run stopped without saying why. Try again.`;
+/** The fallback when a turn fails without a sentence of its own. Exported for
+ *  the history mapper, so a replayed failure says the same thing. */
+export const TURN_FAILED = msg`That turn failed. Try again.`;
+const ANSWER_DROPPED = msg`Your answer didn't go through — the network dropped it.`;
+
 const ERROR_COPY = Object.freeze({
-  [ErrorCode.RATE_LIMITED]:        { text: "The model provider is rate limiting us. Wait a minute, then try again.", action: ErrorAction.RETRY },
-  [ErrorCode.OVERLOADED]:          { text: "The model provider is overloaded right now. Try again in a moment.", action: ErrorAction.RETRY },
-  [ErrorCode.UPSTREAM_ERROR]:      { text: "The model provider returned an error. Try again.", action: ErrorAction.RETRY },
-  [ErrorCode.TIMEOUT]:             { text: "The model took too long to answer. Try again.", action: ErrorAction.RETRY },
-  [ErrorCode.NETWORK]:             { text: "Couldn't reach the model provider. Check your connection and try again.", action: ErrorAction.RETRY },
-  [ErrorCode.AUTH]:                { text: "The model provider rejected the API key. Check it under Settings → Models & providers.", action: ErrorAction.SETTINGS },
-  [ErrorCode.PERMISSION]:          { text: "This API key isn't allowed to use that model. Pick another under Settings → Models & providers.", action: ErrorAction.SETTINGS },
-  [ErrorCode.MODEL_NOT_FOUND]:     { text: "That model isn't available on this provider. Pick another under Settings → Models & providers.", action: ErrorAction.SETTINGS },
-  [ErrorCode.CONTEXT_WINDOW]:      { text: "This conversation no longer fits the model's context, even after summarising it. Start fresh, or pick a model with a bigger window.", action: ErrorAction.FRESH },
-  [ErrorCode.BAD_REQUEST]:         { text: "The model provider rejected the request. Try rephrasing.", action: ErrorAction.NONE },
-  [ErrorCode.CONNECTOR_EXPIRED]:   { text: "A connected account needs reconnecting before the agent can read it.", action: ErrorAction.CONNECTIONS },
-  [ErrorCode.CONNECTOR_FORBIDDEN]: { text: "A connected account doesn't have access to that data. Check its permissions under Connections.", action: ErrorAction.CONNECTIONS },
+  [ErrorCode.RATE_LIMITED]:        { text: msg`The model provider is rate limiting us. Wait a minute, then try again.`, action: ErrorAction.RETRY },
+  [ErrorCode.OVERLOADED]:          { text: msg`The model provider is overloaded right now. Try again in a moment.`, action: ErrorAction.RETRY },
+  [ErrorCode.UPSTREAM_ERROR]:      { text: msg`The model provider returned an error. Try again.`, action: ErrorAction.RETRY },
+  [ErrorCode.TIMEOUT]:             { text: msg`The model took too long to answer. Try again.`, action: ErrorAction.RETRY },
+  [ErrorCode.NETWORK]:             { text: msg`Couldn't reach the model provider. Check your connection and try again.`, action: ErrorAction.RETRY },
+  [ErrorCode.AUTH]:                { text: msg`The model provider rejected the API key. Check it under Settings → Models & providers.`, action: ErrorAction.SETTINGS },
+  [ErrorCode.PERMISSION]:          { text: msg`This API key isn't allowed to use that model. Pick another under Settings → Models & providers.`, action: ErrorAction.SETTINGS },
+  [ErrorCode.MODEL_NOT_FOUND]:     { text: msg`That model isn't available on this provider. Pick another under Settings → Models & providers.`, action: ErrorAction.SETTINGS },
+  [ErrorCode.CONTEXT_WINDOW]:      { text: msg`This conversation no longer fits the model's context, even after summarising it. Start fresh, or pick a model with a bigger window.`, action: ErrorAction.FRESH },
+  [ErrorCode.BAD_REQUEST]:         { text: msg`The model provider rejected the request. Try rephrasing.`, action: ErrorAction.NONE },
+  [ErrorCode.CONNECTOR_EXPIRED]:   { text: msg`A connected account needs reconnecting before the agent can read it.`, action: ErrorAction.CONNECTIONS },
+  [ErrorCode.CONNECTOR_FORBIDDEN]: { text: msg`A connected account doesn't have access to that data. Check its permissions under Connections.`, action: ErrorAction.CONNECTIONS },
   // A clone's TikTok could not be read. Retrying the same link rarely helps
   // (private, deleted, taken down), so the way on is another link.
-  [ErrorCode.REFERENCE_UNAVAILABLE]: { text: "Duct couldn't read that TikTok. Check it opens in a browser without signing in, or try another post.", action: ErrorAction.NONE },
-  [ErrorCode.CANCELLED]:           { text: "Stopped.", action: ErrorAction.RETRY },
-  [ErrorCode.UNKNOWN]:             { text: "The run stopped without saying why. Try again.", action: ErrorAction.RETRY },
+  [ErrorCode.REFERENCE_UNAVAILABLE]: { text: msg`Duct couldn't read that TikTok. Check it opens in a browser without signing in, or try another post.`, action: ErrorAction.NONE },
+  [ErrorCode.CANCELLED]:           { text: STOPPED, action: ErrorAction.RETRY },
+  [ErrorCode.UNKNOWN]:             { text: UNKNOWN_FAILURE, action: ErrorAction.RETRY },
 });
 
 /** The action a failure with this code deserves. No code means the old
@@ -819,38 +835,56 @@ export function errorAction(code) {
  * matched (the backend before typed codes, a stream error from the browser),
  * and never passes through anything that looks like a traceback or a status
  * code.
+ *
+ * Returns a `msg` descriptor for anything said in Duct's words, and the
+ * provider's own sentence as a string when it is short and plain enough to
+ * show. A descriptor handed in (a fallback from the reducer or the hook) goes
+ * straight back out. Render the result with `errorText`.
  */
 // Said twice below — for a leaked traceback and for a message too technical to
 // show — and they are the same claim: ours, logged, and worth one more try.
-const SERVER_FAULT = "Something broke on our end. It's logged — try again in a moment.";
+const SERVER_FAULT = msg`Something broke on our end. It's logged — try again in a moment.`;
 
 export function friendlyErrorMessage(raw, code = "") {
   const known = ERROR_COPY[code];
   if (known) return known.text;
-  const msg = String(raw || "").trim();
-  if (!msg) return "The run stopped without saying why. Try again.";
+  if (raw && typeof raw === "object") return raw;
+  const text = String(raw || "").trim();
+  if (!text) return UNKNOWN_FAILURE;
 
   // Configuration gaps
-  if (/ANTHROPIC_API_KEY/i.test(msg)) return "The assistant isn't connected. Ask your admin to finish setup.";
-  if (/GEMINI_API_KEY/i.test(msg)) return "Image generation isn't connected yet. Ask your admin to finish setup.";
-  if (/uploads.*disabled/i.test(msg)) return "Image uploads aren't enabled in this environment.";
-  if (/POSTBRIDGE|post.?bridge.*connect/i.test(msg)) return "Publishing isn't connected. Ask your admin to set it up.";
+  if (/ANTHROPIC_API_KEY/i.test(text)) return msg`The assistant isn't connected. Ask your admin to finish setup.`;
+  if (/GEMINI_API_KEY/i.test(text)) return msg`Image generation isn't connected yet. Ask your admin to finish setup.`;
+  if (/uploads.*disabled/i.test(text)) return msg`Image uploads aren't enabled in this environment.`;
+  if (/POSTBRIDGE|post.?bridge.*connect/i.test(text)) return msg`Publishing isn't connected. Ask your admin to set it up.`;
 
   // Common transient classes
-  if (/rate limit|429/i.test(msg)) return "We're hitting a rate limit — wait a minute and try again.";
-  if (/timeout|timed.?out/i.test(msg)) return "That took longer than expected. Try again.";
-  if (/network|connection|fetch failed|failed to fetch|ECONNREFUSED/i.test(msg)) return "Couldn't reach the server. Check your internet and try again.";
+  if (/rate limit|429/i.test(text)) return msg`We're hitting a rate limit — wait a minute and try again.`;
+  if (/timeout|timed.?out/i.test(text)) return msg`That took longer than expected. Try again.`;
+  if (/network|connection|fetch failed|failed to fetch|ECONNREFUSED/i.test(text)) return msg`Couldn't reach the server. Check your internet and try again.`;
 
   // Validation
-  if (/validation|invalid|missing/i.test(msg) && msg.length < 200) return "Some input wasn't valid — please review and try again.";
+  if (/validation|invalid|missing/i.test(text) && text.length < 200) return msg`Some input wasn't valid — please review and try again.`;
 
   // Don't leak status codes / file paths / stack traces. The trailing form is
   // what lib/api.js itself throws ("Message failed: 500"), which the leading
   // test missed — a failed send put the bare status on screen.
-  if (/^\d{3}\b/.test(msg) || /failed:\s*\d{3}\b/i.test(msg) || /Traceback|line \d+/i.test(msg)) return SERVER_FAULT;
+  if (/^\d{3}\b/.test(text) || /failed:\s*\d{3}\b/i.test(text) || /Traceback|line \d+/i.test(text)) return SERVER_FAULT;
 
   // Reasonably short, doesn't look technical → pass through.
-  if (msg.length < 200 && !/^\w+Error:/.test(msg)) return msg;
+  if (text.length < 200 && !/^\w+Error:/.test(text)) return text;
 
   return SERVER_FAULT;
+}
+
+/**
+ * The words for a failure the reducer stored: a descriptor from the tables
+ * above, rendered in the interface language, or the provider's own sentence
+ * as it came. Components call this rather than `i18n._` on the value, because
+ * a raw sentence with a brace in it (a JSON body quoted by an upstream error)
+ * is not an ICU message and must not be parsed as one.
+ */
+export function errorText(i18n, value) {
+  if (!value) return "";
+  return typeof value === "string" ? value : i18n._(value);
 }
