@@ -228,6 +228,23 @@ def _belongs_to(conv: AgentConversation, *, agent_type: str, project_id: UUID) -
     return conv.project_id == project_id and conv.agent_type == agent_type
 
 
+def artifact_in_project(
+    db: Session, *, agent_type: str, artifact_type: str, artifact_id: UUID, project_id: UUID
+) -> bool:
+    """Whether the artifact a body names is a row of this project.
+
+    The conversation's artifact becomes the session's working post or plan,
+    which the runner then reads whole into the model's context — so binding
+    is a read, and the id has to be checked like one. An artifact type the
+    registry does not know cannot be checked and is not bound.
+    """
+    table = ARTIFACT_REGISTRY.get((agent_type, artifact_type))
+    if table is None:
+        return False
+    row = db.get(table, artifact_id)
+    return row is not None and getattr(row, "project_id", None) == project_id
+
+
 def resolve_or_create_conversation(
     db: Session,
     *,
@@ -280,19 +297,22 @@ def resolve_or_create_conversation(
         if conv is not None:
             return conv, conv.last_seq > 0
 
-    # An artifact whose active conversation belongs to another project is not
-    # this caller's to bind. One active conversation per artifact is a database
-    # constraint, so binding it would fail on insert — and succeeding would make
-    # the session's working post someone else's. The run goes on with no
-    # artifact, exactly as if the body had named none.
-    if artifact_type and artifact_id:
-        elsewhere = find_active_conversation(db, artifact_type=artifact_type, artifact_id=artifact_id)
-        if elsewhere is not None and elsewhere.project_id != project_id:
-            logger.warning(
-                "persistence: %s %s is bound in another project — conversation created unbound",
-                artifact_type, artifact_id,
-            )
-            artifact_type = artifact_id = None
+    # An artifact that is not this project's row is not this caller's to bind:
+    # the binding becomes the session's working post, which the runner reads
+    # whole into the model's context. The run goes on with no artifact, exactly
+    # as if the body had named none. (One active conversation per artifact is
+    # also a database constraint, so a foreign binding would have failed on
+    # insert whenever its owner had a conversation open — and succeeded when
+    # they did not, which was the dangerous case.)
+    if artifact_type and artifact_id and not artifact_in_project(
+        db, agent_type=agent_type, artifact_type=artifact_type,
+        artifact_id=artifact_id, project_id=project_id,
+    ):
+        logger.warning(
+            "persistence: %s %s is not in project %s — conversation created unbound",
+            artifact_type, artifact_id, project_id,
+        )
+        artifact_type = artifact_id = None
 
     conv = AgentConversation(
         agent_type=agent_type,

@@ -326,7 +326,7 @@ def test_start_fresh_cannot_archive_another_projects_conversation(db, project, o
 
 
 def test_start_fresh_still_archives_the_members_own_conversation(db, project):
-    artifact_id = uuid4()
+    artifact_id = _post(db, project.id).id
     own = _conversation(db, project.id, agent_type=TIKTOK, artifact_type="post", artifact_id=artifact_id)
     conv, _ = _resolve(
         db, project.id, agent_type=TIKTOK, mode="draft_post",
@@ -335,3 +335,66 @@ def test_start_fresh_still_archives_the_members_own_conversation(db, project):
     db.refresh(own)
     assert own.status == "archived"
     assert conv.artifact_id == artifact_id
+
+
+# ---------------------------------------------------------------------------
+# The artifact itself: a post of another project is never the working post
+# ---------------------------------------------------------------------------
+#
+# A bound artifact becomes the session's working post, and the runner reads
+# that row whole into the model's context. So the row is checked before it is
+# bound, and checked again where it is read.
+
+from models.content import ContentPost  # noqa: E402
+
+
+def _post(db, project_id):
+    row = ContentPost(project_id=project_id, post_dir_slug=f"post-{uuid4().hex[:6]}", topic="hooks")
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def test_another_projects_post_is_not_bound_even_with_no_conversation_on_it(db, project, other_project):
+    victim = _post(db, project.id)
+    conv, _ = _resolve(
+        db, other_project.id, agent_type=TIKTOK, mode="draft_post",
+        artifact_type="post", artifact_id=victim.id, resume=True,
+    )
+    assert conv.artifact_id is None
+
+
+def test_the_members_own_post_is_bound(db, project):
+    own = _post(db, project.id)
+    conv, _ = _resolve(
+        db, project.id, agent_type=TIKTOK, mode="draft_post",
+        artifact_type="post", artifact_id=own.id,
+    )
+    assert conv.artifact_id == own.id
+
+
+def test_the_context_block_refuses_a_post_the_session_does_not_own(db, engine, project, other_project, monkeypatch):
+    """Defence in depth at the point of use: whatever set `post_id`, the row
+    that reaches the model is the session's own project's."""
+    victim = _post(db, project.id)
+
+    def _fake_db():
+        yield Session(engine)
+
+    monkeypatch.setattr("db.session.get_session", _fake_db)
+
+    class _Session:
+        session_id = "s1"
+        mode = "draft_post"
+        plan_id = None
+
+    foreign = _Session()
+    foreign.post_id = victim.id
+    foreign.project_id = other_project.id
+    assert agent_routes._content_context_xml(foreign) == ""
+
+    own = _Session()
+    own.post_id = victim.id
+    own.project_id = project.id
+    assert f"<working_post id='{victim.id}'>" in agent_routes._content_context_xml(own)

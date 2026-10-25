@@ -951,11 +951,16 @@ def _content_context_xml(session: Any) -> str:
     mode = getattr(session, "mode", "")
     plan_id = getattr(session, "plan_id", None)
     post_id = getattr(session, "post_id", None)
+    # The working artifact is derived from the conversation, which the resolver
+    # keeps inside the project; this is the same check at the point of use, so
+    # a row that reaches the model is never one the session's project does not
+    # own, whatever path set the id.
+    project_id = getattr(session, "project_id", None)
     try:
         with next(db_session()) as db:
             if mode == "plan_month" and plan_id is not None:
                 plan = db.get(ContentPlan, plan_id)
-                if plan is None:
+                if plan is None or plan.project_id != project_id:
                     return ""
                 payload = {
                     "id": str(plan.id),
@@ -971,7 +976,7 @@ def _content_context_xml(session: Any) -> str:
                 )
             if mode == "draft_post" and post_id is not None:
                 post = db.get(ContentPost, post_id)
-                if post is None:
+                if post is None or post.project_id != project_id:
                     return ""
                 payload = post.model_dump(exclude={"slides_html"})
                 return (
