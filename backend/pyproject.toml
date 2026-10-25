@@ -44,7 +44,7 @@ langchain = "^1.4"
 langchain-openai = "^1.6"
 langchain-google-genai = "^4.4"
 langchain-anthropic = "^1.7"
-langgraph = "^1.2"
+langgraph = "^1.2.17"
 pyjwt = "^2.15"
 httpx = "^0.28"
 # Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
@@ -82,8 +82,8 @@ cloudflare = ">=5.8.0"
 # Separate distributions from `langgraph` itself, and MIT like it — unlike
 # `langgraph-api` (the Platform server, Elastic-2.0), which Duct does not use:
 # the library runs in-process inside FastAPI, with our own SSE transport.
-langgraph-checkpoint-postgres = "^3.1"
-langgraph-checkpoint-sqlite = "^3.1"
+langgraph-checkpoint-postgres = "^3.2.0"
+langgraph-checkpoint-sqlite = "^3.1.2"
 # OpenRouter's first-party LangChain integration — `init_chat_model(
 # model_provider="openrouter")` resolves to it. Duct never imports it directly;
 # LangChain does, which is why no agents/ file gains a framework import and the
