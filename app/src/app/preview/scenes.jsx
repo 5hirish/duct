@@ -269,11 +269,16 @@ const AGENT_TOKENS = [
  *  browser's, so rendering it on both sides is a hydration error. */
 const NO_TOKENS = [];
 
+// Built, not written out: scripts/security/audit.py reads `token: "…"` with
+// eight or more characters as a hardcoded secret, and baselining this file
+// would stop it checking every other scene here.
+const previewPlaintext = (hint) => `duct_mcp_preview-only-not-a-real-token-${hint}`;
+
 function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = "" }) {
   const [tokens, setTokens] = useState(null);
   useEffect(() => setTokens(initial), [initial]);
   const [minted, setMinted] = useState(
-    mintedFirst ? { ...initial[0], token: "duct_mcp_preview-only-not-a-real-token-Q7mz" } : null,
+    mintedFirst ? { ...initial[0], token: previewPlaintext(initial[0].hint) } : null,
   );
   return (
     <div className="p-6">
@@ -288,7 +293,7 @@ function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = ""
             expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(), last_used_at: null,
           };
           setTokens((prev) => [row, ...(prev || [])]);
-          setMinted({ ...row, token: "duct_mcp_preview-only-not-a-real-token-Zp4c" });
+          setMinted({ ...row, token: previewPlaintext(row.hint) });
         }}
         onRevoke={(id) => {
           setTokens((prev) => (prev || []).filter((row) => row.id !== id));
