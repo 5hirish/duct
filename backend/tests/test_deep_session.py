@@ -294,3 +294,84 @@ def test_pruning_is_opt_in_and_content_opts_in_only_where_it_sees_pictures():
     finally:
         runner_module.build_deep_session_agent = restore
     assert seen == [True, False]
+
+
+# ---------------------------------------------------------------------------
+# Fallback only on a failure another model could survive (rulebook gap 4)
+# ---------------------------------------------------------------------------
+
+class _Request:
+    """The least a fallback loop needs from a ModelRequest."""
+
+    model = None
+
+    def override(self, **_kw):
+        return self
+
+
+@pytest.fixture
+def no_sanitize(monkeypatch):
+    import langchain.agents.middleware.model_fallback as module
+
+    monkeypatch.setattr(module, "_sanitize_request_for_fallback", lambda request, model: request)
+
+
+def _failing(status: int):
+    exc_type = type("ProviderError", (Exception,), {"status_code": status})
+    return exc_type(f"status {status}")
+
+
+@pytest.mark.parametrize("status", [401, 400, 404])
+def test_a_rejected_key_or_bad_request_is_not_retried_on_the_fallback(no_sanitize, status):
+    from agents.core.deep_session import ClassifiedFallbackMiddleware
+
+    calls: list[str] = []
+
+    def handler(request):
+        calls.append("call")
+        raise _failing(status)
+
+    middleware = ClassifiedFallbackMiddleware(fake_llm("fallback"))
+    with pytest.raises(Exception, match=f"status {status}"):
+        middleware.wrap_model_call(_Request(), handler)
+    assert calls == ["call"], "the fallback model must not see a request the primary rejected"
+
+
+@pytest.mark.parametrize("status", [429, 529, 503])
+def test_a_transient_failure_falls_back(no_sanitize, status):
+    from agents.core.deep_session import ClassifiedFallbackMiddleware
+
+    calls: list[str] = []
+
+    def handler(request):
+        calls.append("call")
+        if len(calls) == 1:
+            raise _failing(status)
+        return "answer"
+
+    middleware = ClassifiedFallbackMiddleware(fake_llm("fallback"))
+    assert middleware.wrap_model_call(_Request(), handler) == "answer"
+    assert calls == ["call", "call"]
+
+
+async def test_the_async_path_classifies_the_same_way(no_sanitize):
+    from agents.core.deep_session import ClassifiedFallbackMiddleware
+
+    calls: list[int] = []
+
+    async def handler(request):
+        calls.append(1)
+        raise _failing(401)
+
+    middleware = ClassifiedFallbackMiddleware(fake_llm("fallback"))
+    with pytest.raises(Exception, match="status 401"):
+        await middleware.awrap_model_call(_Request(), handler)
+    assert len(calls) == 1
+
+
+def test_the_loop_mounts_the_classified_fallback():
+    from agents.core.deep_session import ClassifiedFallbackMiddleware, session_middleware
+
+    mounted = [m for m in session_middleware(_limits(), fallbacks=[fake_llm("fallback")])
+               if isinstance(m, ClassifiedFallbackMiddleware)]
+    assert len(mounted) == 1
