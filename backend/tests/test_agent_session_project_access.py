@@ -51,7 +51,10 @@ def engine(monkeypatch):
     dependency, so `dependency_overrides` cannot reach it — the module
     attribute is the seam.
     """
-    eng = make_sqlite_engine()
+    # Partial indexes dropped: SQLite would otherwise turn "one ACTIVE
+    # conversation per artifact" into one conversation per artifact ever,
+    # and the start-fresh tests archive one and create the next.
+    eng = make_sqlite_engine(drop_partial_indexes=True)
 
     def _fake_db():
         yield Session(eng)
@@ -164,8 +167,9 @@ def test_a_strangers_audit_runs_unscoped_rather_than_failing(db, project, strang
 
 
 def test_the_resume_controls_go_with_the_scope(db, project, stranger):
-    """A conversation_id is resolved without a project check of its own, so
-    leaving it behind would still address someone else's transcript."""
+    """The resolver answers inside a project, and an unscoped run has none to
+    give it, so the controls go with the scope rather than naming a
+    conversation the run could not continue anyway."""
     body = _body(project.id, artifact_type="post", artifact_id=str(uuid4()), start_fresh=True)
     agent_routes._scope_body_to_authorized_project(AUDIT, body, stranger)
     for key in ("project_id", "conversation_id", "resume", "start_fresh",
@@ -228,3 +232,106 @@ def test_the_route_refuses_before_building_a_session(db, project, stranger, monk
     )
     assert res.status_code == 404
     assert built == []
+
+
+# ---------------------------------------------------------------------------
+# The resolver itself: an id from another project is not found
+# ---------------------------------------------------------------------------
+#
+# The gate above strips the controls from an *unscoped* run. A member of their
+# own project keeps them, and the conversation and artifact ids they carry
+# are still just ids from a request body. The resolver answers inside the
+# project the route authorised, so a conversation of another project (or of
+# another agent) resolves exactly like one that does not exist — and an
+# artifact another project's conversation holds is left unbound rather than
+# resumed, archived, or (one active conversation per artifact is a database
+# constraint) bound a second time.
+
+from agents.content.persistence import resolve_or_create_conversation  # noqa: E402
+from models.content.conversation import AgentConversation  # noqa: E402
+
+
+@pytest.fixture
+def other_project(db, stranger):
+    """The stranger's own project: membership they genuinely hold."""
+    row = Project(user_id=stranger.id, name="Stranger's project")
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    db.add(ProjectMember(project_id=row.id, user_id=stranger.id, role=ROLE_OWNER))
+    db.commit()
+    return row
+
+
+def _conversation(db, project_id, agent_type=AUDIT, **extra):
+    conv = AgentConversation(agent_type=agent_type, project_id=project_id, last_seq=3, **extra)
+    db.add(conv)
+    db.commit()
+    db.refresh(conv)
+    return conv
+
+
+def _resolve(db, project_id, **controls):
+    return resolve_or_create_conversation(
+        db, agent_type=controls.pop("agent_type", AUDIT), project_id=project_id,
+        mode=controls.pop("mode", "chat"), **controls,
+    )
+
+
+def test_another_projects_conversation_id_resolves_to_a_fresh_one(db, project, other_project):
+    victim = _conversation(db, project.id)
+    conv, is_resume = _resolve(db, other_project.id, conversation_id=victim.id, resume=True)
+    assert conv.id != victim.id
+    assert conv.project_id == other_project.id
+    assert is_resume is False
+
+
+def test_the_members_own_conversation_id_still_resumes(db, project):
+    own = _conversation(db, project.id)
+    conv, is_resume = _resolve(db, project.id, conversation_id=own.id, resume=True)
+    assert conv.id == own.id
+    assert is_resume is True
+
+
+def test_another_agents_conversation_is_not_continued(db, project):
+    """Same project, other agent: the thread it names was built by a different
+    runner with different tools, so it is not one this session continues."""
+    own = _conversation(db, project.id, agent_type=TIKTOK)
+    conv, _ = _resolve(db, project.id, conversation_id=own.id, resume=True)
+    assert conv.id != own.id
+
+
+def test_another_projects_artifact_does_not_resume_its_conversation(db, project, other_project):
+    artifact_id = uuid4()
+    victim = _conversation(db, project.id, agent_type=TIKTOK, artifact_type="post", artifact_id=artifact_id)
+    conv, is_resume = _resolve(
+        db, other_project.id, agent_type=TIKTOK, mode="draft_post",
+        artifact_type="post", artifact_id=artifact_id, resume=True,
+    )
+    assert conv.id != victim.id
+    assert is_resume is False
+    assert conv.artifact_id is None  # not bound to a post that is not theirs
+
+
+def test_start_fresh_cannot_archive_another_projects_conversation(db, project, other_project):
+    artifact_id = uuid4()
+    victim = _conversation(db, project.id, agent_type=TIKTOK, artifact_type="post", artifact_id=artifact_id)
+    conv, _ = _resolve(
+        db, other_project.id, agent_type=TIKTOK, mode="draft_post",
+        artifact_type="post", artifact_id=artifact_id, start_fresh=True,
+    )
+    db.refresh(victim)
+    assert victim.status == "active"
+    assert conv.artifact_id is None
+
+
+def test_start_fresh_still_archives_the_members_own_conversation(db, project):
+    artifact_id = uuid4()
+    own = _conversation(db, project.id, agent_type=TIKTOK, artifact_type="post", artifact_id=artifact_id)
+    conv, _ = _resolve(
+        db, project.id, agent_type=TIKTOK, mode="draft_post",
+        artifact_type="post", artifact_id=artifact_id, start_fresh=True,
+    )
+    db.refresh(own)
+    assert own.status == "archived"
+    assert conv.artifact_id == artifact_id

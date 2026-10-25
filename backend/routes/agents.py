@@ -423,9 +423,10 @@ def _scope_body_to_authorized_project(agent_type: str, body: dict, user: User | 
         "agents: caller %s may not use project %s — %s runs unscoped",
         user.id if user else "anonymous", project_id, agent_type,
     )
-    # The conversation controls only mean anything alongside a project, and a
-    # conversation_id is resolved without a project check of its own — so they
-    # go with it rather than being left to address someone else's transcript.
+    # The conversation controls only mean anything alongside a project: the
+    # resolver answers inside the project it is given, and an unscoped run has
+    # none to give it — so they go with the project rather than being left to
+    # name a conversation the run could not legitimately continue.
     for key in ("project_id", "conversation_id", "resume", "start_fresh",
                 "artifact_type", "artifact_id"):
         body.pop(key, None)
