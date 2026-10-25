@@ -11,8 +11,9 @@
 // screen. The allowlisted calls (lib/toolActivity.js) come back as the same
 // rows they were live; everything else is still dropped, still forensics.
 
+import { msg } from "@lingui/core/macro";
 import { ErrorCode } from "./agentEvents";
-import { Notice, Row, friendlyErrorMessage } from "./agentSession";
+import { Notice, Row, TURN_FAILED, friendlyErrorMessage } from "./agentSession";
 import { describeContent } from "./attachments";
 import { activityCallIndex, activityFromStored, contextActivity } from "./toolActivity";
 
@@ -22,11 +23,11 @@ import { activityCallIndex, activityFromStored, contextActivity } from "./toolAc
 function failureRow(data) {
   const code = data?.code || "";
   if (code === ErrorCode.CANCELLED) {
-    return { role: Row.NOTICE, text: "Stopped here — the turn was interrupted." };
+    return { role: Row.NOTICE, text: msg`Stopped here — the turn was interrupted.` };
   }
   return {
     role: Row.SEND_ERROR,
-    text: friendlyErrorMessage(data?.error || "That turn failed.", code),
+    text: friendlyErrorMessage(data?.error || TURN_FAILED, code),
     content: null,
     code,
     retryable: data?.retryable ?? true,

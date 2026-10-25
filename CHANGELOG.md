@@ -78,6 +78,9 @@ published without one. The same script, with no arguments, holds
   errors read as one sentence.
 - A ChatGPT plan's mid-stream failures are classified by payload code, so a
   spent usage window says so and transient ones retry.
+- Failure messages, system notifications and the posture badge follow the
+  interface language; they were English in every language, and the badge
+  showed the raw `ask` / `assisted` / `auto` value instead of the dial's word.
 
 ### Security
 

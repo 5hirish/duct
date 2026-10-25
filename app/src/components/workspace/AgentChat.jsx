@@ -32,7 +32,7 @@ import { Lightbox } from "@/components/ui/lightbox";
 import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import { Phase } from "../../lib/agentPhase";
 import { StepStatus } from "../../lib/agentSteps";
-import { ErrorAction, Notice, Row, errorAction } from "../../lib/agentSession";
+import { ErrorAction, Notice, Row, errorAction, errorText } from "../../lib/agentSession";
 import { compactNumber, formatDate, formatTime, relativeTime } from "../../lib/format";
 import { groupActivityRows } from "../../lib/toolActivity";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,7 @@ import Todos from "./Todos";
  *  the same action the terminal failure card offers, so a failure reads the
  *  same live and after a reload. */
 function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }) {
+  const { i18n } = useLingui();
   const action = code ? errorAction(code) : ErrorAction.RETRY;
   const link = "block w-full text-xs text-right text-muted-foreground hover:text-foreground transition-colors pr-1";
   return (
@@ -65,7 +66,7 @@ function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }
       <div className="max-w-[85%] space-y-1">
         <div className="rounded-2xl rounded-br-sm px-3 py-2 text-sm bg-destructive/10 border border-destructive/30 text-destructive">
           <p className="text-xs font-medium mb-0.5">{content ? <Trans>Failed to send</Trans> : <Trans>That turn failed</Trans>}</p>
-          <p className="text-xs text-destructive/80">{text}</p>
+          <p className="text-xs text-destructive/80">{errorText(i18n, text)}</p>
         </div>
         {action === ErrorAction.SETTINGS && <Link href="/settings/models" className={link}><Trans>Open model settings →</Trans></Link>}
         {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}><Trans>Open connections →</Trans></Link>}
@@ -481,7 +482,7 @@ export function formatElapsed(seconds) {
  * everything after it, not a message in the flow.
  */
 function NoticeRow({ msg: row }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   if (row.kind === Notice.COMPACTED) {
     const freed = row.before != null && row.after != null ? Math.max(0, row.before - row.after) : null;
     return (
@@ -500,7 +501,7 @@ function NoticeRow({ msg: row }) {
   }
   return (
     <p className="my-3 text-center text-2xs text-muted-foreground" role="note">
-      {row.text}
+      {errorText(i18n, row.text)}
     </p>
   );
 }
@@ -860,7 +861,7 @@ export default function AgentChat({
                 <span className="mt-0.5 text-destructive text-base leading-none" aria-hidden="true">✕</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-destructive mb-1">{failedText}</p>
-                  <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorMsg}</p>
+                  <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorText(i18n, errorMsg)}</p>
                 </div>
               </div>
               <FailedAction

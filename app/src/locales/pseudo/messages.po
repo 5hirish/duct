@@ -367,8 +367,20 @@ msgstr ""
 msgid "{name} · Members"
 msgstr ""
 
+#: src/hooks/useAgentNotifications.js
+msgid "{name} is done"
+msgstr ""
+
+#: src/hooks/useAgentNotifications.js
+msgid "{name} needs your input"
+msgstr ""
+
 #: src/components/content/StyleGallery.jsx
 msgid "{name} preview"
+msgstr ""
+
+#: src/hooks/useAgentNotifications.js
+msgid "{name} ran into a problem"
 msgstr ""
 
 #: src/components/workspace/ChatInput.jsx
@@ -792,6 +804,18 @@ msgstr ""
 msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
 msgstr ""
 
+#: src/lib/agentSession.js
+msgid "A connected account doesn't have access to that data. Check its permissions under Connections."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "A connected account needs reconnecting before the agent can read it."
+msgstr ""
+
+#: src/hooks/useAgentNotifications.js
+msgid "A connection is needed before it can continue."
+msgstr ""
+
 #: src/components/workspace/AgentChat.jsx
 msgid "a fallback model"
 msgstr ""
@@ -1056,16 +1080,16 @@ msgid "Agent Chat"
 msgstr ""
 
 #: src/components/AgentDrawer.jsx
-msgid "Agent selector"
-msgstr ""
+#~ msgid "Agent selector"
+#~ msgstr ""
 
 #: src/app/(app)/execute/page.jsx
 msgid "Agent-proposed"
 msgstr ""
 
 #: src/components/AgentDrawer.jsx
-msgid "Agents"
-msgstr ""
+#~ msgid "Agents"
+#~ msgstr ""
 
 #: src/app/(app)/execute/page.jsx
 msgid "Agents propose, you approve. Every change is previewed against your guardrails, and anything applied can be rolled back."
@@ -1084,8 +1108,8 @@ msgid "AI synthesis finished but no report was generated."
 msgstr ""
 
 #: src/lib/engines.js
-msgid "AI-drafted blog posts from audit findings."
-msgstr ""
+#~ msgid "AI-drafted blog posts from audit findings."
+#~ msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "AI-ready fixes"
@@ -1468,7 +1492,6 @@ msgid "Audience"
 msgstr ""
 
 #: src/components/AppNav.jsx
-#: src/lib/engines.js
 msgid "Audit"
 msgstr ""
 
@@ -1498,7 +1521,6 @@ msgstr ""
 msgid "auto"
 msgstr ""
 
-#: src/components/AgentDrawer.jsx
 #: src/components/workspace/ComposerDials.jsx
 #: src/lib/projectsApi.js
 msgid "Auto"
@@ -1622,8 +1644,8 @@ msgid "blocks: {blockedOps}"
 msgstr ""
 
 #: src/lib/engines.js
-msgid "Blog"
-msgstr ""
+#~ msgid "Blog"
+#~ msgstr ""
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Blog / Articles"
@@ -1942,7 +1964,6 @@ msgstr ""
 msgid "Cloning a TikTok"
 msgstr ""
 
-#: src/components/AgentDrawer.jsx
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Close"
 msgstr ""
@@ -1964,7 +1985,6 @@ msgid "Colors and style applied to images and slides."
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
-#: src/lib/engines.js
 msgid "Coming soon"
 msgstr ""
 
@@ -2371,6 +2391,14 @@ msgstr ""
 msgid "Couldn't open it"
 msgstr ""
 
+#: src/lib/agentSession.js
+msgid "Couldn't reach the model provider. Check your connection and try again."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "Couldn't reach the server. Check your internet and try again."
+msgstr ""
+
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
 msgstr ""
@@ -2460,8 +2488,8 @@ msgid "CRM lifecycle stages, pipeline and closed revenue."
 msgstr ""
 
 #: src/components/AgentDrawer.jsx
-msgid "Cross-agent invocations — coming soon"
-msgstr ""
+#~ msgid "Cross-agent invocations — coming soon"
+#~ msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Current growth stage (milestone-based)"
@@ -2817,6 +2845,10 @@ msgstr ""
 
 #: src/app/(auth)/page.js
 msgid "Duct couldn’t open your browser to finish signing in. Check that you have a default browser set, then try again."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "Duct couldn't read that TikTok. Check it opens in a browser without signing in, or try another post."
 msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
@@ -3632,8 +3664,8 @@ msgid "Handled by the OS — change it in your system notification settings"
 msgstr ""
 
 #: src/components/AgentDrawer.jsx
-msgid "Handoff Mode"
-msgstr ""
+#~ msgid "Handoff Mode"
+#~ msgstr ""
 
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/PostViewport.jsx
@@ -3794,8 +3826,8 @@ msgid "Human-friendly title"
 msgstr ""
 
 #: src/components/AgentDrawer.jsx
-msgid "Human-in-the-loop agent handoffs — coming soon"
-msgstr ""
+#~ msgid "Human-in-the-loop agent handoffs — coming soon"
+#~ msgstr ""
 
 #: src/app/(start)/start/page.jsx
 msgid "I have an account"
@@ -3834,8 +3866,16 @@ msgstr ""
 msgid "Image"
 msgstr ""
 
+#: src/lib/agentSession.js
+msgid "Image generation isn't connected yet. Ask your admin to finish setup."
+msgstr ""
+
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Image older than its prompt on {at}"
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "Image uploads aren't enabled in this environment."
 msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
@@ -3895,7 +3935,6 @@ msgstr ""
 
 #: src/components/AppNav.jsx
 #: src/components/insights/InsightsWorkspace.jsx
-#: src/lib/engines.js
 msgid "Insights"
 msgstr ""
 
@@ -3953,6 +3992,10 @@ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Issue distribution across all findings"
+msgstr ""
+
+#: src/hooks/useAgentNotifications.js
+msgid "It has a question before it can continue."
 msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
@@ -4369,8 +4412,8 @@ msgid "Manager account ID (MCC, optional)"
 msgstr ""
 
 #: src/components/AgentDrawer.jsx
-msgid "Manual"
-msgstr ""
+#~ msgid "Manual"
+#~ msgstr ""
 
 #: src/components/content/PlanViewport.jsx
 msgid "Mapping topics across 30 days…"
@@ -5375,6 +5418,10 @@ msgstr ""
 msgid "Open the project timeline"
 msgstr ""
 
+#: src/hooks/useAgentNotifications.js
+msgid "Open the tab to see what happened and what to do."
+msgstr ""
+
 #: src/components/content/PlanCalendar.jsx
 msgid "Open week of {dayLabel}"
 msgstr ""
@@ -5539,8 +5586,8 @@ msgid "Paid Ads Intelligence"
 msgstr ""
 
 #: src/lib/engines.js
-msgid "Paid media & organic growth intelligence."
-msgstr ""
+#~ msgid "Paid media & organic growth intelligence."
+#~ msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Pain points, goals, motivations..."
@@ -5961,6 +6008,10 @@ msgstr ""
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Publishes as the post's first reply."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "Publishing isn't connected. Ask your admin to set it up."
 msgstr ""
 
 #: src/components/content/PostBridgeKeyForm.jsx
@@ -6967,8 +7018,8 @@ msgid "SEO Audit"
 msgstr ""
 
 #: src/lib/engines.js
-msgid "SEO audit and content gap analysis."
-msgstr ""
+#~ msgid "SEO audit and content gap analysis."
+#~ msgstr ""
 
 #: src/components/audit/AuditReport.jsx
 #: src/components/audit/AuditReportV1.jsx
@@ -7364,8 +7415,16 @@ msgstr ""
 msgid "Some accounts need verification or a higher usage tier first. Try another provider, or come back once the account is verified."
 msgstr ""
 
+#: src/lib/agentSession.js
+msgid "Some input wasn't valid — please review and try again."
+msgstr ""
+
 #: src/components/audit/ShareReport.jsx
 msgid "Someone new? Invite them and send the link."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "Something broke on our end. It's logged — try again in a moment."
 msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js
@@ -7376,7 +7435,6 @@ msgstr ""
 msgid "Something interrupted the audit. Your site is fine — this was on our end."
 msgstr ""
 
-#: src/components/AgentDrawer.jsx
 #: src/components/AppSidebar.jsx
 msgid "Soon"
 msgstr ""
@@ -7470,6 +7528,10 @@ msgstr ""
 msgid "Step II of III · Your model"
 msgstr ""
 
+#: src/hooks/useAgentSession.js
+msgid "Still connecting to the session — try again in a moment."
+msgstr ""
+
 #: src/components/workspace/ChatInput.jsx
 msgid "Stop"
 msgstr ""
@@ -7487,12 +7549,24 @@ msgstr ""
 msgid "Stopped — pick up where it left off"
 msgstr ""
 
+#: src/lib/agentHistory.js
+msgid "Stopped here — the turn was interrupted."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "Stopped."
+msgstr ""
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
 msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
 msgid "stored for this provider"
+msgstr ""
+
+#: src/hooks/useAgentSession.js
+msgid "Stream error."
 msgstr ""
 
 #: src/components/connections/logos.jsx
@@ -7742,12 +7816,24 @@ msgstr ""
 msgid "That link isn't on tiktok.com."
 msgstr ""
 
+#: src/lib/agentSession.js
+msgid "That model isn't available on this provider. Pick another under Settings → Models & providers."
+msgstr ""
+
 #: src/components/content/PostVideo.jsx
 msgid "That take couldn't be chosen. Try again."
 msgstr ""
 
+#: src/lib/agentSession.js
+msgid "That took longer than expected. Try again."
+msgstr ""
+
 #: src/components/workspace/AgentChat.jsx
 msgid "That turn failed"
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "That turn failed. Try again."
 msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
@@ -7772,6 +7858,10 @@ msgstr ""
 
 #: src/components/ConnectionBanner.jsx
 msgid "The app is online but Duct's servers are not responding. This is usually brief."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "The assistant isn't connected. Ask your admin to finish setup."
 msgstr ""
 
 #: src/app/(start)/start/page.jsx
@@ -7834,6 +7924,30 @@ msgstr ""
 msgid "The last turn failed"
 msgstr ""
 
+#: src/lib/agentSession.js
+msgid "The model provider is overloaded right now. Try again in a moment."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "The model provider is rate limiting us. Wait a minute, then try again."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "The model provider rejected the API key. Check it under Settings → Models & providers."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "The model provider rejected the request. Try rephrasing."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "The model provider returned an error. Try again."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "The model took too long to answer. Try again."
+msgstr ""
+
 #: src/app/not-found.js
 msgid "The page you are looking for does not exist or has moved."
 msgstr ""
@@ -7864,6 +7978,14 @@ msgstr ""
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The provider returned something Duct didn't expect"
+msgstr ""
+
+#: src/hooks/useAgentNotifications.js
+msgid "The reply is ready when you are."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "The run stopped without saying why. Try again."
 msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
@@ -7943,6 +8065,10 @@ msgstr ""
 msgid "This account can't use that model yet"
 msgstr ""
 
+#: src/lib/agentSession.js
+msgid "This API key isn't allowed to use that model. Pick another under Settings → Models & providers."
+msgstr ""
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "This artifact has no stored content to render."
 msgstr ""
@@ -7973,6 +8099,10 @@ msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "This connector isn't configured"
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "This conversation no longer fits the model's context, even after summarising it. Start fresh, or pick a model with a bigger window."
 msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
@@ -8582,8 +8712,20 @@ msgstr ""
 msgid "We couldn’t load {what}."
 msgstr ""
 
+#: src/hooks/useAgentSession.js
+msgid "We lost the connection and couldn't reconnect. Please retry."
+msgstr ""
+
+#: src/hooks/useAgentSession.js
+msgid "We lost the connection to this run. Please retry."
+msgstr ""
+
 #: src/components/CookieConsent.jsx
 msgid "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves exactly the same. <0>Privacy Policy</0>"
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "We're hitting a rate limit — wait a minute and try again."
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
@@ -8941,6 +9083,10 @@ msgstr ""
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Your answer decides what Duct looks at. Skip if you'd rather it choose."
+msgstr ""
+
+#: src/lib/agentSession.js
+msgid "Your answer didn't go through — the network dropped it."
 msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
