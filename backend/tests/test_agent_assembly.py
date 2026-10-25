@@ -118,3 +118,36 @@ def test_the_audit_graph_carries_the_shared_stack(monkeypatch):
     # fallback model actually sends.
     assert isinstance(middleware[-1], AnthropicPromptCachingMiddleware)
     assert captured["checkpointer"] is not None
+
+
+def test_no_sub_agent_of_either_runner_carries_a_writer():
+    """Enforced by which names are on each list, not by prompt. The harness's
+    `general-purpose` default (every tool of the parent) is why both runners
+    supply their own. Content's test said this for content; this says it for
+    every deep runner, so the third one cannot forget."""
+    from agents.content.schema import ContentTool
+    from agents.content.subagents import (
+        DRAFT_POST_TOOLS,
+        GENERAL_PURPOSE_TOOLS as CONTENT_GP_TOOLS,
+        RESEARCH_PILLAR_TOOLS,
+        REVIEW_POST_TOOLS,
+    )
+    from agents.insights.subagents import GENERAL_PURPOSE_TOOLS as INSIGHTS_GP_TOOLS
+
+    shared_writers = {
+        "ProposeChanges", "RollbackChangeSet", "RememberFact", "CreateArtifact",
+        "UpdateArtifact", "RewriteArtifact", "AskUserQuestion", "RequestConnection", "SelectAccount",
+    }
+    content_writers = {
+        ContentTool.SUBMIT_PLAN.value, ContentTool.SUBMIT_POST_DRAFT.value, ContentTool.EDIT_SLIDE.value,
+        ContentTool.GENERATE_IMAGE.value, ContentTool.EDIT_IMAGE.value, ContentTool.PUBLISH_POST.value,
+        ContentTool.MARK_POSTED.value, ContentTool.RENDER_SLIDE.value, ContentTool.SUBMIT_ASSESSMENT.value,
+    }
+    for name, tools in (
+        ("insights general-purpose", INSIGHTS_GP_TOOLS),
+        ("content general-purpose", CONTENT_GP_TOOLS),
+        ("content research_pillar", RESEARCH_PILLAR_TOOLS),
+        ("content draft_post", DRAFT_POST_TOOLS),
+        ("content review_post", REVIEW_POST_TOOLS),
+    ):
+        assert not (shared_writers | content_writers) & set(tools), name
