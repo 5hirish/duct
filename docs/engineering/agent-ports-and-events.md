@@ -1,350 +1,265 @@
 # Agent ports and the event contract
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-14
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-25
 
-**Status:** implemented · Source of truth is the code, not this page —
-[`backend/agents/core/ports/__init__.py`](../../backend/agents/core/ports/__init__.py)
-declares the ports and
-[`backend/agents/core/events.py`](../../backend/agents/core/events.py) holds the
-event vocabulary and the AG-UI map.
+**Status:** implemented. Source of truth is the code: [`ports/__init__.py`](../../backend/agents/core/ports/__init__.py) declares the ports; [`events.py`](../../backend/agents/core/events.py) holds the vocabulary and the AG-UI map.
 
-Duct rents an agent harness; it does not marry one. This document explains the
-seam that makes that true, and publishes the event contract that crosses it.
+Duct rents an agent framework and does not marry one. This page explains the six seams that keep that true and publishes the event contract the app reads. For anyone adding a runner, changing an event or swapping frameworks.
 
----
+## At a glance
 
-## 1. Why a seam and not a framework
+- **Six ports, one framework behind them.** Tools, events, pauses, artifacts, session state and model transport.
+- **The durable assets never see a framework.** Prompts, tools, schemas and the artifact contract are plain Python.
+- **Events are mapped to AG-UI, failures travel as a code.** The wire names are the app's contract; exception text never reaches a browser.
+- **One test holds the line.** A framework import outside the adapters, or an event with no AG-UI meaning, fails the build.
 
-Agent harnesses are the fastest-churning, least-differentiated layer in this
-stack. At the time of writing: `deepagents` is 0.7.x on a weekly cadence,
-`claude-agent-sdk` is 0.2.x, `google-adk` ships roughly bi-weekly and its 2.x
-line already forced one breaking migration on us. Meanwhile `langchain` 1.x is
-an LTS release under semver, with no breaking changes promised until 2.0.
+## A framework touches Duct through six ports
 
-The durable assets are elsewhere: prompts, tools, schemas, goals, scoring, the
-artifact contract. Those are framework-neutral and survive any harness swap. So
-the useful question is not "which SDK is best" but **"how small is the surface
-through which an SDK touches us, and which SDK keeps that surface smallest?"**
+Inside a port the framework is as framework-shaped as it likes; what crosses it has Duct's shape and follows a multi-vendor standard.
 
-### The anti-pattern we deliberately avoid
-
-There is no `AgentHarness` interface in this codebase, and there should never
-be one. Harnesses differ in *capability*, not just API shape:
-
-- Take the **intersection** and you lose subagents, filesystem, skills, HITL
-  granularity and compaction — the entire reason to rent a harness.
-- Take the **union** and you are writing a framework, plus adapters for it,
-  which is strictly worse than the three-engine problem this replaced.
-
-So the harness stays harness-shaped *inside a runner*, and only its boundary is
-standardized. The evidence that this works is already in the repo: the
-LangChain audit runner is 376 lines against the Claude SDK runner's 1,175, not
-because LangChain is terser but because the boundaries were already in place
-and only the middle had to be rewritten.
-
-### Pick the lowest rung that works
-
-LangChain 1.x is layered, and the layers carry different stability guarantees.
-That makes "how much framework do I adopt" a risk decision, not just a
-convenience one:
-
-| Rung | Stability | Duct agent |
+| Port | What crosses it | Today |
 |---|---|---|
-| `init_chat_model` + `.with_structured_output()` | 1.x LTS, semver | conversation compaction, artifact digests |
-| `create_agent` | 1.x LTS, semver | audit v1, content's enrichment pass |
-| `deepagents` | 0.x, no policy, weekly | insights session, content session (planning, sub-agents, scratch space) |
+| **Tools** | A plain function plus its description | A thin binder per framework |
+| **Events out** | Duct's event vocabulary, via an emitter | The LangChain stream translator |
+| **Human in the loop** | Pause, ask, return the answer | An in-process future (audit); a checkpointed interrupt (insights, content) |
+| **Artifacts** | A streaming tag, a parser, a persister | Framework-neutral by construction |
+| **Session and state** | A live registry; the conversation id as the thread | A LangGraph checkpointer (Postgres, SQLite, memory) |
+| **Model transport** | Provider, model and engine registries | Five native packages; one compatible shape for gateways |
 
-The first-party LangChain surface is still small — `create_agent`,
-`init_chat_model`, `StructuredTool`, the middleware classes and the message
-classes, all on the LTS tier. `deepagents` is now load-bearing for the two
-session agents, which is why it is pinned exactly and gated by
-`tests/test_deepagents_harness.py`.
+## A port is earned on the second implementation
 
-The test that matters: *if `deepagents` were abandoned tomorrow, what breaks?*
-The two session runners' middle — assembly and the stream loop. Their tools,
-prompts, schemas and events are framework-free and the boundary test keeps
-them so, so the fallback is a rung down onto `create_agent`, not a rewrite.
-That asymmetry is the case for this design.
+> **Rule:** write the adapter on the second implementation, not the first. One implementation is a guess; two are a fact.
 
----
+The pause port is the example. For a year the only way to park a run was an in-process future that dies with its worker. When insights moved onto LangGraph's interrupt, the protocol was declared from two real implementations, and the tools stopped knowing which one they held.
 
-## 2. The ports
+The checkpointed one survives a redeploy and re-shows the waiting question on resume. Every port now has one adapter; two frameworks have already left through these seams.
+
+## Why a seam, not a framework
+
+Agent frameworks are the fastest-churning, least-differentiated layer. The deep-agent library Duct rents is 0.x with no stability policy, so it is pinned exactly and gated by a test.
+
+There is deliberately no shared "harness interface". Frameworks differ in capability, not only in API shape: take the intersection and you lose sub-agents, a filesystem, skills and compaction; take the union and you are writing a framework.
+
+So the question is how small a surface the framework touches. LangChain is layered: the lower the rung, the firmer the promise.
+
+| Rung | Runs |
+|---|---|
+| Long-term support (1.x) | Audit |
+| Deep-agent library (0.x, pinned) | Insights, content |
+
+Abandon the top rung tomorrow and one file breaks, the shared session loop; the fallback is one rung down, not a rewrite.
+
+## Events are mapped to AG-UI, never renamed
+
+Duct's event names predate AG-UI and mostly agree. Renaming them would break every consumer to buy nothing, so a table maps each event to its AG-UI meaning; domain events no protocol covers map to `Custom`.
+
+That table is the whole adapter: an AG-UI endpoint is a short translation over it, and the boundary test fails when an event is missing.
+
+## Failures travel as a code, never an exception
+
+A failed step or run carries a code, a retryable flag and a one-sentence error. One classifier assigns the code from the exception's class and status, looking through wrappers, and decides retries: a rate limit backs off, a rejected key fails at once.
+
+The app maps the code to copy and an action; the recorder writes run status and error on the conversation, so a thread list badges "Needs you" or "Failed" before anyone opens it.
+
+> **Why:** the raw message has carried request ids, and once a URL with a key in it. It goes to the log, never the browser.
+
+## Mid-turn messages are steered or queued, never refused
+
+A session that can steer hands the message to the model at its next call, checkpointed with the thread; one that cannot holds it for the next turn. The app marks the row "queued" until an event names it consumed.
+
+## Artifacts, not reports
+
+The streaming tag is named for artifacts, not reports: content streams plans and post drafts through the same tag, and the store versions them all alike.
+
+The mechanism (tag, events, parser, persister) says artifact; the value layer (the `kind` column, the audit schema) says report, because that artifact really is one. Renaming `kind` would carry no information and cost a data migration.
+
+## Any OpenAI-compatible gateway is a config entry
+
+OpenRouter now runs on its own first-party package, for routing preferences and a reasoning parameter the bare shape cannot carry. The compatible shape is still the port: any other gateway is served as chat completions at its base URL, a config value.
+
+A self-hosted gateway replaces OpenRouter's interface and key management, not its commercial aggregation. One key reaches dozens of providers; a gateway reaches accounts you already hold. They are complements on one code path.
+
+## Observability is Duct's job
+
+LangChain's tracing goes to its own vendor, so Duct emits the OpenTelemetry GenAI spans itself: one per model call, one per tool call, at the choke point all binders share. The attribute names are a pinned copy of an experimental convention; a test keeps the copy honest.
+
+> **Remember:** the framework is a tenant. Six ports and one test keep it one.
+
+## Reference
+
+Tables only; the linked code is the source of truth.
+
+### Ports in code
 
 | Port | Contract | Adapters |
 |---|---|---|
-| **Tools** | plain domain callable + a description single-sourced beside it | `build_memory_tools_lc`, `build_artifact_tools_lc`, `build_execution_tools_lc` — each had an SDK twin, retired with v3 |
-| **Events out** | `AgentEvent` / `EventKind` + an `Emitter` | v1 LangChain stream; the SDK's `pump_stream_event` was the second, until v3 went |
-| **Human-in-the-loop** | `PauseFn` — `await pause(event, payload)` returns the user's answer | `make_future_pause` (in-process Future; audit v1, the slide-render bridge), `interrupt_pause` (LangGraph `interrupt()`; insights v1, content v1) |
-| **Artifacts** | `<duct_artifact>` + `DuctArtifactStreamParser` + `ArtifactPersister` | harness-neutral by construction |
-| **Session / state** | `BaseAgentSession` registry for the live process; the conversation id as the durable thread | in-process registry; LangGraph checkpointer keyed on the conversation, driven by the shared `DeepSession` loop (`agents/core/deep_session.py`; insights v1, content v1) |
-| **Model transport** | `Provider` / `ModelName` / `Engine` registries | OpenAI-compatible, native Anthropic, native Gemini |
+| Tools | A plain callable plus its description; `ToolBinder` in [`ports/__init__.py`](../../backend/agents/core/ports/__init__.py) | `build_memory_tools_lc`, `build_artifact_tools_lc`, `build_execution_tools_lc`, `build_mcp_tools_lc`, and the connector, web, audit, content and insights binders listed in [`test_harness_boundaries.py`](../../backend/tests/test_harness_boundaries.py) |
+| Events out | `AgentEvent` / `EventKind` plus `Emitter` | `stream_agent` in [`lc.py`](../../backend/agents/core/lc.py) |
+| Human in the loop | `PauseFn`: `await pause(event, payload)` returns the answer ([`session.py`](../../backend/agents/core/session.py)) | `make_future_pause`: in-process future, 120 s timeout (audit v1; the slide-render bridge uses its own future). `interrupt_pause`: LangGraph `interrupt()`, no timeout (insights v1, content v1) |
+| Artifacts | `<duct_artifact>` tag, `DuctArtifactStreamParser`, `ArtifactPersister` | [`stream.py`](../../backend/agents/core/stream.py), [`artifact_store.py`](../../backend/service/artifact_store.py) |
+| Session and state | `BaseAgentSession` registry (in-process); conversation id as the thread | [`checkpoint.py`](../../backend/agents/core/checkpoint.py): Postgres, SQLite or in-memory, chosen from `DATABASE_URL`, degrading to in-memory. `DeepSession` loop in [`deep_session.py`](../../backend/agents/core/deep_session.py) |
+| Model transport | `Provider` / `ModelName` / `Engine` plus `get_api_key_kwargs` | [`models.py`](../../backend/agents/models.py), [`engines.py`](../../backend/agents/engines.py); `resolve_chat_model` in `lc.py` |
 
-**The rule for adding one: write the adapter on the second implementation, not
-the first.** A port with one implementation is a guess; with two it is a fact.
-The pause port is the worked example. `bridge_user_input` was the only way a
-run could park until the insights runner moved its pauses onto LangGraph's
-`interrupt()`; the `PauseFn` protocol was declared at that point, from two
-real implementations, and the tool bodies (`agents/core/connector_tools.py`)
-stopped knowing which one they had been handed.
+### LangChain rungs
 
-What the checkpointed implementation buys, and the in-process one cannot: a
-pause lives in the thread's checkpoint, so it survives a redeploy, has no
-timeout, and a session opened later on the same conversation is shown the
-question it is still waiting on (`GET …/conversations/{id}/state`, and the
-`replay` flag on the re-emitted event). The frontend contract is unchanged —
-the same three events, one answer endpoint, plus an `interrupt_id` the client
-passes back so two pauses raised in one turn are resolved separately.
+| Rung | Stability | Used for |
+|---|---|---|
+| `init_chat_model` plus `with_structured_output` | 1.x, long-term support under semver | Compaction summaries (`compact_thread`), memory consolidation, typed one-shot answers (enrichment research, audit draft inference, content reference diagnosis) |
+| `create_agent` | 1.x, long-term support | The audit runner (`build_session_agent`), the enrichment research loop (`research.py`) |
+| `deepagents` | 0.x, no stability policy; pinned exactly in `pyproject.toml`, gated by `test_deepagents_harness.py` | The insights and content sessions (`build_deep_session_agent`): planning, sub-agents, scratch space |
+| First-party surface in use | All on the 1.x tier | `create_agent`, `init_chat_model`, `StructuredTool`, the middleware classes, the message classes |
 
-### The external standard behind each port
-
-Ports point at contracts with multi-vendor backing, not at Duct inventions:
+### Standard behind each port
 
 | Port | Standard | Maturity |
 |---|---|---|
-| Tools | **MCP** — under the Linux Foundation's Agentic AI Foundation since Dec 2025 (OpenAI, Anthropic, Google, Microsoft, AWS, Block) | the most durable of the four |
-| Model transport | **OpenAI-compatible chat completions** | de facto universal |
-| Events out | **AG-UI** | credible, younger, single-vendor origin |
-| Observability | **OpenTelemetry GenAI semantic conventions** | `gen_ai.client` settled, `gen_ai.agent` still experimental |
+| Tools | MCP, under the Linux Foundation's Agentic AI Foundation since Dec 2025 (OpenAI, Anthropic, Google, Microsoft, AWS, Block) | The most durable of the four |
+| Model transport | OpenAI-compatible chat completions | De facto universal |
+| Events out | AG-UI | Credible, younger, single-vendor origin |
+| Observability | OpenTelemetry GenAI semantic conventions | `gen_ai.client` settled, `gen_ai.agent` experimental |
 
-The protocols are outliving the SDKs, which is the reason to express contracts
-in their terms even when we do not take the dependency.
+### Live SSE events (`AgentEvent` to AG-UI)
+
+| Duct event | AG-UI | Meaning and payload |
+|---|---|---|
+| `pipeline_started` | `RunStarted` | A run began |
+| `pipeline_finished` | `RunFinished` | A run completed |
+| `pipeline_failed` | `RunError` | A run failed: `code`, `retryable`, `error` |
+| `step_started` | `StepStarted` | A workflow stage began (`step_id`, `status`) |
+| `step_finished` | `StepFinished` | A workflow stage completed |
+| `step_failed` | `StepFinished` | AG-UI has no StepFailed; failure rides in `status` (`error`). Carries `code`, `retryable`, `error` |
+| `agent_message_chunk` | `TextMessageContent` | Prose token |
+| `agent_message` | `TextMessageChunk` | A complete message |
+| `message_stop` | `TextMessageEnd` | Turn boundary |
+| `thinking_chunk` | `ReasoningMessageContent` | Extended-thinking delta |
+| `synthesis_chunk` | `TextMessageContent` | Insights synthesis stream (legacy alias on audit) |
+| `todo_update` | `ActivitySnapshot` | The full todo list; a snapshot, never a delta |
+| `questions_required` | `Custom` | Pause: the agent needs an answer. `interrupt_id` on a checkpointed run; `replay: true` when re-emitted on resume |
+| `connection_required` | `Custom` | Pause: a connector the project lacks. `connector_id`, `label`, `auth_kind`, `authorize_path`, `reason` |
+| `account_selection_required` | `Custom` | Pause: which account, property or site. `connector_id`, `label`, `candidates` |
+| `tool_approval_required` | `Custom` | Pause: a connected MCP tool its server does not mark read-only. Server, tool, reason, argument preview |
+| `slide_render_requested` | `Custom` | The agent asks the browser to rasterize a slide |
+| `artifact_chunk` | `Custom` | Token inside `<duct_artifact>` |
+| `artifact_version` | `Custom` | New version of the primary artifact: full payload, `version_id`, label |
+| `artifact_updated` | `Custom` | Compact artifact card for the transcript; no payload |
+| `project_draft` | `Custom` | Onboarding: fields learned about the site, each with provenance |
+| `plan_generated` | `Custom` | Content: a plan |
+| `post_draft_updated` | `Custom` | Content: a post draft |
+| `execution_proposed` | `Custom` | Staged-execution change set; upsert by `change_set_id` |
+| `tool_activity` | `Custom` | One allowlisted tool call, emitted as `running` then `success` or `error`; upsert by `activity_id`. Fields `title`, `subtitle`, `source`, `meta`; never the output ([`activity.py`](../../backend/agents/core/activity.py)) |
+| `memory_written` | `Custom` | Entries this turn stored, with undo |
+| `memory_recalled` | `Custom` | Entry ids this turn was primed with |
+| `model_retrying` | `Custom` | Status, not failure; the next token clears it. `attempt`, `max_attempts`, `code`, `retry_in` (seconds; a duration the client anchors to its own clock) |
+| `token_usage` | `Custom` | One model call's bill: `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_creation_tokens`, `context_window`, `model`, `scope`, `cost_usd`. Scope is `thread`, `subagent` or `compaction`; all three are billed, only `thread` drives the gauge. Cost comes from `PRICING`; `null` for an unpriced model, never a guess |
+| `context_compacting`, `context_compacted` | `Custom` | The session is summarising old history, then did. The summariser's tokens never reach the transcript. Also emitted around the one emergency compaction: a request the provider rejects as too long is summarised once and retried from its checkpoint; a second rejection is the ordinary `context_window` failure |
+| `user_input_consumed` | `Custom` | A message sent mid-turn reached the model; carries its `client_message_id` |
+
+### Pause answers
+
+One answer endpoint for every pause. `interrupt_id` is passed back on a checkpointed run; omitted, the only pending pause is assumed. An empty answer always means "carry on without it".
+
+| Event | Answer |
+|---|---|
+| `questions_required` | Answers keyed by question |
+| `connection_required` | `{"skipped": true}` to decline; anything else after the sign-in, and the server re-reads the connector rather than trusting the answer |
+| `account_selection_required` | `{"account_id": ...}`; empty is a skip |
+| `tool_approval_required` | `{"approved": true}`; anything else is a skip |
+
+### Failure code
+
+| Field | Value |
+|---|---|
+| `code` | `ErrorCode` in [`errors.py`](../../backend/agents/core/errors.py): `rate_limited`, `overloaded`, `upstream_error`, `timeout`, `network` (retryable); `auth`, `permission`, `context_window`, `bad_request`, `model_not_found`, `connector_expired`, `connector_forbidden`, `reference_unavailable`, `cancelled`, `unknown` |
+| `retryable` | Whether the same request may succeed if sent again shortly |
+| `error` | One code-specific sentence; never the exception text |
+| Classifier | `classify_error`, also the retry decision in `ReportedRetryMiddleware` ([`lc.py`](../../backend/agents/core/lc.py)) |
+| App side | `errorAction` in [`agentSession.js`](../../app/src/lib/agentSession.js); codes mirrored in [`agentEvents.js`](../../app/src/lib/agentEvents.js) |
+
+### Run status (`RunStatus` on `agent_conversations`)
+
+Written only by `ConversationRecorder` ([`persistence.py`](../../backend/agents/content/persistence.py)), derived from the stream; `run_error` carries `{code, retryable, error}`. Both ride on the conversation list and the state route.
+
+| Value | Meaning |
+|---|---|
+| `idle` | Waiting for the user's next message |
+| `running` | A turn is in flight |
+| `paused` | Parked on a question, a connect offer or an account pick |
+| `failed` | The last turn ended in a failure (see `run_error`) |
+| `cancelled` | The session closed while a turn was running |
+
+### Persisted conversation kinds (`EventKind` to AG-UI)
+
+| Kind | AG-UI | Note |
+|---|---|---|
+| `user`, `assistant` | `MessagesSnapshot` | |
+| `thinking` | `ReasoningMessageContent` | |
+| `tool_use` | `ToolCallStart` | Name plus full input |
+| `tool_result` | `ToolCallResult` | Paired by `tool_use_id`; output plus `is_error` |
+| `question`, `answer` | `Custom` | |
+| `failure` | `RunError` | `{code, retryable, error}` where a turn or run died; `code: cancelled` for a stop |
+| `context` | `Custom` | What the model was given: composed turn, blocks, model, system-prompt fingerprint |
+| `compacted` | `Custom` | The thread was summarised in place: `{summary}` |
+| `memory_recalled`, `memory_written` | `Custom` | What memory gave the run and what the run gave memory |
+
+### Mid-turn input
+
+| Harness can steer | Delivery | Where |
+|---|---|---|
+| Yes (`steer_queue` set) | `SteerMiddleware`, a `before_model` hook, so the message is checkpointed with the thread | [`lc.py`](../../backend/agents/core/lc.py) |
+| No | `chat_queue`; waits for the next turn | [`session.py`](../../backend/agents/core/session.py) |
+| Steer after the last model call | Becomes the next turn (`_leftover_steers`) | [`deep_session.py`](../../backend/agents/core/deep_session.py) |
+
+### Artifact vocabulary by layer
+
+| Layer | Word | Why |
+|---|---|---|
+| Mechanism: tag, events, parser, persister | artifact | Shared by every agent; `test_no_live_event_uses_report_vocabulary` pins it |
+| Value: `artifacts.kind`, the `AuditReport` schema | report | This artifact really is a report |
+
+### Renamed wire values
+
+| Was | Is | Migration |
+|---|---|---|
+| `<duct_report>` | `<duct_artifact>` | The parser accepts both tags |
+| `report_chunk` | `artifact_chunk` | The app accepts both strings (`LEGACY_*` in `agentEvents.js`); the backend emits only the new ones, so deploy the app first, then the backend. Python aliases are gone |
+| `report_updated` | `artifact_version` | As above |
+| `artifacts.kind` | unchanged: `report`, `document`, `ticket`, `image` | [`models/artifact.py`](../../backend/models/artifact.py) |
+
+### Model transport
+
+| Provider | Package | Note |
+|---|---|---|
+| `openai` | langchain-openai | |
+| `google_genai` | langchain-google-genai | |
+| `anthropic` | langchain-anthropic | |
+| `openrouter` | langchain-openrouter | Native gateway: routing preferences, unified reasoning parameter. Base URL overridable via `openrouter_base_url`. A `vendor/slug` not in the curated list passes through verbatim; a bare name resolves by prefix |
+| `xai` | langchain-xai | First-party vendor, not a gateway |
+| Any other gateway | OpenAI chat-completions shape at its own base URL | `GATEWAY_BASE_URL` and `NATIVE_GATEWAY_PROVIDERS` in `models.py`; what Ollama, vLLM or LiteLLM would get |
+
+### Self-hosted gateways on the same code path
+
+| Gateway | Licence | Runtime | Note |
+|---|---|---|---|
+| LiteLLM | MIT | Python | 100+ providers, virtual keys, spend control; the default choice |
+| Bifrost | Open source | Go | About 11 µs routing overhead at 5k requests/s; LiteLLM's Python path climbs sharply past about 500 |
+| Portkey Gateway | MIT | Node | Adds guardrails and observability |
+| LLM Gateway | AGPLv3 | Docker | Closest to OpenRouter's whole platform (dashboard, caching, analytics); check the licence before embedding |
+| Envoy AI Gateway | Open source | Kubernetes | For a cluster that already runs Envoy |
+| Ollama, vLLM, llama.cpp | Open source | Local | Model servers, not gateways; same compatible path |
 
 ### Enforcement
 
-[`backend/tests/test_harness_boundaries.py`](../../backend/tests/test_harness_boundaries.py)
-fails if a framework import appears outside the declared adapter allowlist, if
-an allowlist entry goes stale, if a domain module grows a framework import, or
-if an event is missing from the AG-UI map. That is what makes "modular" a
-property of the codebase rather than an intention in a document.
-
-The allowlist also records three files as **boundary debt** — `routes/chat.py`,
-`service/artifact_store.py` and `service/memory_consolidation.py` import a
-harness from the wrong layer. They are named rather than silently blessed.
-
----
-
-## 3. The event contract
-
-Duct's SSE vocabulary predates AG-UI and largely agrees with it —
-`step_started` / `step_finished` are already name-for-name identical.
-
-**We map rather than rename**, deliberately. Renaming `agent_message_chunk` to
-`text_message_content` would break every consumer to buy nothing; the wire
-value is an internal contract, and what has to be portable is the *meaning*.
-And roughly half of these are domain events that no protocol will ever cover —
-AG-UI's answer for those is `Custom`, so "aligning" them would flatten real
-meaning into a generic envelope. Contorting domain events to fit a standard is
-the same mistake as contorting them to fit an SDK.
-
-The map below is the entire AG-UI adapter. A future AG-UI endpoint is a ~30-line
-translation over it, not a refactor.
-
-### Live SSE events
-
-| Duct event | AG-UI | Meaning |
-|---|---|---|
-| `pipeline_started` | `RunStarted` | a run began |
-| `pipeline_finished` | `RunFinished` | a run completed |
-| `pipeline_failed` | `RunError` | a run failed |
-| `step_started` | `StepStarted` | a workflow stage began |
-| `step_finished` | `StepFinished` | a workflow stage completed |
-| `step_failed` | `StepFinished` | AG-UI has no StepFailed; failure rides in `status` |
-| `agent_message_chunk` | `TextMessageContent` | prose token |
-| `agent_message` | `TextMessageChunk` | a complete message |
-| `message_stop` | `TextMessageEnd` | turn boundary |
-| `thinking_chunk` | `ReasoningMessageContent` | extended-thinking delta |
-| `synthesis_chunk` | `TextMessageContent` | insights synthesis stream (legacy on audit) |
-| `todo_update` | `ActivitySnapshot` | full todo list; snapshot, never a delta |
-| `questions_required` | `Custom` | HITL — the agent needs an answer to continue; carries `interrupt_id` on a checkpointed run, `replay: true` when re-emitted on resume |
-| `connection_required` | `Custom` | HITL — a connector the project lacks; answer `{connected}` or `{skipped}` |
-| `account_selection_required` | `Custom` | HITL — which account/property/site; answer `{account_id, account_name}` |
-| `slide_render_requested` | `Custom` | agent asks the browser to rasterize a slide |
-| `artifact_chunk` | `Custom` | token inside `<duct_artifact>` |
-| `artifact_version` | `Custom` | new **version** of the primary artifact, full payload |
-| `artifact_updated` | `Custom` | compact artifact **card** for the transcript |
-| `plan_generated` | `Custom` | content: a plan |
-| `post_draft_updated` | `Custom` | content: a post draft |
-| `execution_proposed` | `Custom` | staged-execution change set; upsert by `change_set_id` |
-| `memory_written` | `Custom` | entries this turn stored, with undo |
-| `memory_recalled` | `Custom` | entry ids this turn was primed with |
-| `model_retrying` | `Custom` | a model call failed and is being retried: `attempt`, `max_attempts`, `code`, `retry_in` (seconds until the next attempt — a duration, so the client anchors it to its own clock and counts down). Status, not failure — the next token clears it |
-| `token_usage` | `Custom` | one model call's bill: `input_tokens`, `output_tokens`, `cache_read_tokens`, `context_window`, `model`, `scope` (`thread`, `subagent`, or `compaction` for the summariser — all three are on the bill, only `thread` drives the gauge), `cost_usd` (from `agents/models.PRICING`; `null` for an unpriced model, never a guess) |
-| `context_compacting`, `context_compacted` | `Custom` | the harness is summarising old history to make room, then did. The summariser's own tokens never reach the transcript. Also emitted by the insights runner around an emergency compaction: a request the provider rejected as too long is summarised once (`compact_thread`) and retried from its checkpoint; a second rejection is the ordinary `context_window` failure |
-| `user_input_consumed` | `Custom` | a message sent mid-turn has reached the model; carries the `client_message_id` the client stamped on it |
-
-### Failures carry a code, never the exception
-
-`step_failed` (no `step_id`) and `pipeline_failed` carry `code`, `retryable`
-and a one-sentence `error`. The code is `agents/core/errors.ErrorCode`, decided
-once by `classify_error` from the exception's class names and status codes,
-looking through whatever wraps it. The same classifier is the `retry_on` of
-the model-call retry (`agents/core/lc.ReportedRetryMiddleware`), so a rate
-limit retries with backoff and a rejected key fails on the first attempt; and
-the frontend maps the code — not the message text — to copy and to the action
-it offers (`lib/agentSession.js` `errorAction`: retry, open model settings,
-open connections, start fresh). `str(exc)` never reaches the browser: it has
-carried request ids, and once a URL with a key in it.
-
-The failure is also durable. `ConversationRecorder` appends a `failure` event
-where the turn died and writes `agent_conversations.run_status` (`RunStatus`:
-idle / running / paused / failed / cancelled) and `run_error` with the same
-`{code, retryable, error}`; a session closed mid-turn is recorded as
-`cancelled`. The conversation list and the state route carry `run_status` and
-`run_error`, so a thread list can badge "Needs you" or "Failed" before anyone
-opens the thread, and a reloaded transcript shows the failure as the same row
-the live client did — with the same action under it. The status is derived
-from the stream in that one place on purpose: a runner that also wrote it
-would be a second opinion about one column.
-
-### Input while a turn runs: steer or queue, never refuse
-
-The chat route never answers 409 to a message. If the session's harness can
-inject a message at its next model call — `BaseAgentSession.steer_queue` is
-set, which the insights runner does through `agents/core/lc.SteerMiddleware`,
-a `before_model` hook so the injected message is checkpointed with the
-thread — a message that arrives mid-turn or while parked on a card is steered:
-the model reads it right after the tool result it was waiting on. Otherwise it
-waits on `chat_queue` for the next turn. Either way the client marks the row
-"queued" until `user_input_consumed` names it. A steer that lands after the
-turn's last model call becomes the next turn (`_leftover_steers` in the
-insights runner), not a surprise at the top of whatever the user asks next.
-
-### Persisted conversation kinds
-
-| Kind | AG-UI |
+| Test | Fails when |
 |---|---|
-| `user`, `assistant` | `MessagesSnapshot` |
-| `thinking` | `ReasoningMessageContent` |
-| `tool_use` | `ToolCallStart` |
-| `tool_result` | `ToolCallResult` |
-| `question`, `answer` | `Custom` |
-| `failure` | `RunError` — `{code, retryable, error}` where a turn or run died; `code: cancelled` for a stop |
+| [`test_harness_boundaries.py`](../../backend/tests/test_harness_boundaries.py) | A framework import appears outside `ADAPTERS`; an `ADAPTERS` entry no longer imports one; a `FRAMEWORK_FREE` module (events, prompts, schemas, registries, the three runners) imports one; an event is missing from the AG-UI maps; an app event mirror names an unknown event, or marks a live one `LEGACY_`; a live event uses report vocabulary |
+| Boundary debt, named in that allowlist | `routes/chat.py` and `service/memory_consolidation.py` import LangChain from the wrong layer |
+| [`test_deepagents_harness.py`](../../backend/tests/test_deepagents_harness.py) | The `deepagents` pin changes what `interrupt()` raised inside a tool does |
+| [`test_telemetry.py`](../../backend/tests/test_telemetry.py) | The pinned GenAI attribute names drift from the installed package |
 
----
+### Telemetry
 
-## 4. Artifacts, not reports
-
-The streaming tag is `<duct_artifact>`. It used to be `<duct_report>`, which
-stopped being accurate the moment content started emitting plans and post
-drafts through the same mechanism and the artifact store began versioning all
-of them alike. "Report" was audit vocabulary sitting on a shared primitive.
-
-Two wire values changed with it:
-
-| Was | Is |
+| Item | Where |
 |---|---|
-| `report_chunk` | `artifact_chunk` |
-| `report_updated` | `artifact_version` |
-
-**Migration:** the parser accepts *both* tags, so conversations recorded before
-the rename still replay and a turn in flight against a cached system prompt
-does not strand its payload. The frontend accepts both event strings; the
-backend emits only the new ones. An older app meeting a newer backend is the
-only broken pairing, so:
-
-> **Deploy the app first, then the backend.**
-
-Drop the frontend's `LEGACY_*` branches once both are out. The Python aliases
-`AgentEvent.REPORT_CHUNK` / `REPORT_UPDATED` are gone — nothing referenced them,
-and a deprecated alias nobody uses is just a second name to keep true.
-
-### What deliberately did *not* change: `artifacts.kind`
-
-`kind` on the `artifacts` row stays `"report"` for audit output, and that is not
-an oversight. It is a **semantic discriminator** — `report | document | ticket |
-image` ([`models/artifact.py`](../../backend/models/artifact.py)) — so it names
-what an artifact *is*, not the mechanism carrying it. Renaming it to `"artifact"`
-would make every artifact's kind be "artifact": the column would carry zero
-information, and it would take a data migration to get there.
-
-The distinction that matters:
-
-| Layer | Vocabulary | Why |
-|---|---|---|
-| Mechanism — tag, events, parser, persister | **artifact** | shared by every agent |
-| Value — `artifacts.kind`, `AuditReport`, `summarize_report` | **report** | this artifact really is a report |
-
-`tests/test_harness_boundaries.py::test_no_live_event_uses_report_vocabulary`
-pins the first row. The second is left alone on purpose.
-
----
-
-## 5. Model transport and bring-your-own-model
-
-`Provider.OPENROUTER` is not a fourth SDK — it is the OpenAI-compatible chat
-completions shape pointed at a different base URL. Adopting the shape rather
-than the vendor is the point: the endpoint is a config value
-(`openrouter_base_url`), so the same code path reaches OpenRouter, a local
-Ollama, vLLM, llama.cpp, or a self-hosted gateway.
-
-Two details worth knowing:
-
-- **The model list is curated, not a whitelist.** OpenRouter fronts hundreds of
-  models, so an unrecognised `vendor/slug` is passed through verbatim rather
-  than silently replaced by a default — substituting would discard the model a
-  BYO-key customer explicitly chose, which is the whole feature. A bare name
-  with no slash is treated as a typo and does fall back.
-- **Only v1 supports it.** The Claude Agent SDK is provider-locked by design
-  (upstream issue #410, closed `not planned`), so v3 asked for OpenRouter
-  degrades to Anthropic rather than appearing to work. That asymmetry is the
-  argument for v1 as the target harness, stated in code.
-
-### Open-source gateways work already — that is the point
-
-Because the port is the *shape* and not the vendor, every self-hostable
-OpenAI-compatible gateway is reachable today by setting `openrouter_base_url`.
-No new provider, no code change:
-
-| Gateway | License | Runtime | Notes |
-|---|---|---|---|
-| **LiteLLM** | MIT | Python | 100+ providers, virtual keys, spend control. The default choice. |
-| **Bifrost** | open source | Go | ~11µs routing overhead at 5k RPS; LiteLLM's Python path climbs sharply past ~500 RPS |
-| **Portkey Gateway** | MIT | Node | adds guardrails + observability |
-| **LLM Gateway** | **AGPLv3** | Docker | closest OSS equivalent to OpenRouter's whole platform (dashboard, caching, analytics) — but check the licence before embedding |
-| **Envoy AI Gateway** | open source | Kubernetes | for a cluster that already runs Envoy |
-| Ollama / vLLM / llama.cpp | open source | local | not gateways — model servers, same OpenAI-compatible path |
-
-**The honest limit.** These replace OpenRouter's *interface and key management*,
-not its **commercial aggregation**. Self-hosting LiteLLM does not get you
-DeepSeek — it gets you a uniform way to call DeepSeek once you hold a DeepSeek
-account. OpenRouter's distinct value is that one commercial relationship reaches
-60+ providers, which for a bring-your-own-key product is the difference between
-a customer pasting one key and pasting fifteen.
-
-So the two are complements, not substitutes: OpenRouter as the default for
-"paste one key and go", a self-hosted gateway for anyone who wants no third
-party in the request path, local model servers for fully-private runs. All three
-are the same code path.
-
-If a second endpoint ever ships as a first-class option, the clean shape is to
-split `Provider.OPENROUTER` into a generic `Provider.OPENAI_COMPATIBLE` (base
-URL required, no default) with OpenRouter as one preset. That is a second
-implementation of the port, so build it when it exists — not before.
-
----
-
-## 6. Observability
-
-The harness gives us nothing. LangChain's own tracing goes to LangSmith, a
-second vendor and a second place to look. The one harness that carried OTel
-built in was the Claude Agent SDK — its subprocess inherited Sentry's OTLP
-endpoint from an env var — and it went, taking that plumbing with it.
-"Observability comes free with the harness" was never true of the harness we
-kept.
-
-So [`backend/agents/core/telemetry.py`](../../backend/agents/core/telemetry.py)
-emits the OpenTelemetry GenAI conventions from our side of the boundary:
-`model_span` around model calls, `tool_span` around tool execution — the latter
-placed at the choke point *both* binders share, so one span shape covers
-LangChain and the Claude Agent SDK alike.
-
-The conventions are still experimental and moved to their own repository in
-June 2026, so the attribute names are **pinned as our own copy** rather than
-imported from the package's private `_incubating` module, and
-`tests/test_telemetry.py` diffs the copy against the installed package. Drift
-surfaces as a failing test instead of as silently wrong telemetry.
-
-`opentelemetry-api` is a declared dependency rather than one inherited
-transitively from `google-adk` — otherwise retiring the frozen v2 engine would
-have silently stopped the spans. The import is still guarded and degrades to a
-no-op regardless, because telemetry must never be why an agent run fails.
+| `model_span`, `tool_span` | [`telemetry.py`](../../backend/agents/core/telemetry.py); attribute names pinned to `SEMCONV_VERSION`, not imported from the package's private module |
+| Exporter | `OTEL_EXPORTER_OTLP_ENDPOINT`; unset means tracing off |
+| Dependency | `opentelemetry-api` declared directly, no longer transitive; import guarded, degrades to a no-op |

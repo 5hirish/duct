@@ -1,295 +1,236 @@
-# Credential storage: the local API key and provider auth
+# Credential storage
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-27
+**Author:** Shirish Kadam · **Updated:** 2026-10-25
 
-**Reference.** Where every secret Duct holds actually lives, what protects it,
-and what breaks it. Written 2026-09-12 after a debugging session in which a
-ChatGPT sign-in stored correctly and then read back as "not signed in" — the
-credential was fine; the report was wrong, and nothing in the tree explained
-the mechanism well enough to tell those apart.
+Where every secret Duct holds lives, what protects it, and what breaks it. Read
+this before touching anything that stores a secret, the bundle identifier, the
+signing identity or a keychain service name: compiling cannot check those.
 
-Read this before changing anything that stores a secret, and before changing
-the app's bundle identifier, its signing identity, or a keychain service name.
-Those last three are load-bearing in a way that compiling cannot check.
+## At a glance
 
----
+- **Eight kinds of secret, seven protected properly.** The desktop session
+  token is still too weak.
+- **The keychain checks who is asking.** An update keeps access, a new
+  signature loses it, and a signed release never prompts.
+- **Only the shell touches the keychain.** The sidecar gets secrets through
+  its environment.
+- **Three changes orphan every install:** bundle identifier, Apple Team ID,
+  keychain service name. CI pins them.
 
-## 1. The inventory
+## Where each secret lives
 
-Duct holds seven kinds of secret. They do not all deserve the same treatment,
-and today they do not all get it.
+| Secret | Where it lives | Status |
+|---|---|---|
+| Provider keys, desktop | Keychain (shell) | sound |
+| Provider keys, browser | Tab storage, or server-side encrypted | sound |
+| ChatGPT sign-in | Keychain (shell) | sound |
+| Connector credentials | Local database, encrypted | sound |
+| Encryption key | Keychain (shell) | sound |
+| Local API key | Keychain since 2026-09-12; file fallback | sound (fallback weaker) |
+| Local JWT secret | Same | sound (fallback weaker) |
+| Session token | Webview on-disk storage | **weaker than it should be** |
 
-| Secret | Where it lives | What protects it | Status |
+Exact names and paths: Reference.
+
+> **Why the last row matters:** an owner-only file or browser store keeps out
+> other accounts, not a process running as you, the realistic attacker. The
+> keychain checks which app asks.
+
+## A signed release never prompts
+
+macOS ties each keychain item to the code-signing identity of the app that
+wrote it. A Developer ID build's identity, bundle identifier plus team, is
+stable, so real users are never asked.
+
+A debug build is ad-hoc signed: its identity changes every rebuild, so
+yesterday's items belong to a stranger. A production dialog is a bug.
+
+When macOS asks, the key card says what to do:
+
+1. **Choose Try again.** The read retries and the password prompt appears.
+2. **Pick Always Allow.** It adds this build to the item for good; plain Allow
+   asks every launch.
+3. **Or paste the key again.** The write deletes and recreates the unreadable
+   item under this identity.
+
+> **Rule:** only the Tauri shell touches the keychain. A second signed binary
+> doubles what can drift and the prompt surface; the shell hands each secret
+> down the process environment ([lib.rs](../../desktop/src-tauri/src/lib.rs),
+> [sidecar.rs](../../desktop/src-tauri/src/sidecar.rs)).
+
+## Three changes orphan every install
+
+Keychain items, the database and the webview store survive updates and
+reinstalls while the identity holds. Three changes break every install
+permanently, with no migration and no actionable error:
+
+1. **Changing the bundle identifier** in the Tauri config: the identity is
+   built from it.
+2. **Changing the Apple Team ID** the release is signed under, as a
+   company-account move does.
+3. **Renaming a keychain service constant.** The old items stay, under a name
+   nothing looks up.
+
+[check-shell-contract.py](../../.github/scripts/check-shell-contract.py) pins
+these four strings across three languages, plus the data-directory name. A
+deliberate change edits the pin and ships a migration for the old name.
+
+## Build flavours share everything
+
+Release, dev and self-host builds have different bundle identifiers but share
+the release's keychain services and data directory: the service names are
+hardcoded. So a dev build reads the release database and fights it for
+differently signed keychain items.
+
+Deriving both from the identifier at runtime would spare real users any
+migration; it waits because getting it wrong orphans every saved key.
+
+## Multi-user Macs are isolated
+
+Every layer is per-user: the login keychain, unlocked by that account's
+password; the owner-only data directory with the database, uploads and any
+fallback file; the app's WebKit store. Windows and Linux stores are per-user
+too.
+
+Nothing goes to `/Library`, `/usr/local` or a predictable temporary path. Keep
+it that way: on a shared Mac that is a real disclosure.
+
+## The session token is the last weak secret
+
+The local API key gates the loopback API; the local JWT secret signs session
+tokens, so its holder can mint one for any user. Until 2026-09-12 both were
+owner-only files, the weakest link. Now:
+
+1. **The shell mints both** on first run and keeps them in its keychain
+   service.
+2. **The sidecar reads them from its environment** and deletes the old file:
+   the whole migration.
+3. **Without a shell or keychain it falls back to the file:** a headless run
+   still boots, weaker.
+
+The session token is the one left: webview on-disk storage, readable by
+anything that reads that store or runs a script in the app's origin. It
+belongs in the keychain.
+
+It touches sign-in, the 30-day "keep me signed in" path, every authenticated
+fetch and what "sign out" means across a reinstall: a product decision,
+undesigned beyond this, for
+[prioritize](../../.agents/skills/prioritize/SKILL.md).
+
+## A refused read is not an absence
+
+This doc exists because a stored ChatGPT sign-in read back as "not signed in":
+a refusal collapsed into an absence. Three behaviours keep that legible
+(code: Reference):
+
+- **A refused read carries its reason.** The key card says "Can't read your
+  key", not "No key set"; the sign-in card offers Sign in again.
+- **Keychain errors name the cause on macOS:** access is per signature;
+  saving again fixes it.
+- **A write repairs an unwritable item** by deleting and retrying, in shell and
+  page, reaching installed shells.
+
+## Checklist before touching a secret
+
+1. **Writes outside the data directory or the login keychain?** Stop.
+2. **A second binary reads the keychain?** Stop.
+3. **Renames a service, account, identifier or data directory?** Migration
+   plus pin update.
+4. **Could the failure path say "absent" for "refused"?** Return the error.
+5. **Logged, in the handshake or a crash report?** Only the handshake carries
+   the local API key, by design.
+
+> **Remember:** the keychain protects a secret from other apps; a file only
+> from other accounts. The session token is still on the wrong side. Threat
+> model: Reference.
+
+## Reference
+
+### Keychain items and their fallbacks
+
+| Secret | Service | Account | Minted by | Pin |
+|---|---|---|---|---|
+| Provider keys | `ai.getduct.desktop.provider-keys` | provider id | `set_provider_key` in `desktop/src-tauri/src/lib.rs`, called from `app/src/lib/providerKeys.js` | `check-shell-contract.py` |
+| ChatGPT bundle | `ai.getduct.desktop.chatgpt` | `session` | `store()` in `desktop/src-tauri/src/chatgpt.rs` | same |
+| Encryption key (Fernet) | `ai.getduct.desktop.sidecar` | `credentials-encryption-key` | `credentials_encryption_key()` in `lib.rs` | same |
+| Local API key | same | `local-api-key` | `local_api_key()` in `lib.rs`; fallback file `local-api-key` | same (service) |
+| Local JWT secret | same | `local-jwt-secret` | `local_jwt_secret()` in `lib.rs`; fallback file `local-jwt-secret` | same (service) |
+| Browser provider keys | `sessionStorage`, or `connector_credentials` rows Fernet-encrypted by `backend/service/provider_keys.py` | | `app/src/lib/providerKeys.js`; `PUT /providers/{provider_id}/key` | none |
+| Session token | webview `localStorage` | `duct_auth_token__desktop` | `app/src/lib/authFetch.js` | none |
+
+### Data directory, by platform
+
+| Platform | Path | Mode | Defined in |
 |---|---|---|---|
-| Provider API keys, desktop | OS keychain, service `ai.getduct.desktop.provider-keys`, account = provider id | keychain ACL, per-user login keychain | sound |
-| Provider API keys, browser | `sessionStorage`, or the server encrypted with Fernet | tab lifetime, or `CREDENTIALS_ENCRYPTION_KEY` | sound |
-| ChatGPT plan OAuth bundle | OS keychain, service `ai.getduct.desktop.chatgpt`, account `session` | keychain ACL | sound |
-| Connector credentials (Google Ads refresh tokens, …) | SQLite, Fernet-encrypted | key held in the keychain, below | sound |
-| Credentials encryption key (Fernet) | OS keychain, service `ai.getduct.desktop.sidecar`, account `credentials-encryption-key` | keychain ACL | sound |
-| **Local API key** | file `local-api-key` in the data dir, `0600` | filesystem only | **weaker than it should be** |
-| **Local JWT secret** | file `local-jwt-secret` in the data dir, `0600` | filesystem only | **weaker than it should be** |
-| Session token (the signed-in user) | `localStorage`, key `duct_auth_token__desktop` | WebKit store, per user | **weaker than it should be** |
+| macOS | `~/Library/Application Support/ai.getduct.desktop` | `0700` | `APP_IDENTIFIER` in `backend/utils/appdirs.py`, pinned by `check-shell-contract.py` |
+| Windows | `%APPDATA%\Duct` | default | same file |
+| Linux | `$XDG_DATA_HOME/duct` | `0700` | same file |
 
-The data directory is `~/Library/Application Support/ai.getduct.desktop`,
-created `0700` by `backend/utils/appdirs.py`. Windows uses `%APPDATA%\Duct`,
-Linux `$XDG_DATA_HOME/duct`.
+### Build flavours
 
-**Why the last three are called out.** `0600` protects a file from *other macOS
-accounts*. It does not protect it from any other process running as the same
-user — which is the realistic attacker for a desktop app. The keychain does,
-because macOS gates each item on the identity of the app asking. The local JWT
-secret is the sharpest of the three: whoever reads it can mint a valid session
-token for any user id and drive the whole local API. Section 6 specifies the
-move.
+| Build | Identifier | Keychain services | Data directory |
+|---|---|---|---|
+| Release | `ai.getduct.desktop` (`tauri.conf.json`) | `ai.getduct.desktop.*` | `…/ai.getduct.desktop` |
+| Dev | `ai.getduct.desktop.dev` (`tauri.dev.conf.json`) | the same | the same |
+| Self-host | `example.getduct.selfhost` (`tauri.selfhost.conf.json`) | the same | the same |
 
----
+### What the shell hands the sidecar
 
-## 2. How the keychain is actually used
+| Variable | Read from | Sidecar behaviour (`backend/local_server.py`) |
+|---|---|---|
+| `DUCT_LOCAL_API_KEY` | keychain | Prefers it and deletes the `local-api-key` file; else mints `secrets.token_urlsafe(32)` into a `0600` file |
+| `DUCT_LOCAL_JWT_SECRET` | keychain | Same, for `local-jwt-secret` |
+| `CREDENTIALS_ENCRYPTION_KEY` | keychain, unless an env file is pinned or the variable is already set | Fernet key for `backend/service/credentials.py` |
+| stdout handshake | sidecar | Carries `api_key` by design; nothing else joins it |
 
-`keyring` 3.6.3 with the `apple-native` feature. Two facts matter and both were
-read out of the crate rather than assumed
-(`keyring-3.6.3/src/macos.rs`):
-
-- It calls the **legacy file-keychain API** — `SecKeychain::set_generic_password`
-  and `find_generic_password`, not the modern `SecItem*` data-protection
-  keychain.
-- It asks for `SecPreferencesDomain::User`, which resolves to
-  `~/Library/Keychains/login.keychain-db`.
-
-Both consequences are load-bearing.
-
-**Legacy items carry an ACL.** When an app creates a generic password this way,
-macOS records the creating app in the item's access-control list, matched later
-by the app's code-signing **designated requirement**. This is why access
-survives an update, and why it does not survive a change of identity. (The ACL
-mechanism is Apple's documented behaviour for this API; what was verified here
-is which API the crate calls.)
-
-**The User domain is per-account.** Every macOS user has their own login
-keychain, unlocked by their own login password. One logged-in user cannot read
-another's items. Section 5 covers the rest of the multi-user story.
-
-Service names are hardcoded constants, not derived from the bundle identifier,
-so **all three build flavours share them** — `ai.getduct.desktop` (release),
-`ai.getduct.desktop.dev`, `example.getduct.selfhost`. See §7.
-
----
-
-## 3. When macOS prompts, and when it does not
-
-The short version: **a correctly signed release build never prompts.** If a user
-sees a keychain dialog, something in this list is true, and it is a bug worth
-chasing rather than normal behaviour.
+### When macOS prompts
 
 | Situation | Prompt? |
 |---|---|
-| App writes an item for the first time | No |
-| Same app, matching designated requirement, reads its own item | No |
-| App updated to a new version, same identifier and team | No |
-| App reinstalled from a fresh download, same identifier and team | No |
-| Machine rebooted, user logged in normally | No — the login keychain unlocks with the login password |
-| **A different app, or the same app with a changed signature, reads the item** | **Yes** — "Duct wants to access key … in your keychain", asking for the login password |
-| The login keychain is locked (user changed their login password without updating it, or set it to lock on sleep) | Yes, once, to unlock |
-| The user previously clicked Deny | Denied without a prompt |
+| The app writes an item for the first time | No |
+| The same app, matching designated requirement, reads its own item | No |
+| The app is updated, or reinstalled from a fresh download, with the same identifier and team | No |
+| The machine rebooted and the user logged in normally | No: the login keychain unlocks with the login password |
+| A different app, or the same app with a changed signature, reads the item | Yes: "Duct wants to access key …", asking for the login password |
+| The login keychain is locked (password changed without updating it, or set to lock on sleep) | Yes, once, to unlock |
+| The user clicked Deny earlier | Refused, with no prompt |
+| Duct warns about the dialog up front | Never: a signed release does not show it; the key card explains it only after a refused read |
 
-Row six is the one that bit this repo. A **debug build is ad-hoc signed**, so its
-designated requirement is a hash of the binary itself and changes with every
-build. Rebuild the app and yesterday's items belong, as far as macOS is
-concerned, to a different application. A **Developer ID build** is signed with a
-requirement built from the bundle identifier and the team OU, both stable
-across versions, which is exactly why real users are not asked again.
+### Where a failure gets named
 
-This is also why "Always Allow" exists on that dialog: it adds the asking app to
-the item's ACL permanently. We should never rely on a user finding it, and we do
-not warn about it up front either, since a signed release never shows the
-dialog. The key card says it at the one moment it matters, when a read has just
-been refused (§9).
+| Behaviour | Code |
+|---|---|
+| Refused sign-in read returns `{ connected: false, error }`; card says the sign-in is saved but this build cannot read it | `chatgptStatus()` in `app/src/lib/chatgpt.js`; `app/src/components/connections/ProviderCard.jsx` |
+| Refused key read returns `{ key: "", error }`; keys read are held for the page's lifetime, so plain Allow asks once per launch, not per message | `readProviderKey()` and `getProviderKey()` in `app/src/lib/providerKeys.js` |
+| Card copy "Can't read your key"; on a Mac, Try again then Always Allow, or paste the key again | `ProviderCard.jsx` |
+| macOS keyring error names the signature cause | `describe_keyring_error()` in `desktop/src-tauri/src/lib.rs` |
+| Delete-and-retry on a refused write | `store()` in `chatgpt.rs`; `setProviderKey()` in `providerKeys.js` |
+| Failed decrypt treated as absent; the user reconnects | `_stored_credentials()` in `backend/service/connector_access.py`; `backend/service/provider_keys.py` |
+| ChatGPT sign-in token refused at rest on Duct's server | `PUT /providers/{provider_id}/key` in `backend/routes/providers.py` |
+| Refuses to install over a running copy: the on-disk signature changes under the live process | `desktop/scripts/install-dev-app.mjs` |
 
-**Design rule that follows.** Only one signed binary should ever touch the
-keychain: the Tauri shell. The sidecar is a separate executable with its own
-identity, so having it read the keychain doubles the number of identities that
-can drift and doubles the prompt surface. The established pattern is the shell
-reading the keychain and passing the value down the process environment —
-`credentials_encryption_key()` in `desktop/src-tauri/src/lib.rs`, handed over in
-`sidecar.rs`. Anything moved into the keychain must follow it.
+### Keychain mechanics, verified in the crate
 
----
+| Fact | Where |
+|---|---|
+| `keyring` 3.6.3 with the `apple-native` feature | `desktop/src-tauri/Cargo.toml`, `Cargo.lock` |
+| Legacy file-keychain API: `SecKeychain::set_generic_password` and `find_generic_password`, not `SecItem*` | `keyring-3.6.3/src/macos.rs` |
+| `SecPreferencesDomain::User`, which is `~/Library/Keychains/login.keychain-db`: one per account, unlocked by its login password | same |
+| Legacy items carry an access list matched by designated requirement; for a Developer ID build that is the bundle identifier plus the team OU | Apple's documented behaviour for this API |
+| A debug build's designated requirement is a hash of the binary | same |
 
-## 4. What survives an update, and the three things that do not
+### Threat model
 
-Stable across app updates, self-updates and reinstalls, as long as the identity
-holds: every keychain item, the data directory and its SQLite database, and the
-WebKit store holding `localStorage`.
+| | |
+|---|---|
+| **Defended** | Another macOS account reading Duct's credentials. A same-user process reading provider keys, the ChatGPT refresh token or connector tokens: all keychain-gated. Someone with the disk but not the login password: the login keychain is encrypted with it. Duct's servers learning a desktop user's provider keys: they never leave the machine, and the server refuses to remember a ChatGPT sign-in token. |
+| **Not defended** | A headless sidecar's local API key and JWT secret, which fall back to files any same-user process can read. Malware holding the user's login password. A user who clicks Allow on a keychain prompt raised by something that is not Duct. |
+| **Deliberately survivable** | Losing the encryption key makes stored connector credentials undecryptable. Both readers treat a failed decrypt as absent and degrade to reconnecting, so a wiped keychain costs a reconnection, never a corrupt state. |
 
-Three changes break every installed copy at once, permanently, with no
-migration path and no error a user can act on:
+### History
 
-1. **Changing `identifier` in `tauri.conf.json`.** The designated requirement is
-   built from it.
-2. **Changing the Apple Team ID the release is signed under.** Same reason. A
-   move from a personal to a company account does this.
-3. **Renaming a keychain service constant.** The old items are still there,
-   under a name nothing looks up.
-
-These are four string literals across three languages, held together by nothing
-but the fact that someone wrote them the same way. They are now pinned in
-`.github/scripts/check-shell-contract.py`, which fails the build if any drifts.
-Changing one deliberately means editing the pin **and** shipping a migration
-that reads the old name and rewrites it under the new one.
-
-The data directory name is the same bargain for the local database:
-`APP_IDENTIFIER` in `backend/utils/appdirs.py` is pinned alongside them.
-
----
-
-## 5. Multi-user machines
-
-Isolated at every layer, by construction rather than by policy:
-
-- **Keychain** — the per-user login keychain, unlocked by that account's
-  password. Another logged-in account cannot read it.
-- **Data directory** — `~/Library/Application Support/<identifier>`, created
-  `0700`, so the SQLite database, uploads and the two secret files are
-  owner-only.
-- **Webview storage** — the app's per-user WebKit store.
-- **Windows and Linux** — Credential Manager and the freedesktop Secret Service
-  are per-user in the same way.
-
-Nothing is written to `/Library`, `/usr/local`, or a predictable temporary path.
-**Keep it that way.** A credential written anywhere system-wide would be
-readable by every account on the machine, and on a shared or family Mac that is
-a real disclosure, not a theoretical one.
-
----
-
-## 6. The three that should move (specified, not yet built)
-
-### 6.1 Local API key and local JWT secret
-
-Today `backend/local_server.py` mints both with `secrets.token_urlsafe(32)` and
-persists them as `0600` files, then reports the API key in its stdout handshake.
-
-They should be minted and held by the shell instead:
-
-- Extend the `ai.getduct.desktop.sidecar` service with accounts `local-api-key`
-  and `local-jwt-secret`, minted on first run exactly as
-  `credentials_encryption_key()` already is.
-- `sidecar.rs` passes both down as environment variables when spawning, beside
-  `CREDENTIALS_ENCRYPTION_KEY`. The sidecar prefers the environment and falls
-  back to its file, so a shell without a keychain still boots.
-- On a successful read from the environment, the sidecar deletes the file. That
-  is the migration: existing installs move on their next launch, and nothing has
-  to detect a version.
-
-No new prompt surface, because the shell is the only identity involved. The
-sidecar keeps working headless (`--data-dir` with no shell) via the file path.
-
-### 6.2 The session token
-
-`duct_auth_token__desktop` lives in `localStorage`, which is readable by
-anything that can read the WebKit store on disk and by any script running in the
-app's origin. On desktop it should live in the keychain and reach the page
-through an invoke, the way provider keys already do.
-
-This one is a larger change — it touches the sign-in flow, the 30-day "keep me
-signed in" path and every `authFetch` caller — and it is a product decision as
-much as a security one, because it changes what "sign out" means across a
-reinstall. It has not been designed further than this paragraph. It needs its
-own pass through `prioritize`.
-
----
-
-## 7. Known wart: the build flavours share everything
-
-All three flavours use the same hardcoded keychain services **and** the same
-data directory, while having different bundle identifiers:
-
-| Build | Identifier | Keychain services | Data dir |
-|---|---|---|---|
-| Release | `ai.getduct.desktop` | `ai.getduct.desktop.*` | `…/ai.getduct.desktop` |
-| Dev | `ai.getduct.desktop.dev` | the same | the same |
-| Self-host | `example.getduct.selfhost` | the same | the same |
-
-So a dev build reads the release build's database and API key, and the two
-compete for keychain items they are differently signed for — which is the ACL
-collision in §3, reproduced on purpose every time someone runs both.
-
-The fix is to derive both from the bundle identifier at runtime, which leaves
-the release values byte-identical (`ai.getduct.desktop.*`, so **no migration for
-real users**) and moves only dev and self-host. It is not done, because it
-touches credential paths and the failure mode of getting it subtly wrong is
-orphaning every user's saved keys.
-
----
-
-## 8. Threat model, stated plainly
-
-What this design does and does not defend against.
-
-**Defended.** Another macOS account on the same machine reading Duct's
-credentials. A process running as the user reading provider keys, the ChatGPT
-refresh token, or connector refresh tokens — all keychain-gated. Someone with
-the disk but not the login password: the login keychain is encrypted with it.
-Duct's servers learning a desktop user's provider keys: they never leave the
-machine, and `PUT /providers/openai/key` refuses to store a plan credential at
-all.
-
-**Not defended.** A process running as the user reading the local API key or the
-JWT secret, until §6.1 lands, and from there driving the loopback API. Malware
-with the user's login password. A user who clicks "Allow" on a keychain prompt
-raised by something that is not Duct.
-
-**Deliberately survivable.** Losing the Fernet key makes stored connector
-credentials undecryptable; `connector_access` and `service/provider_keys.py`
-both treat a failed decrypt as absent and degrade to reconnecting, so a wiped
-keychain costs reconnection, never a corrupt state.
-
----
-
-## 9. What happens when it does break
-
-Three behaviours, added 2026-09-12 for the sign-in and 2026-09-27 for provider
-keys, exist so that a credential failure is legible instead of looking like a
-feature bug:
-
-- **A failed read is never reported as a negative answer.** `chatgptStatus()` in
-  `app/src/lib/chatgpt.js` returns `{ connected: false, error }` rather than a
-  bare `connected: false`. The card renders "your sign-in is saved but this build
-  cannot read it", with the reason, and the button becomes "Sign in again". The
-  old code collapsed "the keychain refused" into "you never signed in", which is
-  what made this take a session to find. Provider keys had the same collapse
-  until `readProviderKey()` in `app/src/lib/providerKeys.js`: the key card now
-  reads "Can't read your key" rather than "No key set", and on a Mac tells the
-  user to choose Try again and pick **Always Allow** when macOS asks, or to
-  paste the key again. Requests still read keys through the quiet
-  `getProviderKey()`, which holds each key it has read for the page's lifetime,
-  so a user who clicked "Allow" instead is asked once per launch, not once per
-  message.
-- **macOS keyring errors name the cause.** `describe_keyring_error()` in
-  `desktop/src-tauri/src/lib.rs` explains that access is granted per signature
-  and that saving again fixes it, instead of returning a bare OSStatus.
-- **A write repairs an unwritable item.** An item this build cannot read often
-  cannot be overwritten either, which would break the sign-in that repairs the
-  situation. `store()` in `chatgpt.rs` deletes and retries, and
-  `setProviderKey()` does the same for provider keys from the page, so the fix
-  reaches shells already installed.
-
-And for the developer-facing half: `desktop/scripts/install-dev-app.mjs` refuses
-to install over a running copy, because swapping the bundle underneath a live
-process changes its on-disk signature and detaches it from its own keychain
-items mid-session.
-
----
-
-## 10. Checklist for a change that touches a secret
-
-- Does it write outside `~/Library/Application Support/<identifier>` or the
-  login keychain? If yes, stop — see §5.
-- Does a second binary now read the keychain? If yes, stop — see §3.
-- Does it rename a service, an account, the identifier, or the data directory?
-  Then it needs a migration and a pin update in `check-shell-contract.py`.
-- Can the failure path report "absent" when it means "refused"? That is the
-  §9 bug; return the error.
-- Is the secret logged, echoed into a handshake, or included in a crash report?
-  The handshake already carries the local API key by design; nothing else should
-  join it.
+| Date | Change |
+|---|---|
+| 2026-09-12 | Doc written after the ChatGPT sign-in false negative; sign-in reports a refused read; local API key and JWT secret moved to the keychain |
+| 2026-09-27 | Provider key cards report a refused read; delete-and-retry on writes |
+| 2026-10-25 | Rewritten for scanning; inventory corrected for the two moved secrets |
