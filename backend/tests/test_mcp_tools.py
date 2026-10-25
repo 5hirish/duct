@@ -157,6 +157,21 @@ async def test_a_server_added_by_address_asks_even_for_a_read(monkeypatch, serve
     assert server.calls == []
 
 
+async def test_an_infrastructure_preset_asks_even_for_a_read(monkeypatch, servers):
+    """Offered by name is not trusted: Cloudflare's reads reach the account's tokens."""
+    servers[0] = ServerAccess(
+        row_id=None, key="cloudflare", url=preset("cloudflare").url, name="Cloudflare", credentials=no_credentials()
+    )
+    pause = Pause({"approved": False})
+    server = _server()
+    async with server.running(monkeypatch):
+        result = await _toolbox(pause).call("cloudflare", "keyword_volume", '{"keyword": "seo"}')
+
+    ((_, payload),) = pause.events
+    assert payload["why"] == mcp_tools.WHY_ALWAYS_ASKS
+    assert result["status"] == "skipped" and server.calls == []
+
+
 async def test_what_is_approved_is_what_was_shown(monkeypatch, servers):
     pause = Pause({"approved": True})
     server = _server()

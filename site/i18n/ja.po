@@ -6426,12 +6426,12 @@ msgid "<0/>Any https address"
 msgstr "<0/>任意のHTTPSアドレス"
 
 #: mcp.html
-msgid "<0/>Linear"
-msgstr "<0/>Linear"
+msgid "<0/>Every call asks first"
+msgstr "<0/>すべての呼び出しで最初に確認します"
 
 #: mcp.html
-msgid "<0/>Most tools ask first"
-msgstr "<0/>ほとんどのツールが最初に尋ねます"
+msgid "<0/>Linear"
+msgstr "<0/>Linear"
 
 #: mcp.html
 msgid "<0/>Notion"
@@ -6812,14 +6812,14 @@ msgid "What the agent will and won't do"
 msgstr "エージェントができること、できないこと"
 
 #: mcp.html
-msgid "When a server <0>says no.</0>"
-msgstr "サーバーが<0>拒否した場合。</0>"
+msgid ""
+"When OpenSEO, PostHog, Notion or Linear marks a tool read-only, the agent calls it without stopping to ask. Railway and Cloudflare get no such trust, because their reads can return your secrets, and nor does a server you add by address: every call to those asks first."
+msgstr ""
+"OpenSEO、PostHog、Notion、Linear がツールを読み取り専用としてマークすると、エージェントは確認せずに呼び出します。Railway と Cloudflare は、それらの読み取りで秘密情報が返される可能性があるため、そのような信頼は得られません。アドレスで追加したサーバーも同様で、それらへのすべての呼び出しで最初に確認します。"
 
 #: mcp.html
-msgid ""
-"When one of the ready-made servers marks a tool read-only, the agent calls it without stopping to ask. A server you add by address gets no such trust: Duct hasn't checked it, so every call asks first."
-msgstr ""
-"既製のサーバーのいずれかがツールを読み取り専用とマークした場合、エージェントは確認せずにそれを呼び出します。アドレスで追加したサーバーは、そのような信頼を得られません。Ductがチェックしていないため、すべての呼び出しで最初に確認します。"
+msgid "When a server <0>says no.</0>"
+msgstr "サーバーが<0>拒否した場合。</0>"
 
 #: mcp.html
 msgid "Which of these five topics has search volume worth writing for?"
@@ -11632,6 +11632,14 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid "<0/>Most tools ask first"
+#~ msgstr "<0/>ほとんどのツールが最初に尋ねます"
+
+#~ msgid ""
+#~ "When one of the ready-made servers marks a tool read-only, the agent calls it without stopping to ask. A server you add by address gets no such trust: Duct hasn't checked it, so every call asks first."
+#~ msgstr ""
+#~ "既製のサーバーのいずれかがツールを読み取り専用とマークした場合、エージェントは確認せずにそれを呼び出します。アドレスで追加したサーバーは、そのような信頼を得られません。Ductがチェックしていないため、すべての呼び出しで最初に確認します。"
 
 #~ msgid ""
 #~ "Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address."

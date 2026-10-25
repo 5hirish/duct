@@ -311,13 +311,13 @@ team   "Content"</pre>
 <article class="srv reveal">
 <div class="srv-head"><img src="assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>Your services, deployments, logs and variables.</p></div></div>
 <div class="srv-addr"><span>Server address</span><code>https://mcp.railway.com</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>One-click sign-in</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Most tools ask first</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>One-click sign-in</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Every call asks first</span></div>
 <p class="srv-try">Try: <q>Did yesterday's deploy go out cleanly?</q></p>
 </article>
 <article class="srv reveal" style="transition-delay:.08s">
 <div class="srv-head"><img src="assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>Your account through its API: Workers, DNS and analytics.</p></div></div>
 <div class="srv-addr"><span>Server address</span><code>https://mcp.cloudflare.com/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>One-click sign-in</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Most tools ask first</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>One-click sign-in</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Every call asks first</span></div>
 <p class="srv-try">Try: <q>How much of last week's traffic was bots?</q></p>
 </article>
 </div>
@@ -361,7 +361,7 @@ team   "Content"</pre>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#eye"/></svg>
 <h3>Read-only tools run straight away</h3>
-<p>When one of the ready-made servers marks a tool read-only, the agent calls it without stopping to ask. A server you add by address gets no such trust: Duct hasn't checked it, so every call asks first.</p>
+<p>When OpenSEO, PostHog, Notion or Linear marks a tool read-only, the agent calls it without stopping to ask. Railway and Cloudflare get no such trust, because their reads can return your secrets, and nor does a server you add by address: every call to those asks first.</p>
 </div>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>

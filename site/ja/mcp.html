@@ -312,13 +312,13 @@ team   "Content"</pre>
 <article class="srv reveal">
 <div class="srv-head"><img src="/assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>あなたのサービス、デプロイ、ログ、変数。</p></div></div>
 <div class="srv-addr"><span>サーバーアドレス</span><code>https://mcp.railway.com</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>ほとんどのツールが最初に尋ねます</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>すべての呼び出しで最初に確認します</span></div>
 <p class="srv-try">例: <q>昨日のデプロイは問題なく完了しましたか？</q></p>
 </article>
 <article class="srv reveal" style="transition-delay:.08s">
 <div class="srv-head"><img src="/assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>APIを介したあなたのアカウント: Workers、DNS、アナリティクス。</p></div></div>
 <div class="srv-addr"><span>サーバーアドレス</span><code>https://mcp.cloudflare.com/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>ほとんどのツールが最初に尋ねます</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>ワンクリックサインイン</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>すべての呼び出しで最初に確認します</span></div>
 <p class="srv-try">例: <q>先週のトラフィックのうち、ボットはどれくらいでしたか？</q></p>
 </article>
 </div>
@@ -362,7 +362,7 @@ team   "Content"</pre>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#eye"/></svg>
 <h3>読み取り専用ツールはすぐに実行されます</h3>
-<p>既製のサーバーのいずれかがツールを読み取り専用とマークした場合、エージェントは確認せずにそれを呼び出します。アドレスで追加したサーバーは、そのような信頼を得られません。Ductがチェックしていないため、すべての呼び出しで最初に確認します。</p>
+<p>OpenSEO、PostHog、Notion、Linear がツールを読み取り専用としてマークすると、エージェントは確認せずに呼び出します。Railway と Cloudflare は、それらの読み取りで秘密情報が返される可能性があるため、そのような信頼は得られません。アドレスで追加したサーバーも同様で、それらへのすべての呼び出しで最初に確認します。</p>
 </div>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>

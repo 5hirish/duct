@@ -312,13 +312,13 @@ team   "Content"</pre>
 <article class="srv reveal">
 <div class="srv-head"><img src="/assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>Seus serviços, implantações, logs e variáveis.</p></div></div>
 <div class="srv-addr"><span>Endereço do servidor</span><code>https://mcp.railway.com</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Entrar com um clique</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>A maioria das ferramentas pergunta primeiro</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Entrar com um clique</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Toda chamada pergunta primeiro</span></div>
 <p class="srv-try">Experimente: <q>A implantação de ontem foi limpa?</q></p>
 </article>
 <article class="srv reveal" style="transition-delay:.08s">
 <div class="srv-head"><img src="/assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>Sua conta através da sua API: Workers, DNS e analytics.</p></div></div>
 <div class="srv-addr"><span>Endereço do servidor</span><code>https://mcp.cloudflare.com/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Entrar com um clique</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>A maioria das ferramentas pergunta primeiro</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Entrar com um clique</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Toda chamada pergunta primeiro</span></div>
 <p class="srv-try">Experimente: <q>Quanto do tráfego da semana passada eram bots?</q></p>
 </article>
 </div>
@@ -362,7 +362,7 @@ team   "Content"</pre>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#eye"/></svg>
 <h3>Ferramentas somente leitura são executadas imediatamente</h3>
-<p>Quando um dos servidores prontos marca uma ferramenta como somente leitura, o agente a chama sem perguntar. Um servidor que você adiciona por endereço não recebe essa confiança: o Duct não o verificou, então cada chamada pergunta primeiro.</p>
+<p>Quando OpenSEO, PostHog, Notion ou Linear marca uma ferramenta como somente leitura, o agente a chama sem parar para perguntar. Railway e Cloudflare não recebem tal confiança, porque suas leituras podem retornar seus segredos, e nem um servidor que você adiciona por endereço: toda chamada para esses pergunta primeiro.</p>
 </div>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>

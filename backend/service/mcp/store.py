@@ -71,10 +71,16 @@ class ServerAccess:
 
     @property
     def vetted(self) -> bool:
-        """One of the presets, whose vendors Duct has looked at. Only their
-        ``readOnlyHint`` is believed: on a server added by address it is the
-        stranger's own claim, and a tool that says it only reads can still
-        carry whatever the agent puts in its arguments to that stranger."""
+        """A preset whose ``readOnlyHint`` Duct believes (``trust_read_only``).
+        On a server added by address it is the stranger's own claim, and a
+        tool that says it only reads can still carry whatever the agent puts
+        in its arguments to that stranger; on an infrastructure preset the
+        read itself returns secrets."""
+        found = preset_for_url(self.url)
+        return bool(found and found.trust_read_only)
+
+    @property
+    def is_preset(self) -> bool:
         return preset_for_url(self.url) is not None
 
     @property

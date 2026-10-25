@@ -22,8 +22,9 @@ import EntityAvatar from "@/components/connections/EntityAvatar";
 import { serverSite } from "@/lib/mcpServers";
 
 const EMPTY_ARGUMENTS = new Set(["", "{}"]);
-// Backend WHY_ADDED_BY_ADDRESS.
+// Backend WHY_ADDED_BY_ADDRESS and WHY_ALWAYS_ASKS (agents/core/mcp_tools.py).
 const WHY_ADDED_BY_ADDRESS = "added_by_address";
+const WHY_ALWAYS_ASKS = "always_asks";
 
 export default function ToolApproval({ request, onAnswer, disabled }) {
   const [open, setOpen] = useState(false);
@@ -78,6 +79,11 @@ export default function ToolApproval({ request, onAnswer, disabled }) {
           <Trans>
             You added {serverName} by address, so Duct asks before every call to it. Skip and the agent
             carries on without it.
+          </Trans>
+        ) : request.why === WHY_ALWAYS_ASKS ? (
+          <Trans>
+            {serverName} can reach your account&rsquo;s secrets, so Duct asks before every call to it. Skip and
+            the agent carries on without it.
           </Trans>
         ) : (
           <Trans>

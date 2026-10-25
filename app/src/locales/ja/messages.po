@@ -303,6 +303,10 @@ msgid "{label} API key"
 msgstr "{label} APIキー"
 
 #: src/components/connections/McpConnectDialog.jsx
+msgid "{label} can reach your account’s secrets, so Duct asks you before every call to it."
+msgstr "{label} はアカウントの機密情報にアクセスできるため、Duct はそれへの呼び出しごとに確認します。"
+
+#: src/components/connections/McpConnectDialog.jsx
 msgid "{label} doesn’t offer one-click sign-in to Duct, so it needs an API key instead."
 msgstr "{label} はDuctへのワンクリックサインインを提供していないため、代わりにAPIキーが必要です。"
 
@@ -522,6 +526,10 @@ msgstr "{server} は再接続が必要です"
 #: src/components/workspace/ActivityRow.jsx
 msgid "{server} returned an error"
 msgstr "{server} はエラーを返しました"
+
+#: src/components/insights/ToolApproval.jsx
+msgid "{serverName} can reach your account’s secrets, so Duct asks before every call to it. Skip and the agent carries on without it."
+msgstr "{serverName} はアカウントの機密情報にアクセスできるため、Duct はそれへの呼び出しごとに確認します。スキップすると、エージェントはそれなしで続行します。"
 
 #: src/components/insights/ToolApproval.jsx
 msgid "{serverName} doesn’t mark this tool as read-only, so Duct asks first. Skip and the agent carries on without it."

@@ -14,12 +14,14 @@ The rules, each a decision:
 * **A chat reaches its own user's servers and nobody else's.** A token reads
   the whole account behind it, so a collaborator's chat in your project gets
   their servers, not yours (``service/mcp/store.py`` says why).
-* **Only a vetted server's word decides what runs unasked.** On a preset, a
-  tool annotated ``readOnlyHint`` runs; anything else pauses for the person
+* **Only a vetted server's word decides what runs unasked.** On a preset
+  that trusts it (``trust_read_only``), a tool annotated ``readOnlyHint`` runs; anything else pauses for the person
   to approve or skip (``TOOL_APPROVAL_REQUIRED``). Unannotated is not assumed
   harmless. On a server added by address every call pauses: "read-only" is
   then a stranger's claim, and a read still sends the agent's arguments,
-  which a poisoned page can fill with the project's data. No change sets
+  which a poisoned page can fill with the project's data. Infrastructure
+  presets (Railway, Cloudflare) ask on every call too: their reads return
+  secrets. No change sets
   here: an arbitrary write has no rollback to stage.
 * **What is approved is what was shown.** The card gets the arguments whole;
   a call too long to show is refused, never cut.
@@ -67,6 +69,7 @@ APPROVAL_ARGUMENT_CHARS = 8_000
 # Why a call is waiting, so the card can say which rule stopped it.
 WHY_NOT_READ_ONLY = "not_read_only"
 WHY_ADDED_BY_ADDRESS = "added_by_address"
+WHY_ALWAYS_ASKS = "always_asks"
 # Approving a call is reading one card; it does not deserve a connect's clock.
 APPROVAL_TIMEOUT = 600.0
 
@@ -164,6 +167,13 @@ def _bounded(payload: dict) -> str:
 
 def _asks_first(server: ServerAccess, tool: ToolInfo) -> bool:
     return not (server.vetted and tool.read_only)
+
+
+def _why(server: ServerAccess) -> str:
+    """Which rule stopped a call, so the card can say it in words."""
+    if server.vetted:
+        return WHY_NOT_READ_ONLY
+    return WHY_ALWAYS_ASKS if server.is_preset else WHY_ADDED_BY_ADDRESS
 
 
 class ConnectedTools:
@@ -313,7 +323,7 @@ class ConnectedTools:
                     "tool": found.name,
                     "tool_title": found.title,
                     "reason": reason,
-                    "why": WHY_ADDED_BY_ADDRESS if not access.vetted else WHY_NOT_READ_ONLY,
+                    "why": _why(access),
                     "arguments": shown,
                 },
                 timeout=APPROVAL_TIMEOUT,

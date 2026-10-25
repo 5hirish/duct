@@ -303,6 +303,10 @@ msgid "{label} API key"
 msgstr "{label} API-Schlüssel"
 
 #: src/components/connections/McpConnectDialog.jsx
+msgid "{label} can reach your account’s secrets, so Duct asks you before every call to it."
+msgstr "{label} kann auf die Geheimnisse deines Kontos zugreifen, daher fragt Duct dich vor jedem Aufruf."
+
+#: src/components/connections/McpConnectDialog.jsx
 msgid "{label} doesn’t offer one-click sign-in to Duct, so it needs an API key instead."
 msgstr "{label} bietet keine Ein-Klick-Anmeldung bei Duct an, daher wird stattdessen ein API-Schlüssel benötigt."
 
@@ -522,6 +526,10 @@ msgstr "{server} muss neu verbunden werden"
 #: src/components/workspace/ActivityRow.jsx
 msgid "{server} returned an error"
 msgstr "{server} hat einen Fehler zurückgegeben"
+
+#: src/components/insights/ToolApproval.jsx
+msgid "{serverName} can reach your account’s secrets, so Duct asks before every call to it. Skip and the agent carries on without it."
+msgstr "{serverName} kann auf die Geheimnisse deines Kontos zugreifen, daher fragt Duct vor jedem Aufruf. Überspringen, und der Agent arbeitet ohne es weiter."
 
 #: src/components/insights/ToolApproval.jsx
 msgid "{serverName} doesn’t mark this tool as read-only, so Duct asks first. Skip and the agent carries on without it."

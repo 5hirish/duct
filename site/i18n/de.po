@@ -6655,12 +6655,12 @@ msgid "<0/>Any https address"
 msgstr "<0/>Jede HTTPS-Adresse"
 
 #: mcp.html
-msgid "<0/>Linear"
-msgstr "<0/>Linear"
+msgid "<0/>Every call asks first"
+msgstr "<0/>Jeder Aufruf fragt zuerst"
 
 #: mcp.html
-msgid "<0/>Most tools ask first"
-msgstr "<0/>Die meisten Tools fragen zuerst"
+msgid "<0/>Linear"
+msgstr "<0/>Linear"
 
 #: mcp.html
 msgid "<0/>Notion"
@@ -7062,14 +7062,14 @@ msgid "What the agent will and won't do"
 msgstr "Was der Agent tun wird und nicht."
 
 #: mcp.html
-msgid "When a server <0>says no.</0>"
-msgstr "Wenn ein Server <0>Nein sagt.</0>"
+msgid ""
+"When OpenSEO, PostHog, Notion or Linear marks a tool read-only, the agent calls it without stopping to ask. Railway and Cloudflare get no such trust, because their reads can return your secrets, and nor does a server you add by address: every call to those asks first."
+msgstr ""
+"Wenn OpenSEO, PostHog, Notion oder Linear ein Tool als schreibgeschützt markiert, ruft der Agent es auf, ohne vorher zu fragen. Railway und Cloudflare erhalten dieses Vertrauen nicht, da ihre Lesevorgänge deine Geheimnisse zurückgeben können, und auch nicht ein Server, den du per Adresse hinzufügst: Jeder Aufruf an diese fragt zuerst."
 
 #: mcp.html
-msgid ""
-"When one of the ready-made servers marks a tool read-only, the agent calls it without stopping to ask. A server you add by address gets no such trust: Duct hasn't checked it, so every call asks first."
-msgstr ""
-"Wenn einer der vorgefertigten Server ein Tool als schreibgeschützt markiert, ruft der Agent es auf, ohne vorher zu fragen. Ein Server, den du per Adresse hinzufügst, erhält dieses Vertrauen nicht: Duct hat ihn nicht geprüft, daher fragt jeder Aufruf zuerst."
+msgid "When a server <0>says no.</0>"
+msgstr "Wenn ein Server <0>Nein sagt.</0>"
 
 #: mcp.html
 msgid "Which of these five topics has search volume worth writing for?"
@@ -12115,6 +12115,14 @@ msgstr "← Zurück"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Neu beginnen"
+
+#~ msgid "<0/>Most tools ask first"
+#~ msgstr "<0/>Die meisten Tools fragen zuerst"
+
+#~ msgid ""
+#~ "When one of the ready-made servers marks a tool read-only, the agent calls it without stopping to ask. A server you add by address gets no such trust: Duct hasn't checked it, so every call asks first."
+#~ msgstr ""
+#~ "Wenn einer der vorgefertigten Server ein Tool als schreibgeschützt markiert, ruft der Agent es auf, ohne vorher zu fragen. Ein Server, den du per Adresse hinzufügst, erhält dieses Vertrauen nicht: Duct hat ihn nicht geprüft, daher fragt jeder Aufruf zuerst."
 
 #~ msgid ""
 #~ "Choose OpenSEO, Notion, Linear or PostHog. For anything else, paste the server's https address."

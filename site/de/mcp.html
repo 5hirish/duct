@@ -312,13 +312,13 @@ team   "Content"</pre>
 <article class="srv reveal">
 <div class="srv-head"><img src="/assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>Deine Dienste, Deployments, Logs und Variablen.</p></div></div>
 <div class="srv-addr"><span>Serveradresse</span><code>https://mcp.railway.com</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Die meisten Tools fragen zuerst</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Jeder Aufruf fragt zuerst</span></div>
 <p class="srv-try">Versuch: <q>Ist der gestrige Deploy sauber durchgelaufen?</q></p>
 </article>
 <article class="srv reveal" style="transition-delay:.08s">
 <div class="srv-head"><img src="/assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>Dein Konto über seine API: Workers, DNS und Analysen.</p></div></div>
 <div class="srv-addr"><span>Serveradresse</span><code>https://mcp.cloudflare.com/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Die meisten Tools fragen zuerst</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Jeder Aufruf fragt zuerst</span></div>
 <p class="srv-try">Versuch: <q>Wie viel des Traffics der letzten Woche waren Bots?</q></p>
 </article>
 </div>
@@ -362,7 +362,7 @@ team   "Content"</pre>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#eye"/></svg>
 <h3>Schreibgeschützte Tools laufen sofort</h3>
-<p>Wenn einer der vorgefertigten Server ein Tool als schreibgeschützt markiert, ruft der Agent es auf, ohne vorher zu fragen. Ein Server, den du per Adresse hinzufügst, erhält dieses Vertrauen nicht: Duct hat ihn nicht geprüft, daher fragt jeder Aufruf zuerst.</p>
+<p>Wenn OpenSEO, PostHog, Notion oder Linear ein Tool als schreibgeschützt markiert, ruft der Agent es auf, ohne vorher zu fragen. Railway und Cloudflare erhalten dieses Vertrauen nicht, da ihre Lesevorgänge deine Geheimnisse zurückgeben können, und auch nicht ein Server, den du per Adresse hinzufügst: Jeder Aufruf an diese fragt zuerst.</p>
 </div>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>

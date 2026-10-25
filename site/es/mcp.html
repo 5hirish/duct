@@ -312,13 +312,13 @@ team   "Content"</pre>
 <article class="srv reveal">
 <div class="srv-head"><img src="/assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>Tus servicios, despliegues, registros y variables.</p></div></div>
 <div class="srv-addr"><span>Dirección del servidor</span><code>https://mcp.railway.com</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Inicio de sesión con un clic</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>La mayoría de las herramientas preguntan primero</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Inicio de sesión con un clic</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Cada llamada pregunta primero</span></div>
 <p class="srv-try">Prueba: <q>¿Se implementó correctamente el despliegue de ayer?</q></p>
 </article>
 <article class="srv reveal" style="transition-delay:.08s">
 <div class="srv-head"><img src="/assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>Tu cuenta a través de su API: Workers, DNS y analíticas.</p></div></div>
 <div class="srv-addr"><span>Dirección del servidor</span><code>https://mcp.cloudflare.com/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Inicio de sesión con un clic</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>La mayoría de las herramientas preguntan primero</span></div>
+<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Inicio de sesión con un clic</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Cada llamada pregunta primero</span></div>
 <p class="srv-try">Prueba: <q>¿Cuánto del tráfico de la semana pasada fueron bots?</q></p>
 </article>
 </div>
@@ -362,7 +362,7 @@ team   "Content"</pre>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#eye"/></svg>
 <h3>Las herramientas de solo lectura se ejecutan de inmediato</h3>
-<p>Cuando uno de los servidores predefinidos marca una herramienta como de solo lectura, el agente la llama sin preguntar. Un servidor que añades por dirección no recibe tal confianza: Duct no lo ha verificado, así que cada llamada pregunta primero.</p>
+<p>Cuando OpenSEO, PostHog, Notion o Linear marcan una herramienta como de solo lectura, el agente la llama sin detenerse a preguntar. Railway y Cloudflare no obtienen esa confianza, porque sus lecturas pueden devolver tus secretos, y tampoco un servidor que añadas por dirección: cada llamada a esos pregunta primero.</p>
 </div>
 <div class="rule">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>

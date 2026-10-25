@@ -303,6 +303,10 @@ msgid "{label} API key"
 msgstr ""
 
 #: src/components/connections/McpConnectDialog.jsx
+msgid "{label} can reach your account’s secrets, so Duct asks you before every call to it."
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
 msgid "{label} doesn’t offer one-click sign-in to Duct, so it needs an API key instead."
 msgstr ""
 
@@ -521,6 +525,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "{server} returned an error"
+msgstr ""
+
+#: src/components/insights/ToolApproval.jsx
+msgid "{serverName} can reach your account’s secrets, so Duct asks before every call to it. Skip and the agent carries on without it."
 msgstr ""
 
 #: src/components/insights/ToolApproval.jsx

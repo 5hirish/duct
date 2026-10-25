@@ -532,9 +532,11 @@ Postgres `DATABASE_URL` names.
     servers, in any project, never the project owner's: unlike a vendor key, a
     token reads the whole account behind it. Sessions are their creator's
     alone, so whoever sees a server's data and answers its card owns it.
-  - **Only a preset's `readOnlyHint` is believed.** On a server added by
-    address every call shows the approval card: a stranger's "read-only" still
-    carries the agent's arguments to the stranger. The card gets the arguments
+  - **Only a trusted preset's `readOnlyHint` is believed** (`trust_read_only`,
+    off by default). On a server added by address every call shows the
+    approval card: a stranger's "read-only" still carries the agent's
+    arguments to the stranger. Infrastructure presets (Railway, Cloudflare)
+    stay untrusted too, because their reads return secrets. The card gets the arguments
     whole; a call too long to show (`APPROVAL_ARGUMENT_CHARS`) is refused,
     never cut.
   - **Sign-in is GitHub's shape.** Start (signed in) parks the flow under the

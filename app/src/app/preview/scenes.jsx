@@ -517,12 +517,12 @@ const ACTIVITIES = [
 // MCP servers, shaped exactly as /api/user/mcp/presets and /servers return
 // them (backend/service/mcp/presets.py, store.list_servers).
 const MCP_PRESETS = [
-  { id: "openseo", label: "OpenSEO", url: "https://app.openseo.so/mcp", home: "https://openseo.so", publisher: "OpenSEO", key_url: "https://app.openseo.so/settings" },
-  { id: "notion", label: "Notion", url: "https://mcp.notion.com/mcp", home: "https://www.notion.so", publisher: "Notion", key_url: "" },
-  { id: "linear", label: "Linear", url: "https://mcp.linear.app/mcp", home: "https://linear.app", publisher: "Linear", key_url: "" },
-  { id: "posthog", label: "PostHog", url: "https://mcp.posthog.com/mcp", home: "https://posthog.com", publisher: "PostHog", key_url: "https://app.posthog.com/settings/user-api-keys" },
-  { id: "railway", label: "Railway", url: "https://mcp.railway.com", home: "https://railway.com", publisher: "Railway", key_url: "" },
-  { id: "cloudflare", label: "Cloudflare", url: "https://mcp.cloudflare.com/mcp", home: "https://www.cloudflare.com", publisher: "Cloudflare", key_url: "" },
+  { id: "openseo", label: "OpenSEO", url: "https://app.openseo.so/mcp", home: "https://openseo.so", publisher: "OpenSEO", key_url: "https://app.openseo.so/settings", trust_read_only: true },
+  { id: "notion", label: "Notion", url: "https://mcp.notion.com/mcp", home: "https://www.notion.so", publisher: "Notion", key_url: "", trust_read_only: true },
+  { id: "linear", label: "Linear", url: "https://mcp.linear.app/mcp", home: "https://linear.app", publisher: "Linear", key_url: "", trust_read_only: true },
+  { id: "posthog", label: "PostHog", url: "https://mcp.posthog.com/mcp", home: "https://posthog.com", publisher: "PostHog", key_url: "https://app.posthog.com/settings/user-api-keys", trust_read_only: true },
+  { id: "railway", label: "Railway", url: "https://mcp.railway.com", home: "https://railway.com", publisher: "Railway", key_url: "", trust_read_only: false },
+  { id: "cloudflare", label: "Cloudflare", url: "https://mcp.cloudflare.com/mcp", home: "https://www.cloudflare.com", publisher: "Cloudflare", key_url: "", trust_read_only: false },
 ];
 
 const mcpServer = (id, fields) => ({
@@ -1516,7 +1516,7 @@ export const SCENES = [
     state: "nothing connected yet",
     group: "McpConnectors",
     title: "MCP connectors, before the first connect",
-    note: "The MCP tiles join the native ones in Connections' one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
+    note: "The MCP tiles join the native ones in Connections' one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. Open Railway's: it asks before every call, read-only or not, because its reads return secrets. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
     render: () => <McpScene servers={MCP_NONE} answer="authorize" />,
   },
   {

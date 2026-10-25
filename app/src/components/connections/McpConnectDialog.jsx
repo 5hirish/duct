@@ -284,9 +284,13 @@ export default function McpConnectDialog({
           <li>
             <ShieldCheck className="mcp-note-icon" aria-hidden="true" />
             <span>
-              {preset ? (
+              {preset?.trust_read_only ? (
                 <Trans>
                   A tool {label} marks read-only runs straight away. Anything else asks you first, every time.
+                </Trans>
+              ) : preset ? (
+                <Trans>
+                  {label} can reach your account&rsquo;s secrets, so Duct asks you before every call to it.
                 </Trans>
               ) : (
                 <Trans>Duct asks you before every call to a server added by address.</Trans>
