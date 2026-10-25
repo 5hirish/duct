@@ -6,6 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { Phase } from "../workspace/agentPhase";
 import { AuditStep } from "../../lib/auditEvents";
 import { StepStatus } from "../../lib/agentSteps";
+import { errorText } from "../../lib/agentSession";
 import { saveText } from "../../lib/download";
 import PipelineProgress from "../PipelineProgress";
 import AuditReportV1 from "./AuditReportV1";
@@ -111,14 +112,14 @@ function SynthesisProgress({ steps, isStreamingReport = false }) {
     [i18n],
   );
   const lines = useMemo(() => SYNTHESIS_LINES.map((line) => i18n._(line)), [i18n]);
-  // Once the model starts adding categories, swap the static time estimate for live
-  // "N/9 categories" progress (emitted per AddAuditCategory call by the backend).
+  // Once the model starts adding categories the focal row carries live "N/9
+  // categories" progress (emitted per AddAuditCategory call by the backend).
+  // Until then it carries nothing: there is no honest estimate of how long
+  // synthesis takes, and the panel's clock is the only figure.
   const synthStep = steps?.find((s) => s.step_id === AuditStep.SYNTHESIZE_AUDIT);
   const done = synthStep?.payload?.categories_done;
   const total = synthStep?.payload?.categories_total ?? 9;
-  const estimate = done != null
-    ? t`${done}/${total} categories`
-    : t`~3 min`;
+  const estimate = done != null ? t`${done}/${total} categories` : undefined;
   return (
     <PipelineProgress
       stages={stages}
@@ -187,6 +188,7 @@ function InterruptedReport() {
 }
 
 function FailedOverlay({ errorMsg, onRetry, hasReport }) {
+  const { i18n } = useLingui();
   return (
     <div
       className={[
@@ -209,7 +211,7 @@ function FailedOverlay({ errorMsg, onRetry, hasReport }) {
               {hasReport
                 ? <Trans>The pipeline stopped early — your partial results are still visible above.</Trans>
                 : errorMsg
-                ? errorMsg
+                ? errorText(i18n, errorMsg)
                 : <Trans>Something interrupted the audit. Your site is fine — this was on our end.</Trans>}
             </p>
           </div>

@@ -17,6 +17,7 @@ persisted in the data dir so it survives restarts.
 
 Usage:
     python local_server.py [--port N] [--data-dir PATH] [--log-level LEVEL]
+                           [--exit-on-stdin-eof]
 """
 
 from __future__ import annotations
@@ -26,9 +27,12 @@ import contextlib
 import json
 import os
 import secrets
+import signal
 import socket
 import stat
 import sys
+import threading
+import time
 from pathlib import Path
 
 from utils.appdirs import ensure_data_dir
@@ -38,6 +42,9 @@ _API_KEY_FILE = "local-api-key"
 _JWT_SECRET_FILE = "local-jwt-secret"
 # Loopback only — the sidecar must never be reachable from the network.
 _HOST = "127.0.0.1"
+# How long a graceful stop may take once the shell is gone before the process
+# ends itself outright. The shell waits the same two seconds before it kills.
+_SHUTDOWN_GRACE_SECS = 2.0
 
 
 def _pick_free_port() -> int:
@@ -138,6 +145,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Override the per-user data directory (default: OS-conventional path).",
     )
     parser.add_argument("--log-level", default="info")
+    parser.add_argument(
+        "--exit-on-stdin-eof",
+        action="store_true",
+        help=(
+            "Exit when stdin reaches end-of-file. The desktop shell passes this "
+            "with a pipe only it holds, so the sidecar ends when the shell does."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -175,6 +190,46 @@ def bootstrap(argv: list[str] | None = None) -> dict[str, object]:
         "api_key": api_key,
         "data_dir": str(data_dir),
     }
+
+
+def watch_stdin(stream, on_eof) -> threading.Thread:
+    """Call `on_eof` from a daemon thread once `stream` reaches end-of-file.
+
+    The shell holds the other end of the pipe and nothing else does, so EOF
+    means the shell is gone — quit, crashed, killed, or relaunched for an
+    update. Before this the sidecar learned of none of those but the clean
+    quit: it kept the SQLite file and its port until someone found the stray
+    Python process. Opt-in by flag rather than always on, because a sidecar
+    started by hand reads a terminal, where Ctrl-D would stop the server, or
+    `/dev/null` from a service manager, where it would stop at once.
+
+    A read error counts as EOF: either way nobody is on the other end.
+    """
+
+    def wait_for_eof() -> None:
+        try:
+            while stream.read(4096):
+                pass
+        except OSError:
+            pass
+        on_eof()
+
+    thread = threading.Thread(target=wait_for_eof, name="stdin-watchdog", daemon=True)
+    thread.start()
+    return thread
+
+
+def _stop_for_lost_shell() -> None:
+    """The stop a lost shell gets: uvicorn's own, then a guaranteed one.
+
+    SIGTERM is what uvicorn already handles — in-flight requests finish, the
+    lifespan shutdown runs, the process exits on its own. The hard exit behind
+    it exists because this is the one case where nobody is left to send a
+    kill, so the sidecar has to be the one that makes sure it ends.
+    """
+    signal.raise_signal(signal.SIGTERM)
+    time.sleep(_SHUTDOWN_GRACE_SECS)
+    os._exit(0)
 
 
 def _report_environment() -> None:
@@ -215,12 +270,23 @@ def main(argv: list[str] | None = None) -> int:
         with contextlib.suppress(Exception):
             stream.reconfigure(line_buffering=True)
 
+    args = _parse_args(argv)
     handshake = bootstrap(argv)
 
     # Emit the handshake before importing the app so the shell gets it promptly
     # even if startup (DB create_all, connector registration) takes a moment.
     sys.stdout.write(json.dumps(handshake) + "\n")
     sys.stdout.flush()
+
+    if args.exit_on_stdin_eof:
+        stdin = getattr(sys.stdin, "buffer", None)
+        if stdin is None:
+            print(
+                "[duct-sidecar] no stdin to watch; the shell cannot end this process",
+                file=sys.stderr,
+            )
+        else:
+            watch_stdin(stdin, _stop_for_lost_shell)
 
     _report_environment()
 
@@ -236,7 +302,7 @@ def main(argv: list[str] | None = None) -> int:
         app,
         host=_HOST,
         port=int(handshake["port"]),
-        log_level=_parse_args(argv).log_level,
+        log_level=args.log_level,
         # One process: the sidecar's lifetime is the app window's lifetime.
         workers=1,
     )

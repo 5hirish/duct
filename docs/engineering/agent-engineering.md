@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-30
+**Author:** Shirish Kadam · **Updated:** 2026-10-25
 
 How an agent is built and maintained here, on LangChain 1.x, LangGraph and
 `deepagents`. Read it before adding an agent or changing one: a prompt, a tool,
@@ -37,7 +37,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 |---|---|---|
 | Lowest rung that works: one structured call, then a fixed workflow, then `create_agent`, then `deepagents` only for what it adds (sub-agents, scratch filesystem, planning). Say in the runner docstring which of those the agent spends, and re-justify when one is switched off. | `init_chat_model`, `create_agent` (1.x, semver-stable), `create_deep_agent` (0.x, pinned exactly) | review; `backend/AGENTS.md` "Pick the lowest rung" |
 | **Build every session graph in one place.** The rung is chosen; the middleware is not. | `build_session_agent` / `build_deep_session_agent` | `tests/test_agent_assembly.py` (a graph built elsewhere fails) |
-| A sub-agent exists to isolate context for a bounded side job. Name its tools; never let `deepagents` default them. The auto-added `general-purpose` sub-agent gets **every** parent tool unless one by that name is supplied. | `SubAgent` dicts with explicit `tools` | content: `test_sub_agents_never_get_the_writer_tools`; insights: **gap 1** |
+| A sub-agent exists to isolate context for a bounded side job. Name its tools; never let `deepagents` default them. The auto-added `general-purpose` sub-agent gets **every** parent tool unless one by that name is supplied. | `SubAgent` dicts with explicit `tools` | `test_agent_assembly.py::test_no_sub_agent_of_either_runner_carries_a_writer`; content: `test_sub_agents_never_get_the_writer_tools` |
 
 ### Tools
 
@@ -56,7 +56,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 |---|---|---|
 | Per-user and per-project text goes in the USER turn, never the system prompt. Stable blocks first. | `ContextSpec`, `BLOCK_ORDER` | `tests/test_turn.py` |
 | Every graph asks for caching. Anthropic caches only a request that says so; Gemini caches implicitly; OpenAI routes by `prompt_cache_key`. | `AnthropicPromptCachingMiddleware` (appended by `create_deep_agent`, by `build_session_agent`, and by `prompt_caching_middleware()` for a one-shot pass); `resolve_chat_model(cache_key=thread)` | `tests/test_agent_assembly.py`; cache share on `TOKEN_USAGE` |
-| Duct owns the final system prompt byte for byte. `deepagents` harness profiles append text per model: 0.7.15 ships coding-agent guidance ("Never speculate about code you have not opened…") for Haiku 4.5, Sonnet 4.6 and Opus 4.7, plus profiles for OpenAI Codex models, and packages can register more. | `register_harness_profile` | gap 6 |
+| Duct owns the final system prompt byte for byte. `deepagents` harness profiles append text per model: 0.7.15 ships coding-agent guidance ("Never speculate about code you have not opened…") for Haiku 4.5, Sonnet 4.6 and Opus 4.7, plus profiles for OpenAI Codex models, and packages can register more. | `register_harness_profile` | `tests/test_system_prompt_ownership.py` (the accepted suffixes are a named set); the dump half is gap 6 |
 | Prune before you summarise, and batch the pruning so each cache break buys something. | `ContextEditingMiddleware` + `ClearToolUsesEdit(clear_at_least=…)` | `RunLimits.__post_init__` (trigger below the summarisation floor) |
 | Set the summarisation trigger from `CONTEXT_WINDOW`, not the library's model profile (0.85 × the profile's `max_input_tokens` is ~850k on Opus 5.5 and Sonnet 5.5, where Duct budgets 200k). | `deepagents` `SummarizationMiddleware` with `trigger=("tokens", N)` | gap 3 |
 | One emergency compaction and one retry on a real overflow; a second overflow is the ordinary failure. | `compact_thread` in `DeepSession` | `tests/test_deep_session.py` |
@@ -67,7 +67,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 |---|---|---|
 | Every agent declares `RunLimits`: model and tool calls per run and per thread. Recursion is derived, never picked. | `ModelCallLimitMiddleware`, `ToolCallLimitMiddleware` | `RunLimits.__post_init__`, `tests/test_deep_session.py` |
 | Retry in exactly one layer, the one that reports each attempt and honours `Retry-After`. Provider SDKs retry underneath by default (Gemini up to 6 times), invisibly. | `ReportedRetryMiddleware`; SDK `max_retries=0` | gap 2 |
-| Fall back only on transient failures. `ModelFallbackMiddleware` falls back on every exception, auth and overflow included. | classified `ModelFallbackMiddleware` subclass | gap 4 |
+| Fall back only on transient failures. `ModelFallbackMiddleware` falls back on every exception, auth and overflow included. | `ClassifiedFallbackMiddleware` in `deep_session.py` | `tests/test_deep_session.py` (rejected key stays rejected; a 429 falls back) |
 | Input typed mid-turn is steered or queued, never refused. | `SteerMiddleware` + the session's `steer_queue` | `tests/test_insights_session.py` |
 | A pause is a checkpointed `interrupt()` and survives a redeploy. Work before the interrupt is idempotent, because the node reruns on resume. | `langgraph.types.interrupt`, `Command(resume=…)` | `tests/test_deepagents_harness.py` |
 | A thread is keyed on the conversation, never the session. | checkpointer `thread_id` | `backend/AGENTS.md` |
@@ -109,9 +109,9 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 
 | Middleware | Mounted | Verdict |
 |---|---|---|
-| `ContextEditingMiddleware` + `ClearToolUsesEdit` | `session_middleware` | keep; add `clear_at_least` |
+| `ContextEditingMiddleware` + `ClearToolUsesEdit` | `session_middleware` | keep; `clear_at_least` is `RunLimits.tool_results_clear_at_least`, a quarter of the trigger, since 2026-10-25 — without it every call past the trigger cleared one more result and broke the cached prefix there |
 | `ModelCallLimitMiddleware`, `ToolCallLimitMiddleware` | `session_middleware` | keep; per-tool caps are `RunLimits.per_tool_run_limits` (content caps `generate_video` at 3 a turn) — still to add for `ProposeChanges` and `task` |
-| `ModelFallbackMiddleware` | `session_middleware` | keep, classified (gap 4) |
+| `ModelFallbackMiddleware` | `session_middleware`, as `ClassifiedFallbackMiddleware` | keep; classified since 2026-10-25 |
 | `ReportedRetryMiddleware` (ours) | `session_middleware` | keep: `ModelRetryMiddleware` has no per-attempt hook and ignores `Retry-After` |
 | `SteerMiddleware`, `SeenImagePruneMiddleware` (ours) | `session_middleware` | keep; no prebuilt equivalent |
 | `AnthropicPromptCachingMiddleware` | every graph | keep; measure a 1h TTL for idle chats |
@@ -157,12 +157,12 @@ land.
 
 | # | Gap | Change | Effort |
 |---|---|---|---|
-| 1 | Insights' auto-added `general-purpose` sub-agent carries every tool, `ProposeChanges`, `RollbackChangeSet` and `RememberFact` included, with no retry or limits | supply a read-only one, as content does; generalise content's test into `test_agent_assembly.py` | S |
-| 2 | SDK retries stack under `ReportedRetryMiddleware`, invisible to the UI and the quota cooldown | `max_retries=0` (Gemini: `retries=1`) and a timeout in `resolve_chat_model`; a test per provider | S |
+| 1 | ~~Insights' auto-added `general-purpose` sub-agent carries every tool, `ProposeChanges`, `RollbackChangeSet` and `RememberFact` included~~ | done 2026-10-25: `agents/insights/subagents/general_purpose.py` supplies a read-only one on the verifier's model; `test_agent_assembly.py` holds every deep runner's sub-agent lists writer-free. Retry and limits for sub-agents remain gap 5 | S |
+| 2 | ~~SDK retries stack under `ReportedRetryMiddleware`, invisible to the UI and the quota cooldown~~ | done 2026-10-25: `max_retries=0` (Gemini `1`) in `resolve_chat_model`, a test per provider. A per-request timeout is still open: the SDK defaults are ten minutes and a thinking call can legitimately run long, so it needs a measurement first | S |
 | 3 | Deep-rung summarisation fires at ~850k on the current Claude models | trigger from `context_window_for(model)`; test across the catalogue | S–M |
-| 4 | Fallback fires on auth, bad-request and overflow errors | classified fallback subclass | S |
+| 4 | ~~Fallback fires on auth, bad-request and overflow errors~~ | done 2026-10-25: `ClassifiedFallbackMiddleware` falls back only on a failure `is_retryable` classes as transient | S |
 | 5 | Sub-agents run without retry or limits; a sub-agent exception ends the parent turn | `subagent_middleware(limits)`; `ToolErrorMiddleware` in `session_middleware` | S–M |
-| 6 | `deepagents` can append to Duct's system prompt per model | test the final prompt per model; render it in `make dump-prompts` | S |
+| 6 | `deepagents` can append to Duct's system prompt per model | half done 2026-10-25: `tests/test_system_prompt_ownership.py` fails a bump that suffixes a catalogue model unannounced (Haiku 4.5 is the one accepted suffix today). Still open: render the suffix in `make dump-prompts` | S |
 | 7 | Tool definitions are unreviewed prompt | render tools in `make dump-prompts`; widen `prompts.yml` paths | S–M |
 | 8 | Execution policy hardening: the auto-apply allowlist, agent-initiated rollback, a drift check on rollback | G1–G2 of the execution-approvals record | S |
 | 9 | Execution policy hardening, part two | tracked with the maintainer, not here | M |

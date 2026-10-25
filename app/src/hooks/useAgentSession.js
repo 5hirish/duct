@@ -39,6 +39,7 @@
  * wrong run.
  */
 
+import { msg } from "@lingui/core/macro";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import {
   closeAgentSession,
@@ -73,7 +74,12 @@ function newClientId() {
   }
 }
 
-const NOT_ATTACHED = "Still connecting to the session — try again in a moment.";
+// Descriptors, not strings: the reducer stores them and AgentChat renders
+// them with errorText(i18n, …) in the interface language.
+const NOT_ATTACHED = msg`Still connecting to the session — try again in a moment.`;
+const LOST_FOR_GOOD = msg`We lost the connection and couldn't reconnect. Please retry.`;
+const LOST_RUN = msg`We lost the connection to this run. Please retry.`;
+const STREAM_ERROR = msg`Stream error.`;
 
 /** Jittered exponential backoff: ~1s, 2s, 4s, 8s, 15s (±50% jitter). */
 function backoffDelay(attempt) {
@@ -338,7 +344,7 @@ export function useAgentSession({
 
         reconnects += 1;
         if (reconnects > MAX_RECONNECT) {
-          dispatch({ type: Action.FAILED, error: "We lost the connection and couldn't reconnect. Please retry." });
+          dispatch({ type: Action.FAILED, error: LOST_FOR_GOOD });
           return;
         }
         dispatch({ type: Action.RECONNECTING, value: true });
@@ -350,7 +356,7 @@ export function useAgentSession({
         if (dead()) return;
         if (!next) {
           if (!conversationIdRef.current) {
-            dispatch({ type: Action.FAILED, error: "We lost the connection to this run. Please retry." });
+            dispatch({ type: Action.FAILED, error: LOST_RUN });
             return;
           }
           continue;  // open failed → loop backs off again
@@ -363,7 +369,7 @@ export function useAgentSession({
     start().catch((err) => {
       if (dead()) return;
       const code = err?.code || "";
-      dispatch({ type: Action.FAILED, error: friendlyErrorMessage(err?.message || "Stream error.", code), code });
+      dispatch({ type: Action.FAILED, error: friendlyErrorMessage(err?.message || STREAM_ERROR, code), code });
     });
 
     return () => {

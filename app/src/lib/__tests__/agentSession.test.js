@@ -352,7 +352,7 @@ describe("failure and reconnect", () => {
   it("maps a raw backend error to something a user can act on", () => {
     const s = replayEvents([{ event: AgentEvent.PIPELINE_FAILED, error: "RuntimeError: ANTHROPIC_API_KEY missing" }]);
     expect(s.phase).toBe(Phase.FAILED);
-    expect(s.error).toBe("The assistant isn't connected. Ask your admin to finish setup.");
+    expect(words(s.error)).toBe("The assistant isn't connected. Ask your admin to finish setup.");
   });
 
   it("stops typing while reconnecting", () => {
@@ -368,6 +368,11 @@ describe("failure and reconnect", () => {
   });
 });
 
+// What the reducer stores is a `msg` descriptor for Duct's own sentences (the
+// stub returns { id, message }) and a plain string for a provider's; the
+// component renders either with errorText. The tests read the words.
+const words = (v) => (v && typeof v === "object" ? v.message : v);
+
 describe("friendlyErrorMessage", () => {
   it.each([
     ["", "The run stopped without saying why. Try again."],
@@ -376,7 +381,13 @@ describe("friendlyErrorMessage", () => {
     ["Traceback (most recent call last): line 12", "Something broke on our end. It's logged — try again in a moment."],
     ["That turn failed. Try rephrasing.", "That turn failed. Try rephrasing."],
   ])("%s", (raw, expected) => {
-    expect(friendlyErrorMessage(raw)).toBe(expected);
+    expect(words(friendlyErrorMessage(raw))).toBe(expected);
+  });
+
+  it("a descriptor from the reducer or the hook passes through; a provider's sentence stays a string", () => {
+    const ours = { id: "x", message: "Still connecting." };
+    expect(friendlyErrorMessage(ours)).toBe(ours);
+    expect(friendlyErrorMessage('Upstream said {"type":"error"}')).toBe('Upstream said {"type":"error"}');
   });
 });
 
@@ -412,10 +423,10 @@ describe("typed failures", () => {
       { kind: "failure", data: { code: "cancelled", retryable: true, error: "Stopped." } },
     ]);
     expect(rows[1]).toMatchObject({ role: Row.SEND_ERROR, code: "auth", retryable: false });
-    expect(rows[1].text).toMatch(/Settings → Models/);
+    expect(words(rows[1].text)).toMatch(/Settings → Models/);
     expect(errorAction(rows[1].code)).toBe(ErrorAction.SETTINGS);
     expect(rows[3]).toMatchObject({ role: Row.NOTICE });
-    expect(rows[3].text).toMatch(/interrupted/);
+    expect(words(rows[3].text)).toMatch(/interrupted/);
   });
 
   it("a turn failure's code picks the copy and whether a retry is offered", () => {
@@ -429,7 +440,7 @@ describe("typed failures", () => {
     expect(row.role).toBe(Row.SEND_ERROR);
     expect(row.code).toBe("auth");
     expect(row.retryable).toBe(false);
-    expect(row.text).toMatch(/Settings → Models/);
+    expect(words(row.text)).toMatch(/Settings → Models/);
     expect(failed.phase).toBe(Phase.READY);
   });
 
@@ -442,12 +453,12 @@ describe("typed failures", () => {
     expect(s.errorCode).toBe("connector_expired");
     expect(s.errorRetryable).toBe(false);
     expect(errorAction(s.errorCode)).toBe(ErrorAction.CONNECTIONS);
-    expect(s.error).toMatch(/reconnecting/);
+    expect(words(s.error)).toMatch(/reconnecting/);
   });
 
   it("without a code the message text is still pattern matched", () => {
-    expect(friendlyErrorMessage("429 Too Many Requests")).toBe("We're hitting a rate limit — wait a minute and try again.");
-    expect(friendlyErrorMessage("anything", "rate_limited")).toMatch(/rate limiting/);
+    expect(words(friendlyErrorMessage("429 Too Many Requests"))).toBe("We're hitting a rate limit — wait a minute and try again.");
+    expect(words(friendlyErrorMessage("anything", "rate_limited"))).toMatch(/rate limiting/);
     expect(errorAction("")).toBe(ErrorAction.RETRY);
   });
 });
@@ -461,13 +472,15 @@ describe("context and cost", () => {
   it("the gauge follows the thread's last call; the total counts every call", () => {
     const s = replayEvents([bill(40000, 500), bill(9000, 200, { scope: "subagent" }), bill(61000, 800)]);
     expect(s.usage.last).toMatchObject({ input: 61000, output: 800, window: 200000, model: "claude-sonnet-5-5" });
-    expect(s.usage.total).toEqual({ input: 110000, output: 1500, cached: 0, calls: 3, cost: 0 });
+    // No bill carried a price, so the session's cost is unknown, not zero.
+    expect(s.usage.total).toEqual({ input: 110000, output: 1500, cached: 0, calls: 3, cost: null });
   });
 
   it("cost rides with the tokens, and an unpriced model leaves it blank rather than zero", () => {
     const s = replayEvents([bill(40000, 500, { cost_usd: 0.085 }), bill(9000, 200, { scope: "subagent", cost_usd: 0.02 }), bill(1000, 10, { cost_usd: null })]);
     expect(s.usage.last.cost).toBeNull();
     expect(s.usage.total.cost).toBeCloseTo(0.105, 6);
+    expect(replayEvents([bill(1000, 10, { cost_usd: null })]).usage.total.cost).toBeNull();
     const hydrated = reduceAgentSession(initialAgentState, {
       type: Action.PAUSES, pauses: [],
       usage: { last: { input_tokens: 1, output_tokens: 1, cost_usd: 0.01 }, total: { calls: 2, cost_usd: 0.3 }, context_window: 1, model: "m" },
@@ -510,7 +523,7 @@ describe("context and cost", () => {
     // And the error says the server was unreachable, not "Failed to fetch".
     const err = failed.messages[failed.messages.length - 1];
     expect(err.role).toBe(Row.SEND_ERROR);
-    expect(err.text).toMatch(/Couldn't reach the server/);
+    expect(words(err.text)).toMatch(/Couldn't reach the server/);
     expect(failed.isAgentTyping).toBe(false);
   });
 
@@ -527,7 +540,7 @@ describe("context and cost", () => {
     const err = failed.messages[failed.messages.length - 1];
     expect(err.content).toEqual({ image_id: "img-1" });
     // A raw status code never reaches the user.
-    expect(err.text).not.toMatch(/500/);
+    expect(words(err.text)).not.toMatch(/500/);
   });
 
   it("a resumed thread reads its usage from the state route", () => {

@@ -1,10 +1,8 @@
 /**
- * Engine and agent-type definitions for the UI.
+ * Engine definitions for the UI.
  *
  * Mirrors backend/agents/engines.py — keep in sync when adding new engines.
  */
-
-import { msg } from "@lingui/core/macro";
 
 // One engine since the Claude Agent SDK (v3) was removed, and every agent runs
 // on it — the per-agent support map listed "v1" five times, so it could no
@@ -20,42 +18,7 @@ import { msg } from "@lingui/core/macro";
 // shipping the UI half alone.
 export const DEFAULT_ENGINE = "v1";
 
-// ---------------------------------------------------------------------------
-// Agent types
-// ---------------------------------------------------------------------------
-
-// `label`, `description` and `hint` are Lingui descriptors: render them with
-// `i18n._(agent.label)` from `useLingui()`.
-
-export const AGENT_TYPES = [
-  {
-    key: "insights",
-    label: msg`Insights`,
-    icon: "✦",
-    available: true,
-    description: msg`Paid media & organic growth intelligence.`,
-  },
-  {
-    key: "audit",
-    label: msg`Audit`,
-    icon: "🔍",
-    available: false,
-    description: msg`SEO audit and content gap analysis.`,
-    hint: msg`Coming soon`,
-  },
-  {
-    key: "blog",
-    label: msg`Blog`,
-    icon: "✍︎",
-    available: false,
-    description: msg`AI-drafted blog posts from audit findings.`,
-    hint: msg`Coming soon`,
-  },
-];
-
-export const DEFAULT_AGENT_TYPE = "insights";
-export const AGENT_TYPE_STORAGE_KEY = "duct_agent_type";
-
-export function getAgentType(key) {
-  return AGENT_TYPES.find((a) => a.key === key) ?? AGENT_TYPES[0];
-}
+// An agent-type list (insights / audit / blog, two of them "Coming soon") used
+// to live here too. Its only reader was AgentDrawer, which nothing mounted and
+// whose selection nothing dispatched on; both went in the 2026-10-25 harness
+// review. The agents that exist are routes (lib/navigation.js), not a picker.

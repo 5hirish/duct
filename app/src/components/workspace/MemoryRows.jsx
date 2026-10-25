@@ -26,12 +26,6 @@ function memoryHref(projectId, memory) {
   return `/project/${projectId}/memory?m=${encodeURIComponent(memory.memory_id)}`;
 }
 
-/** Chip click-through — whether anyone follows a citation back to its source is
- * the one honest signal that the attribution loop is worth its cost. The id is
- * the short, non-identifying one; no memory text leaves the page. */
-function trackChip(surface, memory) {
-}
-
 /** The quiet "Remembered: …" line under a turn that wrote project memory.
  * Deliberately understated — memory should feel like a side effect the user can
  * see and undo, not an announcement. Each entry links to its timeline row, and
@@ -66,7 +60,6 @@ export function MemoryNote({ memories }) {
               {projectId && m.memory_id ? (
                 <a
                   href={memoryHref(projectId, m)}
-                  onClick={() => trackChip("written", m)}
                   className="underline underline-offset-2 hover:text-foreground"
                 >
                   {m.title}
@@ -170,7 +163,6 @@ export function MemoryRecall({ memories, open = false }) {
               {projectId && m.memory_id ? (
                 <a
                   href={memoryHref(projectId, m)}
-                  onClick={() => trackChip("recalled", m)}
                   className="min-w-0 underline underline-offset-2 hover:text-foreground"
                 >
                   {m.title}

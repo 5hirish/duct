@@ -24,6 +24,7 @@
     "windows": [
       {
         "label": "main",
+        "create": false,
         "title": "Duct (dev build)",
         "url": "http://localhost:3003",
         "visible": false,

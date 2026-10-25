@@ -830,6 +830,10 @@ def build_content_tools_lc(
         limit: int = Field(30, ge=1, le=100, description="Max rows to return. Default 30, max 100.")
 
     class ContentAssetsArgs(BaseModel):
+        limit: int = Field(
+            50, ge=1, le=200,
+            description="Newest first. Default 50, max 200; narrow with asset_type to reach older ones.",
+        )
         asset_type: str = Field(
             "",
             description="Optional asset_type filter (e.g. 'generated', 'reference', 'slide_render'). Omit for all types.",
@@ -1361,16 +1365,24 @@ def build_content_tools_lc(
             logger.exception("fetch_discovered_references failed")
             return _err(f"fetch_discovered_references failed: {exc}")
 
-    async def fetch_content_assets(asset_type: str = "", axis: str = "", subtype: str = "") -> str:
+    async def fetch_content_assets(asset_type: str = "", axis: str = "", subtype: str = "", limit: int = 50) -> str:
         try:
             asset_type = (asset_type or "").strip()
             axis       = (axis or "").strip() or None
             subtype    = (subtype or "").strip() or None
+            # Newest first and bounded: a project a few months old holds
+            # hundreds of assets, each carrying its `params` blob, and the
+            # unbounded listing was the largest single tool result the
+            # content agent produced — pruned only when the window filled.
+            limit = max(1, min(int(limit or 50), 200))
             with _open_db() as db:
                 stmt = select(ContentAsset).where(ContentAsset.project_id == project_id)
                 if asset_type:
                     stmt = stmt.where(ContentAsset.asset_type == asset_type)
+                stmt = stmt.order_by(ContentAsset.created_at.desc()).limit(limit + 1)
                 rows = db.exec(stmt).all()
+                truncated = len(rows) > limit
+                rows = rows[:limit]
                 assets = [
                     {
                         "id":         str(r.id),
@@ -1391,7 +1403,7 @@ def build_content_tools_lc(
             if asset_type in ("", "reference"):
                 from service.content_references import global_reference_asset_dicts
                 assets.extend(global_reference_asset_dicts(axis=axis, subtype=subtype))
-            return _ok({"assets": assets})
+            return _ok({"assets": assets, "truncated": truncated, "limit": limit})
         except Exception as exc:
             logger.exception("fetch_content_assets failed")
             return _err(f"fetch_content_assets failed: {exc}")
@@ -2029,6 +2041,15 @@ def build_content_tools_lc(
                 post, err = _require_post(db, project_id, post_id)
                 if err:
                     return err
+                # PostBridge still holds a scheduled post and will publish it
+                # at its time whatever this row says; marking it posted by
+                # hand would leave it to go out a second time. The unschedule
+                # path is the one that takes it off the queue.
+                if is_queued_at_postbridge(post):
+                    return _err(
+                        "This post is queued at PostBridge and will go out at its scheduled time. "
+                        "Unschedule it first if it was posted by hand, or wait for it to post."
+                    )
                 post.status    = "posted"
                 post.posted_at = datetime.now(timezone.utc)
                 if url:

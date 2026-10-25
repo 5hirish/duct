@@ -29,6 +29,7 @@
     "windows": [
       {
         "label": "main",
+        "create": false,
         "title": "Duct",
         "url": "https://app.getduct.example",
         "visible": false,

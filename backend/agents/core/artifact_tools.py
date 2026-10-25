@@ -28,6 +28,7 @@ from typing import Any, Callable
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+from agents.core.errors import safe_excerpt
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +169,7 @@ def build_artifact_tools_lc(
         try:
             rows = await asyncio.to_thread(_query)
         except Exception as exc:  # noqa: BLE001 — tool errors return text, never raise
-            return f"Artifact listing failed: {exc}"
+            return f"Artifact listing failed: {safe_excerpt(exc)}"
         return json.dumps({"artifacts": rows}, indent=2)
 
     async def get_artifact(artifact_id: str) -> str:
@@ -197,7 +198,7 @@ def build_artifact_tools_lc(
         try:
             payload = await asyncio.to_thread(_query)
         except Exception as exc:  # noqa: BLE001
-            return f"Artifact fetch failed: {exc}"
+            return f"Artifact fetch failed: {safe_excerpt(exc)}"
         if payload is None:
             return f"No artifact {raw_id!r} in this project."
         return json.dumps(payload, indent=2)
@@ -236,9 +237,9 @@ def build_artifact_tools_lc(
         try:
             row = await asyncio.to_thread(_create)
         except ValueError as exc:
-            return f"Create failed: {exc}"
+            return f"Create failed: {safe_excerpt(exc)}"
         except Exception as exc:  # noqa: BLE001
-            return f"Create failed unexpectedly: {exc}"
+            return f"Create failed unexpectedly: {safe_excerpt(exc)}"
         return json.dumps({"created": await _emit_card(row)}, indent=2)
 
     async def update_artifact(
@@ -273,15 +274,15 @@ def build_artifact_tools_lc(
                         user_id=user_id, conversation_id=conversation_id,
                     )
                 except ArtifactConflict as exc:
-                    return None, str(exc)
+                    return None, safe_excerpt(exc)
                 except ValueError as exc:
-                    return None, f"Update rejected: {exc}"
+                    return None, f"Update rejected: {safe_excerpt(exc)}"
                 return row, None
 
         try:
             row, err = await asyncio.to_thread(_update)
         except Exception as exc:  # noqa: BLE001
-            return f"Update failed unexpectedly: {exc}"
+            return f"Update failed unexpectedly: {safe_excerpt(exc)}"
         if err:
             return err
         return json.dumps({"updated": await _emit_card(row)}, indent=2)
@@ -304,15 +305,15 @@ def build_artifact_tools_lc(
                         user_id=user_id, conversation_id=conversation_id,
                     )
                 except ArtifactConflict as exc:
-                    return None, str(exc)
+                    return None, safe_excerpt(exc)
                 except ValueError as exc:
-                    return None, f"Rewrite rejected: {exc}"
+                    return None, f"Rewrite rejected: {safe_excerpt(exc)}"
                 return row, None
 
         try:
             row, err = await asyncio.to_thread(_rewrite)
         except Exception as exc:  # noqa: BLE001
-            return f"Rewrite failed unexpectedly: {exc}"
+            return f"Rewrite failed unexpectedly: {safe_excerpt(exc)}"
         if err:
             return err
         return json.dumps({"rewritten": await _emit_card(row)}, indent=2)
