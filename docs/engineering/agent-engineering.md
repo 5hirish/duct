@@ -56,7 +56,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 |---|---|---|
 | Per-user and per-project text goes in the USER turn, never the system prompt. Stable blocks first. | `ContextSpec`, `BLOCK_ORDER` | `tests/test_turn.py` |
 | Every graph asks for caching. Anthropic caches only a request that says so; Gemini caches implicitly; OpenAI routes by `prompt_cache_key`. | `AnthropicPromptCachingMiddleware` (appended by `create_deep_agent`, by `build_session_agent`, and by `prompt_caching_middleware()` for a one-shot pass); `resolve_chat_model(cache_key=thread)` | `tests/test_agent_assembly.py`; cache share on `TOKEN_USAGE` |
-| Duct owns the final system prompt byte for byte. `deepagents` harness profiles append text per model: 0.7.15 ships coding-agent guidance ("Never speculate about code you have not opened…") for Haiku 4.5, Sonnet 4.6 and Opus 4.7, plus profiles for OpenAI Codex models, and packages can register more. | `register_harness_profile` | gap 6 |
+| Duct owns the final system prompt byte for byte. `deepagents` harness profiles append text per model: 0.7.15 ships coding-agent guidance ("Never speculate about code you have not opened…") for Haiku 4.5, Sonnet 4.6 and Opus 4.7, plus profiles for OpenAI Codex models, and packages can register more. | `register_harness_profile` | `tests/test_system_prompt_ownership.py` (the accepted suffixes are a named set); the dump half is gap 6 |
 | Prune before you summarise, and batch the pruning so each cache break buys something. | `ContextEditingMiddleware` + `ClearToolUsesEdit(clear_at_least=…)` | `RunLimits.__post_init__` (trigger below the summarisation floor) |
 | Set the summarisation trigger from `CONTEXT_WINDOW`, not the library's model profile (0.85 × the profile's `max_input_tokens` is ~850k on Opus 5.5 and Sonnet 5.5, where Duct budgets 200k). | `deepagents` `SummarizationMiddleware` with `trigger=("tokens", N)` | gap 3 |
 | One emergency compaction and one retry on a real overflow; a second overflow is the ordinary failure. | `compact_thread` in `DeepSession` | `tests/test_deep_session.py` |
@@ -162,7 +162,7 @@ land.
 | 3 | Deep-rung summarisation fires at ~850k on the current Claude models | trigger from `context_window_for(model)`; test across the catalogue | S–M |
 | 4 | ~~Fallback fires on auth, bad-request and overflow errors~~ | done 2026-10-25: `ClassifiedFallbackMiddleware` falls back only on a failure `is_retryable` classes as transient | S |
 | 5 | Sub-agents run without retry or limits; a sub-agent exception ends the parent turn | `subagent_middleware(limits)`; `ToolErrorMiddleware` in `session_middleware` | S–M |
-| 6 | `deepagents` can append to Duct's system prompt per model | test the final prompt per model; render it in `make dump-prompts` | S |
+| 6 | `deepagents` can append to Duct's system prompt per model | half done 2026-10-25: `tests/test_system_prompt_ownership.py` fails a bump that suffixes a catalogue model unannounced (Haiku 4.5 is the one accepted suffix today). Still open: render the suffix in `make dump-prompts` | S |
 | 7 | Tool definitions are unreviewed prompt | render tools in `make dump-prompts`; widen `prompts.yml` paths | S–M |
 | 8 | Execution policy hardening: the auto-apply allowlist, agent-initiated rollback, a drift check on rollback | G1–G2 of the execution-approvals record | S |
 | 9 | Execution policy hardening, part two | tracked with the maintainer, not here | M |
