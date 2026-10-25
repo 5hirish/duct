@@ -2223,8 +2223,12 @@ msgid "Context compression"
 msgstr "コンテキスト圧縮"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "Context used: {percent} percent. Show token usage."
-msgstr "使用されたコンテキスト: {percent}パーセント。トークン使用量を表示。"
+msgid "Context used: {percent} percent"
+msgstr "コンテキスト使用率: {percent} パーセント"
+
+#: src/components/workspace/ContextRing.jsx
+#~ msgid "Context used: {percent} percent. Show token usage."
+#~ msgstr "使用されたコンテキスト: {percent}パーセント。トークン使用量を表示。"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "Context window"
@@ -7085,6 +7089,14 @@ msgstr "共有"
 #: src/components/audit/ShareReport.jsx
 msgid "Sharing is by membership, and a member needs a name. Sign in with Google and this project, the report and the conversation come with you — nothing is lost."
 msgstr "共有はメンバーシップによって行われ、メンバーには名前が必要です。Googleでサインインすると、このプロジェクト、レポート、会話が引き継がれ、何も失われません。"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Shift+Enter for a new line"
+msgstr "Shift+Enterで改行"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Shift+Enter for a new line · Esc to stop"
+msgstr "Shift+Enterで改行・Escで停止"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Shirish"

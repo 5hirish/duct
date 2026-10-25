@@ -2223,8 +2223,12 @@ msgid "Context compression"
 msgstr "Kontextkomprimierung"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "Context used: {percent} percent. Show token usage."
-msgstr "Genutzter Kontext: {percent} Prozent. Token-Nutzung anzeigen."
+msgid "Context used: {percent} percent"
+msgstr "Kontext genutzt: {percent} Prozent"
+
+#: src/components/workspace/ContextRing.jsx
+#~ msgid "Context used: {percent} percent. Show token usage."
+#~ msgstr "Genutzter Kontext: {percent} Prozent. Token-Nutzung anzeigen."
 
 #: src/components/workspace/ContextRing.jsx
 msgid "Context window"
@@ -7084,6 +7088,14 @@ msgstr "Teilungen"
 #: src/components/audit/ShareReport.jsx
 msgid "Sharing is by membership, and a member needs a name. Sign in with Google and this project, the report and the conversation come with you — nothing is lost."
 msgstr "Das Teilen erfolgt über die Mitgliedschaft, und ein Mitglied benötigt einen Namen. Melde dich mit Google an, und dieses Projekt, der Bericht und die Konversation kommen mit dir – nichts geht verloren."
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Shift+Enter for a new line"
+msgstr "Shift+Enter für eine neue Zeile"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Shift+Enter for a new line · Esc to stop"
+msgstr "Shift+Enter für eine neue Zeile · Esc zum Stoppen"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Shirish"

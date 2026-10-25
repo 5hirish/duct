@@ -461,13 +461,15 @@ describe("context and cost", () => {
   it("the gauge follows the thread's last call; the total counts every call", () => {
     const s = replayEvents([bill(40000, 500), bill(9000, 200, { scope: "subagent" }), bill(61000, 800)]);
     expect(s.usage.last).toMatchObject({ input: 61000, output: 800, window: 200000, model: "claude-sonnet-5-5" });
-    expect(s.usage.total).toEqual({ input: 110000, output: 1500, cached: 0, calls: 3, cost: 0 });
+    // No bill carried a price, so the session's cost is unknown, not zero.
+    expect(s.usage.total).toEqual({ input: 110000, output: 1500, cached: 0, calls: 3, cost: null });
   });
 
   it("cost rides with the tokens, and an unpriced model leaves it blank rather than zero", () => {
     const s = replayEvents([bill(40000, 500, { cost_usd: 0.085 }), bill(9000, 200, { scope: "subagent", cost_usd: 0.02 }), bill(1000, 10, { cost_usd: null })]);
     expect(s.usage.last.cost).toBeNull();
     expect(s.usage.total.cost).toBeCloseTo(0.105, 6);
+    expect(replayEvents([bill(1000, 10, { cost_usd: null })]).usage.total.cost).toBeNull();
     const hydrated = reduceAgentSession(initialAgentState, {
       type: Action.PAUSES, pauses: [],
       usage: { last: { input_tokens: 1, output_tokens: 1, cost_usd: 0.01 }, total: { calls: 2, cost_usd: 0.3 }, context_window: 1, model: "m" },
