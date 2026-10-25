@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-09-30
+**Author:** Shirish Kadam · **Updated:** 2026-10-25
 
 How an agent is built and maintained here, on LangChain 1.x, LangGraph and
 `deepagents`. Read it before adding an agent or changing one: a prompt, a tool,
@@ -109,7 +109,7 @@ hooks, and imports no framework (`tests/test_harness_boundaries.py`).
 
 | Middleware | Mounted | Verdict |
 |---|---|---|
-| `ContextEditingMiddleware` + `ClearToolUsesEdit` | `session_middleware` | keep; add `clear_at_least` |
+| `ContextEditingMiddleware` + `ClearToolUsesEdit` | `session_middleware` | keep; `clear_at_least` is `RunLimits.tool_results_clear_at_least`, a quarter of the trigger, since 2026-10-25 — without it every call past the trigger cleared one more result and broke the cached prefix there |
 | `ModelCallLimitMiddleware`, `ToolCallLimitMiddleware` | `session_middleware` | keep; per-tool caps are `RunLimits.per_tool_run_limits` (content caps `generate_video` at 3 a turn) — still to add for `ProposeChanges` and `task` |
 | `ModelFallbackMiddleware` | `session_middleware` | keep, classified (gap 4) |
 | `ReportedRetryMiddleware` (ours) | `session_middleware` | keep: `ModelRetryMiddleware` has no per-attempt hook and ignores `Retry-After` |
