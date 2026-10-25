@@ -372,3 +372,29 @@ def test_the_apps_draft_channels_are_the_backends_playbooks():
         for name, flag in re.findall(r"\{\s*id:\s*Platform\.(\w+),\s*textFirst:\s*(true|false)\s*\}", block)
     }
     assert app == {str(p): PLAYBOOKS[p] in TEXT_PLAYBOOKS for p in PLAYBOOKS}
+
+
+# ---------------------------------------------------------------------------
+# The asset listing is bounded
+# ---------------------------------------------------------------------------
+
+def test_the_asset_listing_is_newest_first_and_bounded(engine, db, project, monkeypatch):
+    """A project a few months old holds hundreds of assets, each with its
+    params blob; the unbounded listing was the content agent's largest tool
+    result, pruned only once the window filled."""
+    from models.content import ContentAsset
+
+    for i in range(60):
+        db.add(ContentAsset(project_id=project.id, asset_type="generated", url=f"https://cdn.example/{i}.png"))
+    db.commit()
+    session = make_session("assets-1", project.id, "draft_post")
+    tools = _tools(session, engine, monkeypatch)
+
+    result = json.loads(asyncio.run(tools["fetch_content_assets"].ainvoke({"asset_type": "generated"})))
+
+    assert len(result["assets"]) == 50
+    assert result["truncated"] is True
+    assert result["assets"][0]["url"].endswith("/59.png")
+
+    few = json.loads(asyncio.run(tools["fetch_content_assets"].ainvoke({"asset_type": "generated", "limit": 5})))
+    assert len(few["assets"]) == 5
