@@ -703,10 +703,12 @@ def pause_from_interrupt(item: Any) -> dict | None:
 def live_pauses(snapshot: Any) -> list[dict]:
     """The pauses a thread is still parked on, from ``aget_state``.
 
-    ``snapshot.interrupts`` is the wrong field: it keeps an interrupt whose task
-    has since completed, because the superstep's other task is still pending
-    and the checkpoint has not advanced. A pause is live only while its task
-    has no result.
+    Read off the tasks, not ``snapshot.interrupts``. A pause is live only
+    while its task has no result — until langgraph 1.2.13 (#9103) the field
+    still listed an interrupt whose task had completed while the superstep's
+    other task was pending, and the UI re-showed the answered card. The
+    field agrees now; the task result is the ground truth either way, and
+    ``pause_from_interrupt`` still has to drop interrupts that are not ours.
     """
     out: list[dict] = []
     for task in getattr(snapshot, "tasks", ()) or ():

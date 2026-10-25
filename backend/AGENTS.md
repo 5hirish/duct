@@ -343,6 +343,10 @@ see the engine consolidation review (duct-cloud, private) §7–8.
   handshake line on stdout before starting uvicorn:
   `{"duct_sidecar":1,"url":...,"port":...,"api_key":...,"data_dir":...}`.
   The Tauri shell must read the port from that line — never assume one.
+  The shell also passes `--exit-on-stdin-eof` with a pipe only it holds, so
+  the sidecar stops itself when the shell ends however it ends (SIGTERM to
+  uvicorn, then a hard exit two seconds later). Off by default: a sidecar
+  run by hand reads a terminal or `/dev/null`, and neither may stop it.
 - **Data dir** (`utils/appdirs.py`): macOS `~/Library/Application Support/ai.getduct.desktop`,
   Windows `%APPDATA%\Duct`, Linux `$XDG_DATA_HOME/duct`. Created `0700`.
   Override with `--data-dir` or `DUCT_DATA_DIR`.

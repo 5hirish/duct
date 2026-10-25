@@ -63,3 +63,32 @@ async def test_a_root_that_answered_badly_is_still_a_crawl(offline_http):
     statuses = {p.url: p.http_status for p in result.pages}
     assert statuses[ROOT] == 403
     assert statuses[f"{ROOT}/pricing"] == 0, "a dead inner page stays a lenient status-0 observation"
+
+
+async def test_the_crawl_fetches_a_few_pages_at_a_time(offline_http, monkeypatch):
+    """Every page of the plan used to be opened at once — up to 35 connections
+    to one host, which a WAF reads as an attack and a small server as a
+    burst. Six at a time is what a polite crawler sends."""
+    import asyncio
+
+    urls = [ROOT, *(f"{ROOT}/p{i}" for i in range(19))]  # the root first: the crawl checks it answered
+
+    async def plan(_client, root_url, **_kwargs):
+        return CrawlPlan(root_url=root_url, landing_pages=urls)
+
+    in_flight = {"now": 0, "peak": 0}
+
+    async def page(_client, url):
+        in_flight["now"] += 1
+        in_flight["peak"] = max(in_flight["peak"], in_flight["now"])
+        await asyncio.sleep(0.005)
+        in_flight["now"] -= 1
+        return FetchResult(text="<html><title>t</title></html>", status=200)
+
+    monkeypatch.setattr(crawl, "fetch_crawl_plan", plan)
+    monkeypatch.setattr(crawl, "fetch", page)
+
+    result = await crawl.run_crawl(ROOT)
+
+    assert len(result.pages) == 20
+    assert 1 < in_flight["peak"] <= crawl.CRAWL_CONCURRENCY

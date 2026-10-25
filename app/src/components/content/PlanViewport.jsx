@@ -50,7 +50,6 @@ export default function PlanViewport({ payload, steps = [], building = false, on
         synthesising={building}
         virtualWaitsForPrior
         lines={PLAN_LINES.map((m) => i18n._(m))}
-        estimate={t`~3 min`}
         buildingLabel={t`Building your plan`}
         streamingSubtitle={t`Synthesizing your 30-day plan…`}
         idleSubtitle={t`Researching pillars and synthesizing the plan…`}

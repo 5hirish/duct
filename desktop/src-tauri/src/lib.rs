@@ -20,6 +20,8 @@ mod chatgpt;
 mod sidecar;
 mod telemetry;
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use keyring::{Entry, Error as KeyringError};
@@ -161,7 +163,14 @@ pub(crate) fn credentials_encryption_key() -> Result<String, String> {
 }
 
 /// Read a stored provider key. Returns "" when none is set.
-#[tauri::command]
+///
+/// `async` on this and on every other command that touches the keychain or
+/// the disk. A plain command runs on the main thread, which is the UI thread,
+/// and the keyring crate blocks — on macOS for as long as a keychain prompt
+/// stays on screen after the app's signature changed. The window stopped
+/// painting for exactly that long. The marker runs the function on a worker
+/// thread instead; nothing else about it changes.
+#[tauri::command(async)]
 fn get_provider_key(provider: String) -> Result<String, String> {
     match entry(&provider)?.get_password() {
         Ok(secret) => Ok(secret),
@@ -171,7 +180,7 @@ fn get_provider_key(provider: String) -> Result<String, String> {
 }
 
 /// Store a provider key in the OS keychain.
-#[tauri::command]
+#[tauri::command(async)]
 fn set_provider_key(provider: String, key: String) -> Result<(), String> {
     entry(&provider)?
         .set_password(&key)
@@ -179,7 +188,7 @@ fn set_provider_key(provider: String, key: String) -> Result<(), String> {
 }
 
 /// Remove a stored provider key (no-op if absent).
-#[tauri::command]
+#[tauri::command(async)]
 fn delete_provider_key(provider: String) -> Result<(), String> {
     match entry(&provider)?.delete_credential() {
         Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
@@ -187,51 +196,60 @@ fn delete_provider_key(provider: String) -> Result<(), String> {
     }
 }
 
+/// `get_shell_info`'s answer, computed once. Nothing in it can change while
+/// the process runs — the sidecar probe is a `stat` of the bundle — and the
+/// web app asks on every page load.
+static SHELL_INFO: OnceLock<serde_json::Value> = OnceLock::new();
+
 /// Shell version and feature flags. The hosted web app probes this so it can
 /// gate shell-dependent flows on capability, not on shell version — older
 /// shells where this command doesn't exist simply keep the legacy behaviour.
-#[tauri::command]
+#[tauri::command(async)]
 fn get_shell_info(app: AppHandle) -> serde_json::Value {
-    serde_json::json!({
-        "version": env!("CARGO_PKG_VERSION"),
-        "capabilities": {
-            "browserAuth": true,
-            // The `connector` deep-link route exists, so connector OAuth can go
-            // to the system browser too. Older shells lack the route entirely
-            // and the web app keeps navigating them in-window.
-            "browserConnectors": true,
-            // Whether this build ships a local backend. True means the web app
-            // should resolve its API base from `get_sidecar_info` instead of the
-            // build-time NEXT_PUBLIC_API_BASE; false means keep talking to the
-            // hosted API, which is also what older shells without the flag do.
-            //
-            // Probed rather than hardcoded, so the answer cannot disagree with
-            // what `bundle.resources` actually put in the bundle. The official
-            // build ships no sidecar; the self-host build adds it back.
-            "localSidecar": sidecar::is_available(&app),
-            // `tauri-plugin-updater` is wired and permitted in this build, so
-            // the web app may check for updates and offer to install one. Kept
-            // as a probe rather than a literal `true` so a build that compiles
-            // the plugin out cannot advertise an update path it does not have —
-            // no shipping build does that today (see the `updater` feature in
-            // Cargo.toml), which is why the flag is worth a second look.
-            "autoUpdate": cfg!(feature = "updater"),
-            // The `notify` command exists, so the web app may hand "done" and
-            // "needs you" notices to the OS instead of the webview's missing
-            // Notification API. Older shells lack it and stay silent.
-            "notifications": true,
-            // `open_notification_settings` exists *and* this OS has a page for
-            // it to open. False on Linux, where it does not — the web app then
-            // offers no "open settings" affordance rather than one that errors.
-            "notificationSettings": NOTIFICATION_SETTINGS_URL.is_some(),
-            // The `chatgpt_*` commands exist: the web app may offer "Continue
-            // with ChatGPT" and send the access token they mint as the OpenAI
-            // credential. Older shells lack them and show the API-key path
-            // alone. Whether the path is *allowed* is the backend's
-            // CHATGPT_AUTH_ENABLED, read from /api/providers/status.
-            "chatgptAuth": true
-        }
-    })
+    SHELL_INFO
+        .get_or_init(|| {
+            serde_json::json!({
+                "version": env!("CARGO_PKG_VERSION"),
+                "capabilities": {
+                    "browserAuth": true,
+                    // The `connector` deep-link route exists, so connector OAuth can go
+                    // to the system browser too. Older shells lack the route entirely
+                    // and the web app keeps navigating them in-window.
+                    "browserConnectors": true,
+                    // Whether this build ships a local backend. True means the web app
+                    // should resolve its API base from `get_sidecar_info` instead of the
+                    // build-time NEXT_PUBLIC_API_BASE; false means keep talking to the
+                    // hosted API, which is also what older shells without the flag do.
+                    //
+                    // Probed rather than hardcoded, so the answer cannot disagree with
+                    // what `bundle.resources` actually put in the bundle. The official
+                    // build ships no sidecar; the self-host build adds it back.
+                    "localSidecar": sidecar::is_available(&app),
+                    // `tauri-plugin-updater` is wired and permitted in this build, so
+                    // the web app may check for updates and offer to install one. Kept
+                    // as a probe rather than a literal `true` so a build that compiles
+                    // the plugin out cannot advertise an update path it does not have —
+                    // no shipping build does that today (see the `updater` feature in
+                    // Cargo.toml), which is why the flag is worth a second look.
+                    "autoUpdate": cfg!(feature = "updater"),
+                    // The `notify` command exists, so the web app may hand "done" and
+                    // "needs you" notices to the OS instead of the webview's missing
+                    // Notification API. Older shells lack it and stay silent.
+                    "notifications": true,
+                    // `open_notification_settings` exists *and* this OS has a page for
+                    // it to open. False on Linux, where it does not — the web app then
+                    // offers no "open settings" affordance rather than one that errors.
+                    "notificationSettings": NOTIFICATION_SETTINGS_URL.is_some(),
+                    // The `chatgpt_*` commands exist: the web app may offer "Continue
+                    // with ChatGPT" and send the access token they mint as the OpenAI
+                    // credential. Older shells lack them and show the API-key path
+                    // alone. Whether the path is *allowed* is the backend's
+                    // CHATGPT_AUTH_ENABLED, read from /api/providers/status.
+                    "chatgptAuth": true
+                }
+            })
+        })
+        .clone()
 }
 
 /// Where the OS keeps this app's notification switch, or `None` where the
@@ -293,19 +311,37 @@ fn open_notification_settings(app: AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-/// Open a URL in the system's default browser. Restricted to http(s) so the
-/// remote page can never use the shell to launch other URL-scheme handlers.
+/// Open a URL in the system's default browser. Restricted to `https`, plus
+/// `http` on the loopback names, so the remote page can never use the shell to
+/// launch other URL-scheme handlers.
 #[tauri::command]
 fn open_external(app: AppHandle, url: String) -> Result<(), String> {
-    let allowed = url.starts_with("https://")
-        || url.starts_with("http://localhost")
-        || url.starts_with("http://127.0.0.1");
-    if !allowed {
+    if !is_openable_externally(&url) {
         return Err("only http(s) URLs may be opened externally".into());
     }
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|e| e.to_string())
+}
+
+/// The hosts `open_external` accepts over plain `http`: the local sidecar and
+/// the ChatGPT callback both live on loopback, and nothing else should.
+const LOOPBACK_HOSTS: &[&str] = &["localhost", "127.0.0.1"];
+
+/// The `open_external` rule, on a parsed URL rather than a prefix.
+///
+/// `starts_with("http://localhost")` also accepted `http://localhost.evil.tld`
+/// and `http://localhost@evil.tld`. Only the parsed host can be compared
+/// exactly, and the parser normalises the scheme too.
+fn is_openable_externally(raw: &str) -> bool {
+    let Ok(url) = Url::parse(raw) else {
+        return false;
+    };
+    match url.scheme() {
+        "https" => url.host_str().is_some_and(|host| !host.is_empty()),
+        "http" => url.host_str().is_some_and(|host| LOOPBACK_HOSTS.contains(&host)),
+        _ => false,
+    }
 }
 
 /// Whether a newer release is available, and what it is.
@@ -353,9 +389,13 @@ async fn install_update(app: AppHandle) -> Result<(), String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    // Replaces the running process. The sidecar is killed by the Exit handler
-    // in `run()` first, so the new instance gets a free port and an unlocked DB.
-    app.restart();
+    // Asks the event loop to exit and relaunch, which is what delivers
+    // `RunEvent::Exit` to the handler in `run()`: the sidecar is stopped there,
+    // so the new instance gets a free port and an unlocked database.
+    // `restart()` skips those events when it happens to run on the main
+    // thread, and a command runs wherever the runtime puts it.
+    app.request_restart();
+    Ok(())
 }
 
 /// Build without the `updater` feature: the commands still exist so the
@@ -380,7 +420,7 @@ async fn install_update(_app: AppHandle) -> Result<(), String> {
 /// `available` is false when no reporter was compiled in, or one was but has no
 /// destination configured — the settings UI hides the toggle rather than
 /// offering a switch that changes nothing.
-#[tauri::command]
+#[tauri::command(async)]
 fn get_telemetry_settings() -> serde_json::Value {
     let enabled = telemetry::default_data_dir()
         .map(|dir| telemetry::is_enabled(&dir))
@@ -397,7 +437,7 @@ fn get_telemetry_settings() -> serde_json::Value {
 /// Record the user's choice. Takes effect for the sidecar on next launch —
 /// it reads its DSN from the environment the shell hands it at spawn, and this
 /// deliberately does not restart a running backend out from under the user.
-#[tauri::command]
+#[tauri::command(async)]
 fn set_telemetry_enabled(enabled: bool) -> Result<(), String> {
     let dir = telemetry::default_data_dir().ok_or("could not resolve the data directory")?;
     telemetry::write_prefs(
@@ -428,19 +468,43 @@ fn query_param(url: &Url, key: &str) -> Option<String> {
         .map(|(_, value)| value.into_owned())
 }
 
-/// Navigate the main window to `path?query` on whatever origin this shell build
-/// loads (hosted app or local dev server), then bring it to the front.
+/// The URL the main window is configured to load: `app.windows[0].url` in
+/// whichever config this build merged. `None` for a bundled-frontend window.
+///
+/// The one answer to "where does the app live". The sidecar's
+/// `FRONTEND_ORIGIN`, a deep link's destination and the navigation guard all
+/// read it, so none of them can be steered by where the webview happens to be.
+pub(crate) fn configured_app_url(app: &AppHandle) -> Option<Url> {
+    match &app.config().app.windows.first()?.url {
+        WebviewUrl::External(url) => Some(url.clone()),
+        _ => None,
+    }
+}
+
+/// `path?query` on the app's own origin.
+///
+/// Built from the configured URL and never from `window.url()`: the page can
+/// send the window elsewhere (the in-window OAuth fallback did exactly that),
+/// and a deep link joined onto *that* URL would deliver the single-use code to
+/// whichever origin was showing when it arrived.
+fn deep_link_destination(app_url: &Url, path: &str, query: &str) -> Option<Url> {
+    let mut target = app_url.join(path).ok()?;
+    target.set_query(Some(query));
+    Some(target)
+}
+
+/// Navigate the main window to `path?query` on the origin this shell build is
+/// configured to load (hosted app or local dev server), then bring it to the
+/// front.
 fn navigate_webview(app: &AppHandle, path: &str, query: &str) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
-    let Ok(current) = window.url() else {
+    let Some(target) = configured_app_url(app)
+        .and_then(|app_url| deep_link_destination(&app_url, path, query))
+    else {
         return;
     };
-    let Ok(mut target) = current.join(path) else {
-        return;
-    };
-    target.set_query(Some(query));
     let _ = window.navigate(target);
     let _ = window.unminimize();
     let _ = window.set_focus();
@@ -494,6 +558,12 @@ fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
     if let Some((path, query)) = deep_link_target(url) {
         navigate_webview(app, path, &query);
     }
+}
+
+/// Hand a URL on our scheme to whichever route claims it.
+fn route_deep_link(app: &AppHandle, url: &Url) {
+    handle_auth_deep_link(app, url);
+    handle_connector_deep_link(app, url);
 }
 
 /// Menu ids. Namespaced so a future menu can't collide with these.
@@ -830,13 +900,22 @@ const SPLASH_LABEL: &str = "splash";
 /// not left guessing while it waits.
 const SPLASH_DEADLINE: Duration = Duration::from_secs(30);
 
-/// Reveal the real window and dismiss the splash.
+/// Whether the main window has been revealed. `on_page_load` fires on every
+/// navigation the app makes, not only the first, and a `set_focus` on each
+/// pulled the window back over whatever the user had switched to every time
+/// the page reloaded. One reveal; after that the window is left where it is.
+static MAIN_REVEALED: AtomicBool = AtomicBool::new(false);
+
+/// Reveal the real window and dismiss the splash, once.
 ///
-/// Idempotent on purpose: the page-load hook and the deadline race each other
-/// by design, and whichever arrives second finds the work already done. Every
-/// error is ignored for the same reason — a window that is already visible or
-/// already closed is the outcome we wanted.
+/// The page-load hook and the deadline race each other by design, and
+/// whichever arrives second finds the flag already set. Every error is ignored
+/// for the same reason — a window that is already visible or already closed is
+/// the outcome we wanted.
 fn reveal_main_window(app: &AppHandle) {
+    if MAIN_REVEALED.swap(true, Ordering::SeqCst) {
+        return;
+    }
     if let Some(main) = app.get_webview_window("main") {
         let _ = main.show();
         let _ = main.set_focus();
@@ -923,6 +1002,89 @@ fn open_splash(app: &AppHandle, first_run: bool) -> tauri::Result<()> {
     Ok(())
 }
 
+/// What the main window may do with a navigation request.
+#[derive(Debug, PartialEq, Eq)]
+enum Navigation {
+    /// Load it here: the app's own origin, or a frame the page built itself.
+    Allow,
+    /// Not ours, but a web page: the system browser is where it belongs.
+    OpenExternally,
+    /// Neither: refuse it, and do not hand it to the OS either.
+    Block,
+}
+
+/// Decide a navigation of the main window against the configured app origin.
+///
+/// The window is the product, and the page inside it is the only thing that
+/// may call the shell. A top-level navigation anywhere else turns the window
+/// into a browser with no address bar: whatever loads there wears Duct's frame
+/// and title. So the app's origin is allowed, any other web URL is opened in
+/// the system browser instead (the in-window OAuth fallback used to land
+/// here), and everything else is dropped. Handing an arbitrary scheme to the
+/// OS would launch whatever claims it, which is the rule `open_external`
+/// already enforces for the page's explicit requests.
+///
+/// Two non-web documents pass, and only two: `about:blank` and
+/// `about:srcdoc`, which the webview produces itself for an empty frame and
+/// for every `<iframe srcdoc>` the app renders, plus a `blob:` the app's own
+/// origin created. A `data:` document or someone else's blob at the top
+/// level is the same hole as a foreign web page, just without a request, so
+/// both are dropped. The check matters for frames as much as the top level:
+/// on macOS and Linux the webview asks this function about frame navigations
+/// too (wry passes no frame information). That is the caveat to carry: an
+/// `<iframe src="https://elsewhere">` would be opened in the browser there.
+/// Nothing in the app embeds one today.
+fn navigation_policy(url: &Url, app_url: &Url) -> Navigation {
+    match url.scheme() {
+        "http" | "https" if url.origin() == app_url.origin() => Navigation::Allow,
+        "http" | "https" => Navigation::OpenExternally,
+        "about" if matches!(url.path(), "blank" | "srcdoc") => Navigation::Allow,
+        // The `url` crate gives a blob the origin of the URL in its path, so
+        // this is "created by the app" and nothing else; a blob whose path is
+        // not a URL has an opaque origin and fails the comparison.
+        "blob" if url.origin() == app_url.origin() => Navigation::Allow,
+        _ => Navigation::Block,
+    }
+}
+
+/// Build the main window from its config entry, with the navigation guard on.
+///
+/// Every config marks the window `"create": false`, because a guard can only
+/// be attached while the window is being built, and Tauri builds config
+/// windows before `setup` runs. Everything else about the window (URL, size,
+/// the hidden start behind the splash) still comes from the config entry, so
+/// the `--config` overlays keep working unchanged.
+///
+/// A window with no remote URL is an error rather than an unguarded window:
+/// every build shape loads one, and a config that stopped would otherwise ship
+/// a shell whose only safeguard had quietly switched itself off.
+fn open_main_window(app: &AppHandle) -> Result<(), String> {
+    let config = app
+        .config()
+        .app
+        .windows
+        .iter()
+        .find(|window| window.label == "main")
+        .cloned()
+        .ok_or("no `main` window in app.windows")?;
+    let app_url = configured_app_url(app).ok_or("the main window has no remote URL to guard")?;
+
+    let handle = app.clone();
+    WebviewWindowBuilder::from_config(app, &config)
+        .map_err(|e| e.to_string())?
+        .on_navigation(move |url| match navigation_policy(url, &app_url) {
+            Navigation::Allow => true,
+            Navigation::OpenExternally => {
+                let _ = handle.opener().open_url(url.as_str(), None::<&str>);
+                false
+            }
+            Navigation::Block => false,
+        })
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Before the builder: a panic during setup is exactly the kind of failure
@@ -973,14 +1135,22 @@ pub fn run() {
         .on_menu_event(handle_menu_event)
         // The main window is configured hidden, so something has to reveal it.
         // This fires for every navigation the app makes, not just the first;
-        // `reveal_main_window` is idempotent, so the later ones cost nothing.
+        // `reveal_main_window` acts once and returns on every later call, so a
+        // reload never steals focus.
         .on_page_load(|webview, payload| {
             if webview.label() == "main" && payload.event() == PageLoadEvent::Finished {
                 reveal_main_window(webview.app_handle());
             }
         })
         .setup(|app| {
-            // First, before anything else in setup: the whole point is to put
+            // The main window first, exactly where Tauri used to build it from
+            // config before `setup` ran: hidden, pointed at the hosted app, and
+            // now with its navigation guard attached. A shell without it is
+            // not a shell, so a failure here ends setup rather than being
+            // logged past.
+            open_main_window(app.handle())?;
+
+            // Then the splash, before anything else: the whole point is to put
             // pixels on screen while the network is still resolving. The main
             // window points at the hosted app, which measured between 0.3 s and
             // 2.3 s just to return the document, before a byte of script runs.
@@ -1028,10 +1198,27 @@ pub fn run() {
             let handle = app.handle().clone();
             app.deep_link().on_open_url(move |event| {
                 for url in event.urls() {
-                    handle_auth_deep_link(&handle, &url);
-                    handle_connector_deep_link(&handle, &url);
+                    route_deep_link(&handle, &url);
                 }
             });
+
+            // A link that *launched* the app arrived before that listener
+            // existed and is not replayed to it. Windows and Linux pass it in
+            // argv, which the plugin reads during its own setup; macOS may
+            // deliver its `Opened` event on either side of `Ready`. Either
+            // way the plugin keeps the URL for `get_current`, and a link that
+            // arrives after this point reaches the listener instead — so each
+            // one is handled exactly once, and a cold-start sign-in on Windows
+            // or Linux no longer lands on a window that never hears it.
+            match app.deep_link().get_current() {
+                Ok(Some(urls)) => {
+                    for url in urls {
+                        route_deep_link(app.handle(), &url);
+                    }
+                }
+                Ok(None) => {}
+                Err(err) => eprintln!("duct: could not read the launch deep link: {err}"),
+            }
 
             // Start the local backend, if this build shipped one. The official
             // build does not — it talks to the hosted API, and a missing
@@ -1162,6 +1349,106 @@ mod tests {
         assert_eq!(target("ai.getduct.desktop://elsewhere?auth_code=abc"), None);
         let long = "a".repeat(513);
         assert_eq!(target(&format!("ai.getduct.desktop://auth?auth_code={long}")), None);
+    }
+
+    fn app_url() -> Url {
+        Url::parse("https://app.getduct.ai").unwrap()
+    }
+
+    #[test]
+    fn a_deep_link_lands_on_the_configured_origin_whatever_the_window_shows() {
+        // The destination takes the configured URL and nothing else, so a
+        // window the page sent to a vendor cannot receive the code.
+        assert_eq!(
+            deep_link_destination(&app_url(), "/connections", "connector=ga4&auth_code=c0de")
+                .unwrap()
+                .as_str(),
+            "https://app.getduct.ai/connections?connector=ga4&auth_code=c0de"
+        );
+        // A dev origin with a port keeps it, and a path on the configured URL
+        // does not survive: deep links are absolute routes.
+        let dev = Url::parse("http://localhost:3003/somewhere").unwrap();
+        assert_eq!(
+            deep_link_destination(&dev, "/", "auth_code=abc").unwrap().as_str(),
+            "http://localhost:3003/?auth_code=abc"
+        );
+    }
+
+    fn decide(url: &str) -> Navigation {
+        navigation_policy(&Url::parse(url).expect("a well-formed URL"), &app_url())
+    }
+
+    #[test]
+    fn the_window_only_ever_shows_the_app_origin() {
+        assert_eq!(decide("https://app.getduct.ai/connections?x=1"), Navigation::Allow);
+        // Same origin, default port spelled out.
+        assert_eq!(decide("https://app.getduct.ai:443/"), Navigation::Allow);
+
+        // Another web page goes to the real browser, including the same host
+        // over plain http and a lookalike host.
+        assert_eq!(decide("https://accounts.google.com/o/oauth2"), Navigation::OpenExternally);
+        assert_eq!(decide("http://app.getduct.ai/"), Navigation::OpenExternally);
+        assert_eq!(decide("https://app.getduct.ai.evil.tld/"), Navigation::OpenExternally);
+        assert_eq!(decide("https://api.getduct.ai/"), Navigation::OpenExternally);
+
+        // What the page builds for its own frames stays: the two `about:`
+        // documents the webview makes, and a blob the app itself created.
+        assert_eq!(decide("about:srcdoc"), Navigation::Allow);
+        assert_eq!(decide("about:blank"), Navigation::Allow);
+        assert_eq!(decide("blob:https://app.getduct.ai/0f3a"), Navigation::Allow);
+
+        // A document the page could write itself, or a blob from elsewhere,
+        // is a foreign page without the request: dropped, not shown.
+        assert_eq!(decide("data:text/html,x"), Navigation::Block);
+        assert_eq!(decide("data:text/html;base64,PGgxPmhpPC9oMT4="), Navigation::Block);
+        assert_eq!(decide("blob:https://evil.tld/abc"), Navigation::Block);
+        assert_eq!(decide("blob:http://app.getduct.ai/abc"), Navigation::Block);
+        assert_eq!(decide("blob:nonsense"), Navigation::Block);
+        assert_eq!(decide("about:config"), Navigation::Block);
+
+        // A scheme the OS would route to another app is dropped, not forwarded.
+        assert_eq!(decide("mailto:someone@example.com"), Navigation::Block);
+        assert_eq!(decide("ai.getduct.desktop://auth?auth_code=x"), Navigation::Block);
+        assert_eq!(decide("file:///etc/passwd"), Navigation::Block);
+        assert_eq!(decide("tauri://localhost/"), Navigation::Block);
+    }
+
+    #[test]
+    fn a_dev_build_allows_its_own_localhost_port_and_nothing_else_on_loopback() {
+        let dev = Url::parse("http://localhost:3003").unwrap();
+        let decide = |url: &str| navigation_policy(&Url::parse(url).unwrap(), &dev);
+        assert_eq!(decide("http://localhost:3003/connections"), Navigation::Allow);
+        // The API dev server and the sidecar are APIs, not pages for this window.
+        assert_eq!(decide("http://localhost:8002/docs"), Navigation::OpenExternally);
+        assert_eq!(decide("http://127.0.0.1:3003/"), Navigation::OpenExternally);
+    }
+
+    #[test]
+    fn open_external_takes_https_and_loopback_http_by_host_not_by_prefix() {
+        for ok in [
+            "https://accounts.google.com/o/oauth2/v2/auth?client_id=x",
+            "HTTPS://getduct.ai/",
+            "http://localhost:1455/auth/callback",
+            "http://127.0.0.1:53124/auth/signin",
+        ] {
+            assert!(is_openable_externally(ok), "{ok}");
+        }
+        for rejected in [
+            // The prefix check used to pass all three of these.
+            "http://localhost.evil.tld/",
+            "http://localhost@evil.tld/",
+            "http://127.0.0.1.evil.tld/",
+            "http://evil.tld/",
+            "mailto:someone@example.com",
+            "javascript:alert(1)",
+            "file:///etc/passwd",
+            "ai.getduct.desktop://auth?auth_code=x",
+            "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+            "not a url",
+            "",
+        ] {
+            assert!(!is_openable_externally(rejected), "{rejected}");
+        }
     }
 
     #[test]
