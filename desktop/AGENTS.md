@@ -27,7 +27,9 @@ carries all the code.
   just to return the document, and 5.5 s to finish loading on a busy machine.
   So `main` is `"visible": false` in all three configs, `desktop/src/` holds a
   splash that paints with no network at all, and `on_page_load` shows the real
-  window and closes the splash once the app has loaded.
+  window and closes the splash once the app has loaded — once, on the first
+  load. Later loads (a reload, a navigation) leave focus where the user put it;
+  `MAIN_REVEALED` is the flag.
 
   Three things here are load bearing:
   - **The splash window is built in Rust (`open_splash`), not declared in
@@ -207,6 +209,9 @@ carries all the code.
   for a new tab; a link meant to navigate this window still does.
 - macOS registers the custom scheme from the built bundle's Info.plist, so the
   deep-link leg only works from a bundled app (`tauri build`), not `tauri dev`.
+  A link that *launched* the app is read from `get_current` in `setup`;
+  `on_open_url` only hears the ones that arrive afterwards. Both go through
+  `route_deep_link`, so the two paths cannot drift.
 - **Local backend ("sidecar")** — *not in the official build*: a sidecar build ships the FastAPI backend frozen by
   PyInstaller (`backend/duct_sidecar.spec`), supervised by
   `src-tauri/src/sidecar.rs`. It binds a loopback port the OS picks, persists to
@@ -237,9 +242,14 @@ carries all the code.
   debug session owns it, VS Code's Stop cannot close it, and no `postDebugTask`
   can attach — every launch outlives the thing that launched it. The
   `Duct: stop everything` task in `.vscode/tasks.json` is the one command that
-  clears all of it. Quit the app rather than killing it: a graceful quit
-  reaches `RunEvent::Exit`, which stops the sidecar, while SIGTERM to the shell
-  skips it and leaves an orphan holding its loopback port.
+  clears all of it. The sidecar ends with the shell however the shell ends:
+  it runs with `--exit-on-stdin-eof` on a pipe only the shell holds, so a
+  crash, a `kill -9` or a relaunch for an update closes the pipe and the
+  sidecar stops itself (SIGTERM to uvicorn, then a hard exit two seconds
+  later). A graceful quit reaches `RunEvent::Exit`, which closes the pipe
+  deliberately and gives it the same two seconds before killing it. The
+  `Child` in `SidecarState` holds the pipe's write end; take `stdin` out of
+  it anywhere but `shutdown` and the sidecar exits on the spot.
 - **Windows and Linux** ship from the same pipeline: NSIS on Windows, deb +
   AppImage on Linux. They still need their own runners even without the sidecar
   — Tauri bundles are not cross-compiled — and a *sidecar* build additionally
@@ -458,6 +468,15 @@ step in the same change, never before it.
   `backend/` wholesale, which is a property of that config, not licence to put
   anything here.
 - Provider keys live only in the OS keychain — never write them to disk or logs.
+- **A command that blocks runs off the main thread.** A plain
+  `#[tauri::command]` runs on the main thread, which is the UI thread; the
+  keyring crate sat on it behind a macOS keychain prompt and the window
+  stopped painting. Keychain, file and bundle-probing commands are
+  `#[tauri::command(async)]`; an `async fn` that needs the keychain wraps the
+  call in `spawn_blocking` (`off_runtime` in `chatgpt.rs`), because a blocked
+  runtime worker stalls every other command in flight. `get_shell_info` is
+  cached in a `OnceLock` for the same reason. `check-shell-contract.py`
+  recognises both spellings of the attribute.
 - Any origin the webview loads must be listed under `remote.urls` in
   `src-tauri/capabilities/default.json` for `invoke` to work.
 - **A new `#[tauri::command]` needs three edits, not one.** Add it to
