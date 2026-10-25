@@ -379,6 +379,10 @@ msgstr "{n} chars"
 msgid "{name} · Members"
 msgstr "{name} · Members"
 
+#: src/components/connections/McpConnectors.jsx
+msgid "{name} is connected. The insights chat can use its tools now."
+msgstr "{name} is connected. The insights chat can use its tools now."
+
 #: src/hooks/useAgentNotifications.js
 msgid "{name} is done"
 msgstr "{name} is done"
@@ -386,10 +390,6 @@ msgstr "{name} is done"
 #: src/hooks/useAgentNotifications.js
 msgid "{name} needs your input"
 msgstr "{name} needs your input"
-
-#: src/components/connections/McpConnectors.jsx
-msgid "{name} is connected. The insights chat can use its tools now."
-msgstr "{name} is connected. The insights chat can use its tools now."
 
 #: src/components/content/StyleGallery.jsx
 msgid "{name} preview"
@@ -1062,6 +1062,10 @@ msgstr "Add an MCP server"
 msgid "Add another account"
 msgstr "Add another account"
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Add by address"
+msgstr "Add by address"
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Add documents"
 msgstr "Add documents"
@@ -1069,10 +1073,6 @@ msgstr "Add documents"
 #: src/components/settings/AgentAccess.jsx
 msgid "Add Duct to your agent"
 msgstr "Add Duct to your agent"
-
-#: src/components/connections/McpConnectors.jsx
-msgid "Add by address"
-msgstr "Add by address"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Add guardrail"
@@ -2426,13 +2426,13 @@ msgstr "Copy details"
 msgid "Copy failed"
 msgstr "Copy failed"
 
-#: src/components/settings/AgentAccess.jsx
-msgid "Copy it now. Duct shows a token once."
-msgstr "Copy it now. Duct shows a token once."
-
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Copy it from the server’s docs. Duct connects over HTTPS only."
 msgstr "Copy it from the server’s docs. Duct connects over HTTPS only."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Copy it now. Duct shows a token once."
+msgstr "Copy it now. Duct shows a token once."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Copy response"
@@ -2502,6 +2502,10 @@ msgstr "Couldn't make a video clip"
 msgid "Couldn't open it"
 msgstr "Couldn't open it"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't reach {server}"
+msgstr "Couldn't reach {server}"
+
 #: src/lib/agentSession.js
 msgid "Couldn't reach the model provider. Check your connection and try again."
 msgstr "Couldn't reach the model provider. Check your connection and try again."
@@ -2509,10 +2513,6 @@ msgstr "Couldn't reach the model provider. Check your connection and try again."
 #: src/lib/agentSession.js
 msgid "Couldn't reach the server. Check your internet and try again."
 msgstr "Couldn't reach the server. Check your internet and try again."
-
-#: src/components/workspace/ActivityRow.jsx
-msgid "Couldn't reach {server}"
-msgstr "Couldn't reach {server}"
 
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
@@ -2959,10 +2959,6 @@ msgstr "Drop to attach"
 msgid "Duct {version} is available"
 msgstr "Duct {version} is available"
 
-#: src/components/onboarding/DocumentPicker.jsx
-msgid "Duct can't read this type yet"
-msgstr "Duct can't read this type yet"
-
 #: src/components/connections/McpServers.jsx
 #~ msgid "Duct asks before it runs a tool its server doesn’t mark as read-only, and before every call to a server you added by address."
 #~ msgstr "Duct asks before it runs a tool its server doesn’t mark as read-only, and before every call to a server you added by address."
@@ -2970,6 +2966,10 @@ msgstr "Duct can't read this type yet"
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Duct asks you before every call to a server added by address."
 msgstr "Duct asks you before every call to a server added by address."
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Duct can't read this type yet"
+msgstr "Duct can't read this type yet"
 
 #: src/app/(start)/start/page.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -8856,13 +8856,13 @@ msgstr "Use this plan"
 msgid "Use this take"
 msgstr "Use this take"
 
-#: src/components/settings/AgentAccess.jsx
-msgid "Used {used}"
-msgstr "Used {used}"
-
 #: src/components/workspace/ActivityRow.jsx
 msgid "Used {tool}"
 msgstr "Used {tool}"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Used {used}"
+msgstr "Used {used}"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Using {tool}"

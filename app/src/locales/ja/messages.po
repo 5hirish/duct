@@ -379,6 +379,10 @@ msgstr "{n} 文字"
 msgid "{name} · Members"
 msgstr "{name} · メンバー"
 
+#: src/components/connections/McpConnectors.jsx
+msgid "{name} is connected. The insights chat can use its tools now."
+msgstr "{name} は接続済みです。インサイトチャットはそのツールを使用できるようになりました。"
+
 #: src/hooks/useAgentNotifications.js
 msgid "{name} is done"
 msgstr "{name} が完了しました"
@@ -386,10 +390,6 @@ msgstr "{name} が完了しました"
 #: src/hooks/useAgentNotifications.js
 msgid "{name} needs your input"
 msgstr "{name} に入力が必要です"
-
-#: src/components/connections/McpConnectors.jsx
-msgid "{name} is connected. The insights chat can use its tools now."
-msgstr "{name} は接続済みです。インサイトチャットはそのツールを使用できるようになりました。"
 
 #: src/components/content/StyleGallery.jsx
 msgid "{name} preview"
@@ -1062,6 +1062,10 @@ msgstr "MCPサーバーを追加"
 msgid "Add another account"
 msgstr "別のアカウントを追加"
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Add by address"
+msgstr "アドレスで追加"
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Add documents"
 msgstr "ドキュメントを追加"
@@ -1069,10 +1073,6 @@ msgstr "ドキュメントを追加"
 #: src/components/settings/AgentAccess.jsx
 msgid "Add Duct to your agent"
 msgstr "エージェントにDuctを追加"
-
-#: src/components/connections/McpConnectors.jsx
-msgid "Add by address"
-msgstr "アドレスで追加"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Add guardrail"
@@ -2426,13 +2426,13 @@ msgstr "詳細をコピー"
 msgid "Copy failed"
 msgstr "コピーに失敗しました"
 
-#: src/components/settings/AgentAccess.jsx
-msgid "Copy it now. Duct shows a token once."
-msgstr "今すぐコピーしてください。Ductはトークンを一度だけ表示します。"
-
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Copy it from the server’s docs. Duct connects over HTTPS only."
 msgstr "サーバーのドキュメントからコピーしてください。DuctはHTTPS経由でのみ接続します。"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Copy it now. Duct shows a token once."
+msgstr "今すぐコピーしてください。Ductはトークンを一度だけ表示します。"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Copy response"
@@ -2502,6 +2502,10 @@ msgstr "動画クリップを作成できませんでした"
 msgid "Couldn't open it"
 msgstr "開けませんでした"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't reach {server}"
+msgstr "{server} に到達できませんでした"
+
 #: src/lib/agentSession.js
 msgid "Couldn't reach the model provider. Check your connection and try again."
 msgstr "モデルプロバイダーに到達できませんでした。接続を確認して、もう一度お試しください。"
@@ -2509,10 +2513,6 @@ msgstr "モデルプロバイダーに到達できませんでした。接続を
 #: src/lib/agentSession.js
 msgid "Couldn't reach the server. Check your internet and try again."
 msgstr "サーバーに到達できませんでした。インターネット接続を確認して、もう一度お試しください。"
-
-#: src/components/workspace/ActivityRow.jsx
-msgid "Couldn't reach {server}"
-msgstr "{server} に到達できませんでした"
 
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
@@ -2959,10 +2959,6 @@ msgstr "ドロップして添付"
 msgid "Duct {version} is available"
 msgstr "Duct {version} が利用可能です"
 
-#: src/components/onboarding/DocumentPicker.jsx
-msgid "Duct can't read this type yet"
-msgstr "Ductはこのタイプをまだ読み取れません"
-
 #: src/components/connections/McpServers.jsx
 #~ msgid "Duct asks before it runs a tool its server doesn’t mark as read-only, and before every call to a server you added by address."
 #~ msgstr "Ductは、サーバーが読み取り専用としてマークしていないツールを実行する前、およびアドレスで追加したサーバーへのすべての呼び出しの前に確認します。"
@@ -2970,6 +2966,10 @@ msgstr "Ductはこのタイプをまだ読み取れません"
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Duct asks you before every call to a server added by address."
 msgstr "Ductは、アドレスで追加されたサーバーへのすべての呼び出しの前に確認します。"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Duct can't read this type yet"
+msgstr "Ductはこのタイプをまだ読み取れません"
 
 #: src/app/(start)/start/page.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -8856,13 +8856,13 @@ msgstr "このプランを使用する"
 msgid "Use this take"
 msgstr "このテイクを使用する"
 
-#: src/components/settings/AgentAccess.jsx
-msgid "Used {used}"
-msgstr "使用済み {used}"
-
 #: src/components/workspace/ActivityRow.jsx
 msgid "Used {tool}"
 msgstr "{tool}を使用しました"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Used {used}"
+msgstr "使用済み {used}"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Using {tool}"

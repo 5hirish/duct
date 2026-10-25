@@ -379,6 +379,10 @@ msgstr "{n} caracteres"
 msgid "{name} · Members"
 msgstr "{name} · Membros"
 
+#: src/components/connections/McpConnectors.jsx
+msgid "{name} is connected. The insights chat can use its tools now."
+msgstr "{name} está conectado. O chat de insights pode usar suas ferramentas agora."
+
 #: src/hooks/useAgentNotifications.js
 msgid "{name} is done"
 msgstr "{name} foi concluído"
@@ -386,10 +390,6 @@ msgstr "{name} foi concluído"
 #: src/hooks/useAgentNotifications.js
 msgid "{name} needs your input"
 msgstr "{name} precisa da sua entrada"
-
-#: src/components/connections/McpConnectors.jsx
-msgid "{name} is connected. The insights chat can use its tools now."
-msgstr "{name} está conectado. O chat de insights pode usar suas ferramentas agora."
 
 #: src/components/content/StyleGallery.jsx
 msgid "{name} preview"
@@ -1062,6 +1062,10 @@ msgstr "Adicionar um servidor MCP"
 msgid "Add another account"
 msgstr "Adicionar outra conta"
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Add by address"
+msgstr "Adicionar por endereço"
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Add documents"
 msgstr "Adicionar documentos"
@@ -1069,10 +1073,6 @@ msgstr "Adicionar documentos"
 #: src/components/settings/AgentAccess.jsx
 msgid "Add Duct to your agent"
 msgstr "Adicione o Duct ao seu agente"
-
-#: src/components/connections/McpConnectors.jsx
-msgid "Add by address"
-msgstr "Adicionar por endereço"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Add guardrail"
@@ -2426,13 +2426,13 @@ msgstr "Copiar detalhes"
 msgid "Copy failed"
 msgstr "Falha ao copiar"
 
-#: src/components/settings/AgentAccess.jsx
-msgid "Copy it now. Duct shows a token once."
-msgstr "Copie agora. O Duct mostra um token uma vez."
-
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Copy it from the server’s docs. Duct connects over HTTPS only."
 msgstr "Copie-a da documentação do servidor. O Duct se conecta apenas via HTTPS."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Copy it now. Duct shows a token once."
+msgstr "Copie agora. O Duct mostra um token uma vez."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Copy response"
@@ -2502,6 +2502,10 @@ msgstr "Não foi possível criar um videoclipe"
 msgid "Couldn't open it"
 msgstr "Não foi possível abrir"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't reach {server}"
+msgstr "Não foi possível alcançar {server}"
+
 #: src/lib/agentSession.js
 msgid "Couldn't reach the model provider. Check your connection and try again."
 msgstr "Não foi possível contatar o provedor do modelo. Verifique sua conexão e tente novamente."
@@ -2509,10 +2513,6 @@ msgstr "Não foi possível contatar o provedor do modelo. Verifique sua conexão
 #: src/lib/agentSession.js
 msgid "Couldn't reach the server. Check your internet and try again."
 msgstr "Não foi possível contatar o servidor. Verifique sua internet e tente novamente."
-
-#: src/components/workspace/ActivityRow.jsx
-msgid "Couldn't reach {server}"
-msgstr "Não foi possível alcançar {server}"
 
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
@@ -2959,10 +2959,6 @@ msgstr "Arraste para anexar"
 msgid "Duct {version} is available"
 msgstr "Duct {version} está disponível"
 
-#: src/components/onboarding/DocumentPicker.jsx
-msgid "Duct can't read this type yet"
-msgstr "O Duct não consegue ler este tipo ainda"
-
 #: src/components/connections/McpServers.jsx
 #~ msgid "Duct asks before it runs a tool its server doesn’t mark as read-only, and before every call to a server you added by address."
 #~ msgstr "O Duct pergunta antes de executar uma ferramenta que seu servidor não marca como somente leitura, e antes de cada chamada a um servidor que você adicionou por endereço."
@@ -2970,6 +2966,10 @@ msgstr "O Duct não consegue ler este tipo ainda"
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Duct asks you before every call to a server added by address."
 msgstr "A Duct pergunta a você antes de cada chamada para um servidor adicionado por endereço."
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Duct can't read this type yet"
+msgstr "O Duct não consegue ler este tipo ainda"
 
 #: src/app/(start)/start/page.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -8856,13 +8856,13 @@ msgstr "Use este plano"
 msgid "Use this take"
 msgstr "Usar esta versão"
 
-#: src/components/settings/AgentAccess.jsx
-msgid "Used {used}"
-msgstr "Usado {used}"
-
 #: src/components/workspace/ActivityRow.jsx
 msgid "Used {tool}"
 msgstr "Usou {tool}"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Used {used}"
+msgstr "Usado {used}"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Using {tool}"
