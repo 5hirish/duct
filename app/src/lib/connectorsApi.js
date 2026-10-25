@@ -276,3 +276,86 @@ export async function claimGitHubGrant(code) {
   notifyConnectorsChanged();
   return res;
 }
+
+// --- MCP servers the user connects (/api/user/mcp) --------------------------
+//
+// The flow lives in backend/routes/mcp_servers.py. A connect answers one of
+// three ways: saved on the spot (a key, or a server that needs no sign-in),
+// a vendor sign-in to send the person to, or a request for a key because the
+// server offers no sign-in Duct can start. A sign-in comes back as a grant
+// that only this signed-in session can claim, the GitHub shape.
+
+/** Where an MCP sign-in comes home: `/connections?connector=mcp&…`. */
+export const MCP_CONNECTOR = "mcp";
+
+/** What `POST /api/user/mcp/servers` answers. */
+export const McpConnect = Object.freeze({
+  CONNECTED: "connected",
+  AUTHORIZE: "authorize",
+  NEEDS_KEY: "needs_key",
+});
+
+/** How a connected server signs in (`auth` on each server row). */
+export const McpAuth = Object.freeze({
+  OAUTH: "oauth",
+  KEY: "key",
+  NONE: "none",
+});
+
+/** A server row's `status`. */
+export const McpServerStatus = Object.freeze({
+  CONNECTED: "connected",
+  NEEDS_REAUTH: "needs_reauth",
+});
+
+/** `error=` on the sign-in's return, coarse on purpose (it is in the URL). */
+export const McpReturnError = Object.freeze({
+  EXPIRED: "expired",
+  CONSENT: "consent",
+  EXCHANGE: "exchange",
+});
+
+/** `[{ id, label, url, home, key_url }]` — the servers offered by name. */
+export async function listMcpPresets() {
+  const res = await authedRequest("/api/user/mcp/presets");
+  return res?.presets || [];
+}
+
+/** The user's connected servers. No secret comes back. */
+export async function listMcpServers() {
+  const res = await authedRequest("/api/user/mcp/servers");
+  return res?.servers || [];
+}
+
+/**
+ * Start (or finish, with a key) connecting one server. Pass `preset` for a
+ * named one or `url` for any other. Resolves to `{ status, server }`,
+ * `{ status, authorize_url }` or `{ status, message }` — see `McpConnect`.
+ *
+ * A refused key is a 422 and an unreachable server a 502; neither is about
+ * the Duct session, so neither may sign the person out. `client: "desktop"`
+ * sends the sign-in home through the shell's relay page instead of this tab.
+ */
+export function connectMcpServer({ url = "", preset = "", name = "", apiKey = "", client = "" }) {
+  return authedRequest("/api/user/mcp/servers", {
+    method: "POST",
+    retireSession: false,
+    body: { url, preset, name, api_key: apiKey, client },
+  });
+}
+
+/** Save a finished sign-in. Rejects (404) when it expired or another account started it. */
+export async function claimMcpServer(code) {
+  const res = await authedRequest("/api/user/mcp/claim", {
+    method: "POST",
+    // Lands the instant the person returns from the vendor, like the GitHub
+    // claim: a sign-in bounce here would throw away the sign-in they just did.
+    retireSession: false,
+    body: { code },
+  });
+  return res?.server || null;
+}
+
+export function deleteMcpServer(id) {
+  return authedRequest(`/api/user/mcp/servers/${encodeURIComponent(id)}`, { method: "DELETE" });
+}

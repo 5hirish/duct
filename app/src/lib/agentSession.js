@@ -512,6 +512,7 @@ function reduceEvent(state, event, at = 0) {
     case AgentEvent.QUESTIONS_REQUIRED:
     case AgentEvent.CONNECTION_REQUIRED:
     case AgentEvent.ACCOUNT_SELECTION_REQUIRED:
+    case AgentEvent.TOOL_APPROVAL_REQUIRED:
       return {
         ...state,
         isAgentTyping: false,

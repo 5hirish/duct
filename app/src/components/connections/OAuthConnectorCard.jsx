@@ -26,6 +26,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { STORAGE_NONE, STORAGE_SESSION, rowStorage } from "../../lib/credentialStorage";
 import { isLocalBackendActive } from "../../lib/localBackend";
 import { startConnectorOAuth } from "../../lib/connectorAuth";
+import { NATIVE_SOURCE } from "../../lib/connectorSource";
 import StorageBadge from "./StorageBadge";
 import ConnectorDialog from "./ConnectorDialog";
 import ConnectorPermissions from "./ConnectorPermissions";
@@ -98,6 +99,7 @@ export default function OAuthConnectorCard({
         logo={logo}
         title={title}
         description={description}
+        source={NATIVE_SOURCE}
         tone={tone}
         status={status}
         storage={storage}
@@ -110,6 +112,7 @@ export default function OAuthConnectorCard({
         logo={logo}
         title={title}
         description={description}
+        source={NATIVE_SOURCE}
         status={
           <span className="conn-state">
             {/* Equal 20px slots. The dot is a 7px filled circle and the storage

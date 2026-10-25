@@ -516,3 +516,84 @@ class FakeWire:
                 answer = body(call) if callable(body) else body
                 return httpx.Response(status, json=answer, request=request)
         raise AssertionError(f"unexpected {call.method} {call.url} (register it with FakeWire.on)")
+
+
+# ---------------------------------------------------------------------------
+# MCP: a real server, in process
+# ---------------------------------------------------------------------------
+
+
+class FakeMcpServer:
+    """A real MCP server (the reference SDK's MCPServer) reached in process.
+
+    Faked at the seam ``service/mcp/http.py`` gives: ``guarded_client`` is
+    swapped for an httpx2 client whose transport is the server's own ASGI app,
+    so the real SDK client speaks real Streamable HTTP to a real server and no
+    socket opens. ``token`` makes the server refuse any other bearer with a
+    401, which is how a revoked or expired grant looks from the client.
+
+        server = FakeMcpServer()
+
+        @server.mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
+        def volume(keyword: str) -> dict: ...
+
+        async with server.running(monkeypatch):
+            ...
+    """
+
+    def __init__(self, *, token: str | None = None) -> None:
+        from mcp.server import MCPServer
+
+        self.token = token
+        self.authorizations: list[str] = []
+        self.mcp = MCPServer("fake")
+
+    def _app(self):
+        from mcp.server.transport_security import TransportSecuritySettings
+
+        inner = self.mcp.streamable_http_app(
+            stateless_http=True,
+            json_response=True,
+            # The test host is not a real one; the client's own guard is what
+            # is under test, not the server's.
+            transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+        )
+        fake = self
+
+        async def app(scope, receive, send):
+            if scope["type"] == "http":
+                headers = dict(scope.get("headers") or [])
+                auth = headers.get(b"authorization", b"").decode()
+                fake.authorizations.append(auth)
+                if fake.token is not None and auth != f"Bearer {fake.token}":
+                    await send({"type": "http.response.start", "status": 401, "headers": [
+                        (b"www-authenticate", b'Bearer error="invalid_token"'),
+                    ]})
+                    await send({"type": "http.response.body", "body": b""})
+                    return
+            await inner(scope, receive, send)
+
+        return app
+
+    def running(self, monkeypatch):
+        import contextlib
+
+        import httpx2
+
+        import service.mcp.http as mcp_http
+
+        app = self._app()
+        monkeypatch.setattr(
+            mcp_http,
+            "guarded_client",
+            lambda headers=None: httpx2.AsyncClient(
+                transport=httpx2.ASGITransport(app=app), headers=headers or {}, timeout=10
+            ),
+        )
+
+        @contextlib.asynccontextmanager
+        async def run():
+            async with self.mcp.session_manager.run():
+                yield self
+
+        return run()

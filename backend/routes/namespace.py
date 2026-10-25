@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from routes import (
     activity, agents, artifacts, audit, audit_prefetch, auth, chat, connectors, content, engines,
     execution,
-    generate, health, lead_magnet, mcp_server, mcp_tokens, memory, model_settings, profile,
+    generate, health, lead_magnet, mcp_server, mcp_servers, mcp_tokens, memory, model_settings, profile,
     project_connectors,
     project_members, projects,
     providers,
@@ -36,6 +36,9 @@ APP_AND_USER = [Depends(validate_api_key), Depends(get_current_user)]
 router.include_router(health.router)
 router.include_router(auth.router)
 router.include_router(signin.router)
+# The MCP sign-in's browser half: the vendor's redirect back, and the client
+# metadata document an authorization server fetches. Neither carries headers.
+router.include_router(mcp_servers.oauth_router)
 # Crawls a site the caller names, on Duct's bandwidth, before any sign-in — a
 # guest's token is a user here, and the route rate-limits per user on top.
 router.include_router(
@@ -124,6 +127,9 @@ router.include_router(mcp_tokens.router, prefix="/api/user/mcp-tokens")
 # Duct's MCP server, for agents outside Duct. Its own credential: a personal
 # MCP token, never X-API-Key or a sign-in JWT (routes/mcp_server.py).
 router.include_router(mcp_server.router)
+# MCP servers a user connects. Starting one reaches an address the caller
+# chose, so it is never anonymous.
+router.include_router(mcp_servers.router, prefix="/api/user/mcp", dependencies=APP_AND_USER)
 # Invitation redemption. GET is unauthenticated (the recipient has not signed in
 # yet and the token is the secret); POST /accept requires a Bearer JWT.
 router.include_router(

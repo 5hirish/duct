@@ -1,14 +1,15 @@
 "use client";
 
-// The card for whatever the run is parked on. Three pauses exist and they
+// The card for whatever the run is parked on. Four pauses exist and they
 // resolve through one answer endpoint; the event name is what picks the card,
-// and the card decides the answer's shape. Adding a fourth pause is one entry
+// and the card decides the answer's shape. Adding a fifth pause is one entry
 // here — the hook, the reducer and the route already carry any event with an
 // `interrupt_id`.
 
 import { AgentEvent } from "../../lib/agentEvents";
 import AccountSelect from "../insights/AccountSelect";
 import ConnectionRequest from "../insights/ConnectionRequest";
+import ToolApproval from "../insights/ToolApproval";
 import QuestionsCard from "./QuestionsCard";
 
 const CARDS = {
@@ -20,6 +21,9 @@ const CARDS = {
   ),
   [AgentEvent.ACCOUNT_SELECTION_REQUIRED]: ({ pause, onAnswer, disabled }) => (
     <AccountSelect request={pause} onAnswer={onAnswer} disabled={disabled} />
+  ),
+  [AgentEvent.TOOL_APPROVAL_REQUIRED]: ({ pause, onAnswer, disabled }) => (
+    <ToolApproval request={pause} onAnswer={onAnswer} disabled={disabled} />
   ),
 };
 

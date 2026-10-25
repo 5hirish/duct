@@ -179,6 +179,10 @@ msgstr ""
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr ""
 
+#: src/components/connections/McpServers.jsx
+#~ msgid "{customCount, plural, one {# connected} other {# connected}}"
+#~ msgstr ""
+
 #: src/components/content/PlanViewport.jsx
 msgid "{dayCount, plural, one {# day} other {# days}}"
 msgstr ""
@@ -303,6 +307,14 @@ msgstr ""
 msgid "{label} API key"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "{label} can reach your account’s secrets, so Duct asks you before every call to it."
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "{label} doesn’t offer one-click sign-in to Duct, so it needs an API key instead."
+msgstr ""
+
 #: src/components/content/TextPostEditor.jsx
 msgid "{label} doesn't publish comments. Paste this under the post once it's live."
 msgstr ""
@@ -365,6 +377,10 @@ msgstr ""
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
 msgid "{name} · Members"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "{name} is connected. The insights chat can use its tools now."
 msgstr ""
 
 #: src/hooks/useAgentNotifications.js
@@ -527,6 +543,22 @@ msgstr ""
 #: src/components/content/PostVideo.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "{seconds} s"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "{server} needs reconnecting"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "{server} returned an error"
+msgstr ""
+
+#: src/components/insights/ToolApproval.jsx
+msgid "{serverName} can reach your account’s secrets, so Duct asks before every call to it. Skip and the agent carries on without it."
+msgstr ""
+
+#: src/components/insights/ToolApproval.jsx
+msgid "{serverName} doesn’t mark this tool as read-only, so Duct asks first. Skip and the agent carries on without it."
 msgstr ""
 
 #: src/components/workspace/ContextRing.jsx
@@ -724,6 +756,10 @@ msgstr ""
 msgid "<0>Limited scan: </0>Based on {pagesCrawled} of {sitemapUrls} sitemap pages."
 msgstr ""
 
+#: src/app/(app)/connections/page.jsx
+msgid "<0>Native</0> connectors are built by Duct and feed briefs, alerts and the chat. <1>MCP</1> connectors are each company’s own server; the insights chat calls their tools. <2>How MCP works</2>"
+msgstr ""
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "<0>Pillars:</0> {pillars}"
 msgstr ""
@@ -848,6 +884,10 @@ msgstr ""
 msgid "A project starts from a site. Duct reads it and drafts the rest — name, industry, competitors — for you to correct."
 msgstr ""
 
+#: src/components/connections/McpServers.jsx
+#~ msgid "A project’s agent uses its owner’s servers. Anyone you share a project with can ask it to read through yours, and only you can approve a call that changes something."
+#~ msgstr ""
+
 #: src/components/content/FormatLibrary.jsx
 msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
 msgstr ""
@@ -867,6 +907,14 @@ msgstr ""
 #: src/app/(app)/settings/models/page.jsx
 msgid "A tier whose model has no key falls through to the next one along."
 msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "A tool {label} marks read-only runs straight away. Anything else asks you first, every time."
+msgstr ""
+
+#: src/components/connections/McpServers.jsx
+#~ msgid "A tool its server doesn’t mark as read-only asks you before it runs, every time."
+#~ msgstr ""
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Abandon this conversation and start a new one (what it produced is kept)"
@@ -984,6 +1032,10 @@ msgstr ""
 msgid "Add a reply"
 msgstr ""
 
+#: src/components/connections/McpServers.jsx
+#~ msgid "Add a server"
+#~ msgstr ""
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Add a tag"
 msgstr ""
@@ -996,8 +1048,16 @@ msgstr ""
 msgid "Add a thought — it goes in at the next step"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Add an MCP server"
+msgstr ""
+
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Add another account"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Add by address"
 msgstr ""
 
 #: src/components/onboarding/DocumentPicker.jsx
@@ -1236,6 +1296,10 @@ msgstr ""
 msgid "Any agent using this token loses access to Duct right away. Your projects stay as they are."
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Any MCP server"
+msgstr ""
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
 msgstr ""
@@ -1249,6 +1313,7 @@ msgid "Anything specific? (optional)"
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr ""
@@ -1318,6 +1383,10 @@ msgstr ""
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Applying…"
+msgstr ""
+
+#: src/components/insights/ToolApproval.jsx
+msgid "Approve"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -1722,6 +1791,10 @@ msgstr ""
 msgid "Business settings → Users → System users → Generate token with scope ads_read (+ business_management for account discovery). System User tokens don't expire; regular user tokens die in ~60 days."
 msgstr ""
 
+#: src/components/connections/ConnectorSource.jsx
+msgid "by {publisher}"
+msgstr ""
+
 #: src/components/models/UsagePanel.jsx
 msgid "By agent"
 msgstr ""
@@ -1878,6 +1951,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Checked connected sources"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Checked connected tools"
 msgstr ""
 
 #: src/components/audit/AuditReport.jsx
@@ -2086,6 +2163,7 @@ msgstr ""
 msgid "Confirm"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect"
 msgstr ""
@@ -2127,6 +2205,10 @@ msgstr ""
 msgid "Connect one data source"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Connect without a key"
+msgstr ""
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect your {vendor} account"
 msgstr ""
@@ -2143,6 +2225,8 @@ msgstr ""
 #: src/app/(app)/connections/page.jsx
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/McpConnectDialog.jsx
+#: src/components/connections/McpConnectors.jsx
 msgid "Connected"
 msgstr ""
 
@@ -2166,6 +2250,7 @@ msgstr ""
 msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Connecting…"
 msgstr ""
@@ -2335,6 +2420,10 @@ msgstr ""
 msgid "Copy failed"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Copy it from the server’s docs. Duct connects over HTTPS only."
+msgstr ""
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Copy it now. Duct shows a token once."
 msgstr ""
@@ -2375,6 +2464,10 @@ msgstr ""
 msgid "Could only read the front page — the audit will use that"
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Couldn't disconnect {name}. {why}"
+msgstr ""
+
 #: src/components/content/AnalyticsView.jsx
 msgid "Couldn't load analytics."
 msgstr ""
@@ -2383,9 +2476,17 @@ msgstr ""
 msgid "Couldn't load brand context."
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Couldn't load them. {loadError}"
+msgstr ""
+
 #: src/app/(app)/execute/page.jsx
 msgid "Couldn't load your guardrails. The queue above is unaffected."
 msgstr ""
+
+#: src/components/connections/McpServers.jsx
+#~ msgid "Couldn’t load your MCP servers."
+#~ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Couldn't make a video clip"
@@ -2393,6 +2494,10 @@ msgstr ""
 
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Couldn't open it"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't reach {server}"
 msgstr ""
 
 #: src/lib/agentSession.js
@@ -2413,6 +2518,10 @@ msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn't use {name}"
 msgstr ""
 
 #: src/components/TelemetryCard.jsx
@@ -2691,11 +2800,17 @@ msgstr ""
 msgid "Discarded"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+#: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Disconnect “{name}”?"
 msgstr ""
 
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -2838,6 +2953,14 @@ msgstr ""
 msgid "Duct {version} is available"
 msgstr ""
 
+#: src/components/connections/McpServers.jsx
+#~ msgid "Duct asks before it runs a tool its server doesn’t mark as read-only, and before every call to a server you added by address."
+#~ msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Duct asks you before every call to a server added by address."
+msgstr ""
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Duct can't read this type yet"
 msgstr ""
@@ -2935,6 +3058,14 @@ msgstr ""
 msgid "Duct should open automatically. If it doesn’t, use the button below."
 msgstr ""
 
+#: src/components/connections/McpServers.jsx
+#~ msgid "Duct's agent stops using its tools straight away, in every project you own. Connecting it again means signing in again."
+#~ msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Duct's agent stops using its tools straight away, in every project. Connecting it again means signing in again."
+msgstr ""
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Duct's guess"
 msgstr ""
@@ -2961,6 +3092,10 @@ msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "e.g. A meal-planning app for busy families."
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "e.g. Acme CRM"
 msgstr ""
 
 #: src/app/(app)/memory/page.jsx
@@ -3111,6 +3246,10 @@ msgstr ""
 
 #: src/components/audit/AuditReport.jsx
 msgid "Evaluating title tags and meta descriptions…"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Events, funnels and insights from your product analytics."
 msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
@@ -3291,6 +3430,10 @@ msgstr ""
 msgid "Finish signing in in your browser, then come back and press “I’ve connected it”."
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Finish signing in in your browser. The server shows up here when you’re done."
+msgstr ""
+
 #: src/app/(auth)/page.js
 msgid "Finish signing in with Google in your browser — this window will continue automatically."
 msgstr ""
@@ -3458,6 +3601,10 @@ msgstr ""
 msgid "Get a key"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Get a key from {label}"
+msgstr ""
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Get a key from {providerName} →"
 msgstr ""
@@ -3505,6 +3652,10 @@ msgstr ""
 #: src/app/(auth)/desktop-auth/page.js
 msgid "GitHub isn't set up on this server"
 msgstr ""
+
+#: src/components/connections/McpServers.jsx
+#~ msgid "Give Duct’s agent tools from the other apps you use. Connect a server over MCP and the insights chat can use it mid-answer: keyword volumes from OpenSEO, a page from Notion, an issue in Linear."
+#~ msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
@@ -3696,6 +3847,14 @@ msgstr ""
 msgid "Heavy — the deep model"
 msgstr ""
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held {name} for your approval"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held back {name}: too long to show you first"
+msgstr ""
+
 #: src/lib/credentialStorage.js
 msgid "Held by your operating system's keychain on this computer. Duct uses it while the app is open and never stores it."
 msgstr ""
@@ -3789,6 +3948,10 @@ msgstr ""
 #~ msgid "How hard the model should think"
 #~ msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "How MCP connectors work"
+msgstr ""
+
 #: src/components/content/BrandContextForm.jsx
 msgid "How posts sound and what they must (or must not) say."
 msgstr ""
@@ -3835,6 +3998,10 @@ msgstr ""
 
 #: src/app/(start)/start/page.jsx
 msgid "I have an account"
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "I have an API key"
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
@@ -4018,6 +4185,14 @@ msgstr ""
 msgid "Italiano"
 msgstr ""
 
+#: src/app/(auth)/desktop-auth/page.js
+msgid "Its sign-in finished, but it wouldn't hand over access. That's usually temporary. Try again from the app."
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Its sign-in stopped working, so Duct can’t use it until you reconnect."
+msgstr ""
+
 #: src/components/workspace/ContextRing.jsx
 msgid "Just compacted — recounted on the next call"
 msgstr ""
@@ -4069,6 +4244,10 @@ msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Keys usually start with “{keyPrefix}”."
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Keyword volume, difficulty and backlinks for the topics you ask about."
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
@@ -4267,6 +4446,14 @@ msgstr ""
 msgid "Loading insight…"
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Loading MCP connectors"
+msgstr ""
+
+#: src/components/connections/McpServers.jsx
+#~ msgid "Loading MCP servers"
+#~ msgstr ""
+
 #: src/components/ProjectMembers.jsx
 msgid "Loading members…"
 msgstr ""
@@ -4357,6 +4544,10 @@ msgstr ""
 msgid "Longer than the platform allows: {at}"
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Look up issues and projects, or file a new issue."
+msgstr ""
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Looking up where {providerName}'s key comes from."
 msgstr ""
@@ -4442,6 +4633,18 @@ msgstr ""
 #: src/lib/userProfile.js
 msgid "Match my messages"
 msgstr ""
+
+#: src/components/connections/ConnectorSource.jsx
+msgid "MCP"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "MCP connectors"
+msgstr ""
+
+#: src/components/connections/McpServers.jsx
+#~ msgid "MCP servers"
+#~ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Measured"
@@ -4655,12 +4858,20 @@ msgstr ""
 msgid "Name — e.g. Face Shape Analysis"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Name (optional)"
+msgstr ""
+
 #: src/components/content/PlanViewport.jsx
 msgid "Narrator: {narrator}"
 msgstr ""
 
 #: src/components/content/PlanViewport.jsx
 msgid "Narrator: {narrator} · {voice}"
+msgstr ""
+
+#: src/components/connections/ConnectorSource.jsx
+msgid "Native"
 msgstr ""
 
 #: src/components/commands/AppCommands.jsx
@@ -4673,6 +4884,11 @@ msgstr ""
 
 #: src/app/(app)/connections/page.jsx
 msgid "Needed only if the token lacks business_management (no account discovery)."
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+#: src/components/connections/McpConnectors.jsx
+msgid "Needs reconnecting"
 msgstr ""
 
 #: src/lib/contentReview.js
@@ -4962,6 +5178,10 @@ msgstr ""
 msgid "no schema"
 msgstr ""
 
+#: src/components/connections/McpServerRow.jsx
+#~ msgid "No sign-in"
+#~ msgstr ""
+
 #: src/components/content/SlidesCarousel.jsx
 msgid "No slides yet"
 msgstr ""
@@ -5040,6 +5260,8 @@ msgstr ""
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
+#: src/components/connections/McpConnectDialog.jsx
+#: src/components/connections/McpConnectors.jsx
 msgid "Not connected"
 msgstr ""
 
@@ -5345,8 +5567,20 @@ msgstr ""
 msgid "Only members of this project can open the link. Nothing here is public."
 msgstr ""
 
+#: src/components/workspace/ActivityRow.jsx
+#~ msgid "Only the project owner can approve {tool} on {server}"
+#~ msgstr ""
+
 #: src/app/(app)/execute/page.jsx
 msgid "Only the project owner can change autonomy."
+msgstr ""
+
+#: src/components/connections/McpServers.jsx
+#~ msgid "Only your own chats use your servers, in any project. People you share a project with connect their own."
+#~ msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -5424,6 +5658,10 @@ msgstr ""
 
 #: src/hooks/useAgentNotifications.js
 msgid "Open the tab to see what happened and what to do."
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Open to try again"
 msgstr ""
 
 #: src/components/content/PlanCalendar.jsx
@@ -5629,8 +5867,20 @@ msgstr ""
 msgid "Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Paste an API key to connect with one."
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Paste the address of any remote MCP server."
+msgstr ""
+
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste the link to one TikTok post."
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Paste the server's address to connect it."
 msgstr ""
 
 #: src/components/content/VendorKeyForm.jsx
@@ -6071,6 +6321,10 @@ msgstr ""
 msgid "Read a memory"
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Read and write pages in your Notion workspace."
+msgstr ""
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Read full screen"
 msgstr ""
@@ -6189,6 +6443,7 @@ msgstr ""
 #~ msgid "recomputed at the next call"
 #~ msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
 msgid "Reconnect"
@@ -6597,6 +6852,10 @@ msgstr ""
 msgid "Rule, e.g. “Never pause the Brand campaign”"
 msgstr ""
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Run {toolName} on {serverName}?"
+msgstr ""
+
 #: src/app/(app)/artifacts/page.jsx
 msgid "Run an audit with your project selected and its report lands here — versioned, so you can read what changed between two runs of the same check."
 msgstr ""
@@ -6722,6 +6981,10 @@ msgstr ""
 
 #: src/components/content/PublishModal.jsx
 msgid "Saved as TikTok draft"
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Saved encrypted to your account and sent only to this server."
 msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
@@ -7038,6 +7301,10 @@ msgstr ""
 msgid "Sequencing the posting cadence…"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Server address"
+msgstr ""
+
 #: src/app/(app)/connections/page.jsx
 msgid "Service account secret"
 msgstr ""
@@ -7101,6 +7368,10 @@ msgstr ""
 #: src/app/(app)/connections/page.jsx
 msgid "Settled revenue, subscriptions, refunds and payment outcomes."
 msgstr ""
+
+#: src/components/connections/McpServers.jsx
+#~ msgid "Setup guide"
+#~ msgstr ""
 
 #: src/components/onboarding/Aqueduct.jsx
 msgid "Setup steps"
@@ -7196,6 +7467,10 @@ msgstr ""
 msgid "Show superseded"
 msgstr ""
 
+#: src/components/insights/ToolApproval.jsx
+#~ msgid "Showing the first part. The rest goes too."
+#~ msgstr ""
+
 #: src/components/profile/VoiceSample.jsx
 msgid "Shown in English. Duct still writes to you in {language}; only this preview does not."
 msgstr ""
@@ -7236,8 +7511,24 @@ msgstr ""
 msgid "Sign in first. A token works on your account, so there has to be one."
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Sign in instead"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Sign in to connect"
+msgstr ""
+
+#: src/components/connections/McpServers.jsx
+#~ msgid "Sign in to connect an MCP server. It’s saved to your account, like your other connections."
+#~ msgstr ""
+
 #: src/app/(app)/connections/page.jsx
 msgid "Sign in to finish connecting GitHub."
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Sign in to finish connecting that MCP server."
 msgstr ""
 
 #: src/components/AppSidebar.jsx
@@ -7306,6 +7597,10 @@ msgstr ""
 msgid "Signals"
 msgstr ""
 
+#: src/components/connections/McpServerRow.jsx
+#~ msgid "Signed in"
+#~ msgstr ""
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Signed in as <0>{planAccount}</0>"
 msgstr ""
@@ -7340,6 +7635,7 @@ msgid "Sketching image prompts…"
 msgstr ""
 
 #: src/components/insights/AccountSelect.jsx
+#: src/components/insights/ToolApproval.jsx
 msgid "Skip"
 msgstr ""
 
@@ -7353,6 +7649,10 @@ msgstr ""
 
 #: src/app/layout.js
 msgid "Skip to main content"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Skipped {name}"
 msgstr ""
 
 #: src/components/insights/ConnectionRequest.jsx
@@ -7772,8 +8072,16 @@ msgstr ""
 msgid "That connection didn't finish — the link expires after a minute. Please try again."
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "That connection expired or was started from another account. Connect again."
+msgstr ""
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "That didn't connect. Check the key and try again."
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "That didn't connect. Try again in a moment."
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
@@ -7830,6 +8138,10 @@ msgstr ""
 
 #: src/lib/agentSession.js
 msgid "That model isn't available on this provider. Pick another under Settings → Models & providers."
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "That sign-in expired before it came back. Connect the server again."
 msgstr ""
 
 #: src/components/content/PostVideo.jsx
@@ -8004,8 +8316,32 @@ msgstr ""
 msgid "The SEO audit"
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "The server answered in a way Duct didn't expect. Try again."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "The server didn't complete the connection"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "The server's sign-in finished but it wouldn't hand over access. Try connecting again."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "The server's sign-in was cancelled or declined, so nothing was connected. Start again from the app if you meant to connect it."
+msgstr ""
+
 #: src/components/content/StyleGallery.jsx
 msgid "The shared, brand-agnostic slide styles the builder inlines so captions stay consistent. Formats link to these. More styles & categories coming."
+msgstr ""
+
+#: src/app/(auth)/desktop-auth/page.js
+msgid "The sign-in didn't finish"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "The sign-in was cancelled or declined, so nothing was connected."
 msgstr ""
 
 #: src/lib/userProfile.js
@@ -8220,6 +8556,10 @@ msgstr ""
 msgid "This screen doesn't exist or has moved. Nothing is wrong with your install."
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "This server doesn’t offer one-click sign-in to Duct, so it needs an API key instead."
+msgstr ""
+
 #: src/components/workspace/ContextRing.jsx
 msgid "This session"
 msgstr ""
@@ -8298,6 +8638,10 @@ msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Tone"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Tools from OpenSEO, PostHog and other apps, for the insights chat. Saved to your account."
 msgstr ""
 
 #: src/components/content/DiscoverPage.jsx
@@ -8474,6 +8818,10 @@ msgstr ""
 msgid "Use a token instead"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Use an API key instead"
+msgstr ""
+
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"
 msgstr ""
@@ -8502,8 +8850,16 @@ msgstr ""
 msgid "Use this take"
 msgstr ""
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Used {tool}"
+msgstr ""
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Used {used}"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Using {tool}"
 msgstr ""
 
 #: src/lib/modelTiers.js
@@ -8679,6 +9035,7 @@ msgstr ""
 msgid "Waiting for you"
 msgstr ""
 
+#: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
 msgid "Waiting for your browser…"
@@ -8795,6 +9152,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What is my site actually about?"
+msgstr ""
+
+#: src/components/insights/ToolApproval.jsx
+msgid "What it will send"
 msgstr ""
 
 #: src/components/workspace/ComposerDials.jsx
@@ -9016,6 +9377,10 @@ msgstr ""
 msgid "You"
 msgstr ""
 
+#: src/components/insights/ToolApproval.jsx
+msgid "You added {serverName} by address, so Duct asks before every call to it. Skip and the agent carries on without it."
+msgstr ""
+
 #: src/components/execution/ChangeSetCard.jsx
 msgid "You approved this"
 msgstr ""
@@ -9054,6 +9419,10 @@ msgstr ""
 
 #: src/components/ProjectMembers.jsx
 msgid "You'll lose access to this project immediately. The owner can invite you again."
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "You’ll sign in at {label} in your browser, then come straight back here."
 msgstr ""
 
 #: src/components/ProjectMembers.jsx
@@ -9142,6 +9511,10 @@ msgstr ""
 msgid "Your ChatGPT sign-in is saved, but this build cannot read it: {planReadError}"
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Your Cloudflare account through its API: Workers, DNS, zones and analytics."
+msgstr ""
+
 #: src/components/ConnectionBanner.jsx
 msgid "Your connection is fine but Duct's servers are not responding. This is usually brief."
 msgstr ""
@@ -9156,6 +9529,10 @@ msgstr ""
 
 #: src/components/TelemetryCard.jsx
 msgid "Your data, or anything you generate"
+msgstr ""
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Your Duct session has ended. Sign in again, then connect."
 msgstr ""
 
 #: src/components/content/PostViewport.jsx
@@ -9225,6 +9602,10 @@ msgstr ""
 
 #: src/components/TelemetryCard.jsx
 msgid "Your provider API keys"
+msgstr ""
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Your Railway projects: services, deployments, logs and variables."
 msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx

@@ -5,6 +5,7 @@
 // of the body to whichever connector opened it.
 
 import { useRef } from "react";
+import ConnectorSource from "./ConnectorSource";
 
 import {
   Dialog,
@@ -21,6 +22,8 @@ export default function ConnectorDialog({
   logo,
   title,
   description,
+  // `{ kind, publisher }`, the same line the tile shows under its name.
+  source,
   // Status glyphs, rendered beside the title.
   //
   // They used to sit in the action row, which measured 312px of empty space
@@ -71,6 +74,7 @@ export default function ConnectorDialog({
                 <DialogTitle>{title}</DialogTitle>
                 {status}
               </div>
+              <ConnectorSource source={source} />
               <DialogDescription className="conn-dialog-desc">
                 {description}
               </DialogDescription>

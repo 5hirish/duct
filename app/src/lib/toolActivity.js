@@ -48,6 +48,8 @@ export const ACTIVITY_TOOLS = Object.freeze({
   ListDataSources: ActivityKind.CONTEXT,
   GetArtifact: ActivityKind.ARTIFACT,
   ListArtifacts: ActivityKind.ARTIFACT,
+  ListConnectedTools: ActivityKind.CONNECTED_TOOL,
+  CallConnectedTool: ActivityKind.CONNECTED_TOOL,
   ProjectContext: ActivityKind.CONTEXT,
   fetch_brand_context: ActivityKind.CONTEXT,
   fetch_topic_bank: ActivityKind.CONTEXT,
@@ -70,6 +72,23 @@ export const ACTIVITY_TOOLS = Object.freeze({
 // The runner's own notice that the turn was enriched, not a tool the model
 // called (agents/core/activity.PROJECT_CONTEXT_TOOL).
 export const PROJECT_CONTEXT_TOOL = "ProjectContext";
+
+/** The connected-tool listing, as opposed to a call (`meta.listing` live). */
+const CONNECTED_LISTING_TOOL = "ListConnectedTools";
+
+/**
+ * A connected tool's outcomes that are an answer rather than a failure: the
+ * person skipped it, the run had nobody to ask, or the call was too long to
+ * show for approval and nothing was sent. The row carries no error for these,
+ * and the card draws them as a decision, not in red.
+ */
+export const CONNECTED_DECISIONS = new Set(["skipped", "needs_approval", "arguments_too_long"]);
+
+// Outcomes whose message never reaches a row (backend `_CONNECTED_QUIET`): a
+// skip's message is addressed to the model, and a protocol or tool error is
+// the server's own words — bytes a third party wrote, which a card never
+// holds. The reason alone picks the sentence.
+const CONNECTED_QUIET = new Set([...CONNECTED_DECISIONS, "protocol_error", "tool_error"]);
 
 /** The stored CONTEXT row → the "Read project context" row the run drew
  *  live. Only the blocks the run had something for; a resume's row is a
@@ -244,6 +263,23 @@ function replayRow({ tool, id, args, env, raw, isError }) {
       title: env?.topic || env?.headline || args.title || args.topic || "",
       meta,
       error: ok ? "" : String(env?.message || env?.error || ""),
+    };
+  }
+  if (kind === ActivityKind.CONNECTED_TOOL) {
+    // The backend's verdict, restated (`_connected_done`): a listing that
+    // reached every server has no status, a call says "ok", and anything else
+    // is a state the row names.
+    const status = String(env?.status || "");
+    const done = !isError && (status === "" || status === "ok");
+    return {
+      ...base,
+      status: done ? StepStatus.SUCCESS : StepStatus.ERROR,
+      title: String(args.tool || ""),
+      source: String(args.server || ""),
+      subtitle: String(env?.name || ""),
+      meta: { listing: tool === CONNECTED_LISTING_TOOL },
+      error: done || CONNECTED_QUIET.has(status) ? "" : String(env?.message || ""),
+      reason: done ? "" : status,
     };
   }
   if (kind === ActivityKind.DATA) {

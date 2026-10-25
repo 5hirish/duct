@@ -51,6 +51,11 @@ import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
+import McpConnectDialog from "@/components/connections/McpConnectDialog";
+import McpConnectors from "@/components/connections/McpConnectors";
+import { NATIVE_SOURCE } from "@/lib/connectorSource";
+import PauseCard from "@/components/workspace/PauseCard";
+import { AgentEvent } from "@/lib/agentEvents";
 import ProviderCard from "@/components/connections/ProviderCard";
 import { LOGOS } from "@/components/connections/logos";
 import { PROVIDERS } from "@/lib/providerKeys";
@@ -593,6 +598,104 @@ const ACTIVITIES = [
   contextActivity({ resume: false, blocks: { business_context: "…", user_context: "…", memory: "…", data_sources: "ga4, gsc", artifact_format: "html" } }, "context-1"),
   ...activitiesFromEvents(TOOL_TRAFFIC),
 ];
+
+// MCP servers, shaped exactly as /api/user/mcp/presets and /servers return
+// them (backend/service/mcp/presets.py, store.list_servers).
+const MCP_PRESETS = [
+  { id: "openseo", label: "OpenSEO", url: "https://app.openseo.so/mcp", home: "https://openseo.so", publisher: "OpenSEO", key_url: "https://app.openseo.so/settings", trust_read_only: true },
+  { id: "notion", label: "Notion", url: "https://mcp.notion.com/mcp", home: "https://www.notion.so", publisher: "Notion", key_url: "", trust_read_only: true },
+  { id: "linear", label: "Linear", url: "https://mcp.linear.app/mcp", home: "https://linear.app", publisher: "Linear", key_url: "", trust_read_only: true },
+  { id: "posthog", label: "PostHog", url: "https://mcp.posthog.com/mcp", home: "https://posthog.com", publisher: "PostHog", key_url: "https://app.posthog.com/settings/user-api-keys", trust_read_only: true },
+  { id: "railway", label: "Railway", url: "https://mcp.railway.com", home: "https://railway.com", publisher: "Railway", key_url: "", trust_read_only: false },
+  { id: "cloudflare", label: "Cloudflare", url: "https://mcp.cloudflare.com/mcp", home: "https://www.cloudflare.com", publisher: "Cloudflare", key_url: "", trust_read_only: false },
+];
+
+const mcpServer = (id, fields) => ({
+  id,
+  key: id,
+  preset: "",
+  auth: "oauth",
+  status: "connected",
+  last_validated_at: "2026-10-18T09:00:00Z",
+  created_at: "2026-10-12T09:00:00Z",
+  ...fields,
+});
+
+const MCP_NONE = [];
+
+const MCP_SERVERS = [
+  mcpServer("openseo", { url: "https://app.openseo.so/mcp", name: "OpenSEO", preset: "openseo", auth: "key" }),
+  mcpServer("notion", { url: "https://mcp.notion.com/mcp", name: "Notion", preset: "notion", status: "needs_reauth" }),
+  mcpServer("acme", {
+    url: "https://mcp.acme-internal-tools.example.com/v1/mcp",
+    name: "Acme customer relationship manager (production workspace)",
+    auth: "none",
+  }),
+];
+
+// A run's connected-tool traffic as the recorder stores it: what the agent
+// asked each server, and what came back. Every outcome the row has words for.
+const MCP_TRAFFIC = [
+  use("ListConnectedTools", "m1", {}),
+  returned("ListConnectedTools", "m1", { servers: [{ server: "openseo", name: "OpenSEO", status: "ok", tools: [] }], note: "data" }),
+  use("CallConnectedTool", "m2", { server: "openseo", tool: "get_keyword_metrics", arguments: "{\"keywords\": [\"open source seo\"]}" }),
+  returned("CallConnectedTool", "m2", { status: "ok", server: "openseo", name: "OpenSEO", tool: "get_keyword_metrics", content: "…" }),
+  use("CallConnectedTool", "m3", { server: "notion", tool: "create_page", reason: "To file the brief in the team wiki." }),
+  returned("CallConnectedTool", "m3", { status: "skipped", server: "notion", tool: "create_page", message: "The user did not approve this call." }),
+  use("CallConnectedTool", "m4", { server: "linear", tool: "create_issue" }),
+  returned("CallConnectedTool", "m4", { status: "needs_approval", server: "linear", tool: "create_issue", message: "Nobody is here to approve it." }),
+  use("CallConnectedTool", "m4b", { server: "notion", tool: "update_page" }),
+  returned("CallConnectedTool", "m4b", { status: "arguments_too_long", server: "notion", name: "Notion", tool: "update_page", message: "Too long to show for approval, so nothing was sent." }),
+  use("CallConnectedTool", "m5", { server: "notion", tool: "search" }),
+  returned("CallConnectedTool", "m5", { server: "notion", name: "Notion", status: "reauth_required", message: "Notion refused the stored sign-in. Reconnect it on the Connections page." }),
+  use("CallConnectedTool", "m6", { server: "posthog", tool: "query_insights" }),
+  returned("CallConnectedTool", "m6", { server: "posthog", name: "PostHog", status: "unreachable", message: "mcp.posthog.com did not answer within 30 seconds." }),
+  use("CallConnectedTool", "m7", { server: "openseo", tool: "research_keywords" }),
+  returned("CallConnectedTool", "m7", { status: "tool_error", server: "openseo", name: "OpenSEO", tool: "research_keywords", content: "Out of credits." }),
+  use("CallConnectedTool", "m8", { server: "openseo", tool: "rank_everything" }),
+  returned("CallConnectedTool", "m8", { status: "unknown_tool", server: "openseo", tool: "rank_everything", tools: ["get_keyword_metrics"], message: "OpenSEO has no tool by that name." }),
+];
+
+const MCP_ACTIVITIES = [
+  ...activitiesFromEvents(MCP_TRAFFIC),
+  { id: "m9", kind: "connected_tool", tool: "CallConnectedTool", status: "running", title: "get_serp_results", source: "openseo", subtitle: "", meta: { listing: false } },
+];
+
+const TOOL_APPROVAL = {
+  event: AgentEvent.TOOL_APPROVAL_REQUIRED,
+  interrupt_id: "preview-approval",
+  server: "notion",
+  server_name: "Notion",
+  server_url: "https://mcp.notion.com/mcp",
+  tool: "notion-create-pages",
+  tool_title: "Create pages",
+  reason: "To file this week's brief in your Growth wiki, under Weekly briefs.",
+  arguments: JSON.stringify(
+    { parent: { page_id: "1a2b3c4d" }, pages: [{ properties: { title: "Organic growth, week of 13 Oct" }, content: "## What changed\n…" }] },
+    null,
+    2,
+  ),
+};
+
+const TOOL_APPROVAL_LONG = {
+  ...TOOL_APPROVAL,
+  interrupt_id: "preview-approval-long",
+  server: "acme",
+  server_name: "Acme customer relationship manager (production workspace)",
+  server_url: "https://mcp.acme-internal-tools.example.com/v1/mcp",
+  tool: "bulk_update_contacts",
+  tool_title: "",
+  reason: "",
+  // Added by address, so Duct asks even though the server calls it read-only.
+  why: "added_by_address",
+  // Long, and whole: the backend refuses a call too long to show rather than
+  // cutting it, so the fold scrolls instead.
+  arguments: JSON.stringify(
+    { contacts: Array.from({ length: 40 }, (_, i) => ({ id: `c_${i}`, lifecycle_stage: "customer", owner: "growth@acme.example" })) },
+    null,
+    2,
+  ),
+};
 
 const GALLERY_DOCS = [
   { id: "g1", group_id: "g1", title: "Organic growth, week of 8 Sept", version: 3, version_count: 3, content_type: "text/markdown", has_content: true, created_at: new Date(Date.now() - 2 * 3600_000).toISOString() },
@@ -1536,6 +1639,80 @@ export const SCENES = [
           onChange={() => {}}
           loadEntities={stubLoader(null, { fail: "Failed to decrypt credentials" })}
         />
+      </div>
+    ),
+  },
+  {
+    id: "mcp-servers",
+    state: "nothing connected yet",
+    group: "McpConnectors",
+    title: "MCP connectors, before the first connect",
+    note: "The MCP tiles join the native ones in Connections' one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. Open Railway's: it asks before every call, read-only or not, because its reads return secrets. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
+    render: () => <McpScene servers={MCP_NONE} answer="authorize" />,
+  },
+  {
+    id: "mcp-servers-connected",
+    state: "three connected: an API key, a lapsed sign-in, a long name with no sign-in",
+    group: "McpConnectors",
+    title: "MCP connectors, connected",
+    note: "OpenSEO is connected with a key. Notion's sign-in lapsed: its tile goes amber and says Needs reconnecting, and its dialog opens on Reconnect. The third is a server added by address, now a tile of its own: MCP with no publisher (Duct can't know who runs it), its host underneath, and a name long enough to wrap. Disconnect, in the dialog, asks first, then the tile goes.",
+    render: () => <McpScene servers={MCP_SERVERS} answer="needs_key" />,
+  },
+  {
+    id: "mcp-servers-needs-key",
+    state: "the server asks for a key",
+    group: "McpConnectors",
+    title: "When a server has no one-click sign-in",
+    note: "Open either dialog: each starts where a connect lands when the server answers needs_key. The key field appears in place with the reason above it, and OpenSEO's links to where OpenSEO issues keys. In the section above, any tile's Connect gets the same answer; paste anything and press Connect again to see it save.",
+    render: () => <McpKeyScene />,
+  },
+  {
+    id: "mcp-servers-edges",
+    state: "signed out · loading · failed to load",
+    group: "McpConnectors",
+    title: "MCP connectors, before there is anything to show",
+    note: "Signed out there is no list to fetch, so one disabled tile says what would be here. Loading holds tile shapes in the grid. A failed load is one amber tile with the server's sentence; opening it tries again.",
+    render: () => <McpEdgesScene />,
+  },
+  {
+    id: "tool-approval",
+    state: "a tool its server doesn't mark read-only",
+    group: "ToolApproval",
+    title: "The agent asks before running a connected tool",
+    note: "Drawn through PauseCard, the way the chat draws it. Whose tool and which, the agent's reason in its own words, and what will be sent folded under one click. Approve and Skip are both real buttons: a skip is an answer the agent carries on from.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={TOOL_APPROVAL} onAnswer={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "tool-approval-edges",
+    state: "added by address, no title, no reason, a long name, long arguments · disabled while an answer is sending",
+    group: "ToolApproval",
+    title: "The approval card at its edges",
+    note: "A server added by address with a long name and a tool with no title: the heading wraps rather than clipping, and the footer says Duct asks before every call to a server added by address. Open the arguments: they arrive whole and the fold scrolls. The second card is disabled, as it is while an answer is on its way.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={TOOL_APPROVAL_LONG} onAnswer={() => {}} />
+        <PauseCard pause={TOOL_APPROVAL} onAnswer={() => {}} disabled />
+      </div>
+    ),
+  },
+  {
+    id: "activity-connected-tools",
+    state: "checked · used · skipped · needs approval · too long to show · signed out · unreachable · the server's error · unknown tool · running",
+    group: "AgentChat",
+    title: "Tools on connected servers, in the transcript",
+    note: "Built by lib/toolActivity from recorded traffic, the path a reopened thread takes. A skip is the person's choice and is not painted red, and neither is a call held back because it was too long to show first. A protocol or tool error carries no text of the server's: the row says the server returned an error, in our words. Signed out links to Connections; unreachable and an unknown tool keep Duct's own sentence behind the chevron.",
+    render: () => (
+      <div className="max-w-xl space-y-6">
+        <ActivityGroup activities={MCP_ACTIVITIES} />
+        <div className="space-y-1">
+          {MCP_ACTIVITIES.map((a) => (
+            <ActivityRow key={a.id} activity={a} defaultOpen />
+          ))}
+        </div>
       </div>
     ),
   },
@@ -2659,6 +2836,148 @@ function OneClickCardScene() {
         {...common}
         serverRowList={[row("r1", "acme/app"), row("r2", "acme/site")]}
       />
+    </div>
+  );
+}
+
+/** The grid the MCP tiles join on Connections, with two native tiles ahead of
+ *  them so the source lines can be compared, and the page's message line. */
+function ConnectorGrid({ children }) {
+  return (
+    <div className="conn-grid">
+      <ConnectorTile
+        logo={LOGOS.ga4}
+        title="Google Analytics"
+        source={NATIVE_SOURCE}
+        description="Traffic, sessions, engagement and conversions."
+        tone="on"
+        status="Connected"
+        onClick={() => {}}
+      />
+      <ConnectorTile
+        logo={LOGOS.stripe}
+        title="Stripe"
+        source={NATIVE_SOURCE}
+        description="Settled revenue, subscriptions, refunds and payment outcomes."
+        status="Not connected"
+        onClick={() => {}}
+      />
+      {children}
+    </div>
+  );
+}
+
+function McpMessage({ message }) {
+  if (message.error) return <p role="alert" className="mb-3 text-sm text-destructive">{message.error}</p>;
+  if (message.notice) return <p role="status" className="mb-3 text-sm text-muted-foreground">{message.notice}</p>;
+  return null;
+}
+
+/**
+ * The MCP tiles over a stub that behaves like the backend: connecting adds a
+ * server, Disconnect removes it. `answer` is what a connect without a key
+ * gets back — "authorize" (the desktop shell's browser hand-off, so the
+ * dialog waits instead of navigating the preview away) or "needs_key".
+ */
+function McpScene({ servers, answer, signedIn = true }) {
+  const [message, setMessage] = useState({});
+  const api = useMemo(() => {
+    let rows = [...servers];
+    return {
+      listPresets: async () => MCP_PRESETS,
+      listServers: async () => rows,
+      systemBrowser: async () => true,
+      openSignIn: async () => "browser",
+      claim: async () => null,
+      remove: async (id) => {
+        rows = rows.filter((r) => r.id !== id);
+      },
+      connect: async ({ preset, url, name, apiKey }) => {
+        await new Promise((r) => setTimeout(r, 500));
+        if (!apiKey && answer === "authorize") return { status: "authorize", authorize_url: "https://example.com/authorize" };
+        if (!apiKey) return { status: "needs_key", message: "no authorization server metadata" };
+        const chosen = MCP_PRESETS.find((p) => p.id === preset);
+        const server = mcpServer(`new-${rows.length}`, {
+          url: chosen?.url || url,
+          name: chosen?.label || name || "New server",
+          preset: chosen?.id || "",
+          auth: "key",
+        });
+        rows = [...rows.filter((r) => r.url !== server.url), server];
+        return { status: "connected", server };
+      },
+    };
+  }, [servers, answer]);
+  return (
+    <div>
+      <McpMessage message={message} />
+      <ConnectorGrid>
+        <McpConnectors signedIn={signedIn} api={api} onMessage={setMessage} />
+      </ConnectorGrid>
+    </div>
+  );
+}
+
+/** The key-asked state is the far side of a server round trip, so these open
+ *  straight into it. */
+function McpKeyScene() {
+  const [open, setOpen] = useState("");
+  const connect = () => new Promise((resolve) => setTimeout(() => resolve({ done: true }), 600));
+  const close = (next) => !next && setOpen("");
+  return (
+    <div className="space-y-8">
+      <Row>
+        <Button size="sm" variant="outline" onClick={() => setOpen("preset")}>Open OpenSEO, key asked for</Button>
+        <Button size="sm" variant="outline" onClick={() => setOpen("custom")}>Open a server by address, key asked for</Button>
+      </Row>
+      <McpConnectDialog
+        open={open === "preset"}
+        onOpenChange={close}
+        logo={<EntityAvatar url="https://openseo.so" name="OpenSEO" className="conn-favicon" />}
+        description="Keyword volume, difficulty and backlinks for the topics you ask about."
+        source={{ kind: "mcp", publisher: "OpenSEO" }}
+        preset={MCP_PRESETS[0]}
+        initialNeedsKey
+        onConnect={connect}
+      />
+      <McpConnectDialog
+        open={open === "custom"}
+        onOpenChange={close}
+        logo={LOGO}
+        description="Paste the address of any remote MCP server."
+        source={{ kind: "mcp", publisher: "" }}
+        initialUrl="https://tools.example.com/mcp"
+        initialNeedsKey
+        onConnect={connect}
+      />
+      <McpScene servers={MCP_NONE} answer="needs_key" />
+    </div>
+  );
+}
+
+const MCP_PENDING = {
+  listPresets: () => new Promise(() => {}),
+  listServers: () => new Promise(() => {}),
+};
+const MCP_FAILING = {
+  listPresets: async () => {
+    throw new Error("Server error 502");
+  },
+  listServers: async () => [],
+};
+
+function McpEdgesScene() {
+  return (
+    <div className="space-y-10">
+      <ConnectorGrid>
+        <McpConnectors signedIn={false} api={MCP_PENDING} />
+      </ConnectorGrid>
+      <ConnectorGrid>
+        <McpConnectors signedIn api={MCP_PENDING} />
+      </ConnectorGrid>
+      <ConnectorGrid>
+        <McpConnectors signedIn api={MCP_FAILING} />
+      </ConnectorGrid>
     </div>
   );
 }

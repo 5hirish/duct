@@ -137,6 +137,7 @@ Tables only; the linked code is the source of truth.
 | `questions_required` | `Custom` | Pause: the agent needs an answer. `interrupt_id` on a checkpointed run; `replay: true` when re-emitted on resume |
 | `connection_required` | `Custom` | Pause: a connector the project lacks. `connector_id`, `label`, `auth_kind`, `authorize_path`, `reason` |
 | `account_selection_required` | `Custom` | Pause: which account, property or site. `connector_id`, `label`, `candidates` |
+| `tool_approval_required` | `Custom` | Pause: a connected MCP tool its server does not mark read-only. Server, tool, reason, argument preview |
 | `slide_render_requested` | `Custom` | The agent asks the browser to rasterize a slide |
 | `artifact_chunk` | `Custom` | Token inside `<duct_artifact>` |
 | `artifact_version` | `Custom` | New version of the primary artifact: full payload, `version_id`, label |
@@ -162,6 +163,7 @@ One answer endpoint for every pause. `interrupt_id` is passed back on a checkpoi
 | `questions_required` | Answers keyed by question |
 | `connection_required` | `{"skipped": true}` to decline; anything else after the sign-in, and the server re-reads the connector rather than trusting the answer |
 | `account_selection_required` | `{"account_id": ...}`; empty is a skip |
+| `tool_approval_required` | `{"approved": true}`; anything else is a skip |
 
 ### Failure code
 
