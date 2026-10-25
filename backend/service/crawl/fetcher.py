@@ -38,6 +38,11 @@ _TIMEOUT = httpx.Timeout(10.0, connect=5.0)
 # Maximum response body size to read. Prevents downloading huge pages.
 _MAX_BYTES = 5 * 1024 * 1024  # 5 MB
 
+# The budget for one whole fetch. _TIMEOUT bounds each read, so a server that
+# dripped a chunk every nine seconds could hold a crawl worker for as long as
+# it liked; this bounds the exchange from first byte to last.
+_TOTAL_DEADLINE = 30.0
+
 # Response headers we care about for SEO signals.
 _CAPTURE_HEADERS = frozenset({
     "x-robots-tag",
@@ -248,20 +253,39 @@ def _build_redirect_chain(resp: httpx.Response) -> list[dict]:
     return chain
 
 
+async def _read_capped(resp: httpx.Response, url: str) -> bytes:
+    """The body up to _MAX_BYTES, read chunk by chunk and abandoned at the cap.
+
+    ``aread()`` buffered the whole response before the cap was applied, so the
+    cap bounded what reached the parser and not what reached memory: a page
+    that streams gigabytes quickly was an out-of-memory on the one-gigabyte
+    API container, every tenant's live session with it. The chunks are the
+    decoded ones, so a compressed bomb is capped after inflation too; leaving
+    the loop closes the response without draining it.
+    """
+    chunks: list[bytes] = []
+    size = 0
+    async for chunk in resp.aiter_bytes():
+        chunks.append(chunk)
+        size += len(chunk)
+        if size >= _MAX_BYTES:
+            logger.debug("fetch: truncated response from %s to %d bytes", url, _MAX_BYTES)
+            break
+    return b"".join(chunks)[:_MAX_BYTES]
+
+
 async def fetch(client: httpx.AsyncClient, url: str) -> FetchResult:
     """Fetch *url* and return a rich FetchResult.
 
     Captures response headers, redirect chain, and TTFB in addition to
-    body text and status code.  Returns an empty FetchResult on any error.
+    body text and status code.  Returns an empty FetchResult on any error,
+    a body past the cap or a deadline, included.
     """
     try:
         t0 = time.monotonic()
-        async with client.stream("GET", url) as resp:
+        async with asyncio.timeout(_TOTAL_DEADLINE), client.stream("GET", url) as resp:
             ttfb_ms = (time.monotonic() - t0) * 1000
-            body = await resp.aread()
-            if len(body) > _MAX_BYTES:
-                body = body[:_MAX_BYTES]
-                logger.debug("fetch: truncated response from %s to %d bytes", url, _MAX_BYTES)
+            body = await _read_capped(resp, url)
             return FetchResult(
                 text=body.decode("utf-8", errors="replace"),
                 status=resp.status_code,
@@ -289,10 +313,8 @@ async def fetch_bytes(client: httpx.AsyncClient, url: str) -> tuple[bytes, int]:
     Reads at most _MAX_BYTES. Returns (b"", 0) on any error.
     """
     try:
-        async with client.stream("GET", url) as resp:
-            body = await resp.aread()
-            if len(body) > _MAX_BYTES:
-                body = body[:_MAX_BYTES]
+        async with asyncio.timeout(_TOTAL_DEADLINE), client.stream("GET", url) as resp:
+            body = await _read_capped(resp, url)
             return body, resp.status_code
     except Exception as exc:
         logger.debug("fetch_bytes %s failed: %s", url, exc)
