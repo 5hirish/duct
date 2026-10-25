@@ -572,6 +572,9 @@ export default function AgentChat({
   // produced, so it must not flicker away on the next token the way a retry does.
   tierStepDown = null,
   draft = null,
+  // The shell's session key: where ChatInput keeps the unsent text, so a
+  // reload of this thread finds this thread's draft.
+  draftKey = "",
   // Tokens (lib/agentSession.js `usage`): the ring in the composer, the figures
   // in its tooltip. Null until the first model call has been billed.
   usage = null,
@@ -872,6 +875,7 @@ export default function AgentChat({
         isStreaming={isStreaming}
         onStop={onStop}
         draft={draft}
+        draftKey={draftKey}
         placeholder={placeholder}
         ariaLabel={inputAriaLabel}
         accept={inputAccept}

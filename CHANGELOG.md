@@ -83,6 +83,9 @@ published without one. The same script, with no arguments, holds
   errors read as one sentence.
 - A ChatGPT plan's mid-stream failures are classified by payload code, so a
   spent usage window says so and transient ones retry.
+- **The composer keeps a half-written message through a reload**, Esc in it
+  stops a running turn, and the context ring's tooltip says what the last
+  call and the session cost — a dash where the model has no price.
 
 ### Security
 

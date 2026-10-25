@@ -2217,8 +2217,12 @@ msgid "Context compression"
 msgstr ""
 
 #: src/components/workspace/ContextRing.jsx
-msgid "Context used: {percent} percent. Show token usage."
+msgid "Context used: {percent} percent"
 msgstr ""
+
+#: src/components/workspace/ContextRing.jsx
+#~ msgid "Context used: {percent} percent. Show token usage."
+#~ msgstr ""
 
 #: src/components/workspace/ContextRing.jsx
 msgid "Context window"
@@ -7078,6 +7082,14 @@ msgstr ""
 
 #: src/components/audit/ShareReport.jsx
 msgid "Sharing is by membership, and a member needs a name. Sign in with Google and this project, the report and the conversation come with you — nothing is lost."
+msgstr ""
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Shift+Enter for a new line"
+msgstr ""
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Shift+Enter for a new line · Esc to stop"
 msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
