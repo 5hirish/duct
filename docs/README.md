@@ -1,76 +1,88 @@
-# Documentation index
+# Duct docs
 
-Engineering and reference material for Duct. Folder indexes list only the
-references; records are found by their dated filenames.
+**Author:** Shirish Kadam · **Updated:** 2026-10-25
 
-**Start with [`architecture.html`](architecture.html)**: the interactive map
-of the monorepo, each app, and the internals a contributor meets first. Open
-the file in a browser; it is self-contained.
+How Duct is built, what was decided and why, written for the next person on
+the team. Product strategy, go-to-market and the deployment runbooks live in a
+separate private repository; this folder holds engineering and reference
+material only.
 
-| Folder | What is in it |
-|--------|---------------|
-| [`engineering/`](engineering/) | How we build: a short list of references, and dated records beside them |
-| [`design/`](design/) | UX specs and design decisions |
-| [`archive/2026-Q2/`](archive/2026-Q2/) | Records that would now mislead, each with a row saying why |
-| [`guides/`](guides/) | Third-party model prompting references, each with its source and licence |
+## Start here
 
-Product strategy, go-to-market and MVP scope are kept in a separate private
-repository along with the deployment runbooks, so this index covers engineering
-and reference material only.
+| I want to… | Read |
+|---|---|
+| See how the monorepo, the apps and the agents fit together | [architecture.html](architecture.html), an interactive map. Open the file in a browser; it is self-contained |
+| Decide where something is recorded before adding a table, event or log | [Data model](engineering/data-model.md) |
+| Add or change an agent | [Building and changing agents](engineering/agent-engineering.md) |
+| Know where every secret lives and what protects it | [Credential storage](engineering/credential-storage.md) |
+| Find every other reference, by task | [Engineering](engineering/README.md) |
+| Read the plan, review or research behind a decision | `engineering/`, by date. `ls` sorts the records into a timeline |
+
+## Folders
+
+| Folder | Holds |
+|---|---|
+| `engineering/` | How we build: a short list of references kept current, and dated records beside them |
+| `design/` | UX specs and design decisions |
+| `archive/<quarter>/` | Records a reader should no longer follow. Each carries a banner naming what replaced it, and a row in the folder's README saying why |
+| `guides/` | Third-party model prompting references, each with its source and licence |
+| `assets/` | Images the READMEs embed |
+| `figures/` | Standalone SVG figures that Markdown docs embed (create when first needed) |
+
+Agent conventions are rules, not docs: they live in each area's `AGENTS.md`
+(backend agents in [`backend/AGENTS.md`](../backend/AGENTS.md)). Cross-agent
+design and per-agent plans are records in `engineering/`. Add a `README.md` to
+a folder only when its purpose is not obvious from its name.
 
 ## Naming
 
-Two kinds of document, told apart by the filename:
+The filename says whether a document may change.
 
-- **Records** — `YYYY-MM-DD-<slug>.md|html`: a review, a plan, a research
-  report, a decision. The date is the day it was written and the document is
-  frozen from then on. Outcomes and corrections go in a dated addendum at the
-  bottom, or in a new record, never by rewriting the argument, so a reader
-  always knows how old the reasoning is.
-- **References** — `<slug>.md`: a runbook, a contract, an inventory, a
-  watch-list. Anything that has to be true *now*. Rewritten in place, and it
-  says when it was last brought up to date.
+| | References (`<slug>.md`) | Records (`YYYY-MM-DD-<slug>.md`) |
+|---|---|---|
+| Describe | How things are now: a runbook, a contract, an inventory | A review, plan, research report or decision, on the day it was written |
+| Header line | `**Author:** … · **Updated:** YYYY-MM-DD` | `**Author:** … · **Date:** YYYY-MM-DD` |
+| When things change | Rewritten in place, in the same change as the code, and the date moves | Frozen. Outcomes and corrections go in a dated addendum at the bottom, or a new record, so a reader always knows how old the reasoning is |
 
-Every document carries one line under its title naming the author (the git
-user who wrote it) and its date: `**Author:** … · **Date:** …` on a record,
-`**Author:** … · **Updated:** …` on a reference (an HTML page uses
-`<b>Author</b>` / `<b>Date</b>` in its masthead). `scripts/check_docs.py`
-(`make check-docs`, `docs.yml` on pull requests) fails a file that has
-neither line, a record whose date disagrees with its filename, a reference
-that was edited without its `Updated:` line moving, an HTML file with no
-figure in it, or a document whose `files: [...]` lists name a path that no
-longer exists (the architecture page lists one per box). `guides/` is exempt as third-party material with its own
-provenance headers; folder `README.md` indexes and the generated
-`engineering/agent-prompts.md` are exempt too.
+The author is the git user who wrote it; an HTML page carries the same two
+lines in its masthead. `make check-docs` (`docs.yml` on pull requests)
+enforces the rule. The script, `scripts/check_docs.py`, lists exactly what
+fails and what is exempt: the third-party guides, folder indexes and the
+generated agent prompts page.
 
-## Writing
+## Writing docs
 
-- **Markdown, unless the doc needs a figure.** HTML is for a diagram, a
-  chart, a rendered demonstration — something markdown cannot show. A page
-  of prose and tables in HTML costs styling to write and tokens to read and
-  gives nothing back; six of the seven HTML reports here were converted to
-  markdown on 2026-09-14 for exactly that reason, and the check above keeps
-  the rule.
-- **Structured.** Lead with the answer. Short sections under headings, a
-  table for anything compared, a list for anything parallel. A reader should
-  be able to find the one fact they came for without reading the rest.
-- **Brief.** Say it once, in plain words, and stop. A record that takes more
-  than a few minutes to read is hiding its point; the 25 to 100 KB reports
-  that used to live here are the length to avoid, not the model.
-- **Human-readable.** Written for the next person on the team, not for the
-  agent that wrote it. Expand an acronym the first time; name a file only
-  when the reader has to open it.
+Docs are for people. The code, the schemas and the `AGENTS.md` files are for
+agents. A reader gets the point in 5 seconds and the picture in 30, without
+reading a paragraph.
 
-- **`engineering/`** — *how we build*. Records and references side by side;
-  the folder index says which each one is.
-- **`design/`** — UX specs and design decisions.
-- **`archive/<quarter>/`** — records only. A doc moves here when following it
-  would produce the wrong thing, not merely when the work ships. Every archived
-  file carries a banner saying what replaced it, and a row in that folder's
-  `README.md` saying why.
+1. **Four layers.** The title and one line on why it matters. A figure or a
+   table, then **At a glance** in 3–5 bullets. Sections whose headings state
+   their point: "Only approved actions write", never "Overview". Detail last,
+   as links.
+2. **Not too technical.** What it does and why, before how. Paths, config
+   keys, field lists and function names live in the code or the area's
+   `AGENTS.md`; link to them. Explain each term once, in plain words.
+3. **Show, don't tell.** A figure for a flow, a table for a comparison,
+   numbered steps for a procedure, short prose for the why. At most one
+   callout per screen, labelled Rule, Why or Gotcha.
+4. **Short.** One idea per paragraph, three lines at most. An explainer stays
+   under about 1,000 words (5 minutes), a how-to under 600. Longer than that,
+   split it by what each reader needs to do.
+5. **Figures** are standalone SVGs in `figures/<doc>-<name>.svg`, with light
+   and dark palettes, at most eight boxes, arrows labelled with verbs. The
+   caption states the takeaway, not the topic.
+6. **Markdown, unless the doc is interactive.** HTML is for a page the reader
+   drives, like the architecture map, and it must carry a figure. An HTML page
+   of prose fails the check: six sat unread until 2026-09-14.
+7. **Rewriting loses nothing.** List every fact the old doc holds, give each
+   a home (the new doc, the code, another doc, an `AGENTS.md`), and fix
+   inbound links by meaning.
+8. **No customer data.** The repository is public: invented names and
+   synthetic accounts only.
+9. **Before you hand it over.** Does the first line say what this is and why
+   it matters? Do the headings and bold text alone tell the story? Would a
+   newcomer know every term? What could be cut without loss?
 
-Agent conventions are in [`../backend/AGENTS.md`](../backend/AGENTS.md); cross-agent
-design and per-agent plans go in `engineering/`. There is no separate `agents/` folder —
-one existed for a single unbuilt plan, which is now archived.
-
-Add a short `README.md` in a folder when its purpose is non-obvious or status (draft vs active) matters.
+Files written for agents and engineers keep their density: `AGENTS.md`,
+`STYLE.md`, `DESIGN.md` and generated references are detail by design.

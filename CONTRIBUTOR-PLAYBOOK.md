@@ -1,106 +1,100 @@
 # Contributing without writing app code
 
-[CONTRIBUTING.md](CONTRIBUTING.md) is written for someone about to run
-`poetry install` or `npm install`. This one is for a designer, PM, or marketer
-who has an opinion worth landing but no interest in the four-stack table at the
-top of that file. You don't need to set up a database, understand FastAPI, or
-know what a membership check is to fix a landing page headline, flag a
-contrast problem, or draft a blog post.
+You can fix a headline on getduct.ai, flag a contrast problem or draft a blog
+post without a database, FastAPI or a membership check. This page is for a
+designer, PM or marketer with an opinion worth landing; engineers start at
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
-Two things make this realistic in a way it wasn't a couple of years ago:
+## At a glance
 
-- **You can look at the thing without running the whole stack.** The static
-  site needs one command and no build step. The app has an isolated preview
-  route that skips auth and the real screen entirely.
-- **An AI coding assistant (Claude Code, Cursor, or similar) can do the
-  mechanical part** — finding the file, matching the existing HTML/CSS
-  pattern, updating the sitemap — if you can describe *what* should change and
-  *why*. That's the part that actually needs your judgment, and it's the part
-  these paths are built around.
+| I want to… | Do this |
+|---|---|
+| Fix or flag something on the website | Serve `site/` locally, then open a [design feedback issue](../../issues/new?template=design_feedback.yml) or fix the page |
+| Check an app screen or component | Open `/preview`: one component, every state, no sign-in |
+| Propose a feature | An idea goes in [Discussions](../../discussions); a scoped change in a [feature request](../../issues/new?template=feature_request.yml) |
+| Test a new audience or angle | A landing page, built by the `new-page` skill |
+| Publish a post or a release note | The `add-blog-post` and `add-changelog-entry` skills |
+| Stop repeating yourself | Write the instruction down once, as a skill |
+
+> **Why this works:** you can look at the real thing without running the
+> stack, and an AI coding assistant (Claude Code, Cursor, Codex, Copilot) does
+> the mechanical part: finding the file, matching the HTML/CSS pattern,
+> updating the sitemap. You supply the part that needs judgment: *what* should
+> change and *why*.
 
 ## You're a designer
 
-**Look before you touch anything.**
-- Site pages (`site/`, `for-*.html`, the blog, the changelog): pure HTML/CSS,
-  no build step.
-  ```bash
-  python3 -m http.server 8090 --directory site
-  ```
-  Open <http://localhost:8090>. Read [`site/DESIGN.md`](site/DESIGN.md) first —
-  it's the visual system as built: tokens, the accent-variant rule, contrast
-  rules for the brand orange, section rhythm.
-- App components (`app/`): the `/preview` route renders one component in
-  isolation — every state, no sign-in, no need to reproduce the real screen.
-  ```bash
-  cd app && npm install && npm run dev
-  ```
-  Open <http://localhost:3003/preview>. If you have an agent that reads this
-  repo's skills, `component-preview` drives this for you: point it at a
-  component name and the state you need to see (empty, loading, failed, long
-  name, disabled).
+**Look at the real page or component first, then say what's wrong.**
 
-**Report or fix it.** Open a [Design / UX feedback issue](../../issues/new?template=design_feedback.yml)
-— screenshot, page or component, what's wrong. If you'd rather hand it
-straight to an agent, describe the fix in the issue and check "I'd like to try
-this myself" — the issue is already scoped for that.
+The website (`site/`: the landing pages, the blog, the changelog) is plain
+HTML and CSS with no build step:
+
+1. **Serve it.** `python3 -m http.server 8090 --directory site`
+2. **Open** <http://localhost:8090>.
+3. **Read [`site/DESIGN.md`](site/DESIGN.md)** before changing anything: the
+   visual system as built, the accent-variant rule, the contrast rules for the
+   brand orange.
+
+An app component renders alone at `/preview`, in every state, with no sign-in
+and no real screen to reproduce:
+
+1. **Start the app.** `cd app && npm install && npm run dev`
+2. **Open** <http://localhost:3003/preview>.
+3. **Or ask an agent.** The `component-preview` skill takes a component name
+   and the state you need: empty, loading, failed, long name, disabled.
+
+**Report it** with a [design feedback issue](../../issues/new?template=design_feedback.yml):
+a screenshot, the page or component, what's wrong. To hand it straight to an
+agent, describe the fix in the issue and tick "I'd like to try fixing this
+myself".
 
 ## You're a PM
 
-**Propose, don't prescribe.** Open-ended ideas belong in
-[Discussions](../../discussions); a specific, scoped change belongs in a
-[Feature request](../../issues/new?template=feature_request.yml) issue. The
-"the problem" field asks for the situation, not the fix — that's deliberate,
-the fix is often not the one first imagined.
+**Describe the problem, not the fix.** The feature request form asks for the
+situation on purpose: the fix is often not the one first imagined. Open-ended
+ideas go in [Discussions](../../discussions).
 
-**A new audience or campaign angle is a landing page, not a spec doc.**
-`site/` landing pages (`for-*.html`) exist to test a hypothesis fast, one per
-audience or angle, A/B'd by URL. The `new-page` skill builds one from an
-audience slug, a headline, and subtext — same design system, only the copy and
-audience framing change. If you can write the three sentences, an agent can
-build the page.
-
-**If you find yourself repeating a process**, that's worth turning into a
-skill rather than an issue every time — see below.
+**A new audience or campaign angle is a landing page, not a spec.** Each
+`site/for-*.html` page tests one hypothesis for one audience, A/B'd by URL.
+Give the `new-page` skill an audience slug, a headline and a subtext and it
+builds the page on the same design system. If you can write the three
+sentences, an agent can build the page.
 
 ## You're doing marketing or content
 
-**Blog posts, landing-page copy, and changelog entries are all skills**, not
-hand-authored HTML:
-- `add-blog-post` — plans, writes, and files a new Insights post, updates the
-  index and sitemap.
-- `new-page` — a new audience-specific landing page.
-- `add-changelog-entry` — turns what shipped since the last entry into a
-  human-readable release note, RSS item, and sitemap update.
+**Content is a skill, not hand-written HTML.**
 
-Read [`site/AGENTS.md`](site/AGENTS.md) for what each content type is *for*
-(landing pages validate a channel, the blog compounds organic search, the
-changelog is proof-of-motion for someone deciding whether to install) and
-[`site/DESIGN.md`](site/DESIGN.md) for the copy voice — it's been codified
-from the site's best lines, not written from a generic style guide.
+| You want | Skill | It does |
+|---|---|---|
+| A blog post | `add-blog-post` | Plans, writes and files an Insights post; updates the index and the sitemap |
+| A landing page | `new-page` | One audience-specific page on the shared design system |
+| A release note | `add-changelog-entry` | Turns what shipped into a readable entry, an RSS item and a sitemap update |
 
-**Have a draft, an outline, or just a keyword cluster you think we're missing?**
-Open a [Content idea issue](../../issues/new?template=content_idea.yml). Paste
-what you have — a rough draft is more useful to an agent than a one-line ask.
+[`site/AGENTS.md`](site/AGENTS.md) says what each content type is for:
+landing pages validate a channel, the blog compounds organic search, the
+changelog shows motion to someone deciding whether to install.
+[`site/DESIGN.md`](site/DESIGN.md) holds the copy voice, codified from the
+site's best lines rather than a generic style guide.
+
+Have a draft, an outline or a keyword cluster we're missing? Open a
+[content idea issue](../../issues/new?template=content_idea.yml). A rough
+draft is more useful to an agent than a one-line ask.
 
 ## Turn what you know into a skill
 
-Everything above routes through `.agents/skills/<name>/SKILL.md` — a short
-recipe that any agent reading this repo (Claude Code, Cursor, Codex, Copilot)
-can follow the same way. If you find yourself giving the same instructions
-twice — "here's how I want landing-page copy to sound," "here's the checklist
-before an illustration ships" — write it down as a skill instead. That's a
-contribution that pays out every time someone uses it after you, not just once.
+Everything above runs through `.agents/skills/<name>/SKILL.md`: a short recipe
+that any agent reading this repo follows the same way. If you find yourself
+giving the same instruction twice ("here's how landing-page copy should
+sound", "here's the checklist before an illustration ships"), write it as a
+skill. It pays out every time someone uses it after you.
 
-Look at [`add-blog-post`](.agents/skills/add-blog-post/SKILL.md) or
-[`mosaic-panel`](.agents/skills/mosaic-panel/SKILL.md) for the shape: a short
-description, an argument hint, and the steps written the way you'd explain it
-to a smart person who's never seen this project. The root
-[`AGENTS.md`](AGENTS.md) has the mechanics (the directory needs a `SKILL.md`
-plus a symlink from each tool's own skills folder — ask an agent to wire that
-part up, it's mechanical).
+Copy the shape of [`add-blog-post`](.agents/skills/add-blog-post/SKILL.md) or
+[`mosaic-panel`](.agents/skills/mosaic-panel/SKILL.md): a short description, an
+argument hint, and steps written for a smart person who has never seen this
+project. The wiring (a directory, a `SKILL.md`, a symlink from each tool's own
+skills folder) is in [`AGENTS.md`](AGENTS.md); ask an agent to do it.
 
 ## Get credited
 
-Add yourself to [`CONTRIBUTORS.md`](CONTRIBUTORS.md) in the same PR — design,
-content, code, or anything else. No contribution is too small to be listed
-for.
+Add yourself to [`CONTRIBUTORS.md`](CONTRIBUTORS.md) in the same PR, for
+design, content, code or anything else. No contribution is too small.
