@@ -133,8 +133,8 @@ are relative to `backend/`.
 
 | Rule | Primitive | Enforced by |
 |---|---|---|
-| Few, workflow-level tools with meaningful ids. Insights reaches every connector entity through one `FetchData(entity_id)`. | `StructuredTool` + Pydantic `args_schema` | review |
-| Bound every result, and never cut mid-structure: fold losslessly first. | `agents/core/compaction.py` (called by the insights data binder); `FilesystemMiddleware` eviction on the deep rung | `tests/test_insights_data.py` (compaction keeps every number a brief could quote) |
+| Few, workflow-level tools with meaningful ids. Insights reaches every connector entity through one `FetchData(entity_id)`, and every tool on a connected MCP server through `ListConnectedTools` / `CallConnectedTool`, never one definition per server tool. | `StructuredTool` + Pydantic `args_schema` | review; `tests/test_mcp_tools.py` (mounted only when a server is connected) |
+| Bound every result, and never cut mid-structure: fold losslessly first. | `agents/core/compaction.py` (called by the insights data binder and the MCP binder); `FilesystemMiddleware` eviction on the deep rung | `tests/test_insights_data.py` (compaction keeps every number a brief could quote); `tests/test_mcp_tools.py` (an oversized result is capped at `MAX_RESULT_CHARS`) |
 | An error is a result that says what to do next, with a code. Never `str(exc)` to a client. | `classify_error`; `ToolErrorMiddleware` with `tool_error_message` (a raise becomes an error result the model reads on) | `tests/test_agent_errors.py`; `test_deep_session.py` |
 | Tool definitions are prompt: they head the cached prefix, so review them like prompt and keep their order deterministic. | none | gap 7 (`make dump-prompts` renders no tools yet) |
 | Anything a tool returns from outside Duct (a search query, a page, an ad) is data, never instructions. Label it in the prompt. | none | each agent's system prompt (insights: `BOUNDARIES`) |

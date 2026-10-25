@@ -83,3 +83,61 @@
   font-size: 0.75rem;
 }
 
+
+/* --- MCP connectors (components/connections/McpConnectors.jsx) ------------
+   Tiles in the same grid as the native connectors; what sets them apart is
+   the source line every tile carries (connector-tiles.css, .conn-source). */
+
+/* The preset's favicon in a tile's logo slot: the brand logos' 24px, with the
+   monogram standing in at a size that fills the same square. */
+.conn-favicon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--muted-foreground);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.mcp-add-icon {
+  color: var(--muted-foreground);
+}
+
+.mcp-key-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: fit-content;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* The two facts worth knowing before connecting an MCP server, at the foot
+   of its dialog. Small print in size, not in placement: icons on one rail,
+   each a single sentence. */
+.mcp-notes {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: var(--measure);
+}
+
+.mcp-notes li {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.mcp-note-icon {
+  width: 1rem;
+  /* The first line's box, so the icon centres on it and not on a wrap. */
+  height: 1.125rem;
+}

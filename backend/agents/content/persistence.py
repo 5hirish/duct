@@ -363,6 +363,7 @@ _PAUSE_EVENTS = frozenset({
     AgentEvent.QUESTIONS_REQUIRED,
     AgentEvent.CONNECTION_REQUIRED,
     AgentEvent.ACCOUNT_SELECTION_REQUIRED,
+    AgentEvent.TOOL_APPROVAL_REQUIRED,
 })
 # Anything the agent does mid-turn. Only consulted when the status is not
 # already running, so a stream of chunks costs one dict lookup each and at

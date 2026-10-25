@@ -97,18 +97,43 @@ export async function startConnectorOAuth(authorizeUrl, { returnTo = "" } = {}) 
   } catch {
     /* they land on the Connections page instead */
   }
-  if (isDesktopShell()) {
-    const info = await getShellInfo();
-    if (info?.capabilities?.browserConnectors) {
-      const separator = authorizeUrl.includes("?") ? "&" : "?";
-      try {
-        await openExternal(`${authorizeUrl}${separator}client=desktop`);
-        return "browser";
-      } catch {
-        // The shell refused to open it — fall through to the in-window
-        // navigation rather than leaving the button dead.
-      }
+  if (await usesSystemBrowser()) {
+    const separator = authorizeUrl.includes("?") ? "&" : "?";
+    try {
+      await openExternal(`${authorizeUrl}${separator}client=desktop`);
+      return "browser";
+    } catch {
+      // The shell refused to open it — fall through to the in-window
+      // navigation rather than leaving the button dead.
     }
+  }
+  window.location.href = authorizeUrl;
+  return "redirect";
+}
+
+/** True when a sign-in belongs in the system browser: a desktop shell new
+ *  enough to have the deep link that brings the result back. */
+export async function usesSystemBrowser() {
+  if (!isDesktopShell()) return false;
+  const info = await getShellInfo();
+  return Boolean(info?.capabilities?.browserConnectors);
+}
+
+/**
+ * Send the person to a vendor's own sign-in page, for a flow whose return
+ * address was fixed before this URL existed (an MCP server's authorize URL
+ * names its callback inside it, so nothing can be appended here the way
+ * `startConnectorOAuth` appends `client=desktop`). Same answers: "browser"
+ * when the shell's system browser took it, "redirect" when this window left.
+ *
+ * No in-window fallback on the shell: that sign-in was promised to the
+ * desktop relay page, and opening it inside the webview would land the relay
+ * in the very window it exists to hand back to. Failing says so instead.
+ */
+export async function openVendorSignIn(authorizeUrl, { systemBrowser = false } = {}) {
+  if (systemBrowser) {
+    await openExternal(authorizeUrl);
+    return "browser";
   }
   window.location.href = authorizeUrl;
   return "redirect";

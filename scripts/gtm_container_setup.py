@@ -67,6 +67,7 @@ EVENTS = [
     "onboarding_audit_started",
     "audit_shared",
     "signin_to_connect",
+    "mcp_server_connected",
     # Attribution, pushed by site/assets/duct.js on every page.
     "utm_data",
 ]

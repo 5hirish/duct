@@ -60,6 +60,7 @@ class ActivityKind(StrEnum):
     CONTEXT = "context"        # project context read: business, brand, library, the run's own blocks
     ARTIFACT = "artifact"      # an existing document opened or listed
     ACTION = "action"          # something saved, published or logged on the person's behalf
+    CONNECTED_TOOL = "connected_tool"  # a tool on an MCP server the user connected, or the listing of them
 
 
 # Tool names. The core ones are PascalCase (the model reads them in its
@@ -447,6 +448,59 @@ def _action_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[st
     }
 
 
+# Outcomes whose message stays off the card. A skip's or a refusal's message
+# is an instruction to the model, not news for the person; a protocol or tool error
+# carries the server's own words, and a card never holds bytes a third party
+# wrote. The reason alone tells the app which sentence to show.
+_CONNECTED_QUIET = frozenset(
+    {"skipped", "needs_approval", "arguments_too_long", "protocol_error", "tool_error"}
+)
+
+
+def _connected(args: dict[str, Any], *, listing: bool) -> dict[str, Any]:
+    """A server the user connected over MCP: which server, which tool. The
+    listing is the same card with ``listing`` set, so the app says "checked"
+    rather than "used"."""
+    return {
+        "kind": ActivityKind.CONNECTED_TOOL,
+        "title": _text(args.get("tool")),
+        "source": _text(args.get("server")),
+        "meta": {"listing": listing},
+    }
+
+
+def _connected_done(fields: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
+    env = _envelope(result)
+    status = _text(env.get("status"))
+    # A listing carries no status when every server answered; a call says
+    # "ok". Anything else is a state the card names (skipped, signed out).
+    ok = not is_error and status in ("", "ok")
+    message = "" if ok or status in _CONNECTED_QUIET else _text(env.get("message"))
+    return {
+        **fields,
+        "subtitle": _text(env.get("name")),
+        "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
+        "error": message,
+        "reason": "" if ok else status,
+    }
+
+
+def _listing_start(args: dict[str, Any]) -> dict[str, Any]:
+    return _connected(args, listing=True)
+
+
+def _listing_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
+    return _connected_done(_listing_start(args), result, is_error)
+
+
+def _call_start(args: dict[str, Any]) -> dict[str, Any]:
+    return _connected(args, listing=False)
+
+
+def _call_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
+    return _connected_done(_call_start(args), result, is_error)
+
+
 def _context_fields(record: dict[str, Any], *_rest: Any) -> dict[str, Any]:
     """The run's own context notice, from the CONTEXT row's payload: which
     blocks were non-empty, so the person knows the turn was enriched with
@@ -488,6 +542,10 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "SearchMemory": (_memory_search_start, _memory_search_finish),
     "GetMemory": (_memory_get_start, _memory_get_finish),
     "ListDataSources": (_read_start, _read_finish),
+    # Servers the user connected over MCP (agents/core/mcp_tools.py). The
+    # approval pause has a card of its own; the call it approved is a row.
+    "ListConnectedTools": (_listing_start, _listing_finish),
+    "CallConnectedTool": (_call_start, _call_finish),
     "GetArtifact": (_artifact_get_start, _artifact_get_finish),
     "ListArtifacts": (_artifact_list_start, _artifact_list_finish),
     PROJECT_CONTEXT_TOOL: (_context_fields, _context_fields),

@@ -24,6 +24,7 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 - [Download](https://getduct.ai/download): The whole picture in one window: the desktop app for Mac, Windows and Linux. Free, no credit card.
 - [Compare](https://getduct.ai/compare): Duct beside Claude Cowork and n8n, by job: where each is the right call, what each connects, cross-tool questions, who approves a change, licence and price. Checked September 29, 2026.
 - [Open source](https://getduct.ai/open-source): Why it is MIT, what runs where in the desktop app versus a self-hosted install, how to self-host, and the pricing promise.
+- [MCP servers](https://getduct.ai/mcp): Connect your own tools to Duct's agent over MCP: OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare in one click, any other public Streamable HTTP server by its address. Read-only tools run straight away; anything else waits for approval. Used by the insights chat today.
 - [For product teams](https://getduct.ai/for-product-intelligence): See why the number moved, from Mixpanel, Clarity, GrowthBook and GA4 read together, and fix it before the standup.
 - [For SEO and content teams](https://getduct.ai/for-organic-growth): See which content actually converts, from Search Console, GA4 and Clarity, and fix it in the same sitting; the free audit; the content plan.
 - [For performance marketers](https://getduct.ai/for-paid-ads): See what your ad spend bought, from Google Ads, Meta, GA4 and Stripe read together, and move it in the same moment; the pause or the shift, applied on approval.

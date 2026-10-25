@@ -45,7 +45,13 @@ function monogram(name) {
   return first ? first[0].toUpperCase() : "•";
 }
 
-export default function EntityAvatar({ url, name }) {
+/**
+ * @param className  The box. `conn-entity-avatar` is the picker's 20px square;
+ *   a connector tile's logo slot passes `conn-favicon`, the same mark at the
+ *   size of the brand logos beside it, so a server added by URL sits in the
+ *   grid like any other connector.
+ */
+export default function EntityAvatar({ url, name, className = "conn-entity-avatar" }) {
   const href = faviconHref(url);
   const [broken, setBroken] = useState(false);
 
@@ -57,14 +63,14 @@ export default function EntityAvatar({ url, name }) {
 
   if (!href || broken) {
     return (
-      <span className="conn-entity-avatar" aria-hidden="true">
+      <span className={className} aria-hidden="true">
         {monogram(name || url)}
       </span>
     );
   }
 
   return (
-    <span className="conn-entity-avatar" aria-hidden="true">
+    <span className={className} aria-hidden="true">
       {/* Plain <img>: these are third-party origins that next/image would have
           to be told about one domain at a time, and the payload is a favicon. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
