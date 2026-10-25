@@ -45,6 +45,12 @@ published without one. The same script, with no arguments, holds
   site, and the project is drafted from both: personas, competitors and
   pitch marked "From your files". One call on your own model; the file is
   never kept, and a field you set yourself is never replaced.
+- **Set up a project from your own AI agent.** Create a token under Connect
+  your AI agent, paste one line into Claude Code, Codex or Cursor, and ask it
+  to set up the product. It reads your README and docs on your own
+  subscription and drafts the project, marked "From your files". It can read
+  and draft; it cannot approve changes, connect tools, or replace a field you
+  set. Every draft shows in Activity.
 
 ### Changed
 

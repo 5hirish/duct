@@ -12,6 +12,7 @@ import {
   LogOut,
   Settings,
   Cpu,
+  SquareTerminal,
   Sun,
   Moon,
   Bell,
@@ -419,6 +420,14 @@ function SidebarUserFooter() {
           <Link href="/settings/models">
             <Cpu className="size-4" />
             <span><Trans>Models &amp; providers</Trans></span>
+          </Link>
+        </DropdownMenuItem>
+        {/* Duct reached from outside: the person's own agent setting up their
+            projects through the MCP server (settings/agents). */}
+        <DropdownMenuItem asChild>
+          <Link href="/settings/agents">
+            <SquareTerminal className="size-4" />
+            <span><Trans>Connect your AI agent</Trans></span>
           </Link>
         </DropdownMenuItem>
         <ProfileMenuItem />

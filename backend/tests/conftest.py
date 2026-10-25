@@ -213,7 +213,7 @@ def no_network(request, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def fresh_rate_limits(monkeypatch):
-    """A new window for every module-level ``RateLimit`` in ``routes``.
+    """A new window for every module-level ``RateLimit`` in ``routes`` and ``service``.
 
     Each limiter is process state keyed on an address or a user, and a
     TestClient is always the same address. Without this, the suite's total
@@ -227,7 +227,8 @@ def fresh_rate_limits(monkeypatch):
     from service.ratelimit import RateLimit
 
     for name, module in list(sys.modules.items()):
-        if not name.startswith("routes.") or module is None:
+        # service.* too: a limit on one MCP tool lives beside the tool.
+        if not name.startswith(("routes.", "service.")) or module is None:
             continue
         for attr, value in list(vars(module).items()):
             if isinstance(value, RateLimit):

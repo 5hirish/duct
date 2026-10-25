@@ -30,8 +30,9 @@ from utils.dates import utcnow
 ACTIVITY_SOURCES = {"user", "agent", "auto"}
 
 # What kind of thing happened. "conversation" and "connector" are reserved for
-# follow-on call sites; wave 1 writes execution + artifact rows.
-ACTIVITY_CATEGORIES = {"execution", "artifact", "conversation", "connector"}
+# follow-on call sites. "project" is an outside agent drafting the project's
+# profile through the MCP server, which the person should be able to see.
+ACTIVITY_CATEGORIES = {"execution", "artifact", "conversation", "connector", "project"}
 
 
 class ActivityLog(SQLModel, table=True):

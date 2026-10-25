@@ -986,6 +986,10 @@ msgstr "Añadir otra cuenta"
 msgid "Add documents"
 msgstr "Añadir documentos"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Add Duct to your agent"
+msgstr "Añade Duct a tu agente"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Add guardrail"
 msgstr "Añadir barandilla"
@@ -1001,6 +1005,14 @@ msgstr "Añadir pilar"
 #: src/app/(app)/memory/page.jsx
 msgid "Add something about how you work"
 msgstr "Añade algo sobre cómo trabajas"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Add this to <0>~/.codex/config.toml</0>."
+msgstr "Añade esto a <0>~/.codex/config.toml</0>."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Add this to <0>~/.cursor/mcp.json</0>."
+msgstr "Añade esto a <0>~/.cursor/mcp.json</0>."
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Added to your {draftedName} project"
@@ -1202,6 +1214,10 @@ msgstr "Responde arriba, o deja una nota para después"
 msgid "Anthropic"
 msgstr "Anthropic"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Any agent using this token loses access to Duct right away. Your projects stay as they are."
+msgstr "Cualquier agente que use este token pierde el acceso a Duct de inmediato. Tus proyectos se mantienen como están."
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
 msgstr "Cualquier otra cosa que Duct deba saber"
@@ -1398,6 +1414,10 @@ msgstr "Pregunta a Duct"
 #: src/components/content/ContentWorkspace.jsx
 msgid "Ask Duct to refine the plan or post…"
 msgstr "Pide a Duct que refine el plan o la publicación…"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Ask it to set up your project"
+msgstr "Pídele que configure tu proyecto"
 
 #: src/components/insights/Desk.jsx
 msgid "Ask me anything about your site"
@@ -1902,6 +1922,10 @@ msgstr "Documentación de la API de exportación de datos de Clarity"
 msgid "Claude · a few cents per audit"
 msgstr "Claude · unos pocos céntimos por auditoría"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Claude Code on my laptop"
+msgstr "Claude Code en mi portátil"
+
 #: src/components/connections/ProjectEntitySelect.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Clear"
@@ -1953,6 +1977,10 @@ msgstr "Próximamente"
 #: src/app/(app)/connections/page.jsx
 msgid "Comma-separated distinct_id substrings to exclude. Mixpanel has no internal-traffic filter — QA accounts corrupt every funnel until excluded."
 msgstr "Subcadenas de distinct_id separadas por comas para excluir. Mixpanel no tiene filtro de tráfico interno; las cuentas de QA corrompen cada embudo hasta que se excluyen."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Command for Claude Code"
+msgstr "Comando para Claude Code"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "Command palette"
@@ -2088,6 +2116,11 @@ msgstr "Conectar una fuente de datos"
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect your {vendor} account"
 msgstr "Conecta tu cuenta de {vendor}"
+
+#: src/app/(app)/settings/agents/page.jsx
+#: src/components/AppSidebar.jsx
+msgid "Connect your AI agent"
+msgstr "Conecta tu agente de IA"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Connect your PostBridge account"
@@ -2249,6 +2282,7 @@ msgstr "Cookies, sinceramente"
 #: src/app/(auth)/desktop-auth/page.js
 #: src/components/audit/ShareReport.jsx
 #: src/components/content/TextPostEditor.jsx
+#: src/components/settings/AgentAccess.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Copied"
 msgstr "Copiado"
@@ -2267,6 +2301,7 @@ msgstr "copiar"
 
 #: src/components/audit/ShareReport.jsx
 #: src/components/content/TextPostEditor.jsx
+#: src/components/settings/AgentAccess.jsx
 msgid "Copy"
 msgstr "Copiar"
 
@@ -2281,6 +2316,10 @@ msgstr "Copiar detalles"
 #: src/components/AppErrorPanel.jsx
 msgid "Copy failed"
 msgstr "Error al copiar"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Copy it now. Duct shows a token once."
+msgstr "Cópialo ahora. Duct muestra un token una sola vez."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Copy response"
@@ -2386,13 +2425,29 @@ msgstr "Crea una clave RESTRINGIDA con acceso de lectura a Suscripciones, Cargos
 msgid "Create a System User token (Business settings)"
 msgstr "Crear un token de usuario del sistema (configuración de negocio)"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Create a token"
+msgstr "Crear un token"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Create a token first. It fills in below, so one copy is all it takes."
+msgstr "Crea un token primero. Se rellena abajo, así que con una copia es suficiente."
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Create format"
 msgstr "Crear formato"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Create token"
+msgstr "Crear token"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Create your first format"
 msgstr "Crea tu primer formato"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Creating…"
+msgstr "Creando…"
 
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Credentials verified, but no accounts are reachable with them."
@@ -3113,6 +3168,10 @@ msgstr "Expirado"
 msgid "Expired {when}"
 msgstr "Expirado {when}"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Expires {expires}"
+msgstr "Expira {expires}"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Export {format}"
 msgstr "Exportar {format}"
@@ -3221,6 +3280,10 @@ msgstr "la primera línea es el gancho — 2-3 frases"
 #: src/components/content/PostViewport.jsx
 msgid "First line is the hook. Keep it 2–3 sentences."
 msgstr "La primera línea es el gancho. Mantenla en 2-3 frases."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "First prompt"
+msgstr "Primer prompt"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fix These First"
@@ -3898,6 +3961,10 @@ msgstr "Invitado · expira {when}"
 msgid "Issue distribution across all findings"
 msgstr "Distribución de problemas en todos los hallazgos"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "It reads your README and docs, shows you what it will send, then drafts the project. Review it in Duct afterwards; every field says where it came from."
+msgstr "Lee tu README y documentos, te muestra lo que enviará, luego redacta el proyecto. Revísalo en Duct después; cada campo indica su origen."
+
 #: src/components/AppErrorPanel.jsx
 msgid "It’s logged on our side. Copy the details below if you report it."
 msgstr "Está registrado de nuestro lado. Copia los detalles a continuación si lo reportas."
@@ -4016,6 +4083,10 @@ msgstr "Abandonar este proyecto"
 #: src/components/ProjectMembers.jsx
 msgid "Leave this project?"
 msgstr "¿Abandonar este proyecto?"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Let Claude Code, Codex or Cursor set up your projects from the repo you are working in."
+msgstr "Deja que Claude Code, Codex o Cursor configuren tus proyectos desde el repositorio en el que trabajas."
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Let Duct decide"
@@ -4225,6 +4296,7 @@ msgstr "Cargando tus modelos…"
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(auth)/page.js
+#: src/components/settings/AgentAccess.jsx
 msgid "Loading…"
 msgstr "Cargando…"
 
@@ -4585,6 +4657,10 @@ msgstr "Nunca digas"
 msgid "Never sends"
 msgstr "Nunca envía"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Never used"
+msgstr "Nunca usado"
+
 #: src/components/AppNav.jsx
 #: src/components/AppSidebar.jsx
 msgid "New"
@@ -4867,6 +4943,10 @@ msgstr "Ningún hilo todavía. Pregunta algo abajo y uno comenzará."
 #: src/components/audit/AuditReportV1.jsx
 msgid "No title"
 msgstr "Sin título"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "No tokens yet."
+msgstr "No hay tokens aún."
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "No viewport configured."
@@ -6409,6 +6489,18 @@ msgstr "Revisando tus pilares de contenido…"
 msgid "Revise with Duct"
 msgstr "Revisar con Duct"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Revoke"
+msgstr "Revocar"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Revoke “{tokenName}”?"
+msgstr "¿Revocar “{tokenName}”?"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Revoke {tokenName}"
+msgstr "Revocar {tokenName}"
+
 #: src/components/ProjectMembers.jsx
 msgid "Revoke invitation to {invitee}"
 msgstr "Revocar invitación a {invitee}"
@@ -6466,6 +6558,10 @@ msgstr "Ejecutar una auditoría SEO"
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Run SEO Audit →"
 msgstr "Ejecutar auditoría SEO →"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Run this in your terminal."
+msgstr "Ejecuta esto en tu terminal."
 
 #: src/lib/modelTiers.js
 msgid "Running on a key already on this computer, not one you added here."
@@ -6932,6 +7028,10 @@ msgstr "Establecer"
 msgid "Set once in project setup, so audit, insights and content agree."
 msgstr "Se establece una vez en la configuración del proyecto, para que la auditoría, los hallazgos y el contenido coincidan."
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Set up this product in Duct."
+msgstr "Configura este producto en Duct."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Set which model runs each job in Settings → Models & providers."
 msgstr "Establece qué modelo ejecuta cada tarea en Ajustes → Modelos y proveedores."
@@ -6939,6 +7039,14 @@ msgstr "Establece qué modelo ejecuta cada tarea en Ajustes → Modelos y provee
 #: src/app/(app)/connections/page.jsx
 msgid "Settings → API Keys. A read-only key is enough — Duct never flips flags."
 msgstr "Ajustes → API Keys. Una clave de solo lectura es suficiente; Duct nunca cambia los indicadores."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Settings for Codex"
+msgstr "Ajustes para Codex"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Settings for Cursor"
+msgstr "Ajustes para Cursor"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Settled revenue, subscriptions, refunds and payment outcomes."
@@ -7065,6 +7173,10 @@ msgstr "Inicia sesión primero: las credenciales se almacenan cifradas en el ser
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Sign in first — the connection is saved to your account."
 msgstr "Inicia sesión primero: la conexión se guarda en tu cuenta."
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "Sign in first. A token works on your account, so there has to be one."
+msgstr "Inicia sesión primero. Un token funciona en tu cuenta, así que debe haber una."
 
 #: src/app/(app)/connections/page.jsx
 msgid "Sign in to finish connecting GitHub."
@@ -7587,6 +7699,10 @@ msgstr "No se pudo conectar. Revisa la clave e inténtalo de nuevo."
 msgid "That didn't disconnect. Try again."
 msgstr "No se pudo desconectar. Inténtalo de nuevo."
 
+#: src/app/(app)/settings/agents/page.jsx
+msgid "That didn't go through. Try again in a moment."
+msgstr "No se pudo completar. Inténtalo de nuevo en un momento."
+
 #: src/components/content/AccountsTab.jsx
 msgid "That didn't save — your selection has been put back. Try again."
 msgstr "Eso no se guardó — tu selección ha sido restaurada. Inténtalo de nuevo."
@@ -8035,6 +8151,10 @@ msgstr "Título"
 msgid "To date"
 msgstr "Hasta la fecha"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Token name"
+msgstr "Nombre del token"
+
 #: src/components/models/UsagePanel.jsx
 msgid "Tokens"
 msgstr "Tokens"
@@ -8244,6 +8364,10 @@ msgstr "Usar este plan"
 #: src/components/content/PostVideo.jsx
 msgid "Use this take"
 msgstr "Usar esta toma"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Used {used}"
+msgstr "Usado {used}"
 
 #: src/lib/modelTiers.js
 msgid "Using a key already on the machine running Duct, not one you added here"
@@ -8812,6 +8936,10 @@ msgstr "Te han invitado a <0>{projectName}</0>"
 msgid "your account"
 msgstr "tu cuenta"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Your agent can read your projects and draft their profile. It can't approve changes, connect tools, or replace anything you typed or confirmed."
+msgstr "Tu agente puede leer tus proyectos y redactar su perfil. No puede aprobar cambios, conectar herramientas, ni reemplazar nada que hayas escrito o confirmado."
+
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Your answer"
 msgstr "Tu respuesta"
@@ -8922,6 +9050,10 @@ msgstr "Tu memoria"
 msgid "Your model"
 msgstr "Tu modelo"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Your new token"
+msgstr "Tu nuevo token"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Your one-line pitch"
 msgstr "Tu propuesta en una línea"
@@ -8969,6 +9101,14 @@ msgstr "Tu sitio tiene una lista de problemas.<0>Duct la encuentra en unos tres 
 #: src/components/models/TierSummary.jsx
 msgid "Your three tiers run on different keys — open Customise to see which."
 msgstr "Tus tres niveles se ejecutan con claves diferentes; abre Personalizar para ver cuál."
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "your tokens"
+msgstr "tus tokens"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Your tokens"
+msgstr "Tus tokens"
 
 #: src/components/models/UsagePanel.jsx
 msgid "your usage"

@@ -35,7 +35,7 @@ Two kinds of write reach a project, and they get different rules:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -61,6 +61,9 @@ RANK = {
 # The name a project carries until it has a real one (the app's
 # UNTITLED_PROJECT). Nobody chose it, so it is not content.
 UNTITLED_PROJECT = "Untitled project"
+
+# A draft fills the primary persona the project page edits, and one more.
+MAX_DRAFT_PERSONAS = 2
 
 
 @dataclass(frozen=True)
@@ -165,6 +168,18 @@ def clean_labels(raw: Mapping[str, Any] | None) -> dict[str, str] | None:
     }
 
 
+def persona_rows(people: Iterable[tuple[str, str]]) -> list[dict[str, str]]:
+    """``(name, description)`` pairs in the project's persona shape, first one
+    primary. Every writer that drafts personas (the documents, the classifier,
+    the research pass, an outside agent) lands them in the same select-backed
+    field, so they are shaped here once."""
+    named = [(n.strip(), (d or "").strip()) for n, d in people if n and n.strip()]
+    return [
+        {"name": n, "description": d, "priority": "primary" if i == 0 else "secondary"}
+        for i, (n, d) in enumerate(named[:MAX_DRAFT_PERSONAS])
+    ]
+
+
 def merge_draft(project: Any, fields: Mapping[str, Mapping[str, Any]]) -> list[str]:
     """Land a draft's fields under the three rules. Returns the fields that
     changed. ``fields`` is the PROJECT_DRAFT shape: ``{name: {value, provenance}}``.
@@ -179,7 +194,12 @@ def merge_draft(project: Any, fields: Mapping[str, Mapping[str, Any]]) -> list[s
             raise ValueError(f"a draft cannot claim provenance {source!r}")
         if is_blank(name, value):
             continue
-        if not _gives_way(name, get_value(project, name), labels.get(name), source, equal_wins=True):
+        current, label = get_value(project, name), labels.get(name)
+        if label == source and _same(name, current, value):
+            # Already there, from the same source: a re-sync that changes
+            # nothing reports nothing and leaves updated_at alone.
+            continue
+        if not _gives_way(name, current, label, source, equal_wins=True):
             continue
         set_value(project, name, value)
         labels[name] = source
