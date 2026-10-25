@@ -622,7 +622,10 @@ Rules that follow:
 - **The box keeps what was typed.** `ChatInput` saves its text per
   `draftKey` — the shell's `handleKey`, so a reload of this thread finds
   this thread's draft — through `lib/composerDraft.js`, which the desk
-  composer's Settings round-trip uses too, and clears it on send. Esc in
+  composer's Settings round-trip uses too, and clears it on send. The
+  store is `sessionStorage`, per tab, for the reason the session handle
+  gives: the key names a thread, not a user, so anything that outlived the
+  tab would follow a shared browser into the next sign-in. Esc in
   the box stops a streaming turn (scoped to the box: a window-level Escape
   would also fire while someone closes a popover); Shift+Enter is a new
   line; the footer names both while the box has focus.

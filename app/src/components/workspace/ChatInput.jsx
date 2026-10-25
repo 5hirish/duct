@@ -45,10 +45,12 @@ import { AttachmentStrip, DropHint } from "./Attachments";
  * What was typed is kept. The text is saved under `draftKey` (the shell's
  * session key, so this thread's draft comes back on this thread) through
  * lib/composerDraft on every change, restored on mount and cleared on send;
- * a reload mid-sentence used to lose it. Esc in the box stops a streaming
- * turn — scoped to the box on purpose, since a window-level Escape would
- * also fire while someone closes a popover — and the footer names both that
- * and Shift+Enter while the box has focus.
+ * a reload mid-sentence used to lose it. Per tab (sessionStorage), so it
+ * survives the reload and nothing else: the key names a thread, not a user,
+ * and a shared browser's next sign-in must not find it. Esc in the box
+ * stops a streaming turn — scoped to the box on purpose, since a
+ * window-level Escape would also fire while someone closes a popover — and
+ * the footer names both that and Shift+Enter while the box has focus.
  */
 export default function ChatInput({
   onSend,

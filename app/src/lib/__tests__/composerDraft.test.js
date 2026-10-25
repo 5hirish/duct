@@ -11,11 +11,13 @@ function fakeStorage() {
   };
 }
 
-// Node may or may not define a `localStorage` global of its own (it is behind
-// a flag in 22, on by default later), so the test installs and removes the
-// binding explicitly instead of assigning over whatever is there.
+// Node may or may not define a Web Storage global of its own (behind a flag
+// in 22, on by default later), so the test installs and removes the binding
+// explicitly instead of assigning over whatever is there. sessionStorage, not
+// localStorage: a draft is per tab, so it cannot follow a shared browser's
+// next sign-in.
 function setStorage(value) {
-  Object.defineProperty(globalThis, "localStorage", { value, configurable: true, writable: true });
+  Object.defineProperty(globalThis, "sessionStorage", { value, configurable: true, writable: true });
 }
 
 describe("composer drafts", () => {
@@ -56,6 +58,20 @@ describe("composer drafts", () => {
     expect(() => writeDraft("k", "x")).not.toThrow();
     expect(() => clearDraft("k")).not.toThrow();
     expect(readDraft("k")).toBe("");
+  });
+
+  it("never touches localStorage, where a draft would outlive the tab and the sign-in", () => {
+    const touched = () => {
+      throw new Error("localStorage must not be used for drafts");
+    };
+    Object.defineProperty(globalThis, "localStorage", {
+      value: { getItem: touched, setItem: touched, removeItem: touched },
+      configurable: true,
+      writable: true,
+    });
+    writeDraft("k", "x");
+    expect(readDraft("k")).toBe("x");
+    Object.defineProperty(globalThis, "localStorage", { value: undefined, configurable: true, writable: true });
   });
 
   it("no storage at all (a server render) is the same quiet loss", () => {
