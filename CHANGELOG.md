@@ -73,6 +73,10 @@ published without one. The same script, with no arguments, holds
 
 ### Fixed
 
+- The desktop app keeps painting while it reads the keychain, a reload no
+  longer pulls the window back in front of whatever you switched to, a
+  sign-in link that launched the app on Windows or Linux is followed, and
+  a self-host build's local backend ends with the app however the app ends.
 - **Where a drafted field came from follows the project to every device.**
   "From your site" and "From your files" used to live in the browser that
   drafted them; the server keeps them now and merges every draft itself, so

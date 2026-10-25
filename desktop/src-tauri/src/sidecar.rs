@@ -23,7 +23,8 @@
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, State};
@@ -39,6 +40,14 @@ const SIDECAR_BIN: &str = "duct-sidecar.exe";
 const SIDECAR_BIN: &str = "duct-sidecar";
 /// Escape hatch for `tauri dev` runs against a sidecar built somewhere else.
 const SIDECAR_BIN_ENV: &str = "DUCT_SIDECAR_BIN";
+/// Tells the sidecar to exit when its stdin closes, which happens when this
+/// process ends however it ends (`local_server.py` owns the flag).
+const SIDECAR_EXIT_ON_STDIN_EOF: &str = "--exit-on-stdin-eof";
+/// How long a closed stdin may take to stop the sidecar before it is killed.
+/// The sidecar's own fallback fires at the same two seconds; this is the
+/// shell's, for a sidecar too wedged to run even that.
+const SHUTDOWN_GRACE: Duration = Duration::from_secs(2);
+const SHUTDOWN_POLL: Duration = Duration::from_millis(50);
 
 /// Google OAuth **Desktop app** client used for sign-in.
 ///
@@ -132,6 +141,15 @@ pub struct SidecarState {
     pub error: Mutex<Option<String>>,
 }
 
+/// Lock one of the state's mutexes, poisoned or not.
+///
+/// A thread that panicked while holding one of these leaves a value that is
+/// still a plain `Option`; refusing to read it would turn one crash into a
+/// second, in whichever command asked next. Same pattern as `chatgpt.rs`.
+fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 /// Locate the sidecar entry binary.
 ///
 /// Bundled builds find it under the resource dir. `tauri dev` has no resource
@@ -200,7 +218,7 @@ fn frontend_origin(app: &AppHandle) -> Option<String> {
 pub fn spawn(app: &AppHandle) -> Result<(), String> {
     let result = try_spawn(app);
     if let Err(ref err) = result {
-        *app.state::<SidecarState>().error.lock().unwrap() = Some(err.clone());
+        *lock(&app.state::<SidecarState>().error) = Some(err.clone());
     }
     result
 }
@@ -209,6 +227,9 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     let bin = sidecar_path(app)?;
 
     let mut command = Command::new(&bin);
+    // Pairs with the stdin pipe below: the sidecar's lifetime is tied to this
+    // process's by a pipe rather than by a signal nobody may be left to send.
+    command.arg(SIDECAR_EXIT_ON_STDIN_EOF);
 
     // The frozen bundle deliberately ships no `.env`, so sign-in credentials
     // have to arrive through the environment. Only set what we actually have —
@@ -338,7 +359,17 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
         // Inherit stderr so uvicorn's log goes to the shell's own stderr, where
         // `Console.app` and `tauri dev` both pick it up.
         .stderr(Stdio::inherit())
-        .stdin(Stdio::null())
+        // A pipe the sidecar reads for exactly one thing: EOF. The write end
+        // lives in this process and nowhere else, so it closes when this
+        // process ends — a clean quit, a crash, a `kill -9`, a relaunch for an
+        // update — and `--exit-on-stdin-eof` makes the sidecar exit on that.
+        // Until this the sidecar outlived all but the clean quit, holding the
+        // SQLite file and the port. One mechanism covers every platform and
+        // needs no dependency: `PR_SET_PDEATHSIG` would cover Linux alone and
+        // a Job Object Windows alone, and both want crates this one does not
+        // carry. The `Child` in `SidecarState` holds the write end, so nothing
+        // may take `stdin` out of it before `shutdown` does.
+        .stdin(Stdio::piped())
         .spawn()
         .map_err(|e| format!("failed to start sidecar at {}: {e}", bin.display()))?;
 
@@ -348,7 +379,7 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
         .ok_or_else(|| "sidecar stdout was not captured".to_string())?;
 
     let state = app.state::<SidecarState>();
-    *state.child.lock().unwrap() = Some(child);
+    *lock(&state.child) = Some(child);
 
     let handle = app.clone();
     std::thread::spawn(move || {
@@ -358,20 +389,19 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
 
         match reader.read_line(&mut line) {
             Ok(0) => {
-                *state.error.lock().unwrap() =
-                    Some("sidecar exited before printing its handshake".into());
+                *lock(&state.error) = Some("sidecar exited before printing its handshake".into());
                 return;
             }
             Err(e) => {
-                *state.error.lock().unwrap() = Some(format!("reading sidecar handshake: {e}"));
+                *lock(&state.error) = Some(format!("reading sidecar handshake: {e}"));
                 return;
             }
             Ok(_) => {}
         }
 
         match parse_handshake(&line) {
-            Ok(info) => *state.info.lock().unwrap() = Some(info),
-            Err(e) => *state.error.lock().unwrap() = Some(e),
+            Ok(info) => *lock(&state.info) = Some(info),
+            Err(e) => *lock(&state.error) = Some(e),
         }
 
         // Keep draining stdout, and *forward* what we read. The pipe has a
@@ -396,15 +426,27 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
 }
 
 /// Stop the sidecar. Called on app exit — the sidecar's lifetime is the app's.
+///
+/// Closing its stdin is the request: the sidecar's watchdog turns the EOF into
+/// the stop a SIGTERM would be, so in-flight requests finish and SQLite is left
+/// tidy. The kill behind it is for a sidecar that does not get there in time;
+/// an abrupt exit is what WAL recovers from, and what every exit used to be.
 pub fn shutdown(app: &AppHandle) {
     let state = app.state::<SidecarState>();
-    let mut guard = state.child.lock().unwrap();
-    if let Some(mut child) = guard.take() {
-        // SIGKILL via std; the sidecar holds only SQLite (WAL) and a listening
-        // socket, both of which recover cleanly from an abrupt exit.
-        let _ = child.kill();
-        let _ = child.wait();
+    let Some(mut child) = lock(&state.child).take() else {
+        return;
+    };
+    drop(child.stdin.take());
+    let deadline = Instant::now() + SHUTDOWN_GRACE;
+    while Instant::now() < deadline {
+        match child.try_wait() {
+            Ok(Some(_)) => return,
+            Ok(None) => std::thread::sleep(SHUTDOWN_POLL),
+            Err(_) => break,
+        }
     }
+    let _ = child.kill();
+    let _ = child.wait();
 }
 
 /// Handshake for the webview: `null` while still booting.
@@ -413,10 +455,10 @@ pub fn shutdown(app: &AppHandle) {
 /// polling forever.
 #[tauri::command]
 pub fn get_sidecar_info(state: State<'_, SidecarState>) -> Result<Option<SidecarInfo>, String> {
-    if let Some(err) = state.error.lock().unwrap().clone() {
+    if let Some(err) = lock(&state.error).clone() {
         return Err(err);
     }
-    Ok(state.info.lock().unwrap().clone())
+    Ok(lock(&state.info).clone())
 }
 
 #[cfg(test)]

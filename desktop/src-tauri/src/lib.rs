@@ -20,6 +20,8 @@ mod chatgpt;
 mod sidecar;
 mod telemetry;
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use keyring::{Entry, Error as KeyringError};
@@ -161,7 +163,14 @@ pub(crate) fn credentials_encryption_key() -> Result<String, String> {
 }
 
 /// Read a stored provider key. Returns "" when none is set.
-#[tauri::command]
+///
+/// `async` on this and on every other command that touches the keychain or
+/// the disk. A plain command runs on the main thread, which is the UI thread,
+/// and the keyring crate blocks — on macOS for as long as a keychain prompt
+/// stays on screen after the app's signature changed. The window stopped
+/// painting for exactly that long. The marker runs the function on a worker
+/// thread instead; nothing else about it changes.
+#[tauri::command(async)]
 fn get_provider_key(provider: String) -> Result<String, String> {
     match entry(&provider)?.get_password() {
         Ok(secret) => Ok(secret),
@@ -171,7 +180,7 @@ fn get_provider_key(provider: String) -> Result<String, String> {
 }
 
 /// Store a provider key in the OS keychain.
-#[tauri::command]
+#[tauri::command(async)]
 fn set_provider_key(provider: String, key: String) -> Result<(), String> {
     entry(&provider)?
         .set_password(&key)
@@ -179,7 +188,7 @@ fn set_provider_key(provider: String, key: String) -> Result<(), String> {
 }
 
 /// Remove a stored provider key (no-op if absent).
-#[tauri::command]
+#[tauri::command(async)]
 fn delete_provider_key(provider: String) -> Result<(), String> {
     match entry(&provider)?.delete_credential() {
         Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
@@ -187,51 +196,60 @@ fn delete_provider_key(provider: String) -> Result<(), String> {
     }
 }
 
+/// `get_shell_info`'s answer, computed once. Nothing in it can change while
+/// the process runs — the sidecar probe is a `stat` of the bundle — and the
+/// web app asks on every page load.
+static SHELL_INFO: OnceLock<serde_json::Value> = OnceLock::new();
+
 /// Shell version and feature flags. The hosted web app probes this so it can
 /// gate shell-dependent flows on capability, not on shell version — older
 /// shells where this command doesn't exist simply keep the legacy behaviour.
-#[tauri::command]
+#[tauri::command(async)]
 fn get_shell_info(app: AppHandle) -> serde_json::Value {
-    serde_json::json!({
-        "version": env!("CARGO_PKG_VERSION"),
-        "capabilities": {
-            "browserAuth": true,
-            // The `connector` deep-link route exists, so connector OAuth can go
-            // to the system browser too. Older shells lack the route entirely
-            // and the web app keeps navigating them in-window.
-            "browserConnectors": true,
-            // Whether this build ships a local backend. True means the web app
-            // should resolve its API base from `get_sidecar_info` instead of the
-            // build-time NEXT_PUBLIC_API_BASE; false means keep talking to the
-            // hosted API, which is also what older shells without the flag do.
-            //
-            // Probed rather than hardcoded, so the answer cannot disagree with
-            // what `bundle.resources` actually put in the bundle. The official
-            // build ships no sidecar; the self-host build adds it back.
-            "localSidecar": sidecar::is_available(&app),
-            // `tauri-plugin-updater` is wired and permitted in this build, so
-            // the web app may check for updates and offer to install one. Kept
-            // as a probe rather than a literal `true` so a build that compiles
-            // the plugin out cannot advertise an update path it does not have —
-            // no shipping build does that today (see the `updater` feature in
-            // Cargo.toml), which is why the flag is worth a second look.
-            "autoUpdate": cfg!(feature = "updater"),
-            // The `notify` command exists, so the web app may hand "done" and
-            // "needs you" notices to the OS instead of the webview's missing
-            // Notification API. Older shells lack it and stay silent.
-            "notifications": true,
-            // `open_notification_settings` exists *and* this OS has a page for
-            // it to open. False on Linux, where it does not — the web app then
-            // offers no "open settings" affordance rather than one that errors.
-            "notificationSettings": NOTIFICATION_SETTINGS_URL.is_some(),
-            // The `chatgpt_*` commands exist: the web app may offer "Continue
-            // with ChatGPT" and send the access token they mint as the OpenAI
-            // credential. Older shells lack them and show the API-key path
-            // alone. Whether the path is *allowed* is the backend's
-            // CHATGPT_AUTH_ENABLED, read from /api/providers/status.
-            "chatgptAuth": true
-        }
-    })
+    SHELL_INFO
+        .get_or_init(|| {
+            serde_json::json!({
+                "version": env!("CARGO_PKG_VERSION"),
+                "capabilities": {
+                    "browserAuth": true,
+                    // The `connector` deep-link route exists, so connector OAuth can go
+                    // to the system browser too. Older shells lack the route entirely
+                    // and the web app keeps navigating them in-window.
+                    "browserConnectors": true,
+                    // Whether this build ships a local backend. True means the web app
+                    // should resolve its API base from `get_sidecar_info` instead of the
+                    // build-time NEXT_PUBLIC_API_BASE; false means keep talking to the
+                    // hosted API, which is also what older shells without the flag do.
+                    //
+                    // Probed rather than hardcoded, so the answer cannot disagree with
+                    // what `bundle.resources` actually put in the bundle. The official
+                    // build ships no sidecar; the self-host build adds it back.
+                    "localSidecar": sidecar::is_available(&app),
+                    // `tauri-plugin-updater` is wired and permitted in this build, so
+                    // the web app may check for updates and offer to install one. Kept
+                    // as a probe rather than a literal `true` so a build that compiles
+                    // the plugin out cannot advertise an update path it does not have —
+                    // no shipping build does that today (see the `updater` feature in
+                    // Cargo.toml), which is why the flag is worth a second look.
+                    "autoUpdate": cfg!(feature = "updater"),
+                    // The `notify` command exists, so the web app may hand "done" and
+                    // "needs you" notices to the OS instead of the webview's missing
+                    // Notification API. Older shells lack it and stay silent.
+                    "notifications": true,
+                    // `open_notification_settings` exists *and* this OS has a page for
+                    // it to open. False on Linux, where it does not — the web app then
+                    // offers no "open settings" affordance rather than one that errors.
+                    "notificationSettings": NOTIFICATION_SETTINGS_URL.is_some(),
+                    // The `chatgpt_*` commands exist: the web app may offer "Continue
+                    // with ChatGPT" and send the access token they mint as the OpenAI
+                    // credential. Older shells lack them and show the API-key path
+                    // alone. Whether the path is *allowed* is the backend's
+                    // CHATGPT_AUTH_ENABLED, read from /api/providers/status.
+                    "chatgptAuth": true
+                }
+            })
+        })
+        .clone()
 }
 
 /// Where the OS keeps this app's notification switch, or `None` where the
@@ -371,9 +389,13 @@ async fn install_update(app: AppHandle) -> Result<(), String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    // Replaces the running process. The sidecar is killed by the Exit handler
-    // in `run()` first, so the new instance gets a free port and an unlocked DB.
-    app.restart();
+    // Asks the event loop to exit and relaunch, which is what delivers
+    // `RunEvent::Exit` to the handler in `run()`: the sidecar is stopped there,
+    // so the new instance gets a free port and an unlocked database.
+    // `restart()` skips those events when it happens to run on the main
+    // thread, and a command runs wherever the runtime puts it.
+    app.request_restart();
+    Ok(())
 }
 
 /// Build without the `updater` feature: the commands still exist so the
@@ -398,7 +420,7 @@ async fn install_update(_app: AppHandle) -> Result<(), String> {
 /// `available` is false when no reporter was compiled in, or one was but has no
 /// destination configured — the settings UI hides the toggle rather than
 /// offering a switch that changes nothing.
-#[tauri::command]
+#[tauri::command(async)]
 fn get_telemetry_settings() -> serde_json::Value {
     let enabled = telemetry::default_data_dir()
         .map(|dir| telemetry::is_enabled(&dir))
@@ -415,7 +437,7 @@ fn get_telemetry_settings() -> serde_json::Value {
 /// Record the user's choice. Takes effect for the sidecar on next launch —
 /// it reads its DSN from the environment the shell hands it at spawn, and this
 /// deliberately does not restart a running backend out from under the user.
-#[tauri::command]
+#[tauri::command(async)]
 fn set_telemetry_enabled(enabled: bool) -> Result<(), String> {
     let dir = telemetry::default_data_dir().ok_or("could not resolve the data directory")?;
     telemetry::write_prefs(
@@ -536,6 +558,12 @@ fn handle_connector_deep_link(app: &AppHandle, url: &Url) {
     if let Some((path, query)) = deep_link_target(url) {
         navigate_webview(app, path, &query);
     }
+}
+
+/// Hand a URL on our scheme to whichever route claims it.
+fn route_deep_link(app: &AppHandle, url: &Url) {
+    handle_auth_deep_link(app, url);
+    handle_connector_deep_link(app, url);
 }
 
 /// Menu ids. Namespaced so a future menu can't collide with these.
@@ -872,13 +900,22 @@ const SPLASH_LABEL: &str = "splash";
 /// not left guessing while it waits.
 const SPLASH_DEADLINE: Duration = Duration::from_secs(30);
 
-/// Reveal the real window and dismiss the splash.
+/// Whether the main window has been revealed. `on_page_load` fires on every
+/// navigation the app makes, not only the first, and a `set_focus` on each
+/// pulled the window back over whatever the user had switched to every time
+/// the page reloaded. One reveal; after that the window is left where it is.
+static MAIN_REVEALED: AtomicBool = AtomicBool::new(false);
+
+/// Reveal the real window and dismiss the splash, once.
 ///
-/// Idempotent on purpose: the page-load hook and the deadline race each other
-/// by design, and whichever arrives second finds the work already done. Every
-/// error is ignored for the same reason — a window that is already visible or
-/// already closed is the outcome we wanted.
+/// The page-load hook and the deadline race each other by design, and
+/// whichever arrives second finds the flag already set. Every error is ignored
+/// for the same reason — a window that is already visible or already closed is
+/// the outcome we wanted.
 fn reveal_main_window(app: &AppHandle) {
+    if MAIN_REVEALED.swap(true, Ordering::SeqCst) {
+        return;
+    }
     if let Some(main) = app.get_webview_window("main") {
         let _ = main.show();
         let _ = main.set_focus();
@@ -1098,7 +1135,8 @@ pub fn run() {
         .on_menu_event(handle_menu_event)
         // The main window is configured hidden, so something has to reveal it.
         // This fires for every navigation the app makes, not just the first;
-        // `reveal_main_window` is idempotent, so the later ones cost nothing.
+        // `reveal_main_window` acts once and returns on every later call, so a
+        // reload never steals focus.
         .on_page_load(|webview, payload| {
             if webview.label() == "main" && payload.event() == PageLoadEvent::Finished {
                 reveal_main_window(webview.app_handle());
@@ -1160,10 +1198,27 @@ pub fn run() {
             let handle = app.handle().clone();
             app.deep_link().on_open_url(move |event| {
                 for url in event.urls() {
-                    handle_auth_deep_link(&handle, &url);
-                    handle_connector_deep_link(&handle, &url);
+                    route_deep_link(&handle, &url);
                 }
             });
+
+            // A link that *launched* the app arrived before that listener
+            // existed and is not replayed to it. Windows and Linux pass it in
+            // argv, which the plugin reads during its own setup; macOS may
+            // deliver its `Opened` event on either side of `Ready`. Either
+            // way the plugin keeps the URL for `get_current`, and a link that
+            // arrives after this point reaches the listener instead — so each
+            // one is handled exactly once, and a cold-start sign-in on Windows
+            // or Linux no longer lands on a window that never hears it.
+            match app.deep_link().get_current() {
+                Ok(Some(urls)) => {
+                    for url in urls {
+                        route_deep_link(app.handle(), &url);
+                    }
+                }
+                Ok(None) => {}
+                Err(err) => eprintln!("duct: could not read the launch deep link: {err}"),
+            }
 
             // Start the local backend, if this build shipped one. The official
             // build does not — it talks to the hosted API, and a missing
