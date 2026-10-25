@@ -11,12 +11,14 @@ developer's real ~/Library or ~/.local/share.
 from __future__ import annotations
 
 import contextlib
+import io
 import json
 import os
 import re
 import stat
 import sys
 import threading
+import types
 
 import pytest
 from sqlmodel import Session, SQLModel, select
@@ -220,6 +222,134 @@ def test_the_watchdog_is_opt_in():
     """A sidecar run by hand reads a terminal or /dev/null; neither may stop it."""
     assert local_server._parse_args([]).exit_on_stdin_eof is False
     assert local_server._parse_args(["--exit-on-stdin-eof"]).exit_on_stdin_eof is True
+
+
+# ---------------------------------------------------------------------------
+# Secrets on stdin
+#
+# The shell used to put its keychain copies in the sidecar's environment, which
+# every process this user runs can read and every subprocess inherits. They
+# now arrive as one JSON line on the stdin pipe the shell already holds for the
+# watchdog, and bootstrap() scrubs the names from os.environ once Configs has
+# read them.
+# ---------------------------------------------------------------------------
+
+_SECRETS_LINE = (
+    json.dumps(
+        {
+            "duct_secrets": 1,
+            "DUCT_LOCAL_API_KEY": "api-key-from-stdin",
+            "DUCT_LOCAL_JWT_SECRET": "signing-key-from-stdin-and-long-enough",
+            "CREDENTIALS_ENCRYPTION_KEY": "fernet-key-from-stdin",
+        }
+    )
+    + "\n"
+).encode()
+
+
+def _stdin_holding(monkeypatch, payload: bytes) -> None:
+    """Stand in for the pipe the shell writes: binary, one line, left open."""
+    monkeypatch.setattr(sys, "stdin", types.SimpleNamespace(buffer=io.BytesIO(payload)))
+
+
+def test_reading_secrets_from_stdin_is_opt_in():
+    """Without the flag nothing touches stdin, so a terminal or /dev/null is fine."""
+    assert local_server._parse_args([]).secrets_on_stdin is False
+    assert local_server._parse_args(["--secrets-on-stdin"]).secrets_on_stdin is True
+
+
+def test_the_shell_supplies_the_secrets_on_stdin_and_no_file_is_minted(clean_env, tmp_path):
+    _stdin_holding(clean_env, _SECRETS_LINE)
+
+    handshake = local_server.bootstrap(["--data-dir", str(tmp_path), "--secrets-on-stdin"])
+
+    assert handshake["api_key"] == "api-key-from-stdin"
+    assert not (tmp_path / local_server._API_KEY_FILE).exists()
+    assert not (tmp_path / local_server._JWT_SECRET_FILE).exists()
+    assert os.environ["JWT_SECRET"] == "signing-key-from-stdin-and-long-enough"
+    # Configs reads this one from the environment, so bootstrap places it there.
+    assert os.environ["CREDENTIALS_ENCRYPTION_KEY"] == "fernet-key-from-stdin"
+
+
+def test_a_supplied_secret_beats_the_environment_which_beats_the_file(clean_env, tmp_path):
+    """The three sources in order, so the headless and developer paths stay
+    exactly what they were: only a shell that spoke on stdin can outrank an
+    exported name."""
+    clean_env.setenv("DUCT_LOCAL_API_KEY", "from-the-environment")
+    clean_env.setenv("CREDENTIALS_ENCRYPTION_KEY", "pinned-by-the-developer")
+    _stdin_holding(clean_env, _SECRETS_LINE)
+
+    handshake = local_server.bootstrap(["--data-dir", str(tmp_path), "--secrets-on-stdin"])
+
+    assert handshake["api_key"] == "api-key-from-stdin"
+    assert os.environ["CREDENTIALS_ENCRYPTION_KEY"] == "pinned-by-the-developer"
+
+
+def test_the_secrets_line_leaves_the_rest_of_stdin_for_the_watchdog(clean_env, tmp_path):
+    """The watchdog reads the same stream afterwards; the line must not take
+    more than itself with it, or EOF detection would start from the wrong place."""
+    _stdin_holding(clean_env, _SECRETS_LINE + b"still here")
+
+    local_server.bootstrap(["--data-dir", str(tmp_path), "--secrets-on-stdin"])
+
+    assert sys.stdin.buffer.read() == b"still here"
+
+
+@pytest.mark.parametrize(
+    ("payload", "cause"),
+    [
+        (b"", "closed before a line"),
+        (b"not json\n", "not valid JSON"),
+        (b'{"DUCT_LOCAL_API_KEY": "k"}\n', "duct_secrets object"),
+        (b'["duct_secrets", 1]\n', "duct_secrets object"),
+    ],
+)
+def test_a_missing_or_malformed_secrets_line_is_a_failed_start(clean_env, tmp_path, payload, cause):
+    """Falling back to minted files would hand the webview a key the shell does
+    not hold, and every request would 401 with nothing in the log saying why.
+    The message names the cause and never a value."""
+    _stdin_holding(clean_env, payload)
+
+    with pytest.raises(SystemExit) as stop:
+        local_server.bootstrap(["--data-dir", str(tmp_path), "--secrets-on-stdin"])
+
+    assert stop.value.code != 0
+    assert cause in str(stop.value.code)
+    assert '"k"' not in str(stop.value.code), "the line goes to the shell's log; its values must not"
+    assert not (tmp_path / local_server._API_KEY_FILE).exists()
+
+
+def test_only_string_values_are_taken_from_the_secrets_line():
+    supplied = local_server.read_secrets_line(
+        io.BytesIO(b'{"duct_secrets": 1, "DUCT_LOCAL_API_KEY": "k", "nested": {"a": 1}, "n": 2}\n')
+    )
+    assert supplied == {"DUCT_LOCAL_API_KEY": "k"}
+
+
+def test_the_scrub_removes_exactly_the_secret_names(clean_env):
+    for name in local_server.SECRET_ENV_NAMES:
+        clean_env.setenv(name, "x")
+    clean_env.setenv("DUCT_LOCAL", "1")
+    clean_env.setenv("FRONTEND_ORIGIN", "tauri://localhost")
+
+    local_server.scrub_secrets_from_environment()
+
+    assert not any(name in os.environ for name in local_server.SECRET_ENV_NAMES)
+    assert os.environ["DUCT_LOCAL"] == "1"
+    assert os.environ["FRONTEND_ORIGIN"] == "tauri://localhost"
+
+
+def test_the_scrub_covers_every_name_bootstrap_writes_or_reads():
+    """The list is the contract: a secret added to the shell's line or derived
+    in bootstrap() that is not here stays in the environment for good."""
+    assert set(local_server.SECRET_ENV_NAMES) == {
+        "DUCT_LOCAL_API_KEY",
+        "DUCT_LOCAL_JWT_SECRET",
+        "CREDENTIALS_ENCRYPTION_KEY",
+        "GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET",
+        "DUCT_API_KEY",
+        "JWT_SECRET",
+    }
 
 
 # ---------------------------------------------------------------------------

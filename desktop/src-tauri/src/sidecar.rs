@@ -14,13 +14,27 @@
 //! API base at `url`, sending `api_key` as `X-API-Key`. Nothing here is exposed
 //! off the loopback interface.
 //!
+//! The shell's keychain copies travel the other way as exactly one JSON line
+//! on the sidecar's stdin, written right after spawn and before the handshake
+//! is read:
+//!
+//! ```text
+//! {"duct_secrets":1,"DUCT_LOCAL_API_KEY":"…","DUCT_LOCAL_JWT_SECRET":"…",
+//!  "CREDENTIALS_ENCRYPTION_KEY":"…","GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET":"…"}
+//! ```
+//!
+//! Stdin rather than the environment, because a process environment is
+//! readable by every other process the same user runs and is inherited by
+//! every subprocess the backend starts; the pipe is read once by the sidecar
+//! and by nothing else. The same pipe then stays open as the EOF watchdog.
+//!
 //! **onedir, not `externalBin`.** Tauri's `externalBin` copies a single file,
 //! but the PyInstaller build has to be onedir — a onefile binary unpacks itself
 //! to a temp dir at startup, which does not survive macOS signing and
 //! notarization (see the spec's header). So the whole `duct-sidecar/` directory
 //! ships as a bundle *resource* and we spawn the entry binary inside it.
 
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::{Mutex, MutexGuard};
@@ -43,6 +57,13 @@ const SIDECAR_BIN_ENV: &str = "DUCT_SIDECAR_BIN";
 /// Tells the sidecar to exit when its stdin closes, which happens when this
 /// process ends however it ends (`local_server.py` owns the flag).
 const SIDECAR_EXIT_ON_STDIN_EOF: &str = "--exit-on-stdin-eof";
+/// Tells the sidecar the first line on that same stdin is the secrets line
+/// (`local_server.py` owns this flag too). A sidecar started without it reads
+/// nothing from stdin, which is what a headless `--data-dir` run wants.
+const SIDECAR_SECRETS_ON_STDIN: &str = "--secrets-on-stdin";
+/// Marker field on the secrets line, the counterpart of `duct_sidecar` on the
+/// handshake: the sidecar rejects a first line without it.
+const SECRETS_LINE_MARKER: &str = "duct_secrets";
 /// How long a closed stdin may take to stop the sidecar before it is killed.
 /// The sidecar's own fallback fires at the same two seconds; this is the
 /// shell's, for a sidecar too wedged to run even that.
@@ -125,6 +146,28 @@ pub struct SidecarInfo {
 fn parse_handshake(line: &str) -> Result<SidecarInfo, String> {
     serde_json::from_str::<SidecarInfo>(line)
         .map_err(|e| format!("sidecar handshake was not valid JSON ({e}): {line}"))
+}
+
+/// The secrets line, as the sidecar reads it: one compact JSON object, one
+/// trailing newline, no entry for a value we do not have.
+///
+/// Empty values are dropped rather than sent, for the same reason the old
+/// environment path never set an empty variable: an empty string would shadow
+/// whatever the sidecar's own environment or env file provides, and for the
+/// encryption key that means orphaning every row encrypted with the right one.
+/// `serde_json` escapes any newline inside a value, so the result is always
+/// exactly one line however the keychain was filled.
+fn secrets_line(pairs: &[(&str, String)]) -> String {
+    let mut object = serde_json::Map::new();
+    object.insert(SECRETS_LINE_MARKER.to_string(), serde_json::Value::from(1));
+    for (name, value) in pairs {
+        if !value.is_empty() {
+            object.insert((*name).to_string(), serde_json::Value::String(value.clone()));
+        }
+    }
+    let mut line = serde_json::Value::Object(object).to_string();
+    line.push('\n');
+    line
 }
 
 /// Spawned child plus the handshake, once it has arrived.
@@ -227,13 +270,19 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     let bin = sidecar_path(app)?;
 
     let mut command = Command::new(&bin);
-    // Pairs with the stdin pipe below: the sidecar's lifetime is tied to this
-    // process's by a pipe rather than by a signal nobody may be left to send.
-    command.arg(SIDECAR_EXIT_ON_STDIN_EOF);
+    // Both pair with the stdin pipe below: the sidecar's lifetime is tied to
+    // this process's by a pipe rather than by a signal nobody may be left to
+    // send, and the same pipe carries the secrets in before it falls silent.
+    command.args([SIDECAR_EXIT_ON_STDIN_EOF, SIDECAR_SECRETS_ON_STDIN]);
 
-    // The frozen bundle deliberately ships no `.env`, so sign-in credentials
-    // have to arrive through the environment. Only set what we actually have —
-    // an empty value would otherwise shadow a dev's `backend/.env.local`.
+    // What goes on the secrets line rather than in the environment. Collected
+    // here and written once the child exists; the decisions about *which*
+    // secret to send are unchanged from when each was an `env()` call.
+    let mut secrets: Vec<(&str, String)> = Vec::new();
+
+    // The frozen bundle deliberately ships no `.env`, so what the bundle cannot
+    // otherwise know arrives from here. Only set what we actually have — an
+    // empty value would otherwise shadow a dev's `backend/.env.local`.
     // Where the sidecar should send a browser after sign-in. Its own default is
     // `tauri://localhost`, which is right for CORS and useless as a redirect: the
     // OAuth callback lands in the *system browser*, which cannot follow that
@@ -249,9 +298,11 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     // 8 KB gulps — i.e. never, for the handful of lines that precede a crash.
     command.env("PYTHONUNBUFFERED", "1");
 
+    // The id identifies the app and stays in the environment; the secret is a
+    // secret, so it rides the stdin line with the rest.
     command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_ID", GOOGLE_DESKTOP_CLIENT_ID);
     if let Some(secret) = GOOGLE_DESKTOP_CLIENT_SECRET.filter(|s| !s.is_empty()) {
-        command.env("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret);
+        secrets.push(("GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET", secret.to_string()));
     }
 
     // Same rule as everything else in this block: set what the bundle cannot
@@ -260,6 +311,27 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     if std::env::var_os("DUCT_ENV_FILE").is_none() {
         if let Some(path) = SIDECAR_ENV_FILE.filter(|s| !s.is_empty()) {
             command.env("DUCT_ENV_FILE", path);
+        }
+    }
+
+    // The two secrets the sidecar used to mint into `0600` files beside its own
+    // database. A file at `0600` is private to this *account*, not to this
+    // *app*, so anything running as the user could read the key that drives the
+    // loopback API and the one that signs its session tokens. They live in the
+    // keychain now and travel on the stdin line; the sidecar prefers what it is
+    // given and retires the file it finds, which is the whole migration. A
+    // keychain that will not answer is not fatal — the sidecar falls back to
+    // its file and a headless `--data-dir` run keeps working with no shell at
+    // all.
+    for (var, read) in [
+        ("DUCT_LOCAL_API_KEY", crate::local_api_key as fn() -> Result<String, String>),
+        ("DUCT_LOCAL_JWT_SECRET", crate::local_jwt_secret),
+    ] {
+        match read() {
+            Ok(secret) => secrets.push((var, secret)),
+            Err(err) => {
+                eprintln!("duct: no keychain for {var} ({err}). Falling back to the data directory.");
+            }
         }
     }
 
@@ -274,51 +346,26 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     // pinning DUCT_ENV_FILE at an env file with its own key should export that
     // key too, for the same reason.
     //
+    // Skipped entirely when an env file is pinned, for two reasons, either
+    // sufficient. The env file carries its own CREDENTIALS_ENCRYPTION_KEY, so
+    // minting a machine-local one here would encrypt rows into that
+    // deployment's database which the deployment itself cannot decrypt —
+    // silent corruption, discovered much later by whoever tries to read them
+    // back. And reading the keychain *blocks on a modal password prompt*
+    // whenever the app's code identity changes, which for a dev build is every
+    // rebuild: `try_spawn` then sits on that dialog and never reaches
+    // `spawn()`, so the sidecar simply never starts and the only symptom is a
+    // shell that says its backend stopped responding.
+    //
     // Failing is not fatal. A Linux box with no Secret Service daemon loses
     // stored connector credentials for the session — everything else, including
     // provider keys held in this same absent keychain, was already degraded in
     // exactly the same way — so the app starts and says why.
-    // ...and skipped entirely when an env file is pinned, which is the case the
-    // comment above anticipated and the shell can now create for itself.
-    //
-    // Two reasons, either sufficient. The env file carries its own
-    // CREDENTIALS_ENCRYPTION_KEY, so minting a machine-local one here would
-    // encrypt rows into that deployment's database which the deployment itself
-    // cannot decrypt — silent corruption, discovered much later by whoever
-    // tries to read them back. And reading the keychain *blocks on a modal
-    // password prompt* whenever the app's code identity changes, which for a
-    // dev build is every rebuild: `try_spawn` then sits on that dialog and
-    // never reaches `spawn()`, so the sidecar simply never starts and the only
-    // symptom is a shell that says its backend stopped responding.
-    // The two secrets the sidecar used to mint into `0600` files beside its own
-    // database. A file at `0600` is private to this *account*, not to this
-    // *app*, so anything running as the user could read the key that drives the
-    // loopback API and the one that signs its session tokens. They live in the
-    // keychain now and arrive here; the sidecar prefers what it is given and
-    // retires the file it finds, which is the whole migration. A keychain that
-    // will not answer is not fatal — the sidecar falls back to its file and a
-    // headless `--data-dir` run keeps working with no shell at all.
-    for (var, read) in [
-        ("DUCT_LOCAL_API_KEY", crate::local_api_key as fn() -> Result<String, String>),
-        ("DUCT_LOCAL_JWT_SECRET", crate::local_jwt_secret),
-    ] {
-        match read() {
-            Ok(secret) => {
-                command.env(var, secret);
-            }
-            Err(err) => {
-                eprintln!("duct: no keychain for {var} ({err}). Falling back to the data directory.");
-            }
-        }
-    }
-
     let env_file_pinned =
         std::env::var_os("DUCT_ENV_FILE").is_some() || SIDECAR_ENV_FILE.is_some_and(|s| !s.is_empty());
     if !env_file_pinned && std::env::var_os("CREDENTIALS_ENCRYPTION_KEY").is_none() {
         match crate::credentials_encryption_key() {
-            Ok(key) => {
-                command.env("CREDENTIALS_ENCRYPTION_KEY", key);
-            }
+            Ok(key) => secrets.push(("CREDENTIALS_ENCRYPTION_KEY", key)),
             Err(err) => {
                 eprintln!(
                     "duct: no keychain for the credentials key ({err}). \
@@ -359,19 +406,38 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
         // Inherit stderr so uvicorn's log goes to the shell's own stderr, where
         // `Console.app` and `tauri dev` both pick it up.
         .stderr(Stdio::inherit())
-        // A pipe the sidecar reads for exactly one thing: EOF. The write end
-        // lives in this process and nowhere else, so it closes when this
-        // process ends — a clean quit, a crash, a `kill -9`, a relaunch for an
-        // update — and `--exit-on-stdin-eof` makes the sidecar exit on that.
-        // Until this the sidecar outlived all but the clean quit, holding the
-        // SQLite file and the port. One mechanism covers every platform and
-        // needs no dependency: `PR_SET_PDEATHSIG` would cover Linux alone and
-        // a Job Object Windows alone, and both want crates this one does not
-        // carry. The `Child` in `SidecarState` holds the write end, so nothing
-        // may take `stdin` out of it before `shutdown` does.
+        // A pipe the sidecar reads for exactly two things: the secrets line,
+        // then EOF. The write end lives in this process and nowhere else, so
+        // it closes when this process ends — a clean quit, a crash, a
+        // `kill -9`, a relaunch for an update — and `--exit-on-stdin-eof`
+        // makes the sidecar exit on that. Until this the sidecar outlived all
+        // but the clean quit, holding the SQLite file and the port. One
+        // mechanism covers every platform and needs no dependency:
+        // `PR_SET_PDEATHSIG` would cover Linux alone and a Job Object Windows
+        // alone, and both want crates this one does not carry. The `Child` in
+        // `SidecarState` holds the write end, so nothing may take `stdin` out
+        // of it before `shutdown` does.
         .stdin(Stdio::piped())
         .spawn()
         .map_err(|e| format!("failed to start sidecar at {}: {e}", bin.display()))?;
+
+    // The sidecar blocks on this line before it does anything else, so it goes
+    // out before the handshake reader starts. One line fits the pipe buffer
+    // many times over, so the write cannot block on a sidecar that is slow to
+    // read. A failed write is a failed start: the sidecar would otherwise boot
+    // on freshly minted files and every request from the webview would 401.
+    // Returning early drops `child`, which closes this write end, and the
+    // sidecar exits on the EOF rather than lingering.
+    {
+        let stdin = child
+            .stdin
+            .as_mut()
+            .ok_or_else(|| "sidecar stdin was not captured".to_string())?;
+        stdin
+            .write_all(secrets_line(&secrets).as_bytes())
+            .and_then(|()| stdin.flush())
+            .map_err(|e| format!("sending the sidecar its secrets: {e}"))?;
+    }
 
     let stdout = child
         .stdout
@@ -491,5 +557,49 @@ mod tests {
         let err = parse_handshake(r#"{"duct_sidecar":1,"url":"http://127.0.0.1:1","api_key":"k","data_dir":"d"}"#)
             .unwrap_err();
         assert!(err.contains("port"), "{err}");
+    }
+
+    #[test]
+    fn the_secrets_line_is_the_object_local_server_reads() {
+        let line = secrets_line(&[
+            ("DUCT_LOCAL_API_KEY", "k".to_string()),
+            ("CREDENTIALS_ENCRYPTION_KEY", "f".to_string()),
+        ]);
+        let parsed: serde_json::Value = serde_json::from_str(line.trim_end()).expect("one JSON object");
+        assert_eq!(parsed[SECRETS_LINE_MARKER], 1);
+        assert_eq!(parsed["DUCT_LOCAL_API_KEY"], "k");
+        assert_eq!(parsed["CREDENTIALS_ENCRYPTION_KEY"], "f");
+        assert_eq!(parsed.as_object().map(|o| o.len()), Some(3));
+    }
+
+    #[test]
+    fn an_empty_value_is_not_sent() {
+        // An empty variable used to be the bug: it shadowed the env file's key
+        // and orphaned every row encrypted with it. Same rule on the line.
+        let line = secrets_line(&[
+            ("DUCT_LOCAL_API_KEY", "k".to_string()),
+            ("CREDENTIALS_ENCRYPTION_KEY", String::new()),
+        ]);
+        let parsed: serde_json::Value = serde_json::from_str(line.trim_end()).unwrap();
+        assert!(parsed.get("CREDENTIALS_ENCRYPTION_KEY").is_none(), "{line}");
+        assert_eq!(parsed["DUCT_LOCAL_API_KEY"], "k");
+    }
+
+    #[test]
+    fn the_line_is_exactly_one_line_whatever_the_values_hold() {
+        // The sidecar reads one line and hands the rest of the stream to its
+        // watchdog; a raw newline inside a value would split the object.
+        let line = secrets_line(&[("DUCT_LOCAL_JWT_SECRET", "two\nlines".to_string())]);
+        assert!(line.ends_with('\n'));
+        assert_eq!(line.matches('\n').count(), 1, "{line:?}");
+        let parsed: serde_json::Value = serde_json::from_str(line.trim_end()).unwrap();
+        assert_eq!(parsed["DUCT_LOCAL_JWT_SECRET"], "two\nlines");
+    }
+
+    #[test]
+    fn with_nothing_to_send_the_line_still_carries_the_marker() {
+        // A keychain that answers nothing still gets a well-formed line, so the
+        // sidecar falls back to its files instead of failing the start.
+        assert_eq!(secrets_line(&[]), format!("{{\"{SECRETS_LINE_MARKER}\":1}}\n"));
     }
 }

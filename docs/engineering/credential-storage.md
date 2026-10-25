@@ -12,8 +12,8 @@ signing identity or a keychain service name: compiling cannot check those.
   token is still too weak.
 - **The keychain checks who is asking.** An update keeps access, a new
   signature loses it, and a signed release never prompts.
-- **Only the shell touches the keychain.** The sidecar gets secrets through
-  its environment.
+- **Only the shell touches the keychain.** The sidecar gets secrets as one
+  line on its stdin, never through its environment.
 - **Three changes orphan every install:** bundle identifier, Apple Team ID,
   keychain service name. CI pins them.
 
@@ -55,8 +55,11 @@ When macOS asks, the key card says what to do:
 
 > **Rule:** only the Tauri shell touches the keychain. A second signed binary
 > doubles what can drift and the prompt surface; the shell hands each secret
-> down the process environment ([lib.rs](../../desktop/src-tauri/src/lib.rs),
-> [sidecar.rs](../../desktop/src-tauri/src/sidecar.rs)).
+> down the sidecar's stdin as one JSON line
+> ([lib.rs](../../desktop/src-tauri/src/lib.rs),
+> [sidecar.rs](../../desktop/src-tauri/src/sidecar.rs)). Not the process
+> environment: that is readable by every process the user runs and inherited
+> by every subprocess the backend starts.
 
 ## Three changes orphan every install
 
@@ -103,7 +106,7 @@ owner-only files, the weakest link. Now:
 
 1. **The shell mints both** on first run and keeps them in its keychain
    service.
-2. **The sidecar reads them from its environment** and deletes the old file:
+2. **The sidecar reads them from its stdin line** and deletes the old file:
    the whole migration.
 3. **Without a shell or keychain it falls back to the file:** a headless run
    still boots, weaker.
@@ -176,11 +179,18 @@ a refusal collapsed into an absence. Three behaviours keep that legible
 
 ### What the shell hands the sidecar
 
-| Variable | Read from | Sidecar behaviour (`backend/local_server.py`) |
+All four travel as one JSON line on the sidecar's stdin (`--secrets-on-stdin`),
+written right after spawn; the same pipe then stays open as the shutdown
+watchdog. The sidecar removes every one of these names, and the `DUCT_API_KEY`
+and `JWT_SECRET` it derives, from its own environment once its settings are
+built (`SECRET_ENV_NAMES` in `local_server.py`).
+
+| Field | Read from | Sidecar behaviour (`backend/local_server.py`) |
 |---|---|---|
-| `DUCT_LOCAL_API_KEY` | keychain | Prefers it and deletes the `local-api-key` file; else mints `secrets.token_urlsafe(32)` into a `0600` file |
+| `DUCT_LOCAL_API_KEY` | keychain | Prefers it and deletes the `local-api-key` file; else the environment, else mints `secrets.token_urlsafe(32)` into a `0600` file |
 | `DUCT_LOCAL_JWT_SECRET` | keychain | Same, for `local-jwt-secret` |
-| `CREDENTIALS_ENCRYPTION_KEY` | keychain, unless an env file is pinned or the variable is already set | Fernet key for `backend/service/credentials.py` |
+| `CREDENTIALS_ENCRYPTION_KEY` | keychain, unless an env file is pinned or the variable is already set | Fernet key for `backend/service/credentials.py`, placed in the environment for `Configs` and scrubbed after |
+| `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` | compiled into the shell | Same placement and scrub; the client id stays an environment variable, it is not a secret |
 | stdout handshake | sidecar | Carries `api_key` by design; nothing else joins it |
 
 ### When macOS prompts
