@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-24
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-25
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
