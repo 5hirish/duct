@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends
 from routes import (
     activity, agents, artifacts, audit, audit_prefetch, auth, chat, connectors, content, engines,
     execution,
-    generate, health, lead_magnet, memory, model_settings, profile, project_connectors,
+    generate, health, lead_magnet, mcp_server, mcp_tokens, memory, model_settings, profile,
+    project_connectors,
     project_members, projects,
     providers,
     reports, signin, usage, user_connectors, user_contexts, user_projects,
@@ -119,6 +120,10 @@ router.include_router(memory.user_router, prefix="/api/user/memory")
 router.include_router(project_members.router, prefix="/api/user/projects")
 router.include_router(project_connectors.router, prefix="/api/user/projects")
 router.include_router(user_connectors.router, prefix="/api/user/connectors")
+router.include_router(mcp_tokens.router, prefix="/api/user/mcp-tokens")
+# Duct's MCP server, for agents outside Duct. Its own credential: a personal
+# MCP token, never X-API-Key or a sign-in JWT (routes/mcp_server.py).
+router.include_router(mcp_server.router)
 # Invitation redemption. GET is unauthenticated (the recipient has not signed in
 # yet and the token is the secret); POST /accept requires a Bearer JWT.
 router.include_router(

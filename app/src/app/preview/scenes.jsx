@@ -22,6 +22,7 @@ import { useEffect, useMemo, useState } from "react";
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import FrontDoor from "@/components/onboarding/FrontDoor";
 import DocumentPicker, { DocumentState } from "@/components/onboarding/DocumentPicker";
+import AgentAccess from "@/components/settings/AgentAccess";
 import { DocumentError } from "@/lib/onboardingApi";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
@@ -244,6 +245,60 @@ function DocumentPickerScene({ initial = [] }) {
           ])
         }
         onRemove={(key) => setDocuments((prev) => prev.filter((d) => d.key !== key))}
+      />
+    </div>
+  );
+}
+
+const PREVIEW_MCP_URL = "https://api.example.com/mcp";
+const AGENT_TOKENS = [
+  {
+    id: "t1", name: "Claude Code on the studio Mac", hint: "Q7mz",
+    created_at: "2026-09-02T09:00:00Z", expires_at: "2027-09-02T09:00:00Z",
+    last_used_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
+  },
+  {
+    id: "t2", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
+    created_at: "2026-10-20T09:00:00Z", expires_at: "2027-10-20T09:00:00Z", last_used_at: null,
+  },
+];
+
+/** The page holds the tokens and the one-time plaintext; here a scene does,
+ *  so create and revoke both work. The list arrives after mount, as it does
+ *  on the page: "3h ago" is Node's ICU on the server and "3 hr ago" the
+ *  browser's, so rendering it on both sides is a hydration error. */
+const NO_TOKENS = [];
+
+// Built, not written out: scripts/security/audit.py reads `token: "…"` with
+// eight or more characters as a hardcoded secret, and baselining this file
+// would stop it checking every other scene here.
+const previewPlaintext = (hint) => `duct_mcp_preview-only-not-a-real-token-${hint}`;
+
+function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = "" }) {
+  const [tokens, setTokens] = useState(null);
+  useEffect(() => setTokens(initial), [initial]);
+  const [minted, setMinted] = useState(
+    mintedFirst ? { ...initial[0], token: previewPlaintext(initial[0].hint) } : null,
+  );
+  return (
+    <div className="p-6">
+      <AgentAccess
+        serverUrl={PREVIEW_MCP_URL}
+        tokens={tokens}
+        minted={minted}
+        error={error}
+        onCreate={(name) => {
+          const row = {
+            id: `t${Date.now()}`, name, hint: "Zp4c", created_at: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(), last_used_at: null,
+          };
+          setTokens((prev) => [row, ...(prev || [])]);
+          setMinted({ ...row, token: previewPlaintext(row.hint) });
+        }}
+        onRevoke={(id) => {
+          setTokens((prev) => (prev || []).filter((row) => row.id !== id));
+          setMinted((prev) => (prev?.id === id ? null : prev));
+        }}
       />
     </div>
   );
@@ -1021,6 +1076,35 @@ export const SCENES = [
     title: "Documents beside the site",
     note: "Five is the cap, so the add row is gone until one is removed. Check the long name clips and the status beside it never wraps, at 28rem and below; a failure reason may wrap, and its ink is foreground with only the icon in amber, because amber text on --muted fails contrast.",
     render: () => <DocumentPickerScene initial={DOCUMENTS_MIXED} />,
+  },
+  {
+    id: "agent-access",
+    state: "first visit: no tokens, placeholder in every snippet",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "The second paragraph, what an agent cannot do, is the reason a cautious person gets past the first step; it must read before the form. Every snippet shows duct_mcp_… until a token exists. Switch the three tabs: the Codex and Cursor snippets are multi-line and must wrap inside the box, never push the page wider, at 22rem.",
+    render: () => <AgentAccessScene />,
+  },
+  {
+    id: "agent-access-minted",
+    state: "a token just made: shown once, filled into each snippet; a second token never used, with a name long enough to clip",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "The new token sits under the form with its copy button, and the Claude Code command now carries it, so one copy is enough. In the list, the long name truncates and the hint, last use, expiry and Revoke stay on the row or wrap below it as a group. Revoke asks first, in the destructive tint, and the dialog says the projects stay as they are.",
+    render: () => <AgentAccessScene initial={AGENT_TOKENS} mintedFirst />,
+  },
+  {
+    id: "agent-access-limit",
+    state: "the server refused a new token: ten already exist",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "The server's own sentence, under the form, in the destructive ink. The form stays usable so the person can revoke one below and try again.",
+    render: () => (
+      <AgentAccessScene
+        initial={AGENT_TOKENS}
+        error="You have 10 tokens already. Revoke one you no longer use first."
+      />
+    ),
   },
   {
     id: "desk-composer",

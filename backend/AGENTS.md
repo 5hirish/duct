@@ -495,6 +495,19 @@ Postgres `DATABASE_URL` names.
   of project fields goes through `merge_draft`** (the MCP server, a GitHub
   re-sync), never a direct column write; a writer the rules do not know is
   how a guess overwrites what someone typed. A draft cannot claim `user`.
+- `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
+  `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor).
+  Stateless JSON-RPC with no SDK: five methods, no sessions, no event
+  stream. Its one credential is a personal token (`service/mcp_tokens.py`,
+  minted at `/api/user/mcp-tokens` by a signed-in session), accepted on
+  `/mcp` only and never by `get_current_user`. Three tools, and adding a
+  fourth is a scope decision, not a refactor: `list_projects`,
+  `get_project`, `draft_project`. Writes go through
+  `service/project_writes.apply_draft`, labelled `document` (or `inferred`
+  for what the agent guessed), so they never replace the person or their
+  site; each one leaves an `activity_logs` row (`category="project"`). No
+  tool calls a model on Duct's side, and none approves, applies, connects
+  or touches credentials.
 - `agents/engines.resolve_job_run` — provider and model over the keys *this
   caller* can spend, so a user holding only an OpenAI key runs on OpenAI
   instead of a 402 for the instance default. All three agents route through

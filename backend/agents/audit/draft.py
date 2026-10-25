@@ -52,9 +52,11 @@ from service.project_config import (
     INDUSTRY_OPTIONS,
 )
 from service.project_draft import (
+    MAX_DRAFT_PERSONAS,
     PROVENANCE_CRAWL,
     PROVENANCE_DOCUMENT,
     PROVENANCE_INFERRED,
+    persona_rows,
 )
 
 logger = logging.getLogger(__name__)
@@ -86,7 +88,7 @@ _SOCIAL_HOSTS: dict[str, str] = {
     "threads.net": "threads",
 }
 
-_MAX_PERSONAS = 2
+_MAX_PERSONAS = MAX_DRAFT_PERSONAS
 
 
 def _field(value: Any, provenance: str) -> dict[str, Any]:
@@ -94,14 +96,7 @@ def _field(value: Any, provenance: str) -> dict[str, Any]:
 
 
 def _draft_personas(personas: list[DraftPersona]) -> list[dict[str, str]]:
-    """The project's persona shape, first one primary. Three sources draft
-    personas (the documents, the classifier, the research pass) and all three
-    land in the same select-backed field, so they are shaped in one place."""
-    named = [p for p in personas if p.name.strip()][:_MAX_PERSONAS]
-    return [
-        {"name": p.name.strip(), "description": p.description.strip(), "priority": "primary" if i == 0 else "secondary"}
-        for i, p in enumerate(named)
-    ]
+    return persona_rows((p.name, p.description) for p in personas)
 
 
 def _root_page(crawl_result: CrawlResult) -> PageSignals | None:

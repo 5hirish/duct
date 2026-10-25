@@ -105,6 +105,9 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
     library, the cross-agent feed, usage, and user-level memory
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
+  - `settings/agents/` — Connect your AI agent: MCP tokens and the line to
+    paste into Claude Code, Codex or Cursor (`components/settings/AgentAccess.jsx`,
+    `lib/mcpTokensApi.js`). A new token's plaintext lives in page state only
   - `generate/` — the retired wizard, now a bare redirect to `/insights/session`
   - `projects/` — project management
   - `project/[projectId]/` — **Project context**, the editor for one

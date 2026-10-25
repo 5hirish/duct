@@ -22,23 +22,15 @@ from models.execution import (
 from models.membership import ROLE_COLLABORATOR, ROLE_OWNER
 from models.project import Project, unique_slug
 from service.auth import get_current_user
-from service.membership import (
-    accessible_projects,
-    ensure_owner_membership,
-    get_project_for_user,
-    member_role,
-)
-from service.memory import seed_project_profile
+from service.membership import accessible_projects, get_project_for_user, member_role
 from service.project_draft import (
     DRAFT_SOURCES,
     FIELDS,
-    UNTITLED_PROJECT,
     clean_labels,
-    is_blank,
-    merge_draft,
     reconcile_save,
     snapshot,
 )
+from service.project_writes import apply_draft, finish_write, project_for_write
 from utils.dates import utcnow
 
 router = APIRouter(tags=["user-projects"])
@@ -201,14 +193,9 @@ def create_project(
         brand_channels=body.brand_channels,
     )
     reconcile_save(project, snapshot(None), {}, clean_labels(body.provenance))
-    session.add(project)
-    session.flush()
-    ensure_owner_membership(project, session)
-    session.commit()
-    session.refresh(project)
     # The targets and competitors typed into onboarding become dated project
     # memory, so agents cite the operator's own numbers instead of re-asking.
-    seed_project_profile(session, project, user_id=user.id)
+    project = finish_write(project, True, user, session)
     return _to_out(project, role=ROLE_OWNER, owner_email=user.email)
 
 
@@ -226,47 +213,7 @@ def get_project(
     )
 
 
-def _project_for_write(
-    project_id: UUID, user: User, session: Session, *, name: str, slug_name: str | None = None
-) -> tuple[Project, bool]:
-    """The project a write lands on, locked, or a new one owned by the caller.
-
-    The frontend generates project UUIDs locally (and already references them
-    from content plans / agent contexts), so a missing project is created with
-    the supplied id rather than 404'd, keeping those references valid. The row
-    is locked for the rest of the transaction: two drafts arriving together
-    each read the project, merge, and write it back, and without the lock the
-    second write drops the first one's fields.
-    """
-    existing = session.execute(
-        select(Project).where(Project.id == project_id).with_for_update()
-    ).scalars().first()
-    if existing is None:
-        project = Project(
-            id=project_id,
-            user_id=user.id,
-            name=name,
-            slug=unique_slug(session, user.id, slug_name or name),
-        )
-        session.add(project)
-        return project, True
-    # Raises 404 when the caller is neither owner nor collaborator, so an
-    # unrelated project can never be overwritten through an upsert.
-    return get_project_for_user(project_id, user, session), False
-
-
-def _finish_write(project: Project, is_new: bool, user: User, session: Session) -> ProjectOut:
-    session.add(project)
-    if is_new:
-        # Flush after the NOT NULL columns are populated, so the owner row can
-        # reference a project that actually exists.
-        session.flush()
-        ensure_owner_membership(project, session)
-    session.commit()
-    session.refresh(project)
-    # A changed target supersedes the previous one rather than overwriting it —
-    # that is what makes "target CPA $45 (was $60 until 30 Jun)" possible.
-    seed_project_profile(session, project, user_id=user.id)
+def _out(project: Project, user: User, session: Session) -> ProjectOut:
     return _to_out(
         project,
         role=member_role(project.id, user.id, session) or ROLE_OWNER,
@@ -289,7 +236,7 @@ def update_project(
     field the client only carried along: an older copy of a draft must not
     undo the newer one the server holds.
     """
-    project, is_new = _project_for_write(project_id, user, session, name=body.name)
+    project, is_new = project_for_write(project_id, user, session, name=body.name)
     before = snapshot(None if is_new else project)
     before_labels = {} if is_new else dict(project.provenance or {})
 
@@ -305,7 +252,7 @@ def update_project(
     project.brand_channels = body.brand_channels
     reconcile_save(project, before, before_labels, clean_labels(body.provenance))
     project.updated_at = utcnow()
-    return _finish_write(project, is_new, user, session)
+    return _out(finish_write(project, is_new, user, session), user, session)
 
 
 @router.post("/{project_id}/draft")
@@ -317,26 +264,14 @@ def draft_project(
 ) -> ProjectOut:
     """Merge a draft into the project, under the rules in service/project_draft.py.
 
-    Every draft goes through here: the onboarding audit's today, an outside
-    writer's (the MCP server, a GitHub re-sync) later, so there is one set of
-    rules whoever writes. Creates the project when its id belongs to nobody,
-    like the PUT, because onboarding drafts a project the browser made a moment
-    ago. A draft that changes nothing leaves ``updated_at`` alone, so it never
-    makes the server's copy look newer than a device's for no reason.
+    Creates the project when its id belongs to nobody, like the PUT, because
+    onboarding drafts a project the browser made a moment ago. The MCP
+    server's ``draft_project`` tool writes through the same function.
     """
-    # A new project starts untitled so the drafted name lands as a draft, with
-    # its label, and a better one from a later draft can still replace it. The
-    # slug is the one place the drafted name is used up front: nothing rewrites
-    # a slug after creation, and the content agent reads it.
-    drafted = body.fields.get("name")
-    slug_name = drafted.value if drafted and not is_blank("name", drafted.value) else None
-    project, is_new = _project_for_write(
-        project_id, user, session, name=UNTITLED_PROJECT, slug_name=slug_name
+    project, _, _ = apply_draft(
+        project_id, {key: field.model_dump() for key, field in body.fields.items()}, user, session
     )
-    landed = merge_draft(project, {key: field.model_dump() for key, field in body.fields.items()})
-    if landed or is_new:
-        project.updated_at = utcnow()
-    return _finish_write(project, is_new, user, session)
+    return _out(project, user, session)
 
 
 class ProjectSettingsIn(BaseModel):

@@ -120,3 +120,40 @@ class OAuthState(SQLModel, table=True):
         default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
 
+
+
+class McpToken(SQLModel, table=True):
+    """A personal token an outside agent (Claude Code, Codex, Cursor) uses to
+    reach Duct's MCP server on someone's behalf.
+
+    It is accepted on ``/mcp`` and nowhere else, and it is never a session:
+    ``get_current_user`` reads only sign-in JWTs, so a token copied out of an
+    agent's config cannot open the app or call the rest of the API. Only its
+    SHA-256 is stored. A token is high-entropy and random, so a fast hash is
+    the right one (a password hash buys nothing against a 256-bit secret), and
+    the plaintext exists once, in the response that minted it.
+    """
+
+    __tablename__ = "mcp_tokens"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
+    user_id: UUID = Field(
+        sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    )
+    # What the person called it ("Claude Code on my laptop"), so a list of
+    # tokens says which agent each one is in.
+    name: str = Field(sa_column=Column(String, nullable=False))
+    token_hash: str = Field(sa_column=Column(String, nullable=False, unique=True))
+    # The last four characters, to tell two tokens apart without the secret.
+    hint: str = Field(sa_column=Column(String, nullable=False))
+    created_at: datetime = Field(
+        default_factory=utcnow,
+        sa_column=Column(utc_datetime(), nullable=False),
+    )
+    expires_at: datetime = Field(sa_column=Column(utc_datetime(), nullable=False))
+    last_used_at: datetime | None = Field(
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
+    )
+    revoked_at: datetime | None = Field(
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
+    )
