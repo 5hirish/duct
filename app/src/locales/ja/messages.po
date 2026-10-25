@@ -63,6 +63,11 @@ msgstr "{0, plural, other {# 呼び出し}}"
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, other {# 一致}}"
 
+#. placeholder {0}: doc.pages
+#: src/components/onboarding/DocumentPicker.jsx
+#~ msgid "{0, plural, one {# page} other {# pages}}"
+#~ msgstr "{0, plural, other {# ページ}}"
+
 #. placeholder {0}: group.ok
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "{0, plural, one {# pull} other {# pulls}}"
@@ -403,6 +408,7 @@ msgstr "{opportunities, plural, other {# 機会}}"
 #~ msgstr "{output} 出力"
 
 #: src/components/audit/AuditReport.jsx
+#: src/components/onboarding/DocumentPicker.jsx
 msgid "{pages, plural, one {# page} other {# pages}}"
 msgstr "{pages, plural, other {# ページ}}"
 
@@ -469,6 +475,14 @@ msgstr "{projectName} · メモリ"
 #: src/components/workspace/AgentChat.jsx
 msgid "{ranTier} · {requestedTier} is rate limited"
 msgstr "{ranTier} · {requestedTier} はレート制限されています"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "{read}, partly read"
+msgstr "{read}, 一部既読"
+
+#: src/components/onboarding/DocumentPicker.jsx
+#~ msgid "{read}, read the first part"
+#~ msgstr "{read}、最初の部分を読む"
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "{ready} of {total} will apply · {blocked, plural, one {# needs a person} other {# need a person}}"
@@ -940,6 +954,10 @@ msgstr "ガードレールを追加"
 msgid "Add a hashtag"
 msgstr "ハッシュタグを追加"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Add a pitch deck, a positioning doc or a brief, and Duct drafts your project from those too."
+msgstr "ピッチ資料、ポジショニング資料、またはブリーフを追加すると、Ductはそれらからプロジェクトの下書きも作成します。"
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
 msgstr "プロジェクトを追加"
@@ -963,6 +981,10 @@ msgstr "思考を追加 — 次のステップで反映されます"
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Add another account"
 msgstr "別のアカウントを追加"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Add documents"
+msgstr "ドキュメントを追加"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Add guardrail"
@@ -2312,6 +2334,10 @@ msgstr "ガードレールを読み込めませんでした。上記のキュー
 msgid "Couldn't make a video clip"
 msgstr "動画クリップを作成できませんでした"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Couldn't open it"
+msgstr "開けませんでした"
+
 #: src/app/(start)/start/page.jsx
 msgid "Couldn't read that site."
 msgstr "そのサイトを読み取れませんでした。"
@@ -2572,6 +2598,10 @@ msgstr "何かを行いました"
 msgid "Did the revenue actually arrive?"
 msgstr "収益は実際に発生しましたか？"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Didn't upload. Remove it and add it again"
+msgstr "アップロードできませんでした。削除してもう一度追加してください"
+
 #: src/components/content/PostViewport.jsx
 msgid "Discard"
 msgstr "破棄"
@@ -2726,6 +2756,10 @@ msgstr "ドロップして添付"
 #: src/components/UpdateToast.jsx
 msgid "Duct {version} is available"
 msgstr "Duct {version} が利用可能です"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Duct can't read this type yet"
+msgstr "Ductはこのタイプをまだ読み取れません"
 
 #: src/app/(start)/start/page.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -3278,6 +3312,10 @@ msgid "From project context"
 msgstr "プロジェクトのコンテキストから"
 
 #: src/app/(app)/project/[projectId]/page.jsx
+msgid "From your files"
+msgstr "ファイルから"
+
+#: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr "あなたのサイトから"
 
@@ -3475,6 +3513,10 @@ msgstr "Google Tag Manager"
 #: src/app/(auth)/page.js
 msgid "Google will also ask to share Search Console and Analytics with Duct — read-only, and either box can be left unticked."
 msgstr "Googleは、Search ConsoleとAnalyticsをDuctと共有することも求めます。読み取り専用であり、どちらのチェックボックスもオフのままで構いません。"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Got a deck or a doc that says more?"
+msgstr "さらに詳しい情報が記載された資料やドキュメントをお持ちですか？"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "GPT · about a cent per audit"
@@ -4811,6 +4853,10 @@ msgstr "まだスライドがありません"
 msgid "No sources pulled yet"
 msgstr "まだソースが取得されていません"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "No text in it. A scan?"
+msgstr "テキストが含まれていません。スキャンですか？"
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "No textual changes between these versions."
 msgstr "これらのバージョン間にテキストの変更はありません。"
@@ -5382,6 +5428,10 @@ msgstr "クォータを超過すると、実行は停止し、制限が表示さ
 msgid "over {windowDays} days"
 msgstr "{windowDays}日間で"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Over 10 MB"
+msgstr "10 MBを超えています"
+
 #: src/components/ProjectMembers.jsx
 msgid "Owner"
 msgstr "オーナー"
@@ -5430,6 +5480,10 @@ msgstr "部分的に適用済み"
 msgid "Partly applied"
 msgstr "部分的に適用済み"
 
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Partly read"
+msgstr "一部既読"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Partnerships"
 msgstr "パートナーシップ"
@@ -5437,6 +5491,10 @@ msgstr "パートナーシップ"
 #: src/components/audit/AuditReportV1.jsx
 msgid "PASS"
 msgstr "PASS"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "Password-protected. Save a copy without one"
+msgstr "パスワードで保護されています。パスワードなしでコピーを保存してください"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste a key first"
@@ -5465,6 +5523,10 @@ msgstr "貼り付けた画像"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pause remembering"
 msgstr "メモリを一時停止する"
+
+#: src/components/onboarding/DocumentPicker.jsx
+msgid "PDF, Word, PowerPoint, Markdown or text. Up to five."
+msgstr "PDF、Word、PowerPoint、Markdown、またはテキスト。最大5つまで。"
 
 #: src/lib/contentEnums.js
 msgid "Pending"
@@ -5867,6 +5929,7 @@ msgstr "自動実行されました"
 msgid "Reach"
 msgstr "リーチ"
 
+#: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
 msgstr "読み込み"
@@ -5907,6 +5970,10 @@ msgstr "ブランドコンテキストを読み込みました"
 msgid "Read the discovered references"
 msgstr "発見された参照を読み込みました"
 
+#: src/components/onboarding/DocumentPicker.jsx
+#~ msgid "Read the first part"
+#~ msgstr "最初の部分を読む"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read the format library"
 msgstr "フォーマットライブラリを読み込みました"
@@ -5943,7 +6010,12 @@ msgstr "TikTokを読み込み中"
 msgid "Reading what you've already said…"
 msgstr "これまでの発信内容を確認しています…"
 
+#: src/lib/auditEvents.js
+msgid "Reading your documents"
+msgstr "ドキュメントを読み込み中"
+
 #: src/app/(start)/start/page.jsx
+#: src/components/onboarding/DocumentPicker.jsx
 msgid "Reading…"
 msgstr "読み込み中…"
 
@@ -6121,6 +6193,11 @@ msgstr "記憶中…"
 msgid "Remove"
 msgstr "削除"
 
+#. placeholder {0}: doc.name
+#: src/components/onboarding/DocumentPicker.jsx
+#~ msgid "Remove {0}"
+#~ msgstr "{0}を削除"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Remove {item}"
 msgstr "{item}を削除"
@@ -6129,6 +6206,7 @@ msgstr "{item}を削除"
 msgid "Remove {memberEmail}"
 msgstr "{memberEmail}を削除"
 
+#: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/Attachments.jsx
 msgid "Remove {name}"
 msgstr "{name}を削除"

@@ -40,6 +40,11 @@ published without one. The same script, with no arguments, holds
   prompt and edited in a feed-shaped editor (per-part limits, LinkedIn's
   fold, threaded replies). One rules table per channel serves the writer,
   both publish paths, the review and the app.
+- **Onboarding reads your documents beside your website.** Add up to five
+  files (PDF, Word, PowerPoint, Markdown or text) when Duct confirms your
+  site, and the project is drafted from both: personas, competitors and
+  pitch marked "From your files". One call on your own model; the file is
+  never kept, and a field you set yourself is never replaced.
 
 ### Changed
 

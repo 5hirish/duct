@@ -1,10 +1,18 @@
 // The three rules that make a drafted project safe to merge, pinned:
-// a value the user set is never overwritten, what the site says (crawl) beats
-// what a model guessed (inferred), and a filled field with no recorded
-// provenance belongs to the user. Everything else is plumbing.
+// a value the user set is never overwritten, a filled field gives way only to
+// an equal or higher rank (site, then the user's documents, then a model's
+// guess), and a filled field with no recorded provenance belongs to the user.
+// Everything else is plumbing.
 
 import { describe, expect, it } from "vitest";
-import { mergeDraft, markConfirmed, PROVENANCE_CRAWL, PROVENANCE_INFERRED, PROVENANCE_USER } from "../projectDraft";
+import {
+  mergeDraft,
+  markConfirmed,
+  PROVENANCE_CRAWL,
+  PROVENANCE_DOCUMENT,
+  PROVENANCE_INFERRED,
+  PROVENANCE_USER,
+} from "../projectDraft";
 import { UNTITLED_PROJECT } from "../projects";
 
 const empty = { id: "p1", name: "", company: { name: "", pitch: "" }, audience: { personas: [] }, provenance: {} };
@@ -83,6 +91,37 @@ describe("mergeDraft", () => {
   it("writes over the placeholder name", () => {
     const fresh = { id: "p4", name: UNTITLED_PROJECT, company: { name: "", pitch: "" }, audience: { personas: [] } };
     expect(mergeDraft(fresh, crawl).name).toBe("Acme");
+  });
+
+  // The user's own files rank between the site and a model's guess: they fill
+  // what the site left empty, beat the classifier, and never rename what the
+  // site already names, because a deck goes stale and a homepage does not.
+  it("ranks the user's documents below the site and above a guess", () => {
+    const fromSite = mergeDraft(empty, crawl);
+    const documents = {
+      layer: "documents",
+      fields: {
+        name: { value: "Acme Old Name", provenance: PROVENANCE_DOCUMENT },
+        industry: { value: "Marketing & Advertising", provenance: PROVENANCE_DOCUMENT },
+      },
+    };
+    const withDocs = mergeDraft(fromSite, documents);
+    expect(withDocs.name).toBe("Acme");
+    expect(withDocs.provenance.name).toBe(PROVENANCE_CRAWL);
+    expect(withDocs.company.industry).toBe("Marketing & Advertising");
+    expect(withDocs.provenance.industry).toBe(PROVENANCE_DOCUMENT);
+
+    const guess = { fields: { industry: { value: "SaaS & Software", provenance: PROVENANCE_INFERRED } } };
+    expect(mergeDraft(withDocs, guess).company.industry).toBe("Marketing & Advertising");
+    // A later read of the same files may correct an earlier one.
+    const reread = { fields: { industry: { value: "Education", provenance: PROVENANCE_DOCUMENT } } };
+    expect(mergeDraft(withDocs, reread).company.industry).toBe("Education");
+  });
+
+  it("gives a provenance it does not know the least trust", () => {
+    const fromSite = mergeDraft(empty, crawl);
+    const unknown = { fields: { pitch: { value: "From somewhere new", provenance: "telepathy" } } };
+    expect(mergeDraft(fromSite, unknown).company.pitch).toBe("Weeknight dinners, planned.");
   });
 
   it("ignores fields it has no home for", () => {

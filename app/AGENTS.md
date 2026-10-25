@@ -30,7 +30,12 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   background via `/api/audit/prefetch`) → a model (an API key verified by
   spending it, or on desktop "Continue with ChatGPT", or skipped) → the
   session at `/audit/seo/[sessionId]` with `crawl_id` and `draft_project`
-  set. Submitting the URL mints a **guest** (`lib/guest.js`): a real account
+  set. The "Found it" card also offers documents
+  (`components/onboarding/DocumentPicker.jsx`): files read on upload by
+  `/api/audit/documents`, their ids sent as `document_ids`. It lives on that
+  card and not beside the URL field because the landing page's hand-off
+  skips the field, and it blocks "continue" only while a file is being read.
+  Submitting the URL mints a **guest** (`lib/guest.js`): a real account
   with a synthetic email, so everything the audit makes has an owner before
   anyone signs in; Google sign-in later links or merges it. No `AuthGuard`
   and none of the app shell. Layout is the threshold split: the `salve`
@@ -146,8 +151,10 @@ it is a claim about the code, not a way to quiet the check.
   `isGuestToken()` / `isSignedInUser()` read the `guest` claim. A guest is a
   real user everywhere else in the app; only the sidebar footer and the
   sign-in page treat it specially.
-- `lib/onboardingApi.js` — prefetch, verify, link code: the three calls only
-  `/start` makes. Errors carry the backend's `reason`.
+- `lib/onboardingApi.js` — prefetch, documents, verify, link code: the calls
+  only `/start` makes. Errors carry the backend's `reason`. The document
+  limits are mirrored here (`localDocumentError`) only so a file that will be
+  refused says so before it uploads; the server checks every one.
 - `lib/chatgpt.js` — "Continue with ChatGPT", desktop only: the shell runs
   the OAuth and holds the refresh token; this module gets an hour-long access
   token and account id from it, and `providerKeyHeaders()` sends them as the
@@ -155,8 +162,10 @@ it is a claim about the code, not a way to quiet the check.
   `X-OpenAI-Account-Id`). Gated on `capabilities.chatgptAuth` from the shell
   and `chatgpt_auth_enabled` from `/api/providers/status` — both, always.
 - `lib/projectDraft.js` — merges `PROJECT_DRAFT` events into the project
-  with provenance (`crawl` / `inferred` / `user`). Three rules: a user value
-  is never overwritten, a crawl value beats an inferred one, and **a
+  with provenance (`user` / `crawl` / `document` / `inferred`, in that rank).
+  Three rules: a user value is never overwritten, a filled field gives way
+  only to an equal or higher rank (the site beats the user's files, which
+  beat a model's guess; an unknown provenance ranks lowest), and **a
   non-empty field with no recorded provenance counts as the user's** —
   every project made before drafts existed is in that state, and without
   that rule the first draft to reach one replaced a human's name, pitch and

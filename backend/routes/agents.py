@@ -1754,6 +1754,7 @@ async def _start_seo_audit(
                 extra_context=extra_context,
                 crawl_id=req.crawl_id,
                 draft_project=req.draft_project,
+                document_ids=req.document_ids,
             )
             await emit_fn({"event": AuditEvent.PIPELINE_FINISHED, "status": "success"})
         except Exception as exc:

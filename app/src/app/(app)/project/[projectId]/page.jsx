@@ -13,7 +13,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { Brain, Check, Globe, Sparkles, Users, X } from "lucide-react";
+import { Brain, Check, FileText, Globe, Sparkles, Users, X } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,13 @@ import {
   saveProject,
   setActiveProjectId,
 } from "../../../../lib/projects";
-import { PROVENANCE_CRAWL, PROVENANCE_INFERRED, PROVENANCE_USER, markConfirmed } from "../../../../lib/projectDraft";
+import {
+  PROVENANCE_CRAWL,
+  PROVENANCE_DOCUMENT,
+  PROVENANCE_INFERRED,
+  PROVENANCE_USER,
+  markConfirmed,
+} from "../../../../lib/projectDraft";
 import { fetchProjectConfig, getFallbackProjectConfig } from "../../../../lib/projectConfig";
 
 // `value` is what the profile stores and the prompts read, so it stays
@@ -141,6 +147,7 @@ const STEP_DEFINITIONS = [
 // field as the user's, so a later draft leaves it alone.
 const PROVENANCE_COPY = {
   [PROVENANCE_CRAWL]: { label: msg`From your site`, Icon: Globe },
+  [PROVENANCE_DOCUMENT]: { label: msg`From your files`, Icon: FileText },
   [PROVENANCE_INFERRED]: { label: msg`Duct's guess`, Icon: Sparkles },
 };
 

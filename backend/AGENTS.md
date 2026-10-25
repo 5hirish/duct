@@ -441,7 +441,18 @@ Postgres `DATABASE_URL` names.
 - `routes/audit_prefetch.py` — the crawl onboarding starts the moment a URL
   validates (`agents/audit/prefetch.py`): root page now, the rest in the
   background, handed to `run_pipeline` by `crawl_id`. Duct's bandwidth only;
-  inference never runs here.
+  inference never runs here. `POST /api/audit/documents` beside it reads up
+  to five files the user adds on the "Found it" card, keeps their text for
+  the prefetch's TTL (`agents/audit/documents.py`) and answers one result per
+  file; the run names them in `document_ids`. It parses the form itself,
+  after the token, the limiter and the declared length, because a declared
+  `File(...)` body is spooled to disk before any dependency runs.
+- `service/documents.py` — text out of a PDF (pypdf), Word or PowerPoint
+  (zip + XML, any DOCTYPE refused) or plain text, with every reader stopping
+  at a page, character and inflated-size cap. Text rather than a PDF block
+  for the model, because several providers (DeepSeek among them) read none.
+  A file that gives no text raises `DocumentError` with an `Unreadable` code
+  the app words; never a message.
 - `service/ratelimit.py` — the in-process fixed window every route goes
   through that spends before its caller has proven much: `RateLimit.enforce`
   is the 429 with `Retry-After`. Key an address with `client_address(request)`,
@@ -463,10 +474,14 @@ Postgres `DATABASE_URL` names.
   `VISION_PROVIDERS`), and the FIT × PROOF discipline in the USER turn.
   `submit_post_draft` writes `content_posts.clone_source` from the session's
   link plus the model's verdict; the approach is derived, never typed.
-- `agents/audit/draft.py` — the project drafted from the crawl, two layers
-  (`crawl` deterministic, `inferred` one structured call), emitted as
-  `PROJECT_DRAFT` when a run sets `draft_project`. Never infers the North
-  Star; the agent asks for it in chat.
+- `agents/audit/draft.py` — the project drafted from the crawl, in layers
+  (`crawl` deterministic; `documents` one structured call over the user's
+  files, only when they added some; `inferred` one structured call), emitted
+  as `PROJECT_DRAFT` when a run sets `draft_project`. The documents are read
+  in the `read_documents` step, before competitor research, and reach the
+  rest of the run only as the business context they seed: their text never
+  rides in the audit's own turn. Never infers the North Star; the agent asks
+  for it in chat.
 - `agents/engines.resolve_job_run` — provider and model over the keys *this
   caller* can spend, so a user holding only an OpenAI key runs on OpenAI
   instead of a 402 for the instance default. All three agents route through

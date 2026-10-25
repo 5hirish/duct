@@ -21,6 +21,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import FrontDoor from "@/components/onboarding/FrontDoor";
+import DocumentPicker, { DocumentState } from "@/components/onboarding/DocumentPicker";
+import { DocumentError } from "@/lib/onboardingApi";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
 import ComposerDials, { TierDial } from "@/components/workspace/ComposerDials";
@@ -215,6 +217,34 @@ function FrontDoorScene({ error = "" }) {
   return (
     <div className="landing-start">
       <FrontDoor url={url} onUrlChange={setUrl} error={error} onSubmit={(e) => e.preventDefault()} />
+    </div>
+  );
+}
+
+const DOCUMENTS_MIXED = [
+  { key: "1", name: "acme-seed-deck.pdf", state: DocumentState.READY, pages: 14 },
+  { key: "2", name: "positioning.docx", state: DocumentState.READING },
+  { key: "3", name: "board-update-q3-final-final-v7-with-appendix-and-financials.pdf", state: DocumentState.READY, pages: 80, truncated: true },
+  { key: "4", name: "scanned-brochure.pdf", state: DocumentState.FAILED, error: DocumentError.NO_TEXT },
+  { key: "5", name: "pricing.pptx", state: DocumentState.FAILED, error: DocumentError.ENCRYPTED },
+];
+
+/** The picker holds its rows in the page; here a scene holds them, so remove
+ *  works and the add button comes back when a slot frees up. */
+function DocumentPickerScene({ initial = [] }) {
+  const [documents, setDocuments] = useState(initial);
+  return (
+    <div className="max-w-xl p-4">
+      <DocumentPicker
+        documents={documents}
+        onAdd={(files) =>
+          setDocuments((prev) => [
+            ...prev,
+            ...files.map((f, i) => ({ key: `${Date.now()}-${i}`, name: f.name, state: DocumentState.READY, pages: 3 })),
+          ])
+        }
+        onRemove={(key) => setDocuments((prev) => prev.filter((d) => d.key !== key))}
+      />
     </div>
   );
 }
@@ -975,6 +1005,22 @@ export const SCENES = [
     title: "The signed-out front door",
     note: "One line does two jobs, so check the swap does not move the layout: the hint and the error are the same element, and the error takes `role=\"alert\"` plus `aria-describedby` off the input. The reassurance it replaces (\"Free, no account, and nothing else connected\") is the page's answer to the fear that pointing Duct at a site hands over an ad account, so it must come back the moment the error clears.",
     render: () => <FrontDoorScene error="Enter your website address." />,
+  },
+  {
+    id: "document-picker",
+    state: "empty — the offer on the \"Found it\" card, nothing added",
+    group: "DocumentPicker",
+    title: "Documents beside the site",
+    note: "An offer, not a step: dashed, quiet, below the site card and above the project decision. Drop a file on it to see the drop hint, which only appears for a drag that carries files.",
+    render: () => <DocumentPickerScene />,
+  },
+  {
+    id: "document-picker-full",
+    state: "five files: read, reading, read in part with a name long enough to clip, a scan, a locked PDF",
+    group: "DocumentPicker",
+    title: "Documents beside the site",
+    note: "Five is the cap, so the add row is gone until one is removed. Check the long name clips and the status beside it never wraps, at 28rem and below; a failure reason may wrap, and its ink is foreground with only the icon in amber, because amber text on --muted fails contrast.",
+    render: () => <DocumentPickerScene initial={DOCUMENTS_MIXED} />,
   },
   {
     id: "desk-composer",

@@ -1,15 +1,18 @@
 /**
  * Merge what the audit learned about a site into its project.
  *
- * The runner emits `PROJECT_DRAFT` twice — layer "crawl" (deterministic: name,
- * pitch, URL, favicon, pillars, social channels) before enrichment, and layer
- * "inferred" (industry, business model, personas, voice, competitors) after —
+ * The runner emits `PROJECT_DRAFT` in layers — "crawl" (deterministic: name,
+ * pitch, URL, favicon, pillars, social channels) first; "documents" when the
+ * user added files beside the site (what the business wrote about itself);
+ * then "inferred" (industry, business model, personas, voice, competitors) —
  * each field carrying its provenance. This is the only place those events
  * touch the project store, and it holds the three rules that make a draft safe:
  *
  *   1. a value the user set (provenance "user") is never overwritten;
- *   2. a non-empty crawl value is never overwritten by an inferred one — what
- *      the site says beats what a model guessed about it;
+ *   2. a filled value is overwritten only by one of equal or higher rank
+ *      (`PROVENANCE_RANK`): what the site says beats what the user's files
+ *      say, because a deck goes stale and a homepage is current, and both
+ *      beat what a model guessed;
  *   3. a non-empty field with NO recorded provenance is treated as the user's.
  *      Every project made before drafts existed is in that state, and a human
  *      typing it was the only way a field got filled — so without this rule
@@ -32,7 +35,21 @@ import {
 
 export const PROVENANCE_USER = "user";
 export const PROVENANCE_CRAWL = "crawl";
+export const PROVENANCE_DOCUMENT = "document";
 export const PROVENANCE_INFERRED = "inferred";
+
+// Rule 2's order. An unknown provenance ranks with "inferred": a source this
+// build has never heard of gets the least trust, never the most.
+const PROVENANCE_RANK = Object.freeze({
+  [PROVENANCE_USER]: 3,
+  [PROVENANCE_CRAWL]: 2,
+  [PROVENANCE_DOCUMENT]: 1,
+  [PROVENANCE_INFERRED]: 0,
+});
+
+function rankOf(provenance) {
+  return PROVENANCE_RANK[provenance] ?? PROVENANCE_RANK[PROVENANCE_INFERRED];
+}
 
 // Where each drafted field lands in the project profile. A field the backend
 // emits that is not listed here is ignored, never spread somewhere new.
@@ -95,9 +112,7 @@ export function mergeDraft(project, draft) {
     const filled = !isBlank(key, existing);
     // Rule 3: nothing recorded, but something is there — a person put it there.
     if (filled && !current) continue;
-    if (filled && current === PROVENANCE_CRAWL && field.provenance === PROVENANCE_INFERRED) {
-      continue;
-    }
+    if (filled && rankOf(field.provenance) < rankOf(current)) continue;
     next = setPath(next, path, field.value);
     provenance[key] = field.provenance || PROVENANCE_INFERRED;
   }

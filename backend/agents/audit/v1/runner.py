@@ -281,6 +281,7 @@ class LangChainAuditRunner:
         extra_context: str = "",
         crawl_id: str | None = None,
         draft_project: bool = False,
+        document_ids: list[str] | None = None,
     ) -> Any:
         # Imported lazily only to keep the module import graph shallow; nothing
         # here pulls in another engine.
@@ -356,6 +357,34 @@ class LangChainAuditRunner:
         llm = resolve_chat_model(
             self.provider, self.model, self._api_key, self._temperature, cache_key=session_id,
         )
+
+        # The files the user added beside the site. Read before research so
+        # the competitors a deck names are the ones the research looks up.
+        from agents.audit.documents import take_documents
+
+        documents = take_documents(document_ids, owner_id=owner_id) if document_ids else []
+        if documents:
+            from agents.audit.draft import document_draft, seed_business_context_from_documents
+
+            await emit({
+                "event": _E.STEP_STARTED,
+                "step_id": AuditStep.READ_DOCUMENTS,
+                "label": STEP_LABELS[AuditStep.READ_DOCUMENTS],
+                "status": StepStatus.RUNNING,
+            })
+            from_documents = await document_draft(llm, documents)
+            if from_documents and draft_project:
+                await emit({"event": _E.PROJECT_DRAFT, **from_documents})
+            business_context = seed_business_context_from_documents(business_context, from_documents)
+            await emit({
+                "event": _E.STEP_FINISHED,
+                "step_id": AuditStep.READ_DOCUMENTS,
+                "label": STEP_LABELS[AuditStep.READ_DOCUMENTS],
+                # A call that read nothing usable is not a failed audit; the
+                # step closes either way and the draft is the site's alone.
+                "status": StepStatus.SUCCESS,
+                "payload": {"documents": len(documents), "drafted": bool(from_documents)},
+            })
 
         research_context = None
         wants_research = not lead_magnet and (draft_project or bool(
