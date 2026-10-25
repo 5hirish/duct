@@ -8,8 +8,11 @@
  * pushes events onto `dataLayer`.
  *
  * Configured by `NEXT_PUBLIC_GTM_ID`. Absent means unconfigured, which the seam
- * treats as "no analytics" rather than an error.
+ * treats as "no analytics" rather than an error. Inside the desktop shell it is
+ * never configured, whatever the variable says: `isConfigured` carries why.
  */
+
+import { isDesktopShell } from "../shell.js";
 
 const GRANTED = "granted";
 const DENIED = "denied";
@@ -46,19 +49,23 @@ export const gtm = {
   id: "gtm",
 
   isConfigured() {
-    return Boolean(containerId()) && isMeasurableHost();
+    // Never inside the desktop shell. There, the shell's IPC trusts every script
+    // on this origin, and a tag manager exists to run scripts configured outside
+    // this repository — so a misconfigured or compromised container would run
+    // with the keychain. The shell measures nothing; its Preferences switch
+    // governs crash reports alone.
+    return Boolean(containerId()) && isMeasurableHost() && !isDesktopShell();
   },
 
   /**
    * The posture before any decision, declared before `gtm.js` parses — a
    * Consent Initialization tag inside the container cannot beat the container's
-   * own loader.
-   *
-   * `cookieless` is the desktop shell's permanent state: tags fire, GA4 sends
-   * cookieless pings, nothing is written to the machine. No `wait_for_update`
-   * there, because no update is coming and waiting would delay every event.
+   * own loader. `wait_for_update` holds the first hits while the stored or
+   * default decision catches up, so they leave with it rather than before it.
+   * Every surface that gets this far has a decision coming: the one that never
+   * did, the desktop shell, no longer loads the container at all.
    */
-  setDefaults({ cookieless = false } = {}) {
+  setDefaults() {
     gtag("consent", "default", {
       ad_storage: DENIED,
       ad_user_data: DENIED,
@@ -66,7 +73,7 @@ export const gtm = {
       analytics_storage: DENIED,
       functionality_storage: GRANTED,
       security_storage: GRANTED,
-      ...(cookieless ? {} : { wait_for_update: 500 }),
+      wait_for_update: 500,
     });
   },
 

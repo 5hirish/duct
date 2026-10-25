@@ -266,9 +266,11 @@ it is a claim about the code, not a way to quiet the check.
   reference a tag vendor** — that is what lets a self-host build measure nothing
   without editing our consent logic, and it mirrors
   `desktop/src-tauri/src/telemetry/` on the Rust side.
-- `ProductAnalytics` owns the flow, and exempts the desktop shell from ever
-  asking: it measures with storage permanently off, gated on the Preferences
-  switch in `lib/telemetry.js`.
+- `ProductAnalytics` owns the flow. The desktop shell measures nothing and is
+  never asked: `gtm.isConfigured()` is false there, because the shell's IPC
+  trusts every script on this origin and a tag container exists to run scripts
+  configured outside this repository. The Preferences switch in
+  `lib/telemetry.js` governs crash reports alone.
 - `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
   `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
   `formatNumber`, `formatPercent`, `titleCase`, `formatTitle`, `capitalize`,
