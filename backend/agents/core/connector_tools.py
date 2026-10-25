@@ -51,7 +51,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from agents.core.errors import ErrorCode, classify_error
+from agents.core.errors import ErrorCode, classify_error, safe_excerpt
 from agents.core.events import AgentEvent
 from agents.core.session import BaseAgentSession, PauseFn, make_future_pause
 from agents.core.telemetry import tool_span
@@ -249,7 +249,7 @@ async def _run(fn: Callable, *args: Any, **kwargs: Any) -> Any:
                     "it, and do not retry this source again this session."
                 ),
             }
-        return {"status": "error", "message": str(exc)}
+        return {"status": "error", "message": safe_excerpt(exc)}
 
 
 # ---------------------------------------------------------------------------
