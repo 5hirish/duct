@@ -62,6 +62,11 @@ published without one. The same script, with no arguments, holds
 
 ### Fixed
 
+- **Where a drafted field came from follows the project to every device.**
+  "From your site" and "From your files" used to live in the browser that
+  drafted them; the server keeps them now and merges every draft itself, so
+  a second device sees the same chips and an older copy saving cannot undo
+  a newer draft or overwrite what you typed.
 - A scheduled PostBridge post follows edits and deletes made in Duct, links
   on X move to the reply PostBridge keeps them in, and its validation
   errors read as one sentence.

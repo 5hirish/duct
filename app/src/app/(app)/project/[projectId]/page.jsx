@@ -344,9 +344,12 @@ export default function ProjectContextPage() {
   const hasCompanyContext = Boolean(profile.company.industry && profile.company.business_model);
   const drafted = Object.values(provenance).filter((v) => v !== PROVENANCE_USER).length;
 
-  // Typing into a drafted field is as good as confirming it.
+  // Typing into a field is as good as confirming it, drafted or not. The
+  // server settles a save by these labels: a field marked as the person's wins,
+  // even when it was cleared, where an unmarked empty one is taken for a copy
+  // that never had the value and is left alone.
   function own(key) {
-    setProvenance((prev) => (prev[key] && prev[key] !== PROVENANCE_USER ? { ...prev, [key]: PROVENANCE_USER } : prev));
+    setProvenance((prev) => (prev[key] === PROVENANCE_USER ? prev : { ...prev, [key]: PROVENANCE_USER }));
   }
 
   function Prov({ k }) {
@@ -723,7 +726,8 @@ export default function ProjectContextPage() {
             <Input
               id="persona-name"
               value={profile.audience.personas[0]?.name || ""}
-              onChange={(e) =>
+              onChange={(e) => {
+                own("personas");
                 setProfile((prev) => ({
                   ...prev,
                   audience: {
@@ -733,10 +737,10 @@ export default function ProjectContextPage() {
                       name: e.target.value,
                       description: prev.audience.personas[0]?.description || "",
                       priority: prev.audience.personas[0]?.priority || "primary",
-                    }],
+                    }, ...prev.audience.personas.slice(1)],
                   },
-                }))
-              }
+                }));
+              }}
               placeholder={t`Marketing managers at SaaS startups`}
             />
           </div>
@@ -747,7 +751,8 @@ export default function ProjectContextPage() {
               className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
               rows={3}
               value={profile.audience.personas[0]?.description || ""}
-              onChange={(e) =>
+              onChange={(e) => {
+                own("personas");
                 setProfile((prev) => ({
                   ...prev,
                   audience: {
@@ -757,10 +762,10 @@ export default function ProjectContextPage() {
                       description: e.target.value,
                       name: prev.audience.personas[0]?.name || "",
                       priority: prev.audience.personas[0]?.priority || "primary",
-                    }],
+                    }, ...prev.audience.personas.slice(1)],
                   },
-                }))
-              }
+                }));
+              }}
               placeholder={t`Pain points, goals, motivations...`}
             />
           </div>

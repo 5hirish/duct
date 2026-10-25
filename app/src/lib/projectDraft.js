@@ -21,6 +21,12 @@
  *
  * Provenance lives on the project as `project.provenance[field]`, which the
  * project-context surface renders as a chip with a one-click confirm.
+ *
+ * The server keeps the same labels and runs the same rules
+ * (backend/service/project_draft.py): every draft is merged here for an
+ * instant answer, and sent there to be merged against what the server holds,
+ * which is what a second device or an outside writer sees. A parity test
+ * holds the ranks and field names equal across the two.
  */
 
 import {
@@ -28,7 +34,7 @@ import {
   createProject,
   getProjectById,
   projectsForSite,
-  pushProjectToBackend,
+  pushDraftToBackend,
   saveProject,
   setActiveProjectId,
 } from "./projects";
@@ -69,10 +75,19 @@ const FIELD_PATHS = Object.freeze({
   content_pillars: ["brand_channels", "content_pillars"],
 });
 
+// Personas and competitors are rows keyed by name. The settings page seeds one
+// empty row so the form has something to type into; that row is not content.
+function isBlankRow(row) {
+  if (row == null) return true;
+  if (typeof row === "string") return row.trim() === "";
+  if (typeof row === "object") return String(row.name || "").trim() === "";
+  return false;
+}
+
 function isEmpty(value) {
   if (value == null) return true;
   if (typeof value === "string") return value.trim() === "";
-  if (Array.isArray(value)) return value.length === 0;
+  if (Array.isArray(value)) return value.every(isBlankRow);
   return false;
 }
 
@@ -125,9 +140,10 @@ export function draftSite(draft) {
 }
 
 /**
- * Merge a draft into the project it belongs to and persist it — locally now,
- * to the backend best-effort (a guest is a real user, so this is a real
- * write). Returns the saved project.
+ * Merge a draft into the project it belongs to and persist it: locally now,
+ * and to the backend best-effort as the draft itself, so the server merges it
+ * against its own copy (a guest is a real user, so this is a real write).
+ * Returns the saved project.
  *
  * `projectId` is the caller's answer to "which project", and every caller
  * that knows it passes it. Without one this resolves by the drafted site and
@@ -151,7 +167,7 @@ export function applyProjectDraft(draft, { projectId = null, createNew = false }
     setActiveProjectId(project.id);
   }
   const saved = saveProject(mergeDraft(project, draft));
-  pushProjectToBackend(saved);
+  pushDraftToBackend(saved.id, draft);
   return saved;
 }
 

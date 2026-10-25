@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-09-30
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-24
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -43,7 +43,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | `users` | one row per person (or per desktop install, for a guest); user-scope switches like `memory_paused` |
 | `auth_identities` | how a user signs in: Google, guest install, or a linked ChatGPT account (a merge key, never a login alone) |
 | `oauth_states` | short-lived OAuth `state` values, single-use, with an expiry |
-| `projects` | the unit everything else hangs off: settings, `autonomy_level`, `memory_paused` |
+| `projects` | the unit everything else hangs off: settings, `autonomy_level`, `memory_paused`, and `provenance` (where each drafted field came from) |
 | `project_members` | who can see a project. Authorization is membership, not `projects.user_id` |
 | `project_invitations` | pending email invites into a project |
 | `user_profile` | who the operator is and how they want to be written to |
