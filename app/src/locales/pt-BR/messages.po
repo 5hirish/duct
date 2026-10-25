@@ -746,8 +746,8 @@ msgstr "<0>Quando:</0> {occurredAt}"
 #: src/components/audit/AuditStepProgress.jsx
 #: src/components/content/PlanViewport.jsx
 #: src/components/PipelineProgress.jsx
-msgid "~3 min"
-msgstr "~3 min"
+#~ msgid "~3 min"
+#~ msgstr "~3 min"
 
 #: src/app/(app)/execute/page.jsx
 msgid "⛔ Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
@@ -2243,8 +2243,12 @@ msgid "Context compression"
 msgstr "Compressão de contexto"
 
 #: src/components/workspace/ContextRing.jsx
-msgid "Context used: {percent} percent. Show token usage."
-msgstr "Contexto usado: {percent} por cento. Mostrar uso de tokens."
+msgid "Context used: {percent} percent"
+msgstr "Contexto usado: {percent} por cento"
+
+#: src/components/workspace/ContextRing.jsx
+#~ msgid "Context used: {percent} percent. Show token usage."
+#~ msgstr "Contexto usado: {percent} por cento. Mostrar uso de tokens."
 
 #: src/components/workspace/ContextRing.jsx
 msgid "Context window"
@@ -7136,6 +7140,14 @@ msgstr "Compartilhamentos"
 #: src/components/audit/ShareReport.jsx
 msgid "Sharing is by membership, and a member needs a name. Sign in with Google and this project, the report and the conversation come with you — nothing is lost."
 msgstr "O compartilhamento é por associação, e um membro precisa de um nome. Entre com o Google e este projeto, o relatório e a conversa vêm com você — nada é perdido."
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Shift+Enter for a new line"
+msgstr "Shift+Enter para uma nova linha"
+
+#: src/components/workspace/ChatInput.jsx
+msgid "Shift+Enter for a new line · Esc to stop"
+msgstr "Shift+Enter para uma nova linha · Esc para parar"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Shirish"

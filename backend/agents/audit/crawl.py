@@ -30,6 +30,13 @@ logger = logging.getLogger(__name__)
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
+# Pages fetched from one site at a time. The crawl used to open every page
+# of the plan at once — up to 35 connections to a host that may be a small
+# server behind a rate limiter — which read as an attack to a WAF and as a
+# burst to the host; six is what a polite crawler sends, and at the 10 s
+# per-read budget it still finishes a 35-page plan inside a minute.
+CRAWL_CONCURRENCY = 6
+
 
 # ---------------------------------------------------------------------------
 # Session
@@ -86,7 +93,13 @@ async def run_crawl(
             [(url, "landing_page") for url in plan.landing_pages]
             + [(url, "blog_post") for url in plan.blog_posts]
         )
-        tasks = [_fetch_and_extract(client, url, ptype) for url, ptype in all_urls]
+        gate = asyncio.Semaphore(CRAWL_CONCURRENCY)
+
+        async def _politely(url: str, ptype: str) -> Any:
+            async with gate:
+                return await _fetch_and_extract(client, url, ptype)
+
+        tasks = [_politely(url, ptype) for url, ptype in all_urls]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
     pages = []

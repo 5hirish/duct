@@ -65,7 +65,7 @@ export const initialAgentState = Object.freeze({
   // `total` sums every call seen this session (subagents included), which is
   // what the turn cost — in tokens and, for a priced model, in dollars. A
   // resumed thread gets both from the state route.
-  usage: { last: null, total: { input: 0, output: 0, cached: 0, calls: 0, cost: 0 } },
+  usage: { last: null, total: { input: 0, output: 0, cached: 0, calls: 0, cost: null } },
   // The harness is summarising history to make room — shown in the status
   // row; the transcript gets a quiet note when it is done.
   compacting: false,
@@ -335,7 +335,9 @@ function addUsage(usage, event) {
       output: t.output + call.output,
       cached: t.cached + call.cached,
       calls: t.calls + 1,
-      cost: (t.cost || 0) + (call.cost || 0),
+      // Null until a call carries a price: a session of unpriced calls then
+      // says "—" in the ring's tooltip rather than "$0", which reads as free.
+      cost: call.cost == null ? t.cost : (t.cost || 0) + call.cost,
     },
   };
 }
@@ -362,7 +364,7 @@ function usageFromThread(thread) {
       output: t.output_tokens || 0,
       cached: t.cache_read_tokens || 0,
       calls: t.calls || 0,
-      cost: typeof t.cost_usd === "number" ? t.cost_usd : 0,
+      cost: typeof t.cost_usd === "number" ? t.cost_usd : null,
     },
   };
 }

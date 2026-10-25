@@ -736,3 +736,45 @@ def test_an_in_depth_audit_keeps_the_data_it_read_while_it_writes_the_report():
 def test_a_long_follow_up_chat_is_still_pruned():
     cleared = _prune(_audit_messages(data_chars=40_000, follow_ups=10))
     assert cleared, "the trigger must still fire once a chat grows"
+
+
+def test_the_audit_thread_is_keyed_on_the_conversation(emitted, monkeypatch):
+    """A session id is minted per open. Keyed on it, every resume of a
+    project-scoped audit started an empty checkpoint beside its own
+    transcript — the failure the checkpointer was added to prevent. The
+    conversation outlives the session, so it is the thread."""
+    from uuid import uuid4
+
+    import agents.audit.v1.runner as v1
+
+    seen: dict = {}
+
+    class _Loop:
+        def __init__(self, agent, **kwargs):
+            seen.update(kwargs)
+            self.opened = False
+
+    monkeypatch.setattr(v1, "DeepSession", _Loop)
+    runner = v1.LangChainAuditRunner(api_key="unused-no-network")
+    conversation_id = uuid4()
+
+    with_conversation = BaseAgentSession(
+        session_id="audit-open-2", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    )
+    with_conversation.conversation_id = conversation_id
+    runner._session_loop(
+        object(), object(), with_conversation, emitted, "audit-open-2",
+        on_artifact_close=lambda *_a, **_k: None, announce_finish=True,
+    )
+    assert seen["thread_id"] == str(conversation_id)
+
+    ephemeral = BaseAgentSession(
+        session_id="audit-teaser", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    )
+    runner._session_loop(
+        object(), object(), ephemeral, emitted, "audit-teaser",
+        on_artifact_close=lambda *_a, **_k: None, announce_finish=True,
+    )
+    assert seen["thread_id"] == "audit-teaser"

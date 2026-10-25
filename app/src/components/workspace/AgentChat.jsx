@@ -33,7 +33,8 @@ import ChangeSetCard from "@/components/execution/ChangeSetCard";
 import { Phase } from "../../lib/agentPhase";
 import { StepStatus } from "../../lib/agentSteps";
 import { ErrorAction, Notice, Row, errorAction, errorText } from "../../lib/agentSession";
-import { compactNumber, formatDate, formatTime, relativeTime } from "../../lib/format";
+import { compactNumber, formatDate, formatElapsed, formatTime, relativeTime } from "../../lib/format";
+import { useElapsed } from "../../hooks/useElapsed";
 import { groupActivityRows } from "../../lib/toolActivity";
 import { Button } from "@/components/ui/button";
 import { AttachmentStrip } from "./Attachments";
@@ -450,32 +451,6 @@ function FailedAction({ action, retryable, onRetry, retryLabel, onStartFresh }) 
 // Header status
 // ---------------------------------------------------------------------------
 
-/** Seconds since `active` last became true; 0 while it is false. A clock in
- *  the status row is what tells a user a four-minute run is alive. */
-function useElapsed(active) {
-  const [seconds, setSeconds] = useState(0);
-  useEffect(() => {
-    if (!active) {
-      setSeconds(0);
-      return undefined;
-    }
-    const startedAt = Date.now();
-    setSeconds(0);
-    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000);
-    return () => clearInterval(timer);
-  }, [active]);
-  return seconds;
-}
-
-export function formatElapsed(seconds) {
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  if (m < 60) return `${m}m ${String(s).padStart(2, "0")}s`;
-  const h = Math.floor(m / 60);
-  return `${h}h ${String(m % 60).padStart(2, "0")}m`;
-}
-
 /**
  * A quiet line across the transcript. A plain notice is a centred sentence;
  * a compaction or a model switch is a divider, because it is a fact about
@@ -598,6 +573,9 @@ export default function AgentChat({
   // produced, so it must not flicker away on the next token the way a retry does.
   tierStepDown = null,
   draft = null,
+  // The shell's session key: where ChatInput keeps the unsent text, so a
+  // reload of this thread finds this thread's draft.
+  draftKey = "",
   // Tokens (lib/agentSession.js `usage`): the ring in the composer, the figures
   // in its tooltip. Null until the first model call has been billed.
   usage = null,
@@ -898,6 +876,7 @@ export default function AgentChat({
         isStreaming={isStreaming}
         onStop={onStop}
         draft={draft}
+        draftKey={draftKey}
         placeholder={placeholder}
         ariaLabel={inputAriaLabel}
         accept={inputAccept}

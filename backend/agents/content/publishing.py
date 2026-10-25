@@ -68,6 +68,19 @@ def publish_blockers(post) -> list[str]:
     caption = post.caption or ""
     replies = [r for r in (post.replies or []) if isinstance(r, str)]
     problems: list[str] = []
+    # A post PostBridge already holds is not published again. A second create
+    # uploaded the media again, made a second post, and overwrote the id on
+    # the row, so every later edit, unschedule and delete reached the second
+    # post and the first went out untouched. Both publish paths share this
+    # list, which is why the check lives here and not in either caller.
+    if post.post_bridge_post_id and post.status == ContentStatus.SCHEDULED:
+        problems.append(
+            f"This post is already scheduled through Duct for {post.scheduled_at:%d %b %H:%M}"
+            if post.scheduled_at else "This post is already scheduled through Duct"
+        )
+        problems[-1] += "; edit it in place or unschedule it first."
+    elif post.status == ContentStatus.POSTED:
+        problems.append("This post already went out; publishing it again would post it twice.")
     if not caption.strip():
         problems.append("The post has no words yet.")
     problems += copy_problems(ch.id, caption, replies)

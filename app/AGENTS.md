@@ -513,8 +513,11 @@ Rules that follow:
   focus or a tap) on the left, and `composerAside` (`TierDial`: the model
   tier as quiet text, whose popover holds the tier list and thinking as a
   stepped slider), the ring and Send on the right. The ring carries no
-  label; percent, tokens and cost are its tooltip. Placement follows when a
-  dial binds: the posture applies to the next message, so it is inline;
+  label; percent, tokens, cost and the cached share are its tooltip (a dash
+  where the backend has no price for the model), and it is a gauge, not a
+  button — it answers hover and Tab and does nothing on click. Placement
+  follows when a dial binds: the posture applies to the next message, so it
+  is inline;
   tier and thinking bind at the next session, so they are one tap away; the
   tier is the one choice people look for by name, so it stands at the
   corner of the box like every chat app's model name, and thinking is a
@@ -622,6 +625,16 @@ Rules that follow:
   the run is stopped never reached the model: the reducer takes it out of the
   transcript and puts its text in `draft`, which `ChatInput` applies once per
   `draft.key`. Losing a typed message is worse than losing the run.
+- **The box keeps what was typed.** `ChatInput` saves its text per
+  `draftKey` — the shell's `handleKey`, so a reload of this thread finds
+  this thread's draft — through `lib/composerDraft.js`, which the desk
+  composer's Settings round-trip uses too, and clears it on send. The
+  store is `sessionStorage`, per tab, for the reason the session handle
+  gives: the key names a thread, not a user, so anything that outlived the
+  tab would follow a shared browser into the next sign-in. Esc in
+  the box stops a streaming turn (scoped to the box: a window-level Escape
+  would also fire while someone closes a popover); Shift+Enter is a new
+  line; the footer names both while the box has focus.
 - **Notifications come from phase transitions, never from a workspace.** A
   workspace names itself (`notifyAs`) and `hooks/useAgentNotifications.js`
   turns done / needs-input / failed into a system notice — only while the

@@ -410,10 +410,13 @@ MODEL_FALLBACK: dict[ModelName, tuple[ModelName, ...]] = {
     # verification; tests/test_model_transport.py makes one per id, live).
     ModelName.GEMINI_3_8_FLASH:      (ModelName.GEMINI_3_5_FLASH_LITE,),
     ModelName.GEMINI_2_5_FLASH:      (ModelName.GEMINI_3_5_FLASH_LITE,),
-    # OpenAI
+    # OpenAI. Luna is the bottom of its family: it is the cheapest OpenAI
+    # model in PRICING, so a step "down" to 5 Mini was 2.5x dearer on input and
+    # 4x on output — and content takes the fallback as its *cheap* research
+    # model, so a Luna run's research cost more than the run.
+    # tests/test_model_transport.py holds every pair price-monotone.
     ModelName.GPT_6_ASTRA:           (ModelName.GPT_6_1_SOL,),
     ModelName.GPT_6_1_SOL:             (ModelName.GPT_6_LUNA,),
-    ModelName.GPT_6_LUNA:            (ModelName.GPT_5_MINI,),
     ModelName.GPT_5_MINI:            (ModelName.GPT_4O_MINI,),
     ModelName.GPT_4O:                (ModelName.GPT_4O_MINI,),
 }

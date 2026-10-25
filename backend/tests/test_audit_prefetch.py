@@ -128,3 +128,27 @@ async def test_no_response_at_all_is_unreachable(offline):
     offline["fetched"]["result"] = _Fetched(status=0, text="", redirect_chain=[])
     with pytest.raises(SiteUnreachableError):
         await prefetch.start_prefetch(ROOT, owner_id="guest-1")
+
+
+async def test_a_prefetch_the_pipeline_stopped_waiting_for_is_cancelled(offline, monkeypatch):
+    """Past the wait the pipeline crawls the site itself. Left running, the
+    prefetch kept fetching the same pages beside it: two crawls of one host
+    at once, for a result nobody would read."""
+    started = asyncio.Event()
+
+    async def slow_crawl(url, **_kwargs):
+        offline["calls"].append(url)
+        started.set()
+        await asyncio.sleep(60)
+        raise AssertionError("the prefetch should have been cancelled")
+
+    monkeypatch.setattr(audit_crawl, "run_crawl", slow_crawl)
+    entry = await prefetch.start_prefetch(ROOT, owner_id="guest-1")
+    await started.wait()
+
+    assert await prefetch.take_crawl(entry.crawl_id, owner_id="guest-1", wait=0.01) is None
+    await asyncio.sleep(0)  # let the cancellation land
+
+    assert entry.task.cancelled() or entry.task.done()
+    assert entry.status()["state"] == prefetch.STATE_FAILED
+    assert await prefetch.take_crawl(entry.crawl_id, owner_id="guest-1", wait=0.01) is None
