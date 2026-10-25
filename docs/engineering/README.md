@@ -1,44 +1,40 @@
 # Engineering
 
-How Duct is built. Two kinds of file, by name (the rule is in
-[`../README.md`](../README.md#naming)):
+**Author:** Shirish Kadam · **Updated:** 2026-10-25
 
-- **References** — undated, kept true, listed below. Read these first.
-- **Records** — dated `YYYY-MM-DD-<slug>` files in this folder: reviews,
-  plans, research, decisions. Frozen on the day they were written; `ls` sorts
-  them into a timeline, and each one says at the top what it is. They are
-  not indexed here on purpose: a summary of a frozen document goes stale the
-  moment the code moves, while the document itself does not pretend to be
-  current. Superseded ones move to [`../archive/`](../archive/2026-Q2/).
+How Duct is built, by what you want to do. References are kept current;
+dated records are frozen on the day they were written (the rule is in
+[`../README.md`](../README.md#naming)).
 
-## References
+## Build and change an agent
 
-- [`data-model.md`](data-model.md) — every table, what it records, and
-  which of the four stores answers "where is this recorded?". Read before
-  proposing a new table, event kind or log.
-- [`agent-ports-and-events.md`](agent-ports-and-events.md) — the harness
-  boundary: the six agent ports and the SSE event contract. The code is the
-  source of truth; this explains the shape.
-- [`agent-engineering.md`](agent-engineering.md) — how an agent is built
-  and changed on LangChain / `deepagents`: the rules, the primitive behind
-  each, what enforces it, checklists, and the open gaps. Read before adding
-  or changing an agent.
-- [`agent-harness-references.md`](agent-harness-references.md) — the
-  coding-agent harnesses we read (Codex, OpenCode, pi) and the indexes we
-  mine: why each matters, the revision last read, findings pinned to
-  `file:line`.
-- [`agent-evaluation.md`](agent-evaluation.md) — LLM-as-judge output QA:
-  the harness in `backend/tests/eval/`, judge biases and mitigations.
-- [`credential-storage.md`](credential-storage.md) — where every secret
-  lives and what protects it, including exactly when macOS prompts.
-- [`claude-code-on-the-web.md`](claude-code-on-the-web.md) — runbook for
-  cloud Claude Code sessions on this repo.
-- [`security-audit-skill-and-hooks.md`](security-audit-skill-and-hooks.md)
-  — runbook for the local security gate: audit skill, leak scanner, policy.
-- [`agent-prompts.md`](agent-prompts.md) — **generated, do not edit:** every
-  agent's system prompt and a sample turn. `make dump-prompts`; CI fails a
-  prompt change that skips it.
+| To | Read |
+|---|---|
+| Add an agent, or change a prompt, tool, model default, middleware or pin: each rule, what enforces it, the open gaps | [Building and changing agents](agent-engineering.md) |
+| Understand the harness seam: the six agent ports and the event stream the app reads. The code is the source of truth; this explains the shape | [Agent ports and the event contract](agent-ports-and-events.md) |
+| Test an agent whose output is subjective: the LLM-as-judge harness, the eval gate on agent PRs, judge biases and their mitigations | [Agent output QA](agent-evaluation.md) |
+| Read what every agent is told: its system prompt and a sample turn | [Agent prompts](agent-prompts.md), **generated** by `make dump-prompts`. CI fails a prompt change that skips it |
+| See which harnesses we read for answers (Codex, OpenCode, pi), the revision last read and the findings pinned to `file:line` | [Agent harnesses we learn from](agent-harness-references.md) |
 
-Two runbooks live in the private `duct-cloud` repository: deployment
-(Cloudflare + Railway) and the retired TestFlight channel's Apple-account
-notes.
+## Store, secure and run
+
+| To | Read |
+|---|---|
+| Decide where something is recorded before proposing a table, event kind or log | [Data model](data-model.md) |
+| Know where every secret lives, what protects it, and exactly when macOS prompts | [Credential storage](credential-storage.md) |
+| Run the local security gate: audit skill, leak scanner, policy | [Local security audit](security-audit-skill-and-hooks.md) |
+| Run Claude Code in the cloud against this repo | [Claude Code on the web](claude-code-on-the-web.md) |
+
+Deployment (Cloudflare and Railway) and the retired TestFlight channel's
+Apple-account notes are runbooks in a separate private repository.
+
+## Records
+
+Dated `YYYY-MM-DD-<slug>.md|html` files in this folder: reviews, plans,
+research, decisions. `ls` sorts them into a timeline and each says at the top
+what it is.
+
+They are not indexed here on purpose. A summary of a frozen document goes
+stale the moment the code moves, while the document itself never claims to be
+current. Ones a reader should no longer follow move to
+[`../archive/`](../archive/2026-Q2/).

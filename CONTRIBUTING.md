@@ -138,7 +138,8 @@ that carry reasoning, and the self-review pass before you open the PR.
   individually reasonable changes that together dissolve a module is the
   failure mode worth spending the extra minute on.
 - Update the docs next to the code you changed, including the relevant
-  `AGENTS.md` if you changed a convention.
+  `AGENTS.md` if you changed a convention. A doc a person reads follows the
+  writing rules in [`docs/README.md`](docs/README.md#writing-docs).
 - Add a line to `CHANGELOG.md` under `## [Unreleased]` if the change is one a
   user would notice. `.github/scripts/release-notes.mjs` puts that section
   straight into the GitHub release, so what you write there is what they read.
