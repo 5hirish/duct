@@ -93,7 +93,7 @@ const LOCAL_JWT_SECRET_ACCOUNT: &str = "local-jwt-secret";
 /// drift and the number of ways a user can be shown a keychain prompt. The
 /// sidecar is a separate binary, so the shell reads and passes the value down
 /// the environment instead (`sidecar.rs`). See
-/// `docs/engineering/credential-storage.md` §3.
+/// `docs/engineering/credential-storage.md`, "A signed release never prompts".
 ///
 /// `mint` encodes the 32 fresh bytes, because the callers disagree about the
 /// alphabet: Fernet wants padded url-safe base64, the rest want unpadded.

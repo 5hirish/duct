@@ -354,9 +354,12 @@ see the engine consolidation review (duct-cloud, private) §7–8.
   `<data_dir>/duct.db`, uploads at `<data_dir>/uploads`, `init_db_on_startup=True`
   (no Alembic on a laptop). Each is only filled when unset, so
   `DATABASE_URL=postgresql://…` still works for a developer running local mode.
-- **Local API key:** generated once, persisted `0600` at `<data_dir>/local-api-key`,
-  and exported as `DUCT_API_KEY` so the existing `validate_api_key` gate applies
-  unchanged. It only stops other local processes driving the sidecar.
+- **Local API key:** minted once by the desktop shell and held in its keychain,
+  handed down as `DUCT_LOCAL_API_KEY` (the JWT secret travels the same way); a
+  headless sidecar with no shell falls back to a `0600` file at
+  `<data_dir>/local-api-key`. Exported as `DUCT_API_KEY` so the existing
+  `validate_api_key` gate applies unchanged. It only stops other local processes
+  driving the sidecar (`docs/engineering/credential-storage.md`).
 - **JSON columns must use `models/columns.py::json_column()`**, never
   `postgresql.JSONB` directly — raw JSONB fails to compile on SQLite. The variant
   still renders JSONB on Postgres, so it produces no Alembic diff.

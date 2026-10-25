@@ -1,437 +1,275 @@
 # Duct Desktop
 
-A [Tauri v2](https://tauri.app) shell around the Duct web app. Its job is small
-and deliberate:
+The Duct web app in a native window: model keys stay in your computer's
+keychain and sign-in happens in your own browser. For anyone deciding to
+download, build or self-host it, and for contributors who develop or release it.
 
-1. Render the Duct frontend in a native window. The UI is *loaded* from a URL
-   (`app.getduct.ai`) rather than bundled, so a frontend change ships through the
-   normal Cloudflare deploy with no desktop release.
-2. Store **bring-your-own provider API keys** in the OS keychain and expose
-   read/write to the web app via Tauri commands.
-3. Run OAuth in the **system browser** and catch the result on a deep link —
-   Google refuses an embedded webview, and a user inside one has none of their
-   passwords, sessions or passkeys.
+## Start here
 
-**The official build is a thin client.** It ships no backend: it talks to the
-hosted API and signs in with Duct's Google client.
+| I want to… | Read |
+|---|---|
+| Know what I download and where my keys go | [Two builds, one shell](#two-builds-one-shell) |
+| Run Duct with no Duct servers | [Build your own](#build-your-own) |
+| Work on the shell | [Develop](#develop-against-the-hosted-or-a-local-stack) |
+| Test sign-in on my machine | [Test browser sign-in](#test-browser-sign-in-with-a-dev-bundle) |
+| Ship or sign a release | [RELEASING.md](RELEASING.md) |
+| Know what it reports | [Telemetry](#if-you-built-it-it-reports-nothing) |
 
-**The sidecar is optional and off by default.** The shell can supervise a local
-FastAPI backend frozen by PyInstaller — SQLite in the per-user data dir,
-loopback only, no Railway round trip — and the web app repoints its API base at
-it during boot. That build is ~470 MB and is what a self-hoster or a fork wants;
-see [Build your own](#build-your-own). Which one you get is decided by a single
-`bundle.resources` entry, and the shell probes for it at runtime rather than
-being compiled two ways.
-
-> Two corrections, because this file has asserted both of the wrong things at
-> different times. It once said the agent and prompts stay server-side and
-> nothing proprietary ships — false while the sidecar was default, because
-> PyInstaller freezes the entire `backend/` package into the bundle. It then
-> said the backend always runs locally — false now. **The rule that survives
-> both: if a build ships the sidecar, everything under `backend/` is on the
-> user's disk.**
-
-Full design: [`docs/engineering/2026-06-18-tauri-desktop-byo-keys-plan.md`](../docs/engineering/2026-06-18-tauri-desktop-byo-keys-plan.md).
-
-## Architecture
-
-- **UI** loads from the hosted URL (`app.getduct.ai`), set in
-  `src-tauri/tauri.conf.json` (`app.windows[0].url`). Frontend updates ship via
-  the normal Cloudflare deploy — no desktop release needed for UI changes. (GA
-  upgrade path: bundle a static export instead; it's a config flip.)
-- **Keychain:** `src-tauri/src/lib.rs` exposes `get_provider_key`,
-  `set_provider_key`, `delete_provider_key`, backed by the `keyring` crate
-  (macOS Keychain / Windows Credential Manager / Linux Secret Service). The web
-  app calls these through `window.__TAURI__.core.invoke` — see
-  `app/src/lib/providerKeys.js`, which auto-detects the desktop shell.
-- **Remote access:** `src-tauri/capabilities/default.json` lists the hosted
-  origin under `remote.urls` so the loaded page is allowed to invoke commands.
-
-## Prerequisites
-
-- Rust (stable) + Node 22+.
-- Python 3.12 + Poetry — only to build the sidecar (below), which the official
-  build does not ship. Skip it if you are just working on the shell.
-- Platform libraries for Tauri — see <https://tauri.app/start/prerequisites/>.
-  On Debian/Ubuntu: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `librsvg2-dev`,
-  `libsoup-3.0-dev`, and `libdbus-1-dev` (Linux keychain / Secret Service).
-
-## The sidecar (optional)
-
-The shell can run the Duct backend locally instead of calling the hosted API.
-**The official build does not** — `bundle.resources` is empty in
-`tauri.conf.json`, `get_shell_info` reports `localSidecar: false`, and the web
-app keeps talking to Railway. Adding it back is what `tauri.selfhost.conf.json`
-does.
-
-You want it locally when developing against a local backend, and in any build
-meant to run without Duct's infrastructure. `bundle.resources` copies the output
-directory verbatim, so a stale or missing build produces an app that opens
-straight to an error screen — which is why the `pre*` hooks on every
-sidecar-shipping script run `scripts/ensure-sidecar-fresh.mjs` first. It
-compares the freeze against the backend's newest `.py`, spec, lockfile and
-`pyproject.toml`, and **refreezes in place** when the freeze is behind, so a
-`npm run build:dev` on a changed backend just takes three minutes longer instead
-of stopping. `DUCT_SKIP_SIDECAR_CHECK=1` bundles a known-stale freeze anyway.
-
-The first freeze is the one you run by hand — until `backend/dist/duct-sidecar`
-exists the hook assumes you meant the hosted API and says nothing:
-
-```bash
-cd backend && poetry install --with dev
-npm --prefix desktop run sidecar   # ~3 min, ~480 MB on arm64
-```
-
-Use that rather than calling `pyinstaller` yourself. PyInstaller deletes its
-output directory before rebuilding, and a dev build resolves
-`backend/dist/duct-sidecar/` at runtime rather than carrying its own copy, so an
-in-place freeze strips the binary out from under a sidecar a running app is
-executing. The script stages the build and renames it into place instead.
-
-That writes `backend/dist/duct-sidecar/`. The shell spawns the binary inside it,
-reads one JSON handshake line (loopback URL, port, per-install API key, data
-dir) and hands it to the web app, which points its API base there. The frozen
-copy does not pick up edits, so after that first one the freshness hook rebuilds
-it for you whenever backend code changes.
-
-Runtime state lives in the per-user data dir — `~/Library/Application Support/ai.getduct.desktop/`
-on macOS, `%APPDATA%\Duct` on Windows, `~/.local/share/duct` on Linux
-(`duct.db`, `local-api-key`, `uploads/`). Deleting that directory resets the
-install. Set `DUCT_SIDECAR_BIN` to run the shell against a sidecar built
-elsewhere.
-
-The schema is owned by **Alembic**, the same migrations the Railway deployment
-runs (`backend/db/migrate.py`). A first launch builds the schema and stamps it;
-later launches migrate forward. This replaced `create_all`, which created
-missing *tables* only and so silently skipped every migration that added a
-column to an existing one — an upgraded install would then fail at query time
-with `no such column`. Consequence for anyone writing a migration: **it has to
-run on SQLite too.**
-
-## Develop
+## Run it
 
 ```bash
 cd desktop
 npm install
-npm run dev        # tauri dev — window loads the hosted app.getduct.ai
-npm run dev:local  # tauri dev against a local app + API (see below)
+npm run dev          # the window loads the hosted app
+npm run dev:local    # the window loads a local app and API (see Develop)
+npm run build        # installers land in src-tauri/target/release/bundle
 ```
 
-`dev:local` applies `src-tauri/tauri.local.conf.json`, which starts the Next dev
-server for you (`npm --prefix ../app run dev`, port 3003) and points the window
-at it. With a sidecar built (above), the shell spawns its own backend on a
-loopback port and the web app repoints at it — nothing else to start. Without
-one, start the API yourself: with `NEXT_PUBLIC_API_BASE` unset, the web app
-falls back to `http://localhost:8002` outside production:
+## Two builds, one shell
 
-```bash
-cd backend && poetry run uvicorn server:app --port 8002 --reload
-```
+The shell shows the web app in a native window, keeps bring-your-own model
+keys in the OS keychain, and runs sign-in in the system browser
+([why](AGENTS.md)). The web app loads from the hosted URL, so a frontend
+change needs no desktop release.
 
-From VS Code (`.vscode/launch.json`), **`Desktop: Tauri dev (sidecar
-backend)`** runs the sidecar shape without sign-in, **`Duct: Desktop + API`**
-runs uvicorn on 8002, the Next dev server and the registered dev bundle, and
-**`Duct: Desktop + API + Phoenix`** is the same with every agent turn, model
-call and tool call traced into Phoenix on 6006 — the sidecar learns the
-collector through a second `open --env`, since launchd inherits nothing from
-the shell. Phoenix's MCP server (`.mcp.json`) is then up too, so an agent can
-read the traces of a slow run rather than the transcript table.
-
-Zed runs none of the compounds (it implements no `compounds`); its equivalents
-are the **`Desktop: Tauri dev (sidecar backend)`** and **`Duct: Desktop + API`**
-tasks in `.zed/tasks.json`, plus **`Duct: stop everything`** when you are done.
-
-Keychain `invoke` works from the dev server because `http://localhost:3003` is
-already listed under `remote.urls` in `src-tauri/capabilities/default.json`.
-
-### Testing browser-based OAuth locally
-
-Both flows that leave the app for the system browser — signing in
-(`routes/signin.py`) and connecting a data source (`routes/auth.py`) — work
-against a local stack. The backend redirects to `{frontend_origin}/desktop-auth`,
-which defaults to `http://localhost:3003`, and that relay page fires the deep
-link: `//auth?auth_code=` for sign-in, `//connector?connector=&auth_code=` for a
-connector. The one leg that needs more than `tauri dev` is the final
-browser → app hop: macOS registers `ai.getduct.desktop://` from a bundle's
-Info.plist, and `tauri dev` runs a bare binary out of `target/debug/`, not a
-`.app`.
-
-Build the **dev variant** instead. `src-tauri/tauri.dev.conf.json` gives it its
-own product name, bundle identifier (`ai.getduct.desktop.dev`), and deep-link
-scheme, so it coexists with an installed TestFlight build instead of fighting it
-for the same scheme:
-
-```bash
-npm run build:dev   # tauri build --debug --bundles app --config src-tauri/tauri.dev.conf.json
-open src-tauri/target/debug/bundle/macos/"Duct Dev.app"
-```
-
-Set the matching scheme in `app/.env.local` so the relay page hands the code to
-the dev shell rather than the production one:
-
-```
-NEXT_PUBLIC_SHELL_SCHEME=ai.getduct.desktop.dev
-```
-
-Deployed builds leave that unset and fall back to `ai.getduct.desktop`. The
-window URL still points at the dev server, so the web app keeps hot-reloading —
-only Rust changes need a rebuild.
-
-`--debug` keeps the compile fast while still producing a real `.app` (an
-Info.plist is what registers the scheme); `--bundles app` skips DMG packaging,
-which needs signing config that isn't set up locally.
-
-## Build
-
-```bash
-cd desktop
-npm run build    # tauri build — installers land in src-tauri/target/release/bundle
-```
-
-`bundle.createUpdaterArtifacts` is on, so a release build also produces the
-update archive and its signature — which means **it needs the updater signing
-key**. Without it the build stops with *"A public key has been found, but no
-private key"*. Point it at your local copy:
-
-```bash
-export TAURI_SIGNING_PRIVATE_KEY_PATH=~/.tauri/duct-updater.key
-export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=      # empty if the key has none
-```
-
-`npm run build:dev` needs no key: `tauri.dev.conf.json` sets
-`createUpdaterArtifacts: false`. Passing `--bundles app` is *not* enough on its
-own — on macOS the updater archive is produced for the `app` target too, so a
-dev build would otherwise fail at the very last step, after the `.app` was
-already written.
-
-## Releasing
-
-### macOS — Developer ID + notarized DMG
-
-Pushes to `main` touching `desktop/**` or `backend/**` build the sidecar, sign
-it and the app with a Developer ID Application certificate, notarize, staple and
-produce a DMG — [`.github/workflows/desktop-release.yml`](../.github/workflows/desktop-release.yml).
-
-This is the only macOS channel, and the only one it could be. The Mac App Store
-sandbox cannot host a PyInstaller sidecar and embedded interpreters draw
-rejections (review §8.2 (duct-cloud, private)), so an App Store build could
-only ever have shipped the pre-sidecar thin client — a different, worse product
-wearing the same name. **That channel was retired on 2026-09-06** along with its
-workflow, its two overlay files and the `ITSAppUsesNonExemptEncryption` key.
-Do not reintroduce it without first solving the sandbox problem; nothing about
-it has changed.
-
-What Developer ID buys, all of it load-bearing here:
-
-- **Auto-update is allowed** (`tauri-plugin-updater`), which App Store rules
-  forbid — see [Auto-update](#auto-update).
-- **Windows and Linux ship from the same pipeline** — see below.
-- **Unsandboxed keychain**, so the sidecar can reach the user's provider keys
-  and their data dir without an entitlement fight.
-
-Signing order is the fragile part and is handled explicitly in the workflow: the
-sidecar's hundreds of nested Mach-O files are signed *before* the enclosing
-`.app` is re-sealed. `codesign --deep` is deprecated and does not do this
-reliably.
-
-The `updater` cargo feature in `Cargo.toml` existed to strip the plugin for
-App Store builds via `--no-default-features`. With that channel gone it has no
-consumer — a feature flag no build exercises is one that quietly stops
-compiling. Either delete it or find it a real use.
-
-### Windows and Linux
-
-Built by the same workflow, each on its own runner because the PyInstaller
-sidecar is per-OS and cannot be cross-compiled:
-
-| Platform | Bundles | Signing |
+| | Official download | Self-host build |
 |---|---|---|
-| Windows | NSIS `-setup.exe` | **None yet** — needs an Authenticode certificate; SmartScreen warns on first run until then |
-| Linux | `.deb`, `.AppImage` | N/A (AppImage is unsigned by convention) |
+| Inside | The Rust shell only, tens of megabytes | The shell plus the whole backend frozen by PyInstaller, 400 to 500 MB |
+| Backend | Duct's hosted API | A local "sidecar" process: SQLite in your data folder, loopback only |
+| Code on your disk | No Python, no prompts | Everything under `backend/`, prompts included |
+| Your model key | Sent to the hosted API for one request; stored only if you save it | Spent on your own machine |
 
-Linux runtime note: provider keys go to the freedesktop **Secret Service**, so a
-keyring daemon (gnome-keyring, KWallet, KeePassXC) must be running. Without one
-the shell now returns a message saying so rather than failing silently.
+One config entry, `bundle.resources`, decides which you get; the Rust is
+identical and probes at start-up ([why](AGENTS.md)). Key routes and safe
+claims: [table](#where-your-model-key-goes).
 
-The Linux job pins `ubuntu-22.04` rather than `-latest` on purpose: the runner's
-glibc sets the oldest distro the AppImage will start on.
+> **Rule:** if a build ships the sidecar, treat every file under `backend/` as
+> being on the user's disk, because it is.
 
-## Auto-update
+## Develop against the hosted or a local stack
 
-Every channel self-updates via `tauri-plugin-updater` — there is no longer one
-that cannot.
-The web app polls through the shell (`check_for_update` / `install_update` in
-`src-tauri/src/lib.rs`) rather than the plugin's JS bindings, because the window
-loads a remote origin that cannot import them — the same reason `providerKeys.js`
-goes through `invoke`. A useful side effect: the page needs no `updater:*`
-permission, since those gate the plugin's JS API and these commands reach it from
-Rust. The UI is a toast in the corner
-(`app/src/components/UpdateToast.jsx`), never a forced restart: agent sessions
-here are long, and losing one to a surprise relaunch is worse than a stale build.
+`npm run dev` loads the hosted web app and is enough for most shell work. For
+a local stack:
 
-Releases are published as `desktop-v<version>` GitHub Releases carrying every
-platform's bundle plus `latest.json`, the manifest the updater polls. That
-manifest is assembled by
-[`.github/scripts/build-updater-manifest.mjs`](../.github/scripts/build-updater-manifest.mjs),
-which refuses to publish an archive with no signature beside it.
+1. **Start the API.** Skip this if you built the sidecar (below): the shell
+   starts its own.
+   ```bash
+   cd backend && poetry run uvicorn server:app --port 8002 --reload
+   ```
+2. **Start the shell against the local app.** It also starts the Next dev
+   server.
+   ```bash
+   cd desktop && npm run dev:local   # the web app falls back to the local API while NEXT_PUBLIC_API_BASE is unset
+   ```
+3. **Edit.** Web changes hot-reload; only Rust changes need a restart.
 
-Two things to know:
+**Check it worked:** the window shows sign-in and saving a model key succeeds.
+Editor launches: [table](#editor-launches).
 
-- **The minisign private key is not recoverable.** Lose it and no installed copy
-  will accept another update — every user would have to reinstall by hand. It
-  lives in `TAURI_SIGNING_PRIVATE_KEY`; keep a backup outside CI.
-- **macOS is universal2, so Intel Macs are covered** — installs and updates
-  both. This was arm64-only while the sidecar shipped, because a universal2
-  CPython tree roughly doubles to ~600 MB (see the size notes in
-  `backend/duct_sidecar.spec`) and a broken update is worse than none. The
-  updater matches an exact platform key and knows nothing about fat binaries,
-  so `build-updater-manifest.mjs` lists the one universal archive under **both**
-  `darwin-aarch64` and `darwin-x86_64`. Drop the second key and Intel installs
-  poll forever and are silently never offered anything.
-  A sidecar build has to go back to arm64-only for the size reason above.
+### Add the local backend (sidecar)
 
-## What is and is not in this bundle
+For a local backend, or any build that runs without Duct's servers. Freeze it
+once by hand; the `pre*` hooks then refreeze it whenever the backend moves
+ahead, about three minutes extra.
 
-**In the official build:** the Rust shell and nothing else — tens of megabytes, not hundreds. No backend,
-no Python, no prompts.
+```bash
+cd backend && poetry install --with dev
+npm --prefix desktop run sidecar   # ~3 min, writes backend/dist/duct-sidecar/; the hooks stay silent until this exists
+```
 
-**In a sidecar build** (`build:selfhost`, or any build that restores
-`bundle.resources`): the whole `backend/` package frozen by PyInstaller —
-routes, models, migrations, agent code and prompts. If you ship one of those,
-treat every file under `backend/` as being on the user's disk, because it is.
+The shell starts it on a loopback port and the web app repoints at it
+([how](AGENTS.md)). Alembic owns its schema, so every migration must also run
+on SQLite ([rules](AGENTS.md)).
 
-**Not in either:** any credential. Not a provider key, not a database URL, not a
-Railway token — `duct_sidecar.spec` bundles `alembic/` and `alembic.ini` and
-nothing else, and the sidecar generates its own local API key and JWT secret on
-first run, 0600 in the user's data dir. Two values *are* compiled in and neither
-is a production secret: `SENTRY_DSN` (write-only by design, and present only in
-builds compiled with `--features crash-reporting` — see
-[Telemetry](#telemetry)) and the Google **installed-app** OAuth credential,
-which Google documents as non-confidential — it names the app, it does not
-authorise it.
+> **Gotcha:** never run PyInstaller yourself; it empties the folder a running
+> dev app executes from. The script stages and swaps ([why](AGENTS.md)).
 
-Where the user's provider key goes **differs between the two builds**, and it is
-worth being precise because it is the one privacy claim people will ask about:
+## Test browser sign-in with a dev bundle
 
-- **Sidecar build** — the key leaves the keychain and is spent by a process on
-  the same machine. It never crosses the network to us.
-- **Official thin build** — the key leaves the keychain and rides an
-  `X-Provider-*` header to the hosted API, which spends it against the provider.
-  It is held for the life of the request and never written to our database
-  unless the user explicitly saves it (`service/provider_keys.py`, Fernet
-  encrypted). So it does reach our server. Do not describe the thin build as
-  "your keys never leave your machine" — that sentence belongs to the sidecar.
+Signing in and connecting a data source return from the system browser by
+deep link, which needs a real bundle: macOS registers the scheme from a
+bundle's Info.plist, and `tauri dev` runs a bare binary.
 
-Either way it stays the user's key. `resolve_provider_key` in
-`backend/agents/engines.py` only falls back to an env key when
-`allow_server_provider_keys()` says the env file belongs to whoever is running
-the process — true on a self-hosted install, false on our deployment.
+1. **Build the dev variant.** Its own name, identifier and link scheme let it
+   coexist with an installed Duct; on macOS it also installs itself into
+   `/Applications`.
+   ```bash
+   cd desktop && npm run build:dev    # debug: fast, a real .app, no DMG (which would need signing)
+   open "src-tauri/target/debug/bundle/macos/Duct Dev.app"
+   ```
+2. **Point the relay page at it.** Set `NEXT_PUBLIC_SHELL_SCHEME` in
+   `app/.env.local` to the dev identifier from `tauri.dev.conf.json`.
+   Deployed builds leave it unset.
+3. **Sign in.** Web changes still hot-reload; only Rust changes need a rebuild.
 
-## Telemetry
+**Check it worked:** the browser returns you to the dev window, signed in. The
+link carries a single-use code, never a credential ([why](AGENTS.md)).
 
-Two builds of this app exist and they behave differently on purpose. The short
-version: **if you built it, it reports nothing.**
+## Releases build themselves on main
+
+A push to `main` that changes `desktop/` (Markdown excluded) builds, signs,
+notarizes and publishes every platform; installed apps update through a corner
+toast, never a forced restart. Details: [RELEASING.md](RELEASING.md).
+
+## If you built it, it reports nothing
 
 | | App downloaded from getduct.ai | Anything you build yourself |
 |---|---|---|
-| Crash reporting compiled in | yes (`--features crash-reporting`) | **no — the dependency is not even linked** |
-| Analytics provider | GTM (`NEXT_PUBLIC_GTM_ID` baked at build) | `none` unless you set one |
-| Default state | on | off |
-| Switch in Preferences | yes | yes, but there is nothing to switch |
+| Crash reporting compiled in | Yes | No, not even linked |
+| Analytics | Google Tag Manager, via the hosted web app | None unless your web app sets one |
+| Default | On | Off |
+| Switch in the app | Yes | Yes, with nothing to switch |
 
-`crash-reporting` is deliberately not a default Cargo feature, and
-`DUCT_TELEMETRY_DEFAULT_ON=1` is set only in `desktop-release.yml`. A
-`git clone && npm run tauri build` produces a binary with no Sentry crates in
-its dependency tree at all — verifiable with `cargo tree | grep sentry`, which
-prints nothing. That is the difference between "disabled" and "absent", and it
-is the one worth insisting on.
+Crash reporting is an opt-in Cargo feature and the on-by-default flag is set
+only in the release workflow: absent, not disabled. **Check it:** after a
+plain build, `cargo tree | grep sentry` prints nothing. Sent and never sent:
+[table](#what-the-downloaded-app-sends).
 
-**What the downloaded app sends, when the switch is on:**
+**Turning it off:** account menu, *Models & providers*, *Crash reports &
+usage*. One switch covers shell, bundled backend, web view and analytics; your
+answer sticks, and an unreadable preference file counts as off.
 
-- **Crashes** — the error and the stack trace, from the Rust shell and from the
-  web view. `send_default_pii` is off, and query strings, sensitive headers and
-  cookies are scrubbed before an event leaves (`instrumentation-client.ts`).
-- **Usage** — which screens and features get opened, through the same Google Tag
-  Manager container as the website, with storage switched off permanently. No
-  cookies are written on your machine, which is also why the app never shows a
-  consent bar: there is nothing stored to consent to.
-- **Never** — your provider API keys, your connected-tool data, your uploads, or
-  anything an agent generates for you.
-
-**Turning it off:** the account menu → Preferences → *Crash reports & usage*.
-One switch governs the shell, the bundled backend if you are running one, the
-web view's error reporting, and analytics. Once you touch it your answer is
-recorded and no default applies to you again. An unreadable or malformed
-preference file is treated as *off*, so a corrupt file can never silently
-re-enable it.
-
-**Swapping it:** `src/telemetry/reporter.rs` is the only file that names a
-reporting vendor, behind four functions. Point `SENTRY_DSN` at self-hosted
-Sentry or GlitchTip and nothing needs changing at all; use something else
-entirely and it is one more arm in that file. Analytics is the same shape in
-`app/src/lib/analytics/` — one file per provider, selected by
-`NEXT_PUBLIC_ANALYTICS_PROVIDER`.
+**Swapping the vendor:** one Rust file behind four functions, one web file per
+analytics provider ([crash reporting](AGENTS.md),
+[analytics seam](../app/src/lib/analytics/index.js)); a self-hosted collector
+needs no code change.
 
 ## Build your own
 
-The repo is MIT and this shell is meant to be forkable — someone should be able
-to run Duct end to end without touching Duct's infrastructure. Five things are
-Duct-specific, and none of them are code you have to edit. The template
-overlay `tauri.selfhost.conf.json` carries all of them:
+The repository is MIT and the shell is meant to be forked. Five things
+identify Duct's build, and all of them are configuration.
 
-**0. Whether a backend ships at all.** The official build has no
-`bundle.resources`, so it calls the hosted API. The overlay restores the
-sidecar entry, which makes the app self-contained — freeze the sidecar first
-(see [The sidecar](#the-sidecar-optional)) or the build fails on a missing
-resource path. Nothing is compiled differently; `get_shell_info` probes for the
-resource at runtime and reports `localSidecar` accordingly.
+1. **Ship a backend.** Freeze the sidecar first
+   ([above](#add-the-local-backend-sidecar)); the overlay restores the
+   resource entry.
+2. **Load your page.** Replace every `example` value in
+   `tauri.selfhost.conf.json`: window URL, product name, update endpoint,
+   identifier and link scheme. Keeping the official scheme intercepts an
+   installed Duct's sign-in callbacks.
+3. **Allow your origin to call the shell** in `capabilities/selfhost.json`.
+4. **Use your own Google sign-in.** Create a **Desktop app** client and put
+   both halves in `backend/.env.local`; the build bakes them in.
+   ```
+   GOOGLE_DESKTOP_OAUTH_CLIENT_ID=…
+   GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET=…
+   ```
+5. **Build.**
+   ```bash
+   cd desktop && npm run build:selfhost
+   ```
 
-**1. The page it loads.** `app.getduct.ai` is the default window URL. Point it
-at your own deployment of `app/` with a config overlay — the same mechanism
-`dev` and `dev:local` already use. Start from the template:
+The consent screen names the client's owner, so your users should not be asked
+to trust "Duct". Telemetry needs no step; nothing reports unless compiled in.
+Failures: [If a fork fails](#if-a-fork-fails).
 
-```bash
-cp src-tauri/tauri.selfhost.conf.json src-tauri/tauri.mine.conf.json
-# replace every getduct.example value, then:
-npm run build:selfhost   # tauri build --config src-tauri/tauri.selfhost.conf.json
-```
+Code signing is the one thing you cannot copy: the certificates and updater
+key are Duct's legal identity, so a fork builds unsigned or signs with its own.
 
-Change the `identifier` and the deep-link scheme too. The OS routes
-`ai.getduct.desktop://` to whichever app claimed it, so a fork that keeps the
-official scheme will intercept an installed Duct's sign-in callbacks — and hand
-it its own.
+## Reference
 
-**2. The origin allowed to call the shell.** A window URL on its own is not
-enough: `capabilities/*.json` lists which origins may `invoke`. The overlay
-selects `capabilities/selfhost.json`; put your origin in it. Skip this and the
-app loads and renders perfectly, then fails every command with *"not allowed.
-Plugin not found"* — which looks like a broken keychain rather than a config
-gap.
+### Prerequisites
 
-**3. Google sign-in.** Duct's OAuth client is the built-in default, and the
-consent screen names whoever owns the client — your users should not be asked to
-grant access to "Duct". Create your own **Desktop app** client in Google Cloud
-(a *web* client cannot work: the sidecar's redirect URI is
-`http://127.0.0.1:<random>/…` and only desktop clients accept a loopback address
-on any port), then put both halves in `backend/.env.local`:
+| Need | For |
+|---|---|
+| Rust (stable), Node 22+ | The shell |
+| Python 3.12 + Poetry | The sidecar only |
+| [Tauri platform libraries](https://tauri.app/start/prerequisites/) | Building anywhere |
+| Debian/Ubuntu: `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libsoup-3.0-dev libdbus-1-dev` | Linux builds; D-Bus talks to the keychain |
+| A running keyring daemon (gnome-keyring, KWallet, KeePassXC) | Linux at runtime; the shell says so when none is found |
 
-```
-GOOGLE_DESKTOP_OAUTH_CLIENT_ID=…apps.googleusercontent.com
-GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET=…
-```
+### Scripts
 
-`build.rs` bakes them in from there, so the same file configures the sidecar at
-runtime and the shell at compile time. Override them together — an id from one
-Google project beside a secret from another fails at the token exchange, several
-screens after the user last had a chance to notice.
+| Command | Does |
+|---|---|
+| `npm run dev` | `tauri dev` against the hosted app |
+| `npm run dev:local` | `tauri dev` with `tauri.local.conf.json`: starts the Next dev server and loads it |
+| `npm run build` | Release build; needs the updater key ([RELEASING.md](RELEASING.md)) |
+| `npm run build:dev` | Debug `.app` with `tauri.dev.conf.json`; no key; installs to `/Applications` on macOS |
+| `npm run build:selfhost` | Release build with `tauri.selfhost.conf.json`; ships the sidecar |
+| `npm run sidecar` | Freeze the backend into `backend/dist/duct-sidecar/` |
+| `npm run install:dev-app` | Copy the dev bundle to `/Applications` again |
+| `pre*` hooks | `scripts/ensure-sidecar-fresh.mjs` refreezes a stale sidecar before every sidecar-shipping script |
 
-**4. Telemetry.** Nothing here reports unless you compile it in. See
-[Telemetry](#telemetry) above for exactly what the builds we distribute do
-differently, and why a `git clone && npm run tauri build` collects nothing.
+### Config overlays
 
-Not configuration, and not shareable: **code signing**. The Developer ID
-certificate, notarization password and updater signing key in
-`.github/workflows/desktop-release.yml` are Duct's identity, issued by Apple to
-a legal entity. A fork builds unsigned (macOS Gatekeeper will need a
-right-click → Open on first launch) or signs with its own. This is how every
-open-source desktop project works — the source is shared, the signature is not.
+| File | Sets |
+|---|---|
+| `src-tauri/tauri.conf.json` | Base: hosted window URL, identifier, updater endpoint, empty `bundle.resources` |
+| `src-tauri/tauri.local.conf.json` | Dev URL, and the command that starts the Next dev server |
+| `src-tauri/tauri.dev.conf.json` | Dev product name, identifier and scheme; updater archives off; adds `capabilities/dev-localhost.json` |
+| `src-tauri/tauri.selfhost.conf.json` | Fork template: sidecar resource, self-host entitlements, `capabilities/selfhost.json` |
+| `src-tauri/capabilities/default.json` | The hosted origin may call shell commands ([rules](AGENTS.md)) |
+| `src-tauri/capabilities/dev-localhost.json` | A dev bundle may be called from the local dev server. `tauri dev` needs no entry: it treats the dev URL as the app's own origin |
+| `src-tauri/capabilities/selfhost.json` | A fork's origin; template |
+
+### Environment variables
+
+| Variable | Where | Effect |
+|---|---|---|
+| `DUCT_SKIP_SIDECAR_CHECK=1` | Any sidecar build | Bundle a known-stale freeze anyway |
+| `DUCT_SIDECAR_BIN` | Running the shell | Use a sidecar built elsewhere |
+| `GOOGLE_DESKTOP_OAUTH_CLIENT_ID`, `_SECRET` | `backend/.env.local`, baked by `build.rs` | Google installed-app sign-in client |
+| `NEXT_PUBLIC_SHELL_SCHEME` | `app/.env.local` | Which shell the relay page hands the sign-in code to |
+| `NEXT_PUBLIC_ANALYTICS_PROVIDER` | Web app build | `gtm` or `none` |
+| Signing and telemetry flags | Release builds | [RELEASING.md](RELEASING.md) |
+
+### Platforms at runtime
+
+| | macOS | Windows | Linux |
+|---|---|---|---|
+| Keychain | Keychain | Credential Manager | Secret Service, needs a keyring daemon |
+| Sidecar data folder | `~/Library/Application Support/<bundle identifier>/` | `%APPDATA%\Duct` | `~/.local/share/duct` |
+| In the folder | `duct.db`, `uploads/`, the telemetry preference. The local API key and session secret live in the keychain while the shell runs, with a file fallback for a headless sidecar | same | same |
+| Reset the install | Delete the folder | same | same |
+
+### Where your model key goes
+
+| | Official download | Self-host build |
+|---|---|---|
+| Credentials inside | None | None: the sidecar mints its own local secrets on first run |
+| Route | From the keychain to the hosted API, in a request header | From the keychain to a process on the same machine |
+| Held by Duct's servers | For the life of one request, then discarded | Never |
+| Stored by Duct's servers | Only if you save it yourself, encrypted ([service](../backend/service/provider_keys.py)) | No |
+| Duct's own key | Never spent for you: the fallback is allowed only where the env file belongs to whoever runs the process ([the rule](../backend/agents/engines.py)) | The env file's key counts as yours |
+| Compiled in, not secret | A crash-report address (crash-reporting builds only) and Google's installed-app sign-in client, which names the app and does not authorise it | Your own Google client |
+| Safe to say | "Never stored unless you save it" | "Never leaves your machine" |
+
+### What the downloaded app sends
+
+Only while the switch is on.
+
+| | |
+|---|---|
+| Crashes | The error and stack trace from the shell and the web view. Personal data is off; query strings, sensitive headers and cookies are scrubbed first ([web view config](../app/src/instrumentation-client.ts)) |
+| Usage | Which screens and features open, through the website's tag container with storage off permanently. Nothing is written to your machine, so there is no consent bar |
+| Never | Your model keys, connected-tool data, uploads, or anything an agent writes for you |
+
+### If a fork fails
+
+| You see | Do this |
+|---|---|
+| The build fails on a missing resource path | Freeze the sidecar first: `npm --prefix desktop run sidecar` |
+| The app renders, then every command fails with "not allowed. Plugin not found" | Add your origin to `capabilities/selfhost.json`; it looks like a broken keychain and is not |
+| Sign-in fails at the token exchange, several screens in | The client id and secret come from different Google projects; change both together |
+| A Google *web* client never completes | Only a *Desktop app* client accepts a loopback redirect on any port |
+| macOS refuses to open an unsigned fork | Right-click, then Open, on first launch |
+
+### Editor launches
+
+| Editor | Entry | Runs |
+|---|---|---|
+| VS Code | Desktop: Tauri dev (sidecar backend) | `dev:local` with the frozen sidecar; no sign-in needed |
+| VS Code | Duct: Desktop + API | Local API, Next dev server and the registered dev bundle |
+| VS Code | Duct: Desktop + API + Phoenix | The same, with every agent turn traced into Phoenix; the sidecar learns the collector from a second `open --env`, since launchd inherits nothing |
+| Zed | Desktop: Tauri dev (sidecar backend), Duct: Desktop + API | The same two, as tasks (Zed has no compounds) |
+| Both | Duct: stop everything | Quits what a session started; a launched dev app outlives its debug session |
+
+### Go deeper
+
+| | |
+|---|---|
+| [Engineering rules for this folder](AGENTS.md) | Splash, keychain, deep links, notifications, menu, signing, versioning |
+| [Design plan](../docs/engineering/2026-06-18-tauri-desktop-byo-keys-plan.md) | Why a Tauri shell and BYO keys |
+| [RELEASING.md](RELEASING.md) | CI release, signing keys, updater, platform table |
+| [Sidecar spec](../backend/duct_sidecar.spec) | What the freeze includes and how big it is |
+| [Schema management](../backend/db/migrate.py) | Alembic on SQLite |
