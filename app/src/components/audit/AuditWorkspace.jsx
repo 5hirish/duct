@@ -68,13 +68,14 @@ export default function AuditWorkspace({
   const reportReceivedRef = useRef(false);
   const reportFiredRef = useRef(false); // onReportReady fires once
 
+  // The page's own session key is unique per audit, so a reload of this
+  // page reattaches to this audit's run — and to the draft typed into it.
+  const handleKey = `${AGENT_TYPE}:${sessionId}`;
   const agent = useAgentSession({
     agentType: AGENT_TYPE,
     notifyAs: t`The SEO audit`,
     body: auditParams,
-    // The page's own session key is unique per audit, so a reload of this
-    // page reattaches to this audit's run.
-    handleKey: `${AGENT_TYPE}:${sessionId}`,
+    handleKey,
     onEvent: handleEvent,
   });
   const { phase, dispatch } = agent;
@@ -259,6 +260,7 @@ export default function AuditWorkspace({
       left={
         <AgentChat
           title={t`Agent Chat`}
+          draftKey={handleKey}
           phase={phase}
           steps={agent.steps}
           todos={agent.todos}

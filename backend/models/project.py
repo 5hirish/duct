@@ -97,6 +97,13 @@ class Project(SQLModel, table=True):
         default_factory=dict,
         sa_column=Column(json_column(), nullable=False, server_default="{}"),
     )
+    # Where each drafted field came from, {"pitch": "crawl", ...}. Written only
+    # through service/project_draft.py, whose rules keep a draft from
+    # overwriting what the person typed.
+    provenance: dict = Field(
+        default_factory=dict,
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
+    )
     # Execution autonomy: 'ask' (default — the agent asks freely and every
     # change set waits for approval) | 'assisted' | 'auto'. Read it through
     # models.execution.normalize_autonomy, never raw: the server_default below

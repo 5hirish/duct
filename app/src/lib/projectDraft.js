@@ -1,15 +1,18 @@
 /**
  * Merge what the audit learned about a site into its project.
  *
- * The runner emits `PROJECT_DRAFT` twice — layer "crawl" (deterministic: name,
- * pitch, URL, favicon, pillars, social channels) before enrichment, and layer
- * "inferred" (industry, business model, personas, voice, competitors) after —
+ * The runner emits `PROJECT_DRAFT` in layers — "crawl" (deterministic: name,
+ * pitch, URL, favicon, pillars, social channels) first; "documents" when the
+ * user added files beside the site (what the business wrote about itself);
+ * then "inferred" (industry, business model, personas, voice, competitors) —
  * each field carrying its provenance. This is the only place those events
  * touch the project store, and it holds the three rules that make a draft safe:
  *
  *   1. a value the user set (provenance "user") is never overwritten;
- *   2. a non-empty crawl value is never overwritten by an inferred one — what
- *      the site says beats what a model guessed about it;
+ *   2. a filled value is overwritten only by one of equal or higher rank
+ *      (`PROVENANCE_RANK`): what the site says beats what the user's files
+ *      say, because a deck goes stale and a homepage is current, and both
+ *      beat what a model guessed;
  *   3. a non-empty field with NO recorded provenance is treated as the user's.
  *      Every project made before drafts existed is in that state, and a human
  *      typing it was the only way a field got filled — so without this rule
@@ -18,6 +21,12 @@
  *
  * Provenance lives on the project as `project.provenance[field]`, which the
  * project-context surface renders as a chip with a one-click confirm.
+ *
+ * The server keeps the same labels and runs the same rules
+ * (backend/service/project_draft.py): every draft is merged here for an
+ * instant answer, and sent there to be merged against what the server holds,
+ * which is what a second device or an outside writer sees. A parity test
+ * holds the ranks and field names equal across the two.
  */
 
 import {
@@ -25,14 +34,28 @@ import {
   createProject,
   getProjectById,
   projectsForSite,
-  pushProjectToBackend,
+  pushDraftToBackend,
   saveProject,
   setActiveProjectId,
 } from "./projects";
 
 export const PROVENANCE_USER = "user";
 export const PROVENANCE_CRAWL = "crawl";
+export const PROVENANCE_DOCUMENT = "document";
 export const PROVENANCE_INFERRED = "inferred";
+
+// Rule 2's order. An unknown provenance ranks with "inferred": a source this
+// build has never heard of gets the least trust, never the most.
+const PROVENANCE_RANK = Object.freeze({
+  [PROVENANCE_USER]: 3,
+  [PROVENANCE_CRAWL]: 2,
+  [PROVENANCE_DOCUMENT]: 1,
+  [PROVENANCE_INFERRED]: 0,
+});
+
+function rankOf(provenance) {
+  return PROVENANCE_RANK[provenance] ?? PROVENANCE_RANK[PROVENANCE_INFERRED];
+}
 
 // Where each drafted field lands in the project profile. A field the backend
 // emits that is not listed here is ignored, never spread somewhere new.
@@ -52,10 +75,19 @@ const FIELD_PATHS = Object.freeze({
   content_pillars: ["brand_channels", "content_pillars"],
 });
 
+// Personas and competitors are rows keyed by name. The settings page seeds one
+// empty row so the form has something to type into; that row is not content.
+function isBlankRow(row) {
+  if (row == null) return true;
+  if (typeof row === "string") return row.trim() === "";
+  if (typeof row === "object") return String(row.name || "").trim() === "";
+  return false;
+}
+
 function isEmpty(value) {
   if (value == null) return true;
   if (typeof value === "string") return value.trim() === "";
-  if (Array.isArray(value)) return value.length === 0;
+  if (Array.isArray(value)) return value.every(isBlankRow);
   return false;
 }
 
@@ -95,9 +127,7 @@ export function mergeDraft(project, draft) {
     const filled = !isBlank(key, existing);
     // Rule 3: nothing recorded, but something is there — a person put it there.
     if (filled && !current) continue;
-    if (filled && current === PROVENANCE_CRAWL && field.provenance === PROVENANCE_INFERRED) {
-      continue;
-    }
+    if (filled && rankOf(field.provenance) < rankOf(current)) continue;
     next = setPath(next, path, field.value);
     provenance[key] = field.provenance || PROVENANCE_INFERRED;
   }
@@ -110,9 +140,10 @@ export function draftSite(draft) {
 }
 
 /**
- * Merge a draft into the project it belongs to and persist it — locally now,
- * to the backend best-effort (a guest is a real user, so this is a real
- * write). Returns the saved project.
+ * Merge a draft into the project it belongs to and persist it: locally now,
+ * and to the backend best-effort as the draft itself, so the server merges it
+ * against its own copy (a guest is a real user, so this is a real write).
+ * Returns the saved project.
  *
  * `projectId` is the caller's answer to "which project", and every caller
  * that knows it passes it. Without one this resolves by the drafted site and
@@ -136,7 +167,7 @@ export function applyProjectDraft(draft, { projectId = null, createNew = false }
     setActiveProjectId(project.id);
   }
   const saved = saveProject(mergeDraft(project, draft));
-  pushProjectToBackend(saved);
+  pushDraftToBackend(saved.id, draft);
   return saved;
 }
 

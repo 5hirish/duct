@@ -112,6 +112,7 @@ export const AnalyticsParam = {
   Reason: "reason",       // why a site could not be read: invalid_url | unreachable
   Code: "code",           // why a key failed to verify: invalid_key | no_billing | …
   Ok: "ok",               // "true" | "false" on a verify
+  Documents: "documents", // files read beside the site when an onboarding audit starts: "0".."5"
 };
 
 /**

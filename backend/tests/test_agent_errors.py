@@ -207,3 +207,19 @@ def test_retry_after_is_none_when_the_provider_said_nothing():
     assert retry_after_seconds(_named("RateLimitError", "429")) is None
     assert retry_after_seconds(_named("RateLimitError", "429", response=_Response({"retry-after": "soon"}))) is None
     assert retry_after_seconds(_named("RateLimitError", "429", response=_Response(None))) is None
+
+
+def test_safe_excerpt_keeps_the_vendors_sentence_and_drops_what_identifies():
+    """The GA4 StringFilter bug was found from the vendor's sentence on the
+    Data pane; a URL with a key in it once travelled the same way."""
+    from agents.core.errors import safe_excerpt
+
+    exc = ImportError(
+        "cannot import name 'StringFilter' while fetching "
+        "https://analyticsdata.googleapis.com/v1beta/properties/1?key=AIzaSyA1234567890abcdefghijklmnop"
+    )
+    excerpt = safe_excerpt(exc)
+    assert "cannot import name 'StringFilter'" in excerpt
+    assert "https://" not in excerpt and "AIzaSy" not in excerpt
+    assert len(safe_excerpt(RuntimeError("x" * 500))) <= 200
+    assert safe_excerpt(RuntimeError()) == "RuntimeError"

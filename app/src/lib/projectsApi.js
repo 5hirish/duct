@@ -70,6 +70,10 @@ function toApi(local) {
     audience: local.audience || {},
     competition: local.competition || {},
     brand_channels: local.brand_channels || {},
+    // Where each drafted field came from. The server settles a save by it:
+    // a field marked "user" is the person's edit and wins, a drafted one this
+    // copy only carried along cannot undo a newer draft the server holds.
+    provenance: local.provenance || {},
   };
 }
 
@@ -95,6 +99,7 @@ function fromApi(remote) {
     audience: remote.audience || {},
     competition: remote.competition || {},
     brand_channels: remote.brand_channels || {},
+    provenance: remote.provenance || {},
     // Execution autonomy: "ask" (default) | "assisted" | "auto". Server-owned
     // safety setting — changed only through setProjectAutonomy, never via the
     // upsert. The server normalizes the legacy "manual" spelling to "ask" on
@@ -132,6 +137,29 @@ export async function upsertProjectRemote(local) {
       method: "PUT",
       headers: authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(toApi(local)),
+    });
+    if (!res.ok) {
+      endSessionIfUnauthorized(res);
+      return null;
+    }
+    return fromApi(await res.json());
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * POST a PROJECT_DRAFT event's fields to be merged on the server, under the
+ * same rules lib/projectDraft.js runs here, against what the server holds.
+ * Creates the project when its id is new. Returns the server copy or null.
+ */
+export async function postProjectDraftRemote(id, draft) {
+  if (!hasAuthToken() || !id || !draft?.fields) return null;
+  try {
+    const res = await fetch(`${BASE}/api/user/projects/${encodeURIComponent(id)}/draft`, {
+      method: "POST",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ fields: draft.fields }),
     });
     if (!res.ok) {
       endSessionIfUnauthorized(res);

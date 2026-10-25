@@ -59,6 +59,7 @@ from uuid import UUID, uuid4
 from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.activity import activity_hooks, announce_context
 from agents.core.deep_session import (
+    subagent_middleware,
     FILESYSTEM_TOOLS,
     SUMMARIZATION_FLOOR_TOKENS,
     DeepSession,
@@ -83,7 +84,11 @@ from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
 from agents.insights.data_tools import build_data_tools_lc
-from agents.insights.subagents import build_verify_subagent
+from agents.insights.subagents import (
+    build_general_purpose_subagent,
+    build_verify_subagent,
+    pick_read_tools,
+)
 from agents.insights.prompts.autonomous import (
     CAPABILITIES_PHASE_3,
     CAPABILITIES_UNATTENDED,
@@ -364,8 +369,17 @@ class AutonomousInsightsRunner:
         fallbacks: list[Any] = []
         if not injected_llm:
             fallbacks = fallback_chain(
-                self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
+                self.provider, self.model, self._api_key, self._temperature,
+                thinking=self._thinking, cache_key=cache_key,
             )
+
+        # Every sub-agent gets the loop's guards: run limits and the reporting
+        # retry, on the same credential identity as the parent.
+        guards = subagent_middleware(
+            LIMITS,
+            identity="" if injected_llm else credential_identity(self._api_key),
+            provider=None if injected_llm else self.provider,
+        )
 
         prompt_text = system_prompt or build_insights_system_prompt(
             capabilities=(
@@ -384,7 +398,14 @@ class AutonomousInsightsRunner:
             # for what matters, the verifier for what is wrong with the data, and
             # mixing the two costs the analyst its whole window before it writes
             # a word. See agents/insights/subagents/verify.py.
-            subagents=[build_verify_subagent(data_tools, model=verify_llm)],
+            # And the harness's default helper, supplied so it is read-only:
+            # left to deepagents it carries every parent tool, the writers and
+            # the pause tools included (agents/insights/subagents/general_purpose.py).
+            # On the verifier's cheaper model when one was resolved.
+            subagents=[
+                build_verify_subagent(data_tools, model=verify_llm, middleware=guards),
+                build_general_purpose_subagent(pick_read_tools(tools), model=verify_llm or llm, middleware=guards),
+            ],
             system_prompt=prompt_text,
             limits=LIMITS,
             session=session,

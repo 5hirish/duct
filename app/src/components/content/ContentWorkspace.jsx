@@ -46,15 +46,17 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const body = useMemo(() => contentSessionBody(mode, context), [mode, contextKey]);
 
+  // Scoped to the artifact so a reload of this post's workspace resumes
+  // this post's run (and finds this post's draft) and never a different
+  // one's. A clone has no artifact yet, so its link scopes it: cloning a
+  // second post in the same tab must start a second run, not reattach to
+  // the first.
+  const handleKey = `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || context.projectId || ""}`;
   const agent = useAgentSession({
     agentType: CONTENT_AGENT_TYPE,
     notifyAs: t`Content Studio`,
     body,
-    // Scoped to the artifact so a reload of this post's workspace resumes
-    // this post's run and never a different one's. A clone has no artifact
-    // yet, so its link scopes it: cloning a second post in the same tab must
-    // start a second run, not reattach to the first.
-    handleKey: `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || context.projectId || ""}`,
+    handleKey,
     onEvent: handleEvent,
   });
 
@@ -201,6 +203,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
       left={
         <AgentChat
           title={context.cloneUrl ? t`Cloning a TikTok` : MODE_LABELS[mode] ? i18n._(MODE_LABELS[mode]) : t`Content agent`}
+          draftKey={handleKey}
           phase={agent.phase}
           steps={agent.steps}
           todos={agent.todos}

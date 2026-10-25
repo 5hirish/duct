@@ -15,6 +15,7 @@ export const AuditStep = Object.freeze({
   RESOLVE_URL:      "resolve_url",
   FETCH_SITEMAP:    "fetch_sitemap",
   CRAWL_PAGES:      "crawl_pages",
+  READ_DOCUMENTS:   "read_documents",   // onboarding only, when files were added beside the site
   ENRICHING:        "enriching",        // shared step — must match AgentStep.ENRICHING
   SYNTHESIZE_AUDIT: "synthesize_audit",
 });
@@ -25,6 +26,7 @@ export const STEP_LABELS = Object.freeze({
   [AuditStep.RESOLVE_URL]:      msg`Resolving website`,
   [AuditStep.FETCH_SITEMAP]:    msg`Fetching sitemap`,
   [AuditStep.CRAWL_PAGES]:      msg`Crawling pages`,
+  [AuditStep.READ_DOCUMENTS]:   msg`Reading your documents`,
   [AuditStep.ENRICHING]:        msg`Researching competitors`,
   [AuditStep.SYNTHESIZE_AUDIT]: msg`AI synthesis`,
 });

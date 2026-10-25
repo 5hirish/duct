@@ -340,3 +340,22 @@ def error_payload(exc: BaseException) -> dict:
     """
     code = classify_error(exc)
     return {"code": code, "retryable": code in RETRYABLE, "error": DESCRIPTIONS[code]}
+
+
+_URL = re.compile(r"https?://\S+")
+_KEY_SHAPED = re.compile(r"[A-Za-z0-9_\-]{24,}")
+
+
+def safe_excerpt(exc: BaseException, limit: int = 200) -> str:
+    """What a tool result may quote of an exception.
+
+    The vendor's own sentence, with URLs and key-shaped tokens removed and
+    cut short. Enough to debug a wrong import or a refused field — the GA4
+    ``StringFilter`` bug was found from exactly this sentence on the Data
+    pane — and nothing that names a host, a request or a credential, which
+    ``str(exc)`` whole has carried before. The raw text stays in the log.
+    """
+    text = " ".join(str(exc).split())
+    text = _URL.sub("<url>", text)
+    text = _KEY_SHAPED.sub("…", text)
+    return text[:limit] or type(exc).__name__

@@ -101,6 +101,7 @@ from agents.content.tools import build_content_tools_lc
 from agents.core import session as _core_session
 from agents.core.activity import activity_hooks, announce_context
 from agents.core.deep_session import (
+    subagent_middleware,
     DeepSession,
     RunLimits,
     build_deep_session_agent,
@@ -447,10 +448,13 @@ class ContentRunner:
         fans out into a real provider call.
         """
         injected_llm = llm is not None
+        # One conversation, one prompt cache, as insights does: every call of
+        # this thread carries the same key, the fallback's included.
+        cache_key = str(getattr(session, "conversation_id", None) or session_id or "")
         if llm is None:
             llm = resolve_chat_model(
                 self.provider, self.model, self._api_key, self._temperature,
-                thinking=self._thinking,
+                thinking=self._thinking, cache_key=cache_key,
             )
 
         # Fetch, plus whichever search this provider/model can actually use —
@@ -489,17 +493,24 @@ class ContentRunner:
             # the same step the fallback chain takes — because topic discovery
             # is volume work. Drafting stays on the run's model: creative
             # quality is the point.
+            # Every sub-agent gets the loop's guards: run limits and the
+            # reporting retry, on the same credential identity as the parent.
+            guards = subagent_middleware(
+                LIMITS,
+                identity="" if injected_llm else credential_identity(self._api_key),
+                provider=None if injected_llm else self.provider,
+            )
             subagents = [
                 build_research_pillar_subagent(
-                    _pick(RESEARCH_PILLAR_TOOLS), self._sibling_model(llm, injected_llm)
+                    _pick(RESEARCH_PILLAR_TOOLS), self._sibling_model(llm, injected_llm, cache_key), middleware=guards
                 ),
-                build_draft_post_subagent(_pick(DRAFT_POST_TOOLS), llm),
+                build_draft_post_subagent(_pick(DRAFT_POST_TOOLS), llm, middleware=guards),
                 # Judging, like drafting, stays on the run's model.
-                build_review_post_subagent(_pick(REVIEW_POST_TOOLS), llm),
+                build_review_post_subagent(_pick(REVIEW_POST_TOOLS), llm, middleware=guards),
                 # deepagents adds a "general-purpose" sub-agent carrying EVERY
                 # tool of the parent unless one by that name is supplied. That
                 # would hand the writers to a sub-agent; this one reads only.
-                build_general_purpose_subagent(_pick(GENERAL_PURPOSE_TOOLS), llm),
+                build_general_purpose_subagent(_pick(GENERAL_PURPOSE_TOOLS), llm, middleware=guards),
             ]
         tools += web_tools
 
@@ -522,7 +533,8 @@ class ContentRunner:
         fallbacks: list[Any] = []
         if not injected_llm:
             fallbacks = fallback_chain(
-                self.provider, self.model, self._api_key, self._temperature, thinking=self._thinking
+                self.provider, self.model, self._api_key, self._temperature,
+                thinking=self._thinking, cache_key=cache_key,
             )
 
         return build_deep_session_agent(
@@ -545,16 +557,19 @@ class ContentRunner:
             prune_seen_images=self.vision,
         )
 
-    def _sibling_model(self, llm: Any, injected: bool) -> Any:
+    def _sibling_model(self, llm: Any, injected: bool, cache_key: str = "") -> Any:
         """The cheaper model in this family, for volume work; the run's own
-        model when the family has none — or when a test injected one."""
+        model when the family has none — or when a test injected one. Same
+        ``cache_key`` as the run: the sub-agents' calls belong to the same
+        conversation and OpenAI routes by it."""
         if injected:
             return llm
         names = resolve_fallback_models(Engine.V1, self.provider, self.model)
         if not names:
             return llm
         return resolve_chat_model(
-            self.provider, names[0], self._api_key, self._temperature, thinking=self._thinking
+            self.provider, names[0], self._api_key, self._temperature,
+            thinking=self._thinking, cache_key=cache_key,
         )
 
     @staticmethod

@@ -30,7 +30,12 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   background via `/api/audit/prefetch`) → a model (an API key verified by
   spending it, or on desktop "Continue with ChatGPT", or skipped) → the
   session at `/audit/seo/[sessionId]` with `crawl_id` and `draft_project`
-  set. Submitting the URL mints a **guest** (`lib/guest.js`): a real account
+  set. The "Found it" card also offers documents
+  (`components/onboarding/DocumentPicker.jsx`): files read on upload by
+  `/api/audit/documents`, their ids sent as `document_ids`. It lives on that
+  card and not beside the URL field because the landing page's hand-off
+  skips the field, and it blocks "continue" only while a file is being read.
+  Submitting the URL mints a **guest** (`lib/guest.js`): a real account
   with a synthetic email, so everything the audit makes has an owner before
   anyone signs in; Google sign-in later links or merges it. No `AuthGuard`
   and none of the app shell. Layout is the threshold split: the `salve`
@@ -100,6 +105,9 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
     library, the cross-agent feed, usage, and user-level memory
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
+  - `settings/agents/` — Connect your AI agent: MCP tokens and the line to
+    paste into Claude Code, Codex or Cursor (`components/settings/AgentAccess.jsx`,
+    `lib/mcpTokensApi.js`). A new token's plaintext lives in page state only
   - `generate/` — the retired wizard, now a bare redirect to `/insights/session`
   - `projects/` — project management
   - `project/[projectId]/` — **Project context**, the editor for one
@@ -146,8 +154,10 @@ it is a claim about the code, not a way to quiet the check.
   `isGuestToken()` / `isSignedInUser()` read the `guest` claim. A guest is a
   real user everywhere else in the app; only the sidebar footer and the
   sign-in page treat it specially.
-- `lib/onboardingApi.js` — prefetch, verify, link code: the three calls only
-  `/start` makes. Errors carry the backend's `reason`.
+- `lib/onboardingApi.js` — prefetch, documents, verify, link code: the calls
+  only `/start` makes. Errors carry the backend's `reason`. The document
+  limits are mirrored here (`localDocumentError`) only so a file that will be
+  refused says so before it uploads; the server checks every one.
 - `lib/chatgpt.js` — "Continue with ChatGPT", desktop only: the shell runs
   the OAuth and holds the refresh token; this module gets an hour-long access
   token and account id from it, and `providerKeyHeaders()` sends them as the
@@ -155,15 +165,23 @@ it is a claim about the code, not a way to quiet the check.
   `X-OpenAI-Account-Id`). Gated on `capabilities.chatgptAuth` from the shell
   and `chatgpt_auth_enabled` from `/api/providers/status` — both, always.
 - `lib/projectDraft.js` — merges `PROJECT_DRAFT` events into the project
-  with provenance (`crawl` / `inferred` / `user`). Three rules: a user value
-  is never overwritten, a crawl value beats an inferred one, and **a
+  with provenance (`user` / `crawl` / `document` / `inferred`, in that rank).
+  Three rules: a user value is never overwritten, a filled field gives way
+  only to an equal or higher rank (the site beats the user's files, which
+  beat a model's guess; an unknown provenance ranks lowest), and **a
   non-empty field with no recorded provenance counts as the user's** —
   every project made before drafts existed is in that state, and without
   that rule the first draft to reach one replaced a human's name, pitch and
   industry with guesses. Which project a draft lands on is the caller's
   `projectId`; without one it resolves by the drafted site and creates,
-  never "whatever is active". `AuditWorkspace` applies them; nothing else
-  writes drafts.
+  never "whatever is active". `/start` and `AuditWorkspace` apply them;
+  nothing else writes drafts. Each draft is merged here for an instant
+  answer and sent as a draft (`pushDraftToBackend`, one at a time per
+  project, in order) to be merged again on the server, which keeps the
+  labels and holds the same rules (`backend/service/project_draft.py`). A
+  save sends the labels too, and the server settles it by them, so **an
+  edit has to mark its field `user`** (`own()` on the project page): an
+  unmarked empty field reads as a copy that never had the value.
 - `lib/projects.js` — `siteKey()` / `projectsForSite()` are how a site
   address finds its project: lowercase host, no leading `www.`, subdomains
   kept distinct. `projectsForSite` returns every match, because two is a
@@ -475,7 +493,13 @@ Rules that follow:
   code)` and `errorAction(code)` in `lib/agentSession.js` are the only places
   a failure becomes words or a button. A new failure kind is a new `ErrorCode`
   (mirrored from the backend) with a row in `ERROR_COPY`, never a regex on the
-  message.
+  message. The rows are `msg` descriptors — the reducer has no locale — and
+  the state holds a descriptor or, when a provider's own sentence passes
+  through, a string; a component renders either with `errorText(i18n,
+  value)`, never `i18n._` on the value, because a raw sentence with a brace
+  in it is not an ICU message. The literal-string check cannot see a string
+  in an object literal or a `dispatch`, so a sentence in `lib/` or `hooks/`
+  is translated by this rule, not by the check.
 - **The status row says what is happening, with a clock.** While the agent
   works the header reads `Working · 1m 12s · Collecting source data` — phase,
   elapsed, and the step in progress (or "Reconnecting to the model (2/4)",
@@ -489,8 +513,11 @@ Rules that follow:
   focus or a tap) on the left, and `composerAside` (`TierDial`: the model
   tier as quiet text, whose popover holds the tier list and thinking as a
   stepped slider), the ring and Send on the right. The ring carries no
-  label; percent, tokens and cost are its tooltip. Placement follows when a
-  dial binds: the posture applies to the next message, so it is inline;
+  label; percent, tokens, cost and the cached share are its tooltip (a dash
+  where the backend has no price for the model), and it is a gauge, not a
+  button — it answers hover and Tab and does nothing on click. Placement
+  follows when a dial binds: the posture applies to the next message, so it
+  is inline;
   tier and thinking bind at the next session, so they are one tap away; the
   tier is the one choice people look for by name, so it stands at the
   corner of the box like every chat app's model name, and thinking is a
@@ -599,6 +626,16 @@ Rules that follow:
   the run is stopped never reached the model: the reducer takes it out of the
   transcript and puts its text in `draft`, which `ChatInput` applies once per
   `draft.key`. Losing a typed message is worse than losing the run.
+- **The box keeps what was typed.** `ChatInput` saves its text per
+  `draftKey` — the shell's `handleKey`, so a reload of this thread finds
+  this thread's draft — through `lib/composerDraft.js`, which the desk
+  composer's Settings round-trip uses too, and clears it on send. The
+  store is `sessionStorage`, per tab, for the reason the session handle
+  gives: the key names a thread, not a user, so anything that outlived the
+  tab would follow a shared browser into the next sign-in. Esc in
+  the box stops a streaming turn (scoped to the box: a window-level Escape
+  would also fire while someone closes a popover); Shift+Enter is a new
+  line; the footer names both while the box has focus.
 - **Notifications come from phase transitions, never from a workspace.** A
   workspace names itself (`notifyAs`) and `hooks/useAgentNotifications.js`
   turns done / needs-input / failed into a system notice — only while the

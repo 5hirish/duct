@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -21,13 +22,16 @@ from models.execution import (
 from models.membership import ROLE_COLLABORATOR, ROLE_OWNER
 from models.project import Project, unique_slug
 from service.auth import get_current_user
-from service.membership import (
-    accessible_projects,
-    ensure_owner_membership,
-    get_project_for_user,
-    member_role,
+from service.membership import accessible_projects, get_project_for_user, member_role
+from service.project_draft import (
+    DRAFT_SOURCES,
+    FIELDS,
+    clean_labels,
+    reconcile_save,
+    snapshot,
 )
-from service.memory import seed_project_profile
+from service.project_writes import apply_draft, finish_write, project_for_write
+from utils.dates import utcnow
 
 router = APIRouter(tags=["user-projects"])
 
@@ -46,12 +50,47 @@ class ProjectIn(BaseModel):
     audience: dict = {}
     competition: dict = {}
     brand_channels: dict = {}
+    # Where each drafted field came from, as the client last knew it. Absent
+    # (None) from a client that predates the server keeping labels, which
+    # service/project_draft.reconcile_save treats as last write wins. Loosely
+    # typed on purpose: a label this build does not know is dropped by
+    # clean_labels, where a strict type would 422 the person's whole save.
+    provenance: dict[str, Any] | None = None
 
     @field_validator("targets", "audience", "competition", "brand_channels", mode="after")
     @classmethod
     def _check_size(cls, v: dict) -> dict:
         if len(json.dumps(v)) > _JSONB_MAX_BYTES:
             raise ValueError("Section payload too large (max 128 KB).")
+        return v
+
+
+class DraftFieldIn(BaseModel):
+    value: Any = None
+    provenance: str
+
+    @field_validator("provenance")
+    @classmethod
+    def _a_draft_source(cls, v: str) -> str:
+        if v not in DRAFT_SOURCES:
+            raise ValueError(f"provenance must be one of {sorted(DRAFT_SOURCES)}")
+        return v
+
+
+class ProjectDraftIn(BaseModel):
+    """A PROJECT_DRAFT event's fields: ``{name: {value, provenance}}``."""
+
+    fields: dict[str, DraftFieldIn]
+
+    @field_validator("fields", mode="after")
+    @classmethod
+    def _check_fields(cls, v: dict[str, DraftFieldIn]) -> dict[str, DraftFieldIn]:
+        if len(json.dumps({k: f.value for k, f in v.items()}, default=str)) > _JSONB_MAX_BYTES:
+            raise ValueError("Draft payload too large (max 128 KB).")
+        for name, field in v.items():
+            spec = FIELDS.get(name)
+            if spec and field.value is not None and not isinstance(field.value, spec.kind):
+                raise ValueError(f"{name} must be a {spec.kind.__name__}")
         return v
 
 
@@ -76,6 +115,9 @@ class ProjectOut(BaseModel):
     # projects and to hide owner-only controls (invite, remove, delete).
     role: str = ROLE_OWNER
     owner_email: str = ""
+    # Where each drafted field came from ("user", "crawl", "document",
+    # "inferred"). The app renders a chip from it and merges by it.
+    provenance: dict = {}
 
 
 def _to_out(p: Project, *, role: str = ROLE_OWNER, owner_email: str = "") -> ProjectOut:
@@ -96,6 +138,7 @@ def _to_out(p: Project, *, role: str = ROLE_OWNER, owner_email: str = "") -> Pro
         updated_at=p.updated_at.isoformat(),
         role=role,
         owner_email=owner_email,
+        provenance=p.provenance or {},
     )
 
 
@@ -149,14 +192,10 @@ def create_project(
         competition=body.competition,
         brand_channels=body.brand_channels,
     )
-    session.add(project)
-    session.flush()
-    ensure_owner_membership(project, session)
-    session.commit()
-    session.refresh(project)
+    reconcile_save(project, snapshot(None), {}, clean_labels(body.provenance))
     # The targets and competitors typed into onboarding become dated project
     # memory, so agents cite the operator's own numbers instead of re-asking.
-    seed_project_profile(session, project, user_id=user.id)
+    project = finish_write(project, True, user, session)
     return _to_out(project, role=ROLE_OWNER, owner_email=user.email)
 
 
@@ -174,6 +213,14 @@ def get_project(
     )
 
 
+def _out(project: Project, user: User, session: Session) -> ProjectOut:
+    return _to_out(
+        project,
+        role=member_role(project.id, user.id, session) or ROLE_OWNER,
+        owner_email=_owner_emails([project], session).get(project.id, ""),
+    )
+
+
 @router.put("/{project_id}")
 def update_project(
     project_id: UUID,
@@ -181,32 +228,17 @@ def update_project(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> ProjectOut:
-    """Upsert by client-supplied id.
-
-    The frontend generates project UUIDs locally (and already references them
-    from content plans / agent contexts), so a missing project is created with
-    the supplied id rather than 404'd — keeping those references valid.
+    """Upsert by client-supplied id: the person saving their project.
 
     Collaborators may edit an existing project; the create branch only runs for
-    ids that belong to nobody, and the caller becomes its owner.
+    ids that belong to nobody, and the caller becomes its owner. The save
+    replaces every section, then ``reconcile_save`` puts back each drafted
+    field the client only carried along: an older copy of a draft must not
+    undo the newer one the server holds.
     """
-    from datetime import datetime, timezone
-
-    existing = session.execute(
-        select(Project).where(Project.id == project_id)
-    ).scalars().first()
-    is_new = existing is None
-    if is_new:
-        project = Project(
-            id=project_id,
-            user_id=user.id,
-            slug=unique_slug(session, user.id, body.name),
-        )
-        session.add(project)
-    else:
-        # Raises 404 when the caller is neither owner nor collaborator, so an
-        # unrelated project can never be overwritten through this upsert.
-        project = get_project_for_user(project_id, user, session)
+    project, is_new = project_for_write(project_id, user, session, name=body.name)
+    before = snapshot(None if is_new else project)
+    before_labels = {} if is_new else dict(project.provenance or {})
 
     project.name = body.name
     project.company_name = body.company_name
@@ -218,23 +250,28 @@ def update_project(
     project.audience = body.audience
     project.competition = body.competition
     project.brand_channels = body.brand_channels
-    project.updated_at = datetime.now(timezone.utc)
-    session.add(project)
-    if is_new:
-        # Flush after the NOT NULL columns are populated, so the owner row can
-        # reference a project that actually exists.
-        session.flush()
-        ensure_owner_membership(project, session)
-    session.commit()
-    session.refresh(project)
-    # A changed target supersedes the previous one rather than overwriting it —
-    # that is what makes "target CPA $45 (was $60 until 30 Jun)" possible.
-    seed_project_profile(session, project, user_id=user.id)
-    return _to_out(
-        project,
-        role=member_role(project_id, user.id, session) or ROLE_OWNER,
-        owner_email=_owner_emails([project], session).get(project.id, ""),
+    reconcile_save(project, before, before_labels, clean_labels(body.provenance))
+    project.updated_at = utcnow()
+    return _out(finish_write(project, is_new, user, session), user, session)
+
+
+@router.post("/{project_id}/draft")
+def draft_project(
+    project_id: UUID,
+    body: ProjectDraftIn,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> ProjectOut:
+    """Merge a draft into the project, under the rules in service/project_draft.py.
+
+    Creates the project when its id belongs to nobody, like the PUT, because
+    onboarding drafts a project the browser made a moment ago. The MCP
+    server's ``draft_project`` tool writes through the same function.
+    """
+    project, _, _ = apply_draft(
+        project_id, {key: field.model_dump() for key, field in body.fields.items()}, user, session
     )
+    return _out(project, user, session)
 
 
 class ProjectSettingsIn(BaseModel):
@@ -259,8 +296,6 @@ def patch_project_settings(
     keeps working; anything else unrecognised is a 422 rather than a silent
     downgrade, because quietly storing a level the caller did not ask for is
     how a project ends up more or less autonomous than its owner believes."""
-    from datetime import datetime, timezone
-
     from fastapi import HTTPException
 
     project = get_project_for_user(project_id, user, session, require_owner=True)
@@ -270,7 +305,7 @@ def patch_project_settings(
             detail=f"autonomy_level must be one of {sorted(AUTONOMY_LEVELS)}",
         )
     project.autonomy_level = normalize_autonomy(body.autonomy_level)
-    project.updated_at = datetime.now(timezone.utc)
+    project.updated_at = utcnow()
     session.add(project)
     session.commit()
     session.refresh(project)

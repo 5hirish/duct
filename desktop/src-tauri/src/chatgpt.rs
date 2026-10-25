@@ -183,6 +183,22 @@ fn clear() -> Result<(), String> {
     }
 }
 
+/// Run a keychain call off the async runtime.
+///
+/// `load`, `store` and `clear` block, and on macOS they block behind a modal
+/// prompt whenever the app's signature changed. An async command runs on the
+/// runtime's worker threads, and a blocked worker stalls every other command
+/// in flight there; `spawn_blocking` gives the call a thread of its own. The
+/// synchronous commands below use `#[tauri::command(async)]` for the same
+/// reason, which does this for the whole function.
+async fn off_runtime<T: Send + 'static>(
+    call: impl FnOnce() -> Result<T, String> + Send + 'static,
+) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(call)
+        .await
+        .map_err(|e| format!("keychain task stopped: {e}"))?
+}
+
 // ---------------------------------------------------------------------------
 // PKCE
 // ---------------------------------------------------------------------------
@@ -501,13 +517,12 @@ async fn refresh(existing: Session) -> Result<Session, String> {
             if session.email.is_empty() {
                 session.email = existing.email;
             }
-            store(&session)?;
-            Ok(session)
+            off_runtime(move || store(&session).map(|()| session)).await
         }
         Err(e) if e == "revoked" => {
             // The user signed out of ChatGPT or revoked the app. A dead bundle
             // in the keychain would keep reporting "connected" forever.
-            let _ = clear();
+            let _ = off_runtime(clear).await;
             Err("revoked".into())
         }
         Err(e) => Err(e),
@@ -518,8 +533,9 @@ async fn refresh(existing: Session) -> Result<Session, String> {
 // Commands
 // ---------------------------------------------------------------------------
 
-/// Whether a ChatGPT sign-in is held, and for whom. Reads the keychain only.
-#[tauri::command]
+/// Whether a ChatGPT sign-in is held, and for whom. Reads the keychain only,
+/// off the main thread (see `off_runtime`).
+#[tauri::command(async)]
 pub fn chatgpt_status() -> Result<Status, String> {
     Ok(load()?.map(|s| s.status()).unwrap_or_default())
 }
@@ -576,7 +592,7 @@ pub async fn chatgpt_login(app: AppHandle) -> Result<Status, String> {
     ])
     .await?;
     let session = session_from(response, None)?;
-    store(&session)?;
+    let session = off_runtime(move || store(&session).map(|()| session)).await?;
 
     // The user is looking at a browser tab; bring them back.
     if let Some(window) = app.get_webview_window("main") {
@@ -600,7 +616,7 @@ pub fn chatgpt_login_cancel() {
 /// no longer honours it — the web app answers both by offering the button.
 #[tauri::command]
 pub async fn chatgpt_credential() -> Result<Option<Credential>, String> {
-    let Some(session) = load()? else {
+    let Some(session) = off_runtime(load).await? else {
         return Ok(None);
     };
     let session = if session.needs_refresh() { refresh(session).await? } else { session };
@@ -612,7 +628,7 @@ pub async fn chatgpt_credential() -> Result<Option<Credential>, String> {
 
 /// Forget the sign-in. The app registration at OpenAI is untouched — that is
 /// the user's to revoke from their ChatGPT settings.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn chatgpt_logout() -> Result<(), String> {
     clear()
 }

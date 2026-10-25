@@ -7,21 +7,28 @@ in the background while the user connects a provider. ``GET
 passes ``crawl_id`` and ``run_pipeline`` picks the crawl up instead of
 fetching it again (``agents/audit/prefetch.py``).
 
+``POST /api/audit/documents`` is the same idea for the files the user adds
+on the "Found it" card: the text is read now, the session names the ids it
+was handed (``agents/audit/documents.py``).
+
 The caller is a guest most of the time, so the gate is the guest's own
 token plus rate limits rather than Turnstile, which the desktop shell could
-not render anyway. The crawl is the only cost here and it is Duct's;
-inference never runs on this route.
+not render anyway. The crawl and the text extraction are the only costs here
+and both are Duct's; inference never runs on these routes.
 """
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from starlette.datastructures import UploadFile
 from pydantic import BaseModel, ConfigDict
 
+from agents.audit.documents import add_documents
 from agents.audit.prefetch import get_prefetch, start_prefetch
 from models.auth import User
 from service.auth import get_current_user
 from service.crawl.fetcher import SiteUnreachableError
+from service.documents import MAX_BYTES, MAX_DOCUMENTS, Unreadable
 from service.ratelimit import RateLimit, client_address
 
 router = APIRouter(tags=["audit-prefetch"])
@@ -36,6 +43,17 @@ _PREFETCH_LIMIT_DETAIL = "That is a lot of sites in a row. Try again in a few mi
 
 REASON_INVALID = "invalid_url"
 REASON_UNREACHABLE = "unreachable"
+
+# Someone adds a deck, removes it, adds two more; ten uploads covers a fussy
+# person, and each one parses up to five files on our CPU.
+_DOCUMENTS_LIMIT = RateLimit(limit=10, window_seconds=600.0)
+_DOCUMENTS_ADDRESS_LIMIT = RateLimit(limit=30, window_seconds=600.0)
+_DOCUMENTS_LIMIT_DETAIL = "That is a lot of files in a row. Try again in a few minutes."
+REASON_TOO_MANY = "too_many_files"
+_FILES_FIELD = "files"
+# Five files at the per-file cap, plus the multipart framing around them. A
+# body that declares more is refused before a byte of it is parsed.
+_UPLOAD_MAX_BYTES = MAX_DOCUMENTS * MAX_BYTES + 64 * 1024
 
 
 class PrefetchRequest(BaseModel):
@@ -86,3 +104,48 @@ async def prefetch_status(crawl_id: str, user: User = Depends(get_current_user))
         # Expired, unknown, or someone else's — one answer for all three.
         raise HTTPException(status_code=404, detail="No such crawl.")
     return entry.status()
+
+
+@router.post("/audit/documents")
+async def upload_documents(request: Request, user: User = Depends(get_current_user)) -> dict:
+    """Read up to five files now; one result per file, readable or not.
+
+    A file that cannot be read is a result with a reason, not a failed
+    request, so the other four still land and the tile can say which one
+    and why.
+
+    The form is parsed here rather than declared as ``File(...)`` because
+    FastAPI reads a declared body before any dependency runs: a stranger's
+    2 GB upload would be spooled to disk before the token or the limiter was
+    looked at. Here both come first, then the declared length.
+    """
+    _DOCUMENTS_ADDRESS_LIMIT.enforce(client_address(request), _DOCUMENTS_LIMIT_DETAIL)
+    _DOCUMENTS_LIMIT.enforce(str(user.id), _DOCUMENTS_LIMIT_DETAIL)
+    declared = int(request.headers.get("content-length") or 0)
+    if not declared or declared > _UPLOAD_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail={"reason": Unreadable.TOO_LARGE.value, "message": "Those files are too large to read."},
+        )
+    async with request.form(max_files=MAX_DOCUMENTS, max_fields=0) as form:
+        uploads = [f for f in form.getlist(_FILES_FIELD) if isinstance(f, UploadFile)]
+        if not uploads or len(uploads) > MAX_DOCUMENTS:
+            raise HTTPException(
+                status_code=422,
+                detail={"reason": REASON_TOO_MANY, "message": f"Add between 1 and {MAX_DOCUMENTS} files."},
+            )
+        names: list[str] = []
+        payloads: dict[int, bytes] = {}
+        for i, upload in enumerate(uploads):
+            names.append(upload.filename or "document")
+            # One byte past the cap is enough to know it is over.
+            data = await upload.read(MAX_BYTES + 1)
+            if len(data) <= MAX_BYTES:
+                payloads[i] = data
+    read = iter(await add_documents([(names[i], data) for i, data in payloads.items()], owner_id=str(user.id)))
+    return {
+        "documents": [
+            next(read) if i in payloads else {"name": name, "error": Unreadable.TOO_LARGE.value}
+            for i, name in enumerate(names)
+        ]
+    }

@@ -1,6 +1,6 @@
 # Agent harnesses we learn from
 
-**Author:** Shirish Kadam · **Updated:** 2026-10-25
+**Author:** Shirish Kadam · **Updated:** 2026-10-26
 
 Three coding-agent harnesses are built in the open by teams who hit every problem our agent shell hits, a year ahead of us and with more users. Reading them is cheaper than rediscovering their answers.
 
@@ -21,7 +21,7 @@ Codex has the most complete client protocol, OpenCode has our shape, and pi show
 
 | Harness | Why it matters to us | Last read |
 |---|---|---|
-| **Codex** (OpenAI), `github.com/openai/codex` | The desktop and IDE apps are clients of `codex app-server`, a JSON-RPC server whose thread / turn / item contract is the most fully specified agent-UI protocol in the open. The desktop app is closed; the TUI in the same repo is the reference client. | `de78740`, 2026-09-04 |
+| **Codex** (OpenAI), `github.com/openai/codex` | The desktop and IDE apps are clients of `codex app-server`, a JSON-RPC server whose thread / turn / item contract is the most fully specified agent-UI protocol in the open. The desktop app is closed; the TUI in the same repo is the reference client. | `de78740`, 2026-09-04; the shallow clone at `../codex` is gone (2026-10-25), re-clone to refresh |
 | **OpenCode** (Anomaly), `github.com/anomalyco/opencode` (moved from `sst/opencode`; default branch `dev`) | A TypeScript server and clients over a session / message / part model with an SSE event bus, mid-migration to an event-sourced v2. Provider-agnostic, and the closest in shape to our Next.js app talking to a backend. | `5cf9f51`, 2026-09-04 |
 | **pi** (Earendil), `github.com/earendil-works/pi` (moved from `badlogic/pi-mono`; docs at `pi.dev/docs/latest`) | A deliberately small TypeScript agent loop and TUI: the reference for how little harness you need. Explicit steer-versus-follow-up input modes, abortable retry, session trees. | `9841914`, 2026-09-05 |
 
@@ -137,7 +137,7 @@ Rows marked done landed on 2026-09-04, the same day as the reading.
 | S | Completion notification when the tab is hidden | done (via the OpenCode reading, 2026-09-05) | coalesced desktop notification, suppressed when focused | none; insights pipelines run for minutes |
 | S | Hold back markdown tables until the block closes | done (settled plus healed tail, 2026-09-05) | `controller.rs:12-20` | `ChatMarkdown` re-rendered the tail on every delta, so briefs reflowed mid-table |
 | S | "Reject, and say what to do instead" | open | the `No, and tell Codex…` option | `ChangeSetCard` has approve and reject only |
-| S | Thinking folded to a title by default | open | transcript-only unless titled | `ThinkingMarkdown` shows the whole block inline |
+| S | Thinking folded to a title by default | done 2026-10 | transcript-only unless titled | `AgentChat.jsx` folds to "Thought for Ns" |
 | M | Token usage and context left; compaction made visible | done | `TokenCount` per turn, `N% context left`, "Compacting context" | insights compacted silently through deepagents' `SummarizationMiddleware` (since moved to `backend/agents/core/lc.py`) and reported no usage. On BYO keys the user paid for what they could not see, and the Heavy, Standard and Light tiers had no "switch to Light" moment |
 | M | Queue follow-ups while a turn runs | done (insights steers; content and audit queue) | steer or `thread/queue`, shown as `↳` rows | input disabled while streaming; chat while parked was a 409 |
 | M | One writer per conversation; status on the list route | half (status on the list route landed 2026-09-05; the writer lock is still open) | writer lock, and `thread/list` rows carry status | two tabs can each resume the same LangGraph thread; the desk had no badge because the state route was per-conversation only |

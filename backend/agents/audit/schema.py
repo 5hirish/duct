@@ -12,6 +12,7 @@ from agents.core.context import BusinessContext
 from agents.core.session import BaseAgentSession
 from agents.models import AgentEffort
 from agents.preferences import UserPreferences
+from service.documents import MAX_DOCUMENTS
 
 
 # ---------------------------------------------------------------------------
@@ -491,6 +492,10 @@ class AuditRequest(BaseModel):
     crawl_id: str | None = None
     draft_project: bool = False
     tiers: dict[str, str] | None = None
+    # Files the user added beside the site, already read by
+    # ``/api/audit/documents``; the run looks each id up for its own owner and
+    # drops any it cannot find (``agents/audit/documents.py``).
+    document_ids: list[str] = Field(default_factory=list, max_length=MAX_DOCUMENTS)
 
 
 class AuditAnswerRequest(BaseModel):

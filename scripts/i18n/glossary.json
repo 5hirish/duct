@@ -13,7 +13,7 @@
     "n8n", "Claude Cowork", "Cowork", "OpenClaw", "Adspirer", "PaidSync", "AdLoop",
     "Instagram", "LinkedIn", "Facebook", "Pinterest", "Bluesky", "Slack", "Notion", "Linear",
     "Tauri", "FastAPI", "Next.js", "Cloudflare", "Railway", "Turnstile", "Sentry",
-    "SaaS", "UTM", "CMGR", "ROI", "OAuth", "MCP", "Model Context Protocol", "Streamable HTTP", "HTTPS"
+    "SaaS", "UTM", "CMGR", "ROI", "OAuth", "PDF", "Word", "PowerPoint", "Markdown", "MCP", "Model Context Protocol", "Streamable HTTP", "HTTPS"
   ],
   "terms": {
     "brief": { "es": "informe", "pt-BR": "resumo", "de": "Briefing", "ja": "ブリーフ", "note": "The weekly synthesis Duct writes. A noun." },

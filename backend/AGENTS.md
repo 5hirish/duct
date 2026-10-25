@@ -343,6 +343,10 @@ see the engine consolidation review (duct-cloud, private) §7–8.
   handshake line on stdout before starting uvicorn:
   `{"duct_sidecar":1,"url":...,"port":...,"api_key":...,"data_dir":...}`.
   The Tauri shell must read the port from that line — never assume one.
+  The shell also passes `--exit-on-stdin-eof` with a pipe only it holds, so
+  the sidecar stops itself when the shell ends however it ends (SIGTERM to
+  uvicorn, then a hard exit two seconds later). Off by default: a sidecar
+  run by hand reads a terminal or `/dev/null`, and neither may stop it.
 - **Data dir** (`utils/appdirs.py`): macOS `~/Library/Application Support/ai.getduct.desktop`,
   Windows `%APPDATA%\Duct`, Linux `$XDG_DATA_HOME/duct`. Created `0700`.
   Override with `--data-dir` or `DUCT_DATA_DIR`.
@@ -444,7 +448,18 @@ Postgres `DATABASE_URL` names.
 - `routes/audit_prefetch.py` — the crawl onboarding starts the moment a URL
   validates (`agents/audit/prefetch.py`): root page now, the rest in the
   background, handed to `run_pipeline` by `crawl_id`. Duct's bandwidth only;
-  inference never runs here.
+  inference never runs here. `POST /api/audit/documents` beside it reads up
+  to five files the user adds on the "Found it" card, keeps their text for
+  the prefetch's TTL (`agents/audit/documents.py`) and answers one result per
+  file; the run names them in `document_ids`. It parses the form itself,
+  after the token, the limiter and the declared length, because a declared
+  `File(...)` body is spooled to disk before any dependency runs.
+- `service/documents.py` — text out of a PDF (pypdf), Word or PowerPoint
+  (zip + XML, any DOCTYPE refused) or plain text, with every reader stopping
+  at a page, character and inflated-size cap. Text rather than a PDF block
+  for the model, because several providers (DeepSeek among them) read none.
+  A file that gives no text raises `DocumentError` with an `Unreadable` code
+  the app words; never a message.
 - `service/ratelimit.py` — the in-process fixed window every route goes
   through that spends before its caller has proven much: `RateLimit.enforce`
   is the 429 with `Retry-After`. Key an address with `client_address(request)`,
@@ -466,10 +481,40 @@ Postgres `DATABASE_URL` names.
   `VISION_PROVIDERS`), and the FIT × PROOF discipline in the USER turn.
   `submit_post_draft` writes `content_posts.clone_source` from the session's
   link plus the model's verdict; the approach is derived, never typed.
-- `agents/audit/draft.py` — the project drafted from the crawl, two layers
-  (`crawl` deterministic, `inferred` one structured call), emitted as
-  `PROJECT_DRAFT` when a run sets `draft_project`. Never infers the North
-  Star; the agent asks for it in chat.
+- `agents/audit/draft.py` — the project drafted from the crawl, in layers
+  (`crawl` deterministic; `documents` one structured call over the user's
+  files, only when they added some; `inferred` one structured call), emitted
+  as `PROJECT_DRAFT` when a run sets `draft_project`. The documents are read
+  in the `read_documents` step, before competitor research, and reach the
+  rest of the run only as the business context they seed: their text never
+  rides in the audit's own turn. Never infers the North Star; the agent asks
+  for it in chat.
+- `service/project_draft.py` — where each project field came from
+  (`projects.provenance`) and what may overwrite what, the server's copy of
+  the rules `app/src/lib/projectDraft.js` runs for an instant answer (a test
+  holds the ranks and field names equal). Two writers, two rule sets: a
+  draft (`POST /api/user/projects/{id}/draft`, `merge_draft`) is a machine
+  and lands only on a blank, a drafted field of equal or lower rank, never
+  on the person's; a save (the PUT, `reconcile_save`) is the person and wins
+  where they changed something, but a drafted value the client only carried
+  along cannot replace an equal one or blank a field, because that is an
+  older copy of a draft the server has since refreshed. **Every new writer
+  of project fields goes through `merge_draft`** (the MCP server, a GitHub
+  re-sync), never a direct column write; a writer the rules do not know is
+  how a guess overwrites what someone typed. A draft cannot claim `user`.
+- `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
+  `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor).
+  Stateless JSON-RPC with no SDK: five methods, no sessions, no event
+  stream. Its one credential is a personal token (`service/mcp_tokens.py`,
+  minted at `/api/user/mcp-tokens` by a signed-in session), accepted on
+  `/mcp` only and never by `get_current_user`. Three tools, and adding a
+  fourth is a scope decision, not a refactor: `list_projects`,
+  `get_project`, `draft_project`. Writes go through
+  `service/project_writes.apply_draft`, labelled `document` (or `inferred`
+  for what the agent guessed), so they never replace the person or their
+  site; each one leaves an `activity_logs` row (`category="project"`). No
+  tool calls a model on Duct's side, and none approves, applies, connects
+  or touches credentials.
 - `agents/engines.resolve_job_run` — provider and model over the keys *this
   caller* can spend, so a user holding only an OpenAI key runs on OpenAI
   instead of a 402 for the instance default. All three agents route through

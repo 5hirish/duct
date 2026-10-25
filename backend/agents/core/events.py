@@ -217,6 +217,9 @@ class AgentStep(StrEnum):
     RESOLVE_URL = "resolve_url"
     FETCH_SITEMAP = "fetch_sitemap"
     CRAWL_PAGES = "crawl_pages"
+    # Onboarding only: the files the user added beside the site, read on the
+    # run's model before competitor research so the research knows the names.
+    READ_DOCUMENTS = "read_documents"
     SYNTHESIZE_AUDIT = "synthesize_audit"
 
     # Content
@@ -250,6 +253,7 @@ STEP_LABELS: dict[AgentStep, str] = {
     AgentStep.RESOLVE_URL: "Resolving website",
     AgentStep.FETCH_SITEMAP: "Fetching sitemap",
     AgentStep.CRAWL_PAGES: "Crawling pages",
+    AgentStep.READ_DOCUMENTS: "Reading your documents",
     AgentStep.SYNTHESIZE_AUDIT: "AI synthesis",
     # Content
     AgentStep.LOAD_PROJECT: "Loading project",

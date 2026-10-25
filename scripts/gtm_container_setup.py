@@ -56,6 +56,17 @@ EVENTS = [
     "execution_approved",
     "team_member_invited",
     "execution_interest_submitted",
+    # Onboarding, first launch to first finding. Pushed by the app since
+    # September and listed here only in October, so until this script is
+    # re-run the drop-off between these steps reaches no report.
+    "onboarding_started",
+    "onboarding_site_found",
+    "onboarding_site_failed",
+    "provider_verified",
+    "provider_skipped",
+    "onboarding_audit_started",
+    "audit_shared",
+    "signin_to_connect",
     "mcp_server_connected",
     # Attribution, pushed by site/assets/duct.js on every page.
     "utm_data",
@@ -71,6 +82,10 @@ PARAMS = [
     "shell",
     "services",
     "os",
+    "reason",
+    "code",
+    "ok",
+    "documents",
     "utm_source",
     "utm_medium",
     "utm_campaign",

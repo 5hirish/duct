@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, History, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
+import { FileText, History, LockKeyhole, ShieldCheck, SquareTerminal, Zap } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { getActiveProject } from "../../../lib/projects";
@@ -36,6 +36,8 @@ const SOURCE_BADGES = {
 
 function rowIcon(row) {
   if (row.category === "artifact") return FileText;
+  // An outside agent drafting the project through the MCP server.
+  if (row.category === "project") return SquareTerminal;
   if (row.action === "gtm.published") return Zap;
   return ShieldCheck;
 }
@@ -43,6 +45,7 @@ function rowIcon(row) {
 function targetHref(row) {
   if (row.target_type === "artifact" && row.target_id) return `/artifacts/${row.target_id}`;
   if (row.target_type === "change_set") return "/execute";
+  if (row.target_type === "project" && row.target_id) return `/project/${row.target_id}`;
   return null;
 }
 

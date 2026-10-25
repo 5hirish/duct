@@ -1,6 +1,6 @@
 # Claude Code on the web, on this repo
 
-**Author:** Shirish Kadam · **Updated:** 2026-10-25
+**Author:** Shirish Kadam · **Updated:** 2026-10-26
 
 Run a cloud Claude Code session against this monorepo in about five minutes:
 connect GitHub once, paste one setup script, start tasks from your terminal.

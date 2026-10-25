@@ -1,6 +1,6 @@
 # Credential storage
 
-**Author:** Shirish Kadam · **Updated:** 2026-10-25
+**Author:** Shirish Kadam · **Updated:** 2026-10-26
 
 Where every secret Duct holds lives, what protects it, and what breaks it. Read
 this before touching anything that stores a secret, the bundle identifier, the

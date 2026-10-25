@@ -36,6 +36,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.core.telemetry import tool_span
+from agents.core.errors import safe_excerpt
 
 logger = logging.getLogger(__name__)
 
@@ -342,7 +343,7 @@ async def _list_ops(
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("ListExecutableOps failed", exc_info=True)
-        return _error(f"Listing executable ops failed: {exc}")
+        return _error(f"Listing executable ops failed: {safe_excerpt(exc)}")
 
 
 async def _propose(
@@ -371,12 +372,12 @@ async def _propose(
             conversation_id=conversation_id, agent_type=agent_type,
         )
     except KeyError as exc:
-        return _error(str(exc.args[0]) if exc.args else str(exc))
+        return _error(safe_excerpt(exc))
     except ValueError as exc:
-        return _error(str(exc))
+        return _error(safe_excerpt(exc))
     except Exception as exc:  # noqa: BLE001
         logger.warning("ProposeChanges failed", exc_info=True)
-        return _error(f"Proposing the change set failed: {exc}")
+        return _error(f"Proposing the change set failed: {safe_excerpt(exc)}")
 
     card = await _emit_card(row, on_change_set)
     auto_applied = row.status in ("applied", "partial") and row.applied_by == "auto"
@@ -399,7 +400,7 @@ async def _status(change_set_id: str, *, user_id: UUID) -> dict:
         return _error(f"{raw_id!r} is not a valid change set id.")
     except Exception as exc:  # noqa: BLE001
         logger.warning("GetChangeSetStatus failed", exc_info=True)
-        return _error(f"Status fetch failed: {exc}")
+        return _error(f"Status fetch failed: {safe_excerpt(exc)}")
     return card if card is not None else _error(f"No change set {raw_id!r} for this user.")
 
 
@@ -415,9 +416,9 @@ async def _rollback(
         from service.execution.service import StateError
 
         if isinstance(exc, StateError):
-            return _error(str(exc))
+            return _error(safe_excerpt(exc))
         logger.warning("RollbackChangeSet failed", exc_info=True)
-        return _error(f"Rollback failed: {exc}")
+        return _error(f"Rollback failed: {safe_excerpt(exc)}")
     if row is None:
         return _error(f"No change set {raw_id!r} for this user.")
     return await _emit_card(row, on_change_set)

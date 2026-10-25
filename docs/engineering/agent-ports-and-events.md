@@ -1,6 +1,6 @@
 # Agent ports and the event contract
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-25
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-26
 
 **Status:** implemented. Source of truth is the code: [`ports/__init__.py`](../../backend/agents/core/ports/__init__.py) declares the ports; [`events.py`](../../backend/agents/core/events.py) holds the vocabulary and the AG-UI map.
 

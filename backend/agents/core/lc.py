@@ -280,21 +280,50 @@ def resolve_chat_model(
     # API: the credential's own shape sends it to the Codex backend. Decided
     # here, at the one seam every run passes through, so no runner knows.
     if provider is Provider.OPENAI and is_subscription_credential(api_key):
-        return build_codex_chat(
+        llm = build_codex_chat(
             model,
             api_key=api_key,
             temperature=temperature,
             **_thinking_kwargs_for(provider, model, thinking),
             **cache,
+            **_retry_kwargs(provider),
         )
-    return init_chat_model(
-        model=getattr(model, "value", model),
-        model_provider=langchain_provider(provider),
-        temperature=temperature,
-        **_thinking_kwargs_for(provider, model, thinking),
-        **cache,
-        **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
-    )
+    else:
+        llm = init_chat_model(
+            model=getattr(model, "value", model),
+            model_provider=langchain_provider(provider),
+            temperature=temperature,
+            **_thinking_kwargs_for(provider, model, thinking),
+            **cache,
+            **_retry_kwargs(provider),
+            **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
+        )
+    return _within_ducts_window(llm, model)
+
+
+def _within_ducts_window(llm: Any, model: ModelName | str) -> Any:
+    """The model's profile says the window Duct budgets, not the one published.
+
+    deepagents sizes its summariser from `model.profile["max_input_tokens"]`:
+    the trigger is 0.85 of it. The integrations publish the vendor's figure —
+    a million tokens on Opus 5.5 and Sonnet 5.5 — while Duct budgets those
+    threads at 200k (CONTEXT_WINDOW, for the reason given there: every turn
+    re-sends the whole thread), so the summariser was set to fire at ~850k,
+    past the point where a run had already failed on cost or on the budget's
+    own overflow path. Writing Duct's window into the profile makes every
+    fraction deepagents derives — trigger, keep, argument truncation — a
+    fraction of the budget. Rulebook gap 3. The rest of the profile is kept;
+    the integrations read other keys from it (output limits, modalities).
+    """
+    window = context_window_for(model)
+    profile = dict(getattr(llm, "profile", None) or {})
+    if profile.get("max_input_tokens") != window:
+        profile["max_input_tokens"] = window
+        try:
+            llm.profile = profile
+        except (AttributeError, TypeError, ValueError):  # a model class that refuses assignment
+            logger.debug("lc: could not set the window on %s's profile", model, exc_info=True)
+    return llm
 
 
 def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
@@ -324,6 +353,20 @@ def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
 # declared ChatOpenAI field, so it rides in ``model_kwargs`` and lands as a
 # top-level request parameter on both the Responses and Completions shapes.
 PROMPT_CACHE_KEY_FIELD = "prompt_cache_key"
+
+# Retry in exactly one layer: `ReportedRetryMiddleware`, which reports each
+# attempt as MODEL_RETRYING, honours Retry-After and cools the credential
+# down when it gives up. Every provider SDK retries underneath by default
+# (Anthropic and OpenAI twice, Gemini six times), invisibly: four reported
+# attempts over two silent ones each was a minute of "retrying" the UI could
+# not explain, and a dead provider took that long to fall back. Gemini's
+# SDK reads 0 as "use the default", so 1 is its "once".
+SDK_RETRIES = 0
+SDK_RETRIES_GEMINI = 1
+
+
+def _retry_kwargs(provider: Provider) -> dict:
+    return {"max_retries": SDK_RETRIES_GEMINI if provider is Provider.GOOGLE_GENAI else SDK_RETRIES}
 
 
 def _cache_kwargs(provider: Provider, cache_key: str) -> dict:
@@ -676,10 +719,12 @@ def pause_from_interrupt(item: Any) -> dict | None:
 def live_pauses(snapshot: Any) -> list[dict]:
     """The pauses a thread is still parked on, from ``aget_state``.
 
-    ``snapshot.interrupts`` is the wrong field: it keeps an interrupt whose task
-    has since completed, because the superstep's other task is still pending
-    and the checkpoint has not advanced. A pause is live only while its task
-    has no result.
+    Read off the tasks, not ``snapshot.interrupts``. A pause is live only
+    while its task has no result — until langgraph 1.2.13 (#9103) the field
+    still listed an interrupt whose task had completed while the superstep's
+    other task was pending, and the UI re-showed the answered card. The
+    field agrees now; the task result is the ground truth either way, and
+    ``pause_from_interrupt`` still has to drop interrupts that are not ours.
     """
     out: list[dict] = []
     for task in getattr(snapshot, "tasks", ()) or ():

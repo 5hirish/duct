@@ -34,6 +34,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from agents.core.compaction import compact
+from agents.core.errors import safe_excerpt
 from agents.core.telemetry import tool_span
 from agents.insights.fetchers import (
     MAX_RESPONSE_CHARS,
@@ -263,7 +264,7 @@ def build_data_tools_lc(
                 )
             except Exception as exc:  # noqa: BLE001 — a payload, never a raise
                 logger.exception("insights: FetchData(%s) failed", entity_id)
-                result = {"status": "fetch_failed", "entity_id": entity_id, "message": str(exc)[:300]}
+                result = {"status": "fetch_failed", "entity_id": entity_id, "message": safe_excerpt(exc)}
 
             if on_fetch is not None:
                 try:
@@ -278,8 +279,12 @@ def build_data_tools_lc(
             # Only a pull that worked is worth remembering — a failure should
             # be retried when the agent narrows the window or the token is
             # refreshed, not replayed.
+            # One slot per pull, under the resolved key the lookup above falls
+            # back to: storing the typed key as well held two slots per pull,
+            # so FETCH_CACHE_MAX admitted half the pulls it named and the
+            # verifier re-fetched the 45 s report the cache exists to avoid.
             if result.get("status") == "ok" and len(cache) < FETCH_CACHE_MAX:
-                cache[key] = cache[resolved] = body
+                cache[resolved] = body
             return body
 
     tools.append(

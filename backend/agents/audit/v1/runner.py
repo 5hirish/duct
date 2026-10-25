@@ -249,17 +249,19 @@ class LangChainAuditRunner:
         # built-in one; without it the research pass degrades to local signals.
         self._gemini_api_key = gemini_api_key
 
-    def _resilience(self) -> dict:
+    def _resilience(self, *, cache_key: str = "") -> dict:
         """What the shared middleware needs from this run's credential.
 
         The same one-step fallback and quota attribution insights and content
         get, so a provider outage nine categories into an audit falls back
         instead of ending the report, and a final 429 cools this key down for
-        the next run rather than every customer's.
+        the next run rather than every customer's. ``cache_key`` is the one
+        the primary model carries, so the fallback stays on the same prefix.
         """
         return {
             "fallbacks": fallback_chain(
                 self.provider, self.model, self._api_key, self._temperature,
+                cache_key=cache_key,
             ),
             "identity": credential_identity(self._api_key),
             "provider": self.provider,
@@ -281,6 +283,7 @@ class LangChainAuditRunner:
         extra_context: str = "",
         crawl_id: str | None = None,
         draft_project: bool = False,
+        document_ids: list[str] | None = None,
     ) -> Any:
         # Imported lazily only to keep the module import graph shallow; nothing
         # here pulls in another engine.
@@ -356,6 +359,34 @@ class LangChainAuditRunner:
         llm = resolve_chat_model(
             self.provider, self.model, self._api_key, self._temperature, cache_key=session_id,
         )
+
+        # The files the user added beside the site. Read before research so
+        # the competitors a deck names are the ones the research looks up.
+        from agents.audit.documents import take_documents
+
+        documents = take_documents(document_ids, owner_id=owner_id) if document_ids else []
+        if documents:
+            from agents.audit.draft import document_draft, seed_business_context_from_documents
+
+            await emit({
+                "event": _E.STEP_STARTED,
+                "step_id": AuditStep.READ_DOCUMENTS,
+                "label": STEP_LABELS[AuditStep.READ_DOCUMENTS],
+                "status": StepStatus.RUNNING,
+            })
+            from_documents = await document_draft(llm, documents)
+            if from_documents and draft_project:
+                await emit({"event": _E.PROJECT_DRAFT, **from_documents})
+            business_context = seed_business_context_from_documents(business_context, from_documents)
+            await emit({
+                "event": _E.STEP_FINISHED,
+                "step_id": AuditStep.READ_DOCUMENTS,
+                "label": STEP_LABELS[AuditStep.READ_DOCUMENTS],
+                # A call that read nothing usable is not a failed audit; the
+                # step closes either way and the draft is the site's alone.
+                "status": StepStatus.SUCCESS,
+                "payload": {"documents": len(documents), "drafted": bool(from_documents)},
+            })
 
         research_context = None
         wants_research = not lead_magnet and (draft_project or bool(
@@ -472,7 +503,7 @@ class LangChainAuditRunner:
             on_submit_report=_on_submit,
             with_data=with_data,
             **wiring,
-            **self._resilience(),
+            **self._resilience(cache_key=session_id),
         )
 
         await emit({
@@ -593,11 +624,16 @@ class LangChainAuditRunner:
         on_tool_use, on_tool_result = activity_hooks(
             emit, *recorder_tool_hooks(getattr(session, "recorder", None))
         )
+        # The thread is the conversation, as for insights and content: a
+        # session id is minted per open, so keyed on it every resume started
+        # an empty checkpoint beside its own transcript, and a turn cut by a
+        # redeploy could not be continued. The session id is only the key
+        # for a run with nothing persisted (the teaser, a local-only project).
         loop = DeepSession(
             agent,
             session=session,
             emit=emit,
-            thread_id=session_id,
+            thread_id=str(getattr(session, "conversation_id", None) or session_id),
             limits=LIMITS,
             provider=self.provider,
             model=self.model,
@@ -730,7 +766,7 @@ class LangChainAuditRunner:
             on_submit_report=_on_submit,
             with_data=with_data,
             **wiring,
-            **self._resilience(),
+            **self._resilience(cache_key=session_id),
         )
         loop = self._session_loop(
             agent, llm, session, emit, session_id,

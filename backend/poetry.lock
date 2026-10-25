@@ -1272,29 +1272,29 @@ langdetect = ["langdetect (>=1.0.0)"]
 
 [[package]]
 name = "deepagents"
-version = "0.7.23"
+version = "0.7.32"
 description = "Production-ready, extensible agent harness with a built-in filesystem and context management, sub-agent delegation, skills, and long-term memory."
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main"]
 files = [
-    {file = "deepagents-0.7.23-py3-none-any.whl", hash = "sha256:ccba4ca32e82f422e08c04b2321d135f1be321fc44ae5891b9b37a7c8bde5ca7"},
-    {file = "deepagents-0.7.23.tar.gz", hash = "sha256:03fbffec1691f72e412eb9251516a799ac3f5d3851defb4a98a49fece5675c10"},
+    {file = "deepagents-0.7.32-py3-none-any.whl", hash = "sha256:366bd66c786a66c8d639e40f99614d9e5d37236adf4c5b158f0b2cb27956e28b"},
+    {file = "deepagents-0.7.32.tar.gz", hash = "sha256:f4154281b04a499015e48c24edf11f59f833fbabd3d87e0898832e8db954aac4"},
 ]
 
 [package.dependencies]
-langchain = ">=1.4.3,<2.0.0"
-langchain-anthropic = ">=1.7.5,<2.0.0"
-langchain-core = ">=1.6.7,<2.0.0"
-langchain-google-genai = ">=4.4.0,<5.0.0"
-langsmith = ">=0.14.4"
+langchain = ">=1.4.7,<2.0.0"
+langchain-anthropic = ">=1.7.6,<2.0.0"
+langchain-core = ">=1.7.0,<2.0.0"
+langchain-google-genai = ">=4.4.2,<5.0.0"
+langsmith = ">=0.14.12"
 packaging = ">=23.2"
 wcmatch = ">=11.0"
 
 [package.extras]
-aws = ["langchain-aws (>=1.8.1,<2.0.0)"]
-quickjs = ["langchain-quickjs (>=0.3.8)"]
-video = ["av (>=18.0.0,<19.0.0)", "pillow (>=12.3.0,<13.0.0)"]
+aws = ["langchain-aws (>=1.9.0,<2.0.0)"]
+quickjs = ["langchain-quickjs (>=0.3.9)"]
+video = ["av (>=18.0.0)", "pillow (>=12.3.0)"]
 
 [[package]]
 name = "distro"
@@ -1512,18 +1512,19 @@ standard-no-fastapi-cloud-cli = ["email-validator (>=2.0.0)", "fastapi-cli[stand
 
 [[package]]
 name = "fastmcp-slim"
-version = "4.1.1"
+version = "4.1.3"
 description = "The dependency-slim FastMCP package."
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "fastmcp_slim-4.1.1-py3-none-any.whl", hash = "sha256:64bd63e8222305ab1408d11d3498bcc94dc14629f4d55fe5399ccdb496509122"},
-    {file = "fastmcp_slim-4.1.1.tar.gz", hash = "sha256:5d23d2fb7df131097fe87b642f9ad27dde72ebbbd73369c512d96cbaf505e836"},
+    {file = "fastmcp_slim-4.1.3-py3-none-any.whl", hash = "sha256:81af8699331c33d438caf85b6947f36df6e2f04118e6f318ca00374fd9afea9a"},
+    {file = "fastmcp_slim-4.1.3.tar.gz", hash = "sha256:d95277db0979e4cbfa84528cf9016ae079494b41ed8e88cc909fee8233db6035"},
 ]
 
 [package.dependencies]
 authlib = {version = ">=1.6.11", optional = true, markers = "extra == \"client\" or extra == \"server\""}
+certifi = {version = ">=2026.10.19", optional = true, markers = "extra == \"server\""}
 cyclopts = {version = ">=4.0.0", optional = true, markers = "extra == \"server\""}
 exceptiongroup = {version = ">=1.2.2", optional = true, markers = "extra == \"client\" or extra == \"server\""}
 griffelib = {version = ">=2.0.0", optional = true, markers = "extra == \"server\""}
@@ -1531,9 +1532,9 @@ httpx2 = {version = ">=2.5.0", optional = true, markers = "extra == \"client\" o
 joserfc = {version = ">=1.5.0", optional = true, markers = "extra == \"server\""}
 jsonref = {version = ">=1.1.0", optional = true, markers = "extra == \"server\""}
 jsonschema-path = {version = ">=0.3.4", optional = true, markers = "extra == \"server\""}
-mcp = {version = ">=2.0.0,<3.0.0", optional = true, markers = "extra == \"client\" or extra == \"server\""}
+mcp = {version = ">=2.2.0,<3.0.0", optional = true, markers = "extra == \"client\" or extra == \"server\""}
 mcp-types = ">=2.0.0,<3.0.0"
-openapi-pydantic = {version = ">=0.5.1", optional = true, markers = "extra == \"server\""}
+openapi-pydantic = {version = ">=0.6.0", optional = true, markers = "extra == \"server\""}
 opentelemetry-api = {version = ">=1.28.0", optional = true, markers = "extra == \"client\" or extra == \"server\""}
 packaging = {version = ">=24.0", optional = true, markers = "extra == \"server\""}
 platformdirs = ">=4.0.0"
@@ -1553,16 +1554,16 @@ watchfiles = {version = ">=1.0.0", optional = true, markers = "extra == \"server
 websockets = {version = ">=15.0.1", optional = true, markers = "extra == \"server\""}
 
 [package.extras]
-anthropic = ["anthropic (>=0.48.0,<2)"]
+anthropic = ["anthropic (>=0.48.0,<2)", "certifi (>=2026.10.19)"]
 apps = ["prefab-ui (>=0.18.0)"]
-azure = ["azure-identity (>=1.16.0)", "pyjwt (>=2.12.0)"]
-client = ["authlib (>=1.6.11)", "beartype (>=0.23.0rc2) ; python_version >= \"3.15\"", "exceptiongroup (>=1.2.2)", "httpx2 (>=2.5.0)", "mcp (>=2.0.0,<3.0.0)", "opentelemetry-api (>=1.28.0)", "py-key-value-aio[filetree,keyring,memory] (>=0.4.4,<0.5.0)", "starlette (>=1.0.1)"]
+azure = ["azure-identity (>=1.16.0)", "certifi (>=2026.10.19)", "pyjwt (>=2.12.0)"]
+client = ["authlib (>=1.6.11)", "beartype (>=0.23.0rc2) ; python_version >= \"3.15\"", "exceptiongroup (>=1.2.2)", "httpx2 (>=2.5.0)", "mcp (>=2.2.0,<3.0.0)", "opentelemetry-api (>=1.28.0)", "py-key-value-aio[filetree,keyring,memory] (>=0.4.4,<0.5.0)", "starlette (>=1.0.1)"]
 code-mode = ["pydantic-monty (>=1.1,<2)"]
-gemini = ["google-genai (>=1.18.0)", "jsonref (>=1.1.0)"]
+gemini = ["certifi (>=2026.10.19)", "google-genai (>=1.18.0)", "jsonref (>=1.1.0)"]
 jev = ["typesafe-sdk (>=0.5.7)"]
-mcp = ["exceptiongroup (>=1.2.2)", "httpx2 (>=2.5.0)", "mcp (>=2.0.0,<3.0.0)", "opentelemetry-api (>=1.28.0)", "starlette (>=1.0.1)"]
-openai = ["openai (>=1.102.0)"]
-server = ["authlib (>=1.6.11)", "beartype (>=0.23.0rc2) ; python_version >= \"3.15\"", "cyclopts (>=4.0.0)", "exceptiongroup (>=1.2.2)", "griffelib (>=2.0.0)", "httpx2 (>=2.5.0)", "joserfc (>=1.5.0)", "jsonref (>=1.1.0)", "jsonschema-path (>=0.3.4)", "mcp (>=2.0.0,<3.0.0)", "openapi-pydantic (>=0.5.1)", "opentelemetry-api (>=1.28.0)", "packaging (>=24.0)", "py-key-value-aio[filetree,keyring,memory] (>=0.4.4,<0.5.0)", "pyperclip (>=1.9.0)", "python-multipart (>=0.0.26)", "pyyaml (>=6.0,<7.0)", "starlette (>=1.0.1)", "uncalled-for (>=0.4.0)", "uvicorn (>=0.35)", "watchfiles (>=1.0.0)", "websockets (>=15.0.1)"]
+mcp = ["exceptiongroup (>=1.2.2)", "httpx2 (>=2.5.0)", "mcp (>=2.2.0,<3.0.0)", "opentelemetry-api (>=1.28.0)", "starlette (>=1.0.1)"]
+openai = ["certifi (>=2026.10.19)", "openai (>=1.102.0)"]
+server = ["authlib (>=1.6.11)", "beartype (>=0.23.0rc2) ; python_version >= \"3.15\"", "certifi (>=2026.10.19)", "cyclopts (>=4.0.0)", "exceptiongroup (>=1.2.2)", "griffelib (>=2.0.0)", "httpx2 (>=2.5.0)", "joserfc (>=1.5.0)", "jsonref (>=1.1.0)", "jsonschema-path (>=0.3.4)", "mcp (>=2.2.0,<3.0.0)", "openapi-pydantic (>=0.6.0)", "opentelemetry-api (>=1.28.0)", "packaging (>=24.0)", "py-key-value-aio[filetree,keyring,memory] (>=0.4.4,<0.5.0)", "pyperclip (>=1.9.0)", "python-multipart (>=0.0.26)", "pyyaml (>=6.0,<7.0)", "starlette (>=1.0.1)", "uncalled-for (>=0.4.0)", "uvicorn (>=0.35)", "watchfiles (>=1.0.0)", "websockets (>=15.0.1)"]
 
 [[package]]
 name = "fastuuid"
@@ -1892,22 +1893,21 @@ smmap = ">=3.0.1,<6"
 
 [[package]]
 name = "gitpython"
-version = "3.1.62"
+version = "3.2.1"
 description = "GitPython is a Python library used to interact with Git repositories"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "gitpython-3.1.62-py3-none-any.whl", hash = "sha256:7002251225e10e29d2e1f49e6532613fe5d5d9f0b6f1f02997a52b38fe56899e"},
-    {file = "gitpython-3.1.62.tar.gz", hash = "sha256:1791de66309bc0c7cfca40bf8d2e3de7ca091cbf94e6051be1ad0722c61062af"},
+    {file = "gitpython-3.2.1-py3-none-any.whl", hash = "sha256:d66b0832aa8755c1a84892937282df0befb16c97e5a64aeebd68be9c5e323f53"},
+    {file = "gitpython-3.2.1.tar.gz", hash = "sha256:0f1229ec5c057bdabdeeda8bda4f17bda679ab33dbccc00f24e6a480553c8613"},
 ]
 
 [package.dependencies]
 gitdb = ">=4.0.1,<5"
 
 [package.extras]
-doc = ["sphinx (>=7.4.7,<8)", "sphinx-autodoc-typehints", "sphinx_rtd_theme"]
-test = ["basedpyright (==1.39.9) ; python_version >= \"3.9\" and sys_platform != \"cygwin\"", "coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock ; python_version < \"3.8\"", "mypy (==1.18.2) ; python_version >= \"3.9\"", "pre-commit", "pytest (>=7.3.1)", "pytest-cov", "pytest-instafail", "pytest-mock", "pytest-sugar", "typing-extensions ; python_version < \"3.11\""]
+test = ["basedpyright (==1.39.9) ; python_version >= \"3.9\" and sys_platform != \"cygwin\"", "coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock", "mypy (==1.18.2) ; python_version >= \"3.9\"", "pre-commit", "pytest (>=7.3.1)", "pytest-cov", "pytest-instafail", "pytest-mock", "pytest-sugar", "typing-extensions ; python_version < \"3.11\""]
 
 [[package]]
 name = "giturlparse"
@@ -2144,14 +2144,14 @@ grpc = ["grpcio (>=1.44.0,<2.0.0)"]
 
 [[package]]
 name = "graphql-core"
-version = "3.2.8"
-description = "GraphQL implementation for Python, a port of GraphQL.js, the JavaScript reference implementation for GraphQL."
+version = "3.3.1"
+description = "GraphQL-core is a Python port of GraphQL.js, the JavaScript reference implementation for GraphQL."
 optional = false
-python-versions = "<4,>=3.7"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "graphql_core-3.2.8-py3-none-any.whl", hash = "sha256:cbee07bee1b3ed5e531723685369039f32ff815ef60166686e0162f540f1520c"},
-    {file = "graphql_core-3.2.8.tar.gz", hash = "sha256:015457da5d996c924ddf57a43f4e959b0b94fb695b85ed4c29446e508ed65cf3"},
+    {file = "graphql_core-3.3.1-py3-none-any.whl", hash = "sha256:43ebcd0d9a0662a71b1a2f6562ba863d253057ec11cbc45835b2e2683a0a3770"},
+    {file = "graphql_core-3.3.1.tar.gz", hash = "sha256:8d9b6f95fb66b58b260904cf9e191f422782620533ec8fa0c96ab941b6659a2a"},
 ]
 
 [[package]]
@@ -3289,19 +3289,19 @@ type = ["pygobject-stubs", "pytest-mypy (>=1.0.1)", "shtab", "types-pywin32"]
 
 [[package]]
 name = "langchain"
-version = "1.4.3"
+version = "1.4.7"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain-1.4.3-py3-none-any.whl", hash = "sha256:0334066939dd1c7551889727ed2d09a72dea7a6aed2193ffb61817fb658d8921"},
-    {file = "langchain-1.4.3.tar.gz", hash = "sha256:aed5c1a7cd581f70ddc076b75fdbcbae8031b8373983f86efd287aa70798abc2"},
+    {file = "langchain-1.4.7-py3-none-any.whl", hash = "sha256:bc40d4a9a46f0c3d75e316c0e576931fe19bceef83912a71dc1e0df781eb8f82"},
+    {file = "langchain-1.4.7.tar.gz", hash = "sha256:818275348cd707f7fbbe92ece0a725c25823140a054cf29865f420e0200fa2af"},
 ]
 
 [package.dependencies]
-langchain-core = ">=1.6.3,<2.0.0"
-langgraph = ">=1.2.11,<1.3.0"
+langchain-core = ">=1.6.13,<2.0.0"
+langgraph = ">=1.2.12,<1.3.0"
 pydantic = ">=2.7.4,<3.0.0"
 
 [package.extras]
@@ -3316,7 +3316,7 @@ google-genai = ["langchain-google-genai"]
 google-vertexai = ["langchain-google-vertexai"]
 groq = ["langchain-groq"]
 huggingface = ["langchain-huggingface"]
-mcp = ["fastmcp (>=4.0.1,<5.0.0)"]
+mcp = ["fastmcp (>=4.0.11,<5.0.0)"]
 meta = ["langchain-meta"]
 mistralai = ["langchain-mistralai"]
 ollama = ["langchain-ollama"]
@@ -3327,38 +3327,38 @@ xai = ["langchain-xai"]
 
 [[package]]
 name = "langchain-anthropic"
-version = "1.7.5"
+version = "1.7.6"
 description = "Integration package connecting Claude (Anthropic) APIs and LangChain"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_anthropic-1.7.5-py3-none-any.whl", hash = "sha256:b21ef0e0c2d6175235a5b7eef4f5f89057df92d42dbfab66920a05605ef7173a"},
-    {file = "langchain_anthropic-1.7.5.tar.gz", hash = "sha256:6016f38e5c4bf12c16ecfa76abf133a978f459f4d2887b8e28435ae1ff00beb3"},
+    {file = "langchain_anthropic-1.7.6-py3-none-any.whl", hash = "sha256:06bee97006d99e9a04abc4bd56599fc356c0c7f7f2a97629645cb603d9785c73"},
+    {file = "langchain_anthropic-1.7.6.tar.gz", hash = "sha256:e5b41959a39810e69bc608fd6622b7d5d017bde93f858b09332fbb6ac764c393"},
 ]
 
 [package.dependencies]
 anthropic = ">=0.120.0,<2.0.0"
-langchain-core = ">=1.6.6,<2.0.0"
+langchain-core = ">=1.6.10,<2.0.0"
 pydantic = ">=2.7.4,<3.0.0"
 
 [[package]]
 name = "langchain-core"
-version = "1.6.10"
+version = "1.7.0"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_core-1.6.10-py3-none-any.whl", hash = "sha256:14341bdd8b42d0dd9a53dbbcd8b0599ab47b0c718c7caa12e3eb5c50b32cffcb"},
-    {file = "langchain_core-1.6.10.tar.gz", hash = "sha256:3ad7a64eab150c1fea9f8a748b1c076aa1a960c5cf7c28d81a841a2f2dbffad1"},
+    {file = "langchain_core-1.7.0-py3-none-any.whl", hash = "sha256:e82b24d7ac51fc74874baa29d6b3c0b8234880d4f3d897f8ff57fb80dfd9b07d"},
+    {file = "langchain_core-1.7.0.tar.gz", hash = "sha256:c34e53358b103cd73f43c63f5f46f9b5c6c3467efdffcdf134892b89020494e4"},
 ]
 
 [package.dependencies]
 httpx = ">=0.23.0,<1.0.0"
 jsonpatch = ">=1.33.0,<2.0.0"
-langchain-protocol = ">=0.0.17"
-langsmith = ">=0.3.45,<1.0.0"
+langchain-protocol = ">=0.0.20"
+langsmith = ">=0.14.9,<1.0.0"
 packaging = ">=23.2.0"
 pydantic = ">=2.7.4,<3.0.0"
 pyyaml = ">=5.3.0,<7.0.0"
@@ -3368,37 +3368,37 @@ uuid-utils = ">=0.12.0,<1.0"
 
 [[package]]
 name = "langchain-google-genai"
-version = "4.4.0"
+version = "4.4.2"
 description = "An integration package connecting Google's genai package and LangChain"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_google_genai-4.4.0-py3-none-any.whl", hash = "sha256:8e23a1307bd2158590bbf9d99f1d658fc84a9d9ddb77fb1b372f8875a2bafbbf"},
-    {file = "langchain_google_genai-4.4.0.tar.gz", hash = "sha256:7871beec56ac07b719f77c46997845db6ff2267b817bffb0f97877053b0895d7"},
+    {file = "langchain_google_genai-4.4.2-py3-none-any.whl", hash = "sha256:db68bd24e5372b2688f6902e47521a6802bfecc36e2d5bbff14076f8cbb26c83"},
+    {file = "langchain_google_genai-4.4.2.tar.gz", hash = "sha256:0872df6de1ebf031c4dad59aead504f168ff31a4d73ea74e52bb1fcdb8f4ab91"},
 ]
 
 [package.dependencies]
 filetype = ">=1.2.0,<2.0.0"
 google-genai = ">=2.20.0,<3.0.0"
-langchain-core = ">=1.6.1,<2.0.0"
+langchain-core = ">=1.6.10,<2.0.0"
 pydantic = ">=2.0.0,<3.0.0"
 
 [[package]]
 name = "langchain-openai"
-version = "1.6.7"
+version = "1.7.2"
 description = "An integration package connecting OpenAI and LangChain"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_openai-1.6.7-py3-none-any.whl", hash = "sha256:e1b9b318fafc47b2dbc3485778aa23f809195065ee313611c188af29744b8e8e"},
-    {file = "langchain_openai-1.6.7.tar.gz", hash = "sha256:b276a01b43c5287382f62070a4e1ca5bad5581fadab8c086e46b79daa4bf975d"},
+    {file = "langchain_openai-1.7.2-py3-none-any.whl", hash = "sha256:9be7980edf355ca2dd595b795a5125836ccf04515ef9377228913246156e59f5"},
+    {file = "langchain_openai-1.7.2.tar.gz", hash = "sha256:e1fcbc7a96f7c8c94679d61639a979bba88f27889c0a68dfa225b8057345328d"},
 ]
 
 [package.dependencies]
 certifi = ">=2024.6.2"
-langchain-core = ">=1.6.6,<2.0.0"
+langchain-core = ">=1.6.10,<2.0.0"
 openai = ">=2.45.0,<4.0.0"
 tiktoken = ">=0.7.0,<1.0.0"
 
@@ -3423,14 +3423,14 @@ openrouter = ">=0.9.2,<1.0.0"
 
 [[package]]
 name = "langchain-protocol"
-version = "0.0.17"
+version = "0.0.20"
 description = "Python bindings for the LangChain agent streaming protocol"
 optional = false
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
 files = [
-    {file = "langchain_protocol-0.0.17-py3-none-any.whl", hash = "sha256:982a08fe152586ed10d4ff3d538c2e0b5766e5f307cdea325e10be3f2c17cae6"},
-    {file = "langchain_protocol-0.0.17.tar.gz", hash = "sha256:e7cbe58c205df4b4fd87dc6d5bb23f10e13b236d0e2e1b0b9d05bc2b648f3eea"},
+    {file = "langchain_protocol-0.0.20-py3-none-any.whl", hash = "sha256:3c935e5e46b0f6f9cb52f45ba7cfa53d1b9fa80c82c4a277d47f03e07f7385b1"},
+    {file = "langchain_protocol-0.0.20.tar.gz", hash = "sha256:0f5bd002474265648e91161771a9e0438fe9480bd55a416e51af0f60070637ec"},
 ]
 
 [package.dependencies]
@@ -3456,34 +3456,34 @@ requests = ">=2.0.0,<3.0.0"
 
 [[package]]
 name = "langgraph"
-version = "1.2.12"
+version = "1.2.17"
 description = "Building stateful, multi-actor applications with LLMs"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "langgraph-1.2.12-py3-none-any.whl", hash = "sha256:95403af7b510de8d79164742f71daaf866c69ca804a8cb72bef2cc1fa1ab9813"},
-    {file = "langgraph-1.2.12.tar.gz", hash = "sha256:5fae9fa4ce771e90f10ff19ce0d5aaef4b41d7632c713d769e89cbce1241a4b9"},
+    {file = "langgraph-1.2.17-py3-none-any.whl", hash = "sha256:e022a9fea64631fed946557a23f3fa5ac2ff38c72dcb999f426fc77d55ccde60"},
+    {file = "langgraph-1.2.17.tar.gz", hash = "sha256:311516e313abd5424596d6c5250507c89be2e1973cbe813061696728803b0e10"},
 ]
 
 [package.dependencies]
 langchain-core = ">=1.4.7,<2"
-langgraph-checkpoint = ">=4.1.0,<5.0.0"
+langgraph-checkpoint = ">=4.3.0,<5.0.0"
 langgraph-prebuilt = ">=1.1.0,<1.2.0"
-langgraph-sdk = ">=0.4.2,<0.5.0"
+langgraph-sdk = ">=0.4.6,<0.5.0"
 pydantic = ">=2.7.4"
 xxhash = ">=3.5.0"
 
 [[package]]
 name = "langgraph-checkpoint"
-version = "4.1.1"
+version = "4.3.0"
 description = "Library with base interfaces for LangGraph checkpoint savers."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "langgraph_checkpoint-4.1.1-py3-none-any.whl", hash = "sha256:25d29144b082827218e7bc3f1e9b0566a4bb007895cd6cc26f66a8428739f56e"},
-    {file = "langgraph_checkpoint-4.1.1.tar.gz", hash = "sha256:6c2bdb530c91f91d7d9c1bd100925d0fc4f498d418c17f3587d1526279482a25"},
+    {file = "langgraph_checkpoint-4.3.0-py3-none-any.whl", hash = "sha256:bedfafe2f997ded60e4fa593e79f56f436a6e45586392dc382aa810d0c751c64"},
+    {file = "langgraph_checkpoint-4.3.0.tar.gz", hash = "sha256:c75965d84cc2c1d549163e910a15bcb577758001b141619d05297c463280b018"},
 ]
 
 [package.dependencies]
@@ -3492,37 +3492,37 @@ ormsgpack = ">=1.12.0"
 
 [[package]]
 name = "langgraph-checkpoint-postgres"
-version = "3.1.2"
+version = "3.2.0"
 description = "Library with a Postgres implementation of LangGraph checkpoint saver."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "langgraph_checkpoint_postgres-3.1.2-py3-none-any.whl", hash = "sha256:6a7e38ef16985b54e356cba7bdaf447943aae33d5aaf290026c593bb6b4a6264"},
-    {file = "langgraph_checkpoint_postgres-3.1.2.tar.gz", hash = "sha256:1cd404803ff895a2b79f3ac04ce92b775e6b999715f8333fce674c6d927bba95"},
+    {file = "langgraph_checkpoint_postgres-3.2.0-py3-none-any.whl", hash = "sha256:4d89526ab3dff0c71d575233e4132327f95812deb07b6c2e75fc473525b5b8fc"},
+    {file = "langgraph_checkpoint_postgres-3.2.0.tar.gz", hash = "sha256:dffef0e6822d7c614019f7f2c4bdbef42859746aee2d3e6d9d9747cf3744ca90"},
 ]
 
 [package.dependencies]
-langgraph-checkpoint = ">=4.1.0,<5.0.0"
+langgraph-checkpoint = ">=4.3.0,<5.0.0"
 orjson = ">=3.11.5"
 psycopg = ">=3.2.0"
 psycopg-pool = ">=3.2.0"
 
 [[package]]
 name = "langgraph-checkpoint-sqlite"
-version = "3.1.1"
+version = "3.1.2"
 description = "Library with a SQLite implementation of LangGraph checkpoint saver."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "langgraph_checkpoint_sqlite-3.1.1-py3-none-any.whl", hash = "sha256:8505c54c94a658080525d7e6780fdd4e0c078ff2566b30d399c02cc9f9af1c63"},
-    {file = "langgraph_checkpoint_sqlite-3.1.1.tar.gz", hash = "sha256:6fcb20db4c37ef7aad52f29b539eb98c38e2dad6fab7c2446a2a9db24f37a70e"},
+    {file = "langgraph_checkpoint_sqlite-3.1.2-py3-none-any.whl", hash = "sha256:249640b84efd4872585a9ce596a63c2593e543f748341791591aeaf4c878329c"},
+    {file = "langgraph_checkpoint_sqlite-3.1.2.tar.gz", hash = "sha256:4e3f376fa6f192d6ad2a1a4643b039986f1593552ef870e9e45281575de6fbf2"},
 ]
 
 [package.dependencies]
 aiosqlite = ">=0.20"
-langgraph-checkpoint = ">=4.1.0,<5.0.0"
+langgraph-checkpoint = ">=4.3.0,<5.0.0"
 sqlite-vec = ">=0.1.6"
 
 [[package]]
@@ -3543,14 +3543,14 @@ langgraph-checkpoint = ">=2.1.0,<5.0.0"
 
 [[package]]
 name = "langgraph-sdk"
-version = "0.4.4"
+version = "0.4.9"
 description = "SDK for interacting with LangGraph API"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "langgraph_sdk-0.4.4-py3-none-any.whl", hash = "sha256:39afe416c91742925e6f8a93715f566d499b36e1b636b804a4ffe3190e4f4e64"},
-    {file = "langgraph_sdk-0.4.4.tar.gz", hash = "sha256:4e651ffa09de695681579396375377bdde23bedbc8e35b070e615cbd5af7da8b"},
+    {file = "langgraph_sdk-0.4.9-py3-none-any.whl", hash = "sha256:c009243f4784758a07287fb2fd21fe47381c3d85f30479df2ae7f345c8703bb1"},
+    {file = "langgraph_sdk-0.4.9.tar.gz", hash = "sha256:24d775ac1382b94c2595b8eb4eb4e0aa8dde95c905f18e017dc6574e1d79070d"},
 ]
 
 [package.dependencies]
@@ -3558,37 +3558,38 @@ httpx = ">=0.25.2"
 langchain-core = ">=1.4.0,<2"
 langchain-protocol = ">=0.0.15"
 orjson = ">=3.11.5"
-websockets = ">=14,<17"
+websockets = ">=14"
 
 [[package]]
 name = "langsmith"
-version = "0.14.7"
+version = "0.14.12"
 description = "Client library to connect to the LangSmith Observability and Evaluation Platform."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "langsmith-0.14.7-py3-none-any.whl", hash = "sha256:748538d163cd073879106837d7f0892f34849655ba43cbb5aa5e21509e24423d"},
-    {file = "langsmith-0.14.7.tar.gz", hash = "sha256:10ead0e0134ae2ee49371091e9d996e7f32a6103bc35860d55c26ee42d975bee"},
+    {file = "langsmith-0.14.12-py3-none-any.whl", hash = "sha256:9dafba7f615afa77204dc8afbb9c803e4ba1b55e96249f12c8f9aafb23fae6d0"},
+    {file = "langsmith-0.14.12.tar.gz", hash = "sha256:b4d6a24ed74333095da476803ad9d22ee35f9dae1052cebf1e366d3889a9b675"},
 ]
 
 [package.dependencies]
-anyio = ">=3.5.0"
-distro = ">=1.7.0"
+anyio = ">=3.5.0,<5"
+distro = ">=1.7.0,<2"
 httpx2 = ">=2,<3"
 orjson = {version = ">=3.9.14", markers = "platform_python_implementation != \"PyPy\""}
 packaging = ">=23.2"
 pydantic = ">=2,<3"
 requests = ">=2.0.0"
 requests-toolbelt = ">=1.0.0"
-sniffio = ">=1.1"
-typing-extensions = ">=4.0.0"
+sniffio = "*"
+typing-extensions = ">=4.14,<5"
 uuid-utils = ">=0.12.0,<1.0"
 websockets = ">=15.0"
 xxhash = ">=3.0.0"
 zstandard = ">=0.23.0"
 
 [package.extras]
+aiohttp = ["aiohttp (>=3.14.3,<4)", "httpx-aiohttp (>=0.1.9)"]
 claude-agent-sdk = ["claude-agent-sdk (>=0.1.0) ; python_version >= \"3.10\""]
 gemini-live = ["google-genai (>=1.75)"]
 google-adk = ["google-adk (>=1.0.0)", "wrapt (>=1.16.0)"]
@@ -4412,14 +4413,14 @@ voice-helpers = ["numpy (>=2.0.2)", "sounddevice (>=0.5.1)"]
 
 [[package]]
 name = "openapi-pydantic"
-version = "0.5.1"
-description = "Pydantic OpenAPI schema implementation"
+version = "0.6.0"
+description = "Modern, type-safe OpenAPI schemas in Python using Pydantic 1.8+ and 2.x"
 optional = false
-python-versions = "<4.0,>=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "openapi_pydantic-0.5.1-py3-none-any.whl", hash = "sha256:a3a09ef4586f5bd760a8df7f43028b60cafb6d9f61de2acba9574766255ab146"},
-    {file = "openapi_pydantic-0.5.1.tar.gz", hash = "sha256:ff6835af6bde7a459fb93eb93bb92b8749b754fc6e51b2f1590a19dc3005ee0d"},
+    {file = "openapi_pydantic-0.6.0-py3-none-any.whl", hash = "sha256:8bd6d548a250da37db96f461bcd52b3468e8834ad7d6db14b00a6b2ebbd163a3"},
+    {file = "openapi_pydantic-0.6.0.tar.gz", hash = "sha256:11f3ac6ad41521fc156381ec587246b0c0ecea523bd9565ed74d3e7fac9d91cd"},
 ]
 
 [package.dependencies]
@@ -6138,6 +6139,29 @@ files = [
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
+name = "pypdf"
+version = "6.21.2"
+description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "pypdf-6.21.2-py3-none-any.whl", hash = "sha256:1d44d1a3a200f25062adff0085b02040e4646431ac2ccac22e42679e91466084"},
+    {file = "pypdf-6.21.2.tar.gz", hash = "sha256:0a3e1c5c886a1be03646c16a04827cc166c2a0575c971b26a4bf89686551c2d4"},
+]
+
+[package.extras]
+brotli = ["brotli (>=1.2.0)"]
+crypto = ["cryptography (>3.0)"]
+cryptodome = ["PyCryptodome"]
+dev = ["flit", "pip-tools", "pre-commit", "pytest-cov", "pytest-socket", "pytest-timeout", "pytest-xdist", "wheel"]
+docs = ["myst_parser", "sphinx", "sphinx_rtd_theme"]
+fonts = ["fonttools"]
+full = ["Pillow (>=8.0.0)", "arabic-reshaper", "brotli (>=1.2.0)", "cryptography (>3.0)", "fonttools", "python-bidi"]
+image = ["Pillow (>=8.0.0)"]
+rtl-text = ["arabic-reshaper", "python-bidi"]
+
+[[package]]
 name = "pyperclip"
 version = "1.11.0"
 description = "A cross-platform clipboard module for Python. (Only handles plain text for now.)"
@@ -7221,23 +7245,23 @@ unleash = ["UnleashClient (>=6.0.1)"]
 
 [[package]]
 name = "setuptools"
-version = "83.0.0"
+version = "84.2.1"
 description = "Most extensible Python build backend with support for C/C++ extension modules"
 optional = false
 python-versions = ">=3.10"
 groups = ["main", "dev"]
 files = [
-    {file = "setuptools-83.0.0-py3-none-any.whl", hash = "sha256:29b23c360f22f414dc7336bb39178cc7bcbf6021ed2733cde173f09dba19abb3"},
-    {file = "setuptools-83.0.0.tar.gz", hash = "sha256:025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef"},
+    {file = "setuptools-84.2.1-py3-none-any.whl", hash = "sha256:ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2"},
+    {file = "setuptools-84.2.1.tar.gz", hash = "sha256:3ff8b3b5492a0aa66960f4419365a86b84e013070d4313e4d4a6894f5d64d6bc"},
 ]
 
 [package.extras]
 check = ["pytest-checkdocs (>=2.14)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\"", "ruff (>=0.13.0) ; sys_platform != \"cygwin\""]
-core = ["importlib_metadata (>=6) ; python_version < \"3.10\"", "jaraco.functools (>=4)", "jaraco.text (>=3.7)", "more_itertools", "more_itertools (>=8.8)", "packaging (>=24.2)", "tomli (>=2.0.1) ; python_version < \"3.11\"", "wheel (>=0.43.0)"]
+core = ["importlib_metadata (>=6) ; python_version < \"3.10\"", "jaraco.functools (>=4)", "jaraco.text (>=3.7)", "more_itertools", "more_itertools (>=8.8)", "packaging (>=26.3)", "tomli (>=2.0.1) ; python_version < \"3.11\"", "wheel (>=0.43.0)"]
 cover = ["pytest-cov"]
 doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
 enabler = ["pytest-enabler (>=3.4)"]
-test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21) ; python_version >= \"3.9\" and sys_platform != \"cygwin\"", "jaraco.envs (>=2.2)", "jaraco.path (>=3.7.2)", "jaraco.test (>=5.5)", "packaging (>=24.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf ; sys_platform != \"cygwin\"", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
+test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21) ; python_version >= \"3.9\" and sys_platform != \"cygwin\"", "jaraco.envs (>=2.2)", "jaraco.path (>=3.7.2)", "jaraco.test (>=5.5)", "packaging (>=26.3)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf ; sys_platform != \"cygwin\"", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
 type = ["importlib_metadata (>=7.0.2) ; python_version < \"3.10\"", "jaraco.develop (>=7.21) ; sys_platform != \"cygwin\"", "mypy (==1.18.*)", "pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 
 [[package]]
@@ -8894,4 +8918,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "5a859a29537207de94f805e9cdb1bb3ce7401cd87189da4af8004c38dc7f5450"
+content-hash = "9b0d335eb13f677aa6849b4a6da0175157a70b60ecf744c4bcf8af5bc60216d6"

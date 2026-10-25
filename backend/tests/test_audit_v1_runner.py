@@ -361,6 +361,80 @@ async def test_a_drafting_run_uses_the_prefetched_crawl_and_emits_two_draft_laye
     assert order.index(AgentEvent.PROJECT_DRAFT) < order.index(AgentEvent.ARTIFACT_VERSION)
 
 
+class _ReadsDocumentsFake(_DraftingFake):
+    """The drafting fake, answering the documents call with its own schema."""
+
+    def with_structured_output(self, schema, **kwargs):
+        from agents.audit.draft import DocumentCompetitor, DocumentInference
+
+        if schema is not DocumentInference:
+            return super().with_structured_output(schema, **kwargs)
+
+        class _Once:
+            async def ainvoke(self, _prompt):
+                return DocumentInference(
+                    name="Duct", industry="Marketing & Advertising",
+                    competitors=[DocumentCompetitor(name="Supermetrics", differentiator="checks the numbers")],
+                )
+
+        return _Once()
+
+
+async def test_documents_are_read_before_research_and_draft_between_the_site_and_the_guess(
+    emitted, monkeypatch
+):
+    """The files the user added beside the site become their own draft layer,
+    after the crawl's and before the classifier's, and the step that reads
+    them runs before competitor research so the research hears the names."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.documents as documents
+    import agents.audit.prefetch as prefetch
+    import agents.audit.v1.runner as v1
+    from agents.audit.schema import PageSignals
+    from agents.core.context import BusinessContext
+    from service.documents import DocumentKind, Extracted
+
+    session = audit_crawl.create_audit_session(str(uuid.uuid4()))
+    root = PageSignals(url="https://getduct.ai", page_type="landing_page", title="Duct")
+    crawled = CrawlResult(plan=CrawlPlan(root_url="https://getduct.ai", landing_pages=[root.url]), pages=[root])
+
+    async def prefetched(_crawl_id, **_kwargs):
+        return crawled
+
+    asked: list[list[str]] = []
+
+    def take(ids, **_kwargs):
+        asked.append(ids)
+        return [Extracted(name="deck.pdf", kind=DocumentKind.PDF, text="Duct vs Supermetrics", pages=8, truncated=False)]
+
+    monkeypatch.setattr(prefetch, "take_crawl", prefetched)
+    monkeypatch.setattr(documents, "take_documents", take)
+    monkeypatch.setattr(
+        v1, "resolve_chat_model",
+        lambda *_a, **_k: _ReadsDocumentsFake(responses=_model_that_builds_a_template_report().responses),
+    )
+
+    await v1.LangChainAuditRunner(api_key="unused-no-network").run_pipeline(
+        session_id=session.session_id, url="https://getduct.ai",
+        business_context=BusinessContext(), emit=emitted, report_mode="template",
+        crawl_id="prefetched-1", draft_project=True, document_ids=["doc-1"],
+        chat_idle_timeout=0.1,
+    )
+
+    assert asked == [["doc-1"]]
+    drafts = [e for e in emitted.events if e["event"] == AgentEvent.PROJECT_DRAFT]
+    assert [d["layer"] for d in drafts] == ["crawl", "documents", "inferred"]
+    from_documents = drafts[1]["fields"]
+    assert from_documents["industry"] == {"value": "Marketing & Advertising", "provenance": "document"}
+    assert from_documents["competitors"]["value"][0]["name"] == "Supermetrics"
+
+    finished = [e for e in emitted.events if e["event"] == AgentEvent.STEP_FINISHED]
+    steps = [e["step_id"] for e in finished]
+    assert steps.index(AuditStep.READ_DOCUMENTS) < steps.index(AuditStep.ENRICHING)
+    read = next(e for e in finished if e["step_id"] == AuditStep.READ_DOCUMENTS)
+    assert read["payload"] == {"documents": 1, "drafted": True}
+
+
 # ---------------------------------------------------------------------------
 # Provider content shapes
 # ---------------------------------------------------------------------------
@@ -662,3 +736,45 @@ def test_an_in_depth_audit_keeps_the_data_it_read_while_it_writes_the_report():
 def test_a_long_follow_up_chat_is_still_pruned():
     cleared = _prune(_audit_messages(data_chars=40_000, follow_ups=10))
     assert cleared, "the trigger must still fire once a chat grows"
+
+
+def test_the_audit_thread_is_keyed_on_the_conversation(emitted, monkeypatch):
+    """A session id is minted per open. Keyed on it, every resume of a
+    project-scoped audit started an empty checkpoint beside its own
+    transcript — the failure the checkpointer was added to prevent. The
+    conversation outlives the session, so it is the thread."""
+    from uuid import uuid4
+
+    import agents.audit.v1.runner as v1
+
+    seen: dict = {}
+
+    class _Loop:
+        def __init__(self, agent, **kwargs):
+            seen.update(kwargs)
+            self.opened = False
+
+    monkeypatch.setattr(v1, "DeepSession", _Loop)
+    runner = v1.LangChainAuditRunner(api_key="unused-no-network")
+    conversation_id = uuid4()
+
+    with_conversation = BaseAgentSession(
+        session_id="audit-open-2", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    )
+    with_conversation.conversation_id = conversation_id
+    runner._session_loop(
+        object(), object(), with_conversation, emitted, "audit-open-2",
+        on_artifact_close=lambda *_a, **_k: None, announce_finish=True,
+    )
+    assert seen["thread_id"] == str(conversation_id)
+
+    ephemeral = BaseAgentSession(
+        session_id="audit-teaser", agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    )
+    runner._session_loop(
+        object(), object(), ephemeral, emitted, "audit-teaser",
+        on_artifact_close=lambda *_a, **_k: None, announce_finish=True,
+    )
+    assert seen["thread_id"] == "audit-teaser"

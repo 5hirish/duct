@@ -372,3 +372,101 @@ def test_the_apps_draft_channels_are_the_backends_playbooks():
         for name, flag in re.findall(r"\{\s*id:\s*Platform\.(\w+),\s*textFirst:\s*(true|false)\s*\}", block)
     }
     assert app == {str(p): PLAYBOOKS[p] in TEXT_PLAYBOOKS for p in PLAYBOOKS}
+
+
+# ---------------------------------------------------------------------------
+# The asset listing is bounded
+# ---------------------------------------------------------------------------
+
+def test_the_asset_listing_is_newest_first_and_bounded(engine, db, project, monkeypatch):
+    """A project a few months old holds hundreds of assets, each with its
+    params blob; the unbounded listing was the content agent's largest tool
+    result, pruned only once the window filled."""
+    from models.content import ContentAsset
+
+    for i in range(60):
+        db.add(ContentAsset(project_id=project.id, asset_type="generated", url=f"https://cdn.example/{i}.png"))
+    db.commit()
+    session = make_session("assets-1", project.id, "draft_post")
+    tools = _tools(session, engine, monkeypatch)
+
+    result = json.loads(asyncio.run(tools["fetch_content_assets"].ainvoke({"asset_type": "generated"})))
+
+    assert len(result["assets"]) == 50
+    assert result["truncated"] is True
+    assert result["assets"][0]["url"].endswith("/59.png")
+
+    few = json.loads(asyncio.run(tools["fetch_content_assets"].ainvoke({"asset_type": "generated", "limit": 5})))
+    assert len(few["assets"]) == 5
+
+
+# ---------------------------------------------------------------------------
+# Publishing is not repeatable: PostBridge holds one post per row
+# ---------------------------------------------------------------------------
+#
+# A second create uploaded the media again, made a second PostBridge post and
+# overwrote the id on the row, so every later edit, unschedule and delete
+# reached the second post while the first went out untouched. The model calls
+# publish_post once per channel in a thread, or again after an ambiguous
+# error; the route has the same hole from a double click.
+
+def test_the_agent_cannot_publish_a_post_postbridge_already_holds(engine, db, project, wire, monkeypatch):
+    post = _text_post(db, project)
+    session = make_session("text-6", project.id, "draft_post")
+    tools = _tools(session, engine, monkeypatch)
+    args = {"post_id": str(post.id), "social_account_ids": [101], "scheduled_at": WHEN.isoformat()}
+
+    first = json.loads(asyncio.run(tools["publish_post"].ainvoke(args)))
+    second = json.loads(asyncio.run(tools["publish_post"].ainvoke(args)))
+
+    assert first["status"] == "scheduled", first
+    assert second["status"] == "error" and "already scheduled" in second["message"], second
+    assert [r.url.path for r in wire.requests] == ["/v1/posts"], "one create, not two"
+    db.refresh(post)
+    assert post.post_bridge_post_id == "pb_post_1"
+
+
+def test_the_route_refuses_a_second_publish_too(db, project, owner, wire):
+    post = _text_post(db, project)
+    api = _api(db, owner)
+    body = {"social_account_ids": [101], "scheduled_at": WHEN.isoformat()}
+
+    assert api.post(f"/api/content/posts/{post.id}/publish", json=body).status_code == 200
+    second = api.post(f"/api/content/posts/{post.id}/publish", json=body)
+
+    assert second.status_code == 400
+    assert "already scheduled" in second.json()["detail"]
+    assert [r.url.path for r in wire.requests] == ["/v1/posts"]
+
+
+def test_a_post_that_went_out_is_not_published_again(engine, db, project, wire, monkeypatch):
+    post = _text_post(db, project)
+    post.status = "posted"
+    db.add(post)
+    db.commit()
+    session = make_session("text-7", project.id, "draft_post")
+    tools = _tools(session, engine, monkeypatch)
+
+    result = json.loads(asyncio.run(tools["publish_post"].ainvoke({
+        "post_id": str(post.id), "social_account_ids": [101],
+    })))
+
+    assert result["status"] == "error" and "already went out" in result["message"]
+    assert wire.requests == []
+
+
+def test_marking_a_queued_post_as_posted_by_hand_is_refused(engine, db, project, wire, monkeypatch):
+    """PostBridge publishes at the scheduled time whatever the row says; a
+    hand mark would leave the post to go out a second time."""
+    post = _text_post(db, project)
+    session = make_session("text-8", project.id, "draft_post")
+    tools = _tools(session, engine, monkeypatch)
+    asyncio.run(tools["publish_post"].ainvoke({
+        "post_id": str(post.id), "social_account_ids": [101], "scheduled_at": WHEN.isoformat(),
+    }))
+
+    result = json.loads(asyncio.run(tools["mark_posted"].ainvoke({"post_id": str(post.id)})))
+
+    assert result["status"] == "error" and "queued at PostBridge" in result["message"]
+    db.refresh(post)
+    assert post.status == "scheduled"

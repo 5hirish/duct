@@ -13,7 +13,7 @@
 // The water in the aqueduct strip is the state: it reaches an arch when that
 // step's data does.
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, ArrowRight, Check, ClipboardCheck, FolderOpen, Globe, Sparkles } from "lucide-react";
@@ -31,9 +31,17 @@ import { modelPayload } from "@/lib/modelTiers";
 import { PROJECT_EXISTING, PROJECT_NEW, openAuditSession } from "@/lib/auditSession";
 import { hydrateProjectsFromBackend, projectsForSite } from "@/lib/projects";
 import { ensureGuest, isSignedInUser } from "../../../lib/guest";
-import { prefetchSite, prefetchStatus } from "../../../lib/onboardingApi";
+import {
+  DocumentError,
+  localDocumentError,
+  prefetchSite,
+  prefetchStatus,
+  uploadDocuments,
+} from "../../../lib/onboardingApi";
 import { applyProjectDraft } from "../../../lib/projectDraft";
+import { randomId } from "../../../lib/randomId";
 import Aqueduct, { STEP_ACTIVE, STEP_DONE, STEP_DRY, STEP_TODO } from "../../../components/onboarding/Aqueduct";
+import DocumentPicker, { DocumentState } from "../../../components/onboarding/DocumentPicker";
 import ProviderStep from "../../../components/onboarding/ProviderStep";
 import TesseraBurst from "../../../components/onboarding/TesseraBurst";
 
@@ -78,6 +86,10 @@ function StartPageContent() {
   const [target, setTarget] = useState({ mode: PROJECT_NEW });
   const [project, setProject] = useState(null);
   const [verified, setVerified] = useState(null); // provider verdict, or { skipped: true }
+  // Files added beside the site, each read on upload; the audit gets the ids
+  // of the ones that were. They outlive "try another": a deck is about the
+  // business, not about whichever address was typed first.
+  const [documents, setDocuments] = useState([]);
   const [signedIn, setSignedIn] = useState(false);
   const pollRef = useRef(null);
   // StrictMode double-invokes mount effects in dev; without this a `?url=`
@@ -171,6 +183,42 @@ function StartPageContent() {
     [t, url],
   );
 
+  // ── Documents beside the site ──────────────────────────────────────────
+  // A file the browser can already refuse never uploads; the rest go in one
+  // request and come back one result each, in order.
+  async function addDocuments(files) {
+    const rows = files.map((file) => {
+      const error = localDocumentError(file);
+      return { key: randomId(), name: file.name, state: error ? DocumentState.FAILED : DocumentState.READING, error };
+    });
+    setDocuments((prev) => [...prev, ...rows]);
+    const sending = rows.filter((row) => row.state === DocumentState.READING);
+    if (!sending.length) return;
+    const byKey = new Map();
+    try {
+      const results = await uploadDocuments(files.filter((file) => !localDocumentError(file)));
+      sending.forEach((row, i) => {
+        const result = results[i] || { error: DocumentError.UPLOAD_FAILED };
+        byKey.set(row.key, result.error
+          ? { state: DocumentState.FAILED, error: result.error }
+          : { state: DocumentState.READY, id: result.id, pages: result.pages, truncated: result.truncated });
+      });
+    } catch {
+      sending.forEach((row) => byKey.set(row.key, { state: DocumentState.FAILED, error: DocumentError.UPLOAD_FAILED }));
+    }
+    setDocuments((prev) => prev.map((doc) => (byKey.has(doc.key) ? { ...doc, ...byKey.get(doc.key) } : doc)));
+  }
+
+  function removeDocument(key) {
+    setDocuments((prev) => prev.filter((doc) => doc.key !== key));
+  }
+
+  const documentIds = useMemo(
+    () => documents.filter((doc) => doc.state === DocumentState.READY).map((doc) => doc.id),
+    [documents],
+  );
+  const documentsReading = documents.some((doc) => doc.state === DocumentState.READING);
+
   function tryAnother() {
     clearInterval(pollRef.current);
     setCrawl(null);
@@ -235,6 +283,7 @@ function StartPageContent() {
         template_id: DEFAULT_AUDIT_TEMPLATE_ID,
         crawl_id: crawl.crawl_id,
         draft_project: true,
+        ...(documentIds.length ? { document_ids: documentIds } : {}),
         ...(modelPayload()?.tiers ? { tiers: modelPayload().tiers } : {}),
       };
       // Client-only, never sent: the card to show first, and whether this run
@@ -245,10 +294,13 @@ function StartPageContent() {
         projectMode: committedMode,
         projectName: project?.name || "",
       });
-      trackEvent(AnalyticsEvent.OnboardingAuditStarted, { [AnalyticsParam.Ok]: skipped ? "false" : "true" });
+      trackEvent(AnalyticsEvent.OnboardingAuditStarted, {
+        [AnalyticsParam.Ok]: skipped ? "false" : "true",
+        [AnalyticsParam.Documents]: String(documentIds.length),
+      });
       router.push(`/audit/seo/${sessionId}`);
     },
-    [committedMode, crawl, project, router],
+    [committedMode, crawl, documentIds, project, router],
   );
 
   function onVerified(verdict) {
@@ -460,6 +512,8 @@ function StartPageContent() {
                 </p>
               )}
 
+              <DocumentPicker documents={documents} onAdd={addDocuments} onRemove={removeDocument} />
+
               {target.mode === PROJECT_EXISTING && (
                 <div className="start-project" role="status">
                   <FolderOpen className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -511,6 +565,8 @@ function StartPageContent() {
                   <Button
                     type="button"
                     size="lg"
+                    // A file still being read would miss the audit; it takes a second.
+                    disabled={documentsReading}
                     onClick={() =>
                       commitProject({ projectId: target.mode === PROJECT_EXISTING ? target.project.id : null })
                     }

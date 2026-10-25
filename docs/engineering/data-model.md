@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-25
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-26
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -45,7 +45,8 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | `users` | one row per person (or per desktop install, for a guest); user-scope switches like `memory_paused` |
 | `auth_identities` | how a user signs in: Google, guest install, or a linked ChatGPT account (a merge key, never a login alone) |
 | `oauth_states` | short-lived OAuth `state` values, single-use, with an expiry |
-| `projects` | the unit everything else hangs off: settings, `autonomy_level`, `memory_paused` |
+| `mcp_tokens` | personal tokens an outside agent sends to Duct's MCP server; a hash and a four-character hint, never the token, and accepted on `/mcp` only |
+| `projects` | the unit everything else hangs off: settings, `autonomy_level`, `memory_paused`, and `provenance` (where each drafted field came from) |
 | `project_members` | who can see a project. Authorization is membership, not `projects.user_id` |
 | `project_invitations` | pending email invites into a project |
 | `user_profile` | who the operator is and how they want to be written to |
@@ -55,7 +56,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 
 | Table | Holds |
 |---|---|
-| `connector_credentials` | a user's connection to one provider account (OAuth refresh token or key), with `residency` (server or device); also each connected MCP server (`connector_type = "mcp"`, `account_id` = its URL) |
+| `connector_credentials` | a user's connection to one provider account (OAuth refresh token or key), with `residency` (server or device) |
 | `project_connectors` | which credential a project uses, and which entity inside it (GA4 property, GSC site, GTM container) |
 
 ### Agents and conversations

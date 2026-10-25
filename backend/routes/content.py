@@ -1339,7 +1339,9 @@ def get_post(
     active_conversation_id = None
     try:
         from agents.content.persistence import find_active_conversation
-        conv = find_active_conversation(db, artifact_type="post", artifact_id=post.id)
+        conv = find_active_conversation(
+            db, artifact_type="post", artifact_id=post.id, project_id=post.project_id
+        )
         active_conversation_id = conv.id if conv else None
     except Exception:
         db.rollback()

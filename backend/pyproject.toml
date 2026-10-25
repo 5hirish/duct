@@ -40,11 +40,18 @@ google-genai = "^2.27"
 python-dotenv = "^1.2"
 pydantic = "^2.13"
 pydantic-settings = "^2.15"
-langchain = "^1.4"
-langchain-openai = "^1.6"
-langchain-google-genai = "^4.4"
-langchain-anthropic = "^1.7"
-langgraph = "^1.2"
+langchain = "^1.4.7"
+# Declared, not inherited: agents/core imports langchain_core directly
+# (messages, tools, fake chat models), so its floor is Duct's to hold. 1.7.0
+# is where streamed tool-call arguments became `tool-call-delta` events
+# instead of `block-delta` snapshots; nothing in Duct reads either (lc.py's
+# split_chunk takes text and thinking blocks and ignores the rest, and
+# routes/chat.py reads chunk.content), which was checked when this moved.
+langchain-core = "^1.7.0"
+langchain-openai = "^1.7.2"
+langchain-google-genai = "^4.4.2"
+langchain-anthropic = "^1.7.6"
+langgraph = "^1.2.17"
 pyjwt = "^2.15"
 httpx = "^0.28"
 # The client for MCP servers a user connects (service/mcp/). The reference SDK
@@ -70,7 +77,7 @@ trafilatura = ">=2.2.0"
 # manylinux_2_28 and macOS wheels, so no toolchain is needed to build it, and
 # agents/core/compaction.py degrades to plain JSON wherever it is absent.
 headroom-ai = "~0.39"
-deepagents = "0.7.23"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
+deepagents = "0.7.32"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
 # OTel GenAI spans for the agents (agents/core/telemetry.py). The API is what
 # the spans are opened with; the SDK and the OTLP/HTTP exporter are what
 # `configure_tracing` installs when OTEL_EXPORTER_OTLP_ENDPOINT is set
@@ -87,8 +94,8 @@ cloudflare = ">=5.8.0"
 # Separate distributions from `langgraph` itself, and MIT like it — unlike
 # `langgraph-api` (the Platform server, Elastic-2.0), which Duct does not use:
 # the library runs in-process inside FastAPI, with our own SSE transport.
-langgraph-checkpoint-postgres = "^3.1"
-langgraph-checkpoint-sqlite = "^3.1"
+langgraph-checkpoint-postgres = "^3.2.0"
+langgraph-checkpoint-sqlite = "^3.1.2"
 # OpenRouter's first-party LangChain integration — `init_chat_model(
 # model_provider="openrouter")` resolves to it. Duct never imports it directly;
 # LangChain does, which is why no agents/ file gains a framework import and the
@@ -107,6 +114,11 @@ langgraph-checkpoint-sqlite = "^3.1"
 # do not reach for `route`.
 langchain-openrouter = "^0.2.9"
 langchain-xai = "^1.3.0"
+# Text out of the PDFs a user adds at onboarding (service/documents.py). Pure
+# Python and no dependencies of its own; Word and PowerPoint need no library
+# because they are zip files of XML. Duct extracts text rather than handing
+# the model a PDF block because DeepSeek, among others, reads no PDF at all.
+pypdf = "^6.21.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, X } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { STEP_LABELS as BACKEND_STEP_LABELS, AuditStep } from "../../lib/auditEvents";
@@ -13,9 +14,6 @@ const STEP_LABELS = {
   plan_crawl:    msg`Planning crawl`,
   render_report: msg`Finalizing report`,
 };
-
-// Lives outside JSX so the literal-string check does not read a CSS rule as copy.
-const STEP_FILL_KEYFRAMES = `@keyframes duct-step-fill { from { width: 0% } to { width: 85% } }`;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -390,11 +388,11 @@ function StepRow({ step, expanded, onToggle }) {
         {isRunning ? (
           <Spinner className="size-3 text-info" />
         ) : status === StepStatus.SUCCESS ? (
-          <span className="text-success text-xs shrink-0">✓</span>
+          <Check className="size-3 shrink-0 text-success" aria-hidden="true" />
         ) : status === StepStatus.ERROR ? (
-          <span className="text-destructive text-xs shrink-0">✗</span>
+          <X className="size-3 shrink-0 text-destructive" aria-hidden="true" />
         ) : (
-          <span className="size-3 shrink-0 rounded-full border border-muted-foreground/20" />
+          <span className="size-3 shrink-0 rounded-full border border-muted-foreground/20" aria-hidden="true" />
         )}
 
         <span className={isRunning ? "font-medium flex-1" : "text-muted-foreground flex-1"}>
@@ -424,11 +422,6 @@ function StepRow({ step, expanded, onToggle }) {
           </span>
         )}
 
-        {/* Time estimate on synthesize while running */}
-        {isSynthesize && isRunning && (
-          <span className="text-xs text-muted-foreground"><Trans>~3 min</Trans></span>
-        )}
-
         {/* Extended thinking indicator */}
         {isSynthesize && isDone && payload?.reasoned && (
           <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-px text-2xs font-medium text-primary">
@@ -443,19 +436,6 @@ function StepRow({ step, expanded, onToggle }) {
           </span>
         )}
       </HeaderRow>
-
-      {/* Progress bar for synthesize */}
-      {isSynthesize && isRunning && (
-        <div className="ml-5 mt-1.5">
-          <div className="h-0.5 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-info"
-              style={{ animation: "duct-step-fill 180s cubic-bezier(0.08, 0, 0.2, 1) forwards" }}
-            />
-          </div>
-          <style>{STEP_FILL_KEYFRAMES}</style>
-        </div>
-      )}
 
       {/* Expandable detail panel */}
       {canExpand && (

@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends
 from routes import (
     activity, agents, artifacts, audit, audit_prefetch, auth, chat, connectors, content, engines,
     execution,
-    generate, health, lead_magnet, mcp_servers, memory, model_settings, profile, project_connectors,
+    generate, health, lead_magnet, mcp_server, mcp_servers, mcp_tokens, memory, model_settings, profile,
+    project_connectors,
     project_members, projects,
     providers,
     reports, signin, usage, user_connectors, user_contexts, user_projects,
@@ -122,6 +123,10 @@ router.include_router(memory.user_router, prefix="/api/user/memory")
 router.include_router(project_members.router, prefix="/api/user/projects")
 router.include_router(project_connectors.router, prefix="/api/user/projects")
 router.include_router(user_connectors.router, prefix="/api/user/connectors")
+router.include_router(mcp_tokens.router, prefix="/api/user/mcp-tokens")
+# Duct's MCP server, for agents outside Duct. Its own credential: a personal
+# MCP token, never X-API-Key or a sign-in JWT (routes/mcp_server.py).
+router.include_router(mcp_server.router)
 # MCP servers a user connects. Starting one reaches an address the caller
 # chose, so it is never anonymous.
 router.include_router(mcp_servers.router, prefix="/api/user/mcp", dependencies=APP_AND_USER)
