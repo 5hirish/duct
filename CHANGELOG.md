@@ -86,6 +86,10 @@ published without one. The same script, with no arguments, holds
 
 ### Security
 
+- The desktop window only ever shows Duct: a page that sends it elsewhere
+  opens in your browser instead, a sign-in or connector code returning
+  through a deep link always lands on Duct's own origin, and the page can
+  call nothing in the shell beyond its own commands.
 - The insight chat and audit web search spend the caller's model keys, and
   PostBridge and Apify run on each user's saved key, not the operator's.
 - Routes that run before sign-in or for a guest are rate limited on the real

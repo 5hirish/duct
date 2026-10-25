@@ -74,6 +74,27 @@ carries all the code.
   for two seconds. If that ever stops being acceptable, the fix is to drop the
   line entirely for non-English locales, not to fetch a catalogue here.
 
+- **The main window is built in Rust too (`open_main_window`), from its
+  config entry.** Every config marks `main` `"create": false`, because a
+  navigation guard can only be attached while a window is being built and
+  Tauri builds config windows before `setup` runs. `on_navigation` is that
+  guard (`navigation_policy`): the app's origin loads, any other web URL is
+  opened in the system browser instead, and every other scheme is dropped.
+  The window is the product; a page from somewhere else inside it wears
+  Duct's frame with no address bar to say so. Two things to know before
+  touching it:
+  - **The origin comes from `app.windows[0].url`**, the same place the
+    sidecar's `FRONTEND_ORIGIN` and a deep link's destination read it, so the
+    three cannot disagree. A config whose window has no remote URL fails
+    setup rather than running unguarded.
+  - **On macOS and Linux the webview asks the guard about frames too** (wry
+    passes no frame information), so an `<iframe src>` on another origin
+    would be opened in the browser there. Every iframe the app renders is
+    `srcdoc`, which navigates to `about:srcdoc` and passes; so do
+    `about:blank` and a `blob:` the app's own origin created, and nothing
+    else (`data:` and a foreign blob are a foreign page without the request).
+    Keep it that way, or widen `navigation_policy` deliberately, with the
+    test beside it.
 - **The first launch is greeted once.** `claim_first_run` looks for a `greeted`
   marker in the app data dir; if it is absent it writes one and returns true,
   and `open_splash` then builds a 380×330 window (instead of 380×150) and
@@ -120,7 +141,9 @@ carries all the code.
   **No credential ever rides in a deep link.** Any app on the machine can claim
   the scheme, so both routes carry only a single-use 60-second code that the
   webview redeems against the backend (`/auth/exchange`,
-  `/auth/connectors/exchange`). This matters more for connectors than for
+  `/auth/connectors/exchange`). The code is delivered to the *configured*
+  window URL, never to `window.url()`: a window the page had sent elsewhere
+  would otherwise receive it. This matters more for connectors than for
   sign-in: their payload is a *long-lived* Google refresh token, where the
   in-browser flow can still use a URL fragment (never sent to a server) because
   it never leaves the app's own window.
@@ -459,7 +482,16 @@ step in the same change, never before it.
   anything here.
 - Provider keys live only in the OS keychain — never write them to disk or logs.
 - Any origin the webview loads must be listed under `remote.urls` in
-  `src-tauri/capabilities/default.json` for `invoke` to work.
+  `src-tauri/capabilities/default.json` for `invoke` to work, and it gets the
+  shell's own `allow-*` commands plus the three `notification:*` entries,
+  nothing else. `core:default` and `opener:default` were granted once and
+  reached further than the page needs: path resolution, window and webview
+  enumeration, the devtools toggle, `reveal_item_in_dir`, and `open_url` for
+  any http(s)/mailto/tel address around `open_external`'s rule. The page only
+  ever calls `invoke`; what the shell itself opens (Help links, the
+  notification settings page, the ChatGPT sign-in) goes through Rust and
+  needs no capability. The three capability files keep identical permission
+  lists, so a build shape can never be the one that is wider.
 - **A new `#[tauri::command]` needs three edits, not one.** Add it to
   `generate_handler!` in `src/lib.rs`, to `AppManifest::commands` in `build.rs`,
   and as `allow-<kebab-command>` in every capability that needs it. App commands
