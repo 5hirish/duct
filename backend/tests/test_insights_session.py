@@ -1182,3 +1182,37 @@ async def test_a_resumed_thread_records_its_own_context(session, emitted):
     assert ctx["resume"] is True
     assert ctx["turn"].startswith("<deliverable_format>") and ctx["turn"].endswith("and last week?")
     assert ctx["blocks"]["memory"] == "" and ctx["blocks"]["data_sources"] == ""
+
+
+def test_the_general_purpose_helper_is_supplied_and_read_only(monkeypatch):
+    """Rulebook gap 1. deepagents adds a `general-purpose` sub-agent with
+    EVERY parent tool unless one by that name is supplied — for insights that
+    was ProposeChanges, RollbackChangeSet, RememberFact, the artifact writers
+    and the pause tools, with no limits or retry of their own."""
+    import agents.insights.v1.runner as runner_module
+    from agents.insights.subagents import GENERAL_PURPOSE_SUBAGENT, GENERAL_PURPOSE_TOOLS
+
+    built: dict = {}
+    original = runner_module.build_deep_session_agent
+
+    def _capture(**kwargs):
+        built.update(kwargs)
+        return original(**kwargs)
+
+    monkeypatch.setattr(runner_module, "build_deep_session_agent", _capture)
+    RUNNER.build_agent(llm=_fake("ok"))
+
+    by_name = {sub["name"]: sub for sub in built["subagents"]}
+    assert GENERAL_PURPOSE_SUBAGENT in by_name
+    helper_tools = {t.name for t in by_name[GENERAL_PURPOSE_SUBAGENT]["tools"]}
+    # Exactly the parent's read tools: whatever this session shape mounted of
+    # the list, and nothing off it (an unscoped build mounts few of them).
+    assert helper_tools == {t.name for t in built["tools"]} & set(GENERAL_PURPOSE_TOOLS)
+    assert helper_tools
+    assert not helper_tools & {
+        "ProposeChanges", "RollbackChangeSet", "RememberFact", "CreateArtifact",
+        "UpdateArtifact", "RewriteArtifact", "AskUserQuestion", "RequestConnection", "SelectAccount",
+    }
+    # Same objects as the parent's, so the helper shares its scoping closure.
+    parent = {id(t) for t in built["tools"]}
+    assert all(id(t) in parent for t in by_name[GENERAL_PURPOSE_SUBAGENT]["tools"])

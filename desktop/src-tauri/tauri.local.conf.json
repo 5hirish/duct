@@ -8,6 +8,7 @@
     "windows": [
       {
         "label": "main",
+        "create": false,
         "title": "Duct (dev)",
         "url": "http://localhost:3003",
         "width": 1200,

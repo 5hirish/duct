@@ -169,6 +169,13 @@ async def take_crawl(crawl_id: str | None, *, owner_id: str | None = None, wait:
     if entry.task is not None and not entry.task.done():
         try:
             await asyncio.wait_for(asyncio.shield(entry.task), timeout=wait)
-        except (asyncio.TimeoutError, Exception):  # noqa: BLE001 — fall through to "not ready"
+        except asyncio.TimeoutError:
+            # The pipeline is about to crawl the site itself. Left running,
+            # the prefetch kept fetching the same pages beside it — two crawls
+            # of one host at once, for a result nobody would read.
+            entry.task.cancel()
+            entry.state = STATE_FAILED
+            entry.error = "the pipeline crawled the site itself"
+        except Exception:  # noqa: BLE001 — a failed crawl is "not ready", the pipeline crawls
             pass
     return entry.result if entry.state == STATE_DONE else None

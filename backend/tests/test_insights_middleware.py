@@ -139,10 +139,10 @@ def test_the_middleware_mounts_when_a_chain_exists(monkeypatch):
         model=ModelName.CLAUDE_SONNET,
     ).build_agent()
 
-    assert "ModelFallbackMiddleware" in captured[-1]
+    assert "ClassifiedFallbackMiddleware" in captured[-1]
 
 
 def test_an_injected_model_is_never_second_guessed(stack):
     """The `llm=` seam is a deliberate choice; overriding it would fire real
     provider calls out of a fake-model test."""
-    assert "ModelFallbackMiddleware" not in stack
+    assert "ClassifiedFallbackMiddleware" not in stack
