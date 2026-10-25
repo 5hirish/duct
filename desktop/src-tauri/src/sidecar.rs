@@ -26,7 +26,7 @@ use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager, State, WebviewUrl};
+use tauri::{AppHandle, Manager, State};
 
 /// Directory name of the PyInstaller onedir output, both in `backend/dist/`
 /// and inside the bundle's resource dir.
@@ -185,13 +185,11 @@ pub fn is_available(app: &AppHandle) -> bool {
 /// Origin (`scheme://host[:port]`) of this shell's main window.
 ///
 /// `None` for a bundled-frontend window, which has no remote origin to hand a
-/// browser — the sidecar keeps its own default in that case.
+/// browser — the sidecar keeps its own default in that case. Read from the
+/// same place as the deep-link destination and the navigation guard, so the
+/// three can never disagree about where the app lives.
 fn frontend_origin(app: &AppHandle) -> Option<String> {
-    let window = app.config().app.windows.first()?;
-    match &window.url {
-        WebviewUrl::External(url) => Some(url.origin().ascii_serialization()),
-        _ => None,
-    }
+    crate::configured_app_url(app).map(|url| url.origin().ascii_serialization())
 }
 
 /// Start the sidecar and read its handshake on a background thread.

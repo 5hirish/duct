@@ -293,19 +293,37 @@ fn open_notification_settings(app: AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-/// Open a URL in the system's default browser. Restricted to http(s) so the
-/// remote page can never use the shell to launch other URL-scheme handlers.
+/// Open a URL in the system's default browser. Restricted to `https`, plus
+/// `http` on the loopback names, so the remote page can never use the shell to
+/// launch other URL-scheme handlers.
 #[tauri::command]
 fn open_external(app: AppHandle, url: String) -> Result<(), String> {
-    let allowed = url.starts_with("https://")
-        || url.starts_with("http://localhost")
-        || url.starts_with("http://127.0.0.1");
-    if !allowed {
+    if !is_openable_externally(&url) {
         return Err("only http(s) URLs may be opened externally".into());
     }
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|e| e.to_string())
+}
+
+/// The hosts `open_external` accepts over plain `http`: the local sidecar and
+/// the ChatGPT callback both live on loopback, and nothing else should.
+const LOOPBACK_HOSTS: &[&str] = &["localhost", "127.0.0.1"];
+
+/// The `open_external` rule, on a parsed URL rather than a prefix.
+///
+/// `starts_with("http://localhost")` also accepted `http://localhost.evil.tld`
+/// and `http://localhost@evil.tld`. Only the parsed host can be compared
+/// exactly, and the parser normalises the scheme too.
+fn is_openable_externally(raw: &str) -> bool {
+    let Ok(url) = Url::parse(raw) else {
+        return false;
+    };
+    match url.scheme() {
+        "https" => url.host_str().is_some_and(|host| !host.is_empty()),
+        "http" => url.host_str().is_some_and(|host| LOOPBACK_HOSTS.contains(&host)),
+        _ => false,
+    }
 }
 
 /// Whether a newer release is available, and what it is.
@@ -428,19 +446,43 @@ fn query_param(url: &Url, key: &str) -> Option<String> {
         .map(|(_, value)| value.into_owned())
 }
 
-/// Navigate the main window to `path?query` on whatever origin this shell build
-/// loads (hosted app or local dev server), then bring it to the front.
+/// The URL the main window is configured to load: `app.windows[0].url` in
+/// whichever config this build merged. `None` for a bundled-frontend window.
+///
+/// The one answer to "where does the app live". The sidecar's
+/// `FRONTEND_ORIGIN`, a deep link's destination and the navigation guard all
+/// read it, so none of them can be steered by where the webview happens to be.
+pub(crate) fn configured_app_url(app: &AppHandle) -> Option<Url> {
+    match &app.config().app.windows.first()?.url {
+        WebviewUrl::External(url) => Some(url.clone()),
+        _ => None,
+    }
+}
+
+/// `path?query` on the app's own origin.
+///
+/// Built from the configured URL and never from `window.url()`: the page can
+/// send the window elsewhere (the in-window OAuth fallback did exactly that),
+/// and a deep link joined onto *that* URL would deliver the single-use code to
+/// whichever origin was showing when it arrived.
+fn deep_link_destination(app_url: &Url, path: &str, query: &str) -> Option<Url> {
+    let mut target = app_url.join(path).ok()?;
+    target.set_query(Some(query));
+    Some(target)
+}
+
+/// Navigate the main window to `path?query` on the origin this shell build is
+/// configured to load (hosted app or local dev server), then bring it to the
+/// front.
 fn navigate_webview(app: &AppHandle, path: &str, query: &str) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
-    let Ok(current) = window.url() else {
+    let Some(target) = configured_app_url(app)
+        .and_then(|app_url| deep_link_destination(&app_url, path, query))
+    else {
         return;
     };
-    let Ok(mut target) = current.join(path) else {
-        return;
-    };
-    target.set_query(Some(query));
     let _ = window.navigate(target);
     let _ = window.unminimize();
     let _ = window.set_focus();
@@ -923,6 +965,81 @@ fn open_splash(app: &AppHandle, first_run: bool) -> tauri::Result<()> {
     Ok(())
 }
 
+/// What the main window may do with a navigation request.
+#[derive(Debug, PartialEq, Eq)]
+enum Navigation {
+    /// Load it here: the app's own origin, or a frame the page built itself.
+    Allow,
+    /// Not ours, but a web page: the system browser is where it belongs.
+    OpenExternally,
+    /// Neither: refuse it, and do not hand it to the OS either.
+    Block,
+}
+
+/// Decide a navigation of the main window against the configured app origin.
+///
+/// The window is the product, and the page inside it is the only thing that
+/// may call the shell. A top-level navigation anywhere else turns the window
+/// into a browser with no address bar: whatever loads there wears Duct's frame
+/// and title. So the app's origin is allowed, any other web URL is opened in
+/// the system browser instead (the in-window OAuth fallback used to land
+/// here), and everything else is dropped. Handing an arbitrary scheme to the
+/// OS would launch whatever claims it, which is the rule `open_external`
+/// already enforces for the page's explicit requests.
+///
+/// `about:`, `blob:` and `data:` pass because the webview produces them
+/// itself: every `<iframe srcdoc>` the app renders navigates to
+/// `about:srcdoc`, and on macOS and Linux the webview asks this function about
+/// frames as well as the top level (wry passes no frame information). That is
+/// the caveat to carry: an `<iframe src="https://elsewhere">` would be opened
+/// in the browser there. Nothing in the app embeds one today.
+fn navigation_policy(url: &Url, app_url: &Url) -> Navigation {
+    match url.scheme() {
+        "http" | "https" if url.origin() == app_url.origin() => Navigation::Allow,
+        "http" | "https" => Navigation::OpenExternally,
+        "about" | "blob" | "data" => Navigation::Allow,
+        _ => Navigation::Block,
+    }
+}
+
+/// Build the main window from its config entry, with the navigation guard on.
+///
+/// Every config marks the window `"create": false`, because a guard can only
+/// be attached while the window is being built, and Tauri builds config
+/// windows before `setup` runs. Everything else about the window (URL, size,
+/// the hidden start behind the splash) still comes from the config entry, so
+/// the `--config` overlays keep working unchanged.
+///
+/// A window with no remote URL is an error rather than an unguarded window:
+/// every build shape loads one, and a config that stopped would otherwise ship
+/// a shell whose only safeguard had quietly switched itself off.
+fn open_main_window(app: &AppHandle) -> Result<(), String> {
+    let config = app
+        .config()
+        .app
+        .windows
+        .iter()
+        .find(|window| window.label == "main")
+        .cloned()
+        .ok_or("no `main` window in app.windows")?;
+    let app_url = configured_app_url(app).ok_or("the main window has no remote URL to guard")?;
+
+    let handle = app.clone();
+    WebviewWindowBuilder::from_config(app, &config)
+        .map_err(|e| e.to_string())?
+        .on_navigation(move |url| match navigation_policy(url, &app_url) {
+            Navigation::Allow => true,
+            Navigation::OpenExternally => {
+                let _ = handle.opener().open_url(url.as_str(), None::<&str>);
+                false
+            }
+            Navigation::Block => false,
+        })
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Before the builder: a panic during setup is exactly the kind of failure
@@ -980,7 +1097,14 @@ pub fn run() {
             }
         })
         .setup(|app| {
-            // First, before anything else in setup: the whole point is to put
+            // The main window first, exactly where Tauri used to build it from
+            // config before `setup` ran: hidden, pointed at the hosted app, and
+            // now with its navigation guard attached. A shell without it is
+            // not a shell, so a failure here ends setup rather than being
+            // logged past.
+            open_main_window(app.handle())?;
+
+            // Then the splash, before anything else: the whole point is to put
             // pixels on screen while the network is still resolving. The main
             // window points at the hosted app, which measured between 0.3 s and
             // 2.3 s just to return the document, before a byte of script runs.
@@ -1162,6 +1286,96 @@ mod tests {
         assert_eq!(target("ai.getduct.desktop://elsewhere?auth_code=abc"), None);
         let long = "a".repeat(513);
         assert_eq!(target(&format!("ai.getduct.desktop://auth?auth_code={long}")), None);
+    }
+
+    fn app_url() -> Url {
+        Url::parse("https://app.getduct.ai").unwrap()
+    }
+
+    #[test]
+    fn a_deep_link_lands_on_the_configured_origin_whatever_the_window_shows() {
+        // The destination takes the configured URL and nothing else, so a
+        // window the page sent to a vendor cannot receive the code.
+        assert_eq!(
+            deep_link_destination(&app_url(), "/connections", "connector=ga4&auth_code=c0de")
+                .unwrap()
+                .as_str(),
+            "https://app.getduct.ai/connections?connector=ga4&auth_code=c0de"
+        );
+        // A dev origin with a port keeps it, and a path on the configured URL
+        // does not survive: deep links are absolute routes.
+        let dev = Url::parse("http://localhost:3003/somewhere").unwrap();
+        assert_eq!(
+            deep_link_destination(&dev, "/", "auth_code=abc").unwrap().as_str(),
+            "http://localhost:3003/?auth_code=abc"
+        );
+    }
+
+    fn decide(url: &str) -> Navigation {
+        navigation_policy(&Url::parse(url).expect("a well-formed URL"), &app_url())
+    }
+
+    #[test]
+    fn the_window_only_ever_shows_the_app_origin() {
+        assert_eq!(decide("https://app.getduct.ai/connections?x=1"), Navigation::Allow);
+        // Same origin, default port spelled out.
+        assert_eq!(decide("https://app.getduct.ai:443/"), Navigation::Allow);
+
+        // Another web page goes to the real browser, including the same host
+        // over plain http and a lookalike host.
+        assert_eq!(decide("https://accounts.google.com/o/oauth2"), Navigation::OpenExternally);
+        assert_eq!(decide("http://app.getduct.ai/"), Navigation::OpenExternally);
+        assert_eq!(decide("https://app.getduct.ai.evil.tld/"), Navigation::OpenExternally);
+        assert_eq!(decide("https://api.getduct.ai/"), Navigation::OpenExternally);
+
+        // What the page builds for its own frames stays.
+        assert_eq!(decide("about:srcdoc"), Navigation::Allow);
+        assert_eq!(decide("about:blank"), Navigation::Allow);
+        assert_eq!(decide("blob:https://app.getduct.ai/0f3a"), Navigation::Allow);
+
+        // A scheme the OS would route to another app is dropped, not forwarded.
+        assert_eq!(decide("mailto:someone@example.com"), Navigation::Block);
+        assert_eq!(decide("ai.getduct.desktop://auth?auth_code=x"), Navigation::Block);
+        assert_eq!(decide("file:///etc/passwd"), Navigation::Block);
+        assert_eq!(decide("tauri://localhost/"), Navigation::Block);
+    }
+
+    #[test]
+    fn a_dev_build_allows_its_own_localhost_port_and_nothing_else_on_loopback() {
+        let dev = Url::parse("http://localhost:3003").unwrap();
+        let decide = |url: &str| navigation_policy(&Url::parse(url).unwrap(), &dev);
+        assert_eq!(decide("http://localhost:3003/connections"), Navigation::Allow);
+        // The API dev server and the sidecar are APIs, not pages for this window.
+        assert_eq!(decide("http://localhost:8002/docs"), Navigation::OpenExternally);
+        assert_eq!(decide("http://127.0.0.1:3003/"), Navigation::OpenExternally);
+    }
+
+    #[test]
+    fn open_external_takes_https_and_loopback_http_by_host_not_by_prefix() {
+        for ok in [
+            "https://accounts.google.com/o/oauth2/v2/auth?client_id=x",
+            "HTTPS://getduct.ai/",
+            "http://localhost:1455/auth/callback",
+            "http://127.0.0.1:53124/auth/signin",
+        ] {
+            assert!(is_openable_externally(ok), "{ok}");
+        }
+        for rejected in [
+            // The prefix check used to pass all three of these.
+            "http://localhost.evil.tld/",
+            "http://localhost@evil.tld/",
+            "http://127.0.0.1.evil.tld/",
+            "http://evil.tld/",
+            "mailto:someone@example.com",
+            "javascript:alert(1)",
+            "file:///etc/passwd",
+            "ai.getduct.desktop://auth?auth_code=x",
+            "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+            "not a url",
+            "",
+        ] {
+            assert!(!is_openable_externally(rejected), "{rejected}");
+        }
     }
 
     #[test]
