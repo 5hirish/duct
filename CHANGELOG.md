@@ -65,6 +65,11 @@ published without one. The same script, with no arguments, holds
   rolled back.
 - Brand and product names stay in English in every language, enforced by
   `fill.py`; a native review fixed about 230 Spanish and German strings.
+- **The working panel tells the time, not a story.** The "~3 min" and the
+  bar that filled over three minutes on a timer are gone from the audit and
+  content viewports and the audit's step ladder. The panel counts the run's
+  seconds on the same clock as the chat header, and the audit's synthesis
+  row says how many categories are done once it knows.
 
 ### Fixed
 

@@ -734,8 +734,8 @@ msgstr "<0>Cuándo:</0> {occurredAt}"
 #: src/components/audit/AuditStepProgress.jsx
 #: src/components/content/PlanViewport.jsx
 #: src/components/PipelineProgress.jsx
-msgid "~3 min"
-msgstr "~3 min"
+#~ msgid "~3 min"
+#~ msgstr "~3 min"
 
 #: src/app/(app)/execute/page.jsx
 msgid "⛔ Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
