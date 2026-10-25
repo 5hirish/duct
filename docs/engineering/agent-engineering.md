@@ -158,7 +158,7 @@ land.
 | # | Gap | Change | Effort |
 |---|---|---|---|
 | 1 | ~~Insights' auto-added `general-purpose` sub-agent carries every tool, `ProposeChanges`, `RollbackChangeSet` and `RememberFact` included~~ | done 2026-10-25: `agents/insights/subagents/general_purpose.py` supplies a read-only one on the verifier's model; `test_agent_assembly.py` holds every deep runner's sub-agent lists writer-free. Retry and limits for sub-agents remain gap 5 | S |
-| 2 | SDK retries stack under `ReportedRetryMiddleware`, invisible to the UI and the quota cooldown | `max_retries=0` (Gemini: `retries=1`) and a timeout in `resolve_chat_model`; a test per provider | S |
+| 2 | ~~SDK retries stack under `ReportedRetryMiddleware`, invisible to the UI and the quota cooldown~~ | done 2026-10-25: `max_retries=0` (Gemini `1`) in `resolve_chat_model`, a test per provider. A per-request timeout is still open: the SDK defaults are ten minutes and a thinking call can legitimately run long, so it needs a measurement first | S |
 | 3 | Deep-rung summarisation fires at ~850k on the current Claude models | trigger from `context_window_for(model)`; test across the catalogue | S–M |
 | 4 | ~~Fallback fires on auth, bad-request and overflow errors~~ | done 2026-10-25: `ClassifiedFallbackMiddleware` falls back only on a failure `is_retryable` classes as transient | S |
 | 5 | Sub-agents run without retry or limits; a sub-agent exception ends the parent turn | `subagent_middleware(limits)`; `ToolErrorMiddleware` in `session_middleware` | S–M |
