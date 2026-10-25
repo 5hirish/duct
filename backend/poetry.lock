@@ -1272,29 +1272,29 @@ langdetect = ["langdetect (>=1.0.0)"]
 
 [[package]]
 name = "deepagents"
-version = "0.7.23"
+version = "0.7.32"
 description = "Production-ready, extensible agent harness with a built-in filesystem and context management, sub-agent delegation, skills, and long-term memory."
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main"]
 files = [
-    {file = "deepagents-0.7.23-py3-none-any.whl", hash = "sha256:ccba4ca32e82f422e08c04b2321d135f1be321fc44ae5891b9b37a7c8bde5ca7"},
-    {file = "deepagents-0.7.23.tar.gz", hash = "sha256:03fbffec1691f72e412eb9251516a799ac3f5d3851defb4a98a49fece5675c10"},
+    {file = "deepagents-0.7.32-py3-none-any.whl", hash = "sha256:366bd66c786a66c8d639e40f99614d9e5d37236adf4c5b158f0b2cb27956e28b"},
+    {file = "deepagents-0.7.32.tar.gz", hash = "sha256:f4154281b04a499015e48c24edf11f59f833fbabd3d87e0898832e8db954aac4"},
 ]
 
 [package.dependencies]
-langchain = ">=1.4.3,<2.0.0"
-langchain-anthropic = ">=1.7.5,<2.0.0"
-langchain-core = ">=1.6.7,<2.0.0"
-langchain-google-genai = ">=4.4.0,<5.0.0"
-langsmith = ">=0.14.4"
+langchain = ">=1.4.7,<2.0.0"
+langchain-anthropic = ">=1.7.6,<2.0.0"
+langchain-core = ">=1.7.0,<2.0.0"
+langchain-google-genai = ">=4.4.2,<5.0.0"
+langsmith = ">=0.14.12"
 packaging = ">=23.2"
 wcmatch = ">=11.0"
 
 [package.extras]
-aws = ["langchain-aws (>=1.8.1,<2.0.0)"]
-quickjs = ["langchain-quickjs (>=0.3.8)"]
-video = ["av (>=18.0.0,<19.0.0)", "pillow (>=12.3.0,<13.0.0)"]
+aws = ["langchain-aws (>=1.9.0,<2.0.0)"]
+quickjs = ["langchain-quickjs (>=0.3.9)"]
+video = ["av (>=18.0.0)", "pillow (>=12.3.0)"]
 
 [[package]]
 name = "distro"
@@ -8918,4 +8918,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "5ec02d6dee12433b85e5902f2be45e04e618ebd2a225e4c83071a7203f9ff9d3"
+content-hash = "a4ac2dfb386d8ec850a88f79465dfb19036d85da1571309eea358298f63d1b4d"
