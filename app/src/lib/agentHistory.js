@@ -48,6 +48,23 @@ function changeSetFromStored(e) {
   return result?.change_set_id ? result : null;
 }
 
+/** The last segment of `sessionId`'s run these stored rows cover, or 0.
+ *
+ *  The recorder stamps every live event with the segment it belongs to and
+ *  writes the same number on the rows a segment leaves. A tab that left a
+ *  run behind hydrates the rows, then reattaches to the live stream from the
+ *  segment after this one, so the backlog the backend buffered is not drawn
+ *  on top of the replies it already produced. */
+export function hydratedThroughSegment(events, sessionId) {
+  if (!sessionId) return 0;
+  let through = 0;
+  for (const e of events || []) {
+    const segment = e?.data?.segment;
+    if (e?.data?.session === sessionId && Number.isInteger(segment) && segment > through) through = segment;
+  }
+  return through;
+}
+
 export function mapEventsToMessages(events) {
   const out = [];
   const calls = activityCallIndex(events);

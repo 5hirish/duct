@@ -362,8 +362,11 @@ async function sessionCreateError(res) {
  * Open the SSE stream for an active session.
  * Returns the raw ReadableStream body — consume with a reader loop.
  */
-export async function openAgentStream(agentType, sessionId, { signal } = {}) {
-  const url = `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/stream`;
+export async function openAgentStream(agentType, sessionId, { signal, afterSegment = 0 } = {}) {
+  // A tab that hydrated the transcript first says how far its rows reach, so
+  // the backlog the backend buffered while it was away starts after them.
+  const after = afterSegment > 0 ? `?after_segment=${encodeURIComponent(afterSegment)}` : "";
+  const url = `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/stream${after}`;
   const res = await fetch(url, { headers: backendAuthedHeaders(), signal });
   if (!res.ok) {
     const text = await res.text();

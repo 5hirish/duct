@@ -433,7 +433,12 @@ places and nowhere else:
   cleanup, transcript hydration before the live stream, the reconnect loop
   (reattach to the live session, then resume the conversation), pause answers
   by `interrupt_id`, and the per-tab reload handle (`lib/agentSessionHandle.js`)
-  that lets a reloaded tab reattach instead of re-running the prompt. Its
+  that lets a reloaded tab reattach instead of re-running the prompt. Leaving
+  the page mid-turn detaches rather than closes: the handle stays, the run is
+  noted in `lib/liveRuns.js` (the sidebar pulses its entry, `hooks/useLiveRuns.js`
+  polls the session until the turn ends), and a return hydrates the rows and
+  reattaches from the segment after the ones it has (`hydratedThroughSegment`),
+  so the backlog is not drawn twice. Only Stop cancels a run. Its
   `onHydrate` hands a workspace the stored rows verbatim, for a pane the
   transcript does not cover. No workspace needs it today: insights derives its
   Data pane from the transcript's own activity rows (`dataSourceRollup` in
