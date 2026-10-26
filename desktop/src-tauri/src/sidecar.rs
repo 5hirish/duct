@@ -581,7 +581,8 @@ mod tests {
             ("CREDENTIALS_ENCRYPTION_KEY", String::new()),
         ]);
         let parsed: serde_json::Value = serde_json::from_str(line.trim_end()).unwrap();
-        assert!(parsed.get("CREDENTIALS_ENCRYPTION_KEY").is_none(), "{line}");
+        // The line itself stays out of the failure message: a panic is a log.
+        assert!(parsed.get("CREDENTIALS_ENCRYPTION_KEY").is_none());
         assert_eq!(parsed["DUCT_LOCAL_API_KEY"], "k");
     }
 
@@ -591,7 +592,7 @@ mod tests {
         // watchdog; a raw newline inside a value would split the object.
         let line = secrets_line(&[("DUCT_LOCAL_JWT_SECRET", "two\nlines".to_string())]);
         assert!(line.ends_with('\n'));
-        assert_eq!(line.matches('\n').count(), 1, "{line:?}");
+        assert_eq!(line.matches('\n').count(), 1);
         let parsed: serde_json::Value = serde_json::from_str(line.trim_end()).unwrap();
         assert_eq!(parsed["DUCT_LOCAL_JWT_SECRET"], "two\nlines");
     }
