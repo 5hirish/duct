@@ -85,6 +85,8 @@ import {
 import { faviconUrl } from "@/lib/favicon";
 import { CONNECTORS_CHANGED, countConnectedSources } from "@/lib/connectorsApi";
 import { NAV_SECTIONS } from "@/lib/navigation";
+import { runsUnder } from "@/lib/liveRuns";
+import { useLiveRuns } from "@/hooks/useLiveRuns";
 import { LanguageMenuItem } from "@/components/LanguageMenu";
 
 // ---------------------------------------------------------------------------
@@ -564,6 +566,9 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const { t, i18n } = useLingui();
   const connectionCount = useConnectionCount();
+  // Runs this tab left mid-turn: the entry they belong to pulses until the
+  // backend says the turn is over or the page picks the run back up.
+  const liveRuns = useLiveRuns();
 
   function isActive(item) {
     if (!item.matchPrefix || !pathname) return false;
@@ -628,6 +633,7 @@ export default function AppSidebar() {
                     const Icon = item.icon;
                     const active = isActive(item);
                     const label = i18n._(item.label);
+                    const working = runsUnder(liveRuns, item.matchPrefix).length > 0;
 
                     if (!item.available) {
                       return (
@@ -652,6 +658,13 @@ export default function AppSidebar() {
                           <Link href={item.href}>
                             <Icon className="size-4" />
                             <span>{label}</span>
+                            {working && (
+                              <span
+                                role="img"
+                                aria-label={t`Working…`}
+                                className="ml-auto size-2 shrink-0 animate-pulse rounded-full bg-primary group-data-[collapsible=icon]:hidden"
+                              />
+                            )}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

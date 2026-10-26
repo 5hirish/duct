@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapEventsToMessages } from "../agentHistory";
+import { hydratedThroughSegment, mapEventsToMessages } from "../agentHistory";
 
 describe("mapEventsToMessages", () => {
   it("rebuilds the transcript shape the chat renders, dropping tool forensics", () => {
@@ -66,5 +66,25 @@ describe("review cards come back on a reopened thread", () => {
       { kind: "tool_result", data: { name: "ProposeChanges", is_error: true, result: '{"error": "unknown op"}' } },
     ]);
     expect(rows).toEqual([]);
+  });
+});
+
+describe("hydratedThroughSegment", () => {
+  const rows = [
+    { seq: 1, kind: "user", data: { content: "go" } },
+    { seq: 2, kind: "assistant", data: { text: "one", session: "s1", segment: 1 } },
+    { seq: 3, kind: "assistant", data: { text: "older run", session: "s0", segment: 7 } },
+    { seq: 4, kind: "thinking", data: { text: "…", session: "s1", segment: 2 } },
+    { seq: 5, kind: "memory_written", data: { memory: { id: "m" } } },
+  ];
+
+  it("reads the last segment the live session's rows cover", () => {
+    expect(hydratedThroughSegment(rows, "s1")).toBe(2);
+  });
+
+  it("ignores rows of other sessions, rows without a segment, and no session at all", () => {
+    expect(hydratedThroughSegment(rows, "s2")).toBe(0);
+    expect(hydratedThroughSegment(rows, "")).toBe(0);
+    expect(hydratedThroughSegment(undefined, "s1")).toBe(0);
   });
 });

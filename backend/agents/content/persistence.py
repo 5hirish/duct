@@ -433,6 +433,10 @@ def cancel_orphaned_runs_at_startup() -> None:
         logger.info("persistence: %d run(s) the last process left running marked cancelled", cancelled)
 
 
+# The key a live event and the rows it leaves share; see ConversationRecorder.
+SEGMENT_FIELD = "segment"
+
+
 class ConversationRecorder:
     """Persists a conversation by wrapping the runner's emit callback.
 
@@ -448,8 +452,17 @@ class ConversationRecorder:
     why the reply is missing at the place it went missing.
     """
 
-    def __init__(self, conversation_id: UUID) -> None:
+    def __init__(self, conversation_id: UUID, *, session_id: str = "") -> None:
         self.conversation_id = conversation_id
+        # Which live session this transcript is being written from, and how
+        # far along it is: every event this recorder sees is stamped with the
+        # segment it belongs to, and the rows a segment leaves carry the same
+        # number. A tab that left mid-run and comes back hydrates the rows,
+        # reads the last segment they cover, and reattaches to the live
+        # stream from the segment after it, so the queue's backlog is not
+        # drawn twice (routes/agents.py stream_session, hooks/useAgentSession).
+        self.session_id = session_id
+        self._segment = 1
         self._assistant_buf: list[str] = []
         self._thinking_buf: list[str] = []
         # Unknown until the first event; the first transition always writes.
@@ -510,6 +523,7 @@ class ConversationRecorder:
 
     def wrap_emit(self, emit_fn):
         async def _emit(body: dict) -> None:
+            body.setdefault(SEGMENT_FIELD, self._segment)
             await emit_fn(body)  # SSE first — streaming must never wait on a DB write
             try:
                 await self._persist(body)
@@ -608,11 +622,15 @@ class ConversationRecorder:
         assistant = "".join(self._assistant_buf).strip()
         self._thinking_buf.clear()
         self._assistant_buf.clear()
+        # The segment these rows close, and the session that ran it: what a
+        # returning tab reads to know where the live stream should pick up.
+        origin = {"session": self.session_id, SEGMENT_FIELD: self._segment}
         if thinking:
-            await self._append(EventKind.THINKING, {"text": thinking})
+            await self._append(EventKind.THINKING, {"text": thinking, **origin})
         if assistant:
-            await self._append(EventKind.ASSISTANT, {"text": assistant})
+            await self._append(EventKind.ASSISTANT, {"text": assistant, **origin})
             await self._count_citations(assistant)
+        self._segment += 1
 
     async def _count_citations(self, text: str) -> None:
         """Credit the memories this reply cites. The recorder is where every

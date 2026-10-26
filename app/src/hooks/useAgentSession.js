@@ -52,7 +52,7 @@ import {
 } from "../lib/api";
 import { trackEvent, AnalyticsEvent } from "../lib/analytics";
 import { AgentEvent } from "../lib/agentEvents";
-import { mapEventsToMessages } from "../lib/agentHistory";
+import { hydratedThroughSegment, mapEventsToMessages } from "../lib/agentHistory";
 import { describeContent } from "../lib/attachments";
 import { Phase } from "../lib/agentPhase";
 import {
@@ -62,6 +62,7 @@ import {
   reduceAgentSession,
 } from "../lib/agentSession";
 import { clearSessionHandle, readSessionHandle, writeSessionHandle } from "../lib/agentSessionHandle";
+import { forgetDetachedRun, rememberDetachedRun } from "../lib/liveRuns";
 import { consumeSseStream } from "../lib/sse";
 import { useAgentNotifications } from "./useAgentNotifications";
 
@@ -190,6 +191,10 @@ export function useAgentSession({
     let reconnects = 0;
     // A real run failure — never auto-reconnect after it.
     let terminal = false;
+    // How far the hydrated rows of the handle's session reach. A reattach
+    // asks for the backlog after it, so a reply the rows already hold is
+    // not drawn a second time from the queue.
+    let hydratedThrough = 0;
 
     const dead = () => cancelled || ctrl.signal.aborted;
 
@@ -218,12 +223,13 @@ export function useAgentSession({
       onEventRef.current?.(event, { appendMessage, sessionId: sessionIdRef.current, dispatch });
     }
 
-    async function hydrate(cid) {
+    async function hydrate(cid, liveSessionId = "") {
       // History first, so the order is stored turns then live ones. Non-fatal:
       // the server still resumes; the UI just lacks the transcript.
       try {
         const { events } = await getAgentConversation(agentType, cid);
         if (dead()) return;
+        hydratedThrough = hydratedThroughSegment(events, liveSessionId);
         const messages = mapEventsToMessages(events);
         dispatch({ type: Action.HYDRATE, messages, suppressThinking: true });
         onHydrateRef.current?.(events || []);
@@ -272,12 +278,13 @@ export function useAgentSession({
     async function reattach(sid, cid) {
       let stream;
       try {
-        stream = await openAgentStream(agentType, sid, { signal: ctrl.signal });
+        stream = await openAgentStream(agentType, sid, { signal: ctrl.signal, afterSegment: hydratedThrough });
       } catch {
         return null;  // past the grace window, or a different backend — create instead
       }
       if (dead()) return null;
       adopt(sid, cid);
+      forgetDetachedRun(sid);  // this page is watching it again
       // The stream only carries what happens from now on. A card the run is
       // already parked on was delivered before the drop, so it is put back
       // from the session's state rather than waited for. Not awaited: the
@@ -306,7 +313,7 @@ export function useAgentSession({
     async function start() {
       const handle = readSessionHandle(handleKey);
       const resumeCid = openBody.conversation_id || handle?.conversationId || null;
-      if (resumeCid) await hydrate(resumeCid);
+      if (resumeCid) await hydrate(resumeCid, handle?.sessionId || "");
       if (dead()) return;
 
       let stream = null;
@@ -376,14 +383,23 @@ export function useAgentSession({
       cancelled = true;
       ctrl.abort();
       const sid = sessionIdRef.current || adopted;
-      if (sid) {
+      // A turn in flight is left to finish: the stream closes, the handle
+      // stays so this page can pick the run back up, and the sidebar says
+      // the agent is still working. Closing the page used to delete the
+      // session, so opening Connections mid-brief killed the brief. Only an
+      // explicit Stop cancels a run; an idle session is closed as before.
+      const { phase } = stateRef.current;
+      const inFlight = phase === Phase.PIPELINE || phase === Phase.CHATTING;
+      if (sid && adopted && inFlight) {
+        rememberDetachedRun({ agentType, sessionId: sid, conversationId: conversationIdRef.current, handleKey });
+      } else if (sid) {
         closeAgentSession(agentType, sid).catch(() => {});
-        if (sessionIdRef.current === sid) sessionIdRef.current = null;
+        // Only an instance that actually attached forgets the handle. A
+        // StrictMode first mount is torn down before it attaches, and clearing
+        // then would rob the second mount of the reload it was about to do.
+        if (adopted) clearSessionHandle(handleKey);
       }
-      // Only an instance that actually attached forgets the handle. A
-      // StrictMode first mount is torn down before it attaches, and clearing
-      // then would rob the second mount of the reload it was about to do.
-      if (adopted) clearSessionHandle(handleKey);
+      if (sessionIdRef.current === sid) sessionIdRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agentType, bodyKey, enabled, attempt, handleKey, hydrateThreadState]);
@@ -447,7 +463,10 @@ export function useAgentSession({
   const stop = useCallback(
     ({ keepReady } = {}) => {
       abortRef.current?.abort();
-      if (sessionIdRef.current) closeAgentSession(agentType, sessionIdRef.current).catch(() => {});
+      if (sessionIdRef.current) {
+        forgetDetachedRun(sessionIdRef.current);
+        closeAgentSession(agentType, sessionIdRef.current).catch(() => {});
+      }
       clearSessionHandle(handleKey);
       dispatch({ type: Action.STOPPED, keepReady: keepReady ?? stateRef.current.opened });
     },
@@ -467,7 +486,10 @@ export function useAgentSession({
   const startFresh = useCallback(
     (extra = {}) => {
       abortRef.current?.abort();
-      if (sessionIdRef.current) closeAgentSession(agentType, sessionIdRef.current).catch(() => {});
+      if (sessionIdRef.current) {
+        forgetDetachedRun(sessionIdRef.current);
+        closeAgentSession(agentType, sessionIdRef.current).catch(() => {});
+      }
       clearSessionHandle(handleKey);
       sessionIdRef.current = null;
       conversationIdRef.current = null;
