@@ -74,7 +74,7 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5",
-    "wrangler": "^4.151.1"
+    "wrangler": "^4.152.0"
   },
   "overrides": {
     "lodash-es": "^4.18.1"
