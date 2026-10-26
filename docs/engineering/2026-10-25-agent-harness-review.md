@@ -91,6 +91,12 @@ The ranked list of thirteen improvements and fifteen UI defects is in the findin
 - The harness references doc: the thinking-fold row is done, the Codex clone beside the repo is gone, and OpenCode dropped session sharing.
 - The app guide and the context ring disagree about whether cost is shown.
 
+## Addendum, 2026-10-26: what landed
+
+Every fix the review asked for merged the same evening, as one PR per concern (#385 to #410, #389 skipped): the two security seams, the content agent's publish and thread fixes, the three library bumps in order, the cache and crawl work, the shell copy and progress fixes, and the desktop capability trim, navigation guard, async keychain and sidecar leash. The rulebook rows those PRs closed are struck in `agent-engineering.md`.
+
+Three follow-ups are in review: the sidecar now receives its secrets on the pipe it already holds rather than in its environment (#418); a writer tool executed twice for one call, which a run continued from its checkpoint does, writes once (#419); and a run outlives the page that started it, with a pulse in the sidebar and Stop as the only cancel (#420). Still open, as listed in the findings record: the MCP response bounds and the approval card's server-authored title, the self-host entitlements, and the structural desktop change that keeps provider keys out of page scripts altogether.
+
 ## How this was done
 
 Six read-only passes ran in parallel on 2026-10-25, each briefed with the rulebook and told not to re-report its open gaps. Each area's headline finding was re-read by hand before this record was written. The test suite ran once and stopped at its first failure, so later tests are unverified for this run.
