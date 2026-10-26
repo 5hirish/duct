@@ -12,7 +12,6 @@ import {
   readConsentChoice,
   storeConsentChoice,
 } from "../lib/consent";
-import { getTelemetrySettings } from "../lib/telemetry";
 import { isDesktopShell } from "../lib/shell";
 
 /**
@@ -34,9 +33,7 @@ function trackAppOpened() {
   } catch {
     // Private mode: better a repeated open than a silent one.
   }
-  analytics.track(AnalyticsEvent.AppOpened, {
-    shell: isDesktopShell() ? "desktop" : "browser",
-  });
+  analytics.track(AnalyticsEvent.AppOpened);
 }
 
 export function ProductAnalytics() {
@@ -70,27 +67,12 @@ export function ProductAnalytics() {
   }, []);
 
   useEffect(() => {
+    // False on a developer's host, and false inside the desktop shell, where
+    // the provider refuses to load at all (`lib/analytics/` carries why). So
+    // the shell measures nothing and is never asked; its Preferences switch
+    // governs crash reports alone, and the sidebar hides the cookie settings
+    // item there for the same reason.
     if (!analytics.isConfigured()) return undefined;
-
-    // The desktop shell never asks. It measures with storage permanently off,
-    // so nothing is written to the machine — nothing stored means nothing to
-    // consent to, and a bar in front of a window someone just opened is the
-    // worst version of this question. The opt-out is the Preferences switch,
-    // which also governs crash reports and is on in the builds we distribute.
-    if (isDesktopShell()) {
-      let cancelled = false;
-      getTelemetrySettings().then((settings) => {
-        if (cancelled || !settings.enabled) return;
-        analytics.setDefaults({ cookieless: true });
-        analytics.start({ deferred: true });
-        // Carries shell: "desktop", which is what finally distinguishes an
-        // install from a browser tab — they share a URL and a container.
-        trackAppOpened();
-      });
-      return () => {
-        cancelled = true;
-      };
-    }
 
     analytics.setDefaults();
 

@@ -19,7 +19,7 @@ Next.js App Router report viewer and agent interface.
 - **Host:** Cloudflare Workers via `@opennextjs/cloudflare` adapter + wrangler CLI.
 - `npm run deploy:cf` → OpenNext build + `wrangler deploy` (do not run directly — all deploys go through CI/CD on merge to main).
 - **CI/CD:** GitHub Actions (`app.yml`) — lint, typecheck, `next build` on every PR; on push to `main` the `deploy` job runs `opennextjs-cloudflare build` + `wrangler deploy`. (Replaced the Cloudflare "Workers Builds" git integration, which failed on its Node 20 builder — wrangler@4.99 needs ≥22.)
-- **Security headers** are `SECURITY_HEADERS` in `next.config.mjs`, applied by OpenNext's routing layer to every response the worker renders. `/_next/static` and `public/` never reach the worker, so their `nosniff` is in `public/_headers`. The CSP has no `script-src` yet: a strict one needs a per-request nonce from middleware, which makes every page dynamic, and is its own change. Every `srcDoc` iframe (briefs, the audit report, slides) inherits the policy, so a directive added there also governs model-authored HTML. Dev allows same-origin framing only because `/preview` frames `/preview/frame`.
+- **Security headers** are `SECURITY_HEADERS` in `next.config.mjs`, applied by OpenNext's routing layer to every response the worker renders. `/_next/static` and `public/` never reach the worker, so their `nosniff` is in `public/_headers`. The CSP's `script-src` is `SCRIPT_SOURCES` there: this origin, the tag container (web only; `lib/analytics/gtm.js` keeps it out of the shell) and the sign-in bot check, plus `'unsafe-eval'` in dev. A script from any other host is refused, so loading one means adding its host there. It keeps `'unsafe-inline'` with no nonce, and not because a nonce would make pages dynamic (every route already is: the root layout reads the locale cookie) but because an `about:srcdoc` frame inherits its parent's policy, and the brief and artifact frames run model-authored inline `<script>` that no nonce can reach. Every `srcDoc` iframe (briefs, the audit report, slides) inherits the policy, so a directive added there also governs model-authored HTML. Dev allows same-origin framing only because `/preview` frames `/preview/frame`.
 
 ## Route structure
 
@@ -266,9 +266,11 @@ it is a claim about the code, not a way to quiet the check.
   reference a tag vendor** — that is what lets a self-host build measure nothing
   without editing our consent logic, and it mirrors
   `desktop/src-tauri/src/telemetry/` on the Rust side.
-- `ProductAnalytics` owns the flow, and exempts the desktop shell from ever
-  asking: it measures with storage permanently off, gated on the Preferences
-  switch in `lib/telemetry.js`.
+- `ProductAnalytics` owns the flow. The desktop shell measures nothing and is
+  never asked: `gtm.isConfigured()` is false there, because the shell's IPC
+  trusts every script on this origin and a tag container exists to run scripts
+  configured outside this repository. The Preferences switch in
+  `lib/telemetry.js` governs crash reports alone.
 - `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
   `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
   `formatNumber`, `formatPercent`, `titleCase`, `formatTitle`, `capitalize`,

@@ -9,6 +9,11 @@
  * Rust side, for the same reason: the builds we distribute measure, and a fork
  * should be able to drop that or replace it without reading our consent logic.
  *
+ * A provider may still refuse a surface on its own account, when the risk is
+ * what the provider *is* rather than measurement as such: `gtm` reports itself
+ * unconfigured inside the desktop shell because a tag container is a loader for
+ * scripts configured elsewhere. A provider that bundles its own code need not.
+ *
  * Selected by `NEXT_PUBLIC_ANALYTICS_PROVIDER`. Unset falls back to `gtm` when
  * a container is configured and `none` otherwise — so an existing deploy keeps
  * its behaviour, and a self-host build that sets neither variable measures
@@ -106,7 +111,6 @@ export const AnalyticsParam = {
   Provider: "provider",   // connector id: "ga4" | "google_ads" | "meta_ads" | ...
   Agent: "agent",         // agent_type that produced an artifact
   Kind: "kind",           // artifact kind, or change-set kind
-  Shell: "shell",         // "desktop" | "browser"
   Services: "services",   // execution services someone asked for
   Os: "os",               // marketing-site download target
   Reason: "reason",       // why a site could not be read: invalid_url | unreachable

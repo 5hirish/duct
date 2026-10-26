@@ -105,6 +105,12 @@ published without one. The same script, with no arguments, holds
 - Routes that run before sign-in or for a guest are rate limited on the real
   client address, with live runs capped per user.
 - Security headers on every site page, app response and API response.
+- The desktop app loads no tag container. Its keychain bridge trusts every
+  script on the page, and a container exists to run scripts configured
+  elsewhere; the Preferences switch now governs crash reports alone.
+- Every app page names where its scripts may come from: this origin, the
+  sign-in bot check and, in a browser, the tag container. A script from
+  anywhere else is refused, and so is `eval`.
 
 ## [0.7.1] — 2026-09-28
 

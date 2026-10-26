@@ -241,7 +241,7 @@ Only while the switch is on.
 | | |
 |---|---|
 | Crashes | The error and stack trace from the shell and the web view. Personal data is off; query strings, sensitive headers and cookies are scrubbed first ([web view config](../app/src/instrumentation-client.ts)) |
-| Usage | Which screens and features open, through the website's tag container with storage off permanently. Nothing is written to your machine, so there is no consent bar |
+| Usage | Nothing through a tag container: the downloaded app never loads one, because its keychain bridge trusts every script on the page and a container exists to run scripts configured outside this repository. No tags, so no consent bar |
 | Never | Your model keys, connected-tool data, uploads, or anything an agent writes for you |
 
 ### If a fork fails

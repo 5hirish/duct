@@ -4,18 +4,44 @@ import { linguiMacroSwcPlugin } from "@lingui/swc-plugin/options";
 const DEV = process.env.NODE_ENV === "development";
 
 /**
+ * Where a script may come from. Everything bundled (React, Sentry, Mermaid,
+ * DOMPurify, Lingui) is 'self'; the app spawns no worker and calls no `eval`.
+ * The two remote hosts are the only scripts the app fetches by URL: the tag
+ * container, which the web app loads after consent and the desktop shell
+ * never loads (`lib/analytics/gtm.js`), and the sign-in page's Turnstile
+ * check. A new remote script goes here, because nothing else will let it run.
+ * 'unsafe-eval' is dev only: Next's own CSP guidance asks for it there, for
+ * HMR and the error overlay, and nothing in a production bundle needs it.
+ */
+const SCRIPT_SOURCES = [
+  "'self'",
+  "'unsafe-inline'",
+  "https://www.googletagmanager.com",
+  "https://challenges.cloudflare.com",
+  ...(DEV ? ["'unsafe-eval'"] : []),
+];
+
+/**
  * Security headers on every response the worker renders.
  *
  * The session JWT lives in localStorage and the desktop shell lets this origin
  * read keychain-held provider keys, so script injection here is the expensive
- * failure. This set is the part that cannot break a page. The part that would
- * stop injection, a script-src, is not here: App Router hydrates with inline
- * scripts, so a strict policy needs a per-request nonce from middleware, and a
- * nonce makes every page render dynamically. That is its own change.
+ * failure. `script-src` is what answers it: no script from any origin but ours
+ * and the two above, and no `eval`.
  *
- * Before tightening it, know that every srcDoc iframe (briefs, the audit
- * report, slides) inherits this policy, so a directive added here also governs
- * model-authored HTML. That is half of why object-src and base-uri are set.
+ * Why 'unsafe-inline' and not a nonce. Every route already renders dynamically
+ * (the root layout reads the locale cookie), so a nonce would cost no static
+ * page; what rules it out is inheritance. The brief and artifact frames
+ * (`InsightsWorkspace`, `ArtifactRenderer`) are `srcDoc` iframes, and an
+ * `about:srcdoc` document inherits its parent's policy. They run model-authored
+ * HTML whose charts are inline `<script>` by instruction (the insights prompt
+ * forbids external assets), and a nonce cannot be handed to a script the model
+ * wrote. So inline stays allowed and the policy's work is the origin list,
+ * which that inheritance also enforces inside the frames: a model-authored
+ * page cannot pull a script from anywhere. Every `srcDoc` iframe (briefs, the
+ * audit report, slides) inherits the policy, which is half of why object-src
+ * and base-uri are set.
+ *
  * `/_next/static` and `public/` never reach the worker (Workers Static Assets
  * serves them), so `public/_headers` carries their nosniff instead.
  */
@@ -36,7 +62,13 @@ const SECURITY_HEADERS = [
   { key: "X-Frame-Options", value: DEV ? "SAMEORIGIN" : "DENY" },
   {
     key: "Content-Security-Policy",
-    value: `object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors ${DEV ? "'self'" : "'none'"}`,
+    value: [
+      `script-src ${SCRIPT_SOURCES.join(" ")}`,
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      `frame-ancestors ${DEV ? "'self'" : "'none'"}`,
+    ].join("; "),
   },
 ];
 
