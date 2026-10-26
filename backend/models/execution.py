@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 from sqlalchemy import Column, ForeignKey, String
-from models.columns import json_column, utc_datetime
+from models.columns import TOOL_CALL_ID_PRESENT, json_column, utc_datetime
 from sqlmodel import Field, SQLModel
 from utils.dates import utcnow
 
@@ -94,6 +94,18 @@ def normalize_autonomy(value: str | None) -> str:
 
 class ExecutionChangeSet(SQLModel, table=True):
     __tablename__ = "execution_change_sets"
+    __table_args__ = (
+        # One change set per tool call. The index, not the lookup in
+        # propose_change_set, is what makes a replayed call safe under a
+        # race; see models/columns.TOOL_CALL_ID_PRESENT for the predicate.
+        sa.Index(
+            "uq_execution_change_sets_tool_call",
+            "conversation_id", "tool_call_id",
+            unique=True,
+            postgresql_where=sa.text(TOOL_CALL_ID_PRESENT),
+            sqlite_where=sa.text(TOOL_CALL_ID_PRESENT),
+        ),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
     user_id: UUID = Field(
@@ -112,6 +124,11 @@ class ExecutionChangeSet(SQLModel, table=True):
         default=None,
         sa_column=Column(sa.dialects.postgresql.UUID(as_uuid=True), nullable=True, index=True),
     )
+    # The tool call that proposed this set, when an agent did; "" from the
+    # browser. A run continued from its checkpoint executes the call again,
+    # and this is what lets the second execution find the first one's row
+    # (agents/core/tool_calls.py).
+    tool_call_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     agent_type: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     source: str = Field(default="user", sa_column=Column(String, nullable=False, server_default="user"))
     # "" until applied; then "user" (explicit approval) or "auto" (assisted autonomy).

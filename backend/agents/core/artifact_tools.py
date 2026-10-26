@@ -29,6 +29,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 from agents.core.errors import safe_excerpt
+from agents.core.tool_calls import current_tool_call_id
 
 logger = logging.getLogger(__name__)
 
@@ -216,6 +217,10 @@ def build_artifact_tools_lc(
         if (kind or "") == "report":
             return "Reports are produced via the report flow, not CreateArtifact."
 
+        # Read on the loop, before the thread: the call this execution
+        # belongs to, so a replay reads the group the first one minted.
+        call_id = current_tool_call_id()
+
         def _create():
             from db.session import get_session as db_session
             from service.artifact_store import create_artifact_group
@@ -232,6 +237,7 @@ def build_artifact_tools_lc(
                     content=str(content or ""),
                     slug=(slug or "").strip(),
                     conversation_id=conversation_id,
+                    tool_call_id=call_id,
                 )
 
         try:
@@ -247,6 +253,7 @@ def build_artifact_tools_lc(
     ) -> str:
         # LangChain hands nested models as instances; the store wants plain dicts.
         payload = [e if isinstance(e, dict) else e.model_dump() for e in (edits or [])]
+        call_id = current_tool_call_id()
 
         def _update():
             from db.session import get_session as db_session
@@ -272,6 +279,7 @@ def build_artifact_tools_lc(
                         db, head, content=patched, label=(label or "").strip(),
                         expected_version=int(expected_version or 0) or None,
                         user_id=user_id, conversation_id=conversation_id,
+                        tool_call_id=call_id,
                     )
                 except ArtifactConflict as exc:
                     return None, safe_excerpt(exc)
@@ -290,6 +298,8 @@ def build_artifact_tools_lc(
     async def rewrite_artifact(
         artifact: str, content: str, label: str = "", expected_version: int = 0
     ) -> str:
+        call_id = current_tool_call_id()
+
         def _rewrite():
             from db.session import get_session as db_session
             from service.artifact_store import ArtifactConflict, revise_artifact
@@ -303,6 +313,7 @@ def build_artifact_tools_lc(
                         db, head, content=str(content or ""), label=(label or "").strip(),
                         expected_version=int(expected_version or 0) or None,
                         user_id=user_id, conversation_id=conversation_id,
+                        tool_call_id=call_id,
                     )
                 except ArtifactConflict as exc:
                     return None, safe_excerpt(exc)

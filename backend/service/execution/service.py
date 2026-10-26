@@ -22,6 +22,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
 from models.execution import ExecutionChangeSet, ExecutionGuardrail
@@ -180,6 +181,26 @@ def serialize_change_set(cs: ExecutionChangeSet) -> dict[str, Any]:
     }
 
 
+def change_set_for_tool_call(
+    db: Session, *, conversation_id: UUID | None, tool_call_id: str
+) -> ExecutionChangeSet | None:
+    """The set an earlier execution of this tool call proposed, if any.
+
+    A run cut between the tool's commit and its checkpoint is continued from
+    the checkpoint, which executes the call again (agents/core/tool_calls.py).
+    Handing back the row it wrote keeps the second execution from proposing,
+    and on an assisted project auto-applying, the same changes twice.
+    """
+    if conversation_id is None or not tool_call_id:
+        return None
+    return db.execute(
+        select(ExecutionChangeSet).where(
+            ExecutionChangeSet.conversation_id == conversation_id,
+            ExecutionChangeSet.tool_call_id == tool_call_id,
+        )
+    ).scalars().first()
+
+
 def propose_change_set(
     db: Session,
     *,
@@ -195,6 +216,7 @@ def propose_change_set(
     conversation_id: UUID | None = None,
     agent_type: str = "",
     source: str = "user",
+    tool_call_id: str = "",
 ) -> ExecutionChangeSet:
     """Preview + guardrail-check every change and persist the set.
 
@@ -204,6 +226,11 @@ def propose_change_set(
     """
     if not changes:
         raise ValueError("A change set needs at least one change.")
+
+    # Before the previews: a replay must not read the account again either.
+    replay = change_set_for_tool_call(db, conversation_id=conversation_id, tool_call_id=tool_call_id)
+    if replay is not None:
+        return replay
 
     for change in changes:
         spec = get_executor(str(change.get("op_type") or ""))  # KeyError → caller
@@ -264,6 +291,7 @@ def propose_change_set(
         user_id=user_id,
         project_id=project_id,
         conversation_id=conversation_id,
+        tool_call_id=tool_call_id,
         agent_type=agent_type,
         source=source,
         auto_apply_eligible=auto_eligible_set,
@@ -275,7 +303,16 @@ def propose_change_set(
         changes=stored_changes,
     )
     db.add(row)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Two executions of one call raced past the read above; the index
+        # let one through, and this one hands back what it wrote.
+        db.rollback()
+        replay = change_set_for_tool_call(db, conversation_id=conversation_id, tool_call_id=tool_call_id)
+        if replay is None:
+            raise
+        return replay
     db.refresh(row)
 
     blocked = sum(1 for c in stored_changes if c["status"] == "blocked")

@@ -41,6 +41,7 @@ from deepagents import FilesystemMiddleware, create_deep_agent
 from deepagents.backends import StateBackend
 from langchain.agents import create_agent
 from langchain.agents.middleware import (
+    AgentMiddleware,
     ClearToolUsesEdit,
     ContextEditingMiddleware,
     ModelCallLimitMiddleware,
@@ -55,6 +56,7 @@ from langgraph.errors import GraphBubbleUp
 from agents.core.checkpoint import get_checkpointer
 from agents.core.errors import ErrorCode, classify_error, error_payload, is_retryable, safe_excerpt
 from agents.core.events import AgentEvent, AgentStep, StepStatus
+from agents.core.tool_calls import executing_tool_call
 from agents.core.lc import (
     ReportedRetryMiddleware,
     SeenImagePruneMiddleware,
@@ -418,6 +420,34 @@ def tool_error_middleware() -> ToolErrorMiddleware:
     return ToolErrorMiddleware(on_error=tool_error_message)
 
 
+class ToolCallBinder(AgentMiddleware):
+    """Names the executing tool call to the tool body (agents/core/tool_calls).
+
+    A writer keyed on the call id survives the one replay LangGraph makes:
+    a run cut between the tool's commit and its checkpoint, continued from
+    the checkpoint. The id is the one in the model's message, so the second
+    execution carries the same one. LangChain's own route to it,
+    ``InjectedToolCallId``, would put the id in every writer's schema and
+    refuse the plain invocation the tool tests use; a context variable set
+    here costs the tools nothing.
+    """
+
+    def wrap_tool_call(self, request, handler):
+        with executing_tool_call(_tool_call_id(request)):
+            return handler(request)
+
+    async def awrap_tool_call(self, request, handler):
+        with executing_tool_call(_tool_call_id(request)):
+            return await handler(request)
+
+
+def _tool_call_id(request: Any) -> str:
+    try:
+        return str(request.tool_call.get("id") or "")
+    except AttributeError:
+        return ""
+
+
 def subagent_middleware(
     limits: RunLimits,
     *,
@@ -434,6 +464,7 @@ def subagent_middleware(
     repeated here.
     """
     return [
+        ToolCallBinder(),
         tool_error_middleware(),
         ModelCallLimitMiddleware(run_limit=limits.model_calls_per_run, exit_behavior="end"),
         ToolCallLimitMiddleware(run_limit=limits.tool_calls_per_run, exit_behavior="continue"),
@@ -472,6 +503,9 @@ def session_middleware(
             ],
         ),
         *([SeenImagePruneMiddleware()] if prune_seen_images else []),
+        # Every tool body can name the call it runs in; the writers key on
+        # it so a run continued from its checkpoint writes once.
+        ToolCallBinder(),
         # A tool that raises is a result the model reads, not the end of the
         # turn — see tool_error_message.
         tool_error_middleware(),
