@@ -177,6 +177,7 @@ are relative to `backend/`.
 | Authority lives in code, never the prompt. No agent-facing approve or apply tool, in either harness. | `service/execution/policy.py` | `tests/test_execution_policy.py` |
 | Nothing that moves money, goes live, or cannot be fully undone applies without a click on that set. | the auto-apply allowlist (`AUTO_APPLY_ALLOWLIST`) | `tests/test_execution_policy.py`; the allowlist is under review (gap 8) |
 | The agent acts with the user's delegated credentials, scoped to the project at build time. Non-members get 404. | binders take a membership-checked `project_id` | `tests/test_route_auth_boundaries.py` |
+| Only an explicit Stop cancels a run. A page that leaves mid-turn detaches: the run finishes and is written down, the grace close and the pruner wait for the turn, and a returning tab reattaches from the segment after the rows it hydrated. | `_close_after_grace`, `_stale_session_ids`, `after_segment` on the stream (`routes/agents.py`); the recorder's segment stamp; `hooks/useAgentSession.js` | `tests/test_runs_survive_navigation.py`; `lib/__tests__/liveRuns.test.js`, `agentHistory.test.js` |
 
 ### Evals and observability
 

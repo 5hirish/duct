@@ -47,6 +47,7 @@ from agents.audit.crawl import create_audit_session
 from agents.audit.v1.runner import LangChainAuditRunner
 from agents.core.session import close_session, get_session, live_session_count
 from agents.content.persistence import (
+    SEGMENT_FIELD,
     ConversationRecorder,
     archive_conversation,
     build_reprime_context,
@@ -192,6 +193,12 @@ def _schedule_grace_close(session_id: str) -> None:
 
     async def _close_after_grace() -> None:
         await asyncio.sleep(_RECONNECT_GRACE)  # cancelled if a consumer reconnects
+        # A turn still running when the grace elapses is a run the person
+        # left on purpose: the page closed the stream and kept its handle, so
+        # the run finishes, the recorder writes it down, and the grace starts
+        # over once the turn ends. Only an explicit Stop cancels a run.
+        while (s := get_session(session_id)) is not None and getattr(s, "turn_active", False):
+            await asyncio.sleep(_RECONNECT_GRACE)
         s = get_session(session_id)
         if s is not None:
             s.grace_task = None  # past the wait — don't let close_session re-cancel us
@@ -203,19 +210,25 @@ def _schedule_grace_close(session_id: str) -> None:
 
 # Started from the app lifespan in server.py (FastAPI's lifespan disables
 # router-level on_event hooks, so all startup tasks are launched centrally).
+def _stale_session_ids(now: float) -> list[str]:
+    """Sessions idle past _SESSION_TTL. One shared registry across all agent
+    types (agents/core/session.py). Idle means no consumer activity AND no
+    turn in flight: a run whose tab left keeps nothing refreshed, and pruning
+    it would be the cancel that only an explicit Stop may do."""
+    return [
+        sid for sid, session in list(_core_session._sessions.items())
+        if now - session.last_activity > _SESSION_TTL and not getattr(session, "turn_active", False)
+    ]
+
+
 async def _prune_stale_sessions() -> None:
     while True:
         await asyncio.sleep(300)
-        now = time.monotonic()
-        # One shared registry across all agent types (agents/core/session.py).
         # Prune on INACTIVITY (last_activity), not total age: a session with a
         # live SSE consumer keeps refreshing last_activity via the keep-alive
         # ping, so a long-but-active run (e.g. a 30-min planning conversation
         # waiting on the user) is never hard-killed mid-stream.
-        stale = [
-            sid for sid, session in list(_core_session._sessions.items())
-            if now - session.last_activity > _SESSION_TTL
-        ]
+        stale = _stale_session_ids(time.monotonic())
         for sid in stale:
             logger.info("agents: pruning stale session %s", sid)
             _close_and_consolidate(sid)
@@ -230,8 +243,15 @@ async def _emit_to_queue(queue: asyncio.Queue, body: dict[str, Any]) -> None:
     await queue.put(body)
 
 
-async def _sse_stream(event_queue: asyncio.Queue) -> AsyncGenerator[str, None]:
-    """Read from event_queue and yield SSE frames. Runs until sentinel None received."""
+async def _sse_stream(event_queue: asyncio.Queue, *, skip_through: int = 0) -> AsyncGenerator[str, None]:
+    """Read from event_queue and yield SSE frames. Runs until sentinel None received.
+
+    ``skip_through`` drops the backlog a returning tab already has: every
+    recorded event carries the segment it belongs to, the tab hydrated the
+    rows those segments left, and drawing them again from the queue would
+    show each finished reply twice. An event with no segment (emitted
+    outside the recorder) is never skipped.
+    """
     while True:
         try:
             payload = await asyncio.wait_for(event_queue.get(), timeout=15)
@@ -240,6 +260,9 @@ async def _sse_stream(event_queue: asyncio.Queue) -> AsyncGenerator[str, None]:
             continue
         if payload is None:  # sentinel — session closed
             break
+        segment = payload.get(SEGMENT_FIELD) if skip_through else None
+        if isinstance(segment, int) and segment <= skip_through:
+            continue
         # default=str so payloads carrying UUIDs / datetimes / enums (content
         # events do) serialize instead of crashing the stream mid-flight.
         yield f"data: {json.dumps(payload, default=str)}\n\n"
@@ -513,9 +536,14 @@ async def create_session(
 async def stream_session(
     agent_type: str,
     session_id: str,
+    after_segment: int = 0,
     user: User | None = Depends(get_current_user_optional),
 ) -> StreamingResponse:
-    """SSE stream for an active session. Stays open for the session lifetime."""
+    """SSE stream for an active session. Stays open for the session lifetime.
+
+    ``after_segment`` is what a tab that hydrated the transcript first sends:
+    the last segment its rows cover, so the queue's backlog starts after it.
+    """
     session = _owned_session(session_id, agent_type, user)
 
     event_queue: asyncio.Queue = session.event_queue  # type: ignore[assignment]
@@ -527,7 +555,7 @@ async def stream_session(
 
     async def stream() -> AsyncGenerator[str, None]:
         try:
-            async for chunk in _sse_stream(event_queue):
+            async for chunk in _sse_stream(event_queue, skip_through=max(0, int(after_segment or 0))):
                 # Each frame (data or keep-alive ping) proves the consumer is
                 # still attached — refresh last_activity so the pruner measures
                 # idle time, not total session age.
@@ -1020,6 +1048,9 @@ async def get_session_state(
         "agent_type": agent_type,
         "report_versions": versions,
         "has_pending_question": bool(pending) or session.answer_future is not None,
+        # A turn in flight. A tab that left a run behind polls this to keep
+        # its sidebar badge honest without reopening the stream.
+        "running": bool(getattr(session, "turn_active", False)),
         # The pauses the run is parked on, whichever way it parked — what a
         # client that reattaches needs in order to put the card back on screen.
         "pending": pending,
@@ -1301,7 +1332,7 @@ def _create_session_for(agent_type: str, session_id: str, body: dict):
 
         if conv_id is not None:
             session.conversation_id = conv_id
-            session.recorder = ConversationRecorder(conv_id)
+            session.recorder = ConversationRecorder(conv_id, session_id=session_id)
             session.resume = is_resume
             # Derive the working artifact from the conversation so the runner's
             # _content_context_xml + PIPELINE_FINISHED see the right id on resume.
@@ -1351,7 +1382,7 @@ def _create_audit_session_with_conversation(agent_type: str, session_id: str, bo
                 db.add(conv)
                 db.commit()
             session.conversation_id = conv.id
-            session.recorder = ConversationRecorder(conv.id)
+            session.recorder = ConversationRecorder(conv.id, session_id=session_id)
             session.resume = is_resume
     except Exception:
         logger.warning(
@@ -1398,7 +1429,7 @@ def _create_insights_session_with_conversation(agent_type: str, session_id: str,
                 db.add(conv)
                 db.commit()
             session.conversation_id = conv.id
-            session.recorder = ConversationRecorder(conv.id)
+            session.recorder = ConversationRecorder(conv.id, session_id=session_id)
             session.resume = is_resume
     except Exception:
         logger.warning(
