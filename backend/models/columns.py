@@ -22,6 +22,13 @@ from datetime import datetime, timezone
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
 
+# The predicate behind every "one row per agent tool call" index
+# (agents/core/tool_calls.py). A row a person made carries no call id and
+# must never collide with another, so the index is partial, and it is
+# spelled for both dialects because the desktop sidecar and the tests run
+# on SQLite.
+TOOL_CALL_ID_PRESENT = "tool_call_id <> ''"
+
 
 def json_column() -> sa.types.TypeEngine:
     """JSON column type: `JSONB` on Postgres, generic `JSON` elsewhere.

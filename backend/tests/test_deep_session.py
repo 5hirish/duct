@@ -409,3 +409,33 @@ async def test_a_tool_that_raises_becomes_an_error_the_model_can_read():
     assert "Lookup failed (RuntimeError)" in text and "carry on" in text
     assert "https://" not in text and "ABCDEFGH" not in text
     assert result["messages"][-1].content == "Could not look it up; here is what I know."
+
+
+async def test_the_loop_names_the_call_to_the_tool():
+    """What the writers key on: inside a tool body the executing call's id is
+    readable (agents/core/tool_calls.py), set by ToolCallBinder around every
+    call, and it is the id from the model's message, so a replay of the
+    same call carries the same one."""
+    from langchain_core.tools import StructuredTool
+
+    from agents.core.tool_calls import current_tool_call_id
+
+    seen: list[str] = []
+
+    async def _note(topic: str) -> str:
+        """Note the call."""
+        seen.append(current_tool_call_id())
+        return "noted"
+
+    note = StructuredTool.from_function(coroutine=_note, name="Note", description="Note the call.")
+    llm = ToolCallingFake(responses=[
+        AIMessage(content="", tool_calls=[{"name": "Note", "args": {"topic": "x"}, "id": "call_42"}]),
+        AIMessage(content="done"),
+    ])
+    agent = build_session_agent(llm=llm, tools=[note], system_prompt="x", limits=_limits())
+    config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": _limits().recursion}
+
+    await agent.ainvoke({"messages": [{"role": "user", "content": "go"}]}, config)
+
+    assert seen == ["call_42"]
+    assert current_tool_call_id() == ""

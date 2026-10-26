@@ -27,7 +27,7 @@ import sqlalchemy as sa
 from sqlalchemy import Column, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
-from models.columns import json_column, utc_datetime
+from models.columns import TOOL_CALL_ID_PRESENT, json_column, utc_datetime
 from utils.dates import utcnow
 
 
@@ -38,6 +38,16 @@ class Artifact(SQLModel, table=True):
         Index("ix_artifacts_project_created", "project_id", "created_at"),
         # Resolving /artifacts/<project>/<slug>. From c8f3a1d92b4e.
         Index("ix_artifacts_project_slug", "project_id", "slug"),
+        # One version per agent tool call, for the same reason as
+        # execution_change_sets: a run continued from its checkpoint
+        # executes the call again (agents/core/tool_calls.py).
+        Index(
+            "uq_artifacts_tool_call",
+            "conversation_id", "tool_call_id",
+            unique=True,
+            postgresql_where=sa.text(TOOL_CALL_ID_PRESENT),
+            sqlite_where=sa.text(TOOL_CALL_ID_PRESENT),
+        ),
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
@@ -59,6 +69,9 @@ class Artifact(SQLModel, table=True):
         default=None,
         sa_column=Column(sa.dialects.postgresql.UUID(as_uuid=True), nullable=True, index=True),
     )
+    # The tool call that wrote this version, when an agent did; "" for a
+    # version a person made or restored.
+    tool_call_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
 
     # Model-chosen kebab-case identity, unique per project among groups ("" =
     # unnamed). Shared by every version of the group; app-enforced uniqueness

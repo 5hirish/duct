@@ -37,6 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from agents.core.telemetry import tool_span
 from agents.core.errors import safe_excerpt
+from agents.core.tool_calls import current_tool_call_id
 
 logger = logging.getLogger(__name__)
 
@@ -234,6 +235,7 @@ def _propose_sync(
     project_id: UUID | None,
     conversation_id: UUID | None,
     agent_type: str,
+    tool_call_id: str = "",
 ):
     from db.session import get_session as db_session
     from service.execution.creds import resolve_execution_creds
@@ -274,6 +276,7 @@ def _propose_sync(
             conversation_id=conversation_id,
             agent_type=agent_type,
             source="agent",
+            tool_call_id=tool_call_id,
         )
 
 
@@ -370,6 +373,9 @@ async def _propose(
             _propose_sync, args,
             user_id=user_id, project_id=project_id,
             conversation_id=conversation_id, agent_type=agent_type,
+            # The call this execution belongs to, so a replay reads the set
+            # the first execution proposed instead of proposing a twin.
+            tool_call_id=current_tool_call_id(),
         )
     except KeyError as exc:
         return _error(safe_excerpt(exc))

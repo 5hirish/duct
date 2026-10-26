@@ -37,6 +37,7 @@ from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from agents.audit.schema import AuditReport, VersionedReport
 from agents.core.events import AgentEvent
@@ -244,6 +245,24 @@ def audit_report_version(body: dict) -> ArtifactVersion:
 # Sync persistence primitives
 # ---------------------------------------------------------------------------
 
+def artifact_for_tool_call(db, *, conversation_id: UUID | None, tool_call_id: str) -> Artifact | None:
+    """The version an earlier execution of this tool call wrote, if any.
+
+    A run cut between the tool's commit and its checkpoint is continued from
+    the checkpoint, which executes the call again (agents/core/tool_calls.py);
+    without this a replayed CreateArtifact mints a second group and a replayed
+    UpdateArtifact appends a second, identical version.
+    """
+    if conversation_id is None or not tool_call_id:
+        return None
+    return db.execute(
+        select(Artifact).where(
+            Artifact.conversation_id == conversation_id,
+            Artifact.tool_call_id == tool_call_id,
+        )
+    ).scalars().first()
+
+
 def persist_artifact_version(
     *,
     project_id: UUID,
@@ -261,6 +280,7 @@ def persist_artifact_version(
     meta: dict | None = None,
     slug: str = "",
     activity_source: str = "agent",
+    tool_call_id: str = "",
 ) -> Artifact:
     """Store one immutable artifact version (bytes to private storage when
     given, row always). Sync — call from a thread in async contexts.
@@ -286,6 +306,7 @@ def persist_artifact_version(
         project_id=project_id,
         user_id=user_id,
         conversation_id=conversation_id,
+        tool_call_id=tool_call_id,
         agent_type=agent_type,
         kind=kind,
         content_type=content_type,
@@ -299,7 +320,17 @@ def persist_artifact_version(
     )
     with next(db_session()) as db:
         db.add(row)
-        db.commit()
+        try:
+            db.commit()
+        except IntegrityError:
+            # Two executions of one call raced past the caller's read; the
+            # index let one through. The bytes this one put in storage are
+            # an orphan nothing references, which is the cheaper failure.
+            db.rollback()
+            replay = artifact_for_tool_call(db, conversation_id=conversation_id, tool_call_id=tool_call_id)
+            if replay is None:
+                raise
+            return replay
         db.refresh(row)
         # The activity commit below must not expire `row` — callers read it
         # after this session closes.
@@ -490,8 +521,12 @@ def create_artifact_group(
     slug: str = "",
     label: str = "",
     conversation_id: UUID | None = None,
+    tool_call_id: str = "",
 ) -> Artifact:
     """Mint a new artifact group at v1 from text content (agent tool path)."""
+    replay = artifact_for_tool_call(db, conversation_id=conversation_id, tool_call_id=tool_call_id)
+    if replay is not None:
+        return replay
     err = _validate_content(content_type, content)
     if err:
         raise ValueError(err)
@@ -512,6 +547,7 @@ def create_artifact_group(
         data=content.encode("utf-8"),
         meta={"label": label or "Initial version"},
         slug=final_slug,
+        tool_call_id=tool_call_id,
     )
     return row
 
@@ -525,11 +561,17 @@ def revise_artifact(
     expected_version: int | None = None,
     user_id: UUID | None = None,
     conversation_id: UUID | None = None,
+    tool_call_id: str = "",
 ) -> Artifact:
     """Append a new full-snapshot version to head's group.
 
     Optimistic concurrency: when expected_version is given and the group has
     moved past it, raises ArtifactConflict carrying the newer head."""
+    # Before the conflict check: the version a replay wrote is the head that
+    # moved past expected_version.
+    replay = artifact_for_tool_call(db, conversation_id=conversation_id, tool_call_id=tool_call_id)
+    if replay is not None:
+        return replay
     current = latest_of_group(db, head.group_id) or head
     if expected_version is not None and current.version != expected_version:
         raise ArtifactConflict(current)
@@ -555,6 +597,7 @@ def revise_artifact(
         structured_json=current.structured_json if not current.storage_key else {},
         meta={**current.meta, "label": label or f"Version {version}"},
         slug=current.slug,
+        tool_call_id=tool_call_id,
     )
 
 

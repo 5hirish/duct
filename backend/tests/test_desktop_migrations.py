@@ -105,6 +105,11 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN video"))
         conn.execute(sa.text("ALTER TABLE projects DROP COLUMN provenance"))
         conn.execute(sa.text("DROP TABLE mcp_tokens"))
+        # An indexed column cannot be dropped on SQLite; the index goes first.
+        conn.execute(sa.text("DROP INDEX uq_execution_change_sets_tool_call"))
+        conn.execute(sa.text("ALTER TABLE execution_change_sets DROP COLUMN tool_call_id"))
+        conn.execute(sa.text("DROP INDEX uq_artifacts_tool_call"))
+        conn.execute(sa.text("ALTER TABLE artifacts DROP COLUMN tool_call_id"))
 
     assert "alembic_version" not in set(inspect(engine).get_table_names())
     assert "memory_paused" not in _columns(engine, "projects")
