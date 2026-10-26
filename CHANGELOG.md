@@ -108,6 +108,9 @@ published without one. The same script, with no arguments, holds
 - The desktop app loads no tag container. Its keychain bridge trusts every
   script on the page, and a container exists to run scripts configured
   elsewhere; the Preferences switch now governs crash reports alone.
+- Every app page names where its scripts may come from: this origin, the
+  sign-in bot check and, in a browser, the tag container. A script from
+  anywhere else is refused, and so is `eval`.
 
 ## [0.7.1] — 2026-09-28
 
