@@ -20,6 +20,8 @@ listed for. (The maintainer isn't listed here — that's already in
 
 ## Code
 
+[Danny Ward](https://github.com/dannyward630) — isolated project selection between browser tabs (2026-10).
+
 <!-- Name (link) — one line on what you touched, and when -->
 
 ## Everything else
