@@ -15,9 +15,22 @@ port 0 and let the OS choose, so two Duct windows (or a dev server) never
 collide. `api_key` is the local `X-API-Key` value; it is generated once and
 persisted in the data dir so it survives restarts.
 
+Secrets contract (stdin, exactly one line, read before anything else):
+
+    {"duct_secrets": 1, "DUCT_LOCAL_API_KEY": "...", "DUCT_LOCAL_JWT_SECRET": "...",
+     "CREDENTIALS_ENCRYPTION_KEY": "...", "GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET": "..."}
+
+With `--secrets-on-stdin` the shell writes that line on the same pipe it then
+holds open for `--exit-on-stdin-eof`, and omits any value it does not have.
+The sidecar prefers a supplied value over its environment, and whichever
+channel a secret arrived on, the names are removed from `os.environ` once the
+settings object has read them (`SECRET_ENV_NAMES`). Without the flag nothing
+is read from stdin and the environment alone is consulted, which is how a
+headless `--data-dir` run and a developer's shell keep working.
+
 Usage:
     python local_server.py [--port N] [--data-dir PATH] [--log-level LEVEL]
-                           [--exit-on-stdin-eof]
+                           [--exit-on-stdin-eof] [--secrets-on-stdin]
 """
 
 from __future__ import annotations
@@ -33,6 +46,7 @@ import stat
 import sys
 import threading
 import time
+from collections.abc import Mapping
 from pathlib import Path
 
 from utils.appdirs import ensure_data_dir
@@ -79,6 +93,28 @@ def _load_or_create_secret(path: Path) -> str:
 # "the shell has this in the keychain now, delete the file".
 _API_KEY_ENV = "DUCT_LOCAL_API_KEY"
 _JWT_SECRET_ENV = "DUCT_LOCAL_JWT_SECRET"
+# Marker field on the stdin secrets line, the counterpart of `duct_sidecar` on
+# the handshake: a line without it is not ours, whatever else it parses as.
+_SECRETS_LINE_MARKER = "duct_secrets"
+# Settings `Configs` reads straight from the environment. A value the shell
+# supplies on stdin is placed there for it with `setdefault`, so a value a
+# developer exported still wins, exactly as it did when the shell set the
+# variable itself.
+_CONFIGS_SECRET_NAMES = ("CREDENTIALS_ENCRYPTION_KEY", "GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET")
+# Every secret this process ever holds in its environment: the four the shell
+# may hand down and the two `bootstrap()` derives from them. Removed by
+# `scrub_secrets_from_environment()` once `Configs` is built, because a
+# process environment is readable by every other process this user runs and
+# is inherited by every subprocess, and `Configs` is cached after one read
+# (`get_configs` is `lru_cache`d; nothing in the backend reads these names
+# from `os.environ` afterwards).
+SECRET_ENV_NAMES = (
+    _API_KEY_ENV,
+    _JWT_SECRET_ENV,
+    *_CONFIGS_SECRET_NAMES,
+    "DUCT_API_KEY",
+    "JWT_SECRET",
+)
 
 
 def _retire_file(path: Path) -> None:
@@ -94,31 +130,33 @@ def _retire_file(path: Path) -> None:
         pass
 
 
-def _from_shell_or_file(env_name: str, path: Path) -> str:
+def _from_shell_or_file(env_name: str, path: Path, supplied: Mapping[str, str]) -> str:
     """The shell's keychain copy if there is one, else the file, else a new one.
 
-    Deleting the file once the keychain answers *is* the migration: an existing
-    install moves on its next launch and nothing has to detect a version. The
-    fallback is what keeps a headless `duct-sidecar --data-dir …` working with
-    no shell, and what keeps a machine whose keychain is unavailable bootable.
+    The shell's copy arrives on stdin (`supplied`); the environment is consulted
+    second so a developer exporting the name by hand keeps working. Deleting the
+    file once the keychain answers *is* the migration: an existing install moves
+    on its next launch and nothing has to detect a version. The file fallback is
+    what keeps a headless `duct-sidecar --data-dir …` working with no shell, and
+    what keeps a machine whose keychain is unavailable bootable.
     """
-    supplied = os.environ.get(env_name, "").strip()
-    if supplied:
+    value = (supplied.get(env_name) or os.environ.get(env_name, "")).strip()
+    if value:
         _retire_file(path)
-        return supplied
+        return value
     return _load_or_create_secret(path)
 
 
-def load_or_create_api_key(data_dir: Path) -> str:
+def load_or_create_api_key(data_dir: Path, supplied: Mapping[str, str] | None = None) -> str:
     """Return the local API key: the shell's keychain copy, or this install's file.
 
     This is not a shared secret with a server — it only stops other local
     processes on the machine from driving the sidecar.
     """
-    return _from_shell_or_file(_API_KEY_ENV, data_dir / _API_KEY_FILE)
+    return _from_shell_or_file(_API_KEY_ENV, data_dir / _API_KEY_FILE, supplied or {})
 
 
-def load_or_create_jwt_secret(data_dir: Path) -> str:
+def load_or_create_jwt_secret(data_dir: Path, supplied: Mapping[str, str] | None = None) -> str:
     """Return the persisted key that signs this install's session tokens.
 
     The deployment gets JWT_SECRET from its environment; a frozen bundle ships
@@ -128,7 +166,49 @@ def load_or_create_jwt_secret(data_dir: Path) -> str:
     which is a confusing place to land. Persisted rather than per-boot so a
     restart does not silently sign everyone out.
     """
-    return _from_shell_or_file(_JWT_SECRET_ENV, data_dir / _JWT_SECRET_FILE)
+    return _from_shell_or_file(_JWT_SECRET_ENV, data_dir / _JWT_SECRET_FILE, supplied or {})
+
+
+def read_secrets_line(stream) -> dict[str, str]:
+    """Read the shell's one-line JSON object of secrets from `stream`.
+
+    Exactly one line, so the watchdog can go on reading the same stream for
+    EOF afterwards; the two readers are sequential, never concurrent. Anything
+    but the documented object is a failed start rather than a fallback: the
+    shell asked for this channel with `--secrets-on-stdin`, so silently running
+    on freshly minted files would hand the webview a key the shell does not
+    hold and every request would 401 with nothing in the log saying why.
+
+    The failure is reported as a `SystemExit` carrying one line for stderr that
+    names the cause and never a value — this process's stderr is relayed into
+    the shell's log.
+    """
+    line = stream.readline()
+    if not line:
+        raise SystemExit("[duct-sidecar] --secrets-on-stdin was set but stdin closed before a line arrived")
+    try:
+        payload = json.loads(line)
+    except ValueError:
+        raise SystemExit("[duct-sidecar] the first line on stdin was not valid JSON") from None
+    if not isinstance(payload, dict) or payload.get(_SECRETS_LINE_MARKER) != 1:
+        raise SystemExit(f"[duct-sidecar] the first line on stdin was not a {_SECRETS_LINE_MARKER} object")
+    return {
+        name: value
+        for name, value in payload.items()
+        if name != _SECRETS_LINE_MARKER and isinstance(value, str)
+    }
+
+
+def scrub_secrets_from_environment() -> None:
+    """Drop every secret name from `os.environ` once nothing needs it there.
+
+    Safe only after `get_configs()` has run: `Configs` reads the environment at
+    construction and is cached for the life of the process, and every consumer
+    (`service/credentials.py`, `routes/signin.py`, `validate_api_key`) goes
+    through it rather than back to `os.environ`.
+    """
+    for name in SECRET_ENV_NAMES:
+        os.environ.pop(name, None)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -153,7 +233,25 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "with a pipe only it holds, so the sidecar ends when the shell does."
         ),
     )
+    parser.add_argument(
+        "--secrets-on-stdin",
+        action="store_true",
+        help=(
+            "Read one JSON line of secrets from stdin before anything else. The "
+            "desktop shell passes this instead of putting them in the environment."
+        ),
+    )
     return parser.parse_args(argv)
+
+
+def _stdin_bytes():
+    """The binary stdin both the secrets line and the watchdog read, or None.
+
+    One object for both readers on purpose: a second buffered reader over the
+    same descriptor could swallow bytes the first had already consumed, or
+    hold the line in a buffer the other never sees.
+    """
+    return getattr(sys.stdin, "buffer", None)
 
 
 def bootstrap(argv: list[str] | None = None) -> dict[str, object]:
@@ -164,8 +262,17 @@ def bootstrap(argv: list[str] | None = None) -> dict[str, object]:
     """
     args = _parse_args(argv)
 
+    # First, before the data dir or anything that could log: the shell wrote
+    # the line right after spawning and is now waiting on the handshake.
+    supplied: dict[str, str] = {}
+    if args.secrets_on_stdin:
+        stdin = _stdin_bytes()
+        if stdin is None:
+            raise SystemExit("[duct-sidecar] --secrets-on-stdin was set but there is no stdin to read")
+        supplied = read_secrets_line(stdin)
+
     data_dir = ensure_data_dir(args.data_dir)
-    api_key = load_or_create_api_key(data_dir)
+    api_key = load_or_create_api_key(data_dir, supplied)
     port = args.port or _pick_free_port()
     url = f"http://{_HOST}:{port}"
 
@@ -175,7 +282,10 @@ def bootstrap(argv: list[str] | None = None) -> dict[str, object]:
     os.environ["API_PUBLIC_URL"] = url
     # setdefault, not assignment: a developer running the sidecar against a
     # shared backend may want to pin the signing key to that deployment's.
-    os.environ.setdefault("JWT_SECRET", load_or_create_jwt_secret(data_dir))
+    os.environ.setdefault("JWT_SECRET", load_or_create_jwt_secret(data_dir, supplied))
+    for name in _CONFIGS_SECRET_NAMES:
+        if supplied.get(name):
+            os.environ.setdefault(name, supplied[name])
     # The Tauri webview loads the bundled frontend from a tauri:// origin; the
     # shell also opens the hosted app during the transition, so allow both.
     os.environ.setdefault("FRONTEND_ORIGIN", "tauri://localhost")
@@ -279,7 +389,7 @@ def main(argv: list[str] | None = None) -> int:
     sys.stdout.flush()
 
     if args.exit_on_stdin_eof:
-        stdin = getattr(sys.stdin, "buffer", None)
+        stdin = _stdin_bytes()
         if stdin is None:
             print(
                 "[duct-sidecar] no stdin to watch; the shell cannot end this process",
@@ -289,6 +399,10 @@ def main(argv: list[str] | None = None) -> int:
             watch_stdin(stdin, _stop_for_lost_shell)
 
     _report_environment()
+    # `_report_environment` built and cached Configs, so from here on nothing
+    # needs the secrets in the environment; uvicorn and the app are imported
+    # below, after they are gone.
+    scrub_secrets_from_environment()
 
     import uvicorn  # imported after bootstrap so logging config sees our env
 

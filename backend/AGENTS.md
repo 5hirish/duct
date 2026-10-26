@@ -360,6 +360,19 @@ see the engine consolidation review (duct-cloud, private) §7–8.
   `<data_dir>/local-api-key`. Exported as `DUCT_API_KEY` so the existing
   `validate_api_key` gate applies unchanged. It only stops other local processes
   driving the sidecar (`docs/engineering/credential-storage.md`).
+- **Secrets arrive on stdin, not in the environment.** With
+  `--secrets-on-stdin` the shell writes one JSON line
+  (`{"duct_secrets":1, "DUCT_LOCAL_API_KEY": …, …}`) on the pipe it then
+  holds open for the watchdog, and `bootstrap()` reads it before anything
+  else. Precedence is that line, then the environment (the headless and
+  developer path), then the file. Once `_report_environment()` has built and
+  cached `Configs`, `scrub_secrets_from_environment()` removes every name in
+  `SECRET_ENV_NAMES` from `os.environ`, including the `DUCT_API_KEY` and
+  `JWT_SECRET` it derived — a process environment is readable by other
+  same-user processes and inherited by subprocesses. That scrub is safe only
+  because every consumer goes through `get_configs()`; a new reader of one of
+  those names from `os.environ` at request time would find it gone, so route
+  it through `Configs` instead.
 - **JSON columns must use `models/columns.py::json_column()`**, never
   `postgresql.JSONB` directly — raw JSONB fails to compile on SQLite. The variant
   still renders JSONB on Postgres, so it produces no Alembic diff.

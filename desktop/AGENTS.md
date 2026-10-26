@@ -273,6 +273,19 @@ carries all the code.
   deliberately and gives it the same two seconds before killing it. The
   `Child` in `SidecarState` holds the pipe's write end; take `stdin` out of
   it anywhere but `shutdown` and the sidecar exits on the spot.
+
+  **The same pipe carries the secrets in.** The shell's keychain copies (the
+  local API key, the JWT secret, the credentials encryption key) and the
+  baked-in Google client secret go to the sidecar as one JSON line on stdin
+  (`secrets_line` in `sidecar.rs`, flag `--secrets-on-stdin`), written right
+  after spawn and before the handshake is read. They used to be child
+  environment variables, which every process the user runs can read and every
+  subprocess inherits; the sidecar scrubs the names from its own environment
+  once its settings object has read them. Which secret to send is decided
+  exactly as before — the keychain fallbacks, the pinned-env-file guard, the
+  "never overwrite what someone chose" checks — only the channel changed. A
+  new secret goes on the line, never in `command.env`, and its name joins
+  `SECRET_ENV_NAMES` in `local_server.py` so the scrub covers it.
 - **Windows and Linux** ship from the same pipeline: NSIS on Windows, deb +
   AppImage on Linux. They still need their own runners even without the sidecar
   — Tauri bundles are not cross-compiled — and a *sidecar* build additionally

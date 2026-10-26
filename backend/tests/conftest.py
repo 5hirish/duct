@@ -68,6 +68,9 @@ _LOCAL_MODE_ENV_VARS = (
     # it straight to os.environ, so one desktop test leaked a signing key into
     # every test that ran after it.
     "JWT_SECRET", "DUCT_LOCAL_API_KEY", "DUCT_LOCAL_JWT_SECRET",
+    # Settings bootstrap() places in the environment from the shell's stdin
+    # line, so a desktop test's Fernet key cannot become the next test's.
+    "CREDENTIALS_ENCRYPTION_KEY", "GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET",
 )
 
 
