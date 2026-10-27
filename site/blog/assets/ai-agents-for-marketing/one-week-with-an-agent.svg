@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 590" width="1000" height="590" role="img" aria-labelledby="t d">
+  <title id="t">One week with a marketing agent</title>
+  <desc id="d">Five stages from left to right. Your tools (ads, analytics, search, billing, product) feed the agent, which reads across them, remembers what it learned, and writes a brief. The brief may carry a proposed change. The change waits at an approval step where you decide; only after your click does it apply, and it can be rolled back. The approval step is the one stage in orange.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b5068"/></marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff5c00"/></marker>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      .h { font-size: 24px; font-weight: bold; fill: #0d0f1a; }
+      .l { font-size: 19px; fill: #4b5068; }
+      .k { font-size: 15px; font-weight: bold; letter-spacing: 2.5px; fill: #6b7086; }
+      .flow { stroke: #4b5068; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+  <rect width="1000" height="590" fill="#ffffff"/>
+  <text x="20" y="46" class="serif" font-size="32" fill="#0d0f1a">One week with a marketing agent</text>
+  <text x="20" y="78" class="sans" font-size="19" fill="#4b5068">It reads, it writes, it proposes. The orange step is the only one where something in your accounts changes.</text>
+
+  <!-- 1 your tools -->
+  <text x="20" y="128" class="sans k">1 · YOUR TOOLS</text>
+  <rect x="20" y="140" width="200" height="250" rx="14" fill="#faf8f5" stroke="#d9dbe3" stroke-width="2"/>
+  <g class="sans l">
+    <text x="40" y="178">Google, Meta and</text>
+    <text x="40" y="204">ChatGPT Ads, Apple Ads</text>
+    <text x="40" y="240">GA4, Search Console</text>
+    <text x="40" y="266">Mixpanel, Clarity</text>
+    <text x="40" y="302">Stripe, RevenueCat</text>
+    <text x="40" y="338">GrowthBook, GTM,</text>
+    <text x="40" y="364">GitHub</text>
+  </g>
+
+  <!-- 2 the agent -->
+  <text x="268" y="128" class="sans k">2 · THE AGENT</text>
+  <rect x="268" y="140" width="210" height="250" rx="14" fill="#ffffff" stroke="#d9dbe3" stroke-width="2"/>
+  <text x="288" y="180" class="serif h">Reads across</text>
+  <g class="sans l">
+    <text x="288" y="218">all of them at once</text>
+    <text x="288" y="254">Remembers what it</text>
+    <text x="288" y="280">learned, with dates</text>
+    <text x="288" y="316">Does the arithmetic</text>
+    <text x="288" y="342">in code, not in the</text>
+    <text x="288" y="368">model</text>
+  </g>
+
+  <!-- 3 the brief -->
+  <text x="526" y="128" class="sans k">3 · THE BRIEF</text>
+  <rect x="526" y="140" width="200" height="250" rx="14" fill="#ffffff" stroke="#d9dbe3" stroke-width="2"/>
+  <text x="546" y="180" class="serif h">What moved,</text>
+  <text x="546" y="208" class="serif h">and why</text>
+  <g class="sans l">
+    <text x="546" y="246">Numbers with their</text>
+    <text x="546" y="272">sources</text>
+    <text x="546" y="308">Sometimes a</text>
+    <text x="546" y="334">proposed change,</text>
+    <text x="546" y="360">with a guardrail check</text>
+  </g>
+
+  <!-- 4 you -->
+  <text x="774" y="128" class="sans k" fill="#ff5c00">4 · YOU</text>
+  <rect x="774" y="140" width="206" height="250" rx="14" fill="#fff4ec" stroke="#ff5c00" stroke-width="3"/>
+  <text x="794" y="180" class="serif h">Approve,</text>
+  <text x="794" y="208" class="serif h">or don't</text>
+  <g class="sans l">
+    <text x="794" y="246">The agent has no</text>
+    <text x="794" y="272">approve tool. The</text>
+    <text x="794" y="298">button is yours.</text>
+    <text x="794" y="334">Applied changes</text>
+    <text x="794" y="360">can be rolled back</text>
+  </g>
+
+  <!-- arrows -->
+  <path class="flow" d="M220 265 L262 265" marker-end="url(#ah)"/>
+  <path class="flow" d="M478 265 L520 265" marker-end="url(#ah)"/>
+  <path class="flow" d="M726 265 L768 265" marker-end="url(#ao)" stroke="#ff5c00"/>
+
+  <!-- the change, below -->
+  <path class="flow" d="M877 390 L877 430" marker-end="url(#ao)" stroke="#ff5c00"/>
+  <rect x="526" y="436" width="454" height="90" rx="12" fill="#eef0f5"/>
+  <text x="546" y="470" class="sans l" font-weight="bold" fill="#0d0f1a">5 · The change applies</text>
+  <text x="546" y="500" class="sans l">a paused campaign, a negative keyword, a GA4 key event</text>
+
+  <text x="20" y="570" class="sans" font-size="15" fill="#6b7086">Tools as listed on getduct.ai/integrations. The approval rule is enforced in backend/service/execution/policy.py, not in a prompt.</text>
+</svg>
