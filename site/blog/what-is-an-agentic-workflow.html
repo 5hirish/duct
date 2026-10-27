@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>What Is an Agentic Workflow? A Weekly Brief, Step by Step</title>
+<link rel="canonical" href="https://getduct.ai/blog/what-is-an-agentic-workflow"/>
+<meta name="description" content="An agentic workflow, explained on one real job: the weekly growth brief. Every step, who decides each one, and which step was taken away from the model and why."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/blog/what-is-an-agentic-workflow"/>
+<meta property="og:title" content="What Is an Agentic Workflow? A Weekly Brief, Step by Step"/>
+<meta property="og:description" content="One real workflow, the Monday growth brief, walked step by step: who decides each one, and the step I took away from the model after it added 2,504 where the rows summed to 2,681."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/blog-what-is-an-agentic-workflow.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="Guide"/>
+<meta property="article:tag" content="agentic workflow"/>
+<meta property="article:tag" content="ai agents"/>
+<meta property="article:tag" content="reporting"/>
+<meta property="article:tag" content="weekly brief"/>
+<meta property="article:tag" content="marketing analytics"/>
+<meta property="article:published_time" content="2026-11-24T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="What Is an Agentic Workflow? A Weekly Brief, Step by Step"/>
+<meta name="twitter:description" content="One real workflow, the Monday growth brief, walked step by step: who decides each one, and the step I took away from the model after it added 2,504 where the rows summed to 2,681."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/blog-what-is-an-agentic-workflow.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "inLanguage": "en",
+  "headline": "What Is an Agentic Workflow? The Weekly Growth Brief, Step by Step",
+  "description": "An agentic workflow, explained on one real job: the weekly growth brief. Every step, who decides each one, and which step was taken away from the model and why.",
+  "datePublished": "2026-11-24T00:00:00+00:00",
+  "dateModified": "2026-11-24T00:00:00+00:00",
+  "articleSection": "Guide",
+  "wordCount": 2086,
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": [
+    "https://getduct.ai/blog/assets/what-is-an-agentic-workflow/hero.webp",
+    "https://getduct.ai/assets/og/blog-what-is-an-agentic-workflow.jpg"
+  ],
+  "mainEntityOfPage": "https://getduct.ai/blog/what-is-an-agentic-workflow",
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Duct Blog",
+    "url": "https://getduct.ai/blog/"
+  },
+  "keywords": [
+    "agentic workflow",
+    "ai agents",
+    "reporting",
+    "weekly brief",
+    "marketing analytics"
+  ],
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "name": "Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "IBM's definition",
+      "url": "https://www.ibm.com/think/topics/agentic-workflows"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "March 2024 letter in The Batch",
+      "url": "https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "AI-rithmetic",
+      "url": "https://arxiv.org/abs/2602.10416"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://getduct.ai/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "What Is an Agentic Workflow? The Weekly Growth Brief, Step by Step",
+      "item": "https://getduct.ai/blog/what-is-an-agentic-workflow"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the difference between an agentic workflow and an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An AI agent is the thing that decides: a model with tools, memory and a loop. An agentic workflow is a job, broken into steps, in which an agent decides some of the steps and code or a person decides the others. The weekly brief is a workflow; the model inside it is the agent."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How often should an agentic workflow run?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "As often as the decision it feeds. A growth brief that informs a Monday planning conversation runs weekly, before the conversation. Running it daily produces a daily brief nobody reads, and the model spends money reading data that has not changed. Match the cadence to the meeting, not to what the software can do."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can an agentic workflow run with no human at all?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Reading, comparing and writing can run unattended, with the rule that a question the model cannot ask becomes a stated assumption in the output. Changing a live account should not. In Duct the unattended run has no approve tool at all, so the worst an unattended brief can do is be wrong on the page, where a person sees it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is n8n or Zapier an agentic workflow?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not by default. Both are automation: a person designs the path and the tool repeats it. Either becomes agentic the moment one step hands a decision to a model, such as choosing which report to pull or deciding whether a drop is worth flagging. The useful question is which steps you have handed over and whether a check follows them."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does a weekly brief cost to run?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Under your own model key, a brief is one to twenty data pulls and a handful of model turns, so the bill is the model's, not a per-seat fee. The verifier adds a second model's worth of turns. In Duct's measurements the verifier took 66 seconds of a 198-second brief, which is the price of a number you can trust."
+      }
+    }
+  ]
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+.article-nav-all { font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }
+.prose .post-tags { list-style: none; padding: 0; margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prose .post-tags li { font-size: 13px; font-weight: 500; color: var(--navy-2); background: var(--off); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; margin: 0; }
+.post-hero { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+.post-hero img { width: 100%; height: auto; display: block; border-radius: var(--r-lg); border: 1px solid var(--border); }
+.post-toc { margin: 0 0 40px; padding: 20px 24px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.prose .post-toc-title { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0 0 10px; }
+.post-toc ol { margin: 0; padding-left: 20px; }
+.prose .post-toc li { font-size: 15px; margin-bottom: 4px; }
+.prose .post-toc a { border-bottom: none; }
+.prose h2, .prose h3 { scroll-margin-top: 88px; }
+.post-figure { margin: 36px 0; }
+.prose .post-figure img { height: auto; margin: 0; border: 1px solid var(--border); background: var(--white); }
+.post-figure figcaption, .post-quote figcaption { font-size: 13px; color: var(--navy-3); line-height: 1.6; margin-top: 10px; }
+.post-quote { margin: 36px 0; }
+.post-quote blockquote { margin: 0; }
+.post-quote blockquote p { font-family: var(--serif); font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.post-quote figcaption { padding-left: 27px; }
+.post-table { margin: 28px 0 32px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.post-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; color: var(--navy-3); }
+.post-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--off); }
+.post-table th, .post-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; min-width: 120px; }
+.post-table tr:last-child td { border-bottom: none; }
+.post-table code { font-size: 12px; }
+.prose .post-embed {
+  display: flex; align-items: center; gap: 16px; margin: 28px 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
+  color: var(--navy-3); transition: border-color .15s, background .15s;
+}
+.prose .post-embed:hover { border-color: var(--orange); background: var(--off); }
+.post-embed .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.post-embed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-embed-title { font-size: 16px; color: var(--navy); }
+.post-embed-desc { font-size: 14px; font-weight: 300; line-height: 1.5; }
+.post-embed-host { margin-left: auto; font-size: 12px; color: var(--navy-3); flex-shrink: 0; }
+.post-video { position: relative; margin: 32px 0; aspect-ratio: 16 / 9; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); }
+.prose .post-video-facade { display: block; position: absolute; inset: 0; border: none; color: #fff; }
+.prose .post-video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; }
+.post-video-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,.95) 0%, rgba(13,15,26,.75) 30%, rgba(13,15,26,0) 70%); }
+.post-video-play {
+  position: absolute; z-index: 1; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--orange); font-size: 30px; color: #fff;
+  box-shadow: 0 8px 24px rgba(13,15,26,.35); transition: transform .15s;
+}
+.post-video-facade:hover .post-video-play, .post-video-facade:focus-visible .post-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.post-video-caption { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+.post-video-title { font-family: var(--serif); font-size: 19px; line-height: 1.3; }
+.post-video-note { font-size: 13px; color: #c9ccd8; }
+.post-video iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 640px) {
+  .post-video-title { font-size: 16px; }
+  .post-video-caption { padding: 14px 16px; }
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+  .post-embed-host { display: none; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/what-is-an-agentic-workflow.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/integrations/" class="nav-link">Integrations</a>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang" data-duct-lang-menu>
+<button type="button" class="nav-lang-btn" aria-expanded="false" aria-controls="nav-lang-list" aria-label="Language"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#globe"/></svg><span class="nav-lang-code" data-duct-lang-code>EN</span><svg class="ic nav-lang-caret" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></button>
+<div class="nav-lang-menu" id="nav-lang-list">
+<div class="dropdown-menu-inner">
+<a class="nav-lang-item" href="/" hreflang="en" lang="en" data-duct-lang-link="en" data-code="EN" aria-current="true">English</a>
+<a class="nav-lang-item" href="/es/" hreflang="es" lang="es" data-duct-lang-link="es" data-code="ES">Español</a>
+<a class="nav-lang-item" href="/pt-br/" hreflang="pt-BR" lang="pt-BR" data-duct-lang-link="pt-br" data-code="PT">Português (Brasil)</a>
+<a class="nav-lang-item" href="/de/" hreflang="de" lang="de" data-duct-lang-link="de" data-code="DE">Deutsch</a>
+<a class="nav-lang-item" href="/ja/" hreflang="ja" lang="ja" data-duct-lang-link="ja" data-code="JA">日本語</a>
+</div>
+</div>
+</div>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">Guide</p>
+<h1>What Is an Agentic Workflow? The Weekly Growth Brief, Step by Step</h1>
+<div class="article-meta">Nov 24 2026 · 10 min read · By Shirish Kadam</div>
+<p class="article-made">Claude Code ran the search and citation research, read Duct's runner, totals and checks modules, drafted the post and drew the sequence figure. Shirish checked every number against the changelog and the code, and reads the whole thing before it publishes.</p>
+</header>
+
+<main>
+<figure class="post-hero"><img src="assets/what-is-an-agentic-workflow/hero.webp" srcset="assets/what-is-an-agentic-workflow/hero-768.webp 768w, assets/what-is-an-agentic-workflow/hero.webp 1320w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1320" height="743" fetchpriority="high" alt="A Roman mosaic of a complete aqueduct read left to right: water pours from rock into a bowl, pauses in a settling basin, runs along a channel on five arches, dips through a siphon pipe into a valley and climbs into a full tank with a small orange sluice"/></figure>
+<article id="prose" class="prose">
+<p><strong>An agentic workflow is a job split into steps where a language model decides some of the steps as it goes (what to pull, what matters, what to say) instead of following a script written in advance.</strong> The ones that work in practice mix three deciders: code for anything that must be exact, the model for judgment, and a person for anything that touches a live account.</p>
+<p>That is the whole definition. The rest of this post is one real workflow, the Monday growth brief, walked step by step, including the step I took away from the model after it got a sum wrong.</p>
+<nav class="post-toc" aria-label="In this post">
+<p class="post-toc-title">In this post</p>
+<ol>
+<li><a href="#why-the-weekly-brief-of-all-jobs">Why the weekly brief, of all jobs?</a></li>
+<li><a href="#what-is-the-difference-between-an-agentic-workflow-and-workflow-automation">What is the difference between an agentic workflow and workflow automation?</a></li>
+<li><a href="#what-are-the-steps-of-an-agentic-workflow">What are the steps of an agentic workflow?</a></li>
+<li><a href="#which-step-should-the-model-never-do">Which step should the model never do?</a></li>
+<li><a href="#how-do-you-know-the-workflow-worked">How do you know the workflow worked?</a></li>
+<li><a href="#how-do-you-draw-your-own-weekly-report-as-an-agentic-workflow">How do you draw your own weekly report as an agentic workflow?</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+</nav>
+<h2 id="why-the-weekly-brief-of-all-jobs">Why the weekly brief, of all jobs?</h2>
+<p><strong>Because it is the job I built Duct to stop doing by hand.</strong> Before Duct, Monday meant Google Ads, GA4 and Search Console in three tabs, numbers copied into a sheet, and three paragraphs on what moved. I was bad at it and I did not enjoy it; I leave it to you to guess which came first.</p>
+<p>It is also the job most people mean when a vendor says "agentic workflow" to them. If you want to know whether the phrase means anything, pick a job you already do by hand, and see what changes when a model is allowed to decide parts of it. If you do yours by hand today, the <a href="/tools/weekly-brief-template">weekly brief template</a> is the manual version this post automates.</p>
+<h2 id="what-is-the-difference-between-an-agentic-workflow-and-workflow-automation">What is the difference between an agentic workflow and workflow automation?</h2>
+<p><strong>Who decides the path.</strong> In automation, a person decides every step in advance and the software repeats them. In an agentic workflow, a model decides at least one step while the job runs.</p>
+<p>Anthropic's engineers Erik Schluntz and Barry Zhang drew the line most cleanly in <a href="https://www.anthropic.com/engineering/building-effective-agents">Building effective agents</a> (December 2024): "Workflows are systems where LLMs and tools are orchestrated through predefined code paths," while agents "dynamically direct their own processes and tool usage." They also give the advice most vendors skip, recommending "finding the simplest solution possible, and only increasing complexity when needed," because "workflows offer predictability and consistency for well-defined tasks."</p>
+<p><a href="https://www.ibm.com/think/topics/agentic-workflows">IBM's definition</a> says the same thing from the other side: traditional automation "follow[s] predefined rules and design patterns," and agentic workflows are "dynamic, offering more flexibility by adapting to real-time data and unexpected conditions." The phrase owes much of its spread to Andrew Ng's <a href="https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/">March 2024 letter in The Batch</a>, where he showed GPT-3.5 going from 48.1% to "up to 95.1%" on a coding benchmark once it was "wrapped in an agent loop."</p>
+<p>Here is the test, applied to the Monday brief:</p>
+<div class="post-table" role="region" aria-label="Table: Step, Fixed automation, Agentic workflow, Who decides, in Duct" tabindex="0">
+<table>
+<thead><tr><th scope="col">Step</th><th scope="col">Fixed automation</th><th scope="col">Agentic workflow</th><th scope="col">Who decides, in Duct</th></tr></thead>
+<tbody>
+<tr><td>Trigger</td><td>Monday 07:00, always</td><td>Monday 07:00, always</td><td>Code</td></tr>
+<tr><td>Gather</td><td>the same three reports, every week</td><td>the model picks which entities to pull for this week's question</td><td>Model picks, code fetches</td></tr>
+<tr><td>Compare</td><td>a sheet formula per cell</td><td>totals and rates computed in code; the model reads them</td><td>Code, then model</td></tr>
+<tr><td>Check</td><td>none, or a threshold alert</td><td>a verifier model runs integrity checks and names what it could not check</td><td>A second model</td></tr>
+<tr><td>Write</td><td>a template with numbers dropped in</td><td>a brief written for this week, quoting the computed numbers</td><td>Model</td></tr>
+<tr><td>Approve</td><td>nothing changes</td><td>proposed changes wait for a person</td><td>A person</td></tr>
+</tbody>
+</table>
+</div>
+<p>Only three of the six steps are the model's. That ratio is the point. A workflow where the model decides everything is not more agentic; it is less checkable.</p>
+<h2 id="what-are-the-steps-of-an-agentic-workflow">What are the steps of an agentic workflow?</h2>
+<p><strong>Six, for the brief: trigger, gather, compare, check, write, approve.</strong> The figure shows them with the row that matters, who decides each one.</p>
+<figure class="post-figure" data-zoom><img src="assets/what-is-an-agentic-workflow/weekly-brief-steps.svg" width="1000" height="560" loading="lazy" decoding="async" alt="Six boxes in a row, trigger to approve, with a lane underneath naming who decides each step: code, model, code then model, a second model, model, and a person for the approve step, which is orange."/><figcaption>The row underneath is the design. A step moves between lanes when a measurement says it should.</figcaption></figure>
+<p><strong>Trigger.</strong> A schedule. In Duct the unattended run is one HTTP call, <a href="https://github.com/5hirish/duct/blob/main/backend/routes/generate.py"><code>POST /api/insights/generate</code></a>, which takes a project and a sentence ("the weekly brief") and returns a brief as a stored artifact. The honest limit, before a commenter finds it: Duct does not yet own the clock. The endpoint exists and nothing in the product calls it on a schedule, so until the scheduler ships, a Monday run is a request you, or a cron job, send.</p>
+<p><strong>Gather.</strong> The model reads what Duct remembers about the project (goals, decisions, the budget change last Tuesday), looks at which connectors are attached, and decides which data to pull: Google Ads campaigns, GA4 landing pages, Search Console queries, Mixpanel events. It calls one tool, <code>FetchData</code>, with an entity and a date window. The model chooses; code does the fetching, with the credentials resolved on the server so the model never sees a key.</p>
+<p><strong>Compare.</strong> This week against last, by channel and by device. The totals, rates and subtotals are computed by Duct's code and handed to the model with a note that says, in effect, quote these and never add rows yourself. More on why in a moment.</p>
+<p><strong>Check.</strong> Before the brief carries a recommendation, the main model hands the data to a second model, the verifier, which runs in its own context so the check plumbing does not crowd out the analysis. It has <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py">twelve checks</a> in five families: is this real traffic, is it still on, are these units comparable, did the money settle, where is the ask. A check whose data is not connected is reported as a gap, not skipped quietly.</p>
+<p><strong>Write.</strong> The brief itself, as a markdown artifact: what moved, why it probably moved, what to do. The unattended run cannot ask a question, so the prompt tells the model plainly: "There is nobody to ask." Where it would have asked, it takes the most defensible reading and states the assumption in the same sentence that depends on it.</p>
+<p><strong>Approve.</strong> If the brief proposes a change (pause a campaign, move budget), the change is staged and waits. There is no approve tool in the list the model can call; the file that holds the execution tools <a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py">says so in its docstring</a>. A person presses the button, or does not. The reasoning behind that gate has its own post: <a href="/blog/human-in-the-loop-ai-agents">human in the loop for agents that can spend</a>.</p>
+<h2 id="which-step-should-the-model-never-do">Which step should the model never do?</h2>
+<p><strong>The arithmetic.</strong> In September, while writing the <a href="https://github.com/5hirish/duct/blob/main/docs/engineering/2026-09-27-insights-code-execution-design.md">design record</a> on whether the agent should analyze data with code, I replayed a real brief against a recorded session. The model's reasoning was right. Its addition was not: it reported 2,504 sessions where the rows it had in front of it summed to 2,681. Nothing in the brief looked wrong. A wrong total is set in the same font as a right one.</p>
+<p>That is not a Duct bug so much as a property of the tool. A February 2026 paper, <a href="https://arxiv.org/abs/2602.10416">AI-rithmetic</a> by Alex Bie and colleagues, tested frontier models on plain integer addition and found that "all frontier models suffer significantly degraded accuracy" as the number of digits grows, with most errors coming from "operand misalignment or a failure to correctly carry." A language model adding 250 numbers is a bit like me splitting a restaurant bill: quick, confident, and best checked by someone holding a calculator.</p>
+<p>So the step moved. Since <a href="https://github.com/5hirish/duct/pull/238">pull request #238</a>, merged September 28, every fetched report arrives with its totals, rates and per-channel subtotals computed in <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/totals.py"><code>totals.py</code></a>, and the prompt says to quote them. Two rules live in that file and are worth stealing for any report you build:</p>
+<ul>
+<li><strong>An average is never averaged.</strong> The mean of 250 per-page bounce rates is not the site's bounce rate. A ratio metric (CPA, ROAS, CTR) is its numerator's total over its denominator's; anything else is a mean weighted by what the catalog says to weight it by (bounce rate by sessions, position by impressions).</li>
+<li><strong>Say what the total covers.</strong> A report the source cut short says so, so a partial sum is never quoted as the whole.</li>
+</ul>
+<p>A second step went the other way: it was deleted. The model used to keep its own planning checklist, ticking off steps as it went. Measured on a real brief, two of its five turns did nothing but rewrite that checklist, 36 seconds of a 198-second run. Progress is now derived from the tool traffic instead (every fetch is a step), and the model spends its turns on the work. The measurement, and the decision, are in the <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/v1/runner.py">runner's docstring</a>.</p>
+<p>The lesson generalizes. Every step in an agentic workflow sits in a lane (code, model, person), and it should be allowed to move lanes when a measurement says so. The design is the row underneath the boxes.</p>
+<h2 id="how-do-you-know-the-workflow-worked">How do you know the workflow worked?</h2>
+<p><strong>You check the data before you trust the conclusion, and you measure the workflow before you change it.</strong> Two different things.</p>
+<p>The first is the verifier's job, and the reason it exists is a month on a client's Google Ads account where most of the working turns went on establishing whether a number could be trusted at all, and every serious defect looked healthy on a dashboard (the numbers are in <a href="/blog/ai-agent-vs-chatbot-vs-automation">the agent vs chatbot guide</a>). The checks are those lessons, written down once.</p>
+<p>The second is evals. The arithmetic error was found by replaying a recorded brief and the checklist waste by timing a real one; what keeps both fixed is the eval gate, where a change to the prompt or the tools runs trials against a baseline on synthetic accounts before it merges. <a href="/blog/what-is-harness-engineering">What is harness engineering</a> covers how that gate works and what it costs to run.</p>
+<h2 id="how-do-you-draw-your-own-weekly-report-as-an-agentic-workflow">How do you draw your own weekly report as an agentic workflow?</h2>
+<p><strong>Start from the manual version and label every step with a lane.</strong> Fifteen minutes, one sheet of paper:</p>
+<ol>
+<li>Write down what you do on Monday, in order, as you actually do it. Use the <a href="/tools/weekly-brief-template">weekly brief template</a> if you do not have one.</li>
+<li>Mark each step code, model or person. Anything exact (sums, rates, date windows) is code. Anything that needs reading (what matters, why it moved) is model. Anything that changes a live account is person.</li>
+<li>Add a check step before the write step, even if the check is one question: is this number real?</li>
+<li>Decide what happens when the model cannot ask. If the answer is "it guesses silently," you are not ready to run it unattended.</li>
+<li>Run it beside the manual version for a month, and compare the two every week.</li>
+</ol>
+<p>If step 2 puts every step in the model's lane, you have described a chatbot with tools, not a workflow. <a href="/blog/ai-agent-vs-chatbot-vs-automation">AI agent vs chatbot vs automation</a> is the post for telling those apart; the full guide to AI agents for marketing puts this workflow beside the other jobs an agent fits.</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="what-is-the-difference-between-an-agentic-workflow-and-an-ai-agent">What is the difference between an agentic workflow and an AI agent?</h3>
+<p>An AI agent is the thing that decides: a model with tools, memory and a loop. An agentic workflow is a job, broken into steps, in which an agent decides some of the steps and code or a person decides the others. The weekly brief is a workflow; the model inside it is the agent.</p>
+<h3 id="how-often-should-an-agentic-workflow-run">How often should an agentic workflow run?</h3>
+<p>As often as the decision it feeds. A growth brief that informs a Monday planning conversation runs weekly, before the conversation. Running it daily produces a daily brief nobody reads, and the model spends money reading data that has not changed. Match the cadence to the meeting, not to what the software can do.</p>
+<h3 id="can-an-agentic-workflow-run-with-no-human-at-all">Can an agentic workflow run with no human at all?</h3>
+<p>Reading, comparing and writing can run unattended, with the rule that a question the model cannot ask becomes a stated assumption in the output. Changing a live account should not. In Duct the unattended run has no approve tool at all, so the worst an unattended brief can do is be wrong on the page, where a person sees it.</p>
+<h3 id="is-n8n-or-zapier-an-agentic-workflow">Is n8n or Zapier an agentic workflow?</h3>
+<p>Not by default. Both are automation: a person designs the path and the tool repeats it. Either becomes agentic the moment one step hands a decision to a model, such as choosing which report to pull or deciding whether a drop is worth flagging. The useful question is which steps you have handed over and whether a check follows them.</p>
+<h3 id="what-does-a-weekly-brief-cost-to-run">What does a weekly brief cost to run?</h3>
+<p>Under your own model key, a brief is one to twenty data pulls and a handful of model turns, so the bill is the model's, not a per-seat fee. The verifier adds a second model's worth of turns. In Duct's measurements the verifier took 66 seconds of a 198-second brief, which is the price of a number you can trust.</p>
+<ul class="post-tags" aria-label="Tags"><li>agentic workflow</li><li>ai agents</li><li>reporting</li><li>weekly brief</li><li>marketing analytics</li></ul>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-prev" href="/blog/ai-agent-examples-marketing">← AI Agent Examples for Marketing: Seven Jobs, One Week, Thirteen Tools</a>
+<a class="article-nav-all" href="/blog/">All posts</a>
+</nav>
+</main>
+
+<!-- The closer is the product, not a pitch: the same bridge the tools pages
+     end on, with a shot, so a post is not the one page on the site that ends
+     in text alone. Which one depends on the post's audience. -->
+<section class="duct-bridge" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Reading three tools together is the whole job. Duct does it on your machine.</p>
+      <p class="duct-bridge-body">Ask why signups dropped. Duct reads Search Console, GA4 and your ads and revenue tools together, answers with the sources it read, and proposes the change. You approve it. Open source, free with your own keys.</p>
+      <p class="duct-bridge-actions"><a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a><a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a></p>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"/>
+      <figcaption>Why are signups down? Asked once, answered from four tools.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/integrations/">Integrations</a>
+<a href="/mcp">MCP servers</a>
+<a href="/compare">Compare</a>
+<a href="/changelog/">Changelog</a>
+</div>
+<div class="footer-col">
+<h4>Resources</h4>
+<a href="/blog/">Blog</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-legal" aria-label="Legal">
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</nav>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
