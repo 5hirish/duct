@@ -9,7 +9,17 @@
     <managingEditor>hello@getduct.ai (Shirish Kadam)</managingEditor>
     <webMaster>hello@getduct.ai (Shirish Kadam)</webMaster>
     <copyright>MIT licensed project. Posts © Alleviate Lab.</copyright>
-    <lastBuildDate>Tue, 10 Nov 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 17 Nov 2026 00:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>AI Agent Examples for Marketing: Seven Jobs, One Week, Thirteen Tools</title>
+      <link>https://getduct.ai/blog/ai-agent-examples-marketing</link>
+      <guid isPermaLink="true">https://getduct.ai/blog/ai-agent-examples-marketing</guid>
+      <pubDate>Tue, 17 Nov 2026 00:00:00 GMT</pubDate>
+      <author>hello@getduct.ai (Shirish Kadam)</author>
+      <category>Guide</category>
+      <description>Seven jobs a marketing agent does for a two-person team, each with the tools it reads, what it hands back and what it may change. From the open-source agent that does them.</description>
+    </item>
 
     <item>
       <title>Human in the Loop: Why an Agent That Can Spend Your Budget Must Ask First</title>

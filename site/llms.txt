@@ -79,6 +79,7 @@ What Duct reads in each connected tool, what it can change there, and how each o
 
 ## Blog posts
 
+- [AI Agent Examples for Marketing: Seven Jobs, One Week, Thirteen Tools](https://getduct.ai/blog/ai-agent-examples-marketing): Seven concrete AI agent examples for marketing, each with the tools it reads, what it produces and what it may change, from an open-source agent that does them.
 - [Human in the Loop: Why an Agent That Can Spend Your Budget Must Ask First](https://getduct.ai/blog/human-in-the-loop-ai-agents): What human in the loop means for an AI agent that can touch your ad budget: which actions need approval, what the card must show, and how a gate is enforced.
 - [AI Agent vs Chatbot vs Automation: Which One Is Reading Your Dashboards?](https://getduct.ai/blog/ai-agent-vs-chatbot-vs-automation): The difference between an AI agent, a chatbot and an automation, shown on one job: the weekly growth report. A three-question test, and the code behind it.
 - [What Is Harness Engineering? Lessons From a Shipping Agent](https://getduct.ai/blog/what-is-harness-engineering): what harness engineering is, why the same model scores differently in different harnesses, a reading order for the awesome-harness-engineering list, and the harness rules Duct enforces with tests.
