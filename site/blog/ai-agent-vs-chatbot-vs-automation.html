@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>AI Agent vs Chatbot vs Automation: Which Reads Your Data</title>
+<link rel="canonical" href="https://getduct.ai/blog/ai-agent-vs-chatbot-vs-automation"/>
+<meta name="description" content="The difference between an AI agent, a chatbot and an automation, shown on one job: the weekly growth report. A three-question test, and the code behind it."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/blog/ai-agent-vs-chatbot-vs-automation"/>
+<meta property="og:title" content="AI Agent vs Chatbot vs Automation: Which Reads Your Data"/>
+<meta property="og:description" content="Duct&#x27;s first brief pipeline was an automation wearing an agent&#x27;s vocabulary. Here is the three-question test that told me, and the one tool that is missing on purpose."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/blog-ai-agent-vs-chatbot-vs-automation.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="Guide"/>
+<meta property="article:tag" content="ai agents"/>
+<meta property="article:tag" content="automation"/>
+<meta property="article:tag" content="marketing analytics"/>
+<meta property="article:tag" content="agent harness"/>
+<meta property="article:published_time" content="2026-11-03T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="AI Agent vs Chatbot vs Automation: Which Reads Your Data"/>
+<meta name="twitter:description" content="Duct&#x27;s first brief pipeline was an automation wearing an agent&#x27;s vocabulary. Here is the three-question test that told me, and the one tool that is missing on purpose."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/blog-ai-agent-vs-chatbot-vs-automation.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "inLanguage": "en",
+  "headline": "AI Agent vs Chatbot vs Automation: Which One Is Reading Your Dashboards?",
+  "description": "The difference between an AI agent, a chatbot and an automation, shown on one job: the weekly growth report. A three-question test, and the code behind it.",
+  "datePublished": "2026-11-03T00:00:00+00:00",
+  "dateModified": "2026-11-03T00:00:00+00:00",
+  "articleSection": "Guide",
+  "wordCount": 2111,
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": [
+    "https://getduct.ai/blog/assets/ai-agent-vs-chatbot-vs-automation/hero.webp",
+    "https://getduct.ai/assets/og/blog-ai-agent-vs-chatbot-vs-automation.jpg"
+  ],
+  "mainEntityOfPage": "https://getduct.ai/blog/ai-agent-vs-chatbot-vs-automation",
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Duct Blog",
+    "url": "https://getduct.ai/blog/"
+  },
+  "keywords": [
+    "ai agents",
+    "automation",
+    "marketing analytics",
+    "agent harness"
+  ],
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "name": "Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "AI vs. automation",
+      "url": "https://zapier.com/blog/automation-vs-ai/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "AI agent vs. chatbot",
+      "url": "https://www.techtarget.com/searchenterpriseai/tip/AI-agent-vs-chatbot-Breaking-down-the-differences"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "AI agent vs chatbot",
+      "url": "https://www.make.com/en/blog/AI-agent-vs-chatbot"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://getduct.ai/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "AI Agent vs Chatbot vs Automation: Which One Is Reading Your Dashboards?",
+      "item": "https://getduct.ai/blog/ai-agent-vs-chatbot-vs-automation"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is ChatGPT an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "By default, no. ChatGPT is a chatbot: it answers what you type and waits for the next message. It becomes agent-like when it is given tools and a goal, such as browsing or calling an API across several steps. The model is the same either way; what changes is the software around it, the harness."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is a Zapier workflow an AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No, and that is its strength. A Zap runs a fixed sequence of steps whenever its trigger fires, with no judgment in between, so it is cheap, fast and predictable. Adding an AI step that classifies a ticket does not make it an agent; the step after it still runs regardless of what the AI said."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What can an AI agent do that automation cannot?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Change its plan because of what it just read. An automation carries on to the next wired step whatever the data says. An agent can notice that 36 \"upgrades\" came from seven test accounts, go and check the countries, and say so before anyone acts on the number. It can also propose a change and wait for a person to approve it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I know a vendor's \"agent\" is really one?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ask to see the moment the plan changed. A demo that shows many steps happening on their own is showing an automation. Then ask where approval lives: an agent that can spend your money should be able to propose but not apply the risky changes, and that rule should be in code, not in a prompt the model can be talked out of."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When should I use automation instead of an agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "When the steps are the same every time and the inputs are already trusted. Automation costs cents, runs in seconds and never surprises you. Use an agent for the question that is different every week, or for data that lies quietly, where the first job is deciding whether a number can be trusted at all."
+      }
+    }
+  ]
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+.article-nav-all { font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }
+.prose .post-tags { list-style: none; padding: 0; margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prose .post-tags li { font-size: 13px; font-weight: 500; color: var(--navy-2); background: var(--off); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; margin: 0; }
+.post-hero { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+.post-hero img { width: 100%; height: auto; display: block; border-radius: var(--r-lg); border: 1px solid var(--border); }
+.post-toc { margin: 0 0 40px; padding: 20px 24px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.prose .post-toc-title { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0 0 10px; }
+.post-toc ol { margin: 0; padding-left: 20px; }
+.prose .post-toc li { font-size: 15px; margin-bottom: 4px; }
+.prose .post-toc a { border-bottom: none; }
+.prose h2, .prose h3 { scroll-margin-top: 88px; }
+.post-figure { margin: 36px 0; }
+.prose .post-figure img { height: auto; margin: 0; border: 1px solid var(--border); background: var(--white); }
+.post-figure figcaption, .post-quote figcaption { font-size: 13px; color: var(--navy-3); line-height: 1.6; margin-top: 10px; }
+.post-quote { margin: 36px 0; }
+.post-quote blockquote { margin: 0; }
+.post-quote blockquote p { font-family: var(--serif); font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.post-quote figcaption { padding-left: 27px; }
+.post-table { margin: 28px 0 32px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.post-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; color: var(--navy-3); }
+.post-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--off); }
+.post-table th, .post-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; min-width: 120px; }
+.post-table tr:last-child td { border-bottom: none; }
+.post-table code { font-size: 12px; }
+.prose .post-embed {
+  display: flex; align-items: center; gap: 16px; margin: 28px 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
+  color: var(--navy-3); transition: border-color .15s, background .15s;
+}
+.prose .post-embed:hover { border-color: var(--orange); background: var(--off); }
+.post-embed .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.post-embed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-embed-title { font-size: 16px; color: var(--navy); }
+.post-embed-desc { font-size: 14px; font-weight: 300; line-height: 1.5; }
+.post-embed-host { margin-left: auto; font-size: 12px; color: var(--navy-3); flex-shrink: 0; }
+.post-video { position: relative; margin: 32px 0; aspect-ratio: 16 / 9; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); }
+.prose .post-video-facade { display: block; position: absolute; inset: 0; border: none; color: #fff; }
+.prose .post-video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; }
+.post-video-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,.95) 0%, rgba(13,15,26,.75) 30%, rgba(13,15,26,0) 70%); }
+.post-video-play {
+  position: absolute; z-index: 1; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--orange); font-size: 30px; color: #fff;
+  box-shadow: 0 8px 24px rgba(13,15,26,.35); transition: transform .15s;
+}
+.post-video-facade:hover .post-video-play, .post-video-facade:focus-visible .post-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.post-video-caption { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+.post-video-title { font-family: var(--serif); font-size: 19px; line-height: 1.3; }
+.post-video-note { font-size: 13px; color: #c9ccd8; }
+.post-video iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 640px) {
+  .post-video-title { font-size: 16px; }
+  .post-video-caption { padding: 14px 16px; }
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+  .post-embed-host { display: none; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/ai-agent-vs-chatbot-vs-automation.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/integrations/" class="nav-link">Integrations</a>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang" data-duct-lang-menu>
+<button type="button" class="nav-lang-btn" aria-expanded="false" aria-controls="nav-lang-list" aria-label="Language"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#globe"/></svg><span class="nav-lang-code" data-duct-lang-code>EN</span><svg class="ic nav-lang-caret" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></button>
+<div class="nav-lang-menu" id="nav-lang-list">
+<div class="dropdown-menu-inner">
+<a class="nav-lang-item" href="/" hreflang="en" lang="en" data-duct-lang-link="en" data-code="EN" aria-current="true">English</a>
+<a class="nav-lang-item" href="/es/" hreflang="es" lang="es" data-duct-lang-link="es" data-code="ES">Español</a>
+<a class="nav-lang-item" href="/pt-br/" hreflang="pt-BR" lang="pt-BR" data-duct-lang-link="pt-br" data-code="PT">Português (Brasil)</a>
+<a class="nav-lang-item" href="/de/" hreflang="de" lang="de" data-duct-lang-link="de" data-code="DE">Deutsch</a>
+<a class="nav-lang-item" href="/ja/" hreflang="ja" lang="ja" data-duct-lang-link="ja" data-code="JA">日本語</a>
+</div>
+</div>
+</div>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">Guide</p>
+<h1>AI Agent vs Chatbot vs Automation: Which One Is Reading Your Dashboards?</h1>
+<div class="article-meta">Nov 3 2026 · 10 min read · By Shirish Kadam</div>
+<p class="article-made">Claude Code did the research, drafted the post from Duct's code and git history, and drew the figure; I checked every number, quote and link and the claims about Duct before publishing.</p>
+</header>
+
+<main>
+<figure class="post-hero"><img src="assets/ai-agent-vs-chatbot-vs-automation/hero.webp" srcset="assets/ai-agent-vs-chatbot-vs-automation/hero-768.webp 768w, assets/ai-agent-vs-chatbot-vs-automation/hero.webp 1320w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1320" height="743" fetchpriority="high" alt="A Roman mosaic of one aqueduct channel feeding three devices in a row: a plain open channel, a round basin with a bucket hanging over it, and a water mill whose orange sluice lever splits the stream"/></figure>
+<article id="prose" class="prose">
+<p><strong>An automation runs a fixed list of steps when something triggers it. A chatbot answers what you type, then waits. An AI agent is given a goal, decides its own next step, reads whatever tools it needs, and can act, usually behind an approval. Three questions tell them apart: does it choose its own next step, does it read more than one source, and can it change something.</strong></p>
+<p>You probably have all three on your desk already. A Zapier flow that posts last week's spend to Slack on Monday morning. A ChatGPT tab where you paste a screenshot and ask why signups dipped. And a vendor deck in which every slide says "agent", including the pricing one. The words are used so loosely that the deck could be describing any of the three, and the price is very different for each.</p>
+<p>I know the confusion from the inside, because I shipped the wrong one and called it the right thing. Duct's first insights pipeline, built in April 2026, was a wizard: four steps when it shipped, six by August. You picked the connectors, the ad account, the analytics property, a goal from a list, and the model got at most eight pre-chosen tools and a fixed output template. On August 31 the design note I wrote to replace it opened with a sentence I still find a little embarrassing:</p>
+<figure class="post-quote">
+<blockquote cite="https://github.com/5hirish/duct/blob/main/docs/engineering/2026-08-31-autonomous-insights-agent-plan.md">
+<p>The current insights agent is not an agent. It is a two-call pipeline wearing an agent's vocabulary.</p>
+</blockquote>
+<figcaption><a href="https://github.com/5hirish/duct/blob/main/docs/engineering/2026-08-31-autonomous-insights-agent-plan.md">Shirish Kadam, Autonomous Insights Agent design plan</a></figcaption>
+</figure>
+<p>Every decision worth making had been made before the model ran, which is the definition of an automation. A fine thing to be; not an agent. This post is the test I should have applied earlier, the weekly growth report done all three ways, and the exact line in Duct's code where "agent" stops and "automation" takes over.</p>
+<nav class="post-toc" aria-label="In this post">
+<p class="post-toc-title">In this post</p>
+<ol>
+<li><a href="#what-is-the-difference-between-an-ai-agent-a-chatbot-and-an-automation">What is the difference between an AI agent, a chatbot and an automation?</a></li>
+<li><a href="#the-three-question-test">The three-question test</a></li>
+<li><a href="#the-monday-growth-report-done-three-ways">The Monday growth report, done three ways</a></li>
+<li><a href="#where-does-agent-end-and-automation-begin-in-real-code">Where does &quot;agent&quot; end and &quot;automation&quot; begin in real code?</a></li>
+<li><a href="#when-is-automation-the-better-choice">When is automation the better choice?</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+</nav>
+<h2 id="what-is-the-difference-between-an-ai-agent-a-chatbot-and-an-automation">What is the difference between an AI agent, a chatbot and an automation?</h2>
+<p><strong>The difference is who decides the next step: a person wrote it down in advance (automation), a person types it each time (chatbot), or the software works it out from a goal (agent).</strong></p>
+<p>The cleanest definitions I have found come from Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents">Building effective agents</a>, from December 2024: "Workflows are systems where LLMs and tools are orchestrated through predefined code paths", whereas "agents, on the other hand, are systems where LLMs dynamically direct their own processes and tool usage". Zapier's own <a href="https://zapier.com/blog/automation-vs-ai/">AI vs. automation</a> page, updated in September 2026, puts the first one in plainer words: "Automation runs on predefined rules: when X happens, do Y."</p>
+<p>A chatbot is the odd one out, because it is defined by its interface rather than its decision-making. TechTarget's <a href="https://www.techtarget.com/searchenterpriseai/tip/AI-agent-vs-chatbot-Breaking-down-the-differences">AI agent vs. chatbot</a> has it as "a software program that interacts with human users conversationally". It can run on the same language model as an agent. What makes it a chatbot is that it stops after every answer and waits for you.</p>
+<div class="post-table" role="region" aria-label="Table: , Chatbot, Automation, AI agent" tabindex="0">
+<table>
+<thead><tr><th scope="col"></th><th scope="col">Chatbot</th><th scope="col">Automation</th><th scope="col">AI agent</th></tr></thead>
+<tbody>
+<tr><td>Trigger</td><td>you type a message</td><td>a clock or an event</td><td>a question, or a schedule</td></tr>
+<tr><td>Input</td><td>your words</td><td>the same fields every time</td><td>a goal</td></tr>
+<tr><td>Decides the next step</td><td>what to say, then waits</td><td>nothing, the steps are fixed</td><td>yes, from what it just read</td></tr>
+<tr><td>Reads several tools</td><td>no, only the chat</td><td>one tool per step, as wired</td><td>every tool it is connected to</td></tr>
+<tr><td>Changes something</td><td>no</td><td>yes, every run, nobody asked</td><td>proposes; a person approves</td></tr>
+<tr><td>Fails how</td><td>confidently, in prose</td><td>silently, with a wrong number</td><td>by stopping and saying what it could not verify, if it is built well</td></tr>
+<tr><td>Costs</td><td>a subscription</td><td>cents per run</td><td>a model bill per run, and minutes rather than seconds</td></tr>
+</tbody>
+</table>
+</div>
+<p>The last row is the honest one. An agent is the most expensive and the slowest of the three, and a lot of jobs do not need it.</p>
+<h2 id="the-three-question-test">The three-question test</h2>
+<p><strong>Ask three questions of any tool, demo or slide. Two "yes" answers out of three is an agent; fewer is one of the other two, whatever the label says.</strong></p>
+<ol>
+<li><strong>Does it choose its own next step?</strong> Watch what happens when the first result is surprising. An automation carries on to step four. A chatbot asks you what to do. An agent goes and reads something it was not told to read.</li>
+<li><strong>Does it read more than one source?</strong> A chatbot reads the chat. An automation reads one tool per step, in the order someone wired. An agent reads whatever the question needs, and the useful ones say which sources they could not reach.</li>
+<li><strong>Can it change something, and who says yes?</strong> A chatbot cannot touch your ad account. An automation changes things without asking, which is the point of it. An agent should be able to propose a change and should not be able to apply the risky ones itself. If the demo never shows an approval step, ask where it is.</li>
+</ol>
+<figure class="post-figure" data-zoom><img src="assets/ai-agent-vs-chatbot-vs-automation/three-forms.svg" width="1000" height="640" loading="lazy" decoding="async" alt="Three rows, one per form, each with five boxes for trigger, input, decides, reads and changes. Only the agent row has an orange loop from reads back to decides, and only its decide and change boxes are highlighted."/><figcaption>Cover the row labels. The orange loop is the only thing that makes the third row an agent.</figcaption></figure>
+<p>The vendor tell is question one. A demo that shows a long list of steps happening on their own is showing an automation. The agent is the moment the list changes because of what step two found.</p>
+<h2 id="the-monday-growth-report-done-three-ways">The Monday growth report, done three ways</h2>
+<p><strong>The job is the same every week: read Google Ads, GA4, Search Console and Stripe, say what moved and why, and say what to do about it. What differs is what each form can notice.</strong></p>
+<div class="post-table" role="region" aria-label="Table: , Chatbot, Automation, AI agent" tabindex="0">
+<table>
+<thead><tr><th scope="col"></th><th scope="col">Chatbot</th><th scope="col">Automation</th><th scope="col">AI agent</th></tr></thead>
+<tbody>
+<tr><td>Monday morning</td><td>you paste four screenshots</td><td>a message arrives at 8:00 with last week's numbers</td><td>you ask one question, or a cron job requests the brief</td></tr>
+<tr><td>"Why did signups drop?"</td><td>it guesses from the screenshots</td><td>it does not know a question was asked</td><td>it reads the landing pages, the campaigns and the funnel, then answers</td></tr>
+<tr><td>A number is wrong</td><td>it explains the wrong number fluently</td><td>it sends the wrong number, nicely formatted</td><td>it checks the number before using it, or says it could not</td></tr>
+<tr><td>"Pause that campaign"</td><td>it tells you how</td><td>a step could do it, every time, unasked</td><td>it proposes the pause; you approve it</td></tr>
+<tr><td>What you still do</td><td>the reading</td><td>the thinking</td><td>the approving</td></tr>
+</tbody>
+</table>
+</div>
+<p>The row that matters is the third one, and I have a number for it. Duct's integrity checks are modelled on a Google Ads engagement where, <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py">by that project's own accounting</a>, 60% of 93 turns in a month went on establishing whether a number could be trusted at all, and 16% on actually improving anything. Every serious defect found that month looked healthy on a dashboard: an experiment "running" with nobody bucketed for 74 days, a tag that "fired" but failed at runtime, and 23 of 36 "upgrades" coming from seven QA accounts in one country.</p>
+<p>An automation would have posted those 36 upgrades to Slack every Monday. A chatbot would have written a cheerful paragraph about them. Catching them took something that decided, on its own, to look at where the upgrades came from. A dashboard renders a corrupt number in the same font as a correct one, and so does an automation.</p>
+<h2 id="where-does-agent-end-and-automation-begin-in-real-code">Where does "agent" end and "automation" begin in real code?</h2>
+<p><strong>In Duct it ends at a tool that does not exist. The agent can propose a change and inspect its status; there is no tool it can call to approve or apply one.</strong></p>
+<p>Files rather than adjectives here, because this is the part of the test a demo can fake and a repository cannot. Two things changed on August 31 when the wizard went.</p>
+<p>The first is who decides what to read. The old pipeline's model chose among at most eight pre-bound tools with no arguments. The new one, in <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/prompts/autonomous.py"><code>backend/agents/insights/prompts/autonomous.py</code></a>, is told it "decides for itself what to look at", carries a trust protocol that says "never present a figure you did not fetch or were not given", and can ask you a question mid-run when a connector is missing. The unattended brief, the one a cron job can request on Monday morning (Duct has the entry point and does not yet own the clock), is the same agent with the same tools and one difference: nothing that can pause is mounted, because there is nobody at the keyboard, so a question it cannot ask becomes a stated assumption in the brief.</p>
+<figure class="post-figure" data-zoom><img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="3072" height="2052" loading="lazy" decoding="async" alt="Duct&#x27;s insights session: a chat on the left where the agent has proposed a change and is waiting for approval, and the brief it wrote on the right"/><figcaption>The same agent, two triggers: a question in the chat, or an unattended request on Monday morning. Either way the proposed change waits for a person.</figcaption></figure>
+<p>The second is who decides what to change. The agent's execution tools are in <a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py"><code>backend/agents/tools/execution_tools.py</code></a>, and the docstring is the whole policy in one line:</p>
+<figure class="post-quote">
+<blockquote cite="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py">
+<p>There is no approve or apply tool — approval is human-only by construction.</p>
+</blockquote>
+<figcaption><a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py">Duct, execution_tools.py</a></figcaption>
+</figure>
+<p>What may apply without a click is decided once, in <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py"><code>policy.py</code></a>: a short allowlist of reversible edits such as adding negative keywords or creating a GA4 audience, and only when you have set the project's autonomy to assisted or auto. Budget and bid changes stay off that list because they move money. Anything destructive, such as publishing a Tag Manager version, waits for a person at every level. A <a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_execution_policy.py">test file</a> holds all of that in place, so a future prompt change cannot quietly widen it.</p>
+<p>So the three questions, answered for Duct's own agent: it chooses its next step (yes, since August 31), it reads across every connected tool (yes), and it can change things (it can propose; you apply). The rest of the harness around that model, the limits, the memory and the evals, is a longer story, and it is in <a href="/blog/what-is-harness-engineering">What is harness engineering?</a>. The approval step gets its own guide: human in the loop for agents that can spend your budget.</p>
+<h2 id="when-is-automation-the-better-choice">When is automation the better choice?</h2>
+<p><strong>When the steps never change and the inputs can be trusted, automation wins on cost, speed and predictability, and you should not let anyone talk you out of it.</strong></p>
+<p>Anthropic's advice in the same post: "we recommend finding the simplest solution possible, and only increasing complexity when needed." Zapier says automation "is great for replacing repetitive or mundane tasks", and Make's <a href="https://www.make.com/en/blog/AI-agent-vs-chatbot">AI agent vs chatbot</a> describes agents as "a decision layer on top of your existing deterministic automation" rather than a replacement for it. That is the right picture. Keep the Zap that posts the numbers. Put the agent on the question the Zap cannot ask.</p>
+<p>My rule, after running both on Duct's own accounts since August: an automation for anything you could write down as a checklist and hand to a new hire on day one; an agent for the Monday question that is different every Monday. And the limit I should admit: an agent brief takes minutes where a Zap takes seconds, and every run is a line on your model bill. For a report whose numbers you already trust, that is money spent on judgment you did not need.</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="is-chatgpt-an-ai-agent">Is ChatGPT an AI agent?</h3>
+<p>By default, no. ChatGPT is a chatbot: it answers what you type and waits for the next message. It becomes agent-like when it is given tools and a goal, such as browsing or calling an API across several steps. The model is the same either way; what changes is the software around it, the harness.</p>
+<h3 id="is-a-zapier-workflow-an-ai-agent">Is a Zapier workflow an AI agent?</h3>
+<p>No, and that is its strength. A Zap runs a fixed sequence of steps whenever its trigger fires, with no judgment in between, so it is cheap, fast and predictable. Adding an AI step that classifies a ticket does not make it an agent; the step after it still runs regardless of what the AI said.</p>
+<h3 id="what-can-an-ai-agent-do-that-automation-cannot">What can an AI agent do that automation cannot?</h3>
+<p>Change its plan because of what it just read. An automation carries on to the next wired step whatever the data says. An agent can notice that 36 "upgrades" came from seven test accounts, go and check the countries, and say so before anyone acts on the number. It can also propose a change and wait for a person to approve it.</p>
+<h3 id="how-do-i-know-a-vendor-s-agent-is-really-one">How do I know a vendor's "agent" is really one?</h3>
+<p>Ask to see the moment the plan changed. A demo that shows many steps happening on their own is showing an automation. Then ask where approval lives: an agent that can spend your money should be able to propose but not apply the risky changes, and that rule should be in code, not in a prompt the model can be talked out of.</p>
+<h3 id="when-should-i-use-automation-instead-of-an-agent">When should I use automation instead of an agent?</h3>
+<p>When the steps are the same every time and the inputs are already trusted. Automation costs cents, runs in seconds and never surprises you. Use an agent for the question that is different every week, or for data that lies quietly, where the first job is deciding whether a number can be trusted at all.</p>
+<ul class="post-tags" aria-label="Tags"><li>ai agents</li><li>automation</li><li>marketing analytics</li><li>agent harness</li></ul>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-prev" href="/blog/what-is-harness-engineering">← What Is Harness Engineering? Lessons From a Shipping Agent</a>
+<a class="article-nav-all" href="/blog/">All posts</a>
+</nav>
+</main>
+
+<!-- The closer is the product, not a pitch: the same bridge the tools pages
+     end on, with a shot, so a post is not the one page on the site that ends
+     in text alone. Which one depends on the post's audience. -->
+<section class="duct-bridge" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Reading three tools together is the whole job. Duct does it on your machine.</p>
+      <p class="duct-bridge-body">Ask why signups dropped. Duct reads Search Console, GA4 and your ads and revenue tools together, answers with the sources it read, and proposes the change. You approve it. Open source, free with your own keys.</p>
+      <p class="duct-bridge-actions"><a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a><a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a></p>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"/>
+      <figcaption>Why are signups down? Asked once, answered from four tools.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/integrations/">Integrations</a>
+<a href="/mcp">MCP servers</a>
+<a href="/compare">Compare</a>
+<a href="/changelog/">Changelog</a>
+</div>
+<div class="footer-col">
+<h4>Resources</h4>
+<a href="/blog/">Blog</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-legal" aria-label="Legal">
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</nav>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
