@@ -76,6 +76,8 @@ published without one. The same script, with no arguments, holds
 
 ### Fixed
 
+- **Project selection stays in its tab.** Switching projects in another tab no longer retargets the work in the current tab.
+
 - The desktop app keeps painting while it reads the keychain, a reload no
   longer pulls the window back in front of whatever you switched to, a
   sign-in link that launched the app on Windows or Linux is followed, and

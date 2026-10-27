@@ -267,25 +267,44 @@ export function createProject(partial = {}) {
 // ---------------------------------------------------------------------------
 // Active project
 //
-// The project picked in the sidebar is remembered in localStorage and survives
-// reloads, navigation and restarts. Reads go through resolveActiveProjectId so
+// Each tab keeps its own selection in sessionStorage. localStorage remembers
+// the last selection only to seed a new tab. Reads go through resolveActiveProjectId so
 // that the stored id and what the UI shows can never drift apart: a reader that
 // silently falls back to "the first project" without writing that choice back
 // leaves the switcher showing one project while getActiveProjectId() hands the
 // rest of the app an empty string.
 // ---------------------------------------------------------------------------
 
+// Keep a tab-local fallback when browser storage is unavailable. An empty pick
+// is also cached: it must not be reseeded by another tab's later selection.
+const activeProjectByWindow = new WeakMap();
+
 function readStoredActiveProjectId() {
   if (typeof window === "undefined") return "";
+  if (activeProjectByWindow.has(window)) return activeProjectByWindow.get(window);
+  let stored = null;
   try {
-    return window.localStorage.getItem(ACTIVE_PROJECT_ID_STORAGE_KEY) || "";
-  } catch {
-    return "";
+    stored = window.sessionStorage.getItem(ACTIVE_PROJECT_ID_STORAGE_KEY);
+  } catch { /* storage may be unavailable */ }
+  if (stored === null) {
+    try {
+      stored = window.localStorage.getItem(ACTIVE_PROJECT_ID_STORAGE_KEY);
+    } catch { /* storage may be unavailable */ }
   }
+  const selected = stored || "";
+  activeProjectByWindow.set(window, selected);
+  try {
+    window.sessionStorage.setItem(ACTIVE_PROJECT_ID_STORAGE_KEY, selected);
+  } catch { /* the in-memory selection still isolates this tab */ }
+  return selected;
 }
 
 function writeStoredActiveProjectId(id) {
   if (typeof window === "undefined") return;
+  activeProjectByWindow.set(window, id);
+  try {
+    window.sessionStorage.setItem(ACTIVE_PROJECT_ID_STORAGE_KEY, id);
+  } catch { /* the in-memory selection still isolates this tab */ }
   try {
     if (!id) {
       window.localStorage.removeItem(ACTIVE_PROJECT_ID_STORAGE_KEY);
@@ -312,8 +331,8 @@ function writeStoredActiveProjectId(id) {
  */
 export function resolveActiveProjectId(projects = readProjectsStore()) {
   if (typeof window === "undefined") return "";
-  const stored = readStoredActiveProjectId();
   if (!projects.length) return "";
+  const stored = readStoredActiveProjectId();
   if (stored && projects.some((project) => project.id === stored)) return stored;
   const fallback = projects[0]?.id || "";
   if (fallback !== stored) writeStoredActiveProjectId(fallback);
