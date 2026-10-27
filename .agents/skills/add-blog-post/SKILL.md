@@ -110,6 +110,55 @@ cluster's issue; the rules are:
   them. Below that, a hub is a landing page with nothing to land on, and
   under `site/` it would also be five pages per guide to keep translated.
 
+## Google's rules for generated content, and what they change here
+
+Read once, dated 2026-10-27. Google's
+[guidance on generative AI content](https://developers.google.com/search/docs/fundamentals/using-gen-ai-content)
+(revised 2026-10-01) says it is "critical to manually factcheck and review
+all AI-generated content for accuracy and trustworthiness before publishing",
+that the review "also applies to metadata like title elements, meta
+description elements, structured data, and alternate texts for images", and
+suggests "providing more background information on how automation was used".
+The [spam policy on scaled content abuse](https://developers.google.com/search/docs/essentials/spam-policies#scaled-content-abuse)
+applies "no matter how it's created", and its first example is "using
+generative AI tools or other similar tools to generate many pages without
+adding value for users". The September 2026 spam update (24 Sep to 8 Oct)
+was the fourth of the year, and at Search Central Live Barcelona on 2 Oct
+Google's Gary Illyes reportedly named scaled, low-effort content as a bigger
+problem now than link spam (John Campbell's recap for ROAST; not Google's
+published wording).
+
+Google's own [people-first checklist](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)
+lists the warning signs, and an agent-written blog trips several of them by
+default: "extensive automation to produce content on many topics", "mainly
+summarizing what others have to say", writing to a word count, entering a
+niche for traffic rather than expertise, and dates changed to look fresh.
+So, as rules:
+
+- **A person reads every post before it merges.** Every number, every
+  link, every quote, and the metadata: title, description, alt text, FAQ.
+  The PR says who checked it. A post merged unread is a policy risk, not a
+  shortcut.
+- **Every post says how it was made**, in one specific sentence in the
+  `madeWith` front matter key, shown under the byline: what the agent did
+  (the research, the draft, the figures) and what the author checked. Not a
+  boilerplate badge; a sentence that is true of this post.
+- **First-hand evidence is the entry ticket, not a bonus.** The brief's
+  "Duct's first-hand evidence" line names a measurement, a file, a test or
+  a shot that no other page has. A post that is only a synthesis of the
+  pages already ranking is the "summarizing what others say" pattern and is
+  not written.
+- **Alt text describes the image as generated**, written after looking at
+  it, never pasted from the prompt: a generated hero rarely matches its
+  prompt exactly, and alt text is metadata Google says to check.
+- **No bulk publishing.** At most one post a week, never a batch on one
+  day: a burst of same-author, same-template pages is the shape of scaled
+  content abuse whatever is in them. Write ahead if you like; merge on the
+  calendar.
+- **The generator fails on generated-sounding prose**: an em dash in prose
+  or any word in `GENERATED_TELLS` (`scripts/build_blog.py`). The list is
+  the voice guide's cut-on-sight vocabulary. Quoted sources are exempt.
+
 ## Cadence
 
 - **One post every two weeks, alternating clusters.** Research-heavy posts at a
@@ -318,6 +367,7 @@ excerpt: "The card line on the index: a specific claim that makes someone click.
 description: "The meta description, 140–160 characters, with the primary question's words in it."
 hero: assets/<slug>/hero.webp # relative to site/blog/
 heroAlt: "What the hero shows, in one sentence"
+madeWith: "Researched and drafted with Claude Code against the Duct repository; the eval numbers are from our own runs and every source was opened and checked by Shirish before publishing."
 readTime: 12
 ---
 ```
@@ -412,12 +462,14 @@ refresh starts from.
 ## Done means
 
 - [ ] Brief written; it names the value, the gap the cited pages leave, and Duct's evidence
-- [ ] Every claim about Duct checked against the code; category from the five; 1–6 tags
+- [ ] Every claim about Duct checked against the code; category from the six; 1–6 tags
 - [ ] Answer-first paragraph; question-shaped H2s; each section opens with its answer
 - [ ] Every number and quote sourced and seen; outbound links to primary sources
 - [ ] At least one table where anything is compared or mapped; FAQ of 3–5
 - [ ] Hero, plus the visual each major idea calls for (Phase 4's table), legible at 652px
 - [ ] Front matter complete; `seoTitle` ≤60; `description` 140–160
+- [ ] `madeWith` says, specifically, what the agent did and what the author checked
+- [ ] The maintainer has read every number, link, quote and the metadata before merge, and the PR says so
 - [ ] Card drawn, page and index rendered, three listings added, `--check` green
 - [ ] Looked at in a browser at desktop and phone width
 - [ ] Distribution list drafted for the maintainer; issue updated with the brief and the publish date

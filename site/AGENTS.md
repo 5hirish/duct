@@ -434,8 +434,11 @@ Posts live in `site/blog/posts/<slug>.md` with required front matter: `title`,
 one of six, enforced by the generator (`CATEGORIES` in
 `scripts/build_blog.py`: Engineering, Design, Growth, Guide, Announcement,
 Story); tags are 1–6 lowercase topics. Optional: `description` (140–160),
-`seoTitle` (≤60), `updated`, `hero` + `heroAlt`, `audience`. The generator's
-docstring is the reference for every key.
+`seoTitle` (≤60), `updated`, `hero` + `heroAlt`, `audience`, and `madeWith`,
+one sentence on how the post was made, shown under the byline (Google's
+generative-AI guidance asks for it; the skill requires it on new posts). The
+generator's docstring is the reference for every key, and it fails a post
+whose prose carries an em dash or a word from its `GENERATED_TELLS` list.
 
 **Then draw its card, run the generator, and commit both outputs:**
 

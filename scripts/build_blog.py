@@ -68,6 +68,28 @@ Required: title, date, author, category, tags, excerpt, readTime.
                  category's)
     link         makes this a link post (below): the https address of the post
                  where it was published
+    madeWith     one sentence on how the post was made: what an agent did, what
+                 the author checked. Shown under the byline. Google's guidance
+                 on generative AI content (revised 2026-10-01) asks publishers
+                 to give readers that context, and a reader who can see the
+                 method can weigh the claims.
+
+Links to posts not yet published
+--------------------------------
+A link to `/blog/<slug>` whose post is not in `posts/` renders as its text,
+and the build names it ("held links"). The post that adds the target turns
+every such link live when it is built. This is how a series merges one post
+a week without shipping forward links as 404s.
+
+Prose that reads as generated
+-----------------------------
+Every post is lint-checked for the marks readers now take as "an AI wrote
+this": an em dash anywhere in the prose, and the words in GENERATED_TELLS.
+Either one fails the build. Quoted lines (`> ...`) and fenced code are exempt,
+since a source's own words are the source's. The rule is a build failure and
+not a note in the skill because the September 2026 spam update targeted
+scaled, low-effort content, and the cheapest signal of low effort is the
+vocabulary a model reaches for when nobody is reading closely.
 
 Link posts
 ----------
@@ -146,6 +168,17 @@ CATEGORIES = {
 }
 MAX_TAGS = 6
 
+# Vocabulary that marks a draft nobody read closely. From the voice guide's
+# cut-on-sight list; each one has an everyday word that says the same thing.
+GENERATED_TELLS = (
+    "leverage", "unlock", "empower", "seamless", "supercharge", "game-changer",
+    "game changer", "revolutioni", "cutting-edge", "next-level", "elevate",
+    "streamline", "harness the power", "actionable insight", "delve", "tapestry",
+    "landscape", "in today's", "excited to announce", "thrilled to share",
+    "it's not just", "isn't just",
+)
+EM_DASH = "\u2014"
+
 # Links to these are Duct's own pages, not sources the post draws on, so they
 # stay out of the BlogPosting's `citation` list.
 OWN_URL_PREFIXES = (BASE, "https://github.com/5hirish")
@@ -208,6 +241,30 @@ _BLOCK_START = re.compile(r"^(#|\d+\.\s|[-*]\s|```|\||>|!\[|\[!)")
 _TAG = re.compile(r"<[^>]+>")
 
 
+# A link to a post that is written but not yet in the tree. Posts in a series
+# are merged one at a time on their own dates (the add-blog-post skill's
+# no-bulk-publishing rule), so an early post links forward to pages that do
+# not exist yet. Those links render as their text until the target lands; the
+# build that adds the target re-renders every post, and the text becomes a
+# link. check-pages.py does not follow internal links, so without this a
+# forward link would ship as a 404 and stay one for weeks.
+_POST_LINK = re.compile(r"^/blog/([a-z0-9-]+)/?(#[\w-]*)?$")
+HELD_LINKS: set[str] = set()
+
+
+def _published_slugs() -> set[str]:
+    return {p.stem for p in POSTS.glob("*.md")}
+
+
+def _link(m: re.Match) -> str:
+    text, href = m.group(1), m.group(2)
+    target = _POST_LINK.match(html.unescape(href))
+    if target and target.group(1) not in _published_slugs():
+        HELD_LINKS.add(target.group(1))
+        return text
+    return f'<a href="{html.escape(href, quote=True)}">{text}</a>'
+
+
 def _inline(text: str) -> str:
     """Escape, then re-introduce only the inline markup we support.
 
@@ -223,9 +280,7 @@ def _inline(text: str) -> str:
         return f"\x00{len(spans) - 1}\x00"
 
     out = html.escape(_INLINE_CODE.sub(lift, text), quote=False)
-    out = _INLINE_LINK.sub(
-        lambda m: f'<a href="{html.escape(m.group(2), quote=True)}">{m.group(1)}</a>', out
-    )
+    out = _INLINE_LINK.sub(_link, out)
     out = _INLINE_BOLD.sub(r"<strong>\1</strong>", out)
     out = _INLINE_EM.sub(r"<em>\1</em>", out)
     return re.sub("\x00(\\d+)\x00", lambda m: spans[int(m.group(1))], out)
@@ -570,7 +625,34 @@ def parse_front_matter(raw: str, slug: str) -> tuple[dict[str, str], str]:
     fm.setdefault("audience", CATEGORIES[fm["category"]])
     if fm["audience"] not in BRIDGES:
         raise PostError(f"{slug}: audience must be one of {', '.join(BRIDGES)}")
+    check_prose(fm, body, slug)
     return fm, body.strip()
+
+
+def prose_lines(body: str) -> list[tuple[int, str]]:
+    """The body's own words: no fenced code, no quoted source, no link targets."""
+    out, in_code = [], False
+    for n, line in enumerate(body.split("\n"), 1):
+        if line.startswith("```"):
+            in_code = not in_code
+            continue
+        if in_code or line.startswith(">"):
+            continue
+        out.append((n, re.sub(r"\]\([^)]*\)", "]", line)))
+    return out
+
+
+def check_prose(fm: dict[str, str], body: str, slug: str) -> None:
+    lines = [(0, fm.get(k, "")) for k in ("title", "excerpt", "description", "seoTitle", "madeWith")]
+    lines += prose_lines(body)
+    for n, text in lines:
+        where = f"{slug}:{n}" if n else f"{slug}: front matter"
+        if EM_DASH in text:
+            raise PostError(f"{where}: an em dash in post prose. Use a comma, colon, parenthesis or full stop.")
+        low = text.lower()
+        hit = next((t for t in GENERATED_TELLS if t in low), None)
+        if hit:
+            raise PostError(f"{where}: {hit!r} is on the generated-prose list. Say it in everyday words.")
 
 
 def tag_list(fm: dict[str, str]) -> list[str]:
@@ -731,6 +813,7 @@ def render_page(slug: str, fm: dict[str, str], body: str, siblings: list[dict]) 
     byline += [f"{esc(fm['readTime'])} min read", f"By {AUTHOR['name']}"]
 
     full_title = fm.get("seoTitle") or f"{title} — Duct blog"
+    made_html = f'\n<p class="article-made">{_inline(fm["madeWith"])}</p>' if fm.get("madeWith") else ""
     modified = f'\n<meta property="article:modified_time" content="{to_iso(fm["updated"])}"/>' if fm.get("updated") else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -878,7 +961,7 @@ def render_page(slug: str, fm: dict[str, str], body: str, siblings: list[dict]) 
 <header class="article-header">
 <p class="tag">{esc(fm['category'])}</p>
 <h1>{esc(title)}</h1>
-<div class="article-meta">{' · '.join(byline)}</div>
+<div class="article-meta">{' · '.join(byline)}</div>{made_html}
 </header>
 
 <main>
@@ -1149,6 +1232,8 @@ def main() -> int:
         linked = len(posts) - len(own)
         print(f"All {len(own)} posts and the blog index are up to date and listed"
               + (f", with {linked} link post{'s' * (linked != 1)}." if linked else "."))
+    if HELD_LINKS:
+        print("Held as text until published: " + ", ".join(f"/blog/{s}" for s in sorted(HELD_LINKS)))
     return 1 if failed else 0
 
 

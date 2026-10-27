@@ -8,7 +8,7 @@ excerpt: "The old way: export Ahrefs, paste into Sheets, cross-reference with yo
 readTime: 5
 ---
 
-Keyword gap analysis is one of the highest-leverage activities in organic growth. It's also one of the most time-consuming, because it involves moving data between tools that don't talk to each other.
+Keyword gap analysis is one of the few organic-growth jobs where an afternoon of work changes the next quarter. It's also one of the most time-consuming, because it involves moving data between tools that don't talk to each other.
 
 Here's the typical workflow:
 
@@ -26,7 +26,7 @@ That process, done properly, takes 2–4 hours. Most growth teams do it monthly 
 
 The deeper problem isn't the time. It's the staleness.
 
-By the time you've done the analysis, exported it, and put the output into your content calendar, the keyword landscape has shifted. A competitor has published on a term you flagged. A cluster you deprioritised has started trending. Your highest-priority gap from last month is now covered by a post you published two weeks ago.
+By the time you've done the analysis, exported it, and put the output into your content calendar, the keywords have moved. A competitor has published on a term you flagged. A cluster you deprioritised has started trending. Your highest-priority gap from last month is now covered by a post you published two weeks ago.
 
 Keyword opportunities have a half-life. The best time to act on them is when they're fresh: when you can see a keyword rising in Search Console, cross-reference it against your existing content, and add it to this week's brief, not next month's planning cycle.
 
