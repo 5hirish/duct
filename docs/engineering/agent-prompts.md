@@ -69,7 +69,7 @@ Generated from `agents/tiers.py`, `agents/thinking.py`, `agents/models.py` and e
 | Provider | Heavy | Standard | Light |
 |----------|---|---|---|
 | google_genai (default) | `gemini-3.1-pro-preview` | `gemini-3.8-flash` | `gemini-3.5-flash-lite` |
-| anthropic | `claude-opus-5-5` | `claude-sonnet-5-5` | `claude-haiku-4-5` |
+| anthropic | `claude-opus-5-5` | `claude-sonnet-5-5` | `claude-haiku-5-5` |
 | openai | `gpt-6.1-sol` | `gpt-6.1-sol` | `gpt-6-luna` |
 | openrouter | `moonshotai/kimi-k3` | `deepseek/deepseek-v4-pro-0813` | `deepseek/deepseek-v4.1-flash` |
 | xai | `grok-4.7` | `grok-4.7` | `grok-4.7` |
@@ -81,7 +81,7 @@ Generated from `agents/tiers.py`, `agents/thinking.py`, `agents/models.py` and e
 | `gemini-3.5-flash-lite` | minimal | 1,000,000 | 0.3 / 2.5 |
 | `claude-opus-5-5` | medium | 200,000 | 4 / 20 |
 | `claude-sonnet-5-5` | high | 200,000 | 2 / 10 |
-| `claude-haiku-4-5` | no dial | 200,000 | 1 / 5 |
+| `claude-haiku-5-5` | medium | 200,000 | 0.1 / 0.5 |
 | `gpt-6.1-sol` | medium | 400,000 | 2 / 10 |
 | `gpt-6-luna` | medium | 400,000 | 0.1 / 0.5 |
 | `moonshotai/kimi-k3` | medium | 1,000,000 | 3 / 15 |

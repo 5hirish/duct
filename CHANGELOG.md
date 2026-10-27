@@ -54,6 +54,9 @@ published without one. The same script, with no arguments, holds
 
 ### Changed
 
+- **Claude Haiku 5.5 is Anthropic's Light rung**, replacing Haiku 4.5: a
+  tenth of the price up to a 100k-token prompt, a 1M window, and the same
+  effort dial as Opus 5.5. A saved pick of Haiku 4.5 moves with it.
 - **Default models move a generation:** Claude Opus 5.5 and Sonnet 5.5,
   GPT-6.1 Sol, Grok 4.7, DeepSeek V4.1 Flash and V4 Pro 0813 on OpenRouter.
   A retired id moves a saved pick to its successor, never up a price class.

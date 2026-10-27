@@ -40,7 +40,7 @@
 // backend/agents/thinking.py maps them per model. The menu shows the resolved
 // native value under each rung, which is the honesty clause: the abstraction
 // saves you from learning five dialects, it does not hide which one is in use.
-// A model with no dial (Gemini 2.5, Haiku 4.5, gpt-4o) shows no slider.
+// A model with no dial (Gemini 2.5, gpt-4o) shows no slider.
 
 import { useEffect, useState } from "react";
 import { Anvil, ChevronDown, Feather, Scale } from "lucide-react";

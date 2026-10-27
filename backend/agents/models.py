@@ -81,14 +81,16 @@ class ModelName(str, Enum):
     # Anthropic. Fable 5.1 is the most capable widely released model, above the
     # Opus tier and priced accordingly ($10/$50 against Opus 5.5's $4/$20) —
     # offered, not defaulted to. Opus 5.5 (2026-09-22) and Sonnet 5.5
-    # (2026-09-28) replaced Opus 5 and Sonnet 5 on 2026-09-29; Haiku 4.5 has no
-    # successor yet. Fable 5.1 and both 5.5s share a request contract the older
-    # models do not, and both halves are load-bearing here — see
-    # ``CLAUDE_BOUND_THINKING`` below.
+    # (2026-09-28) replaced Opus 5 and Sonnet 5 on 2026-09-29, and Haiku 5.5
+    # replaced Haiku 4.5 on 2026-10-26: a tenth of the price, a 1M window, and
+    # the first Haiku with an effort dial. Fable 5.1 and the three 5.5s share a
+    # request contract the older models do not, except that Haiku 5.5 alone
+    # still takes a forced tool call — see ``CLAUDE_BOUND_THINKING`` and
+    # ``CLAUDE_NO_FORCED_TOOL_CHOICE`` below.
     CLAUDE_FABLE = "claude-fable-5-1"
     CLAUDE_OPUS = "claude-opus-5-5"
     CLAUDE_SONNET = "claude-sonnet-5-5"
-    CLAUDE_HAIKU = "claude-haiku-4-5"
+    CLAUDE_HAIKU = "claude-haiku-5-5"
     # xAI. Verified against docs.x.ai: 500k context, $2/$6, and
     # `reasoning_effort` low/medium/high/xhigh with high the default —
     # "Reasoning cannot be disabled", so there is no off rung to offer. No
@@ -502,7 +504,11 @@ PRICING: dict[ModelName, ModelPrice] = {
     # Opus 5.5's cache read is 5% of input, not the family's 10%.
     ModelName.CLAUDE_OPUS: ModelPrice(4.0, 20.0, 0.2, 5.0),
     ModelName.CLAUDE_SONNET: ModelPrice(2.0, 10.0, 0.2, 2.5),
-    ModelName.CLAUDE_HAIKU: ModelPrice(1.0, 5.0, 0.1, 1.25),
+    # Haiku 5.5's short-prompt card. Above a 100k-token prompt every rate is
+    # 5x ($0.50 / $2.50 in and out); ModelPrice has no tier for that, so a
+    # turn between 100k and the 200k budget under-reports, as GPT-6 does
+    # above 272k.
+    ModelName.CLAUDE_HAIKU: ModelPrice(0.1, 0.5, 0.01, 0.125),
     # Base rates. xAI doubles both above a 200k-token prompt; ModelPrice has
     # no tier for that, so a very long Grok run under-reports.
     ModelName.GROK_4_7: ModelPrice(2.0, 6.0, 0.5),
@@ -553,6 +559,7 @@ class RetiredModel(NamedTuple):
 RETIRED_MODELS: dict[str, RetiredModel] = {
     "claude-opus-5": RetiredModel(ModelName.CLAUDE_OPUS, 200_000, ModelPrice(5.0, 25.0, 0.5, 6.25)),
     "claude-sonnet-5": RetiredModel(ModelName.CLAUDE_SONNET, 200_000, ModelPrice(2.0, 10.0, 0.2, 2.5)),
+    "claude-haiku-4-5": RetiredModel(ModelName.CLAUDE_HAIKU, 200_000, ModelPrice(1.0, 5.0, 0.1, 1.25)),
     "anthropic/claude-opus-5": RetiredModel(ModelName.OR_CLAUDE_OPUS, 200_000, ModelPrice(5.0, 25.0, 0.5, 6.25)),
     "anthropic/claude-sonnet-5": RetiredModel(ModelName.OR_CLAUDE_SONNET, 200_000, ModelPrice(2.0, 10.0, 0.2, 2.5)),
     "gpt-5.6-sol": RetiredModel(ModelName.GPT_6_1_SOL, 400_000, ModelPrice(4.0, 20.0, 0.4, 5.0)),
@@ -766,14 +773,10 @@ def _model_id(model: "ModelName | str | None") -> str:
 
 
 # Claude models on Anthropic's newer request contract, which Fable 5.1
-# introduced and Opus 5.5 and Sonnet 5.5 kept. Two facts, and they have
-# arrived together on every model so far, so one table answers both — split it
-# the day a model ships with only one:
+# introduced and the 5.5 models kept. Two facts that arrived together on every
+# model until Haiku 5.5, which binds its thinking but still takes a forced tool
+# call — so they are two tables, and a model is on each for its own reason:
 #
-# * **A forced tool call is a 400.** ``tool_choice`` of ``any`` or a named tool
-#   is refused on the Messages API and through OpenRouter alike. LangChain's
-#   ``ToolStrategy`` forces exactly that, so a typed answer at the end of a
-#   tool loop has to be asked for another way (``agents/core/research.py``).
 # * **A thinking block is bound to the conversation before it.** Replaying one
 #   after an earlier turn changed is a 400 on accounts created on or after
 #   2026-08-31, which is every new customer's own key, and Duct's harness does
@@ -784,6 +787,21 @@ CLAUDE_BOUND_THINKING: frozenset[str] = frozenset({
     ModelName.CLAUDE_FABLE.value,
     ModelName.CLAUDE_OPUS.value,
     ModelName.CLAUDE_SONNET.value,
+    ModelName.CLAUDE_HAIKU.value,
+    ModelName.OR_CLAUDE_OPUS.value,
+    ModelName.OR_CLAUDE_SONNET.value,
+})
+
+# * **A forced tool call is a 400.** ``tool_choice`` of ``any`` or a named tool
+#   is refused on the Messages API and through OpenRouter alike. LangChain's
+#   ``ToolStrategy`` forces exactly that, so a typed answer at the end of a
+#   tool loop has to be asked for another way (``agents/core/research.py``).
+#   Haiku 5.5 accepts a forced call (the response then starts with it and
+#   carries no thinking block), which is why it is absent here and not above.
+CLAUDE_NO_FORCED_TOOL_CHOICE: frozenset[str] = frozenset({
+    ModelName.CLAUDE_FABLE.value,
+    ModelName.CLAUDE_OPUS.value,
+    ModelName.CLAUDE_SONNET.value,
     ModelName.OR_CLAUDE_OPUS.value,
     ModelName.OR_CLAUDE_SONNET.value,
 })
@@ -791,7 +809,7 @@ CLAUDE_BOUND_THINKING: frozenset[str] = frozenset({
 
 def accepts_forced_tool_choice(model: "ModelName | str | None") -> bool:
     """False for a model that refuses ``tool_choice`` of ``any`` or a named tool."""
-    return _model_id(model) not in CLAUDE_BOUND_THINKING
+    return _model_id(model) not in CLAUDE_NO_FORCED_TOOL_CHOICE
 
 
 def binds_thinking_to_conversation(model: "ModelName | str | None") -> bool:
@@ -801,8 +819,8 @@ def binds_thinking_to_conversation(model: "ModelName | str | None") -> bool:
 
 # Reasoning models that fix their own sampling. A temperature other than the
 # default is refused while they reason: a 400 from GPT-6 and the Claude 5
-# family, and for Fable 5.1 and Sonnet 5.5 a ValueError langchain-anthropic
-# raises before the request leaves. Callers pass one anyway — 0 for the
+# family, Haiku 5.5 included, and for Fable 5.1 and Sonnet 5.5 a ValueError
+# langchain-anthropic raises before the request leaves. Callers pass one anyway — 0 for the
 # key-verify call and the memory pass — so the transport drops it for these
 # rather than every caller carrying the list. GPT-6 takes a temperature back
 # only at reasoning effort `none`, which Duct never sends.
@@ -810,6 +828,7 @@ _FIXED_SAMPLING_PREFIXES: tuple[str, ...] = (
     "claude-fable-",
     "claude-opus-5",
     "claude-sonnet-5",
+    "claude-haiku-5",
     "gpt-6",
 )
 
@@ -882,7 +901,7 @@ MODEL_LABELS: dict[str, str] = {
     ModelName.CLAUDE_FABLE.value: "Claude Fable 5.1",
     ModelName.CLAUDE_OPUS.value: "Claude Opus 5.5",
     ModelName.CLAUDE_SONNET.value: "Claude Sonnet 5.5",
-    ModelName.CLAUDE_HAIKU.value: "Claude Haiku 4.5",
+    ModelName.CLAUDE_HAIKU.value: "Claude Haiku 5.5",
     ModelName.GROK_4_7.value: "Grok 4.7",
     ModelName.OR_DEEPSEEK_V4_1_FLASH.value: "DeepSeek V4.1 Flash",
     ModelName.OR_DEEPSEEK_V4_PRO.value: "DeepSeek V4 Pro",

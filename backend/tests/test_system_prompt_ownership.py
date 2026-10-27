@@ -21,8 +21,9 @@ from agents.models import PRICING, ModelName, provider_of
 
 # The catalogue ids deepagents is known to suffix. Each entry is a deliberate
 # acceptance re-read at every bump of the pin, not a default: a new id here
-# means someone read the suffix and decided Duct's prompt survives it.
-KNOWN_SUFFIXED: frozenset[str] = frozenset({ModelName.CLAUDE_HAIKU.value})
+# means someone read the suffix and decided Duct's prompt survives it. Empty
+# since Haiku 5.5 replaced Haiku 4.5, the one id 0.7.32 suffixes.
+KNOWN_SUFFIXED: frozenset[str] = frozenset()
 
 
 def _appended_for(model: ModelName) -> str:
