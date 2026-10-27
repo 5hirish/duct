@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-10-26
+**Author:** Shirish Kadam · **Updated:** 2026-10-27
 
 Duct's agent rulebook on LangChain 1.x, LangGraph and `deepagents`: 34 rules,
 each naming its primitive and its enforcing test, plus 12 ranked open gaps.
