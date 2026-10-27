@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Local AI Agents: What Stays on Your Machine, What Leaves It</title>
+<link rel="canonical" href="https://getduct.ai/blog/local-ai-agents"/>
+<meta name="description" content="What a local AI agent is, how it differs from self-hosted and cloud agents, and where your marketing data, keys and memory sit in one open-source desktop agent."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/blog/local-ai-agents"/>
+<meta property="og:title" content="Local AI Agents: What Stays on Your Machine, What Leaves It"/>
+<meta property="og:description" content="Your ad and revenue data already lives in Google&#x27;s and Stripe&#x27;s clouds. &#x27;Local&#x27; only ever describes the copy, and I got that wrong on my own site twice."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/blog-local-ai-agents.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="Guide"/>
+<meta property="article:tag" content="local ai agents"/>
+<meta property="article:tag" content="privacy"/>
+<meta property="article:tag" content="bring your own key"/>
+<meta property="article:tag" content="desktop"/>
+<meta property="article:tag" content="data"/>
+<meta property="article:published_time" content="2026-12-01T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Local AI Agents: What Stays on Your Machine, What Leaves It"/>
+<meta name="twitter:description" content="Your ad and revenue data already lives in Google&#x27;s and Stripe&#x27;s clouds. &#x27;Local&#x27; only ever describes the copy, and I got that wrong on my own site twice."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/blog-local-ai-agents.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "inLanguage": "en",
+  "headline": "Local AI Agents: What Stays on Your Machine, What Leaves It",
+  "description": "What a local AI agent is, how it differs from self-hosted and cloud agents, and where your marketing data, keys and memory sit in one open-source desktop agent.",
+  "datePublished": "2026-12-01T00:00:00+00:00",
+  "dateModified": "2026-12-01T00:00:00+00:00",
+  "articleSection": "Guide",
+  "wordCount": 2028,
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": [
+    "https://getduct.ai/blog/assets/local-ai-agents/hero.webp",
+    "https://getduct.ai/assets/og/blog-local-ai-agents.jpg"
+  ],
+  "mainEntityOfPage": "https://getduct.ai/blog/local-ai-agents",
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Duct Blog",
+    "url": "https://getduct.ai/blog/"
+  },
+  "keywords": [
+    "local ai agents",
+    "privacy",
+    "bring your own key",
+    "desktop",
+    "data"
+  ],
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "name": "LocalAI",
+      "url": "https://github.com/mudler/LocalAI"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "October 2026 comparison by iTechGuides",
+      "url": "https://www.itechguides.com/local-ai-agents-vs-cloud-ai-agents-which-is-more-private/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Cursor's page on API keys",
+      "url": "https://cursor.com/help/models-and-usage/api-keys"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "BoltAI's page",
+      "url": "https://docs.boltai.com/blog/how-boltai-handles-your-api-keys"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "OpenAI's data controls page",
+      "url": "https://developers.openai.com/api/docs/guides/your-data"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Anthropic's privacy center",
+      "url": "https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "agenticSeek",
+      "url": "https://github.com/Fosowl/agenticSeek"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://getduct.ai/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Local AI Agents: What Stays on Your Machine, What Leaves It",
+      "item": "https://getduct.ai/blog/local-ai-agents"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a local AI agent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A local AI agent is an agent program that runs on your own computer rather than on a vendor's server. The model it uses and the copy of your data it keeps can each be local or in the cloud separately, so \"local\" describes the program and you have to ask about the other two."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between a local AI agent and a self-hosted one?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Both keep the agent and its data off the vendor's servers. A self-hosted agent runs on a server you operate, so it is always on and someone has to maintain it. A local agent runs on your laptop, so it costs nothing to operate and works only while the laptop is open."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "If I bring my own API key, can the vendor still see my data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sometimes. Your key decides who pays for the model and whose provider terms apply. Whether the vendor sees your prompt depends on whether requests pass through its servers on the way to the model. Cursor says they do; BoltAI says they do not. Ask that question directly."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can a local agent read my Google Ads or GA4 data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, through the same APIs a cloud agent uses. Your Google Ads, GA4 and Stripe data already live in those vendors' clouds, so no agent can make the originals local. What a local agent keeps on your machine is the copy it fetched and the conclusions it drew."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the Duct desktop app keep my data on my machine?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The download keeps your model key on your machine, in the OS keychain, and nothing else: the agent runs on Duct's servers and the briefs, memory and connector authorizations are stored there, encrypted. The self-host build runs the whole backend locally and keeps everything on your disk."
+      }
+    }
+  ]
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+.article-nav-all { font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }
+.prose .post-tags { list-style: none; padding: 0; margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prose .post-tags li { font-size: 13px; font-weight: 500; color: var(--navy-2); background: var(--off); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; margin: 0; }
+.post-hero { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+.post-hero img { width: 100%; height: auto; display: block; border-radius: var(--r-lg); border: 1px solid var(--border); }
+.post-toc { margin: 0 0 40px; padding: 20px 24px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.prose .post-toc-title { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0 0 10px; }
+.post-toc ol { margin: 0; padding-left: 20px; }
+.prose .post-toc li { font-size: 15px; margin-bottom: 4px; }
+.prose .post-toc a { border-bottom: none; }
+.prose h2, .prose h3 { scroll-margin-top: 88px; }
+.post-figure { margin: 36px 0; }
+.prose .post-figure img { height: auto; margin: 0; border: 1px solid var(--border); background: var(--white); }
+.post-figure figcaption, .post-quote figcaption { font-size: 13px; color: var(--navy-3); line-height: 1.6; margin-top: 10px; }
+.post-quote { margin: 36px 0; }
+.post-quote blockquote { margin: 0; }
+.post-quote blockquote p { font-family: var(--serif); font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.post-quote figcaption { padding-left: 27px; }
+.post-table { margin: 28px 0 32px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.post-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; color: var(--navy-3); }
+.post-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--off); }
+.post-table th, .post-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; min-width: 120px; }
+.post-table tr:last-child td { border-bottom: none; }
+.post-table code { font-size: 12px; }
+.prose .post-embed {
+  display: flex; align-items: center; gap: 16px; margin: 28px 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
+  color: var(--navy-3); transition: border-color .15s, background .15s;
+}
+.prose .post-embed:hover { border-color: var(--orange); background: var(--off); }
+.post-embed .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.post-embed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-embed-title { font-size: 16px; color: var(--navy); }
+.post-embed-desc { font-size: 14px; font-weight: 300; line-height: 1.5; }
+.post-embed-host { margin-left: auto; font-size: 12px; color: var(--navy-3); flex-shrink: 0; }
+.post-video { position: relative; margin: 32px 0; aspect-ratio: 16 / 9; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); }
+.prose .post-video-facade { display: block; position: absolute; inset: 0; border: none; color: #fff; }
+.prose .post-video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; }
+.post-video-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,.95) 0%, rgba(13,15,26,.75) 30%, rgba(13,15,26,0) 70%); }
+.post-video-play {
+  position: absolute; z-index: 1; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--orange); font-size: 30px; color: #fff;
+  box-shadow: 0 8px 24px rgba(13,15,26,.35); transition: transform .15s;
+}
+.post-video-facade:hover .post-video-play, .post-video-facade:focus-visible .post-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.post-video-caption { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+.post-video-title { font-family: var(--serif); font-size: 19px; line-height: 1.3; }
+.post-video-note { font-size: 13px; color: #c9ccd8; }
+.post-video iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 640px) {
+  .post-video-title { font-size: 16px; }
+  .post-video-caption { padding: 14px 16px; }
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+  .post-embed-host { display: none; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/local-ai-agents.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/integrations/" class="nav-link">Integrations</a>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang" data-duct-lang-menu>
+<button type="button" class="nav-lang-btn" aria-expanded="false" aria-controls="nav-lang-list" aria-label="Language"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#globe"/></svg><span class="nav-lang-code" data-duct-lang-code>EN</span><svg class="ic nav-lang-caret" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></button>
+<div class="nav-lang-menu" id="nav-lang-list">
+<div class="dropdown-menu-inner">
+<a class="nav-lang-item" href="/" hreflang="en" lang="en" data-duct-lang-link="en" data-code="EN" aria-current="true">English</a>
+<a class="nav-lang-item" href="/es/" hreflang="es" lang="es" data-duct-lang-link="es" data-code="ES">Español</a>
+<a class="nav-lang-item" href="/pt-br/" hreflang="pt-BR" lang="pt-BR" data-duct-lang-link="pt-br" data-code="PT">Português (Brasil)</a>
+<a class="nav-lang-item" href="/de/" hreflang="de" lang="de" data-duct-lang-link="de" data-code="DE">Deutsch</a>
+<a class="nav-lang-item" href="/ja/" hreflang="ja" lang="ja" data-duct-lang-link="ja" data-code="JA">日本語</a>
+</div>
+</div>
+</div>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">Guide</p>
+<h1>Local AI Agents: What Stays on Your Machine, What Leaves It</h1>
+<div class="article-meta">Dec 1 2026 · 10 min read · By Shirish Kadam</div>
+<p class="article-made">Claude Code drafted this from the desktop README, the credential-storage reference and the Tauri config, opened every vendor page quoted here, and drew the figure. I checked each data path against the code and the privacy page before publishing.</p>
+</header>
+
+<main>
+<figure class="post-hero"><img src="assets/local-ai-agents/hero.webp" srcset="assets/local-ai-agents/hero-768.webp 768w, assets/local-ai-agents/hero.webp 1320w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1320" height="743" fetchpriority="high" alt="A Roman mosaic in section: a public aqueduct on three arches ends at a street fountain, a solid wall stands between it and a town house whose roof gutters feed a private cistern under the courtyard"/></figure>
+<article id="prose" class="prose">
+<p><strong>A local AI agent is one whose program runs on your own computer instead of a vendor's server.</strong> That tells you where the software runs, and nothing else. For a business the questions that matter are three: where is my data read, where is the copy stored afterwards, and which model reads it, under whose key. A product can be "local" on one of those and cloud on the other two.</p>
+<p>I know this because I got it wrong on my own website, twice. Duct ships as a desktop app, and two separate pages (a changelog entry and a section of the privacy policy) described it as keeping your data on your machine. That sentence was true of a build I make for people who want to self-host the whole thing, which weighs 400 to 500 MB and almost nobody runs. It was false of the one on the download page, which is a shell of tens of megabytes that talks to my servers. The paragraph that now sits at the top of the site's <a href="https://github.com/5hirish/duct/blob/main/site/AGENTS.md">instructions file</a> exists so that an agent writing copy cannot make that mistake a third time.</p>
+<p>This is the guide I needed before I wrote those pages.</p>
+<nav class="post-toc" aria-label="In this post">
+<p class="post-toc-title">In this post</p>
+<ol>
+<li><a href="#what-is-a-local-ai-agent">What is a local AI agent?</a></li>
+<li><a href="#cloud-self-hosted-or-local-which-one-are-you-being-sold">Cloud, self-hosted or local: which one are you being sold?</a></li>
+<li><a href="#does-bring-your-own-key-mean-the-vendor-can-t-see-my-data">Does bring your own key mean the vendor can&#x27;t see my data?</a></li>
+<li><a href="#where-does-duct-put-your-data">Where does Duct put your data?</a></li>
+<li><a href="#what-does-a-local-agent-cost-to-run">What does a local agent cost to run?</a></li>
+<li><a href="#three-questions-to-ask-any-agent-vendor">Three questions to ask any agent vendor</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+</nav>
+<h2 id="what-is-a-local-ai-agent">What is a local AI agent?</h2>
+<p><strong>An agent is a program that reads things, decides what to do next, and acts; a local one runs that program on your hardware.</strong> Three separate pieces can each be local or not:</p>
+<ol>
+<li><strong>The agent program</strong>, the loop that fetches your data, asks a model what it means, and calls tools. This is the piece people usually mean.</li>
+<li><strong>The model</strong>, the thing that does the reasoning. It can run on your machine (an open-weights model through a tool like <a href="https://github.com/mudler/LocalAI">LocalAI</a>, 50,000 stars on GitHub, "No GPU required") or in a provider's cloud.</li>
+<li><strong>The copy of your data</strong>, what the agent fetched, the briefs it wrote, what it remembers about your business. This lands in a database somewhere, and that somewhere is the question nobody asks.</li>
+</ol>
+<p>Fully local means all three on your machine. An <a href="https://www.itechguides.com/local-ai-agents-vs-cloud-ai-agents-which-is-more-private/">October 2026 comparison by iTechGuides</a> puts the catch well: local inference "does not guarantee an entirely local workflow." The common shape in practice is the hybrid, where the program and the copy stay on your laptop and the model is a cloud API you pay for with your own key.</p>
+<p>If your work is marketing, <strong>the source of truth is already in someone else's cloud.</strong> Google Ads, GA4, Search Console, Stripe and Meta hold the originals. No agent, however local, changes that. What "local" can protect is the copy the agent makes and the conclusions it draws from it.</p>
+<figure class="post-figure" data-zoom><img src="assets/local-ai-agents/where-your-data-goes.svg" width="1000" height="720" loading="lazy" decoding="async" alt="Three columns, cloud agent, local app with a cloud model, and fully local, showing for each where the agent runs, where the copy is stored, which model reads it on whose key, and who can read the copy; the keychain in the middle column is marked orange."/><figcaption>Four questions, three answers each. The orange box is where the hybrid earns its keep: the key, and the bill, are yours.</figcaption></figure>
+<h2 id="cloud-self-hosted-or-local-which-one-are-you-being-sold">Cloud, self-hosted or local: which one are you being sold?</h2>
+<p><strong>Most "local" agents are the middle column, and that is fine, as long as you know which column you bought.</strong> The same four questions, three answers each.</p>
+<div class="post-table" role="region" aria-label="Table: , Cloud agent, Self-hosted, Local desktop app, your own key" tabindex="0">
+<table>
+<thead><tr><th scope="col"></th><th scope="col">Cloud agent</th><th scope="col">Self-hosted</th><th scope="col">Local desktop app, your own key</th></tr></thead>
+<tbody>
+<tr><td>Where the agent runs</td><td>the vendor's servers</td><td>a server you operate</td><td>your laptop</td></tr>
+<tr><td>Where your data is read</td><td>the vendor fetches it from Google, Stripe and the rest</td><td>your server fetches it</td><td>your laptop fetches it</td></tr>
+<tr><td>Where the copy is stored</td><td>the vendor's database</td><td>your database</td><td>a file on your disk</td></tr>
+<tr><td>Who holds the model key</td><td>the vendor</td><td>you</td><td>you, in the OS keychain</td></tr>
+<tr><td>Who pays the model</td><td>the vendor, built into the price</td><td>you, per token</td><td>you, per token</td></tr>
+<tr><td>What the vendor can see</td><td>everything the agent read and wrote</td><td>nothing, unless you send telemetry</td><td>nothing, unless you send telemetry</td></tr>
+<tr><td>What you need</td><td>an account</td><td>a machine that stays on, and someone to run it</td><td>an app and an API key</td></tr>
+</tbody>
+</table>
+</div>
+<p>Self-hosted and local are the same privacy promise with a different operations bill. Self-hosting means a machine that is always on and someone who patches it. A local desktop app means it only works while your laptop is open, which for a weekly growth brief is a feature and for a daily alert is not.</p>
+<h2 id="does-bring-your-own-key-mean-the-vendor-can-t-see-my-data">Does bring your own key mean the vendor can't see my data?</h2>
+<p><strong>No. Your own key settles who pays and whose terms cover the model, not who sees the prompt.</strong> Two products that both say "bring your own key" are honest about this in opposite directions.</p>
+<p><a href="https://cursor.com/help/models-and-usage/api-keys">Cursor's page on API keys</a> says "Your API key is not stored on our servers," and in the same breath that "all requests are routed through Cursor's servers for final prompt building." The key is yours; the prompt still passes through them, and "Cursor's Zero Data Retention policy does not apply when you use your own API keys." <a href="https://docs.boltai.com/blog/how-boltai-handles-your-api-keys">BoltAI's page</a> says "BoltAI stores your OpenAI API key securely in Apple Keychain" and "There is no intermediate server." Same three words on the box, a different data path inside.</p>
+<p>What your own key does change is which contract governs the model side. On the API, <a href="https://developers.openai.com/api/docs/guides/your-data">OpenAI's data controls page</a> says "data sent to the OpenAI API is not used to train or improve OpenAI models," with abuse-monitoring logs "retained for up to 30 days" and zero data retention "subject to prior approval by OpenAI." <a href="https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data">Anthropic's privacy center</a> says "we automatically delete inputs and outputs on our backend within 30 days of receipt or generation," unless you have a zero data retention agreement. Those terms attach to your account, not the agent vendor's, which is the point of holding the key.</p>
+<p>So the question to ask is not "do you store my key" but "does my prompt touch your server on the way to the model." The answer tells you which column you are in.</p>
+<h2 id="where-does-duct-put-your-data">Where does Duct put your data?</h2>
+<p><strong>The download is a cloud agent with your key in the keychain; the self-host build is the local one.</strong> Both are the same code, and the difference is one entry in the <a href="https://github.com/5hirish/duct/blob/main/desktop/src-tauri/tauri.conf.json">build config</a> that decides whether the backend ships inside the app. The desktop README keeps the table I should have written before the privacy page:</p>
+<div class="post-table" role="region" aria-label="Table: , Official download, Self-host build" tabindex="0">
+<table>
+<thead><tr><th scope="col"></th><th scope="col">Official download</th><th scope="col">Self-host build</th></tr></thead>
+<tbody>
+<tr><td>Inside the app</td><td>the native shell, tens of megabytes</td><td>the shell plus the whole backend, 400 to 500 MB</td></tr>
+<tr><td>Where the agent runs</td><td>Duct's hosted servers</td><td>a backend process on your machine, loopback only</td></tr>
+<tr><td>Where your connected data is read</td><td>Duct's servers fetch it from Google, Stripe and the rest</td><td>your machine fetches it</td></tr>
+<tr><td>Where the copy is stored</td><td>Duct's database: briefs, memory, and your connector authorizations, encrypted</td><td>a SQLite file in your user data folder</td></tr>
+<tr><td>Your model key</td><td>your OS keychain; sent with each request, held for that request, then discarded</td><td>your OS keychain; handed to the process on the same machine</td></tr>
+<tr><td>Prompts and agent code</td><td>on Duct's servers</td><td>on your disk, every file</td></tr>
+<tr><td>What Duct's servers see</td><td>what the agent read and wrote for you</td><td>nothing</td></tr>
+<tr><td>What the app reports</td><td>crashes, if you leave that switch on; no analytics tag at all</td><td>nothing is compiled in</td></tr>
+<tr><td>Safe to say</td><td>"your key is never stored unless you save it"</td><td>"nothing leaves your machine"</td></tr>
+</tbody>
+</table>
+</div>
+<p>The key row is the one I am proud of. The <a href="https://github.com/5hirish/duct/blob/main/app/src/lib/providerKeys.js">web app's key module</a> sends your key as a request header, and the desktop shell switches off the "remember this key" option the browser version offers, so there is no path by which the download stores it on my side. The <a href="https://github.com/5hirish/duct/blob/main/backend/agents/engines.py">engine rule</a> runs the other way too: the server's own key is never spent on your behalf. The full map of every secret, including the one that is still weaker than it should be, is in the <a href="https://github.com/5hirish/duct/blob/main/docs/engineering/credential-storage.md">credential storage reference</a>.</p>
+<p>And the limit, before anyone comments it: the build that keeps everything on your machine is the one almost nobody runs. It needs you to <a href="/open-source">build it yourself</a> with your own Google sign-in client, and the hosted one is the one I can support. If "nothing leaves your machine" is your requirement, you want the self-host build or a fully local stack, and you should hold me to the second column, not the first.</p>
+<h2 id="what-does-a-local-agent-cost-to-run">What does a local agent cost to run?</h2>
+<p><strong>With your own key the model bill is yours, and it scales with how often the agent runs and which model it picks, not with the number of seats.</strong> That is the trade: the vendor stops paying for inference, and you stop paying for the seats of people who open the app twice a month.</p>
+<p>Two things keep it small. First, the agent should route work by weight. Duct's <a href="https://github.com/5hirish/duct/blob/main/backend/agents/tiers.py">tier map</a> sends analysis and audits to a heavy model, synthesis and chat to a standard one, and research to a light one, so most tokens go to the cheapest rung that can do the job. Second, a weekly brief runs once a week. A fully local model costs electricity instead; the tagline on <a href="https://github.com/Fosowl/agenticSeek">agenticSeek</a> (27,000 stars) is "No APIs, No $200 monthly bills," and the honest footnote is that my laptop fan has opinions about running a large model on a Monday morning.</p>
+<p>The one dollar figure I have is a median of $0.0052 per weekly brief on DeepSeek V4 Flash, measured on a synthetic test account by the eval that gates changes to the agent; it is in the complete guide to AI agents for marketing with its caveats, and a real account on the default model will cost more. I will publish that number when I have measured it, not before.</p>
+<h2 id="three-questions-to-ask-any-agent-vendor">Three questions to ask any agent vendor</h2>
+<p><strong>Ask these before the demo, and the answers sort any product into a column of the table above.</strong></p>
+<ol>
+<li><strong>Where is my data read, and where does the copy live afterwards?</strong> "Your laptop" and "our database, encrypted" are both acceptable answers. "It stays on your machine" from a product whose agent runs on a server is not.</li>
+<li><strong>Which model reads it, under whose key, and does my prompt touch your server on the way?</strong> Your own key means your provider terms apply, and the two quotes from Cursor and BoltAI above are the two honest answers to the second half.</li>
+<li><strong>What can the agent change without me?</strong> This one is not about privacy and it is the one that costs money. A local agent with write access to your Google Ads account is a budget risk whichever column it sits in; the <a href="/blog/human-in-the-loop-ai-agents">human in the loop guide</a> covers what an approval gate should look like.</li>
+</ol>
+<p>If a vendor cannot answer all three in plain words, the label on the box is marketing, whichever label it is.</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="what-is-a-local-ai-agent-2">What is a local AI agent?</h3>
+<p>A local AI agent is an agent program that runs on your own computer rather than on a vendor's server. The model it uses and the copy of your data it keeps can each be local or in the cloud separately, so "local" describes the program and you have to ask about the other two.</p>
+<h3 id="what-is-the-difference-between-a-local-ai-agent-and-a-self-hosted-one">What is the difference between a local AI agent and a self-hosted one?</h3>
+<p>Both keep the agent and its data off the vendor's servers. A self-hosted agent runs on a server you operate, so it is always on and someone has to maintain it. A local agent runs on your laptop, so it costs nothing to operate and works only while the laptop is open.</p>
+<h3 id="if-i-bring-my-own-api-key-can-the-vendor-still-see-my-data">If I bring my own API key, can the vendor still see my data?</h3>
+<p>Sometimes. Your key decides who pays for the model and whose provider terms apply. Whether the vendor sees your prompt depends on whether requests pass through its servers on the way to the model. Cursor says they do; BoltAI says they do not. Ask that question directly.</p>
+<h3 id="can-a-local-agent-read-my-google-ads-or-ga4-data">Can a local agent read my Google Ads or GA4 data?</h3>
+<p>Yes, through the same APIs a cloud agent uses. Your Google Ads, GA4 and Stripe data already live in those vendors' clouds, so no agent can make the originals local. What a local agent keeps on your machine is the copy it fetched and the conclusions it drew.</p>
+<h3 id="does-the-duct-desktop-app-keep-my-data-on-my-machine">Does the Duct desktop app keep my data on my machine?</h3>
+<p>The download keeps your model key on your machine, in the OS keychain, and nothing else: the agent runs on Duct's servers and the briefs, memory and connector authorizations are stored there, encrypted. The self-host build runs the whole backend locally and keeps everything on your disk.</p>
+<ul class="post-tags" aria-label="Tags"><li>local ai agents</li><li>privacy</li><li>bring your own key</li><li>desktop</li><li>data</li></ul>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-prev" href="/blog/what-is-an-agentic-workflow">← What Is an Agentic Workflow? The Weekly Growth Brief, Step by Step</a>
+<a class="article-nav-all" href="/blog/">All posts</a>
+</nav>
+</main>
+
+<!-- The closer is the product, not a pitch: the same bridge the tools pages
+     end on, with a shot, so a post is not the one page on the site that ends
+     in text alone. Which one depends on the post's audience. -->
+<section class="duct-bridge" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Reading three tools together is the whole job. Duct does it on your machine.</p>
+      <p class="duct-bridge-body">Ask why signups dropped. Duct reads Search Console, GA4 and your ads and revenue tools together, answers with the sources it read, and proposes the change. You approve it. Open source, free with your own keys.</p>
+      <p class="duct-bridge-actions"><a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a><a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a></p>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"/>
+      <figcaption>Why are signups down? Asked once, answered from four tools.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/integrations/">Integrations</a>
+<a href="/mcp">MCP servers</a>
+<a href="/compare">Compare</a>
+<a href="/changelog/">Changelog</a>
+</div>
+<div class="footer-col">
+<h4>Resources</h4>
+<a href="/blog/">Blog</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-legal" aria-label="Legal">
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</nav>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>

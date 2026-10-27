@@ -79,6 +79,7 @@ What Duct reads in each connected tool, what it can change there, and how each o
 
 ## Blog posts
 
+- [Local AI Agents: What Stays on Your Machine, What Leaves It](https://getduct.ai/blog/local-ai-agents): What a local AI agent is, how it differs from self-hosted and cloud agents, and where your marketing data, keys and memory sit in one open-source desktop agent.
 - [What Is an Agentic Workflow? The Weekly Growth Brief, Step by Step](https://getduct.ai/blog/what-is-an-agentic-workflow): An agentic workflow, explained on one real job: the weekly growth brief. Every step, who decides each one, and which step was taken away from the model and why.
 - [AI Agent Examples for Marketing: Seven Jobs, One Week, Thirteen Tools](https://getduct.ai/blog/ai-agent-examples-marketing): Seven concrete AI agent examples for marketing, each with the tools it reads, what it produces and what it may change, from an open-source agent that does them.
 - [Human in the Loop: Why an Agent That Can Spend Your Budget Must Ask First](https://getduct.ai/blog/human-in-the-loop-ai-agents): What human in the loop means for an AI agent that can touch your ad budget: which actions need approval, what the card must show, and how a gate is enforced.
