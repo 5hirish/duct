@@ -431,11 +431,11 @@ follows is the mechanics it relies on.
 
 Posts live in `site/blog/posts/<slug>.md` with required front matter: `title`,
 `date`, `author`, `category`, `tags`, `excerpt`, `readTime`. The category is
-one of five, enforced by the generator (`CATEGORIES` in
-`scripts/build_blog.py`: Engineering, Design, Growth, Announcement, Story); tags
-are 1–6 lowercase topics. Optional: `description` (140–160), `seoTitle` (≤60),
-`updated`, `hero` + `heroAlt`, `audience`. The generator's docstring is the
-reference for every key.
+one of six, enforced by the generator (`CATEGORIES` in
+`scripts/build_blog.py`: Engineering, Design, Growth, Guide, Announcement,
+Story); tags are 1–6 lowercase topics. Optional: `description` (140–160),
+`seoTitle` (≤60), `updated`, `hero` + `heroAlt`, `audience`. The generator's
+docstring is the reference for every key.
 
 **Then draw its card, run the generator, and commit both outputs:**
 

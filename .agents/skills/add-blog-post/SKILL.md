@@ -1,7 +1,7 @@
 ---
 name: add-blog-post
 description: Research, write, illustrate and publish a post on the Duct blog that ranks in search and gets cited by answer engines (ChatGPT, Perplexity, Google AI Overviews, Claude). Runs a research arm first (demand, the pages answer engines cite today, primary sources, Duct's first-hand evidence), then writes for extraction, draws the hero, renders, lists and verifies the post, and keeps the publishing cadence. Use for "write a blog post", "next post", "blog about <topic or URL>", or a blog content calendar.
-argument-hint: "<topic, question or source URL> [Engineering|Design|Growth|Announcement|Story]"
+argument-hint: "<topic, question or source URL> [Engineering|Design|Growth|Guide|Announcement|Story]"
 ---
 
 A post exists to be **found, quoted and trusted**: found by search, quoted by
@@ -71,6 +71,7 @@ the shelf the post sits on; tags are what it is about.
 | `Engineering` | how Duct's agent and product are built, with the code | builders |
 | `Design` | interface and product design decisions, and why | builders |
 | `Growth` | practical guides for running growth without a data team | growth |
+| `Guide` | evergreen explainers: one agent concept, in a marketer's terms (below) | growth |
 | `Announcement` | launches and releases worth more than a changelog line | growth |
 | `Story` | why Duct exists, what building it in public taught us | growth |
 
@@ -81,6 +82,33 @@ post. They show under the post, and become the `BlogPosting`'s `keywords` and
 be a thin page competing with the posts themselves. Add them when a tag has
 five posts. A new category is a deliberate change to `CATEGORIES`, not a
 front-matter typo the generator accepts.
+
+### Guides: the hub inside the blog
+
+A `Guide` explains **one agent concept to a marketer, founder or PM who runs
+growth without a data team**, in the terms of their week (the Monday read of
+three tools, the budget change they would not let a script make), never in
+the terms of a framework. It is the evergreen layer of the blog, and it is
+how getduct.ai earns the territory *AI agents for marketing and growth*
+without a separate learning hub. The reasoning, with the numbers, is on the
+cluster's issue; the rules are:
+
+- **One concept, one primary question, the question's words in the title.**
+  A guide that needs a second concept to make sense links to that concept's
+  guide, which is a second post. Difficulty under 30 and the reader's job in
+  the phrasing beat a bigger head term the domain cannot rank for.
+- **The product is the evidence, not the subject.** A guide names the file,
+  test or shot that proves the concept is real in a shipping agent, once,
+  and never pitches. The generator's growth closer does the rest.
+- **Spokes before the hub.** The pillar guide for a territory is written
+  after its spokes exist and links every one of them; each spoke links the
+  pillar and its nearest sibling. Until the pillar exists, spokes link each
+  other and the relevant `for-*` page.
+- **A `/learn/` path, a nav entry or a tag page is earned, not planned.**
+  Promote a territory out of the blog only when it holds five or more
+  published guides *and* Search Console shows non-branded impressions on
+  them. Below that, a hub is a landing page with nothing to land on, and
+  under `site/` it would also be five pages per guide to keep translated.
 
 ## Cadence
 
@@ -157,7 +185,7 @@ a local path: it is the reader's proof and a link to the repo.
 
 ```markdown
 ## Brief: <working title>
-- Category: <one of the five>. Tags: <1–6>. Reader: <one sentence, a real person>
+- Category: <one of the six>. Tags: <1–6>. Reader: <one sentence, a real person>
 - The value: after reading they can <…>; and they learn <…> nowhere else says
 - Primary question: <as people type it>. Answer in one sentence: <…>
 - Secondary questions (H2s / FAQ): <…>
@@ -283,7 +311,7 @@ seoTitle: "Harness Engineering: A Field Guide From a Shipping Agent"   # <title>
 date: Sep 29 2026
 updated: Oct 14 2026          # optional; only for a substantive revision
 author: Shirish Kadam
-category: Engineering         # Engineering | Design | Growth | Announcement | Story
+category: Engineering         # Engineering | Design | Growth | Guide | Announcement | Story
 tags: harness engineering, agent harness, evals   # 1–6, lowercase
 audience: builders            # optional; defaults from the category
 excerpt: "The card line on the index: a specific claim that makes someone click."

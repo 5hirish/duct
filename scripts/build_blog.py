@@ -133,13 +133,14 @@ AUTHOR = {
 
 REQUIRED_FRONT_MATTER = ("title", "date", "author", "category", "tags", "excerpt", "readTime")
 
-# The primary category is a fixed shelf, so the index reads as five kinds of
+# The primary category is a fixed shelf, so the index reads as six kinds of
 # post rather than one label per post; the topics go in tags. Each category
 # names the closer its readers get unless a post overrides `audience`.
 CATEGORIES = {
     "Engineering": "builders",   # how Duct's agent and product are built, with the code
     "Design": "builders",        # interface and product design decisions, and why
     "Growth": "growth",          # practical guides for running growth without a data team
+    "Guide": "growth",           # evergreen explainers: one agent concept, in a marketer's terms
     "Announcement": "growth",    # launches and releases worth more than a changelog line
     "Story": "growth",           # why Duct exists, what building it in public taught us
 }
