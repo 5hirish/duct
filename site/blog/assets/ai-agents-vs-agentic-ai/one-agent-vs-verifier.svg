@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="1000" height="600" role="img" aria-labelledby="t d">
+  <title id="t">One agent, or an agent with a verifier</title>
+  <desc id="d">Two loops side by side. On the left, one agent reads data, writes and recommends in a single loop. On the right, a lead agent plans, hands the data checks to a verifier subagent that runs in its own context window, and reads back what was verified, what was wrong and what could not be checked before it recommends. In both, a person approves any change.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b5068"/></marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff5c00"/></marker>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      .h { font-size: 26px; font-weight: bold; fill: #0d0f1a; }
+      .b { font-size: 20px; font-weight: bold; fill: #0d0f1a; }
+      .l { font-size: 19px; fill: #4b5068; }
+      .k { font-size: 15px; font-weight: bold; letter-spacing: 2.5px; fill: #4b5068; }
+      .ko { font-size: 15px; font-weight: bold; letter-spacing: 2.5px; fill: #ff5c00; }
+      .flow { stroke: #4b5068; stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+      .flowo { stroke: #ff5c00; stroke-width: 2.5; fill: none; marker-end: url(#ao); }
+      .box { fill: #ffffff; stroke: #d9dbe3; stroke-width: 2; }
+    </style>
+  </defs>
+  <rect width="1000" height="600" fill="#ffffff"/>
+  <text x="20" y="44" class="serif" font-size="32" fill="#0d0f1a">One agent, or an agent with a verifier</text>
+  <text x="20" y="74" class="sans l">Same data, same model family. The orange box is the only thing that changed.</text>
+
+  <!-- LEFT: one agent -->
+  <rect x="20" y="100" width="440" height="470" rx="18" fill="#faf8f5" stroke="#d9dbe3" stroke-width="2" stroke-dasharray="9 7"/>
+  <text x="44" y="134" class="sans k">ONE AI AGENT</text>
+
+  <rect x="60" y="160" width="360" height="56" rx="12" class="box"/>
+  <text x="240" y="195" text-anchor="middle" class="sans b">Reads Search Console, GA4, Ads</text>
+
+  <line x1="240" y1="216" x2="240" y2="252" class="flow"/>
+
+  <rect x="60" y="256" width="360" height="56" rx="12" class="box"/>
+  <text x="240" y="291" text-anchor="middle" class="sans b">Reasons about what it read</text>
+
+  <line x1="240" y1="312" x2="240" y2="348" class="flow"/>
+
+  <rect x="60" y="352" width="360" height="56" rx="12" class="box"/>
+  <text x="240" y="387" text-anchor="middle" class="sans b">Writes the brief, recommends</text>
+
+  <line x1="240" y1="408" x2="240" y2="444" class="flow"/>
+
+  <rect x="60" y="448" width="360" height="56" rx="12" fill="#eef0f5" stroke="#d9dbe3" stroke-width="2"/>
+  <text x="240" y="483" text-anchor="middle" class="sans b">A person approves any change</text>
+
+  <text x="240" y="536" text-anchor="middle" class="sans l">Who checked the number?</text>
+  <text x="240" y="560" text-anchor="middle" class="sans b" font-size="19">Nobody, unless you did.</text>
+
+  <!-- RIGHT: agent + verifier -->
+  <rect x="500" y="100" width="480" height="470" rx="18" fill="#faf8f5" stroke="#d9dbe3" stroke-width="2" stroke-dasharray="9 7"/>
+  <text x="524" y="134" class="sans k">AN AGENT WITH A VERIFIER SUBAGENT</text>
+
+  <rect x="540" y="160" width="250" height="56" rx="12" class="box"/>
+  <text x="665" y="187" text-anchor="middle" class="sans b">Lead agent reads</text>
+  <text x="665" y="207" text-anchor="middle" class="sans l">Search Console, GA4, Ads</text>
+
+  <!-- hand-off to verifier -->
+  <path d="M790 188 L827 188" class="flowo"/>
+
+  <rect x="832" y="150" width="140" height="104" rx="12" fill="#fff4ec" stroke="#ff5c00" stroke-width="2.5"/>
+  <text x="902" y="176" text-anchor="middle" class="sans ko">VERIFIER</text>
+  <text x="902" y="202" text-anchor="middle" class="sans l">own context,</text>
+  <text x="902" y="224" text-anchor="middle" class="sans l">12 checks,</text>
+  <text x="902" y="246" text-anchor="middle" class="sans l">cheaper model</text>
+
+  <!-- back to the lead: three lists -->
+  <path d="M902 254 L902 284 L795 284" class="flowo"/>
+  <text x="894" y="276" text-anchor="end" class="sans l" font-size="16" fill="#c2410c">3 lists back</text>
+
+  <line x1="665" y1="216" x2="665" y2="252" class="flow"/>
+
+  <rect x="540" y="256" width="250" height="56" rx="12" class="box"/>
+  <text x="665" y="283" text-anchor="middle" class="sans b">Reasons, with the</text>
+  <text x="665" y="303" text-anchor="middle" class="sans l">three lists in hand</text>
+
+  <line x1="665" y1="312" x2="665" y2="348" class="flow"/>
+
+  <rect x="540" y="352" width="424" height="56" rx="12" class="box"/>
+  <text x="752" y="380" text-anchor="middle" class="sans b">Writes the brief, recommends,</text>
+  <text x="752" y="400" text-anchor="middle" class="sans l">and says what it could not verify</text>
+
+  <line x1="752" y1="408" x2="752" y2="444" class="flow"/>
+
+  <rect x="540" y="448" width="424" height="56" rx="12" fill="#eef0f5" stroke="#d9dbe3" stroke-width="2"/>
+  <text x="752" y="483" text-anchor="middle" class="sans b">A person approves any change</text>
+
+  <text x="740" y="536" text-anchor="middle" class="sans l">Who checked the number?</text>
+  <text x="740" y="560" text-anchor="middle" class="sans b" font-size="19">A second agent, before the first one wrote.</text>
+
+  <text x="20" y="592" class="sans" font-size="14" fill="#6b7086">How Duct's insights agent runs, October 2026: backend/agents/insights/subagents/verify.py, checks.py</text>
+</svg>

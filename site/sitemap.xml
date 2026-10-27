@@ -392,7 +392,7 @@
   </url>
   <url>
     <loc>https://getduct.ai/blog/</loc>
-    <lastmod>2026-12-01</lastmod>
+    <lastmod>2026-12-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -1209,6 +1209,12 @@
   <url>
     <loc>https://getduct.ai/blog/local-ai-agents</loc>
     <lastmod>2026-12-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://getduct.ai/blog/ai-agents-vs-agentic-ai</loc>
+    <lastmod>2026-12-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
