@@ -195,7 +195,9 @@ def _anthropic_payload(model, *, thinking: str = "", temperature: float = 1.0) -
     return llm._get_request_payload([HumanMessage("hi")])
 
 
-@pytest.mark.parametrize("model", [ModelName.CLAUDE_FABLE, ModelName.CLAUDE_OPUS, ModelName.CLAUDE_SONNET])
+@pytest.mark.parametrize(
+    "model", [ModelName.CLAUDE_FABLE, ModelName.CLAUDE_OPUS, ModelName.CLAUDE_SONNET, ModelName.CLAUDE_HAIKU]
+)
 def test_a_bound_thinking_model_drops_a_stale_block_instead_of_failing(model):
     """Pruning, the seen-image swap and compaction all edit earlier turns. On
     these models that is a 400 for any account opened after 2026-08-31 unless
@@ -217,7 +219,9 @@ def test_the_reasoning_summary_shows_exactly_when_it_did_before():
 
 
 def test_a_model_without_bound_thinking_is_sent_nothing_new():
-    payload = _anthropic_payload(ModelName.CLAUDE_HAIKU, thinking="deep")
+    """Every Claude in the catalogue binds its blocks since Haiku 5.5; an older
+    one a key can still reach (Sonnet 4.6) must not be sent the beta."""
+    payload = _anthropic_payload("claude-sonnet-4-6")
     assert payload.get("thinking") is None
     assert not payload.get("betas")
 
@@ -229,14 +233,14 @@ def test_a_model_without_bound_thinking_is_sent_nothing_new():
         (Provider.ANTHROPIC, ModelName.CLAUDE_OPUS, False),
         (Provider.OPENAI, ModelName.GPT_6_LUNA, False),
         (Provider.OPENROUTER, ModelName.OR_CLAUDE_OPUS, False),
-        (Provider.ANTHROPIC, ModelName.CLAUDE_HAIKU, True),
+        (Provider.ANTHROPIC, ModelName.CLAUDE_HAIKU, False),
         (Provider.GOOGLE_GENAI, ModelName.GEMINI_3_5_FLASH_LITE, True),
     ],
 )
 def test_a_temperature_reaches_only_a_model_that_takes_one(provider, model, kept):
     """The verify call asks for 0 on each provider's Light model. GPT-6 and
-    the Claude 5 family refuse any temperature while they reason — a 400, or
-    for Sonnet 5.5 a ValueError before the request leaves."""
+    the Claude 5 family, Haiku 5.5 included, refuse any temperature while they
+    reason — a 400, or for Sonnet 5.5 a ValueError before the request leaves."""
     from agents.core.lc import resolve_chat_model
 
     llm = resolve_chat_model(provider, model, "k", temperature=0.0)

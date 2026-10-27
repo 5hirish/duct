@@ -34,6 +34,7 @@ from agents.thinking import (
         # Anthropic's ladder is the widest, so every rung is distinct.
         ("claude-opus-5-5", ["low", "medium", "high", "xhigh"]),
         ("claude-sonnet-5-5", ["low", "medium", "high", "xhigh"]),
+        ("claude-haiku-5-5", ["low", "medium", "high", "xhigh"]),
         # 4.6 has max but no xhigh — Exhaustive lands on max, not on high.
         ("claude-sonnet-4-6", ["low", "medium", "high", "max"]),
         # OpenAI names the dial differently and defaults lower.
@@ -89,6 +90,15 @@ def test_opus_5_5_defaults_a_rung_below_the_rest_of_its_family():
     assert marked == ["balanced"]
 
 
+def test_haiku_5_5_is_the_first_haiku_with_a_dial_and_defaults_to_medium():
+    """Haiku 4.5 had no dial and hid the picker; 5.5 takes Opus 5.5's ladder and
+    its medium default, so a saved Haiku pick gains a picker on upgrade."""
+    assert describe_model("claude-haiku-5-5")["default_native"] == "medium"
+    marked = [row["level"] for row in describe_model("claude-haiku-5-5")["levels"] if row["is_default"]]
+    assert marked == ["balanced"]
+    assert describe_model("claude-haiku-4-5")["default_native"] == "medium", "the retired id answers for 5.5"
+
+
 # ---------------------------------------------------------------------------
 # Model identity
 # ---------------------------------------------------------------------------
@@ -126,7 +136,7 @@ def test_a_modelname_enum_resolves_like_its_string():
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "model", ["claude-haiku-4-5", "gpt-4o", "gpt-4o-mini", "gemini-2.5-flash"]
+    "model", ["gpt-4o", "gpt-4o-mini", "gemini-2.5-flash"]
 )
 def test_a_model_with_no_dial_contributes_nothing(model):
     """Gemini 2.5 *rejects* thinking_level outright; 4o has no such parameter.
@@ -205,7 +215,7 @@ def test_the_model_factory_sends_langchains_standard_parameter(monkeypatch):
 
 def test_the_model_factory_stays_silent_when_the_model_has_no_dial(monkeypatch):
     seen = _captured(monkeypatch)
-    resolve_chat_model(Provider.ANTHROPIC, "claude-haiku-4-5", "k", thinking="exhaustive")
+    resolve_chat_model(Provider.OPENAI, "gpt-4o", "k", thinking="exhaustive")
     assert "reasoning_effort" not in seen
 
 

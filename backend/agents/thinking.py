@@ -29,7 +29,7 @@ Three rules make this safe to extend:
    make "Balanced" mean ``low`` on Gemini, which is not what balanced means.
 
 2. **Unsupported is a state, not a silence.** A model with no thinking dial
-   (gpt-4o, claude-haiku-4-5, the Gemini 2.5 line) returns ``None`` and the
+   (gpt-4o, the Gemini 2.5 line) returns ``None`` and the
    picker disappears. Sending an ignored parameter, or worse a rejected one, is
    how you get a 400 nobody can explain.
 
@@ -131,10 +131,10 @@ class ThinkingSupport:
 _ANTHROPIC_5 = ThinkingSupport(
     native=(LOW, MEDIUM, HIGH, XHIGH, MAX), default=HIGH, label="effort"
 )
-# Opus 5.5 takes the same ladder and defaults one rung lower, to medium. Only
-# the label depends on it — Duct never sends a level nobody chose (rule 3) —
-# but a picker marking `high` as the default on Opus 5.5 would be lying.
-_ANTHROPIC_OPUS_5_5 = ThinkingSupport(
+# Opus 5.5 and Haiku 5.5 take the same ladder and default one rung lower, to
+# medium. Only the label depends on it — Duct never sends a level nobody chose
+# (rule 3) — but a picker marking `high` as the default on them would be lying.
+_ANTHROPIC_5_MEDIUM = ThinkingSupport(
     native=(LOW, MEDIUM, HIGH, XHIGH, MAX), default=MEDIUM, label="effort"
 )
 # 4.6-generation Anthropic models have max but not xhigh.
@@ -192,8 +192,11 @@ MODEL_THINKING: dict[str, ThinkingSupport] = {
     # what differs is that their thinking cannot be turned off, which is a
     # request-shape concern (agents/core/lc.py), not a ladder concern.
     ModelName.CLAUDE_FABLE: _ANTHROPIC_5,
-    ModelName.CLAUDE_OPUS: _ANTHROPIC_OPUS_5_5,
+    ModelName.CLAUDE_OPUS: _ANTHROPIC_5_MEDIUM,
     ModelName.CLAUDE_SONNET: _ANTHROPIC_5,
+    # The first Haiku with a dial: 4.5 had none, and a saved pick of it runs
+    # here now (agents/models.RETIRED_MODELS).
+    ModelName.CLAUDE_HAIKU: _ANTHROPIC_5_MEDIUM,
 
     # --- OpenAI
     ModelName.GPT_6_ASTRA: _GPT_6_REASONING_ONLY,
@@ -259,8 +262,6 @@ NO_THINKING_DIAL: frozenset[ModelName] = frozenset({
     # Pre-Gemini-3: thinking_level is rejected outright, and their control is a
     # token budget rather than a level. Supporting budgets is a separate shape.
     ModelName.GEMINI_2_5_FLASH,
-    # Absent from Anthropic's effort-supported model list.
-    ModelName.CLAUDE_HAIKU,
     # Open weights behind OpenRouter. It lists `reasoning` in the catalogue's
     # supported_parameters but *not* `reasoning_effort` — it reasons, it just
     # takes no level. That is the difference from the rows above, which do

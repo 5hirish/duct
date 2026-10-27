@@ -803,7 +803,7 @@ const MODEL_CATALOGUE = {
     { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", provider: "google_genai", engines: ["v1"] },
     { id: "claude-opus-5-5", label: "Claude Opus 5.5", provider: "anthropic", engines: ["v1"] },
     { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5", provider: "anthropic", engines: ["v1"] },
-    { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", provider: "anthropic", engines: ["v1"] },
+    { id: "claude-haiku-5-5", label: "Claude Haiku 5.5", provider: "anthropic", engines: ["v1"] },
   ],
   tiers: [
     { id: "heavy", default_model: "gemini-3.1-pro-preview", jobs: ["analysis", "audit"] },
@@ -825,7 +825,7 @@ const MODEL_CATALOGUE = {
   ],
   video_provider_order: ["google_genai", "openrouter"],
   provider_triples: {
-    anthropic: { heavy: "claude-opus-5-5", standard: "claude-sonnet-5-5", light: "claude-haiku-4-5" },
+    anthropic: { heavy: "claude-opus-5-5", standard: "claude-sonnet-5-5", light: "claude-haiku-5-5" },
     google_genai: { heavy: "gemini-3.1-pro-preview", standard: "gemini-3.8-flash", light: "gemini-3.5-flash-lite" },
   },
 };
