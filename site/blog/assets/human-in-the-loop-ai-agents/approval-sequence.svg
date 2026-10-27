@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="1000" height="560" role="img" aria-labelledby="t d">
+  <title id="t">Where a person sits in a staged change</title>
+  <desc id="d">The agent proposes a change set. A policy in code checks every change. If all changes are allowlisted, reversible and the project allows it, the set applies with an undo. Otherwise a person decides: approve applies the set, reject ends it. Any applied set can be rolled back. The agent has no path to apply.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b5068"/></marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff5c00"/></marker>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      .h { font-size: 23px; font-weight: bold; fill: #0d0f1a; }
+      .l { font-size: 19px; fill: #4b5068; }
+      .s { font-size: 17px; fill: #6b7086; }
+      .k { font-size: 15px; font-weight: bold; letter-spacing: 2.5px; fill: #ff5c00; }
+      .flow { stroke: #4b5068; stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+      .flowo { stroke: #ff5c00; stroke-width: 3; fill: none; marker-end: url(#ao); }
+      .box { fill: #ffffff; stroke: #d9dbe3; stroke-width: 2; }
+    </style>
+  </defs>
+  <rect width="1000" height="560" fill="#ffffff"/>
+  <text x="20" y="44" class="serif" font-size="32" fill="#0d0f1a">Where a person sits in a staged change</text>
+  <text x="20" y="76" class="sans l">The agent's road ends at propose. Only the orange step reaches apply for anything that moves money.</text>
+
+  <!-- lane labels -->
+  <text x="20" y="130" class="sans k">AGENT</text>
+  <text x="20" y="300" class="sans k">CODE</text>
+  <text x="20" y="470" class="sans k">PERSON</text>
+  <line x1="20" y1="215" x2="980" y2="215" stroke="#eef0f5" stroke-width="2"/>
+  <line x1="20" y1="385" x2="980" y2="385" stroke="#eef0f5" stroke-width="2"/>
+
+  <!-- agent lane -->
+  <rect x="120" y="105" width="200" height="90" rx="12" class="box"/>
+  <text x="140" y="140" class="sans h">Propose</text>
+  <text x="140" y="170" class="sans s">a change set, with a reason</text>
+
+  <rect x="770" y="105" width="210" height="90" rx="12" class="box"/>
+  <text x="790" y="140" class="sans h">Roll back</text>
+  <text x="790" y="170" class="sans s">the agent or you, any time</text>
+
+  <!-- code lane -->
+  <rect x="120" y="265" width="240" height="100" rx="12" class="box"/>
+  <text x="140" y="300" class="sans h">Policy check</text>
+  <text x="140" y="326" class="sans s">allowlisted? reversible?</text>
+  <text x="140" y="350" class="sans s">guardrails clean? preview ok?</text>
+
+  <rect x="560" y="265" width="200" height="100" rx="12" class="box"/>
+  <text x="580" y="300" class="sans h">Apply</text>
+  <text x="580" y="326" class="sans s">with a rollback handle</text>
+  <text x="580" y="350" class="sans s">recorded first</text>
+
+  <!-- person lane -->
+  <rect x="120" y="425" width="260" height="100" rx="12" fill="#fff4ec" stroke="#ff5c00" stroke-width="3"/>
+  <text x="140" y="460" class="sans h">You decide</text>
+  <text x="140" y="486" class="sans s">money, live, destructive, or</text>
+  <text x="140" y="510" class="sans s">the project is on its default</text>
+
+  <rect x="560" y="425" width="200" height="100" rx="12" class="box"/>
+  <text x="580" y="460" class="sans h">Rejected</text>
+  <text x="580" y="486" class="sans s">nothing ran</text>
+
+  <!-- flows -->
+  <path d="M220 195 L220 265" class="flow"/>
+  <path d="M360 315 L560 315" class="flow"/>
+  <text x="372" y="300" class="sans s">every change passes</text>
+  <text x="372" y="340" class="sans s">and autonomy allows</text>
+  <path d="M240 365 L240 425" class="flow"/>
+  <text x="252" y="400" class="sans s">anything else</text>
+  <path d="M380 455 L560 455" class="flow"/>
+  <text x="455" y="445" class="sans s">no</text>
+  <path d="M380 490 C470 490 520 430 560 365" class="flowo"/>
+  <text x="470" y="412" class="sans s" fill="#c2410c" font-weight="bold">yes</text>
+  <path d="M760 315 C800 315 800 250 810 195" class="flow"/>
+  <text x="818" y="256" class="sans s">if it has a rollback</text>
+
+  <!-- the missing tool -->
+  <rect x="420" y="105" width="260" height="90" rx="12" fill="#faf8f5" stroke="#d9dbe3" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="440" y="140" class="sans h" fill="#9ea3b8">Approve</text>
+  <text x="440" y="170" class="sans s">no such tool exists for the agent</text>
+</svg>

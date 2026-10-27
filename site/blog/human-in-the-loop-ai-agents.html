@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>Human in the Loop: Why an AI Agent Must Ask Before It Spends</title>
+<link rel="canonical" href="https://getduct.ai/blog/human-in-the-loop-ai-agents"/>
+<meta name="description" content="What human in the loop means for an AI agent that can touch your ad budget: which actions need approval, what the card must show, and how a gate is enforced."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/blog/human-in-the-loop-ai-agents"/>
+<meta property="og:title" content="Human in the Loop: Why an AI Agent Must Ask Before It Spends"/>
+<meta property="og:description" content="Which marketing actions an agent may take alone, which must wait for you, and why a gate enforced by a missing tool beats one enforced by a prompt."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/blog-human-in-the-loop-ai-agents.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="Guide"/>
+<meta property="article:tag" content="human in the loop"/>
+<meta property="article:tag" content="ai agents"/>
+<meta property="article:tag" content="approvals"/>
+<meta property="article:tag" content="google ads"/>
+<meta property="article:tag" content="execution"/>
+<meta property="article:published_time" content="2026-11-10T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Human in the Loop: Why an AI Agent Must Ask Before It Spends"/>
+<meta name="twitter:description" content="Which marketing actions an agent may take alone, which must wait for you, and why a gate enforced by a missing tool beats one enforced by a prompt."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/blog-human-in-the-loop-ai-agents.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "inLanguage": "en",
+  "headline": "Human in the Loop: Why an Agent That Can Spend Your Budget Must Ask First",
+  "description": "What human in the loop means for an AI agent that can touch your ad budget: which actions need approval, what the card must show, and how a gate is enforced.",
+  "datePublished": "2026-11-10T00:00:00+00:00",
+  "dateModified": "2026-11-10T00:00:00+00:00",
+  "articleSection": "Guide",
+  "wordCount": 2387,
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": [
+    "https://getduct.ai/blog/assets/human-in-the-loop-ai-agents/hero.webp",
+    "https://getduct.ai/assets/og/blog-human-in-the-loop-ai-agents.jpg"
+  ],
+  "mainEntityOfPage": "https://getduct.ai/blog/human-in-the-loop-ai-agents",
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Duct Blog",
+    "url": "https://getduct.ai/blog/"
+  },
+  "keywords": [
+    "human in the loop",
+    "ai agents",
+    "approvals",
+    "google ads",
+    "execution"
+  ],
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "name": "Gumloop, Agents that know when to ask",
+      "url": "https://instacart.gumloop.com/blog/human-in-the-loop"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Article 14, Human oversight",
+      "url": "https://artificialintelligenceact.eu/article/14/"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "TechTarget, The human in the loop is falling asleep",
+      "url": "https://www.techtarget.com/it-strategy/news/366649960/The-human-in-the-loop-is-falling-asleep"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Google Ads Help, About Smart Bidding learning",
+      "url": "https://support.google.com/google-ads/answer/13020501"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Google Ads Help, About applying recommendations automatically",
+      "url": "https://support.google.com/google-ads/answer/10279006"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Anthropic, How we built Claude Code auto mode",
+      "url": "https://www.anthropic.com/engineering/claude-code-auto-mode"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "AWS Agentic AI Lens, AGENTSEC04-BP02",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/agentic-ai-lens/agentsec04-bp02.html"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "NeuralTrust, Human-in-the-Loop AI Agents: 2026 Guide",
+      "url": "https://neuraltrust.ai/blog/human-in-the-loop-ai-agents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Anthropic, Measuring AI agent autonomy in practice",
+      "url": "https://www.anthropic.com/research/measuring-agent-autonomy"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "HiL-Bench, arXiv 2604.09408",
+      "url": "https://arxiv.org/abs/2604.09408"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://getduct.ai/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Human in the Loop: Why an Agent That Can Spend Your Budget Must Ask First",
+      "item": "https://getduct.ai/blog/human-in-the-loop-ai-agents"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What does human in the loop mean in AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "At run time it means an AI system pauses at a defined point so a person can approve, change or reject what it is about to do before it does it. The person is a blocking step, not a spectator. The same phrase is also used for people rating model outputs during training, which is a separate practice with the same name."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between human in the loop and human on the loop?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In the loop, the agent proposes and waits; nothing happens until a person decides. On the loop, the agent acts first and a person watches, with the power to stop it or undo it afterwards. Most good agent products use both: in the loop for money and anything live, on the loop for reversible, low-cost changes at volume."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should every AI agent action require human approval?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Anthropic measured that people approve about 93% of permission prompts, which turns the gate into a reflex, and AWS lists routing every action through review as an anti-pattern. Reserve approval for actions that move money, go live, or cannot be fully undone, and give everything else an undo button instead."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can an AI agent change my Google Ads budget without asking?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It depends entirely on how the gate is built, so ask the vendor where the rule lives. In Duct, budget, bid, pause and publish changes always wait for a person at every autonomy setting, and no tool exists that lets the agent approve or apply a change. Google's own auto-apply recommendations also exclude budget raising."
+      }
+    }
+  ]
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+.article-nav-all { font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }
+.prose .post-tags { list-style: none; padding: 0; margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prose .post-tags li { font-size: 13px; font-weight: 500; color: var(--navy-2); background: var(--off); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; margin: 0; }
+.post-hero { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+.post-hero img { width: 100%; height: auto; display: block; border-radius: var(--r-lg); border: 1px solid var(--border); }
+.post-toc { margin: 0 0 40px; padding: 20px 24px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.prose .post-toc-title { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0 0 10px; }
+.post-toc ol { margin: 0; padding-left: 20px; }
+.prose .post-toc li { font-size: 15px; margin-bottom: 4px; }
+.prose .post-toc a { border-bottom: none; }
+.prose h2, .prose h3 { scroll-margin-top: 88px; }
+.post-figure { margin: 36px 0; }
+.prose .post-figure img { height: auto; margin: 0; border: 1px solid var(--border); background: var(--white); }
+.post-figure figcaption, .post-quote figcaption { font-size: 13px; color: var(--navy-3); line-height: 1.6; margin-top: 10px; }
+.post-quote { margin: 36px 0; }
+.post-quote blockquote { margin: 0; }
+.post-quote blockquote p { font-family: var(--serif); font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.post-quote figcaption { padding-left: 27px; }
+.post-table { margin: 28px 0 32px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.post-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; color: var(--navy-3); }
+.post-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--off); }
+.post-table th, .post-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; min-width: 120px; }
+.post-table tr:last-child td { border-bottom: none; }
+.post-table code { font-size: 12px; }
+.prose .post-embed {
+  display: flex; align-items: center; gap: 16px; margin: 28px 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
+  color: var(--navy-3); transition: border-color .15s, background .15s;
+}
+.prose .post-embed:hover { border-color: var(--orange); background: var(--off); }
+.post-embed .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.post-embed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-embed-title { font-size: 16px; color: var(--navy); }
+.post-embed-desc { font-size: 14px; font-weight: 300; line-height: 1.5; }
+.post-embed-host { margin-left: auto; font-size: 12px; color: var(--navy-3); flex-shrink: 0; }
+.post-video { position: relative; margin: 32px 0; aspect-ratio: 16 / 9; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); }
+.prose .post-video-facade { display: block; position: absolute; inset: 0; border: none; color: #fff; }
+.prose .post-video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; }
+.post-video-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,.95) 0%, rgba(13,15,26,.75) 30%, rgba(13,15,26,0) 70%); }
+.post-video-play {
+  position: absolute; z-index: 1; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--orange); font-size: 30px; color: #fff;
+  box-shadow: 0 8px 24px rgba(13,15,26,.35); transition: transform .15s;
+}
+.post-video-facade:hover .post-video-play, .post-video-facade:focus-visible .post-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.post-video-caption { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+.post-video-title { font-family: var(--serif); font-size: 19px; line-height: 1.3; }
+.post-video-note { font-size: 13px; color: #c9ccd8; }
+.post-video iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 640px) {
+  .post-video-title { font-size: 16px; }
+  .post-video-caption { padding: 14px 16px; }
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+  .post-embed-host { display: none; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/human-in-the-loop-ai-agents.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/integrations/" class="nav-link">Integrations</a>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang" data-duct-lang-menu>
+<button type="button" class="nav-lang-btn" aria-expanded="false" aria-controls="nav-lang-list" aria-label="Language"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#globe"/></svg><span class="nav-lang-code" data-duct-lang-code>EN</span><svg class="ic nav-lang-caret" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></button>
+<div class="nav-lang-menu" id="nav-lang-list">
+<div class="dropdown-menu-inner">
+<a class="nav-lang-item" href="/" hreflang="en" lang="en" data-duct-lang-link="en" data-code="EN" aria-current="true">English</a>
+<a class="nav-lang-item" href="/es/" hreflang="es" lang="es" data-duct-lang-link="es" data-code="ES">Español</a>
+<a class="nav-lang-item" href="/pt-br/" hreflang="pt-BR" lang="pt-BR" data-duct-lang-link="pt-br" data-code="PT">Português (Brasil)</a>
+<a class="nav-lang-item" href="/de/" hreflang="de" lang="de" data-duct-lang-link="de" data-code="DE">Deutsch</a>
+<a class="nav-lang-item" href="/ja/" hreflang="ja" lang="ja" data-duct-lang-link="ja" data-code="JA">日本語</a>
+</div>
+</div>
+</div>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">Guide</p>
+<h1>Human in the Loop: Why an Agent That Can Spend Your Budget Must Ask First</h1>
+<div class="article-meta">Nov 10 2026 · 11 min read · By Shirish Kadam</div>
+<p class="article-made">Claude Code read Duct's execution policy, its tests and the September approval review, fetched the ten sources and drafted the text and the sequence figure; Shirish checks every claim against the code and every quote against its page before this goes out.</p>
+</header>
+
+<main>
+<figure class="post-hero"><img src="assets/human-in-the-loop-ai-agents/hero.webp" srcset="assets/human-in-the-loop-ai-agents/hero-768.webp 768w, assets/human-in-the-loop-ai-agents/hero.webp 1320w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1320" height="743" fetchpriority="high" alt="A Roman mosaic of an aqueduct on arches: a closed terracotta sluice gate with a crank holds blue water full on the left while the channel to its right runs dry"/></figure>
+<article id="prose" class="prose">
+<p><strong>Human in the loop means a person sits between what an AI agent proposes and what actually changes in your accounts.</strong> For a marketing agent the useful version is narrower than the phrase suggests: the agent reads, compares and drafts the change on its own; anything that moves money, goes live for every visitor, or cannot be fully undone waits for you; and the waiting is enforced by code the model cannot talk its way past, not by a sentence in its instructions asking it to be careful.</p>
+<p>An agent that notices a campaign burning budget on eight search terms with no conversions, and fixes it, is the thing you would pay for. The same agent fixing it at 3 a.m. on a guess is the thing you would uninstall. This guide is about where the line goes, and how to tell whether a product enforces it.</p>
+<p>It is easy to get wrong, and I have the receipt. On September 28 I was finishing <a href="/blog/what-is-harness-engineering">a post about agent harnesses</a> and the draft said Duct's agent waits for a person before "anything that spends money". I believed it. Then I read the policy file, the only thing that counts, and it said something narrower: budgets and bids always wait, but adding keywords was on the list that may apply without a click, and a new keyword goes in enabled, so it spends. The post was corrected before it shipped. The gap is still open, and I come back to it below because it is the most useful example in this guide.</p>
+<nav class="post-toc" aria-label="In this post">
+<p class="post-toc-title">In this post</p>
+<ol>
+<li><a href="#what-does-human-in-the-loop-mean-for-an-ai-agent">What does human in the loop mean for an AI agent?</a></li>
+<li><a href="#which-marketing-actions-should-always-wait-for-a-person">Which marketing actions should always wait for a person?</a></li>
+<li><a href="#why-does-approving-everything-make-the-gate-useless">Why does approving everything make the gate useless?</a></li>
+<li><a href="#how-is-the-gate-enforced-if-the-model-is-just-told-to-ask">How is the gate enforced if the model is just told to ask?</a></li>
+<li><a href="#what-should-the-approval-card-show">What should the approval card show?</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+</nav>
+<h2 id="what-does-human-in-the-loop-mean-for-an-ai-agent">What does human in the loop mean for an AI agent?</h2>
+<p><strong>It means the agent stops at a defined point and a person decides before anything happens.</strong> The decision is a blocking step: the agent proposes, the run pauses, you approve, edit or reject, and only then does the action run. Gumloop's guide puts the everyday version plainly: "agents can pause at important moments and check in with you for approval before taking action" (<a href="https://instacart.gumloop.com/blog/human-in-the-loop">Gumloop, <em>Agents that know when to ask</em></a>).</p>
+<p>Two neighbours of the phrase matter, because vendors blur them:</p>
+<div class="post-table" role="region" aria-label="Table: Pattern, Who acts first, Your role, Fits" tabindex="0">
+<table>
+<thead><tr><th scope="col">Pattern</th><th scope="col">Who acts first</th><th scope="col">Your role</th><th scope="col">Fits</th></tr></thead>
+<tbody>
+<tr><td>Human in the loop</td><td>the agent proposes, you decide, then it acts</td><td>approve, edit or reject before anything runs</td><td>money, anything live, anything you cannot fully undo</td></tr>
+<tr><td>Human on the loop</td><td>the agent acts, you watch</td><td>monitor and step in after the fact, undo if needed</td><td>reversible, low-cost changes you want done at volume</td></tr>
+<tr><td>Human out of the loop</td><td>the agent acts, nobody watches</td><td>read the report later</td><td>read-only work: a brief, a comparison, a draft</td></tr>
+</tbody>
+</table>
+</div>
+<p>If you are still sorting out whether the thing you have is an agent at all, <a href="/blog/ai-agent-vs-chatbot-vs-automation">the guide to agents, chatbots and automation</a> comes first. The same words also mean people rating model outputs during training, which is a different job. Here it is run time: one action, in your account, today. Regulators use that meaning too: the EU AI Act's Article 14 requires that overseers be able "to intervene in the operation of the high-risk AI system or interrupt the system through a 'stop' button" (<a href="https://artificialintelligenceact.eu/article/14/">Article 14, Human oversight</a>). Your ad account is not a high-risk system under that law. It is still your money.</p>
+<h2 id="which-marketing-actions-should-always-wait-for-a-person">Which marketing actions should always wait for a person?</h2>
+<p><strong>The test is not "is it reversible" but "what does a mistake cost before you notice, and does undo give that back".</strong> Tony Garcia, CIO and CISO at Infineo, puts it in one line: "The simple answer is what can be unwound versus what can't" (<a href="https://www.techtarget.com/it-strategy/news/366649960/The-human-in-the-loop-is-falling-asleep">TechTarget, <em>The human in the loop is falling asleep</em></a>, September 4, 2026). Marketing adds a twist: some settings revert cleanly while their consequences do not.</p>
+<p>The list for a Google Ads, GA4 and Tag Manager stack, with Duct's default read from <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py">the policy file</a>, not the landing page (what each connector can change is on <a href="/integrations/">the integration pages</a>, and the wider picture is in the guide to AI agents for marketing):</p>
+<div class="post-table" role="region" aria-label="Table: Action, Undo gives back, Cost of a wrong one before you notice, Duct today" tabindex="0">
+<table>
+<thead><tr><th scope="col">Action</th><th scope="col">Undo gives back</th><th scope="col">Cost of a wrong one before you notice</th><th scope="col">Duct today</th></tr></thead>
+<tbody>
+<tr><td>Read a report, draft a brief</td><td>nothing to undo</td><td>none</td><td>runs alone</td></tr>
+<tr><td>Add a note to the analytics timeline</td><td>everything</td><td>none</td><td>may auto-apply</td></tr>
+<tr><td>Add negative keywords</td><td>the keyword list, not the traffic you blocked</td><td>lost clicks for a day</td><td>may auto-apply</td></tr>
+<tr><td>Add new keywords</td><td>the keyword, not the spend, and bidding may re-enter learning</td><td>real money</td><td>may auto-apply (the open gap)</td></tr>
+<tr><td>Create a GA4 key event or audience</td><td>everything</td><td>muddled conversion counts</td><td>may auto-apply</td></tr>
+<tr><td>Edit a Tag Manager tag in the workspace</td><td>everything, nothing is live yet</td><td>none</td><td>may auto-apply</td></tr>
+<tr><td>Pause or enable a campaign</td><td>the setting; spend stops or starts instantly</td><td>a day of zero or double spend</td><td>always waits</td></tr>
+<tr><td>Change a budget or a bid</td><td>the setting; Smart Bidding's learning does not come back</td><td>real money, plus up to a week of worse bidding</td><td>always waits</td></tr>
+<tr><td>Publish a Tag Manager version</td><td>the previous version is republished</td><td>the live site changes for every visitor</td><td>always waits, flagged destructive</td></tr>
+<tr><td>Delete a key event, archive an audience</td><td>partly; audience membership rebuilds from zero</td><td>tracking gaps you discover a month later</td><td>always waits, flagged destructive</td></tr>
+</tbody>
+</table>
+</div>
+<p>The learning-period row is the one marketers know and software people miss. Google says Smart Bidding shows learning status "when you make major structural changes", keywords and bidding included, and that it "never lasts more than 7 days" (<a href="https://support.google.com/google-ads/answer/13020501">Google Ads Help, <em>About Smart Bidding learning</em></a>). Rolling the bid back restores the number, not the week.</p>
+<p>Google draws the line in the same place for its own automation: auto-applied recommendations keep a "History" tab, and "Budget raising isn't included in this iteration of auto-apply recommendations" (<a href="https://support.google.com/google-ads/answer/10279006">Google Ads Help, <em>About applying recommendations automatically</em></a>). The platform that sells the ads will not raise your budget without a click. Neither should an agent you downloaded.</p>
+<h2 id="why-does-approving-everything-make-the-gate-useless">Why does approving everything make the gate useless?</h2>
+<p><strong>Because a person asked to approve everything stops reading.</strong> Anthropic measured it on Claude Code, where every risky command used to prompt: "in practice users accept 93% of them anyway" (<a href="https://www.anthropic.com/engineering/claude-code-auto-mode">Anthropic, <em>How we built Claude Code auto mode</em></a>, March 25, 2026). A gate with a 93% yes rate is a reflex, and a reflex is what a confident model walks straight through.</p>
+<p>AWS's guidance for agents lists it as the first anti-pattern: "Routing all agent actions through human review regardless of risk level, creating reviewer fatigue and rubber-stamp approvals" (<a href="https://docs.aws.amazon.com/wellarchitected/latest/agentic-ai-lens/agentsec04-bp02.html">AWS Agentic AI Lens, AGENTSEC04-BP02</a>). Its answer, NeuralTrust's and mine is tiers: "Let read-only and easily reversible actions run without a prompt" (<a href="https://neuraltrust.ai/blog/human-in-the-loop-ai-agents">NeuralTrust, <em>Human-in-the-Loop AI Agents: 2026 Guide</em></a>, October 14, 2026), and keep the interruption for the rows that cost money or go live.</p>
+<p>Trust, when it comes, looks like supervising rather than stamping. Anthropic's study of agent autonomy found newer users "employ full auto-approve roughly 20% of the time", rising past 40% with experience, while experienced users also "interrupt in around 9% of turns": "effective oversight doesn't require approving every action but being in a position to intervene when it matters" (<a href="https://www.anthropic.com/research/measuring-agent-autonomy">Anthropic, <em>Measuring AI agent autonomy in practice</em></a>, February 18, 2026).</p>
+<h2 id="how-is-the-gate-enforced-if-the-model-is-just-told-to-ask">How is the gate enforced if the model is just told to ask?</h2>
+<p><strong>A gate written in the prompt is a wish. A gate written in code is a rule.</strong> This is the question to ask any vendor. There are three ways to build "the agent asks first", and one of them holds when the model is having a bad day.</p>
+<div class="post-table" role="region" aria-label="Table: How the gate is built, What stops a wrong action, What happens when the model is wrong about risk, Where the human sits" tabindex="0">
+<table>
+<thead><tr><th scope="col">How the gate is built</th><th scope="col">What stops a wrong action</th><th scope="col">What happens when the model is wrong about risk</th><th scope="col">Where the human sits</th></tr></thead>
+<tbody>
+<tr><td>Told to ask (a line in the prompt)</td><td>the model's judgement</td><td>the action runs</td><td>in the loop, in theory</td></tr>
+<tr><td>Cannot act (no tool exists to apply)</td><td>the absence of the tool</td><td>the change sits in "proposed" until a person clicks</td><td>in the loop, by construction</td></tr>
+<tr><td>Acts, then reports</td><td>nothing before the fact</td><td>the action runs; you see it in a log</td><td>on the loop</td></tr>
+</tbody>
+</table>
+</div>
+<p>Models are not reliable judges of when to ask. HiL-Bench, built to test exactly this, found that "no frontier model recovers more than a fraction of its full-information performance when deciding whether to ask" (<a href="https://arxiv.org/abs/2604.09408">HiL-Bench, arXiv 2604.09408</a>, April 2026). The first row is the one to be suspicious of, and it is the one most products ship, because it is one sentence of work.</p>
+<p>Duct uses the second row. The agent has four tools for changing things: list the operations it may propose, propose a change set, check a set's status, roll one back. There is no fifth. The docstring of <a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py">the tools file</a> says it in one line: "There is no approve or apply tool." The agent can write a paragraph on why the budget should go up. It cannot make the budget go up, because the thing that would do that is not in the list of things it can call.</p>
+<figure class="post-figure" data-zoom><img src="assets/human-in-the-loop-ai-agents/approval-sequence.svg" width="1000" height="560" loading="lazy" decoding="async" alt="A sequence diagram: the agent proposes a change set; a policy in code checks every change; if all are allowlisted and reversible and the project allows it, they apply with an undo; otherwise a person approves, which applies, or rejects, which ends it; applied changes can be rolled back."/><figcaption>The agent's road ends at propose. The orange step is the only place a person decides, and it is the only path to apply for anything that moves money.</figcaption></figure>
+<p>Whether a proposed set waits for a click or applies on its own is decided in <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py">one policy file</a>, once, in rules short enough to read in a minute:</p>
+<ul>
+<li>A change may apply without a click only if it is on a short allowlist, is not flagged destructive, has a rollback, passed the account's guardrails, and its preview succeeded.</li>
+<li>A set applies without a click only if an agent proposed it, the project's autonomy is set to assisted or auto, and every change in it passes. One destructive change holds the whole set for review.</li>
+<li>Destructive operations never auto-apply at any setting. The file calls this "absolute" and means it.</li>
+<li>Raising a project from assisted to auto changes how often the agent interrupts you with questions. It does not widen what may apply; the allowlist is identical at both levels. I ship a setting called "auto" that is mostly a politeness setting, which I find funny and also correct.</li>
+</ul>
+<p>Tests hold each of those: <a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_execution_policy.py">test_execution_policy.py</a> checks that one destructive change holds a whole set for a person and that a project on its default never auto-applies even a clean set; <a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_execution_apply_safety.py">test_execution_apply_safety.py</a> checks that two requests on one approval apply once, and that a change whose target moved since you approved it is held back. A rule with a test is a rule. A rule in a prompt is a hope.</p>
+<p>Now the open gap. The policy's own comment says budget, bid and status changes "stay OFF the allowlist until numeric guardrail limits (max % delta, absolute caps) exist", because they move money. Adding keywords is on the allowlist, and a new Google Ads keyword goes in enabled, so it can spend. My September review of the flow lists this as its first gap and first fix (<a href="https://github.com/5hirish/duct/blob/main/docs/engineering/2026-09-27-execution-approval-ux-research.md">Approvals and autonomy for execution</a>, G1). Until it ships, the honest sentence is: Duct asks before every budget, bid, pause and publish, and may add a keyword without asking on a project you have set to assisted. On the default setting nothing applies without you. That is the setting I run.</p>
+<h2 id="what-should-the-approval-card-show">What should the approval card show?</h2>
+<p><strong>The exact change, what it is now, why the agent wants it, what undo will and will not give back, and who approved it when.</strong> AWS names the failure mode as a second anti-pattern: "Providing reviewers with insufficient context (the proposed action only, without the reasoning chain, data sources, or potential consequences), turning review into a formality" (<a href="https://docs.aws.amazon.com/wellarchitected/latest/agentic-ai-lens/agentsec04-bp02.html">AGENTSEC04-BP02</a>). A card that says "Apply 3 changes?" is a yes button. A card that says "8 terms cost €120 in 30 days with 0 conversions; add them as negatives; undo restores the list" is a decision.</p>
+<figure class="post-figure" data-zoom><img src="../assets/media/review-card.webp" srcset="../assets/media/review-card-768.webp 768w, ../assets/media/review-card.webp 1088w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1088" height="936" loading="lazy" decoding="async" alt="Duct&#x27;s review card: a proposed change set with the diff per change, the agent&#x27;s reason, the guardrail check, a destructive badge where one applies, and the approve and roll back actions"/><figcaption>What the person sees. The diff is the current value next to the proposed one; the context line is the agent's reason, in its words.</figcaption></figure>
+<p>Duct's card shows each change against the current value read at preview time, the agent's reason in its own words (the tool description tells the model "the user reads it in the review card"), the guardrail result and a destructive badge. Two things it does not do yet, from the same September review: you cannot edit a proposed budget on the card, only approve or reject the set, and a rejection carries no reason, so nothing stops the agent proposing the same thing next week. Both are on the list. I would rather tell you than have you find out.</p>
+<p>Saying no is the simple part: the set moves to rejected and nothing ran. Saying yes and regretting it is the part to check before you trust any product. Duct records a rollback handle at apply time for every change that has one, and the rollback tool reports, rather than skips, any change it cannot undo. Republishing the old Tag Manager version is a real undo. Restoring a budget is a real undo for the number and not for the learning period, and I would be lying if I said otherwise.</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="what-does-human-in-the-loop-mean-in-ai">What does human in the loop mean in AI?</h3>
+<p>At run time it means an AI system pauses at a defined point so a person can approve, change or reject what it is about to do before it does it. The person is a blocking step, not a spectator. The same phrase is also used for people rating model outputs during training, which is a separate practice with the same name.</p>
+<h3 id="what-is-the-difference-between-human-in-the-loop-and-human-on-the-loop">What is the difference between human in the loop and human on the loop?</h3>
+<p>In the loop, the agent proposes and waits; nothing happens until a person decides. On the loop, the agent acts first and a person watches, with the power to stop it or undo it afterwards. Most good agent products use both: in the loop for money and anything live, on the loop for reversible, low-cost changes at volume.</p>
+<h3 id="should-every-ai-agent-action-require-human-approval">Should every AI agent action require human approval?</h3>
+<p>No. Anthropic measured that people approve about 93% of permission prompts, which turns the gate into a reflex, and AWS lists routing every action through review as an anti-pattern. Reserve approval for actions that move money, go live, or cannot be fully undone, and give everything else an undo button instead.</p>
+<h3 id="can-an-ai-agent-change-my-google-ads-budget-without-asking">Can an AI agent change my Google Ads budget without asking?</h3>
+<p>It depends entirely on how the gate is built, so ask the vendor where the rule lives. In Duct, budget, bid, pause and publish changes always wait for a person at every autonomy setting, and no tool exists that lets the agent approve or apply a change. Google's own auto-apply recommendations also exclude budget raising.</p>
+<ul class="post-tags" aria-label="Tags"><li>human in the loop</li><li>ai agents</li><li>approvals</li><li>google ads</li><li>execution</li></ul>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-prev" href="/blog/ai-agent-vs-chatbot-vs-automation">← AI Agent vs Chatbot vs Automation: Which One Is Reading Your Dashboards?</a>
+<a class="article-nav-all" href="/blog/">All posts</a>
+</nav>
+</main>
+
+<!-- The closer is the product, not a pitch: the same bridge the tools pages
+     end on, with a shot, so a post is not the one page on the site that ends
+     in text alone. Which one depends on the post's audience. -->
+<section class="duct-bridge" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Reading three tools together is the whole job. Duct does it on your machine.</p>
+      <p class="duct-bridge-body">Ask why signups dropped. Duct reads Search Console, GA4 and your ads and revenue tools together, answers with the sources it read, and proposes the change. You approve it. Open source, free with your own keys.</p>
+      <p class="duct-bridge-actions"><a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a><a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a></p>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"/>
+      <figcaption>Why are signups down? Asked once, answered from four tools.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/integrations/">Integrations</a>
+<a href="/mcp">MCP servers</a>
+<a href="/compare">Compare</a>
+<a href="/changelog/">Changelog</a>
+</div>
+<div class="footer-col">
+<h4>Resources</h4>
+<a href="/blog/">Blog</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-legal" aria-label="Legal">
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</nav>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
