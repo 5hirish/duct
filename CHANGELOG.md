@@ -101,6 +101,10 @@ published without one. The same script, with no arguments, holds
 
 ### Security
 
+- Signing in to a connected MCP server is held to the server you typed: if
+  its metadata names another address as the resource, or another issuer than
+  the one it was found at, the sign-in stops instead of minting a token in
+  that name.
 - The desktop window only ever shows Duct: a page that sends it elsewhere
   opens in your browser instead, a sign-in or connector code returning
   through a deep link always lands on Duct's own origin, and the page can

@@ -602,7 +602,10 @@ Postgres `DATABASE_URL` names.
     started may claim it. A client metadata document where the server takes one
     (its URL *is* the client id, served at `/auth/mcp/client-metadata.json`),
     dynamic registration otherwise, a pasted key when neither works. PKCE and
-    the RFC 8707 `resource` on both legs.
+    the RFC 8707 `resource` on both legs. The metadata is held to where it
+    was found: a resource that is not this server or a parent of it, or an
+    issuer other than the server the document was fetched for (RFC 8414
+    §3.3), ends the sign-in with the key prompt.
   - **Every request goes to a public https address**, redirects included:
     `service/mcp/http.guarded_client` runs the crawl fetcher's resolved-address
     check. No stdio servers on the hosted API.
