@@ -20,7 +20,7 @@ mod chatgpt;
 mod sidecar;
 mod telemetry;
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::OnceLock;
 use std::time::Duration;
 
@@ -573,6 +573,47 @@ const MENU_RELOAD: &str = "view:reload";
 const MENU_DEVTOOLS: &str = "view:devtools";
 #[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
 const MENU_PHOENIX: &str = "window:phoenix";
+#[cfg(desktop)]
+const MENU_ZOOM_IN: &str = "view:zoom-in";
+#[cfg(desktop)]
+const MENU_ZOOM_OUT: &str = "view:zoom-out";
+#[cfg(desktop)]
+const MENU_ZOOM_RESET: &str = "view:zoom-reset";
+
+/// The zoom levels View steps through, in percent: the ladder browsers use, so
+/// the steps feel the way they do everywhere else. Text size is the reason —
+/// a 4K screen at 100% scaling draws the app at 3840 CSS pixels, a small
+/// laptop wants it smaller, and none of the system webviews binds a zoom key
+/// of its own inside an app window.
+#[cfg(desktop)]
+const ZOOM_STEPS: &[u32] = &[50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200];
+#[cfg(desktop)]
+const ZOOM_DEFAULT: u32 = 100;
+
+/// The main window's zoom, in percent. The webviews can set a zoom factor but
+/// not all of them report one back, so the shell remembers what it set.
+#[cfg(desktop)]
+static MAIN_ZOOM: AtomicU32 = AtomicU32::new(ZOOM_DEFAULT);
+
+/// The next step from `current` in the direction asked, clamped at the ends.
+/// A level that is not on the ladder moves to the nearest step past it.
+#[cfg(desktop)]
+fn next_zoom(current: u32, zoom_in: bool) -> u32 {
+    if zoom_in {
+        ZOOM_STEPS
+            .iter()
+            .copied()
+            .find(|step| *step > current)
+            .unwrap_or(*ZOOM_STEPS.last().unwrap_or(&current))
+    } else {
+        ZOOM_STEPS
+            .iter()
+            .rev()
+            .copied()
+            .find(|step| *step < current)
+            .unwrap_or(*ZOOM_STEPS.first().unwrap_or(&current))
+    }
+}
 
 /// Where the dev build's "Open Phoenix" item goes: the trace UI the sidecar
 /// exports to when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`open --env` in the
@@ -697,6 +738,28 @@ fn install_app_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
     #[cfg(target_os = "macos")]
     view_items.push(Box::new(PredefinedMenuItem::fullscreen(app, None)?));
     view_items.push(Box::new(reload));
+    view_items.push(Box::new(PredefinedMenuItem::separator(app)?));
+    view_items.push(Box::new(MenuItem::with_id(
+        app,
+        MENU_ZOOM_RESET,
+        "Actual Size",
+        true,
+        Some("CmdOrCtrl+0"),
+    )?));
+    view_items.push(Box::new(MenuItem::with_id(
+        app,
+        MENU_ZOOM_IN,
+        "Zoom In",
+        true,
+        Some("CmdOrCtrl+="),
+    )?));
+    view_items.push(Box::new(MenuItem::with_id(
+        app,
+        MENU_ZOOM_OUT,
+        "Zoom Out",
+        true,
+        Some("CmdOrCtrl+-"),
+    )?));
     #[cfg(any(debug_assertions, feature = "devtools"))]
     view_items.push(Box::new(MenuItem::with_id(
         app,
@@ -738,13 +801,26 @@ fn install_app_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
             &privacy,
         ],
     )?;
+    // Off macOS the default menu keeps About under Help, and replacing Help
+    // took it away: Windows and Linux had no About at all, so the `comments`
+    // line `about_metadata` writes for them was never shown. Put it back at
+    // the bottom, where both platforms' conventions keep it.
+    #[cfg(not(target_os = "macos"))]
+    {
+        help.append(&PredefinedMenuItem::separator(app)?)?;
+        help.append(&PredefinedMenuItem::about(
+            app,
+            Some(&format!("About {}", app.package_info().name)),
+            Some(about_metadata(app)),
+        )?)?;
+    }
 
     let menu = Menu::default(app)?;
 
     // The About item the default menu built has no description in it, and
     // AboutMetadata is only settable at construction — so the whole app submenu
     // is rebuilt rather than patched. macOS only; elsewhere About lives under
-    // Help, which is built above.
+    // Help, which is built above with it.
     #[cfg(target_os = "macos")]
     {
         let package = app.package_info();
@@ -868,6 +944,17 @@ fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
     match id {
         MENU_RELOAD => {
             let _ = window.reload();
+        }
+        MENU_ZOOM_IN | MENU_ZOOM_OUT | MENU_ZOOM_RESET => {
+            let current = MAIN_ZOOM.load(Ordering::SeqCst);
+            let next = match id {
+                MENU_ZOOM_IN => next_zoom(current, true),
+                MENU_ZOOM_OUT => next_zoom(current, false),
+                _ => ZOOM_DEFAULT,
+            };
+            if window.set_zoom(f64::from(next) / 100.0).is_ok() {
+                MAIN_ZOOM.store(next, Ordering::SeqCst);
+            }
         }
         #[cfg(any(debug_assertions, feature = "devtools"))]
         MENU_DEVTOOLS => {
@@ -1085,8 +1172,27 @@ fn open_main_window(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// WebKitGTK's DMA-BUF renderer draws a blank or white window on NVIDIA's
+/// proprietary driver, and on some Wayland and AppImage setups — the app is
+/// then unusable with nothing to say why. Turning it off for that driver costs
+/// nothing anyone notices; elsewhere the renderer stays on. A value the user
+/// set themselves always wins.
+///
+/// Must run before anything spawns a thread: `set_var` is not thread-safe.
+#[cfg(target_os = "linux")]
+fn disable_dmabuf_renderer_on_nvidia() {
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none()
+        && std::path::Path::new("/proc/driver/nvidia/version").exists()
+    {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "linux")]
+    disable_dmabuf_renderer_on_nvidia();
+
     // Before the builder: a panic during setup is exactly the kind of failure
     // worth reporting, and the guard has to outlive the whole app — dropping it
     // stops the transport, so binding it to `_guard` (not `_`) matters.
@@ -1179,12 +1285,20 @@ pub fn run() {
             // extracted AppImage — never receives one. Registering at runtime
             // covers that; it is a no-op where the installer already did it,
             // and unsupported on macOS, so the error is deliberately ignored.
+            //
+            // Off the main thread: `setup` runs on it, and on Linux this shells
+            // out to `update-desktop-database` and `xdg-mime` and waits, which
+            // held the splash's first paint behind two subprocesses on every
+            // launch. Nothing this launch does needs the registration finished.
             #[cfg(any(target_os = "linux", windows))]
             {
-                use tauri_plugin_deep_link::DeepLinkExt as _;
-                if let Err(err) = app.deep_link().register_all() {
-                    eprintln!("duct: could not register deep link scheme: {err}");
-                }
+                let handle = app.handle().clone();
+                std::thread::spawn(move || {
+                    use tauri_plugin_deep_link::DeepLinkExt as _;
+                    if let Err(err) = handle.deep_link().register_all() {
+                        eprintln!("duct: could not register deep link scheme: {err}");
+                    }
+                });
             }
 
             // A window that cannot be reloaded is a window that can only be
@@ -1193,6 +1307,13 @@ pub fn run() {
             // usable, just with the default menu.
             if let Err(err) = install_app_menu(app.handle()) {
                 eprintln!("duct: could not install the application menu: {err}");
+            }
+            // Off macOS the app menu is a bar inside each window, and setting it
+            // attaches it to every window that has none, the splash included:
+            // File, Edit, View and Help on a 380-pixel panel with no title bar.
+            #[cfg(not(target_os = "macos"))]
+            if let Some(splash) = app.get_webview_window(SPLASH_LABEL) {
+                let _ = splash.remove_menu();
             }
 
             let handle = app.handle().clone();
@@ -1288,6 +1409,16 @@ pub(crate) mod test_support {
 mod tests {
     use super::*;
     use crate::test_support::scratch_dir;
+
+    #[test]
+    fn zoom_steps_along_the_ladder_and_stops_at_the_ends() {
+        assert_eq!(next_zoom(100, true), 110);
+        assert_eq!(next_zoom(100, false), 90);
+        assert_eq!(next_zoom(200, true), 200, "the top step is a ceiling");
+        assert_eq!(next_zoom(50, false), 50, "the bottom step is a floor");
+        assert_eq!(next_zoom(105, true), 110, "off the ladder moves to the next step up");
+        assert_eq!(next_zoom(105, false), 100, "and down to the one below");
+    }
 
     #[test]
     fn the_greeting_is_claimed_once_and_never_again() {

@@ -37,7 +37,8 @@ carries all the code.
     and the dev and self-host configs each carry their own copy of that array —
     a window declared only in the base config vanishes from both, silently.
   - **`"visible": false` must be set in every config that defines `windows`**,
-    for the same reason. All three do.
+    for the same reason. All four do (`local` was missing it, which opened
+    a blank window beside the splash).
   - **`SPLASH_DEADLINE` reveals the window regardless after 30 s.**
     `on_page_load` never fires if the hosted app is unreachable, and a hidden
     main window behind a splash that never dismisses is an app with no way in
@@ -346,7 +347,25 @@ carries all the code.
   version and nothing else. `about_metadata()` sets a description twice, from
   one constant, because the platforms disagree about where it goes: macOS reads
   `credits` and ignores `comments`, Windows and Linux do the reverse. Setting
-  only one is how a panel ends up blank on half the platforms.
+  only one is how a panel ends up blank on half the platforms. Off macOS the
+  About item lives at the foot of our Help menu: replacing the default Help
+  had removed it there, so the `comments` line was never shown.
+- **Off macOS the menu is a bar inside each window**, and `set_menu` attaches it
+  to every window without one — the splash included. `setup` removes it from
+  the splash right after installing it.
+- **View carries zoom** (Actual Size, Zoom In, Zoom Out, on the browser's
+  50–200% ladder) through `set_zoom`, because no system webview binds zoom keys
+  inside an app window and `zoomHotkeysEnabled` needs a webview permission the
+  capabilities deliberately withhold. The shell remembers the level it set
+  (`MAIN_ZOOM`); not every webview reports one back.
+- **The window must fit the screen it opens on.** Every config's `main` sets
+  `center` and `preventOverflow`: at 1200×800 it otherwise ran under the
+  taskbar on 1366×768 and 1280×800 screens.
+- **Linux on NVIDIA:** `run()` sets `WEBKIT_DISABLE_DMABUF_RENDERER=1` when
+  the proprietary driver is loaded and the user has not chosen, before any
+  thread starts (`set_var` is not thread-safe). WebKitGTK's DMA-BUF renderer
+  draws a blank window there. Deep-link registration runs on its own thread,
+  because on Linux it waits on two subprocesses and `setup` is the UI thread.
 - **Self-update** is wired: `tauri-plugin-updater` behind a default-on `updater`
   cargo feature, driven from the web app through `check_for_update` /
   `install_update` (not the plugin's JS bindings — the window loads a remote
@@ -400,6 +419,18 @@ carries all the code.
   and no edit when a version ships. Renaming one breaks the site silently: the
   link 404s and nothing in this repo fails. Add a platform here and it needs a
   copy in the publish job and a card on the download page.
+- **Windows installs per user, and the first update moves old installs.**
+  `bundle.windows.nsis.installMode` is `currentUser`: %LOCALAPPDATA%, no admin
+  rights, so a self-update never raises UAC. Up to 0.7.1 it was `perMachine`,
+  which made every update ask for admin under an unsigned publisher name. An
+  update to one of those installs lands beside it, and
+  `src-tauri/windows/installer-hooks.nsh` (`NSIS_HOOK_POSTINSTALL`) runs the
+  old uninstaller silently: one last UAC prompt, then none, with the user's
+  data untouched because it was always per user. Declined, both copies keep
+  working and the old one is offered again at its next update. The hook can
+  only be compiled, not run, off Windows: `makensis` (Homebrew) with a stub
+  harness defining `UNINSTKEY` catches syntax; a real check is a 0.7.1 install
+  updated on a Windows machine.
 - **Windows self-update is easy to lose.** Tauri signs the installer directly
   (`*-setup.exe.sig`); it used to zip it first (`*-setup.nsis.zip.sig`). v0.4.0
   shipped with no `windows-x86_64` entry in `latest.json` because the upload
