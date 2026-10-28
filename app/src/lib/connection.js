@@ -22,6 +22,7 @@
  */
 
 import { BASE, backendApiKey } from "./api.js";
+import { pollWhileVisible } from "./visibility.js";
 
 export const STATUS = {
   OK: "ok",
@@ -101,14 +102,15 @@ export function watchConnection(onChange) {
 
   window.addEventListener("offline", onOffline);
   window.addEventListener("online", check);
-  const interval = setInterval(check, POLL_INTERVAL_MS);
+  // Hidden windows skip the probe and re-check on return, which is also the
+  // moment a laptop waking from sleep most needs a fresh answer.
+  const stopPolling = pollWhileVisible(check, POLL_INTERVAL_MS);
   check();
 
   return () => {
     stopped = true;
     controller.abort();
-    clearInterval(interval);
-    clearTimeout(interval);
+    stopPolling();
     window.removeEventListener("offline", onOffline);
     window.removeEventListener("online", check);
   };

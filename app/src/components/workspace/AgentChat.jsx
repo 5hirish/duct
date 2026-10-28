@@ -22,7 +22,7 @@
  *   readyHint           — shown once READY with an empty transcript.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDownRight, Brain, Check, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { msg } from "@lingui/core/macro";
@@ -295,7 +295,7 @@ function ChatBubble({ role, text, thinking, streaming, queued = false, attachmen
           <AttachmentStrip attachments={attachments} className="justify-end px-0 pb-1.5" />
           {text && (
             <div
-              className={`rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed bg-primary text-primary-foreground ${
+              className={`rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed wrap-break-word bg-primary text-primary-foreground ${
                 queued ? "opacity-70" : ""
               }`}
             >
@@ -323,7 +323,7 @@ function ChatBubble({ role, text, thinking, streaming, queued = false, attachmen
           endedAt={thinkingEndedAt}
         />
         {text && (
-          <div className="text-sm leading-relaxed text-foreground">
+          <div className="text-sm leading-relaxed text-foreground wrap-break-word">
             <AssistantMarkdown source={text} streaming={streaming} />
             {streaming && <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />}
           </div>
@@ -388,7 +388,12 @@ function ArtifactCard({ artifact }) {
 // Exported for the preview's answer scenes, which show a question, the steps
 // and the answer without the workspace around them. The chat itself is the
 // only other caller.
-export function TranscriptRow({ msg, onRetrySend }) {
+//
+// Memoised because the pane re-renders on every streamed token and every tick
+// of the status clock, and a settled reply re-parsed its markdown each time:
+// the cost of one token grew with the length of the thread. The reducer keeps
+// an unchanged row's object as it was, so only the streaming tail redraws.
+export const TranscriptRow = memo(function TranscriptRow({ msg, onRetrySend }) {
   switch (msg.role) {
     case Row.SEND_ERROR:
       return <SendErrorBubble text={msg.text} content={msg.content} code={msg.code} onRetry={onRetrySend} retryable={msg.retryable} />;
@@ -423,7 +428,7 @@ export function TranscriptRow({ msg, onRetrySend }) {
         />
       );
   }
-}
+});
 
 /** The one thing worth offering under a terminal failure, decided by its
  *  ErrorCode: a retry only when a retry can work, otherwise the place the fix
@@ -630,6 +635,15 @@ export default function AgentChat({
   const startingText = startingLabel ?? t`Starting session…`;
   const failedText = failedTitle ?? t`Session failed`;
   const retryText = retryLabel ?? t`↺ Retry`;
+  // A stable handle for the rows, so `TranscriptRow`'s memo holds even when a
+  // workspace passes a new function each render; a click still reaches the
+  // latest one.
+  const retrySendRef = useRef(onRetrySend);
+  useEffect(() => {
+    retrySendRef.current = onRetrySend;
+  });
+  const retrySend = useCallback((content) => retrySendRef.current?.(content), []);
+  const rows = useMemo(() => groupActivityRows(messages, Row.ACTIVITY), [messages]);
   const scrollRef = useRef(null);
   const isAtBottom = useRef(true);
   const prevMsgLen = useRef(0);
@@ -784,75 +798,80 @@ export default function AgentChat({
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="absolute inset-0 overflow-y-auto px-4 py-4"
+          className="absolute inset-0 overflow-y-auto px-4 py-4 [scrollbar-gutter:stable]"
         >
-          {phase === Phase.STARTING && (
-            <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
-              <Spinner className="size-3" />
-              {startingText}
-            </div>
-          )}
-
-          {steps.length > 0 && (
-            <div className="mb-2">{renderSteps ? renderSteps(steps) : <StepProgress steps={steps} labels={stepLabels} />}</div>
-          )}
-
-          {/* Grouped at render, not in the reducer: a burst of tool calls is
-              one action to a reader and still one row each to everything that
-              indexes the transcript. */}
-          {groupActivityRows(messages, Row.ACTIVITY).map((msg, i) =>
-            msg.group ? (
-              <ActivityGroup key={msg.activities[0]?.id || i} activities={msg.activities} />
-            ) : (
-              <TranscriptRow
-                key={msg.role === Row.CHANGE_SET_CARD ? msg.changeSet?.change_set_id || i : i}
-                msg={msg}
-                onRetrySend={onRetrySend}
-              />
-            ),
-          )}
-
-          {isAgentTyping && (
-            <WorkingIndicator
-              label={
-                compacting
-                  ? t`Compacting context`
-                  : retrying
-                    ? t`Reconnecting to the model`
-                    : runningStepLabel(steps, stepLabels)
-              }
-            />
-          )}
-
-          {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} returnTo={connectReturnTo} />}
-
-          {reconnecting && !isFailed && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning">
-              <Spinner className="size-3" />
-              <Trans>Connection dropped — reconnecting…</Trans>
-            </div>
-          )}
-
-          {isFailed && (
-            <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/8 p-4">
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 text-destructive text-base leading-none" aria-hidden="true">✕</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-destructive mb-1">{failedText}</p>
-                  <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorText(i18n, errorMsg)}</p>
-                </div>
+          {/* A measure for the transcript: with the right pane folded, or on a
+              wide screen, a reply otherwise ran 200+ characters to the line.
+              The gutter stops the text re-wrapping when the bar first appears. */}
+          <div className="mx-auto w-full max-w-3xl">
+            {phase === Phase.STARTING && (
+              <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+                <Spinner className="size-3" />
+                {startingText}
               </div>
-              <FailedAction
-                action={errorAction(errorCode)}
-                retryable={errorRetryable}
-                onRetry={onRetry}
-                retryLabel={retryText}
-                onStartFresh={onStartFresh}
-              />
-            </div>
-          )}
+            )}
 
-          {phase === Phase.READY && messages.length === 0 && readyHint}
+            {steps.length > 0 && (
+              <div className="mb-2">{renderSteps ? renderSteps(steps) : <StepProgress steps={steps} labels={stepLabels} />}</div>
+            )}
+
+            {/* Grouped at render, not in the reducer: a burst of tool calls is
+                one action to a reader and still one row each to everything that
+                indexes the transcript. */}
+            {rows.map((msg, i) =>
+              msg.group ? (
+                <ActivityGroup key={msg.activities[0]?.id || i} activities={msg.activities} />
+              ) : (
+                <TranscriptRow
+                  key={msg.role === Row.CHANGE_SET_CARD ? msg.changeSet?.change_set_id || i : i}
+                  msg={msg}
+                  onRetrySend={onRetrySend ? retrySend : undefined}
+                />
+              ),
+            )}
+
+            {isAgentTyping && (
+              <WorkingIndicator
+                label={
+                  compacting
+                    ? t`Compacting context`
+                    : retrying
+                      ? t`Reconnecting to the model`
+                      : runningStepLabel(steps, stepLabels)
+                }
+              />
+            )}
+
+            {waiting && <PauseCard pause={pending} onAnswer={onAnswer} disabled={answerDisabled} questionsCopy={questionsCopy} signInToConnect={signInToConnect} returnTo={connectReturnTo} />}
+
+            {reconnecting && !isFailed && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning">
+                <Spinner className="size-3" />
+                <Trans>Connection dropped — reconnecting…</Trans>
+              </div>
+            )}
+
+            {isFailed && (
+              <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/8 p-4">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 text-destructive text-base leading-none" aria-hidden="true">✕</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-destructive mb-1">{failedText}</p>
+                    <p className="text-xs text-muted-foreground break-words leading-relaxed">{errorText(i18n, errorMsg)}</p>
+                  </div>
+                </div>
+                <FailedAction
+                  action={errorAction(errorCode)}
+                  retryable={errorRetryable}
+                  onRetry={onRetry}
+                  retryLabel={retryText}
+                  onStartFresh={onStartFresh}
+                />
+              </div>
+            )}
+
+            {phase === Phase.READY && messages.length === 0 && readyHint}
+          </div>
         </div>
 
         {showScrollBtn && (

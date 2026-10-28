@@ -21,7 +21,7 @@
  * and "it read Search Console" are the same kind of fact.
  */
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -510,7 +510,7 @@ export function ActivityRow({ activity, defaultOpen = false, named = true }) {
  * then says something about them; the rail is what makes that read as one
  * action rather than four interruptions.
  */
-export function ActivityGroup({ activities, defaultOpen = false }) {
+export const ActivityGroup = memo(function ActivityGroup({ activities, defaultOpen = false }) {
   if (!activities?.length) return null;
   return (
     <div className="my-1.5 border-l border-border/60 pl-2">
@@ -519,6 +519,15 @@ export function ActivityGroup({ activities, defaultOpen = false }) {
       ))}
     </div>
   );
+}, sameGroup);
+
+/** The transcript regroups on every streamed token, so each group arrives as a
+ *  new array; it is the same group when it holds the same activity objects. */
+function sameGroup(prev, next) {
+  if (prev.defaultOpen !== next.defaultOpen) return false;
+  const a = prev.activities || [];
+  const b = next.activities || [];
+  return a.length === b.length && a.every((activity, i) => activity === b[i]);
 }
 
 export default ActivityGroup;
