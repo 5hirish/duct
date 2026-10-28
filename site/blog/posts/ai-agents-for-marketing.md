@@ -43,7 +43,7 @@ The three-question test from the [agent vs chatbot vs automation](/blog/ai-agent
 |---|---|---|---|---|
 | The Monday read of ads, analytics and billing | ✓ | | | three tools, one question, and the answer changes every week |
 | "Why did signups drop last week" | ✓ | | | the cause is in a tool you did not think to open |
-| Keyword gap from Search Console | ✓ | | | a comparison that is tedious by hand and needs judgement about intent |
+| Keyword gap from Search Console | ✓ | | | a comparison that is tedious by hand and needs judgment about intent |
 | Pausing a campaign at a spend cap | | ✓ | | a fixed rule; an agent adds nothing but latency |
 | Posting the weekly numbers to Slack | | ✓ | | once the brief exists, delivery is a pipe |
 | Changing a bid, a budget or an audience | proposes | | approves | reversible, but it spends money; a person signs |
@@ -76,7 +76,7 @@ The one number I can stand behind is measured, not estimated. Duct's eval gate r
 
 | What | Model | Median cost per run | Model calls | Recorded |
 |---|---|---|---|---|
-| One weekly brief, the eval case `solo-organic-slip` | DeepSeek V4 Flash via OpenRouter | $0.0052 | 4 | 18 trials, Sep 30 2026 |
+| One weekly brief, on the synthetic test account | DeepSeek V4 Flash via OpenRouter | $0.0052 | 4 | 18 trials, Sep 30 2026 |
 
 The source is the [eval baselines file](https://github.com/5hirish/duct/blob/main/backend/tests/eval/baselines.json) in the repository. The honest half of the row is the column it leaves out: that case passes its own checks 77.8% of the time on that model, which is why the cheapest rung is for memory and recaps, not for the brief you act on. On the default Gemini ladder a brief runs on Flash, and I do not yet have a published baseline for it, so I will not quote one. The [harness engineering](/blog/what-is-harness-engineering) post has the wider point: the cheaper the model, the more the code around it decides the result.
 
