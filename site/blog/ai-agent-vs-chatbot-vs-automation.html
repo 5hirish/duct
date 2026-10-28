@@ -42,7 +42,7 @@
   "datePublished": "2026-11-03T00:00:00+00:00",
   "dateModified": "2026-11-03T00:00:00+00:00",
   "articleSection": "Guide",
-  "wordCount": 2111,
+  "wordCount": 2106,
   "author": {
     "@type": "Person",
     "name": "Shirish Kadam",
@@ -433,7 +433,7 @@
 <li><strong>Does it read more than one source?</strong> A chatbot reads the chat. An automation reads one tool per step, in the order someone wired. An agent reads whatever the question needs, and the useful ones say which sources they could not reach.</li>
 <li><strong>Can it change something, and who says yes?</strong> A chatbot cannot touch your ad account. An automation changes things without asking, which is the point of it. An agent should be able to propose a change and should not be able to apply the risky ones itself. If the demo never shows an approval step, ask where it is.</li>
 </ol>
-<figure class="post-figure" data-zoom><img src="assets/ai-agent-vs-chatbot-vs-automation/three-forms.svg" width="1000" height="640" loading="lazy" decoding="async" alt="Three rows, one per form, each with five boxes for trigger, input, decides, reads and changes. Only the agent row has an orange loop from reads back to decides, and only its decide and change boxes are highlighted."/><figcaption>Cover the row labels. The orange loop is the only thing that makes the third row an agent.</figcaption></figure>
+<figure class="post-figure" data-zoom><img src="assets/ai-agent-vs-chatbot-vs-automation/three-forms.svg" width="1000" height="640" loading="lazy" decoding="async" alt="Three rows, one per form, each with five boxes for trigger, input, decides, reads and changes. Only the agent row has an orange loop from reads back to decides, and only its decide and change boxes are highlighted."/><figcaption>A chatbot stops after one answer and an automation never decides. Only the agent row goes back from reading to deciding.</figcaption></figure>
 <p>The vendor tell is question one. A demo that shows a long list of steps happening on their own is showing an automation. The agent is the moment the list changes because of what step two found.</p>
 <h2 id="the-monday-growth-report-done-three-ways">The Monday growth report, done three ways</h2>
 <p><strong>The job is the same every week: read Google Ads, GA4, Search Console and Stripe, say what moved and why, and say what to do about it. What differs is what each form can notice.</strong></p>
@@ -449,17 +449,17 @@
 </tbody>
 </table>
 </div>
-<p>The row that matters is the third one, and I have a number for it. Duct's integrity checks are modelled on a Google Ads engagement where, <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py">by that project's own accounting</a>, 60% of 93 turns in a month went on establishing whether a number could be trusted at all, and 16% on actually improving anything. Every serious defect found that month looked healthy on a dashboard: an experiment "running" with nobody bucketed for 74 days, a tag that "fired" but failed at runtime, and 23 of 36 "upgrades" coming from seven QA accounts in one country.</p>
+<p>The row that matters is the third one, and I have a number for it. Duct's integrity checks are modeled on a Google Ads engagement where, <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py">by that project's own accounting</a>, 60% of 93 turns in a month went on establishing whether a number could be trusted at all, and 16% on actually improving anything. Every serious defect found that month looked healthy on a dashboard: an experiment "running" with nobody bucketed for 74 days, a tag that "fired" but failed at runtime, and 23 of 36 "upgrades" coming from seven QA accounts in one country.</p>
 <p>An automation would have posted those 36 upgrades to Slack every Monday. A chatbot would have written a cheerful paragraph about them. Catching them took something that decided, on its own, to look at where the upgrades came from. A dashboard renders a corrupt number in the same font as a correct one, and so does an automation.</p>
 <h2 id="where-does-agent-end-and-automation-begin-in-real-code">Where does "agent" end and "automation" begin in real code?</h2>
 <p><strong>In Duct it ends at a tool that does not exist. The agent can propose a change and inspect its status; there is no tool it can call to approve or apply one.</strong></p>
 <p>Files rather than adjectives here, because this is the part of the test a demo can fake and a repository cannot. Two things changed on August 31 when the wizard went.</p>
 <p>The first is who decides what to read. The old pipeline's model chose among at most eight pre-bound tools with no arguments. The new one, in <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/prompts/autonomous.py"><code>backend/agents/insights/prompts/autonomous.py</code></a>, is told it "decides for itself what to look at", carries a trust protocol that says "never present a figure you did not fetch or were not given", and can ask you a question mid-run when a connector is missing. The unattended brief, the one a cron job can request on Monday morning (Duct has the entry point and does not yet own the clock), is the same agent with the same tools and one difference: nothing that can pause is mounted, because there is nobody at the keyboard, so a question it cannot ask becomes a stated assumption in the brief.</p>
 <figure class="post-figure" data-zoom><img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="3072" height="2052" loading="lazy" decoding="async" alt="Duct&#x27;s insights session: a chat on the left where the agent has proposed a change and is waiting for approval, and the brief it wrote on the right"/><figcaption>The same agent, two triggers: a question in the chat, or an unattended request on Monday morning. Either way the proposed change waits for a person.</figcaption></figure>
-<p>The second is who decides what to change. The agent's execution tools are in <a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py"><code>backend/agents/tools/execution_tools.py</code></a>, and the docstring is the whole policy in one line:</p>
+<p>The second is who decides what to change. The agent's execution tools are in <a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py"><code>backend/agents/tools/execution_tools.py</code></a>, and its docstring says it in seven words:</p>
 <figure class="post-quote">
 <blockquote cite="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py">
-<p>There is no approve or apply tool — approval is human-only by construction.</p>
+<p>There is no approve or apply tool.</p>
 </blockquote>
 <figcaption><a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py">Duct, execution_tools.py</a></figcaption>
 </figure>
