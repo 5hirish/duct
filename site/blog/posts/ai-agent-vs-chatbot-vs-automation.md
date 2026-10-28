@@ -52,7 +52,7 @@ The last row is the honest one. An agent is the most expensive and the slowest o
 2. **Does it read more than one source?** A chatbot reads the chat. An automation reads one tool per step, in the order someone wired. An agent reads whatever the question needs, and the useful ones say which sources they could not reach.
 3. **Can it change something, and who says yes?** A chatbot cannot touch your ad account. An automation changes things without asking, which is the point of it. An agent should be able to propose a change and should not be able to apply the risky ones itself. If the demo never shows an approval step, ask where it is.
 
-![Three rows, one per form, each with five boxes for trigger, input, decides, reads and changes. Only the agent row has an orange loop from reads back to decides, and only its decide and change boxes are highlighted.](assets/ai-agent-vs-chatbot-vs-automation/three-forms.svg "Cover the row labels. The orange loop is the only thing that makes the third row an agent.")
+![Three rows, one per form, each with five boxes for trigger, input, decides, reads and changes. Only the agent row has an orange loop from reads back to decides, and only its decide and change boxes are highlighted.](assets/ai-agent-vs-chatbot-vs-automation/three-forms.svg "A chatbot stops after one answer and an automation never decides. Only the agent row goes back from reading to deciding.")
 
 The vendor tell is question one. A demo that shows a long list of steps happening on their own is showing an automation. The agent is the moment the list changes because of what step two found.
 
@@ -68,7 +68,7 @@ The vendor tell is question one. A demo that shows a long list of steps happenin
 | "Pause that campaign" | it tells you how | a step could do it, every time, unasked | it proposes the pause; you approve it |
 | What you still do | the reading | the thinking | the approving |
 
-The row that matters is the third one, and I have a number for it. Duct's integrity checks are modelled on a Google Ads engagement where, [by that project's own accounting](https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py), 60% of 93 turns in a month went on establishing whether a number could be trusted at all, and 16% on actually improving anything. Every serious defect found that month looked healthy on a dashboard: an experiment "running" with nobody bucketed for 74 days, a tag that "fired" but failed at runtime, and 23 of 36 "upgrades" coming from seven QA accounts in one country.
+The row that matters is the third one, and I have a number for it. Duct's integrity checks are modeled on a Google Ads engagement where, [by that project's own accounting](https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py), 60% of 93 turns in a month went on establishing whether a number could be trusted at all, and 16% on actually improving anything. Every serious defect found that month looked healthy on a dashboard: an experiment "running" with nobody bucketed for 74 days, a tag that "fired" but failed at runtime, and 23 of 36 "upgrades" coming from seven QA accounts in one country.
 
 An automation would have posted those 36 upgrades to Slack every Monday. A chatbot would have written a cheerful paragraph about them. Catching them took something that decided, on its own, to look at where the upgrades came from. A dashboard renders a corrupt number in the same font as a correct one, and so does an automation.
 
@@ -82,9 +82,9 @@ The first is who decides what to read. The old pipeline's model chose among at m
 
 ![Duct's insights session: a chat on the left where the agent has proposed a change and is waiting for approval, and the brief it wrote on the right](../assets/media/insights-session.webp "The same agent, two triggers: a question in the chat, or an unattended request on Monday morning. Either way the proposed change waits for a person.")
 
-The second is who decides what to change. The agent's execution tools are in [`backend/agents/tools/execution_tools.py`](https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py), and the docstring is the whole policy in one line:
+The second is who decides what to change. The agent's execution tools are in [`backend/agents/tools/execution_tools.py`](https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py), and its docstring says it in seven words:
 
-> There is no approve or apply tool — approval is human-only by construction.
+> There is no approve or apply tool.
 > -- [Duct, execution_tools.py](https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py)
 
 What may apply without a click is decided once, in [`policy.py`](https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py): a short allowlist of reversible edits such as adding negative keywords or creating a GA4 audience, and only when you have set the project's autonomy to assisted or auto. Budget and bid changes stay off that list because they move money. Anything destructive, such as publishing a Tag Manager version, waits for a person at every level. A [test file](https://github.com/5hirish/duct/blob/main/backend/tests/test_execution_policy.py) holds all of that in place, so a future prompt change cannot quietly widen it.
