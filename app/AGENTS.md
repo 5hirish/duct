@@ -286,6 +286,13 @@ it is a claim about the code, not a way to quiet the check.
   refreshes it again.
 - `lib/sse.js` — `consumeSseStream` / `parseSseDataFrame`, shared by every
   streaming endpoint (audit, content, insights)
+- `lib/visibility.js` — `pollWhileVisible(tick, ms)` / `pageHidden()`. Every
+  poller goes through it: the desktop window sits open all day behind other
+  apps, and a tick nobody can see costs battery and wakes the backend. It
+  re-checks on return, so a skipped tick loses nothing.
+- `hooks/useNearViewport.js` — latches true once an element nears the screen.
+  For list items that are expensive to fill (a fetch, a document in a frame);
+  the artifact library is why it exists.
 - `lib/authFetch.js` — the one home for the auth token: `AUTH_TOKEN_KEY`,
   `authToken`, `hasAuthToken`, `authedHeaders`, `authedRequest`, plus
   `decodeJwtPayload` / `isTokenValid`. Never hardcode `"duct_auth_token"`.
@@ -341,12 +348,43 @@ they are placed.
 - Content: `@container` variants on Tailwind's `@`-scale — `@md` 28rem, `@lg` 32rem,
   `@xl` 36rem, `@2xl` 42rem, `@4xl` 56rem. Roughly 224px per grid column.
 - Viewport (`sm:`/`md:`/…) only for genuine device concerns: the sign-in page,
-  the sidebar's mobile sheet, the pane toggle, and `md:text-sm` on chat inputs
-  (which exists to stop iOS zooming a sub-16px field).
+  the sidebar's mobile sheet, and `md:text-sm` on chat inputs (which exists to
+  stop iOS zooming a sub-16px field). The pane toggle used to be on this list
+  and was wrong there: `SplitWorkspace` now splits at `@xl/split`, its own
+  width, because `md:` said "split" with the sidebar's 16rem already gone and
+  clipped the right pane on an iPad in portrait and an iPhone in landscape.
+- **Safe areas are applied once, at the edge.** The body pads left and right
+  only (`styles/theme.css`); the top and bottom insets belong to whatever
+  touches that edge — `.app-header`, the composer, the sidebar container,
+  sheets, the corner notices. A full-height layout (`h-svh`, `h-dvh`) never
+  adds them again, and an element that is `fixed` pads itself, because the
+  body's padding does not reach it. Left and right are separate values on
+  purpose: iPhone Duo's are asymmetric.
 - No hand-picked pixel breakpoints. There are currently zero; keep it that way.
 - Before adding `container-type` anywhere new: it implies `contain: layout`, which
   makes that element the containing block for `position: fixed` descendants.
   Overlays must be portalled (they are — see below) or they will shrink to it.
+
+**Heavy code loads when it is on screen.** A library that only one kind of
+surface uses — charts (Recharts, Nivo), syntax highlighting, Mermaid, the
+slide rasteriser — is a `lazy()` import behind a placeholder of the same size,
+never a static import in a module that common screens reach. A static one in
+`ArtifactRenderer` put ~110 KB of charts on every screen that drew a markdown
+card. Import a package's single file by path, not from its index: one Prism
+theme from `styles/prism` shipped all ~45. Measure a route the way
+`docs/engineering/2026-10-28-performance-review.md` did before and after.
+
+**Long transcripts stay flat.** The chat pane re-renders on every token and
+every clock tick, so anything it draws per row is `memo`ised and takes props
+that keep their identity (the reducer preserves unchanged rows). A stream that
+re-parses everything so far (a brief, a report) is throttled, never debounced:
+a debounce never fires while chunks keep coming.
+
+**Platform hooks.** The root layout sets `data-platform` (mac, windows, linux,
+other) and `data-shell="desktop"` on `<html>` before first paint;
+`styles/base.css` holds the rules that read them. Use them for platform fit
+(Linux drops backdrop blur, WebKitGTK's slow path), never for features, which
+gate on `getShellInfo()` capabilities.
 
 **Units.** Type, spacing and sticky offsets in `rem` so they follow the reader's
 text size. Device units stay `px`: borders, outlines, shadows, radii, 1px optical
@@ -415,7 +453,9 @@ the page.
   `workspace/CodeBlock`. See "Agent workspaces" below before touching any of
   them.
 - Shortcuts: `lib/shortcuts`' `useShortcut("mod+k", fn)` — platform-neutral, owned
-  by the surface that needs it.
+  by the surface that needs it. An Enter-to-send handler checks
+  `isComposing(e)` first: Enter confirms a Japanese, Chinese or Korean
+  candidate, and without the check it sent half-written messages.
 - Commands: `useRegisterCommands` from `components/commands/CommandRegistry`. A
   route contributes its own commands and they withdraw on unmount.
 - Navigation: `lib/navigation`'s `NAV_SECTIONS` is the single source of truth for
