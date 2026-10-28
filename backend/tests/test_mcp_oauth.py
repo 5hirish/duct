@@ -4,7 +4,8 @@ Faked at the transport (``httpx2.MockTransport`` under ``guarded_client``), so
 the real discovery order, request bodies and token parsing run. What matters
 most here is what Duct sends: PKCE and the RFC 8707 ``resource`` on both legs,
 a public client by default, and no registration at all where the server takes
-a client metadata document.
+a client metadata document. And what it refuses: metadata that names another
+server as the resource or the issuer.
 """
 
 from __future__ import annotations
@@ -35,8 +36,18 @@ def cfg(monkeypatch):
 class Vendor:
     """A protected MCP server and its authorization server, over one transport."""
 
-    def __init__(self, *, cimd: bool = False, s256: bool = True, prm: bool = True, rotate: bool = False):
+    def __init__(
+        self,
+        *,
+        cimd: bool = False,
+        s256: bool = True,
+        prm: bool = True,
+        rotate: bool = False,
+        resource: str = SERVER,
+        issuer: str = AUTH,
+    ):
         self.cimd, self.s256, self.prm, self.rotate = cimd, s256, prm, rotate
+        self.resource, self.issuer = resource, issuer
         self.requests: list[httpx2.Request] = []
 
     def handler(self, request: httpx2.Request) -> httpx2.Response:
@@ -48,10 +59,10 @@ class Vendor:
                 header += ', resource_metadata="https://mcp.vendor.test/.well-known/oauth-protected-resource/mcp"'
             return httpx2.Response(401, headers={"WWW-Authenticate": header})
         if self.prm and url == "https://mcp.vendor.test/.well-known/oauth-protected-resource/mcp":
-            return httpx2.Response(200, json={"resource": SERVER, "authorization_servers": [AUTH]})
+            return httpx2.Response(200, json={"resource": self.resource, "authorization_servers": [AUTH]})
         if url == f"{AUTH}/.well-known/oauth-authorization-server":
             return httpx2.Response(200, json={
-                "issuer": AUTH,
+                "issuer": self.issuer,
                 "authorization_endpoint": f"{AUTH}/authorize",
                 "token_endpoint": f"{AUTH}/token",
                 "registration_endpoint": f"{AUTH}/register",
@@ -92,9 +103,8 @@ async def test_discovery_follows_the_resource_metadata_to_the_authorization_serv
     assert plan.registration_endpoint == f"{AUTH}/register"
 
 
-async def test_a_server_from_before_resource_metadata_is_still_found(monkeypatch, cfg):
+def install_legacy(vendor: Vendor, monkeypatch) -> Vendor:
     """2025-03-26 servers put the authorization metadata at their own origin."""
-    vendor = Vendor(prm=False)
 
     def legacy(request):
         if str(request.url) == "https://mcp.vendor.test/.well-known/oauth-authorization-server":
@@ -103,10 +113,44 @@ async def test_a_server_from_before_resource_metadata_is_still_found(monkeypatch
 
     transport = httpx2.MockTransport(legacy)
     monkeypatch.setattr(mcp_http, "guarded_client", lambda headers=None: httpx2.AsyncClient(transport=transport))
+    return vendor
+
+
+async def test_a_server_from_before_resource_metadata_is_still_found(monkeypatch, cfg):
+    """A legacy server's metadata sits at its own origin and names it as the issuer."""
+    install_legacy(Vendor(prm=False, issuer="https://mcp.vendor.test"), monkeypatch)
     plan = await oauth.discover(SERVER)
 
     assert plan.kind == oauth.AUTH_OAUTH
     assert plan.resource == SERVER
+
+
+async def test_a_resource_the_metadata_names_elsewhere_ends_the_sign_in(monkeypatch, cfg):
+    """The token would be minted for, and sent to, an address nobody typed."""
+    Vendor(resource="https://other.vendor.test/mcp").install(monkeypatch)
+    with pytest.raises(oauth.OAuthUnavailable):
+        await oauth.discover(SERVER)
+
+
+async def test_a_parent_resource_is_the_one_the_token_is_minted_for(monkeypatch, cfg):
+    """One token for a server that serves /mcp and /mcp/v2: the SDK's rule."""
+    Vendor(resource="https://mcp.vendor.test/").install(monkeypatch)
+    plan = await oauth.discover(SERVER)
+
+    assert plan.resource == "https://mcp.vendor.test/"
+
+
+async def test_a_sign_in_found_under_one_issuer_may_not_claim_another(monkeypatch, cfg):
+    """RFC 8414 §3.3: the issuer is the server the metadata was fetched for."""
+    Vendor(issuer="https://other.vendor.test").install(monkeypatch)
+    with pytest.raises(oauth.OAuthUnavailable):
+        await oauth.discover(SERVER)
+
+    # On the legacy path that server is the MCP server's own origin, so a
+    # document there calling itself auth.vendor.test is the same mismatch.
+    install_legacy(Vendor(prm=False, issuer=AUTH), monkeypatch)
+    with pytest.raises(oauth.OAuthUnavailable):
+        await oauth.discover(SERVER)
 
 
 async def test_an_open_server_needs_nothing(monkeypatch, cfg):
