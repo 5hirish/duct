@@ -146,8 +146,8 @@ const RULES = [
     re: /(?<=["' ])(?:sm|md|lg|xl|2xl):(?=[a-z[])/g,
     allow: new Map([
       // The genuine device concerns app/AGENTS.md lists: overlays positioned
-      // against the window, the mobile pane toggle, and the iOS zoom guard.
-      ["components/workspace/SplitWorkspace.jsx", "the mobile pane toggle is a device concern"],
+      // against the window and the iOS zoom guard. (The pane toggle left this
+      // list on 2026-10-28: it asks the split's own width now.)
       ["components/ConnectionBanner.jsx", "fixed to the viewport, not to a container"],
       ["components/CookieConsent.jsx", "fixed to the viewport, not to a container"],
       ["components/ui/sidebar.tsx", "the sidebar's mobile sheet is a device concern"],

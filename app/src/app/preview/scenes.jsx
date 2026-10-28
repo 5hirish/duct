@@ -46,6 +46,7 @@ import { activitiesFromEvents, contextActivity, dataSourceRollup } from "@/lib/t
 import { briefFile } from "@/lib/brief";
 import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
+import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
 import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
@@ -2671,6 +2672,48 @@ export const SCENES = [
       </div>
     ),
   })),
+  {
+    id: "chat-code-and-long-link",
+    group: "AgentChat",
+    title: "A code block and a long link in a reply",
+    state: "settled reply, highlighter loading on first sight",
+    note: "The highlighter is not in the chat's first load: the first code block on screen fetches it, and until then the block is drawn plain in the same dark box at the same size, so only the token colours arrive late. Reload with the network throttled to see the swap. The link has no spaces to break at; it must wrap inside the column rather than scroll the transcript sideways at phone width.",
+    render: () => (
+      <div className="max-w-xl">
+        <TranscriptRow
+          msg={{
+            role: "assistant",
+            text: "The redirect chain is in the response headers:\n\n```bash\ncurl -sI https://example.com/pricing | grep -i location\n```\n\nThe canonical it lands on is https://example.com/pricing/plans/annual?utm_source=newsletter&utm_medium=email&utm_campaign=october-launch-reminder-second-send, which no internal link points to.",
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "artifact-chart",
+    group: "Artifacts",
+    title: "A chart artifact",
+    state: "line chart, Recharts loaded on first sight",
+    note: "Recharts loads when a chart is on screen, not with every screen that can show an artifact; a skeleton of the chart's own height holds the place, so nothing below it moves when the chart arrives.",
+    render: () => (
+      <ChartJsonView
+        source={JSON.stringify({
+          type: "line",
+          title: "Organic sessions, last six weeks",
+          x: "week",
+          series: [{ key: "sessions", label: "Sessions" }, { key: "signups", label: "Sign-ups" }],
+          data: [
+            { week: "W1", sessions: 1240, signups: 31 },
+            { week: "W2", sessions: 1310, signups: 35 },
+            { week: "W3", sessions: 1180, signups: 29 },
+            { week: "W4", sessions: 1420, signups: 41 },
+            { week: "W5", sessions: 1510, signups: 44 },
+            { week: "W6", sessions: 1630, signups: 52 },
+          ],
+        })}
+      />
+    ),
+  },
   {
     id: "audit-report-v1",
     group: "Audit",

@@ -15,7 +15,7 @@ export default async function PublicLayout({ children }) {
   await activateRequestI18n();
   return (
     <div className="h-dvh flex flex-col bg-background overflow-hidden">
-      <header className="shrink-0 border-b border-border/70 bg-background/90 backdrop-blur-xl px-4 h-14 flex items-center gap-3">
+      <header className="shrink-0 border-b border-border/70 bg-background/90 backdrop-blur-xl px-4 h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] flex items-center gap-3">
         <a href="https://getduct.ai" className="flex items-center gap-2 text-sm font-semibold text-foreground hover:opacity-80 transition-opacity">
           <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <rect width="32" height="32" rx="8" fill="#ff5c00"/>

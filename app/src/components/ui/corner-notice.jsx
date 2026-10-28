@@ -44,7 +44,9 @@ export function CornerNotice({
       // reader mid-sentence, which is the audible version of the modal this
       // component exists to avoid.
       aria-live="polite"
-      className="fixed bottom-4 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-lg border border-border bg-background/95 p-4 shadow-lg ring-1 ring-border/40 backdrop-blur-xl"
+      // Inset from the corner by at least the safe area: a landscape notch or
+      // the home indicator would otherwise sit on the card.
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-50 w-[min(22rem,calc(100vw-2rem))] rounded-lg border border-border bg-background/95 p-4 shadow-lg ring-1 ring-border/40 backdrop-blur-xl"
     >
       <div className="flex items-start gap-3">
         {Icon ? (

@@ -187,9 +187,17 @@
        silently instead of showing up in review as a horizontal scrollbar. A
        layout bug you cannot see is a layout bug you ship — and taking it off
        immediately surfaced two that had been hiding behind it. */
-    padding-top: env(safe-area-inset-top);
+    /* Safe areas, sides only. In-flow content is kept clear of a landscape
+       notch, or of iPhone Duo's side controls, here — left and right
+       separately, because they differ. The top and bottom are NOT padded
+       here: every full-height layout (`h-svh`, `h-dvh`) already fills the
+       viewport, so padding the body as well made each one taller than the
+       screen by both insets, and the composer, which adds the bottom inset
+       itself, ended up below the fold on a notched iPhone. Whatever touches
+       the top or bottom edge, or is `fixed` (and so ignores this padding),
+       applies its own inset: the headers, the composer, the sidebar, sheets,
+       the corner notices. */
     padding-right: env(safe-area-inset-right);
-    padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     @apply bg-background text-foreground;
   }

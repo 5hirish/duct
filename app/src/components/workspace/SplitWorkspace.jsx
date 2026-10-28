@@ -187,11 +187,17 @@ export default function SplitWorkspace({
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
+    // The split asks its own width, not the window's: two 17.5rem panes and
+    // the handle need 36rem (`@xl`), and the window's `md:` (48rem) said yes
+    // with the sidebar's 16rem already gone. Between 768 and ~830px — an iPad
+    // in portrait, an iPhone in landscape once its notch insets are taken —
+    // the right pane was clipped. Named, so a pane's own container cannot
+    // answer for it.
+    <div className="@container/split flex h-full w-full flex-col overflow-hidden">
       {banner}
 
-      {/* Mobile pane toggle — desktop shows both panes so this is hidden there */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-border/60 bg-card p-1.5 md:hidden">
+      {/* Pane toggle — shown until both panes fit side by side */}
+      <div className="flex shrink-0 items-center gap-1 border-b border-border/60 bg-card p-1.5 @xl/split:hidden">
         <PaneTab active={mobilePane === "left"} onClick={() => setMobilePane("left")} icon={MessageSquare} label={leftText} />
         <PaneTab active={mobilePane === "right"} onClick={() => setMobilePane("right")} icon={PanelRight} label={rightText} status={rightStatus} />
       </div>
@@ -201,11 +207,11 @@ export default function SplitWorkspace({
         className="flex min-h-0 w-full flex-1 overflow-hidden"
         style={{ "--split": `${leftWidth}%` }}
       >
-        {/* Left pane — toggled on mobile, split on md+ */}
+        {/* Left pane — toggled when narrow, split once both fit */}
         <div
           id={`${storageKey}-left`}
-          className={`@container ${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 md:flex ${
-            rightCollapsed ? "md:w-full" : "md:w-[var(--split)] md:min-w-[17.5rem]"
+          className={`@container ${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 @xl/split:flex ${
+            rightCollapsed ? "@xl/split:w-full" : "@xl/split:w-[var(--split)] @xl/split:min-w-[17.5rem]"
           }`}
         >
           {left}
@@ -228,7 +234,7 @@ export default function SplitWorkspace({
           onKeyDown={onKeyDown}
           onDoubleClick={() => (rightCollapsed ? undefined : commit(initialSplit))}
           title={rightCollapsed ? "" : t`Drag to resize — double-click to reset, arrow keys to nudge`}
-          className={`group relative hidden w-3 shrink-0 touch-none select-none items-center justify-center focus-visible:outline-none md:flex ${
+          className={`group relative hidden w-3 shrink-0 touch-none select-none items-center justify-center focus-visible:outline-none @xl/split:flex ${
             rightCollapsed ? "cursor-default" : "cursor-col-resize"
           }`}
         >
@@ -268,14 +274,14 @@ export default function SplitWorkspace({
           </button>
         </div>
 
-        {/* Right pane — toggled on mobile, split on md+. Single mount. */}
+        {/* Right pane — toggled when narrow, split once both fit. Single mount. */}
         <div
           id={`${storageKey}-right`}
           className={`@container ${mobilePane === "right" ? "flex" : "hidden"} min-w-0 flex-1 flex-col overflow-hidden ${
             // Collapsing is a desktop affordance only: on mobile the panes are
             // already one at a time, so hiding this one there would leave the
             // segmented control pointing at nothing.
-            rightCollapsed ? "md:hidden" : "md:flex md:min-w-[17.5rem]"
+            rightCollapsed ? "@xl/split:hidden" : "@xl/split:flex @xl/split:min-w-[17.5rem]"
           }`}
         >
           {right}
