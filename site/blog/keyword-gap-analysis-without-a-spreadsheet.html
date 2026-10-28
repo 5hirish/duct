@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
-<title>Keyword Gap Analysis Without a Spreadsheet — Duct blog</title>
+<title>Keyword Gap Analysis Without a Spreadsheet: A Real Example</title>
 <link rel="canonical" href="https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet"/>
-<meta name="description" content="The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup."/>
+<meta name="description" content="A keyword gap analysis worked end to end on a real site: what Search Console already shows, how to judge difficulty and fit, and how to pick one topic to own."/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="article"/>
 <meta property="og:locale" content="en_US"/>
 <meta property="og:url" content="https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet"/>
-<meta property="og:title" content="Keyword Gap Analysis Without a Spreadsheet — Duct blog"/>
-<meta property="og:description" content="The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup."/>
+<meta property="og:title" content="Keyword Gap Analysis Without a Spreadsheet: A Real Example"/>
+<meta property="og:description" content="The keyword gap analysis I ran for this blog on October 27: what Search Console showed, which searches were worth chasing, and why I skipped a 22,200-search term."/>
 <meta property="og:image" content="https://getduct.ai/assets/og/blog-keyword-gap-analysis-without-a-spreadsheet.jpg"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
@@ -25,9 +25,10 @@
 <meta property="article:tag" content="search console"/>
 <meta property="article:tag" content="seo"/>
 <meta property="article:published_time" content="2026-03-10T00:00:00+00:00"/>
+<meta property="article:modified_time" content="2026-10-28T00:00:00+00:00"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Keyword Gap Analysis Without a Spreadsheet — Duct blog"/>
-<meta name="twitter:description" content="The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup."/>
+<meta name="twitter:title" content="Keyword Gap Analysis Without a Spreadsheet: A Real Example"/>
+<meta name="twitter:description" content="The keyword gap analysis I ran for this blog on October 27: what Search Console showed, which searches were worth chasing, and why I skipped a 22,200-search term."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og/blog-keyword-gap-analysis-without-a-spreadsheet.jpg"/>
 <link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
 <link rel="stylesheet" href="../assets/duct.css"/>
@@ -38,11 +39,11 @@
   "@type": "BlogPosting",
   "inLanguage": "en",
   "headline": "Keyword Gap Analysis Without a Spreadsheet",
-  "description": "The old way: export Ahrefs, paste into Sheets, cross-reference with your content calendar. The new way: know the gap before your Monday standup.",
+  "description": "A keyword gap analysis worked end to end on a real site: what Search Console already shows, how to judge difficulty and fit, and how to pick one topic to own.",
   "datePublished": "2026-03-10T00:00:00+00:00",
-  "dateModified": "2026-03-10T00:00:00+00:00",
+  "dateModified": "2026-10-28T00:00:00+00:00",
   "articleSection": "Growth",
-  "wordCount": 549,
+  "wordCount": 1322,
   "author": {
     "@type": "Person",
     "name": "Shirish Kadam",
@@ -58,7 +59,10 @@
     "name": "Duct",
     "url": "https://getduct.ai"
   },
-  "image": "https://getduct.ai/assets/og/blog-keyword-gap-analysis-without-a-spreadsheet.jpg",
+  "image": [
+    "https://getduct.ai/blog/assets/keyword-gap-analysis-without-a-spreadsheet/hero.webp",
+    "https://getduct.ai/assets/og/blog-keyword-gap-analysis-without-a-spreadsheet.jpg"
+  ],
   "mainEntityOfPage": "https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet",
   "isPartOf": {
     "@type": "Blog",
@@ -70,6 +74,18 @@
     "content strategy",
     "search console",
     "seo"
+  ],
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "name": "Search Console Help",
+      "url": "https://support.google.com/webmasters/answer/7042828"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Campaign URL Builder",
+      "url": "https://ga-dev-tools.google/campaign-url-builder/"
+    }
   ]
 }
 </script>
@@ -96,6 +112,47 @@
       "position": 3,
       "name": "Keyword Gap Analysis Without a Spreadsheet",
       "item": "https://getduct.ai/blog/keyword-gap-analysis-without-a-spreadsheet"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a keyword gap analysis?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A keyword gap analysis lists the searches your site should rank for and doesn't, then ranks them by how likely you are to win and what a win is worth. It combines your own Search Console data, volume and difficulty from a keyword tool, and what comparable sites rank for. The useful output is one topic to own, not a long list."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I do a keyword gap analysis for free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Partly. Search Console is free and gives you the most valuable half: pages that rank without clicks and queries climbing toward page one. Volumes and difficulty need a keyword tool. Google's Keyword Planner gives rough volume ranges inside a Google Ads account; paid tools add difficulty scores and competitors' rankings."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What keyword difficulty should a new site target?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Low enough that your site's authority can win it this year. On a site with around 30 referring domains, I target difficulty under 30 and skip anything near 50, however large its volume. The threshold is a judgment, not a law: recheck it as links grow, and let fit with your product break ties."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is a keyword gap different from a content gap?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A keyword gap starts from searches and asks which ones you are missing. A content gap starts from topics and asks which ones you have not covered. They meet in the middle: each search you decide to win needs a page that answers it better than what ranks today, which is a content decision."
+      }
     }
   ]
 }
@@ -305,53 +362,74 @@
 <header class="article-header">
 <p class="tag">Growth</p>
 <h1>Keyword Gap Analysis Without a Spreadsheet</h1>
-<div class="article-meta">Mar 10 2026 · 5 min read · By Shirish Kadam</div>
+<div class="article-meta">Mar 10 2026 · Updated Oct 28 2026 · 6 min read · By Shirish Kadam</div>
+<p class="article-made">First written in March 2026 with an AI assistant and no real data. Rewritten in October with Claude Code around the keyword research behind this blog's guides, using getduct.ai's own Search Console. Shirish checked every number before publishing.</p>
 </header>
 
 <main>
+<figure class="post-hero"><img src="assets/keyword-gap-analysis-without-a-spreadsheet/hero.webp" srcset="assets/keyword-gap-analysis-without-a-spreadsheet/hero-768.webp 768w, assets/keyword-gap-analysis-without-a-spreadsheet/hero.webp 1320w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1320" height="743" fetchpriority="high" alt="A Roman mosaic of a colonnade with a roof gutter and five spouts: four pour into stone basins, and the fifth has no basin, so its water splashes into a puddle on orange paving"/></figure>
 <article id="prose" class="prose">
-<p>Keyword gap analysis is one of the few organic-growth jobs where an afternoon of work changes the next quarter. It's also one of the most time-consuming, because it involves moving data between tools that don't talk to each other.</p>
-<p>Here's the typical workflow:</p>
+<p><strong>A keyword gap analysis lists the searches your site should be found for and isn't, ranked by how likely you are to win them and what a win is worth.</strong> It takes three inputs: what you already rank for (Search Console), how hard the neighboring searches are (a keyword tool), and what kind of page wins for a comparable site. The output is not a list of fifty keywords. It is one topic to own.</p>
+<p>The first version of this post, in March, described that process in the abstract, with example numbers I made up. This version is the one I actually ran, for this blog, on October 27, 2026. Every number below came out of a tool that day. It took an afternoon and no spreadsheet.</p>
+<h2 id="where-do-you-start-a-keyword-gap-analysis">Where do you start a keyword gap analysis?</h2>
+<p><strong>With what Search Console already shows, because the cheapest wins are pages that rank and don't get clicked.</strong> getduct.ai is a young site, and the baseline was humbling: in the three months to October 25 it earned 34 clicks from 5,523 impressions, and 21 of those clicks were people typing the brand.</p>
+<p>Google defines an impression narrowly, which matters for what follows: "An impression means that a user has seen (or potentially seen) a link to your site in Search" (<a href="https://support.google.com/webmasters/answer/7042828">Search Console Help</a>). A page that sits on page one and is seen without being clicked is telling you something specific.</p>
+<div class="post-table" role="region" aria-label="Table: Page, and the search, Impressions, Average position, What it says" tabindex="0">
+<table>
+<thead><tr><th scope="col">Page, and the search</th><th scope="col">Impressions</th><th scope="col">Average position</th><th scope="col">What it says</th></tr></thead>
+<tbody>
+<tr><td>The harness engineering post, all searches</td><td>81</td><td>7.6</td><td>page one; the title is not earning the click</td></tr>
+<tr><td>The open-source page, all searches</td><td>76</td><td>6.3</td><td>the same</td></tr>
+<tr><td>The UTM builder, for "ga link builder"</td><td>83</td><td>4.6</td><td>wrong intent: these people want Google's own tool</td></tr>
+<tr><td>The CPM calculator, for "counts per minute calculator"</td><td>119</td><td>45.1</td><td>wrong meaning altogether</td></tr>
+</tbody>
+</table>
+</div>
+<p><em>Search Console for getduct.ai, July 25 to October 25, 2026. None of the four earned a click.</em></p>
+<p>The first two rows are the gap that costs nothing to close: a better title on a page that already ranks. The third is a lesson in intent. Someone searching "ga link builder" wants Google's <a href="https://ga-dev-tools.google/campaign-url-builder/">Campaign URL Builder</a>, and position 4.6 will not change their mind. The fourth is people looking for a radiation counter, and no title test will turn a Geiger counter into an ad budget.</p>
+<p>Duct asks the first kind of question in its briefs whenever Search Console is connected. The check, <code>organic_ctr_gap</code> in <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py">checks.py</a>, says why in its own words: "That is a title/snippet problem, not a ranking problem, and it is the cheapest fix in organic search."</p>
+<h2 id="how-do-you-find-the-searches-you-are-missing">How do you find the searches you are missing?</h2>
+<p><strong>Write down the questions your buyers type, then look up volume and difficulty for each before writing anything.</strong> I started from the product's category, AI agents, and asked what a marketer or product manager would search on the way to needing one. The volumes and difficulty scores below are US figures from OpenSEO's keyword data on October 27. Difficulty runs from 0 to 100; higher means harder to rank.</p>
+<div class="post-table" role="region" aria-label="Table: Search, Monthly searches, Difficulty, Verdict" tabindex="0">
+<table>
+<thead><tr><th scope="col">Search</th><th scope="col">Monthly searches</th><th scope="col">Difficulty</th><th scope="col">Verdict</th></tr></thead>
+<tbody>
+<tr><td>what is an ai agent</td><td>22,200</td><td>49</td><td>skip: too hard for a site this young</td></tr>
+<tr><td>ai agent examples</td><td>1,600</td><td>18</td><td>take</td></tr>
+<tr><td>human in the loop ai</td><td>1,000</td><td>25</td><td>take</td></tr>
+<tr><td>what is agent harness</td><td>590</td><td>21</td><td>the harness post already covers it; improve that page</td></tr>
+<tr><td>ai agents for marketing</td><td>480</td><td>7</td><td>the topic to own</td></tr>
+<tr><td>ai agent vs chatbot</td><td>320</td><td>12</td><td>take</td></tr>
+<tr><td>ai agents for product managers</td><td>140</td><td>0</td><td>too small on its own; covered by the others</td></tr>
+<tr><td>agentic ai explained</td><td>140</td><td>57</td><td>skip</td></tr>
+</tbody>
+</table>
+</div>
+<p>The biggest number on the list was the easiest to say no to. A difficulty of 49 on a 22,200-search term is not winnable this year for a site with 30 referring domains, which is what getduct.ai had that day. "AI agents for marketing" has a forty-sixth of the volume and a difficulty of 7, and it is exactly what the product does. A page that ranks for it can end on a download without a stretch.</p>
+<h2 id="what-does-a-comparable-site-tell-you">What does a comparable site tell you?</h2>
+<p><strong>Which kind of page wins, not which keyword to copy.</strong> I looked at the ranked keywords of ChatPRD's learning section, a hub on a site in a neighboring category. It ranked for 145 keywords, and the traffic estimates at the top of that list all pointed at a handful of pages about one term: what a PRD is, a PRD example, a spec template, a PRD for coding agents. That term is what the product makes.</p>
+<p>The lesson was not "write about PRDs". It was that a narrow topic next to the product, covered thoroughly, beat a broad hub. That decided the format too: no separate learning hub with a glossary, just a cluster of guides inside the blog with one pillar page written last.</p>
+<h2 id="how-do-you-decide-what-to-write-first">How do you decide what to write first?</h2>
+<p><strong>Rank the gap by the chance of winning, then by fit, and only then by volume.</strong> The rules I used, in the order I applied them:</p>
 <ol>
-<li>Export keyword rankings from Ahrefs</li>
-<li>Pull your content inventory from Notion or your CMS</li>
-<li>Open a spreadsheet</li>
-<li>Match keywords to existing content manually</li>
-<li>Flag gaps: keywords you're not targeting at all, or topics where you rank below position 15</li>
-<li>Prioritise by search volume, keyword difficulty, and business fit</li>
-<li>Brief the next piece of content</li>
+<li><strong>Difficulty under 30</strong>, because a site with 30 referring domains does not win harder terms this year.</li>
+<li><strong>The searcher's job matches the product's job.</strong> A reader who searches "ai agents for marketing" can use Duct; one who searches "what is an ai agent" is often just curious.</li>
+<li><strong>One topic, not a scatter.</strong> Seven pieces on one subject build more trust than seven on seven subjects.</li>
+<li><strong>Something only I can show.</strong> Each guide needed first-hand evidence from Duct's own code or data; a page that only summarizes what already ranks has no reason to be chosen over it.</li>
 </ol>
-<p>That process, done properly, takes 2–4 hours. Most growth teams do it monthly at best. Some never get to it.</p>
-<h2 id="the-gap-in-the-gap-analysis">The gap in the gap analysis</h2>
-<p>The deeper problem isn't the time. It's the staleness.</p>
-<p>By the time you've done the analysis, exported it, and put the output into your content calendar, the keywords have moved. A competitor has published on a term you flagged. A cluster you deprioritised has started trending. Your highest-priority gap from last month is now covered by a post you published two weeks ago.</p>
-<p>Keyword opportunities have a half-life. The best time to act on them is when they're fresh: when you can see a keyword rising in Search Console, cross-reference it against your existing content, and add it to this week's brief, not next month's planning cycle.</p>
-<h2 id="what-a-real-time-gap-analysis-looks-like">What a real-time gap analysis looks like</h2>
-<p>The core question is simple: <strong>what are people searching for, in categories I care about, where I either don't rank or rank below position 10?</strong></p>
-<p>To answer it in real time, you need three things connected:</p>
-<ol>
-<li><strong>Your current rankings</strong>: where you sit today on each keyword</li>
-<li><strong>Search trends</strong>: which keywords in your category are gaining velocity</li>
-<li><strong>Your existing content</strong>: what you've already published and what it covers</li>
-</ol>
-<p>When these three data sources are linked, a keyword gap isn't a spreadsheet exercise. It's a notification. "You rank at position 22 for 'product analytics for PMs', KD 31, and your content calendar has nothing targeting it."</p>
-<p>That's the kind of signal you should get on Monday morning, not three weeks after someone exports a CSV.</p>
-<h2 id="how-to-prioritise-what-you-find">How to prioritise what you find</h2>
-<p>Not all keyword gaps are worth pursuing. When you're building a content calendar for a small team, every piece of content is expensive. Here's a simple prioritisation frame:</p>
-<ul>
-<li><strong>High priority:</strong> low KD (under 40), a rising search trend, high business relevance, and no existing content</li>
-<li><strong>Medium priority:</strong> medium KD (40–60), existing content that ranks below position 15, and a focused update could push it</li>
-<li><strong>Low priority:</strong> high KD (60+) with no existing domain authority in that cluster. Build authority first.</li>
-</ul>
-<p>The "rising trend" signal is particularly underused. Most growth teams optimise for today's search volume. The teams that compound fastest target what's trending before it's competitive.</p>
-<h2 id="the-monday-brief-approach">The Monday brief approach</h2>
-<p>The most practical change a small growth team can make is shifting from monthly keyword audits to a weekly brief.</p>
-<p>A weekly keyword brief doesn't need to be exhaustive. It needs to answer two questions:</p>
-<ul>
-<li>What changed in our ranking positions this week that we should know about?</li>
-<li>What's the single highest-priority keyword gap we should address this sprint?</li>
-</ul>
-<p>That's it. Two answers, every Monday, derived from your connected tools, no spreadsheet required.</p>
+<p>The result is a cluster of seven guides on AI agents for marketing, one a week, ending in a <a href="/blog/ai-agents-for-marketing">pillar guide</a>. The whole decision, with the numbers, lives on <a href="https://github.com/5hirish/duct/issues/431">a GitHub issue</a>, which is the only place a spreadsheet would have earned its keep.</p>
+<h2 id="how-often-should-you-run-a-keyword-gap-analysis">How often should you run a keyword gap analysis?</h2>
+<p><strong>The full analysis once a quarter; the Search Console half every week.</strong> Volumes and difficulty move slowly. What moves weekly is which of your pages is climbing toward page one and which is ranking without being clicked, and that half is cheap to check every Monday.</p>
+<p>Duct covers the weekly half: it reads Search Console and asks the ranking-without-clicks question in its briefs. It does not have keyword volumes or difficulty yet (that is <a href="https://github.com/5hirish/duct/issues/216">issue #216</a>), so the quarterly half still needs a keyword tool. For this analysis I used OpenSEO's MCP server inside a Claude Code session: Search Console, keyword metrics and a competitor's ranked keywords, all as tool calls, with the decision written up as the last step.</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="what-is-a-keyword-gap-analysis">What is a keyword gap analysis?</h3>
+<p>A keyword gap analysis lists the searches your site should rank for and doesn't, then ranks them by how likely you are to win and what a win is worth. It combines your own Search Console data, volume and difficulty from a keyword tool, and what comparable sites rank for. The useful output is one topic to own, not a long list.</p>
+<h3 id="can-i-do-a-keyword-gap-analysis-for-free">Can I do a keyword gap analysis for free?</h3>
+<p>Partly. Search Console is free and gives you the most valuable half: pages that rank without clicks and queries climbing toward page one. Volumes and difficulty need a keyword tool. Google's Keyword Planner gives rough volume ranges inside a Google Ads account; paid tools add difficulty scores and competitors' rankings.</p>
+<h3 id="what-keyword-difficulty-should-a-new-site-target">What keyword difficulty should a new site target?</h3>
+<p>Low enough that your site's authority can win it this year. On a site with around 30 referring domains, I target difficulty under 30 and skip anything near 50, however large its volume. The threshold is a judgment, not a law: recheck it as links grow, and let fit with your product break ties.</p>
+<h3 id="how-is-a-keyword-gap-different-from-a-content-gap">How is a keyword gap different from a content gap?</h3>
+<p>A keyword gap starts from searches and asks which ones you are missing. A content gap starts from topics and asks which ones you have not covered. They meet in the middle: each search you decide to win needs a page that answers it better than what ranks today, which is a content decision.</p>
 <ul class="post-tags" aria-label="Tags"><li>keyword research</li><li>content strategy</li><li>search console</li><li>seo</li></ul>
 </article>
 
