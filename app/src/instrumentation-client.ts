@@ -1,5 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
+import { TRACES_SAMPLE_RATE } from "./sentry.sampling";
+
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? process.env.NODE_ENV;
 
 const _SENSITIVE_FIELDS = /token|code|refresh_token|api_key|secret|password|authorization/i;
@@ -74,13 +76,13 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: appEnv,
     dataCollection: CLIENT_DATA_COLLECTION,
-    tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.5,
+    tracesSampleRate: TRACES_SAMPLE_RATE,
     /**
      * Profiling only happens if all three of these agree, and two of them are
      * not in this file.
      *
      * `profileLifecycle: "trace"` ties a profile to a sampled transaction, so
-     * the effective profile rate is `tracesSampleRate x this` — 0.5, not 1.0.
+     * the effective profile rate is `tracesSampleRate x this` — 0.1, not 1.0.
      * The integration below is what actually starts the profiler, and the
      * `Document-Policy: js-profiling` header in `next.config.mjs` is what lets
      * it. Remove any one and the other two go quiet without complaining.
