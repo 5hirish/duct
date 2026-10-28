@@ -1,7 +1,7 @@
 ---
 name: add-blog-post
 description: Research, write, illustrate and publish a post on the Duct blog that ranks in search and gets cited by answer engines (ChatGPT, Perplexity, Google AI Overviews, Claude). Runs a research arm first (demand, the pages answer engines cite today, primary sources, Duct's first-hand evidence), then writes for extraction, draws the hero, renders, lists and verifies the post, and keeps the publishing cadence. Use for "write a blog post", "next post", "blog about <topic or URL>", or a blog content calendar.
-argument-hint: "<topic, question or source URL> [Engineering|Design|Growth|Announcement|Story]"
+argument-hint: "<topic, question or source URL> [Engineering|Design|Growth|Guide|Announcement|Story]"
 ---
 
 A post exists to be **found, quoted and trusted**: found by search, quoted by
@@ -71,6 +71,7 @@ the shelf the post sits on; tags are what it is about.
 | `Engineering` | how Duct's agent and product are built, with the code | builders |
 | `Design` | interface and product design decisions, and why | builders |
 | `Growth` | practical guides for running growth without a data team | growth |
+| `Guide` | evergreen explainers: one agent concept, in a marketer's terms (below) | growth |
 | `Announcement` | launches and releases worth more than a changelog line | growth |
 | `Story` | why Duct exists, what building it in public taught us | growth |
 
@@ -81,6 +82,82 @@ post. They show under the post, and become the `BlogPosting`'s `keywords` and
 be a thin page competing with the posts themselves. Add them when a tag has
 five posts. A new category is a deliberate change to `CATEGORIES`, not a
 front-matter typo the generator accepts.
+
+### Guides: the hub inside the blog
+
+A `Guide` explains **one agent concept to a marketer, founder or PM who runs
+growth without a data team**, in the terms of their week (the Monday read of
+three tools, the budget change they would not let a script make), never in
+the terms of a framework. It is the evergreen layer of the blog, and it is
+how getduct.ai earns the territory *AI agents for marketing and growth*
+without a separate learning hub. The reasoning, with the numbers, is on the
+cluster's issue; the rules are:
+
+- **One concept, one primary question, the question's words in the title.**
+  A guide that needs a second concept to make sense links to that concept's
+  guide, which is a second post. Difficulty under 30 and the reader's job in
+  the phrasing beat a bigger head term the domain cannot rank for.
+- **The product is the evidence, not the subject.** A guide names the file,
+  test or shot that proves the concept is real in a shipping agent, once,
+  and never pitches. The generator's growth closer does the rest.
+- **Spokes before the hub.** The pillar guide for a territory is written
+  after its spokes exist and links every one of them; each spoke links the
+  pillar and its nearest sibling. Until the pillar exists, spokes link each
+  other and the relevant `for-*` page.
+- **A `/learn/` path, a nav entry or a tag page is earned, not planned.**
+  Promote a territory out of the blog only when it holds five or more
+  published guides *and* Search Console shows non-branded impressions on
+  them. Below that, a hub is a landing page with nothing to land on, and
+  under `site/` it would also be five pages per guide to keep translated.
+
+## Google's rules for generated content, and what they change here
+
+Read once, dated 2026-10-27. Google's
+[guidance on generative AI content](https://developers.google.com/search/docs/fundamentals/using-gen-ai-content)
+(revised 2026-10-01) says it is "critical to manually factcheck and review
+all AI-generated content for accuracy and trustworthiness before publishing",
+that the review "also applies to metadata like title elements, meta
+description elements, structured data, and alternate texts for images", and
+suggests "providing more background information on how automation was used".
+The [spam policy on scaled content abuse](https://developers.google.com/search/docs/essentials/spam-policies#scaled-content-abuse)
+applies "no matter how it's created", and its first example is "using
+generative AI tools or other similar tools to generate many pages without
+adding value for users". The September 2026 spam update (24 Sep to 8 Oct)
+was the fourth of the year, and at Search Central Live Barcelona on 2 Oct
+Google's Gary Illyes reportedly named scaled, low-effort content as a bigger
+problem now than link spam (John Campbell's recap for ROAST; not Google's
+published wording).
+
+Google's own [people-first checklist](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)
+lists the warning signs, and an agent-written blog trips several of them by
+default: "extensive automation to produce content on many topics", "mainly
+summarizing what others have to say", writing to a word count, entering a
+niche for traffic rather than expertise, and dates changed to look fresh.
+So, as rules:
+
+- **A person reads every post before it merges.** Every number, every
+  link, every quote, and the metadata: title, description, alt text, FAQ.
+  The PR says who checked it. A post merged unread is a policy risk, not a
+  shortcut.
+- **Every post says how it was made**, in one specific sentence in the
+  `madeWith` front matter key, shown under the byline: what the agent did
+  (the research, the draft, the figures) and what the author checked. Not a
+  boilerplate badge; a sentence that is true of this post.
+- **First-hand evidence is the entry ticket, not a bonus.** The brief's
+  "Duct's first-hand evidence" line names a measurement, a file, a test or
+  a shot that no other page has. A post that is only a synthesis of the
+  pages already ranking is the "summarizing what others say" pattern and is
+  not written.
+- **Alt text describes the image as generated**, written after looking at
+  it, never pasted from the prompt: a generated hero rarely matches its
+  prompt exactly, and alt text is metadata Google says to check.
+- **No bulk publishing.** At most one post a week, never a batch on one
+  day: a burst of same-author, same-template pages is the shape of scaled
+  content abuse whatever is in them. Write ahead if you like; merge on the
+  calendar.
+- **The generator fails on generated-sounding prose**: an em dash in prose
+  or any word in `GENERATED_TELLS` (`scripts/build_blog.py`). The list is
+  the voice guide's cut-on-sight vocabulary. Quoted sources are exempt.
 
 ## Cadence
 
@@ -157,7 +234,7 @@ a local path: it is the reader's proof and a link to the repo.
 
 ```markdown
 ## Brief: <working title>
-- Category: <one of the five>. Tags: <1–6>. Reader: <one sentence, a real person>
+- Category: <one of the six>. Tags: <1–6>. Reader: <one sentence, a real person>
 - The value: after reading they can <…>; and they learn <…> nowhere else says
 - Primary question: <as people type it>. Answer in one sentence: <…>
 - Secondary questions (H2s / FAQ): <…>
@@ -283,13 +360,14 @@ seoTitle: "Harness Engineering: A Field Guide From a Shipping Agent"   # <title>
 date: Sep 29 2026
 updated: Oct 14 2026          # optional; only for a substantive revision
 author: Shirish Kadam
-category: Engineering         # Engineering | Design | Growth | Announcement | Story
+category: Engineering         # Engineering | Design | Growth | Guide | Announcement | Story
 tags: harness engineering, agent harness, evals   # 1–6, lowercase
 audience: builders            # optional; defaults from the category
 excerpt: "The card line on the index: a specific claim that makes someone click."
 description: "The meta description, 140–160 characters, with the primary question's words in it."
 hero: assets/<slug>/hero.webp # relative to site/blog/
 heroAlt: "What the hero shows, in one sentence"
+madeWith: "Researched and drafted with Claude Code against the Duct repository; the eval numbers are from our own runs and every source was opened and checked by Shirish before publishing."
 readTime: 12
 ---
 ```
@@ -384,12 +462,14 @@ refresh starts from.
 ## Done means
 
 - [ ] Brief written; it names the value, the gap the cited pages leave, and Duct's evidence
-- [ ] Every claim about Duct checked against the code; category from the five; 1–6 tags
+- [ ] Every claim about Duct checked against the code; category from the six; 1–6 tags
 - [ ] Answer-first paragraph; question-shaped H2s; each section opens with its answer
 - [ ] Every number and quote sourced and seen; outbound links to primary sources
 - [ ] At least one table where anything is compared or mapped; FAQ of 3–5
 - [ ] Hero, plus the visual each major idea calls for (Phase 4's table), legible at 652px
 - [ ] Front matter complete; `seoTitle` ≤60; `description` 140–160
+- [ ] `madeWith` says, specifically, what the agent did and what the author checked
+- [ ] The maintainer has read every number, link, quote and the metadata before merge, and the PR says so
 - [ ] Card drawn, page and index rendered, three listings added, `--check` green
 - [ ] Looked at in a browser at desktop and phone width
 - [ ] Distribution list drafted for the maintainer; issue updated with the brief and the publish date
