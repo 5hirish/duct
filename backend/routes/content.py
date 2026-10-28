@@ -109,6 +109,7 @@ from models.content import (
 from models.auth import User
 from models.project import Project
 from service import storage
+from service.analytics import capture_event
 from service.auth import get_current_user, get_user_provider_keys
 from service.content_metrics import merge_manual_metrics, merge_synced_metrics
 from service.membership import get_project_for_user, get_project_row_for_user
@@ -116,14 +117,6 @@ from service.provider_keys import stored_keys_for
 from utils.dates import now_iso
 
 logger = logging.getLogger(__name__)
-
-
-def _capture_posthog(event: str, properties: dict | None = None) -> None:
-    """Capture within the request context when server analytics is configured."""
-    from server import posthog_client
-
-    if posthog_client is not None:
-        posthog_client.capture(event, properties=properties)
 
 
 # Authentication is declared on the router, not on 44 individual endpoints —
@@ -433,7 +426,7 @@ async def run_plan_stream(
     session_id = str(uuid.uuid4())
     _session_created_at[session_id] = time.monotonic()
     create_plan_session(session_id, req.project_id)
-    _capture_posthog("content_plan_generation_started")
+    capture_event("content_plan_generation_started")
 
     queue: asyncio.Queue = asyncio.Queue()
     finished = asyncio.Event()
@@ -561,7 +554,7 @@ async def run_post_stream(
     session_id = str(uuid.uuid4())
     _session_created_at[session_id] = time.monotonic()
     create_draft_session(session_id, req.project_id, plan_id=req.plan_id)
-    _capture_posthog("content_post_draft_started", {"is_clone": bool(req.clone_url)})
+    capture_event("content_post_draft_started", {"is_clone": bool(req.clone_url)})
 
     queue: asyncio.Queue = asyncio.Queue()
     finished = asyncio.Event()
@@ -653,7 +646,7 @@ async def send_content_chat_message(
     if not session:
         raise HTTPException(404, "Session not found or expired")
     await session.chat_queue.put({"role": "user", "content": req.content})
-    _capture_posthog("content_session_message_sent")
+    capture_event("content_session_message_sent")
     return {"status": "queued"}
 
 
@@ -2355,7 +2348,7 @@ async def publish_post_route(
             raise HTTPException(500, "The clip for this post couldn't be loaded.")
         media = [(data, clip.filename or "clip.mp4", clip.mime_type or "video/mp4")]
         result = await _publish_media(db, post, proj, body, media)
-        _capture_posthog("content_post_published", {"post_type": post.post_type, "is_scheduled": body.scheduled_at is not None})
+        capture_event("content_post_published", {"post_type": post.post_type, "is_scheduled": body.scheduled_at is not None})
         return result
 
     text_only = is_text_only(post)
@@ -2380,7 +2373,7 @@ async def publish_post_route(
     if not media and not text_only:
         raise HTTPException(400, "Couldn't find any uploaded image files for this post.")
     result = await _publish_media(db, post, proj, body, media)
-    _capture_posthog("content_post_published", {"post_type": post.post_type, "is_scheduled": body.scheduled_at is not None})
+    capture_event("content_post_published", {"post_type": post.post_type, "is_scheduled": body.scheduled_at is not None})
     return result
 
 

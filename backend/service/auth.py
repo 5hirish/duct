@@ -8,7 +8,6 @@ import secrets
 import jwt
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
-from posthog import identify_context
 from sqlalchemy import select
 from sqlmodel import Session
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
@@ -17,6 +16,7 @@ from agents.models import Provider
 from config import Configs, get_configs
 from db.session import get_session_optional
 from models.auth import User
+from service.analytics import identify_user
 
 logger = logging.getLogger(__name__)
 
@@ -41,27 +41,6 @@ _xai_key_header = APIKeyHeader(name="X-Provider-XAI", auto_error=False)
 # here is a one-hour access token plus the account it belongs to, and the Codex
 # backend needs both on every request (agents/core/codex.py).
 _openai_account_header = APIKeyHeader(name="X-OpenAI-Account-Id", auto_error=False)
-
-
-def identify_posthog_user(user: User) -> None:
-    """Bind a verified user to the PostHog context for this request.
-
-    ``PosthogASGIMiddleware`` has already opened the request context before
-    FastAPI resolves dependencies. Importing the singleton lazily avoids the
-    server/routes import cycle while ensuring person updates use that client.
-    """
-    from server import posthog_client
-
-    if posthog_client is None:
-        return
-
-    distinct_id = str(user.id)
-    identify_context(distinct_id)
-
-    person_properties = {"email": user.email}
-    if user.full_name:
-        person_properties["name"] = user.full_name
-    posthog_client.set(distinct_id=distinct_id, properties=person_properties)
 
 
 async def validate_api_key(
@@ -92,8 +71,9 @@ async def get_user_provider_keys(
     Returns only the providers the caller actually supplied (non-blank). The
     generate route prefers these over the server-side config keys, falling back
     to the backend's own key when a provider is absent. These values are secrets:
-    never log them and never persist them (see the Sentry header scrub in
-    server.py).
+    never log them and never persist them. Error tracking never sees them
+    either: PostHog's request context records method, path, user agent and
+    address, never a header (service/analytics.py).
 
     An OpenAI value that is a ChatGPT access token is packed together with its
     account id, so the pair travels the same road an API key does — through
@@ -158,7 +138,7 @@ async def get_current_user(
     user = session.execute(select(User).where(User.email == email)).scalars().first()
     if user is None:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
-    identify_posthog_user(user)
+    identify_user(user)
     return user
 
 
@@ -208,5 +188,5 @@ async def get_current_user_optional(
     user = session.execute(select(User).where(User.email == email)).scalars().first()
     if user is None:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
-    identify_posthog_user(user)
+    identify_user(user)
     return user

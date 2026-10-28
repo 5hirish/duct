@@ -318,23 +318,19 @@ class Configs(BaseSettings):
     # carry the string.
     generate_engine: str = Field(default="v1")
 
-    # PostHog server analytics. Empty values keep production instances that do
-    # not opt in to PostHog running without analytics.
+    # Product analytics and error tracking (service/analytics.py). No key, no
+    # PostHog: a self-hosted instance measures nothing unless it opts in. A
+    # loopback deployment (a developer, the desktop sidecar) stays quiet even
+    # with a key unless POSTHOG_ENABLE_LOCALHOST says otherwise.
     posthog_api_key: str = ""
-    posthog_host: str = ""
+    posthog_host: str = "https://us.i.posthog.com"
+    posthog_enable_localhost: bool = False
 
-    # Sentry observability
+    # Which deployment this is; tags every analytics event and agent trace.
     app_env: str = Field(
         default="local",
         validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"),
     )
-    sentry_dsn: str = ""
-    sentry_send_default_pii: bool = True
-    sentry_enable_logs: bool = True
-    sentry_traces_sample_rate: float = 1.0
-    sentry_profile_session_sample_rate: float = 1.0
-    sentry_profile_lifecycle: str = "trace"
-    sentry_enable_localhost: bool = False
     # Where the agent's OpenTelemetry spans go (agents/core/telemetry.py).
     # The standard OTel variable name, so Phoenix locally and a collector in
     # production are the same setting. Unset means tracing is off.

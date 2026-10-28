@@ -210,7 +210,15 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   picks one; unset takes the first with credentials (Cloudflare, then Resend) and
   falls back to `console`, which logs, so dev/CI/self-host need no vendor account.
   Same shape as the app's analytics seam, for the same reason: a fork swaps one file.
-- **Observability:** Sentry error tracking; OpenTelemetry tracing of every
+- **Observability:** PostHog for product events, error tracking and AI call
+  metadata, behind one seam (`service/analytics.py`, the only file that
+  imports PostHog): routes call `capture_event`, `get_current_user` attributes
+  the request with `identify_user` (the account UUID, the same distinct id the
+  app sends), uncaught exceptions are caught by the ASGI middleware and
+  `logger.exception` records by a root handler, and the AI callback runs in
+  privacy mode, so prompts and replies never leave. Off without
+  `POSTHOG_API_KEY`, and off on a loopback `API_PUBLIC_URL` unless
+  `POSTHOG_ENABLE_LOCALHOST` is set. And OpenTelemetry tracing of every
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
   it is unset. Locally that is Phoenix: the "Duct: App + API + Phoenix" and
@@ -1206,9 +1214,10 @@ So when you add a setting:
 - Renaming a field means renaming it in `.env.example` too — the stale check
   catches it, because a wrong example is worse than a missing one.
 
-Names are shared across processes deliberately. `SENTRY_DSN` is read by this
-backend, by the desktop sidecar (only on user consent), and compiled into the
-Tauri shell via `option_env!`; `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` likewise.
+Names are shared across processes deliberately. `POSTHOG_API_KEY` is read by
+this backend and by the desktop sidecar (only when the shell passes it, on the
+user's Preferences switch); `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` is read here
+and compiled into the Tauri shell via `option_env!`.
 One value in `.env.local` serves all of them — do not invent a `DUCT_`-prefixed
 variant for the desktop half.
 

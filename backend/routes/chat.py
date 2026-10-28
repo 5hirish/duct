@@ -126,7 +126,7 @@ async def insight_chat(
         from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
         from agents.core.lc import resolve_chat_model
-        from agents.core.posthog_ai import langchain_callback
+        from service.analytics import langchain_callback
 
         llm = resolve_chat_model(run.provider, run.model, run.api_key, temperature=0.7)
         callback = langchain_callback(
@@ -143,10 +143,14 @@ async def insight_chat(
         lc_messages.append(HumanMessage(content=req.message))
 
         try:
-            async for chunk in llm.astream(
-                lc_messages,
-                config={"callbacks": [callback]} if callback is not None else None,
-            ):
+            # Only with a callback: a bare `config=None` is not the same call to
+            # every chat model, and analytics off must mean the call unchanged.
+            stream = (
+                llm.astream(lc_messages, config={"callbacks": [callback]})
+                if callback is not None
+                else llm.astream(lc_messages)
+            )
+            async for chunk in stream:
                 token = chunk.content
                 if token:
                     yield f"data: {json.dumps({'token': token})}\n\n"

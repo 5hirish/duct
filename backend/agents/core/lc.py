@@ -1225,7 +1225,7 @@ async def stream_agent(
 
     turn_config = dict(config or {})
     if conversation_id:
-        from agents.core.posthog_ai import langchain_callback
+        from service.analytics import langchain_callback
 
         callback = langchain_callback(
             session_id=conversation_id,

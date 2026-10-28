@@ -8,7 +8,6 @@ from fastapi import APIRouter
 
 from config import get_configs
 from routes.schemas import HealthResponse, RootLinks, RootResponse
-from utils.posthog_logs import posthog_log_logger
 
 router = APIRouter(tags=["health"])
 
@@ -33,8 +32,4 @@ def root() -> RootResponse:
 
 @router.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    posthog_log_logger.info(
-        "health_check_completed",
-        extra={"event": "health_check_completed"},
-    )
     return HealthResponse()
