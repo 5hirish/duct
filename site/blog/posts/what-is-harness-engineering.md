@@ -9,6 +9,7 @@ excerpt: "We read the most-starred harness engineering list against Duct's own a
 description: "Harness engineering is everything around the model: loop, tools, context, memory, approvals and evals. What the awesome list teaches, and what it misses."
 hero: assets/what-is-harness-engineering/hero.webp
 heroAlt: "A Roman mosaic of a water mill: an aqueduct channel runs through a raised sluice gate onto a wheel that turns a millstone"
+madeWith: "Researched and drafted with Claude Code against Duct's repository and every source linked here. One claim about approvals was checked against the policy file and corrected before it shipped."
 readTime: 13
 ---
 
