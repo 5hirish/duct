@@ -426,7 +426,7 @@
 </nav>
 <h2 id="what-does-human-in-the-loop-mean-for-an-ai-agent">What does human in the loop mean for an AI agent?</h2>
 <p><strong>It means the agent stops at a defined point and a person decides before anything happens.</strong> The decision is a blocking step: the agent proposes, the run pauses, you approve, edit or reject, and only then does the action run. Gumloop's guide puts the everyday version plainly: "agents can pause at important moments and check in with you for approval before taking action" (<a href="https://instacart.gumloop.com/blog/human-in-the-loop">Gumloop, <em>Agents that know when to ask</em></a>).</p>
-<p>Two neighbours of the phrase matter, because vendors blur them:</p>
+<p>Two neighbors of the phrase matter, because vendors blur them:</p>
 <div class="post-table" role="region" aria-label="Table: Pattern, Who acts first, Your role, Fits" tabindex="0">
 <table>
 <thead><tr><th scope="col">Pattern</th><th scope="col">Who acts first</th><th scope="col">Your role</th><th scope="col">Fits</th></tr></thead>
@@ -470,7 +470,7 @@
 <table>
 <thead><tr><th scope="col">How the gate is built</th><th scope="col">What stops a wrong action</th><th scope="col">What happens when the model is wrong about risk</th><th scope="col">Where the human sits</th></tr></thead>
 <tbody>
-<tr><td>Told to ask (a line in the prompt)</td><td>the model's judgement</td><td>the action runs</td><td>in the loop, in theory</td></tr>
+<tr><td>Told to ask (a line in the prompt)</td><td>the model's judgment</td><td>the action runs</td><td>in the loop, in theory</td></tr>
 <tr><td>Cannot act (no tool exists to apply)</td><td>the absence of the tool</td><td>the change sits in "proposed" until a person clicks</td><td>in the loop, by construction</td></tr>
 <tr><td>Acts, then reports</td><td>nothing before the fact</td><td>the action runs; you see it in a log</td><td>on the loop</td></tr>
 </tbody>
@@ -478,7 +478,7 @@
 </div>
 <p>Models are not reliable judges of when to ask. HiL-Bench, built to test exactly this, found that "no frontier model recovers more than a fraction of its full-information performance when deciding whether to ask" (<a href="https://arxiv.org/abs/2604.09408">HiL-Bench, arXiv 2604.09408</a>, April 2026). The first row is the one to be suspicious of, and it is the one most products ship, because it is one sentence of work.</p>
 <p>Duct uses the second row. The agent has four tools for changing things: list the operations it may propose, propose a change set, check a set's status, roll one back. There is no fifth. The docstring of <a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py">the tools file</a> says it in one line: "There is no approve or apply tool." The agent can write a paragraph on why the budget should go up. It cannot make the budget go up, because the thing that would do that is not in the list of things it can call.</p>
-<figure class="post-figure" data-zoom><img src="assets/human-in-the-loop-ai-agents/approval-sequence.svg" width="1000" height="560" loading="lazy" decoding="async" alt="A sequence diagram: the agent proposes a change set; a policy in code checks every change; if all are allowlisted and reversible and the project allows it, they apply with an undo; otherwise a person approves, which applies, or rejects, which ends it; applied changes can be rolled back."/><figcaption>The agent's road ends at propose. The orange step is the only place a person decides, and it is the only path to apply for anything that moves money.</figcaption></figure>
+<figure class="post-figure" data-zoom><img src="assets/human-in-the-loop-ai-agents/approval-sequence.svg" width="1000" height="580" loading="lazy" decoding="async" alt="A sequence diagram: the agent proposes a change set; a policy in code checks every change; if all are allowlisted and reversible and the project allows it, they apply with an undo; otherwise a person approves, which applies, or rejects, which ends it; applied changes can be rolled back."/><figcaption>The agent's road ends at propose. The orange step is the only place a person decides, and it is the only path to apply for anything that moves money.</figcaption></figure>
 <p>Whether a proposed set waits for a click or applies on its own is decided in <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py">one policy file</a>, once, in rules short enough to read in a minute:</p>
 <ul>
 <li>A change may apply without a click only if it is on a short allowlist, is not flagged destructive, has a rollback, passed the account's guardrails, and its preview succeeded.</li>

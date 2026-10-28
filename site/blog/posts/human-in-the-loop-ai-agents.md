@@ -23,7 +23,7 @@ It is easy to get wrong, and I have the receipt. On September 28 I was finishing
 
 **It means the agent stops at a defined point and a person decides before anything happens.** The decision is a blocking step: the agent proposes, the run pauses, you approve, edit or reject, and only then does the action run. Gumloop's guide puts the everyday version plainly: "agents can pause at important moments and check in with you for approval before taking action" ([Gumloop, *Agents that know when to ask*](https://instacart.gumloop.com/blog/human-in-the-loop)).
 
-Two neighbours of the phrase matter, because vendors blur them:
+Two neighbors of the phrase matter, because vendors blur them:
 
 | Pattern | Who acts first | Your role | Fits |
 |---|---|---|---|
@@ -70,7 +70,7 @@ Trust, when it comes, looks like supervising rather than stamping. Anthropic's s
 
 | How the gate is built | What stops a wrong action | What happens when the model is wrong about risk | Where the human sits |
 |---|---|---|---|
-| Told to ask (a line in the prompt) | the model's judgement | the action runs | in the loop, in theory |
+| Told to ask (a line in the prompt) | the model's judgment | the action runs | in the loop, in theory |
 | Cannot act (no tool exists to apply) | the absence of the tool | the change sits in "proposed" until a person clicks | in the loop, by construction |
 | Acts, then reports | nothing before the fact | the action runs; you see it in a log | on the loop |
 

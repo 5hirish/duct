@@ -22,6 +22,9 @@ const ICONS = join(REPO, "site/assets/icons");
 const POSTS = join(REPO, "site/blog/posts");
 const OUT = join(REPO, "site/assets/og");
 const W = 1200, H = 630, LIMIT = 150 * 1024;
+const FOOTER_Y = H - 56, FOOTER_CLEARANCE = 44;
+// Title sizes to try, largest first, when a long title would crowd the footer.
+const TITLE_STEPS = [46, 40];
 
 // slug → the card. `shot` is a file in site/assets/media; its top-left corner
 // is what shows, so pick shots whose first 620×480 carry the point.
@@ -109,13 +112,29 @@ function wrap(text, max) {
 
 async function card(slug, { title, sub, shot, art, kicker, logo }) {
   const withShot = Boolean(shot || art || logo);
-  const titleLines = wrap(title, withShot ? 18 : 30);
-  const size = titleLines.length > 2 ? 54 : 64;
   const x = 72, y = 236;
   const subLines = wrap(sub, withShot ? 36 : 62);
   // Three lines fit under a three-line title with the footer still clear;
   // a fourth runs into it, and a fourth line is a paragraph, not a subtitle.
   if (subLines.length > 3) throw new Error(`${slug}: the line under the title runs to ${subLines.length} lines; shorten it`);
+  // The title steps down a size until the line under it clears the footer.
+  // Only the size was chosen before, from the line count, so a five-line
+  // post title put its byline on top of the footer, on the share card and on
+  // the post's cover in the blog index. A smaller size fits more characters
+  // per line, so each step re-wraps.
+  const chars = withShot ? 18 : 30;
+  const fits = (lines, size) =>
+    y + lines.length * size * 1.12 + 22 + (subLines.length - 1) * 34 <= FOOTER_Y - FOOTER_CLEARANCE;
+  let titleLines = wrap(title, chars);
+  let size = titleLines.length > 2 ? 54 : 64;
+  for (const step of TITLE_STEPS) {
+    if (fits(titleLines, size)) break;
+    size = step;
+    // Georgia bold's capitals run wide, so a step holds slightly fewer
+    // characters than the size ratio alone suggests.
+    titleLines = wrap(title, Math.round(chars * 54 / step * 0.95));
+  }
+  if (!fits(titleLines, size)) throw new Error(`${slug}: the title does not fit the card at ${size}px; shorten it`);
   const subY = y + titleLines.length * size * 1.12 + 22;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1e8"/><stop offset=".55" stop-color="#f7f4f0"/><stop offset="1" stop-color="#e9ecf5"/></linearGradient></defs>
@@ -124,7 +143,7 @@ async function card(slug, { title, sub, shot, art, kicker, logo }) {
     ${kicker ? `<rect x="${x}" y="${y - size - 22}" width="22" height="3" rx="1.5" fill="#ff5c00"/><text x="${x + 32}" y="${y - size - 12}" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="bold" letter-spacing="2.5" fill="#ff5c00">${esc(kicker.toUpperCase())}</text>` : ""}
     ${titleLines.map((l, i) => `<text x="${x}" y="${y + i * size * 1.12}" font-family="Georgia, serif" font-size="${size}" font-weight="bold" fill="#0d0f1a" letter-spacing="-1">${esc(l)}</text>`).join("")}
     ${subLines.map((l, i) => `<text x="${x}" y="${subY + i * 34}" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="#4b5068">${esc(l)}</text>`).join("")}
-    <text x="${x}" y="${H - 56}" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#7a7f95">getduct.ai · open source · MIT</text>
+    <text x="${x}" y="${FOOTER_Y}" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#7a7f95">getduct.ai · open source · MIT</text>
   </svg>`;
   const layers = [];
   if (shot) {
