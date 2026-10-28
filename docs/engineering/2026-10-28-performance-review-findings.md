@@ -4,19 +4,20 @@
 
 The rows behind [`2026-10-28-performance-review.md`](2026-10-28-performance-review.md). Read that first; open this when fixing something. Paths are relative to `app/src/` or `desktop/` as the section says, at `a116370b` on `main`.
 
-**Status:** *Fixed* landed on `perf/client-load-and-shell-review`. *Open* is the backlog, ranked within each table.
+**Status:** *Fixed* landed on `perf/client-load-and-shell-review`, the desktop rows on `perf/desktop-shell-0.7.2`. *Open* is the backlog, ranked within each table.
 
 ## Web: first load
 
 | # | Finding | Evidence | Fix | Effort | Status |
 |---|---|---|---|---|---|
-| W1 | Every route server-renders "Starting Duct…" and nothing else; the first real pixel waits for all the JavaScript | `components/LocalBackendGate.jsx` renders a placeholder until an effect runs; all six route groups wrap it | Make each request await the backend base instead of gating the tree, so routes render on the server. Front door and `/start` first | M | Open |
+| W1 | Every route server-rendered "Starting Duct…" and nothing else; the first real pixel waited for all the JavaScript | `components/LocalBackendGate.jsx` rendered a placeholder until an effect ran; all six route groups wrap it | The gate holds hydration, not HTML: pages render on the server, and the desktop shell suspends hydration until it names its backend. A pre-paint hint (`lib/sessionHint.js`) hides the front door from a member being redirected | M | Fixed |
 | W2 | The whole English (or Japanese) catalogue, about 120 KB, is inlined into every HTML response | `app/layout.js` passes `initialMessages={i18n.messages}` | Load the catalogue as a cached per-locale chunk, read with `use()` in the provider | M | Open |
 | W3 | Recharts loaded with every artifact card, brief and content hub | `components/artifacts/ArtifactRenderer.jsx`, `app/(app)/content/page.jsx`, `components/audit/AuditReport.jsx` | Lazy chart and report views; lazy Analytics and Discover tabs | S | Fixed |
 | W4 | All ~45 Prism themes shipped with every chat route, eagerly | `components/workspace/CodeBlock.jsx` imported `dist/cjs/styles/prism` (the index) | One theme by path; highlighter in `HighlightedCode.jsx`, loaded on the first code block | S | Fixed |
 | W5 | `modern-screenshot` in every content workspace's first load | `lib/slideCapture.js` | Imported inside the capture | S | Fixed |
 | W6 | The code font is preloaded on every first visit | `app/layout.js` | `preload: false` | S | Fixed |
 | W7 | Sentry traced 50% of sessions and profiled every traced one | `instrumentation-client.ts`, both server configs | `TRACES_SAMPLE_RATE` in `sentry.sampling.ts`: 10% in production, all three runtimes | S | Fixed |
+| W9 | Signed-in screens server-render "Loading…": the session lives in `localStorage`, which the server cannot read | `lib/auth.js` `AuthGuard` | Draw the app shell (sidebar, header) on the server, chosen by the same session hint | M | Open |
 | W8 | One 260 KB stylesheet (41 KB compressed, render-blocking) carries every page's partials on every route, the `/preview` lenses included | `app/globals.css` imports 22 partials | Move page-only partials (connector tiles, model tiers, ads report, onboarding) beside their pages | M | Open |
 
 ## Web: long sessions
@@ -51,7 +52,7 @@ Paths under `desktop/src-tauri/`. Shell version 0.7.1 to 0.7.2 (patch: no contra
 | D8 | WebView2 is never told the window is minimised, so it keeps its full memory | wry skips `SIZE_MINIMIZED` | On minimise, hide the controller and set a low memory target; reverse on restore | M | Open |
 | D9 | Per-machine NSIS install asks for admin on every self-update | `tauri.conf.json` `installMode` | `currentUser`; `windows/installer-hooks.nsh` retires an old per-machine copy at its first update (one last prompt). Needs a 0.7.1 → 0.7.2 update tested on Windows | M | Fixed |
 | D10 | Offline launch: 30 s of splash then a blank window on macOS; an engine error page elsewhere | `SPLASH_DEADLINE` reveal | Keep the splash and offer Retry and Quit on it | M | Open |
-| D11 | The window is revealed on the page `load` event, onto the "Starting Duct…" placeholder (W1) | `on_page_load` | Reveal when the app says it has drawn (new command, minor bump), after W1 | M | Open |
+| D11 | The window is revealed on the page `load` event. Since W1 that is the real front door, but a signed-in launch still shows "Loading…" (W9) | `on_page_load` | Reveal when the app says it has drawn (new command, minor bump), after W9 | M | Open |
 | D12 | Self-host builds read three keychain items on the UI thread at launch | `src/sidecar.rs` via `setup` | Spawn the sidecar from a thread | S | Open |
 
 Already right, and worth keeping: one webview at steady state (the splash is destroyed, not hidden); WebKit's own background suspension; blocking commands off the main thread; one WebView2 browser process for both windows; no OpenSSL; Sentry inert unless enabled.

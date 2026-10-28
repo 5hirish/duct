@@ -9,6 +9,7 @@ import { Trans } from "@lingui/react/macro";
 
 import { LinguiClientProvider } from "../i18n/LinguiClientProvider";
 import { activateRequestI18n } from "../i18n/server";
+import { SESSION_HINT_SCRIPT } from "../lib/sessionHint";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -111,6 +112,7 @@ export default async function RootLayout({ children }) {
     >
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         <script dangerouslySetInnerHTML={{ __html: PLATFORM_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: SESSION_HINT_SCRIPT }} />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="duct-theme">
           <TooltipProvider>
             <a href="#main-content" className="skip-link">

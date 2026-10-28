@@ -133,7 +133,16 @@ bag and is spent once).
 **Every routable segment renders `LocalBackendGate`.** The desktop shell
 bundles its own backend and only learns its loopback port at runtime, so
 `BASE` is repointed once at boot (`lib/localBackend.js`) and the gate holds
-rendering until then. Skipping it is not a slow path, it is a sign-out: the
+*hydration* until then. It does not hold the HTML: the server renders the
+page, a browser hydrates it at once, and the shell suspends hydration with
+`use()`, which keeps the server's HTML on screen and runs no effect or handler
+below the gate until the backend is named. Two consequences. A gated page's
+first render has to match the server's, so browser state (`localStorage`,
+`isLocalBackendActive()`, `isMac()`) is read in an effect, not during render;
+the front door's Turnstile flag is the worked example. And a member opening
+`/` must not see the front door the server drew for everyone, so
+`lib/sessionHint.js` marks `<html data-session="member">` before paint and the
+page clears it if it stays. Skipping the gate is not a slow path, it is a sign-out: the
 session token is stored under one key but signed by whichever backend minted
 it, so a token from the wrong one comes back 401 "Invalid token" and
 `authFetch.endSession` reads any 401 as a dead session. That is what `/start`
@@ -314,7 +323,8 @@ it is a claim about the code, not a way to quiet the check.
   written by `setAuthToken`), because the shell addresses two — its sidecar and
   the hosted API — and a token from the wrong one is well-formed, unexpired and
   correctly signed, so nothing else on the client can tell it apart.
-  `reconcileStoredSession()` runs once, from `LocalBackendGate`, and discards a
+  `reconcileStoredSession()` runs once, when `lib/localBackend.js` settles the
+  backend (before anything below the gate renders), and discards a
   mismatch *quietly*: no event, no parked redirect, no "your session ended".
   That is the distinction — a mismatch is not an expiry, and treating it as one
   is what signed people out mid-use. A session with no recorded issuer predates
