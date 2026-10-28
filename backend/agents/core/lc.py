@@ -1151,6 +1151,7 @@ async def stream_agent(
     provider: Provider | None = None,
     model: ModelName | str = "",
     conversation_id: str = "",
+    user_id: str = "",
     on_todo: Callable[[list], Awaitable[None]] | None = None,
     on_tool_use: Callable[[str, Any, str], Awaitable[None]] | None = None,
     on_tool_result: Callable[[str, Any, str, bool], Awaitable[None]] | None = None,
@@ -1222,6 +1223,17 @@ async def stream_agent(
         if on_tool_result is not None:
             await on_tool_result(name, result, tool_use_id, is_error)
 
+    turn_config = dict(config or {})
+    if conversation_id:
+        from agents.core.posthog_ai import langchain_callback
+
+        callback = langchain_callback(
+            session_id=conversation_id,
+            distinct_id=user_id,
+        )
+        if callback is not None:
+            turn_config["callbacks"] = [*(turn_config.get("callbacks") or []), callback]
+
     with model_span(
         provider=(provider or Provider.ANTHROPIC).value,
         model=getattr(model, "value", model) or "unknown",
@@ -1233,7 +1245,7 @@ async def stream_agent(
         foreign_interrupts = 0
         async for mode, chunk in agent.astream(
             _turn_input(prompt),
-            config or {},
+            turn_config,
             stream_mode=["messages", "updates", "custom"],
         ):
             if mode == "custom":

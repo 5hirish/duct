@@ -318,6 +318,11 @@ class Configs(BaseSettings):
     # carry the string.
     generate_engine: str = Field(default="v1")
 
+    # PostHog server analytics. Empty values keep production instances that do
+    # not opt in to PostHog running without analytics.
+    posthog_api_key: str = ""
+    posthog_host: str = ""
+
     # Sentry observability
     app_env: str = Field(
         default="local",

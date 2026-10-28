@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import atexit
 import asyncio
 import contextvars
 import logging
@@ -16,6 +17,8 @@ from urllib.parse import urlparse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from posthog import Posthog
+from posthog.integrations.asgi import PosthogASGIMiddleware
 import sentry_sdk
 from uvicorn.logging import DefaultFormatter
 
@@ -41,6 +44,7 @@ from db.session import init_db
 import models  # noqa: F401 - registers SQLModel metadata
 from routes.namespace import router as api_router
 from utils.openapi_docs_auth import OpenapiDocsBasicAuthMiddleware
+from utils.posthog_logs import configure_posthog_logs, posthog_log_logger
 from utils.security_headers import SecurityHeadersMiddleware
 
 _cfg = get_configs()
@@ -332,6 +336,10 @@ async def lifespan(app: FastAPI):
         # cleanly — a deploy, a crash, a quit desktop app. Close only flushes early.
         asyncio.create_task(sweep_idle_conversations(), name="memory-sweep"),
     ]
+    posthog_log_logger.info(
+        "backend_started",
+        extra={"event": "backend_started", "environment": _cfg.app_env},
+    )
     try:
         yield
     finally:
@@ -345,11 +353,53 @@ async def lifespan(app: FastAPI):
         for task in pruners:
             task.cancel()
         await asyncio.gather(*pruners, return_exceptions=True)
+        posthog_log_logger.info(
+            "backend_stopping",
+            extra={"event": "backend_stopping", "environment": _cfg.app_env},
+        )
+        if posthog_client:
+            posthog_client.flush()
+        if _posthog_log_provider:
+            _posthog_log_provider.force_flush()
+            _posthog_log_provider.shutdown()
         # Last: a still-draining session may write a final checkpoint, so the
         # pool outlives everything that could use it.
         set_checkpointer(None)
         await checkpoints.aclose()
 
+
+_posthog_missing_var = (
+    "POSTHOG_API_KEY" if not _cfg.posthog_api_key else "POSTHOG_HOST" if not _cfg.posthog_host else ""
+)
+if _posthog_missing_var and _cfg.app_env.lower() in {"development", "debug"}:
+    raise RuntimeError(
+        f"{_posthog_missing_var} variable required by PostHog is missing or un-configured, "
+        f"this causes events to be silently missed. This error stops appearing once "
+        f"{_posthog_missing_var} is configured"
+    )
+
+posthog_client = (
+    Posthog(
+        _cfg.posthog_api_key,
+        host=_cfg.posthog_host,
+        enable_exception_autocapture=True,
+        privacy_mode=False,
+    )
+    if not _posthog_missing_var
+    else None
+)
+if posthog_client:
+    atexit.register(posthog_client.shutdown)
+
+_posthog_log_provider = (
+    configure_posthog_logs(
+        host=_cfg.posthog_host,
+        project_token=_cfg.posthog_api_key,
+        environment=_cfg.app_env,
+    )
+    if posthog_client
+    else None
+)
 
 _openapi = "/openapi.json" if _cfg.expose_openapi_docs else None
 app = FastAPI(
@@ -361,6 +411,8 @@ app = FastAPI(
 )
 
 app.add_middleware(CORSMiddleware, **cors_kwargs(get_configs()))
+if posthog_client:
+    app.add_middleware(PosthogASGIMiddleware, posthog_client=posthog_client)
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 # Outside CORS and the docs gate, so a preflight answer and a docs 401 carry
 # the headers too; inside the access log, which stays outermost for timing.
