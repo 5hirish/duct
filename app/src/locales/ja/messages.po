@@ -4507,6 +4507,10 @@ msgstr "ブリーフを読み込み中"
 msgid "Loading the project"
 msgstr "プロジェクトを読み込み中"
 
+#: src/components/audit/AuditReport.jsx
+msgid "Loading the report"
+msgstr "レポートを読み込み中"
+
 #: src/app/(app)/insights/session/page.jsx
 msgid "Loading the thread"
 msgstr "スレッドを読み込み中"

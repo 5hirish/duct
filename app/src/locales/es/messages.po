@@ -4507,6 +4507,10 @@ msgstr "Cargando el informe"
 msgid "Loading the project"
 msgstr "Cargando el proyecto"
 
+#: src/components/audit/AuditReport.jsx
+msgid "Loading the report"
+msgstr "Cargando el reporte"
+
 #: src/app/(app)/insights/session/page.jsx
 msgid "Loading the thread"
 msgstr "Cargando el hilo"
