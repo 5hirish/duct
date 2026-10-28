@@ -6,8 +6,15 @@
     <atom:link href="https://getduct.ai/changelog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>What shipped in Duct — new connectors, agent and model upgrades, execution controls, and desktop builds.</description>
     <language>en</language>
-    <lastBuildDate>Wed, 30 Sep 2026 09:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 28 Oct 2026 09:00:00 GMT</lastBuildDate>
 
+    <item>
+      <title>Bring your MCP servers</title>
+      <link>https://getduct.ai/changelog/#2026-10-28</link>
+      <guid isPermaLink="false">duct-changelog-2026-10-28</guid>
+      <pubDate>Wed, 28 Oct 2026 09:00:00 GMT</pubDate>
+      <description>The insights chat can call tools on MCP servers you connect, from OpenSEO, Notion, Linear, PostHog, Railway and Cloudflare to any public server by its address, and asks before any call it has not been trusted to make. Claude Code, Codex or Cursor can draft a Duct project from your repo, onboarding reads your pitch deck and docs, and a brief keeps running when you leave the page. Each browser tab now keeps its own project, a fix from Danny Ward, Duct's first outside contributor.</description>
+    </item>
     <item>
       <title>See what you shipped</title>
       <link>https://getduct.ai/changelog/#2026-09-30</link>
