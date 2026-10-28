@@ -199,6 +199,13 @@ scratchpad.
   it.
 - **Green before merge, even with the bypass.** Admin bypass on the `main`
   ruleset exists for emergencies, not for impatience. Let the checks finish.
+- **A contributor's pull request is read, never run.** Review it against the
+  issue it closes (the seam the issue named, nothing more), approve its
+  waiting CI runs once the diff is read, post the review, and leave the merge
+  to the maintainer: `main` wants signed commits, a fork's are not, so it
+  goes in as a squash. Never check the branch out or run its code locally;
+  CI is the machine it runs on. The contributor-facing half is in
+  [`CONTRIBUTING.md`](CONTRIBUTING.md), "How a contribution is reviewed".
 - **Branches are short-lived and named for their type** (`feat/`, `fix/`,
   `chore/`, `docs/`, `ci/`, `test/`). When it merges, delete the branch and
   remove its worktree the same day. A merged branch left lying around is what
