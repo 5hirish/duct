@@ -2,11 +2,11 @@
   "version": "0.2.0",
   "compounds": [
     {
-      "name": "Duct: App + API + Phoenix (verbose)",
+      "name": "Duct: App + API + Jaeger (verbose)",
       "configurations": [
         "Backend: FastAPI (uvicorn verbose)",
         "App: dev server",
-        "Phoenix: OTEL traces UI (:6006)"
+        "Jaeger: traces UI (:16686)"
       ],
       "stopAll": true
     },
@@ -20,10 +20,10 @@
       "stopAll": true
     },
     {
-      "//": "The desktop stack with every agent turn, model call and tool call traced into Phoenix, and Phoenix's own MCP (.mcp.json → http://localhost:6006/mcp) up for an agent to query the traces. Phoenix is listed first so it is listening before the sidecar's first batch; the exporter would retry anyway, but the first turn's spans are the ones you launched this for. The API is the traced uvicorn variant so a browser tab against :8002 lands in the same trace store as the sidecar.",
-      "name": "Duct: Desktop + API + Phoenix",
+      "//": "The desktop stack with every agent turn, model call and tool call traced into Jaeger, and Jaeger's own MCP (.mcp.json → http://localhost:16686/api/ai/mcp/) up for an agent to query the traces. Jaeger is listed first so it is listening before the sidecar's first batch; the exporter would retry anyway, but the first turn's spans are the ones you launched this for. The API is the traced uvicorn variant so a browser tab against :8002 lands in the same trace store as the sidecar.",
+      "name": "Duct: Desktop + API + Jaeger",
       "configurations": [
-        "Phoenix: OTEL traces UI (:6006)",
+        "Jaeger: traces UI (:16686)",
         "Backend: FastAPI (uvicorn verbose)",
         "App: dev server",
         "Desktop: Duct Dev app (local env, traced)"
@@ -69,28 +69,28 @@
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
-      "//": "OTEL_EXPORTER_OTLP_ENDPOINT is what turns agent tracing on (agents/core/telemetry.py::configure_tracing). Without it the Phoenix compound starts a trace UI that receives nothing.",
+      "//": "OTEL_EXPORTER_OTLP_ENDPOINT is what turns agent tracing on (agents/core/telemetry.py::configure_tracing). Without it the Jaeger compound starts a trace UI that receives nothing.",
       "name": "Backend: FastAPI (uvicorn verbose)",
       "type": "node-terminal",
       "request": "launch",
       "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --timeout-graceful-shutdown 10 --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend",
-      "env": { "NODE_OPTIONS": "", "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:6006", "DUCT_LOG_FILE": "${workspaceFolder}/backend/dev.log" },
+      "env": { "NODE_OPTIONS": "", "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318", "DUCT_LOG_FILE": "${workspaceFolder}/backend/dev.log" },
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
-      "//": "Opens the traces UI in a Simple Browser tab once the server is actually listening, which is the whole reason you picked a Phoenix launch. Not the Live Preview extension: every livePreview command is `.atFile` and serves static workspace files from its own server, so it cannot front a running Python app. `openIntegratedBrowser` is the built-in equivalent — debug-server-ready matches this terminal by shell pid and opens the captured URL. The pattern reads the URL out of the banner's last line instead of capturing a port, because the banner prints 127.0.0.1 when the host is 0.0.0.0 and a hardcoded localhost would be a second place to fix. Zed ignores all of this: it reads .zed/debug.json, and serverReadyAction is VS Code only.",
-      "name": "Phoenix: OTEL traces UI (:6006)",
+      "//": "Opens the traces UI in a Simple Browser tab once the server is actually listening, which is the whole reason you picked a Jaeger launch. Not the Live Preview extension: every livePreview command is `.atFile` and serves static workspace files from its own server, so it cannot front a running server. `openIntegratedBrowser` is the built-in equivalent — debug-server-ready matches this terminal by shell pid and opens the captured URL. scripts/jaeger.sh prints its ready line only once the UI answers, which is what the pattern waits for. Zed ignores all of this: it reads .zed/debug.json, and serverReadyAction is VS Code only.",
+      "name": "Jaeger: traces UI (:16686)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "poetry run python -m phoenix.server.main serve",
-      "cwd": "${workspaceFolder}/backend",
+      "command": "./scripts/jaeger.sh",
+      "cwd": "${workspaceFolder}",
       "serverReadyAction": {
         "action": "openIntegratedBrowser",
-        "pattern": "open (https?://\\S+) to get started",
+        "pattern": "Jaeger ready: (https?://\\S+)",
         "uriFormat": "%s"
       },
-      "postDebugTask": "Phoenix: stop (6006)"
+      "postDebugTask": "Jaeger: stop (16686)"
     },
     {
       "name": "App: dev server",
@@ -125,11 +125,11 @@
       "cwd": "${workspaceFolder}/desktop"
     },
     {
-      "//": "The local-env launch above, with the sidecar exporting spans to Phoenix on :6006. A second `--env` is the only way in: launchd does not inherit this shell, and putting OTEL_EXPORTER_OTLP_ENDPOINT in .env.local would turn tracing on for every desktop launch and log an export failure per batch whenever Phoenix is not running. `open --env` may be repeated (it rejects only single-letter names). Part of the 'Duct: Desktop + API + Phoenix' compound; on its own, start Phoenix first or the spans go nowhere.",
+      "//": "The local-env launch above, with the sidecar exporting spans to Jaeger on :4318. A second `--env` is the only way in: launchd does not inherit this shell, and putting OTEL_EXPORTER_OTLP_ENDPOINT in .env.local would turn tracing on for every desktop launch and log an export failure per batch whenever Jaeger is not running. `open --env` may be repeated (it rejects only single-letter names). Part of the 'Duct: Desktop + API + Jaeger' compound; on its own, start Jaeger first or the spans go nowhere.",
       "name": "Desktop: Duct Dev app (local env, traced)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local\" --env \"OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:6006\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log · traces: http://localhost:6006'",
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local\" --env \"OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log · traces: http://localhost:16686'",
       "cwd": "${workspaceFolder}/desktop"
     },
     {

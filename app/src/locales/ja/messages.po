@@ -3199,8 +3199,12 @@ msgid "Email address to invite"
 msgstr "招待するメールアドレス"
 
 #: src/components/ProjectMembers.jsx
-msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>RESEND_API_KEY</0> to deliver them."
-msgstr "この環境ではメール配信が設定されていないため、招待は送信されずにサーバー側に記録されます。配信するには<0>RESEND_API_KEY</0>を設定してください。"
+msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>EMAIL_PROVIDER</0> and its settings to deliver them."
+msgstr "この環境ではメール配信が設定されていないため、招待は送信されずにサーバー側に記録されます。配信するには<0>EMAIL_PROVIDER</0>とその設定を行ってください。"
+
+#: src/components/ProjectMembers.jsx
+#~ msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>RESEND_API_KEY</0> to deliver them."
+#~ msgstr "この環境ではメール配信が設定されていないため、招待は送信されずにサーバー側に記録されます。配信するには<0>RESEND_API_KEY</0>を設定してください。"
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Empty dataset."
@@ -9166,8 +9170,12 @@ msgstr "この実行への接続が失われました。もう一度お試しく
 #~ msgstr "Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の目的であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否した場合でもDuctの動作は全く同じです。<0>プライバシーポリシー</0>"
 
 #: src/components/CookieConsent.jsx
-msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
-msgstr "PostHogとGoogle Analyticsを使って、どのページがサインアップにつながるか、Ductのどこで使いにくさを感じているかを確認しています。訪問の録画も含みますが、入力した内容はすべて隠されます。用途はこれだけで、広告ターゲティングも販売も一切ありません。拒否してもDuctはまったく同じように動作します。<0>プライバシーポリシー</0>"
+#~ msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "PostHogとGoogle Analyticsを使って、どのページがサインアップにつながるか、Ductのどこで使いにくさを感じているかを確認しています。訪問の録画も含みますが、入力した内容はすべて隠されます。用途はこれだけで、広告ターゲティングも販売も一切ありません。拒否してもDuctはまったく同じように動作します。<0>プライバシーポリシー</0>"
+
+#: src/components/CookieConsent.jsx
+msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+msgstr "PostHogを使って、どのページがサインアップにつながるか、Ductのどこで使いにくさを感じているかを確認しています。訪問の録画も含みますが、入力した内容はすべて隠されます。用途はこれだけで、広告ターゲティングも販売も一切ありません。拒否してもDuctはまったく同じように動作します。<0>プライバシーポリシー</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."

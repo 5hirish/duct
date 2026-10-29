@@ -39,7 +39,7 @@ export function CookieConsent({ onAccept, onDecline }) {
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           <Trans>
-            We use PostHog and Google Analytics to see which pages earn a signup and
+            We use PostHog to see which pages earn a signup and
             where Duct gets in your way, including replays of visits with everything
             you type hidden. That is the whole use — no ad targeting, nothing sold.
             Decline and Duct works exactly the same.{" "}

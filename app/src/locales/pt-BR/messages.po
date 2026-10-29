@@ -3199,8 +3199,12 @@ msgid "Email address to invite"
 msgstr "Endereço de e-mail para convidar"
 
 #: src/components/ProjectMembers.jsx
-msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>RESEND_API_KEY</0> to deliver them."
-msgstr "A entrega de e-mail não está configurada neste ambiente, então os convites são registrados no servidor em vez de enviados. Defina <0>RESEND_API_KEY</0> para entregá-los."
+msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>EMAIL_PROVIDER</0> and its settings to deliver them."
+msgstr "A entrega de e-mail não está configurada neste ambiente, então os convites são registrados no servidor em vez de enviados. Defina <0>EMAIL_PROVIDER</0> e suas configurações para entregá-los."
+
+#: src/components/ProjectMembers.jsx
+#~ msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>RESEND_API_KEY</0> to deliver them."
+#~ msgstr "A entrega de e-mail não está configurada neste ambiente, então os convites são registrados no servidor em vez de enviados. Defina <0>RESEND_API_KEY</0> para entregá-los."
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Empty dataset."
@@ -9166,8 +9170,12 @@ msgstr "Perdemos a conexão com esta execução. Por favor, tente novamente."
 #~ msgstr "Usamos o Google Analytics para ver quais páginas geram um cadastro. Esse é o único uso — sem segmentação de anúncios, sem perfis, nada vendido. Recuse e o Duct se comporta exatamente da mesma forma. <0>Política de Privacidade</0>"
 
 #: src/components/CookieConsent.jsx
-msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
-msgstr "Usamos o PostHog e o Google Analytics para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo gravações de visitas com tudo o que você digita oculto. Esse é o único uso — sem segmentação de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma. <0>Política de Privacidade</0>"
+#~ msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "Usamos o PostHog e o Google Analytics para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo gravações de visitas com tudo o que você digita oculto. Esse é o único uso — sem segmentação de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma. <0>Política de Privacidade</0>"
+
+#: src/components/CookieConsent.jsx
+msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+msgstr "Usamos o PostHog para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo gravações de visitas com tudo o que você digita oculto. Esse é o único uso — sem segmentação de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma. <0>Política de Privacidade</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."

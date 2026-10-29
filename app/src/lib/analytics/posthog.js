@@ -18,7 +18,7 @@
  *   replay: the shell sets nothing and asks nothing (privacy policy), so its
  *   Preferences switch is the whole consent story there.
  *
- * Safe inside the desktop shell, unlike `gtm`: the shell's IPC trusts every
+ * Safe inside the desktop shell, unlike a tag manager: the shell's IPC trusts every
  * script on this origin, and this provider runs only code bundled from this
  * repository. The `no-external` build never loads a script from PostHog —
  * no remote config scripts, no site apps, no toolbar — which also keeps the

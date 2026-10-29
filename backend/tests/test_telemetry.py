@@ -200,13 +200,13 @@ def test_endpoint_builds_a_batching_otlp_http_exporter_at_the_traces_path():
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-    provider = t.configure_tracing("http://localhost:6006/", environment="test")
+    provider = t.configure_tracing("http://localhost:4318/", environment="test")
     assert provider is not None
     processors = provider._active_span_processor._span_processors
     assert len(processors) == 1 and isinstance(processors[0], BatchSpanProcessor)
     exporter = processors[0].span_exporter
     assert isinstance(exporter, OTLPSpanExporter)
-    assert exporter._endpoint == "http://localhost:6006/v1/traces"
+    assert exporter._endpoint == "http://localhost:4318/v1/traces"
     attrs = provider.resource.attributes
     assert attrs["service.name"] == t.SERVICE_NAME
     assert attrs["deployment.environment"] == "test"
@@ -220,9 +220,9 @@ def test_endpoint_builds_a_batching_otlp_http_exporter_at_the_traces_path():
     full.shutdown()
 
 
-def test_spans_carry_the_phoenix_kind():
-    """The OpenInference kind is what makes the local trace UI a table
-    rather than a list; a backend that does not know it ignores it."""
+def test_spans_carry_the_openinference_kind():
+    """The OpenInference kind is what LLM trace viewers group by; a backend
+    that does not know it, Jaeger included, ignores it."""
     with t.model_span(provider="openai", model="gpt-x"):
         pass
     with t.model_span(provider="openai", model="gpt-x", operation=t.OP_INVOKE_AGENT):
