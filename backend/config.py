@@ -341,8 +341,8 @@ class Configs(BaseSettings):
         validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"),
     )
     # Where the agent's OpenTelemetry spans go (agents/core/telemetry.py).
-    # The standard OTel variable name, so Phoenix locally and a collector in
-    # production are the same setting. Unset means tracing is off.
+    # The standard OTel variable name, so Jaeger locally (scripts/jaeger.sh)
+    # and a collector in production are the same setting. Unset means tracing is off.
     otel_exporter_otlp_endpoint: str = ""
 
     model_config = SettingsConfigDict(

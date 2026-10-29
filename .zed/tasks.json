@@ -45,10 +45,9 @@
   {
     // OTEL_EXPORTER_OTLP_ENDPOINT on the API is what fills this; without it
     // the UI comes up and receives nothing.
-    "label": "Phoenix: OTEL traces UI (:6006)",
-    "command": "poetry",
-    "args": ["run", "python", "-m", "phoenix.server.main", "serve"],
-    "cwd": "$ZED_WORKTREE_ROOT/backend",
+    "label": "Jaeger: traces UI (:16686)",
+    "command": "./scripts/jaeger.sh",
+    "cwd": "$ZED_WORKTREE_ROOT",
     "allow_concurrent_runs": false
   },
   {
@@ -117,9 +116,9 @@
     "hide": "on_success"
   },
   {
-    "label": "Phoenix: stop (6006)",
+    "label": "Jaeger: stop (16686)",
     "command": "./scripts/dev_stop.sh",
-    "args": ["phoenix"],
+    "args": ["jaeger"],
     "cwd": "$ZED_WORKTREE_ROOT",
     "reveal": "no_focus",
     "hide": "on_success"

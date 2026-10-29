@@ -574,7 +574,7 @@ const MENU_RELOAD: &str = "view:reload";
 #[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
 const MENU_DEVTOOLS: &str = "view:devtools";
 #[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
-const MENU_PHOENIX: &str = "window:phoenix";
+const MENU_TRACES: &str = "window:traces";
 #[cfg(desktop)]
 const MENU_ZOOM_IN: &str = "view:zoom-in";
 #[cfg(desktop)]
@@ -617,25 +617,13 @@ fn next_zoom(current: u32, zoom_in: bool) -> u32 {
     }
 }
 
-/// Where the dev build's "Open Phoenix" item goes: the trace UI the sidecar
-/// exports to when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`open --env` in the
-/// launch config). Read from that variable so the menu and the exporter can
-/// never point at two different collectors, with the launch config's port as
-/// the fallback for a shell started without it.
+/// Where the dev build's "Open Jaeger Traces" item goes: the UI that
+/// `scripts/jaeger.sh` serves. Not derived from `OTEL_EXPORTER_OTLP_ENDPOINT`,
+/// as it was when Phoenix took spans and served its UI on one port: Jaeger
+/// takes spans on 4318 and serves the UI on 16686, so the exporter's address
+/// says nothing about the UI's.
 #[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
-const PHOENIX_DEFAULT_URL: &str = "http://localhost:6006";
-#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
-const OTLP_TRACES_PATH: &str = "/v1/traces";
-
-#[cfg(all(desktop, any(debug_assertions, feature = "devtools")))]
-fn phoenix_url() -> String {
-    std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
-        .ok()
-        .map(|raw| raw.trim().trim_end_matches('/').to_string())
-        .filter(|url| !url.is_empty())
-        .map(|url| url.trim_end_matches(OTLP_TRACES_PATH).to_string())
-        .unwrap_or_else(|| PHOENIX_DEFAULT_URL.to_string())
-}
+const TRACES_UI_URL: &str = "http://localhost:16686";
 #[cfg(desktop)]
 const MENU_HOME: &str = "help:home";
 #[cfg(desktop)]
@@ -891,8 +879,8 @@ fn install_app_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
         window_menu.append(&PredefinedMenuItem::separator(app)?)?;
         window_menu.append(&MenuItem::with_id(
             app,
-            MENU_PHOENIX,
-            "Open Phoenix Traces",
+            MENU_TRACES,
+            "Open Jaeger Traces",
             true,
             None::<&str>,
         )?)?;
@@ -935,8 +923,8 @@ fn handle_menu_event(app: &tauri::AppHandle, event: tauri::menu::MenuEvent) {
     // Same rule as Help: a trace UI belongs in a real browser with tabs, not
     // in the product's window.
     #[cfg(any(debug_assertions, feature = "devtools"))]
-    if id == MENU_PHOENIX {
-        let _ = app.opener().open_url(phoenix_url(), None::<&str>);
+    if id == MENU_TRACES {
+        let _ = app.opener().open_url(TRACES_UI_URL, None::<&str>);
         return;
     }
 
