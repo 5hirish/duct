@@ -7831,12 +7831,12 @@ msgid "2. Changes Duct Makes on Your Behalf"
 msgstr "2. Alterações que o Duct Faz em Seu Nome"
 
 #: privacy.html
-msgid "3 months"
-msgstr "3 meses"
-
-#: privacy.html
 msgid "3. How We Use Google User Data"
 msgstr "3. Como Usamos os Dados de Usuário do Google"
+
+#: privacy.html
+msgid "30 days"
+msgstr "30 dias"
 
 #: privacy.html
 msgid "4. Limited Use of Google User Data"
@@ -12186,6 +12186,9 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#~ msgid "3 months"
+#~ msgstr "3 meses"
 
 #~ msgid ""
 #~ "No — usage events, session replays with inputs hidden, error reports and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"

@@ -7574,12 +7574,12 @@ msgid "2. Changes Duct Makes on Your Behalf"
 msgstr "2. Ductがお客様に代わって行う変更"
 
 #: privacy.html
-msgid "3 months"
-msgstr "3ヶ月"
-
-#: privacy.html
 msgid "3. How We Use Google User Data"
 msgstr "3. Googleユーザーデータの使用方法"
+
+#: privacy.html
+msgid "30 days"
+msgstr "30日間"
 
 #: privacy.html
 msgid "4. Limited Use of Google User Data"
@@ -11720,6 +11720,9 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid "3 months"
+#~ msgstr "3ヶ月"
 
 #~ msgid ""
 #~ "When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. <0>Error reports in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, error reports are part of analytics and follow your cookie choice."
