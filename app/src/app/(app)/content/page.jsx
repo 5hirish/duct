@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, CopyPlus, Plus } from "lucide-react";
@@ -13,9 +13,7 @@ import {
 } from "@/lib/contentApi";
 import { getActiveProjectId, getActiveProject } from "@/lib/projects";
 import BrandContextForm from "@/components/content/BrandContextForm";
-import DiscoverPage from "@/components/content/DiscoverPage";
 import AccountsTab from "@/components/content/AccountsTab";
-import AnalyticsView from "@/components/content/AnalyticsView";
 import FormatLibrary from "@/components/content/FormatLibrary";
 import StyleGallery from "@/components/content/StyleGallery";
 import PostCard from "@/components/content/PostCard";
@@ -29,6 +27,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DRAFT_CHANNELS } from "@/lib/contentEnums";
+
+// One tab shows at a time and the hub opens on the plan. Analytics brings
+// Recharts and Discover is the largest tab, so neither is downloaded until
+// someone opens it.
+const AnalyticsView = lazy(() => import("@/components/content/AnalyticsView"));
+const DiscoverPage = lazy(() => import("@/components/content/DiscoverPage"));
 
 const TABS = ["plan", "posts", "analytics", "discover", "library", "brand", "accounts"];
 
@@ -74,7 +78,7 @@ export default function ContentLandingPage() {
 
   if (!projectId) {
     return (
-      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4" role="status" aria-label={t`Loading`}>
+      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]" role="status" aria-label={t`Loading`}>
         {[0, 1, 2, 3].map((i) => (
           <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
         ))}
@@ -92,13 +96,15 @@ export default function ContentLandingPage() {
       </header>
 
       <nav className="border-b border-border/60 mb-6">
-        <div className="flex items-center gap-1">
+        {/* Seven tabs are ~500px of text: on a phone, or a tablet with the
+            sidebar open, they scroll in place instead of widening the page. */}
+        <div className="flex items-center gap-1 overflow-x-auto">
           {TABS.map((id) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
-              className={`px-3 py-2 text-sm capitalize transition-colors border-b-2 -mb-px ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 text-sm capitalize transition-colors border-b-2 -mb-px ${
                 tab === id
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -112,10 +118,12 @@ export default function ContentLandingPage() {
 
       {tab === "plan"      && <PlanTab      projectId={projectId} />}
       {tab === "posts"     && <PostsTab     projectId={projectId} />}
-      {tab === "analytics" && (
-        <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
-      )}
-      {tab === "discover"  && <DiscoverPage projectId={projectId} />}
+      <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+        {tab === "analytics" && (
+          <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
+        )}
+        {tab === "discover"  && <DiscoverPage projectId={projectId} />}
+      </Suspense>
       {tab === "library"   && <LibraryTab   projectId={projectId} />}
       {tab === "brand"     && <BrandTab     projectId={projectId} />}
       {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
@@ -278,7 +286,7 @@ function PostsTab({ projectId }) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
         {[0, 1, 2, 3].map((i) => (
           <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
         ))}
@@ -330,7 +338,7 @@ function PostsTab({ projectId }) {
           <Trans>No {filterLabel} posts.</Trans>
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
           {visible.map((p) => <PostCard key={p.id} post={p} />)}
         </div>
       )}

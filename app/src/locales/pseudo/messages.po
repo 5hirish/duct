@@ -4501,6 +4501,10 @@ msgstr ""
 msgid "Loading the project"
 msgstr ""
 
+#: src/components/audit/AuditReport.jsx
+msgid "Loading the report"
+msgstr ""
+
 #: src/app/(app)/insights/session/page.jsx
 msgid "Loading the thread"
 msgstr ""

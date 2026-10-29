@@ -79,7 +79,9 @@ function PinButton({ pinned, onToggle, label }) {
         "rounded p-0.5 transition-opacity",
         pinned
           ? "text-brand opacity-100"
-          : "text-muted-foreground opacity-0 group-hover:opacity-70 focus-visible:opacity-100"
+          // Revealed by hover, so shown outright where there is none (touch),
+          // the same rule RowMeta follows in the transcript.
+          : "text-muted-foreground opacity-0 group-hover:opacity-70 focus-visible:opacity-100 [@media(hover:none)]:opacity-70"
       )}
     >
       <Pin className="size-3.5" fill={pinned ? "currentColor" : "none"} />

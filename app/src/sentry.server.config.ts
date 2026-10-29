@@ -1,5 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
+import { TRACES_SAMPLE_RATE } from "./sentry.sampling";
+
 const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 
 /**
@@ -35,7 +37,7 @@ if (appEnv !== "local" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
     dataCollection: {
       httpHeaders: { request: { deny: [...SENSITIVE_HEADERS] } },
     },
-    tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.5,
+    tracesSampleRate: TRACES_SAMPLE_RATE,
     // No profiling here, deliberately. Node profiling needs
     // `@sentry/profiling-node`, which is a native V8 addon, and this app
     // deploys to Cloudflare Workers via OpenNext — workerd cannot load one.

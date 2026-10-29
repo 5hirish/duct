@@ -13,6 +13,13 @@
   min-height: 100dvh;
 }
 
+/* The server renders this page for everyone; a member is on their way into the
+   app and should not watch it flash. Set before paint by lib/sessionHint.js,
+   dropped by the page if it decides to stay. */
+html[data-session="member"] .landing-split {
+  visibility: hidden;
+}
+
 /* ── Sign in (left, narrow, dark — the returning-user path) ─────────── */
 .landing-auth {
   background: var(--navy);

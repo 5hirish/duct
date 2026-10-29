@@ -1,31 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Trans } from "@lingui/react/macro";
-import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import js from "react-syntax-highlighter/dist/cjs/languages/prism/javascript";
-import markup from "react-syntax-highlighter/dist/cjs/languages/prism/markup";
-import json from "react-syntax-highlighter/dist/cjs/languages/prism/json";
-import css from "react-syntax-highlighter/dist/cjs/languages/prism/css";
-import bash from "react-syntax-highlighter/dist/cjs/languages/prism/bash";
-import python from "react-syntax-highlighter/dist/cjs/languages/prism/python";
-import typescript from "react-syntax-highlighter/dist/cjs/languages/prism/typescript";
+import oneDark from "react-syntax-highlighter/dist/esm/styles/prism/one-dark";
 
-SyntaxHighlighter.registerLanguage("javascript", js);
-SyntaxHighlighter.registerLanguage("js", js);
-SyntaxHighlighter.registerLanguage("jsx", js);
-SyntaxHighlighter.registerLanguage("html", markup);
-SyntaxHighlighter.registerLanguage("xml", markup);
-SyntaxHighlighter.registerLanguage("json", json);
-SyntaxHighlighter.registerLanguage("css", css);
-SyntaxHighlighter.registerLanguage("bash", bash);
-SyntaxHighlighter.registerLanguage("sh", bash);
-SyntaxHighlighter.registerLanguage("shell", bash);
-SyntaxHighlighter.registerLanguage("python", python);
-SyntaxHighlighter.registerLanguage("py", python);
-SyntaxHighlighter.registerLanguage("typescript", typescript);
-SyntaxHighlighter.registerLanguage("ts", typescript);
+// Loaded on the first code block, not with the chat pane: most replies have
+// none, and the highlighter plus its grammars outweighs the rest of the pane.
+const HighlightedCode = lazy(() => import("./HighlightedCode"));
+
+// The theme's own box, so the plain fallback and the highlighted block are
+// the same size and only the token colours arrive late.
+const PRE_STYLE = oneDark['pre[class*="language-"]'];
 
 /**
  * Syntax-highlighted code block with language label and copy button.
@@ -35,6 +20,13 @@ SyntaxHighlighter.registerLanguage("ts", typescript);
 export function CodeBlock({ language, children, compact = false }) {
   const [copied, setCopied] = useState(false);
   const code = String(children).replace(/\n$/, "");
+  const customStyle = {
+    margin: 0,
+    borderRadius: 0,
+    fontSize: compact ? "10px" : "12px",
+    lineHeight: compact ? "1.5" : "1.6",
+    padding: compact ? "10px 12px" : "14px 16px",
+  };
 
   function handleCopy() {
     navigator.clipboard.writeText(code).catch(() => {});
@@ -57,20 +49,15 @@ export function CodeBlock({ language, children, compact = false }) {
           {copied ? <Trans>✓ copied</Trans> : <Trans>copy</Trans>}
         </button>
       </div>
-      <SyntaxHighlighter
-        language={language || "text"}
-        style={oneDark}
-        customStyle={{
-          margin: 0,
-          borderRadius: 0,
-          fontSize: compact ? "10px" : "12px",
-          lineHeight: compact ? "1.5" : "1.6",
-          padding: compact ? "10px 12px" : "14px 16px",
-        }}
-        wrapLongLines
+      <Suspense
+        fallback={
+          <pre style={{ ...PRE_STYLE, ...customStyle, whiteSpace: "pre-wrap" }}>
+            <code>{code}</code>
+          </pre>
+        }
       >
-        {code}
-      </SyntaxHighlighter>
+        <HighlightedCode language={language} code={code} style={oneDark} customStyle={customStyle} />
+      </Suspense>
     </div>
   );
 }
