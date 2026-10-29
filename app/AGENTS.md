@@ -10,7 +10,7 @@ Next.js App Router report viewer and agent interface.
 - **State:** React Context (`InsightContext.js`) + component-level state only. No Redux/Zustand.
 - **HTTP:** Native `fetch` wrapped in `lib/api.js`. No type-safe client or OpenAPI generation.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
-- **Observability:** PostHog and GTM behind one swappable seam (`lib/analytics/`; `NEXT_PUBLIC_ANALYTICS_PROVIDER` picks, unset runs every provider whose variable is set: `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_GTM_ID`), gated on consent; Cloudflare Turnstile bot protection. Nothing outside `lib/analytics/` names a vendor.
+- **Observability:** PostHog behind a swappable seam (`lib/analytics/`; `NEXT_PUBLIC_ANALYTICS_PROVIDER` picks, unset runs every provider whose variable is set: `NEXT_PUBLIC_POSTHOG_KEY`), gated on consent. No tag manager: GTM and GA4 were removed in October 2026, because a container runs scripts configured outside this repository and the product measures itself with open-source tools; Cloudflare Turnstile bot protection. Nothing outside `lib/analytics/` names a vendor.
   PostHog runs in two modes on one client (`lib/analytics/posthog.js`). **Errors** starts for every browser session from `instrumentation-client.ts`: early `error`/`unhandledrejection` listeners at once, the library on idle, in-memory persistence, so it stores nothing and needs no banner; error boundaries call `reportError`. **Full** starts on consent: cookie across `.getduct.ai`, page views, autocapture, heatmaps, replay. In the desktop shell the Preferences switch (`lib/telemetry.js`) replaces both the banner and the errors-before-consent rule: off sends nothing at all, on runs full mode in memory and never records a replay. Three rules a change here must keep: the `no-external` build only (the shell's IPC trusts every script on this origin, and it keeps `script-src` at `'self'`); `lib/analytics/scrub.js` on every event (query strings and the `/invite/` and `/open/audit/` path tokens go); and the replay masks all text and blocks images, embeds and canvases, plus `mask_all_text` on clicks, because a human watching a replay of a customer's GA4 numbers breaks Google's Limited Use rule. Server render errors go through `instrumentation.ts` → `lib/analytics/server.js` (posthog-node). Events reach PostHog through the same-origin `/ingest` rewrite in `next.config.mjs`, which the marketing site uses too.
 - **Overrides:** `package.json` forces `lodash-es` to ^4.18.1. `mermaid` 12.0.0 depends on `chevrotain` 11.1.2, which pins `lodash-es` 4.17.23 exactly, and that version carries a high advisory (code injection via `_.template`) and a moderate one (prototype pollution in `_.unset`/`_.omit`). Delete the override once `mermaid` moves to `chevrotain` 12 or later, which no longer uses lodash.
 
@@ -268,18 +268,18 @@ it is a claim about the code, not a way to quiet the check.
   for signed-out runs, mirrored from the profile rather than edited here
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
 - `lib/analytics/` — the seam. `index.js` selects a provider from
-  `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `gtm` when a container is
-  configured, else `none`); `gtm.js` is the only file that knows Google exists;
+  `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `posthog` when its key is
+  set, else `none`); `posthog.js` is the only file that knows the vendor;
   `none.js` is a complete implementation, not a stub. Adding a provider is one
   file plus a line in `PROVIDERS`. **Nothing outside this directory may
   reference a tag vendor** — that is what lets a self-host build measure nothing
   without editing our consent logic, and it mirrors
   `desktop/src-tauri/src/telemetry/` on the Rust side.
-- `ProductAnalytics` owns the flow. The desktop shell measures nothing and is
-  never asked: `gtm.isConfigured()` is false there, because the shell's IPC
-  trusts every script on this origin and a tag container exists to run scripts
-  configured outside this repository. The Preferences switch in
-  `lib/telemetry.js` governs crash reports alone.
+- `ProductAnalytics` owns the flow. The desktop shell is never asked: the
+  Preferences switch in `lib/telemetry.js` stands in for the banner there.
+  Never add a tag manager: the shell's IPC trusts every script on this origin,
+  and a tag container exists to run scripts configured outside this
+  repository.
 - `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
   `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
   `formatNumber`, `formatPercent`, `titleCase`, `formatTitle`, `capitalize`,

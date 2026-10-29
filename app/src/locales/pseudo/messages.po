@@ -9114,7 +9114,11 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/CookieConsent.jsx
-msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+#~ msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+#~ msgstr ""
+
+#: src/components/CookieConsent.jsx
+msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
 msgstr ""
 
 #: src/lib/agentSession.js

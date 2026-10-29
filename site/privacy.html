@@ -76,9 +76,6 @@
 </head>
 <body>
 
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
-
 <!-- NAV (shared: site/partials/nav-simple.html) -->
 <div data-duct-partial="/partials/nav-simple.html"></div>
 
@@ -190,7 +187,7 @@
 <li><strong>The app we distribute talks to our servers.</strong> It does not carry its own copy of Duct's backend. Your projects, briefs, agent memories, activity log, uploads and connector authorisations are stored by us, exactly as they are when you use Duct in a browser &mdash; which is also what lets you sign in on a second computer and find your work there. Sections 12 to 14 cover how we store, share and delete it.</li>
 <li><strong>Your AI provider keys stay on your machine.</strong> They live in your operating system's keychain, and are sent with a request only when a job needs to run. We never store them, and the option to save a key with us that the browser version offers is deliberately switched off in the desktop app.</li>
 <li><strong>Sign-in and connector authorisation open your system browser</strong> rather than an embedded window, so you keep your browser's own protections, and no credential is ever carried in the link that returns you to the app.</li>
-<li><strong>The desktop app sets no cookies, and is never going to ask you about them.</strong> It loads no Google Tag Manager and no Google Analytics at all. Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for.</li>
+<li><strong>The desktop app sets no cookies, and is never going to ask you about them.</strong> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for.</li>
 <li><strong>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</strong> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open &mdash; never your provider API keys, your data, or anything you generate. If you are signed in, both carry your account ID. If you build Duct yourself both are off by default instead, because then we are not the ones running it.</li>
 <li><strong>The desktop app never records a replay of your session.</strong> Session replay (section 11) exists only on our website and in the web app in a browser.</li>
 <li><strong>Update checks</strong> contact our release host to ask whether a newer version exists. This request reveals your IP address and the version you are running.</li>
@@ -218,7 +215,8 @@
 <h2>11. Other Information We Collect</h2>
 
 <h3>Usage data</h3>
-<p>We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through two tools: Google Analytics 4, loaded by Google Tag Manager, and PostHog. Both follow the cookie choice described below.</p>
+<p>We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through PostHog, which follows the cookie choice described below.</p>
+<p>We do not use Google Analytics, Google Tag Manager or any other tag manager. We stopped in October 2026, and our website deletes the cookies they set before then (<code>_ga</code>, <code>_gcl_au</code>) on your next visit.</p>
 <p>PostHog also records session replays: a reconstruction of the page and where you clicked, so we can watch where a visit went wrong. What a replay hides is hidden in your browser, before anything leaves it:</p>
 <ul>
 <li><strong>On our website,</strong> everything you type into a field.</li>
@@ -234,15 +232,12 @@
 
 <p>Analytics cookies are set only after you accept them. If you are in the EEA, the UK or Switzerland we ask before anything is set, and nothing but the strictly necessary entries below exists until you choose. Elsewhere analytics is on by default and you can turn it off at any time — the <strong>Cookie settings</strong> link in our footer, and in the account menu inside the app, reopens the choice on every page.</p>
 
-<p>Declining means neither Google Tag Manager nor PostHog is loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page.</p>
+<p>Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page.</p>
 
 <div class="legal-table-wrap">
 <table>
 <thead><tr><th>Cookie</th><th>Set by</th><th>Purpose</th><th>Expires</th></tr></thead>
 <tbody>
-<tr><td><code>_ga</code></td><td>Google Analytics 4</td><td>Distinguishes one visitor from another so a returning visit is not counted twice</td><td>2 years</td></tr>
-<tr><td><code>_ga_SXH5LYVTJ8</code></td><td>Google Analytics 4</td><td>Holds the state of the current session for our specific property</td><td>2 years</td></tr>
-<tr><td><code>_gcl_au</code></td><td>Google Tag Manager (Conversion Linker)</td><td>Attributes a signup to the ad or link that led to it</td><td>90 days</td></tr>
 <tr><td><code>ph_phc_…_posthog</code></td><td>PostHog</td><td>Distinguishes one visitor from another, and carries the same visit across <code>getduct.ai</code> and <code>app.getduct.ai</code> so it counts as one person, not two. PostHog may keep the same value in your browser's local storage</td><td>1 year</td></tr>
 <tr><td><code>duct_consent</code></td><td>Duct</td><td>Remembers your choice, so you are not asked on every page. Set on <code>getduct.ai</code> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it never asks (section 7). Strictly necessary — it exists whether you accept or decline</td><td>6 months, then we ask again</td></tr>
 <tr><td><code>duct_consent_region</code></td><td>Duct (session storage)</td><td>Caches the country your request arrived from, so we ask the right question without repeating the lookup. Strictly necessary</td><td>End of session</td></tr>
