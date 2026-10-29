@@ -70,6 +70,7 @@ const PROVIDER_LABELS = {
   google_genai: "Google",
   openrouter: "OpenRouter",
   xai: "xAI",
+  ollama: "Ollama",
 };
 
 export function providerLabel(key) {

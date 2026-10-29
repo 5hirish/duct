@@ -597,3 +597,54 @@ class FakeMcpServer:
                 yield self
 
         return run()
+
+
+class FakeSMTP:
+    """Stands in for ``smtplib.SMTP`` and ``SMTP_SSL`` in the email seam's SMTP
+    provider: records the conversation instead of opening a socket.
+
+    ``sessions`` is shared by both classes ``install`` patches in, one entry per
+    connection, so a test reads which class was opened, on which port, and what
+    was said, in order. ``fail_with`` makes the first command raise, the way a
+    refused login or a dropped connection would.
+    """
+
+    def __init__(self, fail_with: Exception | None = None):
+        self.sessions: list[dict] = []
+        self.fail_with = fail_with
+
+    def install(self, monkeypatch, module) -> None:
+        fake = self
+
+        class _Client:
+            implicit_tls = False
+
+            def __init__(self, host, port, timeout=None, context=None):  # noqa: ARG002
+                self.session = {"host": host, "port": port, "tls": self.implicit_tls, "calls": []}
+                fake.sessions.append(self.session)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+            def _record(self, name, *args):
+                if fake.fail_with is not None:
+                    raise fake.fail_with
+                self.session["calls"].append((name, *args))
+
+            def starttls(self, context=None):  # noqa: ARG002
+                self._record("starttls")
+
+            def login(self, user, password):
+                self._record("login", user, password)
+
+            def send_message(self, message):
+                self._record("send_message", message)
+
+        class _ClientSSL(_Client):
+            implicit_tls = True
+
+        monkeypatch.setattr(module.smtplib, "SMTP", _Client)
+        monkeypatch.setattr(module.smtplib, "SMTP_SSL", _ClientSSL)

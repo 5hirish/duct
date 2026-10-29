@@ -26,7 +26,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   **The consolidation is finished.** Per the engine consolidation review
   (duct-cloud, private), every agent moved to one harness — LangChain 1.x /
   `deepagents` — because customers bring their own model (OpenAI / Gemini /
-  Claude / xAI / OpenRouter) and the Claude Agent SDK was Anthropic-only by
+  Claude / xAI / OpenRouter, or an Ollama server) and the Claude Agent SDK was Anthropic-only by
   design (upstream issue #410, closed `not planned`). Insights
   (`agents/insights/v1/runner.py`) and content (`agents/content/v1/runner.py`)
   are `deepagents` sessions; audit's runner is on the `create_agent` rung
@@ -207,9 +207,13 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   it, and `tests/test_content_access.py` asserts that property directly.
 - **Email:** `service/email/` — one seam (`send_email`) over swappable providers in
   `service/email/providers/`, the only place a mail vendor is named. `EMAIL_PROVIDER`
-  picks one; unset takes the first with credentials (Cloudflare, then Resend) and
+  picks one; unset takes the first with credentials (Cloudflare, then SMTP) and
   falls back to `console`, which logs, so dev/CI/self-host need no vendor account.
   Same shape as the app's analytics seam, for the same reason: a fork swaps one file.
+  SMTP is the open-standard provider — any mail server or vendor relay — and the
+  way to read local mail as it would arrive: the "Mailpit" editor task (`brew
+  install mailpit`) catches it on `:1025` with an inbox at `http://localhost:8025`.
+  Resend's own provider was removed in favour of it (#460); Resend takes SMTP too.
 - **Observability:** PostHog for product events, error tracking and AI call
   metadata, behind one seam (`service/analytics.py`, the only file that
   imports PostHog): routes call `capture_event`, `get_current_user` attributes
@@ -221,17 +225,16 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   `POSTHOG_ENABLE_LOCALHOST` is set. And OpenTelemetry tracing of every
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
-  it is unset. Locally that is Phoenix: the "Duct: App + API + Phoenix" and
-  "Duct: Desktop + API + Phoenix" launch compounds start it and point the
-  API (and, for the desktop one, the sidecar via a second `open --env`) at
-  `http://localhost:6006`, and every FetchData and verifier dispatch is a span
-  with its own latency. The spans carry `openinference.project.name: duct`, so
-  they land in Phoenix's **duct** project instead of in `default` beside every
-  other local project's traces; Phoenix creates it on the first span, and any
-  other OTLP backend ignores the attribute. Phoenix's own MCP server is
-  registered in `.mcp.json`
-  at `/mcp` on the same port, so an agent can read the traces of a slow run
-  instead of querying the transcript table. Every log line carries a request
+  it is unset. Locally that is Jaeger (`scripts/jaeger.sh`, Apache-2.0; it
+  replaced Phoenix, whose Elastic licence is not open source): the "Duct: App +
+  API + Jaeger" and "Duct: Desktop + API + Jaeger" launch compounds start it
+  and point the API (and, for the desktop one, the sidecar via a second
+  `open --env`) at `http://localhost:4318`, and every FetchData and verifier
+  dispatch is a span with its own latency. Jaeger reads the `gen_ai.*`
+  attributes, lists the spans under the `duct-backend` service, and keeps them
+  on disk for a week. Its MCP server is registered in `.mcp.json` at
+  `/api/ai/mcp/` on the UI port (16686), so an agent can read the traces of a
+  slow run instead of querying the transcript table. Every log line carries a request
   id (`[a1b2c3d4]`, from `X-Request-Id` when the caller sends one, minted
   otherwise, echoed in the response); an agent run logs under the id of the
   request that created its session, so one grep follows one press of Send.
@@ -434,7 +437,7 @@ Postgres `DATABASE_URL` names.
 - **Query layer:** DuckDB + Ibis
 - **Transforms:** dbt
 - **Orchestration:** Dagster
-- **Delivery:** Resend (email) + Slack webhooks
+- **Delivery:** email through `service/email/` + Slack webhooks
 
 ## Product-shape constraints
 
@@ -1181,6 +1184,19 @@ don't fit.
   auth headers, query encoding and pagination stay vendor-side. Not for
   `service/apify` or `service/post_bridge` — those are async, hold a
   long-lived client, and need no retry.
+- `service/ollama.py` + `Provider.OLLAMA` — open models on the instance's own
+  Ollama server (`OLLAMA_BASE_URL`), the one chat provider with no key: the
+  server is the credential (`ProviderKey.source == "instance"`), reachable on
+  hosted and local alike once the operator sets it, and only when it holds a
+  model that calls tools. Ids are namespaced `ollama:<tag>`, checked before
+  `provider_of`'s "/" test because a Hugging Face tag has one. Three rules,
+  held by `tests/test_ollama_provider.py`: the pickers list what the server
+  holds (`/api/tags`, filtered on `/api/show`'s `tools` capability), never a
+  catalogue; every call sends `num_ctx` (`OLLAMA_CONTEXT_LENGTH`, held to the
+  model's trained length), because Ollama's own 4,096-token default silently
+  cuts the system prompt and tools; and `reasoning` goes only to a model that
+  thinks, since Ollama refuses it from one that cannot. A local model is
+  priced at zero, not unknown.
 - `service/vendor_keys.py` — a third-party key each user brings for
   themselves (PostBridge, Apify). A request spends the key its project's
   owner saved; the instance's env key only where `allow_server_provider_keys()`

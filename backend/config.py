@@ -249,13 +249,22 @@ class Configs(BaseSettings):
     # a hosted instance, where it would pay for every signup's scraping.
     apify_api_key: str = ""
 
-    # Which email provider delivers everything: "cloudflare", "resend" or
+    # Which email provider delivers everything: "cloudflare", "smtp" or
     # "console". Empty picks the first one whose credentials are present, and
     # "console" when none are — so local dev, CI and a self-hosted install run
     # every mail flow with no vendor account, logging what they would have sent.
     # See service/email/sender.py; adding a provider does not touch this file.
     email_provider: str = ""
-    resend_api_key: str = ""
+    # SMTP, the open-standard provider (service/email/providers/smtp.py): any
+    # mail server or vendor relay, or Mailpit on :1025 with security "none" to
+    # catch mail locally. Port 0 means the security mode's standard port
+    # (587, 465 or 25). Security is "starttls" (empty means this), "tls" for
+    # implicit TLS, or "none", which is plain text and only for this machine.
+    smtp_host: str = ""
+    smtp_port: int = Field(default=0, ge=0, le=65535)
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_security: str = ""
     # Default From address. Must be on a domain verified with the active
     # provider, otherwise sends are rejected.
     email_from: str = Field(default="noreply@getduct.ai")
@@ -309,10 +318,21 @@ class Configs(BaseSettings):
     # that, because the provider was ChatOpenAI aimed elsewhere; it is now
     # ChatOpenRouter, which speaks OpenRouter's API rather than plain
     # chat-completions. A self-hosted router (LiteLLM, Bifrost, Portkey) or a
-    # local model server (Ollama http://localhost:11434/v1, vLLM, llama.cpp) is
-    # a new GATEWAY_BASE_URL entry in agents/models.py — which takes the
-    # OpenAI-shape branch — plus its own key field here.
+    # local model server (vLLM, llama.cpp) is a new GATEWAY_BASE_URL entry in
+    # agents/models.py — which takes the OpenAI-shape branch — plus its own key
+    # field here. Ollama has a provider of its own, below.
     openrouter_base_url: str = ""
+    # An Ollama server this instance runs open models on (agents/models.py,
+    # Provider.OLLAMA), e.g. http://localhost:11434. Not a key: whoever sets it
+    # offers that server to every user of the instance. Empty means no Ollama,
+    # and nothing probes for one; the hosted deployment leaves it empty.
+    ollama_base_url: str = ""
+    # The context Duct asks Ollama to load, and the window it budgets a thread
+    # in. Ollama's own default is 4,096 tokens on a machine without a large GPU,
+    # which silently cuts Duct's system prompt and tools short; a model trained
+    # on less is held to its own length. Same name as Ollama's server setting,
+    # because it means the same thing.
+    ollama_context_length: int = Field(default=32_768, ge=4_096, le=1_048_576)
     # Engine selection. One engine ("v1") since the Claude Agent SDK was
     # removed; the field stays because stored preferences and requests still
     # carry the string.
@@ -332,8 +352,8 @@ class Configs(BaseSettings):
         validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"),
     )
     # Where the agent's OpenTelemetry spans go (agents/core/telemetry.py).
-    # The standard OTel variable name, so Phoenix locally and a collector in
-    # production are the same setting. Unset means tracing is off.
+    # The standard OTel variable name, so Jaeger locally (scripts/jaeger.sh)
+    # and a collector in production are the same setting. Unset means tracing is off.
     otel_exporter_otlp_endpoint: str = ""
 
     model_config = SettingsConfigDict(

@@ -59,8 +59,9 @@ import { NATIVE_SOURCE } from "@/lib/connectorSource";
 import PauseCard from "@/components/workspace/PauseCard";
 import { AgentEvent } from "@/lib/agentEvents";
 import ProviderCard from "@/components/connections/ProviderCard";
+import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
 import { LOGOS } from "@/components/connections/logos";
-import { PROVIDERS } from "@/lib/providerKeys";
+import { INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
@@ -1541,6 +1542,27 @@ export const SCENES = [
           provider={PROVIDERS.find((p) => p.id === "anthropic")}
           logo={LOGO}
           status={{ id: "anthropic", source: "none", reachable: false, stored: false, key_mismatch: true }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "instance-provider",
+    state: "ready, and not answering",
+    group: "InstanceProviderCard",
+    title: "Ollama: offered by the server, no key",
+    note: "Two tiles for one provider in its two states. Ready reads On this server in the info tone, not green: green is for a key the reader put there. Open the grey one: the two steps name the two ways it fails, and Check again asks the server which (in the preview there is no backend, so it answers with the request's own error). Neither dialog has a key field or a Remove button; nothing here is the reader's to store.",
+    render: () => (
+      <div className="conn-grid">
+        <InstanceProviderCard
+          provider={INSTANCE_PROVIDERS[0]}
+          logo={LOGOS.ollama}
+          status={{ id: "ollama", source: "instance", reachable: true, configured: true, keyless: true }}
+        />
+        <InstanceProviderCard
+          provider={INSTANCE_PROVIDERS[0]}
+          logo={LOGOS.ollama}
+          status={{ id: "ollama", source: "none", reachable: false, configured: true, keyless: true }}
         />
       </div>
     ),

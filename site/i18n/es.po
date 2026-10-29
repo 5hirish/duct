@@ -8407,10 +8407,6 @@ msgid "No"
 msgstr "No"
 
 #: privacy.html
-msgid "No — email address and report content only"
-msgstr "No — solo dirección de correo electrónico y contenido del informe"
-
-#: privacy.html
 msgid ""
 "No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
 msgstr ""
@@ -8485,10 +8481,6 @@ msgid ""
 "Replays never include your browser's console logs. We do not record keystrokes or form contents."
 msgstr ""
 "Las repeticiones nunca incluyen los registros de la consola de tu navegador. No registramos pulsaciones de teclas ni contenido de formularios."
-
-#: privacy.html
-msgid "Resend"
-msgstr "Reenviar"
 
 #: privacy.html
 msgid ""
@@ -8614,11 +8606,6 @@ msgstr ""
 msgid "To report on traffic, conversion and retention alongside your other tools"
 msgstr ""
 "Para informar sobre tráfico, conversión y retención junto con tus otras herramientas"
-
-#: privacy.html
-msgid "Transactional email (report delivery, project invitations)"
-msgstr ""
-"Correo electrónico transaccional (entrega de informes, invitaciones a proyectos)"
 
 #: privacy.html
 msgid "Until you ask us to delete them"
@@ -12185,6 +12172,16 @@ msgstr "← Volver"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Empezar de nuevo"
+
+#~ msgid "No — email address and report content only"
+#~ msgstr "No — solo dirección de correo electrónico y contenido del informe"
+
+#~ msgid "Resend"
+#~ msgstr "Reenviar"
+
+#~ msgid "Transactional email (report delivery, project invitations)"
+#~ msgstr ""
+#~ "Correo electrónico transaccional (entrega de informes, invitaciones a proyectos)"
 
 #~ msgctxt "js"
 #~ msgid ""

@@ -8118,10 +8118,6 @@ msgid "No"
 msgstr "いいえ"
 
 #: privacy.html
-msgid "No — email address and report content only"
-msgstr "いいえ — メールアドレスとレポートコンテンツのみ"
-
-#: privacy.html
 msgid ""
 "No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
 msgstr ""
@@ -8194,10 +8190,6 @@ msgstr ""
 msgid ""
 "Replays never include your browser's console logs. We do not record keystrokes or form contents."
 msgstr "リプレイにはブラウザのコンソールログは含まれません。キー入力やフォームの内容は記録しません。"
-
-#: privacy.html
-msgid "Resend"
-msgstr "再送信"
 
 #: privacy.html
 msgid ""
@@ -8311,10 +8303,6 @@ msgstr "有料パフォーマンスを報告し、お客様が承認した場合
 #: privacy.html
 msgid "To report on traffic, conversion and retention alongside your other tools"
 msgstr "他のツールと合わせて、トラフィック、コンバージョン、およびリテンションを報告するため"
-
-#: privacy.html
-msgid "Transactional email (report delivery, project invitations)"
-msgstr "トランザクションメール（レポート配信、プロジェクト招待）"
 
 #: privacy.html
 msgid "Until you ask us to delete them"
@@ -11689,6 +11677,15 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid "No — email address and report content only"
+#~ msgstr "いいえ — メールアドレスとレポートコンテンツのみ"
+
+#~ msgid "Resend"
+#~ msgstr "再送信"
+
+#~ msgid "Transactional email (report delivery, project invitations)"
+#~ msgstr "トランザクションメール（レポート配信、プロジェクト招待）"
 
 #~ msgctxt "js"
 #~ msgid ""

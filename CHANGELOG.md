@@ -24,6 +24,18 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+### Added
+
+- **Open models on your own Ollama.** A self-hosted Duct pointed at an Ollama
+  server runs on any model pulled there that can call tools, with no key and
+  no bill: pick one for a tier like any other model. Duct asks Ollama for a
+  context long enough for its prompts, where Ollama's own default would cut
+  them short.
+- **Mail through any SMTP server.** A self-hosted Duct sends invitations and
+  audit reports through its own mail server or any provider's SMTP relay, and
+  Mailpit catches local mail so a flow can be read as it would arrive. Resend's
+  dedicated integration is gone; Resend accepts SMTP too.
+
 ### Removed
 
 - **Google Tag Manager and GA4, from the site and the web app.** PostHog,

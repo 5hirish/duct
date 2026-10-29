@@ -30,6 +30,8 @@ from agents.engines import (
     preferred_video_model,
     PROVIDER_CONFIG_ATTR,
     Engine,
+    default_ollama_model,
+    ollama_ready,
     resolve_engine_model,
 )
 from agents.models import (
@@ -42,6 +44,7 @@ from agents.models import (
     ModelName,
     Provider,
     VideoModel,
+    ollama_model_id,
     provider_of,
 )
 from agents.tiers import (
@@ -109,6 +112,10 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
     Provider.XAI: (
         "xAI",
         "Grok models, and Grok's own image generation.",
+    ),
+    Provider.OLLAMA: (
+        "Ollama",
+        "Open models on this server's own Ollama. No key: whoever runs Duct offers it.",
     ),
 }
 
@@ -193,6 +200,28 @@ def providers_status(
     media_sources: dict[str, str] = {}
     for provider in Provider:
         label, description = _PROVIDER_LABELS.get(provider, (provider.value, ""))
+        if provider is Provider.OLLAMA:
+            # No key to hold, save or forget: the server either offers models
+            # that can run an agent or it does not. `configured` says whether
+            # the operator offered Ollama at all, so the settings page shows
+            # the tile only where it means something.
+            from service.ollama import server_url
+
+            ready = ollama_ready()
+            providers.append({
+                "id": provider.value,
+                "label": label,
+                "description": description,
+                "reachable": ready,
+                "source": "instance" if ready else "none",
+                "stored": False,
+                "key_mismatch": False,
+                "keyless": True,
+                "configured": bool(server_url()),
+                "engines": _engines_for(provider),
+            })
+            media_sources[provider.value] = "none"
+            continue
         # Not `bool(...)`: a supplied value that this provider cannot accept
         # is not a key, and calling it one is what made the Anthropic tile
         # green for a stale ChatGPT token.
@@ -234,6 +263,7 @@ def providers_status(
             # it could ever accept. Distinct from `source`, because the user
             # still has to go remove it even when a stored key is serving.
             "key_mismatch": bool(supplied) and not has_user,
+            "keyless": False,
             "engines": _engines_for(provider),
         })
     settings = get_model_settings(user.id if user else None)
@@ -323,6 +353,8 @@ def store_provider_key(
     this one, which answers with presence and nothing else.
     """
     provider = _provider_or_404(provider_id)
+    if provider is Provider.OLLAMA:
+        raise HTTPException(422, "Ollama takes no key. Set OLLAMA_BASE_URL on the server to offer one.")
     key = body.api_key.strip()
     if not key:
         raise HTTPException(422, "api_key must not be blank")
@@ -444,14 +476,35 @@ async def verify_provider_key(
     from service.provider_keys import stored_provider_keys
 
     provider = _provider_or_404(provider_id)
-    key = (user_keys.get(provider) or "").strip()
-    if not key:
-        key = (stored_provider_keys(db, user.id).get(provider) or "").strip()
-    if not key:
-        return {"ok": False, "code": VERIFY_MISSING_KEY, "detail": "No key supplied for this provider."}
+    if provider is Provider.OLLAMA:
+        # Nothing pasted to test: the question is whether the server answers
+        # and holds a model that can run an agent. Asked off the event loop,
+        # since the server's own client is synchronous.
+        from service.ollama import OllamaUnreachable, installed_models, server_url
 
-    picked = PROVIDER_TRIPLES.get(provider, {}).get(Tier.LIGHT)
-    model = resolve_engine_model(Engine.V1, provider, picked.value if picked else None)
+        url = server_url()
+        if not url:
+            return {"ok": False, "code": VERIFY_MISSING_KEY, "detail": "No Ollama server is set (OLLAMA_BASE_URL)."}
+        try:
+            models = await asyncio.to_thread(installed_models, url)
+        except OllamaUnreachable:
+            return {"ok": False, "code": VERIFY_UNREACHABLE, "detail": "The Ollama server did not answer."}
+        if not any(m.calls_tools for m in models):
+            return {
+                "ok": False,
+                "code": VERIFY_MODEL_ACCESS,
+                "detail": "No installed model calls tools. Pull one, for example `ollama pull qwen3`.",
+            }
+        key, model = "", await asyncio.to_thread(default_ollama_model)
+    else:
+        key = (user_keys.get(provider) or "").strip()
+        if not key:
+            key = (stored_provider_keys(db, user.id).get(provider) or "").strip()
+        if not key:
+            return {"ok": False, "code": VERIFY_MISSING_KEY, "detail": "No key supplied for this provider."}
+
+        picked = PROVIDER_TRIPLES.get(provider, {}).get(Tier.LIGHT)
+        model = resolve_engine_model(Engine.V1, provider, picked.value if picked else None)
 
     started = time.monotonic()
     try:
@@ -501,6 +554,19 @@ def models_catalogue() -> dict:
             "provider": provider.value,
             "tier_hint": (_MODEL_TIER_HINT.get(model.value) or Tier.STANDARD).value,
             "engines": _engines_for(provider),
+        })
+    # The instance's Ollama server lists its own: whatever is pulled there and
+    # calls tools, read from the server, so `ollama pull` is how a model joins
+    # the picker. A model that cannot call tools could not run any Duct agent.
+    from service.ollama import tool_models
+
+    for local in tool_models():
+        models.append({
+            "id": ollama_model_id(local.tag),
+            "label": f"{local.tag} · {local.parameter_size}" if local.parameter_size else local.tag,
+            "provider": Provider.OLLAMA.value,
+            "tier_hint": Tier.STANDARD.value,
+            "engines": _engines_for(Provider.OLLAMA),
         })
 
     return {
@@ -582,10 +648,16 @@ def models_preview(
     reachable = {
         provider
         for provider in Provider
-        if is_usable_credential(provider, user_keys.get(provider) or "")
-        or provider in stored
-        or (server_usable and getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), ""))
+        if provider is not Provider.OLLAMA
+        and (
+            is_usable_credential(provider, user_keys.get(provider) or "")
+            or provider in stored
+            or (server_usable and getattr(cfg, PROVIDER_CONFIG_ATTR.get(provider, ""), ""))
+        )
     }
+    # The same rule resolve_job_run applies: offered by the instance, no key.
+    if ollama_ready():
+        reachable.add(Provider.OLLAMA)
     reachable = frozenset(reachable)
 
     try:
