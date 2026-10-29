@@ -737,6 +737,11 @@ mod backend {
             Some(token) if enabled => vec![
                 ("POSTHOG_API_KEY", token.to_string()),
                 ("POSTHOG_HOST", host().to_string()),
+                // The sidecar binds 127.0.0.1, and the backend treats a
+                // loopback deployment as "not deployed" and sends nothing
+                // (`service/analytics.py`) unless told otherwise. The user's
+                // switch is that telling.
+                ("POSTHOG_ENABLE_LOCALHOST", "true".to_string()),
             ],
             _ => Vec::new(),
         }
