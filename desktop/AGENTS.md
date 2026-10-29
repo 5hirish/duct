@@ -479,28 +479,47 @@ vendor. `reporter.rs` holds the vendor, behind the `crash-reporting` Cargo
 feature, with a complete no-op arm for builds without it.
 
 **`crash-reporting` is not a default feature.** The builds we distribute pass
-`--features crash-reporting`; everyone else gets a shell with no reporting
-dependency compiled in at all. Someone self-hosting Duct did not sign up to run
+`--features crash-reporting`; everyone else gets a shell with no reporting code
+compiled in at all. Someone self-hosting Duct did not sign up to run
 our observability, and a default they have to discover in order to remove is not
-a real choice. Swapping Sentry for something else means a third arm in
+a real choice. Swapping PostHog for something else means a third arm in
 `reporter.rs` against its four functions — `is_available`, `init`,
 `capture_message`, `sidecar_env` — and no change anywhere else. Pointing
-`SENTRY_DSN` at a self-hosted Sentry or GlitchTip needs no code change at all.
+`POSTHOG_HOST` at the EU cloud or a self-hosted PostHog needs no code change at
+all.
 
 Three processes, one consent decision:
 
-- **The shell** initialises `sentry` in-process. Before this, a Rust panic or a
-  sidecar that would not start left no trace anywhere — the webview's Sentry
-  only ever sees JavaScript.
+- **The shell** sends PostHog `$exception` events itself: a panic hook (chained
+  to the previous one) and `capture_message`. No SDK — each report is one JSON
+  POST over the reqwest client the shell already links, with the `blocking`
+  front end added only by the feature, because a panicking thread has to wait
+  for its own request before it dies (five seconds at most). Before this, a
+  Rust panic or a sidecar that would not start left no trace anywhere — the
+  webview's reporter only ever sees JavaScript.
 - **The sidecar** stays silent by default. `local_server.py` blanks
-  `SENTRY_DSN` on purpose ("a user's laptop is not a deployment"), and
-  `sidecar.rs` passes a real DSN through *only* when the user has opted in. It
-  also has to pass `SENTRY_ENABLE_LOCALHOST=1`, because the sidecar binds
-  127.0.0.1 and `server.py` otherwise treats that as "not deployed" and drops
-  every event.
-- **The webview** already reported, but was indistinguishable from a browser
-  session; `instrumentation-client.ts` now tags `shell`, `shell.version` and
-  `shell.localSidecar`.
+  `POSTHOG_API_KEY` on purpose ("a user's laptop is not a deployment"), and
+  `sidecar.rs` passes the token and host through *only* when the user has
+  opted in. They go in the environment, not the secrets line: the token is
+  public.
+- **The webview** reports on its own through posthog-js (`app/`) and reads the
+  same switch through `get_telemetry_settings`. Keep that command's shape; the
+  web layer depends on it.
+
+What a native report carries, and what it does not:
+
+- **Anonymous.** `distinct_id` is a random UUID in `telemetry-id` beside
+  `telemetry.json`, made on the first report; events are personless
+  (`$process_person_profile: false`). The user's home directory is replaced
+  with `~` in the message and in every frame path.
+- **Tagged** `$lib: duct-desktop-native`, `surface: desktop-native`,
+  `shell_version`, `$os`, `platform` (`mac`/`windows`/`linux`) and `arch`.
+- **Bounded.** Ten reports per run at most, and the switch is read again before
+  each send, so turning it off stops the shell at once rather than at the next
+  launch.
+- **Not a native crash handler.** A segfault, an abort or an Objective-C
+  exception is not a panic and is not reported. Sentry's Rust SDK did not
+  catch those either.
 
 The preference is `telemetry.json` in the per-user data dir — a preference, not
 a secret, so not the keychain. The builds we distribute set
@@ -510,23 +529,34 @@ chose, so the build default applies; an *unreadable or malformed* file means
 off, because it may be an explicit refusal we are one step from overriding.
 Once the user touches the switch their answer is recorded and no default applies
 again.
-The DSN is compiled in via `SENTRY_DSN` — the same name the backend reads and
-`backend/.env.local` already defines, so there is one spelling across all three
-processes. With no DSN the whole path is inert and the settings card hides
-itself rather than offering a switch that changes nothing.
+The destination is compiled in: `POSTHOG_PROJECT_TOKEN` (the public `phc_`
+token) and, optionally, `POSTHOG_HOST`, both read by `option_env!` and passed
+by the release workflow as repository variables. With no token the whole path
+is inert and the settings card hides itself rather than offering a switch that
+changes nothing.
 
 The data-dir path is duplicated between `telemetry/mod.rs` and `utils/appdirs.py`
 by necessity — the shell must resolve it *before* the sidecar exists to ask.
 Change one, change the other.
 
-**Crash reports are symbolicated from the binary's own symbols.** Nothing in
-`desktop-release.yml` uploads debug files to Sentry, so the shipped binary is
-the only place the symbols exist. That makes `strip = true` in
-`[profile.release]` a silent trap: it breaks no build and no test, and turns
-every report from a release into hex addresses. `src-tauri/Cargo.toml` carries
-the same warning at the place someone would add it. If you want stripping — and
-it is worth roughly 30 MB of bundle — add a `sentry-cli debug-files upload`
-step in the same change, never before it.
+**Crash reports are named from the binary's own symbols, in process.** Nothing
+in `desktop-release.yml` uploads debug symbols to PostHog, so the shipped
+binary's symbol table is the only place frame names exist. That makes
+`strip = true` in `[profile.release]` a silent trap: it breaks no build and no
+test, and turns every report from a release into frames with no names.
+`src-tauri/Cargo.toml` carries the same warning at the place someone would add
+it. If you want stripping — and it is worth roughly 30 MB of bundle — upload
+symbols with `posthog-cli` and send instruction addresses in the same change,
+never before it. Windows already ships no PDB, so its reports carry the panic's
+file and line (compiled in by `#[track_caller]`) and little or no stack.
+
+Frames come from parsing `std::backtrace::Backtrace`'s text, not the
+`backtrace` crate, which would link a second copy of the symbolizer std already
+has. `a_real_backtrace_parses_into_named_frames` is the guard: a toolchain that
+changes the format fails it. Two naming facts it already absorbs: rustc 1.97
+prints v0-style names (`{closure#0}`, `<Type>::method`), and a dev build's
+line tables name this crate's functions bare, so in-app is decided by name
+*or* by file.
 
 ## Rules
 

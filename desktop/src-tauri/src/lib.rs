@@ -435,8 +435,10 @@ fn get_telemetry_settings() -> serde_json::Value {
 }
 
 /// Record the user's choice. Takes effect for the sidecar on next launch —
-/// it reads its DSN from the environment the shell hands it at spawn, and this
-/// deliberately does not restart a running backend out from under the user.
+/// it reads its reporting key from the environment the shell hands it at
+/// spawn, and this deliberately does not restart a running backend out from
+/// under the user. The shell's own reporter asks again before every send, so
+/// "off" stops it at once; "on" waits for the next launch, like the sidecar.
 #[tauri::command(async)]
 fn set_telemetry_enabled(enabled: bool) -> Result<(), String> {
     let dir = telemetry::default_data_dir().ok_or("could not resolve the data directory")?;
@@ -1194,14 +1196,14 @@ pub fn run() {
     disable_dmabuf_renderer_on_nvidia();
 
     // Before the builder: a panic during setup is exactly the kind of failure
-    // worth reporting, and the guard has to outlive the whole app — dropping it
-    // stops the transport, so binding it to `_guard` (not `_`) matters.
+    // worth reporting.
     let telemetry_enabled = telemetry::default_data_dir()
         .map(|dir| telemetry::is_enabled(&dir))
         .unwrap_or(false);
     // Named, not inferred: the type is the contract — whatever the compiled-in
-    // reporter needs held for the process's life. Dropping it stops the
-    // transport, so binding to `_guard` (not `_`) is load-bearing.
+    // reporter needs held for the process's life. PostHog's needs nothing, but
+    // a reporter with a background transport stops it on drop, so this stays
+    // `_guard` (not `_`) for the arm that does.
     let _guard: telemetry::Guard = telemetry::init(telemetry_enabled);
 
     let builder = tauri::Builder::default();

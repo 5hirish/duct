@@ -121,9 +121,10 @@ toast, never a forced restart. Details: [RELEASING.md](RELEASING.md).
 | Switch in the app | Yes | Yes, with nothing to switch |
 
 Crash reporting is an opt-in Cargo feature and the on-by-default flag is set
-only in the release workflow: absent, not disabled. **Check it:** after a
-plain build, `cargo tree | grep sentry` prints nothing. Sent and never sent:
-[table](#what-the-downloaded-app-sends).
+only in the release workflow: absent, not disabled. **Check it:** in
+`src-tauri`, `cargo tree -e features -i reqwest | grep -c blocking` prints 0
+without the feature; the sending code needs that and is not compiled. Sent and
+never sent: [table](#what-the-downloaded-app-sends).
 
 **Turning it off:** account menu, *Models & providers*, *Crash reports &
 usage*. One switch covers shell, bundled backend, web view and analytics; your
@@ -240,7 +241,7 @@ Only while the switch is on.
 
 | | |
 |---|---|
-| Crashes | The error and stack trace from the shell and the web view. Personal data is off; query strings, sensitive headers and cookies are scrubbed first ([web view config](../app/src/instrumentation-client.ts)) |
+| Crashes | From the shell: the panic message and stack, with your home folder replaced by `~`, under a random install id rather than your account. From the web view: what its own config sends ([web view config](../app/src/instrumentation-client.ts)) |
 | Usage | Nothing through a tag container: the downloaded app never loads one, because its keychain bridge trusts every script on the page and a container exists to run scripts configured outside this repository. No tags, so no consent bar |
 | Never | Your model keys, connected-tool data, uploads, or anything an agent writes for you |
 
