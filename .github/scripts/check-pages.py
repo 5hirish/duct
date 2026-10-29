@@ -11,6 +11,7 @@ import sys
 import os
 import glob
 import json
+from urllib.parse import urlsplit
 from html.parser import HTMLParser
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -60,6 +61,17 @@ CANONICAL_BASE = "https://getduct.ai"
 
 # ── HTML parser ───────────────────────────────────────────────────────────────
 
+
+GTM_HOST = "googletagmanager.com"
+
+
+def _is_gtm_host(src: str) -> bool:
+    """Whether a script or frame loads from Google Tag Manager. Read off the
+    parsed host, not the raw string, so a path that merely mentions the domain
+    does not count and a lookalike host does not slip past."""
+    host = (urlsplit(src).hostname or "").lower()
+    return host == GTM_HOST or host.endswith("." + GTM_HOST)
+
 class PageChecker(HTMLParser):
     def __init__(self, path):
         super().__init__()
@@ -87,7 +99,7 @@ class PageChecker(HTMLParser):
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
 
-        if tag in ("script", "iframe") and "googletagmanager.com" in attrs.get("src", ""):
+        if tag in ("script", "iframe") and _is_gtm_host(attrs.get("src") or ""):
             self.loads_google_tags = True
 
         if tag == "link":
