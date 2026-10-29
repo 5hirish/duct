@@ -6,6 +6,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import ChatSidebar from "./ChatSidebar";
 import InsightDashboard from "./InsightDashboard";
 import { refreshInsightBriefs } from "../lib/api";
+import { connectedConnectorTypes } from "../lib/connectorsApi";
 import {
   getInsightEntry,
   patchInsightRefresh,
@@ -41,12 +42,15 @@ export default function LocalInsightDetail({ slug }) {
     let cancelled = false;
     async function runRefresh(manual = false) {
       if (!entry?.routine) return;
-      const hasAnyToken = Boolean(
-        sessionStorage.getItem("gads_refresh_token") ||
-          sessionStorage.getItem("ga4_refresh_token") ||
-          sessionStorage.getItem("gsc_refresh_token")
-      );
-      if (!hasAnyToken && !manual) return;
+      // Refresh on open only when the account can actually read one of the
+      // routine's sources. This used to ask whether THIS tab held a Google
+      // token, so a report refreshed in the tab that connected and nowhere else.
+      if (!manual) {
+        const connected = await connectedConnectorTypes();
+        if (cancelled) return;
+        const wanted = (entry.routine.connections || []).map((c) => String(c).toLowerCase().replace(/-/g, "_"));
+        if (!wanted.some((c) => connected.has(c))) return;
+      }
 
       const loadingPatch = {
         refresh_status: "loading",

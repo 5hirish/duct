@@ -13,9 +13,10 @@ fn main() {
     // Same mechanism again, for which database the bundled sidecar talks to.
     println!("cargo:rerun-if-env-changed=DUCT_SIDECAR_ENV_FILE");
     bake_sidecar_env_file();
-    // Same reason: telemetry.rs reads this through `option_env!`. Same spelling
-    // as the backend's own variable, so one value serves both halves.
-    println!("cargo:rerun-if-env-changed=SENTRY_DSN");
+    // Same reason: telemetry/reporter.rs reads these through `option_env!`.
+    for key in ["POSTHOG_PROJECT_TOKEN", "POSTHOG_HOST"] {
+        println!("cargo:rerun-if-env-changed={key}");
+    }
 
     // App-defined commands are allowed by default only for *local* content. The
     // window loads a remote origin (app.getduct.ai, or the Next dev server in a

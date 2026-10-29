@@ -2253,8 +2253,8 @@ msgid "connected sources"
 msgstr "fontes conectadas"
 
 #: src/app/(app)/connections/page.jsx
-msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
-msgstr "Conectado ao Google, mas sua sessão do Duct foi rejeitada por {backend}, então a conexão não pôde ser salva em sua conta. Saia e entre novamente, depois reconecte."
+#~ msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
+#~ msgstr "Conectado ao Google, mas sua sessão do Duct foi rejeitada por {backend}, então a conexão não pôde ser salva em sua conta. Saia e entre novamente, depois reconecte."
 
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/workspace/AgentChat.jsx
@@ -3721,6 +3721,10 @@ msgstr "Google Ads, GA4, Search Console e Meta Ads se conectam depois — soment
 #: src/components/connections/logos.jsx
 msgid "Google Analytics"
 msgstr "Google Analytics"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Google approved the connection, but you're not signed in to Duct here, so it wasn't saved. Sign in, then connect again."
+msgstr "O Google aprovou a conexão, mas você não está conectado ao Duct aqui, então ela não foi salva. Entre e conecte de novo."
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Google declined the exchange, which is almost always temporary. Try again from the app."
@@ -6464,8 +6468,8 @@ msgid "Reconnect this source →"
 msgstr "Reconectar esta fonte →"
 
 #: src/components/connections/OAuthConnectorCard.jsx
-msgid "Reconnect to save it to your account."
-msgstr "Reconecte para salvá-lo na sua conta."
+#~ msgid "Reconnect to save it to your account."
+#~ msgstr "Reconecte para salvá-lo na sua conta."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reconnecting to the model"
@@ -7550,8 +7554,8 @@ msgid "Sign in to save — manual credentials are stored server-side (encrypted)
 msgstr "Entre para salvar — as credenciais manuais são armazenadas no servidor (criptografadas) para que agentes e extrações programadas possam usá-las."
 
 #: src/components/connections/OAuthConnectorCard.jsx
-msgid "Sign in to save it to your account."
-msgstr "Entrar para salvar na sua conta."
+#~ msgid "Sign in to save it to your account."
+#~ msgstr "Entrar para salvar na sua conta."
 
 #: src/components/AppSidebar.jsx
 msgid "Sign in to save your work"
@@ -7620,8 +7624,8 @@ msgid "Signed in to {planName}"
 msgstr "Logado em {planName}"
 
 #: src/app/(app)/connections/page.jsx
-msgid "Signed in with Google, but saving the connection to your account failed, so it will only last this browser session. Try Reconnect once you're back online."
-msgstr "Você entrou com Google, mas salvar a conexão na sua conta falhou, então ela durará apenas esta sessão do navegador. Tente Reconectar assim que estiver online novamente."
+#~ msgid "Signed in with Google, but saving the connection to your account failed, so it will only last this browser session. Try Reconnect once you're back online."
+#~ msgstr "Você entrou com Google, mas salvar a conexão na sua conta falhou, então ela durará apenas esta sessão do navegador. Tente Reconectar assim que estiver online novamente."
 
 #: src/app/(app)/connections/page.jsx
 msgid "Signing in with Google is all Duct needs. If your accounts sit under a manager account, name it here so Duct reads the child accounts through it."
@@ -8075,12 +8079,16 @@ msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."
 msgstr "Obrigado! Entraremos em contato em <0>{contact}</0> para definir o escopo."
 
 #: src/app/(app)/connections/page.jsx
-msgid "That connection came back incomplete — please try again."
-msgstr "Essa conexão voltou incompleta — por favor, tente novamente."
+#~ msgid "That connection came back incomplete — please try again."
+#~ msgstr "Essa conexão voltou incompleta — por favor, tente novamente."
 
 #: src/app/(app)/connections/page.jsx
-msgid "That connection didn't finish — the link expires after a minute. Please try again."
-msgstr "Essa conexão não foi concluída — o link expira após um minuto. Por favor, tente novamente."
+#~ msgid "That connection didn't finish — the link expires after a minute. Please try again."
+#~ msgstr "Essa conexão não foi concluída — o link expira após um minuto. Por favor, tente novamente."
+
+#: src/app/(app)/connections/page.jsx
+msgid "That connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again."
+msgstr "Essa conexão não foi concluída. O link vale por dois minutos e só funciona para a conta que a iniciou. Conecte de novo."
 
 #: src/components/connections/McpConnectors.jsx
 msgid "That connection expired or was started from another account. Connect again."
@@ -8187,8 +8195,8 @@ msgid "The agents stop seeing it from the next turn."
 msgstr "Os agentes param de vê-lo a partir da próxima execução."
 
 #: src/app/(app)/connections/page.jsx
-msgid "the API"
-msgstr "a API"
+#~ msgid "the API"
+#~ msgstr "a API"
 
 #: src/components/ConnectionBanner.jsx
 msgid "The app is online but Duct's servers are not responding. This is usually brief."
@@ -8257,6 +8265,10 @@ msgstr "A chave funciona, mas a conta não tem crédito"
 #: src/components/insights/desk/DeskCards.jsx
 msgid "The last turn failed"
 msgstr "A última execução falhou"
+
+#: src/app/(app)/connections/page.jsx
+msgid "The manager account wasn't saved."
+msgstr "A conta de gerente não foi salva."
 
 #: src/lib/agentSession.js
 msgid "The model provider is overloaded right now. Try again in a moment."

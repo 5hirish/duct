@@ -25,13 +25,12 @@ class RefreshRoutineTarget(BaseModel):
 
 
 class InsightRefreshRequest(BaseModel):
+    # No credentials: each connector's are read from the caller's stored rows,
+    # so a refresh works from any tab, browser or the desktop app alike.
     connections: list[str] = Field(default_factory=list)
     date_preset: str = "30"
     date_from: str = ""
     date_to: str = ""
-    refresh_token: str = ""
-    ga4_refresh_token: str = ""
-    gsc_refresh_token: str = ""
     targets: dict[str, RefreshRoutineTarget] = Field(default_factory=dict)
 
 

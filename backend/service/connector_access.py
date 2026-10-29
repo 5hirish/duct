@@ -124,7 +124,13 @@ def bound_credential_row(
     )
 
 
-def _decrypt_row(row: ConnectorCredential) -> dict:
+def decrypt_row(row: ConnectorCredential) -> dict:
+    """A row's credential blob, or ``{}`` when it cannot be read.
+
+    Never raises: a missing CREDENTIALS_ENCRYPTION_KEY or a corrupt blob is a
+    row that reads as empty, which every caller already treats as "not
+    connected" rather than as a failure to report.
+    """
     try:
         data = decrypt_credentials(row.credentials_enc)
     except Exception as exc:  # noqa: BLE001 — stored creds are optional, never fatal
@@ -199,7 +205,7 @@ def _stored_credentials(
     the env fallback still applies.
     """
     for row in _candidate_rows(session, user_id, connector_type, account_id, project_id):
-        data = _decrypt_row(row)
+        data = decrypt_row(row)
         if data:
             return data
     return {}
@@ -527,7 +533,7 @@ def attach_account(
     # Copy the secret from whichever authorized row we have — prefer the
     # account-agnostic one, since that is what a fresh OAuth leaves behind.
     donor = next((r for r in rows if not r.account_id), rows[0])
-    blob = _decrypt_row(donor)
+    blob = decrypt_row(donor)
     if not blob:
         return None
 

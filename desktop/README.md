@@ -116,14 +116,15 @@ toast, never a forced restart. Details: [RELEASING.md](RELEASING.md).
 | | App downloaded from getduct.ai | Anything you build yourself |
 |---|---|---|
 | Crash reporting compiled in | Yes | No, not even linked |
-| Analytics | Google Tag Manager, via the hosted web app | None unless your web app sets one |
+| Analytics | PostHog, in memory only, from the web view and the shell | None unless your web app sets one |
 | Default | On | Off |
 | Switch in the app | Yes | Yes, with nothing to switch |
 
 Crash reporting is an opt-in Cargo feature and the on-by-default flag is set
-only in the release workflow: absent, not disabled. **Check it:** after a
-plain build, `cargo tree | grep sentry` prints nothing. Sent and never sent:
-[table](#what-the-downloaded-app-sends).
+only in the release workflow: absent, not disabled. **Check it:** in
+`src-tauri`, `cargo tree -e features -i reqwest | grep -c blocking` prints 0
+without the feature; the sending code needs that and is not compiled. Sent and
+never sent: [table](#what-the-downloaded-app-sends).
 
 **Turning it off:** account menu, *Models & providers*, *Crash reports &
 usage*. One switch covers shell, bundled backend, web view and analytics; your
@@ -210,7 +211,7 @@ key are Duct's legal identity, so a fork builds unsigned or signs with its own.
 | `DUCT_SIDECAR_BIN` | Running the shell | Use a sidecar built elsewhere |
 | `GOOGLE_DESKTOP_OAUTH_CLIENT_ID`, `_SECRET` | `backend/.env.local`, baked by `build.rs` | Google installed-app sign-in client |
 | `NEXT_PUBLIC_SHELL_SCHEME` | `app/.env.local` | Which shell the relay page hands the sign-in code to |
-| `NEXT_PUBLIC_ANALYTICS_PROVIDER` | Web app build | `gtm` or `none` |
+| `NEXT_PUBLIC_ANALYTICS_PROVIDER` | Web app build | `posthog`, `gtm`, both (comma-separated) or `none`; unset runs whichever has its key |
 | Signing and telemetry flags | Release builds | [RELEASING.md](RELEASING.md) |
 
 ### Platforms at runtime
@@ -240,8 +241,8 @@ Only while the switch is on.
 
 | | |
 |---|---|
-| Crashes | The error and stack trace from the shell and the web view. Personal data is off; query strings, sensitive headers and cookies are scrubbed first ([web view config](../app/src/instrumentation-client.ts)) |
-| Usage | Nothing through a tag container: the downloaded app never loads one, because its keychain bridge trusts every script on the page and a container exists to run scripts configured outside this repository. No tags, so no consent bar |
+| Crashes | From the shell: the panic message and stack, with your home folder replaced by `~`, under a random install id rather than your account. From the web view: the error and stack trace, page path without its query, and your account id if signed in ([web view reporter](../app/src/lib/analytics/posthog.js)) |
+| Usage | Which screens and features you open, page views and clicks (the element, never its text), under your account id if signed in. Held in memory, so nothing is stored on your machine and there is no consent bar; never a session replay. No tag container either: the keychain bridge trusts every script on the page, so only bundled code measures |
 | Never | Your model keys, connected-tool data, uploads, or anything an agent writes for you |
 
 ### If a fork fails

@@ -9,9 +9,9 @@ Two-phase commit over connector mutations:
   POST /api/execute/{id}/rollback  revert applied changes
   POST /api/execute/{id}/reject    discard without applying
 
-Credentials resolve per request: BYO fields in the body win, then the user's
-stored (Fernet-encrypted) connector credentials, then server env fallbacks —
-see ``service/execution/creds.py``. Nothing from the body is persisted here.
+Credentials are never taken from the body: the project's binding, then the
+user's stored (Fernet-encrypted) connector credentials, then server env
+fallbacks — see ``service/execution/creds.py``.
 Guardrails are per-account invariants enforced in code at both preview and
 apply time.
 """
@@ -54,11 +54,6 @@ from utils.dates import utcnow
 router = APIRouter(tags=["execution"])
 
 
-class CredentialsIn(BaseModel):
-    refresh_token: str = ""
-    login_customer_id: str = ""
-
-
 class ChangeIn(BaseModel):
     op_type: str
     summary: str = ""
@@ -73,7 +68,6 @@ class ChangeSetIn(BaseModel):
     title: str
     context: str = ""
     changes: list[ChangeIn]
-    credentials: CredentialsIn = Field(default_factory=CredentialsIn)
     # Optional provenance: ties the set to a project the caller belongs to.
     # Browser proposals are always source="user" and never auto-apply.
     project_id: UUID | None = None
@@ -81,10 +75,6 @@ class ChangeSetIn(BaseModel):
 
 class ApproveIn(BaseModel):
     change_ids: list[str] | None = None  # None = approve everything not blocked
-
-
-class ExecuteIn(BaseModel):
-    credentials: CredentialsIn = Field(default_factory=CredentialsIn)
 
 
 class GuardrailIn(BaseModel):
@@ -233,7 +223,6 @@ def propose_change_set(
         user.id,
         body.connector_type,
         body.account_id,
-        override=body.credentials.model_dump(),
         project_id=body.project_id,
     )
     try:
@@ -365,7 +354,6 @@ def reject_change_set(
 @router.post("/{change_set_id}/apply")
 def apply_change_set(
     change_set_id: UUID,
-    body: ExecuteIn,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> dict:
@@ -375,7 +363,6 @@ def apply_change_set(
         user.id,
         row.connector_type,
         row.account_id,
-        override=body.credentials.model_dump(),
         project_id=_project_scope(session, user, row),
     )
     try:
@@ -389,7 +376,6 @@ def apply_change_set(
 @router.post("/{change_set_id}/rollback")
 def rollback_change_set(
     change_set_id: UUID,
-    body: ExecuteIn,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> dict:
@@ -399,7 +385,6 @@ def rollback_change_set(
         user.id,
         row.connector_type,
         row.account_id,
-        override=body.credentials.model_dump(),
         project_id=_project_scope(session, user, row),
     )
     try:

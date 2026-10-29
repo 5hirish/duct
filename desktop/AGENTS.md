@@ -37,7 +37,8 @@ carries all the code.
     and the dev and self-host configs each carry their own copy of that array —
     a window declared only in the base config vanishes from both, silently.
   - **`"visible": false` must be set in every config that defines `windows`**,
-    for the same reason. All three do.
+    for the same reason. All four do (`local` was missing it, which opened
+    a blank window beside the splash).
   - **`SPLASH_DEADLINE` reveals the window regardless after 30 s.**
     `on_page_load` never fires if the hosted app is unreachable, and a hidden
     main window behind a splash that never dismisses is an app with no way in
@@ -141,14 +142,16 @@ carries all the code.
     `backend/routes/auth.py`, started by `app/src/lib/connectorAuth.js`).
 
   **No credential ever rides in a deep link.** Any app on the machine can claim
-  the scheme, so both routes carry only a single-use 60-second code that the
-  webview redeems against the backend (`/auth/exchange`,
-  `/auth/connectors/exchange`). The code is delivered to the *configured*
-  window URL, never to `window.url()`: a window the page had sent elsewhere
-  would otherwise receive it. This matters more for connectors than for
-  sign-in: their payload is a *long-lived* Google refresh token, where the
-  in-browser flow can still use a URL fragment (never sent to a server) because
-  it never leaves the app's own window.
+  the scheme, so both routes carry only a single-use, short-lived code. For
+  sign-in the webview redeems it for the session JWT (`/auth/exchange`). For a
+  connector it is a claim ticket: the webview's signed-in Connections page
+  claims the grant (`POST /api/user/connectors/claim`), the backend stores the
+  refresh token for the user who started the connect, and the token never
+  reaches the webview or the browser at all (issue #456). The code is
+  delivered to the *configured* window URL, never to `window.url()`: a window
+  the page had sent elsewhere would otherwise receive it. The deep-link shape
+  (`connector` + `auth_code`, both required by `deep_link_target`) is a
+  contract with released shells; change the backend's redirect, never it.
 
   Both flows also route their failures to the app's `/desktop-auth` relay page
   rather than raising. The system browser renders whatever the loopback sidecar
@@ -346,7 +349,25 @@ carries all the code.
   version and nothing else. `about_metadata()` sets a description twice, from
   one constant, because the platforms disagree about where it goes: macOS reads
   `credits` and ignores `comments`, Windows and Linux do the reverse. Setting
-  only one is how a panel ends up blank on half the platforms.
+  only one is how a panel ends up blank on half the platforms. Off macOS the
+  About item lives at the foot of our Help menu: replacing the default Help
+  had removed it there, so the `comments` line was never shown.
+- **Off macOS the menu is a bar inside each window**, and `set_menu` attaches it
+  to every window without one — the splash included. `setup` removes it from
+  the splash right after installing it.
+- **View carries zoom** (Actual Size, Zoom In, Zoom Out, on the browser's
+  50–200% ladder) through `set_zoom`, because no system webview binds zoom keys
+  inside an app window and `zoomHotkeysEnabled` needs a webview permission the
+  capabilities deliberately withhold. The shell remembers the level it set
+  (`MAIN_ZOOM`); not every webview reports one back.
+- **The window must fit the screen it opens on.** Every config's `main` sets
+  `center` and `preventOverflow`: at 1200×800 it otherwise ran under the
+  taskbar on 1366×768 and 1280×800 screens.
+- **Linux on NVIDIA:** `run()` sets `WEBKIT_DISABLE_DMABUF_RENDERER=1` when
+  the proprietary driver is loaded and the user has not chosen, before any
+  thread starts (`set_var` is not thread-safe). WebKitGTK's DMA-BUF renderer
+  draws a blank window there. Deep-link registration runs on its own thread,
+  because on Linux it waits on two subprocesses and `setup` is the UI thread.
 - **Self-update** is wired: `tauri-plugin-updater` behind a default-on `updater`
   cargo feature, driven from the web app through `check_for_update` /
   `install_update` (not the plugin's JS bindings — the window loads a remote
@@ -400,6 +421,18 @@ carries all the code.
   and no edit when a version ships. Renaming one breaks the site silently: the
   link 404s and nothing in this repo fails. Add a platform here and it needs a
   copy in the publish job and a card on the download page.
+- **Windows installs per user, and the first update moves old installs.**
+  `bundle.windows.nsis.installMode` is `currentUser`: %LOCALAPPDATA%, no admin
+  rights, so a self-update never raises UAC. Up to 0.7.1 it was `perMachine`,
+  which made every update ask for admin under an unsigned publisher name. An
+  update to one of those installs lands beside it, and
+  `src-tauri/windows/installer-hooks.nsh` (`NSIS_HOOK_POSTINSTALL`) runs the
+  old uninstaller silently: one last UAC prompt, then none, with the user's
+  data untouched because it was always per user. Declined, both copies keep
+  working and the old one is offered again at its next update. The hook can
+  only be compiled, not run, off Windows: `makensis` (Homebrew) with a stub
+  harness defining `UNINSTKEY` catches syntax; a real check is a 0.7.1 install
+  updated on a Windows machine.
 - **Windows self-update is easy to lose.** Tauri signs the installer directly
   (`*-setup.exe.sig`); it used to zip it first (`*-setup.nsis.zip.sig`). v0.4.0
   shipped with no `windows-x86_64` entry in `latest.json` because the upload
@@ -448,28 +481,47 @@ vendor. `reporter.rs` holds the vendor, behind the `crash-reporting` Cargo
 feature, with a complete no-op arm for builds without it.
 
 **`crash-reporting` is not a default feature.** The builds we distribute pass
-`--features crash-reporting`; everyone else gets a shell with no reporting
-dependency compiled in at all. Someone self-hosting Duct did not sign up to run
+`--features crash-reporting`; everyone else gets a shell with no reporting code
+compiled in at all. Someone self-hosting Duct did not sign up to run
 our observability, and a default they have to discover in order to remove is not
-a real choice. Swapping Sentry for something else means a third arm in
+a real choice. Swapping PostHog for something else means a third arm in
 `reporter.rs` against its four functions — `is_available`, `init`,
 `capture_message`, `sidecar_env` — and no change anywhere else. Pointing
-`SENTRY_DSN` at a self-hosted Sentry or GlitchTip needs no code change at all.
+`POSTHOG_HOST` at the EU cloud or a self-hosted PostHog needs no code change at
+all.
 
 Three processes, one consent decision:
 
-- **The shell** initialises `sentry` in-process. Before this, a Rust panic or a
-  sidecar that would not start left no trace anywhere — the webview's Sentry
-  only ever sees JavaScript.
+- **The shell** sends PostHog `$exception` events itself: a panic hook (chained
+  to the previous one) and `capture_message`. No SDK — each report is one JSON
+  POST over the reqwest client the shell already links, with the `blocking`
+  front end added only by the feature, because a panicking thread has to wait
+  for its own request before it dies (five seconds at most). Before this, a
+  Rust panic or a sidecar that would not start left no trace anywhere — the
+  webview's reporter only ever sees JavaScript.
 - **The sidecar** stays silent by default. `local_server.py` blanks
-  `SENTRY_DSN` on purpose ("a user's laptop is not a deployment"), and
-  `sidecar.rs` passes a real DSN through *only* when the user has opted in. It
-  also has to pass `SENTRY_ENABLE_LOCALHOST=1`, because the sidecar binds
-  127.0.0.1 and `server.py` otherwise treats that as "not deployed" and drops
-  every event.
-- **The webview** already reported, but was indistinguishable from a browser
-  session; `instrumentation-client.ts` now tags `shell`, `shell.version` and
-  `shell.localSidecar`.
+  `POSTHOG_API_KEY` on purpose ("a user's laptop is not a deployment"), and
+  `sidecar.rs` passes the token and host through *only* when the user has
+  opted in. They go in the environment, not the secrets line: the token is
+  public.
+- **The webview** reports on its own through posthog-js (`app/`) and reads the
+  same switch through `get_telemetry_settings`. Keep that command's shape; the
+  web layer depends on it.
+
+What a native report carries, and what it does not:
+
+- **Anonymous.** `distinct_id` is a random UUID in `telemetry-id` beside
+  `telemetry.json`, made on the first report; events are personless
+  (`$process_person_profile: false`). The user's home directory is replaced
+  with `~` in the message and in every frame path.
+- **Tagged** `$lib: duct-desktop-native`, `surface: desktop-native`,
+  `shell_version`, `$os`, `platform` (`mac`/`windows`/`linux`) and `arch`.
+- **Bounded.** Ten reports per run at most, and the switch is read again before
+  each send, so turning it off stops the shell at once rather than at the next
+  launch.
+- **Not a native crash handler.** A segfault, an abort or an Objective-C
+  exception is not a panic and is not reported. Sentry's Rust SDK did not
+  catch those either.
 
 The preference is `telemetry.json` in the per-user data dir — a preference, not
 a secret, so not the keychain. The builds we distribute set
@@ -479,23 +531,34 @@ chose, so the build default applies; an *unreadable or malformed* file means
 off, because it may be an explicit refusal we are one step from overriding.
 Once the user touches the switch their answer is recorded and no default applies
 again.
-The DSN is compiled in via `SENTRY_DSN` — the same name the backend reads and
-`backend/.env.local` already defines, so there is one spelling across all three
-processes. With no DSN the whole path is inert and the settings card hides
-itself rather than offering a switch that changes nothing.
+The destination is compiled in: `POSTHOG_PROJECT_TOKEN` (the public `phc_`
+token) and, optionally, `POSTHOG_HOST`, both read by `option_env!` and passed
+by the release workflow as repository variables. With no token the whole path
+is inert and the settings card hides itself rather than offering a switch that
+changes nothing.
 
 The data-dir path is duplicated between `telemetry/mod.rs` and `utils/appdirs.py`
 by necessity — the shell must resolve it *before* the sidecar exists to ask.
 Change one, change the other.
 
-**Crash reports are symbolicated from the binary's own symbols.** Nothing in
-`desktop-release.yml` uploads debug files to Sentry, so the shipped binary is
-the only place the symbols exist. That makes `strip = true` in
-`[profile.release]` a silent trap: it breaks no build and no test, and turns
-every report from a release into hex addresses. `src-tauri/Cargo.toml` carries
-the same warning at the place someone would add it. If you want stripping — and
-it is worth roughly 30 MB of bundle — add a `sentry-cli debug-files upload`
-step in the same change, never before it.
+**Crash reports are named from the binary's own symbols, in process.** Nothing
+in `desktop-release.yml` uploads debug symbols to PostHog, so the shipped
+binary's symbol table is the only place frame names exist. That makes
+`strip = true` in `[profile.release]` a silent trap: it breaks no build and no
+test, and turns every report from a release into frames with no names.
+`src-tauri/Cargo.toml` carries the same warning at the place someone would add
+it. If you want stripping — and it is worth roughly 30 MB of bundle — upload
+symbols with `posthog-cli` and send instruction addresses in the same change,
+never before it. Windows already ships no PDB, so its reports carry the panic's
+file and line (compiled in by `#[track_caller]`) and little or no stack.
+
+Frames come from parsing `std::backtrace::Backtrace`'s text, not the
+`backtrace` crate, which would link a second copy of the symbolizer std already
+has. `a_real_backtrace_parses_into_named_frames` is the guard: a toolchain that
+changes the format fails it. Two naming facts it already absorbs: rustc 1.97
+prints v0-style names (`{closure#0}`, `<Type>::method`), and a dev build's
+line tables name this crate's functions bare, so in-app is decided by name
+*or* by file.
 
 ## Rules
 

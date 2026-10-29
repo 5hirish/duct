@@ -448,7 +448,11 @@ Postgres `DATABASE_URL` names.
 - `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
 - `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
 - `agents/insights/prompts/` — synthesis prompts: `autonomous.py` builds the system and user prompt, `paid_ads.py` and `organic_growth.py` hold the vertical modes `get_system_prompt()` dispatches to
-- `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
+- `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`).
+  Every connect starts with a `?link=` naming the signed-in user and ends with
+  that user's page claiming the grant; both clients come home on
+  `/connections?connector=&auth_code=` (the desktop one through `/desktop-auth`
+  and the shell's deep link).
 - `routes/signin.py` — Google sign-in, and the **guest**: `POST /auth/guest`
   mints a real `users` row keyed on an install id so an audit can run before
   anyone signs in; `/auth/guest/link-code` + `?link=` on authorize lets the
@@ -1151,6 +1155,17 @@ don't fit.
   mints a token for any installation id it is handed, so an id a browser
   could store is someone else's repository. The only writer is the claim
   route, bound to the user whose signed-in session started the connect.
+  The four Google connectors' `refresh_token` is server-only for the same
+  reason and by the same route shape (issue #456): `POST
+  /api/user/connectors/connect-link` names the user, the OAuth callback parks
+  the grant, `POST /api/user/connectors/claim` stores it merged over the row
+  (`service/connector_store.store_oauth_grant`, so a reconnect keeps the MCC
+  id). **No Google token reaches a client** — not in a redirect, a response or
+  browser storage — and every reader (`/api/insights/refresh`, execution,
+  FetchData) resolves from stored rows; there is no request override left.
+  `ConnectorMeta.settings_keys` is the opposite list: non-secret keys the user
+  may change on a stored row (`PATCH /api/user/connectors/{id}`), today only
+  the Ads `login_customer_id`, shown back as `settings` on the row.
 - `service/content_metrics.py` — a content post's `perf`, read and written one
   way. `METRIC_ALIASES` reconciles the three key conventions in the column
   (PostBridge's `view_count`, migrated `avgWatchTime`, hand-entered `saves`);

@@ -29,7 +29,6 @@ import {
   parkPostSignInRedirect,
   resumeAuditPath,
 } from "@/lib/signInSources";
-import { BASE } from "../../lib/api";
 import { consumeConnectorConnected, startConnectorOAuth } from "../../lib/connectorAuth";
 
 export default function ConnectionRequest({ request, onAnswer, disabled, signInToConnect = null, returnTo = "" }) {
@@ -61,7 +60,9 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
     if (phase === "starting") return;
     setPhase("starting");
     try {
-      const mode = await startConnectorOAuth(`${BASE}${authorizePath}`, { returnTo });
+      // `authorize_path` says this connector signs in; the URL itself is
+      // built with a link naming this session's user (lib/connectorAuth.js).
+      const mode = await startConnectorOAuth(connectorId, { returnTo });
       setPhase(mode === "browser" ? "browser" : "starting");
     } catch {
       setPhase("");

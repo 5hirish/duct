@@ -122,6 +122,13 @@ jobs:
         working-directory: desktop/src-tauri
         run: cargo check --locked --all-targets
 
+      # Release builds compile the crash reporter in; nothing else does. Without
+      # this the code that runs on every distributed install is first compiled
+      # by the release workflow, after the merge.
+      - name: cargo check (crash-reporting)
+        working-directory: desktop/src-tauri
+        run: cargo check --lib --locked --features crash-reporting
+
       - name: cargo test
         working-directory: desktop/src-tauri
         run: cargo test --lib --locked
