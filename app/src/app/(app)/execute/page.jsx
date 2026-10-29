@@ -765,8 +765,8 @@ export default function ExecutePage() {
     try {
       if (action === "approve") await approveChangeSet(cs.id, changeIds);
       if (action === "reject") await rejectChangeSet(cs.id);
-      if (action === "apply") await applyChangeSet(cs.id, cs.connector_type);
-      if (action === "rollback") await rollbackChangeSet(cs.id, cs.connector_type);
+      if (action === "apply") await applyChangeSet(cs.id);
+      if (action === "rollback") await rollbackChangeSet(cs.id);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

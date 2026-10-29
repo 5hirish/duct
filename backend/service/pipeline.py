@@ -11,6 +11,7 @@ from fastapi import HTTPException
 
 from config import Configs
 from service.google.brief import build_brief
+from service.google.constants import LOGIN_CUSTOMER_ID_KEY, REFRESH_TOKEN_KEY
 from service.google.credentials import resolve_ads_credentials, resolve_customer_id
 from service.google.fetch import fetch_campaigns
 from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 SUPPORTED_CONNECTORS = {
     "google_ads", "ga4", "gsc",
     # Manual-credential connectors (Phase 7): credentials arrive via the
-    # `credentials` dict (request override or the user's stored encrypted rows).
+    # `credentials` dict, read from the user's stored encrypted rows.
     "apple_ads", "meta_ads", "stripe", "revenuecat", "openai_ads",
     # Gads wave 2: Mixpanel (cross-platform event truth), Clarity (on-page
     # friction), GrowthBook (experiment health).
@@ -119,17 +120,20 @@ async def fetch_connector_payload(
     date_from: str,
     date_to: str,
     cfg: Configs,
-    refresh_token: str = "",
     customer_id: str = "",
     account_name: str = "",
     currency_code: str = "USD",
     login_customer_id: str = "",
     ga4_property_id: str = "",
     gsc_site_url: str = "",
-    ga4_refresh_token: str = "",
-    gsc_refresh_token: str = "",
     credentials: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    """Pull one connector's raw data for a window.
+
+    ``credentials`` is what ``connector_access.resolve_read_credentials``
+    returned for the caller: a pasted-key blob, or the Google shape with the
+    stored refresh token. Never anything a request carried.
+    """
     if connector_id in MANUAL_CREDENTIAL_CONNECTORS:
         creds = dict(credentials or {})
         # The picked account rides on the shared account/customer field when
@@ -179,9 +183,11 @@ async def fetch_connector_payload(
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    stored = credentials or {}
+    refresh_token = str(stored.get(REFRESH_TOKEN_KEY) or "").strip()
     if connector_id == "google_ads":
         resolved_customer_id = resolve_customer_id(request_customer_id=customer_id)
-        cid, secret, rt = resolve_ads_credentials(request_refresh_token=refresh_token)
+        cid, secret, rt = resolve_ads_credentials(refresh_token=refresh_token)
         data = await asyncio.to_thread(
             fetch_campaigns,
             customer_id=resolved_customer_id,
@@ -192,7 +198,9 @@ async def fetch_connector_payload(
             date_to=date_to,
             account_name=account_name,
             currency_code=currency_code,
-            login_customer_id=login_customer_id,
+            # The routine's own MCC when it named one, else the one stored
+            # with the connection (or the server default).
+            login_customer_id=login_customer_id or str(stored.get(LOGIN_CUSTOMER_ID_KEY) or ""),
         )
         if not data.get("rows"):
             raise RuntimeError("No campaigns returned for this customer and date range.")
@@ -200,11 +208,13 @@ async def fetch_connector_payload(
 
     ga_client_id, ga_client_secret = resolve_ga_credentials(cfg)
     if connector_id == "ga4":
-        token = (ga4_refresh_token or refresh_token).strip()
+        token = refresh_token
         if not ga4_property_id:
             raise HTTPException(status_code=422, detail="ga4_property_id is required when GA4 is selected.")
         if not token:
-            raise HTTPException(status_code=422, detail="ga4_refresh_token is required when GA4 is selected.")
+            raise HTTPException(
+                status_code=422, detail="Google Analytics is not connected. Connect it on the Connections page."
+            )
         if not ga_client_id or not ga_client_secret:
             raise HTTPException(
                 status_code=422,
@@ -232,11 +242,13 @@ async def fetch_connector_payload(
         return {"landing_pages": landing_pages, "conversion_paths": conversion_paths}
 
     if connector_id == "gsc":
-        token = (gsc_refresh_token or refresh_token).strip()
+        token = refresh_token
         if not gsc_site_url:
             raise HTTPException(status_code=422, detail="gsc_site_url is required when GSC is selected.")
         if not token:
-            raise HTTPException(status_code=422, detail="gsc_refresh_token is required when GSC is selected.")
+            raise HTTPException(
+                status_code=422, detail="Search Console is not connected. Connect it on the Connections page."
+            )
         if not ga_client_id or not ga_client_secret:
             raise HTTPException(
                 status_code=422,

@@ -1,8 +1,8 @@
-"""Connector-agnostic API (accounts, etc.)."""
+"""Connector-agnostic API: verifying pasted keys by the accounts they reach."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
@@ -17,11 +17,9 @@ router = APIRouter(tags=["connectors"])
 
 
 class ConnectorAccountsRequest(BaseModel):
-    refresh_token: str = ""
-    login_customer_id: str = ""  # MCC override
     # Manual-credential connectors (apple_ads, meta_ads, stripe, revenuecat,
-    # openai_ads): arbitrary key/value credentials the adapter reads from
-    # auth.extras (api_key, access_token, private_key, team_id, …).
+    # openai_ads, …): the keys being pasted, verified by listing what they
+    # reach before they are saved. The adapter reads them from auth.extras.
     credentials: dict[str, str] = {}
 
 
@@ -39,6 +37,17 @@ def _list_accounts(connector_id: str, body: ConnectorAccountsRequest) -> dict:
             status_code=HTTP_501_NOT_IMPLEMENTED,
             detail=f"Connector {connector_id!r} does not support listing accounts.",
         )
+    # A sign-in connector's credential lives only on the server, so there is
+    # nothing a request could verify here: its accounts come from the stored
+    # row (`GET /api/user/connectors/{id}/entities`).
+    if meta.oauth_scope:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"{meta.label} is connected by signing in, not with pasted keys. "
+                "Its accounts are listed from the stored connection."
+            ),
+        )
     # The same refusal as saving: listing with a grant this caller did not
     # earn would read someone else's repository names.
     reserved = server_only_keys_in(connector_id, body.credentials)
@@ -48,20 +57,8 @@ def _list_accounts(connector_id: str, body: ConnectorAccountsRequest) -> dict:
             detail=f"{', '.join(reserved)} is set by Duct's own connect flow, never by a request.",
         )
 
-    extras = {
-        key: value.strip()
-        for key, value in (
-            ("login_customer_id", body.login_customer_id),
-        )
-        if value.strip()
-    }
-    # Manual-credential connectors carry their whole credential shape here.
-    extras.update({k: v.strip() for k, v in (body.credentials or {}).items() if v and v.strip()})
-    auth = ConnectorAuthContext(
-        connector_id=connector_id,
-        refresh_token=body.refresh_token.strip() or None,
-        extras=extras,
-    )
+    extras = {k: v.strip() for k, v in (body.credentials or {}).items() if v and v.strip()}
+    auth = ConnectorAuthContext(connector_id=connector_id, extras=extras)
     try:
         accounts = adapter.list_accounts(auth)
     except ValueError as exc:
@@ -73,14 +70,10 @@ def _list_accounts(connector_id: str, body: ConnectorAccountsRequest) -> dict:
 
 
 @router.post("/{connector_id}/accounts")
-def list_connector_accounts_post(connector_id: str, body: ConnectorAccountsRequest) -> dict:
-    """Preferred variant: credentials travel in the body, not the query string."""
+def list_connector_accounts(connector_id: str, body: ConnectorAccountsRequest) -> dict:
+    """Verify pasted keys by listing the accounts they reach.
+
+    The GET variant, which took a refresh token in the query string, is gone
+    with the last client that held a token to send.
+    """
     return _list_accounts(connector_id, body)
-
-
-@router.get("/{connector_id}/accounts")
-def list_connector_accounts(
-    connector_id: str,
-    refresh_token: str = Query(default=""),
-) -> dict:
-    return _list_accounts(connector_id, ConnectorAccountsRequest(refresh_token=refresh_token))

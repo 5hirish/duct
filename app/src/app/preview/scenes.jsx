@@ -52,6 +52,7 @@ import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
+import OAuthConnectorCard from "@/components/connections/OAuthConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
 import McpConnectors from "@/components/connections/McpConnectors";
 import { NATIVE_SOURCE } from "@/lib/connectorSource";
@@ -1461,6 +1462,14 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "oauth-card-google",
+    state: "not connected, and connected with a partial grant",
+    group: "OAuthConnectorCard",
+    title: "A Google sign-in connector",
+    note: "Open each tile. What the card shows is the stored row and nothing else: there is no \u201cthis session only\u201d state any more, because the token never reaches the browser. Not connected, the dialog offers Sign in with Google; press it and the preview answers the way the desktop hand-off does, so the waiting line with Open it again appears. Connected, the storage glyph says where the row lives, the permissions list shows the scope that was declined, and the footer carries Disconnect (which asks first) and Reconnect.",
+    render: () => <OAuthCardScene />,
   },
   {
     id: "manual-card-one-click",
@@ -2878,6 +2887,49 @@ function OneClickCardScene() {
       <ManualConnectorCard
         {...common}
         serverRowList={[row("r1", "acme/app"), row("r2", "acme/site")]}
+      />
+    </div>
+  );
+}
+
+function OAuthCardScene() {
+  const GA4_READ = "https://www.googleapis.com/auth/analytics.readonly";
+  const GA4_EDIT = "https://www.googleapis.com/auth/analytics.edit";
+  const scopes = [
+    { scope: GA4_READ, label: "Read reports", why: "To read traffic and conversions for briefs.", access: "read", required: true, granted: true },
+    { scope: GA4_EDIT, label: "Edit configuration", why: "To stage key events you approve.", access: "write", required: false, granted: false },
+  ];
+  const row = {
+    id: "r1",
+    connector_type: "ga4",
+    account_id: "",
+    account_name: "",
+    storage: "cloud",
+    residency: "server",
+    scopes,
+    scope_status: "partial",
+    missing_scopes: [GA4_EDIT],
+  };
+  const common = {
+    connectorType: "ga4",
+    title: "Google Analytics",
+    description: "Traffic, sessions, engagement and conversions.",
+    logo: LOGOS.ga4,
+    start: () => new Promise((resolve) => setTimeout(() => resolve("browser"), 400)),
+    onDisconnect: () => {},
+  };
+  return (
+    <div className="conn-grid">
+      <OAuthConnectorCard {...common} connected={false} oauthConnected={false} tone="off" status="Not connected" />
+      <OAuthConnectorCard
+        {...common}
+        connected
+        oauthConnected
+        tone="partial"
+        status="Connected · 1 permission missing"
+        scopes={scopes}
+        scopeStatus="partial"
+        rows={[row]}
       />
     </div>
   );

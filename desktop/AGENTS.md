@@ -142,14 +142,16 @@ carries all the code.
     `backend/routes/auth.py`, started by `app/src/lib/connectorAuth.js`).
 
   **No credential ever rides in a deep link.** Any app on the machine can claim
-  the scheme, so both routes carry only a single-use 60-second code that the
-  webview redeems against the backend (`/auth/exchange`,
-  `/auth/connectors/exchange`). The code is delivered to the *configured*
-  window URL, never to `window.url()`: a window the page had sent elsewhere
-  would otherwise receive it. This matters more for connectors than for
-  sign-in: their payload is a *long-lived* Google refresh token, where the
-  in-browser flow can still use a URL fragment (never sent to a server) because
-  it never leaves the app's own window.
+  the scheme, so both routes carry only a single-use, short-lived code. For
+  sign-in the webview redeems it for the session JWT (`/auth/exchange`). For a
+  connector it is a claim ticket: the webview's signed-in Connections page
+  claims the grant (`POST /api/user/connectors/claim`), the backend stores the
+  refresh token for the user who started the connect, and the token never
+  reaches the webview or the browser at all (issue #456). The code is
+  delivered to the *configured* window URL, never to `window.url()`: a window
+  the page had sent elsewhere would otherwise receive it. The deep-link shape
+  (`connector` + `auth_code`, both required by `deep_link_target`) is a
+  contract with released shells; change the backend's redirect, never it.
 
   Both flows also route their failures to the app's `/desktop-auth` relay page
   rather than raising. The system browser renders whatever the loopback sidecar
