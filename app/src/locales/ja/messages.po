@@ -2253,8 +2253,8 @@ msgid "connected sources"
 msgstr "接続ソース"
 
 #: src/app/(app)/connections/page.jsx
-msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
-msgstr "Googleには接続されましたが、Ductセッションが{backend}によって拒否されたため、接続をアカウントに保存できませんでした。サインアウトして再度サインインし、再接続してください。"
+#~ msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
+#~ msgstr "Googleには接続されましたが、Ductセッションが{backend}によって拒否されたため、接続をアカウントに保存できませんでした。サインアウトして再度サインインし、再接続してください。"
 
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/workspace/AgentChat.jsx
@@ -3721,6 +3721,10 @@ msgstr "Google Ads、GA4、Search Console、Meta Adsは後で接続します —
 #: src/components/connections/logos.jsx
 msgid "Google Analytics"
 msgstr "Google Analytics"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Google approved the connection, but you're not signed in to Duct here, so it wasn't saved. Sign in, then connect again."
+msgstr "Googleは接続を承認しましたが、ここではDuctにサインインしていないため保存されませんでした。サインインしてから、もう一度接続してください。"
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Google declined the exchange, which is almost always temporary. Try again from the app."
@@ -6464,8 +6468,8 @@ msgid "Reconnect this source →"
 msgstr "このソースを再接続 →"
 
 #: src/components/connections/OAuthConnectorCard.jsx
-msgid "Reconnect to save it to your account."
-msgstr "再接続してアカウントに保存してください。"
+#~ msgid "Reconnect to save it to your account."
+#~ msgstr "再接続してアカウントに保存してください。"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reconnecting to the model"
@@ -7550,8 +7554,8 @@ msgid "Sign in to save — manual credentials are stored server-side (encrypted)
 msgstr "保存するにはサインインしてください。手動の認証情報はサーバー側（暗号化済み）に保存され、エージェントとスケジュールされたプルが使用できます。"
 
 #: src/components/connections/OAuthConnectorCard.jsx
-msgid "Sign in to save it to your account."
-msgstr "アカウントに保存するにはサインインしてください。"
+#~ msgid "Sign in to save it to your account."
+#~ msgstr "アカウントに保存するにはサインインしてください。"
 
 #: src/components/AppSidebar.jsx
 msgid "Sign in to save your work"
@@ -7620,8 +7624,8 @@ msgid "Signed in to {planName}"
 msgstr "{planName}にサインイン済み"
 
 #: src/app/(app)/connections/page.jsx
-msgid "Signed in with Google, but saving the connection to your account failed, so it will only last this browser session. Try Reconnect once you're back online."
-msgstr "Googleでサインインしましたが、アカウントへの接続の保存に失敗したため、このブラウザセッション中のみ有効です。オンラインに戻ったら、再接続を試してください。"
+#~ msgid "Signed in with Google, but saving the connection to your account failed, so it will only last this browser session. Try Reconnect once you're back online."
+#~ msgstr "Googleでサインインしましたが、アカウントへの接続の保存に失敗したため、このブラウザセッション中のみ有効です。オンラインに戻ったら、再接続を試してください。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Signing in with Google is all Duct needs. If your accounts sit under a manager account, name it here so Duct reads the child accounts through it."
@@ -8075,12 +8079,16 @@ msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."
 msgstr "ありがとうございます！<0>{contact}</0>にご連絡し、詳細を検討させていただきます。"
 
 #: src/app/(app)/connections/page.jsx
-msgid "That connection came back incomplete — please try again."
-msgstr "接続が不完全でした。もう一度お試しください。"
+#~ msgid "That connection came back incomplete — please try again."
+#~ msgstr "接続が不完全でした。もう一度お試しください。"
 
 #: src/app/(app)/connections/page.jsx
-msgid "That connection didn't finish — the link expires after a minute. Please try again."
-msgstr "接続が完了しませんでした。リンクは1分後に期限切れになります。もう一度お試しください。"
+#~ msgid "That connection didn't finish — the link expires after a minute. Please try again."
+#~ msgstr "接続が完了しませんでした。リンクは1分後に期限切れになります。もう一度お試しください。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "That connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again."
+msgstr "接続が完了しませんでした。リンクの有効期間は2分間で、接続を開始したアカウントでのみ使用できます。もう一度接続してください。"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "That connection expired or was started from another account. Connect again."
@@ -8187,8 +8195,8 @@ msgid "The agents stop seeing it from the next turn."
 msgstr "エージェントは次回の実行からそれを見なくなります。"
 
 #: src/app/(app)/connections/page.jsx
-msgid "the API"
-msgstr "API"
+#~ msgid "the API"
+#~ msgstr "API"
 
 #: src/components/ConnectionBanner.jsx
 msgid "The app is online but Duct's servers are not responding. This is usually brief."
@@ -8257,6 +8265,10 @@ msgstr "キーは有効ですが、アカウントにクレジットがありま
 #: src/components/insights/desk/DeskCards.jsx
 msgid "The last turn failed"
 msgstr "前回の実行は失敗しました"
+
+#: src/app/(app)/connections/page.jsx
+msgid "The manager account wasn't saved."
+msgstr "マネージャーアカウントは保存されませんでした。"
 
 #: src/lib/agentSession.js
 msgid "The model provider is overloaded right now. Try again in a moment."
@@ -9100,8 +9112,12 @@ msgid "We lost the connection to this run. Please retry."
 msgstr "この実行への接続が失われました。もう一度お試しください。"
 
 #: src/components/CookieConsent.jsx
-msgid "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves exactly the same. <0>Privacy Policy</0>"
-msgstr "Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の目的であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否した場合でもDuctの動作は全く同じです。<0>プライバシーポリシー</0>"
+#~ msgid "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の目的であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否した場合でもDuctの動作は全く同じです。<0>プライバシーポリシー</0>"
+
+#: src/components/CookieConsent.jsx
+msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+msgstr "PostHogとGoogle Analyticsを使って、どのページがサインアップにつながるか、Ductのどこで使いにくさを感じているかを確認しています。訪問の録画も含みますが、入力した内容はすべて隠されます。用途はこれだけで、広告ターゲティングも販売も一切ありません。拒否してもDuctはまったく同じように動作します。<0>プライバシーポリシー</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."

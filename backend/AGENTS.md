@@ -210,7 +210,15 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   picks one; unset takes the first with credentials (Cloudflare, then Resend) and
   falls back to `console`, which logs, so dev/CI/self-host need no vendor account.
   Same shape as the app's analytics seam, for the same reason: a fork swaps one file.
-- **Observability:** Sentry error tracking; OpenTelemetry tracing of every
+- **Observability:** PostHog for product events, error tracking and AI call
+  metadata, behind one seam (`service/analytics.py`, the only file that
+  imports PostHog): routes call `capture_event`, `get_current_user` attributes
+  the request with `identify_user` (the account UUID, the same distinct id the
+  app sends), uncaught exceptions are caught by the ASGI middleware and
+  `logger.exception` records by a root handler, and the AI callback runs in
+  privacy mode, so prompts and replies never leave. Off without
+  `POSTHOG_API_KEY`, and off on a loopback `API_PUBLIC_URL` unless
+  `POSTHOG_ENABLE_LOCALHOST` is set. And OpenTelemetry tracing of every
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
   it is unset. Locally that is Phoenix: the "Duct: App + API + Phoenix" and
@@ -440,7 +448,11 @@ Postgres `DATABASE_URL` names.
 - `service/google/brief.py` — Google Ads brief normalization (loads demo from `data/<connector_id>/`, default `google_ads`)
 - `service/google/schema.py` — typed Google Ads brief payload (dataclasses / JSON contract)
 - `agents/insights/prompts/` — synthesis prompts: `autonomous.py` builds the system and user prompt, `paid_ads.py` and `organic_growth.py` hold the vertical modes `get_system_prompt()` dispatches to
-- `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`)
+- `routes/auth.py` — OAuth by connector (`/auth/connectors/{connector_id}/oauth/...`).
+  Every connect starts with a `?link=` naming the signed-in user and ends with
+  that user's page claiming the grant; both clients come home on
+  `/connections?connector=&auth_code=` (the desktop one through `/desktop-auth`
+  and the shell's deep link).
 - `routes/signin.py` — Google sign-in, and the **guest**: `POST /auth/guest`
   mints a real `users` row keyed on an install id so an audit can run before
   anyone signs in; `/auth/guest/link-code` + `?link=` on authorize lets the
@@ -1143,6 +1155,17 @@ don't fit.
   mints a token for any installation id it is handed, so an id a browser
   could store is someone else's repository. The only writer is the claim
   route, bound to the user whose signed-in session started the connect.
+  The four Google connectors' `refresh_token` is server-only for the same
+  reason and by the same route shape (issue #456): `POST
+  /api/user/connectors/connect-link` names the user, the OAuth callback parks
+  the grant, `POST /api/user/connectors/claim` stores it merged over the row
+  (`service/connector_store.store_oauth_grant`, so a reconnect keeps the MCC
+  id). **No Google token reaches a client** — not in a redirect, a response or
+  browser storage — and every reader (`/api/insights/refresh`, execution,
+  FetchData) resolves from stored rows; there is no request override left.
+  `ConnectorMeta.settings_keys` is the opposite list: non-secret keys the user
+  may change on a stored row (`PATCH /api/user/connectors/{id}`), today only
+  the Ads `login_customer_id`, shown back as `settings` on the row.
 - `service/content_metrics.py` — a content post's `perf`, read and written one
   way. `METRIC_ALIASES` reconciles the three key conventions in the column
   (PostBridge's `view_count`, migrated `avgWatchTime`, hand-entered `saves`);
@@ -1206,9 +1229,10 @@ So when you add a setting:
 - Renaming a field means renaming it in `.env.example` too — the stale check
   catches it, because a wrong example is worse than a missing one.
 
-Names are shared across processes deliberately. `SENTRY_DSN` is read by this
-backend, by the desktop sidecar (only on user consent), and compiled into the
-Tauri shell via `option_env!`; `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` likewise.
+Names are shared across processes deliberately. `POSTHOG_API_KEY` is read by
+this backend and by the desktop sidecar (only when the shell passes it, on the
+user's Preferences switch); `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` is read here
+and compiled into the Tauri shell via `option_env!`.
 One value in `.env.local` serves all of them — do not invent a `DUCT_`-prefixed
 variant for the desktop half.
 

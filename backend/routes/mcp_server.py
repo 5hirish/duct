@@ -30,6 +30,7 @@ from starlette.status import (
 )
 
 from db.session import get_session
+from service.analytics import identify_user
 from service.mcp_server.protocol import (
     INTERNAL_ERROR,
     PARSE_ERROR,
@@ -73,6 +74,7 @@ def get_mcp_caller(
             headers=_BEARER_CHALLENGE,
         )
     token, user = resolved
+    identify_user(user)
     _CALL_LIMIT.enforce(str(token.id), "Too many MCP requests. Slow down and try again shortly.")
     return Caller(user=user, token=token, session=session)
 

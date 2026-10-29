@@ -184,11 +184,11 @@ export default function ChangeSetCard({ changeSet: initial }) {
   const onApprove = () =>
     run("approve", async () => {
       await approveChangeSet(cs.change_set_id);
-      return applyChangeSet(cs.change_set_id, cs.connector_type);
+      return applyChangeSet(cs.change_set_id);
     });
   const onReject = () => run("reject", () => rejectChangeSet(cs.change_set_id));
   const onRollback = () =>
-    run("rollback", () => rollbackChangeSet(cs.change_set_id, cs.connector_type));
+    run("rollback", () => rollbackChangeSet(cs.change_set_id));
 
   return (
     <div className="my-2 max-w-md overflow-hidden rounded-xl border border-border bg-card">

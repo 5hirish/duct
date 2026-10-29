@@ -773,10 +773,10 @@
     }
   }
 
-  // GTM reads these; without them the funnel is a page view and nothing else.
+  // GTM and PostHog read these; without them the funnel is a page view and
+  // nothing else. ductTrack (assets/duct.js) feeds both behind the consent gate.
   function track(event) {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ event: event });
+    if (window.ductTrack) window.ductTrack(event);
   }
 
   function normalizeUrl(raw) {

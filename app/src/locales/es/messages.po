@@ -2253,8 +2253,8 @@ msgid "connected sources"
 msgstr "fuentes conectadas"
 
 #: src/app/(app)/connections/page.jsx
-msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
-msgstr "Conectado a Google, pero tu sesión de Duct fue rechazada por {backend}, por lo que la conexión no pudo guardarse en tu cuenta. Cierra sesión y vuelve a iniciarla, luego reconecta."
+#~ msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
+#~ msgstr "Conectado a Google, pero tu sesión de Duct fue rechazada por {backend}, por lo que la conexión no pudo guardarse en tu cuenta. Cierra sesión y vuelve a iniciarla, luego reconecta."
 
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/workspace/AgentChat.jsx
@@ -3721,6 +3721,10 @@ msgstr "Google Ads, GA4, Search Console y Meta Ads se conectan más tarde — de
 #: src/components/connections/logos.jsx
 msgid "Google Analytics"
 msgstr "Google Analytics"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Google approved the connection, but you're not signed in to Duct here, so it wasn't saved. Sign in, then connect again."
+msgstr "Google aprobó la conexión, pero aquí no has iniciado sesión en Duct, así que no se guardó. Inicia sesión y vuelve a conectar."
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Google declined the exchange, which is almost always temporary. Try again from the app."
@@ -6463,8 +6467,8 @@ msgid "Reconnect this source →"
 msgstr "Reconectar esta fuente →"
 
 #: src/components/connections/OAuthConnectorCard.jsx
-msgid "Reconnect to save it to your account."
-msgstr "Reconecta para guardarlo en tu cuenta."
+#~ msgid "Reconnect to save it to your account."
+#~ msgstr "Reconecta para guardarlo en tu cuenta."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reconnecting to the model"
@@ -7549,8 +7553,8 @@ msgid "Sign in to save — manual credentials are stored server-side (encrypted)
 msgstr "Inicia sesión para guardar: las credenciales manuales se almacenan en el servidor (cifradas) para que los agentes y las extracciones programadas puedan usarlas."
 
 #: src/components/connections/OAuthConnectorCard.jsx
-msgid "Sign in to save it to your account."
-msgstr "Inicia sesión para guardarlo en tu cuenta."
+#~ msgid "Sign in to save it to your account."
+#~ msgstr "Inicia sesión para guardarlo en tu cuenta."
 
 #: src/components/AppSidebar.jsx
 msgid "Sign in to save your work"
@@ -7619,8 +7623,8 @@ msgid "Signed in to {planName}"
 msgstr "Sesión iniciada en {planName}"
 
 #: src/app/(app)/connections/page.jsx
-msgid "Signed in with Google, but saving the connection to your account failed, so it will only last this browser session. Try Reconnect once you're back online."
-msgstr "Sesión iniciada con Google, pero guardar la conexión en tu cuenta falló, por lo que solo durará esta sesión del navegador. Intenta reconectar una vez que estés en línea de nuevo."
+#~ msgid "Signed in with Google, but saving the connection to your account failed, so it will only last this browser session. Try Reconnect once you're back online."
+#~ msgstr "Sesión iniciada con Google, pero guardar la conexión en tu cuenta falló, por lo que solo durará esta sesión del navegador. Intenta reconectar una vez que estés en línea de nuevo."
 
 #: src/app/(app)/connections/page.jsx
 msgid "Signing in with Google is all Duct needs. If your accounts sit under a manager account, name it here so Duct reads the child accounts through it."
@@ -8074,12 +8078,16 @@ msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."
 msgstr "Gracias. Nos pondremos en contacto contigo en <0>{contact}</0> para definir el alcance."
 
 #: src/app/(app)/connections/page.jsx
-msgid "That connection came back incomplete — please try again."
-msgstr "Esa conexión volvió incompleta — por favor, inténtalo de nuevo."
+#~ msgid "That connection came back incomplete — please try again."
+#~ msgstr "Esa conexión volvió incompleta — por favor, inténtalo de nuevo."
 
 #: src/app/(app)/connections/page.jsx
-msgid "That connection didn't finish — the link expires after a minute. Please try again."
-msgstr "Esa conexión no terminó — el enlace expira después de un minuto. Por favor, inténtalo de nuevo."
+#~ msgid "That connection didn't finish — the link expires after a minute. Please try again."
+#~ msgstr "Esa conexión no terminó — el enlace expira después de un minuto. Por favor, inténtalo de nuevo."
+
+#: src/app/(app)/connections/page.jsx
+msgid "That connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again."
+msgstr "Esa conexión no se completó. El enlace dura dos minutos y solo sirve para la cuenta que la inició. Vuelve a conectar."
 
 #: src/components/connections/McpConnectors.jsx
 msgid "That connection expired or was started from another account. Connect again."
@@ -8186,8 +8194,8 @@ msgid "The agents stop seeing it from the next turn."
 msgstr "Los agentes dejan de verlo a partir del próximo turno."
 
 #: src/app/(app)/connections/page.jsx
-msgid "the API"
-msgstr "la API"
+#~ msgid "the API"
+#~ msgstr "la API"
 
 #: src/components/ConnectionBanner.jsx
 msgid "The app is online but Duct's servers are not responding. This is usually brief."
@@ -8256,6 +8264,10 @@ msgstr "La clave funciona, pero la cuenta no tiene crédito"
 #: src/components/insights/desk/DeskCards.jsx
 msgid "The last turn failed"
 msgstr "El último turno falló"
+
+#: src/app/(app)/connections/page.jsx
+msgid "The manager account wasn't saved."
+msgstr "No se guardó la cuenta de administrador."
 
 #: src/lib/agentSession.js
 msgid "The model provider is overloaded right now. Try again in a moment."
@@ -9099,8 +9111,12 @@ msgid "We lost the connection to this run. Please retry."
 msgstr "Perdimos la conexión a esta ejecución. Por favor, inténtalo de nuevo."
 
 #: src/components/CookieConsent.jsx
-msgid "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves exactly the same. <0>Privacy Policy</0>"
-msgstr "Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Si lo rechazas, Duct se comporta exactamente igual. <0>Política de privacidad</0>"
+#~ msgid "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Si lo rechazas, Duct se comporta exactamente igual. <0>Política de privacidad</0>"
+
+#: src/components/CookieConsent.jsx
+msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+msgstr "Usamos PostHog y Google Analytics para ver qué páginas generan un registro y dónde Duct te estorba, incluidas grabaciones de visitas en las que todo lo que escribes queda oculto. Ese es todo el uso: sin segmentación de anuncios, nada vendido. Si lo rechazas, Duct funciona exactamente igual. <0>Política de privacidad</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."

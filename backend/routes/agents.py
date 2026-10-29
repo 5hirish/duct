@@ -305,7 +305,7 @@ def _owned_session(session_id: str, agent_type: str, user: User | None):
       anyone, and there is no signed-in caller to compare against.
 
     Session ids are unguessable, but unguessable is not a permission: an id
-    reaches a log, a shared URL, a Sentry breadcrumb. It should not also be
+    reaches a log, a shared URL, an error report. It should not also be
     the only thing standing between a stranger and someone else's live agent.
     """
     session = get_session(session_id)
@@ -348,8 +348,8 @@ def _require_caller(agent_type: str, body: dict, user: User | None) -> str | Non
 
     The token is consumed here and removed from the body: nothing downstream
     needs it, ``AuditRequest`` forbids unknown fields, and a credential that
-    stops travelling is one fewer thing to keep out of a log or a Sentry
-    breadcrumb.
+    stops travelling is one fewer thing to keep out of a log or an error
+    report.
 
     Returns the token when the run is the teaser, because the teaser runs on
     Duct's key (``duct_pays=req.lead_magnet``) and the token is what its limits

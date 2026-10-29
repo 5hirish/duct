@@ -9,9 +9,12 @@ from config import get_configs
 
 def resolve_ads_credentials(
     *,
-    request_refresh_token: str | None,
+    refresh_token: str | None,
 ) -> tuple[str, str, str]:
     """Resolve the OAuth client and refresh token for a Google Ads call.
+
+    ``refresh_token`` is the caller's stored one; the env token is the
+    operator's own account, for a self-host with nothing connected.
 
     No developer token is involved: Google sunset them on 2026-09-09, and the
     access level of a call is now that of the Cloud project owning
@@ -22,14 +25,14 @@ def resolve_ads_credentials(
     cfg = get_configs()
     cid = cfg.google_oauth_client_id or cfg.google_ads_client_id
     secret = cfg.google_oauth_client_secret or cfg.google_ads_client_secret
-    rt = (request_refresh_token or "").strip() or cfg.google_ads_refresh_token
+    rt = (refresh_token or "").strip() or cfg.google_ads_refresh_token
     if not all([cid, secret, rt]):
         raise HTTPException(
             status_code=422,
             detail=(
                 "Missing Google Ads credentials. Set GOOGLE_OAUTH_CLIENT_ID and "
-                "GOOGLE_OAUTH_CLIENT_SECRET, and connect Google Ads to provide a "
-                "refresh_token."
+                "GOOGLE_OAUTH_CLIENT_SECRET, and connect Google Ads on the "
+                "Connections page."
             ),
         )
     return cid, secret, rt
