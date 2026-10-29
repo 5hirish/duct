@@ -143,9 +143,9 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
    * anchors that appear later. Matching on the release prefix is what makes a
    * per-platform link count and a link to /download not.
    *
-   * Sent through ductTrack (assets/duct.js), which queues it for GTM and
-   * PostHog alike whether or not either has loaded; if the visitor declined
-   * cookies neither loads and the queues are simply never drained. */
+   * Sent through ductTrack (assets/duct.js), which queues it until PostHog
+   * has loaded; if the visitor declined cookies PostHog never loads and the
+   * queue is simply never drained. */
   function osForHref(href) {
     var slot = SLOTS.filter(function (s) { return href && href.indexOf(s.file) !== -1; })[0];
     return (slot && slot.key) || detect() || '';

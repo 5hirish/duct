@@ -34,9 +34,9 @@ export function AuthProvider({ children }) {
         guest: payload.guest === true,
       });
       // The account UUID, not `sub` — that is the email, and it must not reach
-      // an analytics provider. Safe before consent resolves: nothing drains the
-      // dataLayer until a provider actually loads, and if the answer is no it
-      // never does.
+      // an analytics provider. Safe before consent resolves: until someone says
+      // yes the provider sends crash reports and nothing else, and if the
+      // answer is no that never changes.
       analytics.identify(payload.uid);
     }
     setLoading(false);

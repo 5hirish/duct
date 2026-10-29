@@ -54,17 +54,17 @@ describe("provider selection", () => {
   }
 
   it("measures nothing when nothing is configured", async () => {
-    const analytics = await load({ NEXT_PUBLIC_POSTHOG_KEY: "", NEXT_PUBLIC_GTM_ID: "", NEXT_PUBLIC_ANALYTICS_PROVIDER: "" });
+    const analytics = await load({ NEXT_PUBLIC_POSTHOG_KEY: "", NEXT_PUBLIC_ANALYTICS_PROVIDER: "" });
     expect(analytics.id).toBe("none");
   });
 
-  it("runs every configured provider", async () => {
-    const analytics = await load({ NEXT_PUBLIC_POSTHOG_KEY: "phc_x", NEXT_PUBLIC_GTM_ID: "GTM-X", NEXT_PUBLIC_ANALYTICS_PROVIDER: "" });
-    expect(analytics.id).toBe("posthog+gtm");
+  it("runs PostHog when its key is set", async () => {
+    const analytics = await load({ NEXT_PUBLIC_POSTHOG_KEY: "phc_x", NEXT_PUBLIC_ANALYTICS_PROVIDER: "" });
+    expect(analytics.id).toBe("posthog");
   });
 
   it("honours an explicit list", async () => {
-    const analytics = await load({ NEXT_PUBLIC_POSTHOG_KEY: "phc_x", NEXT_PUBLIC_GTM_ID: "GTM-X", NEXT_PUBLIC_ANALYTICS_PROVIDER: "posthog" });
-    expect(analytics.id).toBe("posthog");
+    const analytics = await load({ NEXT_PUBLIC_POSTHOG_KEY: "phc_x", NEXT_PUBLIC_ANALYTICS_PROVIDER: "none" });
+    expect(analytics.id).toBe("none");
   });
 });

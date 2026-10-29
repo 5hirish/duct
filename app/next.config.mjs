@@ -7,17 +7,15 @@ const DEV = process.env.NODE_ENV === "development";
  * Where a script may come from. Everything bundled (React, PostHog, Mermaid,
  * DOMPurify, Lingui) is 'self' — PostHog's `no-external` build fetches no
  * script of its own; the app spawns no worker and calls no `eval`.
- * The two remote hosts are the only scripts the app fetches by URL: the tag
- * container, which the web app loads after consent and the desktop shell
- * never loads (`lib/analytics/gtm.js`), and the sign-in page's Turnstile
- * check. A new remote script goes here, because nothing else will let it run.
+ * The remote host is the only script the app fetches by URL: the sign-in
+ * page's Turnstile check. A new remote script goes here, because nothing else
+ * will let it run.
  * 'unsafe-eval' is dev only: Next's own CSP guidance asks for it there, for
  * HMR and the error overlay, and nothing in a production bundle needs it.
  */
 const SCRIPT_SOURCES = [
   "'self'",
   "'unsafe-inline'",
-  "https://www.googletagmanager.com",
   "https://challenges.cloudflare.com",
   ...(DEV ? ["'unsafe-eval'"] : []),
 ];
@@ -28,7 +26,7 @@ const SCRIPT_SOURCES = [
  * The session JWT lives in localStorage and the desktop shell lets this origin
  * read keychain-held provider keys, so script injection here is the expensive
  * failure. `script-src` is what answers it: no script from any origin but ours
- * and the two above, and no `eval`.
+ * and the one above, and no `eval`.
  *
  * Why 'unsafe-inline' and not a nonce. Every route already renders dynamically
  * (the root layout reads the locale cookie), so a nonce would cost no static

@@ -77,9 +77,7 @@ class PageChecker(HTMLParser):
         self.has_config_js = False
         self.has_duct_js = False
         self.duct_js_defer = False
-        self.has_gtm_noscript = False
-        self._in_noscript = False
-        self._saw_body = False
+        self.loads_google_tags = False
         self.ld_blocks = []
         self._in_ld = False
         # Every local image the page references, src and srcset alike. A shot
@@ -89,16 +87,8 @@ class PageChecker(HTMLParser):
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
 
-        if tag == "body":
-            self._saw_body = True
-
-        if tag == "noscript":
-            self._in_noscript = True
-
-        if tag == "iframe" and self._in_noscript:
-            src = attrs.get("src", "")
-            if "googletagmanager.com/ns.html" in src:
-                self.has_gtm_noscript = True
+        if tag in ("script", "iframe") and "googletagmanager.com" in attrs.get("src", ""):
+            self.loads_google_tags = True
 
         if tag == "link":
             rel = attrs.get("rel", "")
@@ -146,8 +136,6 @@ class PageChecker(HTMLParser):
             self.ld_blocks.append(data)
 
     def handle_endtag(self, tag):
-        if tag == "noscript":
-            self._in_noscript = False
         if tag == "script":
             self._in_ld = False
 
@@ -261,9 +249,10 @@ class PageChecker(HTMLParser):
         elif not self.duct_js_defer:
             self.errors.append("duct.js script tag is missing the 'defer' attribute")
 
-        # GTM noscript
-        if not self.has_gtm_noscript:
-            self.errors.append("Missing GTM <noscript><iframe> immediately after <body>")
+        # GTM and GA4 were removed: a tag container runs scripts configured
+        # outside this repository, and outside the consent gate in duct.js.
+        if self.loads_google_tags:
+            self.errors.append("Loads Google Tag Manager; the site measures with PostHog behind the consent gate in duct.js")
 
 
 # ── Runner ────────────────────────────────────────────────────────────────────

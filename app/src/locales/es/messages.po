@@ -9115,8 +9115,12 @@ msgstr "Perdimos la conexión a esta ejecución. Por favor, inténtalo de nuevo.
 #~ msgstr "Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Si lo rechazas, Duct se comporta exactamente igual. <0>Política de privacidad</0>"
 
 #: src/components/CookieConsent.jsx
-msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
-msgstr "Usamos PostHog y Google Analytics para ver qué páginas generan un registro y dónde Duct te estorba, incluidas grabaciones de visitas en las que todo lo que escribes queda oculto. Ese es todo el uso: sin segmentación de anuncios, nada vendido. Si lo rechazas, Duct funciona exactamente igual. <0>Política de privacidad</0>"
+#~ msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "Usamos PostHog y Google Analytics para ver qué páginas generan un registro y dónde Duct te estorba, incluidas grabaciones de visitas en las que todo lo que escribes queda oculto. Ese es todo el uso: sin segmentación de anuncios, nada vendido. Si lo rechazas, Duct funciona exactamente igual. <0>Política de privacidad</0>"
+
+#: src/components/CookieConsent.jsx
+msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+msgstr "Usamos PostHog para ver qué páginas generan un registro y dónde Duct te estorba, incluidas grabaciones de visitas en las que todo lo que escribes queda oculto. Ese es todo el uso: sin segmentación de anuncios, nada vendido. Si lo rechazas, Duct funciona exactamente igual. <0>Política de privacidad</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."
