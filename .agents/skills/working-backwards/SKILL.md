@@ -166,10 +166,9 @@ Two reads, both free, before any outlet is picked. Skipping them is how
 the first backfill run nearly planned four posts nobody could have measured.
 
 - **The conversion is counted.** The site's one action is the desktop
-  download, which pushes `download_started` to the dataLayer from the
-  `/download` page (`site/assets/duct-download.js`). Through the OpenSEO connector
-  (`get_google_analytics_measurement_health`, then `get_google_analytics_key_events`),
-  confirm GA4 counts it as a key event. If it does not, that is the first
+  download, which sends `download_started` through `ductTrack` from the
+  `/download` page (`site/assets/duct-download.js`). Through the PostHog MCP,
+  confirm the event arrived in the last 30 days. If it did not, that is the first
   finding of the run and goes to the maintainer before any post: an outlet
   whose result cannot be read is a guess, however good its keyword.
 - **The quarter's goals.** `get_project_context` for the getduct.ai project

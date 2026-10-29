@@ -24,6 +24,14 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+### Removed
+
+- **Google Tag Manager and GA4, from the site and the web app.** PostHog,
+  which is open source, already measured both, and a tag container runs
+  scripts configured outside this repository with the session token in reach.
+  The cookie bar names PostHog alone, and the site deletes the `_ga` and
+  `_gcl_au` cookies that earlier visits were given.
+
 ## [0.7.2] — 2026-10-29
 
 Pages that arrive drawn, conversations that stay fast however long they get,

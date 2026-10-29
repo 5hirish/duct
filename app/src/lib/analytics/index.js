@@ -10,13 +10,15 @@
  * should be able to drop that or replace it without reading our consent logic.
  *
  * A provider may still refuse a surface on its own account, when the risk is
- * what the provider *is* rather than measurement as such: `gtm` reports itself
- * unconfigured inside the desktop shell because a tag container is a loader for
- * scripts configured elsewhere. A provider that bundles its own code need not.
+ * what the provider *is* rather than measurement as such. A tag manager would:
+ * it runs scripts configured outside this repository, with the session token
+ * and the desktop shell's IPC in reach. Google Tag Manager and GA4 ran here
+ * until October 2026 and went for that reason, and because an open-source
+ * product measures itself with open-source tools.
  *
  * Selected by `NEXT_PUBLIC_ANALYTICS_PROVIDER`, a comma-separated list. Unset
- * means every provider whose own variable is set (`NEXT_PUBLIC_POSTHOG_KEY`,
- * `NEXT_PUBLIC_GTM_ID`), so a self-host build that sets none of them measures
+ * means every provider whose own variable is set (`NEXT_PUBLIC_POSTHOG_KEY`
+ * today), so a self-host build that sets none of them measures
  * nothing without having to opt out of anything. More than one runs as one:
  * every call goes to each, so the consent flow above never learns how many.
  *
@@ -27,15 +29,13 @@
  * seams would name it twice.
  */
 
-import { gtm } from "./gtm";
 import { none } from "./none";
 import { posthog } from "./posthog";
 
-const PROVIDERS = { posthog, gtm, none };
+const PROVIDERS = { posthog, none };
 
 const CONFIGURED_BY = {
   posthog: () => Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY),
-  gtm: () => Boolean(process.env.NEXT_PUBLIC_GTM_ID),
 };
 
 /** Several providers behind the one interface: each call fans out, any running counts. */
@@ -93,9 +93,7 @@ export const analytics = resolve();
  *
  * `download_started` lives on the marketing site (`site/assets/duct-download.js`),
  * which shares no code with this app. PostHog takes every event by name, as
- * sent. GA4 takes only what the trigger list in `scripts/gtm-container-setup.ts`
- * forwards — an event missing from that list reaches the dataLayer and stops
- * there.
+ * sent.
  */
 export const AnalyticsEvent = {
   // Acquisition — the denominator for everything below.
@@ -138,10 +136,8 @@ export const AnalyticsEvent = {
 };
 
 /**
- * The parameter vocabulary. GA4 cannot wildcard event parameters — each one is
- * mapped by name in the container — so a param outside this set is silently
- * dropped on arrival there (PostHog keeps it). Adding one means adding it here
- * and in the setup script.
+ * The parameter vocabulary: one name per idea, so a filter on `provider` finds
+ * every event that carries one. Adding a param means adding it here.
  */
 export const AnalyticsParam = {
   Method: "method",       // how they signed up: "google"; how an MCP server signs in: "oauth" | "key" | "none"
@@ -157,8 +153,9 @@ export const AnalyticsParam = {
 };
 
 /**
- * Push a custom event. Safe before the provider starts — GTM's dataLayer queues,
- * and a provider that never starts drops it, which is the intent.
+ * Push a custom event. Safe before consent resolves: PostHog holds a few events
+ * until the answer and sends them only on a yes, and a provider that never
+ * starts drops them, which is the intent.
  */
 export function trackEvent(event, params = {}) {
   if (typeof window === "undefined") return;
