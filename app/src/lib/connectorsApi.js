@@ -2,13 +2,15 @@
 
 // Server-side connector credentials (/api/user/connectors).
 //
-// Saving a connector here stores its credentials Fernet-encrypted in the
-// backend so server-side work — agent-proposed executions, scheduled pulls —
-// can run without a browser session. Session-only tokens keep working as
-// before; this is the durable layer on top.
+// The only place a connection lives. Credentials are stored Fernet-encrypted
+// in the backend, so every tab, browser and the desktop app see the same
+// connections, and server-side work — agent-proposed executions, scheduled
+// pulls — runs without a browser. A sign-in connector's token never comes to
+// this app at all: the page mints a connect link, the provider's grant is
+// parked on the server, and the same session claims it (issue #456).
 
 import { authedRequest, hasAuthToken } from "./authFetch";
-import { SESSION_TOKEN_KEYS, resolveConnectedTypes } from "./connectorCount";
+import { resolveConnectedTypes } from "./connectorCount";
 import { connectedCount } from "./dataSources";
 
 export { hasAuthToken };
@@ -19,10 +21,10 @@ export function listServerConnectors() {
 }
 
 /**
- * Upsert one connector's credentials.
- * `credentials` is the raw dict to encrypt at rest, e.g. `{refresh_token}` or
- * `{refresh_token, login_customer_id}` for Google Ads.
- * Note: the blob replaces the stored one whole — always send every field.
+ * Upsert one pasted-key connector's credentials (Stripe, Meta, a GitHub
+ * token, …). `credentials` is the raw dict to encrypt at rest, and replaces
+ * the stored one whole — always send every field. A sign-in connector's token
+ * is refused here; it is only ever written by `claimConnectorGrant`.
  */
 export async function saveServerConnector({
   connector_type,
@@ -36,10 +38,8 @@ export async function saveServerConnector({
 }) {
   const res = await authedRequest("/api/user/connectors", {
     method: "POST",
-    // The one caller that keeps its own 401: this lands the instant the user
-    // returns from the provider, and bouncing them to sign-in there would
-    // discard the connection they just approved. The connections page explains
-    // instead — see reportSyncFailure.
+    // A 401 here would sign the person out mid-form and throw away the keys
+    // they just pasted; the card shows the error instead.
     retireSession: false,
     body: { connector_type, account_id, account_name, credentials, granted_scopes },
   });
@@ -53,17 +53,63 @@ export async function deleteServerConnector(id) {
   return res;
 }
 
+/**
+ * Change a stored connection's non-secret settings (the row's `settings`),
+ * e.g. `{ login_customer_id }` for the Google Ads manager account. Merged on
+ * the server: the token stays where the connect flow put it. An empty value
+ * clears a setting. Resolves to the updated row.
+ */
+export function updateConnectorSettings(id, settings) {
+  return authedRequest(`/api/user/connectors/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: { settings },
+  });
+}
+
+// --- Connecting by signing in (Google, GitHub) -------------------------------
+//
+// The flow lives in backend/routes/auth.py. What the browser does: mint a
+// single-use link naming the signed-in user, open the authorize route with it
+// (lib/connectorAuth.js), and — when the provider hands back a code — claim
+// the grant with the same session. The claim is the only way a sign-in
+// connector's credential is saved; saveServerConnector refuses one.
+
+/** A five-minute, single-use code for `/auth/connectors/{type}/oauth/authorize?link=`. */
+export async function startConnectLink(connectorType) {
+  const res = await authedRequest("/api/user/connectors/connect-link", {
+    method: "POST",
+    body: { connector_type: connectorType },
+  });
+  return res?.link || "";
+}
+
+/**
+ * Save a Google connector's grant to the account. Resolves to the stored row
+ * (never a token); rejects when the code expired or belongs to a connect
+ * another account started.
+ */
+export async function claimConnectorGrant(code) {
+  const res = await authedRequest("/api/user/connectors/claim", {
+    method: "POST",
+    // This lands the instant the user returns from Google, and a sign-in
+    // bounce here would discard the connection they just approved.
+    retireSession: false,
+    body: { code },
+  });
+  notifyConnectorsChanged();
+  return res;
+}
+
 // --- "how many sources are live?" ------------------------------------------
 //
-// Asked by the sidebar badge, and answered from the same two places the
-// Connections page reads: the durable server rows, plus the session-only OAuth
-// tokens a signed-out user can still hold. Counting DISTINCT connector types —
-// two Stripe accounts are one connected source, not two, which is what the
-// Connections page shows and therefore what the badge has to agree with.
+// Asked by the sidebar badge, and answered from the place the Connections
+// page reads: the stored rows. Counting DISTINCT connector types — two Stripe
+// accounts are one connected source, not two, which is what the Connections
+// page shows and therefore what the badge has to agree with.
 
 /** Fired whenever connector state changes, so anything showing a count can
- *  re-read it. `storage` events do not cover this: sessionStorage is per-tab
- *  and same-tab writes never fire one. */
+ *  re-read it. `storage` events do not cover this: a write to the server
+ *  fires none. */
 export { resolveConnectedTypes } from "./connectorCount";
 
 export const CONNECTORS_CHANGED = "duct:connectors-changed";
@@ -73,20 +119,9 @@ export function notifyConnectorsChanged() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(CONNECTORS_CHANGED));
 }
 
-/** Connector types with credentials somewhere, as a Set. Never throws — a
- *  signed-out or offline caller still gets the session-only answer. */
+/** Connector types with a stored credential, as a Set. Never throws — a
+ *  signed-out or offline caller gets the empty set. */
 export async function connectedConnectorTypes() {
-  const sessionTypes = [];
-  if (typeof window !== "undefined") {
-    for (const [type, key] of Object.entries(SESSION_TOKEN_KEYS)) {
-      try {
-        if (sessionStorage.getItem(key)) sessionTypes.push(type);
-      } catch {
-        /* storage disabled — server rows below still count */
-      }
-    }
-  }
-
   const serverTypes = [];
   if (hasAuthToken()) {
     try {
@@ -94,11 +129,10 @@ export async function connectedConnectorTypes() {
         if (row?.connector_type) serverTypes.push(row.connector_type);
       }
     } catch {
-      /* offline / signed-out — the session-only answer stands */
+      /* offline / signed-out — nothing this tab can vouch for */
     }
   }
-
-  return resolveConnectedTypes({ sessionTypes, serverTypes });
+  return resolveConnectedTypes({ serverTypes });
 }
 
 // --- The inventory: what can this project actually reach? ----------------
@@ -106,8 +140,8 @@ export async function connectedConnectorTypes() {
 // Server-resolved, so it covers every connector in the registry — OAuth and
 // pasted-API-key alike — and applies the project's bindings. Prefer these over
 // connectedConnectorTypes() wherever a project id is available: that function
-// can only see the four Google session-token keys plus stored rows, and knows
-// nothing about which account a project has chosen.
+// sees only the stored rows, and knows nothing about which account a project
+// has chosen.
 //
 // Each row: {connector_id, label, status, account_id, account_name,
 //            auth_kind, has_catalog, catalog_stale, stored_accounts}
@@ -136,12 +170,10 @@ export function listAccountDataSources() {
  * were reporting honestly about different questions, which is the worst
  * version of this bug — neither looks broken on its own.
  *
- * The server answer wins because it is the one that matches what a run can
+ * The inventory answer wins because it is the one that matches what a run can
  * actually use: it walks the whole registry, so a pasted API key counts like
- * an OAuth grant, and it applies the project's bindings. The browser's own
- * view is kept strictly as a fallback — signed out, offline, or against a
- * backend without the route, this tab may still hold session-only tokens, and
- * answering "zero" then is its own lie.
+ * an OAuth grant, and it applies the project's bindings. The plain row count
+ * is kept as the fallback for a backend without the inventory route.
  */
 export async function countConnectedSources(projectId) {
   const key = projectId || "";
@@ -242,22 +274,14 @@ export async function listConnectorAccounts(connectorId, credentials) {
 
 // --- GitHub App: the one-click GitHub connection ----------------------------
 //
-// The flow lives in backend/service/github/app.py. What the browser does:
-// ask whether this server has an App (self-hosted ones do not, and keep the
-// token form), mint a single-use link naming the signed-in user, open the
-// authorize route with it, and — when GitHub hands back — claim the grant
-// with the same session. The claim is the only way an App grant is saved;
-// saveServerConnector refuses one.
+// The flow lives in backend/service/github/app.py and starts like a Google
+// connect (`startConnectorOAuth("github")`). Two differences: ask first
+// whether this server has an App (self-hosted ones do not, and keep the token
+// form), and claim with the GitHub route, which stores a row per repository.
 
 /** `{ available, manage_url }` — whether GitHub connects in one click here. */
 export function getGitHubApp() {
   return authedRequest("/api/user/connectors/github/app");
-}
-
-/** A five-minute, single-use code for `/auth/connectors/github/oauth/authorize?link=`. */
-export async function startGitHubConnect() {
-  const res = await authedRequest("/api/user/connectors/github/connect", { method: "POST" });
-  return res?.link || "";
 }
 
 /**

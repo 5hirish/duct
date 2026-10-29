@@ -46,8 +46,8 @@ router.include_router(
     prefix="/api",
     dependencies=APP_AND_USER,
 )
-# Lists a vendor's accounts for a refresh token the caller supplies. Reaching
-# Google Ads on someone's behalf is not something an anonymous caller does.
+# Lists a vendor's accounts for keys the caller is pasting. Reaching a vendor
+# on someone's behalf is not something an anonymous caller does.
 router.include_router(
     connectors.router,
     prefix="/api/connectors",

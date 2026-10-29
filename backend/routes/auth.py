@@ -13,8 +13,7 @@ from starlette.status import HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 from config import get_configs
 from service.auth_exchange import (
     consume_connect_link_code,
-    consume_connector_code,
-    store_connector_code,
+    store_connector_grant,
     store_github_grant,
 )
 from service.connector_scopes import join_scopes, parse_scopes
@@ -31,7 +30,6 @@ from service.google.constants import (
 from service.google.oauth import create_google_oauth_flow
 from service.oauthstate import (
     cleanup_expired_states,
-    consume_state_for_flows,
     consume_state_full,
     save_state,
 )
@@ -54,17 +52,22 @@ CONNECTOR_FLOW_GA4 = "connector_ga4"
 CONNECTOR_FLOW_GSC = "connector_gsc"
 CONNECTOR_FLOW_GTM = "connector_gtm"
 
-# base flow -> (connector id, URL-fragment key the web app reads the token from)
-FLOW_TO_CALLBACK = {
-    CONNECTOR_FLOW_GOOGLE_ADS: (GOOGLE_ADS_CONNECTOR_ID, "refresh_token"),
-    CONNECTOR_FLOW_GA4: (GA4_CONNECTOR_ID, "ga4_refresh_token"),
-    CONNECTOR_FLOW_GSC: (GSC_CONNECTOR_ID, "gsc_refresh_token"),
-    CONNECTOR_FLOW_GTM: (GTM_CONNECTOR_ID, "gtm_refresh_token"),
+# base flow -> the connector it connects
+FLOW_TO_CONNECTOR = {
+    CONNECTOR_FLOW_GOOGLE_ADS: GOOGLE_ADS_CONNECTOR_ID,
+    CONNECTOR_FLOW_GA4: GA4_CONNECTOR_ID,
+    CONNECTOR_FLOW_GSC: GSC_CONNECTOR_ID,
+    CONNECTOR_FLOW_GTM: GTM_CONNECTOR_ID,
 }
-CONNECTOR_TO_FLOW = {connector_id: flow for flow, (connector_id, _) in FLOW_TO_CALLBACK.items()}
+CONNECTOR_TO_FLOW = {connector_id: flow for flow, connector_id in FLOW_TO_CONNECTOR.items()}
 # Every flow the shared /auth/google/callback accepts, desktop twins included.
 GOOGLE_CONNECTOR_FLOWS = tuple(
-    flow for base in FLOW_TO_CALLBACK for flow in (base, base + DESKTOP_FLOW_SUFFIX)
+    flow for base in FLOW_TO_CONNECTOR for flow in (base, base + DESKTOP_FLOW_SUFFIX)
+)
+# Said by every connect that arrives without a live link or state: the link
+# lasts five minutes and the state is spent once, so starting over is the fix.
+CONNECT_EXPIRED_DETAIL = (
+    "The connect link is missing or expired. Start again from the Connections page."
 )
 
 # GitHub App (service/github/app.py has the whole flow). Three legs, each with
@@ -138,40 +141,46 @@ def _connector_failure(
 def _connector_success(
     *,
     connector_id: str,
-    token_fragment_key: str,
+    user_id: str,
     refresh_token: str,
     granted_scopes: str,
     desktop: bool,
 ) -> RedirectResponse:
-    """Hand the refresh token back to whichever client started the flow.
+    """Park what Google granted for the user who started the connect, and send
+    their client home to claim it.
 
-    Browser: straight back to /connections with the token in the URL *fragment*,
-    which browsers never send to a server and the page strips on arrival.
+    The refresh token stays here. It used to ride back to the browser in a URL
+    fragment and live in that tab's session storage, synced to the account only
+    if a best-effort post succeeded — so a connection could exist in one tab and
+    nowhere else. Now the signed-in page claims the grant
+    (``POST /api/user/connectors/claim``) and the token goes straight from this
+    process to the database.
 
-    Desktop: the flow ends in the system browser and has to cross back into the
-    app through a custom-scheme deep link — a URL handled by whatever app claims
-    the scheme, and visible to the browser besides. A connector refresh token is
-    long-lived and must never ride in one, so it stays on the backend behind a
-    single-use 60-second code, exactly as the sign-in JWT does.
+    Claimed, not stored here, for the reason the GitHub App flow gives
+    (`service/github/app.py`): the connect link is a URL, and someone could send
+    a victim one minted for their own account. Stored on the callback, the
+    victim's consent would land on the sender's account. The claim honours the
+    grant only for the session whose user started the connect, and the code
+    only ever reaches the browser that consented.
     """
-    cfg = get_configs()
-    if desktop:
-        code = store_connector_code(
-            connector_type=connector_id,
-            refresh_token=refresh_token,
-            granted_scopes=granted_scopes,
-        )
-        query = f"connector={quote(connector_id, safe='')}&auth_code={quote(code, safe='')}"
-        return _no_store_redirect(f"{cfg.frontend_origin}/desktop-auth?{query}", 307)
-    # The granted scopes ride beside the token in the fragment. They are not a
-    # secret — the point of carrying them is that the browser can store them
-    # with the credential, so the card can say what was actually granted rather
-    # than assuming it got what it asked for.
-    redirect_url = (
-        f"{cfg.frontend_origin}/connections#{token_fragment_key}={quote(refresh_token, safe='')}"
-        f"&granted_scopes={quote(granted_scopes, safe='')}"
+    code = store_connector_grant(
+        user_id=user_id,
+        connector_type=connector_id,
+        refresh_token=refresh_token,
+        granted_scopes=granted_scopes,
     )
-    return _no_store_redirect(redirect_url, status_code=307)
+    return _grant_redirect(connector_id, code, desktop=desktop)
+
+
+def _grant_redirect(connector_id: str, code: str, *, desktop: bool) -> RedirectResponse:
+    """Both clients end on /connections?connector=…&auth_code=…: the browser
+    directly, the desktop shell by the relay page and its deep link. The shell's
+    deep link requires exactly those two values (desktop 0.7.2 and later), so
+    this shape is a contract with released binaries."""
+    cfg = get_configs()
+    query = f"connector={quote(connector_id, safe='')}&auth_code={quote(code, safe='')}"
+    page = "desktop-auth" if desktop else "connections"
+    return _no_store_redirect(f"{cfg.frontend_origin}/{page}?{query}")
 
 
 def _with_desktop(flow: str, desktop: bool) -> str:
@@ -192,11 +201,7 @@ def _github_authorize(*, link: str, desktop: bool) -> RedirectResponse:
         )
     user_id = consume_connect_link_code(link) if link else None
     if not user_id:
-        return fail(
-            CONNECT_ERROR_EXPIRED,
-            400,
-            "The connect link is missing or expired. Start again from the Connections page.",
-        )
+        return fail(CONNECT_ERROR_EXPIRED, 400, CONNECT_EXPIRED_DETAIL)
     return _github_to_oauth(user_id, flow=CONNECTOR_FLOW_GITHUB, desktop=desktop)
 
 
@@ -258,16 +263,11 @@ def _github_callback(*, code: str, state: str) -> RedirectResponse:
         user_id=consumed.link_user_id,
         grant={"repos": [r.as_dict() for r in repos], "omitted": omitted},
     )
-    # Both clients end on /connections?connector=github&auth_code=…: the
-    # browser directly, the desktop shell by the relay page and its deep link,
-    # exactly as a Google connect does. There the signed-in page claims it.
-    cfg = get_configs()
-    query = f"connector={GITHUB_CONNECTOR_ID}&auth_code={quote(grant_code, safe='')}"
-    page = "desktop-auth" if desktop else "connections"
-    return _no_store_redirect(f"{cfg.frontend_origin}/{page}?{query}")
+    # The signed-in page claims it, exactly as it claims a Google grant.
+    return _grant_redirect(GITHUB_CONNECTOR_ID, grant_code, desktop=desktop)
 
 
-def _google_connector_authorize(connector_id: str, *, desktop: bool) -> RedirectResponse:
+def _google_connector_authorize(connector_id: str, *, link: str, desktop: bool) -> RedirectResponse:
     flow_key = CONNECTOR_TO_FLOW[connector_id]
     if desktop:
         flow_key += DESKTOP_FLOW_SUFFIX
@@ -293,13 +293,29 @@ def _google_connector_authorize(connector_id: str, *, desktop: bool) -> Redirect
             CONNECT_ERROR_CONFIG, 500, str(exc), desktop=desktop, connector_id=connector_id
         )
 
+    # Whose connect this is. The navigation carries no bearer token, so the
+    # signed-in app minted a single-use link naming its user first; without
+    # one there is nobody to hand the grant to, and going on to Google would
+    # only end in a consent nobody can claim.
+    user_id = consume_connect_link_code(link) if link else None
+    if not user_id:
+        return _connector_failure(
+            CONNECT_ERROR_EXPIRED,
+            400,
+            CONNECT_EXPIRED_DETAIL,
+            desktop=desktop,
+            connector_id=connector_id,
+        )
+
     auth_url, _ = flow.authorization_url(
         access_type="offline",
         include_granted_scopes="false",
         prompt="consent",
     )
     cleanup_expired_states()
-    save_state(state, flow.code_verifier, flow_key, OAUTH_STATE_TTL_SECONDS)
+    save_state(
+        state, flow.code_verifier, flow_key, OAUTH_STATE_TTL_SECONDS, link_user_id=user_id
+    )
     return _no_store_redirect(auth_url, status_code=307)
 
 
@@ -308,7 +324,7 @@ def _google_connector_callback_with_state(
     connector_id: str,
     code: str,
     state: str,
-    token_fragment_key: str,
+    user_id: str,
     code_verifier: str | None,
     desktop: bool,
 ) -> RedirectResponse:
@@ -370,7 +386,7 @@ def _google_connector_callback_with_state(
 
     return _connector_success(
         connector_id=connector_id,
-        token_fragment_key=token_fragment_key,
+        user_id=user_id,
         refresh_token=refresh_token,
         granted_scopes=granted_scopes,
         desktop=desktop,
@@ -380,7 +396,6 @@ def _google_connector_callback_with_state(
 def _google_connector_callback(*, connector_id: str, code: str, state: str) -> RedirectResponse:
     """Per-connector callback: accepts this connector's browser or desktop flow."""
     base_flow = CONNECTOR_TO_FLOW[connector_id]
-    _, token_fragment_key = FLOW_TO_CALLBACK[base_flow]
     # Before the state is consumed there is nothing to say which client started
     # the flow, so fall back on where this process runs: only the desktop
     # sidecar runs local. Same test, same reason, as `_signin_failure`.
@@ -402,10 +417,12 @@ def _google_connector_callback(*, connector_id: str, code: str, state: str) -> R
             desktop=assumed_desktop,
             connector_id=connector_id,
         )
-    matched_flow, code_verifier = consume_state_for_flows(
+    consumed = consume_state_full(
         state, (base_flow, base_flow + DESKTOP_FLOW_SUFFIX), OAUTH_STATE_TTL_SECONDS
     )
-    if matched_flow is None:
+    # No user on a live state is a connect started before connect links
+    # existed: there is nobody to hand it to, so it expires like any other.
+    if consumed.flow is None or not consumed.link_user_id:
         return _connector_failure(
             CONNECT_ERROR_EXPIRED,
             400,
@@ -413,13 +430,13 @@ def _google_connector_callback(*, connector_id: str, code: str, state: str) -> R
             desktop=assumed_desktop,
             connector_id=connector_id,
         )
-    _, desktop = _split_flow(matched_flow)
+    _, desktop = _split_flow(consumed.flow)
     return _google_connector_callback_with_state(
         connector_id=connector_id,
         code=code,
         state=state,
-        token_fragment_key=token_fragment_key,
-        code_verifier=code_verifier,
+        user_id=consumed.link_user_id,
+        code_verifier=consumed.code_verifier,
         desktop=desktop,
     )
 
@@ -466,8 +483,9 @@ def github_app_setup(state: str = Query(default="")) -> RedirectResponse:
         )
 
 
-# Per source address. Each start writes an OAuth state row with no user behind
-# it; connecting every Google source, with a retry or two, is well under this.
+# Per source address. A start is a bare navigation that writes an OAuth state
+# row, and the link is only checked after the limit; connecting every Google
+# source, with a retry or two, is well under this.
 _CONNECT_START_LIMIT = RateLimit(limit=20, window_seconds=600.0)
 
 
@@ -494,8 +512,10 @@ def connector_oauth_authorize(
     safe: it decides only where a user's *own* freshly granted token is handed
     back to, never what is granted or who is trusted.
 
-    ``link`` is GitHub's alone: the single-use code naming the signed-in user
-    the connect belongs to (service/github/app.py, step 1).
+    ``link`` is the single-use code naming the signed-in user the connect
+    belongs to, minted by ``POST /api/user/connectors/connect-link``. Every
+    OAuth connector requires one: what the provider grants is parked for that
+    user alone to claim (`_connector_success`, service/github/app.py step 4).
     """
     cid = normalize_connector_id(connector_id)
     try:
@@ -510,7 +530,7 @@ def connector_oauth_authorize(
         return _github_authorize(link=link, desktop=client == "desktop")
 
     if cid in CONNECTOR_TO_FLOW:
-        return _google_connector_authorize(cid, desktop=client == "desktop")
+        return _google_connector_authorize(cid, link=link, desktop=client == "desktop")
 
     if meta.oauth_scope:
         raise HTTPException(
@@ -595,37 +615,17 @@ def _google_oauth_callback_short_path(*, code: str, state: str) -> RedirectRespo
         return _connector_failure(
             CONNECT_ERROR_EXPIRED, 400, "Invalid or expired OAuth state.", desktop=assumed_desktop
         )
-    matched_flow, code_verifier = consume_state_for_flows(
-        state, GOOGLE_CONNECTOR_FLOWS, OAUTH_STATE_TTL_SECONDS
-    )
-    if matched_flow is None:
+    consumed = consume_state_full(state, GOOGLE_CONNECTOR_FLOWS, OAUTH_STATE_TTL_SECONDS)
+    if consumed.flow is None or not consumed.link_user_id:
         return _connector_failure(
             CONNECT_ERROR_EXPIRED, 400, "Invalid or expired OAuth state.", desktop=assumed_desktop
         )
-    base_flow, desktop = _split_flow(matched_flow)
-    connector_id, token_fragment_key = FLOW_TO_CALLBACK[base_flow]
+    base_flow, desktop = _split_flow(consumed.flow)
     return _google_connector_callback_with_state(
-        connector_id=connector_id,
+        connector_id=FLOW_TO_CONNECTOR[base_flow],
         code=code,
         state=state,
-        token_fragment_key=token_fragment_key,
-        code_verifier=code_verifier,
+        user_id=consumed.link_user_id,
+        code_verifier=consumed.code_verifier,
         desktop=desktop,
     )
-
-
-@router.get("/auth/connectors/exchange")
-def exchange_connector_code(code: str = Query(default="")) -> dict:
-    """Single-use endpoint: exchange a 60-second code for connector credentials.
-
-    The desktop shell's webview calls this once the deep link lands, mirroring
-    `/auth/exchange` for sign-in. No API key and no session, for the same reason
-    that one has none: the code *is* the credential — unguessable, single-use,
-    and dead within a minute.
-    """
-    if not code:
-        raise HTTPException(status_code=400, detail="Missing auth code.")
-    payload = consume_connector_code(code)
-    if payload is None:
-        raise HTTPException(status_code=400, detail="Invalid or expired auth code.")
-    return payload

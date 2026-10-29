@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { plural } from "@lingui/core/macro";
-import { BASE } from "../../../lib/api";
-import { getAdsLoginCustomerId, setAdsLoginCustomerId } from "../../../lib/adsCredentials";
 import {
   bindProjectConnector,
+  claimConnectorGrant,
   claimGitHubGrant,
   deleteServerConnector,
   getGitHubApp,
@@ -16,15 +15,11 @@ import {
   listProjectConnectors,
   listServerConnectors,
   MCP_CONNECTOR,
-  notifyConnectorsChanged,
-  saveServerConnector,
-  startGitHubConnect,
   unbindProjectConnector,
+  updateConnectorSettings,
 } from "../../../lib/connectorsApi";
 import {
-  CONNECTOR_TOKEN_KEYS,
   consumeConnectorReturn,
-  exchangeConnectorCode,
   markConnectorConnected,
   startConnectorOAuth,
 } from "../../../lib/connectorAuth";
@@ -32,12 +27,6 @@ import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
 import { getActiveProject } from "../../../lib/projects";
 import { MCP_GUIDE_URL } from "../../../lib/mcpServers";
 import { NATIVE_SOURCE } from "../../../lib/connectorSource";
-
-/** Storage key back to the connector it belongs to. */
-function connectorTypeForStorageKey(storageKey) {
-  const hit = Object.entries(CONNECTOR_TOKEN_KEYS).find(([, key]) => key === storageKey);
-  return hit ? hit[0] : "";
-}
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,11 +41,9 @@ import { LOGOS } from "../../../components/connections/logos";
 export default function ConnectionsPage() {
   const { t } = useLingui();
   const router = useRouter();
-  const [ga4Connected, setGa4Connected] = useState(false);
-  const [gscConnected, setGscConnected] = useState(false);
-  const [gtmConnected, setGtmConnected] = useState(false);
-  const [gadsOauthConnected, setGadsOauthConnected] = useState(false);
-  const [mccInput, setMccInput] = useState("");
+  const notSignedInHere = t`Google approved the connection, but you're not signed in to Duct here, so it wasn't saved. Sign in, then connect again.`;
+  // What the person is typing into the MCC field; null follows the stored value.
+  const [mccDraft, setMccDraft] = useState(null);
   const [signedIn, setSignedIn] = useState(false);
   const [connectError, setConnectError] = useState("");
   const [connectNotice, setConnectNotice] = useState("");
@@ -85,7 +72,7 @@ export default function ConnectionsPage() {
       setServerRows(byType);
       setServerRowsAll(byTypeAll);
     } catch {
-      /* offline / signed-out — session-only mode still works */
+      /* offline — the cards show what was last read */
     }
   }
 
@@ -98,122 +85,33 @@ export default function ConnectionsPage() {
     }
   }
 
-  // Upserts replace the stored blob whole, so a Google Ads sync must always
-  // carry both fields (refresh token + MCC).
-  async function syncGadsToServer() {
-    if (!hasAuthToken()) return;
-    const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
-    if (!refreshToken) return;
-    const loginCustomerId = getAdsLoginCustomerId() || "";
+  // A Google connector's grant, home from Google: the browser directly, the
+  // desktop shell through its deep link. Claimed with this session — the
+  // backend honours it only for the account whose link started the connect —
+  // and stored there, never here. The card turns green from the row the claim
+  // wrote, so a connection is never one this tab alone believes in.
+  async function adoptConnectorGrant(connectorType, code) {
     try {
-      await saveServerConnector({
-        connector_type: "google_ads",
-        credentials: {
-          refresh_token: refreshToken,
-          login_customer_id: loginCustomerId,
-        },
-        granted_scopes: grantedScopesFor("google_ads"),
-      });
+      const row = await claimConnectorGrant(code);
       await refreshServerRows();
+      const provider = row?.connector_type || connectorType;
+      // Activation. Only here, after the server took it: a claim that failed
+      // is not a connection, and a disconnect is not an activation either.
+      trackEvent(AnalyticsEvent.ConnectorConnected, { provider });
+      await returnToRequester(provider, Promise.resolve());
     } catch (err) {
-      reportSyncFailure(err);
-    }
-  }
-
-  // Saving the token to the account is what makes a connection outlive this
-  // tab; swallowing its failure is how one silently becomes session-only —
-  // the card goes green off the sessionStorage write, no row is ever stored,
-  // and every later open reports "Not connected" with nothing to explain it.
-  function reportSyncFailure(err) {
-    // A 401 is not "you are offline" and telling someone to retry is useless:
-    // the token is well-formed and correctly signed, it just names a user this
-    // backend's database has never seen — a session left over from a different
-    // environment. Only signing in again fixes it.
-    if (err?.status === 401) {
-      // Keep the backend's own words. "Token expired" and "User not found" are
-      // different faults with different causes — one is age, the other is a
-      // session pointing at a database that has never seen this account — and
-      // collapsing them into one friendly sentence throws away the only thing
-      // that tells you which you are looking at.
-      //
-      // Name the backend too. Which server answered is the other half of the
-      // diagnosis and the half nobody can see: the desktop shell and a browser
-      // on the same origin call different backends, so "rejected" without a
-      // destination is unactionable — and reproducing it took three rounds of
-      // asking which one the reporter had been using.
-      const backend = BASE || t`the API`;
       setConnectError(
-        t`Connected to Google, but your Duct session was rejected by ${backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect.` +
-          (err?.message ? ` (${err.message})` : ""),
+        err?.status === 401
+          ? notSignedInHere
+          : t`That connection didn't finish. The link lasts two minutes and works only for the account that started it. Please connect again.`,
       );
-      return;
     }
-    setConnectError(
-      t`Signed in with Google, but saving the connection to your account failed, so it will only last this browser session. Try Reconnect once you're back online.` +
-        " " +
-        (err?.message || ""),
-    );
-  }
-
-  /** Scopes stashed alongside the token by whichever leg delivered it. */
-  function grantedScopesFor(connectorType) {
-    const key = CONNECTOR_TOKEN_KEYS[connectorType];
-    if (!key) return "";
-    try {
-      return sessionStorage.getItem(`${key}_scopes`) || "";
-    } catch {
-      return "";
-    }
-  }
-
-  async function syncTokenToServer(connectorType, refreshToken) {
-    if (!hasAuthToken() || !refreshToken) return;
-    try {
-      await saveServerConnector({
-        connector_type: connectorType,
-        credentials: { refresh_token: refreshToken },
-        granted_scopes: grantedScopesFor(connectorType),
-      });
-      await refreshServerRows();
-    } catch (err) {
-      reportSyncFailure(err);
-    }
-  }
-
-  // One connector's OAuth arriving from the desktop shell. The browser flow
-  // hands the token over in the URL fragment; the desktop one cannot — a
-  // refresh token must never ride in a deep link — so the shell brings back a
-  // single-use code and the token is fetched here instead. Everything after
-  // that is the fragment path's destination, one round trip later.
-  async function adoptConnectorToken(connectorType, refreshToken, grantedScopes = "") {
-    const storageKey = CONNECTOR_TOKEN_KEYS[connectorType];
-    if (!storageKey || !refreshToken) {
-      setConnectError(t`That connection came back incomplete — please try again.`);
-      return;
-    }
-    sessionStorage.setItem(storageKey, refreshToken);
-    if (grantedScopes) sessionStorage.setItem(`${storageKey}_scopes`, grantedScopes);
-    // A signed-out connection never reaches the server, so nothing else would
-    // tell the sidebar badge its count changed.
-    notifyConnectorsChanged();
-    // Activation. Deliberately here and not inside notifyConnectorsChanged(),
-    // which the four signOut* handlers also call — that would count a
-    // disconnect as an activation. A partial scope grant still counts: the
-    // tool is connected, which is the thing being measured.
-    trackEvent(AnalyticsEvent.ConnectorConnected, { provider: connectorType });
-    if (connectorType === "google_ads") setGadsOauthConnected(true);
-    if (connectorType === "ga4") setGa4Connected(true);
-    if (connectorType === "gsc") setGscConnected(true);
-    if (connectorType === "gtm") setGtmConnected(true);
-    if (!hasAuthToken()) return;
-    if (connectorType === "google_ads") await syncGadsToServer();
-    else await syncTokenToServer(connectorType, refreshToken);
   }
 
   // A connect that started from a conversation ends back in it. Only after
   // the server row is written: the agent answers "connected" by re-reading
-  // the database, not by trusting the browser, so returning a beat early
-  // would have it report the source as still missing.
+  // the database, so returning a beat early would have it report the source
+  // as still missing.
   async function returnToRequester(connectorType, pending) {
     const back = consumeConnectorReturn();
     if (!back) return;
@@ -228,11 +126,8 @@ export default function ConnectionsPage() {
 
   // GitHub App (backend/service/github/app.py). A single-use link names this
   // session's user, then the same navigation every OAuth card makes.
-  async function connectGitHub() {
-    const link = await startGitHubConnect();
-    return startConnectorOAuth(
-      `${BASE}/auth/connectors/github/oauth/authorize?link=${encodeURIComponent(link)}`,
-    );
+  function connectGitHub() {
+    return startConnectorOAuth("github");
   }
 
   // GitHub came back with a grant. Claimed by this signed-in session, which is
@@ -271,76 +166,14 @@ export default function ConnectionsPage() {
     }
   }
 
-  async function removeServerRow(connectorType) {
-    const row = serverRows[connectorType];
-    if (!row) return;
-    try {
-      await deleteServerConnector(row.id);
-      await refreshServerRows();
-    } catch {
-      /* best-effort */
-    }
-  }
-
   useEffect(() => {
-    const arrived = {};
-    const hash = window.location.hash;
-    if (hash.startsWith("#")) {
-      const params = new URLSearchParams(hash.slice(1));
-      // [fragment param, sessionStorage key] pairs — key NAMES, not secrets.
-      // Kept as pairs (not an object literal) so the security audit's
-      // hardcoded-secret heuristic (`token: "..."`) doesn't false-positive.
-      const fragmentKeys = [
-        ["refresh_token", "gads_refresh_token"],
-        ["ga4_refresh_token", "ga4_refresh_token"],
-        ["gsc_refresh_token", "gsc_refresh_token"],
-        ["gtm_refresh_token", "gtm_refresh_token"],
-      ];
-      // One grant per callback — the fragment carries exactly one connector's
-      // result, so a single key serves whichever token arrived with it.
-      const grantedScopes = decodeURIComponent(params.get("granted_scopes") || "");
-      for (const [fragmentKey, storageKey] of fragmentKeys) {
-        const token = params.get(fragmentKey);
-        if (token) {
-          const decoded = decodeURIComponent(token);
-          sessionStorage.setItem(storageKey, decoded);
-          if (grantedScopes) sessionStorage.setItem(`${storageKey}_scopes`, grantedScopes);
-          notifyConnectorsChanged();
-          trackEvent(AnalyticsEvent.ConnectorConnected, {
-            provider: connectorTypeForStorageKey(storageKey),
-          });
-          arrived[storageKey] = decoded;
-        }
-      }
-      window.history.replaceState(null, "", window.location.pathname);
-    }
-
-    setGadsOauthConnected(!!sessionStorage.getItem("gads_refresh_token"));
-    setMccInput(getAdsLoginCustomerId());
-    setGa4Connected(!!sessionStorage.getItem("ga4_refresh_token"));
-    setGscConnected(!!sessionStorage.getItem("gsc_refresh_token"));
-    setGtmConnected(!!sessionStorage.getItem("gtm_refresh_token"));
-
     const authed = hasAuthToken();
     setSignedIn(authed);
-    const synced = [];
-    if (authed) {
-      refreshServerRows();
-      // Persist newly-arrived OAuth tokens server-side (encrypted) so agent
-      // executions and scheduled pulls can run without this browser tab.
-      if (arrived.gads_refresh_token) synced.push(syncGadsToServer());
-      if (arrived.ga4_refresh_token) synced.push(syncTokenToServer("ga4", arrived.ga4_refresh_token));
-      if (arrived.gsc_refresh_token) synced.push(syncTokenToServer("gsc", arrived.gsc_refresh_token));
-      if (arrived.gtm_refresh_token) synced.push(syncTokenToServer("gtm", arrived.gtm_refresh_token));
-    }
-    // One grant per callback, so the first arrival names the connector.
-    const arrivedKey = Object.keys(arrived)[0];
-    if (arrivedKey) returnToRequester(connectorTypeForStorageKey(arrivedKey), Promise.all(synced));
+    if (authed) refreshServerRows();
 
-    // Desktop shell: the OAuth ran in the system browser and came home through
-    // the shell's deep link, which navigates this window to
-    // /connections?connector=&auth_code=. Redeem the code for the token the
-    // fragment path above would have carried directly.
+    // Every sign-in connect comes home here as /connections?connector=&auth_code=:
+    // the browser straight from the callback, the desktop shell through the
+    // relay page and its deep link. The code is a claim ticket, not a token.
     const query = new URLSearchParams(window.location.search);
     const connectorParam = query.get("connector") || "";
     const codeParam = query.get("auth_code") || "";
@@ -363,24 +196,15 @@ export default function ConnectionsPage() {
         setConnectError(t`Sign in to finish connecting GitHub.`);
       }
     } else if (connectorParam === MCP_CONNECTOR) {
-      // An MCP server's sign-in. McpConnectors claims it: a grant, not a token,
-      // and not one /auth/connectors/exchange would recognise.
+      // An MCP server's sign-in. McpConnectors claims it, with its own route:
+      // the Google claim would not recognise its code.
     } else if (connectorParam && codeParam) {
-      // Single-use and 60-second, but there is no reason to leave it in the
+      // Single-use and two minutes, but there is no reason to leave it in the
       // address bar or in history either.
       window.history.replaceState(null, "", window.location.pathname);
       setConnectError("");
-      exchangeConnectorCode(codeParam)
-        .then(({ connector_type, refresh_token, granted_scopes }) => {
-          const type = connector_type || connectorParam;
-          // adoptConnectorToken awaits the server sync, so the return waits too.
-          return returnToRequester(type, adoptConnectorToken(type, refresh_token, granted_scopes || ""));
-        })
-        .catch(() =>
-          setConnectError(
-            t`That connection didn't finish — the link expires after a minute. Please try again.`,
-          ),
-        );
+      if (authed) adoptConnectorGrant(connectorParam, codeParam);
+      else setConnectError(notSignedInHere);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -499,57 +323,47 @@ export default function ConnectionsPage() {
     };
   }
 
+  // The manager (MCC) id lives on the stored Google Ads row beside the token,
+  // so every device and every scheduled read uses the same one. The field
+  // shows the stored value until someone types; a save merges it on the
+  // server without touching the token.
+  const gadsRow = serverRows.google_ads;
+  const mccInput = mccDraft ?? (gadsRow?.settings?.login_customer_id || "");
+
   async function saveGadsManagerAccount(event) {
     event.preventDefault();
+    if (!gadsRow) return;
+    // Google Ads shows manager ids dashed and its API refuses them that way.
     const mcc = mccInput.replace(/-/g, "").trim();
-    setAdsLoginCustomerId(mcc);
-    setMccInput(mcc);
-    await syncGadsToServer();
+    try {
+      await updateConnectorSettings(gadsRow.id, { login_customer_id: mcc });
+      await refreshServerRows();
+      setMccDraft(null);
+    } catch (err) {
+      setConnectError(t`The manager account wasn't saved.` + (err?.message ? ` (${err.message})` : ""));
+    }
   }
 
-  async function signOutGads() {
-    sessionStorage.removeItem("gads_refresh_token");
-    sessionStorage.removeItem("gads_customer_id");
-    notifyConnectorsChanged();
-    setAdsLoginCustomerId("");
-    setGadsOauthConnected(false);
-    setMccInput("");
-    await removeServerRow("google_ads");
+  // Disconnect forgets every stored account of the connector, not just the
+  // first: picking a property stores a row per account, and one left behind
+  // would keep the card green over a connection the user just removed.
+  async function disconnect(connectorType) {
+    try {
+      await Promise.all((serverRowsAll[connectorType] || []).map((row) => deleteServerConnector(row.id)));
+    } catch {
+      /* the refresh below shows whatever is still stored */
+    }
+    if (connectorType === "google_ads") setMccDraft(null);
+    await refreshServerRows();
   }
 
-  async function signOutGa4() {
-    sessionStorage.removeItem("ga4_refresh_token");
-    notifyConnectorsChanged();
-    setGa4Connected(false);
-    await removeServerRow("ga4");
-  }
-
-  async function signOutGsc() {
-    sessionStorage.removeItem("gsc_refresh_token");
-    notifyConnectorsChanged();
-    setGscConnected(false);
-    await removeServerRow("gsc");
-  }
-
-  async function signOutGtm() {
-    sessionStorage.removeItem("gtm_refresh_token");
-    notifyConnectorsChanged();
-    setGtmConnected(false);
-    await removeServerRow("gtm");
-  }
-
-  // "Connected" has to survive closing the tab, and sessionStorage does not:
-  // it is per-tab and dies with it. A card reading only the session key reports
-  // "Not connected" on every fresh open of a connector that IS connected, while
-  // the project's data-source inventory — which reads the stored rows — says the
-  // opposite about the same connector. The stored row is the durable half of the
-  // answer; the session key still counts on its own, because a signed-out
-  // connect never reaches the server at all. The manual cards below have always
-  // worked this way (`serverRowList.length > 0`); these four were the exception.
-  const gadsAuthorized = gadsOauthConnected || !!serverRows.google_ads;
-  const ga4Authorized = ga4Connected || !!serverRows.ga4;
-  const gscAuthorized = gscConnected || !!serverRows.gsc;
-  const gtmAuthorized = gtmConnected || !!serverRows.gtm;
+  // Connected means stored on the account. It used to also mean "this tab
+  // holds a token", which is how a card read green in one tab and "Not
+  // connected" in the next, and how a failed sync still turned it green.
+  const gadsAuthorized = !!serverRows.google_ads;
+  const ga4Authorized = !!serverRows.ga4;
+  const gscAuthorized = !!serverRows.gsc;
+  const gtmAuthorized = !!serverRows.gtm;
 
   // Authorized is not the same as fully permitted. Google's consent screen has
   // a tickbox per scope, so a connector can hold a valid token and still be
@@ -659,10 +473,8 @@ export default function ConnectionsPage() {
               tone={toneFor(gadsAuthorized, "google_ads")}
               {...scopeProps("google_ads")}
               status={connectionStatusFor(gadsAuthorized, "google_ads")}
-              authorizeUrl={`${BASE}/auth/connectors/google_ads/oauth/authorize`}
-              onDisconnect={signOutGads}
-              signedIn={signedIn}
-              syncedToAccount={!!serverRows.google_ads}
+              connectorType="google_ads"
+              onDisconnect={() => disconnect("google_ads")}
               rows={serverRowsAll.google_ads || []}
               {...mappingProps("google_ads")}
             >
@@ -680,7 +492,7 @@ export default function ConnectionsPage() {
                     inputMode="numeric"
                     placeholder="e.g. 1234567890"
                     value={mccInput}
-                    onChange={(e) => setMccInput(e.target.value)}
+                    onChange={(e) => setMccDraft(e.target.value)}
                   />
                 </div>
                 <div>
@@ -700,10 +512,8 @@ export default function ConnectionsPage() {
               tone={toneFor(gscAuthorized, "gsc")}
               status={connectionStatusFor(gscAuthorized, "gsc")}
               {...scopeProps("gsc")}
-              authorizeUrl={`${BASE}/auth/connectors/gsc/oauth/authorize`}
-              onDisconnect={signOutGsc}
-              signedIn={signedIn}
-              syncedToAccount={!!serverRows.gsc}
+              connectorType="gsc"
+              onDisconnect={() => disconnect("gsc")}
               rows={serverRowsAll.gsc || []}
               {...mappingProps("gsc")}
             />
@@ -717,10 +527,8 @@ export default function ConnectionsPage() {
               tone={toneFor(ga4Authorized, "ga4")}
               status={connectionStatusFor(ga4Authorized, "ga4")}
               {...scopeProps("ga4")}
-              authorizeUrl={`${BASE}/auth/connectors/ga4/oauth/authorize`}
-              onDisconnect={signOutGa4}
-              signedIn={signedIn}
-              syncedToAccount={!!serverRows.ga4}
+              connectorType="ga4"
+              onDisconnect={() => disconnect("ga4")}
               rows={serverRowsAll.ga4 || []}
               {...mappingProps("ga4")}
             />
@@ -734,10 +542,8 @@ export default function ConnectionsPage() {
               tone={toneFor(gtmAuthorized, "gtm")}
               status={connectionStatusFor(gtmAuthorized, "gtm")}
               {...scopeProps("gtm")}
-              authorizeUrl={`${BASE}/auth/connectors/gtm/oauth/authorize`}
-              onDisconnect={signOutGtm}
-              signedIn={signedIn}
-              syncedToAccount={!!serverRows.gtm}
+              connectorType="gtm"
+              onDisconnect={() => disconnect("gtm")}
               rows={serverRowsAll.gtm || []}
               {...mappingProps("gtm")}
             />
