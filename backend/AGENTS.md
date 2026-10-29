@@ -207,9 +207,13 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   it, and `tests/test_content_access.py` asserts that property directly.
 - **Email:** `service/email/` — one seam (`send_email`) over swappable providers in
   `service/email/providers/`, the only place a mail vendor is named. `EMAIL_PROVIDER`
-  picks one; unset takes the first with credentials (Cloudflare, then Resend) and
+  picks one; unset takes the first with credentials (Cloudflare, then SMTP) and
   falls back to `console`, which logs, so dev/CI/self-host need no vendor account.
   Same shape as the app's analytics seam, for the same reason: a fork swaps one file.
+  SMTP is the open-standard provider — any mail server or vendor relay — and the
+  way to read local mail as it would arrive: the "Mailpit" editor task (`brew
+  install mailpit`) catches it on `:1025` with an inbox at `http://localhost:8025`.
+  Resend's own provider was removed in favour of it (#460); Resend takes SMTP too.
 - **Observability:** PostHog for product events, error tracking and AI call
   metadata, behind one seam (`service/analytics.py`, the only file that
   imports PostHog): routes call `capture_event`, `get_current_user` attributes
@@ -434,7 +438,7 @@ Postgres `DATABASE_URL` names.
 - **Query layer:** DuckDB + Ibis
 - **Transforms:** dbt
 - **Orchestration:** Dagster
-- **Delivery:** Resend (email) + Slack webhooks
+- **Delivery:** email through `service/email/` + Slack webhooks
 
 ## Product-shape constraints
 

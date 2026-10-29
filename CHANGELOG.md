@@ -24,6 +24,13 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+### Added
+
+- **Mail through any SMTP server.** A self-hosted Duct sends invitations and
+  audit reports through its own mail server or any provider's SMTP relay, and
+  Mailpit catches local mail so a flow can be read as it would arrive. Resend's
+  dedicated integration is gone; Resend accepts SMTP too.
+
 ## [0.7.2] — 2026-10-29
 
 Pages that arrive drawn, conversations that stay fast however long they get,

@@ -41,6 +41,12 @@ stop_phoenix() {
   pkill -f "phoenix.server.main" >/dev/null 2>&1 || true
 }
 
+# Both ports: the inbox UI and the SMTP listener the API sends to.
+stop_mailpit() {
+  kill_port 8025
+  kill_port 1025
+}
+
 # Quit first, kill second: a graceful quit reaches RunEvent::Exit, which stops
 # the sidecar, while SIGTERM to the shell skips it and leaves an orphan holding
 # its loopback port. The pkill pair is the fallback for an app already gone or
@@ -54,7 +60,7 @@ stop_desktop() {
 }
 
 usage() {
-  echo "usage: scripts/dev_stop.sh [all|backend|app|site|phoenix|desktop]..." >&2
+  echo "usage: scripts/dev_stop.sh [all|backend|app|site|phoenix|mailpit|desktop]..." >&2
   exit 2
 }
 
@@ -62,11 +68,12 @@ usage() {
 
 for target in "$@"; do
   case "$target" in
-    all)      stop_desktop; stop_app; stop_backend; stop_site; stop_phoenix ;;
+    all)      stop_desktop; stop_app; stop_backend; stop_site; stop_phoenix; stop_mailpit ;;
     backend)  stop_backend ;;
     app)      stop_app ;;
     site)     stop_site ;;
     phoenix)  stop_phoenix ;;
+    mailpit)  stop_mailpit ;;
     desktop)  stop_desktop ;;
     *)        echo "unknown target: $target" >&2; usage ;;
   esac

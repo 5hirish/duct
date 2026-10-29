@@ -8416,10 +8416,6 @@ msgid "No"
 msgstr "Não"
 
 #: privacy.html
-msgid "No — email address and report content only"
-msgstr "Não — apenas endereço de e-mail e conteúdo do relatório"
-
-#: privacy.html
 msgid ""
 "No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
 msgstr ""
@@ -8494,10 +8490,6 @@ msgid ""
 "Replays never include your browser's console logs. We do not record keystrokes or form contents."
 msgstr ""
 "As reproduções nunca incluem os logs do console do seu navegador. Não registramos digitações ou conteúdos de formulários."
-
-#: privacy.html
-msgid "Resend"
-msgstr "Reenviar"
 
 #: privacy.html
 msgid ""
@@ -8623,10 +8615,6 @@ msgstr ""
 msgid "To report on traffic, conversion and retention alongside your other tools"
 msgstr ""
 "Para relatar sobre tráfego, conversão e retenção juntamente com suas outras ferramentas"
-
-#: privacy.html
-msgid "Transactional email (report delivery, project invitations)"
-msgstr "E-mail transacional (entrega de relatório, convites de projeto)"
 
 #: privacy.html
 msgid "Until you ask us to delete them"
@@ -12186,6 +12174,15 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#~ msgid "No — email address and report content only"
+#~ msgstr "Não — apenas endereço de e-mail e conteúdo do relatório"
+
+#~ msgid "Resend"
+#~ msgstr "Reenviar"
+
+#~ msgid "Transactional email (report delivery, project invitations)"
+#~ msgstr "E-mail transacional (entrega de relatório, convites de projeto)"
 
 #~ msgid "3 months"
 #~ msgstr "3 meses"

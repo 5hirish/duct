@@ -249,13 +249,22 @@ class Configs(BaseSettings):
     # a hosted instance, where it would pay for every signup's scraping.
     apify_api_key: str = ""
 
-    # Which email provider delivers everything: "cloudflare", "resend" or
+    # Which email provider delivers everything: "cloudflare", "smtp" or
     # "console". Empty picks the first one whose credentials are present, and
     # "console" when none are — so local dev, CI and a self-hosted install run
     # every mail flow with no vendor account, logging what they would have sent.
     # See service/email/sender.py; adding a provider does not touch this file.
     email_provider: str = ""
-    resend_api_key: str = ""
+    # SMTP, the open-standard provider (service/email/providers/smtp.py): any
+    # mail server or vendor relay, or Mailpit on :1025 with security "none" to
+    # catch mail locally. Port 0 means the security mode's standard port
+    # (587, 465 or 25). Security is "starttls" (empty means this), "tls" for
+    # implicit TLS, or "none", which is plain text and only for this machine.
+    smtp_host: str = ""
+    smtp_port: int = Field(default=0, ge=0, le=65535)
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_security: str = ""
     # Default From address. Must be on a domain verified with the active
     # provider, otherwise sends are rejected.
     email_from: str = Field(default="noreply@getduct.ai")

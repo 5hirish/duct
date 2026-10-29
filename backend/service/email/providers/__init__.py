@@ -9,7 +9,7 @@ without knowing anything about it:
 
 Adding a provider is one file here plus a line in ``sender.PROVIDERS``. No
 template, route, or test outside this package should need to change, and a fork
-that wants SMTP or SES writes that one file rather than reading our routes.
+that wants SES's own API writes that one file rather than reading our routes.
 """
 
 from __future__ import annotations
