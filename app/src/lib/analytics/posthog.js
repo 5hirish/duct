@@ -275,7 +275,10 @@ export const posthog = {
     if (mode === "off") this.startErrorReporting();
     mode = "full";
     const desktop = isDesktopShell();
-    const recorder = desktop ? Promise.resolve() : import("posthog-js/dist/recorder");
+    // `posthog-recorder`, not `recorder`: the session-recording code itself
+    // ships in this bundle, and the plain rrweb one leaves the SDK reaching
+    // for a script it is not allowed to fetch, which fails without a word.
+    const recorder = desktop ? Promise.resolve() : import("posthog-js/dist/posthog-recorder");
     Promise.all([load(), recorder]).then(([ph]) => {
       if (!ph || mode !== "full") return;
       ph.set_config({
