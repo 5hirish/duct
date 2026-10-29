@@ -37,13 +37,19 @@ name: desktop — release (macOS, Windows, Linux)
 #   All platforms (self-update)
 #     TAURI_SIGNING_PRIVATE_KEY    contents of the minisign private key
 #     TAURI_SIGNING_PRIVATE_KEY_PASSWORD
-#   All platforms (crash reporting)
-#     SENTRY_DSN                   same DSN the backend uses. Compiled into the
-#                                  shell by `option_env!`, so like the OAuth
-#                                  secret below it must be on every step that
-#                                  runs `tauri build`. Absent is fine: the shell
-#                                  simply never reports, and the settings toggle
-#                                  hides itself.
+#   All platforms (crash reporting): repository VARIABLES, not secrets
+#     POSTHOG_PROJECT_TOKEN        the project's `phc_` token, the same one
+#                                  posthog-js ships in every page. It writes
+#                                  events and reads nothing back, so it is a
+#                                  `vars.` entry and shows in logs, which is
+#                                  fine.
+#                                  Compiled into the shell by `option_env!`, so
+#                                  like the OAuth secret below it must be on
+#                                  every step that runs `tauri build`. Absent is
+#                                  fine: the shell simply never reports, and the
+#                                  settings toggle hides itself.
+#     POSTHOG_HOST                 optional: the EU cloud or a self-hosted
+#                                  PostHog. Unset means https://us.i.posthog.com.
 #   All platforms (sign-in)
 #     GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET
 #                                  secret of the Google *Desktop app* OAuth client
@@ -254,9 +260,11 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          # Variables, not secrets: the token is public by design (see the header).
+          POSTHOG_PROJECT_TOKEN: ${{ vars.POSTHOG_PROJECT_TOKEN }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           # Ships crash reporting on by default. Set only here, so a
-          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          # self-host build stays opt-in — see src-tauri/src/telemetry/mod.rs.
           DUCT_TELEMETRY_DEFAULT_ON: "1"
         run: npm run tauri -- build --features crash-reporting --target universal-apple-darwin --bundles app,dmg,updater
 
@@ -344,9 +352,11 @@ jobs:
           # way around it; installing `fuse` is not enough.
           APPIMAGE_EXTRACT_AND_RUN: '1'
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          # Variables, not secrets: the token is public by design (see the header).
+          POSTHOG_PROJECT_TOKEN: ${{ vars.POSTHOG_PROJECT_TOKEN }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           # Ships crash reporting on by default. Set only here, so a
-          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          # self-host build stays opt-in — see src-tauri/src/telemetry/mod.rs.
           DUCT_TELEMETRY_DEFAULT_ON: "1"
         run: npm run tauri -- build --features crash-reporting --bundles deb,appimage,updater
 
@@ -395,9 +405,11 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          # Variables, not secrets: the token is public by design (see the header).
+          POSTHOG_PROJECT_TOKEN: ${{ vars.POSTHOG_PROJECT_TOKEN }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           # Ships crash reporting on by default. Set only here, so a
-          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          # self-host build stays opt-in — see src-tauri/src/telemetry/mod.rs.
           DUCT_TELEMETRY_DEFAULT_ON: "1"
         run: npm run tauri -- build --features crash-reporting --bundles nsis,updater
 
