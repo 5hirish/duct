@@ -1,6 +1,6 @@
 # Agent output QA
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-26
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-29
 
 Duct's agents write briefs, audits and posts, so no test can assert the one right answer. This is how we learn whether a change made an agent worse, before it merges.
 
