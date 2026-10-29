@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
 
 import AppErrorPanel from "../components/AppErrorPanel";
+import { reportError } from "../lib/analytics";
 
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    reportError(error, { boundary: "global" });
   }, [error]);
 
   return <AppErrorPanel error={error} reset={reset} showHtmlShell />;

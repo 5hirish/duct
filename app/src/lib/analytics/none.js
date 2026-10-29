@@ -19,4 +19,6 @@ export const none = {
   track: () => {},
   identify: () => {},
   reset: () => {},
+  startErrorReporting: () => {},
+  captureException: () => {},
 };

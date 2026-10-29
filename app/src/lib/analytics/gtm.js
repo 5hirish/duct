@@ -52,8 +52,8 @@ export const gtm = {
     // Never inside the desktop shell. There, the shell's IPC trusts every script
     // on this origin, and a tag manager exists to run scripts configured outside
     // this repository — so a misconfigured or compromised container would run
-    // with the keychain. The shell measures nothing; its Preferences switch
-    // governs crash reports alone.
+    // with the keychain. What the shell measures goes through `posthog`, which
+    // runs only bundled code, behind its Preferences switch.
     return Boolean(containerId()) && isMeasurableHost() && !isDesktopShell();
   },
 
@@ -159,6 +159,10 @@ export const gtm = {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ user_id: undefined, user_properties: {} });
   },
+
+  /** GA4 is not an error tracker; another provider takes these. */
+  startErrorReporting() {},
+  captureException() {},
 };
 
 function load() {

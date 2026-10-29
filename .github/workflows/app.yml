@@ -154,13 +154,16 @@ jobs:
           NEXT_PUBLIC_DUCT_API_KEY: ${{ secrets.NEXT_PUBLIC_DUCT_API_KEY }}
           NEXT_PUBLIC_GTM_ID: ${{ secrets.NEXT_PUBLIC_GTM_ID }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
-          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
-          # Without this the Sentry build plugin cannot upload source maps, and
-          # every production stack trace and profile frame in Sentry names a
-          # minified chunk instead of a file. The plugin skips the upload and
-          # carries on when it is absent, which is why this went unnoticed —
-          # nothing failed, the reports were just unreadable.
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          # The public project token (phc_…), a repository variable rather than
+          # a secret because every browser receives it anyway. Unset, the build
+          # measures nothing and reports no errors.
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.POSTHOG_PROJECT_TOKEN }}
+          # Source maps for readable stack traces. Unlike the token this is a
+          # personal key with write access, so it is a secret; unset, the build
+          # skips the upload (next.config.mjs) and the reports name minified
+          # chunks.
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ vars.POSTHOG_PROJECT_ID }}
 
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy

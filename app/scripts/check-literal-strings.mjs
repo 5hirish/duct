@@ -32,7 +32,7 @@ const EXEMPT = [
   "src/i18n/",              // the plumbing itself
   "src/locales/",
   "src/components/ui/",     // shadcn primitives take their copy as children
-  "src/instrumentation",    // Sentry
+  "src/instrumentation",    // error reporting bootstrap, no UI copy
 ];
 
 /** Attributes whose value a person reads. */
