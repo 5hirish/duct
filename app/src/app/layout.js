@@ -122,8 +122,12 @@ export default async function RootLayout({ children }) {
                 without asking, and it bought nothing: GA4 needs JavaScript, so
                 with JS off the frame measures a visitor it cannot report on.
                 The seam in lib/analytics is the only path in now. */}
-            <ProductAnalytics />
             <LinguiClientProvider initialLocale={i18n.locale} initialMessages={i18n.messages}>
+              {/* Inside the provider: the consent bar is translated, and a
+                  <Trans> rendered outside it has no catalogue to read. Outside,
+                  every visitor who was asked (the EEA, the UK, Switzerland)
+                  got the root error page instead of the question. */}
+              <ProductAnalytics />
               {children}
             </LinguiClientProvider>
           </TooltipProvider>

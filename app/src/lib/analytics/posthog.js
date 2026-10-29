@@ -169,7 +169,9 @@ function load() {
       disable_product_tours: true,
       disable_conversations: true,
       disable_web_experiments: true,
-      advanced_disable_flags: true,
+      // Flags off, remote config on: replay cannot start without the
+      // project's recording settings, and those arrive as remote config.
+      advanced_disable_feature_flags: true,
       opt_in_site_apps: false,
       before_send: gate,
     });
