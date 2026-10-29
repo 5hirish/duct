@@ -47,6 +47,7 @@ from service.execution.service import (
     rollback_change_set as rollback_core,
     serialize_change_set as _serialize,
 )
+from service.analytics import capture_event
 from service.membership import get_project_for_user
 from utils.dates import utcnow
 
@@ -241,6 +242,10 @@ def propose_change_set(
     except (KeyError, ValueError) as exc:
         detail = str(exc.args[0]) if isinstance(exc, KeyError) and exc.args else str(exc)
         raise HTTPException(status_code=422, detail=detail) from exc
+    capture_event(
+        "change_set_proposed",
+        {"connector_type": body.connector_type, "change_count": len(body.changes)},
+    )
     return _serialize(row)
 
 
@@ -315,6 +320,10 @@ def approve_change_set(
         summary=f"Approved “{row.title}” — {approved_count} change(s)",
         data={"approved": approved_count, "subset": body.change_ids is not None},
     )
+    capture_event(
+        "change_set_approved",
+        {"connector_type": row.connector_type, "approved_count": approved_count, "is_subset": body.change_ids is not None},
+    )
     return _serialize(row)
 
 
@@ -338,6 +347,7 @@ def reject_change_set(
         source="user",
         summary=f"Rejected “{row.title}”",
     )
+    capture_event("change_set_rejected", {"connector_type": row.connector_type})
     return _serialize(row)
 
 
@@ -359,6 +369,7 @@ def apply_change_set(
         row = apply_core(session, row, creds, applied_by="user")
     except StateError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    capture_event("change_set_applied", {"connector_type": row.connector_type})
     return _serialize(row)
 
 

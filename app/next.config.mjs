@@ -1,11 +1,12 @@
-import { withSentryConfig } from "@sentry/nextjs/config";
+import { withPostHogConfig } from "@posthog/nextjs-config";
 import { linguiMacroSwcPlugin } from "@lingui/swc-plugin/options";
 
 const DEV = process.env.NODE_ENV === "development";
 
 /**
- * Where a script may come from. Everything bundled (React, Sentry, Mermaid,
- * DOMPurify, Lingui) is 'self'; the app spawns no worker and calls no `eval`.
+ * Where a script may come from. Everything bundled (React, PostHog, Mermaid,
+ * DOMPurify, Lingui) is 'self' — PostHog's `no-external` build fetches no
+ * script of its own; the app spawns no worker and calls no `eval`.
  * The two remote hosts are the only scripts the app fetches by URL: the tag
  * container, which the web app loads after consent and the desktop shell
  * never loads (`lib/analytics/gtm.js`), and the sign-in page's Turnstile
@@ -86,37 +87,40 @@ const nextConfig = {
     // invented by hand. Reads lingui.config.mjs for the locale list.
     swcPlugins: [linguiMacroSwcPlugin()],
   },
-  /**
-   * Browser profiling is granted per document, not per SDK.
-   *
-   * Chrome's JS Self-Profiling API refuses to start unless the response that
-   * delivered the page carried this header, and it refuses *silently*:
-   * `browserProfilingIntegration` initialises, logs nothing, and produces zero
-   * profiles. That is precisely how this sat for months — the sample rates were
-   * in `instrumentation-client.ts` the whole time with nothing on the wire.
-   *
-   * Scoped to documents rather than `/:path*` because the policy only means
-   * anything on an HTML response; sending it on every asset is noise on a
-   * header Cloudflare charges us bytes for.
-   */
   async headers() {
+    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+  },
+  /**
+   * PostHog through our own origin. Lists that block analytics block
+   * PostHog's hosts by name, and a tool for marketers is visited by exactly
+   * the people who run them; a first-party path is the documented answer.
+   * The marketing site sends here too, so one journey is one set of events.
+   * `/static` is the assets host: the site loads PostHog's snippet library
+   * from it (the app bundles its own and fetches nothing there).
+   */
+  async rewrites() {
     return [
-      { source: "/:path*", headers: SECURITY_HEADERS },
-      {
-        source: "/:path*",
-        missing: [{ type: "header", key: "next-router-prefetch" }],
-        headers: [{ key: "Document-Policy", value: "js-profiling" }],
-      },
+      { source: "/ingest/static/:path*", destination: "https://us-assets.i.posthog.com/static/:path*" },
+      { source: "/ingest/:path*", destination: "https://us.i.posthog.com/:path*" },
     ];
   },
+  // PostHog's endpoints end in a slash (`/e/`); the default redirect would
+  // bounce every capture through a 308 first.
+  skipTrailingSlashRedirect: true,
 };
 
-// Skip the Sentry build plugin in dev — it only matters for prod releases.
-export default DEV
+/**
+ * Source maps go to PostHog, so a production stack trace names a file and a
+ * line instead of a minified chunk. Only where CI holds the personal API key:
+ * a build without it — a fork, a contributor, a self-host — is untouched, and
+ * a build with a bad key fails rather than shipping unreadable reports.
+ */
+const SOURCE_MAP_KEY = process.env.POSTHOG_PERSONAL_API_KEY;
+export default DEV || !SOURCE_MAP_KEY
   ? nextConfig
-  : withSentryConfig(nextConfig, {
-      org: "alleviate-lab",
-      project: "app-duct",
-      silent: !process.env.CI,
+  : withPostHogConfig(nextConfig, {
+      personalApiKey: SOURCE_MAP_KEY,
+      projectId: process.env.POSTHOG_PROJECT_ID,
+      sourcemaps: { enabled: true, releaseName: "duct-app", deleteAfterUpload: true },
     });
 

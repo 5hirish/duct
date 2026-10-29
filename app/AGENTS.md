@@ -10,8 +10,8 @@ Next.js App Router report viewer and agent interface.
 - **State:** React Context (`InsightContext.js`) + component-level state only. No Redux/Zustand.
 - **HTTP:** Native `fetch` wrapped in `lib/api.js`. No type-safe client or OpenAPI generation.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
-- **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
-  Sentry is **not** behind the consent gate, so the client's `dataCollection` block (`instrumentation-client.ts`) is Sentry 10's restrictive baseline written out — no IP, no bodies. Since Sentry 11 an unset `dataCollection` collects every category, so removing that block is a privacy change, not a tidy-up. Streamed spans pass through neither `beforeSend` nor scope tags: a header that must never leave goes in `dataCollection.httpHeaders` (as `sentry.server.config.ts` does for `X-Provider-*`), and a tag performance data is split by is also set with `Sentry.setAttribute`.
+- **Observability:** PostHog and GTM behind one swappable seam (`lib/analytics/`; `NEXT_PUBLIC_ANALYTICS_PROVIDER` picks, unset runs every provider whose variable is set: `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_GTM_ID`), gated on consent; Cloudflare Turnstile bot protection. Nothing outside `lib/analytics/` names a vendor.
+  PostHog runs in two modes on one client (`lib/analytics/posthog.js`). **Errors** starts for every browser session from `instrumentation-client.ts`: early `error`/`unhandledrejection` listeners at once, the library on idle, in-memory persistence, so it stores nothing and needs no banner; error boundaries call `reportError`. **Full** starts on consent: cookie across `.getduct.ai`, page views, autocapture, heatmaps, replay. In the desktop shell the Preferences switch (`lib/telemetry.js`) replaces both the banner and the errors-before-consent rule: off sends nothing at all, on runs full mode in memory and never records a replay. Three rules a change here must keep: the `no-external` build only (the shell's IPC trusts every script on this origin, and it keeps `script-src` at `'self'`); `lib/analytics/scrub.js` on every event (query strings and the `/invite/` and `/open/audit/` path tokens go); and the replay masks all text and blocks images, embeds and canvases, plus `mask_all_text` on clicks, because a human watching a replay of a customer's GA4 numbers breaks Google's Limited Use rule. Server render errors go through `instrumentation.ts` → `lib/analytics/server.js` (posthog-node). Events reach PostHog through the same-origin `/ingest` rewrite in `next.config.mjs`, which the marketing site uses too.
 - **Overrides:** `package.json` forces `lodash-es` to ^4.18.1. `mermaid` 12.0.0 depends on `chevrotain` 11.1.2, which pins `lodash-es` 4.17.23 exactly, and that version carries a high advisory (code injection via `_.template`) and a moderate one (prototype pollution in `_.unset`/`_.omit`). Delete the override once `mermaid` moves to `chevrotain` 12 or later, which no longer uses lodash.
 
 ## Deployment
@@ -791,7 +791,7 @@ or leave it visible; do not delete the row to make the count look better.
 
 Frames **mount only when scrolled near** and the catalogue crops them to their
 specimen. Both are load-bearing, not polish: each frame is a whole Next document
-(app bundle, Sentry, HMR client), and 27 entries × 2 devices eagerly mounted is
+(app bundle, analytics, HMR client), and 27 entries × 2 devices eagerly mounted is
 not slow, it is `ERR_INSUFFICIENT_RESOURCES` and a half-loaded page. Keep the
 lazy mount if you touch `Frame`.
 

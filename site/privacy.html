@@ -86,7 +86,7 @@
 <article class="legal-page">
 
 <h1>Privacy Policy</h1>
-<p class="legal-date">Last updated: September 7, 2026</p>
+<p class="legal-date">Last updated: October 29, 2026</p>
 
 <p>Alleviate Lab ("we", "us", "our") operates Duct (<a href="https://getduct.ai">getduct.ai</a>), a cross-tool intelligence platform that connects your advertising, analytics, product and search tools, synthesises what changed across them, and — only when you approve a specific change — applies that change back to the connected tool. This Privacy Policy explains what we collect, why, who we share it with, how long we keep it, and how to delete it.</p>
 
@@ -157,6 +157,7 @@
 <li>Use Google user data to develop, improve, or train generalised or non-personalised AI or machine learning models</li>
 <li>Allow humans to read Google user data, except where you have given explicit consent for a specific issue, where it is necessary for security purposes or to comply with applicable law, or where the data has been aggregated and anonymised</li>
 </ul>
+<p>Session replays and click analytics in the web app never record Google user data: all text on screen is masked in your browser before anything is sent (section 11).</p>
 
 <h2>5. Other Data Sources You Connect</h2>
 
@@ -189,8 +190,9 @@
 <li><strong>The app we distribute talks to our servers.</strong> It does not carry its own copy of Duct's backend. Your projects, briefs, agent memories, activity log, uploads and connector authorisations are stored by us, exactly as they are when you use Duct in a browser &mdash; which is also what lets you sign in on a second computer and find your work there. Sections 12 to 14 cover how we store, share and delete it.</li>
 <li><strong>Your AI provider keys stay on your machine.</strong> They live in your operating system's keychain, and are sent with a request only when a job needs to run. We never store them, and the option to save a key with us that the browser version offers is deliberately switched off in the desktop app.</li>
 <li><strong>Sign-in and connector authorisation open your system browser</strong> rather than an embedded window, so you keep your browser's own protections, and no credential is ever carried in the link that returns you to the app.</li>
-<li><strong>The desktop app sets no cookies, and is never going to ask you about them.</strong> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for.</li>
-<li><strong>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</strong> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open &mdash; never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it.</li>
+<li><strong>The desktop app sets no cookies, and is never going to ask you about them.</strong> It loads no Google Tag Manager and no Google Analytics at all. Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for.</li>
+<li><strong>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</strong> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open &mdash; never your provider API keys, your data, or anything you generate. If you are signed in, both carry your account ID. If you build Duct yourself both are off by default instead, because then we are not the ones running it.</li>
+<li><strong>The desktop app never records a replay of your session.</strong> Session replay (section 11) exists only on our website and in the web app in a browser.</li>
 <li><strong>Update checks</strong> contact our release host to ask whether a newer version exists. This request reveals your IP address and the version you are running.</li>
 <li><strong>You can run the whole thing yourself instead.</strong> The source is public, and it can be built with the backend inside the app or hosted on your own server. Then we hold nothing and this policy has nothing to describe &mdash; see section 16.</li>
 </ul>
@@ -216,13 +218,23 @@
 <h2>11. Other Information We Collect</h2>
 
 <h3>Usage data</h3>
-<p>We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents.</p>
+<p>We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through two tools: Google Analytics 4, loaded by Google Tag Manager, and PostHog. Both follow the cookie choice described below.</p>
+<p>PostHog also records session replays: a reconstruction of the page and where you clicked, so we can watch where a visit went wrong. What a replay hides is hidden in your browser, before anything leaves it:</p>
+<ul>
+<li><strong>On our website,</strong> everything you type into a field.</li>
+<li><strong>In the web app,</strong> everything you type, and also all text on screen, images, embedded documents, charts and video. A replay of the app shows the layout, your clicks and where you went, never the data on the page. When PostHog counts a click in the app, it records which element was clicked, not the text on it.</li>
+</ul>
+<p>Replays never include your browser's console logs. We do not record keystrokes or form contents.</p>
+<p>When you are signed in, our servers also record the actions you take in Duct, such as starting a content plan or approving or applying a change, with your account ID. Your PostHog profile keeps your email address and name, so we can contact you about a problem you hit.</p>
+
+<h3>AI model calls</h3>
+<p>For each call Duct makes to an AI model we record metadata only: the model, the number of tokens, how long it took, what it cost, and any error. Never the prompt or the response text.</p>
 
 <h3>Cookies and similar technologies</h3>
 
 <p>Analytics cookies are set only after you accept them. If you are in the EEA, the UK or Switzerland we ask before anything is set, and nothing but the strictly necessary entries below exists until you choose. Elsewhere analytics is on by default and you can turn it off at any time — the <strong>Cookie settings</strong> link in our footer, and in the account menu inside the app, reopens the choice on every page.</p>
 
-<p>Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page.</p>
+<p>Declining means neither Google Tag Manager nor PostHog is loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page.</p>
 
 <div class="legal-table-wrap">
 <table>
@@ -231,7 +243,8 @@
 <tr><td><code>_ga</code></td><td>Google Analytics 4</td><td>Distinguishes one visitor from another so a returning visit is not counted twice</td><td>2 years</td></tr>
 <tr><td><code>_ga_SXH5LYVTJ8</code></td><td>Google Analytics 4</td><td>Holds the state of the current session for our specific property</td><td>2 years</td></tr>
 <tr><td><code>_gcl_au</code></td><td>Google Tag Manager (Conversion Linker)</td><td>Attributes a signup to the ad or link that led to it</td><td>90 days</td></tr>
-<tr><td><code>duct_consent</code></td><td>Duct</td><td>Remembers your choice, so you are not asked on every page. Set on <code>getduct.ai</code> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline</td><td>6 months, then we ask again</td></tr>
+<tr><td><code>ph_phc_…_posthog</code></td><td>PostHog</td><td>Distinguishes one visitor from another, and carries the same visit across <code>getduct.ai</code> and <code>app.getduct.ai</code> so it counts as one person, not two. PostHog may keep the same value in your browser's local storage</td><td>1 year</td></tr>
+<tr><td><code>duct_consent</code></td><td>Duct</td><td>Remembers your choice, so you are not asked on every page. Set on <code>getduct.ai</code> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it never asks (section 7). Strictly necessary — it exists whether you accept or decline</td><td>6 months, then we ask again</td></tr>
 <tr><td><code>duct_consent_region</code></td><td>Duct (session storage)</td><td>Caches the country your request arrived from, so we ask the right question without repeating the lookup. Strictly necessary</td><td>End of session</td></tr>
 </tbody>
 </table>
@@ -240,7 +253,8 @@
 <p>The authentication token described under <em>Locally stored data</em> below is also strictly necessary: without it you cannot stay signed in.</p>
 
 <h3>Diagnostics</h3>
-<p>When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID.</p>
+<p>When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. The web app also sends how long each page took to load and respond (web vitals), which is timing and nothing else. <strong>Error reports and page timing in the web app are sent whether or not you accept analytics cookies,</strong> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, both are part of analytics and follow your cookie choice.</p>
+<p>Our servers report their own errors to PostHog the same way, along with a few log lines recording when a server starts and stops. We configure error reporting to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID.</p>
 
 <h3>Activity and agent memory</h3>
 <p>Duct records an activity log of significant actions in a project, and stores durable notes its agents derive from your data (for example, a recurring seasonal pattern) so reports improve over time. Both are scoped to your project, visible to you, and deleted with it.</p>
@@ -261,11 +275,12 @@
 <tr><td>Generative media providers</td><td>Image and video generation in Content Studio</td><td>Prompts and reference media only</td></tr>
 <tr><td>PostBridge</td><td>Publishing to, and reading analytics from, your social accounts</td><td>Social account data and post content only</td></tr>
 <tr><td>Apify</td><td>Retrieving publicly available social content for research</td><td>No</td></tr>
-<tr><td>Sentry</td><td>Error monitoring and crash reporting</td><td>Incidentally, in error context only</td></tr>
+<tr><td>PostHog</td><td>Product and web analytics, session replay, error and crash reporting, page-speed measurement, AI call metadata</td><td>No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11</td></tr>
 <tr><td>Resend</td><td>Transactional email (report delivery, project invitations)</td><td>No — email address and report content only</td></tr>
 </tbody>
 </table>
 </div>
+<p><strong>PostHog, Inc. is a US company, and stores what it receives in its US region.</strong> Sending it data from the EU relies on the EU Standard Contractual Clauses in PostHog's data processing agreement.</p>
 <p>Where connected-source data is sent to an AI model provider, it is sent solely to produce the output you asked for. <strong>We never use it to train models, and we never permit a provider to do so on our behalf.</strong> Anthropic, OpenAI and Google are used under API terms that exclude submitted data from training by default.</p>
 <p><strong>OpenRouter is a router, not a model provider,</strong> and it warrants a specific note. It forwards a request to whichever underlying provider the routing configuration selects, and those providers differ in whether they log or train on what they receive. Where you supply your own OpenRouter key, that routing configuration is yours: the retention and training behaviour of a request is governed by the data policy set on your OpenRouter account, and you should set it to match the commitments you need. We recommend enabling OpenRouter's zero-logging and no-training data policy before connecting a key. Duct does not use your data for training regardless of which route is taken.</p>
 <p>We may also disclose data where required by law, and to a successor entity in the event of a merger or acquisition, in which case this policy continues to apply until you are notified otherwise.</p>
@@ -287,7 +302,8 @@
 <tr><td>Data fetched from connected sources</td><td>Retained as part of the reports, insights, agent memory and working artifacts it produced, for as long as your account is active</td></tr>
 <tr><td>Generated reports, content drafts, uploads and audit logs</td><td>While your account is active</td></tr>
 <tr><td>Authentication tokens (browser)</td><td>7 days</td></tr>
-<tr><td>Error diagnostics</td><td>90 days</td></tr>
+<tr><td>Usage events, error reports and AI call metadata (PostHog)</td><td>Up to 7 years, the retention of our PostHog plan</td></tr>
+<tr><td>Session replays (PostHog)</td><td>30 days</td></tr>
 <tr><td>Audit tool submissions</td><td>Until you ask us to delete them</td></tr>
 <tr><td>Backups</td><td>Deleted data may persist in encrypted backups for up to 30 days after deletion</td></tr>
 </tbody>
@@ -303,7 +319,7 @@
 </ul>
 
 <h2>15. Your Rights</h2>
-<p>We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <a href="mailto:hello@getduct.ai">hello@getduct.ai</a>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD).</p>
+<p>We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product; legitimate interest for security and diagnostics, including the error reports and server-side events in section 11; and your consent for analytics cookies and session replays where we ask for it. Exercise any of these rights at <a href="mailto:hello@getduct.ai">hello@getduct.ai</a>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD).</p>
 <p>Data may be processed outside the EEA by the providers listed in section 12, under transfer mechanisms including the EU Standard Contractual Clauses.</p>
 
 <h2>16. Open Source and Self-Hosting</h2>

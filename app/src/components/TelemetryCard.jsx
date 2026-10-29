@@ -7,7 +7,8 @@
 // distinction nobody asked for at the cost of a settings screen nobody reads.
 //
 // Renders nothing anywhere else — and nothing in a desktop build compiled
-// without a DSN, where the switch would change a preference that no code reads.
+// without a PostHog token, where the switch would change a preference that no
+// code reads.
 // An off switch that does not switch anything off is worse than no switch.
 //
 // The copy is deliberately specific about what is and isn't sent. "Help us
@@ -26,6 +27,7 @@ import { Check, Minus, ShieldAlert } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Switch } from "@/components/ui/switch";
 import { getTelemetrySettings, setTelemetryEnabled } from "@/lib/telemetry";
+import { analytics } from "@/lib/analytics";
 
 export default function TelemetryCard() {
   const [state, setState] = useState({ available: false, enabled: false, defaultOn: false });
@@ -49,6 +51,10 @@ export default function TelemetryCard() {
       try {
         await setTelemetryEnabled(next);
         setState((prev) => ({ ...prev, enabled: next }));
+        // The window's own reporting follows at once; the bundled backend
+        // reads the switch at launch (the note under the lists says so).
+        analytics.setConsent(next);
+        if (next) analytics.start();
       } catch (err) {
         setError(String(err?.message || err));
       } finally {

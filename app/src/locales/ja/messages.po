@@ -9112,8 +9112,12 @@ msgid "We lost the connection to this run. Please retry."
 msgstr "この実行への接続が失われました。もう一度お試しください。"
 
 #: src/components/CookieConsent.jsx
-msgid "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves exactly the same. <0>Privacy Policy</0>"
-msgstr "Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の目的であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否した場合でもDuctの動作は全く同じです。<0>プライバシーポリシー</0>"
+#~ msgid "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の目的であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否した場合でもDuctの動作は全く同じです。<0>プライバシーポリシー</0>"
+
+#: src/components/CookieConsent.jsx
+msgid "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+msgstr "PostHogとGoogle Analyticsを使って、どのページがサインアップにつながるか、Ductのどこで使いにくさを感じているかを確認しています。訪問の録画も含みますが、入力した内容はすべて隠されます。用途はこれだけで、広告ターゲティングも販売も一切ありません。拒否してもDuctはまったく同じように動作します。<0>プライバシーポリシー</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."

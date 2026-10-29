@@ -16,6 +16,7 @@ from agents.models import Provider
 from config import Configs, get_configs
 from db.session import get_session_optional
 from models.auth import User
+from service.analytics import identify_user
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +71,9 @@ async def get_user_provider_keys(
     Returns only the providers the caller actually supplied (non-blank). The
     generate route prefers these over the server-side config keys, falling back
     to the backend's own key when a provider is absent. These values are secrets:
-    never log them and never persist them (see the Sentry header scrub in
-    server.py).
+    never log them and never persist them. Error tracking never sees them
+    either: PostHog's request context records method, path, user agent and
+    address, never a header (service/analytics.py).
 
     An OpenAI value that is a ChatGPT access token is packed together with its
     account id, so the pair travels the same road an API key does — through
@@ -136,6 +138,7 @@ async def get_current_user(
     user = session.execute(select(User).where(User.email == email)).scalars().first()
     if user is None:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
+    identify_user(user)
     return user
 
 
@@ -185,4 +188,5 @@ async def get_current_user_optional(
     user = session.execute(select(User).where(User.email == email)).scalars().first()
     if user is None:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
+    identify_user(user)
     return user

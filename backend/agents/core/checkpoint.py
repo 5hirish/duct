@@ -24,7 +24,7 @@ names. It never opens a database of its own and never forces a dialect:
 A saver that cannot be opened degrades to ``InMemorySaver`` rather than taking
 the process down. Losing durability is bad; refusing to boot is worse, and a
 crash-looping deploy is how a checkpoint-table race turns into an outage. The
-failure is logged with a traceback so it reaches Sentry.
+failure is logged with a traceback so it reaches error tracking.
 
 LangGraph owns its own tables
 -----------------------------
