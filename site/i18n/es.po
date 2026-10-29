@@ -523,9 +523,9 @@ msgstr "Universal · Apple silicon e Intel"
 #: assets/*.js
 msgctxt "js"
 msgid ""
-"We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same."
+"We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
 msgstr ""
-"Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Rechaza y el sitio se comportará exactamente igual."
+"Usamos PostHog y Google Analytics para ver qué páginas generan un registro y dónde Duct te dificulta el uso, incluyendo repeticiones de visitas con todo lo que escribes oculto. Ese es el único uso: sin segmentación de anuncios, nada vendido. Rechaza y Duct funciona exactamente igual."
 
 #: assets/*.js
 msgctxt "js"
@@ -6898,7 +6898,7 @@ msgid ""
 msgstr ""
 "Conecta los servidores MCP que ya usas al agente de Duct. Las herramientas de solo lectura se ejecutan de inmediato; cualquier otra espera tu aprobación primero."
 
-#: mcp.html
+#: mcp.html privacy.html
 msgid "PostHog"
 msgstr "PostHog"
 
@@ -7793,6 +7793,10 @@ msgid "How Duct works"
 msgstr "Cómo funciona Duct"
 
 #: privacy.html
+msgid "1 year"
+msgstr "1 año"
+
+#: privacy.html
 msgid "1. Google User Data We Access"
 msgstr "1. Datos de usuario de Google a los que accedemos"
 
@@ -7843,6 +7847,10 @@ msgstr "2 años"
 #: privacy.html
 msgid "2. Changes Duct Makes on Your Behalf"
 msgstr "2. Cambios que Duct realiza en tu nombre"
+
+#: privacy.html
+msgid "3 months"
+msgstr "3 meses"
 
 #: privacy.html
 msgid "3. How We Use Google User Data"
@@ -7916,9 +7924,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
+"<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you are signed in, both carry your account ID. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
 msgstr ""
-"<0>Los informes de fallos y los datos de uso están activados por defecto en la app que distribuimos, y un interruptor en Preferencias los desactiva ambos.</0> Una vez que lo tocas, tu respuesta se guarda y no se aplica ningún valor predeterminado de nuevo. Un informe de fallos contiene el error y el seguimiento de la pila que lo causó; los datos de uso son las pantallas y funciones que abres, nunca tus claves de API de proveedor, tus datos o cualquier cosa que generes. Si construyes Duct tú mismo, ambos están desactivados por defecto, porque entonces no somos nosotros quienes lo ejecutamos."
+"<0>Los informes de errores y los datos de uso están activados por defecto en la app que distribuimos, y un solo interruptor en Preferencias los desactiva ambos.</0> Una vez que lo tocas, tu respuesta se guarda y no se aplica ninguna configuración predeterminada de nuevo. Un informe de errores contiene el error y el seguimiento de la pila que lo causó; los datos de uso son las pantallas y funciones que abres, nunca tus claves API de proveedor, tus datos o cualquier cosa que generes. Si has iniciado sesión, ambos llevan tu ID de cuenta. Si construyes Duct tú mismo, ambos están desactivados por defecto, porque entonces no somos nosotros quienes lo ejecutamos."
 
 #: privacy.html
 msgid ""
@@ -7968,6 +7976,12 @@ msgstr ""
 
 #: privacy.html
 msgid ""
+"<0>In the web app,</0> everything you type, and also all text on screen, images, embedded documents, charts and video. A replay of the app shows the layout, your clicks and where you went, never the data on the page. When PostHog counts a click in the app, it records which element was clicked, not the text on it."
+msgstr ""
+"<0>En la app web,</0> todo lo que escribes, y también todo el texto en pantalla, imágenes, documentos incrustados, gráficos y video. Una repetición de la app muestra el diseño, tus clics y dónde fuiste, nunca los datos de la página. Cuando PostHog cuenta un clic en la app, registra qué elemento fue clicado, no el texto en él."
+
+#: privacy.html
+msgid ""
 "<0>Nothing is written automatically.</0> Duct proposes a change set, shows you the exact before-and-after for every individual change, and applies nothing until you explicitly approve it in the app."
 msgstr ""
 "<0>Nada se escribe automáticamente.</0> Duct propone un conjunto de cambios, te muestra el antes y el después exacto de cada cambio individual, y no aplica nada hasta que lo apruebes explícitamente en la app."
@@ -7979,10 +7993,20 @@ msgstr ""
 "<0>Los tokens de OAuth y las claves de proveedor guardadas se cifran en reposo</0> usando cifrado simétrico Fernet, se almacenan en el servidor por usuario y nunca se exponen al navegador"
 
 #: privacy.html
+msgid "<0>On our website,</0> everything you type into a field."
+msgstr "<0>En nuestro sitio web,</0> todo lo que escribes en un campo."
+
+#: privacy.html
 msgid ""
 "<0>OpenRouter is a router, not a model provider,</0> and it warrants a specific note. It forwards a request to whichever underlying provider the routing configuration selects, and those providers differ in whether they log or train on what they receive. Where you supply your own OpenRouter key, that routing configuration is yours: the retention and training behaviour of a request is governed by the data policy set on your OpenRouter account, and you should set it to match the commitments you need. We recommend enabling OpenRouter's zero-logging and no-training data policy before connecting a key. Duct does not use your data for training regardless of which route is taken."
 msgstr ""
 "<0>OpenRouter es un enrutador, no un proveedor de modelos,</0> y merece una nota específica. Reenvía una solicitud al proveedor subyacente que seleccione la configuración de enrutamiento, y esos proveedores difieren en si registran o entrenan con lo que reciben. Cuando proporcionas tu propia clave de OpenRouter, esa configuración de enrutamiento es tuya: el comportamiento de retención y entrenamiento de una solicitud se rige por la política de datos establecida en tu cuenta de OpenRouter, y debes configurarla para que coincida con los compromisos que necesitas. Recomendamos habilitar la política de datos de registro cero y no entrenamiento de OpenRouter antes de conectar una clave. Duct no utiliza tus datos para entrenamiento, independientemente de la ruta que se tome."
+
+#: privacy.html
+msgid ""
+"<0>PostHog, Inc. is a US company, and stores what it receives in its US region.</0> Sending it data from the EU relies on the EU Standard Contractual Clauses in PostHog's data processing agreement."
+msgstr ""
+"<0>PostHog, Inc. es una empresa estadounidense y almacena lo que recibe en su región de EE. UU.</0> El envío de datos desde la UE se basa en las Cláusulas Contractuales Estándar de la UE en el acuerdo de procesamiento de datos de PostHog."
 
 #: privacy.html
 msgid "<0>Product and behavioural analytics:</0> Mixpanel, Microsoft Clarity"
@@ -8048,9 +8072,15 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+"<0>The desktop app never records a replay of your session.</0> Session replay (section 11) exists only on our website and in the web app in a browser."
 msgstr ""
-"<0>La app de escritorio no establece cookies y nunca te preguntará sobre ellas.</0> Informa el uso a través del mismo contenedor de Google Tag Manager que el resto de Duct, pero con el almacenamiento permanentemente desactivado: Google Analytics recibe el evento y no escribe nada en tu máquina, por lo que ninguna de las cookies de la sección 11 existe allí y no hay nada que consentir. Una barra de consentimiento frente a una aplicación que acabas de abrir no es una pregunta por la que valga la pena interrumpir a nadie."
+"<0>La app de escritorio nunca graba una repetición de tu sesión.</0> La repetición de sesión (sección 11) solo existe en nuestro sitio web y en la app web en un navegador."
+
+#: privacy.html
+msgid ""
+"<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It loads no Google Tag Manager and no Google Analytics at all. Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+msgstr ""
+"<0>La app de escritorio no establece cookies y nunca te preguntará sobre ellas.</0> No carga Google Tag Manager ni Google Analytics en absoluto. Sus eventos de uso e informes de errores van a PostHog, que en la app de escritorio mantiene todo en memoria y no escribe nada en tu máquina, por lo que ninguna de las cookies de la sección 11 existe allí y no hay nada a lo que dar consentimiento. Una barra de consentimiento frente a una aplicación que acabas de abrir no es una pregunta por la que valga la pena interrumpir a nadie."
 
 #: privacy.html
 msgid ""
@@ -8079,6 +8109,10 @@ msgstr ""
 #: privacy.html
 msgid "A stable Google account identifier"
 msgstr "Un identificador de cuenta de Google estable"
+
+#: privacy.html
+msgid "AI model calls"
+msgstr "Llamadas a modelos de IA"
 
 #: privacy.html
 msgid ""
@@ -8189,9 +8223,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page."
+"Declining means neither Google Tag Manager nor PostHog is loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
 msgstr ""
-"Rechazar significa que Google Tag Manager nunca se carga, en lugar de cargarse en un modo restringido. Si rechazas después de haber aceptado previamente, eliminamos las cookies a continuación y recargamos la página."
+"Rechazar significa que ni Google Tag Manager ni PostHog se cargan en absoluto, en lugar de cargarse en un modo restringido. Si rechazas después de haber aceptado previamente, detenemos PostHog, eliminamos las cookies a continuación y la copia de PostHog de ellas en el almacenamiento de tu navegador, y recargamos la página."
 
 #: privacy.html
 msgid ""
@@ -8212,6 +8246,12 @@ msgid ""
 "Distinguishes one visitor from another so a returning visit is not counted twice"
 msgstr ""
 "Distingue un visitante de otro para que una visita recurrente no se cuente dos veces"
+
+#: privacy.html
+msgid ""
+"Distinguishes one visitor from another, and carries the same visit across <0>getduct.ai</0> and <1>app.getduct.ai</1> so it counts as one person, not two. PostHog may keep the same value in your browser's local storage"
+msgstr ""
+"Distingue a un visitante de otro y lleva la misma visita a través de <0>getduct.ai</0> y <1>app.getduct.ai</1> para que cuente como una persona, no dos. PostHog puede mantener el mismo valor en el almacenamiento local de tu navegador."
 
 #: privacy.html
 msgid ""
@@ -8287,16 +8327,14 @@ msgid "End of session"
 msgstr "Fin de la sesión"
 
 #: privacy.html
-msgid "Error diagnostics"
-msgstr "Diagnóstico de errores"
-
-#: privacy.html
-msgid "Error monitoring and crash reporting"
-msgstr "Monitoreo de errores e informes de fallos"
-
-#: privacy.html
 msgid "Expires"
 msgstr "Caduca"
+
+#: privacy.html
+msgid ""
+"For each call Duct makes to an AI model we record metadata only: the model, the number of tokens, how long it took, what it cost, and any error. Never the prompt or the response text."
+msgstr ""
+"Por cada llamada que Duct hace a un modelo de IA, solo registramos metadatos: el modelo, el número de tokens, el tiempo que tardó, su coste y cualquier error. Nunca el prompt o el texto de la respuesta."
 
 #: privacy.html
 msgid "For privacy questions, data access or deletion requests:"
@@ -8367,18 +8405,14 @@ msgid "In transit"
 msgstr "En tránsito"
 
 #: privacy.html
-msgid "Incidentally, in error context only"
-msgstr "Incidentalmente, solo en contexto de error"
-
-#: privacy.html
 msgid ""
 "It does not cover an instance of the software that someone else runs. If you use a Duct deployment operated by a third party, or one you run yourself, the operator of that deployment is the data controller and this policy does not apply to it. Publishing the code does not give us access to any data held in a deployment we do not operate."
 msgstr ""
 "No cubre una instancia del software que otra persona ejecute. Si utilizas una implementación de Duct operada por un tercero, o una que ejecutes tú mismo, el operador de esa implementación es el controlador de datos y esta política no se aplica a ella. Publicar el código no nos da acceso a ningún dato contenido en una implementación que no operamos."
 
 #: privacy.html terms.html
-msgid "Last updated: September 7, 2026"
-msgstr "Última actualización: 7 de septiembre de 2026"
+msgid "Last updated: October 29, 2026"
+msgstr "Última actualización: 29 de octubre de 2026"
 
 #. meta og:description
 #. meta twitter:description
@@ -8403,6 +8437,12 @@ msgid "No — email address and report content only"
 msgstr "No — solo dirección de correo electrónico y contenido del informe"
 
 #: privacy.html
+msgid ""
+"No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
+msgstr ""
+"No — eventos de uso, repeticiones de sesión enmascaradas como se describe en la sección 11, informes de error, tiempo de carga de página y metadatos de llamadas de IA; nunca los datos de tus herramientas conectadas o tus prompts. Un informe de error puede contener incidentalmente un identificador, como se describe en la sección 11."
+
+#: privacy.html
 msgid "OAuth refresh tokens and saved provider keys"
 msgstr "Tokens de actualización de OAuth y claves de proveedor guardadas"
 
@@ -8413,14 +8453,32 @@ msgstr ""
 "Nuestra herramienta pública de auditoría SEO recopila la dirección de correo electrónico y la URL del sitio web que envías, recupera páginas de ese sitio web para analizarlas, y te envía por correo electrónico el informe resultante. Almacenamos el envío y el informe para poder reenviarlo y para poder contactarte sobre Duct. Solo envía un sitio web que poseas o para el que estés autorizado a realizar una auditoría. Pregúntanos en <0>hello@getduct.ai</0> para eliminar un envío."
 
 #: privacy.html
+msgid ""
+"Our servers report their own errors to PostHog the same way, along with a few log lines recording when a server starts and stops. We configure error reporting to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+msgstr ""
+"Nuestros servidores reportan sus propios errores a PostHog de la misma manera, junto con algunas líneas de registro que graban cuándo un servidor se inicia y se detiene. Configuramos el informe de errores para evitar capturar datos de usuario de Google, pero un informe puede contener incidentalmente un identificador como un ID de propiedad."
+
+#: privacy.html
 msgid "PostBridge"
 msgstr "PostBridge"
+
+#: privacy.html
+msgid ""
+"PostHog also records session replays: a reconstruction of the page and where you clicked, so we can watch where a visit went wrong. What a replay hides is hidden in your browser, before anything leaves it:"
+msgstr ""
+"PostHog también registra repeticiones de sesión: una reconstrucción de la página y dónde hiciste clic, para que podamos ver dónde una visita salió mal. Lo que una repetición oculta está oculto en tu navegador, antes de que algo lo abandone:"
 
 #. meta og:title
 #. meta twitter:title
 #: privacy.html
 msgid "Privacy Policy — Duct"
 msgstr "Política de privacidad — Duct"
+
+#: privacy.html
+msgid ""
+"Product and web analytics, session replay, error and crash reporting, page-speed measurement, AI call metadata"
+msgstr ""
+"Análisis de producto y web, repetición de sesión, informes de errores y fallos, medición de velocidad de página, metadatos de llamadas de IA"
 
 #: privacy.html
 msgid "Prompts and reference media only"
@@ -8444,9 +8502,15 @@ msgstr "¿Recibe datos de fuentes conectadas?"
 
 #: privacy.html
 msgid ""
-"Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline"
+"Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it never asks (section 7). Strictly necessary — it exists whether you accept or decline"
 msgstr ""
-"Recuerda tu elección, para que no se te pregunte en cada página. Establecido en <0>getduct.ai</0> y todos sus subdominios, así que responder una vez en tu navegador también responde para la app. La app de escritorio nunca lo establece, porque no carga analíticas en absoluto. Estrictamente necesario — existe tanto si aceptas como si rechazas"
+"Recuerda tu elección, para que no se te pregunte en cada página. Establecido en <0>getduct.ai</0> y todos sus subdominios, por lo que responder una vez en tu navegador también responde para la app. La app de escritorio nunca lo establece, porque nunca pregunta (sección 7). Estrictamente necesario: existe tanto si aceptas como si rechazas."
+
+#: privacy.html
+msgid ""
+"Replays never include your browser's console logs. We do not record keystrokes or form contents."
+msgstr ""
+"Las repeticiones nunca incluyen los registros de la consola de tu navegador. No registramos pulsaciones de teclas ni contenido de formularios."
 
 #: privacy.html
 msgid "Resend"
@@ -8477,8 +8541,14 @@ msgstr ""
 "Vender, alquilar o transferir datos de usuario de Google a intermediarios de datos, revendedores de información o a cualquier tercero para sus propios fines"
 
 #: privacy.html
-msgid "Sentry"
-msgstr "Sentry"
+msgid "Session replays (PostHog)"
+msgstr "Repeticiones de sesión (PostHog)"
+
+#: privacy.html
+msgid ""
+"Session replays and click analytics in the web app never record Google user data: all text on screen is masked in your browser before anything is sent (section 11)."
+msgstr ""
+"Las repeticiones de sesión y el análisis de clics en la app web nunca registran datos de usuario de Google: todo el texto en pantalla se enmascara en tu navegador antes de que se envíe nada (sección 11)."
 
 #: privacy.html
 msgid "Set by"
@@ -8587,8 +8657,16 @@ msgstr ""
 "Hasta que desconectes la fuente, elimines la clave, elimines tu cuenta o revoques el acceso en el proveedor — lo que ocurra primero"
 
 #: privacy.html
+msgid "Up to 7 years, the retention of our PostHog plan"
+msgstr "Hasta 7 años, la retención de nuestro plan PostHog"
+
+#: privacy.html
 msgid "Usage data"
 msgstr "Datos de uso"
+
+#: privacy.html
+msgid "Usage events, error reports and AI call metadata (PostHog)"
+msgstr "Eventos de uso, informes de errores y metadatos de llamadas de IA (PostHog)"
 
 #: privacy.html
 msgid "Use Google user data to build or enrich independent databases or profiles"
@@ -8614,15 +8692,15 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
+"We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product; legitimate interest for security and diagnostics, including the error reports and server-side events in section 11; and your consent for analytics cookies and session replays where we ask for it. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
 msgstr ""
-"Estamos basados en España y procesamos datos personales bajo el RGPD de la UE. Tienes derecho a acceder, corregir, exportar, restringir el procesamiento o eliminar tus datos personales, y a oponerte al procesamiento. Nuestra base legal es la ejecución de nuestro contrato contigo para operar el producto, y el interés legítimo para seguridad y diagnósticos. Ejerce cualquiera de estos derechos en <0>hello@getduct.ai</0>; también tienes derecho a presentar una queja ante tu autoridad de supervisión local (en España, la AEPD)."
+"Estamos basados en España y procesamos datos personales bajo el RGPD de la UE. Tienes derecho a acceder, corregir, exportar, restringir el procesamiento o eliminar tus datos personales, y a oponerte al procesamiento. Nuestra base legal es la ejecución de nuestro contrato contigo para operar el producto; interés legítimo para seguridad y diagnóstico, incluyendo los informes de errores y eventos del lado del servidor en la sección 11; y tu consentimiento para cookies de análisis y repeticiones de sesión donde lo solicitamos. Ejerce cualquiera de estos derechos en <0>hello@getduct.ai</0>; también tienes derecho a presentar una queja ante tu autoridad de supervisión local (en España, la AEPD)."
 
 #: privacy.html
 msgid ""
-"We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents."
+"We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through two tools: Google Analytics 4, loaded by Google Tag Manager, and PostHog. Both follow the cookie choice described below."
 msgstr ""
-"Recopilamos analíticas básicas del producto —páginas visitadas, funciones utilizadas, patrones generales de interacción— para entender cómo se usa Duct. Esto se ejecuta a través de Google Tag Manager, que carga Google Analytics 4. No registramos pulsaciones de teclas ni contenido de formularios."
+"Recopilamos análisis de producto —páginas visitadas, funciones utilizadas, lo que haces clic, la velocidad de carga de las páginas— para ver qué páginas generan un registro y dónde Duct te dificulta el uso. En nuestro sitio web y en la app web en un navegador, esto se ejecuta a través de dos herramientas: Google Analytics 4, cargado por Google Tag Manager, y PostHog. Ambas siguen la elección de cookies descrita a continuación."
 
 #: privacy.html
 msgid ""
@@ -8663,9 +8741,15 @@ msgstr "A qué accede"
 
 #: privacy.html
 msgid ""
-"When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+"When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. The web app also sends how long each page took to load and respond (web vitals), which is timing and nothing else. <0>Error reports and page timing in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, both are part of analytics and follow your cookie choice."
 msgstr ""
-"Cuando algo falla, recopilamos informes de error que contienen el contexto técnico del fallo (seguimiento de pila, navegador, la operación intentada). Configuramos nuestra monitorización de errores para evitar capturar datos de usuario de Google, pero un informe puede contener incidentalmente un identificador como un ID de propiedad."
+"Cuando algo falla en la app web, envía a PostHog un informe de error: el seguimiento de la pila, tu navegador, la ruta de la página sin su cadena de consulta y, si has iniciado sesión, tu ID de cuenta. La app web también envía cuánto tiempo tardó cada página en cargar y responder (métricas web), lo cual es solo tiempo y nada más. <0>Los informes de error y el tiempo de carga de la página en la app web se envían aceptes o no las cookies de análisis,</0> porque no almacenan nada en tu dispositivo: se mantienen en la memoria para esa página y desaparecen cuando la abandonas. En nuestro sitio web, ambos forman parte de los análisis y siguen tu elección de cookies."
+
+#: privacy.html
+msgid ""
+"When you are signed in, our servers also record the actions you take in Duct, such as starting a content plan or approving or applying a change, with your account ID. Your PostHog profile keeps your email address and name, so we can contact you about a problem you hit."
+msgstr ""
+"Cuando has iniciado sesión, nuestros servidores también registran las acciones que realizas en Duct, como iniciar un plan de contenido o aprobar o aplicar un cambio, con tu ID de cuenta. Tu perfil de PostHog guarda tu dirección de correo electrónico y nombre, para que podamos contactarte sobre un problema que encuentres."
 
 #: privacy.html
 msgid ""
@@ -8744,6 +8828,10 @@ msgstr "duct_consent_region"
 #: privacy.html
 msgid "openid"
 msgstr "openid"
+
+#: privacy.html
+msgid "ph_phc_…_posthog"
+msgstr "ph_phc_…_posthog"
 
 #: privacy.html
 msgid "tagmanager.edit.containers"
@@ -9150,13 +9238,15 @@ msgstr ""
 
 #: terms.html
 msgid ""
+"<0>Crash reports and usage data are on by default</0> in the app we distribute, and one switch in Preferences turns both off. In a build you compile yourself they are off by default. The <1>Privacy Policy</1> says what each contains"
+msgstr ""
+"<0>Los informes de fallos y los datos de uso están activados por defecto</0> en la app que distribuimos, y un interruptor en Preferencias los desactiva ambos. En una versión que compiles tú mismo están desactivados por defecto. La <1>Política de Privacidad</1> indica lo que contiene cada uno."
+
+#: terms.html
+msgid ""
 "<0>Creating and publishing content</0> — drafts, images and video you review before anything is published (see section 8)"
 msgstr ""
 "<0>Crear y publicar contenido</0> — borradores, imágenes y videos que revisas antes de que se publique nada (consulta la sección 8)"
-
-#: terms.html
-msgid "<0>Diagnostics are opt-in</0> and off by default"
-msgstr "<0>Los diagnósticos son opcionales</0> y están desactivados por defecto"
 
 #: terms.html
 msgid ""
@@ -12127,6 +12217,80 @@ msgstr "← Volver"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Empezar de nuevo"
+
+#~ msgid ""
+#~ "No — usage events, session replays with inputs hidden, error reports and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
+#~ msgstr ""
+#~ "No — eventos de uso, repeticiones de sesión con entradas ocultas, informes de errores y metadatos de llamadas de IA; nunca los datos de tus herramientas conectadas o tus prompts. Un informe de errores puede contener incidentalmente un identificador, como se describe en la sección 11."
+
+#~ msgid ""
+#~ "PostHog also records session replays: a reconstruction of what was on the page and where you clicked, so we can watch where a visit went wrong. <0>Everything typed into a field is hidden in your browser before the replay leaves it.</0> We do not record keystrokes or form contents."
+#~ msgstr ""
+#~ "PostHog también graba repeticiones de sesión: una reconstrucción de lo que había en la página y dónde hiciste clic, para que podamos ver dónde salió mal una visita. <0>Todo lo que se escribe en un campo se oculta en tu navegador antes de que la repetición lo abandone.</0> No grabamos pulsaciones de teclas ni contenido de formularios."
+
+#~ msgid ""
+#~ "When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. <0>Error reports in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, error reports are part of analytics and follow your cookie choice."
+#~ msgstr ""
+#~ "Cuando algo falla en la app web, envía a PostHog un informe de error: el seguimiento de pila, tu navegador, la ruta de la página sin su cadena de consulta y, si has iniciado sesión, tu ID de cuenta. <0>Los informes de error en la app web se envían aceptes o no las cookies de análisis,</0> porque no almacenan nada en tu dispositivo: se mantienen en la memoria para esa página y desaparecen cuando la abandonas. En nuestro sitio web, los informes de error son parte de los análisis y siguen tu elección de cookies."
+
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same."
+#~ msgstr ""
+#~ "Usamos Google Analytics para ver qué páginas generan un registro. Ese es todo el uso: sin segmentación de anuncios, sin perfiles, nada vendido. Rechaza y el sitio se comportará exactamente igual."
+
+#~ msgid ""
+#~ "<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
+#~ msgstr ""
+#~ "<0>Los informes de fallos y los datos de uso están activados por defecto en la app que distribuimos, y un interruptor en Preferencias los desactiva ambos.</0> Una vez que lo tocas, tu respuesta se guarda y no se aplica ningún valor predeterminado de nuevo. Un informe de fallos contiene el error y el seguimiento de la pila que lo causó; los datos de uso son las pantallas y funciones que abres, nunca tus claves de API de proveedor, tus datos o cualquier cosa que generes. Si construyes Duct tú mismo, ambos están desactivados por defecto, porque entonces no somos nosotros quienes lo ejecutamos."
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>La app de escritorio no establece cookies y nunca te preguntará sobre ellas.</0> Informa el uso a través del mismo contenedor de Google Tag Manager que el resto de Duct, pero con el almacenamiento permanentemente desactivado: Google Analytics recibe el evento y no escribe nada en tu máquina, por lo que ninguna de las cookies de la sección 11 existe allí y no hay nada que consentir. Una barra de consentimiento frente a una aplicación que acabas de abrir no es una pregunta por la que valga la pena interrumpir a nadie."
+
+#~ msgid ""
+#~ "Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page."
+#~ msgstr ""
+#~ "Rechazar significa que Google Tag Manager nunca se carga, en lugar de cargarse en un modo restringido. Si rechazas después de haber aceptado previamente, eliminamos las cookies a continuación y recargamos la página."
+
+#~ msgid "Error diagnostics"
+#~ msgstr "Diagnóstico de errores"
+
+#~ msgid "Error monitoring and crash reporting"
+#~ msgstr "Monitoreo de errores e informes de fallos"
+
+#~ msgid "Incidentally, in error context only"
+#~ msgstr "Incidentalmente, solo en contexto de error"
+
+#~ msgid "Last updated: September 7, 2026"
+#~ msgstr "Última actualización: 7 de septiembre de 2026"
+
+#~ msgid ""
+#~ "Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline"
+#~ msgstr ""
+#~ "Recuerda tu elección, para que no se te pregunte en cada página. Establecido en <0>getduct.ai</0> y todos sus subdominios, así que responder una vez en tu navegador también responde para la app. La app de escritorio nunca lo establece, porque no carga analíticas en absoluto. Estrictamente necesario — existe tanto si aceptas como si rechazas"
+
+#~ msgid "Sentry"
+#~ msgstr "Sentry"
+
+#~ msgid ""
+#~ "We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
+#~ msgstr ""
+#~ "Estamos basados en España y procesamos datos personales bajo el RGPD de la UE. Tienes derecho a acceder, corregir, exportar, restringir el procesamiento o eliminar tus datos personales, y a oponerte al procesamiento. Nuestra base legal es la ejecución de nuestro contrato contigo para operar el producto, y el interés legítimo para seguridad y diagnósticos. Ejerce cualquiera de estos derechos en <0>hello@getduct.ai</0>; también tienes derecho a presentar una queja ante tu autoridad de supervisión local (en España, la AEPD)."
+
+#~ msgid ""
+#~ "We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents."
+#~ msgstr ""
+#~ "Recopilamos analíticas básicas del producto —páginas visitadas, funciones utilizadas, patrones generales de interacción— para entender cómo se usa Duct. Esto se ejecuta a través de Google Tag Manager, que carga Google Analytics 4. No registramos pulsaciones de teclas ni contenido de formularios."
+
+#~ msgid ""
+#~ "When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+#~ msgstr ""
+#~ "Cuando algo falla, recopilamos informes de error que contienen el contexto técnico del fallo (seguimiento de pila, navegador, la operación intentada). Configuramos nuestra monitorización de errores para evitar capturar datos de usuario de Google, pero un informe puede contener incidentalmente un identificador como un ID de propiedad."
+
+#~ msgid "<0>Diagnostics are opt-in</0> and off by default"
+#~ msgstr "<0>Los diagnósticos son opcionales</0> y están desactivados por defecto"
 
 #~ msgid "<0/>Most tools ask first"
 #~ msgstr "<0/>La mayoría de las herramientas preguntan primero"
