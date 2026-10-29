@@ -52,13 +52,14 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProviderCard from "@/components/connections/ProviderCard";
+import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
 import TelemetryCard from "@/components/TelemetryCard.jsx";
 import AdvancedSettings from "@/components/models/AdvancedSettings";
 import TierCard from "@/components/models/TierCard";
 import TierSummary from "@/components/models/TierSummary";
 import UsagePanel from "@/components/models/UsagePanel";
 import { LOGOS } from "@/components/connections/logos";
-import { PROVIDERS } from "@/lib/providerKeys";
+import { INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
 import {
   MODEL_MAP_CHANGED,
   TIERS,
@@ -446,6 +447,16 @@ function ModelSettings() {
                 status={providersById[provider.statusId]}
                 planEnabled={chatgptAuthEnabled}
                 loading={providers === null}
+              />
+            ))}
+            {/* Offered by the server, not keyed by the reader; each renders
+                nothing on a deployment that does not offer it. */}
+            {INSTANCE_PROVIDERS.map((provider) => (
+              <InstanceProviderCard
+                key={provider.id}
+                provider={provider}
+                logo={LOGOS[provider.id]}
+                status={providersById[provider.statusId]}
               />
             ))}
             {/* Desktop only, and only in a build that can actually report —

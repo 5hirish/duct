@@ -32,6 +32,10 @@ _HIDDEN_PACKAGES = [
     # PyInstaller cannot see through the same string-name resolution.
     "langchain_openrouter",
     "openrouter",
+    # The same for Ollama: init_chat_model finds langchain_ollama by name, and
+    # it imports the ollama client package.
+    "langchain_ollama",
+    "ollama",
     "langgraph",
     "deepagents",
     # Google API clients build service objects from discovery documents.

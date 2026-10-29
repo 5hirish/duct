@@ -33,6 +33,13 @@ class Provider(str, Enum):
     # shape at api.x.ai too, but the native package carries reasoning_effort
     # and xAI's server-side search as real fields rather than passthrough.
     XAI = "xai"
+    # Open models on an Ollama server the instance points at (OLLAMA_BASE_URL),
+    # through ``langchain-ollama`` → ``ChatOllama``: Ollama's own API rather
+    # than its OpenAI-compatible one, which would drop the reasoning text.
+    # No key — the server is the credential — and no catalogue: a model id is
+    # whatever tag the server holds, written ``ollama:<tag>`` (see
+    # ``OLLAMA_MODEL_PREFIX``).
+    OLLAMA = "ollama"
 
 
 class ModelName(str, Enum):
@@ -591,10 +598,18 @@ def _model_key(model: "ModelName | str | None") -> "ModelName | None":
         return None
 
 
+# A model on the instance's own Ollama server costs nothing per token: the
+# price is the hardware, which nobody bills by the call. Zero, not ``None``,
+# because zero is the true answer and a blank would read as "unknown".
+LOCAL_MODEL_PRICE = ModelPrice(0.0, 0.0)
+
+
 def price_for(model: "ModelName | str | None") -> ModelPrice | None:
     """The price list for a model id, by enum member or raw string; ``None``
     for a model the table does not know. A retired id is priced as itself,
     since a thread it served was billed at its own rate."""
+    if is_ollama_model(model):
+        return LOCAL_MODEL_PRICE
     key = _model_key(model)
     if key is not None:
         return PRICING.get(key)
@@ -700,6 +715,9 @@ def get_api_key_kwargs(
         return {"anthropic_api_key": api_key}
     if provider == Provider.XAI:
         return {"xai_api_key": api_key}
+    if provider == Provider.OLLAMA:
+        # The server is the credential; there is no key to send.
+        return {"base_url": base_url}
     return {}
 
 
@@ -749,6 +767,27 @@ _PROVIDER_PREFIXES: tuple[tuple[str, Provider], ...] = (
 )
 
 
+# An Ollama model is namespaced because its tag has no shape of its own:
+# `qwen3:8b` matches no vendor prefix, and `hf.co/org/repo:Q4_K_M` contains a
+# "/" and would be read as an OpenRouter slug, spending the wrong credential.
+# A bare ":" is no test either — OpenRouter slugs end in `:free` and `:nitro`.
+OLLAMA_MODEL_PREFIX = "ollama:"
+
+
+def is_ollama_model(model: "ModelName | str | None") -> bool:
+    return str(getattr(model, "value", model) or "").strip().startswith(OLLAMA_MODEL_PREFIX)
+
+
+def ollama_model_id(tag: str) -> str:
+    """The id Duct stores for an Ollama tag."""
+    return f"{OLLAMA_MODEL_PREFIX}{tag.strip()}"
+
+
+def ollama_tag(model: "ModelName | str") -> str:
+    """The tag Ollama knows a model by: the id without Duct's namespace."""
+    return str(getattr(model, "value", model) or "").strip().removeprefix(OLLAMA_MODEL_PREFIX)
+
+
 def provider_of(model: "ModelName | str") -> Provider | None:
     """The provider that serves this model id, or None when unrecognisable.
 
@@ -760,6 +799,9 @@ def provider_of(model: "ModelName | str") -> Provider | None:
     name = str(getattr(model, "value", model) or "").strip().lower()
     if not name:
         return None
+    # Before the "/" test: an Ollama tag pulled from Hugging Face has one.
+    if name.startswith(OLLAMA_MODEL_PREFIX):
+        return Provider.OLLAMA
     if "/" in name:
         return Provider.OPENROUTER
     for prefix, provider in _PROVIDER_PREFIXES:

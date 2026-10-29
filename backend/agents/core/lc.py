@@ -67,7 +67,10 @@ from agents.models import (
     Provider,
     binds_thinking_to_conversation,
     get_api_key_kwargs,
+    is_ollama_model,
     langchain_provider,
+    ollama_model_id,
+    ollama_tag,
     takes_temperature,
 )
 from agents.thinking import thinking_kwargs
@@ -173,10 +176,55 @@ def default_base_url(provider: Provider) -> str:
     install-wide setting, not a per-request one — and because agents/models.py
     stays a config-free leaf module. Direct vendors never consult it.
     """
+    from config import get_configs
+    if provider is Provider.OLLAMA:
+        return get_configs().ollama_base_url or ""
     if provider not in GATEWAY_BASE_URL:
         return ""
-    from config import get_configs
     return getattr(get_configs(), "openrouter_base_url", "") or ""
+
+
+def _ollama_context_length(model: ModelName | str) -> int:
+    """The context Duct asks Ollama to load for this model, and budgets in.
+
+    The configured length (``OLLAMA_CONTEXT_LENGTH``), held to the length the
+    model was trained on when the server says what that is.
+    """
+    from config import get_configs
+    from service.ollama import model_or_none
+
+    wanted = get_configs().ollama_context_length
+    info = model_or_none(ollama_tag(model))
+    trained = info.context_length if info is not None else 0
+    return min(wanted, trained) if trained else wanted
+
+
+def duct_window(model: ModelName | str) -> int:
+    """The window Duct budgets this model's threads in."""
+    if is_ollama_model(model):
+        return _ollama_context_length(model)
+    return context_window_for(model)
+
+
+def _ollama_kwargs(model: ModelName | str, thinking: str) -> dict:
+    """What ChatOllama needs that no other provider's class takes.
+
+    ``num_ctx`` is the one that matters. Without it Ollama loads the model at
+    its own default, 4,096 tokens on a machine without a large GPU, and drops
+    what does not fit, Duct's system prompt and tool schemas included, without
+    an error: the run just goes wrong. ``reasoning`` keeps a thinking model's
+    reasoning out of its answer (it arrives as ``reasoning_content``, which the
+    stream already shows as thinking); sent only to a model the server says
+    thinks, because Ollama refuses it from one that cannot. A "quick" run asks
+    for none, the way the other providers' dials go to their lowest rung.
+    """
+    from service.ollama import model_or_none
+
+    kwargs: dict[str, Any] = {"num_ctx": _ollama_context_length(model)}
+    info = model_or_none(ollama_tag(model))
+    if info is not None and info.thinks:
+        kwargs["reasoning"] = thinking != "quick"
+    return kwargs
 
 
 def _thinking_kwargs_for(provider: Provider, model, thinking: str) -> dict:
@@ -288,6 +336,15 @@ def resolve_chat_model(
             **cache,
             **_retry_kwargs(provider),
         )
+    elif provider is Provider.OLLAMA:
+        # Ollama knows the model by its tag, not by Duct's namespaced id.
+        llm = init_chat_model(
+            model=ollama_tag(model),
+            model_provider=langchain_provider(provider),
+            temperature=temperature,
+            **_ollama_kwargs(model, thinking),
+            **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
+        )
     else:
         llm = init_chat_model(
             model=getattr(model, "value", model),
@@ -315,7 +372,7 @@ def _within_ducts_window(llm: Any, model: ModelName | str) -> Any:
     fraction of the budget. Rulebook gap 3. The rest of the profile is kept;
     the integrations read other keys from it (output limits, modalities).
     """
-    window = context_window_for(model)
+    window = duct_window(model)
     profile = dict(getattr(llm, "profile", None) or {})
     if profile.get("max_input_tokens") != window:
         profile["max_input_tokens"] = window
@@ -506,6 +563,20 @@ def _states(delta: Any) -> list[dict]:
     return [d for d in (delta if isinstance(delta, list) else [delta]) if isinstance(d, dict)]
 
 
+def _served_model_id(name: Any, configured: Any) -> str:
+    """The id a call is priced and windowed by: the model that answered when
+    the response names one, else the thread's.
+
+    Ollama names its bare tag, which would read as a model Duct does not know
+    (no price, a 200k window it never had); it gets the namespace back.
+    """
+    if not name:
+        return str(getattr(configured, "value", configured) or "")
+    if is_ollama_model(configured) and not is_ollama_model(name):
+        return ollama_model_id(str(name))
+    return str(name)
+
+
 class UsageTracker:
     """Turn the per-chunk ``usage_metadata`` of a stream into one TOKEN_USAGE
     per model call.
@@ -541,8 +612,11 @@ class UsageTracker:
             self._pending["cache_read_tokens"] += int(details.get("cache_read") or 0)
             self._pending["cache_creation_tokens"] += int(details.get("cache_creation") or 0)
         if response.get("model_name") and self._pending is not None:
-            self._pending["model"] = str(response["model_name"])
-        if self._pending is not None and (response.get("stop_reason") or response.get("finish_reason")):
+            self._pending["model"] = _served_model_id(response["model_name"], self.model)
+        # Ollama names the end of a call `done_reason`.
+        if self._pending is not None and (
+            response.get("stop_reason") or response.get("finish_reason") or response.get("done_reason")
+        ):
             return self.flush()
         return None
 
@@ -556,7 +630,7 @@ class UsageTracker:
             **usage,
             "model": str(model),
             "total_tokens": usage["input_tokens"] + usage["output_tokens"],
-            "context_window": context_window_for(model),
+            "context_window": duct_window(model),
             # None for a model the price table does not know: the tooltip then
             # shows tokens without a dollar figure rather than a made-up one.
             "cost_usd": cost_usd(
@@ -603,7 +677,7 @@ def usage_from_messages(messages: list, model: Any) -> dict:
         details = usage.get("input_token_details") or {}
         # The message may name the model that actually answered (a fallback);
         # price by that when it does, else by the thread's configured model.
-        served = (getattr(message, "response_metadata", None) or {}).get("model_name") or model
+        served = _served_model_id((getattr(message, "response_metadata", None) or {}).get("model_name"), model)
         last = {
             "input_tokens": int(usage.get("input_tokens") or 0),
             "output_tokens": int(usage.get("output_tokens") or 0),
@@ -625,7 +699,7 @@ def usage_from_messages(messages: list, model: Any) -> dict:
     return {
         "last": last,
         "total": total,
-        "context_window": context_window_for(model),
+        "context_window": duct_window(model),
         "model": str(getattr(model, "value", model) or ""),
     }
 

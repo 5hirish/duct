@@ -26,7 +26,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   **The consolidation is finished.** Per the engine consolidation review
   (duct-cloud, private), every agent moved to one harness — LangChain 1.x /
   `deepagents` — because customers bring their own model (OpenAI / Gemini /
-  Claude / xAI / OpenRouter) and the Claude Agent SDK was Anthropic-only by
+  Claude / xAI / OpenRouter, or an Ollama server) and the Claude Agent SDK was Anthropic-only by
   design (upstream issue #410, closed `not planned`). Insights
   (`agents/insights/v1/runner.py`) and content (`agents/content/v1/runner.py`)
   are `deepagents` sessions; audit's runner is on the `create_agent` rung
@@ -1181,6 +1181,19 @@ don't fit.
   auth headers, query encoding and pagination stay vendor-side. Not for
   `service/apify` or `service/post_bridge` — those are async, hold a
   long-lived client, and need no retry.
+- `service/ollama.py` + `Provider.OLLAMA` — open models on the instance's own
+  Ollama server (`OLLAMA_BASE_URL`), the one chat provider with no key: the
+  server is the credential (`ProviderKey.source == "instance"`), reachable on
+  hosted and local alike once the operator sets it, and only when it holds a
+  model that calls tools. Ids are namespaced `ollama:<tag>`, checked before
+  `provider_of`'s "/" test because a Hugging Face tag has one. Three rules,
+  held by `tests/test_ollama_provider.py`: the pickers list what the server
+  holds (`/api/tags`, filtered on `/api/show`'s `tools` capability), never a
+  catalogue; every call sends `num_ctx` (`OLLAMA_CONTEXT_LENGTH`, held to the
+  model's trained length), because Ollama's own 4,096-token default silently
+  cuts the system prompt and tools; and `reasoning` goes only to a model that
+  thinks, since Ollama refuses it from one that cannot. A local model is
+  priced at zero, not unknown.
 - `service/vendor_keys.py` — a third-party key each user brings for
   themselves (PostBridge, Apify). A request spends the key its project's
   owner saved; the instance's env key only where `allow_server_provider_keys()`

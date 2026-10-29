@@ -1943,6 +1943,10 @@ msgstr "Chat"
 msgid "ChatGPT sign-in isn't available for this account right now"
 msgstr "El inicio de sesión de ChatGPT no está disponible para esta cuenta en este momento"
 
+#: src/components/connections/InstanceProviderCard.jsx
+msgid "Check again"
+msgstr "Comprobar de nuevo"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Check connections"
 msgstr "Revisar conexiones"
@@ -1976,6 +1980,7 @@ msgid "Checking your invitation…"
 msgstr "Comprobando tu invitación…"
 
 #: src/components/ConnectionBanner.jsx
+#: src/components/connections/InstanceProviderCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Checking…"
@@ -5267,6 +5272,10 @@ msgstr "Métrica North Star"
 msgid "Not a key we can use"
 msgstr "No es una clave que podamos usar"
 
+#: src/components/connections/InstanceProviderCard.jsx
+msgid "Not answering"
+msgstr "No responde"
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Not confirmed"
 msgstr "No confirmado"
@@ -5495,6 +5504,14 @@ msgstr "Desactivado por defecto — Duct ejecuta su backend aquí, y nada sale a
 msgid "older version"
 msgstr "versión anterior"
 
+#: src/components/connections/logos.jsx
+msgid "Ollama"
+msgstr "Ollama"
+
+#: src/components/connections/InstanceProviderCard.jsx
+msgid "Ollama isn't answering, or holds no model that can call tools"
+msgstr "Ollama no responde o no tiene ningún modelo que pueda llamar a herramientas"
+
 #: src/components/AppSidebar.jsx
 msgid "On"
 msgstr "Activado"
@@ -5515,6 +5532,10 @@ msgstr "En la diapositiva {0}"
 #: src/lib/credentialStorage.js
 msgid "On this device"
 msgstr "En este dispositivo"
+
+#: src/lib/modelTiers.js
+msgid "On this server"
+msgstr "En este servidor"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On-page content rewrites"
@@ -5948,6 +5969,10 @@ msgstr "Elige un color"
 msgid "Pick at least one account."
 msgstr "Elige al menos una cuenta."
 
+#: src/components/connections/InstanceProviderCard.jsx
+msgid "Pick one of its models for a tier on the Tiers tab. Only models that can call tools are listed, because every Duct agent works by calling them."
+msgstr "Elige uno de sus modelos para un nivel en la pestaña Niveles. Solo aparecen los modelos que pueden llamar a herramientas, porque todos los agentes de Duct trabajan llamándolas."
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Pick one of the questions below, or type your own."
 msgstr "Elige una de las preguntas a continuación, o escribe la tuya."
@@ -6289,6 +6314,10 @@ msgstr "La publicación no está conectada. Pide a tu administrador que la confi
 msgid "Publishing this take"
 msgstr "Publicando esta toma"
 
+#: src/components/connections/InstanceProviderCard.jsx
+msgid "Pull a model that calls tools, for example <0>ollama pull qwen3</0>."
+msgstr "Descarga un modelo que llame a herramientas, por ejemplo <0>ollama pull qwen3</0>."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Putting it together"
 msgstr "Armándolo"
@@ -6427,6 +6456,11 @@ msgstr "Listo"
 #: src/components/onboarding/ProviderRequiredCard.jsx
 msgid "Ready when you are"
 msgstr "Listo cuando tú lo estés"
+
+#. placeholder {0}: check.model
+#: src/components/connections/InstanceProviderCard.jsx
+msgid "Ready: {0} answered."
+msgstr "Listo: {0} respondió."
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Real problems from a real account. Nothing lands here unchecked."
@@ -6888,6 +6922,10 @@ msgstr "Ejecuta esto en tu terminal."
 #: src/lib/modelTiers.js
 msgid "Running on a key already on this computer, not one you added here."
 msgstr "Ejecutando con una clave ya en este ordenador, no una que hayas añadido aquí."
+
+#: src/lib/modelTiers.js
+msgid "Running on an open model this server offers — no key, and nobody is billed."
+msgstr "Funciona con un modelo abierto que ofrece este servidor: sin clave y sin que nadie pague."
 
 #: src/lib/modelTiers.js
 msgid "Running on Duct's own key — we are paying for these runs."
@@ -7816,6 +7854,10 @@ msgstr "Iniciar una nueva conversación"
 msgid "Start discovery"
 msgstr "Iniciar descubrimiento"
 
+#: src/components/connections/InstanceProviderCard.jsx
+msgid "Start Ollama on the machine it was set up on (<0>download it</0>)."
+msgstr "Inicia Ollama en la máquina donde se configuró (<0>descárgalo</0>)."
+
 #: src/app/(auth)/page.js
 msgid "Start over"
 msgstr "Empezar de nuevo"
@@ -8581,6 +8623,10 @@ msgstr "Esta pantalla no existe o se ha movido. No hay nada malo con tu instalac
 msgid "This server doesn’t offer one-click sign-in to Duct, so it needs an API key instead."
 msgstr "Este servidor no ofrece inicio de sesión con un clic a Duct, así que necesita una clave API en su lugar."
 
+#: src/components/connections/InstanceProviderCard.jsx
+msgid "This server is set up to run open models on Ollama, but Ollama isn’t answering or holds no model that can call tools."
+msgstr "Este servidor está configurado para ejecutar modelos abiertos en Ollama, pero Ollama no responde o no tiene ningún modelo que pueda llamar a herramientas."
+
 #: src/components/workspace/ContextRing.jsx
 msgid "This session"
 msgstr "Esta sesión"
@@ -8886,6 +8932,10 @@ msgstr "Usando {tool}"
 #: src/lib/modelTiers.js
 msgid "Using a key already on the machine running Duct, not one you added here"
 msgstr "Usando una clave ya en la máquina que ejecuta Duct, no una que hayas añadido aquí"
+
+#: src/lib/modelTiers.js
+msgid "Using an open model on the Ollama server whoever runs Duct set up"
+msgstr "Usa un modelo abierto en el servidor Ollama que configuró quien ejecuta Duct"
 
 #: src/lib/modelTiers.js
 msgid "Using Duct's own key — we're paying for this run"

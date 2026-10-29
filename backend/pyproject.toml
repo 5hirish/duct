@@ -115,6 +115,11 @@ langgraph-checkpoint-sqlite = "^3.1.2"
 # do not reach for `route`.
 langchain-openrouter = "^0.2.9"
 langchain-xai = "^1.3.0"
+# Open models on the instance's own Ollama server (Provider.OLLAMA). The native
+# integration rather than ChatOpenAI at Ollama's /v1: the OpenAI-compatible
+# route drops `reasoning_content`, and `num_ctx` — the context Ollama loads,
+# 4,096 tokens by default on most laptops — has no field there at all.
+langchain-ollama = "^1.1.0"
 # Text out of the PDFs a user adds at onboarding (service/documents.py). Pure
 # Python and no dependencies of its own; Word and PowerPoint need no library
 # because they are zip files of XML. Duct extracts text rather than handing

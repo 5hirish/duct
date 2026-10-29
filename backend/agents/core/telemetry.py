@@ -115,6 +115,7 @@ _PROVIDER_NAMES = {
     "anthropic": "anthropic",
     "google_genai": "gcp.gemini",
     "openrouter": "openrouter",
+    "ollama": "ollama",
 }
 
 

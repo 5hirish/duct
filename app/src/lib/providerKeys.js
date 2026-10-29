@@ -87,6 +87,24 @@ export const PROVIDERS = [
   },
 ];
 
+/**
+ * Providers the server offers itself, with no key: today Ollama, open models on
+ * a server the person running Duct points it at (`OLLAMA_BASE_URL`).
+ *
+ * Kept apart from PROVIDERS because nothing here is pasted, stored, sent as a
+ * header or lent to a background job, and every reader of that list does one
+ * of those. `backend/routes/providers.py` holds the same sentence. Change both.
+ */
+export const INSTANCE_PROVIDERS = [
+  {
+    id: "ollama",
+    statusId: "ollama",
+    label: "Ollama",
+    description: "Open models on this server's own Ollama. No key: whoever runs Duct offers it.",
+    downloadUrl: "https://ollama.com/download",
+  },
+];
+
 const STORAGE_PREFIX = "duct_provider_key_";
 const OPENAI_HEADER = PROVIDERS.find((p) => p.id === "openai").header;
 

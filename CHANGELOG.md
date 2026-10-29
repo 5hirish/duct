@@ -24,6 +24,14 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+### Added
+
+- **Open models on your own Ollama.** A self-hosted Duct pointed at an Ollama
+  server runs on any model pulled there that can call tools, with no key and
+  no bill: pick one for a tier like any other model. Duct asks Ollama for a
+  context long enough for its prompts, where Ollama's own default would cut
+  them short.
+
 ## [0.7.2] — 2026-10-29
 
 Pages that arrive drawn, conversations that stay fast however long they get,
