@@ -261,7 +261,7 @@ Only while the switch is on.
 |---|---|---|
 | VS Code | Desktop: Tauri dev (sidecar backend) | `dev:local` with the frozen sidecar; no sign-in needed |
 | VS Code | Duct: Desktop + API | Local API, Next dev server and the registered dev bundle |
-| VS Code | Duct: Desktop + API + Phoenix | The same, with every agent turn traced into Phoenix; the sidecar learns the collector from a second `open --env`, since launchd inherits nothing |
+| VS Code | Duct: Desktop + API + Jaeger | The same, with every agent turn traced into Jaeger; the sidecar learns the collector from a second `open --env`, since launchd inherits nothing |
 | Zed | Desktop: Tauri dev (sidecar backend), Duct: Desktop + API | The same two, as tasks (Zed has no compounds) |
 | Both | Duct: stop everything | Quits what a session started; a launched dev app outlives its debug session |
 

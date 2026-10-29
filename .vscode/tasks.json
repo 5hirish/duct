@@ -36,9 +36,9 @@
       "problemMatcher": []
     },
     {
-      "label": "Phoenix: stop (6006)",
+      "label": "Jaeger: stop (16686)",
       "type": "shell",
-      "command": "./scripts/dev_stop.sh phoenix",
+      "command": "./scripts/dev_stop.sh jaeger",
       "options": { "cwd": "${workspaceFolder}" },
       "presentation": {
         "reveal": "silent",

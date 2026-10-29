@@ -163,14 +163,14 @@ Directions not yet built:
 | A/B regression | Pairwise-judge old against new on a fixed topic set, order randomised, to catch drift between prompt or model changes |
 | Human calibration | Hand-score a sample periodically; adjust thresholds and weights from the judge-to-human correlation |
 | Multi-judge | Average independent judges on high-stakes dimensions. Naive panels amplify shared biases, so keep them independent |
-| Phoenix export | Push scorecards into Phoenix, already a dev dependency, for trend and regression views |
+| Scorecard trends | Keep scorecards where trends and regressions show, in an open-source tool chosen once there are enough to trend |
 
 Landscape, 2025 to 2026:
 
 | Tier | Tools | Where we sit |
 |---|---|---|
 | CI gating, lightweight, code-defined | Promptfoo (now part of OpenAI; strong red-teaming), DeepEval, RAGAS | Our harness |
-| Platforms: tracing, human annotation, regression, dashboards | Braintrust, LangSmith, Arize Phoenix (already a backend dev dependency), Helicone | The recommended pairing: a light framework for CI plus a platform for annotation and trends |
+| Platforms: tracing, human annotation, regression, dashboards | Braintrust, LangSmith, Arize Phoenix, Helicone | The recommended pairing: a light framework for CI plus a platform for annotation and trends |
 
 Sources:
 

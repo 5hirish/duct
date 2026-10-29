@@ -36,9 +36,9 @@ stop_site() {
   pkill -f "dev_server.py" >/dev/null 2>&1 || true
 }
 
-stop_phoenix() {
-  kill_port 6006
-  pkill -f "phoenix.server.main" >/dev/null 2>&1 || true
+stop_jaeger() {
+  kill_port 16686
+  pkill -f "duct/jaeger/jaeger-" >/dev/null 2>&1 || true
 }
 
 # Quit first, kill second: a graceful quit reaches RunEvent::Exit, which stops
@@ -54,7 +54,7 @@ stop_desktop() {
 }
 
 usage() {
-  echo "usage: scripts/dev_stop.sh [all|backend|app|site|phoenix|desktop]..." >&2
+  echo "usage: scripts/dev_stop.sh [all|backend|app|site|jaeger|desktop]..." >&2
   exit 2
 }
 
@@ -62,11 +62,11 @@ usage() {
 
 for target in "$@"; do
   case "$target" in
-    all)      stop_desktop; stop_app; stop_backend; stop_site; stop_phoenix ;;
+    all)      stop_desktop; stop_app; stop_backend; stop_site; stop_jaeger ;;
     backend)  stop_backend ;;
     app)      stop_app ;;
     site)     stop_site ;;
-    phoenix)  stop_phoenix ;;
+    jaeger)   stop_jaeger ;;
     desktop)  stop_desktop ;;
     *)        echo "unknown target: $target" >&2; usage ;;
   esac

@@ -106,8 +106,6 @@ a = Analysis(
         # boto3/botocore back the R2 storage backend only (service/storage.py
         # imports them lazily). Desktop stores uploads on local disk.
         "boto3", "botocore", "s3transfer",
-        # Dev observability, never bundled.
-        "phoenix", "arize",
     ],
     noarchive=False,
 )

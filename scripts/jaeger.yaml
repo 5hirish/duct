@@ -1,0 +1,57 @@
+# Jaeger for local agent traces, started by scripts/jaeger.sh.
+#
+# Jaeger's own all-in-one keeps up to 100k traces in memory and loses them on
+# restart; this keeps them on disk (Badger) for a week instead, which holds
+# memory flat however long the dev stack runs. Everything binds to localhost:
+# the traces carry tool arguments, and nothing off this machine should read them.
+service:
+  extensions: [jaeger_storage, jaeger_query]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger_storage_exporter]
+  telemetry:
+    metrics:
+      level: none
+    logs:
+      level: warn
+
+extensions:
+  jaeger_query:
+    storage:
+      traces: local
+    # Jaeger's default is every interface (":16686"), not localhost.
+    http:
+      endpoint: localhost:16686
+    grpc:
+      endpoint: localhost:16685
+    # The MCP tools an agent queries, at /api/ai/mcp/ on the UI port.
+    ai:
+      mcp: {}
+
+  jaeger_storage:
+    backends:
+      local:
+        badger:
+          directories:
+            keys: ${env:JAEGER_DATA_DIR}/keys
+            values: ${env:JAEGER_DATA_DIR}/values
+          ephemeral: false
+          ttl:
+            spans: 168h
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: localhost:4317
+      http:
+        endpoint: localhost:4318
+
+processors:
+  batch:
+
+exporters:
+  jaeger_storage_exporter:
+    trace_storage: local

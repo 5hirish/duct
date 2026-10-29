@@ -221,17 +221,16 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   `POSTHOG_ENABLE_LOCALHOST` is set. And OpenTelemetry tracing of every
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
-  it is unset. Locally that is Phoenix: the "Duct: App + API + Phoenix" and
-  "Duct: Desktop + API + Phoenix" launch compounds start it and point the
-  API (and, for the desktop one, the sidecar via a second `open --env`) at
-  `http://localhost:6006`, and every FetchData and verifier dispatch is a span
-  with its own latency. The spans carry `openinference.project.name: duct`, so
-  they land in Phoenix's **duct** project instead of in `default` beside every
-  other local project's traces; Phoenix creates it on the first span, and any
-  other OTLP backend ignores the attribute. Phoenix's own MCP server is
-  registered in `.mcp.json`
-  at `/mcp` on the same port, so an agent can read the traces of a slow run
-  instead of querying the transcript table. Every log line carries a request
+  it is unset. Locally that is Jaeger (`scripts/jaeger.sh`, Apache-2.0; it
+  replaced Phoenix, whose Elastic licence is not open source): the "Duct: App +
+  API + Jaeger" and "Duct: Desktop + API + Jaeger" launch compounds start it
+  and point the API (and, for the desktop one, the sidecar via a second
+  `open --env`) at `http://localhost:4318`, and every FetchData and verifier
+  dispatch is a span with its own latency. Jaeger reads the `gen_ai.*`
+  attributes, lists the spans under the `duct-backend` service, and keeps them
+  on disk for a week. Its MCP server is registered in `.mcp.json` at
+  `/api/ai/mcp/` on the UI port (16686), so an agent can read the traces of a
+  slow run instead of querying the transcript table. Every log line carries a request
   id (`[a1b2c3d4]`, from `X-Request-Id` when the caller sends one, minted
   otherwise, echoed in the response); an agent run logs under the id of the
   request that created its session, so one grep follows one press of Send.
