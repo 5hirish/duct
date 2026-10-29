@@ -6,8 +6,15 @@
     <atom:link href="https://getduct.ai/changelog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>What shipped in Duct — new connectors, agent and model upgrades, execution controls, and desktop builds.</description>
     <language>en</language>
-    <lastBuildDate>Wed, 28 Oct 2026 09:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 29 Oct 2026 09:00:00 GMT</lastBuildDate>
 
+    <item>
+      <title>Faster on every screen</title>
+      <link>https://getduct.ai/changelog/#2026-10-29</link>
+      <guid isPermaLink="false">duct-changelog-2026-10-29</guid>
+      <pubDate>Thu, 29 Oct 2026 09:00:00 GMT</pubDate>
+      <description>Duct's pages arrive drawn instead of waiting on their scripts, and a long conversation stays as quick as a short one. Desktop 0.7.2 fits a small laptop screen, adds zoom for 4K displays, and installs per user on Windows, so updates stop asking for admin. First-time visitors from the EU, UK and Switzerland no longer hit an error page when asked about cookies.</description>
+    </item>
     <item>
       <title>Bring your MCP servers</title>
       <link>https://getduct.ai/changelog/#2026-10-28</link>
