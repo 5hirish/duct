@@ -1,7 +1,7 @@
 ---
 title: "AI Agents for Marketing: What They Do, What They Don't, How to Run One"
 seoTitle: "AI Agents for Marketing: What They Do and How to Run One"
-date: Dec 15 2026
+date: Nov 14 2026
 author: Shirish Kadam
 category: Guide
 tags: ai agents for marketing, ai agents, marketing analytics, growth
