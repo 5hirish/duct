@@ -1,7 +1,7 @@
 ---
 title: "AI Agents vs Agentic AI: The Difference, in a Marketer's Terms"
 seoTitle: "AI Agents vs Agentic AI: The Difference, for Marketers"
-date: Dec 8 2026
+date: Nov 12 2026
 author: Shirish Kadam
 category: Guide
 tags: agentic ai, ai agents, subagents, marketing analytics

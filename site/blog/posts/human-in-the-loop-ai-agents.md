@@ -1,7 +1,7 @@
 ---
 title: "Human in the Loop: Why an Agent That Can Spend Your Budget Must Ask First"
 seoTitle: "Human in the Loop: Why an AI Agent Must Ask Before It Spends"
-date: Nov 10 2026
+date: Nov 4 2026
 author: Shirish Kadam
 category: Guide
 tags: human in the loop, ai agents, approvals, google ads, execution
