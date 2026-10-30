@@ -1,7 +1,7 @@
 ---
 title: "AI Agent vs Chatbot vs Automation: Which One Is Reading Your Dashboards?"
 seoTitle: "AI Agent vs Chatbot vs Automation: Which Reads Your Data"
-date: Nov 3 2026
+date: Nov 2 2026
 author: Shirish Kadam
 category: Guide
 tags: ai agents, automation, marketing analytics, agent harness

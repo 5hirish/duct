@@ -1,7 +1,7 @@
 ---
 title: "Local AI Agents: What Stays on Your Machine, What Leaves It"
 seoTitle: "Local AI Agents: What Stays on Your Machine, What Leaves It"
-date: Dec 1 2026
+date: Nov 10 2026
 author: Shirish Kadam
 category: Guide
 tags: local ai agents, privacy, bring your own key, desktop, data
