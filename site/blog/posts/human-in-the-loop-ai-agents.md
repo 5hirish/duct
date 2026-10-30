@@ -17,7 +17,7 @@ madeWith: "Claude Code read Duct's execution policy, its tests and the September
 
 An agent that notices a campaign burning budget on eight search terms with no conversions, and fixes it, is the thing you would pay for. The same agent fixing it at 3 a.m. on a guess is the thing you would uninstall. This guide is about where the line goes, and how to tell whether a product enforces it.
 
-It is easy to get wrong, and I have the receipt. On September 28 I was finishing [a post about agent harnesses](/blog/what-is-harness-engineering) and the draft said Duct's agent waits for a person before "anything that spends money". I believed it. Then I read the policy file, the only thing that counts, and it said something narrower: budgets and bids always wait, but adding keywords was on the list that may apply without a click, and a new keyword goes in enabled, so it spends. The post was corrected before it shipped. The gap is still open, and I come back to it below because it is the most useful example in this guide.
+It is easy to get wrong, and I have the receipt. On September 28 I was finishing [a post about agent harnesses](/blog/what-is-harness-engineering) and the draft said Duct's agent waits for a person before "anything that spends money". I believed it. Then I read the policy file, the only thing that counts, and it said something narrower: budgets and bids always wait, but adding keywords was on the list that may apply without a click, and a new keyword goes in enabled, so it spends. The post was corrected before it shipped, and the gap itself closed on October 30. I come back to it below because it is the most useful example in this guide.
 
 ## What does human in the loop mean for an AI agent?
 
@@ -44,7 +44,7 @@ The list for a Google Ads, GA4 and Tag Manager stack, with Duct's default read f
 | Read a report, draft a brief | nothing to undo | none | runs alone |
 | Add a note to the analytics timeline | everything | none | may auto-apply |
 | Add negative keywords | the keyword list, not the traffic you blocked | lost clicks for a day | may auto-apply |
-| Add new keywords | the keyword, not the spend, and bidding may re-enter learning | real money | may auto-apply (the open gap) |
+| Add new keywords | the keyword, not the spend, and bidding may re-enter learning | real money | always waits (since October 30) |
 | Create a GA4 key event or audience | everything | muddled conversion counts | may auto-apply |
 | Edit a Tag Manager tag in the workspace | everything, nothing is live yet | none | may auto-apply |
 | Pause or enable a campaign | the setting; spend stops or starts instantly | a day of zero or double spend | always waits |
@@ -89,7 +89,7 @@ Whether a proposed set waits for a click or applies on its own is decided in [on
 
 Tests hold each of those: [test_execution_policy.py](https://github.com/5hirish/duct/blob/main/backend/tests/test_execution_policy.py) checks that one destructive change holds a whole set for a person and that a project on its default never auto-applies even a clean set; [test_execution_apply_safety.py](https://github.com/5hirish/duct/blob/main/backend/tests/test_execution_apply_safety.py) checks that two requests on one approval apply once, and that a change whose target moved since you approved it is held back. A rule with a test is a rule. A rule in a prompt is a hope.
 
-Now the open gap. The policy's own comment says budget, bid and status changes "stay OFF the allowlist until numeric guardrail limits (max % delta, absolute caps) exist", because they move money. Adding keywords is on the allowlist, and a new Google Ads keyword goes in enabled, so it can spend. My September review of the flow lists this as its first gap and first fix ([Approvals and autonomy for execution](https://github.com/5hirish/duct/blob/main/docs/engineering/2026-09-27-execution-approval-ux-research.md), G1). Until it ships, the honest sentence is: Duct asks before every budget, bid, pause and publish, and may add a keyword without asking on a project you have set to assisted. On the default setting nothing applies without you. That is the setting I run.
+Now the gap. The policy's own comment says budget, bid and status changes "stay OFF the allowlist until numeric guardrail limits (max % delta, absolute caps) exist", because they move money. Adding keywords was on the allowlist anyway, and a new Google Ads keyword goes in enabled, so it can spend. My September review of the flow listed this as its first gap and first fix ([Approvals and autonomy for execution](https://github.com/5hirish/duct/blob/main/docs/engineering/2026-09-27-execution-approval-ux-research.md), G1), and on October 30 it shipped: adding keywords now waits for a person at every setting, and a test fails if anything that spends ever lands on the list again. So the honest sentence is now the simple one: Duct asks before every budget, bid, pause, new keyword and publish. On the default setting nothing applies without you. That is the setting I run.
 
 ## What should the approval card show?
 
