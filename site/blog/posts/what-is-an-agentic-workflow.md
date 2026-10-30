@@ -1,7 +1,7 @@
 ---
 title: "What Is an Agentic Workflow? The Weekly Growth Brief, Step by Step"
 seoTitle: "What Is an Agentic Workflow? A Weekly Brief, Step by Step"
-date: Nov 24 2026
+date: Nov 8 2026
 author: Shirish Kadam
 category: Guide
 tags: agentic workflow, ai agents, reporting, weekly brief, marketing analytics

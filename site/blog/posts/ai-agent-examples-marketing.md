@@ -1,7 +1,7 @@
 ---
 title: "AI Agent Examples for Marketing: Seven Jobs, One Week, Thirteen Tools"
 seoTitle: "AI Agent Examples for Marketing: 7 Jobs Across 13 Tools"
-date: Nov 17 2026
+date: Nov 6 2026
 author: Shirish Kadam
 category: Guide
 tags: ai agent examples, ai agents, marketing analytics, ga4, search console
