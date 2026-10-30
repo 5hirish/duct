@@ -1775,6 +1775,10 @@ msgstr "ブリーフ"
 msgid "Briefs"
 msgstr "ブリーフ"
 
+#: src/components/connections/logos.jsx
+msgid "Bring your own provider"
+msgstr "独自のプロバイダーを使う"
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Building report"
@@ -5865,8 +5869,8 @@ msgid "OpenAI has changed what third-party apps may do with this plan. An API ke
 msgstr "OpenAIは、このプランでサードパーティアプリができることを変更しました。APIキーは関係なく機能します。"
 
 #: src/components/connections/logos.jsx
-msgid "OpenAI-compatible server"
-msgstr "OpenAI 互換サーバー"
+#~ msgid "OpenAI-compatible server"
+#~ msgstr "OpenAI 互換サーバー"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Opened"

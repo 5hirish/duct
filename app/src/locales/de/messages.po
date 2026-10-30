@@ -1775,6 +1775,10 @@ msgstr "Briefing"
 msgid "Briefs"
 msgstr "Briefings"
 
+#: src/components/connections/logos.jsx
+msgid "Bring your own provider"
+msgstr "Eigenen Anbieter verbinden"
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Building report"
@@ -5864,8 +5868,8 @@ msgid "OpenAI has changed what third-party apps may do with this plan. An API ke
 msgstr "OpenAI hat geändert, was Drittanbieter-Apps mit diesem Plan tun dürfen. Ein API-Schlüssel funktioniert trotzdem."
 
 #: src/components/connections/logos.jsx
-msgid "OpenAI-compatible server"
-msgstr "OpenAI-kompatibler Server"
+#~ msgid "OpenAI-compatible server"
+#~ msgstr "OpenAI-kompatibler Server"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Opened"

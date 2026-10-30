@@ -1208,8 +1208,10 @@ don't fit.
   (a vLLM model is named by its Hugging Face repo). Four rules, held by
   `tests/test_compatible_provider.py`: **the address is user input**, so off a
   private network it must be public https, judged on the name when entered
-  (`canonical_base_url`) and on the resolved address on every request after
-  (`guarded_http_clients`, the crawl fetcher's check), with a private address
+  (`canonical_base_url`), and every request after is resolved once, judged
+  and connected to the address that passed, real hostname kept for TLS
+  (`_PinnedTransport`, so DNS rebinding has no second lookup to win), with
+  discovery read under a size and time cap; a private address
   only where the network is the user's own (desktop sidecar, local dev, or
   `PRIVATE_MODEL_ENDPOINTS`); **connecting proves a tool call**
   (`POST /providers/openai_compatible/probe`), because a model that answers

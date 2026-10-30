@@ -118,12 +118,12 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
         "Grok models, and Grok's own image generation.",
     ),
     Provider.OLLAMA: (
-        "Ollama",
-        "Open models on this server's own Ollama. No key: whoever runs Duct offers it.",
+        "Local models",
+        "Models on this server's own Ollama. No key: whoever runs Duct offers it.",
     ),
     Provider.OPENAI_COMPATIBLE: (
-        "OpenAI-compatible",
-        "Any server that speaks OpenAI's API: vLLM, llama.cpp, LM Studio, Together, Groq and more.",
+        "Bring your own provider",
+        "Any host or server that speaks OpenAI's API: Together, Groq, vLLM, LM Studio and more.",
     ),
 }
 

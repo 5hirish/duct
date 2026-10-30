@@ -1551,7 +1551,7 @@ export const SCENES = [
     id: "instance-provider",
     state: "ready, and not answering",
     group: "InstanceProviderCard",
-    title: "Ollama: offered by the server, no key",
+    title: "Local models: Ollama offered by the server, no key",
     note: "Two tiles for one provider in its two states. Ready reads On this server in the info tone, not green: green is for a key the reader put there. Open the grey one: the two steps name the two ways it fails, and Check again asks the server which (in the preview there is no backend, so it answers with the request's own error). Neither dialog has a key field or a Remove button; nothing here is the reader's to store.",
     render: () => (
       <div className="conn-grid">
@@ -1572,7 +1572,7 @@ export const SCENES = [
     id: "endpoint-provider",
     state: "not connected, connected, self-hosted",
     group: "EndpointProviderCard",
-    title: "OpenAI-compatible: an address, its models, a tool call",
+    title: "Bring your own provider: an address, its models, a tool call",
     note: "Three tiles. The first is a hosted Duct with nothing connected: open it, pick Together, and Find models lists a host's catalogue with a filter; type localhost instead and the field says why a hosted server cannot reach it before any request. Picking base-model and testing shows the no-tools failure with Connect anyway; any other model passes the check (saving then fails here, since the preview has no backend to remember it on). The second is connected and remembered: the host is the tile's tag, the dialog lists the chosen models with their context and offers Check again, Change and Disconnect. The third is a self-hosted Duct, which offers LM Studio, vLLM and llama.cpp as well.",
     render: () => {
       const listing = [

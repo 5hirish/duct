@@ -48,7 +48,7 @@ export const CONNECTOR_NAMES = {
   openrouter: msg`OpenRouter`,
   xai: msg`xAI`,
   ollama: msg`Ollama`,
-  compatible: msg`OpenAI-compatible server`,
+  compatible: msg`Bring your own provider`,
 };
 
 function Img({ src, alt }) {

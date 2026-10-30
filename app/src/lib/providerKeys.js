@@ -99,8 +99,8 @@ export const INSTANCE_PROVIDERS = [
   {
     id: "ollama",
     statusId: "ollama",
-    label: "Ollama",
-    description: "Open models on this server's own Ollama. No key: whoever runs Duct offers it.",
+    label: "Local models",
+    description: "Models on this server's own Ollama. No key: whoever runs Duct offers it.",
     downloadUrl: "https://ollama.com/download",
   },
 ];
@@ -121,10 +121,10 @@ export const INSTANCE_PROVIDERS = [
 export const ENDPOINT_PROVIDER = {
   id: "compatible",
   statusId: "openai_compatible",
-  label: "OpenAI-compatible",
+  label: "Bring your own provider",
   header: "X-Provider-Compatible",
   placeholder: "https://api.together.xyz/v1",
-  description: "Any server that speaks OpenAI's API: vLLM, llama.cpp, LM Studio, Together, Groq and more.",
+  description: "Any host or server that speaks OpenAI's API: Together, Groq, vLLM, LM Studio and more.",
   presets: [
     { id: "together", label: "Together", url: "https://api.together.xyz/v1", keyUrl: "https://api.together.ai/settings/api-keys" },
     { id: "fireworks", label: "Fireworks", url: "https://api.fireworks.ai/inference/v1", keyUrl: "https://fireworks.ai/account/api-keys" },
