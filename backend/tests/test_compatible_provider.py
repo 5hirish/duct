@@ -6,7 +6,7 @@ credential that is three things packed into one (address, key, chosen
 models), model ids that look like OpenRouter slugs, an address the user typed
 that Duct then calls, and a model that may answer without ever calling a tool.
 
-The server is ``FakeWire`` answering ``/models``; the model is a fake that
+The server is an httpx2 transport answering ``/models``; the model is a fake that
 does or does not call the tool it is handed. No socket opens.
 """
 
@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import socket
 
-import httpx
+import httpx2
 import pytest
 from langchain_core.messages import AIMessage
 
@@ -26,8 +26,13 @@ from agents.models import COMPATIBLE_MODEL_PREFIX, Provider, provider_of
 from agents.tiers import Job
 from config import Configs
 from service import compatible
+
+# Imported here, never first inside a test: both bind `get_configs` when they
+# load, and a test that patches it first leaves the patch wired into the
+# API-key check for every test after (test_engines_status got 403s).
+import routes.providers  # noqa: E402,F401
+import service.auth  # noqa: E402,F401
 from service.crawl.fetcher import SSRFError
-from tests.fakes import FakeWire
 
 PUBLIC = "https://api.models.example/v1"
 LOCAL = "http://localhost:1234/v1"
@@ -158,11 +163,29 @@ def test_private_addresses_follow_the_instance(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
+class Wire:
+    """The endpoint's server, as an httpx2 transport under discovery: what it
+    answers, and every request that reached it."""
+
+    def __init__(self, body=None, status: int = 200, content: bytes | None = None) -> None:
+        self.body, self.status, self.content = body, status, content
+        self.calls: list[httpx2.Request] = []
+
+    def __call__(self, request: httpx2.Request) -> httpx2.Response:
+        self.calls.append(request)
+        if self.content is not None:
+            return httpx2.Response(self.status, content=self.content)
+        return httpx2.Response(self.status, json=self.body)
+
+    def install(self, monkeypatch) -> "Wire":
+        monkeypatch.setattr(compatible, "_list_transport", lambda private_ok: httpx2.MockTransport(self))
+        return self
+
+
 @pytest.fixture
 def server(monkeypatch):
     _configure(monkeypatch)
-    _resolves_to(monkeypatch, "93.184.216.34")
-    return FakeWire().on("GET", "/models", _LISTING).install(monkeypatch)
+    return Wire(_LISTING).install(monkeypatch)
 
 
 def test_discovery_lists_chat_models_with_their_context(server):
@@ -172,7 +195,8 @@ def test_discovery_lists_chat_models_with_their_context(server):
         (QWEN, 40960),
         ("small-chat", 0),
     ]
-    assert server.sent("GET", "/v1/models")[0].headers["Authorization"] == "Bearer sk-endpoint"
+    assert str(server.calls[0].url) == f"{PUBLIC}/models"
+    assert server.calls[0].headers["Authorization"] == "Bearer sk-endpoint"
 
 
 @pytest.mark.parametrize(
@@ -186,34 +210,65 @@ def test_discovery_lists_chat_models_with_their_context(server):
     ],
 )
 def test_discovery_says_what_went_wrong(monkeypatch, status, body, code):
-    _resolves_to(monkeypatch, "93.184.216.34")
-    FakeWire().on("GET", "/models", body, status=status).install(monkeypatch)
+    Wire(body, status=status).install(monkeypatch)
     with pytest.raises(compatible.EndpointError) as caught:
         compatible.discover(PUBLIC, private_ok=False)
     assert caught.value.code == code
 
 
-def test_a_public_name_that_resolves_inside_is_refused_before_any_request(monkeypatch):
+def test_a_listing_that_never_ends_costs_a_bounded_read(monkeypatch):
+    """The server is one the caller named; a reply past the cap is abandoned
+    rather than held in memory whole."""
+    Wire(content=b" " * (compatible._LIST_MAX_BYTES + 1)).install(monkeypatch)
+    with pytest.raises(compatible.EndpointError) as caught:
+        compatible.discover(PUBLIC, private_ok=False)
+    assert caught.value.code == compatible.CODE_NOT_COMPATIBLE
+
+
+@pytest.fixture
+def sent(monkeypatch):
+    """What the pinned transport hands to the network, which never opens."""
+    seen: list[httpx2.Request] = []
+
+    def record(self, request):
+        seen.append(request)
+        return httpx2.Response(200, json=_LISTING, request=request)
+
+    monkeypatch.setattr(httpx2.HTTPTransport, "handle_request", record)
+    return seen
+
+
+def test_a_request_connects_to_the_address_that_was_checked(monkeypatch, sent):
+    """Resolved once and pinned: a second lookup a hostile DNS server could
+    answer differently never happens, and TLS still checks the real name."""
+    _resolves_to(monkeypatch, "93.184.216.34")
+    compatible.discover(PUBLIC, private_ok=False)
+    (request,) = sent
+    assert request.url.host == "93.184.216.34"
+    assert request.headers["Host"] == "api.models.example"
+    assert request.extensions["sni_hostname"] == "api.models.example"
+
+
+def test_a_public_name_that_resolves_inside_is_refused_before_any_request(monkeypatch, sent):
     _resolves_to(monkeypatch, "10.0.0.5")
-    wire = FakeWire().on("GET", "/models", _LISTING).install(monkeypatch)
     with pytest.raises(compatible.EndpointError) as caught:
         compatible.discover(PUBLIC, private_ok=False)
     assert caught.value.code == compatible.CODE_REFUSED
-    assert wire.calls == []
+    assert sent == []
 
 
-def test_every_model_request_is_held_to_a_public_address(monkeypatch):
-    """The transport's own guard, on the address each request resolves to,
-    redirects included, since the name was checked once when it was typed."""
-    clients = compatible.guarded_http_clients(private_ok=False)
-    hook = clients["http_client"].event_hooks["request"][0]
+def test_every_model_request_is_pinned_too(monkeypatch, sent):
+    """The model client takes the same transport, so a chat call is held to
+    the same rule as the listing, redirects included."""
+    client = compatible.guarded_http_clients(private_ok=False)["http_client"]
     _resolves_to(monkeypatch, "10.0.0.5")
     with pytest.raises(SSRFError):
-        hook(httpx.Request("POST", f"{PUBLIC}/chat/completions"))
+        client.post(f"{PUBLIC}/chat/completions", json={})
     _resolves_to(monkeypatch, "93.184.216.34")
-    hook(httpx.Request("POST", f"{PUBLIC}/chat/completions"))
+    client.post(f"{PUBLIC}/chat/completions", json={})
     with pytest.raises(SSRFError):
-        hook(httpx.Request("POST", "http://api.models.example/v1/chat/completions"))
+        client.post("http://api.models.example/v1/chat/completions", json={})
+    assert [r.url.host for r in sent] == ["93.184.216.34"]
     assert compatible.guarded_http_clients(private_ok=True) == {}
 
 
@@ -385,7 +440,7 @@ def test_a_model_that_answers_in_words_is_not_one_an_agent_can_run_on(server, mo
 
 def test_connecting_a_private_address_on_a_hosted_instance_says_why(monkeypatch):
     _configure(monkeypatch)
-    wire = FakeWire().on("GET", "/models", _LISTING).install(monkeypatch)
+    wire = Wire(_LISTING).install(monkeypatch)
     body = _client(monkeypatch).post("/providers/openai_compatible/probe", json={"base_url": LOCAL}).json()
     assert body["ok"] is False and body["code"] == "refused"
     assert wire.calls == []

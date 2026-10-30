@@ -199,22 +199,45 @@ async def assert_public_url(url: str) -> None:
     _judge_resolved(host, infos)
 
 
-def assert_public_url_sync(url: str) -> None:
-    """``assert_public_url`` for a caller with no event loop: a sync httpx
-    request hook, or a worker thread. The same checks, the same refusal."""
-    validate_public_url(url)
+def resolve_public_sync(host: str) -> str:
+    """One public address for ``host``, or ``SSRFError``.
 
-    host = urlparse(url).hostname or ""
+    For a caller that pins its connection to the address it checked, which
+    closes the rebinding window ``assert_public_url`` leaves open: the name is
+    resolved once, every answer is judged, and the connection goes to the
+    address that passed rather than to a second lookup.
+    """
     try:
-        ipaddress.ip_address(host)
-        return
+        addr = ipaddress.ip_address(host.strip("[]"))
     except ValueError:
-        pass
+        try:
+            infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+        except socket.gaierror as exc:
+            raise SSRFError(f"Could not resolve hostname {host!r}.") from exc
+        _judge_resolved(host, infos)
+        return infos[0][4][0]
+    reason = _blocked_reason(addr)
+    if reason:
+        raise SSRFError(f"{host} is not a public internet address ({reason}).")
+    return str(addr)
+
+
+async def resolve_public(host: str) -> str:
+    """``resolve_public_sync`` without blocking the event loop."""
     try:
-        infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
-    except socket.gaierror as exc:
-        raise SSRFError(f"Could not resolve hostname {host!r}.") from exc
-    _judge_resolved(host, infos)
+        addr = ipaddress.ip_address(host.strip("[]"))
+    except ValueError:
+        loop = asyncio.get_running_loop()
+        try:
+            infos = await loop.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+        except socket.gaierror as exc:
+            raise SSRFError(f"Could not resolve hostname {host!r}.") from exc
+        _judge_resolved(host, infos)
+        return infos[0][4][0]
+    reason = _blocked_reason(addr)
+    if reason:
+        raise SSRFError(f"{host} is not a public internet address ({reason}).")
+    return str(addr)
 
 
 def _judge_resolved(host: str, infos: list) -> None:

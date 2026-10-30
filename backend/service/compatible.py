@@ -20,9 +20,10 @@ answer it got when the user connected is the one they chose from.
 
 **The address is user input, so it is a request someone else aims.** On a
 hosted instance it must be a public https address, judged on the name when it
-is entered and on the resolved address on every request after
-(``service/crawl/fetcher``'s check, the one every other user-aimed fetch in
-Duct goes through). A private address (LM Studio on localhost, vLLM on the
+is entered, and every request after is resolved once, judged
+(``service/crawl/fetcher``'s rule, the one every other user-aimed fetch in
+Duct follows) and connected to the address that passed, so a second DNS
+answer never gets a say. A private address (LM Studio on localhost, vLLM on the
 LAN) is allowed only where the network is the user's own: a desktop sidecar,
 local dev, or a self-hosted server that set ``PRIVATE_MODEL_ENDPOINTS``.
 
@@ -37,14 +38,15 @@ import binascii
 import json
 import logging
 import re
+import time
 from dataclasses import dataclass
 from urllib.parse import urlsplit, urlunsplit
 
-import httpx
+import httpx2
 
 import config
 from config import Configs
-from service.crawl.fetcher import SSRFError, assert_public_url, assert_public_url_sync, validate_public_url
+from service.crawl.fetcher import SSRFError, resolve_public, resolve_public_sync, validate_public_url
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +60,11 @@ CREDENTIAL_PREFIX = "oaic1."
 DEFAULT_CONTEXT_LENGTH = 32_768
 
 _LIST_TIMEOUT_SECONDS = 10.0
+# A host's whole catalogue is a few hundred kilobytes; past these, a listing
+# is not one Duct needs to finish reading.
+_LIST_DEADLINE_SECONDS = 15.0
+_LIST_MAX_BYTES = 4 * 1024 * 1024
+_LIST_MAX_ENTRIES = 2_000
 
 # Where servers put a model's context length in their /models listing, which
 # the OpenAI shape itself does not carry: vLLM says `max_model_len`, Together,
@@ -225,37 +232,45 @@ def _chat_model(entry: dict) -> bool:
 def discover(base_url: str, api_key: str = "", *, private_ok: bool) -> list[EndpointModel]:
     """The chat models the server lists, from ``GET {base}/models``.
 
-    Synchronous (``httpx.request``, the same call shape as the REST
-    connectors, so tests fake it with ``FakeWire``); call it off the event
-    loop. Raises ``EndpointError`` with a code the app can word.
+    Synchronous; call it off the event loop. Read as a stream and held to
+    ``_LIST_MAX_BYTES`` and ``_LIST_DEADLINE_SECONDS`` overall: the server is
+    one the caller named, and a listing that never ends, or arrives a byte at
+    a time, must cost a bounded amount. Raises ``EndpointError`` with a code
+    the app can word.
     """
     url = f"{base_url}/models"
-    if not private_ok:
-        try:
-            assert_public_url_sync(url)
-        except SSRFError as exc:
-            raise EndpointError(CODE_REFUSED, "That address resolves to a private network.") from exc
+    host = urlsplit(base_url).netloc
     headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+    started = time.monotonic()
     try:
-        response = httpx.request("GET", url, headers=headers, timeout=_LIST_TIMEOUT_SECONDS)
-    except httpx.HTTPError as exc:
-        raise EndpointError(CODE_UNREACHABLE, f"Nothing answered at {urlsplit(base_url).netloc}.") from exc
-    if response.status_code in (401, 403):
-        raise EndpointError(CODE_INVALID_KEY, f"The server said {response.status_code}: the key is missing or wrong.")
-    if response.status_code == 404:
-        raise EndpointError(CODE_NOT_COMPATIBLE, "Nothing at that address lists models. Check it ends where /v1 does.")
-    if response.status_code >= 400:
-        raise EndpointError(CODE_UNREACHABLE, f"The server answered {response.status_code}.")
+        with _list_client(private_ok) as client, client.stream("GET", url, headers=headers) as response:
+            if response.status_code in (401, 403):
+                raise EndpointError(CODE_INVALID_KEY, f"The server said {response.status_code}: the key is missing or wrong.")
+            if response.status_code == 404:
+                raise EndpointError(CODE_NOT_COMPATIBLE, "Nothing at that address lists models. Check it ends where /v1 does.")
+            if response.status_code >= 400:
+                raise EndpointError(CODE_UNREACHABLE, f"The server answered {response.status_code}.")
+            body = bytearray()
+            for chunk in response.iter_bytes():
+                body += chunk
+                if len(body) > _LIST_MAX_BYTES:
+                    raise EndpointError(CODE_NOT_COMPATIBLE, "The server's model list is too large to read.")
+                if time.monotonic() - started > _LIST_DEADLINE_SECONDS:
+                    raise EndpointError(CODE_UNREACHABLE, f"{host} took too long to list its models.")
+    except SSRFError as exc:
+        raise EndpointError(CODE_REFUSED, "That address resolves to a private network.") from exc
+    except httpx2.HTTPError as exc:
+        raise EndpointError(CODE_UNREACHABLE, f"Nothing answered at {host}.") from exc
     try:
-        body = response.json()
+        payload = json.loads(bytes(body))
     except ValueError as exc:
         raise EndpointError(CODE_NOT_COMPATIBLE, "The server answered, but not in OpenAI's format.") from exc
-    entries = body.get("data") if isinstance(body, dict) else body
+    entries = payload.get("data") if isinstance(payload, dict) else payload
     if not isinstance(entries, list):
         raise EndpointError(CODE_NOT_COMPATIBLE, "The server answered, but not in OpenAI's format.")
     models = [
         EndpointModel(str(entry["id"]), _context_length(entry))
-        for entry in entries
+        for entry in entries[:_LIST_MAX_ENTRIES]
         if isinstance(entry, dict) and entry.get("id") and _chat_model(entry)
     ]
     if not models:
@@ -264,40 +279,62 @@ def discover(base_url: str, api_key: str = "", *, private_ok: bool) -> list[Endp
 
 
 # ---------------------------------------------------------------------------
-# The transport's guard
+# The transport: every request to the address that was checked
 # ---------------------------------------------------------------------------
+#
+# Judging a name and then letting the client resolve it again leaves a window
+# a hostile DNS server can use: public on the check, 169.254.169.254 on the
+# connect. So off a private network each request is resolved once, every
+# answer judged, and the connection made to the address that passed, with the
+# real hostname kept for TLS (SNI and certificate checks) and the Host header.
+# Redirects pass through the transport too, so each hop is pinned the same way.
+#
+# httpx2 because it is the OpenAI SDK's own client, which ChatOpenAI hands
+# these to; discovery shares the transport so the rule exists once.
 
 
-def _refuse(url: str) -> None:
-    if not url.startswith("https://"):
+def _pin(request: httpx2.Request, address: str) -> None:
+    if request.url.scheme != "https":
         raise SSRFError("An endpoint off a private network is https only.")
+    host = request.url.host
+    request.extensions = {**request.extensions, "sni_hostname": host}
+    request.url = request.url.copy_with(host=address)
 
 
-def _sync_guard(request: httpx.Request) -> None:
-    url = str(request.url)
-    _refuse(url)
-    assert_public_url_sync(url)
+class _PinnedTransport(httpx2.HTTPTransport):
+    def handle_request(self, request: httpx2.Request) -> httpx2.Response:
+        _pin(request, resolve_public_sync(request.url.host))
+        return super().handle_request(request)
 
 
-async def _async_guard(request: httpx.Request) -> None:
-    url = str(request.url)
-    _refuse(url)
-    await assert_public_url(url)
+class _AsyncPinnedTransport(httpx2.AsyncHTTPTransport):
+    async def handle_async_request(self, request: httpx2.Request) -> httpx2.Response:
+        _pin(request, await resolve_public(request.url.host))
+        return await super().handle_async_request(request)
+
+
+def _list_transport(private_ok: bool) -> httpx2.BaseTransport:
+    return httpx2.HTTPTransport() if private_ok else _PinnedTransport()
+
+
+def _list_client(private_ok: bool) -> httpx2.Client:
+    return httpx2.Client(
+        transport=_list_transport(private_ok), timeout=_LIST_TIMEOUT_SECONDS, trust_env=False
+    )
 
 
 def guarded_http_clients(*, private_ok: bool) -> dict:
     """The ``http_client`` / ``http_async_client`` pair for ChatOpenAI, or
     nothing where a private address is allowed anyway.
 
-    Every request the model client makes, redirects included, is judged on
-    the address it resolves to. ``trust_env=False`` so an ambient proxy cannot
-    carry a user's key somewhere nobody chose.
+    ``trust_env=False`` so an ambient proxy cannot carry a user's key
+    somewhere nobody chose.
     """
     if private_ok:
         return {}
     return {
-        "http_client": httpx.Client(trust_env=False, event_hooks={"request": [_sync_guard]}),
-        "http_async_client": httpx.AsyncClient(trust_env=False, event_hooks={"request": [_async_guard]}),
+        "http_client": httpx2.Client(transport=_PinnedTransport(), trust_env=False),
+        "http_async_client": httpx2.AsyncClient(transport=_AsyncPinnedTransport(), trust_env=False),
     }
 
 
