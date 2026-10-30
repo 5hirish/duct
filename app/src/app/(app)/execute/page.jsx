@@ -487,8 +487,8 @@ function AutonomyPanel({ project, level, onChange, saving, error }) {
       <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-xs)" }}>
         <Trans>
           Destructive work waits here at every level — GTM publishes, archives, unlinks,
-          anything touching budget or status. Assisted and Auto share one narrow allowlist:
-          keywords, GA4 key events and audiences, GTM workspace edits.
+          anything touching budget or status, and new keywords. Assisted and Auto share one
+          narrow allowlist: negative keywords, GA4 key events and audiences, GTM workspace edits.
         </Trans>
       </p>
 

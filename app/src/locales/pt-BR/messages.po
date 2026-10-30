@@ -2768,8 +2768,12 @@ msgid "Destructive operations change what is live for every visitor."
 msgstr "Operações destrutivas alteram o que está ativo para cada visitante."
 
 #: src/app/(app)/execute/page.jsx
-msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status. Assisted and Auto share one narrow allowlist: keywords, GA4 key events and audiences, GTM workspace edits."
-msgstr "Trabalhos destrutivos aguardam aqui em todos os níveis — GTM publica, arquiva, desvincula, qualquer coisa que afete orçamento ou status. Assistido e Automático compartilham uma lista de permissões restrita: palavras-chave, eventos-chave e públicos do GA4, edições de workspace do GTM."
+msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status, and new keywords. Assisted and Auto share one narrow allowlist: negative keywords, GA4 key events and audiences, GTM workspace edits."
+msgstr "Trabalhos destrutivos aguardam aqui em todos os níveis — GTM publica, arquiva, desvincula, qualquer coisa que afete orçamento ou status, e palavras-chave novas. Assistido e Automático compartilham uma lista de permissões restrita: palavras-chave negativas, eventos-chave e públicos do GA4, edições de workspace do GTM."
+
+#: src/app/(app)/execute/page.jsx
+#~ msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status. Assisted and Auto share one narrow allowlist: keywords, GA4 key events and audiences, GTM workspace edits."
+#~ msgstr "Trabalhos destrutivos aguardam aqui em todos os níveis — GTM publica, arquiva, desvincula, qualquer coisa que afete orçamento ou status. Assistido e Automático compartilham uma lista de permissões restrita: palavras-chave, eventos-chave e públicos do GA4, edições de workspace do GTM."
 
 #: src/app/(app)/activity/page.jsx
 msgid "details"
