@@ -36,6 +36,14 @@ published without one. The same script, with no arguments, holds
   Mailpit catches local mail so a flow can be read as it would arrive. Resend's
   dedicated integration is gone; Resend accepts SMTP too.
 
+### Changed
+
+- **New Google Ads keywords always wait for you.** A project set to assisted
+  or auto could add keywords without a click; a new keyword goes live enabled,
+  so it spends before anyone looks, and undo removes it but not the money.
+  Keywords now wait for approval like budgets, bids and pauses do. On assisted
+  and auto, negative keywords still apply on their own.
+
 ### Removed
 
 - **Google Tag Manager and GA4, from the site and the web app.** PostHog,

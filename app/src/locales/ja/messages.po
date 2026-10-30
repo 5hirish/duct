@@ -2768,8 +2768,12 @@ msgid "Destructive operations change what is live for every visitor."
 msgstr "破壊的な操作は、すべての訪問者に対してライブの状態を変更します。"
 
 #: src/app/(app)/execute/page.jsx
-msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status. Assisted and Auto share one narrow allowlist: keywords, GA4 key events and audiences, GTM workspace edits."
-msgstr "破壊的な作業は、GTMの公開、アーカイブ、リンク解除、予算やステータスに影響するあらゆるものなど、あらゆるレベルでここで待機します。アシストと自動は、キーワード、GA4の主要イベントとオーディエンス、GTMワークスペースの編集という狭い許可リストを共有します。"
+msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status, and new keywords. Assisted and Auto share one narrow allowlist: negative keywords, GA4 key events and audiences, GTM workspace edits."
+msgstr "破壊的な作業は、GTMの公開、アーカイブ、リンク解除、予算やステータスに影響するあらゆるもの、新しいキーワードなど、あらゆるレベルでここで待機します。アシストと自動は、除外キーワード、GA4の主要イベントとオーディエンス、GTMワークスペースの編集という狭い許可リストを共有します。"
+
+#: src/app/(app)/execute/page.jsx
+#~ msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status. Assisted and Auto share one narrow allowlist: keywords, GA4 key events and audiences, GTM workspace edits."
+#~ msgstr "破壊的な作業は、GTMの公開、アーカイブ、リンク解除、予算やステータスに影響するあらゆるものなど、あらゆるレベルでここで待機します。アシストと自動は、キーワード、GA4の主要イベントとオーディエンス、GTMワークスペースの編集という狭い許可リストを共有します。"
 
 #: src/app/(app)/activity/page.jsx
 msgid "details"
