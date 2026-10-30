@@ -66,7 +66,10 @@ from agents.models import (
     ModelName,
     Provider,
     binds_thinking_to_conversation,
+    compatible_model_id,
+    compatible_served_id,
     get_api_key_kwargs,
+    is_compatible_model,
     is_ollama_model,
     langchain_provider,
     ollama_model_id,
@@ -203,6 +206,10 @@ def duct_window(model: ModelName | str) -> int:
     """The window Duct budgets this model's threads in."""
     if is_ollama_model(model):
         return _ollama_context_length(model)
+    if is_compatible_model(model):
+        from service.compatible import window_for
+
+        return window_for(str(getattr(model, "value", model)))
     return context_window_for(model)
 
 
@@ -336,6 +343,8 @@ def resolve_chat_model(
             **cache,
             **_retry_kwargs(provider),
         )
+    elif provider is Provider.OPENAI_COMPATIBLE:
+        return _compatible_chat(model, api_key, temperature)
     elif provider is Provider.OLLAMA:
         # Ollama knows the model by its tag, not by Duct's namespaced id.
         llm = init_chat_model(
@@ -356,6 +365,45 @@ def resolve_chat_model(
             **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
         )
     return _within_ducts_window(llm, model)
+
+
+# Marks a chat model as the user's own endpoint for readers that hold only the
+# model object (``structured_output``): it is a ChatOpenAI like OpenAI's own.
+DUCT_PROVIDER_METADATA = "duct_provider"
+
+
+def _compatible_chat(model: ModelName | str, credential: str, temperature: float | None) -> Any:
+    """ChatOpenAI at the user's own endpoint, on one of the models they chose.
+
+    The credential carries the address, the key and the chosen models with
+    their context lengths, so nothing here asks the server anything. A model
+    id that is not one of theirs (a run that resolved here with no tier
+    naming this provider) takes the first they chose. No thinking dial and no
+    cache key: neither is part of the shape every server accepts, and an
+    unknown field is a 400 on some of them. Off a private network every
+    request is held to a public address (``guarded_http_clients``).
+    """
+    from service import compatible
+
+    endpoint = compatible.unpack(credential)
+    if endpoint is None:
+        raise ValueError("That isn't an OpenAI-compatible endpoint Duct can read. Connect it again in Settings.")
+    served = compatible_served_id(model) if is_compatible_model(model) else endpoint.models[0].id
+    known = endpoint.model(served)
+    window = known.window if known else compatible.DEFAULT_CONTEXT_LENGTH
+    model_id = compatible_model_id(served)
+    compatible.remember_window(model_id, window)
+    llm = init_chat_model(
+        model=served,
+        model_provider=langchain_provider(Provider.OPENAI_COMPATIBLE),
+        temperature=temperature,
+        stream_usage=True,
+        metadata={DUCT_PROVIDER_METADATA: Provider.OPENAI_COMPATIBLE.value},
+        **_retry_kwargs(Provider.OPENAI_COMPATIBLE),
+        **get_api_key_kwargs(Provider.OPENAI_COMPATIBLE, endpoint.api_key, base_url=endpoint.base_url),
+        **compatible.guarded_http_clients(private_ok=compatible.private_allowed()),
+    )
+    return _within_ducts_window(llm, model_id)
 
 
 def _within_ducts_window(llm: Any, model: ModelName | str) -> Any:
@@ -395,7 +443,8 @@ def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
     ``json_schema`` is Claude's own structured output, constrained decoding on
     every Claude in the catalogue.
 
-    Everyone else keeps their default. OpenAI (the ChatGPT plan included)
+    A user's own OpenAI-compatible endpoint asks for a JSON schema and falls
+    back to a tool call (below). Everyone else keeps their default. OpenAI (the ChatGPT plan included)
     and Gemini already default to ``json_schema``. OpenRouter and xAI default
     to tool calling, and OpenRouter fronts open-weight models whose hosts do
     not all accept a JSON-schema response format — moving them is a change
@@ -403,6 +452,16 @@ def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
     """
     if isinstance(llm, ChatAnthropic):
         kwargs.setdefault("method", "json_schema")
+    elif (getattr(llm, "metadata", None) or {}).get(DUCT_PROVIDER_METADATA) == Provider.OPENAI_COMPATIBLE.value:
+        # Constrained decoding first: vLLM, llama.cpp, LM Studio, Ollama and
+        # the open-weight hosts implement a JSON-schema response format, and a
+        # small model held to the schema answers where it would reply in words
+        # to a forced tool call (measured on qwen3 0.6B: 3/3 against 0/3). A
+        # server that refuses the format, or a reply that does not parse, falls
+        # back to a tool call, the one thing connecting the endpoint proved.
+        if "method" not in kwargs:
+            primary = llm.with_structured_output(schema, method="json_schema", **kwargs)
+            return primary.with_fallbacks([llm.with_structured_output(schema, method="function_calling", **kwargs)])
     return llm.with_structured_output(schema, **kwargs)
 
 
@@ -574,6 +633,8 @@ def _served_model_id(name: Any, configured: Any) -> str:
         return str(getattr(configured, "value", configured) or "")
     if is_ollama_model(configured) and not is_ollama_model(name):
         return ollama_model_id(str(name))
+    if is_compatible_model(configured) and not is_compatible_model(name):
+        return compatible_model_id(str(name))
     return str(name)
 
 

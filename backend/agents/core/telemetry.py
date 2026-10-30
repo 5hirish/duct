@@ -115,6 +115,7 @@ _PROVIDER_NAMES = {
     "google_genai": "gcp.gemini",
     "openrouter": "openrouter",
     "ollama": "ollama",
+    "openai_compatible": "openai_compatible",
 }
 
 

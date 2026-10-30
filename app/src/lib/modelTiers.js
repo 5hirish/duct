@@ -163,6 +163,7 @@ export const PROVIDER_LOGO_KEY = {
   openrouter: "openrouter",
   xai: "xai",
   ollama: "ollama",
+  openai_compatible: "compatible",
 };
 
 // ---------------------------------------------------------------------------
@@ -290,7 +291,11 @@ export async function fetchProviderStatus() {
  */
 export async function fetchModelCatalogue() {
   try {
-    const res = await fetch(`${BASE}/api/models/catalogue`, { headers: backendAuthedHeaders() });
+    // With the provider headers: a connected endpoint's models are the caller's
+    // own, and the catalogue lists them only for the caller who sent it.
+    const res = await fetch(`${BASE}/api/models/catalogue`, {
+      headers: { ...backendAuthedHeaders(), ...(await providerKeyHeaders()) },
+    });
     if (!res.ok) return null;
     return await res.json();
   } catch {

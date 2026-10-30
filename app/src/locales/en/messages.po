@@ -94,6 +94,12 @@ msgstr "{0} in this thread"
 msgid "{0} matches"
 msgstr "{0} matches"
 
+#. placeholder {0}: found.models.length
+#. placeholder {1}: found.baseUrl
+#: src/components/connections/EndpointProviderCard.jsx
+#~ msgid "{0} models at {1}"
+#~ msgstr "{0} models at {1}"
+
 #. placeholder {0}: group.ok
 #. placeholder {1}: group.failed
 #: src/components/insights/InsightsWorkspace.jsx
@@ -371,6 +377,10 @@ msgstr "{messageCount, plural, one {# message} other {# messages}}"
 msgid "{missing, plural, one {Connected · # permission missing} other {Connected · # permissions missing}}"
 msgstr "{missing, plural, one {Connected · # permission missing} other {Connected · # permissions missing}}"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "{modelCount} models at {foundAt}"
+msgstr "{modelCount} models at {foundAt}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{n} chars"
 msgstr "{n} chars"
@@ -564,6 +574,10 @@ msgstr "{serverName} doesn’t mark this tool as read-only, so Duct asks first. 
 #: src/components/workspace/ContextRing.jsx
 msgid "{share}% from cache"
 msgstr "{share}% from cache"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "{size} context"
+msgstr "{size} context"
 
 #: src/components/content/PostViewport.jsx
 msgid "{slideCount, plural, one {# slide} other {# slides}}"
@@ -1319,6 +1333,7 @@ msgid "Anything specific? (optional)"
 msgstr "Anything specific? (optional)"
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
@@ -1867,6 +1882,7 @@ msgstr "Can't read your key"
 
 #: src/app/(app)/execute/page.jsx
 #: src/app/(app)/projects/page.jsx
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/CloneFromUrlDialog.jsx
@@ -1910,9 +1926,17 @@ msgstr "casual, punchy"
 msgid "Category Scores"
 msgstr "Category Scores"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Change"
+msgstr "Change"
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Change {n}"
 msgstr "Change {n}"
+
+#: src/components/connections/EndpointProviderCard.jsx
+#~ msgid "Change address or key"
+#~ msgstr "Change address or key"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "change set {id}"
@@ -1943,6 +1967,7 @@ msgstr "Chat"
 msgid "ChatGPT sign-in isn't available for this account right now"
 msgstr "ChatGPT sign-in isn't available for this account right now"
 
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/InstanceProviderCard.jsx
 msgid "Check again"
 msgstr "Check again"
@@ -1980,6 +2005,7 @@ msgid "Checking your invitation…"
 msgstr "Checking your invitation…"
 
 #: src/components/ConnectionBanner.jsx
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/InstanceProviderCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/onboarding/ProviderStep.jsx
@@ -2009,6 +2035,10 @@ msgstr "Choose repositories on GitHub"
 #: src/app/(app)/connections/page.jsx
 msgid "Choose the repositories on GitHub. Duct gets read-only access to those and nothing else."
 msgstr "Choose the repositories on GitHub. Duct gets read-only access to those and nothing else."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Choose them for tiers"
+msgstr "Choose them for tiers"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
@@ -2100,6 +2130,10 @@ msgstr "Comments"
 #: src/components/content/PostViewport.jsx
 msgid "Commit edits"
 msgstr "Commit edits"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Common servers"
+msgstr "Common servers"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Community"
@@ -2204,6 +2238,10 @@ msgstr "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refr
 msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
 msgstr "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Connect anyway"
+msgstr "Connect anyway"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Connect GitHub"
 msgstr "Connect GitHub"
@@ -2249,6 +2287,10 @@ msgstr "Connected — {accountCount} accounts"
 msgid "Connected — {firstAccountName}"
 msgstr "Connected — {firstAccountName}"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Connected · {host}"
+msgstr "Connected · {host}"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
 msgstr "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
@@ -2257,9 +2299,17 @@ msgstr "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
 msgid "connected sources"
 msgstr "connected sources"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Connected to {host}"
+msgstr "Connected to {host}"
+
 #: src/app/(app)/connections/page.jsx
 #~ msgid "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
 #~ msgstr "Connected to Google, but your Duct session was rejected by {backend}, so the connection could not be saved to your account. Sign out and sign in again, then reconnect."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Connected. Its models are in the tier pickers now, ready to run any Duct agent."
+msgstr "Connected. Its models are in the tier pickers now, ready to run any Duct agent."
 
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/workspace/AgentChat.jsx
@@ -2331,6 +2381,10 @@ msgstr "Context"
 #: src/components/ContextCompressionCard.jsx
 msgid "Context compression"
 msgstr "Context compression"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "context not reported, Duct assumes 32K"
+msgstr "context not reported, Duct assumes 32K"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "Context used: {percent} percent"
@@ -2676,6 +2730,10 @@ msgstr "Declined"
 msgid "Deeper analysis"
 msgstr "Deeper analysis"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "default"
+msgstr "default"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Default"
 msgstr "Default"
@@ -2811,6 +2869,7 @@ msgstr "Discard"
 msgid "Discarded"
 msgstr "Discarded"
 
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -2827,6 +2886,10 @@ msgstr "Disconnect “{name}”?"
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
 msgstr "Disconnect “{title}”?"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Disconnect {host}?"
+msgstr "Disconnect {host}?"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect Apify"
@@ -2972,6 +3035,10 @@ msgstr "Duct {version} is available"
 msgid "Duct asks you before every call to a server added by address."
 msgstr "Duct asks you before every call to a server added by address."
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Duct can’t call that address."
+msgstr "Duct can’t call that address."
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Duct can't read this type yet"
 msgstr "Duct can't read this type yet"
@@ -3008,6 +3075,10 @@ msgstr "Duct forgets the sign-in held in this machine’s keychain, and stops ru
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
 msgstr "Duct forgets these credentials. Reports and scheduled runs that read from {title} stop working until you connect it again, and reconnecting means signing in with Google once more."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Duct forgets this endpoint and its key. Tiers set to one of its models fall back to another provider you’ve connected."
+msgstr "Duct forgets this endpoint and its key. Tiers set to one of its models fall back to another provider you’ve connected."
 
 #: src/components/content/AccountsTab.jsx
 msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
@@ -3100,6 +3171,14 @@ msgstr "Duct's local backend stopped responding"
 #: src/components/workspace/ComposerDials.jsx
 msgid "Duct's pick for the job — Heavy for a brief, Standard for a follow-up"
 msgstr "Duct's pick for the job — Heavy for a brief, Standard for a follow-up"
+
+#: src/components/connections/EndpointProviderCard.jsx
+#~ msgid "Duct’s servers can’t reach a model on your own computer or network. Give the server a public https address, or run Duct yourself, where any address works."
+#~ msgstr "Duct’s servers can’t reach a model on your own computer or network. Give the server a public https address, or run Duct yourself, where any address works."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Duct’s servers can’t reach this address. A model on your own computer or network needs a public https address, or Duct running on your side."
+msgstr "Duct’s servers can’t reach this address. A model on your own computer or network needs a public https address, or Duct running on your side."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "e.g. A meal-planning app for busy families."
@@ -3409,6 +3488,10 @@ msgstr "Fetching sitemap"
 msgid "Fill-In"
 msgstr "Fill-In"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Filter models"
+msgstr "Filter models"
+
 #: src/app/(app)/activity/page.jsx
 msgid "Filtered to one conversation · <0>show all</0>"
 msgstr "Filtered to one conversation · <0>show all</0>"
@@ -3416,6 +3499,10 @@ msgstr "Filtered to one conversation · <0>show all</0>"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Finalizing report"
 msgstr "Finalizing report"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Find models"
+msgstr "Find models"
 
 #: src/components/content/PostViewport.jsx
 msgid "Finding a source…"
@@ -3616,9 +3703,18 @@ msgstr "Generating report"
 msgid "Get a key"
 msgstr "Get a key"
 
+#. placeholder {0}: preset.label
+#: src/components/connections/EndpointProviderCard.jsx
+#~ msgid "Get a key from {0} →"
+#~ msgstr "Get a key from {0} →"
+
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Get a key from {label}"
 msgstr "Get a key from {label}"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Get a key from {presetName} →"
+msgstr "Get a key from {presetName} →"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Get a key from {providerName} →"
@@ -3902,6 +3998,7 @@ msgstr "Hide activity"
 msgid "Hide changes"
 msgstr "Hide changes"
 
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Hide key"
@@ -4224,6 +4321,7 @@ msgstr "just now"
 msgid "Kanban"
 msgstr "Kanban"
 
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
 msgid "Keep it"
@@ -4310,6 +4408,10 @@ msgstr "Learned"
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Leave full screen"
 msgstr "Leave full screen"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Leave it empty if your server doesn’t ask for one."
+msgstr "Leave it empty if your server doesn’t ask for one."
 
 #: src/components/ProjectMembers.jsx
 msgid "Leave project"
@@ -4575,6 +4677,14 @@ msgstr "Look up issues and projects, or file a new issue."
 msgid "Looking up where {providerName}'s key comes from."
 msgstr "Looking up where {providerName}'s key comes from."
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Looking up your endpoint."
+msgstr "Looking up your endpoint."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Looking…"
+msgstr "Looking…"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Looks right"
 msgstr "Looks right"
@@ -4827,6 +4937,10 @@ msgstr "Model provider"
 msgid "Modelled on {reference}"
 msgstr "Modelled on {reference}"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Models"
+msgstr "Models"
+
 #: src/app/(app)/settings/models/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/AppSidebar.jsx
@@ -5065,6 +5179,14 @@ msgstr "No competitor research was returned for this audit."
 msgid "No earlier version to compare."
 msgstr "No earlier version to compare."
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "No endpoint connected"
+msgstr "No endpoint connected"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "No endpoint is connected yet."
+msgstr "No endpoint is connected yet."
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "No findings for this category."
 msgstr "No findings for this category."
@@ -5140,6 +5262,10 @@ msgstr "No metrics yet"
 #: src/components/models/UsagePanel.jsx
 msgid "No model calls in this window."
 msgstr "No model calls in this window."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "No model matches “{query}”."
+msgstr "No model matches “{query}”."
 
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "No model provider is connected, so this can’t run yet. <0>Connect one in Settings → Models & providers →</0> — what you typed is still here when you come back."
@@ -5286,6 +5412,7 @@ msgid "Not confirmed"
 msgstr "Not confirmed"
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -5380,6 +5507,10 @@ msgstr "Note"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Notes"
 msgstr "Notes"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Nothing answered at that address. Check the server is running and the address is right."
+msgstr "Nothing answered at that address. Check the server is running and the address is right."
 
 #: src/components/models/TierCard.jsx
 msgid "Nothing below this tier can run either — add a key to use {tierName}."
@@ -5570,6 +5701,15 @@ msgstr "One memorable line"
 msgid "One memorable line."
 msgstr "One memorable line."
 
+#. placeholder {0}: found.baseUrl
+#: src/components/connections/EndpointProviderCard.jsx
+#~ msgid "One model at {0}"
+#~ msgstr "One model at {0}"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "One model at {foundAt}"
+msgstr "One model at {foundAt}"
+
 #: src/components/audit/AuditWorkspace.jsx
 msgid "One moment — Duct has a quick question"
 msgstr "One moment — Duct has a quick question"
@@ -5724,6 +5864,10 @@ msgstr "OpenAI Ads API quickstart"
 msgid "OpenAI has changed what third-party apps may do with this plan. An API key works regardless."
 msgstr "OpenAI has changed what third-party apps may do with this plan. An API key works regardless."
 
+#: src/components/connections/logos.jsx
+msgid "OpenAI-compatible server"
+msgstr "OpenAI-compatible server"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Opened"
 msgstr "Opened"
@@ -5775,6 +5919,10 @@ msgstr "opportunities"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Opportunity"
 msgstr "Opportunity"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "optional"
+msgstr "optional"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Optional — improves report quality"
@@ -5985,6 +6133,10 @@ msgstr "Pick one of the questions below, or type your own."
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Pick the account to use:"
 msgstr "Pick the account to use:"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier pickers, and the first is used when a tier doesn’t name one."
+msgstr "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier pickers, and the first is used when a tier doesn’t name one."
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Pick up where you left off"
@@ -6467,6 +6619,16 @@ msgstr "Ready when you are"
 msgid "Ready: {0} answered."
 msgstr "Ready: {0} answered."
 
+#. placeholder {0}: checked.model
+#. placeholder {1}: (checked.latency_ms / 1000).toFixed(1)
+#: src/components/connections/EndpointProviderCard.jsx
+#~ msgid "Ready: {0} called a tool in {1} s."
+#~ msgstr "Ready: {0} called a tool in {1} s."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Ready: {readyModel} called a tool in {readySeconds} s."
+msgstr "Ready: {readyModel} called a tool in {readySeconds} s."
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Real problems from a real account. Nothing lands here unchecked."
 msgstr "Real problems from a real account. Nothing lands here unchecked."
@@ -6602,6 +6764,10 @@ msgstr "Remember it on Duct, encrypted, so it survives a refresh and can fund sc
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Remember selection"
 msgstr "Remember selection"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Remember this endpoint on Duct, so scheduled runs can use it"
+msgstr "Remember this endpoint on Duct, so scheduled runs can use it"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Remember this key on Duct"
@@ -7043,6 +7209,10 @@ msgstr "Saved as TikTok draft"
 msgid "Saved encrypted to your account and sent only to this server."
 msgstr "Saved encrypted to your account and sent only to this server."
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Saved key not shown: paste it to change"
+msgstr "Saved key not shown: paste it to change"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "saved on this device"
 msgstr "saved on this device"
@@ -7317,6 +7487,14 @@ msgstr "Sending…"
 msgid "Sends"
 msgstr "Sends"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Sends a key with every request."
+msgstr "Sends a key with every request."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Sends no key."
+msgstr "Sends no key."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Sent while the agent was busy; it reads this at its next step."
 msgstr "Sent while the agent was busy; it reads this at its next step."
@@ -7357,6 +7535,7 @@ msgstr "SEO Report"
 msgid "Sequencing the posting cadence…"
 msgstr "Sequencing the posting cadence…"
 
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Server address"
 msgstr "Server address"
@@ -7494,6 +7673,7 @@ msgstr "Show changes"
 msgid "Show Duct in"
 msgstr "Show Duct in"
 
+#: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Show key"
@@ -7790,6 +7970,10 @@ msgstr "Some input wasn't valid — please review and try again."
 #: src/components/audit/ShareReport.jsx
 msgid "Someone new? Invite them and send the link."
 msgstr "Someone new? Invite them and send the link."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Something answered, but not in OpenAI’s format. The address usually ends in /v1."
+msgstr "Something answered, but not in OpenAI’s format. The address usually ends in /v1."
 
 #: src/lib/agentSession.js
 msgid "Something broke on our end. It's logged — try again in a moment."
@@ -8108,9 +8292,17 @@ msgstr "Technical"
 msgid "Tell us who you are and what you do. This anchors every audit and report we generate."
 msgstr "Tell us who you are and what you do. This anchors every audit and report we generate."
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Test and connect"
+msgstr "Test and connect"
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Testing"
 msgstr "Testing"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "Testing…"
+msgstr "Testing…"
 
 #: src/lib/contentEnums.js
 msgid "Text"
@@ -8163,6 +8355,10 @@ msgstr "That didn't save — your selection has been put back. Try again."
 #: src/components/audit/ExecutionOffer.jsx
 msgid "That didn’t send — your choices are still here. Try again."
 msgstr "That didn’t send — your choices are still here. Try again."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "That didn’t work."
+msgstr "That didn’t work."
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "That doesn't look like a link."
@@ -8231,6 +8427,14 @@ msgstr "That's a share link. Open it, then copy the full address from your brows
 #: src/app/(start)/start/page.jsx
 msgid "That's us — continue"
 msgstr "That's us — continue"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "The account behind this key has no credit."
+msgstr "The account behind this key has no credit."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "The address that serves OpenAI’s API, usually ending in /v1. One on your own network works here."
+msgstr "The address that serves OpenAI’s API, usually ending in /v1. One on your own network works here."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."
@@ -8372,6 +8576,10 @@ msgstr "The provider is rate-limiting right now"
 msgid "The provider returned something Duct didn't expect"
 msgstr "The provider returned something Duct didn't expect"
 
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "The public https address that serves OpenAI’s API, usually ending in /v1."
+msgstr "The public https address that serves OpenAI’s API, usually ending in /v1."
+
 #: src/hooks/useAgentNotifications.js
 msgid "The reply is ready when you are."
 msgstr "The reply is ready when you are."
@@ -8391,6 +8599,22 @@ msgstr "The server answered in a way Duct didn't expect. Try again."
 #: src/app/(auth)/desktop-auth/page.js
 msgid "The server didn't complete the connection"
 msgstr "The server didn't complete the connection"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "The server doesn’t serve that model to this key."
+msgstr "The server doesn’t serve that model to this key."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "The server is limiting requests right now. Try again in a minute."
+msgstr "The server is limiting requests right now. Try again in a minute."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "The server lists no chat models yet. Load or deploy one, then try again."
+msgstr "The server lists no chat models yet. Load or deploy one, then try again."
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "The server turned the key down. Check it, or whether this server needs one at all."
+msgstr "The server turned the key down. Check it, or whether this server needs one at all."
 
 #: src/components/connections/McpConnectors.jsx
 msgid "The server's sign-in finished but it wouldn't hand over access. Try connecting again."
@@ -8568,6 +8792,10 @@ msgstr "This looks like a client-rendered app, so the crawler may see very littl
 #: src/components/ProjectMembers.jsx
 msgid "this member"
 msgstr "this member"
+
+#: src/components/connections/EndpointProviderCard.jsx
+msgid "This model answered, but didn’t call the tool it was handed. Duct’s agents work by calling tools, so pick one that supports them. On vLLM, start the server with tool calling turned on."
+msgstr "This model answered, but didn’t call the tool it was handed. Duct’s agents work by calling tools, so pick one that supports them. On vLLM, start the server with tool calling turned on."
 
 #: src/app/(app)/execute/page.jsx
 msgid "This mutates the live account. Applied changes record a rollback handle."

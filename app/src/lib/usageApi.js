@@ -71,6 +71,7 @@ const PROVIDER_LABELS = {
   openrouter: "OpenRouter",
   xai: "xAI",
   ollama: "Ollama",
+  openai_compatible: "OpenAI-compatible",
 };
 
 export function providerLabel(key) {

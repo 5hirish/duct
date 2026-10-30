@@ -276,13 +276,21 @@ def test_v1_supports_openrouter():
 # Registry completeness
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("provider", list(Provider))
+# A user's OpenAI-compatible endpoint is brought per user in Settings and has
+# no instance-wide key or env var to fall back to: there is nothing for either
+# table to name.
+_PER_USER_ONLY = {Provider.OPENAI_COMPATIBLE}
+
+
+@pytest.mark.parametrize("provider", [p for p in Provider if p not in _PER_USER_ONLY])
 def test_every_provider_has_a_config_attribute(provider: Provider):
     assert provider in PROVIDER_CONFIG_ATTR
 
 
 @pytest.mark.parametrize("provider", list(Provider))
 def test_every_provider_supported_by_v1_has_an_env_var(provider: Provider):
+    if provider in _PER_USER_ONLY:
+        pytest.skip(f"{provider.value} is brought per user, never set in env")
     if provider not in ENGINE_SUPPORTED_PROVIDERS[Engine.V1]:
         pytest.skip(f"{provider.value} is not a v1 provider")
     assert get_env_var_for_engine_provider(Engine.V1, provider)

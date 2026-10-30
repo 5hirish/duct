@@ -35,6 +35,11 @@ published without one. The same script, with no arguments, holds
   audit reports through its own mail server or any provider's SMTP relay, and
   Mailpit catches local mail so a flow can be read as it would arrive. Resend's
   dedicated integration is gone; Resend accepts SMTP too.
+- **Any OpenAI-compatible server for your models.** Connect vLLM, llama.cpp,
+  LM Studio or a host of open-weight models such as Together, Fireworks, Groq
+  or DeepInfra from Settings: Duct lists the server's models, you pick which
+  ones it may use, and it checks the first one really calls tools before
+  saving. Off your own network the address has to be public and https.
 
 ### Removed
 

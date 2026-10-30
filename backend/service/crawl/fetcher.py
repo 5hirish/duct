@@ -196,7 +196,28 @@ async def assert_public_url(url: str) -> None:
         infos = await loop.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
     except socket.gaierror as exc:
         raise SSRFError(f"Could not resolve hostname {host!r}.") from exc
+    _judge_resolved(host, infos)
 
+
+def assert_public_url_sync(url: str) -> None:
+    """``assert_public_url`` for a caller with no event loop: a sync httpx
+    request hook, or a worker thread. The same checks, the same refusal."""
+    validate_public_url(url)
+
+    host = urlparse(url).hostname or ""
+    try:
+        ipaddress.ip_address(host)
+        return
+    except ValueError:
+        pass
+    try:
+        infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+    except socket.gaierror as exc:
+        raise SSRFError(f"Could not resolve hostname {host!r}.") from exc
+    _judge_resolved(host, infos)
+
+
+def _judge_resolved(host: str, infos: list) -> None:
     if not infos:
         raise SSRFError(f"Hostname {host!r} resolved to no addresses.")
 
