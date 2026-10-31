@@ -9,7 +9,17 @@
     <managingEditor>hello@getduct.ai (Shirish Kadam)</managingEditor>
     <webMaster>hello@getduct.ai (Shirish Kadam)</webMaster>
     <copyright>MIT licensed project. Posts © Alleviate Lab.</copyright>
-    <lastBuildDate>Sun, 08 Nov 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 10 Nov 2026 00:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>Local AI Agents: What Stays on Your Machine, What Leaves It</title>
+      <link>https://getduct.ai/blog/local-ai-agents</link>
+      <guid isPermaLink="true">https://getduct.ai/blog/local-ai-agents</guid>
+      <pubDate>Tue, 10 Nov 2026 00:00:00 GMT</pubDate>
+      <author>hello@getduct.ai (Shirish Kadam)</author>
+      <category>Guide</category>
+      <description>Your ad and revenue data already lives in Google&#x27;s and Stripe&#x27;s clouds. &#x27;Local&#x27; only ever describes the copy, and I got that wrong on my own site twice.</description>
+    </item>
 
     <item>
       <title>What Is an Agentic Workflow? The Weekly Growth Brief, Step by Step</title>
