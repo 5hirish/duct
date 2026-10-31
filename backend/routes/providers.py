@@ -402,7 +402,7 @@ def store_provider_key(
         try:
             compatible.canonical_base_url(endpoint.base_url, private_ok=compatible.private_allowed())
         except compatible.UnsafeEndpoint as exc:
-            raise HTTPException(422, str(exc)) from None
+            raise HTTPException(422, exc.detail) from None
     if not key:
         raise HTTPException(422, "api_key must not be blank")
     if is_subscription_credential(key):
@@ -690,7 +690,7 @@ async def probe_endpoint(
     try:
         base_url = compatible.canonical_base_url(body.base_url, private_ok=private_ok)
     except compatible.UnsafeEndpoint as exc:
-        return {"ok": False, "code": compatible.CODE_REFUSED, "detail": str(exc)}
+        return {"ok": False, "code": compatible.CODE_REFUSED, "detail": exc.detail}
     api_key = body.api_key.strip()
     try:
         models = await asyncio.to_thread(compatible.discover, base_url, api_key, private_ok=private_ok)

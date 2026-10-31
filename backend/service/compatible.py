@@ -84,7 +84,16 @@ _ENDPOINT_SUFFIXES = ("/chat/completions", "/completions", "/models")
 
 
 class UnsafeEndpoint(ValueError):
-    """An address Duct will not call. The message is safe to show."""
+    """An address Duct will not call. ``detail`` is safe to show.
+
+    Routes answer with ``detail``, never ``str(exc)``: every raise below
+    passes one of our own sentences, but ``str()`` of an exception is whatever
+    the next raise site, or a chained cause, puts there.
+    """
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
 
 
 # Why discovery failed, in the same vocabulary verify answers in.
