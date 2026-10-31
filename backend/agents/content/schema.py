@@ -410,6 +410,10 @@ class ContentStatus(StrEnum):
     DRAFT     — user clicked Save; now a real, kept draft.
     SCHEDULED — queued to publish.
     POSTED    — published.
+    FAILED    — PostBridge didn't publish it at its scheduled time. Its reason
+                is the activity log row that recorded the change
+                (routes/content.py, _settle_overdue); publishing again is
+                the way out.
     DISCARDED — rejected.
     """
 
@@ -417,6 +421,7 @@ class ContentStatus(StrEnum):
     DRAFT     = "draft"
     SCHEDULED = "scheduled"
     POSTED    = "posted"
+    FAILED    = "failed"
     DISCARDED = "discarded"
 
 

@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Trans } from "@lingui/react/macro";
-import { getActiveProjectId } from "@/lib/projects";
+import { useActiveProjectId, useProjectSwitched } from "@/hooks/useActiveProjectId";
 import PlanBoard from "@/components/content/PlanBoard";
 
 export default function PlanBoardPage() {
   const searchParams = useSearchParams();
   const requestedPlanId = searchParams.get("plan") || "";
-  const [projectId, setProjectId] = useState(null);
-
-  useEffect(() => {
-    setProjectId(getActiveProjectId() || "");
-  }, []);
+  const projectId = useActiveProjectId();
+  // ?plan= names a plan of the project this page opened on; after a switch
+  // from the sidebar it would open that plan on the new project's board.
+  const switched = useProjectSwitched();
 
   if (!projectId) {
     return (
@@ -25,7 +23,7 @@ export default function PlanBoardPage() {
 
   return (
     <div className="h-full p-4">
-      <PlanBoard projectId={projectId} initialPlanId={requestedPlanId} />
+      <PlanBoard key={projectId} projectId={projectId} initialPlanId={switched ? "" : requestedPlanId} />
     </div>
   );
 }
