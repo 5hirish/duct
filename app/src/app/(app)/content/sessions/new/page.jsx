@@ -7,6 +7,7 @@ import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PlanViewport from "@/components/content/PlanViewport";
 import { listPlans } from "@/lib/contentApi";
 import { getActiveProjectId } from "@/lib/projects";
+import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
 
 /**
  * Brand-new plan_month session.
@@ -19,6 +20,8 @@ export default function NewPlanSessionPage() {
   const router = useRouter();
   const [projectId, setProjectId] = useState(null);
   const [latestPlanId, setLatestPlanId] = useState(null);
+  // The plan is written into the project the page opened on.
+  useLeaveOnProjectSwitch();
 
   useEffect(() => {
     const id = getActiveProjectId();

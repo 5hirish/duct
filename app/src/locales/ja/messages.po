@@ -2235,8 +2235,8 @@ msgid "Connect a source"
 msgstr "ソースを接続"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."
-msgstr "PostBridgeでTikTok、Instagram、またはYouTubeアカウントを接続し、更新してこのプロジェクトにリンクします。"
+#~ msgid "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."
+#~ msgstr "PostBridgeでTikTok、Instagram、またはYouTubeアカウントを接続し、更新してこのプロジェクトにリンクします。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
@@ -2270,6 +2270,10 @@ msgstr "{vendor}アカウントを接続"
 #: src/components/AppSidebar.jsx
 msgid "Connect your AI agent"
 msgstr "AIエージェントを接続"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then refresh to link it to this project."
+msgstr "PostBridgeでLinkedIn、X、TikTok、Instagram、またはYouTubeのアカウントを接続し、更新してこのプロジェクトにリンクします。"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Connect your PostBridge account"

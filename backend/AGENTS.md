@@ -160,9 +160,11 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   `ProviderKey.source` is `subscription`; it is the user's own plan, never billed
   to Duct. The refresh token never reaches the backend, `PUT /providers/openai/key`
   refuses to store a token, and background jobs (no request, no header) still
-  need an API key. `CHATGPT_AUTH_ENABLED=false` is the kill switch the app reads
-  from `/api/providers/status` — the Codex backend is undocumented and the path
-  can stop working without notice.
+  need an API key. `CHATGPT_AUTH_ENABLED=false` is the kill switch: the app
+  reads it from `/api/providers/status` to hide the sign-in, and
+  `get_user_provider_keys` drops a plan token it is still sent, so a shell that
+  signed in earlier cannot keep using it — the Codex backend is undocumented
+  and the path can stop working without notice.
 
   So a shared change is made once. Claude remains a first-class *model* through
   V1, which is why retiring its SDK cost no model coverage.

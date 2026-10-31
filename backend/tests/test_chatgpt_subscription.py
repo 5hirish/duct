@@ -111,6 +111,32 @@ def test_the_auth_dependency_packs_token_and_account_together():
     assert plain[Provider.OPENAI] == "sk-proj-x"
 
 
+def test_the_kill_switch_drops_a_plan_token_on_the_server(monkeypatch):
+    """Hiding the card was the whole switch, so a shell already signed in kept
+    sending its token and every run kept spending the plan. Off now means the
+    backend never sees one; an API key in the same slot still passes."""
+    import asyncio
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(auth_service, "get_configs", lambda: SimpleNamespace(chatgpt_auth_enabled=False))
+
+    def keys(openai_key):
+        return asyncio.run(
+            auth_service.get_user_provider_keys(
+                anthropic_key=None,
+                openai_key=openai_key,
+                gemini_key="AIza-x",
+                openrouter_key=None,
+                xai_key=None,
+                compatible_key=None,
+                openai_account_id=ACCOUNT_ID,
+            )
+        )
+
+    assert keys(ACCESS_TOKEN) == {Provider.GOOGLE_GENAI: "AIza-x"}
+    assert keys("sk-proj-x")[Provider.OPENAI] == "sk-proj-x"
+
+
 # ---------------------------------------------------------------------------
 # Where it goes
 # ---------------------------------------------------------------------------

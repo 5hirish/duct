@@ -91,8 +91,8 @@ from agents.engines import (
     resolve_image_run,
     resolve_job_run,
     resolve_video_run,
+    web_search_key,
 )
-from agents.models import Provider
 from agents.tiers import Job
 from agents.content.channels import Platform
 from config import get_configs
@@ -270,7 +270,6 @@ def _attach_image_run(
         # image-capable key. The tools report it in the words the user needs.
         sess.image_provider = None
         sess.image_api_key = ""
-        sess.gemini_api_key = ""
         return
     # Not "subscription": ``resolve_image_run`` refuses a plan credential
     # outright, so the only source here that costs Duct money is the hosted key.
@@ -278,7 +277,28 @@ def _attach_image_run(
         logger.info("content: images billed to Duct (%s/%s)", run.provider.value, run.source)
     sess.image_provider = run.provider
     sess.image_api_key = run.api_key
-    sess.gemini_api_key = run.api_key if run.provider is Provider.GOOGLE_GENAI else ""
+
+
+def _attach_search_key(session_id: str, run: JobRun, user_keys: dict | None = None, owner_id=None) -> None:
+    """The Gemini key behind Duct's own WebSearch, for a model with no search
+    of its own.
+
+    It used to be set only when the *images* resolved to Gemini, so a run on
+    OpenAI with OpenAI images had no web search at all, while the same user's
+    audit searched on their Gemini key. Same rule as the audit now
+    (``agents/engines.web_search_key``): the caller's key, Duct's only when
+    Duct is already paying for the run.
+    """
+    from agents.core.session import get_session as _get_agent_session
+
+    sess = _get_agent_session(session_id)
+    if sess is None:
+        return
+    if owner_id is None:
+        owner_id = getattr(sess, "user_id", None)
+    sess.gemini_api_key = web_search_key(
+        user_keys, stored_keys_for(owner_id), billed_to_duct=run.source == "cloud",
+    )
 
 
 def _attach_video_run(
@@ -388,6 +408,7 @@ def _runner_for(session_id: str, user_keys: dict | None) -> ContentRunner:
     run = _resolve_run_model(session_id, user_keys)
     _attach_image_run(session_id, user_keys)
     _attach_video_run(session_id, user_keys)
+    _attach_search_key(session_id, run, user_keys)
     return ContentRunner(api_key=run.api_key, provider=run.provider, model=run.model)
 
 
