@@ -3463,12 +3463,17 @@ msgstr "Gesichtsform, Farbtyp…"
 msgid "FAIL"
 msgstr "FEHLGESCHLAGEN"
 
+#: src/app/(app)/content/page.jsx
+msgid "failed"
+msgstr "fehlgeschlagen"
+
 #: src/app/(app)/audit/seo/page.jsx
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
+#: src/lib/contentEnums.js
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
@@ -6253,6 +6258,14 @@ msgstr "Beitrag geplant"
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "PostBridge-API-Schlüssel"
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it at its scheduled time."
+msgstr "PostBridge hat den Beitrag nicht zur geplanten Zeit veröffentlicht."
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it: {failureReason}"
+msgstr "PostBridge hat den Beitrag nicht veröffentlicht: {failureReason}"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"

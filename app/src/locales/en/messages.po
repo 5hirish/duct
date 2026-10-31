@@ -3463,12 +3463,17 @@ msgstr "faceshape, colorseason…"
 msgid "FAIL"
 msgstr "FAIL"
 
+#: src/app/(app)/content/page.jsx
+msgid "failed"
+msgstr "failed"
+
 #: src/app/(app)/audit/seo/page.jsx
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
+#: src/lib/contentEnums.js
 msgid "Failed"
 msgstr "Failed"
 
@@ -6254,6 +6259,14 @@ msgstr "Post scheduled"
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "PostBridge API key"
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it at its scheduled time."
+msgstr "PostBridge didn't publish it at its scheduled time."
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it: {failureReason}"
+msgstr "PostBridge didn't publish it: {failureReason}"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"

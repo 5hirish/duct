@@ -679,12 +679,18 @@ agents/
     │                     replies that publish, media and metrics support; the
     │                     writer, both publish paths, the review and the app (via
     │                     `post.channel`) all read it. A new channel is a row there
-    ├── publishing.py   — the PostBridge request and its bookkeeping, shared by the
-    │                     agent's publish_post and the publish route (#272 was the two
-    │                     drifting apart); and while PostBridge holds a scheduled post,
-    │                     push_edit / cancel, which every edit, unschedule, delete and
-    │                     agent rewrite goes through so the queue never publishes stale
-    │                     words or a deleted post
+    ├── publishing.py   — the PostBridge request, the media and its bookkeeping, shared
+    │                     by the agent's publish_post and the publish route (#272, then
+    │                     a button that read only local disk, were the two drifting
+    │                     apart): pick_media chooses the files (a video's cut, each
+    │                     slide's composed render), load_media reads them through
+    │                     service.storage (R2 or disk), send_post uploads and creates.
+    │                     While PostBridge holds a scheduled post, push_edit / cancel,
+    │                     which every edit, unschedule, delete and agent rewrite goes
+    │                     through so the queue never publishes stale words or a deleted
+    │                     post; once its time has passed, settle, which the post
+    │                     listing runs (throttled per project) so it reads posted or
+    │                     failed, the reason on an activity_logs row
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
     ├── performance.py  — the account's own history for a plan: type ranking (completion,

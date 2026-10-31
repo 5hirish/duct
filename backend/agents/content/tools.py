@@ -81,16 +81,21 @@ from agents.content.channels import (
     resolve as resolve_channel,
 )
 from agents.content.publishing import (
+    SLIDE_RENDER,
+    MediaUnreadable,
     PostAlreadyOut,
-    create_request,
+    default_account,
     is_queued_at_postbridge,
     is_text_only,
+    load_media,
     metrics_sync,
     no_sync_message,
+    pick_media,
     publish_blockers,
     publish_failure,
     push_edit,
     record_published,
+    send_post,
     unpublished_replies,
     went_out,
     words_changed,
@@ -109,7 +114,7 @@ from agents.content.schema import (
     clone_source,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
-from agents.content.video import VIDEO_POST_TYPE, cut_of, publish_asset, video_takes
+from agents.content.video import VIDEO_POST_TYPE, cut_of, video_takes
 from service import storage
 from service.content_metrics import merge_synced_metrics
 from db.session import get_engine
@@ -121,7 +126,7 @@ from models.content import (
     ContentPost,
 )
 from models.project import Project
-from utils.dates import now_iso
+from utils.dates import now_iso, parse_iso
 
 logger = logging.getLogger(__name__)
 
@@ -613,7 +618,7 @@ def _downscale_for_vision(data: bytes, mime: str, max_edge: int = 1536) -> tuple
 def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: bytes) -> str:
     """Best-effort: write a rasterized slide PNG to object storage + a
     ContentAsset row (asset_type='slide_render'). These composed renders are what
-    publish_post uploads to TikTok. Returns the public url."""
+    both publish paths upload (publishing.pick_media). Returns the public url."""
     fname = f"{slide_id}-{uuid4().hex[:8]}.png"
     key = f"projects/{project_id}/renders/{fname}"
     url = storage.put_image(key, png, "image/png")
@@ -621,7 +626,7 @@ def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: b
         db.add(ContentAsset(
             project_id=project_id,
             post_id=post_id,
-            asset_type="slide_render",
+            asset_type=SLIDE_RENDER,
             source="render",
             url=url,
             filename=fname,
@@ -849,8 +854,20 @@ def build_content_tools_lc(
 
     class PublishPostArgs(BaseModel):
         post_id: str = Field(description="UUID of the content_posts row to publish.")
-        social_account_ids: list[int] = Field(description="Numeric PostBridge social account IDs (at least one).")
-        scheduled_at: str | None = Field(None, description="Optional ISO 8601 timestamp; omit to post now.")
+        social_account_ids: list[int] = Field(
+            default_factory=list,
+            description=(
+                "Numeric PostBridge social account IDs. Omit to post from the account this project "
+                "linked for the post's platform; if there is none, or more than one, the error names them."
+            ),
+        )
+        scheduled_at: str | None = Field(
+            None,
+            description=(
+                "Optional ISO 8601 time WITH the user's UTC offset, e.g. 2026-10-02T09:00:00+02:00 "
+                "(a time without one is read as UTC); omit to post now."
+            ),
+        )
         tiktok_draft: bool = Field(False, description="If true, post lands as a TikTok draft instead of scheduling.")
         allow_uncomposed: bool = Field(
             False,
@@ -1863,7 +1880,7 @@ def build_content_tools_lc(
 
     async def publish_post(
         post_id: str,
-        social_account_ids: list[int],
+        social_account_ids: list[int] | None = None,
         scheduled_at: str | None = None,
         tiktok_draft: bool = False,
         allow_uncomposed: bool = False,
@@ -1871,30 +1888,21 @@ def build_content_tools_lc(
         try:
             from service.post_bridge import PostBridgeAPIError, client_for_user
 
-            post_id_raw = post_id
-            raw_ids     = social_account_ids or []
-            scheduled_raw  = scheduled_at
-            tiktok_draft = bool(tiktok_draft)
-            allow_uncomposed = bool(allow_uncomposed)
-            if not post_id_raw:
+            if not post_id:
                 return _err("post_id is required.")
             try:
-                social_account_ids = [int(x) for x in raw_ids]
+                account_ids = [int(x) for x in (social_account_ids or [])]
             except (TypeError, ValueError):
                 return _err("social_account_ids must be a list of numbers.")
-            if not social_account_ids:
-                return _err("social_account_ids is required (at least one).")
-
-            post_id = UUID(str(post_id_raw))
-            scheduled_at = None
-            if scheduled_raw:
-                try:
-                    scheduled_at = datetime.fromisoformat(str(scheduled_raw))
-                except ValueError as exc:
-                    return _err(f"scheduled_at invalid: {exc}")
+            due = parse_iso(scheduled_at) if scheduled_at else None
+            if scheduled_at and due is None:
+                return _err(
+                    f"scheduled_at {scheduled_at!r} isn't a time I can read. Send ISO 8601 with the "
+                    "user's UTC offset, e.g. 2026-10-02T09:00:00+02:00."
+                )
 
             with _open_db() as db:
-                post, err = _require_post(db, project_id, post_id)
+                post, err = _require_post(db, project_id, UUID(str(post_id)))
                 if err:
                     return err
                 proj = db.get(Project, project_id)
@@ -1903,112 +1911,57 @@ def build_content_tools_lc(
                 blockers = publish_blockers(post)
                 if blockers:
                     return _err(" ".join(blockers))
+                if not account_ids:
+                    # No list_social_accounts tool exists for the model to
+                    # find an id with, so naming none means the project's
+                    # own linked account for this platform.
+                    account_id, why_not = default_account(db, post)
+                    if account_id is None:
+                        return _err(why_not)
+                    account_ids = [account_id]
 
-                # Gather what to upload, in slide order. PREFER the composed
-                # slide renders (caption + layout baked in) — those are what
-                # should appear on TikTok. Fall back to a single-image slide's
-                # raw photo only when it has no render yet.
-                all_assets = db.execute(
-                    select(ContentAsset)
-                    .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
-                    .order_by(ContentAsset.created_at)
-                ).scalars().all()
-                renders_by_slide: dict[str, ContentAsset] = {}
-                by_url: dict[str, ContentAsset] = {}
-                for a in all_assets:
-                    if a.asset_type == "slide_render":
-                        sid = (a.params or {}).get("slide_id")
-                        if sid:
-                            renders_by_slide[str(sid)] = a   # asc order → latest wins
-                    if a.url:
-                        by_url.setdefault(a.url, a)
-
-                slides_meta = [s for s in (post.slides or []) if isinstance(s, dict)]
-                asset_rows: list[ContentAsset] = []
-                missing: list[str] = []
-                uncomposed: list[str] = []
-                if post.post_type == VIDEO_POST_TYPE:
-                    # A video post sends its cut, alone — not the keyframes
-                    # and references that also carry its id.
-                    clip = publish_asset(db, post)
-                    if clip is None:
-                        return _err(
-                            "This video post has no clip yet — make one with generate_video, "
-                            "then publish."
-                        )
-                    asset_rows = [clip]
-                elif slides_meta:
-                    for s in slides_meta:
-                        sid = str(s.get("slide_id") or "")
-                        ren = renders_by_slide.get(sid)
-                        if ren is not None:
-                            asset_rows.append(ren)
-                            continue
-                        # No composed render. Only a single-image slide can fall
-                        # back to its raw photo, and only when explicitly allowed
-                        # (collage / before-after MUST be rendered to compose).
-                        url = s.get("image_url")
-                        fallback = by_url.get(url) if url else None
-                        if allow_uncomposed and fallback is not None and not s.get("items"):
-                            asset_rows.append(fallback)
-                            uncomposed.append(sid or "(unnamed)")
-                        else:
-                            missing.append(sid or "(unnamed)")
-                elif is_text_only(post):
-                    # Words alone. Nothing linked to the post rides along.
-                    asset_rows = []
-                else:
-                    # Legacy posts with no structured slides — upload whatever's linked.
-                    asset_rows = list(all_assets)
-
-                if missing:
+                pick = pick_media(db, post, allow_uncomposed=allow_uncomposed)
+                if post.post_type == VIDEO_POST_TYPE and not pick.files:
+                    return _err(
+                        "This video post has no clip yet — make one with generate_video, "
+                        "then publish."
+                    )
+                if pick.missing:
                     return _err(
                         "These slides have no composed render, so their captions "
-                        f"wouldn't publish: {missing}. Call render_slide on each, then "
+                        f"wouldn't publish: {pick.missing}. Call render_slide on each, then "
                         "publish again — or pass allow_uncomposed=true to publish "
                         "single-image slides as raw photos (captions won't appear; "
                         "collage / before-after still require a render)."
                     )
                 # A text post goes out as words alone; a post with slides
                 # carries them.
-                if not asset_rows and not is_text_only(post):
+                if not pick.files and not is_text_only(post):
                     return _err("No slide images to publish — render or generate images first.")
+                try:
+                    media = await load_media(pick.files)
+                except MediaUnreadable:
+                    return _err("Some media for this post couldn't be loaded — try regenerating the images.")
 
                 try:
                     client = client_for_user(proj.user_id, db)
                 except ValueError as exc:
                     return _err(str(exc))
-
-                # Upload each asset → media_id list.
-                media_ids: list[str] = []
                 try:
                     async with client as pb:
-                        for asset in asset_rows:
-                            data = _load_asset_bytes(asset)
-                            if not data:
-                                return _err("Some media for this post couldn't be loaded — try regenerating the images.")
-                            upload = await pb.create_upload_url(
-                                name=asset.filename or f"slide-{len(media_ids)+1}.png",
-                                mime_type=asset.mime_type or "image/png",
-                                size_bytes=len(data),
-                            )
-                            await pb.upload_media(data, upload.upload_url, asset.mime_type or "image/png")
-                            media_ids.append(upload.media_id)
-
-                        resp = await pb.create_post(create_request(
-                            post,
-                            social_account_ids=social_account_ids,
-                            media_ids=media_ids,
-                            scheduled_at=scheduled_at,
-                            tiktok_draft=tiktok_draft,
-                        ))
+                        resp = await send_post(
+                            pb, post, media,
+                            social_account_ids=account_ids,
+                            scheduled_at=due,
+                            tiktok_draft=bool(tiktok_draft),
+                        )
                 except PostBridgeAPIError as exc:
                     logger.warning("content: publish failed: %s", exc, exc_info=True)
                     return _err(f"Couldn't publish that just now — {exc.error.message or 'please try again shortly'}.")
 
                 if why := publish_failure(resp):
                     return _err(why)
-                record_published(post, resp, scheduled_at)
+                record_published(post, resp, due)
                 db.add(post)
                 db.commit()
                 db.refresh(post)
@@ -2021,11 +1974,12 @@ def build_content_tools_lc(
                     "post_bridge_post_id":   resp.id,
                     "status":                post.status,
                     "scheduled_at":          resp.scheduled_at.isoformat() if resp.scheduled_at else None,
-                    "media_count":           len(media_ids),
+                    "social_account_ids":    account_ids,
+                    "media_count":           len(media),
                     # Replies the channel does not publish: tell the user to
                     # post them by hand (a thread's tail, a LinkedIn comment).
                     "replies_to_post_by_hand": unpublished_replies(post),
-                    "uncomposed_slides":     uncomposed,   # published as raw photos (no caption)
+                    "uncomposed_slides":     pick.uncomposed,   # published as raw photos (no caption)
                 })
         except Exception as exc:
             logger.exception("publish_post failed")
@@ -2537,9 +2491,11 @@ def build_content_tools_lc(
         ),
         _bind(
             publish_post, ContentTool.PUBLISH_POST,
-            "Publish a saved post via PostBridge to one or more "
-            "social_account_ids (numeric, from list_social_accounts), now or at "
-            "scheduled_at, and record the result on the post. A slideshow "
+            "Publish a saved post via PostBridge, now or at scheduled_at, and "
+            "record the result on the post. It posts from the account the "
+            "project linked for the post's platform unless social_account_ids "
+            "names others; when that is ambiguous the error lists the linked "
+            "accounts to ask the user about. A slideshow "
             "uploads each slide's COMPOSED render (call render_slide first; by "
             "default slides with no render are refused, since their captions "
             "wouldn't appear). A text post goes out as words alone, its first "

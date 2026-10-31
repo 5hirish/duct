@@ -186,13 +186,14 @@ function LibraryTab({ projectId }) {
 // Posts tab — all drafted/posted posts for the project
 // ---------------------------------------------------------------------------
 
-const POST_FILTERS = ["all", "posted", "scheduled", "draft"];
+const POST_FILTERS = ["all", "posted", "scheduled", "failed", "draft"];
 
 // Filter ids are post statuses (API values); these are what the chips say.
 const FILTER_LABELS = {
   all: msg`all`,
   posted: msg`posted`,
   scheduled: msg`scheduled`,
+  failed: msg`failed`,
   draft: msg`draft`,
 };
 
