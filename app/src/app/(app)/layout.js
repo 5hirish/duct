@@ -14,6 +14,7 @@ import LocalBackendGate from "../../components/LocalBackendGate.jsx";
 import UpdateToast from "../../components/UpdateToast.jsx";
 import ReloadToast from "../../components/ReloadToast.jsx";
 import ConnectionBanner from "../../components/ConnectionBanner.jsx";
+import DailyDraftsReminder from "../../components/content/DailyDraftsReminder.jsx";
 import { CommandProvider } from "../../components/commands/CommandRegistry";
 import CommandPalette from "../../components/commands/CommandPalette";
 import AppCommands from "../../components/commands/AppCommands";
@@ -123,6 +124,10 @@ function AppLayoutInner({ children }) {
           </SidebarInset>
           <AppCommands />
           <CommandPalette />
+          {/* The drafts queue's one notice a day, from wherever the app is
+              open. Inside AuthGuard: signed out, its read would be a 401,
+              and a 401 ends the session it does not have. */}
+          <DailyDraftsReminder />
         </SidebarProvider>
         </CommandProvider>
         </AuditNavProvider>

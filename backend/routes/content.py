@@ -38,6 +38,7 @@ import time
 import uuid
 from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -48,6 +49,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, select
 from sqlmodel import Session
+from starlette.status import HTTP_409_CONFLICT
 
 from agents.content.assessment import reassess_post
 from agents.content.channels import channel_payload, primary_channel, resolve as resolve_channel
@@ -1653,6 +1655,137 @@ def delete_post(
     db.delete(post)
     db.commit()
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# The drafts queue (issue #266): the Posts tab's drafts nobody has answered
+# are read from GET /content/posts?status=draft. These two are what a queue
+# card adds: when the draft should go out, and a no that teaches.
+# ---------------------------------------------------------------------------
+
+# A draft nobody has published, scheduled or turned down yet. Pending is the
+# agent's unsaved draft, still open in its workspace; draft is a kept one.
+_SKIPPABLE = (ContentStatus.PENDING, ContentStatus.DRAFT)
+
+
+class SkipReason(StrEnum):
+    """Why a draft got a no. Crosses the wire (the queue card's five chips,
+    app/src/lib/contentEnums.js); each says something different about what
+    the next draft should do, so there are few and they do not overlap."""
+
+    NOT_TRUE        = "not_true"
+    TOO_REVEALING   = "too_revealing"
+    NOT_INTERESTING = "not_interesting"
+    ALREADY_SAID    = "already_said"
+    WRONG_VOICE     = "wrong_voice"
+
+
+# How each reason reads in the memory the agent's next draft sees. The digest
+# renders a memory's title and nothing else, so the lesson is in the title.
+_SKIP_WORDS = {
+    SkipReason.NOT_TRUE:        "it was not true",
+    SkipReason.TOO_REVEALING:   "it gave too much away",
+    SkipReason.NOT_INTERESTING: "it was not interesting enough to post",
+    SkipReason.ALREADY_SAID:    "it had already been said",
+    SkipReason.WRONG_VOICE:     "it did not sound like them",
+}
+# A topic long enough to name the draft, short enough that the title keeps
+# its reason inside the memory's 200-character title.
+_SKIP_TOPIC_CHARS = 90
+
+
+class SkipRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: SkipReason
+
+
+class BestSlotOut(BaseModel):
+    at:     str
+    reason: str
+    posts:  int
+    hour:   int
+
+
+def _skip_title(post: ContentPost, reason: SkipReason) -> str:
+    channel = resolve_channel(primary_channel(post.platforms)).label
+    topic = (post.topic or "").strip()
+    if len(topic) > _SKIP_TOPIC_CHARS:
+        topic = topic[: _SKIP_TOPIC_CHARS - 1].rstrip() + "…"
+    about = f' on "{topic}"' if topic else ""
+    return f"Skipped a {channel} draft{about}: {_SKIP_WORDS[reason]}"
+
+
+@router.get("/content/best-slot")
+def best_slot(
+    project_id: UUID,
+    channel: Platform,
+    tz: str = "",
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> BestSlotOut:
+    """The next good time for a post on ``channel``, in the reader's ``tz``:
+    the account's own best hour once enough posts there have numbers, else
+    the channel's default; never on top of a post already scheduled there."""
+    from agents.content.best_time import next_slot
+
+    _project_for_user(db, user, project_id)
+    rows = [
+        p for p in db.execute(
+            select(ContentPost).where(
+                ContentPost.project_id == project_id,
+                ContentPost.status.in_([ContentStatus.POSTED, ContentStatus.SCHEDULED]),
+            )
+        ).scalars().all()
+        if primary_channel(p.platforms) == channel
+    ]
+    posted = [p for p in rows if p.status == ContentStatus.POSTED]
+    taken = [
+        (p.scheduled_at if p.scheduled_at.tzinfo else p.scheduled_at.replace(tzinfo=timezone.utc))
+        for p in rows if p.status == ContentStatus.SCHEDULED and p.scheduled_at
+    ]
+    slot = next_slot(channel, posts=posted, taken=taken, now=utcnow(), tz_name=tz)
+    return BestSlotOut(at=slot.at.isoformat(), reason=slot.reason, posts=slot.posts, hour=slot.hour)
+
+
+@router.post("/content/posts/{post_id}/skip")
+def skip_post(
+    post_id: UUID,
+    body: SkipRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """No to a draft, with the one reason that decides what the next one
+    looks like. The draft is discarded, and the reason becomes a feedback
+    memory the next draft reads, so the same miss is not proposed twice.
+    Feedback, not decision: the digest pins the five newest goals and
+    decisions, and a week of skips would have pushed the project's real ones
+    out of it. Feedback ranks high among recent entries instead."""
+    from agents.registry import AgentType
+    from models.memory import SOURCE_USER
+    from service.memory import remember
+
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
+    if post.status not in _SKIPPABLE:
+        raise HTTPException(HTTP_409_CONFLICT, "Only a draft that hasn't gone out can be skipped.")
+    post.status = ContentStatus.DISCARDED.value
+    post.updated_at = utcnow()
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    remember(
+        db,
+        kind="feedback",
+        title=_skip_title(post, body.reason),
+        body=f"The draft read: {(post.caption or '')[:400]}",
+        project_id=post.project_id,
+        user_id=user.id,
+        source_type=SOURCE_USER,
+        confidence="high",
+        agent_type=str(AgentType.TIKTOK_STUDIO),
+        meta={"skip_reason": str(body.reason), "post_id": str(post.id)},
+    )
+    return _enrich_one(db, post)
 
 
 # ---------------------------------------------------------------------------

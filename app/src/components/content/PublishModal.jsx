@@ -35,8 +35,11 @@ import PublishReviewPanel from "./PublishReviewPanel";
  *   - onClose     : () => void
  *   - post        : { id, project_id, topic, caption, platforms[], post_type, replies[], channel }
  *   - onPublished : (updatedPost) => void  — fired after successful publish
+ *   - suggestedAt : ISO instant to open on as the schedule (the drafts queue's
+ *                   best slot); absent, the dialog opens on "Post now"
+ *   - suggestion  : a line saying why that time, shown while it is still the pick
  */
-export default function PublishModal({ open, onClose, post, onPublished }) {
+export default function PublishModal({ open, onClose, post, onPublished, suggestedAt, suggestion }) {
   const { t, i18n } = useLingui();
   const [accounts, setAccounts]     = useState([]);
   const [selected, setSelected]     = useState(new Set());
@@ -57,9 +60,14 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
     return out;
   }, [accounts]);
 
+  // The picker's own format, the same one minDateTime is written in below, so
+  // a suggested instant lands on the schedule the server will read back.
+  const suggestedValue = suggestedAt ? new Date(suggestedAt).toISOString().slice(0, 16) : "";
+
   useEffect(() => {
     if (!open || !post?.project_id) return;
     setStage("loading"); setError("");
+    if (suggestedValue) { setScheduledAt(suggestedValue); setTiktokDraft(false); }
     let cancelled = false;
     (async () => {
       try {
@@ -248,6 +256,9 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                       className="rounded border border-input bg-background px-2 py-0.5 text-xs"
                     />
                   </label>
+                  {suggestion && scheduledAt && scheduledAt === suggestedValue && (
+                    <p className="pl-5 text-2xs text-muted-foreground">{suggestion}</p>
+                  )}
                   {offersTiktokDraft && (
                     <label className="flex items-center gap-2 text-xs">
                       <input

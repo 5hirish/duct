@@ -19,6 +19,8 @@ import StyleGallery from "@/components/content/StyleGallery";
 import PostCard from "@/components/content/PostCard";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import PlanBoard from "@/components/content/PlanBoard";
+import DraftsQueue from "@/components/content/DraftsQueue";
+import ReminderSetting from "@/components/content/ReminderSetting";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import {
   DropdownMenu,
@@ -26,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DRAFT_CHANNELS } from "@/lib/contentEnums";
+import { DRAFT_CHANNELS, PostStatus } from "@/lib/contentEnums";
 
 // One tab shows at a time and the hub opens on the plan. Analytics brings
 // Recharts and Discover is the largest tab, so neither is downloaded until
@@ -198,14 +200,16 @@ function LibraryTab({ projectId }) {
 // Posts tab — all drafted/posted posts for the project
 // ---------------------------------------------------------------------------
 
-const POST_FILTERS = ["all", "posted", "scheduled", "draft"];
+// Drafts come first and say "waiting": a draft nobody has answered is the
+// drafts queue (issue #266), and the tab opens on it while it has anything.
+const POST_FILTERS = [PostStatus.DRAFT, "all", PostStatus.POSTED, PostStatus.SCHEDULED];
 
 // Filter ids are post statuses (API values); these are what the chips say.
 const FILTER_LABELS = {
   all: msg`all`,
-  posted: msg`posted`,
-  scheduled: msg`scheduled`,
-  draft: msg`draft`,
+  [PostStatus.POSTED]: msg`posted`,
+  [PostStatus.SCHEDULED]: msg`scheduled`,
+  [PostStatus.DRAFT]: msg`waiting`,
 };
 
 function postRank(p) {
@@ -219,7 +223,8 @@ function PostsTab({ projectId }) {
   const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  // null until the posts arrive: the default depends on whether any wait.
+  const [filter, setFilter] = useState(null);
   const [cloneOpen, setCloneOpen] = useState(false);
 
   // The two ways into a post no plan asked for: write one for a channel the
@@ -264,7 +269,9 @@ function PostsTab({ projectId }) {
       try {
         const p = await listPosts(projectId);
         if (cancelled) return;
-        setPosts(Array.isArray(p) ? p : []);
+        const rows = Array.isArray(p) ? p : [];
+        setPosts(rows);
+        setFilter((f) => f ?? (rows.some((r) => r.status === PostStatus.DRAFT) ? PostStatus.DRAFT : "all"));
       } catch {/* ignore */}
       finally {
         if (!cancelled) setLoading(false);
@@ -279,10 +286,18 @@ function PostsTab({ projectId }) {
     return acc;
   }, {});
 
-  const filterLabel = i18n._(FILTER_LABELS[filter]);
+  const activeFilter = filter ?? "all";
+  const filterLabel = i18n._(FILTER_LABELS[activeFilter]);
+
+  // An answer from the queue (a skip, or an approve that scheduled or posted
+  // it) moves the post to its new status here, so the counts follow at once.
+  const answered = (postId, updated) => {
+    if (!updated) return;
+    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, ...updated } : p)));
+  };
 
   const visible = posts
-    .filter((p) => filter === "all" || p.status === filter)
+    .filter((p) => activeFilter === "all" || p.status === activeFilter)
     .sort((a, b) => {
       const [ar, av] = postRank(a);
       const [br, bv] = postRank(b);
@@ -320,14 +335,16 @@ function PostsTab({ projectId }) {
         <div className="order-last ml-auto flex items-center gap-2">{cloneButton}{newPostMenu}</div>
         {POST_FILTERS.map((f) => {
           const n = counts[f] || 0;
-          if (f !== "all" && n === 0) return null;
+          // The active chip stays even at zero: answering the last draft
+          // should not leave a view with no chip saying what it is.
+          if (f !== "all" && n === 0 && f !== activeFilter) return null;
           return (
             <button
               key={f}
               type="button"
               onClick={() => setFilter(f)}
               className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
-                filter === f
+                activeFilter === f
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/70"
               }`}
@@ -338,7 +355,14 @@ function PostsTab({ projectId }) {
         })}
       </div>
 
-      {visible.length === 0 ? (
+      {activeFilter === PostStatus.DRAFT ? (
+        <DraftsQueue
+          posts={visible}
+          projectId={projectId}
+          onAnswered={answered}
+          aside={<ReminderSetting />}
+        />
+      ) : visible.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border/60 px-4 py-10 text-center text-sm text-muted-foreground">
           <Trans>No {filterLabel} posts.</Trans>
         </p>

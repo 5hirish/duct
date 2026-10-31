@@ -103,6 +103,32 @@ export const CLONE_APPROACH_LABELS = Object.freeze({
   [CloneApproach.STRUCTURE_ONLY]: msg`Structure only`,
 });
 
+// Mirrors SkipReason in backend/routes/content.py: a no to a draft, which
+// the content agent's next run reads back as a feedback memory. Few, and
+// each says something different about what to write next time.
+export const SkipReason = Object.freeze({
+  NOT_TRUE:        "not_true",
+  TOO_REVEALING:   "too_revealing",
+  NOT_INTERESTING: "not_interesting",
+  ALREADY_SAID:    "already_said",
+  WRONG_VOICE:     "wrong_voice",
+});
+
+export const SKIP_REASON_LABELS = Object.freeze({
+  [SkipReason.NOT_TRUE]:        msg`Not true`,
+  [SkipReason.TOO_REVEALING]:   msg`Gives too much away`,
+  [SkipReason.NOT_INTERESTING]: msg`Not interesting`,
+  [SkipReason.ALREADY_SAID]:    msg`Already said`,
+  [SkipReason.WRONG_VOICE]:     msg`Not my voice`,
+});
+
+// Mirrors SlotReason in backend/agents/content/best_time.py: why the
+// drafts queue suggests the time it does.
+export const SlotReason = Object.freeze({
+  HISTORY: "history",
+  DEFAULT: "default",
+});
+
 export const AspectRatio = Object.freeze({
   SQUARE_1_1:     "1:1",
   PORTRAIT_9_16:  "9:16",
