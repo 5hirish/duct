@@ -90,6 +90,8 @@ import TextPostEditor from "@/components/content/TextPostEditor";
 import PostCard from "@/components/content/PostCard";
 import DraftsQueue from "@/components/content/DraftsQueue";
 import ReminderSetting from "@/components/content/ReminderSetting";
+import WritingSamples from "@/components/content/WritingSamples";
+import VoiceRulesFields from "@/components/content/VoiceRulesFields";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
@@ -1171,6 +1173,37 @@ const QUEUE_SLOTS = {
   tiktok: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 2, hour: 9 },
 };
 const queueSlot = (_project, channel) => Promise.resolve(QUEUE_SLOTS[channel]);
+
+// The Brand tab's voice (issue 271). VOICE_DEFAULTS is what GET /content/brand
+// answers as voice_rules_default: the rules every project had as constants.
+const VOICE_DEFAULTS = {
+  banned_words: ["game-changer", "revolutionary", "excited to share", "dive in", "unpopular opinion",
+    "hot take", "here's a thread", "a few thoughts on", "today I learned", "quick reminder", "let that sink in"],
+  no_client_names: true,
+  protect_the_edge: true,
+};
+const VOICE_BUILD_IN_PUBLIC = { banned_words: ["synergy", "game-changer"], no_client_names: false, protect_the_edge: false };
+
+/** Both fields are controlled by the Brand tab's form; this is that form's state. */
+function WritingSamplesScene({ initial }) {
+  const [samples, setSamples] = useState(initial);
+  return <div className="max-w-xl p-5"><WritingSamples samples={samples} onChange={setSamples} /></div>;
+}
+
+function VoiceRulesScene({ initial, customised: startCustomised }) {
+  const [rules, setRules] = useState(initial);
+  const [customised, setCustomised] = useState(startCustomised);
+  return (
+    <div className="max-w-xl p-5">
+      <VoiceRulesFields
+        rules={rules}
+        customised={customised}
+        onChange={(next) => { setRules(next); setCustomised(true); }}
+        onReset={() => { setRules(VOICE_DEFAULTS); setCustomised(false); }}
+      />
+    </div>
+  );
+}
 
 /** TextPostEditor is controlled by the post pane; this is that pane's state. */
 function TextPostScene({ initial }) {
@@ -2774,6 +2807,38 @@ export const SCENES = [
         <ReminderSetting surface="shell" />
       </div>
     ),
+  },
+  {
+    id: "writing-samples",
+    state: "two posts pasted",
+    group: "WritingSamples",
+    title: "Writing samples on the Brand tab",
+    note: "Posts the brand already wrote (issue 271). The text writer reads them before every X or LinkedIn draft, and a carousel caption hears them too, so a draft starts in a real voice. Up to five, 1,500 characters each, counted under each field. What to check: the counter sits right under its own field, and Add a post disables at five.",
+    render: () => <WritingSamplesScene initial={[X_THREAD_POST.caption, LINKEDIN_POST.caption]} />,
+  },
+  {
+    id: "writing-samples-empty",
+    state: "nothing pasted yet",
+    group: "WritingSamples",
+    title: "Before the first sample",
+    note: "One empty field rather than an empty list: the placeholder says what goes in it.",
+    render: () => <WritingSamplesScene initial={[]} />,
+  },
+  {
+    id: "voice-rules-default",
+    state: "Duct's defaults",
+    group: "VoiceRulesFields",
+    title: "Voice rules, never touched",
+    note: "The rules every project had as constants until issue 271, shown as settings: the banned list as chips, the two switches on. Change anything and Back to Duct's defaults appears. The writer refuses an X or LinkedIn draft with a banned word and says which, so the list is a promise, not a hint.",
+    render: () => <VoiceRulesScene initial={VOICE_DEFAULTS} customised={false} />,
+  },
+  {
+    id: "voice-rules-custom",
+    state: "a build-in-public founder's rules",
+    group: "VoiceRulesFields",
+    title: "Voice rules, customised",
+    note: "Clients may be named and the mechanism may be shown; each switch's line says what it means in its current position, not in the other one.",
+    render: () => <VoiceRulesScene initial={VOICE_BUILD_IN_PUBLIC} customised />,
   },
   {
     id: "post-metrics-x",

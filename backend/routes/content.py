@@ -54,6 +54,7 @@ from starlette.status import HTTP_409_CONFLICT
 from agents.content.assessment import reassess_post
 from agents.content.channels import channel_payload, primary_channel, resolve as resolve_channel
 from agents.content.plan_period import PlanPeriod, requested_period
+from agents.content.voice_rules import VoiceRules, voice_problems, voice_rules_of
 from agents.content.publishing import (
     PostAlreadyOut,
     cancel,
@@ -818,6 +819,16 @@ class BrandContextIn(BaseModel):
             raise ValueError("Section payload too large (max 256 KB).")
         return v
 
+    @field_validator("content_brand", mode="after")
+    @classmethod
+    def _check_voice(cls, v: dict | None) -> dict | None:
+        # The voice fields are read into every text draft, so their caps are
+        # held here too, not only by the Brand tab that normally sends them.
+        problems = voice_problems(v)
+        if problems:
+            raise ValueError(" ".join(problems))
+        return v
+
 
 class BrandContextOut(BaseModel):
     project_id:            UUID
@@ -829,6 +840,11 @@ class BrandContextOut(BaseModel):
     content_brand:         dict
     content_pillars:       dict
     content_visual_assets: dict
+    # The text writer's rules as they apply (content_brand.voice_rules with
+    # the defaults filled in), and the defaults themselves, so the Brand tab
+    # shows a project that never set them what it runs on and can go back.
+    voice_rules:           dict
+    voice_rules_default:   dict
 
 
 def _brand_out(p: Project) -> BrandContextOut:
@@ -842,6 +858,8 @@ def _brand_out(p: Project) -> BrandContextOut:
         content_brand=p.content_brand or {},
         content_pillars=p.content_pillars or {},
         content_visual_assets=p.content_visual_assets or {},
+        voice_rules=voice_rules_of(p.content_brand).model_dump(),
+        voice_rules_default=VoiceRules().model_dump(),
     )
 
 

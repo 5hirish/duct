@@ -96,6 +96,7 @@ from agents.content.publishing import (
     went_out,
     words_changed,
 )
+from agents.content.voice_rules import banned_words_in, voice_rules_of
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
@@ -1023,6 +1024,20 @@ def build_content_tools_lc(
             problems = copy_problems(ch.id, draft.caption, replies)
             if problems:
                 return _err("Nothing saved. " + " ".join(problems) + " Tighten it and submit again.")
+            if draft.post_type == TEXT_POST_TYPE:
+                # The project's banned words, checked here for the same reason
+                # as the length: a rule the model may forget is a suggestion.
+                # Read fresh, so a Brand tab edit binds the very next submit.
+                with _open_db() as db:
+                    proj = db.get(Project, project_id)
+                    banned = voice_rules_of(proj.content_brand if proj else None).banned_words
+                used = banned_words_in("\n".join([draft.caption, *replies]), banned)
+                if used:
+                    named = ", ".join(f'"{w}"' for w in used)
+                    return _err(
+                        f"Nothing saved. The post uses {named}, which this project's voice rules ban. "
+                        "Rewrite that line and submit again."
+                    )
             # Serialize against concurrent image-attach / edit_slide on this post.
             lock_key = str(session.post_id) if session.post_id else f"slug:{project_id}:{draft.post_dir_slug}"
             async with _post_lock(lock_key):

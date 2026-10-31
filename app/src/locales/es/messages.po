@@ -975,6 +975,10 @@ msgstr "Una herramienta {label} marca las ejecuciones de solo lectura inmediatam
 #~ msgid "A tool its server doesn’t mark as read-only asks you before it runs, every time."
 #~ msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "A word or phrase, then Enter"
+msgstr "Una palabra o frase, luego Enter"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Abandon this conversation and start a new one (what it produced is kept)"
 msgstr "Abandonar esta conversación y empezar una nueva (lo que produjo se mantiene)"
@@ -1067,6 +1071,10 @@ msgstr "Adaptado"
 msgid "Adaptive thinking"
 msgstr "Pensamiento adaptativo"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Add"
+msgstr "Añadir"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Add a first comment"
 msgstr "Añadir un primer comentario"
@@ -1082,6 +1090,10 @@ msgstr "Añadir un hashtag"
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Add a pitch deck, a positioning doc or a brief, and Duct drafts your project from those too."
 msgstr "Añade una presentación, un documento de posicionamiento o un informe, y Duct también redactará tu proyecto a partir de ellos."
+
+#: src/components/content/WritingSamples.jsx
+msgid "Add a post"
+msgstr "Añadir una publicación"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
@@ -1291,6 +1303,10 @@ msgstr "Todas las fuentes"
 #: src/app/(app)/execute/page.jsx
 msgid "All statuses"
 msgstr "Todos los estados"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Allow \"{word}\" again"
+msgstr "Permitir \"{word}\" de nuevo"
 
 #: src/lib/contentEnums.js
 msgid "Already said"
@@ -1717,6 +1733,10 @@ msgstr "Pendiente de revisión"
 msgid "Back"
 msgstr "Volver"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Back to Duct's defaults"
+msgstr "Volver a los valores predeterminados de Duct"
+
 #: src/app/(app)/connections/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 msgid "Back to Insights"
@@ -1737,6 +1757,10 @@ msgstr "Equilibrado"
 #: src/components/content/PlanViewport.jsx
 msgid "Balancing pillars and formats…"
 msgstr "Equilibrando pilares y formatos…"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Banned words"
+msgstr "Palabras prohibidas"
 
 #: src/components/insight-blocks/BarChartBlock.jsx
 msgid "Bar chart"
@@ -2761,6 +2785,10 @@ msgstr "Estado actual (instantánea antes del cambio)"
 msgid "Currently mapped to {foreignName} — a teammate's connector."
 msgstr "Actualmente asignado a {foreignName} — un conector de un compañero de equipo."
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Customers, clients and partners are never named unless you say so."
+msgstr "Los clientes y socios nunca se nombran a menos que tú lo digas."
+
 #: src/components/models/TierSummary.jsx
 msgid "Customise"
 msgstr "Personalizar"
@@ -3098,6 +3126,14 @@ msgstr "Redactando publicación"
 msgid "Drafting the post…"
 msgstr "Redactando la publicación…"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Drafts may name customers, clients and partners."
+msgstr "Los borradores pueden nombrar a clientes y socios."
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Drafts share the lesson, never the exact prompt, model or sequence that's working."
+msgstr "Los borradores comparten la lección, nunca el prompt exacto, el modelo o la secuencia que funciona."
+
 #: src/app/(start)/start/page.jsx
 msgid "Drafts your project from what it finds"
 msgstr "Redacta tu proyecto a partir de lo que encuentra"
@@ -3239,6 +3275,10 @@ msgstr "Duct envía cada tarea al nivel que merece. Elige qué va en cada uno."
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Duct should open automatically. If it doesn’t, use the button below."
 msgstr "Duct debería abrirse automáticamente. Si no lo hace, usa el botón de abajo."
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Duct won't save an X or LinkedIn draft that uses one, and says which."
+msgstr "Duct no guardará un borrador de X o LinkedIn que use uno, e indica cuál."
 
 #: src/components/connections/McpServers.jsx
 #~ msgid "Duct's agent stops using its tools straight away, in every project you own. Connecting it again means signing in again."
@@ -4457,6 +4497,10 @@ msgstr "ahora mismo"
 #: src/components/content/PlanBoard.jsx
 msgid "Kanban"
 msgstr "Kanban"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Keep client names out"
+msgstr "Mantén los nombres de los clientes fuera"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -5703,6 +5747,10 @@ msgstr "Notas"
 msgid "Nothing answered at that address. Check the server is running and the address is right."
 msgstr "Nada respondió en esa dirección. Comprueba que el servidor esté en marcha y que la dirección sea correcta."
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Nothing banned. Drafts follow plain good writing."
+msgstr "Nada prohibido. Los borradores siguen una buena escritura sencilla."
+
 #: src/components/models/TierCard.jsx
 msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr "Nada por debajo de este nivel puede ejecutarse tampoco. Añade una clave para usar {tierName}."
@@ -6262,6 +6310,10 @@ msgstr "APROBADO"
 msgid "Password-protected. Save a copy without one"
 msgstr "Protegido con contraseña. Guarda una copia sin ella"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Paste a few posts you wrote. Duct matches their voice on X and LinkedIn, never their topics."
+msgstr "Pega algunas publicaciones que escribiste. Duct iguala su voz en X y LinkedIn, nunca sus temas."
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste a key first"
 msgstr "Pega una clave primero"
@@ -6269,6 +6321,10 @@ msgstr "Pega una clave primero"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
 msgstr "Pega una publicación que funcionó. Duct lee por qué funcionó, luego redacta un carrusel para tu marca con la misma estructura, y te dice lo que mantuvo."
+
+#: src/components/content/WritingSamples.jsx
+msgid "Paste a post you wrote and liked, exactly as it went out."
+msgstr "Pega una publicación que escribiste y te gustó, exactamente como se publicó."
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Paste an API key to connect with one."
@@ -6438,6 +6494,10 @@ msgstr "Portugués"
 #: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr "Publicación"
+
+#: src/components/content/WritingSamples.jsx
+msgid "Post {n}"
+msgstr "Publicación {n}"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Post draft"
@@ -6646,6 +6706,10 @@ msgstr "Propuesto por ti"
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed target + payload"
 msgstr "Objetivo propuesto + carga útil"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Protect the edge"
+msgstr "Protege el límite"
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Providers"
@@ -7045,6 +7109,10 @@ msgstr "¿Eliminar {removalTarget}?"
 #: src/components/connections/ProviderCard.jsx
 msgid "Remove key"
 msgstr "Eliminar clave"
+
+#: src/components/content/WritingSamples.jsx
+msgid "Remove post {n}"
+msgstr "Eliminar publicación {n}"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Remove reply {n}"
@@ -8777,6 +8845,10 @@ msgstr "La clave funciona, pero la cuenta no tiene crédito"
 msgid "The last turn failed"
 msgstr "El último turno falló"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "The list is full"
+msgstr "La lista está llena"
+
 #: src/app/(app)/connections/page.jsx
 msgid "The manager account wasn't saved."
 msgstr "No se guardó la cuenta de administrador."
@@ -9599,6 +9671,10 @@ msgstr "Visuales"
 msgid "Voice & messaging"
 msgstr "Voz y mensajería"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Voice rules"
+msgstr "Reglas de voz"
+
 #: src/app/(app)/content/page.jsx
 msgid "waiting"
 msgstr "esperando"
@@ -9709,6 +9785,10 @@ msgstr "Semana {number}"
 #: src/components/content/PlanDayOne.jsx
 msgid "What a freelancer's September actually costs"
 msgstr "Lo que realmente cuesta el septiembre de un freelancer"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "What an X or LinkedIn draft never does. Duct's defaults until you change them."
+msgstr "Lo que un borrador de X o LinkedIn nunca hace. Los valores predeterminados de Duct hasta que los cambies."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
@@ -9946,6 +10026,10 @@ msgstr "Escríbeme en"
 msgid "Writing post metadata"
 msgstr "Escribiendo metadatos de la publicación"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Writing samples"
+msgstr "Muestras de escritura"
+
 #: src/lib/contentEvents.js
 msgid "Writing slide copy"
 msgstr "Escribiendo el texto de la diapositiva"
@@ -9994,6 +10078,10 @@ msgstr "Añadiste {serverName} por dirección, así que Duct pregunta antes de c
 #: src/components/execution/ChangeSetCard.jsx
 msgid "You approved this"
 msgstr "Aprobaste esto"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "You build in public: drafts may show exactly how it works."
+msgstr "Construyes en público: los borradores pueden mostrar exactamente cómo funciona."
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."

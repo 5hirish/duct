@@ -114,7 +114,10 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     next draft reads as a feedback memory. Its one notice a day is
     `components/content/DailyDraftsReminder.jsx`, mounted once in the app
     layout inside `AuthGuard`; its time and switch are per device
-    (`lib/dailyReminder.js`)
+    (`lib/dailyReminder.js`). The Brand tab's Writing samples and Voice rules
+    (#271, `WritingSamples.jsx`, `VoiceRulesFields.jsx`, caps in
+    `lib/voiceRules.js`) save into `content_brand`; the rules are stored only
+    once changed, so an untouched project keeps following Duct's defaults
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
   - `connections/` — connector/integration management
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the

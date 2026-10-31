@@ -969,6 +969,10 @@ msgstr ""
 #~ msgid "A tool its server doesn’t mark as read-only asks you before it runs, every time."
 #~ msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "A word or phrase, then Enter"
+msgstr ""
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Abandon this conversation and start a new one (what it produced is kept)"
 msgstr ""
@@ -1061,6 +1065,10 @@ msgstr ""
 msgid "Adaptive thinking"
 msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Add"
+msgstr ""
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Add a first comment"
 msgstr ""
@@ -1075,6 +1083,10 @@ msgstr ""
 
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Add a pitch deck, a positioning doc or a brief, and Duct drafts your project from those too."
+msgstr ""
+
+#: src/components/content/WritingSamples.jsx
+msgid "Add a post"
 msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -1284,6 +1296,10 @@ msgstr ""
 
 #: src/app/(app)/execute/page.jsx
 msgid "All statuses"
+msgstr ""
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Allow \"{word}\" again"
 msgstr ""
 
 #: src/lib/contentEnums.js
@@ -1711,6 +1727,10 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Back to Duct's defaults"
+msgstr ""
+
 #: src/app/(app)/connections/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 msgid "Back to Insights"
@@ -1730,6 +1750,10 @@ msgstr ""
 
 #: src/components/content/PlanViewport.jsx
 msgid "Balancing pillars and formats…"
+msgstr ""
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Banned words"
 msgstr ""
 
 #: src/components/insight-blocks/BarChartBlock.jsx
@@ -2755,6 +2779,10 @@ msgstr ""
 msgid "Currently mapped to {foreignName} — a teammate's connector."
 msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Customers, clients and partners are never named unless you say so."
+msgstr ""
+
 #: src/components/models/TierSummary.jsx
 msgid "Customise"
 msgstr ""
@@ -3092,6 +3120,14 @@ msgstr ""
 msgid "Drafting the post…"
 msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Drafts may name customers, clients and partners."
+msgstr ""
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Drafts share the lesson, never the exact prompt, model or sequence that's working."
+msgstr ""
+
 #: src/app/(start)/start/page.jsx
 msgid "Drafts your project from what it finds"
 msgstr ""
@@ -3232,6 +3268,10 @@ msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Duct should open automatically. If it doesn’t, use the button below."
+msgstr ""
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Duct won't save an X or LinkedIn draft that uses one, and says which."
 msgstr ""
 
 #: src/components/connections/McpServers.jsx
@@ -4450,6 +4490,10 @@ msgstr ""
 
 #: src/components/content/PlanBoard.jsx
 msgid "Kanban"
+msgstr ""
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Keep client names out"
 msgstr ""
 
 #: src/components/connections/EndpointProviderCard.jsx
@@ -5698,6 +5742,10 @@ msgstr ""
 msgid "Nothing answered at that address. Check the server is running and the address is right."
 msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Nothing banned. Drafts follow plain good writing."
+msgstr ""
+
 #: src/components/models/TierCard.jsx
 msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr ""
@@ -6257,12 +6305,20 @@ msgstr ""
 msgid "Password-protected. Save a copy without one"
 msgstr ""
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Paste a few posts you wrote. Duct matches their voice on X and LinkedIn, never their topics."
+msgstr ""
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste a key first"
 msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
+msgstr ""
+
+#: src/components/content/WritingSamples.jsx
+msgid "Paste a post you wrote and liked, exactly as it went out."
 msgstr ""
 
 #: src/components/connections/McpConnectDialog.jsx
@@ -6432,6 +6488,10 @@ msgstr ""
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/TextPostEditor.jsx
 msgid "Post"
+msgstr ""
+
+#: src/components/content/WritingSamples.jsx
+msgid "Post {n}"
 msgstr ""
 
 #: src/components/content/ContentWorkspace.jsx
@@ -6640,6 +6700,10 @@ msgstr ""
 
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed target + payload"
+msgstr ""
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Protect the edge"
 msgstr ""
 
 #: src/app/(app)/settings/models/page.jsx
@@ -7039,6 +7103,10 @@ msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Remove key"
+msgstr ""
+
+#: src/components/content/WritingSamples.jsx
+msgid "Remove post {n}"
 msgstr ""
 
 #: src/components/content/TextPostEditor.jsx
@@ -8772,6 +8840,10 @@ msgstr ""
 msgid "The last turn failed"
 msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "The list is full"
+msgstr ""
+
 #: src/app/(app)/connections/page.jsx
 msgid "The manager account wasn't saved."
 msgstr ""
@@ -9594,6 +9666,10 @@ msgstr ""
 msgid "Voice & messaging"
 msgstr ""
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Voice rules"
+msgstr ""
+
 #: src/app/(app)/content/page.jsx
 msgid "waiting"
 msgstr ""
@@ -9703,6 +9779,10 @@ msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
 msgid "What a freelancer's September actually costs"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "What an X or LinkedIn draft never does. Duct's defaults until you change them."
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
@@ -9941,6 +10021,10 @@ msgstr ""
 msgid "Writing post metadata"
 msgstr ""
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Writing samples"
+msgstr ""
+
 #: src/lib/contentEvents.js
 msgid "Writing slide copy"
 msgstr ""
@@ -9988,6 +10072,10 @@ msgstr ""
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "You approved this"
+msgstr ""
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "You build in public: drafts may show exactly how it works."
 msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js

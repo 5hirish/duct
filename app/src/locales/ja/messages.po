@@ -975,6 +975,10 @@ msgstr "ツール{label}は読み取り専用の実行をすぐにマークし�
 #~ msgid "A tool its server doesn’t mark as read-only asks you before it runs, every time."
 #~ msgstr ""
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "A word or phrase, then Enter"
+msgstr "単語またはフレーズを入力し、Enterキーを押してください"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Abandon this conversation and start a new one (what it produced is kept)"
 msgstr "この会話を破棄して新しい会話を開始する（生成されたものは保持されます）"
@@ -1067,6 +1071,10 @@ msgstr "調整済み"
 msgid "Adaptive thinking"
 msgstr "適応思考"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Add"
+msgstr "追加"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Add a first comment"
 msgstr "最初のコメントを追加"
@@ -1082,6 +1090,10 @@ msgstr "ハッシュタグを追加"
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Add a pitch deck, a positioning doc or a brief, and Duct drafts your project from those too."
 msgstr "ピッチ資料、ポジショニング資料、またはブリーフを追加すると、Ductはそれらからプロジェクトの下書きも作成します。"
+
+#: src/components/content/WritingSamples.jsx
+msgid "Add a post"
+msgstr "投稿を追加"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
@@ -1291,6 +1303,10 @@ msgstr "すべてのソース"
 #: src/app/(app)/execute/page.jsx
 msgid "All statuses"
 msgstr "すべてのステータス"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Allow \"{word}\" again"
+msgstr "\"{word}\" を再度許可"
 
 #: src/lib/contentEnums.js
 msgid "Already said"
@@ -1717,6 +1733,10 @@ msgstr "レビュー待ち"
 msgid "Back"
 msgstr "戻る"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Back to Duct's defaults"
+msgstr "Duct のデフォルトに戻す"
+
 #: src/app/(app)/connections/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 msgid "Back to Insights"
@@ -1737,6 +1757,10 @@ msgstr "バランス"
 #: src/components/content/PlanViewport.jsx
 msgid "Balancing pillars and formats…"
 msgstr "柱とフォーマットのバランス調整中…"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Banned words"
+msgstr "禁止ワード"
 
 #: src/components/insight-blocks/BarChartBlock.jsx
 msgid "Bar chart"
@@ -2761,6 +2785,10 @@ msgstr "現在の状態（変更前のスナップショット）"
 msgid "Currently mapped to {foreignName} — a teammate's connector."
 msgstr "{foreignName}（チームメイトのコネクタ）に現在マッピングされています。"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Customers, clients and partners are never named unless you say so."
+msgstr "顧客、クライアント、パートナーは、あなたが指示しない限り、名前を挙げられることはありません。"
+
 #: src/components/models/TierSummary.jsx
 msgid "Customise"
 msgstr "カスタマイズ"
@@ -3098,6 +3126,14 @@ msgstr "投稿を下書き中"
 msgid "Drafting the post…"
 msgstr "投稿を下書きしています…"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Drafts may name customers, clients and partners."
+msgstr "下書きでは、顧客、クライアント、パートナーの名前を挙げても構いません。"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Drafts share the lesson, never the exact prompt, model or sequence that's working."
+msgstr "下書きは教訓を共有しますが、機能している正確なプロンプト、モデル、またはシーケンスは共有しません。"
+
 #: src/app/(start)/start/page.jsx
 msgid "Drafts your project from what it finds"
 msgstr "見つけたものからプロジェクトを下書きします"
@@ -3239,6 +3275,10 @@ msgstr "Ductは各ジョブを適切なランクに送ります。それぞれ�
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Duct should open automatically. If it doesn’t, use the button below."
 msgstr "Ductは自動的に開くはずです。開かない場合は、下のボタンを使用してください。"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Duct won't save an X or LinkedIn draft that uses one, and says which."
+msgstr "Duct は、禁止ワードを使用している X または LinkedIn の下書きを保存せず、どのワードが使用されているかを伝えます。"
 
 #: src/components/connections/McpServers.jsx
 #~ msgid "Duct's agent stops using its tools straight away, in every project you own. Connecting it again means signing in again."
@@ -4457,6 +4497,10 @@ msgstr "たった今"
 #: src/components/content/PlanBoard.jsx
 msgid "Kanban"
 msgstr "カンバン"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Keep client names out"
+msgstr "クライアント名を含めない"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -5704,6 +5748,10 @@ msgstr "注記"
 msgid "Nothing answered at that address. Check the server is running and the address is right."
 msgstr "そのアドレスから応答がありません。サーバーが動いているか、アドレスが正しいか確認してください。"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Nothing banned. Drafts follow plain good writing."
+msgstr "禁止事項はありません。下書きは簡潔で良い文章に従います。"
+
 #: src/components/models/TierCard.jsx
 msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr "このティアより下も実行できません — {tierName}を使用するにはキーを追加してください。"
@@ -6263,6 +6311,10 @@ msgstr "PASS"
 msgid "Password-protected. Save a copy without one"
 msgstr "パスワードで保護されています。パスワードなしでコピーを保存してください"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Paste a few posts you wrote. Duct matches their voice on X and LinkedIn, never their topics."
+msgstr "あなたが書いた投稿をいくつか貼り付けてください。DuctはXとLinkedInでその声に合わせますが、トピックには合わせません。"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste a key first"
 msgstr "まずキーを貼り付けてください"
@@ -6270,6 +6322,10 @@ msgstr "まずキーを貼り付けてください"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
 msgstr "成功した投稿を貼り付けてください。Ductがその成功理由を読み取り、同じ構造でブランド向けのカルーセルを下書きし、保持した内容をお知らせします。"
+
+#: src/components/content/WritingSamples.jsx
+msgid "Paste a post you wrote and liked, exactly as it went out."
+msgstr "あなたが書いて気に入った投稿を、公開された通りに貼り付けてください。"
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Paste an API key to connect with one."
@@ -6439,6 +6495,10 @@ msgstr "ポルトガル語"
 #: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr "投稿"
+
+#: src/components/content/WritingSamples.jsx
+msgid "Post {n}"
+msgstr "投稿 {n}"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Post draft"
@@ -6647,6 +6707,10 @@ msgstr "あなたが提案しました"
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed target + payload"
 msgstr "提案されたターゲット + ペイロード"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Protect the edge"
+msgstr "エッジを保護する"
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Providers"
@@ -7046,6 +7110,10 @@ msgstr "{removalTarget}を削除しますか？"
 #: src/components/connections/ProviderCard.jsx
 msgid "Remove key"
 msgstr "キーを削除"
+
+#: src/components/content/WritingSamples.jsx
+msgid "Remove post {n}"
+msgstr "投稿 {n}を削除"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Remove reply {n}"
@@ -8778,6 +8846,10 @@ msgstr "キーは有効ですが、アカウントにクレジットがありま
 msgid "The last turn failed"
 msgstr "前回の実行は失敗しました"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "The list is full"
+msgstr "リストがいっぱいです"
+
 #: src/app/(app)/connections/page.jsx
 msgid "The manager account wasn't saved."
 msgstr "マネージャーアカウントは保存されませんでした。"
@@ -9600,6 +9672,10 @@ msgstr "ビジュアル"
 msgid "Voice & messaging"
 msgstr "ボイス＆メッセージング"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Voice rules"
+msgstr "ボイスルール"
+
 #: src/app/(app)/content/page.jsx
 msgid "waiting"
 msgstr "待機中"
@@ -9710,6 +9786,10 @@ msgstr "第{number}週"
 #: src/components/content/PlanDayOne.jsx
 msgid "What a freelancer's September actually costs"
 msgstr "フリーランサーの9月の実際の費用"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "What an X or LinkedIn draft never does. Duct's defaults until you change them."
+msgstr "XやLinkedInの下書きでは決してできないこと。変更するまでDuctのデフォルト設定です。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
@@ -9947,6 +10027,10 @@ msgstr "で私に書いてください"
 msgid "Writing post metadata"
 msgstr "投稿メタデータを書き込み中"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Writing samples"
+msgstr "執筆サンプル"
+
 #: src/lib/contentEvents.js
 msgid "Writing slide copy"
 msgstr "スライドコピーを書き込み中"
@@ -9995,6 +10079,10 @@ msgstr "あなたは{serverName}をアドレスで追加したため、Ductは�
 #: src/components/execution/ChangeSetCard.jsx
 msgid "You approved this"
 msgstr "これを承認しました"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "You build in public: drafts may show exactly how it works."
+msgstr "あなたは公開で構築します。下書きはそれがどのように機能するかを正確に示す場合があります。"
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."

@@ -975,6 +975,10 @@ msgstr "A tool {label} marks read-only runs straight away. Anything else asks yo
 #~ msgid "A tool its server doesn’t mark as read-only asks you before it runs, every time."
 #~ msgstr "A tool its server doesn’t mark as read-only asks you before it runs, every time."
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "A word or phrase, then Enter"
+msgstr "A word or phrase, then Enter"
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Abandon this conversation and start a new one (what it produced is kept)"
 msgstr "Abandon this conversation and start a new one (what it produced is kept)"
@@ -1067,6 +1071,10 @@ msgstr "Adapted"
 msgid "Adaptive thinking"
 msgstr "Adaptive thinking"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Add"
+msgstr "Add"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Add a first comment"
 msgstr "Add a first comment"
@@ -1082,6 +1090,10 @@ msgstr "Add a hashtag"
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Add a pitch deck, a positioning doc or a brief, and Duct drafts your project from those too."
 msgstr "Add a pitch deck, a positioning doc or a brief, and Duct drafts your project from those too."
+
+#: src/components/content/WritingSamples.jsx
+msgid "Add a post"
+msgstr "Add a post"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add a project"
@@ -1291,6 +1303,10 @@ msgstr "All sources"
 #: src/app/(app)/execute/page.jsx
 msgid "All statuses"
 msgstr "All statuses"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Allow \"{word}\" again"
+msgstr "Allow \"{word}\" again"
 
 #: src/lib/contentEnums.js
 msgid "Already said"
@@ -1717,6 +1733,10 @@ msgstr "Awaiting review"
 msgid "Back"
 msgstr "Back"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Back to Duct's defaults"
+msgstr "Back to Duct's defaults"
+
 #: src/app/(app)/connections/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 msgid "Back to Insights"
@@ -1737,6 +1757,10 @@ msgstr "Balanced"
 #: src/components/content/PlanViewport.jsx
 msgid "Balancing pillars and formats…"
 msgstr "Balancing pillars and formats…"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Banned words"
+msgstr "Banned words"
 
 #: src/components/insight-blocks/BarChartBlock.jsx
 msgid "Bar chart"
@@ -2761,6 +2785,10 @@ msgstr "Current state (snapshot before change)"
 msgid "Currently mapped to {foreignName} — a teammate's connector."
 msgstr "Currently mapped to {foreignName} — a teammate's connector."
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Customers, clients and partners are never named unless you say so."
+msgstr "Customers, clients and partners are never named unless you say so."
+
 #: src/components/models/TierSummary.jsx
 msgid "Customise"
 msgstr "Customise"
@@ -3098,6 +3126,14 @@ msgstr "Drafting post"
 msgid "Drafting the post…"
 msgstr "Drafting the post…"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Drafts may name customers, clients and partners."
+msgstr "Drafts may name customers, clients and partners."
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Drafts share the lesson, never the exact prompt, model or sequence that's working."
+msgstr "Drafts share the lesson, never the exact prompt, model or sequence that's working."
+
 #: src/app/(start)/start/page.jsx
 msgid "Drafts your project from what it finds"
 msgstr "Drafts your project from what it finds"
@@ -3239,6 +3275,10 @@ msgstr "Duct sends each job to the rung it deserves. Pick what sits on each one.
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Duct should open automatically. If it doesn’t, use the button below."
 msgstr "Duct should open automatically. If it doesn’t, use the button below."
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Duct won't save an X or LinkedIn draft that uses one, and says which."
+msgstr "Duct won't save an X or LinkedIn draft that uses one, and says which."
 
 #: src/components/connections/McpServers.jsx
 #~ msgid "Duct's agent stops using its tools straight away, in every project you own. Connecting it again means signing in again."
@@ -4457,6 +4497,10 @@ msgstr "just now"
 #: src/components/content/PlanBoard.jsx
 msgid "Kanban"
 msgstr "Kanban"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Keep client names out"
+msgstr "Keep client names out"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -5704,6 +5748,10 @@ msgstr "Notes"
 msgid "Nothing answered at that address. Check the server is running and the address is right."
 msgstr "Nothing answered at that address. Check the server is running and the address is right."
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Nothing banned. Drafts follow plain good writing."
+msgstr "Nothing banned. Drafts follow plain good writing."
+
 #: src/components/models/TierCard.jsx
 msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr "Nothing below this tier can run either — add a key to use {tierName}."
@@ -6263,6 +6311,10 @@ msgstr "PASS"
 msgid "Password-protected. Save a copy without one"
 msgstr "Password-protected. Save a copy without one"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Paste a few posts you wrote. Duct matches their voice on X and LinkedIn, never their topics."
+msgstr "Paste a few posts you wrote. Duct matches their voice on X and LinkedIn, never their topics."
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Paste a key first"
 msgstr "Paste a key first"
@@ -6270,6 +6322,10 @@ msgstr "Paste a key first"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
 msgstr "Paste a post that worked. Duct reads why it worked, then drafts a carousel for your brand on the same structure, and tells you what it kept."
+
+#: src/components/content/WritingSamples.jsx
+msgid "Paste a post you wrote and liked, exactly as it went out."
+msgstr "Paste a post you wrote and liked, exactly as it went out."
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Paste an API key to connect with one."
@@ -6439,6 +6495,10 @@ msgstr "Português"
 #: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr "Post"
+
+#: src/components/content/WritingSamples.jsx
+msgid "Post {n}"
+msgstr "Post {n}"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Post draft"
@@ -6647,6 +6707,10 @@ msgstr "Proposed by you"
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed target + payload"
 msgstr "Proposed target + payload"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "Protect the edge"
+msgstr "Protect the edge"
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Providers"
@@ -7046,6 +7110,10 @@ msgstr "Remove {removalTarget}?"
 #: src/components/connections/ProviderCard.jsx
 msgid "Remove key"
 msgstr "Remove key"
+
+#: src/components/content/WritingSamples.jsx
+msgid "Remove post {n}"
+msgstr "Remove post {n}"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Remove reply {n}"
@@ -8778,6 +8846,10 @@ msgstr "The key works, but the account has no credit"
 msgid "The last turn failed"
 msgstr "The last turn failed"
 
+#: src/components/content/VoiceRulesFields.jsx
+msgid "The list is full"
+msgstr "The list is full"
+
 #: src/app/(app)/connections/page.jsx
 msgid "The manager account wasn't saved."
 msgstr "The manager account wasn't saved."
@@ -9600,6 +9672,10 @@ msgstr "Visuals"
 msgid "Voice & messaging"
 msgstr "Voice & messaging"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Voice rules"
+msgstr "Voice rules"
+
 #: src/app/(app)/content/page.jsx
 msgid "waiting"
 msgstr "waiting"
@@ -9710,6 +9786,10 @@ msgstr "Week {number}"
 #: src/components/content/PlanDayOne.jsx
 msgid "What a freelancer's September actually costs"
 msgstr "What a freelancer's September actually costs"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "What an X or LinkedIn draft never does. Duct's defaults until you change them."
+msgstr "What an X or LinkedIn draft never does. Duct's defaults until you change them."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
@@ -9947,6 +10027,10 @@ msgstr "Write to me in"
 msgid "Writing post metadata"
 msgstr "Writing post metadata"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Writing samples"
+msgstr "Writing samples"
+
 #: src/lib/contentEvents.js
 msgid "Writing slide copy"
 msgstr "Writing slide copy"
@@ -9995,6 +10079,10 @@ msgstr "You added {serverName} by address, so Duct asks before every call to it.
 #: src/components/execution/ChangeSetCard.jsx
 msgid "You approved this"
 msgstr "You approved this"
+
+#: src/components/content/VoiceRulesFields.jsx
+msgid "You build in public: drafts may show exactly how it works."
+msgstr "You build in public: drafts may show exactly how it works."
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
