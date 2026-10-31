@@ -191,8 +191,8 @@ export default function AccountsTab({ projectId }) {
         <h3 className="text-sm font-semibold"><Trans>No accounts available yet</Trans></h3>
         <p className="mt-1 text-sm text-muted-foreground">
           <Trans>
-            Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link
-            it to this project.
+            Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then
+            refresh to link it to this project.
           </Trans>
         </p>
         <Button className="mt-4" asChild>

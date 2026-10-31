@@ -8,6 +8,7 @@ import PlanViewport from "@/components/content/PlanViewport";
 import { getPlan, listPlans } from "@/lib/contentApi";
 import { parseDate, planCovering } from "@/lib/contentSchedule";
 import { getActiveProjectId } from "@/lib/projects";
+import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
 
 /**
  * The plan manager: a plan_month session over one period's plan.
@@ -31,6 +32,8 @@ export default function NewPlanSessionPage() {
   const router = useRouter();
   const [setup, setSetup] = useState(null); // { projectId, plan, start, days }
   const [planId, setPlanId] = useState(null);
+  // The plan is written into the project the page opened on.
+  useLeaveOnProjectSwitch();
 
   useEffect(() => {
     const projectId = getActiveProjectId();

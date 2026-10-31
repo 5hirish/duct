@@ -43,6 +43,7 @@ export const PostStatus = Object.freeze({
   DRAFT:     "draft",     // saved/kept
   SCHEDULED: "scheduled",
   POSTED:    "posted",
+  FAILED:    "failed",    // PostBridge didn't publish it at its time; post.publish_error says why
   DISCARDED: "discarded",
 });
 
@@ -54,6 +55,7 @@ export const POST_STATUS_LABELS = Object.freeze({
   [PostStatus.DRAFT]:     msg`Draft`,
   [PostStatus.SCHEDULED]: msg`Scheduled`,
   [PostStatus.POSTED]:    msg`Posted`,
+  [PostStatus.FAILED]:    msg`Failed`,
   [PostStatus.DISCARDED]: msg`Discarded`,
 });
 

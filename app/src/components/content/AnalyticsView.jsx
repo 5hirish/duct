@@ -29,7 +29,7 @@ import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { getContentAnalytics } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
-import { dayKey, formatDate, formatNumber, titleCase, toDate } from "@/lib/format";
+import { compactNumber, dayKey, formatDate, formatNumber, titleCase, toDate } from "@/lib/format";
 
 // Sort keys are API-ish identifiers; these are what the buttons say.
 const SORT_LABELS = {
@@ -122,7 +122,7 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
   );
 
   // Breakdown by pillar / format — over posts attributed to our system.
-  const pillarData = useMemo(() => aggregateBy(rows, "pillar", prettify), [rows]);
+  const pillarData = useMemo(() => aggregateBy(rows, "pillar", titleCase), [rows]);
   const formatData = useMemo(() => aggregateBy(rows, "format_name", (f) => f || ""), [rows]);
 
   const rowCount = rows.length;
@@ -203,7 +203,7 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={compact} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={44} />
+                    <YAxis tickFormatter={compactNumber} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={44} />
                     <Tooltip content={<ChartTooltip />} />
                     <Area type="monotone" dataKey="views" stroke="var(--primary)" strokeWidth={2} fill="url(#viewsFill)" />
                   </AreaChart>
@@ -216,7 +216,7 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
             <ChartCard title={t`Top posts by views`}>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={topPosts} layout="vertical" margin={{ top: 4, right: 12, left: 8, bottom: 0 }}>
-                  <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <XAxis type="number" tickFormatter={compactNumber} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
                   <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.4 }} />
                   <Bar dataKey="view_count" radius={[0, 4, 4, 0]}>
@@ -360,7 +360,7 @@ function CategoryBars({ data }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 12, left: 8, bottom: 0 }}>
-        <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+        <XAxis type="number" tickFormatter={compactNumber} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
         <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
         <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.4 }} />
         <Bar dataKey="views" fill="var(--primary)" radius={[0, 4, 4, 0]} />

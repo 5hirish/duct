@@ -2325,8 +2325,8 @@ msgid "Connect a source"
 msgstr "Conectar uma fonte"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."
-msgstr "Conecte uma conta TikTok, Instagram ou YouTube no PostBridge, depois atualize para vinculá-la a este projeto."
+#~ msgid "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."
+#~ msgstr "Conecte uma conta TikTok, Instagram ou YouTube no PostBridge, depois atualize para vinculá-la a este projeto."
 
 #: src/app/(app)/connections/page.jsx
 msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
@@ -2360,6 +2360,10 @@ msgstr "Conecte sua conta do {vendor}"
 #: src/components/AppSidebar.jsx
 msgid "Connect your AI agent"
 msgstr "Conecte seu agente de IA"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then refresh to link it to this project."
+msgstr "Conecte sua conta do LinkedIn, X, TikTok, Instagram ou YouTube no PostBridge, depois atualize para vinculá-la a este projeto."
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Connect your PostBridge account"
@@ -3604,12 +3608,17 @@ msgstr "formato do rosto, estação de cores…"
 msgid "FAIL"
 msgstr "FALHA"
 
+#: src/app/(app)/content/page.jsx
+msgid "failed"
+msgstr "falhou"
+
 #: src/app/(app)/audit/seo/page.jsx
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
+#: src/lib/contentEnums.js
 msgid "Failed"
 msgstr "Falhou"
 
@@ -6523,6 +6532,14 @@ msgstr "Post agendado"
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "Chave de API do PostBridge"
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it at its scheduled time."
+msgstr "O PostBridge não publicou no horário agendado."
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it: {failureReason}"
+msgstr "O PostBridge não publicou: {failureReason}"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"

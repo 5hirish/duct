@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-26
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-31
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -65,7 +65,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 |---|---|
 | `agent_conversations` | one thread: agent type, project, run status, compaction summary, `seq` allocator, optional link to the artifact it edits |
 | `agent_events` | the thread's transcript (see above). `kind` is free text: `user`, `assistant`, `thinking`, `tool_use`, `tool_result`, `question`, `answer`, `context`, `compacted`, `memory_*`, `failure` |
-| `activity_logs` | see above. The project's audit trail: change-set transitions, GTM publishes, artifact versions. Not a mirror of tool calls |
+| `activity_logs` | see above. The project's audit trail: change-set transitions, GTM publishes, artifact versions, a scheduled post PostBridge failed (whose reason the post's card reads back). Not a mirror of tool calls |
 | `agent_contexts` | per project and agent, a JSON blob of working notes the agent carries between runs |
 | `artifacts` | every version of every output (brief, report, image): `group_id` is the identity, one immutable row per version; bytes in object storage, never a public URL |
 | `project_memories` | see above. Scopes `user`, `project`, `artifact` in one table |

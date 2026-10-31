@@ -6,6 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { listStyles } from "@/lib/contentApi";
 import LoadError from "@/components/LoadError";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ---------------------------------------------------------------------------
 // Live preview — render the real CSS inside an isolated iframe so global
