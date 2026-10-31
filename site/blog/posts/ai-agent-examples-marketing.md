@@ -89,7 +89,7 @@ One lesson from building it is worth passing on. The model was asked to do the s
 
 **The Monday read, because it needs read-only access and tells you in a week whether the agent reads your stack correctly.** Connect the tools you already pay for, let it write one brief, and check the brief against the dashboards you would have opened anyway. If the numbers match and the reading is right, move to the drop trace and the ranking check. Leave budget changes for last: not because they are dangerous behind an approval gate, but because you should trust the reading before you trust the proposal. The wider map, which jobs to hand over, which to keep and what one costs to run, is in [AI agents for marketing](/blog/ai-agents-for-marketing).
 
-The reason the reading jobs come first is the month on a client's Google Ads account that Duct's checks are modeled on, where most of the work went on establishing whether a number could be trusted at all and every serious defect looked healthy on a dashboard. The numbers are in [the agent vs chatbot guide](/blog/ai-agent-vs-chatbot-vs-automation), and the retrospective is the first paragraph of [checks.py](https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py).
+The reason the reading jobs come first: an agent that proposes changes from a wrong number is worse than no agent, and the worst wrong numbers look healthy on a dashboard. [The agent vs chatbot guide](/blog/ai-agent-vs-chatbot-vs-automation) shows three of them, and Duct's [check library](https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py) lists the questions it asks before any number reaches a brief.
 
 ## Which marketing jobs should you not give an agent yet?
 
