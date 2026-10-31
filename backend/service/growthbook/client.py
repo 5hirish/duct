@@ -1,7 +1,7 @@
 """GrowthBook REST API v1 — experimentation truth, read-only.
 
-The engagement read GrowthBook through its MCP server and found both live
-experiments had silently stopped bucketing users for 74 days while still
+The engagement read GrowthBook through its MCP server and found live
+experiments that had silently stopped bucketing users for weeks while still
 showing "running" — nothing in the platform flags it. That is the trap this
 connector exists to surface: an experiment's status is a setting, not a
 signal. Exposure has to be checked against the analysis dates.

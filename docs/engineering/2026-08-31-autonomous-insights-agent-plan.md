@@ -309,11 +309,11 @@ more here, not less, given the verified caching behaviour.
 ### 6.3 The verification subagent
 
 This is the part carried over from the Gads retrospective, and it is the product
-differentiator rather than a nice-to-have. That engagement's own accounting: **60%
-of 93 turns were establishing whether a number could be trusted at all; 16% were
-optimization.** Every serious defect found presented as healthy — experiments
-"running" with nobody bucketed, tags "firing" that failed at runtime, 23 of 36
-"upgrades" from 7 QA accounts.
+differentiator rather than a nice-to-have. By that engagement's own accounting, **most
+of its turns went on establishing whether a number could be trusted at all, and
+few on optimization.** Every serious defect found presented as healthy — experiments
+"running" with nobody bucketed, tags "firing" that failed at runtime, "upgrades"
+that were QA accounts.
 
 A `verify` subagent runs before synthesis and emits a `data_integrity` section that
 every artifact carries. Ship the checks the connected stack can actually support:

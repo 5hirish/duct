@@ -5,8 +5,9 @@
 // It replaces "No insights yet", which is the least useful true sentence
 // available: Duct already knows what it can reach, what it cannot, and which
 // questions are answerable right now. Two of the cards carry clearly-labelled
-// SAMPLES — real failure classes from a real account — so you can see what is
-// on offer before granting anything.
+// SAMPLES so you can see what is on offer before granting anything. The failure
+// classes are real; the numbers are invented, because the account they were
+// found in is a client's and its figures are not ours to publish.
 //
 // There is no check scoreboard here on purpose. On day one it would be an
 // empty board, and an empty board teaches nothing.
@@ -19,9 +20,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const SAMPLE_FINDINGS = [
-  { title: msg`Real upgrades: 13, not 36.`, detail: msg`23 came from your own team` },
-  { title: msg`Ads says 4,212. Stripe settled 1,890.`, detail: msg`Nobody had compared them` },
-  { title: msg`An A/B test live 74 days with nobody in it.`, detail: msg`Every dashboard called it healthy` },
+  { title: msg`Real upgrades: 9, not 31.`, detail: msg`22 came from your own team` },
+  { title: msg`Ads says 3,480. Stripe settled 1,520.`, detail: msg`Nobody had compared them` },
+  { title: msg`An A/B test live six weeks with nobody in it.`, detail: msg`Every dashboard called it healthy` },
 ];
 
 const SAMPLE_RUNNING = [

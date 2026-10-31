@@ -818,8 +818,8 @@ msgid "2–4 hrs"
 msgstr "2–4 horas"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "23 came from your own team"
-msgstr "23 vieram da sua própria equipe"
+msgid "22 came from your own team"
+msgstr "22 vieram da sua própria equipe"
 
 #: src/lib/usageApi.js
 msgid "30 days"
@@ -1119,8 +1119,8 @@ msgid "Ads API key"
 msgstr "Chave da API de anúncios"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Ads says 4,212. Stripe settled 1,890."
-msgstr "Anúncios dizem 4.212. Stripe liquidou 1.890."
+msgid "Ads says 3,480. Stripe settled 1,520."
+msgstr "Anúncios dizem 3.480. Stripe liquidou 1.520."
 
 #: src/app/(app)/audit/seo/page.jsx
 #: src/components/models/AdvancedSettings.jsx
@@ -1247,8 +1247,8 @@ msgid "Always say"
 msgstr "Sempre diga"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "An A/B test live 74 days with nobody in it."
-msgstr "Um teste A/B ativo há 74 dias sem ninguém nele."
+msgid "An A/B test live six weeks with nobody in it."
+msgstr "Um teste A/B ativo há seis semanas sem ninguém nele."
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "An answer worth keeping becomes an artifact here, and versions pile up as it is rewritten."
@@ -6476,8 +6476,8 @@ msgid "Real problems from a real account. Nothing lands here unchecked."
 msgstr "Problemas reais de uma conta real. Nada chega aqui sem ser verificado."
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Real upgrades: 13, not 36."
-msgstr "Atualizações reais: 13, não 36."
+msgid "Real upgrades: 9, not 31."
+msgstr "Atualizações reais: 9, não 31."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reasoning"

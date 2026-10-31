@@ -1,12 +1,12 @@
 """The integrity check library — prove the number before you use it.
 
-Why this exists, in one statistic from the engagement it is modelled on: of 93
-turns across a month, **60% were establishing whether a number could be trusted
-at all; 16% were optimisation.** Every serious defect found in that month
-presented as healthy — an experiment "running" with nobody bucketed for 74
-days, a tag that "fires" but fails at runtime, 23 of 36 "upgrades" coming from
-seven QA accounts in one country. No system in the stack alerted on any of it,
-because a dashboard renders a corrupt number in the same font as a correct one.
+Why this exists: in the Google Ads work it is modelled on, **most of the
+effort went on establishing whether a number could be trusted at all, not on
+improving anything.** Every serious defect presented as healthy — an experiment
+"running" with nobody bucketed, a tag that "fires" but fails at runtime,
+"upgrades" that were the team's own QA accounts. No system in the stack alerted
+on any of it, because a dashboard renders a corrupt number in the same font as
+a correct one.
 
 Design, and the one rule that matters
 -------------------------------------

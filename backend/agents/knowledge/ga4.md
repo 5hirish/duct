@@ -2,9 +2,8 @@
 
 - **GA4 ships with no internal-traffic filtering.** QA testers, staff, and dev
   machines land in production metrics by default — and they concentrate in
-  exactly the low-N segments decisions are made on (a real case: 23 of 36
-  "upgrades" came from 7 QA users). Before trusting any conversion count,
-  check for geo/user clusters that look like a QA team.
+  exactly the low-N segments decisions are made on. Before trusting any
+  conversion count, check for geo/user clusters that look like a QA team.
 - **Staging/dev hostnames often report into the production web stream.**
   Filter on the production `hostName` for any serious read.
 - **Validate organic against GSC before baselining.** Bot bursts can log 40×+

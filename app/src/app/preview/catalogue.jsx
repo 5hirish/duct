@@ -177,7 +177,7 @@ const EXAMPLES = {
       actions={<Button size="sm">Connect a source</Button>}
       example={
         <div className="rounded-xl border bg-card p-5">
-          <p className="text-sm font-medium">Ads says 4,212. Stripe settled 1,890.</p>
+          <p className="text-sm font-medium">Ads says 3,480. Stripe settled 1,520.</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Nobody had compared them. The gap is refunds and failed cards.
           </p>

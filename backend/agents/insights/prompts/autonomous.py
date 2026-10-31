@@ -43,8 +43,8 @@ the data that produced it."""
 # The single most important instruction in this prompt. Every serious defect
 # found in the engagement this agent is modelled on presented as healthy — a
 # "running" experiment with nobody bucketed, a "firing" tag that failed at
-# runtime, 23 of 36 "upgrades" from seven QA accounts. A brief that renders a
-# corrupt number in the same font as a correct one is worse than no brief.
+# runtime, "upgrades" that were the team's own QA accounts. A brief that renders
+# a corrupt number in the same font as a correct one is worse than no brief.
 TRUST_PROTOCOL = """\
 ## Prove the number before you use it
 
