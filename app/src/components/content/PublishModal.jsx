@@ -61,9 +61,10 @@ export default function PublishModal({ open, onClose, post, onPublished, suggest
     return out;
   }, [accounts]);
 
-  // The picker's own format, the same one minDateTime is written in below, so
-  // a suggested instant lands on the schedule the server will read back.
-  const suggestedValue = suggestedAt ? new Date(suggestedAt).toISOString().slice(0, 16) : "";
+  // The picker's own format, in the reader's zone like minDateTime below: the
+  // UTC slice this used to take showed a 9:00 Madrid slot as 07:00, and
+  // absoluteTime then sent 07:00 Madrid.
+  const suggestedValue = suggestedAt ? localPickerValue(suggestedAt) : "";
 
   useEffect(() => {
     if (!open || !post?.project_id) return;
