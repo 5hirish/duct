@@ -36,6 +36,8 @@ venv/
 **/.next/
 **/out/
 *.log
+# Written by the Railway build (backend/scripts/posthog_release.py).
+.posthog-release-id
 *.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*

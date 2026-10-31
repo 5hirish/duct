@@ -250,8 +250,8 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   pass through unbuffered; `tests/test_security_headers.py` holds both.
 - **Hosting:** Railway — auto-deploys from `main` via GitHub integration; `railway.json` defines Railpack build + uvicorn start.
   `railpack.json` sits beside it and configures the **builder**, where
-  `railway.json` configures **Railway**. It exists for one line —
-  `deploy.aptPackages: ["...", "libexpat1"]` — and every character of it is
+  `railway.json` configures **Railway**. It holds two lines. The first is
+  `deploy.aptPackages: ["...", "libexpat1"]`, and every character of it is
   load bearing, including the `"..."`. Railpack builds with a mise-installed
   CPython, then assembles a slim runtime image carrying only the apt packages
   it inferred from the dependency graph (`libpq5`, from psycopg). That
@@ -262,6 +262,13 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   rather than extend it; `"..."` is its spread syntax. Writing
   `["libexpat1"]` therefore drops `libpq5` and everything else Railpack
   worked out.
+  The second is `steps.build.commands`, which runs `scripts/posthog_release.py`
+  after Railpack's own build (the `"..."` again): it ties the deploy to a
+  PostHog release so an error names the commit that raised it. PostHog's
+  documented route resolves the release in a deploy workflow, and Railway's
+  deploy has none, so the build does it and leaves the id in
+  `.posthog-release-id` for `service/analytics.py`. Off without
+  `POSTHOG_CLI_API_KEY` (staging, self-host), and it never fails a build.
 - **Runtime commands must name the venv binary, never `poetry run`.**
   `startCommand` and `preDeployCommand` both run in the deploy image, and
   `poetry` is not a real program there — it is a mise shim onto a private

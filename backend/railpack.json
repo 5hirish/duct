@@ -1,5 +1,10 @@
 {
   "$schema": "https://schema.railpack.com",
+  "steps": {
+    "build": {
+      "commands": ["...", "/app/.venv/bin/python scripts/posthog_release.py"]
+    }
+  },
   "deploy": {
     "aptPackages": ["...", "libexpat1"]
   }

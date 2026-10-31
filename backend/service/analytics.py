@@ -15,13 +15,19 @@ desktop sidecar binds 127.0.0.1 — "a user's laptop is not a deployment"
 from __future__ import annotations
 
 import logging
+import os
 import time
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 from config import get_configs
 
 logger = logging.getLogger(__name__)
+
+# Written by the Railway build (scripts/posthog_release.py), which says why the
+# release is resolved there rather than in a deploy workflow.
+_RELEASE_ID_FILE = Path(__file__).resolve().parents[1] / ".posthog-release-id"
 
 # One person-property write per user per process per day. The identity rides
 # every request through the context below for free; the `$set` that keeps the
@@ -37,6 +43,21 @@ _client_built = False
 
 def _is_loopback(url: str) -> bool:
     return urlparse(url).hostname in {"localhost", "127.0.0.1", "::1"}
+
+
+def _release_properties() -> dict:
+    """``$release_id`` from the build, so an error says which deploy raised it.
+
+    The SDK reads ``POSTHOG_RELEASE_ID`` itself, and a super property would
+    override it, so the build's file counts only when the variable is unset.
+    """
+    if os.environ.get("POSTHOG_RELEASE_ID", "").strip():
+        return {}
+    try:
+        release_id = _RELEASE_ID_FILE.read_text().strip()
+    except OSError:
+        return {}
+    return {"$release_id": release_id} if release_id else {}
 
 
 def client():
@@ -62,7 +83,7 @@ def client():
         # (their GA4 numbers, ad spend, search terms). Model, tokens, latency
         # and cost are what we need; the content is theirs, not ours to keep.
         privacy_mode=True,
-        super_properties={"environment": cfg.app_env, "service": "backend"},
+        super_properties={"environment": cfg.app_env, "service": "backend", **_release_properties()},
     )
     return _client
 

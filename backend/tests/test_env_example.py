@@ -37,6 +37,9 @@ NOT_CONFIG_FIELDS = {
     "PORT",
     # Read straight from os.environ by the langchain-google-genai SDK.
     "GOOGLE_API_KEY",
+    # Read by scripts/posthog_release.py in the Railway build, never the server.
+    "POSTHOG_CLI_API_KEY",
+    "POSTHOG_CLI_PROJECT_ID",
 }
 
 # What counts as "a credential someone must be told about".
