@@ -87,14 +87,14 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
  * /api/agents/tiktok_studio/sessions. The hook owns opening the stream,
  * reconnecting and closing; this only knows the two modes' fields.
  *
- *   plan_month: { projectId, startDate? }
+ *   plan_month: { projectId, startDate?, days? }
  *   draft_post: { projectId, planId?, dayIndex?, topic?, pillar?, channel? }
  * plus the resume fields (conversationId, resume, startFresh, artifactType,
  * artifactId) in either mode.
  */
 export function contentSessionBody(mode, context = {}) {
   const {
-    projectId, startDate, planId, dayIndex, topic, pillar, channel, cloneUrl,
+    projectId, startDate, days, planId, dayIndex, topic, pillar, channel, cloneUrl,
     conversationId, resume, startFresh, artifactType, artifactId,
   } = context;
   const resumeBody = resumeFields({ conversationId, resume, startFresh, artifactType, artifactId });
@@ -103,6 +103,7 @@ export function contentSessionBody(mode, context = {}) {
       mode,
       project_id: projectId,
       ...(startDate ? { start_date: startDate } : {}),
+      ...(days ? { days } : {}),
       ...resumeBody,
     };
   }
@@ -369,6 +370,13 @@ export async function listSocialAccounts(projectId, platform) {
  * connects one. Status is { connected, own_key, is_owner }.
  */
 export const VENDOR = Object.freeze({ POSTBRIDGE: "post-bridge", APIFY: "apify" });
+
+// Where a user gets the key for each vendor. Every "connect" form links here,
+// and the Plan tab's checklist offers both, so the address is said once.
+export const VENDOR_HOME = Object.freeze({
+  [VENDOR.POSTBRIDGE]: "https://app.post-bridge.com",
+  [VENDOR.APIFY]: "https://console.apify.com",
+});
 
 export async function getVendorKeyStatus(vendor, projectId) {
   const url = new URL(`${BASE}/api/content/vendor-keys/${vendor}`);

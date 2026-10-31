@@ -685,6 +685,15 @@ agents/
     │                     words or a deleted post
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
+    ├── plan_period.py  — the period a plan manages: one post per date, at most 30. The
+    │                     person picks the month in progress (default; under a week left
+    │                     rolls over to the next month) or 7, 14, 30 days (PlanRequest
+    │                     start_date + days). One plan per period: a run opened on a plan,
+    │                     or while a plan covers its start date, manages that plan; a new
+    │                     plan stops short of the next one; submit_plan updates in place
+    │                     (days with a drafted post are kept). It used to insert every
+    │                     time, so each refinement in chat left a second plan beside the
+    │                     first. app/src/lib/contentSchedule.js mirrors these rules
     ├── performance.py  — the account's own history for a plan: type ranking (completion,
     │                     saves, shares; never likes), explore/exploit, graded bets, best
     │                     posting times. An unrecorded metric is unknown, never zero.

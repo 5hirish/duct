@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, CalendarDays } from "lucide-react";
+import { LayoutGrid, CalendarDays, CalendarPlus, PencilLine, Plus } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import {
   Select,
@@ -11,19 +11,62 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getPlan, listPlans, listPosts } from "@/lib/contentApi";
+import {
+  VENDOR,
+  connectVendorKey,
+  getBrandContext,
+  getPlan,
+  getVendorKeyStatus,
+  listLinkedAccounts,
+  listPlans,
+  listPosts,
+} from "@/lib/contentApi";
 import LoadError from "@/components/LoadError";
+import { Button } from "@/components/ui/button";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanCalendar from "@/components/content/PlanCalendar";
 import PlanStrategy from "@/components/content/PlanStrategy";
+import PlanDayOne from "@/components/content/PlanDayOne";
+import { dayKey, nextPlanStart, planCovering, planEndOf, planPeriodOptions, planStartOf } from "@/lib/contentSchedule";
+import { formatDateRange } from "@/lib/format";
+import { PlanPeriodMenu } from "@/components/content/PlanPeriodPicker";
+
+// Where a plan is made or managed: a plan_month session in the split
+// workspace. Nothing linked here before #274, so a new project had no way in
+// but the URL.
+export const NEW_PLAN_HREF = "/content/sessions/new";
+
+/**
+ * The session for one plan: `planId` reopens that plan to revise it (with its
+ * conversation, when it has one); `start` and `days` plan that period. With
+ * neither, the session manages the plan covering today, or makes one for the
+ * month in progress — the backend resolves the same way.
+ */
+export function planSessionHref({ planId, start, days } = {}) {
+  const params = new URLSearchParams();
+  if (planId) params.set("plan", planId);
+  else if (start) {
+    params.set("start", dayKey(start));
+    if (days) params.set("days", String(days));
+  }
+  const q = params.toString();
+  return q ? `${NEW_PLAN_HREF}?${q}` : NEW_PLAN_HREF;
+}
+
+function startOfToday() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
 
 /**
  * Inline plan board — plan selector + Kanban/Calendar toggle. Renders directly
  * inside the Content "Plan" tab (no separate route hop). Pass `initialPlanId`
- * to preselect (e.g. from a query param).
+ * to preselect (e.g. from a query param). Before the first plan it is
+ * `PlanDayOne`, whose "fix this" links call `onOpenTab(tab)`; a caller
+ * outside Content Studio's tabs leaves it out and the links navigate there.
  */
-export default function PlanBoard({ projectId, initialPlanId = "" }) {
-  const { t } = useLingui();
+export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab }) {
+  const { t, i18n } = useLingui();
   const router = useRouter();
   const [plans, setPlans] = useState([]);
   const [activeId, setActiveId] = useState(initialPlanId || "");
@@ -33,6 +76,9 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   const [calView, setCalView] = useState("month"); // "month" | "week"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // What the first-run screen shows back: null is "could not tell", which
+  // it renders differently from "nothing set".
+  const [sources, setSources] = useState({ brand: null, accounts: null, vendors: {} });
   // Bumped by the retry button. Both loads below key off it, because a
   // failure in either leaves the same empty board.
   const [reloadKey, setReloadKey] = useState(0);
@@ -45,8 +91,21 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
       try {
         const list = await listPlans(projectId);
         if (cancelled) return;
+        // Only a project with no plan shows its sources, so only it waits
+        // for them. Either failing leaves its part of the screen out.
+        if (list.length === 0) {
+          const [brand, accounts, postBridge, apify] = await Promise.all([
+            getBrandContext(projectId).catch(() => null),
+            listLinkedAccounts(projectId).catch(() => null),
+            getVendorKeyStatus(VENDOR.POSTBRIDGE, projectId).catch(() => null),
+            getVendorKeyStatus(VENDOR.APIFY, projectId).catch(() => null),
+          ]);
+          if (cancelled) return;
+          setSources({ brand, accounts, vendors: { [VENDOR.POSTBRIDGE]: postBridge, [VENDOR.APIFY]: apify } });
+        }
         setPlans(list);
-        setActiveId((prev) => prev || initialPlanId || list[0]?.id || "");
+        // The plan for today's period first: the Plan tab manages it.
+        setActiveId((prev) => prev || initialPlanId || planCovering(list, new Date())?.id || list[0]?.id || "");
       } catch (e) {
         if (!cancelled) setError(e.message || "");
       } finally {
@@ -84,6 +143,27 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   );
   const postCount = Array.isArray(plan?.days) ? plan.days.length : 0;
 
+  // What the toolbar offers follows the period, not the button's history: a
+  // plan still running (or ahead) is revised in place; with no plan for today
+  // there is a new one to make; and while one runs, the days after the last
+  // plan can be planned ahead. Both new-plan buttons ask how far ahead.
+  const today = startOfToday();
+  const selectedEnd = planEndOf(activeMeta);
+  const selectedLive = Boolean(selectedEnd && selectedEnd >= today);
+  const newOptions = planCovering(plans, today) ? [] : planPeriodOptions(today, plans);
+  const aheadFrom = nextPlanStart(plans, today);
+  const aheadOptions = aheadFrom ? planPeriodOptions(aheadFrom, plans) : [];
+  const startPlan = (period) => router.push(planSessionHref(period));
+  const periodLabel = formatDateRange(planStartOf(activeMeta), selectedEnd, { locale: i18n.locale });
+
+  // A key pasted into the first-run checklist. The save answers with the new
+  // status, so the row turns over without a second read; a refusal throws
+  // and the field shows the vendor's reason.
+  const connectVendor = useCallback(async (vendor, apiKey) => {
+    const status = await connectVendorKey(vendor, apiKey);
+    setSources((prev) => ({ ...prev, vendors: { ...prev.vendors, [vendor]: status } }));
+  }, []);
+
   // Pending card → open the creation split-view, carrying the day's primary channel.
   const reviseDay = useCallback((index) => {
     const day = Array.isArray(plan?.days) ? plan.days[index] : null;
@@ -109,9 +189,14 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
   }
   if (plans.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center">
-        <p className="text-sm text-muted-foreground"><Trans>No plan yet for this project.</Trans></p>
-      </div>
+      <PlanDayOne
+        brand={sources.brand}
+        accounts={sources.accounts}
+        vendors={sources.vendors}
+        onConnectVendor={connectVendor}
+        onStart={startPlan}
+        onOpenTab={onOpenTab || ((tab) => router.push(`/content?tab=${tab}`))}
+      />
     );
   }
 
@@ -143,6 +228,7 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
           )}
           {Array.isArray(plan?.days) && (
             <span className="hidden text-xs text-muted-foreground tabular-nums @md:inline">
+              {periodLabel && <>{periodLabel} · </>}
               <Plural value={postCount} one="# post" other="# posts" />
             </span>
           )}
@@ -156,6 +242,17 @@ export default function PlanBoard({ projectId, initialPlanId = "" }) {
             />
           )}
           <ViewToggle view={view} onChange={setView} />
+          <PlanPeriodMenu options={aheadOptions} onPick={startPlan} icon={CalendarPlus} variant="outline">
+            <Trans>Plan ahead</Trans>
+          </PlanPeriodMenu>
+          <PlanPeriodMenu options={newOptions} onPick={startPlan} icon={Plus} variant={selectedLive ? "outline" : "default"}>
+            <Trans>New plan</Trans>
+          </PlanPeriodMenu>
+          {selectedLive && (
+            <Button size="sm" className="h-8" onClick={() => router.push(planSessionHref({ planId: activeId }))}>
+              <PencilLine className="size-3.5" aria-hidden /> <Trans>Revise plan</Trans>
+            </Button>
+          )}
         </div>
       </div>
 

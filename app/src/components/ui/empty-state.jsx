@@ -67,28 +67,37 @@ export default function EmptyState({
         )}
       </div>
 
-      {example && (
-        // Framed like a specimen, not laid out like the page's own content.
-        // A centred rule and 55% opacity was the first attempt and it failed
-        // the light theme: dimmed near-black on white is still near-black, and
-        // an invented $6.41 that reads as live spending on a money page is a
-        // worse bug than the empty state it replaced. The dashed border, the
-        // recessed ground and a legend sitting on the border are three
-        // independent signals, none of which depend on a colour holding up.
-        <div className="relative rounded-xl border border-dashed bg-muted/40 px-4 pb-4 pt-6">
-          <span className="absolute -top-2 left-4 rounded-full border bg-background px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
-            {exampleLabel}
-          </span>
-          {/* The legend above is real text; the sample below is not. It is
-              invented data drawn in the same components as the real thing, so
-              a screen reader reading it would be read a figure the user never
-              spent. `inert` takes the tab stops with it — the example must not
-              be reachable by keyboard either. */}
-          <div inert={true} aria-hidden="true" className="select-none opacity-75">
-            {example}
-          </div>
-        </div>
-      )}
+      {example && <ExampleFrame label={exampleLabel}>{example}</ExampleFrame>}
+    </div>
+  );
+}
+
+/**
+ * A sample of a filled surface, framed so nobody mistakes it for their own.
+ * EmptyState's `example` slot, and exported for first-run screens that lay
+ * the sample out beside other content (`PlanDayOne`).
+ *
+ * A centred rule and 55% opacity was the first attempt and it failed the
+ * light theme: dimmed near-black on white is still near-black, and an
+ * invented $6.41 that reads as live spending on a money page is a worse bug
+ * than the empty state it replaced. The dashed border, the recessed ground
+ * and a legend sitting on the border are three independent signals, none of
+ * which depend on a colour holding up.
+ */
+export function ExampleFrame({ label = "Example", className, children }) {
+  return (
+    <div className={cn("relative rounded-xl border border-dashed bg-muted/40 px-4 pb-4 pt-6", className)}>
+      <span className="absolute -top-2 left-4 rounded-full border bg-background px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      {/* The legend above is real text; the sample below is not. It is
+          invented data drawn in the same components as the real thing, so
+          a screen reader reading it would be read a figure the user never
+          spent. `inert` takes the tab stops with it — the example must not
+          be reachable by keyboard either. */}
+      <div inert={true} aria-hidden="true" className="select-none opacity-75">
+        {children}
+      </div>
     </div>
   );
 }
