@@ -81,7 +81,7 @@ The lesson generalizes. Every step in an agentic workflow sits in a lane (code, 
 
 **You check the data before you trust the conclusion, and you measure the workflow before you change it.** Two different things.
 
-The first is the verifier's job, and the reason it exists is a month on a client's Google Ads account where most of the working turns went on establishing whether a number could be trusted at all, and every serious defect looked healthy on a dashboard (the numbers are in [the agent vs chatbot guide](/blog/ai-agent-vs-chatbot-vs-automation)). The checks are those lessons, written down once.
+The first is the verifier's job, and it exists because the wrong numbers that cost the most look healthy on a dashboard: a test marked running that assigns nobody, upgrades that are your own team testing checkout ([the agent vs chatbot guide](/blog/ai-agent-vs-chatbot-vs-automation) shows why only an agent catches them). The checks are those failure classes, written down once.
 
 The second is evals. The arithmetic error was found by replaying a recorded brief and the checklist waste by timing a real one; what keeps both fixed is the eval gate, where a change to the prompt or the tools runs trials against a baseline on synthetic accounts before it merges. [What is harness engineering](/blog/what-is-harness-engineering) covers how that gate works and what it costs to run.
 

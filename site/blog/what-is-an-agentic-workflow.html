@@ -43,7 +43,7 @@
   "datePublished": "2026-11-08T00:00:00+00:00",
   "dateModified": "2026-11-08T00:00:00+00:00",
   "articleSection": "Guide",
-  "wordCount": 2086,
+  "wordCount": 2081,
   "author": {
     "@type": "Person",
     "name": "Shirish Kadam",
@@ -445,7 +445,7 @@
 <p>The lesson generalizes. Every step in an agentic workflow sits in a lane (code, model, person), and it should be allowed to move lanes when a measurement says so. The design is the row underneath the boxes.</p>
 <h2 id="how-do-you-know-the-workflow-worked">How do you know the workflow worked?</h2>
 <p><strong>You check the data before you trust the conclusion, and you measure the workflow before you change it.</strong> Two different things.</p>
-<p>The first is the verifier's job, and the reason it exists is a month on a client's Google Ads account where most of the working turns went on establishing whether a number could be trusted at all, and every serious defect looked healthy on a dashboard (the numbers are in <a href="/blog/ai-agent-vs-chatbot-vs-automation">the agent vs chatbot guide</a>). The checks are those lessons, written down once.</p>
+<p>The first is the verifier's job, and it exists because the wrong numbers that cost the most look healthy on a dashboard: a test marked running that assigns nobody, upgrades that are your own team testing checkout (<a href="/blog/ai-agent-vs-chatbot-vs-automation">the agent vs chatbot guide</a> shows why only an agent catches them). The checks are those failure classes, written down once.</p>
 <p>The second is evals. The arithmetic error was found by replaying a recorded brief and the checklist waste by timing a real one; what keeps both fixed is the eval gate, where a change to the prompt or the tools runs trials against a baseline on synthetic accounts before it merges. <a href="/blog/what-is-harness-engineering">What is harness engineering</a> covers how that gate works and what it costs to run.</p>
 <h2 id="how-do-you-draw-your-own-weekly-report-as-an-agentic-workflow">How do you draw your own weekly report as an agentic workflow?</h2>
 <p><strong>Start from the manual version and label every step with a lane.</strong> Fifteen minutes, one sheet of paper:</p>
