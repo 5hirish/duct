@@ -55,6 +55,18 @@ export const STATUS_META = Object.freeze({
     accentClass: "border-success/30 bg-success/5",
     textClass: "text-success",
   },
+  // Destructive like Discarded, because it is the other way a post ends up
+  // not going out; the label tells the two apart, and only this one asks
+  // for something (publishing again once PostBridge's reason is fixed).
+  [PostStatus.FAILED]: {
+    label: POST_STATUS_LABELS[PostStatus.FAILED],
+    badgeVariant: "destructive",
+    solidClass: "bg-destructive text-destructive-foreground",
+    dotClass: "bg-destructive",
+    softClass: "bg-destructive/10 text-destructive dark:bg-destructive/20",
+    accentClass: "border-destructive/25 bg-destructive/5",
+    textClass: "text-destructive",
+  },
   [PostStatus.DISCARDED]: {
     label: POST_STATUS_LABELS[PostStatus.DISCARDED],
     badgeVariant: "destructive",
@@ -81,6 +93,7 @@ export const SCHEDULED_META = Object.freeze({
 export const STATUS_ORDER = Object.freeze([
   PostStatus.PENDING,
   PostStatus.DRAFT,
+  PostStatus.FAILED,
   PostStatus.POSTED,
   PostStatus.DISCARDED,
 ]);

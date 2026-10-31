@@ -3453,12 +3453,17 @@ msgstr ""
 msgid "FAIL"
 msgstr ""
 
+#: src/app/(app)/content/page.jsx
+msgid "failed"
+msgstr ""
+
 #: src/app/(app)/audit/seo/page.jsx
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
+#: src/lib/contentEnums.js
 msgid "Failed"
 msgstr ""
 
@@ -6244,6 +6249,14 @@ msgstr ""
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr ""
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it at its scheduled time."
+msgstr ""
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it: {failureReason}"
+msgstr ""
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"

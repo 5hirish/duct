@@ -3459,12 +3459,17 @@ msgstr "顔の形、パーソナルカラー…"
 msgid "FAIL"
 msgstr "失敗"
 
+#: src/app/(app)/content/page.jsx
+msgid "failed"
+msgstr "失敗"
+
 #: src/app/(app)/audit/seo/page.jsx
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
+#: src/lib/contentEnums.js
 msgid "Failed"
 msgstr "失敗しました"
 
@@ -6250,6 +6255,14 @@ msgstr "投稿スケジュール済み"
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "PostBridgeのAPIキー"
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it at its scheduled time."
+msgstr "PostBridgeは予定時刻に投稿しませんでした。"
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it: {failureReason}"
+msgstr "PostBridgeは投稿しませんでした: {failureReason}"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"
