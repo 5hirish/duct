@@ -464,7 +464,7 @@
 <figcaption><a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py">Duct, execution_tools.py</a></figcaption>
 </figure>
 <p>What may apply without a click is decided once, in <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py"><code>policy.py</code></a>: a short allowlist of reversible edits such as adding negative keywords or creating a GA4 audience, and only when you have set the project's autonomy to assisted or auto. Budget changes, bid changes and new keywords stay off that list because they spend money. Anything destructive, such as publishing a Tag Manager version, waits for a person at every level. A <a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_execution_policy.py">test file</a> holds all of that in place, so a future prompt change cannot quietly widen it.</p>
-<p>So the three questions, answered for Duct's own agent: it chooses its next step (yes, since August 31), it reads across every connected tool (yes), and it can change things (it can propose; you apply). The rest of the harness around that model, the limits, the memory and the evals, is a longer story, and it is in <a href="/blog/what-is-harness-engineering">What is harness engineering?</a>. The approval step gets its own guide: human in the loop for agents that can spend your budget.</p>
+<p>So the three questions, answered for Duct's own agent: it chooses its next step (yes, since August 31), it reads across every connected tool (yes), and it can change things (it can propose; you apply). The rest of the harness around that model, the limits, the memory and the evals, is a longer story, and it is in <a href="/blog/what-is-harness-engineering">What is harness engineering?</a>. The approval step gets its own guide: <a href="/blog/human-in-the-loop-ai-agents">human in the loop for agents that can spend your budget</a>.</p>
 <h2 id="when-is-automation-the-better-choice">When is automation the better choice?</h2>
 <p><strong>When the steps never change and the inputs can be trusted, automation wins on cost, speed and predictability, and you should not let anyone talk you out of it.</strong></p>
 <p>Anthropic's advice in the same post: "we recommend finding the simplest solution possible, and only increasing complexity when needed." Zapier says automation "is great for replacing repetitive or mundane tasks", and Make's <a href="https://www.make.com/en/blog/AI-agent-vs-chatbot">AI agent vs chatbot</a> describes agents as "a decision layer on top of your existing deterministic automation" rather than a replacement for it. That is the right picture. Keep the Zap that posts the numbers. Put the agent on the question the Zap cannot ask.</p>
@@ -500,6 +500,7 @@
 <nav class="article-nav" aria-label="More articles">
 <a class="article-nav-prev" href="/blog/what-is-harness-engineering">← What Is Harness Engineering? Lessons From a Shipping Agent</a>
 <a class="article-nav-all" href="/blog/">All posts</a>
+<a class="article-nav-next" href="/blog/human-in-the-loop-ai-agents">Human in the Loop: Why an Agent That Can Spend Your Budget Must Ask First →</a>
 </nav>
 </main>
 
