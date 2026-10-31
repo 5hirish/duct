@@ -47,7 +47,7 @@ import anyio.from_thread
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlmodel import Session
 from starlette.status import HTTP_409_CONFLICT
 
@@ -55,21 +55,25 @@ from agents.content.assessment import reassess_post
 from agents.content.channels import channel_payload, primary_channel, resolve as resolve_channel
 from agents.content.plan_period import PlanPeriod, requested_period
 from agents.content.publishing import (
+    MediaUnreadable,
     PostAlreadyOut,
     cancel,
-    create_request,
     is_queued_at_postbridge,
     is_text_only,
+    load_media,
     metrics_sync,
     no_sync_message,
+    pick_media,
     publish_blockers,
     publish_failure,
     push_edit,
     record_published,
+    send_post,
+    settle,
     went_out,
     words_changed,
 )
-from agents.content.video import cut_of, publish_asset, take_for, video_takes
+from agents.content.video import VIDEO_POST_TYPE, cut_of, take_for, video_takes
 from agents.content.events import ContentEvent
 from agents.content.styles import base_css, list_styles
 from agents.content.schema import (
@@ -94,8 +98,8 @@ from agents.engines import (
     resolve_image_run,
     resolve_job_run,
     resolve_video_run,
+    web_search_key,
 )
-from agents.models import Provider
 from agents.tiers import Job
 from agents.content.channels import Platform
 from config import get_configs
@@ -109,9 +113,11 @@ from models.content import (
     ContentPost,
     ContentSocialLink,
 )
+from models.activity import ActivityLog
 from models.auth import User
 from models.project import Project
 from service import storage
+from service.activity import log_activity
 from service.analytics import capture_event
 from service.auth import get_current_user, get_user_provider_keys
 from service.content_metrics import merge_manual_metrics, merge_synced_metrics
@@ -273,7 +279,6 @@ def _attach_image_run(
         # image-capable key. The tools report it in the words the user needs.
         sess.image_provider = None
         sess.image_api_key = ""
-        sess.gemini_api_key = ""
         return
     # Not "subscription": ``resolve_image_run`` refuses a plan credential
     # outright, so the only source here that costs Duct money is the hosted key.
@@ -281,7 +286,28 @@ def _attach_image_run(
         logger.info("content: images billed to Duct (%s/%s)", run.provider.value, run.source)
     sess.image_provider = run.provider
     sess.image_api_key = run.api_key
-    sess.gemini_api_key = run.api_key if run.provider is Provider.GOOGLE_GENAI else ""
+
+
+def _attach_search_key(session_id: str, run: JobRun, user_keys: dict | None = None, owner_id=None) -> None:
+    """The Gemini key behind Duct's own WebSearch, for a model with no search
+    of its own.
+
+    It used to be set only when the *images* resolved to Gemini, so a run on
+    OpenAI with OpenAI images had no web search at all, while the same user's
+    audit searched on their Gemini key. Same rule as the audit now
+    (``agents/engines.web_search_key``): the caller's key, Duct's only when
+    Duct is already paying for the run.
+    """
+    from agents.core.session import get_session as _get_agent_session
+
+    sess = _get_agent_session(session_id)
+    if sess is None:
+        return
+    if owner_id is None:
+        owner_id = getattr(sess, "user_id", None)
+    sess.gemini_api_key = web_search_key(
+        user_keys, stored_keys_for(owner_id), billed_to_duct=run.source == "cloud",
+    )
 
 
 def _attach_video_run(
@@ -391,6 +417,7 @@ def _runner_for(session_id: str, user_keys: dict | None) -> ContentRunner:
     run = _resolve_run_model(session_id, user_keys)
     _attach_image_run(session_id, user_keys)
     _attach_video_run(session_id, user_keys)
+    _attach_search_key(session_id, run, user_keys)
     return ContentRunner(api_key=run.api_key, provider=run.provider, model=run.model)
 
 
@@ -1170,6 +1197,9 @@ class PostOut(BaseModel):
     # Set when PostBridge published the post, which is when its counts sync —
     # so the metrics form shows them rather than asking for them.
     post_bridge_post_id: str = ""
+    # PostBridge's reason, while the post is failed; "" otherwise, and "" when
+    # PostBridge gave none (the card words that case itself).
+    publish_error: str = ""
     perf:          dict
     daily_perf:    list
     notes:         str
@@ -1198,6 +1228,7 @@ def _post_out(
     active_conversation_id: UUID | None = None,
     with_assessment: bool = False,
     video_takes: list | None = None,
+    publish_error: str = "",
 ) -> PostOut:
     """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
     return PostOut(
@@ -1245,6 +1276,7 @@ def _post_out(
         published_url=p.published_url,
         published_via=p.published_via,
         post_bridge_post_id=p.post_bridge_post_id or "",
+        publish_error=publish_error,
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
         notes=p.notes,
@@ -1313,7 +1345,119 @@ def _enrich_one(db: Session, post: ContentPost) -> PostOut:
     return _post_out(
         post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb, with_assessment=True,
         video_takes=video_takes(db, post),
+        publish_error=_failure_reasons(db, post.project_id, [post]).get(post.id, ""),
     )
+
+
+# ---------------------------------------------------------------------------
+# Scheduled posts whose time has passed (#311)
+# ---------------------------------------------------------------------------
+
+# How often one project's board may ask PostBridge about its overdue scheduled
+# posts, how many it asks about at once, and how long it waits. A board
+# re-lists on every visit and after every save; without the window each
+# listing would be a round of PostBridge calls, without the cap a backlog of a
+# hundred overdue posts would hold one listing for two hundred, and without
+# the deadline a slow PostBridge would be a slow board.
+_SETTLE_EVERY = 60.0     # seconds
+_SETTLE_BATCH = 10
+_SETTLE_TIMEOUT = 8.0    # seconds
+_settled_at: dict[UUID, float] = {}
+
+# The activity row a failed post's reason lives on. The post row has no column
+# for it, and a migration for one sentence that matters only until the post is
+# published again bought nothing activity_logs does not already record: what
+# happened to a post, when, and that nobody here did it.
+_POST_FAILED = "content_post.failed"
+_POST_TARGET = "content_post"
+
+
+def _settle_overdue(db: Session, proj: Project) -> None:
+    """Settle the project's scheduled posts whose time has passed against
+    PostBridge before the board lists them: posted, failed with PostBridge's
+    reason, or still waiting (publishing.settle). Best effort in every
+    direction: no key, a closed window, a PostBridge error or a slow answer
+    leaves every status as it was, and the listing goes ahead."""
+    from service.post_bridge import client_for_user
+
+    now = time.monotonic()
+    last = _settled_at.get(proj.id)
+    if last is not None and now - last < _SETTLE_EVERY:
+        return
+    overdue = db.execute(
+        select(ContentPost)
+        .where(
+            ContentPost.project_id == proj.id,
+            ContentPost.status == ContentStatus.SCHEDULED,
+            ContentPost.post_bridge_post_id != "",
+            # No stored time: scheduled by the agent before #272. The first
+            # answer gives it one, so it is asked about once, not every time.
+            or_(ContentPost.scheduled_at.is_(None), ContentPost.scheduled_at <= utcnow()),
+        )
+        .order_by(ContentPost.scheduled_at)
+        .limit(_SETTLE_BATCH)
+    ).scalars().all()
+    if not overdue:
+        return
+    _settled_at[proj.id] = now
+    try:
+        client = client_for_user(proj.user_id, db)
+    except ValueError:
+        return   # the owner's PostBridge key is gone; nothing to ask
+    try:
+        failed = anyio.from_thread.run(_settle_all, client, overdue)
+    except Exception:  # noqa: BLE001 — a PostBridge outage must not take the board down with it
+        logger.warning("content: settling scheduled posts failed for project %s", proj.id, exc_info=True)
+        db.rollback()
+        return
+    db.commit()
+    for post, reason in failed:
+        log_activity(
+            db, category="content", action=_POST_FAILED, source="auto",
+            project_id=proj.id, target_type=_POST_TARGET, target_id=str(post.id),
+            summary=f"PostBridge didn't publish “{post.topic or post.post_dir_slug}” at its scheduled time.",
+            data={"reason": reason, "post_bridge_post_id": post.post_bridge_post_id},
+        )
+
+
+async def _settle_all(client, posts: list[ContentPost]) -> list[tuple[ContentPost, str]]:
+    """Ask about every post at once, inside one deadline; return the ones
+    that failed, with PostBridge's reason. A post PostBridge errors on stays
+    as it was and the others still settle."""
+    async with client as pb:
+        outcomes = await asyncio.wait_for(
+            asyncio.gather(*(settle(pb, p) for p in posts), return_exceptions=True),
+            timeout=_SETTLE_TIMEOUT,
+        )
+    failed: list[tuple[ContentPost, str]] = []
+    for post, outcome in zip(posts, outcomes):
+        if isinstance(outcome, BaseException):
+            logger.warning("content: couldn't settle post %s: %s", post.id, outcome)
+        elif outcome is not None:
+            failed.append((post, outcome))
+    return failed
+
+
+def _failure_reasons(db: Session, project_id: UUID, posts) -> dict[UUID, str]:
+    """PostBridge's reason for each failed post among ``posts``, from the
+    newest activity row that marked it failed."""
+    failed_ids = [str(p.id) for p in posts if p.status == ContentStatus.FAILED]
+    if not failed_ids:
+        return {}
+    rows = db.execute(
+        select(ActivityLog.target_id, ActivityLog.data)
+        .where(
+            ActivityLog.project_id == project_id,
+            ActivityLog.target_type == _POST_TARGET,
+            ActivityLog.action == _POST_FAILED,
+            ActivityLog.target_id.in_(failed_ids),
+        )
+        .order_by(ActivityLog.created_at.desc())
+    ).all()
+    reasons: dict[UUID, str] = {}
+    for target_id, data in rows:
+        reasons.setdefault(UUID(target_id), str((data or {}).get("reason") or ""))
+    return reasons
 
 
 def _rerender_slides(post: ContentPost) -> None:
@@ -1339,7 +1483,8 @@ def list_posts(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[PostOut]:
-    _project_for_user(db, user, project_id)
+    proj = _project_for_user(db, user, project_id)
+    _settle_overdue(db, proj)
     stmt = select(ContentPost).where(ContentPost.project_id == project_id)
     if plan_id is not None:
         stmt = stmt.where(ContentPost.plan_id == plan_id)
@@ -1353,8 +1498,12 @@ def list_posts(
     rows = db.execute(stmt).scalars().all()
     by_id = _format_map(db, project_id)
     thumbs = _thumb_map(db, [r.id for r in rows])
+    reasons = _failure_reasons(db, project_id, rows)
     return [
-        _post_out(r, fmt=_fmt_for(r, by_id), thumbnail_url=thumbs.get(r.id, ""))
+        _post_out(
+            r, fmt=_fmt_for(r, by_id), thumbnail_url=thumbs.get(r.id, ""),
+            publish_error=reasons.get(r.id, ""),
+        )
         for r in rows
     ]
 
@@ -1388,6 +1537,7 @@ def get_post(
         active_conversation_id=active_conversation_id,
         with_assessment=True,
         video_takes=video_takes(db, post),
+        publish_error=_failure_reasons(db, post.project_id, [post]).get(post.id, ""),
     )
 
 
@@ -2486,87 +2636,48 @@ async def publish_post_route(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Upload the post's media to PostBridge, then create the post. A video
-    post sends its chosen cut; a text post with no slides goes out as words
-    alone."""
+    """Upload the post's media to PostBridge, then create the post. What goes
+    is the agent's choice too (publishing.pick_media): a video post's cut, a
+    slideshow's composed slides, a text post's words alone."""
+    from service.post_bridge import PostBridgeAPIError, client_for_user
+
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
     proj = _project_for_user(db, user, post.project_id)
     blockers = publish_blockers(post)
     if blockers:
         raise HTTPException(400, " ".join(blockers))
 
-    if post.post_type == "video":
-        # A video post sends its cut and nothing else — not the keyframes or
-        # references that also carry its id. Read through storage.get_bytes,
-        # which serves R2 and local paths alike.
-        clip = publish_asset(db, post)
-        if clip is None:
-            raise HTTPException(400, "Make a clip for this video post before publishing it.")
-        data = storage.get_bytes(clip.url)
-        if not data:
-            raise HTTPException(500, "The clip for this post couldn't be loaded.")
-        media = [(data, clip.filename or "clip.mp4", clip.mime_type or "video/mp4")]
-        result = await _publish_media(db, post, proj, body, media)
-        capture_event("content_post_published", {"post_type": post.post_type, "is_scheduled": body.scheduled_at is not None})
-        return result
-
-    text_only = is_text_only(post)
-    asset_rows = [] if text_only else db.execute(
-        select(ContentAsset)
-        .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
-        .order_by(ContentAsset.created_at)
-    ).scalars().all()
-    if not asset_rows and not text_only:
+    # A person can't render a slide from here, only the agent can, so a
+    # single-picture slide with no render goes as its photo rather than
+    # blocking the button; one that needs composing is named instead.
+    pick = pick_media(db, post, allow_uncomposed=True)
+    if post.post_type == VIDEO_POST_TYPE and not pick.files:
+        raise HTTPException(400, "Make a clip for this video post before publishing it.")
+    if pick.missing:
+        raise HTTPException(400, (
+            f"These slides need composing before they can go out: {', '.join(pick.missing)}. "
+            "Ask the agent to render them, then publish again."
+        ))
+    if not pick.files and not is_text_only(post):
         raise HTTPException(400, "Generate or upload at least one image before publishing.")
-
-    cfg = get_configs()
-    base = Path(cfg.uploads_dir or "/app/uploads")
-    media: list[tuple[bytes, str, str]] = []
-    for a in asset_rows:
-        if not a.url.startswith("/uploads/"):
-            continue
-        disk = base / a.url[len("/uploads/"):]
-        if not disk.exists():
-            raise HTTPException(500, f"Asset bytes missing on disk for {a.url}.")
-        media.append((disk.read_bytes(), a.filename or disk.name, a.mime_type or "image/png"))
-    if not media and not text_only:
-        raise HTTPException(400, "Couldn't find any uploaded image files for this post.")
-    result = await _publish_media(db, post, proj, body, media)
-    capture_event("content_post_published", {"post_type": post.post_type, "is_scheduled": body.scheduled_at is not None})
-    return result
-
-
-async def _publish_media(
-    db: Session,
-    post: ContentPost,
-    proj,
-    body: PublishRequest,
-    media: list[tuple[bytes, str, str]],
-) -> PostOut:
-    """Upload ``media`` (bytes, name, mime) to PostBridge in order, create the
-    post, and record what PostBridge answered."""
-    from service.post_bridge import PostBridgeAPIError, client_for_user
+    try:
+        media = await load_media(pick.files)
+    except MediaUnreadable as exc:
+        logger.warning("publish: %s for post %s", exc, post.id)
+        raise HTTPException(500, "Some of this post's media couldn't be loaded. Try regenerating it.") from exc
 
     try:
         client = client_for_user(proj.user_id, db)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
-
     try:
         async with client as pb:
-            media_ids: list[str] = []
-            for data, name, mime in media:
-                upload = await pb.create_upload_url(name=name, mime_type=mime, size_bytes=len(data))
-                await pb.upload_media(data, upload.upload_url, mime)
-                media_ids.append(upload.media_id)
-
-            resp = await pb.create_post(create_request(
-                post,
+            resp = await send_post(
+                pb, post, media,
                 social_account_ids=body.social_account_ids,
-                media_ids=media_ids,
                 scheduled_at=body.scheduled_at,
                 tiktok_draft=body.tiktok_draft,
-            ))
+            )
     except PostBridgeAPIError as exc:
         raise _pb_http_error(exc) from exc
 
@@ -2577,6 +2688,7 @@ async def _publish_media(
     db.commit()
     db.refresh(post)
     _invalidate_analytics(post.project_id)
+    capture_event("content_post_published", {"post_type": post.post_type, "is_scheduled": body.scheduled_at is not None})
     return _enrich_one(db, post)
 
 

@@ -2301,8 +2301,8 @@ msgid "Connect a source"
 msgstr "Eine Quelle verbinden"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."
-msgstr "Verbinde ein TikTok-, Instagram- oder YouTube-Konto in PostBridge, dann aktualisiere, um es mit diesem Projekt zu verknüpfen."
+#~ msgid "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."
+#~ msgstr "Verbinde ein TikTok-, Instagram- oder YouTube-Konto in PostBridge, dann aktualisiere, um es mit diesem Projekt zu verknüpfen."
 
 #: src/app/(app)/connections/page.jsx
 msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
@@ -2336,6 +2336,10 @@ msgstr "Verbinde dein {vendor}-Konto"
 #: src/components/AppSidebar.jsx
 msgid "Connect your AI agent"
 msgstr "Verbinde deinen KI-Agenten"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then refresh to link it to this project."
+msgstr "Verbinde dein LinkedIn-, X-, TikTok-, Instagram- oder YouTube-Konto in PostBridge, dann aktualisiere, um es mit diesem Projekt zu verknüpfen."
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Connect your PostBridge account"
@@ -3564,12 +3568,17 @@ msgstr "Gesichtsform, Farbtyp…"
 msgid "FAIL"
 msgstr "FEHLGESCHLAGEN"
 
+#: src/app/(app)/content/page.jsx
+msgid "failed"
+msgstr "fehlgeschlagen"
+
 #: src/app/(app)/audit/seo/page.jsx
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
+#: src/lib/contentEnums.js
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
@@ -6462,6 +6471,14 @@ msgstr "Beitrag geplant"
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "PostBridge-API-Schlüssel"
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it at its scheduled time."
+msgstr "PostBridge hat den Beitrag nicht zur geplanten Zeit veröffentlicht."
+
+#: src/components/content/PostCard.jsx
+msgid "PostBridge didn't publish it: {failureReason}"
+msgstr "PostBridge hat den Beitrag nicht veröffentlicht: {failureReason}"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"

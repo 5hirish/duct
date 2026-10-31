@@ -2776,6 +2776,19 @@ export const SCENES = [
     ),
   },
   {
+    id: "post-card-failed",
+    state: "a scheduled post PostBridge failed · with and without a reason",
+    group: "PostCard",
+    title: "A post that didn't go out",
+    note: "The board asks PostBridge about a scheduled post once its time has passed (issue 311). A failure gets the Failed chip and PostBridge's own sentence under the title; when PostBridge gave none, the card says so in its own words. Publishing again is the way out.",
+    render: () => (
+      <div className="grid max-w-md grid-cols-2 gap-4 p-5">
+        <PostCard post={{ ...X_THREAD_POST, id: "failed-1", status: "failed", publish_error: "The X account needs reconnecting." }} />
+        <PostCard post={{ ...LINKEDIN_POST, id: "failed-2", status: "failed", publish_error: "" }} />
+      </div>
+    ),
+  },
+  {
     id: "post-metrics-x",
     state: "X post published through PostBridge · nothing syncs",
     group: "PostMetricsForm",

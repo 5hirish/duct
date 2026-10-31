@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-import httpx
+from datetime import datetime, timedelta
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -30,55 +31,12 @@ from models.content import ContentPost
 from models.membership import ProjectMember
 from models.project import Project
 from service.membership import ROLE_OWNER
-from service.post_bridge import PostBridgeClient
 from tests.conftest import make_sqlite_engine
+from tests.fakes import PostBridgeQueue
+from utils.dates import utcnow
 
 WHEN = "2026-10-01T09:30:00Z"
-PB_ID = "pb_post_1"
-
-
-class PostBridgeQueue:
-    """PostBridge's posts endpoints over a dict, recording every request."""
-
-    def __init__(self) -> None:
-        self.posts: dict[str, dict] = {}
-        self.requests: list[tuple[str, str, dict | None]] = []
-        self.create_status = "scheduled"
-        self.down = False
-
-    def __call__(self, req: httpx.Request) -> httpx.Response:
-        body = json.loads(req.read()) if req.content else None
-        self.requests.append((req.method, req.url.path, body))
-        if self.down:
-            return httpx.Response(503, json={"message": "maintenance"})
-        if req.method == "POST" and req.url.path == "/v1/posts":
-            post = {"id": PB_ID, "caption": body["caption"], "status": self.create_status,
-                    "scheduled_at": body.get("scheduled_at"), "social_accounts": body["social_accounts"]}
-            if self.create_status == "failed":
-                post["warnings"] = ["The X account needs reconnecting."]
-            self.posts[PB_ID] = post
-            return httpx.Response(200, json=post)
-        post_id = req.url.path.removeprefix("/v1/posts/")
-        post = self.posts.get(post_id)
-        if post is None:
-            return httpx.Response(404, json={"message": "Post not found"})
-        if req.method == "GET":
-            return httpx.Response(200, json=post)
-        if req.method == "PATCH":
-            post.update(body)
-            return httpx.Response(200, json=post)
-        if req.method == "DELETE":
-            if post["status"] not in ("scheduled", "draft"):
-                return httpx.Response(400, json={"message": "Can only delete scheduled or draft posts"})
-            del self.posts[post_id]
-            return httpx.Response(200, json={})
-        raise AssertionError(f"unexpected PostBridge call: {req.method} {req.url.path}")
-
-    def client(self, *_args) -> PostBridgeClient:
-        return PostBridgeClient("sk-fake", client=httpx.AsyncClient(transport=httpx.MockTransport(self)))
-
-    def calls(self) -> list[tuple[str, str]]:
-        return [(method, path) for method, path, _ in self.requests]
+PB_ID = PostBridgeQueue.POST_ID
 
 
 # ---------------------------------------------------------------------------
@@ -327,3 +285,101 @@ def test_the_agents_rewrite_of_a_queued_post_reaches_the_queue(engine, db, proje
     db.expire_all()
     assert db.get(ContentPost, post.id).status == ContentStatus.SCHEDULED
 
+
+
+# ---------------------------------------------------------------------------
+# A scheduled post whose time has passed (#311)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def fresh_settle_window(monkeypatch):
+    """Each test opens the board as if for the first time this minute."""
+    monkeypatch.setattr(content_routes, "_settled_at", {})
+
+
+def _overdue(db, project, queue, remote_status: str, **remote) -> ContentPost:
+    post = _queued(db, project, queue)
+    post.scheduled_at = utcnow() - timedelta(hours=2)
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    queue.posts[PB_ID].update(status=remote_status, scheduled_at=post.scheduled_at.isoformat(), **remote)
+    return post
+
+
+def _board(db, owner, project) -> dict[str, dict]:
+    res = _api(db, owner).get("/api/content/posts", params={"project_id": str(project.id)})
+    assert res.status_code == 200, res.text
+    return {card["id"]: card for card in res.json()}
+
+
+def test_an_overdue_post_postbridge_published_is_posted_when_the_board_loads(db, project, owner, queue):
+    post = _overdue(db, project, queue, "posted")
+    queue.results[PB_ID] = [{"id": "res_1", "post_id": PB_ID, "success": True, "social_account_id": 101,
+                             "platform_data": {"url": "https://x.com/kestrel/status/1"}}]
+
+    card = _board(db, owner, project)[str(post.id)]
+
+    assert card["status"] == ContentStatus.POSTED
+    assert card["published_url"] == "https://x.com/kestrel/status/1"
+    # When it went out is when it was due, not when somebody next looked.
+    assert card["posted_at"] == card["scheduled_at"]
+
+
+def test_an_overdue_post_postbridge_failed_shows_its_reason(db, project, owner, queue):
+    post = _overdue(db, project, queue, "failed")
+    queue.results[PB_ID] = [{"id": "res_1", "post_id": PB_ID, "success": False, "social_account_id": 101,
+                             "error": {"message": "The X account needs reconnecting."}}]
+
+    card = _board(db, owner, project)[str(post.id)]
+
+    assert card["status"] == ContentStatus.FAILED
+    assert card["publish_error"] == "The X account needs reconnecting."
+    detail = _api(db, owner).get(f"/api/content/posts/{post.id}").json()
+    assert detail["publish_error"] == "The X account needs reconnecting."
+    # Failed is not queued: publishing again is allowed, and editing it no
+    # longer reaches PostBridge's copy.
+    assert _edit(db, owner, post, caption="Shipped it, again.").status_code == 200
+    assert ("PATCH", f"/v1/posts/{PB_ID}") not in queue.calls()
+
+
+def test_a_postbridge_outage_never_fails_the_board(db, project, owner, queue):
+    post = _overdue(db, project, queue, "posted")
+    queue.down = True
+
+    card = _board(db, owner, project)[str(post.id)]
+
+    assert card["status"] == ContentStatus.SCHEDULED
+
+
+def test_the_board_asks_postbridge_once_a_window_and_only_about_overdue_posts(db, project, owner, queue):
+    post = _overdue(db, project, queue, "scheduled")
+    later = ContentPost(
+        project_id=project.id, post_dir_slug="2026-10-30-001", post_type=TEXT_POST_TYPE, caption="Later.",
+        platforms=["twitter"], status=ContentStatus.SCHEDULED.value, post_bridge_post_id="pb_later",
+        scheduled_at=utcnow() + timedelta(days=1),
+    )
+    db.add(later)
+    db.commit()
+
+    _board(db, owner, project)
+    _board(db, owner, project)
+
+    assert queue.calls() == [("GET", f"/v1/posts/{PB_ID}")]
+    db.refresh(post)
+    assert post.status == ContentStatus.SCHEDULED
+
+
+def test_a_post_scheduled_before_its_time_was_stored_learns_it(db, project, owner, queue):
+    """The agent scheduled posts without storing a time before #272; the
+    first answer places them on the calendar, and they are left alone until
+    they are due."""
+    post = _queued(db, project, queue)
+    upcoming = (utcnow() + timedelta(days=3)).replace(microsecond=0)
+    queue.posts[PB_ID]["scheduled_at"] = upcoming.isoformat()
+
+    card = _board(db, owner, project)[str(post.id)]
+
+    assert card["status"] == ContentStatus.SCHEDULED
+    assert datetime.fromisoformat(card["scheduled_at"]) == upcoming

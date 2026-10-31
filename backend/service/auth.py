@@ -87,7 +87,14 @@ async def get_user_provider_keys(
     from agents.core.codex import is_subscription_credential, pack_subscription_credential
 
     if openai_key and is_subscription_credential(openai_key):
-        openai_key = pack_subscription_credential(openai_key, openai_account_id or "")
+        if get_configs().chatgpt_auth_enabled:
+            openai_key = pack_subscription_credential(openai_key, openai_account_id or "")
+        else:
+            # The kill switch has to hold here, not only in the app: a shell
+            # signed in before the switch went off keeps sending its token,
+            # and hiding the card stops nobody. Dropped rather than refused,
+            # so a stored API key underneath still serves the run.
+            openai_key = None
     supplied = {
         Provider.ANTHROPIC: anthropic_key,
         Provider.OPENAI: openai_key,

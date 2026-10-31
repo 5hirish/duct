@@ -14,6 +14,7 @@ import {
   getPost,
   listLinkedAccounts,
   listSocialAccounts,
+  localPickerValue,
   publishPost,
 } from "@/lib/contentApi";
 import { PLATFORM_LABELS, Platform, PostType } from "@/lib/contentEnums";
@@ -135,7 +136,7 @@ export default function PublishModal({ open, onClose, post, onPublished, suggest
   }
 
   const hasAccounts = accounts.length > 0;
-  const minDateTime = new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16);
+  const minDateTime = localPickerValue(new Date(Date.now() + 5 * 60_000));
 
   // A publish in flight must not be dismissable — hence the guards on
   // onOpenChange, outside-click and Escape rather than a bare onClose.

@@ -330,12 +330,36 @@ function browserTimeZone() {
 }
 
 /**
- * POST /api/content/posts/{id}/publish — uploads each linked image to
+ * A schedule time as an absolute instant. The picker's value
+ * ("2026-10-02T09:00") has no zone, and the server read it as UTC, so a
+ * post set for 9:00 in Madrid went out at 11:00. JavaScript reads that
+ * shape as the reader's own local time, which is what they picked.
+ */
+export function absoluteTime(value) {
+  if (!value) return value;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toISOString();
+}
+
+/**
+ * A moment as the `datetime-local` picker's value, in the reader's zone:
+ * "2026-10-02T09:00". `toISOString` would give UTC, and the picker would show
+ * a time hours off from the one meant.
+ */
+export function localPickerValue(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * POST /api/content/posts/{id}/publish — uploads the post's media to
  * PostBridge then creates the post.
  *
  * @param postId          Content post UUID
  * @param socialAccountIds Numeric PostBridge social account IDs
- * @param scheduledAt     ISO 8601 string (optional; omit to post now)
+ * @param scheduledAt     the picker's local time (optional; omit to post now)
  * @param tiktokDraft     true → land as a TikTok draft, false → schedule/post
  */
 export async function publishPost(postId, { socialAccountIds, scheduledAt, tiktokDraft = false } = {}) {
@@ -346,7 +370,7 @@ export async function publishPost(postId, { socialAccountIds, scheduledAt, tikto
       headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         social_account_ids: socialAccountIds,
-        ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
+        ...(scheduledAt ? { scheduled_at: absoluteTime(scheduledAt) } : {}),
         tiktok_draft: tiktokDraft,
       }),
     },

@@ -62,6 +62,14 @@ function AppLayoutInner({ children }) {
     // a valid auth token, so it's a no-op when signed out.
     migrateFromLegacyProfile();
     hydrateProjectsFromBackend();
+    // A project can be made outside this tab — by a coding agent over MCP, or
+    // on another device — and the list was only pulled at mount, so it stayed
+    // missing from the switcher until a reload. Coming back to the tab is
+    // when someone would look for it.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") hydrateProjectsFromBackend();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     // The profile's interface language, on a device that has not seen it
     // yet: the server frame rendered from the cookie (or the browser), so if
     // the profile says otherwise, write the cookie and re-render once.
@@ -75,6 +83,7 @@ function AppLayoutInner({ children }) {
     return () => {
       alive = false;
       stopCatchUp();
+      document.removeEventListener("visibilitychange", onVisible);
     };
     // `router` is stable; this runs once per mount on purpose.
     // eslint-disable-next-line react-hooks/exhaustive-deps

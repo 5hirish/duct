@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, CopyPlus, Plus } from "lucide-react";
@@ -11,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   listPosts,
 } from "@/lib/contentApi";
-import { getActiveProjectId, getActiveProject } from "@/lib/projects";
+import { getProjectById } from "@/lib/projects";
+import { useActiveProjectId } from "@/hooks/useActiveProjectId";
 import BrandContextForm from "@/components/content/BrandContextForm";
 import AccountsTab from "@/components/content/AccountsTab";
 import FormatLibrary from "@/components/content/FormatLibrary";
@@ -52,33 +53,23 @@ const TAB_LABELS = {
 
 export default function ContentLandingPage() {
   const { t, i18n } = useLingui();
-  const [tab,        setTab]        = useState("plan");
-  const [projectId,  setProjectId]  = useState(null);
-  const [projectName, setProjectName] = useState("");
-  const [error,      setError]      = useState("");
+  const [tab, setTab] = useState("plan");
+  const projectId = useActiveProjectId();
+  const project = useMemo(() => (projectId ? getProjectById(projectId) : null), [projectId]);
+  const projectName = project?.profile?.company?.name || project?.name || t`Project`;
 
+  // A link from outside the hub (the plan board's first-run fixes) names its
+  // tab; read once here rather than with useSearchParams, which would make the
+  // whole hub suspend for a value only the first render needs.
   useEffect(() => {
-    const id = getActiveProjectId();
-    if (!id) {
-      setError(t`Select a project in the sidebar to use the content agent.`);
-      return;
-    }
-    setProjectId(id);
-    // A link from outside the hub (the plan board's first-run fixes) names
-    // its tab; read once here rather than with useSearchParams, which would
-    // make the whole hub suspend for a value only the first render needs.
     const wanted = new URLSearchParams(window.location.search).get("tab");
     if (TABS.includes(wanted)) setTab(wanted);
-    const p = getActiveProject();
-    setProjectName(p?.profile?.company?.name || p?.name || t`Project`);
-    // `t` follows the locale; this runs once on mount on purpose.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (error) {
+  if (projectId === "") {
     return (
       <div className="max-w-2xl mx-auto py-12 px-6 text-center">
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="text-sm text-muted-foreground"><Trans>Select a project in the sidebar to use the content agent.</Trans></p>
       </div>
     );
   }
@@ -123,17 +114,22 @@ export default function ContentLandingPage() {
         </div>
       </nav>
 
-      {tab === "plan"      && <PlanTab      projectId={projectId} onOpenTab={setTab} />}
-      {tab === "posts"     && <PostsTab     projectId={projectId} />}
-      <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
-        {tab === "analytics" && (
-          <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
-        )}
-        {tab === "discover"  && <DiscoverPage projectId={projectId} />}
-      </Suspense>
-      {tab === "library"   && <LibraryTab   projectId={projectId} />}
-      {tab === "brand"     && <BrandTab     projectId={projectId} />}
-      {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
+      {/* Keyed on the project so a switch from the sidebar remounts the tab:
+          each one loads its project's data on mount, and the Posts tab's
+          loading flag would otherwise never reset for the new project. */}
+      <div key={projectId}>
+        {tab === "plan"      && <PlanTab      projectId={projectId} onOpenTab={setTab} />}
+        {tab === "posts"     && <PostsTab     projectId={projectId} />}
+        <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+          {tab === "analytics" && (
+            <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
+          )}
+          {tab === "discover"  && <DiscoverPage projectId={projectId} />}
+        </Suspense>
+        {tab === "library"   && <LibraryTab   projectId={projectId} />}
+        {tab === "brand"     && <BrandTab     projectId={projectId} />}
+        {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
+      </div>
     </div>
   );
 }
@@ -202,13 +198,14 @@ function LibraryTab({ projectId }) {
 
 // Drafts come first and say "waiting": a draft nobody has answered is the
 // drafts queue (issue #266), and the tab opens on it while it has anything.
-const POST_FILTERS = [PostStatus.DRAFT, "all", PostStatus.POSTED, PostStatus.SCHEDULED];
+const POST_FILTERS = [PostStatus.DRAFT, "all", PostStatus.POSTED, PostStatus.SCHEDULED, PostStatus.FAILED];
 
 // Filter ids are post statuses (API values); these are what the chips say.
 const FILTER_LABELS = {
   all: msg`all`,
   [PostStatus.POSTED]: msg`posted`,
   [PostStatus.SCHEDULED]: msg`scheduled`,
+  [PostStatus.FAILED]: msg`failed`,
   [PostStatus.DRAFT]: msg`waiting`,
 };
 
