@@ -24,6 +24,7 @@ from agents.core.session import BaseAgentSession
 
 from agents.content.channels import Platform
 from agents.content.plan_period import MAX_PLAN_DAYS
+from agents.content.voice_rules import VoiceRules
 from agents.models import AspectRatio, ImageModel, Provider
 
 
@@ -154,6 +155,10 @@ class ContentBrandContext(BaseModel):
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
     # Where the brand already posts, as Platform values (channels.brand_platforms).
     active_channels: list[str] = Field(default_factory=list)
+    # The project's own voice (agents/content/voice_rules.py): posts it wrote,
+    # for the writer to match, and the rules a text post keeps.
+    writing_samples: list[str] = Field(default_factory=list)
+    voice_rules: VoiceRules = Field(default_factory=VoiceRules)
 
 
 # ---------------------------------------------------------------------------

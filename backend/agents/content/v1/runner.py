@@ -67,6 +67,7 @@ from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepSt
 from agents.content.channels import brand_platforms
 from agents.content.performance import AccountPerformance, load_account_performance
 from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, default_period, plan_end
+from agents.content.voice_rules import voice_rules_of, writing_samples_of
 from agents.core.events import run_context
 from agents.content.prompts import (
     build_clone_user_prompt,
@@ -285,6 +286,8 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             pillars=pillars,
             visual=visual,
             active_channels=brand_platforms(channels_blob.get("active_channels")),
+            writing_samples=writing_samples_of(brand_blob),
+            voice_rules=voice_rules_of(brand_blob),
         )
 
 

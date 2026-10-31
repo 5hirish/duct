@@ -693,6 +693,11 @@ agents/
     │                     failed, the reason on an activity_logs row
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
+    ├── voice_rules.py  — the project's own voice (#271): writing samples, banned words
+    │                     and the client-names / protect-the-edge switches, stored in
+    │                     content_brand (no migration). The old prompt constants are the
+    │                     defaults. Values ride in the USER turn; the text writer refuses
+    │                     a banned word as it refuses an over-length post
     ├── plan_period.py  — the period a plan manages: one post per date, at most 30. The
     │                     person picks the month in progress (default; under a week left
     │                     rolls over to the next month) or 7, 14, 30 days (PlanRequest

@@ -33,6 +33,7 @@ from utils.formatting import number, percent
 
 from agents.content.plan_period import MAX_PLAN_DAYS
 from agents.content.text_prompts import text_post_user_prompt, text_system_prompt
+from agents.content.voice_rules import render_voice_stanza
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -1644,8 +1645,9 @@ def build_post_user_prompt(
             f"pillar={pillar or '(unspecified)'} · format_slug={format_slug}"
         )
     if getattr(channel, "text_first", False):
+        voice = render_voice_stanza(brand.voice_rules, brand.writing_samples)
         return text_post_user_prompt(
-            brand_stanza=_brand_stanza(brand), project_name=brand.project_name,
+            brand_stanza=f"{_brand_stanza(brand)}\n{voice}", project_name=brand.project_name,
             channel=channel, target=target, recent_lines=recent_lines,
         )
     avatar_summary = (
@@ -1653,10 +1655,14 @@ def build_post_user_prompt(
         if isinstance(avatar, dict)
         else (avatar.model_dump_json() if avatar is not None else "(none)")
     )
+    # A carousel's caption is words too, so it hears the brand's own posts;
+    # the rules stay with the text writer, which is what enforces them.
+    samples = render_voice_stanza(brand.voice_rules, brand.writing_samples, with_rules=False)
+    samples_block = f"{samples}\n\n" if samples else ""
     return f"""\
 {_brand_stanza(brand)}
 
-Draft one post for {brand.project_name}.
+{samples_block}Draft one post for {brand.project_name}.
 
 {_channel_directive(channel)}
 
