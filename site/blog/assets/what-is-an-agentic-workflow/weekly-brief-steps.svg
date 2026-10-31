@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="1000" height="560" role="img" aria-labelledby="t d">
+  <title id="t">The weekly brief as an agentic workflow: six steps and who decides each</title>
+  <desc id="d">Six boxes in a row: trigger, gather, compare, check, write, approve. Under each, who decides: code starts the run on a schedule; the model chooses what to fetch and code fetches it; code computes the totals and the model reads them; a verifier model runs twelve checks; the model writes the brief; a person approves any change to a live account. The approve step is orange. The compare step is marked as arithmetic done by code, not the model.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b5068"/></marker>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      .step { font-size: 24px; font-weight: bold; fill: #0d0f1a; }
+      .sub { font-size: 19px; fill: #4b5068; }
+      .who { font-size: 19px; font-weight: bold; fill: #0d0f1a; }
+      .k { font-size: 15px; font-weight: bold; letter-spacing: 2.5px; fill: #4b5068; }
+      .flow { stroke: #4b5068; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+  <rect width="1000" height="560" fill="#ffffff"/>
+  <text x="20" y="46" class="serif" font-size="32" fill="#0d0f1a">The weekly brief, as an agentic workflow</text>
+  <text x="20" y="78" class="sans" font-size="20" fill="#4b5068">Six steps. The point is the row underneath: who decides each one.</text>
+
+  <!-- steps row: 6 boxes of 148 wide, gap 14, starting x=20 -->
+  <g>
+    <rect x="20" y="120" width="148" height="160" rx="12" fill="#ffffff" stroke="#d9dbe3" stroke-width="2"/>
+    <text x="94" y="162" text-anchor="middle" class="serif step">Trigger</text>
+    <text x="94" y="196" text-anchor="middle" class="sans sub">Monday,</text>
+    <text x="94" y="222" text-anchor="middle" class="sans sub">before 9</text>
+
+    <rect x="182" y="120" width="148" height="160" rx="12" fill="#ffffff" stroke="#d9dbe3" stroke-width="2"/>
+    <text x="256" y="162" text-anchor="middle" class="serif step">Gather</text>
+    <text x="256" y="196" text-anchor="middle" class="sans sub">Ads, GA4,</text>
+    <text x="256" y="222" text-anchor="middle" class="sans sub">Search Console</text>
+
+    <rect x="344" y="120" width="148" height="160" rx="12" fill="#faf8f5" stroke="#0d0f1a" stroke-width="2.5"/>
+    <text x="418" y="162" text-anchor="middle" class="serif step">Compare</text>
+    <text x="418" y="196" text-anchor="middle" class="sans sub">this week</text>
+    <text x="418" y="222" text-anchor="middle" class="sans sub">against last</text>
+    <text x="418" y="252" text-anchor="middle" class="sans k">SUMS BY CODE</text>
+
+    <rect x="506" y="120" width="148" height="160" rx="12" fill="#ffffff" stroke="#d9dbe3" stroke-width="2"/>
+    <text x="580" y="162" text-anchor="middle" class="serif step">Check</text>
+    <text x="580" y="196" text-anchor="middle" class="sans sub">12 integrity</text>
+    <text x="580" y="222" text-anchor="middle" class="sans sub">checks</text>
+
+    <rect x="668" y="120" width="148" height="160" rx="12" fill="#ffffff" stroke="#d9dbe3" stroke-width="2"/>
+    <text x="742" y="162" text-anchor="middle" class="serif step">Write</text>
+    <text x="742" y="196" text-anchor="middle" class="sans sub">the brief,</text>
+    <text x="742" y="222" text-anchor="middle" class="sans sub">with gaps named</text>
+
+    <rect x="830" y="120" width="150" height="160" rx="12" fill="#fff3eb" stroke="#ff5c00" stroke-width="3"/>
+    <text x="905" y="162" text-anchor="middle" class="serif step" fill="#c2410c">Approve</text>
+    <text x="905" y="196" text-anchor="middle" class="sans sub">any change to</text>
+    <text x="905" y="222" text-anchor="middle" class="sans sub">a live account</text>
+  </g>
+  <!-- arrows between boxes -->
+  <g class="flow" marker-end="url(#ah)">
+    <line x1="168" y1="195" x2="180" y2="195"/>
+    <line x1="330" y1="195" x2="342" y2="195"/>
+    <line x1="492" y1="195" x2="504" y2="195"/>
+    <line x1="654" y1="195" x2="666" y2="195"/>
+    <line x1="816" y1="195" x2="828" y2="195"/>
+  </g>
+
+  <!-- who decides lane -->
+  <text x="20" y="326" class="sans k">WHO DECIDES</text>
+  <g class="sans">
+    <text x="94" y="366" text-anchor="middle" class="who">Code</text>
+    <text x="94" y="392" text-anchor="middle" class="sub">a schedule</text>
+
+    <text x="256" y="366" text-anchor="middle" class="who">Model</text>
+    <text x="256" y="392" text-anchor="middle" class="sub">picks the data;</text>
+    <text x="256" y="416" text-anchor="middle" class="sub">code fetches it</text>
+
+    <text x="418" y="366" text-anchor="middle" class="who">Code first</text>
+    <text x="418" y="392" text-anchor="middle" class="sub">Duct sums it;</text>
+    <text x="418" y="416" text-anchor="middle" class="sub">the model reads</text>
+
+    <text x="580" y="366" text-anchor="middle" class="who">Second model</text>
+    <text x="580" y="392" text-anchor="middle" class="sub">the verifier,</text>
+    <text x="580" y="416" text-anchor="middle" class="sub">own context</text>
+
+    <text x="742" y="366" text-anchor="middle" class="who">Model</text>
+    <text x="742" y="392" text-anchor="middle" class="sub">quoting Duct's</text>
+    <text x="742" y="416" text-anchor="middle" class="sub">numbers</text>
+
+    <text x="905" y="366" text-anchor="middle" class="who" fill="#c2410c">A person</text>
+    <text x="905" y="392" text-anchor="middle" class="sub">no approve tool</text>
+    <text x="905" y="416" text-anchor="middle" class="sub">for the model</text>
+  </g>
+
+  <line x1="20" y1="480" x2="980" y2="480" stroke="#eef0f5" stroke-width="2"/>
+  <text x="20" y="516" class="sans" font-size="18" fill="#4b5068">A step moved left on this row (from model to code) when it was measured wrong: the sums, September 28, 2026.</text>
+  <text x="20" y="542" class="sans" font-size="18" fill="#4b5068">A step was deleted when it was measured useless: the model's planning checklist, 36 s of a 198 s run.</text>
+</svg>
