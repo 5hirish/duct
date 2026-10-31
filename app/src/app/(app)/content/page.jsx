@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, CopyPlus, Plus } from "lucide-react";
@@ -11,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   listPosts,
 } from "@/lib/contentApi";
-import { getActiveProjectId, getActiveProject } from "@/lib/projects";
+import { getProjectById } from "@/lib/projects";
+import { useActiveProjectId } from "@/hooks/useActiveProjectId";
 import BrandContextForm from "@/components/content/BrandContextForm";
 import AccountsTab from "@/components/content/AccountsTab";
 import FormatLibrary from "@/components/content/FormatLibrary";
@@ -50,28 +51,15 @@ const TAB_LABELS = {
 
 export default function ContentLandingPage() {
   const { t, i18n } = useLingui();
-  const [tab,        setTab]        = useState("plan");
-  const [projectId,  setProjectId]  = useState(null);
-  const [projectName, setProjectName] = useState("");
-  const [error,      setError]      = useState("");
+  const [tab, setTab] = useState("plan");
+  const projectId = useActiveProjectId();
+  const project = useMemo(() => (projectId ? getProjectById(projectId) : null), [projectId]);
+  const projectName = project?.profile?.company?.name || project?.name || t`Project`;
 
-  useEffect(() => {
-    const id = getActiveProjectId();
-    if (!id) {
-      setError(t`Select a project in the sidebar to use the content agent.`);
-      return;
-    }
-    setProjectId(id);
-    const p = getActiveProject();
-    setProjectName(p?.profile?.company?.name || p?.name || t`Project`);
-    // `t` follows the locale; this runs once on mount on purpose.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (error) {
+  if (projectId === "") {
     return (
       <div className="max-w-2xl mx-auto py-12 px-6 text-center">
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="text-sm text-muted-foreground"><Trans>Select a project in the sidebar to use the content agent.</Trans></p>
       </div>
     );
   }
@@ -116,17 +104,22 @@ export default function ContentLandingPage() {
         </div>
       </nav>
 
-      {tab === "plan"      && <PlanTab      projectId={projectId} />}
-      {tab === "posts"     && <PostsTab     projectId={projectId} />}
-      <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
-        {tab === "analytics" && (
-          <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
-        )}
-        {tab === "discover"  && <DiscoverPage projectId={projectId} />}
-      </Suspense>
-      {tab === "library"   && <LibraryTab   projectId={projectId} />}
-      {tab === "brand"     && <BrandTab     projectId={projectId} />}
-      {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
+      {/* Keyed on the project so a switch from the sidebar remounts the tab:
+          each one loads its project's data on mount, and the Posts tab's
+          loading flag would otherwise never reset for the new project. */}
+      <div key={projectId}>
+        {tab === "plan"      && <PlanTab      projectId={projectId} />}
+        {tab === "posts"     && <PostsTab     projectId={projectId} />}
+        <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+          {tab === "analytics" && (
+            <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
+          )}
+          {tab === "discover"  && <DiscoverPage projectId={projectId} />}
+        </Suspense>
+        {tab === "library"   && <LibraryTab   projectId={projectId} />}
+        {tab === "brand"     && <BrandTab     projectId={projectId} />}
+        {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
+      </div>
     </div>
   );
 }

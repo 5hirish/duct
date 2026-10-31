@@ -190,7 +190,9 @@ function SidebarProjectSwitcher() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/projects")}>
+        {/* A project starts from a site, at /start; /projects was a hop to
+            the same button. */}
+        <DropdownMenuItem onClick={() => router.push("/start")}>
           <Plus className="size-4" />
           <span><Trans>New project</Trans></span>
         </DropdownMenuItem>
