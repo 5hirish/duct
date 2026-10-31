@@ -35,6 +35,9 @@ _gemini_key_header = APIKeyHeader(name="X-Provider-Gemini", auto_error=False)
 # header rather than riding on X-Provider-OpenAI.
 _openrouter_key_header = APIKeyHeader(name="X-Provider-OpenRouter", auto_error=False)
 _xai_key_header = APIKeyHeader(name="X-Provider-XAI", auto_error=False)
+# A user's own OpenAI-compatible endpoint: address, key and chosen models packed
+# into one value (service/compatible.py), so it travels as a key does.
+_compatible_key_header = APIKeyHeader(name="X-Provider-Compatible", auto_error=False)
 # Rides beside X-Provider-OpenAI when that header carries a ChatGPT access
 # token rather than an API key. The desktop shell signs the user in to their
 # own ChatGPT plan and holds the refresh token in the OS keychain; what reaches
@@ -64,6 +67,7 @@ async def get_user_provider_keys(
     gemini_key: str | None = Security(_gemini_key_header),
     openrouter_key: str | None = Security(_openrouter_key_header),
     xai_key: str | None = Security(_xai_key_header),
+    compatible_key: str | None = Security(_compatible_key_header),
     openai_account_id: str | None = Security(_openai_account_header),
 ) -> dict[Provider, str]:
     """Per-request bring-your-own provider API keys from the X-Provider-* headers.
@@ -90,6 +94,7 @@ async def get_user_provider_keys(
         Provider.GOOGLE_GENAI: gemini_key,
         Provider.OPENROUTER: openrouter_key,
         Provider.XAI: xai_key,
+        Provider.OPENAI_COMPATIBLE: compatible_key,
     }
     return {
         provider: value.strip()

@@ -21,6 +21,12 @@ from agents.models import OLLAMA_MODEL_PREFIX, Provider, cost_usd, provider_of
 from agents.tiers import JOB_TIER, Job
 from config import Configs
 from service import ollama
+
+# Imported here, never first inside a test: both bind `get_configs` when they
+# load, and a test that patches it first leaves the patch wired into the
+# API-key check for every test after (test_engines_status got 403s).
+import routes.providers  # noqa: E402,F401
+import service.auth  # noqa: E402,F401
 from tests.fakes import FakeWire
 
 SERVER = "http://ollama.test:11434"

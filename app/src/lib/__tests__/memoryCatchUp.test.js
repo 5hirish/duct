@@ -7,9 +7,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const keys = {};
 vi.mock("../providerKeys", () => ({
-  PROVIDERS: [
+  // Every credential that rides as a header, a connected endpoint included:
+  // the memory sweep can run on one as well as on a vendor key.
+  KEYED_PROVIDERS: [
     { id: "anthropic", header: "X-Provider-Anthropic" },
     { id: "gemini", header: "X-Provider-Gemini" },
+    { id: "compatible", header: "X-Provider-Compatible" },
   ],
   getProviderKey: vi.fn(async (id) => keys[id] || ""),
 }));
@@ -36,6 +39,11 @@ describe("memory catch-up", () => {
   it("sends only the API keys this device holds", async () => {
     keys.gemini = "AIza-test";
     expect(await apiKeyHeaders()).toEqual({ "X-Provider-Gemini": "AIza-test" });
+  });
+
+  it("lends a connected endpoint like any key", async () => {
+    keys.compatible = "oaic1.endpoint";
+    expect(await apiKeyHeaders()).toEqual({ "X-Provider-Compatible": "oaic1.endpoint" });
   });
 
   it("offers the keys without risking the session", async () => {

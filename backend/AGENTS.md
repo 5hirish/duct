@@ -26,7 +26,7 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   **The consolidation is finished.** Per the engine consolidation review
   (duct-cloud, private), every agent moved to one harness — LangChain 1.x /
   `deepagents` — because customers bring their own model (OpenAI / Gemini /
-  Claude / xAI / OpenRouter, or an Ollama server) and the Claude Agent SDK was Anthropic-only by
+  Claude / xAI / OpenRouter, an Ollama server, or any OpenAI-compatible endpoint) and the Claude Agent SDK was Anthropic-only by
   design (upstream issue #410, closed `not planned`). Insights
   (`agents/insights/v1/runner.py`) and content (`agents/content/v1/runner.py`)
   are `deepagents` sessions; audit's runner is on the `create_agent` rung
@@ -1197,6 +1197,28 @@ don't fit.
   cuts the system prompt and tools; and `reasoning` goes only to a model that
   thinks, since Ollama refuses it from one that cannot. A local model is
   priced at zero, not unknown.
+- `service/compatible.py` + `Provider.OPENAI_COMPATIBLE` — an OpenAI-compatible
+  endpoint a user brings (vLLM, llama.cpp, LM Studio, Together, Groq):
+  ChatOpenAI at their address. Its credential is the address, an optional key
+  and the models they chose (with each one's reported context length) packed
+  into one string (`oaic1.…`), so it is stored, sent as `X-Provider-Compatible`
+  and lent to background work exactly like a key; `app/src/lib/
+  endpointCredential.js` packs the same bytes, and a shared fixture holds the
+  two equal. Ids are `compat:<the server's id>`, checked before the "/" test
+  (a vLLM model is named by its Hugging Face repo). Four rules, held by
+  `tests/test_compatible_provider.py`: **the address is user input**, so off a
+  private network it must be public https, judged on the name when entered
+  (`canonical_base_url`), and every request after is resolved once, judged
+  and connected to the address that passed, real hostname kept for TLS
+  (`_PinnedTransport`, so DNS rebinding has no second lookup to win), with
+  discovery read under a size and time cap; a private address
+  only where the network is the user's own (desktop sidecar, local dev, or
+  `PRIVATE_MODEL_ENDPOINTS`); **connecting proves a tool call**
+  (`POST /providers/openai_compatible/probe`), because a model that answers
+  in words cannot run an agent; a typed answer asks for a JSON schema first
+  (constrained decoding, which a small model follows where it ignores a forced
+  tool call) and falls back to a tool call; and the price is
+  unknown (`None`), since a hosted endpoint bills and Duct cannot say what.
 - `service/vendor_keys.py` — a third-party key each user brings for
   themselves (PostBridge, Apify). A request spends the key its project's
   owner saved; the instance's env key only where `allow_server_provider_keys()`

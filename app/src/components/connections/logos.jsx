@@ -20,6 +20,7 @@
 
 import { useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
+import { Server } from "lucide-react";
 
 /**
  * What each mark is called. One map, because the name is needed twice — as the
@@ -47,6 +48,7 @@ export const CONNECTOR_NAMES = {
   openrouter: msg`OpenRouter`,
   xai: msg`xAI`,
   ollama: msg`Ollama`,
+  compatible: msg`Bring your own provider`,
 };
 
 function Img({ src, alt }) {
@@ -111,6 +113,14 @@ export function OllamaMark() {
   );
 }
 
+// An OpenAI-compatible endpoint is a kind of server, not a brand, so it is the
+// one mark here that is a generic glyph. It is whichever server the reader
+// points it at, and borrowing any one vendor's mark would name the wrong one.
+export function EndpointMark() {
+  const { i18n } = useLingui();
+  return <Server aria-label={i18n._(CONNECTOR_NAMES.compatible)} role="img" strokeWidth={1.75} />;
+}
+
 export const LOGOS = {
   google_ads: <Img src="/icons/google-ads.svg" alt={CONNECTOR_NAMES.google_ads} />,
   gsc: <Img src="/icons/google-search-console.svg" alt={CONNECTOR_NAMES.gsc} />,
@@ -134,4 +144,5 @@ export const LOGOS = {
   openrouter: <OpenRouterMark />,
   xai: <XaiMark />,
   ollama: <OllamaMark />,
+  compatible: <EndpointMark />,
 };

@@ -173,7 +173,14 @@ def is_usable_credential(provider: Provider, value: str) -> bool:
         return False
     if is_subscription_credential(value):
         return provider in SUBSCRIPTION_PROVIDERS
-    return True
+    # The other shape certain enough to judge: an OpenAI-compatible endpoint
+    # is a packed credential (``service/compatible.py``), in its own slot and
+    # nowhere else.
+    from service.compatible import is_packed, unpack
+
+    if provider is Provider.OPENAI_COMPATIBLE:
+        return unpack(value) is not None
+    return not is_packed(value)
 
 
 def pack_subscription_credential(access_token: str, account_id: str = "") -> str:

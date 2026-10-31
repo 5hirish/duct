@@ -26,7 +26,7 @@ published without one. The same script, with no arguments, holds
 
 ### Added
 
-- **Open models on your own Ollama.** A self-hosted Duct pointed at an Ollama
+- **Local models on your own Ollama.** A self-hosted Duct pointed at an Ollama
   server runs on any model pulled there that can call tools, with no key and
   no bill: pick one for a tier like any other model. Duct asks Ollama for a
   context long enough for its prompts, where Ollama's own default would cut
@@ -35,6 +35,11 @@ published without one. The same script, with no arguments, holds
   audit reports through its own mail server or any provider's SMTP relay, and
   Mailpit catches local mail so a flow can be read as it would arrive. Resend's
   dedicated integration is gone; Resend accepts SMTP too.
+- **Bring your own provider.** Connect any host or server that speaks
+  OpenAI's API from Settings, from Together, Fireworks, Groq or DeepInfra to
+  vLLM, llama.cpp or LM Studio. Duct lists the server's models, you pick which
+  ones it may use, and it checks the first one really calls tools before
+  saving. Off your own network the address has to be public and https.
 
 ### Changed
 

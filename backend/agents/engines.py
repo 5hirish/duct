@@ -44,7 +44,10 @@ from agents.models import (
     ModelName,
     Provider,
     VideoModel,
+    compatible_model_id,
+    compatible_served_id,
     current_model_id,
+    is_compatible_model,
     is_ollama_model,
     ollama_model_id,
     provider_of,
@@ -85,7 +88,7 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
 ENGINE_SUPPORTED_PROVIDERS: dict[Engine, frozenset[Provider]] = {
     Engine.V1: frozenset({
         Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC, Provider.OPENROUTER,
-        Provider.XAI, Provider.OLLAMA,
+        Provider.XAI, Provider.OLLAMA, Provider.OPENAI_COMPATIBLE,
     }),
 }
 
@@ -233,6 +236,13 @@ def resolve_engine_model(
         if override and is_ollama_model(override):
             return override.strip()
         return default_ollama_model() or default
+    if provider is Provider.OPENAI_COMPATIBLE:
+        # A model from the user's own server runs as picked. Nothing picked is
+        # settled once the key is in hand (``endpoint_model``), since only the
+        # credential knows which models they chose.
+        if override and is_compatible_model(override):
+            return override.strip()
+        return default
     if not override:
         return default
     candidate = current_model_id(override)
@@ -243,6 +253,25 @@ def resolve_engine_model(
             return candidate
         return default
     return resolved
+
+
+def endpoint_model(provider: Provider, model: ModelName | str, key: str) -> ModelName | str:
+    """The model a run on the user's own endpoint takes when nothing names one
+    they still offer: the first model they chose when they connected it.
+
+    A tier saved with a model they have since deselected counts as nothing
+    named. Sending it anyway would fail on a server that no longer serves it,
+    or run on one they decided against."""
+    if provider is not Provider.OPENAI_COMPATIBLE:
+        return model
+    from service.compatible import unpack
+
+    endpoint = unpack(key)
+    if endpoint is None:
+        return model
+    if is_compatible_model(model) and endpoint.model(compatible_served_id(model)) is not None:
+        return model
+    return compatible_model_id(endpoint.models[0].id)
 
 
 def get_env_var_for_engine_provider(engine: Engine, provider: Provider) -> str | None:
@@ -611,6 +640,7 @@ def resolve_run_model(
             provider = candidate
     model = resolve_engine_model(engine, provider, model_override)
     resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+    model = endpoint_model(provider, model, resolved.key)
     if resolved.billed_to_duct:
         logger.info("%s: run billed to Duct (%s/%s)", log_prefix, provider.value, resolved.source)
     api_key = resolved.key
@@ -781,6 +811,7 @@ def resolve_job_run(
     resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys, duct_pays=duct_pays)
     if resolved.billed_to_duct:
         logger.info("%s: run billed to Duct (%s/%s)", log_prefix, provider.value, resolved.source)
+    model = endpoint_model(provider, model, resolved.key)
     return JobRun(
         provider=provider,
         model=model,

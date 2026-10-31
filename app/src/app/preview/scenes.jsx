@@ -60,8 +60,9 @@ import PauseCard from "@/components/workspace/PauseCard";
 import { AgentEvent } from "@/lib/agentEvents";
 import ProviderCard from "@/components/connections/ProviderCard";
 import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
+import EndpointProviderCard from "@/components/connections/EndpointProviderCard";
 import { LOGOS } from "@/components/connections/logos";
-import { INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
+import { ENDPOINT_PROVIDER, INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
@@ -1550,7 +1551,7 @@ export const SCENES = [
     id: "instance-provider",
     state: "ready, and not answering",
     group: "InstanceProviderCard",
-    title: "Ollama: offered by the server, no key",
+    title: "Local models: Ollama offered by the server, no key",
     note: "Two tiles for one provider in its two states. Ready reads On this server in the info tone, not green: green is for a key the reader put there. Open the grey one: the two steps name the two ways it fails, and Check again asks the server which (in the preview there is no backend, so it answers with the request's own error). Neither dialog has a key field or a Remove button; nothing here is the reader's to store.",
     render: () => (
       <div className="conn-grid">
@@ -1566,6 +1567,89 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "endpoint-provider",
+    state: "not connected, connected, self-hosted",
+    group: "EndpointProviderCard",
+    title: "Bring your own provider: an address, its models, a tool call",
+    note: "Three tiles. The first is a hosted Duct with nothing connected: open it, pick Together, and Find models lists a host's catalogue with a filter; type localhost instead and the field says why a hosted server cannot reach it before any request. Picking base-model and testing shows the no-tools failure with Connect anyway; any other model passes the check (saving then fails here, since the preview has no backend to remember it on). The second is connected and remembered: the host is the tile's tag, the dialog lists the chosen models with their context and offers Check again, Change and Disconnect. The third is a self-hosted Duct, which offers LM Studio, vLLM and llama.cpp as well.",
+    render: () => {
+      const listing = [
+        { id: "Qwen/Qwen3-235B-A22B", context_length: 262144 },
+        { id: "Qwen/Qwen3-32B", context_length: 40960 },
+        { id: "base-model", context_length: 0 },
+        { id: "deepseek-ai/DeepSeek-V4", context_length: 131072 },
+        { id: "meta-llama/Llama-4-Maverick-17B-128E-Instruct", context_length: 1048576 },
+        { id: "meta-llama/Llama-4-Scout", context_length: 131072 },
+        { id: "mistralai/Mistral-Small-4", context_length: 131072 },
+        { id: "moonshotai/Kimi-K2.5", context_length: 262144 },
+        { id: "openai/gpt-oss-120b", context_length: 131072 },
+        { id: "zai-org/GLM-5", context_length: 202752 },
+      ];
+      const probe = async ({ baseUrl, model }) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        if (/localhost|127\.0/.test(baseUrl)) {
+          return { ok: false, code: "refused", detail: "That address is on a private network, which Duct's servers can't reach." };
+        }
+        const base = baseUrl.replace(/\/+$/, "");
+        const answer = { ok: true, base_url: base, models: listing };
+        if (model) {
+          answer.check =
+            model === "base-model"
+              ? { ok: false, code: "no_tools", model, detail: "It answered in words instead of calling the tool it was given." }
+              : { ok: true, model, latency_ms: 1380 };
+        }
+        return answer;
+      };
+      const readKey = async () => ({ key: "" });
+      const check = async () => ({ ok: true, model: "Qwen/Qwen3-32B", latency_ms: 1210 });
+      const connected = {
+        id: "openai_compatible",
+        source: "stored",
+        reachable: true,
+        stored: true,
+        private_ok: false,
+        endpoint: {
+          base_url: "https://api.together.xyz/v1",
+          host: "api.together.xyz",
+          has_key: true,
+          models: [
+            { id: "Qwen/Qwen3-32B", context_length: 40960 },
+            { id: "meta-llama/Llama-4-Scout", context_length: 131072 },
+          ],
+        },
+      };
+      return (
+        <div className="conn-grid">
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={{ id: "openai_compatible", source: "none", reachable: false, stored: false, private_ok: false, endpoint: null }}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+          />
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={connected}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+            onOpenTiers={() => {}}
+          />
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={{ id: "openai_compatible", source: "none", reachable: false, stored: false, private_ok: true, endpoint: null }}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+          />
+        </div>
+      );
+    },
   },
   {
     id: "storage-badge",

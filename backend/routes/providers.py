@@ -44,6 +44,7 @@ from agents.models import (
     ModelName,
     Provider,
     VideoModel,
+    compatible_model_id,
     ollama_model_id,
     provider_of,
 )
@@ -72,11 +73,14 @@ from service.auth import (
     get_current_user_optional,
     get_user_provider_keys,
 )
+from service import compatible
 from service.provider_keys import (
     delete_provider_key,
     has_stored_provider_keys,
     save_provider_key,
+    stored_provider_keys,
 )
+from service.ratelimit import RateLimit
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +118,12 @@ _PROVIDER_LABELS: dict[Provider, tuple[str, str]] = {
         "Grok models, and Grok's own image generation.",
     ),
     Provider.OLLAMA: (
-        "Ollama",
-        "Open models on this server's own Ollama. No key: whoever runs Duct offers it.",
+        "Local models",
+        "Models on this server's own Ollama. No key: whoever runs Duct offers it.",
+    ),
+    Provider.OPENAI_COMPATIBLE: (
+        "Bring your own provider",
+        "Any host or server that speaks OpenAI's API: Together, Groq, vLLM, LM Studio and more.",
     ),
 }
 
@@ -249,7 +257,7 @@ def providers_status(
         else:
             media_sources[provider.value] = source
 
-        providers.append({
+        row = {
             "id": provider.value,
             "label": label,
             "description": description,
@@ -265,7 +273,10 @@ def providers_status(
             "key_mismatch": bool(supplied) and not has_user,
             "keyless": False,
             "engines": _engines_for(provider),
-        })
+        }
+        if provider is Provider.OPENAI_COMPATIBLE:
+            row.update(_endpoint_status(supplied if has_user else "", has_stored, db, user))
+        providers.append(row)
     settings = get_model_settings(user.id if user else None)
     return {
         "providers": providers,
@@ -282,6 +293,30 @@ def providers_status(
         # ChatGPT"; this decides whether it *may*. An undocumented backend
         # needs a switch that does not wait for an app release.
         "chatgpt_auth_enabled": cfg.chatgpt_auth_enabled,
+    }
+
+
+def _endpoint_status(supplied: str, has_stored: bool, db: Session | None, user: User | None) -> dict:
+    """What the endpoint card shows about the serving endpoint, never its key.
+
+    A remembered endpoint is decrypted to describe it: the browser holds no
+    copy, and "Remembered" with no address would leave the person guessing
+    which server it is. Only the address and the model names leave.
+    """
+    credential = supplied
+    if not credential and has_stored and user is not None:
+        credential = stored_provider_keys(db, user.id).get(Provider.OPENAI_COMPATIBLE, "")
+    endpoint = compatible.unpack(credential)
+    return {
+        # Whether this instance lets an endpoint sit on a private network, so
+        # the card offers LM Studio on localhost only where it would work.
+        "private_ok": compatible.private_allowed(),
+        "endpoint": None if endpoint is None else {
+            "base_url": endpoint.base_url,
+            "host": endpoint.host,
+            "has_key": bool(endpoint.api_key),
+            "models": [{"id": m.id, "context_length": m.context_length} for m in endpoint.models],
+        },
     }
 
 
@@ -322,7 +357,9 @@ class StoreProviderKeyRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    api_key: str = Field(min_length=1, max_length=512)
+    # Room for an OpenAI-compatible endpoint, which packs an address, a key and
+    # a handful of model names into one value.
+    api_key: str = Field(min_length=1, max_length=4096)
 
 
 def _provider_or_404(provider_id: str) -> Provider:
@@ -356,6 +393,16 @@ def store_provider_key(
     if provider is Provider.OLLAMA:
         raise HTTPException(422, "Ollama takes no key. Set OLLAMA_BASE_URL on the server to offer one.")
     key = body.api_key.strip()
+    if provider is Provider.OPENAI_COMPATIBLE:
+        # Judged again here, not trusted from the card: the address is about
+        # to be called by every background run this user has.
+        endpoint = compatible.unpack(key)
+        if endpoint is None:
+            raise HTTPException(422, "Connect the endpoint from its card in Settings.")
+        try:
+            compatible.canonical_base_url(endpoint.base_url, private_ok=compatible.private_allowed())
+        except compatible.UnsafeEndpoint as exc:
+            raise HTTPException(422, exc.detail) from None
     if not key:
         raise HTTPException(422, "api_key must not be blank")
     if is_subscription_credential(key):
@@ -408,6 +455,10 @@ VERIFY_UNKNOWN = "unknown"
 VERIFY_SUBSCRIPTION_QUOTA = "subscription_quota"
 VERIFY_SUBSCRIPTION_REVOKED = "subscription_revoked"
 VERIFY_SUBSCRIPTION_BLOCKED = "subscription_blocked"
+# An OpenAI-compatible model that answered without calling the tool it was
+# handed, or a server that refused tools outright (vLLM without a tool parser).
+# Every Duct agent works by calling tools, so this is a model that cannot run one.
+VERIFY_NO_TOOLS = "no_tools"
 
 # A fresh OpenAI account has no credit and fails with a 429 whose body says
 # `insufficient_quota`; Anthropic says "credit balance is too low". Both
@@ -476,6 +527,14 @@ async def verify_provider_key(
     from service.provider_keys import stored_provider_keys
 
     provider = _provider_or_404(provider_id)
+    if provider is Provider.OPENAI_COMPATIBLE:
+        credential = (user_keys.get(provider) or "").strip() or (
+            stored_provider_keys(db, user.id).get(provider) or ""
+        ).strip()
+        endpoint = compatible.unpack(credential)
+        if endpoint is None:
+            return {"ok": False, "code": VERIFY_MISSING_KEY, "detail": "No endpoint is connected."}
+        return await _check_tool_calling(credential, endpoint.models[0].id)
     if provider is Provider.OLLAMA:
         # Nothing pasted to test: the question is whether the server answers
         # and holds a model that can run an agent. Asked off the event loop,
@@ -535,8 +594,140 @@ async def verify_provider_key(
     }
 
 
+_TOOL_CHECK_PROMPT = "Call the confirm_connection tool with ok set to true. Do not answer in words."
+
+
+_CONFIRM_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "confirm_connection",
+        "description": "Confirm the connection works.",
+        "parameters": {
+            "type": "object",
+            "properties": {"ok": {"type": "boolean"}},
+            "required": ["ok"],
+        },
+    },
+}
+
+
+async def _check_tool_calling(credential: str, served_id: str) -> dict:
+    """One real call that hands the model a tool, and whether it called it.
+
+    A chat that answers is not enough on an endpoint: every Duct agent works
+    by calling tools, and plenty of servers serve models that answer in words
+    whatever they are handed, or refuse tools until the operator turns a
+    parser on. Not forced with ``tool_choice``, which some servers reject: a
+    model that needs forcing would not call one mid-run either.
+    """
+    import asyncio
+    import time
+
+    from agents.core.lc import resolve_chat_model
+
+    model = compatible_model_id(served_id)
+    started = time.monotonic()
+    try:
+        llm = resolve_chat_model(Provider.OPENAI_COMPATIBLE, model, credential, temperature=0.0)
+        reply = await asyncio.wait_for(
+            llm.bind_tools([_CONFIRM_TOOL]).ainvoke(_TOOL_CHECK_PROMPT),
+            timeout=_VERIFY_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        return {"ok": False, "code": VERIFY_UNREACHABLE, "model": served_id, "detail": "The model did not answer in time."}
+    except Exception as exc:  # noqa: BLE001 — every failure is an answer here
+        text = str(exc)
+        endpoint = compatible.unpack(credential)
+        secret = endpoint.api_key if endpoint else ""
+        code = VERIFY_NO_TOOLS if "tool" in text.lower() and "400" in text else _verify_code(exc)
+        logger.info("verify: openai_compatible %s failed as %s", served_id, code)
+        detail = text[:240].replace(secret, "[key]") if secret else text[:240]
+        return {"ok": False, "code": code, "model": served_id, "detail": detail}
+    if not getattr(reply, "tool_calls", None):
+        return {
+            "ok": False,
+            "code": VERIFY_NO_TOOLS,
+            "model": served_id,
+            "detail": "It answered in words instead of calling the tool it was given.",
+        }
+    return {"ok": True, "model": served_id, "latency_ms": int((time.monotonic() - started) * 1000)}
+
+
+class ProbeEndpointRequest(BaseModel):
+    """An endpoint being connected, before anything is saved."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    base_url: str = Field(min_length=1, max_length=512)
+    api_key: str = Field(default="", max_length=1024)
+    #: When set, also check that this model calls a tool.
+    model: str = Field(default="", max_length=256)
+
+
+# Each probe calls an address the caller typed, so it is held well under what
+# connecting one endpoint needs (a listing and a check or two per attempt).
+_PROBES_PER_USER = RateLimit(limit=30, window_seconds=600.0)
+
+
+@router.post("/providers/openai_compatible/probe")
+async def probe_endpoint(
+    body: ProbeEndpointRequest,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """What the server at an address offers, and optionally whether one of its
+    models can run an agent.
+
+    The connect dialog's one call. Nothing is stored: the card packs what
+    comes back into the credential and saves it the way any key is saved.
+    Signed in, and rate limited, because it makes a request to an address
+    the caller chose; off a private network that address must be public and
+    https (``service/compatible.py``).
+    """
+    import asyncio
+
+    _PROBES_PER_USER.enforce(str(user.id), "Too many connection attempts. Try again in a few minutes.")
+    private_ok = compatible.private_allowed()
+    try:
+        base_url = compatible.canonical_base_url(body.base_url, private_ok=private_ok)
+    except compatible.UnsafeEndpoint as exc:
+        return {"ok": False, "code": compatible.CODE_REFUSED, "detail": exc.detail}
+    api_key = body.api_key.strip()
+    try:
+        models = await asyncio.to_thread(compatible.discover, base_url, api_key, private_ok=private_ok)
+    except compatible.EndpointError as exc:
+        return {"ok": False, "code": exc.code, "base_url": base_url, "detail": exc.detail}
+
+    answer: dict = {
+        "ok": True,
+        "base_url": base_url,
+        "models": [{"id": m.id, "context_length": m.context_length} for m in models],
+    }
+    wanted = body.model.strip()
+    if wanted:
+        picked = next((m for m in models if m.id == wanted), None)
+        if picked is None:
+            answer["check"] = {"ok": False, "code": VERIFY_MODEL_ACCESS, "model": wanted, "detail": "The server doesn't list that model."}
+        else:
+            credential = compatible.pack(compatible.Endpoint(base_url, api_key, (picked,)))
+            answer["check"] = await _check_tool_calling(credential, picked.id)
+    return answer
+
+
 @router.get("/models/catalogue")
-def models_catalogue() -> dict:
+def get_models_catalogue(
+    user_keys: dict[Provider, str] = Depends(get_user_provider_keys),
+    user: User | None = Depends(get_current_user_optional),
+    db: Session = Depends(db_session),
+) -> dict:
+    """The catalogue, plus the models of the caller's own endpoint if they
+    connected one, from the header first and their remembered one after."""
+    credential = user_keys.get(Provider.OPENAI_COMPATIBLE) or ""
+    if not credential and user is not None:
+        credential = stored_provider_keys(db, user.id).get(Provider.OPENAI_COMPATIBLE, "")
+    return models_catalogue(endpoint=compatible.unpack(credential))
+
+
+def models_catalogue(endpoint: compatible.Endpoint | None = None) -> dict:
     """Every model the tier pickers may offer, plus the defaults and the job map.
 
     The job map ships so the settings page can render "what runs on each tier"
@@ -567,6 +758,17 @@ def models_catalogue() -> dict:
             "provider": Provider.OLLAMA.value,
             "tier_hint": Tier.STANDARD.value,
             "engines": _engines_for(Provider.OLLAMA),
+        })
+    # The models the caller chose on their own endpoint, and only those: a
+    # host like Together lists hundreds, and the picker is for choosing among
+    # the ones they meant to use.
+    for chosen in endpoint.models if endpoint else ():
+        models.append({
+            "id": compatible_model_id(chosen.id),
+            "label": chosen.id,
+            "provider": Provider.OPENAI_COMPATIBLE.value,
+            "tier_hint": Tier.STANDARD.value,
+            "engines": _engines_for(Provider.OPENAI_COMPATIBLE),
         })
 
     return {

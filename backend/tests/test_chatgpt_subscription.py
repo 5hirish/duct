@@ -91,6 +91,7 @@ def test_the_auth_dependency_packs_token_and_account_together():
             gemini_key=None,
             openrouter_key=None,
             xai_key=None,
+            compatible_key=None,
             openai_account_id=ACCOUNT_ID,
         )
     )
@@ -103,6 +104,7 @@ def test_the_auth_dependency_packs_token_and_account_together():
             gemini_key=None,
             openrouter_key=None,
             xai_key=None,
+            compatible_key=None,
             openai_account_id=ACCOUNT_ID,
         )
     )

@@ -318,9 +318,9 @@ class Configs(BaseSettings):
     # that, because the provider was ChatOpenAI aimed elsewhere; it is now
     # ChatOpenRouter, which speaks OpenRouter's API rather than plain
     # chat-completions. A self-hosted router (LiteLLM, Bifrost, Portkey) or a
-    # local model server (vLLM, llama.cpp) is a new GATEWAY_BASE_URL entry in
-    # agents/models.py — which takes the OpenAI-shape branch — plus its own key
-    # field here. Ollama has a provider of its own, below.
+    # model server (vLLM, llama.cpp) is an OpenAI-compatible endpoint, which a
+    # user brings in Settings (Provider.OPENAI_COMPATIBLE). Ollama has a
+    # provider of its own, below.
     openrouter_base_url: str = ""
     # An Ollama server this instance runs open models on (agents/models.py,
     # Provider.OLLAMA), e.g. http://localhost:11434. Not a key: whoever sets it
@@ -333,6 +333,13 @@ class Configs(BaseSettings):
     # on less is held to its own length. Same name as Ollama's server setting,
     # because it means the same thing.
     ollama_context_length: int = Field(default=32_768, ge=4_096, le=1_048_576)
+    # Whether a user's OpenAI-compatible endpoint may be on a private network
+    # (a vLLM box on the LAN, LM Studio on localhost). Off by default because
+    # the address is user input: on a hosted instance it would let anyone aim
+    # Duct at its own internal network. A desktop sidecar and local dev allow
+    # it regardless (``allow_server_provider_keys``); a self-hosted server
+    # whose model server is internal turns this on.
+    private_model_endpoints: bool = False
     # Engine selection. One engine ("v1") since the Claude Agent SDK was
     # removed; the field stays because stored preferences and requests still
     # carry the string.
