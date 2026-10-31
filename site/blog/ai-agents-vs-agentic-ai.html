@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>AI Agents vs Agentic AI: The Difference, for Marketers</title>
+<link rel="canonical" href="https://getduct.ai/blog/ai-agents-vs-agentic-ai"/>
+<meta name="description" content="AI agents vs agentic AI in a marketer&#x27;s terms: one agent doing a task versus a system that plans and checks, when each fits, and where one product became both."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/blog/ai-agents-vs-agentic-ai"/>
+<meta property="og:title" content="AI Agents vs Agentic AI: The Difference, for Marketers"/>
+<meta property="og:description" content="One agent does a task. An agentic system adds a planner and a checker. Here is the day I found a second agent in Duct that I had not meant to ship, and what it taught me about the word."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/blog-ai-agents-vs-agentic-ai.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="Guide"/>
+<meta property="article:tag" content="agentic ai"/>
+<meta property="article:tag" content="ai agents"/>
+<meta property="article:tag" content="subagents"/>
+<meta property="article:tag" content="marketing analytics"/>
+<meta property="article:published_time" content="2026-11-12T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="AI Agents vs Agentic AI: The Difference, for Marketers"/>
+<meta name="twitter:description" content="One agent does a task. An agentic system adds a planner and a checker. Here is the day I found a second agent in Duct that I had not meant to ship, and what it taught me about the word."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/blog-ai-agents-vs-agentic-ai.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "inLanguage": "en",
+  "headline": "AI Agents vs Agentic AI: The Difference, in a Marketer's Terms",
+  "description": "AI agents vs agentic AI in a marketer's terms: one agent doing a task versus a system that plans and checks, when each fits, and where one product became both.",
+  "datePublished": "2026-11-12T00:00:00+00:00",
+  "dateModified": "2026-11-12T00:00:00+00:00",
+  "articleSection": "Guide",
+  "wordCount": 2190,
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": [
+    "https://getduct.ai/blog/assets/ai-agents-vs-agentic-ai/hero.webp",
+    "https://getduct.ai/assets/og/blog-ai-agents-vs-agentic-ai.jpg"
+  ],
+  "mainEntityOfPage": "https://getduct.ai/blog/ai-agents-vs-agentic-ai",
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Duct Blog",
+    "url": "https://getduct.ai/blog/"
+  },
+  "keywords": [
+    "agentic ai",
+    "ai agents",
+    "subagents",
+    "marketing analytics"
+  ],
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "name": "deepagents",
+      "url": "https://github.com/langchain-ai/deepagents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "AI Agents vs. Agentic AI: A Conceptual Taxonomy, Applications and Challenges",
+      "url": "https://arxiv.org/abs/2505.10468"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "plainer words",
+      "url": "https://www.workday.com/en-us/perspectives/ai/ai-agents-vs-agentic-ai.html"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "AI Agents vs. Agentic AI: Is There Really a Difference?",
+      "url": "https://www.descope.com/blog/post/ai-agents-vs-agentic-ai"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "How we built our multi-agent research system",
+      "url": "https://www.anthropic.com/engineering/multi-agent-research-system"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Organizing Context in a Multi-Agent Harness",
+      "url": "https://www.langchain.com/blog/organizing-context-in-a-multi-agent-harness"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://getduct.ai/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "AI Agents vs Agentic AI: The Difference, in a Marketer's Terms",
+      "item": "https://getduct.ai/blog/ai-agents-vs-agentic-ai"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is ChatGPT agentic AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ChatGPT in a chat window is a generative model: it writes, it does not act. ChatGPT's agent mode, which browses and fills forms on your behalf, is an AI agent, one loop with tools. Neither is an agentic system in the paper's sense, which needs several agents with a plan and a check. The marketing version is the same ladder with your data plugged in."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between generative AI, AI agents and agentic AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Generative AI produces text, images or code from a prompt and stops. An AI agent wraps a model in a loop with tools, so it can read your accounts and act toward a goal. Agentic AI is several agents arranged with a planner, shared memory and a checker. Each level adds autonomy, cost and things to govern."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is an agentic workflow the same as agentic AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. An agentic workflow is a process where steps are decided by a model as it goes, and it can be one agent. Agentic AI, in the usual meaning, is the multi-agent arrangement. A weekly brief written by one agent that fetches, compares and writes is an agentic workflow without being agentic AI."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need agentic AI for my marketing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Probably not as a product category. You need a check on any number that moves budget, and a person approving the move. Whether that check is a second agent, a rule in code or you reading the brief is an engineering choice. Buy the check, not the adjective."
+      }
+    }
+  ]
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+.article-nav-all { font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }
+.prose .post-tags { list-style: none; padding: 0; margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prose .post-tags li { font-size: 13px; font-weight: 500; color: var(--navy-2); background: var(--off); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; margin: 0; }
+.post-hero { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+.post-hero img { width: 100%; height: auto; display: block; border-radius: var(--r-lg); border: 1px solid var(--border); }
+.post-toc { margin: 0 0 40px; padding: 20px 24px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.prose .post-toc-title { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0 0 10px; }
+.post-toc ol { margin: 0; padding-left: 20px; }
+.prose .post-toc li { font-size: 15px; margin-bottom: 4px; }
+.prose .post-toc a { border-bottom: none; }
+.prose h2, .prose h3 { scroll-margin-top: 88px; }
+.post-figure { margin: 36px 0; }
+.prose .post-figure img { height: auto; margin: 0; border: 1px solid var(--border); background: var(--white); }
+.post-figure figcaption, .post-quote figcaption { font-size: 13px; color: var(--navy-3); line-height: 1.6; margin-top: 10px; }
+.post-quote { margin: 36px 0; }
+.post-quote blockquote { margin: 0; }
+.post-quote blockquote p { font-family: var(--serif); font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.post-quote figcaption { padding-left: 27px; }
+.post-table { margin: 28px 0 32px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.post-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; color: var(--navy-3); }
+.post-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--off); }
+.post-table th, .post-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; min-width: 120px; }
+.post-table tr:last-child td { border-bottom: none; }
+.post-table code { font-size: 12px; }
+.prose .post-embed {
+  display: flex; align-items: center; gap: 16px; margin: 28px 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
+  color: var(--navy-3); transition: border-color .15s, background .15s;
+}
+.prose .post-embed:hover { border-color: var(--orange); background: var(--off); }
+.post-embed .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.post-embed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-embed-title { font-size: 16px; color: var(--navy); }
+.post-embed-desc { font-size: 14px; font-weight: 300; line-height: 1.5; }
+.post-embed-host { margin-left: auto; font-size: 12px; color: var(--navy-3); flex-shrink: 0; }
+.post-video { position: relative; margin: 32px 0; aspect-ratio: 16 / 9; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); }
+.prose .post-video-facade { display: block; position: absolute; inset: 0; border: none; color: #fff; }
+.prose .post-video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; }
+.post-video-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,.95) 0%, rgba(13,15,26,.75) 30%, rgba(13,15,26,0) 70%); }
+.post-video-play {
+  position: absolute; z-index: 1; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--orange); font-size: 30px; color: #fff;
+  box-shadow: 0 8px 24px rgba(13,15,26,.35); transition: transform .15s;
+}
+.post-video-facade:hover .post-video-play, .post-video-facade:focus-visible .post-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.post-video-caption { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+.post-video-title { font-family: var(--serif); font-size: 19px; line-height: 1.3; }
+.post-video-note { font-size: 13px; color: #c9ccd8; }
+.post-video iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 640px) {
+  .post-video-title { font-size: 16px; }
+  .post-video-caption { padding: 14px 16px; }
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+  .post-embed-host { display: none; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/ai-agents-vs-agentic-ai.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/integrations/" class="nav-link">Integrations</a>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang" data-duct-lang-menu>
+<button type="button" class="nav-lang-btn" aria-expanded="false" aria-controls="nav-lang-list" aria-label="Language"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#globe"/></svg><span class="nav-lang-code" data-duct-lang-code>EN</span><svg class="ic nav-lang-caret" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></button>
+<div class="nav-lang-menu" id="nav-lang-list">
+<div class="dropdown-menu-inner">
+<a class="nav-lang-item" href="/" hreflang="en" lang="en" data-duct-lang-link="en" data-code="EN" aria-current="true">English</a>
+<a class="nav-lang-item" href="/es/" hreflang="es" lang="es" data-duct-lang-link="es" data-code="ES">Español</a>
+<a class="nav-lang-item" href="/pt-br/" hreflang="pt-BR" lang="pt-BR" data-duct-lang-link="pt-br" data-code="PT">Português (Brasil)</a>
+<a class="nav-lang-item" href="/de/" hreflang="de" lang="de" data-duct-lang-link="de" data-code="DE">Deutsch</a>
+<a class="nav-lang-item" href="/ja/" hreflang="ja" lang="ja" data-duct-lang-link="ja" data-code="JA">日本語</a>
+</div>
+</div>
+</div>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">Guide</p>
+<h1>AI Agents vs Agentic AI: The Difference, in a Marketer&#x27;s Terms</h1>
+<div class="article-meta">Nov 12 2026 · 10 min read · By Shirish Kadam</div>
+<p class="article-made">Claude Code ran the search research, fetched every source cited, read the subagent code and the eval baseline in the Duct repository, and drafted the text and the figure; Shirish checks every quote, number and link before this publishes.</p>
+</header>
+
+<main>
+<figure class="post-hero"><img src="assets/ai-agents-vs-agentic-ai/hero.webp" srcset="assets/ai-agents-vs-agentic-ai/hero-768.webp 768w, assets/ai-agents-vs-agentic-ai/hero.webp 1320w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1320" height="743" fetchpriority="high" alt="A Roman mosaic of water mills: on the left one large wheel turned by a straight channel, on the right a cascade of four smaller wheels stepping down a slope, with an orange sluice gate at the top of the cascade"/></figure>
+<article id="prose" class="prose">
+<p><strong>An AI agent is one program that uses a language model to do a bounded job with tools: read your Google Ads, write the weekly report, propose a bid change. Agentic AI is a system of several such agents, where one plans, others do the parts, and one checks the result. Most marketing jobs need the first. A few need the check, and those are the ones where a wrong number costs money.</strong></p>
+<p>On October 25 I found out that Duct had been agentic in a way I had not intended. The insights agent, the one that reads a team's Search Console, GA4 and ad accounts together and writes the brief, hands its data checks to a smaller helper agent. The framework it runs on (<a href="https://github.com/langchain-ai/deepagents">deepagents</a>, LangChain's agent harness) also mounts a second helper by default, named general-purpose, and that default gives the helper every tool its parent has. So for eight weeks Duct's helper could propose changes to live ad accounts, roll them back and write to memory, with none of the run limits its parent works under.</p>
+<p>Nothing bad happened, because the helper was never asked to do any of that, and because no agent in Duct can apply a change anyway: that needs a person pressing a button. But "nothing happened" is luck, not design. The fix was a 68-line file and a test, <a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_agent_assembly.py"><code>test_agent_assembly.py</code></a>, that fails if any helper ever carries a writing tool again.</p>
+<p>I am starting with that story because it is the whole difference between the two terms in one incident. One agent is a thing you can read. Several agents are a thing you have to govern, and the second one you did not know you had is the one that bites.</p>
+<nav class="post-toc" aria-label="In this post">
+<p class="post-toc-title">In this post</p>
+<ol>
+<li><a href="#what-is-the-difference-between-an-ai-agent-and-agentic-ai">What is the difference between an AI agent and agentic AI?</a></li>
+<li><a href="#is-agentic-ai-just-a-buzzword">Is agentic AI just a buzzword?</a></li>
+<li><a href="#when-does-a-marketing-job-need-more-than-one-agent">When does a marketing job need more than one agent?</a></li>
+<li><a href="#what-is-a-subagent-and-why-does-duct-run-two">What is a subagent, and why does Duct run two?</a></li>
+<li><a href="#does-agentic-make-a-product-better-or-only-more-expensive">Does agentic make a product better, or only more expensive?</a></li>
+<li><a href="#what-should-a-marketer-ask-in-a-demo">What should a marketer ask in a demo?</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+</nav>
+<h2 id="what-is-the-difference-between-an-ai-agent-and-agentic-ai">What is the difference between an AI agent and agentic AI?</h2>
+<p><strong>An AI agent is one model-driven program doing one job. Agentic AI is the arrangement of several, with a plan, a shared memory and a check.</strong> The paper people search for by name, Sapkota, Roumeliotis and Karkee's <a href="https://arxiv.org/abs/2505.10468">AI Agents vs. Agentic AI: A Conceptual Taxonomy, Applications and Challenges</a> (Information Fusion, 2025), describes AI agents as "modular systems driven and enabled by LLMs and LIMs for task-specific automation" (LIMs are large image models, the picture-reading cousins of language models), and agentic AI as "a paradigm shift marked by multi-agent collaboration, dynamic task decomposition, persistent memory" and "coordinated autonomy".</p>
+<p>Workday's Sydney Scott puts the same split in <a href="https://www.workday.com/en-us/perspectives/ai/ai-agents-vs-agentic-ai.html">plainer words</a>: "AI agents are task-oriented software systems that carry out specific, predefined actions within a workflow", and "Where agentic AI determines the plan, AI agents are responsible for completing the steps that move a process forward."</p>
+<p>Strip the vocabulary and you get a table a marketer can use:</p>
+<div class="post-table" role="region" aria-label="Table: , One AI agent, An agentic system" tabindex="0">
+<table>
+<thead><tr><th scope="col"></th><th scope="col">One AI agent</th><th scope="col">An agentic system</th></tr></thead>
+<tbody>
+<tr><td>How many</td><td>one loop, one context window</td><td>several agents, each with its own context window</td></tr>
+<tr><td>Who plans</td><td>the agent, inside its one conversation</td><td>a lead agent breaks the job into parts and hands them out</td></tr>
+<tr><td>Who checks</td><td>nobody, unless you do</td><td>a separate agent whose only job is to find what is wrong</td></tr>
+<tr><td>How it fails</td><td>confidently: a wrong number carried straight into the recommendation</td><td>expensively: more model calls, and a detail lost in the handover between agents</td></tr>
+<tr><td>Cost per run</td><td>the cheapest it gets</td><td>Anthropic measured about 15 times the tokens of a chat</td></tr>
+<tr><td>A marketing job that fits</td><td>"what was my ROAS last week, by campaign"</td><td>"why did signups drop, and can I trust the numbers that say so"</td></tr>
+</tbody>
+</table>
+</div>
+<p>The row that matters is "who checks". Everything else is plumbing.</p>
+<h2 id="is-agentic-ai-just-a-buzzword">Is agentic AI just a buzzword?</h2>
+<p><strong>As a label, mostly yes. As a question, no.</strong> Descope's take, in <a href="https://www.descope.com/blog/post/ai-agents-vs-agentic-ai">AI Agents vs. Agentic AI: Is There Really a Difference?</a>, is that for most practitioners "these differences are more semantic than substantive", and the autocomplete data agrees with the confusion: the top phrasings around this query are the paper's title, "reddit", "examples" and "vs generative ai", which is what people type when a word is everywhere and nobody will define it. "Agentic" is doing for software what "artisanal" did for bread: same loaf, new price.</p>
+<p>The useful question hides inside the label. When a vendor says agentic, ask who checks the work. A product with one model reading your data and writing a recommendation is one agent, whatever the adjective. A product where a second agent reads the same data looking for what is wrong with it, before the first one recommends anything, is doing the one thing the word was supposed to mean. If you cannot find that second agent in the demo, it is not there.</p>
+<h2 id="when-does-a-marketing-job-need-more-than-one-agent">When does a marketing job need more than one agent?</h2>
+<p><strong>When the job is wide, or when being wrong is expensive. Otherwise one agent, and often no agent at all.</strong> Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents">Building effective agents</a> is the clearest guide I know on this, and its advice is to find "the simplest solution possible, and only increasing complexity when needed", because agent systems "often trade latency and cost for better task performance". Add a second agent "only when it demonstrably improves outcomes".</p>
+<p>They then measured what "demonstrably" looks like. In <a href="https://www.anthropic.com/engineering/multi-agent-research-system">How we built our multi-agent research system</a>, a lead agent with parallel helpers "outperformed single-agent Claude Opus 4 by 90.2% on our internal research eval". It also used "about 15× more tokens than chats", and "token usage by itself explains 80% of the variance": the second agent helps mostly by reading more. Their conclusion is a budget rule, not a technology rule: "multi-agent systems require tasks where the value of the task is high enough".</p>
+<p>For a growth team, that sorts the week's jobs quickly:</p>
+<ul>
+<li><strong>One agent, or none:</strong> the Monday read of one dashboard, a CTR by campaign, a draft of next week's post. One read, one answer. A good <a href="/tools/">calculator</a> does some of these without a model at all.</li>
+<li><strong>One agent with a checker:</strong> anything that ends in "so we should move budget". The read is cheap; the recommendation is not, and the number under it deserves a second pair of eyes.</li>
+<li><strong>Several agents in parallel:</strong> a competitor sweep across thirty sites, a keyword gap across every page you rank for. Wide jobs, where the gain is reading more than one context window can hold.</li>
+</ul>
+<p>If you want the one-agent case drawn out step by step, <a href="/blog/what-is-an-agentic-workflow">the agentic workflow guide</a> walks a weekly brief through it. The line between an agent and plain automation is in <a href="/blog/ai-agent-vs-chatbot-vs-automation">AI agent vs chatbot vs automation</a>.</p>
+<h2 id="what-is-a-subagent-and-why-does-duct-run-two">What is a subagent, and why does Duct run two?</h2>
+<p><strong>A subagent is a second agent the first one can hand a bounded job to, which does that job in its own context window and reports back.</strong> Duct's insights agent runs two: a verifier, and the read-only general-purpose helper from the story above.</p>
+<figure class="post-figure" data-zoom><img src="assets/ai-agents-vs-agentic-ai/one-agent-vs-verifier.svg" width="1000" height="600" loading="lazy" decoding="async" alt="Two loops side by side. On the left, one agent reads data, writes and recommends in a single loop. On the right, a lead agent plans, hands data checks to a verifier subagent in its own context, and reads back what was verified, what was wrong and what could not be checked before it recommends; a person approves any change."/><figcaption>The second agent does not make the first one smarter. It makes the first one's number checked. The orange box is the only thing that changed.</figcaption></figure>
+<p>The verifier <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/subagents/verify.py">landed on August 31</a>, and the commit that added it gives the two reasons it is a separate agent rather than a step in the main loop. The first is room: running twelve checks means fetching several entities and reasoning about each, and doing that inline "would fill the analyst's window with check plumbing before it wrote a word of the actual answer". The second is posture: the analyst is looking for what matters, the verifier for what is wrong with the data, "an adversarial posture that reads badly when mixed into the same turn". LangChain's Thushanth Bengre and Chester Curme make the same case in <a href="https://www.langchain.com/blog/organizing-context-in-a-multi-agent-harness">Organizing Context in a Multi-Agent Harness</a>: "Subagents provide context isolation", and for a checker specifically, "inheriting the supervisor's reasoning can be counterproductive". You do not want the auditor to have read the pitch.</p>
+<p>What the verifier checks is a library of <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/checks.py">twelve questions</a> in five families, each one there because the naive reading produced a believable wrong number in a real account: is tracking still recording anything (liveness), is this real traffic or your own team (contamination), are the ad platform's conversions and the analytics' conversions the same unit (units), where in the funnel is the ask (funnel), and did the money actually settle (money). The analyst's prompt tells it to <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/prompts/autonomous.py">delegate before any recommendation</a>, and the verifier comes back with three lists: what it verified, what it found wrong, and what it could not check at all. That third list is half the value. "I could not check whether your conversions include internal traffic" is a sentence a dashboard cannot say.</p>
+<p>Two honest limits. Nine of the twelve checks run today; the three money checks are declared but wait on billing entities the verifier cannot fetch yet, so a brief will tell you it could not confirm revenue settled rather than pretend it did. And the verifier runs on Duct's Standard model tier while the analyst runs on Heavy (<a href="https://github.com/5hirish/duct/blob/main/backend/agents/tiers.py"><code>tiers.py</code></a>), which is a cost decision I made on reasoning, not on a measurement. Which brings me to the question everyone should ask.</p>
+<h2 id="does-agentic-make-a-product-better-or-only-more-expensive">Does agentic make a product better, or only more expensive?</h2>
+<p><strong>I cannot show you a number that says Duct's verifier made its briefs better. I can show you what it costs, and why I keep it anyway.</strong> The eval that gates changes to the agent records a baseline per model: on DeepSeek V4 Flash, a brief on the synthetic test account costs a median of $0.0052 and four model calls, with a 77.8% pass rate over 18 trials (<a href="https://github.com/5hirish/duct/blob/main/backend/tests/eval/baselines.json"><code>baselines.json</code></a>, recorded September 30). The verifier's calls are inside that number. So "agentic" costs cents here, not dollars, because the second agent runs on a cheaper tier and, since a change in October, reuses the analyst's data pulls instead of fetching them again.</p>
+<p>What the eval does not yet do is run the same brief with the verifier switched off and compare. That is the measurement that would settle whether the second agent earns its place, and it is on the list. Until then, the honest statement is the one Anthropic's research team made about their own system: more agents help by reading more, and they are worth it only where the task is worth it. A weekly recommendation that moves ad spend is worth a $0.005 check. A number in a dashboard nobody acts on is not.</p>
+<p>The real cost of agentic is not the model calls. It is governance. Every extra agent is another thing with tools, and my October 25 helper is what that looks like when nobody is counting. That is why <a href="/blog/what-is-harness-engineering">the harness around the agents</a>, not the agents themselves, is where I spend the time, and why every change still ends with <a href="/blog/human-in-the-loop-ai-agents">a person approving it</a>.</p>
+<h2 id="what-should-a-marketer-ask-in-a-demo">What should a marketer ask in a demo?</h2>
+<p>Six questions, in the order they save you money:</p>
+<ol>
+<li><strong>How many agents are there, and what can each one do?</strong> Ask for the list of tools per agent. A vendor who cannot produce it has not read their own system.</li>
+<li><strong>Who checks the numbers before the recommendation?</strong> If the answer is "the model is very accurate", there is no checker.</li>
+<li><strong>What does it tell me it could not check?</strong> The good answer is a list. The bad answer is silence.</li>
+<li><strong>Which actions need a person, and what enforces that?</strong> A rule in the prompt is a wish. A missing tool is a rule.</li>
+<li><strong>What does one run cost, on my data?</strong> Ask for the number per brief, not per month.</li>
+<li><strong>Can I read the code?</strong> You may never read it, but a vendor's answer to this question tells you how confident they are in the first five.</li>
+</ol>
+<h2 id="faq">FAQ</h2>
+<h3 id="is-chatgpt-agentic-ai">Is ChatGPT agentic AI?</h3>
+<p>ChatGPT in a chat window is a generative model: it writes, it does not act. ChatGPT's agent mode, which browses and fills forms on your behalf, is an AI agent, one loop with tools. Neither is an agentic system in the paper's sense, which needs several agents with a plan and a check. The marketing version is the same ladder with your data plugged in.</p>
+<h3 id="what-is-the-difference-between-generative-ai-ai-agents-and-agentic-ai">What is the difference between generative AI, AI agents and agentic AI?</h3>
+<p>Generative AI produces text, images or code from a prompt and stops. An AI agent wraps a model in a loop with tools, so it can read your accounts and act toward a goal. Agentic AI is several agents arranged with a planner, shared memory and a checker. Each level adds autonomy, cost and things to govern.</p>
+<h3 id="is-an-agentic-workflow-the-same-as-agentic-ai">Is an agentic workflow the same as agentic AI?</h3>
+<p>No. An agentic workflow is a process where steps are decided by a model as it goes, and it can be one agent. Agentic AI, in the usual meaning, is the multi-agent arrangement. A weekly brief written by one agent that fetches, compares and writes is an agentic workflow without being agentic AI.</p>
+<h3 id="do-i-need-agentic-ai-for-my-marketing">Do I need agentic AI for my marketing?</h3>
+<p>Probably not as a product category. You need a check on any number that moves budget, and a person approving the move. Whether that check is a second agent, a rule in code or you reading the brief is an engineering choice. Buy the check, not the adjective.</p>
+<ul class="post-tags" aria-label="Tags"><li>agentic ai</li><li>ai agents</li><li>subagents</li><li>marketing analytics</li></ul>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-prev" href="/blog/local-ai-agents">← Local AI Agents: What Stays on Your Machine, What Leaves It</a>
+<a class="article-nav-all" href="/blog/">All posts</a>
+</nav>
+</main>
+
+<!-- The closer is the product, not a pitch: the same bridge the tools pages
+     end on, with a shot, so a post is not the one page on the site that ends
+     in text alone. Which one depends on the post's audience. -->
+<section class="duct-bridge" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Reading three tools together is the whole job. Duct does it on your machine.</p>
+      <p class="duct-bridge-body">Ask why signups dropped. Duct reads Search Console, GA4 and your ads and revenue tools together, answers with the sources it read, and proposes the change. You approve it. Open source, free with your own keys.</p>
+      <p class="duct-bridge-actions"><a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a><a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a></p>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"/>
+      <figcaption>Why are signups down? Asked once, answered from four tools.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/integrations/">Integrations</a>
+<a href="/mcp">MCP servers</a>
+<a href="/compare">Compare</a>
+<a href="/changelog/">Changelog</a>
+</div>
+<div class="footer-col">
+<h4>Resources</h4>
+<a href="/blog/">Blog</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-legal" aria-label="Legal">
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</nav>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
