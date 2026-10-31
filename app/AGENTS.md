@@ -106,7 +106,15 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     New plan and Plan ahead ask how far ahead (`PlanPeriodPicker.jsx`: the
     month, 1 or 2 weeks, 30 days) and are the second. The dates come from
     `lib/contentSchedule.js`, which mirrors `agents/content/plan_period.py`
-    and must keep agreeing with it
+    and must keep agreeing with it. The hub's Posts tab opens on its Waiting
+    chip while any draft is unanswered: that view is the drafts queue (#266,
+    `components/content/DraftsQueue.jsx`), read from `status=draft` rather
+    than a route of its own. Approve opens `PublishModal` on the channel's
+    best slot (`suggestedAt`), Skip takes a `SkipReason` the content agent's
+    next draft reads as a feedback memory. Its one notice a day is
+    `components/content/DailyDraftsReminder.jsx`, mounted once in the app
+    layout inside `AuthGuard`; its time and switch are per device
+    (`lib/dailyReminder.js`)
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
   - `connections/` — connector/integration management
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the

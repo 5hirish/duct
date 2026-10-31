@@ -58,6 +58,16 @@ msgstr "(tú)"
 msgid "{0, plural, one {# call} other {# calls}}"
 msgstr "{0, plural, one {# llamada} other {# llamadas}}"
 
+#. placeholder {0}: notice.count
+#: src/components/content/DailyDraftsReminder.jsx
+msgid "{0, plural, one {# draft ready} other {# drafts ready}}"
+msgstr "{0, plural, one {# borrador listo} other {# borradores listos}}"
+
+#. placeholder {0}: drafts.length
+#: src/components/content/DraftsQueue.jsx
+msgid "{0, plural, one {# draft waiting for you} other {# drafts waiting for you}}"
+msgstr "{0, plural, one {# borrador esperándote} other {# borradores esperándote}}"
+
 #. placeholder {0}: items.length
 #: src/components/memory/MemoryTimeline.jsx
 msgid "{0, plural, one {# match} other {# matches}}"
@@ -905,6 +915,10 @@ msgstr "Algunas palabras que el agente aplica a los elementos visuales."
 msgid "A finding, written for you"
 msgstr "Un hallazgo, escrito para ti"
 
+#: src/components/content/DraftsQueue.jsx
+msgid "A good default for {channelLabel} until five posts have numbers."
+msgstr "Un buen valor predeterminado para {channelLabel} hasta que cinco publicaciones tengan números."
+
 #: src/app/(app)/connections/page.jsx
 msgid "A key is scoped to ONE ad account — make sure it's the right one."
 msgstr "Una clave está limitada a UNA cuenta de anuncios — asegúrate de que sea la correcta."
@@ -1278,6 +1292,10 @@ msgstr "Todas las fuentes"
 msgid "All statuses"
 msgstr "Todos los estados"
 
+#: src/lib/contentEnums.js
+msgid "Already said"
+msgstr "Ya dicho"
+
 #: src/app/(auth)/page.js
 #~ msgid "Already using Duct?"
 #~ msgstr "¿Ya usas Duct?"
@@ -1440,6 +1458,7 @@ msgstr "Aplicando ahora"
 msgid "Applying…"
 msgstr "Aplicando…"
 
+#: src/components/content/DraftsQueue.jsx
 #: src/components/insights/ToolApproval.jsx
 msgid "Approve"
 msgstr "Aprobar"
@@ -1455,6 +1474,10 @@ msgstr "Aprobar y aplicar"
 #: src/app/(app)/execute/page.jsx
 msgid "Approve all"
 msgstr "Aprobar todo"
+
+#: src/components/content/DailyDraftsReminder.jsx
+msgid "Approve, edit or skip them on Content Studio's Posts tab."
+msgstr "Apruébalos, edítalos u omítelos en la pestaña Publicaciones de Content Studio."
 
 #: src/app/(app)/execute/page.jsx
 msgid "Approved"
@@ -2746,6 +2769,10 @@ msgstr "Actualmente asignado a {foreignName} — un conector de un compañero de
 msgid "Customise"
 msgstr "Personalizar"
 
+#: src/components/content/ReminderSetting.jsx
+msgid "Daily reminder"
+msgstr "Recordatorio diario"
+
 #: src/components/AppSidebar.jsx
 msgid "Dark mode"
 msgstr "Modo oscuro"
@@ -3052,8 +3079,8 @@ msgid "Download this document"
 msgstr "Descargar este documento"
 
 #: src/app/(app)/content/page.jsx
-msgid "draft"
-msgstr "borrador"
+#~ msgid "draft"
+#~ msgstr "borrador"
 
 #: src/lib/contentEnums.js
 msgid "Draft"
@@ -3333,6 +3360,10 @@ msgstr "Editar"
 #: src/components/content/FormatLibrary.jsx
 msgid "Edit format"
 msgstr "Editar formato"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Edit in chat"
+msgstr "Editar en el chat"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Edit project context"
@@ -3870,6 +3901,10 @@ msgstr "GitHub no está configurado en este servidor"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Give me the number first, then the why. Never recommend a change I cannot roll back."
 msgstr "Dame el número primero, luego el porqué. Nunca recomiendes un cambio que no pueda revertir."
+
+#: src/lib/contentEnums.js
+msgid "Gives too much away"
+msgstr "Revela demasiado"
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Go back to the Duct desktop app and start again — it usually works second time."
@@ -5292,6 +5327,10 @@ msgstr "sin canónica"
 msgid "No caption"
 msgstr "Sin título"
 
+#: src/components/content/DraftsQueue.jsx
+msgid "No caption yet."
+msgstr "Sin descripción aún."
+
 #: src/components/content/PostVideo.jsx
 msgid "No clip yet"
 msgstr "Aún no hay clip"
@@ -5307,6 +5346,10 @@ msgstr "Sin compromiso — lo evaluaremos y te contactaremos."
 #: src/components/audit/AuditStepProgress.jsx
 msgid "No competitor research was returned for this audit."
 msgstr "No se devolvió ninguna investigación de la competencia para esta auditoría."
+
+#: src/components/content/ReminderSetting.jsx
+msgid "No daily reminder"
+msgstr "Sin recordatorio diario"
 
 #: src/components/content/PlanList.jsx
 msgid "No drafts yet. Pick a pending post to start one."
@@ -5571,9 +5614,17 @@ msgstr "no encontrado"
 msgid "Not granted"
 msgstr "No concedido"
 
+#: src/lib/contentEnums.js
+msgid "Not interesting"
+msgstr "No interesante"
+
 #: src/app/(start)/start/page.jsx
 msgid "Not it — try another"
 msgstr "Ese no es, prueba otro"
+
+#: src/lib/contentEnums.js
+msgid "Not my voice"
+msgstr "No es mi voz"
 
 #: src/components/models/ModelPicker.jsx
 msgid "not on {engine}"
@@ -5645,6 +5696,10 @@ msgstr "No iniciado"
 msgid "Not stored"
 msgstr "No almacenado"
 
+#: src/lib/contentEnums.js
+msgid "Not true"
+msgstr "No es verdad"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Note"
 msgstr "Nota"
@@ -5693,6 +5748,7 @@ msgstr "Nada aquí"
 msgid "Nothing here yet."
 msgstr "Nada aquí aún."
 
+#: src/components/content/DraftsQueue.jsx
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Nothing is waiting on you."
 msgstr "Nada te está esperando."
@@ -6971,6 +7027,10 @@ msgstr "Recordado:"
 msgid "Remembering…"
 msgstr "Recordando…"
 
+#: src/components/content/ReminderSetting.jsx
+msgid "Remind me at {at}"
+msgstr "Recuérdame a las {at}"
+
 #: src/app/(app)/execute/page.jsx
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/ProjectMembers.jsx
@@ -7857,6 +7917,10 @@ msgstr "Mostrar {rightText}"
 msgid "Show {widest} days"
 msgstr "Mostrar {widest} días"
 
+#: src/components/content/DraftsQueue.jsx
+msgid "Show all"
+msgstr "Mostrar todo"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Show changes"
 msgstr "Mostrar cambios"
@@ -7871,6 +7935,7 @@ msgstr "Mostrar Duct en"
 msgid "Show key"
 msgstr "Mostrar clave"
 
+#: src/components/content/DraftsQueue.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Show less"
 msgstr "Mostrar menos"
@@ -8062,6 +8127,7 @@ msgstr "Mapa del sitio"
 msgid "Sketching image prompts…"
 msgstr "Bocetando indicaciones de imagen…"
 
+#: src/components/content/DraftsQueue.jsx
 #: src/components/insights/AccountSelect.jsx
 #: src/components/insights/ToolApproval.jsx
 msgid "Skip"
@@ -9550,6 +9616,10 @@ msgstr "Visuales"
 msgid "Voice & messaging"
 msgstr "Voz y mensajería"
 
+#: src/app/(app)/content/page.jsx
+msgid "waiting"
+msgstr "esperando"
+
 #: src/components/workspace/ChatInput.jsx
 msgid "Waiting for agent…"
 msgstr "Esperando al agente…"
@@ -9818,6 +9888,10 @@ msgstr "Por qué es importante y cómo debería aplicarlo un agente. Opcional."
 msgid "Why it worked:"
 msgstr "Por qué funcionó:"
 
+#: src/components/content/DraftsQueue.jsx
+msgid "Why not? The next draft learns from it."
+msgstr "¿Por qué no? El siguiente borrador aprende de ello."
+
 #: src/components/content/PlanDayOne.jsx
 msgid "Why we rebuilt onboarding from scratch"
 msgstr "Por qué reconstruimos el onboarding desde cero"
@@ -10042,6 +10116,10 @@ msgstr "tus artefactos"
 #: src/components/workspace/ActivityRow.jsx
 msgid "your ask"
 msgstr "tu solicitud"
+
+#: src/components/content/DraftsQueue.jsx
+msgid "Your best hour on {channelLabel}, from {posts} posts with numbers."
+msgstr "Tu mejor hora en {channelLabel}, de {posts} publicaciones con números."
 
 #: src/components/connections/ProviderCard.jsx
 msgid "your ChatGPT account"

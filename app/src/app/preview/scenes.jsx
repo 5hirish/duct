@@ -88,6 +88,8 @@ import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import TextPostEditor from "@/components/content/TextPostEditor";
 import PostCard from "@/components/content/PostCard";
+import DraftsQueue from "@/components/content/DraftsQueue";
+import ReminderSetting from "@/components/content/ReminderSetting";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
@@ -1153,6 +1155,22 @@ const X_OVER_POST = {
   caption: "Most freelancers who ask me about tax want a better percentage. The percentage is almost never the problem. The problem is that the money sits in the same account as everything else for weeks, and money that looks spendable gets spent. Move it the hour the invoice clears, into an account with no card.",
 };
 const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", post_bridge_post_id: "pb_story_x", perf: {} };
+
+// The drafts queue (issue 266): three drafts nobody has answered, from a
+// chat (X), a plan day (the carousel) and the LinkedIn writer, newest first.
+const QUEUE_DRAFTS = [
+  { ...X_THREAD_POST, id: "queue-x", created_at: "2026-10-30T18:00:00Z" },
+  { ...STORY_POSTS.post_1, id: "queue-carousel", status: "draft", created_at: "2026-10-30T09:00:00Z" },
+  { ...LINKEDIN_POST, id: "queue-li", created_at: "2026-10-29T16:00:00Z" },
+];
+// GET /content/best-slot per channel: X on its default, LinkedIn from the
+// account's own history, TikTok on the weekday-morning fallback.
+const QUEUE_SLOTS = {
+  twitter: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 0, hour: 9 },
+  linkedin: { at: "2026-11-03T07:00:00Z", reason: "history", posts: 7, hour: 8 },
+  tiktok: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 2, hour: 9 },
+};
+const queueSlot = (_project, channel) => Promise.resolve(QUEUE_SLOTS[channel]);
 
 /** TextPostEditor is controlled by the post pane; this is that pane's state. */
 function TextPostScene({ initial }) {
@@ -2712,6 +2730,48 @@ export const SCENES = [
       <div className="grid max-w-md grid-cols-2 gap-4 p-5">
         <PostCard post={X_THREAD_POST} />
         <PostCard post={LINKEDIN_POST} />
+      </div>
+    ),
+  },
+  {
+    id: "drafts-queue",
+    state: "three drafts waiting · one slot from history",
+    group: "DraftsQueue",
+    title: "The drafts queue on the Posts tab",
+    note: "The Posts tab opens on its Waiting chip while any draft is unanswered (issue 266): plan-day drafts and chat drafts alike, any channel, newest first. Each card says when it would go out and why: the account's own best hour once five posts on that channel have numbers, else the channel's default. Approve opens the publish dialog on that time; Edit in chat opens the post's workspace; Skip asks one of five reasons and turns it into a feedback memory the content agent's next draft reads. A long LinkedIn post folds behind Show all. What to check: Approve is the heaviest thing on each card, and Skip sits right, out of the way.",
+    render: () => (
+      <div className="p-5">
+        <DraftsQueue
+          posts={QUEUE_DRAFTS}
+          projectId="p"
+          loadSlot={queueSlot}
+          skip={(id) => new Promise((resolve) => setTimeout(() => resolve({ id, status: "discarded" }), 400))}
+          aside={<ReminderSetting surface="shell" />}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "drafts-queue-empty",
+    state: "the last draft answered",
+    group: "DraftsQueue",
+    title: "Nothing waiting",
+    note: "What the Waiting view says once the last draft is answered. The chip stays while it is the one selected, so the view never loses its label; on the next visit the tab opens on All instead.",
+    render: () => (
+      <div className="p-5">
+        <DraftsQueue posts={[]} projectId="p" loadSlot={queueSlot} aside={<ReminderSetting surface="browser" />} />
+      </div>
+    ),
+  },
+  {
+    id: "reminder-setting",
+    state: "the daily notice's time",
+    group: "ReminderSetting",
+    title: "When the daily notice arrives",
+    note: "One notice a day, \"3 drafts ready\", through the desktop shell or a browser tab that granted notifications, and only while the app is not being looked at. Per device, beside the queue. Hidden where nothing can notify, because a setting for a notice that can never arrive is a promise the page breaks.",
+    render: () => (
+      <div className="p-5">
+        <ReminderSetting surface="shell" />
       </div>
     ),
   },

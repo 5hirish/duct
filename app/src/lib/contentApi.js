@@ -291,6 +291,45 @@ export async function markPostPosted(postId, { publishedUrl } = {}) {
 }
 
 /**
+ * The next good time for a post on `channel`, as `{ at, reason, posts, hour }`:
+ * `reason` is SlotReason.HISTORY once the account's own posts with numbers
+ * decide it, else SlotReason.DEFAULT. `tz` is the reader's zone, so the hour
+ * is theirs.
+ */
+export async function getBestSlot(projectId, channel, tz = browserTimeZone()) {
+  const params = new URLSearchParams({ project_id: projectId, channel, tz });
+  const res = await fetch(
+    `${BASE}/api/content/best-slot?${params.toString()}`,
+    { headers: backendAuthedHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+/** No to a draft, with the SkipReason that shapes the next one. */
+export async function skipPost(postId, reason) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/skip`,
+    {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ reason }),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
+function browserTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    // An engine without Intl zones: the server reads "" as UTC.
+    return "";
+  }
+}
+
+/**
  * A schedule time as an absolute instant. The picker's value
  * ("2026-10-02T09:00") has no zone, and the server read it as UTC, so a
  * post set for 9:00 in Madrid went out at 11:00. JavaScript reads that

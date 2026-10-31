@@ -702,6 +702,12 @@ agents/
     │                     (days with a drafted post are kept). It used to insert every
     │                     time, so each refinement in chat left a second plan beside the
     │                     first. app/src/lib/contentSchedule.js mirrors these rules
+    ├── best_time.py    — when a draft goes out (#266): the account's own best hour on
+    │                     that channel once five posts there have numbers, else the
+    │                     channel's default, in the reader's zone, never on top of a
+    │                     post already scheduled there. performance.py is the plan's half.
+    │                     Its route sits beside POST /content/posts/{id}/skip, whose
+    │                     reason becomes a feedback memory the next draft reads
     ├── performance.py  — the account's own history for a plan: type ranking (completion,
     │                     saves, shares; never likes), explore/exploit, graded bets, best
     │                     posting times. An unrecorded metric is unknown, never zero.
