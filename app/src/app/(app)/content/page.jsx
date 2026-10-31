@@ -56,6 +56,14 @@ export default function ContentLandingPage() {
   const project = useMemo(() => (projectId ? getProjectById(projectId) : null), [projectId]);
   const projectName = project?.profile?.company?.name || project?.name || t`Project`;
 
+  // A link from outside the hub (the plan board's first-run fixes) names its
+  // tab; read once here rather than with useSearchParams, which would make the
+  // whole hub suspend for a value only the first render needs.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    if (TABS.includes(wanted)) setTab(wanted);
+  }, []);
+
   if (projectId === "") {
     return (
       <div className="max-w-2xl mx-auto py-12 px-6 text-center">
@@ -108,7 +116,7 @@ export default function ContentLandingPage() {
           each one loads its project's data on mount, and the Posts tab's
           loading flag would otherwise never reset for the new project. */}
       <div key={projectId}>
-        {tab === "plan"      && <PlanTab      projectId={projectId} />}
+        {tab === "plan"      && <PlanTab      projectId={projectId} onOpenTab={setTab} />}
         {tab === "posts"     && <PostsTab     projectId={projectId} />}
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
           {tab === "analytics" && (
@@ -128,13 +136,13 @@ export default function ContentLandingPage() {
 // Plan tab
 // ---------------------------------------------------------------------------
 
-function PlanTab({ projectId }) {
+function PlanTab({ projectId, onOpenTab }) {
   // This tab scrolls inside .app-main-wide, so nothing above gives the board a
   // height — it is the one caller that has to state one. svh, not vh, to match
   // the rest of the app's full-height surfaces.
   return (
     <div className="h-[calc(100svh-15rem)] min-h-[28rem]">
-      <PlanBoard projectId={projectId} />
+      <PlanBoard projectId={projectId} onOpenTab={onOpenTab} />
     </div>
   );
 }

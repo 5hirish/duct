@@ -193,6 +193,10 @@ msgstr "{crawledPages, plural, one {# página} other {# páginas}}"
 msgid "{dayCount, plural, one {# day} other {# days}}"
 msgstr "{dayCount, plural, one {# dia} other {# dias}}"
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "{days, plural, one {# day} other {# days}}"
+msgstr "{days, plural, one {# dia} other {# dias}}"
+
 #: src/app/(app)/execute/page.jsx
 msgid "{destructiveCount, plural, one {# destructive change} other {# destructive changes}} — {destructiveNames}."
 msgstr "{destructiveCount, plural, one {# alteração destrutiva} other {# alterações destrutivas}} — {destructiveNames}."
@@ -490,6 +494,10 @@ msgstr "{percent}% usado"
 msgid "{phase}… {elapsed}s"
 msgstr "{phase}… {elapsed}s"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "{pillarCount, plural, one {# content pillar} other {# content pillars}}"
+msgstr "{pillarCount, plural, one {# pilar de conteúdo} other {# pilares de conteúdo}}"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount} — sem API key, sem cobrança extra."
@@ -521,6 +529,10 @@ msgstr "{read}, parcialmente lido"
 #: src/components/onboarding/DocumentPicker.jsx
 #~ msgid "{read}, read the first part"
 #~ msgstr "{read}, leia a primeira parte"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "{ready} of {total} ready"
+msgstr "{ready} de {total} prontos"
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "{ready} of {total} will apply · {blocked, plural, one {# needs a person} other {# need a person}}"
@@ -819,6 +831,10 @@ msgstr "✓ Relatório pronto — me pergunte o que quiser sobre as constataçõ
 msgid "✦ Reasoned"
 msgstr "✦ Raciocinado"
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "1 week"
+msgstr "1 semana"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "1–2 wks"
 msgstr "1–2 semanas"
@@ -826,6 +842,10 @@ msgstr "1–2 semanas"
 #: src/components/audit/AuditReportV1.jsx
 msgid "1–3 days"
 msgstr "1–3 dias"
+
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "2 weeks"
+msgstr "2 semanas"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "2–4 hrs"
@@ -835,14 +855,15 @@ msgstr "2–4 horas"
 msgid "23 came from your own team"
 msgstr "23 vieram da sua própria equipe"
 
+#: src/components/content/PlanPeriodPicker.jsx
 #: src/lib/usageApi.js
 msgid "30 days"
 msgstr "30 dias"
 
 #: src/components/content/ContentWorkspace.jsx
 #: src/components/content/PlanViewport.jsx
-msgid "30-day plan"
-msgstr "Plano de 30 dias"
+#~ msgid "30-day plan"
+#~ msgstr "Plano de 30 dias"
 
 #: src/lib/usageApi.js
 msgid "7 days"
@@ -887,6 +908,10 @@ msgstr "Uma constatação, escrita para você"
 #: src/app/(app)/connections/page.jsx
 msgid "A key is scoped to ONE ad account — make sure it's the right one."
 msgstr "Uma chave é restrita a UMA conta de anúncio — certifique-se de que seja a correta."
+
+#: src/components/content/PlanDayOne.jsx
+msgid "A month of posts, planned in about three minutes."
+msgstr "Um mês de posts, planejado em cerca de três minutos."
 
 #: src/components/ReloadToast.jsx
 msgid "A new version of Duct is ready"
@@ -1100,6 +1125,10 @@ msgstr "Adicione um ou mais nomes, separados por vírgulas."
 msgid "Add pillar"
 msgstr "Adicionar pilar"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Add pillars"
+msgstr "Adicionar pilares"
+
 #: src/app/(app)/memory/page.jsx
 msgid "Add something about how you work"
 msgstr "Adicione algo sobre como você trabalha"
@@ -1201,6 +1230,7 @@ msgstr "todos"
 
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/artifacts/page.jsx
+#: src/components/content/PlanList.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "All"
 msgstr "Todos"
@@ -1338,6 +1368,10 @@ msgstr "Algo específico? (opcional)"
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr "Chave de API"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
+msgstr "Apify está conectado. Posts que você salva no Discover moldam os tópicos do plano."
 
 #: src/app/(app)/connections/page.jsx
 msgid "App secret"
@@ -1693,6 +1727,10 @@ msgstr "Estilos base"
 msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
 msgstr "Estilos base que o construtor de slides incorpora para este formato. Navegue por eles em Biblioteca → Estilos."
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Behind the app"
+msgstr "Por trás do app"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "being written"
 msgstr "sendo escrito"
@@ -1756,6 +1794,7 @@ msgstr "Contexto da marca"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "Brand voice"
 msgstr "Voz da marca"
 
@@ -2069,6 +2108,10 @@ msgstr "Claude Code no meu laptop"
 msgid "Clear"
 msgstr "Limpar"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Clicks"
+msgstr "Cliques"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Client ID"
 msgstr "ID do Cliente"
@@ -2367,8 +2410,14 @@ msgid "Content goal"
 msgstr "Meta de conteúdo"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "Content pillars"
 msgstr "Pilares de conteúdo"
+
+#: src/components/content/ContentWorkspace.jsx
+#: src/components/content/PlanViewport.jsx
+msgid "Content plan"
+msgstr "Plano de conteúdo"
 
 #: src/app/(app)/content/page.jsx
 #: src/components/AppNav.jsx
@@ -2597,6 +2646,10 @@ msgstr "Não foi possível salvar. Tente novamente."
 msgid "Couldn't use {name}"
 msgstr "Não foi possível usar {name}"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Covers {range}, one post a day. You can revise any day after."
+msgstr "Cobre {range}, um post por dia. Você pode revisar qualquer dia depois."
+
 #: src/components/TelemetryCard.jsx
 msgid "Crash reports & usage"
 msgstr "Relatórios de falhas e uso"
@@ -2820,6 +2873,10 @@ msgstr "Excluir este formato?"
 msgid "Deleting…"
 msgstr "Excluindo…"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Describe your brand"
+msgstr "Descreva sua marca"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Deselect all ({selectedCount}/{approvableCount} selected)"
 msgstr "Desmarcar tudo ({selectedCount}/{approvableCount} selecionados)"
@@ -3006,6 +3063,10 @@ msgstr "Rascunho"
 msgid "Draft a clone"
 msgstr "Rascunhar um clone"
 
+#: src/components/content/PostMiniCard.jsx
+msgid "Draft post"
+msgstr "Rascunho de post"
+
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
 msgstr "Rascunhando post"
@@ -3131,6 +3192,10 @@ msgstr "Duct lê \"semana passada\" e \"ontem\" em {chosenZone}{offsetSuffix}."
 #: src/components/onboarding/FrontDoor.jsx
 msgid "Duct reads it the way a search engine does."
 msgstr "Duct lê da mesma forma que um mecanismo de busca."
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Duct reads your brand, your pillars and what has already worked, then lays out the weeks ahead, a post a day, with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
+msgstr "Duct lê sua marca, seus pilares e o que já funcionou, então planeja as semanas seguintes, um post por dia, com uma razão para cada um. Você os rascunha um por vez, e nada é publicado sem o seu sim."
 
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Duct reads your site the way a search engine does, then tells you what to fix first."
@@ -3374,6 +3439,14 @@ msgstr "Cada entrada nomeia quem fez, então o registro começa quando há uma c
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr "Cada medição, o método, notas para quem for criar a correção"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Every post dated, with its pillar and what it is for. Open one and Duct drafts it with you."
+msgstr "Cada post datado, com seu pilar e para que serve. Abra um e o Duct o rascunha com você."
+
+#: src/components/content/PlanList.jsx
+msgid "Every post in this plan has a draft."
+msgstr "Cada post neste plano tem um rascunho."
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Every type has results"
 msgstr "Todo tipo tem resultados"
@@ -3398,6 +3471,7 @@ msgstr "Tudo o que seus agentes produziram para <0>{projectName}</0> — relató
 msgid "Evidence: {evidence}"
 msgstr "Evidência: {evidence}"
 
+#: src/components/content/PlanDayOne.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Example"
 msgstr "Exemplo"
@@ -3581,6 +3655,10 @@ msgstr "Primeiro prompt"
 msgid "Fix These First"
 msgstr "Corrija Estes Primeiro"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Follows"
+msgstr "Seguidores"
+
 #: src/components/workspace/MemoryRows.jsx
 msgid "Forget"
 msgstr "Esquecer"
@@ -3708,8 +3786,8 @@ msgid "Generated: {generatedAt}"
 msgstr "Gerado: {generatedAt}"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "Generating 30-day plan"
-msgstr "Gerando plano de 30 dias"
+#~ msgid "Generating 30-day plan"
+#~ msgstr "Gerando plano de 30 dias"
 
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
@@ -3752,6 +3830,10 @@ msgstr "Obter o app para desktop →"
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Get the full audit →"
 msgstr "Obter a auditoria completa →"
+
+#: src/components/content/VendorKeyForm.jsx
+msgid "Get your key from {vendor}"
+msgstr "Obtenha sua chave de {vendor}"
 
 #: src/components/connections/logos.jsx
 msgid "GitHub"
@@ -3820,6 +3902,10 @@ msgstr "Ir para Memória"
 #: src/app/not-found.js
 msgid "Go to Sign In"
 msgstr "Ir para Entrar"
+
+#: src/components/content/PostMiniCard.jsx
+msgid "Goal:"
+msgstr "Meta:"
 
 #: src/components/audit/AuditReportV1.jsx
 #: src/lib/contentReview.js
@@ -4073,6 +4159,10 @@ msgstr "Regras da casa, a métrica que você realmente se importa, como você qu
 msgid "How Duct writes"
 msgstr "Como o Duct escreve"
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "How far ahead?"
+msgstr "Com que antecedência?"
+
 #: src/components/workspace/ComposerDials.jsx
 msgid "How freely Duct may act"
 msgstr "Com que liberdade o Duct pode agir"
@@ -4294,6 +4384,10 @@ msgstr "Convidado"
 msgid "Invited · expires {when}"
 msgstr "Convidado · expira {when}"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Invoicing"
+msgstr "Faturamento"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Issue distribution across all findings"
 msgstr "Distribuição de problemas em todas as constatações"
@@ -4412,6 +4506,10 @@ msgstr "Última chamada"
 msgid "Last checked {lastChecked}. {sourceCount, plural, one {# source connected.} other {# sources connected.}}"
 msgstr "Última verificação {lastChecked}. {sourceCount, plural, one {# fonte conectada.} other {# fontes conectadas.}}"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Late-paying client? Say this, word for word."
+msgstr "Cliente com atraso no pagamento? Diga isto, palavra por palavra."
+
 #: src/components/audit/AuditReportV1.jsx
 #: src/components/ReloadToast.jsx
 #: src/components/UpdateToast.jsx
@@ -4492,6 +4590,7 @@ msgid "Link all"
 msgstr "Vincular tudo"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "Link an account"
 msgstr "Vincular uma conta"
 
@@ -4761,8 +4860,12 @@ msgstr "ID da conta de gerente (MCC, opcional)"
 #~ msgstr "Manual"
 
 #: src/components/content/PlanViewport.jsx
-msgid "Mapping topics across 30 days…"
-msgstr "Mapeando tópicos ao longo de 30 dias…"
+#~ msgid "Mapping topics across 30 days…"
+#~ msgstr "Mapeando tópicos ao longo de 30 dias…"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Mapping topics across your dates…"
+msgstr "Mapeando tópicos para suas datas…"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Mapping your site structure"
@@ -4968,6 +5071,10 @@ msgstr "Modelos e provedores"
 msgid "Momentum"
 msgstr "Impulso"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Money habits"
+msgstr "Hábitos financeiros"
+
 #: src/components/content/PlanBoard.jsx
 msgid "Month"
 msgstr "Mês"
@@ -5060,6 +5167,10 @@ msgstr "Precisa de trabalho"
 msgid "Needs you"
 msgstr "Precisa de você"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Net 30 is a choice, not a law"
+msgstr "Net 30 é uma escolha, não uma lei"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Never say"
 msgstr "Nunca diga"
@@ -5088,6 +5199,11 @@ msgstr "Novo formato"
 #: src/components/ProjectMembers.jsx
 msgid "New invitation sent to {invitee}."
 msgstr "Novo convite enviado para {invitee}."
+
+#: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanDayOne.jsx
+msgid "New plan"
+msgstr "Novo plano"
 
 #: src/app/(app)/content/page.jsx
 msgid "New post"
@@ -5191,6 +5307,10 @@ msgstr "Sem compromisso — vamos definir o escopo e fazer o acompanhamento."
 #: src/components/audit/AuditStepProgress.jsx
 msgid "No competitor research was returned for this audit."
 msgstr "Nenhuma pesquisa de concorrentes foi retornada para esta auditoria."
+
+#: src/components/content/PlanList.jsx
+msgid "No drafts yet. Pick a pending post to start one."
+msgstr "Nenhum rascunho ainda. Escolha um post pendente para começar um."
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "No earlier version to compare."
@@ -5301,8 +5421,8 @@ msgid "No pillar-attributed posts yet."
 msgstr "Nenhum post atribuído a pilar ainda."
 
 #: src/components/content/PlanBoard.jsx
-msgid "No plan yet for this project."
-msgstr "Nenhum plano ainda para este projeto."
+#~ msgid "No plan yet for this project."
+#~ msgstr "Nenhum plano ainda para este projeto."
 
 #: src/app/(app)/content/page.jsx
 #~ msgid "No posts yet. Generate a plan and draft posts from the board, or clone a TikTok that worked."
@@ -5412,6 +5532,10 @@ msgstr "nenhum"
 msgid "None of these — start a new one"
 msgstr "Nenhum desses — comece um novo"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "None yet. Duct asks what you want to be known for."
+msgstr "Nenhum ainda. Duct pergunta pelo que você quer ser conhecido."
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "North Star metric"
 msgstr "Métrica North Star"
@@ -5505,9 +5629,14 @@ msgid "Not scored yet. Revise with Duct and ask for a review to get one."
 msgstr "Ainda não pontuado. Revise com o Duct e peça uma avaliação para obter um."
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanDayOne.jsx
 #: src/lib/modelTiers.js
 msgid "Not set"
 msgstr "Não definido"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Not set. Duct asks you a question or two before it plans."
+msgstr "Não definido. Duct faz uma ou duas perguntas a você antes de planejar."
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Not started"
@@ -5537,9 +5666,17 @@ msgstr "Nada abaixo deste nível pode ser executado — adicione uma chave para 
 msgid "Nothing checked yet."
 msgstr "Nada verificado ainda."
 
+#: src/components/content/PlanList.jsx
+msgid "Nothing discarded."
+msgstr "Nada descartado."
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Nothing from project memory is read into this session, and nothing it concludes is written back."
 msgstr "Nada da memória do projeto é lido nesta sessão, e nada do que ela conclui é gravado de volta."
+
+#: src/components/content/PlanList.jsx
+msgid "Nothing from this plan has gone out yet."
+msgstr "Nada deste plano foi publicado ainda."
 
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing has run on your key yet"
@@ -5811,6 +5948,10 @@ msgstr "Abrir conexões"
 msgid "Open connections →"
 msgstr "Abrir conexões →"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "Open Discover"
+msgstr "Abrir Discover"
+
 #: src/app/(auth)/desktop-auth/page.js
 #: src/app/(start)/start/page.jsx
 msgid "Open Duct"
@@ -5948,6 +6089,18 @@ msgstr "Opcional — melhora a qualidade do relatório"
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Optional — the agent will ask if you leave this unset."
 msgstr "Opcional — o agente perguntará se você deixar isso em branco."
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Optional. Connect Apify to search TikTok in Discover; the posts you save there shape the plan's topics."
+msgstr "Opcional. Conecte o Apify para pesquisar no TikTok em Discover; os posts que você salva lá moldam os tópicos do plano."
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Optional. Connect PostBridge and link an account, and the plan learns from your own results and posting times."
+msgstr "Opcional. Conecte o PostBridge e vincule uma conta, e o plano aprende com seus próprios resultados e horários de postagem."
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Optional. Link one and the plan learns from your own results and posting times."
+msgstr "Opcional. Vincule um e o plano aprende com seus próprios resultados e horários de postagem."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "or paste an API key"
@@ -6206,6 +6359,10 @@ msgstr "Plano"
 #: src/components/content/PlanBoard.jsx
 msgid "Plan {shortId}"
 msgstr "Plano {shortId}"
+
+#: src/components/content/PlanBoard.jsx
+msgid "Plan ahead"
+msgstr "Planejar com antecedência"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
@@ -6630,6 +6787,7 @@ msgstr "Lendo…"
 msgid "Reads what a search engine sees"
 msgstr "Lê o que um motor de busca vê"
 
+#: src/components/content/PlanDayOne.jsx
 #: src/components/models/TierCard.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Ready"
@@ -6967,6 +7125,10 @@ msgstr "Resolvido: {resolvedFindings}"
 msgid "Resolving website"
 msgstr "Resolvendo site"
 
+#: src/components/content/PlanPeriodPicker.jsx
+msgid "Rest of {month}"
+msgstr "Resto de {month}"
+
 #: src/components/UpdateToast.jsx
 msgid "Restart to update"
 msgstr "Reinicie para atualizar"
@@ -7032,6 +7194,10 @@ msgstr "Revisando a completude do Open Graph…"
 #: src/components/content/PlanViewport.jsx
 msgid "Reviewing your content pillars…"
 msgstr "Revisando seus pilares de conteúdo…"
+
+#: src/components/content/PlanBoard.jsx
+msgid "Revise plan"
+msgstr "Revisar plano"
 
 #: src/components/content/PostViewport.jsx
 msgid "Revise with Duct"
@@ -7266,6 +7432,7 @@ msgstr "Salvo na sua conta"
 msgid "saved to your Duct account"
 msgstr "salvo na sua conta Duct"
 
+#: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
 msgid "Saves"
 msgstr "Salvos"
@@ -7658,6 +7825,7 @@ msgid "Shared by {owner}"
 msgstr "Compartilhado por {owner}"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
 msgid "Shares"
 msgstr "Compartilhamentos"
@@ -8142,6 +8310,10 @@ msgstr "Parado."
 msgid "Stored encrypted, and used only for projects you own."
 msgstr "Armazenada com criptografia e usada só nos projetos que são seus."
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "Stored encrypted."
+msgstr "Armazenado criptografado."
+
 #: src/components/connections/ProviderCard.jsx
 msgid "stored for this provider"
 msgstr "armazenado para este provedor"
@@ -8236,12 +8408,20 @@ msgid "Synthesizing 30-day plan"
 msgstr "Sintetizando plano de 30 dias"
 
 #: src/components/content/PlanViewport.jsx
-msgid "Synthesizing your 30-day plan"
-msgstr "Sintetizando seu plano de 30 dias"
+#~ msgid "Synthesizing your 30-day plan"
+#~ msgstr "Sintetizando seu plano de 30 dias"
 
 #: src/components/content/PlanViewport.jsx
-msgid "Synthesizing your 30-day plan…"
-msgstr "Sintetizando seu plano de 30 dias…"
+#~ msgid "Synthesizing your 30-day plan…"
+#~ msgstr "Sintetizando seu plano de 30 dias…"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Synthesizing your plan"
+msgstr "Sintetizando seu plano"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Synthesizing your plan…"
+msgstr "Sintetizando seu plano…"
 
 #: src/components/AppSidebar.jsx
 #: src/components/memory/MemoryTimeline.jsx
@@ -8299,6 +8479,10 @@ msgstr "Palavras-chave alvo"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Targets"
 msgstr "Alvos"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Tax without fear"
+msgstr "Imposto sem medo"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Team ID"
@@ -8452,6 +8636,10 @@ msgstr "Esse é um link de compartilhamento. Abra-o e copie o endereço completo
 #: src/app/(start)/start/page.jsx
 msgid "That's us — continue"
 msgstr "Somos nós — continuar"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "The 12% rule for tax money"
+msgstr "A regra dos 12% para impostos"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "The account behind this key has no credit."
@@ -8857,6 +9045,10 @@ msgstr "Este projeto"
 msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."
 msgstr "Este projeto usa a conta do {vendor} da pessoa proprietária. Peça a ela para conectar aqui, e vai funcionar para você também."
 
+#: src/components/content/VendorKeyForm.jsx
+msgid "This project uses its owner's {vendor} account. Ask them to connect it."
+msgstr "Este projeto usa a conta {vendor} do proprietário. Peça a eles para conectá-la."
+
 #: src/app/(app)/activity/page.jsx
 msgid "this project's activity"
 msgstr "atividade deste projeto"
@@ -8932,6 +9124,10 @@ msgstr "Níveis"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "TikTok link"
 msgstr "Link do TikTok"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "TikTok research"
+msgstr "Pesquisa no TikTok"
 
 #: src/components/insight-blocks/TimeSeriesBlock.jsx
 msgid "Time series"
@@ -9454,6 +9650,14 @@ msgstr "O URL do site é obrigatório."
 msgid "Week"
 msgstr "Semana"
 
+#: src/components/content/PlanList.jsx
+msgid "Week {number}"
+msgstr "Semana {number}"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "What a freelancer's September actually costs"
+msgstr "Quanto custa de fato o setembro de um freelancer"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
 msgstr "O que mais limita essa métrica atualmente? <0>(opcional)</0>"
@@ -9473,6 +9677,10 @@ msgstr "Como é o sucesso?"
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 msgid "What Duct knows about this project. Agents read it before every run — confirm, correct, or pin a fact so it stays in view."
 msgstr "O que o Duct sabe sobre este projeto. Os agentes leem isso antes de cada execução — confirme, corrija ou fixe um fato para que ele permaneça visível."
+
+#: src/components/content/PlanDayOne.jsx
+msgid "What Duct plans from"
+msgstr "Do que o Duct planeja"
 
 #: src/components/models/UsagePanel.jsx
 msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
@@ -9510,6 +9718,10 @@ msgstr "O que o feed do {label} mostra antes do “ver mais”"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What was observed, why it matters, how to apply it."
 msgstr "O que foi observado, por que é importante, como aplicar."
+
+#: src/components/content/PlanDayOne.jsx
+msgid "What you get"
+msgstr "O que você recebe"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "What you uniquely offer."
@@ -9606,6 +9818,10 @@ msgstr "Por que isso importa e como um agente deve aplicar. Opcional."
 #: src/components/content/CloneSourceNote.jsx
 msgid "Why it worked:"
 msgstr "Por que funcionou:"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Why we rebuilt onboarding from scratch"
+msgstr "Por que reconstruímos o onboarding do zero"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Will be encrypted and stored on Duct, so scheduled runs use your key too."
@@ -9791,6 +10007,10 @@ msgstr "Você foi convidado para <0>{projectName}</0>"
 #: src/components/ChatSidebar.jsx
 msgid "your account"
 msgstr "sua conta"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Your accounts"
+msgstr "Suas contas"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Your agent can read your projects and draft their profile. It can't approve changes, connect tools, or replace anything you typed or confirmed."

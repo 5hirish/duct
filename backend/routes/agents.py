@@ -1471,7 +1471,7 @@ async def _start_tiktok_studio(
     plan/draft workers so the DB logic (Day resolution, post_id linkback) stays
     in one place."""
     # Imported lazily to avoid a route-module import cycle.
-    from routes.content import _run_draft_worker, _run_plan_worker
+    from routes.content import _requested_period, _run_draft_worker, _run_plan_worker
 
     mode = body.get("mode", "plan_month")
     # `mode` is a dispatch discriminator, and the conversation/resume fields are
@@ -1497,7 +1497,7 @@ async def _start_tiktok_studio(
             req = PlanRequest.model_validate(config)
         except Exception as exc:
             raise HTTPException(422, f"Invalid plan_month config: {exc}") from exc
-        coro = _run_plan_worker(session_id, req.project_id, emit_fn, user_keys)
+        coro = _run_plan_worker(session_id, req.project_id, emit_fn, user_keys, period=_requested_period(req))
     else:
         raise HTTPException(422, f"mode must be 'plan_month' or 'draft_post', got {mode!r}")
 

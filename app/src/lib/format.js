@@ -40,6 +40,15 @@ export function formatDate(value, { withYear = true, locale, fallback = "" } = {
   });
 }
 
+/** "Oct 7 – 31", "Oct 28 – Nov 3": a span of days, the way the locale writes
+ * one, so the month is not repeated when it does not change. */
+export function formatDateRange(start, end, { locale } = {}) {
+  const a = toDate(start);
+  const b = toDate(end);
+  if (!a || !b) return "";
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).formatRange(a, b);
+}
+
 /** "3:04 PM". */
 export function formatTime(value, { locale, fallback = "" } = {}) {
   const d = toDate(value);

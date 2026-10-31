@@ -99,7 +99,14 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit hub and live workspace
   - `content/` — Content Studio hub; `content/plan/` the planner board;
     `content/posts/[postId]`, `posts/new`, `sessions/new` — the content agent
-    workspace over a post or a plan
+    workspace over a post or a plan. A plan session is the plan manager for
+    one period: `?plan=<id>` revises that plan, `?start=<day>&days=<n>` plans
+    that period, and neither manages the plan covering today (or makes one
+    for the month in progress). The Plan tab's Revise plan is the first;
+    New plan and Plan ahead ask how far ahead (`PlanPeriodPicker.jsx`: the
+    month, 1 or 2 weeks, 30 days) and are the second. The dates come from
+    `lib/contentSchedule.js`, which mirrors `agents/content/plan_period.py`
+    and must keep agreeing with it
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
   - `connections/` — connector/integration management
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
