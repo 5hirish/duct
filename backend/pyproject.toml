@@ -123,7 +123,7 @@ langchain-ollama = "^1.1.0"
 # Python and no dependencies of its own; Word and PowerPoint need no library
 # because they are zip files of XML. Duct extracts text rather than handing
 # the model a PDF block because DeepSeek, among others, reads no PDF at all.
-pypdf = "^6.21.2"
+pypdf = "^6.21.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
