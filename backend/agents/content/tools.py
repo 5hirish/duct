@@ -80,6 +80,7 @@ from agents.content.channels import (
     primary_channel,
     resolve as resolve_channel,
 )
+from agents.content.formats import find_format, linked_styles, style_problems
 from agents.content.plan_period import PlanPeriod, default_period, keep_drafted_days, plan_end
 from agents.content.publishing import (
     SLIDE_RENDER,
@@ -1035,6 +1036,16 @@ def build_content_tools_lc(
                 draft.post_type = TEXT_POST_TYPE
             if draft.post_type == TEXT_POST_TYPE and not draft.caption.strip():
                 return _err("A text post carries its words in `caption`; it is empty.")
+            # The format the person started this draft in files the post when
+            # the model names none, and its styles bind (agents/content/formats.py).
+            if not draft.format_slug and session.format_slug and draft.post_type != TEXT_POST_TYPE:
+                draft.format_slug = session.format_slug
+            if draft.format_slug and draft.slides:
+                with _open_db() as db:
+                    fmt = find_format(db, project_id, draft.format_slug)
+                off_style = style_problems(fmt, draft.slides) if fmt else []
+                if off_style:
+                    return _err("Nothing saved. " + " ".join(off_style) + " Restyle those slides and submit again.")
             replies = [r for r in draft.replies if r.strip()]
             # The platform's own limits, checked here rather than trusted to
             # the model: an over-length tweet does not publish.
@@ -1221,6 +1232,11 @@ def build_content_tools_lc(
                     slide_obj = Slide.model_validate(merged)
                 except ValidationError as exc:
                     return _err(f"patched slide is invalid — fix and call again:\n{exc}")
+                fmt_row = db.get(ContentFormat, row.format_id) if row.format_id else None
+                fmt = find_format(db, project_id, fmt_row.slug) if fmt_row else None
+                off_style = style_problems(fmt, [slide_obj]) if fmt else []
+                if off_style:
+                    return _err("Not changed. " + " ".join(off_style))
                 slides[idx] = slide_obj.model_dump(mode="json")
                 parsed = [Slide.model_validate(s) for s in slides]
                 row.slides = slides
@@ -1307,22 +1323,23 @@ def build_content_tools_lc(
 
     async def fetch_format_library() -> str:
         try:
-            from agents.content.styles import css_for
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentFormat).where(ContentFormat.project_id == project_id)
                 ).all()
-                out = []
-                for r in rows:
-                    data = r.data or {}
-                    linked = data.get("linked_styles") or data.get("caption_classes") or []
-                    out.append({
-                        "id":   str(r.id),
-                        "slug": r.slug,
-                        "name": r.name,
-                        "data": data,
-                        "resolved_css": css_for(linked),
-                    })
+                # No CSS: the renderer owns it (templates.py) and the agent
+                # never writes any, so the stylesheet this used to return was
+                # the largest part of the result and none of it was read.
+                out = [
+                    {
+                        "id":     str(r.id),
+                        "slug":   r.slug,
+                        "name":   r.name,
+                        "data":   r.data or {},
+                        "styles": linked_styles(r.data),
+                    }
+                    for r in rows
+                ]
                 return _ok({"formats": out})
         except Exception as exc:
             logger.exception("fetch_format_library failed")
@@ -2422,10 +2439,11 @@ def build_content_tools_lc(
         ),
         _bind(
             fetch_format_library, ContentTool.FETCH_FORMAT_LIBRARY,
-            "Return the per-project content formats (name, slug, full JSONB data) "
-            "AND resolved_css — the shared base engine CSS plus the format's linked "
-            "styles, ready to inline verbatim into the slides <style> block. Do not "
-            "write caption/hook/layout CSS yourself; use resolved_css and its classes.",
+            "Return the project's content formats: slug, name, data (spec_markdown, the "
+            "recipe to build to, and default_slide_count) and styles, the caption styles "
+            "a post in that format uses. Set a post's format_slug to the format it is "
+            "built in; submit_post_draft and edit_slide refuse a photo caption in a "
+            "style its format does not link.",
         ),
         _bind(
             fetch_avatar_library, ContentTool.FETCH_AVATAR_LIBRARY,

@@ -18,9 +18,11 @@ import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
  *   - channel      (optional)  — the platform to write for (tiktok, linkedin,
  *                                twitter); picks the agent's playbook
  *   - clone_url    (optional)  — a TikTok post to model the draft on
+ *   - format       (optional)  — a library format slug to build the post in
  *
  * Reached from PlanViewport's "Draft this post →" button on a day card, and
- * from "New post" and "Clone a TikTok" on the Posts tab.
+ * from "New post" and "Clone a TikTok" on the Posts tab, and from "Draft a
+ * post in this format" on a format in the Library.
  */
 export default function NewPostDraftPage() {
   const router = useRouter();
@@ -35,6 +37,7 @@ export default function NewPostDraftPage() {
   const pillar    = search.get("pillar") || undefined;
   const channel   = search.get("channel") || undefined;
   const cloneUrl  = search.get("clone_url") || undefined;
+  const formatSlug = search.get("format") || undefined;
 
   useEffect(() => {
     const id = getActiveProjectId();
@@ -62,6 +65,7 @@ export default function NewPostDraftPage() {
           pillar,
           channel,
           cloneUrl,
+          formatSlug,
         }}
         renderViewport={({ payload, onSendMessage }) => (
           <PostViewport payload={payload} onSendMessage={onSendMessage} channel={channel} />

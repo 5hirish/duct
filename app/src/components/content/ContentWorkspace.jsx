@@ -29,7 +29,7 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  *
  * Props:
  *   - mode: 'plan_month' | 'draft_post'
- *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId, cloneUrl }
+ *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId, cloneUrl, channel, formatSlug }
  *   - renderViewport: ({ payload, mode, sessionId, phase, steps, building, onSendMessage }) => ReactNode
  *     Called every render with the latest plan/post payload from the agent.
  *     onSendMessage(text) sends a chat turn into the live session (used by the
@@ -50,9 +50,12 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // this post's run (and finds this post's draft) and never a different
   // one's. A clone has no artifact yet, so its link scopes it: cloning a
   // second post in the same tab must start a second run, not reattach to
-  // the first. A new plan is scoped by its period for the same reason.
+  // the first. A new plan is scoped by its period for the same reason, and a
+  // new post by its channel and format: starting a carousel in a format must
+  // not reattach to the LinkedIn draft opened a minute ago.
   const periodKey = context.startDate && `from:${context.startDate}+${context.days || ""}`;
-  const handleKey = `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || periodKey || context.projectId || ""}`;
+  const newPostKey = (context.channel || context.formatSlug) && `new:${context.channel || ""}+${context.formatSlug || ""}`;
+  const handleKey = `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || periodKey || newPostKey || context.projectId || ""}`;
   const agent = useAgentSession({
     agentType: CONTENT_AGENT_TYPE,
     notifyAs: t`Content Studio`,

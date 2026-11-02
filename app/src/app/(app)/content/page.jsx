@@ -3,12 +3,13 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, CopyPlus, Plus } from "lucide-react";
+import { ChevronDown, CopyPlus, Layers, Plus } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  listFormats,
   listPosts,
 } from "@/lib/contentApi";
 import { getProjectById } from "@/lib/projects";
@@ -27,9 +28,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DRAFT_CHANNELS, PostStatus } from "@/lib/contentEnums";
+import { DRAFT_CHANNELS, Platform, PostStatus } from "@/lib/contentEnums";
 
 // One tab shows at a time and the hub opens on the plan. Analytics brings
 // Recharts and Discover is the largest tab, so neither is downloaded until
@@ -223,10 +226,22 @@ function PostsTab({ projectId }) {
   // null until the posts arrive: the default depends on whether any wait.
   const [filter, setFilter] = useState(null);
   const [cloneOpen, setCloneOpen] = useState(false);
+  const [formats, setFormats] = useState([]);
 
-  // The two ways into a post no plan asked for: write one for a channel the
-  // agent has a playbook for, or model one on a TikTok that already worked
-  // (issue #222). The workspace does the rest.
+  // The library's formats are carousel recipes, so the menu offers a TikTok
+  // draft in each. A library that cannot be read leaves the channels alone.
+  useEffect(() => {
+    let cancelled = false;
+    listFormats(projectId)
+      .then((rows) => { if (!cancelled) setFormats(Array.isArray(rows) ? rows : []); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [projectId]);
+
+  // The ways into a post no plan asked for: write one for a channel the agent
+  // has a playbook for, build a carousel in one of the library's formats, or
+  // model one on a TikTok that already worked (issue #222). The workspace
+  // does the rest.
   const newPostMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -234,7 +249,7 @@ function PostsTab({ projectId }) {
           <Plus aria-hidden="true" /> <Trans>New post</Trans> <ChevronDown aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-56">
         {DRAFT_CHANNELS.map(({ id }) => (
           <DropdownMenuItem
             key={id}
@@ -244,6 +259,23 @@ function PostsTab({ projectId }) {
             <span>{platformMeta(id).label}</span>
           </DropdownMenuItem>
         ))}
+        {formats.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-2xs font-medium text-muted-foreground">
+              <Trans>TikTok carousel in a format</Trans>
+            </DropdownMenuLabel>
+            {formats.map((f) => (
+              <DropdownMenuItem
+                key={f.id}
+                onClick={() => router.push(`/content/posts/new?${new URLSearchParams({ channel: Platform.TIKTOK, format: f.slug })}`)}
+              >
+                <Layers className="size-4" aria-hidden="true" />
+                <span className="truncate">{f.name || f.slug}</span>
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -88,13 +88,13 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
  * reconnecting and closing; this only knows the two modes' fields.
  *
  *   plan_month: { projectId, startDate?, days? }
- *   draft_post: { projectId, planId?, dayIndex?, topic?, pillar?, channel? }
+ *   draft_post: { projectId, planId?, dayIndex?, topic?, pillar?, channel?, cloneUrl?, formatSlug? }
  * plus the resume fields (conversationId, resume, startFresh, artifactType,
  * artifactId) in either mode.
  */
 export function contentSessionBody(mode, context = {}) {
   const {
-    projectId, startDate, days, planId, dayIndex, topic, pillar, channel, cloneUrl,
+    projectId, startDate, days, planId, dayIndex, topic, pillar, channel, cloneUrl, formatSlug,
     conversationId, resume, startFresh, artifactType, artifactId,
   } = context;
   const resumeBody = resumeFields({ conversationId, resume, startFresh, artifactType, artifactId });
@@ -117,6 +117,8 @@ export function contentSessionBody(mode, context = {}) {
     ...(channel ? { channel } : {}),
     // A draft modelled on a TikTok post; the server validates it again.
     ...(cloneUrl ? { clone_url: cloneUrl } : {}),
+    // A library format to build it in (Library → Formats).
+    ...(formatSlug ? { format_slug: formatSlug } : {}),
     ...resumeBody,
   };
 }

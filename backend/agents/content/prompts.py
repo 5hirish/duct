@@ -38,6 +38,7 @@ from agents.content.voice_rules import render_voice_stanza
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from agents.content.formats import FormatSummary
     from agents.content.performance import AccountPerformance, Measure
     from agents.content.plan_period import PlanPeriod
     from agents.content.schema import (
@@ -1385,10 +1386,7 @@ def build_plan_user_prompt(
             for h in history[-30:]
         ) or "  (no history)"
     )
-    format_lines = (
-        "\n".join(f"  - {f.get('slug', '?')}: {f.get('name', '')}" for f in formats)
-        or "  (no formats — use Format D defaults)"
-    )
+    format_lines = "\n".join(_format_line(f) for f in formats) or "  (no formats — use Format D defaults)"
     avatar_lines = (
         "\n".join(
             f"  - {a.name if hasattr(a, 'name') else a.get('name', '?')}"
@@ -1606,6 +1604,31 @@ def _research_stanza(research: "ContentResearchContext | None") -> str:
     return "\n".join(parts)
 
 
+def _format_line(f: dict) -> str:
+    """One library format as the plan reads it: what to put in a day's
+    `format_slug`, and what building in it means."""
+    facts = [f"{f['slide_count']} slides"] if f.get("slide_count") else []
+    if f.get("styles"):
+        facts.append(f"styles {', '.join(f['styles'])}")
+    tail = f" ({'; '.join(facts)})" if facts else ""
+    return f"  - {f.get('slug', '?')}: {f.get('name', '')}{tail}"
+
+
+def _format_block(fmt: "FormatSummary | None") -> str:
+    """The format a draft was started in, for the visual write phase. The
+    spec itself stays behind fetch_format_library: it runs to pages."""
+    if fmt is None:
+        return ""
+    parts = [f"Format: {fmt.name} (`{fmt.slug}`), the format this post is built in. Read its spec with "
+             "fetch_format_library before you write, and set `format_slug` to it."]
+    if fmt.slide_count:
+        parts.append(f"It runs {fmt.slide_count} slides unless the topic needs otherwise.")
+    if fmt.styles:
+        parts.append(f"Its styles are {', '.join(fmt.styles)}; submit_post_draft refuses a photo caption "
+                     "in a style the format does not link.")
+    return " ".join(parts) + "\n\n"
+
+
 def build_post_user_prompt(
     brand: ContentBrandContext,
     day: "Day | None",
@@ -1613,6 +1636,7 @@ def build_post_user_prompt(
     topic: str | None = None,
     pillar: str | None = None,
     format_slug: str = "",
+    fmt: "FormatSummary | None" = None,
     avatar: "Avatar | dict | None" = None,
     recent_posts: list[dict] | None = None,
     channel=None,
@@ -1668,7 +1692,7 @@ def build_post_user_prompt(
 
 Target: {target}
 
-Recent posts (last 5):
+{_format_block(fmt)}Recent posts (last 5):
 {recent_lines}
 
 Avatar reference (for character consistency across slides):

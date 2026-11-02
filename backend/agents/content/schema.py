@@ -194,6 +194,9 @@ class DraftPostRequest(BaseModel):
     # the runner and the session only ever see a URL rebuilt from a parsed
     # handle and post id; anything else is a 422 before a session starts.
     clone_url: str | None = None
+    # A library format to build the post in (Library → Formats): a slug the
+    # project's own library resolves, so an unknown one is dropped there.
+    format_slug: str | None = Field(default=None, max_length=80, pattern=r"^[a-z0-9][a-z0-9_-]*$")
 
     @field_validator("clone_url")
     @classmethod
@@ -277,6 +280,11 @@ class ContentSession(BaseAgentSession):
     # when the model leaves `platforms` out — otherwise the schema default
     # would quietly make a LinkedIn draft a TikTok post.
     channel: str = ""
+    # The format this draft was asked for (the person's pick, or the plan
+    # day's), set by the runner. submit_post_draft files the post under it
+    # when the model names none, and holds its captions to the format's
+    # styles (agents/content/formats.py).
+    format_slug: str = ""
 
 
 # ---------------------------------------------------------------------------

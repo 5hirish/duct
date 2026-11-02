@@ -557,6 +557,7 @@ async def _run_draft_worker(
                 day=day_obj,
                 topic=req.topic,
                 pillar=req.pillar,
+                format_slug=req.format_slug or "",
                 channel=channel,
             )
         # Link the drafted post back onto its plan-day (post_id) so the board

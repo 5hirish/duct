@@ -9,9 +9,11 @@ import {
   Pencil,
   Plus,
   Save,
+  Sparkles,
   Trash2,
   Type,
 } from "lucide-react";
+import Link from "next/link";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button, buttonVariants } from "@/components/ui/button";
 import EmptyState from "@/components/ui/empty-state";
@@ -27,6 +29,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Platform } from "@/lib/contentEnums";
 import { relativeTime } from "@/lib/format";
 import {
   AlertDialog,
@@ -362,7 +365,7 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
 // Detail sheet — read view
 // ---------------------------------------------------------------------------
 
-function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
+export function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
   const { i18n } = useLingui();
   const slides = slidesOf(format);
   const linked = linkedOf(format);
@@ -392,8 +395,16 @@ function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
                 ))}
               </div>
 
-              <div className="mt-3 flex items-center gap-2">
-                <Button size="sm" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> <Trans>Edit</Trans></Button>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {/* A format is a carousel recipe, so its post is a TikTok draft
+                    built to it; the agent reads the spec and keeps to its styles. */}
+                <Link
+                  href={`/content/posts/new?${new URLSearchParams({ channel: Platform.TIKTOK, format: format.slug })}`}
+                  className={buttonVariants({ size: "sm" })}
+                >
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> <Trans>Draft a post in this format</Trans>
+                </Link>
+                <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> <Trans>Edit</Trans></Button>
                 <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onDelete}>
                   <Trash2 className="h-3.5 w-3.5" /> <Trans>Delete</Trans>
                 </Button>
@@ -532,7 +543,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
           <div className="mt-5">
             <Label className="text-xs"><Trans>Linked styles</Trans></Label>
             <p className="mb-2 text-2xs text-muted-foreground">
-              <Trans>Base styles the slide builder inlines for this format. Browse them in Library → Styles.</Trans>
+              <Trans>The caption styles a post in this format uses. Duct holds its photo captions to them. Browse them in Library → Styles.</Trans>
             </p>
             {available.length === 0 ? (
               <p className="rounded-md border border-dashed border-border/60 px-3 py-3 text-center text-2xs text-muted-foreground">

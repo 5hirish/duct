@@ -1771,8 +1771,8 @@ msgid "Base styles"
 msgstr "Base styles"
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
-msgstr "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+#~ msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+#~ msgstr "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Behind the app"
@@ -3117,6 +3117,10 @@ msgstr "Draft"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
 msgstr "Draft a clone"
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Draft a post in this format"
+msgstr "Draft a post in this format"
 
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
@@ -8823,6 +8827,10 @@ msgstr "The backend that runs inside the app is not answering. Quitting and reop
 msgid "the caption"
 msgstr "the caption"
 
+#: src/components/content/FormatLibrary.jsx
+msgid "The caption styles a post in this format uses. Duct holds its photo captions to them. Browse them in Library → Styles."
+msgstr "The caption styles a post in this format uses. Duct holds its photo captions to them. Browse them in Library → Styles."
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "The ChatGPT sign-in has lapsed"
@@ -9258,6 +9266,10 @@ msgstr "Threads"
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
 msgstr "Tiers"
+
+#: src/app/(app)/content/page.jsx
+msgid "TikTok carousel in a format"
+msgstr "TikTok carousel in a format"
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "TikTok link"

@@ -1771,8 +1771,8 @@ msgid "Base styles"
 msgstr "Basis-Styles"
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
-msgstr "Basis-Styles, die der Slide Builder für dieses Format einbindet. Durchsuche sie in Bibliothek → Styles."
+#~ msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+#~ msgstr "Basis-Styles, die der Slide Builder für dieses Format einbindet. Durchsuche sie in Bibliothek → Styles."
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Behind the app"
@@ -3117,6 +3117,10 @@ msgstr "Entwurf"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
 msgstr "Einen Klon entwerfen"
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Draft a post in this format"
+msgstr "Einen Beitrag in diesem Format entwerfen"
 
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
@@ -8822,6 +8826,10 @@ msgstr "Das Backend, das in der App läuft, antwortet nicht. Duct beenden und ne
 msgid "the caption"
 msgstr "die Bildunterschrift"
 
+#: src/components/content/FormatLibrary.jsx
+msgid "The caption styles a post in this format uses. Duct holds its photo captions to them. Browse them in Library → Styles."
+msgstr "Die Caption-Stile, die ein Beitrag in diesem Format verwendet. Duct hält seine Foto-Captions an sie. Durchsuche sie in Bibliothek → Styles."
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "Die ChatGPT-Anmeldung ist abgelaufen"
@@ -9257,6 +9265,10 @@ msgstr "Threads"
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
 msgstr "Stufen"
+
+#: src/app/(app)/content/page.jsx
+msgid "TikTok carousel in a format"
+msgstr "TikTok-Karussell in einem Format"
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "TikTok link"

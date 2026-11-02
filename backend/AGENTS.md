@@ -691,6 +691,11 @@ agents/
     │                     post; once its time has passed, settle, which the post
     │                     listing runs (throttled per project) so it reads posted or
     │                     failed, the reason on an activity_logs row
+    ├── formats.py      — the library binds: the plan reads each format (it was told the
+    │                     library was empty), a draft started in one (or from a plan day
+    │                     naming one) is filed under it, and submit_post_draft / edit_slide
+    │                     refuse a photo caption in a style the format does not link. The
+    │                     renderer still loads every style; the format decides which apply
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
     ├── voice_rules.py  — the project's own voice (#271): writing samples, banned words

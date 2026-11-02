@@ -35,6 +35,7 @@ import { CalendarPlus, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
+import { FormatDetailSheet } from "@/components/content/FormatLibrary";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
 import DeskCards from "@/components/insights/desk/DeskCards";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
@@ -3161,6 +3162,14 @@ export const SCENES = [
     render: () => <AuditReportV1 data={STORY_AUDIT} />,
   },
   {
+    id: "format-sheet",
+    state: "a format opened from the Library: its recipe, its styles, and the way to start a post in it",
+    group: "Formats",
+    title: "A format, ready to draft in",
+    note: "Draft a post in this format is the heaviest button on the sheet; Edit sits beside it outlined and Delete stays in the destructive tint. It opens a TikTok draft built to this recipe, and the agent keeps the photo captions to the styles in the chips. The New post menu on the Posts tab lists the same formats under its channels. At 22rem the three buttons wrap as a group and Updated drops below them.",
+    render: () => <FormatSheetScene />,
+  },
+  {
     id: "clone-dialog",
     state: "empty — nothing pasted yet",
     group: "Clone a TikTok",
@@ -3218,6 +3227,29 @@ const CLONE_SOURCE = {
   approach: "close",
   kept: "The identity-call hook, one face shape per slide, and the self-test on slide 4, because at 42× the creator's following the format carried it.",
 };
+
+const SAMPLE_FORMAT = {
+  id: "fmt-1",
+  slug: "build-log",
+  name: "Build log — what shipped this week",
+  updated_at: "2026-10-30T09:00:00Z",
+  data: {
+    default_slide_count: 6,
+    linked_styles: ["hook", "cap-stroke", "body-neutral"],
+    spec_markdown: "# Build log — what shipped this week\n\nOne carousel per release. Slide 1 names the change in the reader's words; slides 2-5 show it working; slide 6 says where to try it.\n\n| Slide | Type | Caption style |\n|---|---|---|\n| 1 | Hook | hook |\n| 2-5 | Screenshot | cap-stroke |\n| 6 | Text card | body-neutral |",
+  },
+};
+
+/** A format opened from the Library; the button brings it back after Escape. */
+function FormatSheetScene() {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Open the format</Button>
+      <FormatDetailSheet format={SAMPLE_FORMAT} open={open} onOpenChange={setOpen} onEdit={() => {}} onDelete={() => {}} />
+    </>
+  );
+}
 
 /** The clone dialog, open on arrival; the button brings it back after Escape. */
 function CloneDialogScene({ initialValue = "" }) {

@@ -1771,8 +1771,8 @@ msgid "Base styles"
 msgstr "Estilos base"
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
-msgstr "Estilos base que el creador de diapositivas inserta para este formato. Explóralos en Biblioteca → Estilos."
+#~ msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+#~ msgstr "Estilos base que el creador de diapositivas inserta para este formato. Explóralos en Biblioteca → Estilos."
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Behind the app"
@@ -3117,6 +3117,10 @@ msgstr "Borrador"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
 msgstr "Redactar un clon"
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Draft a post in this format"
+msgstr "Redactar una publicación en este formato"
 
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
@@ -8822,6 +8826,10 @@ msgstr "El backend que se ejecuta dentro de la app no responde. Cerrar y volver 
 msgid "the caption"
 msgstr "la descripción"
 
+#: src/components/content/FormatLibrary.jsx
+msgid "The caption styles a post in this format uses. Duct holds its photo captions to them. Browse them in Library → Styles."
+msgstr "Los estilos de texto que usa una publicación en este formato. Duct ajusta a ellos los textos de sus fotos. Explóralos en Biblioteca → Estilos."
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "El inicio de sesión de ChatGPT ha caducado"
@@ -9257,6 +9265,10 @@ msgstr "Hilos"
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
 msgstr "Niveles"
+
+#: src/app/(app)/content/page.jsx
+msgid "TikTok carousel in a format"
+msgstr "Carrusel de TikTok en un formato"
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "TikTok link"

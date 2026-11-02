@@ -1771,8 +1771,8 @@ msgid "Base styles"
 msgstr "基本スタイル"
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
-msgstr "このフォーマットのためにスライドビルダーがインライン化する基本スタイルです。ライブラリ → スタイルで閲覧できます。"
+#~ msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+#~ msgstr "このフォーマットのためにスライドビルダーがインライン化する基本スタイルです。ライブラリ → スタイルで閲覧できます。"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Behind the app"
@@ -3117,6 +3117,10 @@ msgstr "下書き"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
 msgstr "クローンを下書き"
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Draft a post in this format"
+msgstr "このフォーマットで投稿を下書き"
 
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
@@ -8823,6 +8827,10 @@ msgstr "アプリ内で実行されているバックエンドが応答してい
 msgid "the caption"
 msgstr "キャプション"
 
+#: src/components/content/FormatLibrary.jsx
+msgid "The caption styles a post in this format uses. Duct holds its photo captions to them. Browse them in Library → Styles."
+msgstr "このフォーマットの投稿が使うキャプションスタイルです。Duct は写真のキャプションをこれらに限定します。ライブラリ → スタイルで閲覧できます。"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "ChatGPTのサインインの有効期限が切れました"
@@ -9258,6 +9266,10 @@ msgstr "スレッド"
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
 msgstr "ティア"
+
+#: src/app/(app)/content/page.jsx
+msgid "TikTok carousel in a format"
+msgstr "フォーマットに沿った TikTok カルーセル"
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "TikTok link"

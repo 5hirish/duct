@@ -1765,8 +1765,8 @@ msgid "Base styles"
 msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
-msgstr ""
+#~ msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+#~ msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Behind the app"
@@ -3110,6 +3110,10 @@ msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
+msgstr ""
+
+#: src/components/content/FormatLibrary.jsx
+msgid "Draft a post in this format"
 msgstr ""
 
 #: src/components/content/PostMiniCard.jsx
@@ -8817,6 +8821,10 @@ msgstr ""
 msgid "the caption"
 msgstr ""
 
+#: src/components/content/FormatLibrary.jsx
+msgid "The caption styles a post in this format uses. Duct holds its photo captions to them. Browse them in Library → Styles."
+msgstr ""
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The ChatGPT sign-in has lapsed"
 msgstr ""
@@ -9251,6 +9259,10 @@ msgstr ""
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
+msgstr ""
+
+#: src/app/(app)/content/page.jsx
+msgid "TikTok carousel in a format"
 msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx

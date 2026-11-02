@@ -64,6 +64,7 @@ from agents.content.artifacts import (
     parse_artifact_json,
 )
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
+from agents.content.formats import FormatSummary, format_summaries
 from agents.content.channels import brand_platforms
 from agents.content.performance import AccountPerformance, load_account_performance
 from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, default_period, plan_end
@@ -401,6 +402,28 @@ async def _account_performance(project_id: UUID) -> AccountPerformance | None:
         return None
 
 
+def _read_formats(project_id: UUID) -> list[FormatSummary]:
+    from sqlmodel import Session
+
+    from db.session import get_engine
+
+    engine = get_engine()
+    if engine is None:
+        return []
+    with Session(engine) as db:
+        return format_summaries(db, project_id)
+
+
+async def _format_library(project_id: UUID) -> list[FormatSummary]:
+    """The project's formats, for an opening turn. Empty when they cannot be
+    read: the plan then falls back to the defaults the prompt names."""
+    try:
+        return await asyncio.to_thread(_read_formats, project_id)
+    except Exception:  # noqa: BLE001 — a recipe for the turn, never a blocker
+        logger.warning("content: format library unavailable", exc_info=True)
+        return []
+
+
 async def _memory_block(session: ContentSession, *, query: str = "", emit: EmitFn | None = None) -> str:
     """The project's memory digest for a content run, as a user-turn block.
 
@@ -712,8 +735,9 @@ class ContentRunner:
                 return build_plan_revise_prompt(brand, days=bound_days, period=managed)
             research = await self._enrich_step(brand, emit, llm, session)
             performance = await _account_performance(project_id)
+            formats = [f.as_dict() for f in await _format_library(project_id)]
             return build_plan_user_prompt(
-                brand, history=[], formats=[], avatars=[], research=research, performance=performance,
+                brand, history=[], formats=formats, avatars=[], research=research, performance=performance,
                 period=managed,
             )
 
@@ -745,11 +769,17 @@ class ContentRunner:
         session = get_session(session_id) or create_draft_session(session_id, project_id)
         ch = resolve_channel(channel)  # sync, no DB — safe before the first emit
         session.channel = ch.id
+        # A format is a carousel recipe, so a post that is words has none.
+        if not ch.text_first:
+            session.format_slug = format_slug or (day.format_slug if day is not None else "")
 
         async def _opening(brand: ContentBrandContext) -> str:
+            fmt = None
+            if session.format_slug:
+                fmt = next((f for f in await _format_library(project_id) if f.slug == session.format_slug), None)
             return build_post_user_prompt(
                 brand, day,
-                topic=topic, pillar=pillar, format_slug=format_slug,
+                topic=topic, pillar=pillar, format_slug=session.format_slug, fmt=fmt,
                 avatar=None, recent_posts=[], channel=ch,
             )
 
