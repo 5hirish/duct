@@ -103,7 +103,12 @@ def install(app) -> None:
         return
     from posthog.integrations.asgi import PosthogASGIMiddleware
 
-    app.add_middleware(PosthogASGIMiddleware, posthog_client=posthog)
+    # Starlette builds the middleware stack on the first request, not here, so
+    # a wrong keyword passes import, startup and every test that runs without
+    # a key. On 2026-10-29 `posthog_client=` (the SDK says `client=`) failed
+    # every request in production only, the healthcheck with them, and every
+    # backend deploy for four days.
+    app.add_middleware(PosthogASGIMiddleware, client=posthog)
     logging.getLogger().addHandler(_LoggedExceptionHandler(level=logging.ERROR))
 
 
