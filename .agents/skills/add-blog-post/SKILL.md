@@ -151,10 +151,10 @@ So, as rules:
 - **Alt text describes the image as generated**, written after looking at
   it, never pasted from the prompt: a generated hero rarely matches its
   prompt exactly, and alt text is metadata Google says to check.
-- **No bulk publishing.** At most one post a week, never a batch on one
-  day: a burst of same-author, same-template pages is the shape of scaled
-  content abuse whatever is in them. Write ahead if you like; merge on the
-  calendar.
+- **No bulk publishing.** Never two posts on one day, and at least two days
+  between any two: a burst of same-author, same-template pages is the shape
+  of scaled content abuse whatever is in them. Write ahead if you like; merge
+  on the calendar, and date each post the day it actually goes up.
 - **The generator fails on generated-sounding prose**: an em dash in prose
   or any word in `GENERATED_TELLS` (`scripts/build_blog.py`). The list is
   the voice guide's cut-on-sight vocabulary. Quoted sources are exempt.
@@ -164,6 +164,11 @@ So, as rules:
 - **One post every two weeks, alternating clusters.** Research-heavy posts at a
   rate a solo maintainer plus agents sustain. For answer engines one cited page
   beats five thin ones: citations concentrate on the best page for a question.
+- **A cluster written ahead ships every other day.** Its posts link to each
+  other, so a weekly drip leaves the set half-built for two months; one post
+  every 48 hours puts it all live within two weeks and still never two on a
+  day. The seven agents-for-marketing guides went out this way, 2 to 14 Nov
+  2026.
 - **The calendar is the GitHub Project, not a file.** Each planned post is an
   issue titled `post: <working title>`, labelled `site`, with the research
   brief (Phase 1) as its body and the milestone that holds its publish date.

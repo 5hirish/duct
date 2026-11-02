@@ -9,7 +9,17 @@
     <managingEditor>hello@getduct.ai (Shirish Kadam)</managingEditor>
     <webMaster>hello@getduct.ai (Shirish Kadam)</webMaster>
     <copyright>MIT licensed project. Posts © Alleviate Lab.</copyright>
-    <lastBuildDate>Mon, 28 Sep 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 02 Nov 2026 00:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>AI Agent vs Chatbot vs Automation: Which One Is Reading Your Dashboards?</title>
+      <link>https://getduct.ai/blog/ai-agent-vs-chatbot-vs-automation</link>
+      <guid isPermaLink="true">https://getduct.ai/blog/ai-agent-vs-chatbot-vs-automation</guid>
+      <pubDate>Mon, 02 Nov 2026 00:00:00 GMT</pubDate>
+      <author>hello@getduct.ai (Shirish Kadam)</author>
+      <category>Guide</category>
+      <description>Duct&#x27;s first brief pipeline was an automation wearing an agent&#x27;s vocabulary. Here is the three-question test that told me, and the one tool that is missing on purpose.</description>
+    </item>
 
     <item>
       <title>What Is Harness Engineering? Lessons From a Shipping Agent</title>
