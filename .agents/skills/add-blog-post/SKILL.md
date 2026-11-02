@@ -329,7 +329,7 @@ How each is made:
   Follow the `mosaic-panel` skill's six stones, ground and border, but 16:9,
   no inscription, one subject that is the post's metaphor. Pass one of
   `app/art-src/mosaic/*.jpg` as the style reference to
-  `mcp__gemini-image-generation__generate_image` (`gemini-3-pro-image-preview`,
+  `mcp__gemini-image-generation__generate_image` (`gemini-3-pro-image`,
   `aspect_ratio: 16:9`, `image_size: 2K`). A hero stands alone, so a naive
   oblique view is allowed where it reads better; app panels stay flat. Expect
   one re-roll; keep the better image, not the more rule-abiding one.
