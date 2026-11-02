@@ -453,6 +453,7 @@ class ContentTool(StrEnum):
     FETCH_CONTENT_HISTORY       = "fetch_content_history"
     FETCH_CONTENT_ASSETS        = "fetch_content_assets"
     FETCH_DISCOVERED_REFERENCES = "fetch_discovered_references"
+    SEARCH_TRENDS               = "search_trends"
     FETCH_POST                  = "fetch_post"
     FETCH_SLIDE_CONTEXT         = "fetch_slide_context"
     RENDER_SLIDE                = "render_slide"

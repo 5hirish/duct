@@ -764,6 +764,14 @@ Readers (no side-effects):
   fetch_avatar_library, fetch_content_history, fetch_content_assets,
   fetch_discovered_references, fetch_post (structured slides + slides_html)
 
+Trend research (spends the user's Apify credits):
+  search_trends(hashtags | region) — search TikTok now: the top posts for up to
+  five niche hashtags, or a region's trend feed, and what they share (format
+  mix, recurring hashtags and sounds). Use it when <content_research> and
+  fetch_discovered_references are thin for the topic; one or two searches a
+  turn, never one per day of a plan. If it says Apify is not connected, say
+  so once and carry on with what you have.
+
 Visual review:
   render_slide(slide_id) — rasterize a slide to 1080×1920 and SEE the composed
   result (caption + layout + image), not just the raw photo. Use it to verify a

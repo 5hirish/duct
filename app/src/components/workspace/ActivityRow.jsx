@@ -41,7 +41,7 @@ import {
 import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { ActivityKind } from "@/lib/agentEvents";
-import { CONNECTED_DECISIONS } from "@/lib/toolActivity";
+import { CONNECTED_DECISIONS, TREND_SEARCH_TOOL } from "@/lib/toolActivity";
 import { StepStatus } from "@/lib/agentSteps";
 import { Spinner } from "@/components/ui/spinner";
 import { Lightbox } from "@/components/ui/lightbox";
@@ -178,6 +178,14 @@ function useSummary(activity, named) {
       return { lead: name, detail: entity, aside: windowLabel(meta, i18n.locale) };
     }
     case ActivityKind.WEB_SEARCH:
+      // The content agent's TikTok search shares the card; its sources are posts.
+      if (activity.tool === TREND_SEARCH_TOOL) {
+        return {
+          lead: t`Searched TikTok`,
+          detail: activity.title,
+          aside: meta.source_count ? t`${meta.source_count} posts` : "",
+        };
+      }
       return {
         lead: t`Searched the web`,
         detail: activity.title,

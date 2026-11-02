@@ -645,6 +645,13 @@ Postgres `DATABASE_URL` names.
 - `service/apify/run_cache.py` — an identical Discover search (actor + canonical
   input) inside 30 minutes joins the earlier Apify run instead of paying for a
   new one. In process; the API runs one worker.
+- `service/trend_search.py` — the content agent's own TikTok search
+  (`search_trends`): Discover's two searches through Discover's input policy
+  and the run cache, on the project owner's Apify key, read back as a summary
+  (top ten posts, format mix, recurring tags and sounds) rather than thirty raw
+  posts. Saves nothing; capped at `TREND_SEARCHES_PER_RUN` a turn because each
+  new search spends the person's credits. Its result names `query` and
+  `sources` as WebSearch does, so the activity row draws it as a search.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling

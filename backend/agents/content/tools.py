@@ -119,6 +119,7 @@ from agents.content.templates import derive_image_prompts, render_slides_html
 from agents.content.video import VIDEO_POST_TYPE, cut_of, video_takes
 from service import storage
 from service.content_metrics import merge_synced_metrics
+from service.trend_search import MAX_SEARCH_HASHTAGS, TrendSearchFailed, run_trend_search
 from db.session import get_engine
 from models.content import (
     ContentAsset,
@@ -836,6 +837,19 @@ def build_content_tools_lc(
         )
         limit: int = Field(30, ge=1, le=100, description="Max rows to return. Default 30, max 100.")
 
+    class TrendSearchArgs(BaseModel):
+        hashtags: list[str] = Field(
+            default_factory=list, max_length=MAX_SEARCH_HASHTAGS,
+            description=(
+                "Up to five TikTok hashtags that name the niche, without '#' (e.g. "
+                "['buildinpublic', 'indiehackers']). Leave empty to read a region's trend feed instead."
+            ),
+        )
+        region: str = Field(
+            "", max_length=2,
+            description="Two-letter country code for the trend feed, used only with no hashtags. Default US.",
+        )
+
     class ContentAssetsArgs(BaseModel):
         limit: int = Field(
             50, ge=1, le=200,
@@ -1420,6 +1434,26 @@ def build_content_tools_lc(
         except Exception as exc:
             logger.exception("fetch_discovered_references failed")
             return _err(f"fetch_discovered_references failed: {exc}")
+
+    async def search_trends(hashtags: list[str] | None = None, region: str = "") -> str:
+        try:
+            from service.apify import APIFY_KEY, ApifyClient
+
+            with _open_db() as db:
+                key = APIFY_KEY.for_project(project_id, db)
+            if not key:
+                return _err(
+                    "Trend search runs on the project's own Apify account and none is connected. "
+                    "Tell the user they can connect Apify in Content → Discover; until then, work "
+                    "from fetch_discovered_references and web search."
+                )
+            async with ApifyClient(key) as client:
+                return _ok(await run_trend_search(client, hashtags or [], region))
+        except TrendSearchFailed as exc:
+            return _err(str(exc))
+        except Exception as exc:
+            logger.exception("search_trends failed")
+            return _err(f"search_trends failed: {exc}")
 
     async def fetch_content_assets(asset_type: str = "", axis: str = "", subtype: str = "", limit: int = 50) -> str:
         try:
@@ -2460,6 +2494,18 @@ def build_content_tools_lc(
             "music, author, and the TikTok URL. Filter by min_play_count to "
             "skip the long tail (default 10000).",
             DiscoveredReferencesArgs,
+        ),
+        _bind(
+            search_trends, ContentTool.SEARCH_TRENDS,
+            "Search TikTok now, on the user's own Apify account (each new search costs them "
+            "Apify credits; the same search again within 30 minutes is free). Pass up to five "
+            "hashtags for a niche, or none for a region's trend feed. Returns the top posts by "
+            "plays (caption, format, counts, engagement, sound, URL) and what the results share: "
+            "the slideshow/video mix with each one's median engagement, the recurring hashtags "
+            "and sounds. Takes one to three minutes. Use it when <content_research> and "
+            "fetch_discovered_references are thin for what you are planning or drafting; cite "
+            "the URLs you build on.",
+            TrendSearchArgs,
         ),
         _bind(
             fetch_post, ContentTool.FETCH_POST,

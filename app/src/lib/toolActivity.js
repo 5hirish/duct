@@ -58,6 +58,8 @@ export const ACTIVITY_TOOLS = Object.freeze({
   fetch_content_history: ActivityKind.CONTEXT,
   fetch_content_assets: ActivityKind.CONTEXT,
   fetch_discovered_references: ActivityKind.CONTEXT,
+  // The content agent's TikTok search: drawn as a search, the posts as sources.
+  search_trends: ActivityKind.WEB_SEARCH,
   fetch_post: ActivityKind.CONTEXT,
   fetch_slide_context: ActivityKind.CONTEXT,
   submit_plan: ActivityKind.ACTION,
@@ -72,6 +74,10 @@ export const ACTIVITY_TOOLS = Object.freeze({
 // The runner's own notice that the turn was enriched, not a tool the model
 // called (agents/core/activity.PROJECT_CONTEXT_TOOL).
 export const PROJECT_CONTEXT_TOOL = "ProjectContext";
+
+// The content agent's TikTok search (agents/content/schema.ContentTool), which
+// shares the web search card and is worded as its own.
+export const TREND_SEARCH_TOOL = "search_trends";
 
 /** The connected-tool listing, as opposed to a call (`meta.listing` live). */
 const CONNECTED_LISTING_TOOL = "ListConnectedTools";

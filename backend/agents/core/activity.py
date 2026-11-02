@@ -372,6 +372,15 @@ def _memory_get_finish(args: dict[str, Any], result: Any, is_error: bool) -> dic
     }
 
 
+def _trends_start(args: dict[str, Any]) -> dict[str, Any]:
+    """The content agent's TikTok search, drawn as a search: the hashtags it
+    asked for, or the region's feed. The finish reads the same ``query`` and
+    ``sources`` a web search returns."""
+    tags = [t for t in (args.get("hashtags") or []) if isinstance(t, str)]
+    title = " ".join(f"#{t.lstrip('#')}" for t in tags) or _text(args.get("region")) or ""
+    return {"kind": ActivityKind.WEB_SEARCH, "title": title[:TITLE_CHARS]}
+
+
 def _read_start(args: dict[str, Any]) -> dict[str, Any]:
     """A read of something the project already holds — brand context, the
     topic bank, connected sources. The tool name says which; the app words it."""
@@ -557,6 +566,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "fetch_content_history": (_read_start, _read_finish),
     "fetch_content_assets": (_read_start, _read_finish),
     "fetch_discovered_references": (_read_start, _read_finish),
+    "search_trends": (_trends_start, _search_finish),
     "fetch_post": (_read_start, _read_finish),
     "fetch_slide_context": (_read_start, _read_finish),
     # … and what it does on the person's behalf.

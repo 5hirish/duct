@@ -740,3 +740,52 @@ class PostBridgeQueue:
         """The body of the last create-post request."""
         return next(body for method, path, body in reversed(self.requests)
                     if (method, path) == ("POST", "/v1/posts"))
+
+
+# ---------------------------------------------------------------------------
+# Apify
+# ---------------------------------------------------------------------------
+#
+# Beneath the real ``ApifyClient``, at the transport, so its id checks, the
+# ``user~actor`` rewrite and the dataset parsing all run. The clone flow and
+# the agent's trend search both start runs through the run cache and poll
+# them the same way.
+
+
+class ApifyRuns:
+    """Apify's run, run-status and dataset endpoints, recording each request.
+
+    ``statuses`` are the polled states in order (the last repeats);
+    ``start_as`` is the state a new run reports ("SUCCEEDED" skips polling);
+    ``items`` is the dataset; ``start_status`` >= 400 refuses the start.
+    """
+
+    def __init__(self, *, statuses=("SUCCEEDED",), items=None, start_status=201, start_as="READY"):
+        self.statuses = list(statuses)
+        self.start_as = start_as
+        self.items = [] if items is None else items
+        self.start_status = start_status
+        self.requests: list[httpx.Request] = []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        path = request.url.path
+        if request.method == "POST" and path.endswith("/runs"):
+            if self.start_status >= 400:
+                return httpx.Response(self.start_status, json={"error": {"message": "nope"}})
+            return httpx.Response(201, json={"data": {"id": "run1", "status": self.start_as, "defaultDatasetId": "ds1"}})
+        if path.startswith("/v2/actor-runs/"):
+            status = self.statuses.pop(0) if len(self.statuses) > 1 else self.statuses[0]
+            return httpx.Response(200, json={"data": {"id": "run1", "status": status, "defaultDatasetId": "ds1"}})
+        if path == "/v2/datasets/ds1/items":
+            return httpx.Response(200, json=self.items)
+        return httpx.Response(404)
+
+    def client(self):
+        from service.apify import ApifyClient
+
+        return ApifyClient("apify-test-key", client=httpx.AsyncClient(transport=httpx.MockTransport(self)))
+
+    @property
+    def starts(self) -> list[httpx.Request]:
+        return [r for r in self.requests if r.method == "POST"]

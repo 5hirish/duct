@@ -110,6 +110,11 @@ msgstr "{0} coincidencias"
 #~ msgid "{0} models at {1}"
 #~ msgstr ""
 
+#. placeholder {0}: meta.source_count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} posts"
+msgstr "{0} publicaciones"
+
 #. placeholder {0}: group.ok
 #. placeholder {1}: group.failed
 #: src/components/insights/InsightsWorkspace.jsx
@@ -3117,6 +3122,10 @@ msgstr "Borrador"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
 msgstr "Redactar un clon"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Draft from this"
+msgstr "Redactar a partir de esto"
 
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
@@ -7690,6 +7699,10 @@ msgstr "Buscó en la memoria"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "Buscó en la web"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched TikTok"
+msgstr "Buscó en TikTok"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"

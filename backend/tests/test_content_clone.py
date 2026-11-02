@@ -57,7 +57,6 @@ from models.content import ContentAsset, ContentPost
 from models.membership import ProjectMember
 from models.project import Project
 from service import storage
-from service.apify import ApifyClient
 from service.apify.schema import ScrapedPost
 from service.clone_reference import (
     SINGLE_POST_ACTOR,
@@ -72,6 +71,7 @@ from service.clone_reference import (
 )
 from service.membership import ROLE_OWNER
 from tests.conftest import make_sqlite_engine
+from tests.fakes import ApifyRuns
 
 POST_ID = "7300000000000000001"
 URL = f"https://www.tiktok.com/@kestrel/video/{POST_ID}"
@@ -187,36 +187,10 @@ def test_the_actor_input_is_one_post_with_every_download_off():
     }
 
 
-class Apify:
-    """Apify's run, run-status and dataset endpoints, recording each request."""
-
-    def __init__(self, *, statuses=("SUCCEEDED",), items=None, start_status=201, start_as="READY"):
-        self.statuses = list(statuses)
-        self.start_as = start_as  # "SUCCEEDED" skips polling, for tests about what happens after
-        self.items = [apify_item()] if items is None else items
-        self.start_status = start_status
-        self.requests: list[httpx.Request] = []
-
-    def __call__(self, request: httpx.Request) -> httpx.Response:
-        self.requests.append(request)
-        path = request.url.path
-        if request.method == "POST" and path.endswith("/runs"):
-            if self.start_status >= 400:
-                return httpx.Response(self.start_status, json={"error": {"message": "nope"}})
-            return httpx.Response(201, json={"data": {"id": "run1", "status": self.start_as, "defaultDatasetId": "ds1"}})
-        if path.startswith("/v2/actor-runs/"):
-            status = self.statuses.pop(0) if len(self.statuses) > 1 else self.statuses[0]
-            return httpx.Response(200, json={"data": {"id": "run1", "status": status, "defaultDatasetId": "ds1"}})
-        if path == "/v2/datasets/ds1/items":
-            return httpx.Response(200, json=self.items)
-        return httpx.Response(404)
-
-    def client(self) -> ApifyClient:
-        return ApifyClient("apify-test-key", client=httpx.AsyncClient(transport=httpx.MockTransport(self)))
-
-    @property
-    def starts(self) -> list[httpx.Request]:
-        return [r for r in self.requests if r.method == "POST"]
+def Apify(**kwargs) -> ApifyRuns:  # noqa: N802 - reads as the fake it builds
+    """The shared Apify fake, answering with this module's one post by default."""
+    kwargs.setdefault("items", [apify_item()])
+    return ApifyRuns(**kwargs)
 
 
 @pytest.fixture(autouse=True)

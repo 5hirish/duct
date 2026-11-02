@@ -35,6 +35,7 @@ import { CalendarPlus, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
+import { ResultCard } from "@/components/content/DiscoverPage";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
 import DeskCards from "@/components/insights/desk/DeskCards";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
@@ -547,6 +548,15 @@ const TOOL_TRAFFIC = [
       { title: "docs.litellm.ai", url: "https://docs.litellm.ai/docs/proxy" },
       { title: "portkey.ai", url: "https://portkey.ai/docs" },
       { title: "github.com", url: "https://github.com/BerriAI/litellm" },
+    ],
+  }),
+  // The content agent's TikTok search shares the search card, worded as its own.
+  use("search_trends", "t4b", { hashtags: ["buildinpublic", "indiehackers"] }),
+  returned("search_trends", "t4b", {
+    status: "ok", query: "#buildinpublic #indiehackers", found: 30,
+    sources: [
+      { title: "@shipwithmaya", url: "https://www.tiktok.com/@shipwithmaya/video/7301000000000000001" },
+      { title: "@devlogdan", url: "https://www.tiktok.com/@devlogdan/video/7301000000000000002" },
     ],
   }),
   use("WebFetch", "t5", { url: "https://docs.litellm.ai/docs/proxy/deploy" }),
@@ -3161,6 +3171,20 @@ export const SCENES = [
     render: () => <AuditReportV1 data={STORY_AUDIT} />,
   },
   {
+    id: "discover-result",
+    state: "a carousel that can be drafted from, beside a result with no usable link",
+    group: "Clone a TikTok",
+    title: "Draft from a Discover result",
+    note: "Draft from this saves the post if it is not saved yet, then opens the clone workspace on it, so the clone reuses the post Discover already scraped instead of paying Apify to read it again. It is the one filled control on the card; Save stays the quiet one in the footer. A result whose link the clone flow would refuse shows no Draft button at all rather than one that fails. At two columns on a phone the label must stay on one line.",
+    render: () => (
+      <div className="grid max-w-xl grid-cols-2 gap-4">
+        {DISCOVER_RESULTS.map((p) => (
+          <ResultCard key={p.id} post={p} busy="" onSave={() => {}} onDraft={() => {}} />
+        ))}
+      </div>
+    ),
+  },
+  {
     id: "clone-dialog",
     state: "empty — nothing pasted yet",
     group: "Clone a TikTok",
@@ -3218,6 +3242,34 @@ const CLONE_SOURCE = {
   approach: "close",
   kept: "The identity-call hook, one face shape per slide, and the self-test on slide 4, because at 42× the creator's following the format carried it.",
 };
+
+// Two Discover results as the actor returns them: a carousel that can be
+// drafted from, and a video whose link the clone flow would refuse.
+const DISCOVER_RESULTS = [
+  {
+    id: "7301000000000000001",
+    text: "I shipped 3 features this week and nobody noticed. Here is what I changed #buildinpublic #indiehackers",
+    web_video_url: "https://www.tiktok.com/@shipwithmaya/photo/7301000000000000001",
+    is_slideshow: true,
+    play_count: 184_000, digg_count: 9_100, comment_count: 410, share_count: 1_300, collect_count: 4_800,
+    create_time_iso: "2026-10-27T18:00:00Z",
+    hashtags: ["buildinpublic", "indiehackers", "saas"],
+    author_meta: { name: "shipwithmaya", fans: 12_400, verified: false },
+    music_meta: { music_name: "original sound - shipwithmaya" },
+    slideshow_image_links: ["/art/mosaic/fons.webp"],
+  },
+  {
+    id: "7301000000000000002",
+    text: "Day 41 of building in public",
+    web_video_url: "",
+    is_slideshow: false,
+    play_count: 22_000, digg_count: 800, comment_count: 35, share_count: 40, collect_count: 120,
+    create_time_iso: "2026-10-29T08:00:00Z",
+    hashtags: ["buildinpublic"],
+    author_meta: { name: "devlogdan", fans: 3_100, verified: true },
+    slideshow_image_links: ["/art/mosaic/otium.webp"],
+  },
+];
 
 /** The clone dialog, open on arrival; the button brings it back after Escape. */
 function CloneDialogScene({ initialValue = "" }) {

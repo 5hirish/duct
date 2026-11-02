@@ -161,6 +161,11 @@ TOOL_RESULTS_KEPT = 8
 # guard for when a loop forgets. Issue #284's spec sets it at three.
 VIDEO_CLIPS_PER_RUN = 3
 
+# TikTok searches per turn. Each new one spends the user's Apify credits and
+# a minute or more; two niches and a trend feed is a thorough look, and a
+# loop that keeps searching is the thing this stops.
+TREND_SEARCHES_PER_RUN = 3
+
 LIMITS = RunLimits(
     model_calls_per_run=MODEL_CALLS_PER_RUN,
     model_calls_per_thread=MODEL_CALLS_PER_THREAD,
@@ -168,7 +173,10 @@ LIMITS = RunLimits(
     tool_calls_per_thread=TOOL_CALLS_PER_THREAD,
     tool_result_prune_trigger=TOOL_RESULT_PRUNE_TRIGGER,
     tool_results_kept=TOOL_RESULTS_KEPT,
-    per_tool_run_limits=((ContentTool.GENERATE_VIDEO.value, VIDEO_CLIPS_PER_RUN),),
+    per_tool_run_limits=(
+        (ContentTool.GENERATE_VIDEO.value, VIDEO_CLIPS_PER_RUN),
+        (ContentTool.SEARCH_TRENDS.value, TREND_SEARCHES_PER_RUN),
+    ),
 )
 
 # How long a session waits for a follow-up before closing itself. Matches

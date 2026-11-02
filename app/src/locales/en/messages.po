@@ -110,6 +110,11 @@ msgstr "{0} matches"
 #~ msgid "{0} models at {1}"
 #~ msgstr "{0} models at {1}"
 
+#. placeholder {0}: meta.source_count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} posts"
+msgstr "{0} posts"
+
 #. placeholder {0}: group.ok
 #. placeholder {1}: group.failed
 #: src/components/insights/InsightsWorkspace.jsx
@@ -3117,6 +3122,10 @@ msgstr "Draft"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
 msgstr "Draft a clone"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Draft from this"
+msgstr "Draft from this"
 
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
@@ -7691,6 +7700,10 @@ msgstr "Searched memory"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "Searched the web"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched TikTok"
+msgstr "Searched TikTok"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"

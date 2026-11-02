@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
   Bookmark,
@@ -18,6 +19,7 @@ import {
   Share2,
   Sparkles,
   TrendingUp,
+  WandSparkles,
   X,
 } from "lucide-react";
 import { msg } from "@lingui/core/macro";
@@ -44,6 +46,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { compactNumber, formatDate } from "@/lib/format";
+import { parseTikTokPostUrl } from "@/lib/tiktokUrl";
 
 // The actor that searches by hashtag; the only one whose input is tags.
 const HASHTAG_ACTOR = "clockworks/tiktok-scraper";
@@ -102,6 +105,7 @@ function DiscoverHeader({ aside }) {
 
 export default function DiscoverPage({ projectId }) {
   const { t, i18n } = useLingui();
+  const router = useRouter();
   // Searches run on the project owner's own Apify account. null until known,
   // and left null when the check fails: the page then works as before and a
   // search says why it could not run.
@@ -113,7 +117,7 @@ export default function DiscoverPage({ projectId }) {
   const [tagDraft, setTagDraft]     = useState("");
   const [region, setRegion]         = useState("US");
   const [sort, setSort]             = useState("plays");
-  const [busy, setBusy]             = useState({}); // post.id → "saving" | "saved"
+  const [busy, setBusy]             = useState({}); // post.id → "saving" | "saved" | "drafting"
 
   const actor = useMemo(() => ACTORS.find((a) => a.id === actorId), [actorId]);
   const { phase, results, error, elapsed, runId, datasetId, startRun, reset } = useScraperRun();
@@ -191,6 +195,25 @@ export default function DiscoverPage({ projectId }) {
       setBusy((b) => ({ ...b, [post.id]: "" }));
       console.error("save reference failed", e);
     }
+  }
+
+  // A post that worked becomes this brand's carousel: the clone flow, the same
+  // one "Clone a TikTok" starts from a pasted link. Saving first lets the clone
+  // reuse the post already scraped here (service/clone_reference.py) instead of
+  // paying Apify to read it a second time.
+  async function handleDraft(post, url) {
+    const wasSaved = busy[post.id] === "saved";
+    setBusy((b) => ({ ...b, [post.id]: "drafting" }));
+    try {
+      if (!wasSaved) {
+        await saveDiscoveredReference({ projectId, actorId, runId, datasetId, request: buildInput(), post });
+      }
+    } catch (e) {
+      // The clone scrapes the post itself when no saved copy exists, so a
+      // failed save costs a run, not the draft.
+      console.error("save before draft failed", e);
+    }
+    router.push(`/content/posts/new?${new URLSearchParams({ clone_url: url })}`);
   }
 
   const resultCount = results.length;
@@ -381,7 +404,7 @@ export default function DiscoverPage({ projectId }) {
 
           <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
             {sorted.map((p) => (
-              <ResultCard key={p.id} post={p} busy={busy[p.id]} onSave={() => handleSave(p)} />
+              <ResultCard key={p.id} post={p} busy={busy[p.id]} onSave={() => handleSave(p)} onDraft={(url) => handleDraft(p, url)} />
             ))}
           </div>
         </div>
@@ -390,8 +413,12 @@ export default function DiscoverPage({ projectId }) {
   );
 }
 
-function ResultCard({ post, busy, onSave }) {
+export function ResultCard({ post, busy, onSave, onDraft }) {
   const { i18n } = useLingui();
+  // Only a post with a link the clone flow accepts can be drafted from; the
+  // server parses it again and rebuilds the URL from the handle and id.
+  const draftUrl = parseTikTokPostUrl(post.web_video_url).url;
+  const drafting = busy === "drafting";
   const author = post.author_meta?.name;
   const verified = post.author_meta?.verified;
   const music  = post.music_meta?.music_name;
@@ -481,13 +508,20 @@ function ResultCard({ post, busy, onSave }) {
           )}
         </div>
 
+        {draftUrl && (
+          <Button size="xs" className="mt-1 w-full" onClick={() => onDraft(draftUrl)} disabled={drafting}>
+            {drafting ? <Spinner className="size-3" /> : <WandSparkles aria-hidden="true" />}
+            <Trans>Draft from this</Trans>
+          </Button>
+        )}
+
         {/* footer */}
         <div className="flex items-center justify-between gap-2 border-t border-border/40 pt-2">
           <span className="text-2xs text-muted-foreground">{formatDate(post.create_time_iso, { locale: i18n.locale })}</span>
           <button
             type="button"
             onClick={onSave}
-            disabled={busy === "saving" || saved}
+            disabled={busy === "saving" || drafting || saved}
             className={cn(
               "inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium transition-colors",
               saved

@@ -110,6 +110,11 @@ msgstr ""
 #~ msgid "{0} models at {1}"
 #~ msgstr ""
 
+#. placeholder {0}: meta.source_count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} posts"
+msgstr ""
+
 #. placeholder {0}: group.ok
 #. placeholder {1}: group.failed
 #: src/components/insights/InsightsWorkspace.jsx
@@ -3110,6 +3115,10 @@ msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
+msgstr ""
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Draft from this"
 msgstr ""
 
 #: src/components/content/PostMiniCard.jsx
@@ -7684,6 +7693,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched TikTok"
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx

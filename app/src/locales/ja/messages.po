@@ -110,6 +110,11 @@ msgstr "{0}件の一致"
 #~ msgid "{0} models at {1}"
 #~ msgstr ""
 
+#. placeholder {0}: meta.source_count
+#: src/components/workspace/ActivityRow.jsx
+msgid "{0} posts"
+msgstr "{0} 件の投稿"
+
 #. placeholder {0}: group.ok
 #. placeholder {1}: group.failed
 #: src/components/insights/InsightsWorkspace.jsx
@@ -3117,6 +3122,10 @@ msgstr "下書き"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Draft a clone"
 msgstr "クローンを下書き"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Draft from this"
+msgstr "これをもとに下書き"
 
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
@@ -7691,6 +7700,10 @@ msgstr "メモリを検索しました"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "ウェブを検索"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched TikTok"
+msgstr "TikTok を検索"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"
