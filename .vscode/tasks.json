@@ -24,6 +24,19 @@
       }
     },
     {
+      "//": "Freezes the backend into backend/dist/duct-sidecar for the self-host desktop launch. Only the first freeze needs this task: after it, the desktop scripts' pre* hooks refreeze whenever the backend has moved ahead. NOT bare `pyinstaller`: that deletes its output directory before rebuilding, out from under a sidecar a running app is executing; the script stages the freeze and swaps it in. ~3 min. Zed lists this one from here, so .zed/tasks.json has no copy.",
+      "label": "Desktop: Build sidecar",
+      "type": "shell",
+      "command": "npm run sidecar",
+      "options": { "cwd": "${workspaceFolder}/desktop" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "App: stop dev server (3003)",
       "type": "shell",
       "command": "./scripts/dev_stop.sh app",
