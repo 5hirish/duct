@@ -228,10 +228,10 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
   it is unset. Locally that is Jaeger (`scripts/jaeger.sh`, Apache-2.0; it
-  replaced Phoenix, whose Elastic licence is not open source): the "Duct: App +
-  API + Jaeger" and "Duct: Desktop + API + Jaeger" launch compounds start it
-  and point the API (and, for the desktop one, the sidecar via a second
-  `open --env`) at `http://localhost:4318`, and every FetchData and verifier
+  replaced Phoenix, whose Elastic licence is not open source): the "App + API
+  + Jaeger" and "Desktop + API + Jaeger" launch compounds start it
+  and point the API at `http://localhost:4318` (the desktop window talks to
+  that same API, so it needs no exporter of its own), and every FetchData and verifier
   dispatch is a span with its own latency. Jaeger reads the `gen_ai.*`
   attributes, lists the spans under the `duct-backend` service, and keeps them
   on disk for a week. Its MCP server is registered in `.mcp.json` at

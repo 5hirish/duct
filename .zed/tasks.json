@@ -64,16 +64,7 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "allow_concurrent_runs": false
   },
-  {
-    // Run once before the first desktop launch: a missing freeze ships a
-    // broken app. NOT bare `pyinstaller` — that deletes its output directory
-    // out from under a running sidecar. ~3 min.
-    "label": "Desktop: Build sidecar",
-    "command": "npm",
-    "args": ["run", "sidecar"],
-    "cwd": "$ZED_WORKTREE_ROOT/desktop",
-    "reveal": "always"
-  },
+  // "Desktop: Build sidecar" comes from .vscode/tasks.json, which Zed merges.
   {
     "label": "Desktop: Tauri dev (sidecar backend)",
     "command": "npm",

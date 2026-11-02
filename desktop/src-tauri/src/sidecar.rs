@@ -54,6 +54,12 @@ const SIDECAR_BIN: &str = "duct-sidecar.exe";
 const SIDECAR_BIN: &str = "duct-sidecar";
 /// Escape hatch for `tauri dev` runs against a sidecar built somewhere else.
 const SIDECAR_BIN_ENV: &str = "DUCT_SIDECAR_BIN";
+/// Any non-empty value switches off the working-copy fallback under `backend/dist/`, so
+/// a dev build runs as the official one does: no sidecar, the window on the API
+/// its web app is configured for. Without it, a freeze sitting on disk wins,
+/// and every backend change costs a three-minute refreeze before the next
+/// launch. A bundled sidecar and `DUCT_SIDECAR_BIN` are unaffected.
+const NO_DEV_SIDECAR_ENV: &str = "DUCT_NO_DEV_SIDECAR";
 /// Tells the sidecar to exit when its stdin closes, which happens when this
 /// process ends however it ends (`local_server.py` owns the flag).
 const SIDECAR_EXIT_ON_STDIN_EOF: &str = "--exit-on-stdin-eof";
@@ -220,6 +226,9 @@ fn sidecar_path(app: &AppHandle) -> Result<PathBuf, String> {
         .join(SIDECAR_DIR)
         .join(SIDECAR_BIN);
     if dev.exists() {
+        if !dev_fallback_allowed(std::env::var_os(NO_DEV_SIDECAR_ENV)) {
+            return Err(format!("the working-copy sidecar is switched off by {NO_DEV_SIDECAR_ENV}"));
+        }
         return Ok(dev);
     }
 
@@ -239,9 +248,16 @@ fn sidecar_path(app: &AppHandle) -> Result<PathBuf, String> {
 ///
 /// `sidecar_path` also accepts the dev fallback under `backend/dist/`, which is
 /// what makes `npm run dev` exercise the local path on a machine that has
-/// frozen one. On a user's machine that path does not exist.
+/// frozen one, unless `DUCT_NO_DEV_SIDECAR` is set. On a user's machine that
+/// path does not exist.
 pub fn is_available(app: &AppHandle) -> bool {
     sidecar_path(app).is_ok()
+}
+
+/// The `DUCT_NO_DEV_SIDECAR` rule, given the variable's value rather than
+/// reading it, so a test can hold it without touching the process environment.
+fn dev_fallback_allowed(switch: Option<std::ffi::OsString>) -> bool {
+    switch.is_none_or(|value| value.is_empty())
 }
 
 /// Origin (`scheme://host[:port]`) of this shell's main window.
@@ -532,6 +548,13 @@ pub fn get_sidecar_info(state: State<'_, SidecarState>) -> Result<Option<Sidecar
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_dev_sidecar_is_switched_off_only_by_a_value() {
+        assert!(dev_fallback_allowed(None));
+        assert!(dev_fallback_allowed(Some("".into())));
+        assert!(!dev_fallback_allowed(Some("1".into())));
+    }
 
     #[test]
     fn the_documented_handshake_line_parses() {
