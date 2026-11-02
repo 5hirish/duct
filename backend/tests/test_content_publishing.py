@@ -24,7 +24,6 @@ from sqlmodel import Session
 import agents.content.tools as content_tools
 import routes.content as content_routes
 import service.auth as auth_service
-import service.post_bridge as post_bridge
 from agents.content.publishing import SLIDE_RENDER
 from agents.content.schema import ContentStatus, make_session
 from db.session import get_session as get_session_dep
@@ -34,7 +33,7 @@ from models.membership import ProjectMember
 from models.project import Project
 from service.membership import ROLE_OWNER
 from tests.conftest import make_sqlite_engine
-from tests.fakes import PostBridgeQueue
+from tests.fakes import PostBridgeQueue, connect_scheduler
 
 CDN = "https://media.duct.test/projects/p1"
 
@@ -74,9 +73,9 @@ def project(db, owner):
 
 
 @pytest.fixture
-def queue(monkeypatch) -> PostBridgeQueue:
+def queue(monkeypatch, db, owner) -> PostBridgeQueue:
     q = PostBridgeQueue()
-    monkeypatch.setattr(post_bridge, "client_for_user", q.client)
+    connect_scheduler(monkeypatch, db, owner.id, q.publisher)
     return q
 
 
@@ -133,7 +132,7 @@ def slideshow(db, project, r2) -> ContentPost:
 
 
 def _link(db, project, account_id: int, platform: str, username: str) -> None:
-    db.add(ContentSocialLink(project_id=project.id, external_account_id=str(account_id),
+    db.add(ContentSocialLink(project_id=project.id, publisher="post_bridge", external_account_id=str(account_id),
                              platform=platform, username=username))
     db.commit()
 
@@ -207,7 +206,7 @@ def test_a_person_publishes_an_unrendered_photo_slide_as_its_photo_but_not_a_col
     assert _sent(queue) == [("photo.png", b"bytes of photo.png")]
 
     queue.uploads.clear()
-    post.status, post.post_bridge_post_id = "draft", ""
+    post.status, post.publisher_post_id = "draft", ""
     post.slides = [*post.slides, {"slide_id": "slide-02", "kind": "collage",
                                   "items": [{"image_url": photo.url}, {"image_url": photo.url}]}]
     db.add(post)

@@ -110,8 +110,14 @@ class ContentPost(SQLModel, table=True):
     # flow or a migrated MaxAura plan); "" / "external" when it appeared on the
     # account from elsewhere (TikTok Studio, PostBridge dashboard).
     published_via: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
-    post_bridge_post_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
-    post_bridge_result_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    # The scheduler that holds the post once Duct sent it (PublisherSpec.id:
+    # "post_bridge", "zernio"), and its ids there: the post's, and the handle
+    # its numbers are read by. Only that scheduler can change, cancel or
+    # report on the post, so it is stored with it rather than read off
+    # whichever scheduler the project uses now.
+    publisher: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    publisher_post_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    publisher_metrics_id: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
 
     perf: dict = Field(
         default_factory=dict,

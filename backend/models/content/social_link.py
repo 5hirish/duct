@@ -1,4 +1,4 @@
-"""Per-project linked social account (selected from PostBridge accounts)."""
+"""Per-project linked social account, at the scheduler that holds it."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ class ContentSocialLink(SQLModel, table=True):
     __tablename__ = "content_social_links"
     __table_args__ = (
         UniqueConstraint(
-            "project_id", "external_account_id",
-            name="uq_content_social_links_project_account",
+            "project_id", "publisher", "external_account_id",
+            name="uq_content_social_links_project_publisher_account",
         ),
     )
 
@@ -26,7 +26,11 @@ class ContentSocialLink(SQLModel, table=True):
             ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
         )
     )
-    # PostBridge social-account id (numeric upstream) stored as text.
+    # The scheduler that holds the account (PublisherSpec.id), and the
+    # account's id there, as text: PostBridge's are numbers, Zernio's are not.
+    # A project can link LinkedIn at one scheduler and TikTok at another, and
+    # a post goes out through the one holding its platform's account.
+    publisher: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     external_account_id: str = Field(sa_column=Column(String, nullable=False))
     platform: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     username: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))

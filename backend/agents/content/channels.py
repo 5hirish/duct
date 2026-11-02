@@ -8,6 +8,12 @@ and the app read the same numbers: how long the words may be, where the feed
 folds them, whether the platform takes a post with no media, and how many of
 the replies go out with it.
 
+What a channel takes is the platform's; what goes out on it also depends on
+the scheduler the post goes through (how many replies it publishes, whether it
+reports the numbers, whether it strips links), and that half is the
+scheduler's ``PublisherSpec`` (service/publishers/base.py), which
+``channel_payload`` folds in.
+
 A post's *primary channel* (platforms[0]) picks the playbook the agent drafts
 with. Three have one: TikTok (visual), and X and LinkedIn (text). Any other
 channel falls back to the TikTok playbook with ``supported=False`` so the UI
@@ -19,18 +25,22 @@ from __future__ import annotations
 import re
 from dataclasses import asdict, dataclass
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from utils.strings import titleize
+
+if TYPE_CHECKING:
+    from service.publishers.base import PublisherSpec
 
 
 class Platform(StrEnum):
     """Publishing channels a post can target.
 
-    Values are PostBridge v1 wire names — which is why it reads 'twitter'
-    rather than 'x'. Deliberately not the same object as
-    service.post_bridge.schema.PostBridgePlatform: that one is the vendor's
-    contract and moves when PostBridge moves, this is Duct's own list. They
-    happen to agree today. Mirrored for the UI in app/src/lib/contentEnums.js.
+    The values began as PostBridge's wire names — which is why it reads
+    'twitter' rather than 'x' — and are Duct's own list now: each scheduler's
+    adapter translates its vendor's spelling to these (Zernio's
+    'googlebusiness' is 'google_business' here). Mirrored for the UI in
+    app/src/lib/contentEnums.js.
 
     Lives here rather than in agents/models.py because a publishing channel is
     not a model — and because the label map below is the thing that consumes it.
@@ -64,33 +74,18 @@ class ChannelRules:
     ``max_chars`` is the platform's own ceiling on one post's words — X's is
     for a standard account, the one every account has. Counted as Python
     ``len`` (code points), which is exact for the Latin text these playbooks
-    write; X weighs CJK and most emoji double and every URL as 23, and a post
-    that keeps its links in the reply (``strips_links``) never meets the URL
-    case.
-
-    ``strips_links``: PostBridge deletes every link from the post itself on
-    X, bare domains included, because X charges more for a post with one. It
-    says nothing when it does, so a link there is a copy problem, and the
-    reply, which keeps its links, is where one goes.
+    write; X weighs CJK and most emoji double and every URL as 23.
 
     ``fold_chars`` is where the feed cuts to "see more" (0: it does not), so
-    the preview can show the reader's first screen. ``publishable_replies`` is
-    how many of ``replies`` PostBridge posts with it: one on X and Threads,
-    as a ``first_comment``; none elsewhere, where a reply is for the author
-    to paste. ``requires_media`` is PostBridge's own list of platforms that
-    reject a post without a picture or video, and ``synced_metrics`` its list
-    of those it reports views and likes for (TikTok, YouTube, Instagram,
-    Facebook); anywhere else the numbers are typed in from the platform.
+    the preview can show the reader's first screen. ``requires_media``: the
+    platform rejects a post without a picture or video.
     """
 
     label:               str
     max_chars:           int
     fold_chars:          int = 0
-    publishable_replies: int = 0
     requires_media:      bool = False
     hashtags:            bool = True    # does the playbook expect them at all
-    synced_metrics:      bool = False   # PostBridge reports this platform's numbers
-    strips_links:        bool = False   # PostBridge drops links from the post itself
 
 
 # Keyed by the enum so a Platform without rules is a visible hole (the unit
@@ -98,13 +93,13 @@ class ChannelRules:
 # and "Twitter / X" don't fall out of titleize. StrEnum keys match plain
 # strings, so rules_for() can index it with a bare channel id.
 RULES: dict[Platform, ChannelRules] = {
-    Platform.TIKTOK:          ChannelRules("TikTok", 4000, requires_media=True, synced_metrics=True),
-    Platform.INSTAGRAM:       ChannelRules("Instagram", 2200, fold_chars=125, requires_media=True, synced_metrics=True),
-    Platform.YOUTUBE:         ChannelRules("YouTube", 5000, requires_media=True, synced_metrics=True),
+    Platform.TIKTOK:          ChannelRules("TikTok", 4000, requires_media=True),
+    Platform.INSTAGRAM:       ChannelRules("Instagram", 2200, fold_chars=125, requires_media=True),
+    Platform.YOUTUBE:         ChannelRules("YouTube", 5000, requires_media=True),
     Platform.LINKEDIN:        ChannelRules("LinkedIn", 3000, fold_chars=210, hashtags=False),
-    Platform.TWITTER:         ChannelRules("Twitter / X", 280, publishable_replies=1, hashtags=False, strips_links=True),
-    Platform.FACEBOOK:        ChannelRules("Facebook", 63206, synced_metrics=True),
-    Platform.THREADS:         ChannelRules("Threads", 500, publishable_replies=1),
+    Platform.TWITTER:         ChannelRules("Twitter / X", 280, hashtags=False),
+    Platform.FACEBOOK:        ChannelRules("Facebook", 63206),
+    Platform.THREADS:         ChannelRules("Threads", 500),
     Platform.BLUESKY:         ChannelRules("Bluesky", 300),
     Platform.PINTEREST:       ChannelRules("Pinterest", 500, requires_media=True),
     Platform.GOOGLE_BUSINESS: ChannelRules("Google Business", 1500),
@@ -156,8 +151,8 @@ def primary_channel(platforms: list | None) -> str:
 
 
 # The site crawl names channels by the host it found a profile on
-# (agents/audit/draft._SOCIAL_HOSTS), which calls X "x"; posts use
-# PostBridge's wire names, which call it "twitter".
+# (agents/audit/draft._SOCIAL_HOSTS), which calls X "x"; posts call it
+# "twitter".
 _ALIASES: dict[str, str] = {"x": Platform.TWITTER}
 
 
@@ -197,14 +192,19 @@ def resolve(channel: str | None) -> Channel:
     )
 
 
-def channel_payload(channel: str | None) -> dict:
-    """The channel as the app reads it: id, playbook, and the rules the
-    preview counts against. Sent with every post so the app never keeps its
-    own copy of a character limit."""
+def channel_payload(channel: str | None, spec: PublisherSpec | None = None) -> dict:
+    """The channel as the app reads it: id, playbook, the rules the preview
+    counts against, and what the post's scheduler does there (``spec``; with
+    none connected, nothing publishes and nothing syncs). Sent with every post
+    so the app never keeps its own copy of a character limit."""
     ch = resolve(channel)
     return {
         "id": ch.id, "supported": ch.supported, "playbook": ch.playbook,
         "text_first": ch.text_first, **asdict(ch.rules),
+        "publisher": spec.id if spec else "",
+        "publishable_replies": spec.replies_for(ch.id) if spec else 0,
+        "synced_metrics": spec.reports_metrics(ch.id) if spec else False,
+        "strips_links": spec.strips_links_on(ch.id) if spec else False,
     }
 
 
@@ -228,16 +228,21 @@ def links_in(text: str) -> list[str]:
     return [m.group(0).rstrip(".,;:!?)\"'") for m in _LINK.finditer(text or "")]
 
 
-def copy_problems(channel: str | None, caption: str, replies: list[str] | None = None) -> list[str]:
+def copy_problems(
+    channel: str | None, caption: str, replies: list[str] | None = None, *, strips_links: bool = False,
+) -> list[str]:
     """What is wrong with a post's words for its channel, as sentences a model
     or a person can act on. Empty when it fits. The limits are the platform's
-    own, so an over-length post is not a style note: it does not publish."""
+    own, so an over-length post is not a style note: it does not publish.
+    ``strips_links``: the post's scheduler deletes every link from the post
+    itself on this channel and says nothing, so a link there is a problem and
+    the reply, which keeps its links, is where one goes."""
     rules = rules_for(channel)
     out: list[str] = []
     caption = caption or ""
     if len(caption) > rules.max_chars:
         out.append(f"The post is {len(caption)} characters; {rules.label} allows {rules.max_chars}.")
-    if rules.strips_links and (found := links_in(caption)):
+    if strips_links and (found := links_in(caption)):
         out.append(
             f"{rules.label} loses every link in the post itself on the way out "
             f"({', '.join(found)}), bare domains included. Put the link in the reply, "

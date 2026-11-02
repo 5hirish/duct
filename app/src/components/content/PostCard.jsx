@@ -118,13 +118,13 @@ export default function PostCard({ post }) {
           {post.topic || post.post_dir_slug || t`Untitled post`}
         </h3>
 
-        {/* The chip says Failed; this says why, in PostBridge's own words
+        {/* The chip says Failed; this says why, in the scheduler's own words
             (vendor text, so it is shown as sent, not translated). */}
         {status === PostStatus.FAILED && (
           <p className="line-clamp-3 text-xs text-destructive">
             {failureReason
-              ? <Trans>PostBridge didn't publish it: {failureReason}</Trans>
-              : <Trans>PostBridge didn't publish it at its scheduled time.</Trans>}
+              ? <Trans>Your scheduler didn't publish it: {failureReason}</Trans>
+              : <Trans>Your scheduler didn't publish it at its scheduled time.</Trans>}
           </p>
         )}
 

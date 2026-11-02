@@ -43,7 +43,7 @@ export const PostStatus = Object.freeze({
   DRAFT:     "draft",     // saved/kept
   SCHEDULED: "scheduled",
   POSTED:    "posted",
-  FAILED:    "failed",    // PostBridge didn't publish it at its time; post.publish_error says why
+  FAILED:    "failed",    // its scheduler didn't publish it at its time; post.publish_error says why
   DISCARDED: "discarded",
 });
 

@@ -17,6 +17,7 @@ import {
   getBrandContext,
   getPlan,
   getVendorKeyStatus,
+  listPublishers,
   listLinkedAccounts,
   listPlans,
   listPosts,
@@ -132,14 +133,16 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
         // Only a project with no plan shows its sources, so only it waits
         // for them. Either failing leaves its part of the screen out.
         if (list.length === 0) {
-          const [brand, accounts, postBridge, apify] = await Promise.all([
+          const [brand, accounts, publishers, apify] = await Promise.all([
             getBrandContext(projectId).catch(() => null),
             listLinkedAccounts(projectId).catch(() => null),
-            getVendorKeyStatus(VENDOR.POSTBRIDGE, projectId).catch(() => null),
+            listPublishers(projectId).catch(() => null),
             getVendorKeyStatus(VENDOR.APIFY, projectId).catch(() => null),
           ]);
           if (cancelled) return;
-          setSources({ brand, accounts, vendors: { [VENDOR.POSTBRIDGE]: postBridge, [VENDOR.APIFY]: apify } });
+          // Any scheduler connected is enough: which one is the Accounts tab's question.
+          const scheduler = publishers ? { connected: publishers.some((p) => p.connected) } : null;
+          setSources({ brand, accounts, scheduler, vendors: { [VENDOR.APIFY]: apify } });
         }
         setPlans(list);
         // The plan for today's period first: the Plan tab manages it.
@@ -214,6 +217,7 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
       <PlanDayOne
         brand={sources.brand}
         accounts={sources.accounts}
+        scheduler={sources.scheduler}
         vendors={sources.vendors}
         onConnectVendor={connectVendor}
         onStart={startPlan}

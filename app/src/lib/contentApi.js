@@ -219,7 +219,7 @@ export async function patchPlanDay(planId, day, patch) {
   return jsonOrThrow(res);
 }
 
-// Posts + their PostBridge-sourced analytics both depend on post state, so any
+// Posts + their scheduler-sourced analytics both depend on post state, so any
 // post write clears both. Broad (prefix) invalidation keeps it simple and safe.
 function invalidatePosts() {
   invalidate("posts:");
@@ -354,22 +354,24 @@ export function localPickerValue(date) {
 }
 
 /**
- * POST /api/content/posts/{id}/publish — uploads the post's media to
- * PostBridge then creates the post.
+ * POST /api/content/posts/{id}/publish — uploads the post's media to its
+ * scheduler then creates the post there.
  *
  * @param postId          Content post UUID
- * @param socialAccountIds Numeric PostBridge social account IDs
+ * @param socialAccountIds the scheduler's account ids (from listSocialAccounts)
+ * @param publisher       the scheduler holding those accounts (their `publisher`)
  * @param scheduledAt     the picker's local time (optional; omit to post now)
  * @param tiktokDraft     true → land as a TikTok draft, false → schedule/post
  */
-export async function publishPost(postId, { socialAccountIds, scheduledAt, tiktokDraft = false } = {}) {
+export async function publishPost(postId, { socialAccountIds, publisher, scheduledAt, tiktokDraft = false } = {}) {
   const res = await fetch(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/publish`,
     {
       method: "POST",
       headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
-        social_account_ids: socialAccountIds,
+        social_account_ids: socialAccountIds.map(String),
+        ...(publisher ? { publisher } : {}),
         ...(scheduledAt ? { scheduled_at: absoluteTime(scheduledAt) } : {}),
         tiktok_draft: tiktokDraft,
       }),
@@ -428,18 +430,30 @@ export async function listSocialAccounts(projectId, platform) {
 }
 
 /**
- * The vendors each user brings their own key for: PostBridge (publishing) and
- * Apify (Discover). A project spends its owner's key, so only the owner
- * connects one. Status is { connected, own_key, is_owner }.
+ * The vendors each user brings their own key for: a scheduler to publish
+ * through (PostBridge, Zernio: listPublishers names them) and Apify
+ * (Discover). A project spends its owner's key, so only the owner connects
+ * one. Status is { connected, own_key, is_owner }. A scheduler's id is its
+ * vendor slug here too.
  */
-export const VENDOR = Object.freeze({ POSTBRIDGE: "post-bridge", APIFY: "apify" });
+export const VENDOR = Object.freeze({ APIFY: "apify" });
 
-// Where a user gets the key for each vendor. Every "connect" form links here,
-// and the Plan tab's checklist offers both, so the address is said once.
+// Where a user gets the Apify key; a scheduler's comes with it (dashboard_url).
 export const VENDOR_HOME = Object.freeze({
-  [VENDOR.POSTBRIDGE]: "https://app.post-bridge.com",
   [VENDOR.APIFY]: "https://console.apify.com",
 });
+
+/**
+ * Every scheduler Duct can publish through, and whether this project's owner
+ * connected it: [{ id, label, dashboard_url, reports, connected, own_key,
+ * is_owner }]. Nothing is a default; with none connected nothing publishes.
+ */
+export async function listPublishers(projectId) {
+  const url = new URL(`${BASE}/api/content/publishers`);
+  url.searchParams.set("project_id", projectId);
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
+  return jsonOrThrow(res);
+}
 
 export async function getVendorKeyStatus(vendor, projectId) {
   const url = new URL(`${BASE}/api/content/vendor-keys/${vendor}`);
@@ -467,8 +481,8 @@ export async function disconnectVendorKey(vendor) {
 }
 
 /**
- * Per-post analytics for the project's linked accounts, pulled live from
- * PostBridge. Pass { refresh: true } to trigger a PostBridge sync first.
+ * Per-post analytics for the project's linked accounts, pulled live from every
+ * connected scheduler. Pass { refresh: true } to ask them to sync first.
  */
 export async function getContentAnalytics(projectId, { refresh = false } = {}) {
   const fetchIt = async () => {

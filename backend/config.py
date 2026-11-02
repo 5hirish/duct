@@ -247,6 +247,8 @@ class Configs(BaseSettings):
     # Accounts; a hosted instance never spends this one, because it is the
     # operator's account and every signup would be publishing through it.
     postbridge_api_key: str = ""
+    # Zernio, the other scheduler (service/zernio/), on the same terms.
+    zernio_api_key: str = ""
 
     # Apify API token, for TikTok discovery (service/apify/). Like PostBridge's:
     # users save their own in Content → Discover, and this one is spent only

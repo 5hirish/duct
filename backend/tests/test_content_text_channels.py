@@ -22,7 +22,6 @@ from sqlmodel import Session
 import agents.content.tools as content_tools
 import routes.content as content_routes
 import service.auth as auth_service
-import service.post_bridge as post_bridge
 from agents.content.assessment import compute_sanity
 from agents.content.channels import brand_platforms
 from agents.content.performance import rank_types
@@ -36,6 +35,7 @@ from models.membership import ProjectMember
 from models.project import Project
 from service.membership import ROLE_OWNER
 from service.post_bridge import PostBridgeClient
+from tests.fakes import connect_scheduler, post_bridge_on
 from tests.conftest import make_sqlite_engine
 
 WHEN = datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc)
@@ -120,9 +120,9 @@ class PostBridgeWire:
 
 
 @pytest.fixture
-def wire(monkeypatch) -> PostBridgeWire:
+def wire(monkeypatch, db, owner) -> PostBridgeWire:
     w = PostBridgeWire()
-    monkeypatch.setattr(post_bridge, "client_for_user", w.client)
+    connect_scheduler(monkeypatch, db, owner.id, post_bridge_on(w))
     return w
 
 
@@ -160,7 +160,7 @@ def _draft(project, **extra) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_a_draft_with_no_platforms_is_filed_under_the_sessions_channel(engine, db, project, monkeypatch):
+def test_a_draft_with_no_platforms_is_filed_under_the_sessions_channel(engine, db, project, monkeypatch, wire):
     """A model that leaves `platforms` out must not turn an X draft into a
     TikTok post by the schema's default; with no slides it is a text post."""
     session = make_session("text-1", project.id, "draft_post")
@@ -274,7 +274,7 @@ def test_a_linkedin_post_with_a_first_comment_still_publishes(db, project, owner
     assert "linkedin" not in (wire.created().get("platform_configurations") or {})
 
 
-def test_a_link_in_the_tweet_itself_is_refused_and_the_reply_keeps_one(engine, db, project, monkeypatch):
+def test_a_link_in_the_tweet_itself_is_refused_and_the_reply_keeps_one(engine, db, project, monkeypatch, wire):
     """PostBridge deletes every link from the post itself on X, bare domains
     included, and says nothing. The reply keeps its links, so that is where
     the refusal sends it."""
@@ -317,7 +317,7 @@ def test_x_numbers_are_typed_in_not_synced(db, project, owner, wire):
     for an X post would return nothing, so the route says where the numbers
     come from instead of calling."""
     post = _text_post(db, project)
-    post.post_bridge_post_id = "pb_post_1"
+    post.publisher, post.publisher_post_id = "post_bridge", "pb_post_1"
     db.add(post)
     db.commit()
 
@@ -423,7 +423,7 @@ def test_the_agent_cannot_publish_a_post_postbridge_already_holds(engine, db, pr
     assert second["status"] == "error" and "already scheduled" in second["message"], second
     assert [r.url.path for r in wire.requests] == ["/v1/posts"], "one create, not two"
     db.refresh(post)
-    assert post.post_bridge_post_id == "pb_post_1"
+    assert post.publisher_post_id == "pb_post_1"
 
 
 def test_the_route_refuses_a_second_publish_too(db, project, owner, wire):

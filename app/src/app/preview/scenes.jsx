@@ -90,6 +90,9 @@ import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
 import PlanDayOne from "@/components/content/PlanDayOne";
+import AccountsTab from "@/components/content/AccountsTab";
+import { AnalyticsGate } from "@/components/content/AnalyticsView";
+import { DiscoverGate } from "@/components/content/DiscoverPage";
 import PlanList from "@/components/content/PlanList";
 import { PlanPeriodMenu, PlanPeriodToggle } from "@/components/content/PlanPeriodPicker";
 import { planPeriodOptions } from "@/lib/contentSchedule";
@@ -571,7 +574,7 @@ const TOOL_TRAFFIC = [
   use("submit_assessment", "t12", { markers: [], notes: "" }),
   returned("submit_assessment", "t12", { status: "ok", post_id: "p1", topic: "Why your colours look off", overall: 56, band: "needs_work" }),
   use("publish_post", "t11", { post_id: "p1" }),
-  returned("publish_post", "t11", { status: "ok", post_id: "p1", post_bridge_post_id: "pb1", status_label: "scheduled", scheduled_at: "2026-09-23T09:00:00Z" }),
+  returned("publish_post", "t11", { status: "ok", post_id: "p1", publisher: "zernio", publisher_post_id: "zp1", status_label: "scheduled", scheduled_at: "2026-09-23T09:00:00Z" }),
 ];
 
 // A post's pre-publish review as `PostOut.assessment` carries it. Ids only —
@@ -1241,20 +1244,35 @@ const PLAN_ACCOUNTS = [
   { account_id: 1, platform: "tiktok", username: "solo.money" },
   { account_id: 2, platform: "instagram", username: "solomoney.app" },
 ];
-// The two keys a user brings, as GET /content/vendor-keys/{vendor} answers.
-// Keyed by the API's vendor ids ("post-bridge", "apify").
+// The Apify key a user brings, as GET /content/vendor-keys/apify answers; a
+// scheduler is any of GET /content/publishers being connected.
 const PLAN_VENDORS_MISSING = {
-  "post-bridge": { connected: false, own_key: false, is_owner: true },
   apify: { connected: false, own_key: false, is_owner: true },
 };
 const PLAN_VENDORS_CONNECTED = {
-  "post-bridge": { connected: true, own_key: true, is_owner: true },
   apify: { connected: true, own_key: true, is_owner: true },
 };
 const PLAN_VENDORS_COLLABORATOR = {
-  "post-bridge": { connected: false, own_key: false, is_owner: false },
   apify: { connected: false, own_key: false, is_owner: false },
 };
+// The Accounts tab's three reads, as GET /content/publishers, /social-accounts
+// and /linked-accounts answer them.
+const SCHEDULERS_NONE = [
+  { id: "post_bridge", label: "PostBridge", dashboard_url: "https://app.post-bridge.com", reports: ["facebook", "instagram", "tiktok", "youtube"], connected: false, own_key: false, is_owner: true },
+  { id: "zernio", label: "Zernio", dashboard_url: "https://zernio.com/dashboard", reports: ["bluesky", "facebook", "google_business", "instagram", "linkedin", "pinterest", "threads", "tiktok", "twitter", "youtube"], connected: false, own_key: false, is_owner: true },
+];
+const SCHEDULERS_BOTH = SCHEDULERS_NONE.map((p) => ({ ...p, connected: true, own_key: true }));
+const SCHEDULER_ACCOUNTS = [
+  { id: "101", publisher: "post_bridge", publisher_label: "PostBridge", platform: "tiktok", username: "solomoney.app" },
+  { id: "acc_li", publisher: "zernio", publisher_label: "Zernio", platform: "linkedin", username: "solomoney", display_name: "Solo Money" },
+  { id: "acc_x", publisher: "zernio", publisher_label: "Zernio", platform: "twitter", username: "solomoneyhq", needs_reconnect: true },
+];
+const loadsAccounts = (publishers, accounts = [], linked = []) => async () => ({ publishers, accounts, linked });
+const ACCOUNTS_NONE = loadsAccounts(SCHEDULERS_NONE);
+const ACCOUNTS_BOTH = loadsAccounts(SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, [{ account_id: "acc_li", publisher: "zernio" }]);
+const ACCOUNTS_COLLABORATOR = loadsAccounts(SCHEDULERS_NONE.map((p) => ({ ...p, is_owner: false })));
+const NO_SCHEDULER = { connected: false };
+const A_SCHEDULER = { connected: true };
 // What the preview does with a pasted key: accept it after a beat, the way
 // the real save waits for the vendor, or refuse it the way a wrong key is.
 const acceptKey = () => new Promise((resolve) => setTimeout(resolve, 900));
@@ -1289,7 +1307,8 @@ function PlanPeriodScene() {
 // other went out from the platform's own app, so nothing has synced.
 const METRICS_SYNCED_POST = {
   ...STORY_POSTS.post_1,
-  post_bridge_post_id: "pb_story_1",
+  publisher: "post_bridge",
+  publisher_post_id: "pb_story_1",
   perf: {
     view_count: 18400, like_count: 1120, comment_count: 86, share_count: 240,
     last_synced_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
@@ -1298,7 +1317,7 @@ const METRICS_SYNCED_POST = {
     manual_updated_at: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
   },
 };
-const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, post_bridge_post_id: "", perf: {} };
+const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, publisher: "", publisher_post_id: "", perf: {} };
 
 // Text posts (X, LinkedIn). `channel` is what the backend sends with every
 // post (agents/content/channels.channel_payload); the editor counts against it.
@@ -1330,7 +1349,7 @@ const X_OVER_POST = {
   ...X_THREAD_POST, id: "text-x-2", replies: [],
   caption: "Most freelancers who ask me about tax want a better percentage. The percentage is almost never the problem. The problem is that the money sits in the same account as everything else for weeks, and money that looks spendable gets spent. Move it the hour the invoice clears, into an account with no card.",
 };
-const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", post_bridge_post_id: "pb_story_x", perf: {} };
+const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", publisher: "post_bridge", publisher_post_id: "pb_story_x", perf: {} };
 
 // The drafts queue (issue 266): three drafts nobody has answered, from a
 // chat (X), a plan day (the carousel) and the LinkedIn writer, newest first.
@@ -3353,7 +3372,7 @@ export const SCENES = [
     note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, neither connector's key saved. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, takes the PostBridge and Apify keys right in their rows, asks how far ahead to plan (the month in progress, or 1 week, 2 weeks, 30 days, each naming its dates), and shows a sample week in the same list the plan workspace uses. Paste anything into a key field and press Enter: the preview refuses it the way a wrong key is refused. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={refuseKey} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={refuseKey} />
       </div>
     ),
   },
@@ -3365,7 +3384,7 @@ export const SCENES = [
     note: "Every source missing. Voice and pillars say what Duct does about them (it asks) and offer the tab that fixes them; the two connectors take their key in place. The button still works: the agent asks for what is missing before it plans. A pasted key is accepted after a beat here and the field stays busy, since the preview has no state to turn the row over with.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
       </div>
     ),
   },
@@ -3377,7 +3396,7 @@ export const SCENES = [
     note: "Voice, four pillars, two linked accounts and Apify connected. The plan learns from those accounts' own results, which is what the strategy band on a finished plan reports; the research row points at Discover, because only posts saved there reach the plan.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} vendors={PLAN_VENDORS_CONNECTED} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} scheduler={A_SCHEDULER} vendors={PLAN_VENDORS_CONNECTED} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
       </div>
     ),
   },
@@ -3389,8 +3408,68 @@ export const SCENES = [
     note: "A project spends its owner's PostBridge and Apify keys, so a collaborator gets no field, only who to ask.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
       </div>
+    ),
+  },
+  {
+    id: "analytics-no-scheduler",
+    state: "no scheduler connected",
+    group: "ConnectorGate",
+    title: "Analytics, before any scheduler",
+    note: "What the tab does, what unlocks it, and the stat row it fills in, drawn by the real cards over invented numbers. The schedulers are the server's list, at most three.",
+    render: () => (
+      <div className="p-5"><AnalyticsGate publishers={SCHEDULERS_NONE} onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "discover-no-apify",
+    state: "Apify not connected",
+    group: "ConnectorGate",
+    title: "Discover, before Apify",
+    note: "One connector, so one card; who pays for the scraping is said under it. The example is two real result cards over invented posts.",
+    render: () => (
+      <div className="p-5"><DiscoverGate isOwner onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "discover-no-apify-collaborator",
+    state: "a collaborator, owner hasn't connected Apify",
+    group: "ConnectorGate",
+    title: "Discover, when the key is the owner's",
+    note: "No Connect button: the project spends its owner's key, so anyone else is told who connects it.",
+    render: () => (
+      <div className="p-5"><DiscoverGate isOwner={false} onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "accounts-no-scheduler",
+    state: "nothing connected",
+    group: "AccountsTab",
+    title: "Accounts, before any scheduler",
+    note: "Nothing is a default: with no scheduler connected nothing publishes, so the tab says what it does once one is, offers each scheduler with the platforms it reports numbers for (the difference worth choosing on), and shows the accounts list it fills in. Connect opens the key field in the card.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_NONE} /></div>
+    ),
+  },
+  {
+    id: "accounts-two-schedulers",
+    state: "both connected, one account linked, one needing a reconnect",
+    group: "AccountsTab",
+    title: "Accounts at two schedulers",
+    note: "Each account says which scheduler holds it, because that is the one a post to it goes through. An account the scheduler reports as disconnected says where to fix it.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BOTH} /></div>
+    ),
+  },
+  {
+    id: "accounts-scheduler-collaborator",
+    state: "a collaborator, owner hasn't connected one",
+    group: "AccountsTab",
+    title: "When the scheduler is the owner's to connect",
+    note: "A project publishes through its owner's scheduler, so Connect tells anyone else who sets it up rather than offering a key that would never be used.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_COLLABORATOR} /></div>
     ),
   },
   {

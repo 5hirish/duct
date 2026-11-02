@@ -21,7 +21,6 @@ from sqlmodel import Session
 import agents.content.tools as content_tools
 import routes.content as content_routes
 import service.auth as auth_service
-import service.post_bridge as post_bridge
 from agents.content.publishing import PUBLISHED_VIA_DUCT
 from agents.content.schema import ContentStatus, TEXT_POST_TYPE
 from agents.content.v1.runner import make_session
@@ -32,7 +31,7 @@ from models.membership import ProjectMember
 from models.project import Project
 from service.membership import ROLE_OWNER
 from tests.conftest import make_sqlite_engine
-from tests.fakes import PostBridgeQueue
+from tests.fakes import PostBridgeQueue, connect_scheduler
 from utils.dates import utcnow
 
 WHEN = "2026-10-01T09:30:00Z"
@@ -76,9 +75,9 @@ def project(db, owner):
 
 
 @pytest.fixture
-def queue(monkeypatch) -> PostBridgeQueue:
+def queue(monkeypatch, db, owner) -> PostBridgeQueue:
     q = PostBridgeQueue()
-    monkeypatch.setattr(post_bridge, "client_for_user", q.client)
+    connect_scheduler(monkeypatch, db, owner.id, q.publisher)
     return q
 
 
@@ -88,7 +87,7 @@ def _queued(db, project, queue, *, caption="Shipped the eval gate.", replies=("S
     row = ContentPost(
         project_id=project.id, post_dir_slug="2026-09-28-001", post_type=TEXT_POST_TYPE,
         caption=caption, replies=list(replies), platforms=["twitter"],
-        status=ContentStatus.SCHEDULED.value, post_bridge_post_id=PB_ID, published_via=PUBLISHED_VIA_DUCT,
+        status=ContentStatus.SCHEDULED.value, publisher="post_bridge", publisher_post_id=PB_ID, published_via=PUBLISHED_VIA_DUCT,
     )
     db.add(row)
     db.commit()
@@ -143,7 +142,7 @@ def test_a_post_postbridge_failed_is_reported_and_stays_a_draft(db, project, own
     assert res.status_code == 502
     assert "needs reconnecting" in res.json()["detail"]
     db.refresh(post)
-    assert post.status == "draft" and post.post_bridge_post_id == ""
+    assert post.status == "draft" and post.publisher_post_id == ""
 
 
 # ---------------------------------------------------------------------------
@@ -210,7 +209,7 @@ def test_a_post_postbridge_no_longer_holds_is_saved_as_a_draft(db, project, owne
     assert res.status_code == 200, res.text
     db.refresh(post)
     assert post.caption == "Still want this."
-    assert post.status == ContentStatus.DRAFT and post.post_bridge_post_id == "" and post.scheduled_at is None
+    assert post.status == ContentStatus.DRAFT and post.publisher_post_id == "" and post.scheduled_at is None
 
 
 def test_unscheduling_takes_the_post_off_the_queue(db, project, owner, queue):
@@ -222,7 +221,7 @@ def test_unscheduling_takes_the_post_off_the_queue(db, project, owner, queue):
     assert queue.calls() == [("DELETE", f"/v1/posts/{PB_ID}")]
     assert PB_ID not in queue.posts
     db.refresh(post)
-    assert post.status == ContentStatus.DISCARDED and post.post_bridge_post_id == ""
+    assert post.status == ContentStatus.DISCARDED and post.publisher_post_id == ""
 
 
 # ---------------------------------------------------------------------------
@@ -357,7 +356,7 @@ def test_the_board_asks_postbridge_once_a_window_and_only_about_overdue_posts(db
     post = _overdue(db, project, queue, "scheduled")
     later = ContentPost(
         project_id=project.id, post_dir_slug="2026-10-30-001", post_type=TEXT_POST_TYPE, caption="Later.",
-        platforms=["twitter"], status=ContentStatus.SCHEDULED.value, post_bridge_post_id="pb_later",
+        platforms=["twitter"], status=ContentStatus.SCHEDULED.value, publisher="post_bridge", publisher_post_id="pb_later",
         scheduled_at=utcnow() + timedelta(days=1),
     )
     db.add(later)
