@@ -179,7 +179,14 @@ scratchpad.
 - **Ask before `git commit`, `git push` or `gh pr create`. Every time.** Make
   the change, summarise it, stop. Approval for one commit is not approval for
   the next. This is the standing rule and it outranks any inference that
-  committing would be convenient.
+  committing would be convenient. The maintainer answers it by name with
+  `/ship` (commit, push, PR, merge when green) or `/merge-green` (fix every
+  red PR by Dependabot or them, then merge the green ones; drafts are never
+  touched); each covers that one run. Those two and `/deploy-health`, which
+  checks that `main` actually deployed, are the maintainer's own commands
+  across repositories, not files here; they defer to this file for checks
+  and conventions. `/test-open-prs` puts main plus every open PR on one
+  local branch for testing by hand.
 - **Never rewrite published history.** No force-push, no `--amend`, no rebase
   of anything already on `origin`. Someone may have pulled it. Unpushed local
   commits are yours to tidy. A branch already pushed takes a merge of
@@ -365,6 +372,9 @@ Check here before hand-rolling env or secret plumbing:
 - `bootstrap_env_test.sh` — copy local dev env files to the gitignored
   `.env.test` targets.
 - `envfile.py` — shared dotenv parser used by the above.
+- `test_open_prs.py` — rebuild `local/open-prs` as `origin/main` plus every
+  open, non-draft, same-repo PR, merged without touching the working tree;
+  never pushed. Says which lock files and migrations need a step first.
 - `dev_stop.sh` — stop what a dev session started: `all`, or any of `backend`,
   `app`, `site`, `jaeger`, `desktop`. Both editors' stop tasks call it, so the
   kill list exists once.
