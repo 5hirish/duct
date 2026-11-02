@@ -96,3 +96,24 @@ def test_uvicorns_own_report_of_an_uncaught_error_is_not_sent_twice(fake):
     finally:
         log.removeHandler(handler)
     assert fake.exceptions == []
+
+
+def test_the_middleware_mounts_and_serves_with_a_real_client(monkeypatch):
+    """Only the production deploy has a key, so only it mounts the middleware.
+    Build the stack with the real SDK, the way the first request does."""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from posthog import Posthog
+
+    real = Posthog("phc_test", host="https://example.invalid", disabled=True, sync_mode=True)
+    monkeypatch.setattr(analytics, "_client", real)
+    monkeypatch.setattr(analytics, "_client_built", True)
+    app = FastAPI()
+    app.get("/health")(lambda: {"ok": True})
+    root = logging.getLogger()
+    handlers_before = list(root.handlers)
+    try:
+        analytics.install(app)
+        assert TestClient(app).get("/health").status_code == 200
+    finally:
+        root.handlers[:] = handlers_before
